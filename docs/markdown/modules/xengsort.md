@@ -1,5 +1,6 @@
 ---
 title: Xengsort
+displayed_sidebar: multiqcSidebar
 description: >
   Fast xenograft read sorter based on space-efficient k-mer hashing
 ---

@@ -1,5 +1,6 @@
 ---
 title: pycoQC
+displayed_sidebar: multiqcSidebar
 description: >
   Computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data
 ---

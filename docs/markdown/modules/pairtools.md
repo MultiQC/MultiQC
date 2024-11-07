@@ -1,5 +1,6 @@
 ---
 title: pairtools
+displayed_sidebar: multiqcSidebar
 description: >
   Toolkit for Chromatin Conformation Capture experiments. Handles short-reads paired reference alignments, extracts 3C-specific information, and perform common tasks such as sorting, filtering, and deduplication
 ---

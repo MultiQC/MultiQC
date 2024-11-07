@@ -1,5 +1,6 @@
 ---
 title: Iso-Seq
+displayed_sidebar: multiqcSidebar
 description: >
   Identifies transcripts in PacBio single-molecule sequencing data (HiFi reads)
 ---

@@ -1,5 +1,6 @@
 ---
 title: Bustools
+displayed_sidebar: multiqcSidebar
 description: >
   Tools for BUS files - a file format for single-cell RNA-seq data designed to facilitate the development of modular workflows for data processing
 ---

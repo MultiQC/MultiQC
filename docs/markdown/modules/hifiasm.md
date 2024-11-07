@@ -1,5 +1,6 @@
 ---
 title: HiFiasm
+displayed_sidebar: multiqcSidebar
 description: >
   Haplotype-resolved assembler for accurate Hifi reads
 ---

@@ -1,5 +1,6 @@
 ---
 title: FLASh
+displayed_sidebar: multiqcSidebar
 description: >
   Merges paired-end reads from next-generation sequencing experiments
 ---

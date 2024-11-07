@@ -1,5 +1,6 @@
 ---
 title: GoPeaks
+displayed_sidebar: multiqcSidebar
 description: >
   Calls peaks in CUT&TAG/CUT&RUN datasets
 ---

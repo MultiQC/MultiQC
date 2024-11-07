@@ -1,5 +1,6 @@
 ---
 title: HOMER
+displayed_sidebar: multiqcSidebar
 description: >
   Motif discovery and next-gen sequencing analysis
 ---

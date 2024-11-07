@@ -1,5 +1,6 @@
 ---
 title: Slamdunk
+displayed_sidebar: multiqcSidebar
 description: >
   Tool to analyze SLAM-Seq data
 ---

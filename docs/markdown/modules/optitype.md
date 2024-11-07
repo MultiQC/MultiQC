@@ -1,5 +1,6 @@
 ---
 title: OptiType
+displayed_sidebar: multiqcSidebar
 description: >
   Precision HLA typing from next-generation sequencing data
 ---

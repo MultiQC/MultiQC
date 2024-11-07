@@ -1,5 +1,6 @@
 ---
 title: Samtools
+displayed_sidebar: multiqcSidebar
 description: >
   Toolkit for interacting with BAM/CRAM files
 ---

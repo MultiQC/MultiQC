@@ -1,5 +1,6 @@
 ---
 title: qc3C
+displayed_sidebar: multiqcSidebar
 description: >
   Reference-free and BAM based quality control for Hi-C data
 ---

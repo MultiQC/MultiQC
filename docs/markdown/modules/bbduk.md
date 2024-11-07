@@ -1,5 +1,6 @@
 ---
 title: BBDuk
+displayed_sidebar: multiqcSidebar
 description: >
   Common data-quality-related trimming, filtering, and masking operations with a kmer based approach
 ---

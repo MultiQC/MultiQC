@@ -1,5 +1,6 @@
 ---
 title: Mosdepth
+displayed_sidebar: multiqcSidebar
 description: >
   Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 ---

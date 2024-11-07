@@ -1,5 +1,6 @@
 ---
 title: Motus
+displayed_sidebar: multiqcSidebar
 description: >
   Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs)
 ---

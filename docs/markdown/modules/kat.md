@@ -1,5 +1,6 @@
 ---
 title: K-mer Analysis Toolkit
+displayed_sidebar: multiqcSidebar
 description: >
   Analyses sequencing data via its k-mer spectra
 ---

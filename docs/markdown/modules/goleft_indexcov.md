@@ -1,5 +1,6 @@
 ---
 title: goleft indexcov
+displayed_sidebar: multiqcSidebar
 description: >
   Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution
 ---

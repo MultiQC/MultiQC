@@ -1,5 +1,6 @@
 ---
 title: Nextclade
+displayed_sidebar: multiqcSidebar
 description: >
   Viral genome alignment, clade assignment, mutation calling, and quality checks
 ---

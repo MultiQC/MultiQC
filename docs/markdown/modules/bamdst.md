@@ -1,5 +1,6 @@
 ---
 title: Bamdst
+displayed_sidebar: multiqcSidebar
 description: >
   Lightweight tool to stat the depth coverage of target regions of BAM file(s)
 ---

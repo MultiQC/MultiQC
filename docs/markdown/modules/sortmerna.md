@@ -1,5 +1,6 @@
 ---
 title: SortMeRNA
+displayed_sidebar: multiqcSidebar
 description: >
   Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data
 ---

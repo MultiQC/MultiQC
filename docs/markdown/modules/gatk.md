@@ -1,5 +1,6 @@
 ---
 title: GATK
+displayed_sidebar: multiqcSidebar
 description: >
   Wide variety of tools with a primary focus on variant discovery and genotyping
 ---
