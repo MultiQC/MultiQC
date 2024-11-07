@@ -3,8 +3,9 @@ Generate docs/modules/<module.md> files for each module in MultiQC from the Mult
 
 Usage:
 
-    python scripts/make_module_docs.py
-    python scripts/make_module_docs.py samtools
+    python scripts/make_module_docs.py modules
+    python scripts/make_module_docs.py modules --module samtools
+    python scripts/make_module_docs.py changelog
 """
 
 import json
@@ -19,56 +20,62 @@ from textwrap import dedent
 
 from multiqc import config, report, BaseMultiqcModule
 
-test_data_dir = Path("test-data")
-if not test_data_dir.exists():
-    raise RuntimeError("Please clone https://github.com/MultiQC/test-data into test-data/")
-
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("module", help="Generate for a specific module", nargs="?")
+parser.add_argument("mode", help="Generate modules or changelog", nargs="?")
+parser.add_argument("--module", help="Generate for a specific module", nargs="?")
 args = parser.parse_args()
 
-sp_by_mod: Dict[str, Dict] = dict()
-with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
-    for k, v in yaml.safe_load(f).items():
-        mod_id = k.split("/")[0]
-        sp_by_mod.setdefault(mod_id, {})[k] = v
+if args.mode and args.mode not in ("modules", "changelog"):
+    parser.error("Invalid mode. Please use 'modules' or 'changelog'.")
 
+if not args.mode or args.mode == "modules":
+    test_data_dir = Path("test-data")
+    if not test_data_dir.exists():
+        raise RuntimeError("Please clone https://github.com/MultiQC/test-data into test-data/")
 
-os.makedirs("docs/markdown/modules", exist_ok=True)
+    sp_by_mod: Dict[str, Dict] = dict()
+    with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
+        for k, v in yaml.safe_load(f).items():
+            mod_id = k.split("/")[0]
+            sp_by_mod.setdefault(mod_id, {})[k] = v
 
-# Table in the index page
-modules_data = []
+    os.makedirs("docs/markdown/modules", exist_ok=True)
 
-for mod_id, entry_point in config.avail_modules.items():
-    if mod_id == "custom_content":
-        continue
+    # Table in the index page
+    modules_data = []
 
-    mod_data_dir = test_data_dir / "data" / "modules" / mod_id
-    assert mod_data_dir.exists() and mod_data_dir.is_dir(), mod_data_dir
-    report.analysis_files = [mod_data_dir]
-    report.search_files([mod_id])
+    for mod_id, entry_point in config.avail_modules.items():
+        if mod_id == "custom_content":
+            continue
 
-    module_cls = entry_point.load()
-    docstring = module_cls.__doc__ or ""
+        mod_data_dir = test_data_dir / "data" / "modules" / mod_id
+        assert mod_data_dir.exists() and mod_data_dir.is_dir(), mod_data_dir
+        report.analysis_files = [mod_data_dir]
+        report.search_files([mod_id])
 
-    module: BaseMultiqcModule = module_cls()
-    modules_data.append({"id": f"modules/{mod_id}", "data": {"name": f"{module.name}", "summary": f"{module.info}"}})
+        module_cls = entry_point.load()
+        docstring = module_cls.__doc__ or ""
 
-    if args.module and args.module != mod_id:
-        continue
+        module: BaseMultiqcModule = module_cls()
+        modules_data.append(
+            {"id": f"modules/{mod_id}", "data": {"name": f"{module.name}", "summary": f"{module.info}"}}
+        )
 
-    if module.extra:
-        extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
-        extra += "\n\n"
-    else:
-        extra = ""
+        if args.module and args.module != mod_id:
+            continue
 
-    text = f"""\
+        if module.extra:
+            extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
+            extra += "\n\n"
+        else:
+            extra = ""
+
+        text = f"""\
 ---
 title: {module.name}
 displayed_sidebar: multiqcSidebar
 description: >
-  {module.info}
+{module.info}
 ---
 
 <!--
@@ -93,26 +100,27 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
 ```yaml
 {yaml.dump(sp_by_mod[mod_id]).strip()}
 ```
-""".strip()
+"""
 
-    # Remove double empty lines
-    while "\n\n\n" in text:
-        text = text.replace("\n\n\n", "\n\n")
+        # Remove double empty lines
+        while "\n\n\n" in text:
+            text = text.replace("\n\n\n", "\n\n")
 
-    output_path = Path("docs") / "markdown" / "modules" / f"{mod_id}.md"
-    with output_path.open("w") as fh:
-        fh.write(text)
+        output_path = Path("docs") / "markdown" / "modules" / f"{mod_id}.md"
+        with output_path.open("w") as fh:
+            fh.write(text)
 
-    print(f"Generated {output_path}")
+        print(f"Generated {output_path}")
 
-with (Path("docs") / "markdown" / "modules.mdx").open("w") as fh:
-    fh.write(f"""\
+    with (Path("docs") / "markdown" / "modules.mdx").open("w") as fh:
+        fh.write(
+            """\
 ---
 title: Supported Tools
 description: Tools supported by MultiQC
 displayed_sidebar: multiqcSidebar
 ---
-             
+            
 MultiQC currently has modules to support {len(config.avail_modules)} bioinformatics tools, listed below.
 
 Click the tool name to go to the MultiQC documentation for that tool.
@@ -124,7 +132,44 @@ If you would like another tool to to be supported, please [open an issue](https:
 import MultiqcModules from "@site/src/components/MultiqcModules";
 
 <MultiqcModules
-  modules={{{str(json.dumps(modules_data))}}}
+modules={{{str(json.dumps(modules_data))}}}
 />
 
-""")
+"""
+        )
+
+
+if not args.mode or args.mode == "changelog":
+    """
+    Script to sync the MultiQC changelog into the docs site.
+    """
+
+    # Read the changelog from the submodule
+    changelog_path = Path("CHANGELOG.md")
+    docs_path = Path("docs/markdown/changelog.md")
+
+    # Read and process the changelog
+    with open(changelog_path) as f:
+        changelog = f.read()
+
+    # Write the combined file
+    with open(docs_path, "w") as f:
+        f.write(
+            f"""\
+---
+title: MultiQC Version History
+description: MultiQC version history and changes
+---
+
+<!--
+~~~~~ DO NOT EDIT ~~~~~
+This file is autogenerated. Do not edit the markdown, it will be overwritten.
+
+File path for the source of this content: CHANGELOG.md
+~~~~~~~~~~~~~~~~~~~~~~~
+-->
+        
+{changelog}"""
+        )
+
+    print(f"Generated {docs_path}")
