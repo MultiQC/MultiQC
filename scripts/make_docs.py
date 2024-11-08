@@ -17,82 +17,90 @@ import subprocess
 
 from multiqc import config, report, BaseMultiqcModule
 
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--skip-if-exists", help="Skip if docs folder exists", action="store_true")
-parser.add_argument("--create-pr", help="Create a PR with the changes", action="store_true")
-parser.add_argument("--main-branch", help="Main branch name", default="master")
-args = parser.parse_args()
 
-SEQERA_DOCS_REPO = "https://github.com/seqeralabs/docs"
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--skip-if-exists", help="Skip if docs folder exists", action="store_true")
+    args = parser.parse_args()
 
-DOCS_REPO = Path("seqeralabs-docs")
-if not DOCS_REPO.exists():
-    raise RuntimeError(f"Please run: git clone {SEQERA_DOCS_REPO} {DOCS_REPO}")
+    SEQERA_DOCS_REPO = "https://github.com/seqeralabs/docs"
 
-TEST_DATA_DIR = Path("test-data")
-if not TEST_DATA_DIR.exists():
-    raise RuntimeError("Please run: git clone https://github.com/MultiQC/test-data.git test-data")
+    DOCS_REPO = Path("seqeralabs-docs")
+    if not DOCS_REPO.exists():
+        print(f"Cloning {SEQERA_DOCS_REPO} to {DOCS_REPO}")
+        subprocess.run(["git", "clone", SEQERA_DOCS_REPO, DOCS_REPO], check=True)
 
-OUTPUT_PATH = DOCS_REPO / "multiqc_docs/docs"
-os.makedirs(OUTPUT_PATH, exist_ok=True)
+    TEST_DATA_DIR = Path("test-data")
+    if not TEST_DATA_DIR.exists():
+        print("Cloning test-data to test-data")
+        subprocess.run(["git", "clone", "https://github.com/MultiQC/test-data.git", TEST_DATA_DIR], check=True)
 
-# Use rsync to sync the directories, except for README.md
-rsync_command = [
-    "rsync",
-    "-av",  # archive mode, verbose
-    "--delete",  # delete extraneous files from destination
-    "docs/",  # source with trailing slash
-    "--exclude",
-    "README.md",
-    "--exclude",
-    "modules.mdx",
-    "--exclude",
-    "modules",
-    f"{OUTPUT_PATH}/",  # destination with trailing slash
-]
+    OUTPUT_PATH = DOCS_REPO / "multiqc_docs/docs"
+    os.makedirs(OUTPUT_PATH, exist_ok=True)
 
-try:
-    subprocess.run(rsync_command, check=True)
-    print(f"Successfully synced docs/ to {OUTPUT_PATH}")
-except subprocess.CalledProcessError as e:
-    raise RuntimeError(f"Failed to sync directories: {e}")
+    # Use rsync to sync the directories, except for README.md
+    rsync_command = [
+        "rsync",
+        "-av",  # archive mode, verbose
+        "--delete",  # delete extraneous files from destination
+        "docs/",  # source with trailing slash
+        "--exclude",
+        "README.md",
+        "--exclude",
+        "modules.mdx",
+        "--exclude",
+        "modules",
+        f"{OUTPUT_PATH}/",  # destination with trailing slash
+    ]
 
-if not args.skip_if_exists or not (OUTPUT_PATH / "markdown/modules").exists():
-    # Load search patterns
-    sp_by_mod: Dict[str, Dict] = dict()
-    with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
-        for k, v in yaml.safe_load(f).items():
-            mod_id = k.split("/")[0]
-            sp_by_mod.setdefault(mod_id, {})[k] = v
+    try:
+        subprocess.run(rsync_command, check=True)
+        print(f"Successfully synced docs/ to {OUTPUT_PATH}")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to sync directories: {e}")
 
-    # Generate module documentation
-    modules_data = []
-    for mod_id, entry_point in config.avail_modules.items():
-        if mod_id == "custom_content":
-            continue
+    if not args.skip_if_exists or not (OUTPUT_PATH / "markdown/modules").exists():
+        # Load search patterns
+        sp_by_mod: Dict[str, Dict] = dict()
+        with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
+            for k, v in yaml.safe_load(f).items():
+                mod_id = k.split("/")[0]
+                sp_by_mod.setdefault(mod_id, {})[k] = v
 
-        mod_data_dir = TEST_DATA_DIR / "data/modules" / mod_id
-        assert mod_data_dir.exists() and mod_data_dir.is_dir(), mod_data_dir
+        # Generate module documentation
+        modules_data = []
+        for mod_id, entry_point in config.avail_modules.items():
+            if mod_id == "custom_content":
+                continue
 
-        report.analysis_files = [mod_data_dir]
-        report.search_files([mod_id])
+            mod_data_dir = TEST_DATA_DIR / "data/modules" / mod_id
+            assert mod_data_dir.exists() and mod_data_dir.is_dir(), mod_data_dir
 
-        module_cls = entry_point.load()
-        module: BaseMultiqcModule = module_cls()
+            report.analysis_files = [mod_data_dir]
+            report.search_files([mod_id])
 
-        modules_data.append(
-            {"id": f"modules/{mod_id}", "data": {"name": f"{module.name}", "summary": f"{module.info}"}}
-        )
+            module_cls = entry_point.load()
+            module: BaseMultiqcModule = module_cls()
 
-        docstring = module_cls.__doc__ or ""
+            modules_data.append(
+                {
+                    "id": f"modules/{mod_id}",
+                    "data": {
+                        "name": f"{module.name}",
+                        "summary": f"{module.info}",
+                    },
+                }
+            )
 
-        if module.extra:
-            extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
-            extra += "\n\n"
-        else:
-            extra = ""
+            docstring = module_cls.__doc__ or ""
 
-        text = f"""\
+            if module.extra:
+                extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
+                extra += "\n\n"
+            else:
+                extra = ""
+
+            text = f"""\
 ---
 title: {module.name}
 displayed_sidebar: multiqcSidebar
@@ -122,22 +130,22 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
 ```yaml
 {yaml.dump(sp_by_mod[mod_id]).strip()}
 ```
-    """
+        """
 
-        # Remove double empty lines
-        while "\n\n\n" in text:
-            text = text.replace("\n\n\n", "\n\n")
+            # Remove double empty lines
+            while "\n\n\n" in text:
+                text = text.replace("\n\n\n", "\n\n")
 
-        module_md_path = OUTPUT_PATH / "markdown/modules" / f"{mod_id}.md"
-        module_md_path.parent.mkdir(parents=True, exist_ok=True)
-        with module_md_path.open("w") as fh:
-            fh.write(text)
-        print(f"Generated {module_md_path}")
+            module_md_path = OUTPUT_PATH / "markdown/modules" / f"{mod_id}.md"
+            module_md_path.parent.mkdir(parents=True, exist_ok=True)
+            with module_md_path.open("w") as fh:
+                fh.write(text)
+            print(f"Generated {module_md_path}")
 
-    mdx_path = OUTPUT_PATH / "markdown/modules.mdx"
-    with mdx_path.open("w") as fh:
-        fh.write(
-            f"""\
+        mdx_path = OUTPUT_PATH / "markdown/modules.mdx"
+        with mdx_path.open("w") as fh:
+            fh.write(
+                f"""\
 ---
 title: Supported Tools
 description: Tools supported by MultiQC
@@ -164,38 +172,5 @@ import MultiqcModules from "@site/src/components/MultiqcModules";
 modules={{{str(json.dumps(modules_data))}}}
 />
 
-"""
-        )
-
-if args.create_pr:
-    # Change to docs repo directory
-    os.chdir(DOCS_REPO)
-
-    # Create a new branch
-    branch_name = f"multiqc-docs-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-    try:
-        # remove branch if exists
-        subprocess.run(["git", "branch", "-D", branch_name], check=False)
-        # create new branch
-        subprocess.run(["git", "checkout", "-b", branch_name], check=True)
-    except subprocess.CalledProcessError:
-        pass
-
-    # Add and commit changes
-    subprocess.run(["git", "add", "multiqc_docs"], check=True)
-    subprocess.run(["git", "commit", "-m", "Update MultiQC documentation"], check=True)
-
-    # Push changes
-    subprocess.run(["git", "push", "--set-upstream", "origin", branch_name], check=True)
-
-    # Create PR using gh CLI (assumes gh is installed)
-    pr_title = "Update MultiQC documentation"
-    pr_body = """\
-Automated PR to update MultiQC documentation
-
-This PR was automatically generated from the MultiQC repository."""
-    subprocess.run(
-        ["gh", "pr", "create", "--title", pr_title, "--body", pr_body, "--base", args.main_branch], check=True
-    )
-    subprocess.run(["git", "checkout", args.main_branch], check=True)
-    print("Successfully created pull request")
+    """
+            )
