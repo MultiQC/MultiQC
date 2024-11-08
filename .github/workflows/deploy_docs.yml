@@ -44,3 +44,5 @@ jobs:
 
       - name: Make docs
         run: python scripts/make_docs.py --create-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
