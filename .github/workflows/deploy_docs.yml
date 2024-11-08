@@ -56,6 +56,6 @@ jobs:
             Automated PR to update MultiQC documentation
 
             This PR was automatically generated from the MultiQC repository.
-          branch: update-multiqc-docs
-          base: main
+          branch: multiqc-docs
+          base: master
           delete-branch: true
