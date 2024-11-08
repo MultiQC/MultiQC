@@ -48,8 +48,6 @@ rsync_command = [
     "modules.mdx",
     "--exclude",
     "modules",
-    "--exclude",
-    "images",
     f"{OUTPUT_PATH}/",  # destination with trailing slash
 ]
 

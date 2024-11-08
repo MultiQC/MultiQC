@@ -43,19 +43,4 @@ jobs:
           git clone https://github.com/MultiQC/test-data.git test-data
 
       - name: Make docs
-        run: python scripts/make_docs.py seqeralabs-docs
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: seqeralabs-docs
-          commit-message: "docs: Update MultiQC documentation"
-          title: "docs: Update MultiQC documentation"
-          body: |
-            Automated PR to update MultiQC documentation
-
-            This PR was automatically generated from the MultiQC repository.
-          branch: multiqc-docs
-          base: master
-          delete-branch: true
+        run: python scripts/make_docs.py --create-pr
