@@ -1,13 +1,13 @@
 name: Create PR in seqeralabs/docs
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "docs/**"
-      - ".github/workflows/docs_deploy.yml"
-  release:
-    types: [published]
+  #     branches:
+  #       - main
+  #     paths:
+  #       - "docs/**"
+  #       - ".github/workflows/docs_deploy.yml"
+  #   release:
+  #     types: [published]
   workflow_dispatch:
 
 jobs:
