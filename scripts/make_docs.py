@@ -186,7 +186,7 @@ if args.create_pr:
     subprocess.run(["git", "commit", "-m", "Update MultiQC documentation"], check=True)
 
     # Push changes
-    subprocess.run(["git", "push"], check=True)
+    subprocess.run(["git", "push", "--set-upstream", "origin", branch_name], check=True)
 
     # Create PR using gh CLI (assumes gh is installed)
     pr_title = "Update MultiQC documentation"
