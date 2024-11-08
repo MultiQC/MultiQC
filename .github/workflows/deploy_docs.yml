@@ -42,6 +42,11 @@ jobs:
         run: |
           git clone https://github.com/MultiQC/test-data.git test-data
 
+      - name: Set up Git user
+        run: |
+          git config --global user.name "Your GitHub Actions Bot"
+          git config --global user.email "bot@example.com"
+
       - name: Make docs
         run: python scripts/make_docs.py --create-pr
         env:
