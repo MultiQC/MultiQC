@@ -274,3 +274,6 @@ plugins = ["pydantic.mypy"]
 # exclude all files in multiqc/modules
 files = ["multiqc", "tests"]
 exclude = "multiqc/modules/*"
+
+[tool.pyright]
+include = ["multiqc", "scripts", "tests"]

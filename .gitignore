@@ -52,9 +52,8 @@ runTest.sh
 venv*
 
 # Related repos
-/test-data/
-/website/
-/usage/
+/test-data
+/seqeralabs-docs
 
 node_modules/
 package-lock.json
