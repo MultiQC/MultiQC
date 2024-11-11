@@ -1,5 +1,6 @@
 ---
 title: Rockhopper
+displayed_sidebar: multiqcSidebar
 description: >
   Bacterial RNA-seq analysis: align reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs
 ---

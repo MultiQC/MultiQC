@@ -1,5 +1,6 @@
 ---
 title: Kraken
+displayed_sidebar: multiqcSidebar
 description: >
   Taxonomic classification using exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
 ---
@@ -24,11 +25,11 @@ The MultiQC module supports outputs from Kraken.
 It works with report files generated using the `--report` flag, that look like the following:
 
 ```ts
-11.66       98148   98148   U       0       unclassified
-88.34       743870  996     -       1       root
-88.22       742867  0       -       131567    cellular organisms
-88.22       742866  2071    D       2           Bacteria
-87.95       740514  2914    P       1239          Firmicutes
+11.66	98148	98148	U	0	unclassified
+88.34	743870	996	-	1	root
+88.22	742867	0	-	131567	  cellular organisms
+88.22	742866	2071	D	2	    Bacteria
+87.95	740514	2914	P	1239	      Firmicutes
 ```
 
 A bar graph is generated that shows the number of fragments for each sample that

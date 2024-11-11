@@ -1,5 +1,6 @@
 ---
 title: CCS
+displayed_sidebar: multiqcSidebar
 description: >
   PacBio tool that generates highly accurate single-molecule consensus reads (HiFi Reads)
 ---

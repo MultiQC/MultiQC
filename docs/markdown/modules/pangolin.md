@@ -1,5 +1,6 @@
 ---
 title: Pangolin
+displayed_sidebar: multiqcSidebar
 description: >
   Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages
 ---

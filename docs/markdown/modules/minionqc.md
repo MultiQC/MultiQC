@@ -1,5 +1,6 @@
 ---
 title: MinIONQC
+displayed_sidebar: multiqcSidebar
 description: >
   Quality control for ONT (Oxford Nanopore) long reads
 ---

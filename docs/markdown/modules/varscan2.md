@@ -1,5 +1,6 @@
 ---
 title: VarScan2
+displayed_sidebar: multiqcSidebar
 description: >
   Variant detection in massively parallel sequencing data
 ---

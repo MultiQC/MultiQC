@@ -1,5 +1,6 @@
 ---
 title: VG
+displayed_sidebar: multiqcSidebar
 description: >
   Toolkit to manipulate and analyze graphical genomes, including read alignment
 ---

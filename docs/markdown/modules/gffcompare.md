@@ -1,5 +1,6 @@
 ---
 title: GffCompare
+displayed_sidebar: multiqcSidebar
 description: >
   Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format
 ---

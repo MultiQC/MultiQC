@@ -1,5 +1,6 @@
 ---
 title: DeDup
+displayed_sidebar: multiqcSidebar
 description: >
   Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
 ---

@@ -1,5 +1,6 @@
 ---
 title: DRAGEN-FastQC
+displayed_sidebar: multiqcSidebar
 description: >
   Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
 ---

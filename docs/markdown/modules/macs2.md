@@ -1,5 +1,6 @@
 ---
 title: MACS2
+displayed_sidebar: multiqcSidebar
 description: >
   Identifies transcription factor binding sites in ChIP-seq data
 ---

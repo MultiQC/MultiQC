@@ -1,5 +1,6 @@
 ---
 title: AfterQC
+displayed_sidebar: multiqcSidebar
 description: >
   Automatic filtering, trimming, error removing, and quality control for FastQ data
 ---
