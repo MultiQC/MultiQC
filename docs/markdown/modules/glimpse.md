@@ -1,5 +1,6 @@
 ---
 title: GLIMPSE
+displayed_sidebar: multiqcSidebar
 description: >
   Low-coverage whole genome sequencing imputation
 ---

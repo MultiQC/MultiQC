@@ -1,5 +1,6 @@
 ---
 title: VerifyBAMID
+displayed_sidebar: multiqcSidebar
 description: >
   Detects sample contamination and/or sample swaps
 ---

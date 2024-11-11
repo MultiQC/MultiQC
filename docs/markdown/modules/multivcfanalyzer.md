@@ -1,5 +1,6 @@
 ---
 title: MultiVCFAnalyzer
+displayed_sidebar: multiqcSidebar
 description: >
   Reads multiple VCF files into combined genotype calls, produces summary statistics and downstream formats
 ---

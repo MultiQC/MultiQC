@@ -1,5 +1,6 @@
 ---
 title: Bowtie 1
+displayed_sidebar: multiqcSidebar
 description: >
   Ultrafast, memory-efficient short read aligner
 ---

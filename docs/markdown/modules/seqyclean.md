@@ -1,5 +1,6 @@
 ---
 title: SeqyClean
+displayed_sidebar: multiqcSidebar
 description: >
   Filters adapters, vectors, and contaminants while quality trimming
 ---

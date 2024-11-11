@@ -68,7 +68,7 @@ class ColumnDict(TypedDict, total=False):
     tt_decimals: Optional[int]
     suffix: Optional[str]
     cond_formatting_colours: List[Dict[str, str]]
-    cond_formatting_rules: Dict[str, List[Dict[str, str]]]
+    cond_formatting_rules: Dict[str, List[Dict[str, Union[str, int, float]]]]
     bgcols: Dict[str, str]
     bars_zero_centrepoint: bool
     modify: Optional[Callable[[ValueT], ValueT]]
@@ -101,7 +101,7 @@ class ColumnMeta(ValidatedConfig):
     tt_decimals: Optional[int] = None
     suffix: Optional[str] = None
     cond_formatting_colours: List[Dict[str, str]] = []
-    cond_formatting_rules: Dict[str, List[Dict[str, str]]] = {}
+    cond_formatting_rules: Dict[str, List[Dict[str, Union[str, int, float]]]] = {}
     bgcols: Dict[str, str] = {}
     bars_zero_centrepoint: bool = False
     modify: Optional[Callable[[ValueT], ValueT]] = None
@@ -116,8 +116,10 @@ class ColumnMeta(ValidatedConfig):
         table_anchor: Anchor,
     ) -> "ColumnMeta":
         # Overwrite any header config if set in config
-        for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_key, {}).items():
-            col_dict[custom_k] = custom_v  # type: ignore
+        if header_config := config.custom_table_header_config.get(pconfig.id, {}):
+            if col_config := header_config.get(col_key, {}):
+                for custom_k, custom_v in col_config.items():
+                    col_dict[custom_k] = custom_v  # type: ignore
 
         namespace = col_dict.get("namespace", pconfig.namespace) or ""
         assert isinstance(namespace, str)
@@ -130,6 +132,12 @@ class ColumnMeta(ValidatedConfig):
             ns_slugified = re.sub(r"\W+", "_", str(namespace)).strip().strip("_").lower()
             _rid = f"{ns_slugified}-{_rid}"
         col_dict["rid"] = ColumnAnchor(report.save_htmlid(_rid, scope=table_anchor))
+
+        # Additionally override the header config assuming rid is used (for legacy docs)
+        if header_config:
+            if col_config := header_config.get(col_dict["rid"], {}):
+                for custom_k, custom_v in col_config.items():
+                    col_dict[custom_k] = custom_v  # type: ignore
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
         shared_key = col_dict.get("shared_key", None)

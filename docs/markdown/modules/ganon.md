@@ -1,5 +1,6 @@
 ---
 title: Ganon
+displayed_sidebar: multiqcSidebar
 description: >
   Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers
 ---

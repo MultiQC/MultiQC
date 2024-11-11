@@ -1,5 +1,6 @@
 ---
 title: Porechop
+displayed_sidebar: multiqcSidebar
 description: >
   Finds and removes adapters from Oxford Nanopore reads
 ---

@@ -1,5 +1,6 @@
 ---
 title: Samblaster
+displayed_sidebar: multiqcSidebar
 description: >
   Marks duplicates and extracts discordant and split reads from sam files
 ---

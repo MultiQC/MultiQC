@@ -1,5 +1,6 @@
 ---
 title: HISAT2
+displayed_sidebar: multiqcSidebar
 description: >
   Maps DNA or RNA reads against a genome or a population of genomes
 ---

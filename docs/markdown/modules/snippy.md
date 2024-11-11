@@ -1,5 +1,6 @@
 ---
 title: Snippy
+displayed_sidebar: multiqcSidebar
 description: >
   Rapid haploid variant calling and core genome alignment
 ---

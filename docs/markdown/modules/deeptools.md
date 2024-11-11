@@ -1,5 +1,6 @@
 ---
 title: deepTools
+displayed_sidebar: multiqcSidebar
 description: >
   Tools to process and analyze deep sequencing data
 ---

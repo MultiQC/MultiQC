@@ -1,5 +1,6 @@
 ---
 title: leeHom
+displayed_sidebar: multiqcSidebar
 description: >
   Bayesian reconstruction of ancient DNA
 ---

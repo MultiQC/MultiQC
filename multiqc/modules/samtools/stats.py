@@ -123,6 +123,14 @@ def parse_samtools_stats(module: BaseMultiqcModule):
             "description": f"Total sequences in the bam file ({config.read_count_desc})",
             "shared_key": "read_count",
         },
+        "insert_size_average": {
+            "title": "Mean insert",
+            "description": "Average insert size",
+            "suffix": "bp",
+            "format": "{:,.1f}",
+            "scale": "Oranges",
+            "hidden": True,
+        },
     }
     module.general_stats_addcols(samtools_stats, stats_headers, namespace="stats")
 

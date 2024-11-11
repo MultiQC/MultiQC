@@ -1,5 +1,6 @@
 ---
 title: ngsderive
+displayed_sidebar: multiqcSidebar
 description: >
   Forensic tool for by backwards computing library information in sequencing data
 ---

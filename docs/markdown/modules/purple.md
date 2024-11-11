@@ -1,5 +1,6 @@
 ---
 title: PURPLE
+displayed_sidebar: multiqcSidebar
 description: >
   A purity, ploidy and copy number estimator for whole genome tumor data
 ---

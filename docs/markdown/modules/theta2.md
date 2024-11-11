@@ -1,5 +1,6 @@
 ---
 title: THetA2
+displayed_sidebar: multiqcSidebar
 description: >
   Estimates tumour purity and clonal / subclonal copy number
 ---

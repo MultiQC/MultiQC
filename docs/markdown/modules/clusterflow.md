@@ -1,5 +1,6 @@
 ---
 title: Cluster Flow
+displayed_sidebar: multiqcSidebar
 description: >
   Simple and flexible bioinformatics pipeline tool
 ---

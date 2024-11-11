@@ -1,5 +1,6 @@
 ---
 title: Kaiju
+displayed_sidebar: multiqcSidebar
 description: >
   Taxonomic classification for metagenomics
 ---

@@ -1,5 +1,6 @@
 ---
 title: Skewer
+displayed_sidebar: multiqcSidebar
 description: >
   Adapter trimming tool for NGS paired-end sequences
 ---

@@ -64,12 +64,12 @@ class MultiqcModule(BaseMultiqcModule):
                 if line.startswith("--output-prefix"):
                     if s_name is not None:
                         log.debug(f"Duplicate sample name found within the same file {f['fn']}! Overwriting: {s_name}")
-                    s_name = self.clean_s_name(line.split()[1])
+                    s_name = self.clean_s_name(line.split()[1], f)
                     self.add_data_source(f, s_name=s_name)
                     continue
 
                 if line.startswith("Ganon report output found:"):
-                    s_name = self.clean_s_name(line.split(":")[1])
+                    s_name = self.clean_s_name(line.split(":")[1], f)
                     self.add_data_source(f, s_name=s_name)
                     continue
 

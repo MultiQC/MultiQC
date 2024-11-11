@@ -699,7 +699,7 @@ If you are using non-standard values for the logfile root, filename or search pa
 key, these can be specified. The function def looks like this:
 
 ```python
-def clean_s_name(self, s_name, f=None, root=None, filename=None, search_pattern_key=None):
+def clean_s_name(self, s_name, f, root=None):
 ```
 
 A typical example is when the sample name is the log file directory.

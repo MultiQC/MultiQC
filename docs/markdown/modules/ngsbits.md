@@ -1,5 +1,6 @@
 ---
 title: ngs-bits
+displayed_sidebar: multiqcSidebar
 description: >
   Calculating statistics from FASTQ, BAM, and VCF
 ---
@@ -22,7 +23,8 @@ Calculating statistics from FASTQ, BAM, and VCF
 The ngs-bits module parses XML output generated for several tools in the ngs-bits collection:
 
 - [ReadQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/ReadQC.md) for statistics on FASTQ files,
-- [MappingQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/MappingQC.md) for statistics on BAM files
+- [MappingQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/MappingQC.md) for statistics on BAM files,
+- [SampleGender](https://github.com/imgag/ngs-bits/blob/master/doc/tools/SampleGender.md) for gender prediction based on sequencing data.
 
 ### File search patterns
 
@@ -38,4 +40,6 @@ ngsbits/readqc:
   - contents: SeqPurge
     fn: "*.qcML"
     num_lines: 20
+ngsbits/samplegender:
+  - fn: "*_ngsbits_sex.tsv"
 ```

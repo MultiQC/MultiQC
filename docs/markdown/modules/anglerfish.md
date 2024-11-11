@@ -1,5 +1,6 @@
 ---
 title: Anglerfish
+displayed_sidebar: multiqcSidebar
 description: >
   Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells
 ---

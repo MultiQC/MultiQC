@@ -1,5 +1,6 @@
 ---
 title: iVar
+displayed_sidebar: multiqcSidebar
 description: >
   Functions for viral amplicon-based sequencing
 ---

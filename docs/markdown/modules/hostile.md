@@ -1,5 +1,6 @@
 ---
 title: Hostile
+displayed_sidebar: multiqcSidebar
 description: >
   Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz]
 ---

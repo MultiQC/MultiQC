@@ -1,5 +1,6 @@
 ---
 title: Peddy
+displayed_sidebar: multiqcSidebar
 description: >
   Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF
 ---

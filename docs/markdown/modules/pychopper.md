@@ -1,5 +1,6 @@
 ---
 title: Pychopper
+displayed_sidebar: multiqcSidebar
 description: >
   Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads
 ---

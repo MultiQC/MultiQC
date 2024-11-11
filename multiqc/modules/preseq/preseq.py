@@ -250,7 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for line in real_counts_file_raw.splitlines():
                     if not line.startswith("#"):
                         cols = line.strip().split()  # Split on any whitespace
-                        sn = self.clean_s_name(cols[0], None)
+                        sn = self.clean_s_name(cols[0], f)
                         if sn in sample_names:
                             if len(cols) >= 2:
                                 if cols[1].isdigit():

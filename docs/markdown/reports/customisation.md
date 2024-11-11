@@ -714,8 +714,8 @@ To change the number of decimals used in the General Statistics table for the si
 ```yaml
 custom_table_header_config:
   general_stats_table:
-    mean_coverage:
-      format: "{:,.20f}"
+    "Mean Coverage":
+      format: "{:,.2f}"
 ```
 
 The first key is the table ID, the second is the header ID for the column you want to change.

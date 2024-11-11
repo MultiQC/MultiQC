@@ -1,5 +1,6 @@
 ---
 title: mapDamage
+displayed_sidebar: multiqcSidebar
 description: >
   Tracks and quantifies damage patterns in ancient DNA sequences
 ---
