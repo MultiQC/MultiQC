@@ -19,88 +19,54 @@ from multiqc import config, report, BaseMultiqcModule
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--skip-if-exists", help="Skip if docs folder exists", action="store_true")
-    args = parser.parse_args()
-
-    SEQERA_DOCS_REPO = "https://github.com/seqeralabs/docs"
-
-    DOCS_REPO = Path("seqeralabs-docs")
-    if not DOCS_REPO.exists():
-        print(f"Cloning {SEQERA_DOCS_REPO} to {DOCS_REPO}")
-        subprocess.run(["git", "clone", SEQERA_DOCS_REPO, DOCS_REPO], check=True)
-
     TEST_DATA_DIR = Path("test-data")
     if not TEST_DATA_DIR.exists():
         print("Cloning test-data to test-data")
         subprocess.run(["git", "clone", "https://github.com/MultiQC/test-data.git", TEST_DATA_DIR], check=True)
 
-    OUTPUT_PATH = DOCS_REPO / "multiqc_docs/docs"
-    os.makedirs(OUTPUT_PATH, exist_ok=True)
+    OUTPUT_PATH = Path("docs")
 
-    # Use rsync to sync the directories, except for README.md
-    rsync_command = [
-        "rsync",
-        "-av",  # archive mode, verbose
-        "--delete",  # delete extraneous files from destination
-        "docs/",  # source with trailing slash
-        "--exclude",
-        "README.md",
-        "--exclude",
-        "modules.mdx",
-        "--exclude",
-        "modules",
-        f"{OUTPUT_PATH}/",  # destination with trailing slash
-    ]
+    # Load search patterns
+    sp_by_mod: Dict[str, Dict] = dict()
+    with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
+        for k, v in yaml.safe_load(f).items():
+            mod_id = k.split("/")[0]
+            sp_by_mod.setdefault(mod_id, {})[k] = v
 
-    try:
-        subprocess.run(rsync_command, check=True)
-        print(f"Successfully synced docs/ to {OUTPUT_PATH}")
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"Failed to sync directories: {e}")
+    # Generate module documentation
+    modules_data = []
+    for mod_id, entry_point in config.avail_modules.items():
+        if mod_id == "custom_content":
+            continue
 
-    if not args.skip_if_exists or not (OUTPUT_PATH / "markdown/modules").exists():
-        # Load search patterns
-        sp_by_mod: Dict[str, Dict] = dict()
-        with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
-            for k, v in yaml.safe_load(f).items():
-                mod_id = k.split("/")[0]
-                sp_by_mod.setdefault(mod_id, {})[k] = v
+        mod_data_dir = TEST_DATA_DIR / "data/modules" / mod_id
+        assert mod_data_dir.exists() and mod_data_dir.is_dir(), mod_data_dir
 
-        # Generate module documentation
-        modules_data = []
-        for mod_id, entry_point in config.avail_modules.items():
-            if mod_id == "custom_content":
-                continue
+        report.analysis_files = [mod_data_dir]
+        report.search_files([mod_id])
 
-            mod_data_dir = TEST_DATA_DIR / "data/modules" / mod_id
-            assert mod_data_dir.exists() and mod_data_dir.is_dir(), mod_data_dir
+        module_cls = entry_point.load()
+        module: BaseMultiqcModule = module_cls()
 
-            report.analysis_files = [mod_data_dir]
-            report.search_files([mod_id])
+        modules_data.append(
+            {
+                "id": f"modules/{mod_id}",
+                "data": {
+                    "name": f"{module.name}",
+                    "summary": f"{module.info}",
+                },
+            }
+        )
 
-            module_cls = entry_point.load()
-            module: BaseMultiqcModule = module_cls()
+        docstring = module_cls.__doc__ or ""
 
-            modules_data.append(
-                {
-                    "id": f"modules/{mod_id}",
-                    "data": {
-                        "name": f"{module.name}",
-                        "summary": f"{module.info}",
-                    },
-                }
-            )
+        if module.extra:
+            extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
+            extra += "\n\n"
+        else:
+            extra = ""
 
-            docstring = module_cls.__doc__ or ""
-
-            if module.extra:
-                extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
-                extra += "\n\n"
-            else:
-                extra = ""
-
-            text = f"""\
+        text = f"""\
 ---
 title: {module.name}
 displayed_sidebar: multiqcSidebar
@@ -130,22 +96,22 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
 ```yaml
 {yaml.dump(sp_by_mod[mod_id]).strip()}
 ```
-        """
+    """
 
-            # Remove double empty lines
-            while "\n\n\n" in text:
-                text = text.replace("\n\n\n", "\n\n")
+        # Remove double empty lines
+        while "\n\n\n" in text:
+            text = text.replace("\n\n\n", "\n\n")
 
-            module_md_path = OUTPUT_PATH / "markdown/modules" / f"{mod_id}.md"
-            module_md_path.parent.mkdir(parents=True, exist_ok=True)
-            with module_md_path.open("w") as fh:
-                fh.write(text)
-            print(f"Generated {module_md_path}")
+        module_md_path = OUTPUT_PATH / "markdown/modules" / f"{mod_id}.md"
+        module_md_path.parent.mkdir(parents=True, exist_ok=True)
+        with module_md_path.open("w") as fh:
+            fh.write(text)
+        print(f"Generated {module_md_path}")
 
-        mdx_path = OUTPUT_PATH / "markdown/modules.mdx"
-        with mdx_path.open("w") as fh:
-            fh.write(
-                f"""\
+    mdx_path = OUTPUT_PATH / "markdown/modules.mdx"
+    with mdx_path.open("w") as fh:
+        fh.write(
+            f"""\
 ---
 title: Supported Tools
 description: Tools supported by MultiQC
@@ -173,7 +139,11 @@ modules={{{str(json.dumps(modules_data))}}}
 />
 
     """
-            )
+        )
+
+    # Format markdown files
+    subprocess.run(["npx", "prettier", "--write", "docs/markdown/modules/*.md"], check=True)
+    subprocess.run(["npx", "prettier", "--write", "docs/markdown/modules.mdx"], check=True)
 
 
 if __name__ == "__main__":
