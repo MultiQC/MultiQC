@@ -38,7 +38,7 @@ Python 3.13, bugs fixed, improved sample grouping UI, and handling freezes in co
 
 New feature: grouping samples in the General Statistics table.
 
-<img width="400" src="docs/images/changelog/v1.25-grouping-samples.png">
+<img width="400" src="docs/images/changelog/v1.25-grouping-samples.png"/>
 
 Some modules - prominently FastQC - may produce multiple results per sample, e.g. for the forward and the reverse reads. To group such results in the table together, a new [configuration option](https://multiqc.info/docs/reports/customisation/#sample-grouping) is introduced.
 
@@ -413,7 +413,7 @@ This release also introduces some huge performance improvements thanks to [@rhpv
 
 Finally, support for the depreciated HighCharts plotting library is fully removed in v1.22, bringing to a close a long standing project to migrate to Plotly.
 
-For more information, please see the MultiQC release blog article on the Seqera website: <https://seqera.io/blog/>
+For more information, please see the MultiQC release blog article on the [Seqera website](https://seqera.io/blog)
 
 ### MultiQC updates
 
@@ -546,7 +546,7 @@ self.add_section(
 )
 ```
 
-<img width="400" src="https://raw.githubusercontent.com/MultiQC/MultiQC/1e2ad5529d547ab9dc04c99274da49ad6a2e556f/docs/images/changelog/v1.21-boxplot.png">
+<img width="400" src="https://raw.githubusercontent.com/MultiQC/MultiQC/1e2ad5529d547ab9dc04c99274da49ad6a2e556f/docs/images/changelog/v1.21-boxplot.png"/>
 
 Note the difference with the violin plot: the box plot visualises the distributions of many values within one sample, whereas the violin plot shows the distribution of one metric across many samples.
 
@@ -2166,7 +2166,7 @@ string beginning with the name of your module, anything you like after the first
 #### New MultiQC Features
 
 - New MultiQC docker image
-  - Ready to use docker image now available at <https://hub.docker.com/r/MultiQC/MultiQC/> (200 MB)
+  - Ready to use docker image now available at [https://hub.docker.com/r/MultiQC/MultiQC/](https://hub.docker.com/r/MultiQC/MultiQC/) (200 MB)
   - Uses automated builds - pull `:latest` to get the development version, future releases will have stable tags.
   - Written by [@MaxUlysse](https://github.com/MaxUlysse/)
 - New `module_order` config options allow modules to be run multiple times
@@ -2725,7 +2725,7 @@ who worked on MultiQC projects.
 - **General Statistics**
   - Some tweaks to the display defaults (FastQC, Bismark, Qualimap, SnpEff)
   - Now possible to skip the General Statistics section of the report with `--exclude general_stats`
-- **Cutadapt** module updated to recognise logs from old versions of cutadapt (<= v1.6)
+- **Cutadapt** module updated to recognise logs from old versions of cutadapt (`<= v1.6`)
 - **Trimmomatic**
   - Now handles `,` decimal places in percentage values.
   - Can cope with line breaks in log files (see issue #212)
@@ -2854,7 +2854,7 @@ Bugfixes:
 - Updated HighCharts from `v4.2.2` to `v4.2.3`, fixes tooltip hover bug.
 - Nicer export button. Now tied to the export toolbox, hopefully more intuitive.
 - FastQC: Per base sequence content heatmap can now be clicked to show line graph for single sample
-- FastQC: No longer show adapter contamination datasets with <= 0.1% contamination.
+- FastQC: No longer show adapter contamination datasets with `<= 0.1%` contamination.
 - Picard: Added support for `CollectOxoGMetrics` reports.
 - Changed command line option `--name` to `--filename`
 - `--name` also used for filename if `--filename` not specified.

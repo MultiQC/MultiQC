@@ -4,16 +4,27 @@ This checklist is for my own reference, as I forget the steps every time.
 
 1. Check that everything is up-to-date and ready to go
 2. Update version numbers in `pyproject.toml`
-3. Run `python scripts/print_changelog.py` to generate a new changelog section stub, paste it into `CHANGELOG.md` and edit accordingly: group changes if needed, add highlights.
-4. Run `python scripts/make_module_docs.py` to update markdown files for module
-5. Install the package again in `install` mode:
+3. Generate a new changelog section stub:
+
+   ```bash
+   python scripts/print_changelog.py
+   ```
+
+   Then paste it into `CHANGELOG.md` and edit accordingly: group changes if needed, add highlights.
+
+4. Update module documentation markdown files:
+
+   ```bash
+   python scripts/make_module_docs.py
+   ```
+
+5. Install the package again in the `install` mode:
 
    ```bash
    pip install .
    ```
 
-   - This removes the commit hash from the version number when MultiQC runs
-   - If still getting the commit hash in the version, check that the `venv` isn't in a subdirectory of the cloned MultiQC git repo
+   This removes the commit hash from the version number when MultiQC runs.
 
 6. Run using test data
    - Check for any command line or javascript errors
