@@ -12,23 +12,11 @@ This checklist is for my own reference, as I forget the steps every time.
 
    Then paste it into `CHANGELOG.md` and edit accordingly: group changes if needed, add highlights.
 
-4. Make docs:
+4. Update module documentation markdown files:
 
-   - Update doc files into the [seqeralabs/docs](https://github.com/seqeralabs/docs) repo cloned locally:
-
-     ```bash
-     python scripts/make_docs.py
-     ```
-
-   - Then change to the `seqeralabs-docs` repo clone folder, create a branch, a commit, and a pull-request with the docs changes, if there are any:
-
-     ```bash
-     cd seqeralabs-docs
-     git checkout -b multiqc-docs
-     git add multiqc_docs
-     git commit -m "Update MultiQC documentation"
-     gh pr create
-     ```
+   ```bash
+   python scripts/make_module_docs.py
+   ```
 
 5. Install the package again in the `install` mode:
 
