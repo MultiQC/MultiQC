@@ -174,3 +174,7 @@ modules={{{str(json.dumps(modules_data))}}}
 
     """
             )
+
+
+if __name__ == "__main__":
+    main()
