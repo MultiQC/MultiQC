@@ -56,10 +56,11 @@ jobs:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
           # But 32-bit binaries likely require compilation from source so stick with linux/amd64 and linux/arm64 for now
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.ref == 'refs/heads/main' }}
+          push: ${{ github.ref == 'refs/heads/main' || github.event.head_commit.author.name == 'ewels' || github.event.head_commit.author.name == 'vladsaveliev' }}
+          # If it's a PR, use the branch name as a tag, otherwise use "dev"
           tags: |
-            multiqc/multiqc:dev
-            ghcr.io/multiqc/multiqc:dev
+            ${{ github.ref == 'refs/heads/main' && 'multiqc/multiqc:dev' || format('multiqc/multiqc:{0}', github.head_ref) }}
+            ${{ github.ref == 'refs/heads/main' && 'ghcr.io/multiqc/multiqc:dev' || format('ghcr.io/multiqc/multiqc:{0}', github.head_ref) }}
 
       - name: "Build release"
         uses: docker/build-push-action@v3
