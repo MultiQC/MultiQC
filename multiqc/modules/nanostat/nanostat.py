@@ -48,6 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.has_seq_summary = False
         self.has_fastq = False
         self.has_fasta = False
+        self.general_stats_added = False
         for f in self.find_log_files("nanostat", filehandles=True):
             nano_stats_by_sample = self.parse_nanostat_log(f)
             for s_name, nano_stats in nano_stats_by_sample.items():
@@ -300,6 +301,20 @@ class MultiqcModule(BaseMultiqcModule):
             anchor=f"nanostat_{stat_type.replace(' ', '_')}_stats",
             plot=table.plot(self.nanostat_data, headers, table_config),
         )
+
+        if not self.general_stats_added:
+            # Remove the hidden metrics, hide the rest apart from Read N50
+            general_stats_headers = {}
+            for k in headers:
+                if headers[k].get("hidden"):
+                    continue
+                general_stats_headers[k] = headers[k]
+                general_stats_headers[k]["description"] = headers[k]["description"] + f" ({stat_title})"
+                if k != f"Read length N50_{stat_type}":
+                    general_stats_headers[k]["hidden"] = True
+
+            self.general_stats_addcols(self.nanostat_data, general_stats_headers)
+            self.general_stats_added = True
 
     def reads_by_quality_plot(self):
         def _get_total_reads(_data_dict):
