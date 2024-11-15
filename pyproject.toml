@@ -11,8 +11,6 @@ dependencies = [
     "importlib_metadata",
     "jinja2>=3.0.0",
     "kaleido",  # for flat plot export
-    # "orca",  # for flat plot export, alternative for kaleido
-    # "psutil",  # for flat plot export with orca
     "markdown",
     "numpy",
     "packaging",
@@ -27,6 +25,7 @@ dependencies = [
     "pydantic>=2.7.0",
     "typeguard",
     "tqdm",  # progress bar in notebooks
+    "natsort",
 ]
 requires-python = ">=3.8"
 authors = [

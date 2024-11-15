@@ -1,74 +1,77 @@
 """
-Generate docs/modules/<module.md> files for each module in MultiQC from the MultiqcModule class docstrings.
+Generate documentation for MultiQC modules and changelog.
 
 Usage:
-
-    python scripts/make_module_docs.py
-    python scripts/make_module_docs.py samtools
+    python scripts/make_docs.py <docs_repo_path>
 """
 
+from datetime import datetime
 import json
 import os
 from typing import Dict
-
 import yaml
-
 import argparse
 from pathlib import Path
-from textwrap import dedent
+from textwrap import dedent, indent
+import subprocess
 
 from multiqc import config, report, BaseMultiqcModule
 
-test_data_dir = Path("test-data")
-if not test_data_dir.exists():
-    raise RuntimeError("Please clone https://github.com/MultiQC/test-data into test-data/")
 
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("module", help="Generate for a specific module", nargs="?")
-args = parser.parse_args()
+def main():
+    TEST_DATA_DIR = Path("test-data")
+    if not TEST_DATA_DIR.exists():
+        print("Cloning test-data to test-data")
+        subprocess.run(["git", "clone", "https://github.com/MultiQC/test-data.git", TEST_DATA_DIR], check=True)
 
-sp_by_mod: Dict[str, Dict] = dict()
-with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
-    for k, v in yaml.safe_load(f).items():
-        mod_id = k.split("/")[0]
-        sp_by_mod.setdefault(mod_id, {})[k] = v
+    OUTPUT_PATH = Path("docs")
 
+    # Load search patterns
+    sp_by_mod: Dict[str, Dict] = dict()
+    with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
+        for k, v in yaml.safe_load(f).items():
+            mod_id = k.split("/")[0]
+            sp_by_mod.setdefault(mod_id, {})[k] = v
 
-os.makedirs("docs/markdown/modules", exist_ok=True)
+    # Generate module documentation
+    modules_data = []
+    for mod_id, entry_point in config.avail_modules.items():
+        if mod_id == "custom_content":
+            continue
 
-# Table in the index page
-modules_data = []
+        mod_data_dir = TEST_DATA_DIR / "data/modules" / mod_id
+        assert mod_data_dir.exists() and mod_data_dir.is_dir(), mod_data_dir
 
-for mod_id, entry_point in config.avail_modules.items():
-    if mod_id == "custom_content":
-        continue
+        report.analysis_files = [mod_data_dir]
+        report.search_files([mod_id])
 
-    mod_data_dir = test_data_dir / "data" / "modules" / mod_id
-    assert mod_data_dir.exists() and mod_data_dir.is_dir(), mod_data_dir
-    report.analysis_files = [mod_data_dir]
-    report.search_files([mod_id])
+        module_cls = entry_point.load()
+        module: BaseMultiqcModule = module_cls()
 
-    module_cls = entry_point.load()
-    docstring = module_cls.__doc__ or ""
+        modules_data.append(
+            {
+                "id": f"modules/{mod_id}",
+                "data": {
+                    "name": f"{module.name}",
+                    "summary": f"{module.info}",
+                },
+            }
+        )
 
-    module: BaseMultiqcModule = module_cls()
-    modules_data.append({"id": f"modules/{mod_id}", "data": {"name": f"{module.name}", "summary": f"{module.info}"}})
+        docstring = module_cls.__doc__ or ""
 
-    if args.module and args.module != mod_id:
-        continue
+        if module.extra:
+            extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
+            extra += "\n\n"
+        else:
+            extra = ""
 
-    if module.extra:
-        extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
-        extra += "\n\n"
-    else:
-        extra = ""
-
-    text = f"""\
+        text = f"""\
 ---
 title: {module.name}
 displayed_sidebar: multiqcSidebar
 description: >
-  {module.info}
+{indent(module.info, "    ")}
 ---
 
 <!--
@@ -93,26 +96,34 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
 ```yaml
 {yaml.dump(sp_by_mod[mod_id]).strip()}
 ```
-""".strip()
+    """
 
-    # Remove double empty lines
-    while "\n\n\n" in text:
-        text = text.replace("\n\n\n", "\n\n")
+        # Remove double empty lines
+        while "\n\n\n" in text:
+            text = text.replace("\n\n\n", "\n\n")
 
-    output_path = Path("docs") / "markdown" / "modules" / f"{mod_id}.md"
-    with output_path.open("w") as fh:
-        fh.write(text)
+        module_md_path = OUTPUT_PATH / "markdown/modules" / f"{mod_id}.md"
+        module_md_path.parent.mkdir(parents=True, exist_ok=True)
+        with module_md_path.open("w") as fh:
+            fh.write(text)
+        print(f"Generated {module_md_path}")
 
-    print(f"Generated {output_path}")
-
-with (Path("docs") / "markdown" / "modules.mdx").open("w") as fh:
-    fh.write(f"""\
+    mdx_path = OUTPUT_PATH / "markdown/modules.mdx"
+    with mdx_path.open("w") as fh:
+        fh.write(
+            f"""\
 ---
 title: Supported Tools
 description: Tools supported by MultiQC
 displayed_sidebar: multiqcSidebar
 ---
-             
+
+<!--
+~~~~~ DO NOT EDIT ~~~~~
+This file is autogenerated. Do not edit the markdown, it will be overwritten.
+~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
 MultiQC currently has modules to support {len(config.avail_modules)} bioinformatics tools, listed below.
 
 Click the tool name to go to the MultiQC documentation for that tool.
@@ -124,7 +135,16 @@ If you would like another tool to to be supported, please [open an issue](https:
 import MultiqcModules from "@site/src/components/MultiqcModules";
 
 <MultiqcModules
-  modules={{{str(json.dumps(modules_data))}}}
+modules={{{str(json.dumps(modules_data))}}}
 />
 
-""")
+    """
+        )
+
+    # Format markdown files
+    subprocess.run(["npx", "prettier", "--write", "docs/markdown/modules/*.md"], check=True)
+    subprocess.run(["npx", "prettier", "--write", "docs/markdown/modules.mdx"], check=True)
+
+
+if __name__ == "__main__":
+    main()

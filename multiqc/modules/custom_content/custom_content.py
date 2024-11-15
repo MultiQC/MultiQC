@@ -493,7 +493,7 @@ class MultiqcModule(BaseMultiqcModule):
                     pass
 
             # Table
-            if plot_type == PlotType.TABLE:
+            if plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
                 headers = ccdict.config.get("headers")
 
                 # handle some legacy fields for backwards compat
@@ -504,7 +504,9 @@ class MultiqcModule(BaseMultiqcModule):
                 if no_violin is not None:
                     pconfig["no_violin"] = no_violin
 
-                plot = table.plot(plot_datasets, headers=headers, pconfig=pconfig)  # type: ignore
+                plot = (table if plot_type == PlotType.TABLE else violin).plot(
+                    plot_datasets, headers=headers, pconfig=pconfig
+                )
 
             # Bar plot
             elif plot_type == PlotType.BAR:
@@ -760,7 +762,7 @@ def _parse_txt(
         return box_ddict, conf, plot_type
 
     # Header row of strings, or configured as table
-    if strings_in_first_row == len(matrix[0]) or plot_type == PlotType.TABLE:
+    if strings_in_first_row == len(matrix[0]) or plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
         data_ddict = dict()
         for row in matrix[1:]:
             s_name = str(row[0])
@@ -780,12 +782,12 @@ def _parse_txt(
                 plot_type = PlotType.TABLE
         # Set table col_1 header
         col_name = str(matrix[0][0])
-        if conf.get("plot_type") == "table" and col_name.strip() != "":
+        if plot_type in [PlotType.TABLE, PlotType.VIOLIN] and col_name.strip() != "":
             conf["pconfig"] = conf.get("pconfig", {})
             if not conf["pconfig"].get("col1_header"):
                 conf["pconfig"]["col1_header"] = col_name.strip()
         # Return parsed data
-        if plot_type == PlotType.BAR or plot_type == PlotType.TABLE:
+        if plot_type in [PlotType.BAR, PlotType.TABLE, PlotType.VIOLIN]:
             return data_ddict, conf, plot_type
         else:
             data_ddict = dict()  # reset
