@@ -7,7 +7,7 @@ from collections import OrderedDict
 from multiqc import config
 from multiqc.plots import table, bargraph
 from multiqc.base_module import BaseMultiqcModule
-#from multiqc.base_module import ModuleNoSamplesFound
+from multiqc.base_module import ModuleNoSamplesFound
 import logging
 
 # Initialise the main MultiQC logger
@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent module Class object
         super(MultiqcModule, self).__init__(
-            name="MGIKIT",
+            # name="MGIKIT",
             target="mgikit",
             anchor="mgikit",
             href="https://github.com/sagc-bioinformatics/mgikit",
@@ -158,6 +158,8 @@ class MultiqcModule(BaseMultiqcModule):
         if len(mgi_general_statistics.keys()) > 0:
             self.general_stats_addcols(mgi_general_statistics, columns_headers)
             self.write_data_file(mgi_general_statistics, "multiqc_mgikit_general")
+        else:
+            raise ModuleNoSamplesFound
 
         if file_cnt > 0:
             log.info("{} general information log files (*.mgikit.general) were loaded!".format(file_cnt))
@@ -298,6 +300,8 @@ class MultiqcModule(BaseMultiqcModule):
                         mgi_lane_read_data[curr_label][header[i]] += int(vals[i])
                     mgi_lane_sample_read_data[curr_label][vals[0]][header[i]] += int(vals[i])
                 # print(mgi_sample_reads_data)
+        if len(mgi_sample_reads_data) == 0:
+            raise ModuleNoSamplesFound
 
         mgi_sample_reads_data_filtered = None
         if file_cnt > 0:
