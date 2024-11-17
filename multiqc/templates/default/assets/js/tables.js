@@ -4,12 +4,15 @@
 
 // Execute when page load has finished loading
 $(function () {
-  if ($(".mqc_table").length > 0) {
+  if ($(".mqc_per_sample_table").length > 0) {
     // Enable tablesorter on MultiQC tables
-    let get_sort_val = function (node) {
+    let getSortVal = function (node) {
       // if val is defined, use it
-      if (node.getAttribute("val") !== null) {
-        let val = node.getAttribute("val");
+      let val = $(node).data("sorting-val");
+      if (val !== null && val !== undefined) {
+        if (val === "") {
+          return val;
+        }
         let floatVal = parseFloat(val);
         if (!isNaN(floatVal)) {
           return val; // expected to return a string
@@ -27,28 +30,33 @@ $(function () {
 
       return text;
     };
-    $(".mqc_table").tablesorter({ sortInitialOrder: "desc", textExtraction: get_sort_val, cancelSelection: false });
+    $(".mqc_per_sample_table").tablesorter({
+      sortInitialOrder: "desc",
+      textExtraction: getSortVal,
+      cancelSelection: false,
+      headers: null, // can revert when https://github.com/Mottie/tablesorter/pull/1851 is merged
+    });
 
     // Update tablesorter if samples renamed
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
-      $(".mqc_table").trigger("update");
+      $(".mqc_per_sample_table").trigger("update");
     });
 
     $(".mqc-table-to-violin").click(function (e) {
       e.preventDefault();
-      let tableId = $(this).data("table-id");
-      let violinId = $(this).data("violin-id");
-      $("#mqc_violintable_wrapper_" + tableId).hide();
-      $("#mqc_violintable_wrapper_" + violinId).show();
-      renderPlot(violinId);
+      let tableAnchor = $(this).data("table-anchor");
+      let violinAnchor = $(this).data("violin-anchor");
+      $("#mqc_violintable_wrapper_" + tableAnchor).hide();
+      $("#mqc_violintable_wrapper_" + violinAnchor).show();
+      renderPlot(violinAnchor);
     });
 
     $(".mqc-violin-to-table").click(function (e) {
       e.preventDefault();
-      let tableId = $(this).data("table-id");
-      let violinId = $(this).data("violin-id");
-      $("#mqc_violintable_wrapper_" + tableId).show();
-      $("#mqc_violintable_wrapper_" + violinId).hide();
+      let tableAnchor = $(this).data("table-anchor");
+      let violinAnchor = $(this).data("violin-anchor");
+      $("#mqc_violintable_wrapper_" + tableAnchor).show();
+      $("#mqc_violintable_wrapper_" + violinAnchor).hide();
     });
 
     $(".mqc_table_copy_btn").click(function () {
@@ -98,50 +106,51 @@ $(function () {
     /////// COLUMN CONFIG
     // show + hide columns
     $(".mqc_table_col_visible").change(function () {
-      let tableId = $(this).data("table-id");
-      let violinId = $(this).data("violin-id");
-      mqc_table_col_updateVisible(tableId, violinId);
+      let tableAnchor = $(this).data("table-anchor");
+      let violinAnchor = $(this).data("violin-anchor");
+      mqc_table_col_updateVisible(tableAnchor, violinAnchor);
     });
     // Bulk set visible / hidden
-    $(".mqc_configModal_bulkVisible").click(function (e) {
+    $(".mqc_config_modal_bulk_visible").click(function (e) {
       e.preventDefault();
-      let tableId = $(this).data("table-id");
-      let violinId = $(this).data("violin-id");
+      let tableAnchor = $(this).data("table-anchor");
+      let violinAnchor = $(this).data("violin-anchor");
       let visible = $(this).data("action") === "showAll";
-      $("#" + tableId + "_configModal_table tbody .mqc_table_col_visible").prop("checked", visible);
-      mqc_table_col_updateVisible(tableId, violinId);
+      $("#" + tableAnchor + "_config_modal_table tbody .mqc_table_col_visible").prop("checked", visible);
+      mqc_table_col_updateVisible(tableAnchor, violinAnchor);
     });
-    function mqc_table_col_updateVisible(tableId, violinId) {
-      let target = "#" + tableId;
+    function mqc_table_col_updateVisible(tableAnchor, violinAnchor) {
+      let target = "#" + tableAnchor;
 
       let metricsHidden = {};
-      $(target + "_configModal_table .mqc_table_col_visible").each(function () {
+      $(target + "_config_modal_table .mqc_table_col_visible").each(function () {
         let metric = $(this).val();
         metricsHidden[metric] = !$(this).is(":checked");
       });
 
       Object.entries(metricsHidden).map(([metric, hidden]) => {
         if (hidden) {
-          $(target + " ." + metric).addClass("hidden");
-          $(target + "_configModal_table ." + metric).addClass("text-muted");
+          $(target + " ." + metric).addClass("column-hidden");
+          $(target + "_config_modal_table ." + metric).addClass("text-muted");
         } else {
-          $(target + " ." + metric).removeClass("hidden");
-          $(target + "_configModal_table ." + metric).removeClass("text-muted");
+          $(target + " ." + metric).removeClass("column-hidden");
+          $(target + "_config_modal_table ." + metric).removeClass("text-muted");
         }
       });
       // Hide empty rows
-      $(target + " tbody tr").show();
       $(target + " tbody tr").each(function () {
-        let hasVal = false;
-        $(this)
-          .find("td")
-          .each(function () {
-            if (!$(this).hasClass("sorthandle") && $(this).text() !== "") {
-              hasVal = true;
-            }
-          });
-        if (!hasVal) {
-          $(this).hide();
+        let trIsEmpty = true;
+        let tr = $(this);
+        tr.find("td").each(function () {
+          let td = $(this);
+          if (!td.hasClass("column-hidden") && !td.hasClass("sorthandle") && td.text() !== "") {
+            trIsEmpty = false;
+          }
+        });
+        if (trIsEmpty) {
+          tr.addClass("row-empty");
+        } else {
+          tr.removeClass("row-empty");
         }
       });
       // Update counts
@@ -149,33 +158,37 @@ $(function () {
       $(target + "_numcols").text($(target + " thead th:visible").length - 1);
 
       // Also update the violin plot
-      if (violinId !== undefined) {
-        let plot = mqc_plots[violinId];
+      if (violinAnchor !== undefined) {
+        let plot = mqc_plots[violinAnchor];
         plot.datasets.map((dataset) => {
           dataset["metrics"].map((metric) => {
             dataset["header_by_metric"][metric]["hidden"] = metricsHidden[metric];
           });
         });
-        renderPlot(violinId);
+        renderPlot(violinAnchor);
       }
     }
 
-    // Make rows in MultiQC tables sortable
-    $(".mqc_table.mqc_sortable tbody").sortable({
-      handle: ".sorthandle",
-      helper: function fixWidthHelper(e, ui) {
-        ui.children().each(function () {
-          $(this).width($(this).width());
+    // Make rows in MultiQC "Configure Columns" tables sortable
+    $(".mqc_config_modal").on("show.bs.modal", function (e) {
+      $(e.target)
+        .find(".mqc_table.mqc_sortable tbody")
+        .sortable({
+          handle: ".sorthandle",
+          helper: function fixWidthHelper(e, ui) {
+            ui.children().each(function () {
+              $(this).width($(this).width());
+            });
+            return ui;
+          },
         });
-        return ui;
-      },
     });
 
     // Change order of columns
-    $(".mqc_configModal_table").on("sortstop", function (e, ui) {
+    $(".mqc_config_modal_table").on("sortstop", function (e, ui) {
       change_mqc_table_col_order($(this));
     });
-    $(".mqc_configModal_table").bind("sortEnd", function () {
+    $(".mqc_config_modal_table").bind("sortEnd", function () {
       change_mqc_table_col_order($(this));
     });
 
@@ -184,8 +197,8 @@ $(function () {
     // highlight samples
     $(document).on("mqc_highlights", function (e, f_texts, f_cols, regex_mode) {
       $(".mqc_table_sortHighlight").hide();
-      $(".mqc_table tbody th").removeClass("highlighted").removeData("highlight");
-      $(".mqc_table tbody th").each(function (i) {
+      $(".mqc_per_sample_table tbody th").removeClass("highlighted").removeData("highlight");
+      $(".mqc_per_sample_table tbody th").each(function (i) {
         let th = $(this);
         let thtext = $(this).text();
         let thiscol = "#333";
@@ -203,9 +216,9 @@ $(function () {
     // Sort MultiQC tables by highlight
     $(".mqc_table_sortHighlight").click(function (e) {
       e.preventDefault();
-      let target = $(this).data("target");
+      let tableAnchor = $(this).data("table-anchor");
       // collect highlighted rows
-      let hrows = $(target + " tbody th.highlighted")
+      let hrows = $("#" + tableAnchor + " tbody th.highlighted")
         .parent()
         .detach();
       hrows = hrows.sort(function (a, b) {
@@ -213,17 +226,17 @@ $(function () {
       });
       if ($(this).data("direction") === "desc") {
         hrows = hrows.get().reverse();
-        $(target + " tbody").prepend(hrows);
+        $("#" + tableAnchor + " tbody").prepend(hrows);
         $(this).data("direction", "asc");
       } else {
-        $(target + " tbody").append(hrows);
+        $("#" + tableAnchor + " tbody").append(hrows);
         $(this).data("direction", "desc");
       }
     });
 
     // Rename samples
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
-      $(".mqc_table tbody th").each(function () {
+      $(".mqc_per_sample_table tbody th span.th-sample-name").each(function () {
         let s_name = String($(this).data("original-sn"));
         $.each(f_texts, function (idx, f_text) {
           if (regex_mode) {
@@ -240,21 +253,30 @@ $(function () {
     // Hide samples
     $(document).on("mqc_hidesamples", function (e, f_texts, regex_mode) {
       // Hide rows in MultiQC tables
-      $(".mqc_table tbody th").each(function () {
+      $(".mqc_per_sample_table tbody tr").each(function () {
+        let tr = $(this);
+        let th = tr.find("th");
         let match = false;
-        let hfilter = $(this).text();
+        let s_name = th.find(".th-sample-name").text();
+        let g_name = tr.data("sample-group");
         $.each(f_texts, function (idx, f_text) {
-          if ((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)) {
-            match = true;
+          if (regex_mode) {
+            if (s_name.match(f_text) || g_name.match(f_text)) {
+              match = true;
+            }
+          } else {
+            if (s_name.indexOf(f_text) > -1 || g_name.indexOf(f_text) > -1) {
+              match = true;
+            }
           }
         });
         if (window.mqc_hide_mode === "show") {
           match = !match;
         }
         if (match) {
-          $(this).parent().hide().addClass("hidden");
+          tr.addClass("sample-hidden");
         } else {
-          $(this).parent().show().removeClass("hidden");
+          tr.removeClass("sample-hidden");
         }
       });
       $(".mqc_table_numrows").each(function () {
@@ -263,11 +285,11 @@ $(function () {
       });
 
       // Hide empty columns
-      $(".mqc_table").each(function () {
+      $(".mqc_per_sample_table").each(function () {
         let table = $(this);
         let gsthidx = 0;
-        table.find("thead th, tbody tr td").show();
         table.find("thead th").each(function () {
+          let th = $(this);
           if (gsthidx === 0) {
             gsthidx += 1;
             return true;
@@ -278,14 +300,15 @@ $(function () {
             .find("tbody tr td:nth-child(" + (gsthidx + 2) + ")")
             .filter(":visible")
             .each(function () {
+              let td = $(this);
               count += 1;
-              if ($(this).text() === "") {
+              if (td.text() === "") {
                 empties += 1;
               }
             });
           if (count > 0 && count === empties) {
-            $(this).hide();
-            table.find("tbody tr td:nth-child(" + (gsthidx + 2) + ")").hide();
+            th.addClass("column-hidden");
+            table.find("tbody tr td:nth-child(" + (gsthidx + 2) + ")").addClass("column-hidden");
           }
           gsthidx += 1;
         });
@@ -295,38 +318,85 @@ $(function () {
         $(this).text($("#" + tid + " thead th:visible").length - 1);
       });
     });
+
+    // Support expanding grouped samples in table
+    $(".expandable-row-primary").click(function (e) {
+      e.preventDefault();
+
+      // if the user is selecting text, do not expand the row
+      if (window.getSelection().toString().length > 0) {
+        return;
+      }
+      // let th = $(this);
+      // final most parent table object
+      let tr = $(this);
+      let table = tr.closest("table");
+      let tableId = tr.data("table-id");
+      // find all rows with the same data-group-id
+      let groupId = tr.data("sample-group");
+      let otherRows = table.find(
+        "tbody tr.expandable-row-secondary[data-sample-group='" + groupId + "'][data-table-id='" + tableId + "']",
+      );
+      // toggle the visibility of the rows and type of arrow
+      otherRows.toggleClass("expandable-row-secondary-hidden");
+      tr.toggleClass("expanded");
+    });
+
+    // We want to allow user select sample name text without expanding the row
+    $(".th-sample-name").click(function (e) {
+      // stop propagation to prevent row expansion
+      // e.stopPropagation();
+    });
   } // End of check for table
 
   // Table Scatter Modal
-  $("#tableScatterForm").submit(function (e) {
+  $("#table_scatter_form").submit(function (e) {
     e.preventDefault();
   });
-  $(".mqc_table_makeScatter").click(function (e) {
+  $(".mqc_table_make_scatter").click(function (e) {
     // Reset dropdowns
-    if ($("#tableScatter_tid").val() !== $(this).data("table")) {
-      $("#tableScatter_col1, #tableScatter_col2").html('<option value="">Select Column</option>');
+    let tableAnchor = $(this).data("table-anchor");
+    let table_scatter_table_anchor_el = $("#table_scatter_table_anchor");
+    if (table_scatter_table_anchor_el.val() !== tableAnchor) {
+      $("#table_scatter_col1, #table_scatter_col2").html('<option value="">Select Column</option>');
       // Add columns to dropdowns
-      $($(this).data("table") + " thead tr th").each(function (e) {
-        let c_id = $(this).attr("id");
-        if (c_id !== undefined) {
-          let c_name = $(this).attr("data-namespace") + ": " + $(this).text();
-          $("#tableScatter_col1, #tableScatter_col2").append('<option value="' + c_id + '">' + c_name + "</select>");
+      $("#" + tableAnchor + " thead tr th").each(function (e) {
+        let thId = $(this).attr("id");
+        if (thId !== undefined) {
+          let name = $(this).text();
+          let namespace = $(this).data("namespace");
+          if (namespace) {
+            name = namespace + ": " + name;
+          }
+          $("#table_scatter_col1, #table_scatter_col2").append('<option value="' + thId + '">' + name + "</select>");
         }
       });
-      $("#tableScatter_tid").val($(this).data("table"));
-      $("#tableScatterPlot").html("<small>Please select two table columns.</small>").addClass("not_rendered");
+      table_scatter_table_anchor_el.val(tableAnchor);
+      $("#table_scatter_plot").html("<small>Please select two table columns.</small>").addClass("not_rendered");
     }
   });
-  $("#tableScatterForm select").change(function (e) {
-    let tid = $("#tableScatter_tid").val();
-    let col1 = $("#tableScatter_col1").val().replace("header_", "");
-    let col2 = $("#tableScatter_col2").val().replace("header_", "");
-    let col1_name = $("#tableScatter_col1 option:selected").text();
-    let col2_name = $("#tableScatter_col2 option:selected").text();
-    let col1_max = parseFloat($(tid + " thead th#header_" + col1).data("dmax"));
-    let col1_min = parseFloat($(tid + " thead th#header_" + col1).data("dmin"));
-    let col2_max = parseFloat($(tid + " thead th#header_" + col2).data("dmax"));
-    let col2_min = parseFloat($(tid + " thead th#header_" + col2).data("dmin"));
+  $("#table_scatter_form select").change(function (e) {
+    let tableAnchor = $("#table_scatter_table_anchor").val();
+    let col1 = $("#table_scatter_col1").val().replace("header_", "");
+    let col2 = $("#table_scatter_col2").val().replace("header_", "");
+    let col1_name = $("#table_scatter_col1 option:selected").text();
+    let col2_name = $("#table_scatter_col2 option:selected").text();
+    let col1_min = parseFloat($("#" + tableAnchor + " thead th#header_" + col1).data("dmin"));
+    let col1_max = parseFloat($("#" + tableAnchor + " thead th#header_" + col1).data("dmax"));
+    let col2_max = parseFloat($("#" + tableAnchor + " thead th#header_" + col2).data("dmax"));
+    let col2_min = parseFloat($("#" + tableAnchor + " thead th#header_" + col2).data("dmin"));
+    if (!isNaN(col1_min) && !isNaN(col1_max) && col1_max != 0) {
+      col1_max += (col1_max - col1_min) * 0.05;
+    }
+    if (!isNaN(col1_min) && !isNaN(col1_max) && col1_min != 0) {
+      col1_min -= (col1_max - col1_min) * 0.05;
+    }
+    if (!isNaN(col2_min) && !isNaN(col2_max) && col2_max != 0) {
+      col2_max += (col2_max - col2_min) * 0.05;
+    }
+    if (!isNaN(col2_min) && !isNaN(col2_max) && col2_min != 0) {
+      col2_min -= (col2_max - col2_min) * 0.05;
+    }
     if (isNaN(col1_max)) {
       col1_max = undefined;
     }
@@ -339,49 +409,35 @@ $(function () {
     if (isNaN(col2_min)) {
       col2_min = undefined;
     }
+    let plotDiv = $("#table_scatter_plot");
     if (col1 !== "" && col2 !== "") {
-      $("#tableScatterPlot").html("<small>loading..</small>");
-      if ($(tid).attr("data-title")) {
-        plot_title = $(tid).attr("data-title");
+      plotDiv.html("<small>loading..</small>");
+      let plotTitle;
+      if ($("#" + tableAnchor).data("title")) {
+        plotTitle = $("#" + tableAnchor).data("title");
       } else {
-        plot_title = tid.replace(/^#/, "").replace(/_/g, " ");
+        plotTitle = tableAnchor.replace(/_/g, " ");
       }
-      // Get the data values
-      mqc_plots["tableScatterPlot"] = {
-        plot_type: "scatter",
-        config: {
-          id: "tableScatter_" + tid,
-          title: plot_title,
-          xlab: col1_name,
-          ylab: col2_name,
-          xmin: col1_min,
-          xmax: col1_max,
-          ymin: col2_min,
-          ymax: col2_max,
-        },
-        datasets: [[]],
-      };
-      $(tid + " tbody tr").each(function (e) {
-        let s_name = $(this).children("th.rowheader").text();
+      let plotDataset = [];
+      $("#" + tableAnchor + " tbody tr").each(function (e) {
+        let sName = $(this).children("th.rowheader").text();
         let val_1 = $(this)
           .children("td." + col1)
-          .text()
-          .replace(/[^\d\.]/g, "");
+          .data("sorting-val");
         let val_2 = $(this)
           .children("td." + col2)
-          .text()
-          .replace(/[^\d\.]/g, "");
+          .data("sorting-val");
         if (!isNaN(parseFloat(val_1)) && isFinite(val_1) && !isNaN(parseFloat(val_2)) && isFinite(val_2)) {
-          mqc_plots["tableScatterPlot"]["datasets"][0].push({
-            name: s_name,
+          plotDataset.push({
+            name: sName,
             x: parseFloat(val_1),
             y: parseFloat(val_2),
           });
         }
       });
-      if (Object.keys(mqc_plots["tableScatterPlot"]["datasets"][0]).length > 0) {
-        let target = "tableScatterPlot";
-        let traces = mqc_plots["tableScatterPlot"]["datasets"][0].map(function (point) {
+      if (Object.keys(plotDataset).length > 0) {
+        let target = "table_scatter_plot";
+        let traces = plotDataset.map(function (point) {
           return {
             type: "scatter",
             x: [point.x],
@@ -391,7 +447,7 @@ $(function () {
           };
         });
         let layout = {
-          title: plot_title,
+          title: plotTitle,
           xaxis: {
             title: col1_name,
             range: [col1_min, col1_max],
@@ -420,18 +476,18 @@ $(function () {
         };
         let plot = Plotly.newPlot(target, traces, layout, config);
         if (!plot) {
-          $("#tableScatterPlot").html("<small>Error: Something went wrong when plotting the scatter plot.</small>");
-          $("#tableScatterPlot").addClass("not_rendered");
+          plotDiv.html("<small>Error: Something went wrong when plotting the scatter plot.</small>");
+          plotDiv.addClass("not_rendered");
         } else {
-          $("#tableScatterPlot").removeClass("not_rendered");
+          plotDiv.removeClass("not_rendered");
         }
       } else {
-        $("#tableScatterPlot").html("<small>Error: No data pairs found for these columns.</small>");
-        $("#tableScatterPlot").addClass("not_rendered");
+        plotDiv.html("<small>Error: No data pairs found for these columns.</small>");
+        plotDiv.addClass("not_rendered");
       }
     } else {
-      $("#tableScatterPlot").html("<small>Please select two table columns.</small>");
-      $("#tableScatterPlot").addClass("not_rendered");
+      plotDiv.html("<small>Please select two table columns.</small>");
+      plotDiv.addClass("not_rendered");
     }
   });
 });
@@ -442,7 +498,7 @@ $(function () {
 function change_mqc_table_col_order(table) {
   // Find the targets of this sorting
   let elemId = table.attr("id");
-  let tableId = elemId.replace("_configModal_table", "");
+  let tableAnchor = elemId.replace("_config_modal_table", "");
 
   // Collect the desired order of columns
   let classes = [];
@@ -450,7 +506,7 @@ function change_mqc_table_col_order(table) {
     classes.push($(this).attr("class"));
   });
   // Go through each row
-  $("#" + tableId + " tr").each(function () {
+  $("#" + tableAnchor + " tr").each(function () {
     let cols = {};
     let row = $(this);
     // Detach any cell that matches a known class from above

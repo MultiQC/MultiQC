@@ -60,8 +60,9 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
     """
     Apply config.run_modules and config.exclude_modules filters
     """
+    avail_modules = set(config.avail_modules.keys()) | {"software_versions"}
     if len(config.run_modules) > 0:
-        unknown_modules = [m for m in config.run_modules if m not in config.avail_modules.keys()]
+        unknown_modules = [m for m in config.run_modules if m not in avail_modules]
         if unknown_modules:
             logger.error(
                 f"Module(s) in config.run_modules are unknown: {', '.join(unknown_modules)}. "
@@ -69,7 +70,7 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
             )
         if len(unknown_modules) == len(config.run_modules):
             raise RunError("No available modules to run!")
-        module_names = [m for m in module_names if m in config.run_modules and m in config.avail_modules.keys()]
+        module_names = [m for m in module_names if m in config.run_modules and m in avail_modules]
         if "custom_content" in config.run_modules:
             module_names.extend(config.custom_content_modules)
         logger.info(f"Only using modules: {', '.join(module_names)}")
@@ -94,9 +95,10 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     mod_dicts_in_order: List[Dict[str, Dict]] = [
         m for m in report.top_modules if list(m.keys())[0] in config.avail_modules.keys()
     ]
-    mod_keys = set(list(m.keys())[0] for m in report.module_order)
+
+    mod_order_keys = set(list(m.keys())[0] for m in report.module_order)
     mod_dicts_in_order.extend(
-        [{m: {}} for m in config.avail_modules.keys() if m not in mod_keys and m not in mod_dicts_in_order]
+        [{m: {}} for m in config.avail_modules.keys() if m not in mod_order_keys and m not in mod_dicts_in_order]
     )
     mod_dicts_in_order.extend(
         [
@@ -109,16 +111,16 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
 
     # Always run software_versions module to collect version YAML files
     # Use config.skip_versions_section to exclude from report
-    if "software_versions" not in mod_keys:
+    if "software_versions" not in mod_order_keys:
         mod_dicts_in_order.append({"software_versions": {}})
 
-    mod_names = include_or_exclude_modules([list(m.keys())[0] for m in mod_dicts_in_order])
-    mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0] in mod_names]
+    mod_ids = include_or_exclude_modules([list(m.keys())[0] for m in mod_dicts_in_order])
+    mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0] in mod_ids]
     if len(mod_dicts_in_order) == 0:
         raise RunError("No analysis modules specified!")
-    assert len(mod_dicts_in_order) == len(mod_names)
+    assert len(mod_dicts_in_order) == len(mod_ids)
 
-    sp_keys = list(mod_names)  # make a copy
+    sp_keys = list(mod_ids)  # make a copy
     # Add custom content section names
     try:
         if "custom_content" in sp_keys:
@@ -126,7 +128,11 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     except AttributeError:
         pass  # custom_data not in config
 
-    logger.debug(f"Analysing modules: {', '.join(mod_names)}")
-    if sp_keys != mod_names:
+    # Always add software_versions
+    if "software_versions" not in sp_keys:
+        sp_keys.append("software_versions")
+
+    logger.debug(f"Analysing modules: {', '.join(mod_ids)}")
+    if sp_keys != mod_ids:
         logger.debug(f"Search keys: {', '.join(sorted(sp_keys))}")
     return mod_dicts_in_order, sp_keys

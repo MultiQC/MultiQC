@@ -15,10 +15,9 @@ from typing import Dict, List
 from github import Github
 from github.PullRequest import PullRequest
 
-
 REPO_ID = "MultiQC/MultiQC"
 REPO_URL = f"https://github.com/{REPO_ID}"
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 WORKSPACE_PATH = Path(os.environ.get("GITHUB_WORKSPACE", "."))
 MODULES_SUBDIR = Path("multiqc/modules")
 
@@ -46,7 +45,9 @@ def get_milestone_prs(repo, current_tag: str, previous_tag: str, limit=100) -> L
                 print(f"Reached limit of {limit} PRs")
                 return all_pulls
         else:
-            print(f"PR not in milestone '{p.milestone.title}': {p.number} {p.title}")
+            print(
+                f"The PR is not in the previous miletone {previous_tag} nor the current milestone {current_tag}: '{p.milestone.title}': {p.number} {p.title}"
+            )
 
     return all_pulls
 
@@ -66,18 +67,20 @@ def get_version_from_tag() -> str:
         for line in f:
             if line.startswith("version ="):
                 version = line.split(" = ")[1].strip().strip('"')
-                return version
+                return version.removesuffix("dev")
     raise ValueError("Could not find version in pyproject.toml")
 
 
 def main():
     current_tag = f"v{get_version_from_tag()}"
-    previous_tag = run_cmd(f"cd {WORKSPACE_PATH} && git describe --tags --abbrev=0").stdout.strip()
+    previous_minor_tag = run_cmd(f"cd {WORKSPACE_PATH} && git describe --tags --abbrev=0").stdout.strip()
+    if previous_minor_tag.count(".") == 2:  # 1.24.1 -> 1.24
+        previous_minor_tag = previous_minor_tag.rsplit(".", 1)[0]
     repo = Github(login_or_token=GITHUB_TOKEN).get_repo(REPO_ID)
     milestones = repo.get_milestones(state="all")
     assert_milestone_exists(milestones, current_tag)
-    assert_milestone_exists(milestones, previous_tag)
-    prs: List[PullRequest] = get_milestone_prs(repo, current_tag, previous_tag)
+    assert_milestone_exists(milestones, previous_minor_tag)
+    prs: List[PullRequest] = get_milestone_prs(repo, current_tag, previous_minor_tag)
 
     label_to_section: Dict[str, str] = {
         "module: new": "New modules",
@@ -85,18 +88,18 @@ def main():
         "module: enhancement": "Module updates",
         "module: change": "Updates",
         "bug: core": "Fixes",
-        "core: infrastructure": "Infrastructure",
-        "core: refactoring": "Refactoring",
+        "core: infrastructure": "Infrastructure and packaging",
+        "core: refactoring": "Refactoring and typing",
         "documentation": "Chores",
     }
     sections_to_prs: Dict[str, List[PullRequest]] = {
-        "Fixes": [],
-        "Updates": [],
         "New modules": [],
-        "Module fixes": [],
+        "Updates": [],
         "Module updates": [],
-        "Refactoring": [],
-        "Infrastructure": [],
+        "Fixes": [],
+        "Module fixes": [],
+        "Refactoring and typing": [],
+        "Infrastructure and packaging": [],
         "Chores": [],
     }
     for pr in prs:

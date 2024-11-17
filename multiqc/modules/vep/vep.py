@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from VEP"""
-
 import ast
 import logging
 import re
@@ -8,20 +6,31 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """VEP"""
+    """
+    MultiQC parses the Ensembl VEP summary statistics stored in either HTML or plain text format.
+
+    Beside VEP's default naming convention, you can run VEP with one of the options below to use this module:
+
+    - `--stats_file [OUTPUT_FILENAME]_summary.html` _(VEP's default naming convention)_
+    - `--stats_file [SAMPLE_NAME].vep.html` _(without the `vep` or `summary` suffix, MultiQC will ignore the HTML files)_
+    - `--stats_file [SAMPLE_NAME]_vep.html`
+    - `--stats_text --stats_file [SAMPLE_NAME].vep.txt`
+    - `--stats_text --stats_file [SAMPLE_NAME]_vep.txt`
+
+    See the [VEP](https://www.ensembl.org/info/docs/tools/vep/vep_formats.html#stats)
+    documentation for more information.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="VEP",
             anchor="vep",
             href="https://www.ensembl.org/info/docs/tools/vep/index.html",
-            info="Ensembl VEP determines the effect of your variants on genes, transcripts and protein sequences, "
+            info="Determines the effect of variants on genes, transcripts and protein sequences, "
             "as well as regulatory regions.",
             doi="10.1186/s13059-016-0974-4",
         )

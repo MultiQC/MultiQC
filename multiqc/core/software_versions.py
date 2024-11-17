@@ -3,12 +3,14 @@
 import logging
 import os
 from collections import defaultdict
-from typing import List, Dict, Tuple, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import packaging.version
 import yaml
 
-from multiqc import report as mqc_report, config, report
+from multiqc import config, report
+from multiqc import report as mqc_report
+from multiqc.types import ModuleId
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -63,7 +65,7 @@ def load_versions_from_config():
         versions_config = validate_software_versions(versions_config)
 
     versions_from_files: Dict[str, Dict[str, List]] = defaultdict(lambda: defaultdict(list))
-    for f in mqc_report.files.get("software_versions", []):
+    for f in mqc_report.files.get(ModuleId("software_versions"), []):
         file_name = os.path.join(f["root"], f["fn"])
         with open(file_name) as fh:
             log.debug(f"Reading software versions settings from: {file_name}")

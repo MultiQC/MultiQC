@@ -100,11 +100,11 @@ class HeatmapPlot extends Plot {
 $(function () {
   // Listeners for range slider
   $(".mqc_hcplot_range_sliders input").on("keyup change input", function () {
-    let target = $(this).data("target");
+    let anchor = $(this).data("anchor");
     let minmax = $(this).data("minmax");
-    if (minmax === "min") Plotly.restyle(target, { zmin: $(this).val() });
-    if (minmax === "max") Plotly.restyle(target, { zmax: $(this).val() });
-    $("#" + target + "_range_slider_" + minmax + ", #" + target + "_range_slider_" + minmax + "_txt").val(
+    if (minmax === "min") Plotly.restyle(anchor, { zmin: $(this).val() });
+    if (minmax === "max") Plotly.restyle(anchor, { zmax: $(this).val() });
+    $("#" + anchor + "_range_slider_" + minmax + ", #" + anchor + "_range_slider_" + minmax + "_txt").val(
       $(this).val(),
     );
   });

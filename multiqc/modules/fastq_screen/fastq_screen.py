@@ -1,27 +1,36 @@
-"""MultiQC module to parse output from FastQ Screen"""
-
 import logging
 import re
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"Fastq_screen version: ([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    By default, the module creates a plot that emulates the FastQ Screen output
+    with blue and red stacked bars showing unique and multimapping read counts.
+    This plot only works for a handful of samples however, so if
+    `# samples * # organisms >= 160`, a simpler stacked barplot is shown. This
+    is also shown when generating flat-image plots.
+
+    To always show this style of plot, add the following line to a MultiQC config file:
+
+    ```yaml
+    fastqscreen_simpleplot: true
+    ```
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="FastQ Screen",
             anchor="fastq_screen",
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/",
-            info="allows you to screen a library of sequences in FastQ format against"
-            " a set of sequence databases so you can see if the composition of the"
-            " library matches with what you expect.",
+            info="Screens a library of sequences in FastQ format against a set of sequence databases "
+            "to see if the composition of the library matches with what you expect.",
             doi="10.12688/f1000research.15931.2",
         )
 

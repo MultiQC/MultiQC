@@ -1,26 +1,21 @@
-"""MultiQC module to parse output from MultiVCFAnalyzer"""
-
 import json
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """MultiVCFAnalyzer module"""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MultiVCFAnalyzer",
             anchor="multivcfanalyzer",
             href="https://github.com/alexherbig/MultiVCFAnalyzer",
-            info="""combines multiple VCF files in a coherent way,
-            can produce summary statistics and downstream analysis formats for phylogeny reconstruction.""",
+            info="Reads multiple VCF files into combined genotype calls, produces summary statistics and downstream formats",
+            extra="The downstream formats are useful for follow-up analyses such as phylogeny reconstruction, "
+            "SNP effect analyses, population genetic analyses, etc.",
             doi="10.1038/nature13591",
         )
 

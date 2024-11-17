@@ -1,12 +1,9 @@
-"""MultiQC module to parse output from HiFiasm"""
-
 import logging
 import re
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"\[M::main\] Version: ([\d\.r\-]+)"
@@ -14,12 +11,11 @@ VERSION_REGEX = r"\[M::main\] Version: ([\d\.r\-]+)"
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialse the parent object
         super(MultiqcModule, self).__init__(
             name="HiFiasm",
             anchor="hifiasm",
             href="https://github.com/chhylp123/hifiasm",
-            info="is a haplotype-resolved assembler for accurate Hifi reads",
+            info="Haplotype-resolved assembler for accurate Hifi reads",
             doi="10.1038/s41592-020-01056-5",
         )
 

@@ -1,6 +1,5 @@
-"""MultiQC module to parse output from NanoStat"""
-
 import logging
+from collections import defaultdict
 from typing import List
 
 from multiqc import config
@@ -8,13 +7,10 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """NanoStat module"""
-
     _KEYS_MAPPING = {
         "number_of_reads": "Number of reads",
         "number_of_bases": "Total bases",
@@ -34,12 +30,14 @@ class MultiqcModule(BaseMultiqcModule):
     _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="NanoStat",
             anchor="nanostat",
-            href="https://github.com/wdecoster/nanostat/",
-            info="reports various statistics from a long read sequencing dataset in FASTQ, BAM or sequencing summary format.",
+            href=["https://github.com/wdecoster/nanostat/", "https://github.com/wdecoster/nanoplot/"],
+            info="Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary "
+            "format (supports NanoPack; NanoPlot, NanoComp).",
+            extra="Programs are part of the NanoPack family for summarising results of sequencing on Oxford Nanopore "
+            "methods (MinION, PromethION etc.)",
             doi="10.1093/bioinformatics/bty149",
         )
 
@@ -50,15 +48,20 @@ class MultiqcModule(BaseMultiqcModule):
         self.has_seq_summary = False
         self.has_fastq = False
         self.has_fasta = False
+        self.general_stats_added = False
         for f in self.find_log_files("nanostat", filehandles=True):
-            self.parse_nanostat_log(f)
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
+            nano_stats_by_sample = self.parse_nanostat_log(f)
+            for s_name, nano_stats in nano_stats_by_sample.items():
+                self.save_data(s_name, nano_stats)
 
         for f in self.find_log_files("nanostat/legacy", filehandles=True):
-            self.parse_legacy_nanostat_log(f)
+            nano_stats_by_sample = self.parse_legacy_nanostat_log(f)
+            for s_name, nano_stats in nano_stats_by_sample.items():
+                self.save_data(s_name, nano_stats)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Filter to strip out ignored sample names
         self.nanostat_data = self.ignore_samples(self.nanostat_data)
@@ -73,13 +76,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Stats Tables
         if self.has_aligned:
-            self.nanostat_stats_table("aligned")
+            self.nanostat_stats_table("aligned", "Aligned")
         if self.has_seq_summary:
-            self.nanostat_stats_table("seq summary")
+            self.nanostat_stats_table("seq summary", "Sequencing summary")
         if self.has_fastq:
-            self.nanostat_stats_table("fastq")
+            self.nanostat_stats_table("fastq", "FASTQ")
         if self.has_fasta:
-            self.nanostat_stats_table("fasta")
+            self.nanostat_stats_table("fasta", "FASTA")
 
         # Quality distribution Plot
         if self.has_qscores:
@@ -91,21 +94,29 @@ class MultiqcModule(BaseMultiqcModule):
         Note: Tool can be run in two different modes, giving two variants to the output.
         To avoid overwriting keys from different modes, keys are given a suffix.
         """
-        nano_stats = {}
+        snames = [f["s_name"]]
+        nano_stats_by_sname = defaultdict(dict)
         for line in f["f"]:
-            parts = line.strip().split()
-            if len(parts) == 2 and parts[0] in self._KEYS_MAPPING.keys():
-                key = self._KEYS_MAPPING.get(parts[0])
+            parts = line.strip().split("\t")
+            if len(parts) < 2:
+                continue
+
+            key = parts[0]
+            if key == "Metrics":
+                snames = parts[1:]
+
+            elif key in self._KEYS_MAPPING.keys():
+                key = self._KEYS_MAPPING.get(key)
                 if key:
-                    nano_stats[key] = float(parts[1])
+                    for sname, val in zip(snames, parts[1:]):
+                        nano_stats_by_sname[sname][key] = float(val)
             else:
-                parts = line.strip().split(":")
-                key = parts[0].replace("Reads ", "")
+                key = key.replace("Reads ", "").strip(":")
                 if key.startswith(">Q"):
-                    # Number of reads above Q score cutoff
-                    val = int(parts[1].strip().split()[0])
-                    nano_stats[key] = val
-        self.save_data(f, nano_stats)
+                    for sname, val in zip(snames, parts[1:]):
+                        # Number of reads above Q score cutoff
+                        nano_stats_by_sname[sname][key] = int(val.split()[0])
+        return nano_stats_by_sname
 
     def parse_legacy_nanostat_log(self, f):
         """Parse legacy output from NanoStat
@@ -113,24 +124,41 @@ class MultiqcModule(BaseMultiqcModule):
         Note: Tool can be run in two different modes, giving two variants to the output.
         To avoid overwriting keys from different modes, keys are given a suffix.
         """
-        nano_stats = {}
+        snames = [f["s_name"]]
+        nano_stats_by_sname = defaultdict(dict)
         for line in f["f"]:
             parts = line.strip().split(":")
-            if len(parts) == 0:
+            if len(parts) < 2:
                 continue
 
             key = parts[0]
+            if key == "General summary":
+                if parts[1].strip().split():
+                    snames = parts[1].strip().split()
 
-            if key in self._KEYS_MAPPING.values():
-                val = float(parts[1].replace(",", ""))
-                nano_stats[key] = val
+            elif key in self._KEYS_MAPPING.values():
+                vals = parts[1].strip().split()
+                if len(vals) == len(snames):
+                    for sname, val in zip(snames, vals):
+                        nano_stats_by_sname[sname][key] = float(val.replace(",", ""))
+                else:
+                    log.error(f"Unexpected number of values for key {key}: {vals}")
+
             elif key.startswith(">Q"):
                 # Number of reads above Q score cutoff
-                val = int(parts[1].strip().split()[0])
-                nano_stats[key] = val
-        self.save_data(f, nano_stats)
+                vals = parts[1].strip().split("\t")
+                if len(vals) == len(snames):
+                    for sname, val in zip(snames, vals):
+                        nano_stats_by_sname[sname][key] = float(val.split()[0])
+                else:
+                    log.error(f"Unexpected number of values for key {key}: {vals}")
 
-    def save_data(self, f, nano_stats):
+        for sname in snames:
+            self.add_data_source(f, s_name=sname)
+
+        return nano_stats_by_sname
+
+    def save_data(self, s_name, nano_stats):
         """
         Normalise fields and save parsed data.
 
@@ -152,22 +180,20 @@ class MultiqcModule(BaseMultiqcModule):
             stat_type = "fasta"
             self.has_fasta = True
         else:
-            log.debug(f"Did not recognise NanoStat file '{f['fn']}' - skipping")
+            log.debug(f"Did not recognise NanoStat data for sample '{s_name}', skipping")
             return
 
         out_d = {f"{k}_{stat_type}": v for k, v in nano_stats.items()}
 
         # Warn if we find overlapping data for the same sample
-        if f["s_name"] in self.nanostat_data:
+        if s_name in self.nanostat_data:
             # Only if the same has some keys in common
-            if not set(self.nanostat_data[f["s_name"]].keys()).isdisjoint(out_d.keys()):
-                log.debug(f"Duplicate sample data found! Overwriting: {f['s_name']}")
+            if not set(self.nanostat_data[s_name].keys()).isdisjoint(out_d.keys()):
+                log.debug(f"Duplicate sample data found! Overwriting: {s_name}")
 
-        self.nanostat_data.setdefault(f["s_name"], {}).update(out_d)
+        self.nanostat_data.setdefault(s_name, {}).update(out_d)
 
-        self.add_data_source(f)
-
-    def nanostat_stats_table(self, stat_type):
+    def nanostat_stats_table(self, stat_type, stat_title):
         """Take the parsed stats from the Kallisto report and add it to the
         basic stats table at the top of the report"""
 
@@ -271,10 +297,24 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add the report section
         self.add_section(
-            name="Summary Statistics",
+            name=f"Summary Statistics ({stat_title})",
             anchor=f"nanostat_{stat_type.replace(' ', '_')}_stats",
             plot=table.plot(self.nanostat_data, headers, table_config),
         )
+
+        if not self.general_stats_added:
+            # Remove the hidden metrics, hide the rest apart from Read N50
+            general_stats_headers = {}
+            for k in headers:
+                if headers[k].get("hidden"):
+                    continue
+                general_stats_headers[k] = headers[k]
+                general_stats_headers[k]["description"] = headers[k]["description"] + f" ({stat_title})"
+                if k != f"Read length N50_{stat_type}":
+                    general_stats_headers[k]["hidden"] = True
+
+            self.general_stats_addcols(self.nanostat_data, general_stats_headers)
+            self.general_stats_added = True
 
     def reads_by_quality_plot(self):
         def _get_total_reads(_data_dict):
@@ -287,7 +327,7 @@ class MultiqcModule(BaseMultiqcModule):
         q_values: List[int] = []
         samples_with_same_q_values = []
         samples_with_other_q_values = []  # will be skipped
-        for s_name, data_dict in self.nanostat_data.items():
+        for s_name, data_dict in sorted(self.nanostat_data.items()):
             sample_q_vals = [
                 int(k.strip().replace(">Q", "").split("_")[0]) for k in data_dict.keys() if k.startswith(">Q")
             ]

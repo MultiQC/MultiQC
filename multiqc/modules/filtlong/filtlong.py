@@ -7,13 +7,33 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module takes summary statistics of number of long reads filtered and displays them in the General Stats table.
+
+    #### Bases Kept
+
+    Sometimes, the Filtlong log message contains this:
+
+    ```
+    Filtering long reads
+      target: 123456789 bp
+      reads already fall below target after filtering
+
+    Outputting passed long reads
+    ```
+
+    In these cases we cannot say for sure how many bases were kept. As such, this field is left blank.
+    If you have a better solution, please suggest in an issue or pull request.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Filtlong",
             anchor="filtlong",
             href="https://github.com/rrwick/Filtlong",
-            info="A tool for filtering long reads by quality.",
+            info="Filters long reads by quality.",
+            extra="It can take a set of long reads and produce a smaller, better subset. It uses both read length "
+            "(longer is better) and read identity (higher is better) when choosing which reads pass the filter.",
             # doi="", # No DOI
         )
 

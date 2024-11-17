@@ -1,3 +1,5 @@
+from typing import Dict
+
 from multiqc import config
 
 from .plot_aqhist import plot_aqhist
@@ -36,7 +38,7 @@ section_order = [
     "statsfile_machine",
     "statsfile",
 ]
-file_types = {
+file_types: Dict = {
     "stats": {
         "title": "BBDuk filtering statistics",
         "descr": "Proportion of reads that matched adapters/contaminants.",
@@ -364,12 +366,17 @@ file_types = {
             "Read1_linear": float,
             "Read1_log": float,
             "Read1_measured": float,
+        },
+        "extracols": {
             "Read2_linear": float,
             "Read2_log": float,
             "Read2_measured": float,
         },
         "plot_func": plot_qhist,
         "plot_params": {},
+        "kv_descriptions": {
+            "Deviation": ("", {}),
+        },
     },
     "rpkm": {
         "title": "RPKM/FPKM",

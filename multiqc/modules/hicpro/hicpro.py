@@ -1,8 +1,3 @@
-## Nicolas Servant
-## April 2018
-
-"""MultiQC module to parse output from HiC-Pro"""
-
 import logging
 import os.path
 from typing import Dict
@@ -11,20 +6,25 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    **Note** - because this module shares sample identifiers across multiple files,
+    the `--fn_as_s_name` / `config.use_filename_as_sample_name` functionality has been disabled and has no effect.
+
+    The MultiQC module is supported since HiC-Pro v2.11.0.
+    """
+
     """HiC-Pro module, parses log and stats files saved by HiC-Pro."""
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HiC-Pro",
             anchor="hicpro",
             href="https://github.com/nservant/HiC-Pro",
-            info="is an efficient and flexible pipeline for Hi-C data processing. The MultiQC module is supported since HiC-Pro v2.11.0.",
+            info="Pipeline for Hi-C data processing",
             doi="10.1186/s13059-015-0831-x",
         )
 
@@ -165,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_hicpro_stats(self, f, rsection):
         """Parse a HiC-Pro stat file"""
-        s_name = self.clean_s_name(os.path.basename(f["root"]), root=os.path.dirname(f["root"]))
+        s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
         if s_name not in self.hicpro_data.keys():
             self.hicpro_data[s_name] = {}
 

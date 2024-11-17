@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.23"
+version = "1.26dev"
 dependencies = [
     "click",
     "humanize",
@@ -18,14 +18,14 @@ dependencies = [
     "Pillow>=10",  # to add a logo into flat plots
     "plotly>=5.18",
     "pyyaml>=4",
-    "pyaml-env",
     "rich>=10",
     "rich-click",
     "coloredlogs",  # logging in notebooks
-    "tqdm",  # progress bar in notebooks
     "spectra>=0.0.10",
-    "pydantic>=2.7.1",
+    "pydantic>=2.7.0",
     "typeguard",
+    "tqdm",  # progress bar in notebooks
+    "natsort",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -60,18 +60,24 @@ dev = [
     "pdoc3",
     "pytest",
     "pytest-cov",
+    "pytest-xdist",  # for parallel testing with `pytest -n`
+    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that
+    # does work better with parametrized tests
+    "pygithub",  # to generate changelog
     "mypy",
     "types-PyYAML",
     "types-tqdm",
     "types-requests",
     "types-Markdown",
+    "types-beautifulsoup4",
+    "types-Pillow",
 ]
 
 [project.urls]
 Homepage = "https://multiqc.info"
 Repository = "https://github.com/MultiQC/MultiQC"
 Issues = "https://github.com/MultiQC/MultiQC/issues"
-Documentation = "https://multiqc.info/docs"
+Documentation = "https://docs.seqera.io/multiqc"
 Changelog = "https://github.com/MultiQC/MultiQC/blob/main/CHANGELOG.md"
 
 [project.entry-points.console_scripts]
@@ -95,7 +101,6 @@ biscuit = "multiqc.modules.biscuit:MultiqcModule"
 bismark = "multiqc.modules.bismark:MultiqcModule"
 bowtie1 = "multiqc.modules.bowtie1:MultiqcModule"
 bowtie2 = "multiqc.modules.bowtie2:MultiqcModule"
-bracken = "multiqc.modules.bracken:MultiqcModule"
 busco = "multiqc.modules.busco:MultiqcModule"
 bustools = "multiqc.modules.bustools:MultiqcModule"
 ccs = "multiqc.modules.ccs:MultiqcModule"
@@ -117,13 +122,14 @@ eigenstratdatabasetools = "multiqc.modules.eigenstratdatabasetools:MultiqcModule
 fastp = "multiqc.modules.fastp:MultiqcModule"
 fastq_screen = "multiqc.modules.fastq_screen:MultiqcModule"
 fastqc = "multiqc.modules.fastqc:MultiqcModule"
-featureCounts = "multiqc.modules.featureCounts:MultiqcModule"
+featurecounts = "multiqc.modules.featurecounts:MultiqcModule"
 fgbio = "multiqc.modules.fgbio:MultiqcModule"
 flash = "multiqc.modules.flash:MultiqcModule"
 flexbar = "multiqc.modules.flexbar:MultiqcModule"
 filtlong = "multiqc.modules.filtlong:MultiqcModule"
 freyja = "multiqc.modules.freyja:MultiqcModule"
 gffcompare = "multiqc.modules.gffcompare:MultiqcModule"
+ganon = "multiqc.modules.ganon:MultiqcModule"
 gatk = "multiqc.modules.gatk:MultiqcModule"
 glimpse = "multiqc.modules.glimpse:MultiqcModule"
 goleft_indexcov = "multiqc.modules.goleft_indexcov:MultiqcModule"
@@ -166,13 +172,16 @@ mosdepth = "multiqc.modules.mosdepth:MultiqcModule"
 motus = "multiqc.modules.motus:MultiqcModule"
 mtnucratio = "multiqc.modules.mtnucratio:MultiqcModule"
 multivcfanalyzer = "multiqc.modules.multivcfanalyzer:MultiqcModule"
+nanoq = "multiqc.modules.nanoq:MultiqcModule"
 nanostat = "multiqc.modules.nanostat:MultiqcModule"
+ngsbits = "multiqc.modules.ngsbits:MultiqcModule"
 nextclade = "multiqc.modules.nextclade:MultiqcModule"
 ngsderive = "multiqc.modules.ngsderive:MultiqcModule"
 nonpareil = "multiqc.modules.nonpareil:MultiqcModule"
 odgi = "multiqc.modules.odgi:MultiqcModule"
 optitype = "multiqc.modules.optitype:MultiqcModule"
 pangolin = "multiqc.modules.pangolin:MultiqcModule"
+pairtools = "multiqc.modules.pairtools:MultiqcModule"
 pbmarkdup = "multiqc.modules.pbmarkdup:MultiqcModule"
 peddy = "multiqc.modules.peddy:MultiqcModule"
 phantompeakqualtools = "multiqc.modules.phantompeakqualtools:MultiqcModule"
@@ -219,6 +228,7 @@ theta2 = "multiqc.modules.theta2:MultiqcModule"
 tophat = "multiqc.modules.tophat:MultiqcModule"
 trimmomatic = "multiqc.modules.trimmomatic:MultiqcModule"
 truvari = "multiqc.modules.truvari:MultiqcModule"
+umicollapse = "multiqc.modules.umicollapse:MultiqcModule"
 umitools = "multiqc.modules.umitools:MultiqcModule"
 varscan2 = "multiqc.modules.varscan2:MultiqcModule"
 vcftools = "multiqc.modules.vcftools:MultiqcModule"
@@ -243,6 +253,7 @@ mgikit_undetermined_barcode_threshold = "multiqc.modules.mgikit.cli:undetermined
 mgikit_brief_report = "multiqc.modules.mgikit.cli:brief_report"
 mgikit_keep_core_samples = "multiqc.modules.mgikit.cli:keep_core_samples"
 mgikit_decimal_positions = "multiqc.modules.mgikit.cli:decimal_positions"
+
 #my-new-option = "myplugin.cli:new_option"
 #
 #[project.entry-points."multiqc.hooks.v1"]
@@ -256,6 +267,7 @@ mgikit_decimal_positions = "multiqc.modules.mgikit.cli:decimal_positions"
 
 [tool.setuptools]
 packages = ["multiqc"]
+package-data = {multiqc = ["py.typed"]}
 
 [tool.ruff]
 line-length = 120
@@ -266,4 +278,8 @@ lint.ignore = ["F401"]  # unused-import
 check_untyped_defs = true
 plugins = ["pydantic.mypy"]
 # exclude all files in multiqc/modules
+files = ["multiqc", "tests"]
 exclude = "multiqc/modules/*"
+
+[tool.pyright]
+include = ["multiqc", "scripts", "tests"]

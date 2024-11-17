@@ -1,12 +1,21 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
-LABEL author="Phil Ewels" \
+LABEL author="Phil Ewels & Vlad Savelyev" \
       description="MultiQC" \
       maintainer="phil.ewels@seqera.io"
 
+RUN mkdir /usr/src/multiqc
+
 # Add the MultiQC source files to the container
-ADD . /usr/src/multiqc
-WORKDIR /usr/src/multiqc
+COPY LICENSE /usr/src/multiqc/
+COPY README.md /usr/src/multiqc/
+COPY docs /usr/src/multiqc/docs
+COPY multiqc /usr/src/multiqc/multiqc
+COPY pyproject.toml /usr/src/multiqc/
+COPY MANIFEST.in /usr/src/multiqc/
+COPY scripts /usr/src/multiqc/scripts
+COPY setup.py /usr/src/multiqc/
+COPY tests /usr/src/multiqc/tests
 
 # - Install `ps` for Nextflow
 # - Install MultiQC through pip
@@ -24,9 +33,11 @@ RUN \
     apt-get clean -y && \
     echo "Docker build log: Upgrade pip and install multiqc" 1>&2 && \
     pip install --quiet --upgrade pip && \
-    pip install --verbose --no-cache-dir . && \
+    #################
+    # Install MultiQC
+    pip install --verbose --no-cache-dir /usr/src/multiqc && \
     echo "Docker build log: Delete python cache directories" 1>&2 && \
-    find /usr/local/lib/python3.11 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \) -printf "\"%p\" " | \
+    find /usr/local/lib/python3.12 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \) -printf "\"%p\" " | \
     xargs rm -rf {} && \
     echo "Docker build log: Delete /usr/src/multiqc" 1>&2 && \
     rm -rf "/usr/src/multiqc/" && \

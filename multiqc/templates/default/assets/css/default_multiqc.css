@@ -761,7 +761,7 @@ tbody .sorthandle {
   cursor: pointer;
   color: #ccc;
 }
-.mqc_configModal_table tbody .sorthandle {
+.mqc_config_modal_table tbody .sorthandle {
   color: #999;
 }
 .mqc_table .rowheader {
@@ -1027,4 +1027,41 @@ hr {
   color: #999999;
   font-size: 8px;
   font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
+}
+
+tr.expandable-row-secondary {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+tr.expandable-row-primary {
+  cursor: pointer;
+}
+tr.expandable-row-primary .expandable-row-caret {
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 4 16 16"><path d="M11.8152 13.1989L10.0167 11.1432C9.80447 10.9013 9.97697 10.5214 10.2991 10.5214H13.8961C13.9682 10.5214 14.0388 10.5421 14.0994 10.5811C14.16 10.6201 14.2081 10.6758 14.2379 10.7414C14.2677 10.8071 14.2779 10.8799 14.2674 10.9512C14.2569 11.0226 14.226 11.0893 14.1785 11.1435L12.38 13.1985C12.3448 13.2388 12.3014 13.2711 12.2527 13.2932C12.204 13.3153 12.1511 13.3268 12.0976 13.3268C12.0441 13.3268 11.9912 13.3153 11.9425 13.2932C11.8938 13.2711 11.8504 13.2388 11.8152 13.1985V13.1989Z" /></svg>')
+    50% / 24px 24px;
+  transform: rotate(-90deg);
+}
+tr.expandable-row-primary.expanded .expandable-row-caret {
+  transform: rotate(0deg);
+}
+tr.expandable-row-secondary-hidden {
+  visibility: collapse;
+}
+tr.sample-hidden {
+  display: none;
+}
+th.column-hidden,
+td.column-hidden {
+  display: none;
+}
+tr.row-empty {
+  display: none;
+}
+
+/* Safari-specific fix using @supports
+ Safari doesn't support visibility: collapse, so we use display: none instead
+ */
+@supports (-webkit-hyphens: none) {
+  tr.expandable-row-secondary-hidden {
+    display: none;
+  }
 }

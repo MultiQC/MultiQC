@@ -1,12 +1,11 @@
-"""MultiQC module to parse output from WhatsHap"""
-
 import logging
 from collections import defaultdict
+from typing import Dict, Tuple, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
+from multiqc.types import LoadedFileDict
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -15,20 +14,15 @@ ALL_CHROM = "ALL"
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    WhatsHap module class, parses WhatsHap output.
+    The module is currently restricted to the output from `whatshap stats --tsv`.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="WhatsHap",
             anchor="whatshap",
             href="https://whatshap.readthedocs.io/",
-            info="""is a program for phasing genomic variants using DNA sequencing
-                    reads, also called read-based phasing or haplotype assembly. It
-                    is especially suitable for long reads, but also works well with
-                    short reads.
-                    """,
+            info="Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly)",
             doi="10.1101/085050",
         )
 
@@ -64,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         # general statistics table
         self.add_stats_table()
 
-    def parse_whatshap_stats(self, logfile):
+    def parse_whatshap_stats(self, f: LoadedFileDict) -> Tuple[str, Dict[str, Dict[str, Union[int, float]]]]:
         """Parse WhatsHap stats file"""
 
         def parse_numeric_values(data):
@@ -89,10 +83,10 @@ class MultiqcModule(BaseMultiqcModule):
                 if value == "nan":
                     data[key] = None
 
-        file_content = logfile["f"]
+        file_content = f["f"]
         # This will later be replaced by the sample name from the file, unless
         # we are parsing an empty file
-        sample = logfile["s_name"]
+        sample = f["s_name"]
         # Get the header and remove the "#" character from the first field
         header = next(file_content).strip().split("\t")
         header[0] = header[0].lstrip("#")
@@ -173,7 +167,7 @@ class MultiqcModule(BaseMultiqcModule):
             results[chrom]["frac_het_phased"] = frac_het_phased
 
         # Clean the sample name
-        sample = self.clean_s_name(sample, logfile["root"])
+        sample = self.clean_s_name(sample, f)
 
         return sample, results
 

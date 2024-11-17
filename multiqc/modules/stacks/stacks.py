@@ -1,5 +1,3 @@
-"""MultiQC module to parse Stacks 2 denovo output"""
-
 import logging
 import os
 import re
@@ -7,17 +5,24 @@ import re
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This module is designed to only parse some of the output from the Stacks `denovo_map` pipeline.
+
+    The module works with Stacks version 2.1 or greater.
+
+    If you are missing some functionality, please submit an issue on the [MultiQC github page](https://github.com/MultiQC/MultiQC)
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Stacks",
             anchor="stacks",
             href="http://catchenlab.life.illinois.edu/stacks/",
-            info="A software for analyzing restriction enzyme-based data (e.g. RAD-seq).",
+            info="Analyzes restriction enzyme-based data (e.g. RAD-seq).",
             doi="10.1111/mec.12354",
         )
 

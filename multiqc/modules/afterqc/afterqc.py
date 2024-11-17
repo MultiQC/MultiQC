@@ -1,19 +1,18 @@
-"""MultiQC module to parse output from Afterqc"""
-
 import json
 import logging
+from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    AfterQC module class
+    AfterQC goes through all FastQ files in a folder and outputs three folders: good, bad and QC folders,
+    which contains good reads, bad reads and the QC results of each fastq file/pair.
     """
 
     def __init__(self):
@@ -22,12 +21,12 @@ class MultiqcModule(BaseMultiqcModule):
             name="AfterQC",
             anchor="afterqc",
             href="https://github.com/OpenGene/AfterQC",
-            info="Automatic Filtering, Trimming, Error Removing and Quality Control for fastq data.",
+            info="Automatic filtering, trimming, error removing, and quality control for FastQ data.",
             doi="10.1186/s12859-017-1469-3",
         )
 
         # Find and load any Afterqc reports
-        self.afterqc_data = dict()
+        self.afterqc_data: Dict = dict()
         for f in self.find_log_files("afterqc", filehandles=True):
             self.parse_afterqc_log(f)
 

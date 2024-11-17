@@ -47,6 +47,8 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
         # You can disable it anytime, if it is not wanted.
         make_log_report(log_data, log, "overall_mean_cov_metrics")
 
+        self.overall_mean_cov_data = self.ignore_samples(self.overall_mean_cov_data)
+
         # No need to write the data.
         self.write_data_file(self.overall_mean_cov_data, "dragen_overall_mean_cov_data")
 

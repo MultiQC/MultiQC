@@ -6,7 +6,7 @@ from typing import Dict, List
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
-from multiqc.plots.bargraph import CatT
+from multiqc.plots.bargraph import CatDataDict
 
 # Initialise the logger
 log = logging.getLogger(__name__)

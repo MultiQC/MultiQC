@@ -1,24 +1,32 @@
-"""MultiQC module to parse output from DIAMOND"""
-
 import logging
 import re
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"diamond v([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module takes summary statistics from the `diamond.log` file (`--log` option). It parses and reports
+    the number of sequences aligned and displays them in the General Stats table.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="DIAMOND",
             anchor="diamond",
             href="https://github.com/bbuchfink/diamond",
-            info="a sequence aligner for protein and translated DNA searches, designed for high performance analysis of big sequence data.",
+            info="Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST",
+            extra="""
+            Key features are:
+            - Pairwise alignment of proteins and translated DNA at 100x-10,000x speed of BLAST.
+            - Frameshift alignments for long read analysis.
+            - Low resource requirements and suitable for running on standard desktops or laptops.
+            - Various output formats, including BLAST pairwise, tabular and XML, as well as taxonomic classification.
+            """,
             doi="10.1038/s41592-021-01101-x",
         )
 

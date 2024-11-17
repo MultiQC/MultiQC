@@ -1,32 +1,36 @@
-"""MultiQC module to parse output from Snippy"""
-
 import logging
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    snippy module class.
+    The following commands are implemented:
+
+    - `snippy`
+      - Variant type descriptive statistics.
+      - Parses summary `prefix.txt` file that is generated.
+    - `snippy-core`
+      - Core genome alignment descriptive statistics.
+      - Parses summary `prefix.txt` file that is generated.
     """
 
-    # -------------------------------------------------------------------------#
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Snippy",
             anchor="snippy",
             href="https://github.com/tseemann/snippy",
-            info="is used for rapid haploid variant calling and core genome alignment.",
+            info="Rapid haploid variant calling and core genome alignment.",
             # Can't find a DOI // doi=
         )
 
-        self.snippy_data = {}
-        self.snippy_core_data = {}
+        data_by_sample: Dict[str, Dict] = {}
+        core_data_by_sample: Dict[str, Dict] = {}
+
         self.snippy_col = [
             "Variant-COMPLEX",
             "Variant-DEL",
@@ -47,48 +51,47 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse the txt files from snippy
         for f in self.find_log_files("snippy/snippy"):
             # Check for duplicate sample names
-            if f["s_name"] in self.snippy_data:
+            if f["s_name"] in data_by_sample:
                 log.debug(f"Duplicate sample name found for snippy! Overwriting: {f['s_name']}")
             # Add the file data under the key filename
             data = self.parse_snippy_txt(f["f"])
             if data:
-                self.snippy_data[f["s_name"]] = data
+                data_by_sample[f["s_name"]] = data
                 self.add_software_version(data["version"], f["s_name"])
 
             self.add_data_source(f, section="snippy")
 
         # Ignore samples specified by the user
-        self.snippy_data = self.ignore_samples(self.snippy_data)
+        data_by_sample = self.ignore_samples(data_by_sample)
 
         # Parse the txt files from snippy-core
         for f in self.find_log_files("snippy/snippy-core"):
             # Check for duplicate sample names
-            if f["s_name"] in self.snippy_core_data:
+            if f["s_name"] in core_data_by_sample:
                 log.debug(f"Duplicate sample name found for snippy-core! Overwriting: {f['s_name']}")
             # Add the file data under the key filename
-            self.snippy_core_data[f["s_name"]] = self.parse_snippy_core_txt(f["f"])
+            core_data_by_sample[f["s_name"]] = self.parse_snippy_core_txt(f["f"])
 
             self.add_data_source(f, section="snippy-core")
 
         # Ignore samples specified by the user
-        self.snippy_core_data = self.ignore_samples(self.snippy_core_data)
+        core_data_by_sample = self.ignore_samples(core_data_by_sample)
 
         # Raise warning if no logs were found.
-        if len(self.snippy_data) == 0 and len(self.snippy_core_data) == 0:
+        if len(data_by_sample) == 0 and len(core_data_by_sample) == 0:
             raise ModuleNoSamplesFound
 
         # Run analysis if txt files found
-        if len(self.snippy_data) > 0:
-            log.info(f"Found {len(self.snippy_data)} reports")
-            self.snippy_stats_table()
-            self.snippy_report_section()
+        if len(data_by_sample) > 0:
+            log.info(f"Found {len(data_by_sample)} reports")
+            self.snippy_stats_table(data_by_sample)
+            self.snippy_report_section(data_by_sample)
 
-        if len(self.snippy_core_data) > 0:
-            log.info(f"Found {len(self.snippy_core_data)} snippy-core reports")
-            self.snippy_core_stats_table()
-            self.snippy_core_report_section()
+        if len(core_data_by_sample) > 0:
+            log.info(f"Found {len(core_data_by_sample)} snippy-core reports")
+            self.snippy_core_stats_table(core_data_by_sample)
+            self.snippy_core_report_section(core_data_by_sample)
 
-    # -------------------------------------------------------------------------#
     def parse_snippy_txt(self, file):
         """
         Parse the txt file for snippy output.
@@ -109,7 +112,6 @@ class MultiqcModule(BaseMultiqcModule):
                 data[col] = 0
         return data
 
-    # -------------------------------------------------------------------------#
     def parse_snippy_core_txt(self, file):
         """
         Parse the txt file for snippy-core output.
@@ -120,13 +122,12 @@ class MultiqcModule(BaseMultiqcModule):
             data[split_line[0]] = split_line[1:]
         return data
 
-    # -------------------------------------------------------------------------#
-    def snippy_stats_table(self):
+    def snippy_stats_table(self, data_by_sample):
         """
         Add the snippy data to the general stats.
         """
         self.general_stats_addcols(
-            self.snippy_data,
+            data_by_sample,
             {
                 "VariantTotal": {
                     "title": "# Variants",
@@ -137,39 +138,37 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             },
         )
-        self.write_data_file(self.snippy_data, "multiqc_snippy")
+        self.write_data_file(data_by_sample, "multiqc_snippy")
 
-    # -------------------------------------------------------------------------#
-    def snippy_core_stats_table(self):
+    def snippy_core_stats_table(self, data_by_sample):
         """
         Add the snippy-core data to the general stats.
         """
         # Parse the statistics
-        data = {}
-        for file in self.snippy_core_data:
-            for sample in self.snippy_core_data[file]:
+        data: Dict = {}
+        for file in data_by_sample:
+            for sample in data_by_sample[file]:
                 data[sample] = {}
                 for i in range(0, len(self.snippy_core_col)):
-                    data[sample][self.snippy_core_col[i]] = int(self.snippy_core_data[file][sample][i])
+                    data[sample][self.snippy_core_col[i]] = int(data_by_sample[file][sample][i])
                 data[sample]["Percent_Aligned"] = (data[sample]["ALIGNED"] / data[sample]["LENGTH"]) * 100
                 data[sample]["Percent_Het"] = (data[sample]["HET"] / data[sample]["ALIGNED"]) * 100
 
         self.general_stats_addcols(data, self.snippy_core_headers_config())
         self.write_data_file(data, "multiqc_snippy")
 
-    # -------------------------------------------------------------------------#
-    def snippy_report_section(self):
+    def snippy_report_section(self, data_by_sample):
         """
         Create a report section for the snippy data.
         """
-        bargraph_data = {}
-        for sample in self.snippy_data:
+        bargraph_data: Dict[str, Dict] = {}
+        for sample in data_by_sample:
             # Remove the VariantTotal stat
             bargraph_data[sample] = {}
-            for stat in self.snippy_data[sample]:
+            for stat in data_by_sample[sample]:
                 if stat == "VariantTotal":
                     continue
-                bargraph_data[sample][stat] = self.snippy_data[sample][stat]
+                bargraph_data[sample][stat] = data_by_sample[sample][stat]
 
         # Config for the plot
         pconfig = {
@@ -185,19 +184,18 @@ class MultiqcModule(BaseMultiqcModule):
             description="This plot shows the different variant types reported by snippy.",
         )
 
-    # -------------------------------------------------------------------------#
-    def snippy_core_report_section(self):
+    def snippy_core_report_section(self, data_by_sample):
         """
         Create a report section for the snippy-core data.
         """
-        bargraph_data = {}
-        for file in self.snippy_core_data:
-            for sample in self.snippy_core_data[file]:
+        bargraph_data: Dict[str, Dict] = {}
+        for file in data_by_sample:
+            for sample in data_by_sample[file]:
                 bargraph_data[sample] = {}
                 for i in range(0, len(self.snippy_core_col)):
                     if self.snippy_core_col[i] == "LENGTH":
                         continue
-                    bargraph_data[sample][self.snippy_core_col[i]] = int(self.snippy_core_data[file][sample][i])
+                    bargraph_data[sample][self.snippy_core_col[i]] = int(data_by_sample[file][sample][i])
                 # Subtract variant from aligned
                 bargraph_data[sample]["ALIGNED"] = bargraph_data[sample]["ALIGNED"] - bargraph_data[sample]["VARIANT"]
 
@@ -215,8 +213,8 @@ class MultiqcModule(BaseMultiqcModule):
             description="Different categories of sites in a snippy-core genome alignment.",
         )
 
-    # -------------------------------------------------------------------------#
-    def snippy_core_headers_config(self):
+    @staticmethod
+    def snippy_core_headers_config():
         """
         Prepare the headers for the snippy core stats table.
         """

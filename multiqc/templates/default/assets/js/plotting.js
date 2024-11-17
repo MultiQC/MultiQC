@@ -17,7 +17,7 @@ window.mqc_hide_regex_mode = false;
 
 class Plot {
   constructor(dump) {
-    this.target = dump["id"];
+    this.anchor = dump["anchor"];
     this.layout = dump["layout"];
     this.datasets = dump["datasets"];
     this.pctAxisUpdate = dump["pct_axis_update"];
@@ -29,6 +29,7 @@ class Plot {
     this.activeDatasetIdx = 0;
     this.lActive = dump["l_active"];
     this.pActive = dump["p_active"];
+    this.deferRender = dump["defer_render"];
   }
 
   activeDatasetSize() {
@@ -52,7 +53,7 @@ class Plot {
     } else {
       this.layout.width = null;
     }
-    Plotly.relayout(this.target, this.layout);
+    Plotly.relayout(this.anchor, this.layout);
   }
 
   buildTraces() {
@@ -149,35 +150,44 @@ $(function () {
 });
 
 callAfterDecompressed.push(function (mqc_plotdata) {
-  mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.id, initPlot(data)]));
+  mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.anchor, initPlot(data)]));
 
-  let shouldRender = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
+  let shouldLoad = $(".hc-plot.not_loaded:visible");
 
-  // Render plots on page load
-  shouldRender.each(function () {
-    let target = $(this).attr("id");
-    // Deferring each plot call prevents browser from locking up
+  // Show plots on page load: either render, or show the "Show Plot" button
+  shouldLoad.each(function () {
+    let anchor = $(this).attr("id");
+    let plot = mqc_plots[anchor];
     setTimeout(function () {
-      renderPlot(target);
-      if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0)
-        // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
+      // Deferring each plot call prevents browser from locking up
+      if (plot.deferRender) {
+        $("#" + anchor)
+          .removeClass("not_loaded")
+          .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+      } else {
+        renderPlot(anchor);
+      }
+      if ($(".hc-plot.not_loaded:visible").length === 0)
+        // All plots loaded successfully (rendered or deferred with "Show Plot"), so hiding the warning
         $(".mqc_loading_warning").hide();
     }, 50);
   });
 
-  // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
-  if (shouldRender.length === 0) loadingWarning.hide();
+  // All plots loaded successfully, so hiding the warning
+  if (shouldLoad.length === 0) loadingWarning.hide();
 
   // Render a plot when clicked (heavy plots are not automatically rendered by default)
   $("body").on("click", ".render_plot", function (e) {
-    renderPlot($(this).parent().attr("id"));
+    let plotAnchor = $(this).parent().attr("id");
+    renderPlot(plotAnchor);
   });
 
-  // Render all plots from header, even those that are hidden
+  // Button "Render all plots" clicked, so rendering everything, and hiding the parent button object
   $("#mqc-render-all-plots").click(function () {
-    $(".hc-plot.not_rendered").each(function () {
+    $(".hc-plot").each(function () {
       renderPlot($(this).attr("id"));
     });
+    $(this).parent().hide();
   });
 
   // Replot graphs when something changed in filters
@@ -191,64 +201,73 @@ callAfterDecompressed.push(function (mqc_plotdata) {
   // A "Percentages" button above a plot is clicked
   $("button.interactive-switch-group.percent-switch").click(function (e) {
     e.preventDefault();
-    let target = $(this).data("pid");
+    let plotAnchor = $(this).data("plot-anchor");
 
     // Toggling flags
-    mqc_plots[target].pActive = !$(this).hasClass("active");
+    mqc_plots[plotAnchor].pActive = !$(this).hasClass("active");
     $(this).toggleClass("active");
 
-    renderPlot(target);
+    if (mqc_plots[plotAnchor].rendered) {
+      renderPlot(plotAnchor); // re-render
+    }
   });
 
   // A "Log" button above a plot is clicked
   $("button.interactive-switch-group.log10-switch").click(function (e) {
     e.preventDefault();
-    let target = $(this).data("pid");
+    let plotAnchor = $(this).data("plot-anchor");
 
     // Toggling flags
-    mqc_plots[target].lActive = !$(this).hasClass("active");
+    mqc_plots[plotAnchor].lActive = !$(this).hasClass("active");
     $(this).toggleClass("active");
 
-    renderPlot(target);
+    if (mqc_plots[plotAnchor].rendered) {
+      renderPlot(plotAnchor); // re-render
+    }
   });
 
   // Switch data source
   $(".interactive-switch-group.dataset-switch-group button").click(function (e) {
     e.preventDefault();
-    if ($(this).hasClass("active")) return;
-    $(this).siblings("button.active").removeClass("active");
-    $(this).addClass("active");
-    let target = $(this).data("pid");
-    let activeDatasetIdx = mqc_plots[target].activeDatasetIdx;
-    let newDatasetIdx = $(this).data("datasetIndex");
-    mqc_plots[target].activeDatasetIdx = newDatasetIdx;
+    let el = $(this);
+    if (el.hasClass("active")) return;
+    el.siblings("button.active").removeClass("active");
+    el.addClass("active");
+    let plotAnchor = el.data("plot-anchor");
+    let activeDatasetIdx = mqc_plots[plotAnchor].activeDatasetIdx;
+    let newDatasetIdx = el.data("datasetIndex");
+    mqc_plots[plotAnchor].activeDatasetIdx = newDatasetIdx;
     if (activeDatasetIdx === newDatasetIdx) return;
 
-    renderPlot(target);
+    if (mqc_plots[plotAnchor].rendered) {
+      renderPlot(plotAnchor); // re-render
+    }
   });
 
   // Make divs height-draggable
   // http://jsfiddle.net/Lkwb86c8/
   $(".hc-plot:not(.no-handle)").each(function () {
-    if (!$(this).parent().hasClass("hc-plot-wrapper")) {
-      $(this).wrap('<div class="hc-plot-wrapper"></div>');
+    let el = $(this);
+    if (!el.parent().hasClass("hc-plot-wrapper")) {
+      el.wrap('<div class="hc-plot-wrapper"></div>');
     }
-    if (!$(this).siblings().hasClass("hc-plot-handle")) {
-      $(this).after('<div class="hc-plot-handle"><span></span><span></span><span></span></div>');
+    if (!el.siblings().hasClass("hc-plot-handle")) {
+      el.after('<div class="hc-plot-handle"><span></span><span></span><span></span></div>');
     }
-    $(this).css({ height: "auto", top: 0, bottom: "6px", position: "absolute" });
+    el.css({ height: "auto", top: 0, bottom: "6px", position: "absolute" });
   });
 
   $(".hc-plot-handle").on("mousedown", function (e) {
     let wrapper = $(this).parent();
-    let target = wrapper.children(".hc-plot")[0].id;
+    let plotAnchor = wrapper.children(".hc-plot")[0].id;
     let startHeight = wrapper.height();
     let pY = e.pageY;
 
-    $(document).on("mouseup", function () {
+    let doc = $(document);
+    doc.on("mouseup", function () {
       // Clear listeners now that we've let go
-      $(document).off("mousemove");
-      $(document).off("mouseup");
+      doc.off("mousemove");
+      doc.off("mouseup");
       // Fire off a custom jQuery event for other javascript chunks to tie into
       // Bind to the plot div, which should have a custom ID
       $(wrapper.parent().find(".hc-plot, .beeswarm-plot")).trigger("mqc_plotresize");
@@ -257,38 +276,23 @@ callAfterDecompressed.push(function (mqc_plotdata) {
     $(document).on("mousemove", function (me) {
       let newHeight = startHeight + (me.pageY - pY) + 2; // 2 px for the border or something
       wrapper.css("height", newHeight);
-      if (mqc_plots[target] !== undefined) mqc_plots[target].resize(newHeight - 7); // 7 is the height of the handle overlapping the plot wrapper
+      if (mqc_plots[plotAnchor] !== undefined) mqc_plots[plotAnchor].resize(newHeight - 7); // 7 is the height of the handle overlapping the plot wrapper
     });
-  });
-
-  // Sort a heatmap by highlighted names  // TODO: fix for Plotly
-  $(".mqc_heatmap_sortHighlight").click(function (e) {
-    e.preventDefault();
-    let target = $(this).data("target").substr(1);
-    if (mqc_plots[target].sort_highlights === true) {
-      mqc_plots[target].sort_highlights = false;
-      $(this).removeClass("active");
-    } else {
-      mqc_plots[target].sort_highlights = true;
-      $(this).addClass("active");
-    }
-    $(this).blur();
-    renderPlot(target);
   });
 });
 
 // Highlighting, hiding and renaming samples. Takes a list of samples, returns
 // a list of objects: {"name": "new_name", "highlight": "#cccccc", "hidden": false}
-function applyToolboxSettings(samples, target) {
+function applyToolboxSettings(samples, plotAnchor) {
   // init object with default values
   let objects = samples.map((name) => ({ name: name, highlight: null, hidden: false }));
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
     objects.map((obj) => {
-      for (let p_idx = 0; p_idx < window.mqc_rename_f_texts.length; p_idx++) {
-        let pattern = window.mqc_rename_f_texts[p_idx];
-        let new_text = window.mqc_rename_t_texts[p_idx];
+      for (let patternIdx = 0; patternIdx < window.mqc_rename_f_texts.length; patternIdx++) {
+        let pattern = window.mqc_rename_f_texts[patternIdx];
+        let new_text = window.mqc_rename_t_texts[patternIdx];
         obj.name = obj.name.replace(pattern, new_text);
       }
     });
@@ -313,7 +317,7 @@ function applyToolboxSettings(samples, target) {
 
   // Hide samples
   if (window.mqc_hide_f_texts.length > 0) {
-    let groupDiv = $("#" + target).closest(".mqc_hcplot_plotgroup");
+    let groupDiv = $("#" + plotAnchor).closest(".mqc_hcplot_plotgroup");
     groupDiv.parent().find(".samples-hidden-warning").remove();
     groupDiv.show();
 
@@ -347,7 +351,7 @@ function applyToolboxSettings(samples, target) {
     // All series hidden. Hide the graph.
     if (nHidden === objects.length) {
       groupDiv.hide();
-      return null;
+      return objects;
     }
   }
 
@@ -356,20 +360,20 @@ function applyToolboxSettings(samples, target) {
 }
 
 // Call to render any plot
-function renderPlot(target) {
-  let plot = mqc_plots[target];
+function renderPlot(plotAnchor) {
+  let plot = mqc_plots[plotAnchor];
   if (plot === undefined) return false;
   if (plot.datasets.length === 0) return false;
 
-  let container = $("#" + target);
+  let container = $("#" + plotAnchor);
 
-  // When the plot was already rendered, it's faster to call react, using the same signature
+  // When the plot was already rendered, it's faster to call Plotly.react, using the same signature
   // https://plotly.com/javascript/plotlyjs-function-reference/#plotlyreact
   let func;
   if (!plot.rendered) {
     func = Plotly.newPlot;
     plot.rendered = true;
-    container.removeClass("not_rendered").parent().find(".render_plot").remove();
+    container.removeClass("not_rendered").removeClass("not_loaded").parent().find(".render_plot").remove();
     if ($(".hc-plot.not_rendered").length === 0) $("#mqc-warning-many-samples").hide();
   } else {
     func = Plotly.react;
@@ -408,11 +412,11 @@ function renderPlot(target) {
   }
 
   container.show();
-  func(target, traces, plot.layout, {
+  func(plotAnchor, traces, plot.layout, {
     responsive: true,
     displaylogo: false,
     displayModeBar: true,
-    toImageButtonOptions: { filename: target },
+    toImageButtonOptions: { filename: plotAnchor },
     modeBarButtonsToRemove: [
       "lasso2d",
       "autoScale2d",

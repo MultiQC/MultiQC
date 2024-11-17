@@ -7,12 +7,11 @@ from typing import Dict, Set, Union
 
 import pytest
 import yaml
+from importlib_metadata import EntryPoint
 
-from multiqc import config
-from multiqc import report
+from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.core.file_search import file_search
-from multiqc.core.update_config import update_config
 
 
 def _test_search_files(
@@ -21,17 +20,14 @@ def _test_search_files(
     extra_config: Dict,
     expected_paths_by_module: Dict[str, Set[Union[Path, str]]],
 ):
-    update_config()
-
     config.sp = search_patterns
     config.run_modules = list(config.sp.keys())
-    config.avail_modules = dict.fromkeys(config.run_modules)
+    config.avail_modules = {k: EntryPoint(k, k, k) for k in config.run_modules}
 
     config.analysis_dir = [str(analysis_dir)]
     if extra_config:
         config.update(extra_config)
 
-    report.reset_file_search()
     file_search()
 
     expected = {m: set(str(p) for p in paths) for m, paths in expected_paths_by_module.items()}

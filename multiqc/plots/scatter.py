@@ -1,7 +1,9 @@
 """MultiQC functions to plot a scatter plot"""
 
 import logging
-from typing import Union, Dict
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.plots.plotly import scatter
@@ -11,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+_template_mod: Optional[EntryPoint] = None
 
 
 def get_template_mod():
@@ -22,31 +24,33 @@ def get_template_mod():
 
 
 def plot(
-    data,
-    pconfig: Union[Dict, ScatterConfig, None] = None,
+    data: Union[Mapping[str, Any], Sequence[Mapping[str, Any]]],
+    pconfig: Union[Mapping[str, Any], ScatterConfig, None] = None,
 ) -> Union[scatter.ScatterPlot, str]:
     """Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    pconf = ScatterConfig.from_pconfig_dict(pconfig)
+    pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
-        data = [data]
+        data = [data]  # type: ignore
 
-    plotdata = list()
+    plotdata: List[List[Dict[str, Any]]] = list()
     for data_index, ds in enumerate(data):
-        d = list()
+        d: List[Dict[str, Any]] = list()
         for s_name in ds:
             # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config: ScatterConfig = pconf.model_copy()
-            if pconf.data_labels and isinstance(pconf.data_labels[data_index], dict):
-                # if not a dict: only dataset name is provided
-                for k, v in pconf.data_labels[data_index].items():
-                    if k in series_config.model_fields:
-                        setattr(series_config, k, v)
+            if pconf.data_labels:
+                dl = pconf.data_labels[data_index]
+                if isinstance(dl, dict):
+                    # if not a dict: only dataset name is provided
+                    for k, v in dl.items():
+                        if k in series_config.model_fields:
+                            setattr(series_config, k, v)
 
             if not isinstance(ds[s_name], list):
                 ds[s_name] = [ds[s_name]]
@@ -92,11 +96,13 @@ def plot(
     # noinspection PyBroadException
     try:
         if pconf.extra_series:
-            extra_series = pconf.extra_series
+            extra_series: List[List[Dict[str, Any]]] = []
             if isinstance(pconf.extra_series, dict):
                 extra_series = [[pconf.extra_series]]
-            elif isinstance(pconf.extra_series, list) and isinstance(pconf.extra_series[0], dict):
-                extra_series = [pconf.extra_series]
+            elif isinstance(pconf.extra_series[0], dict):
+                extra_series = [cast(List[Dict[str, Any]], [pconf.extra_series])]
+            else:
+                extra_series = cast(List[List[Dict[str, Any]]], pconf.extra_series)
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
@@ -105,10 +111,10 @@ def plot(
 
     # Make a plot
     mod = get_template_mod()
-    if "scatter" in mod.__dict__ and callable(mod.scatter):
+    if "scatter" in mod.__dict__ and callable(mod.__dict__["scatter"]):
         # noinspection PyBroadException
         try:
-            return mod.scatter(plotdata, pconf)
+            return mod.__dict__["scatter"](plotdata, pconf)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive

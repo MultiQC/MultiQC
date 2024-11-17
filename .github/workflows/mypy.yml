@@ -12,20 +12,21 @@ on:
       - "*.md"
 
 jobs:
-  linux:
-    name: Python ${{ matrix.python-version }}
+  mypy:
+    name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ["3.8", "3.12"] # Oldest and newest supported Python versions
+        python-version: ["3.9", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: "Set up Python ${{ matrix.python-version }}"
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
 
       - run: pip install '.[dev]'
       - run: mypy multiqc
