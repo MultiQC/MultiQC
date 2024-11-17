@@ -12,7 +12,7 @@ from typing import Dict
 
 
 def find_plot_calls(module_path: Path) -> Dict[str, int]:
-    call_by_plot_type = defaultdict(int)
+    call_by_plot_type: Dict[str, int] = defaultdict(int)
     with module_path.open() as f:
         for line in f:
             if ".plot(" in line:
@@ -25,7 +25,7 @@ def find_plot_calls(module_path: Path) -> Dict[str, int]:
 
 def main():
     modules_dir = Path(__file__).parent.parent / "multiqc/modules"
-    stat_by_plot_type_by_module = defaultdict(lambda: defaultdict(int))
+    stat_by_plot_type_by_module: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
     for mod_dir in modules_dir.iterdir():
         if mod_dir.is_dir():
             mod_name = mod_dir.name

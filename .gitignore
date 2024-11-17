@@ -6,7 +6,8 @@ multiqc_plots/
 /examples/
 /result
 /benchmarks
-/tmp/
+/tmp
+/playground
 
 # CI tooling
 .ruff_cache
@@ -48,12 +49,10 @@ runTest.sh
 .direnv/*
 
 # Typical name for virtualenv
-venv/
+venv*
 
 # Related repos
-/test-data/
-/website/
-/usage/
+/test-data
 
 node_modules/
 package-lock.json

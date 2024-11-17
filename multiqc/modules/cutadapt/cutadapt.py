@@ -1,45 +1,55 @@
-"""MultiQC module to parse output from Cutadapt"""
-
 import functools
+import json
 import logging
 import os
 import re
 import shlex
-import json
+from typing import Dict
 
 from packaging import version
 
-from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, linegraph
+from multiqc.types import Anchor, ColumnKey, SampleName
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Cutadapt module class, parses stderr logs.
-    Also understands logs saved by Trim Galore!
-    (which contain cutadapt logs)
+    This module should be able to parse logs from a wide range of versions of Cutadapt.
+    It works with both the regular Cutadapt report output and also with
+    [JSON reports (`--json`)](https://cutadapt.readthedocs.io/en/latest/guide.html#json-report).
+
+    Although the module parsing code works with very old log files, if you are working with
+    ancient versions (such as v1.2) you may need to change the search pattern to the following:
+
+    ```yaml
+    sp:
+      cutadapt:
+        contents: "cutadapt version"
+    ```
+
+    See the [module search patterns](https://docs.seqera.io/multiqc/getting_started/config#module-search-patterns)
+    section of the MultiQC documentation for more information.
+
+    The module also understands logs saved by Trim Galore, which contain cutadapt logs.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cutadapt",
-            anchor="cutadapt",
+            anchor=Anchor("cutadapt"),
             href="https://cutadapt.readthedocs.io/",
-            info="""is a tool to find and remove adapter sequences, primers, poly-A
-                    tails and other types of unwanted sequence from your high-throughput
-                    sequencing reads.""",
+            info="Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.",
             doi="10.14806/ej.17.1.200",
         )
 
         # Find and load any Cutadapt reports
-        self.cutadapt_data = dict()
-        self.cutadapt_length_counts = {"default": dict()}
-        self.cutadapt_length_exp = {"default": dict()}
-        self.cutadapt_length_obsexp = {"default": dict()}
+        self.cutadapt_data: Dict[SampleName, Dict] = dict()
+        self.cutadapt_length_counts: Dict[str, Dict[SampleName, Dict]] = {"default": dict()}
+        self.cutadapt_length_exp: Dict[str, Dict[SampleName, Dict]] = {"default": dict()}
+        self.cutadapt_length_obsexp: Dict[str, Dict[SampleName, Dict]] = {"default": dict()}
 
         for f in self.find_log_files("cutadapt"):
             self.parse_file(f)
@@ -49,17 +59,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         self.cutadapt_data = self.ignore_samples(self.cutadapt_data)
-
         if len(self.cutadapt_data) == 0:
             raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.cutadapt_data)} reports")
 
-        # Write parsed report data to a file
-        self.write_data_file(self.cutadapt_data, "multiqc_cutadapt")
-
         # Basic Stats Table
         self.cutadapt_general_stats_table()
+
+        # Write parsed report data to a file
+        self.write_data_file(self.cutadapt_data, "multiqc_cutadapt")
 
         # Bar plot with number of reads trimmed
         self.cutadapt_filtered_barplot()
@@ -119,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
         with open(path, "r") as fh:
             data = json.load(fh)
 
-        s_name = self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path")], f)
+        s_name = SampleName(self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path") and v], f=f))
         if s_name in self.cutadapt_data:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
 
@@ -153,6 +162,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             for read in ["read1", "read2"]:
                 if f"input_{read}" not in data["basepair_counts"]:
+                    continue
+                if not data[f"adapters_{read}"]:
                     continue
                 for adapter_data in data[f"adapters_{read}"]:
                     end_data = adapter_data.get(end_key)
@@ -241,10 +252,10 @@ class MultiqcModule(BaseMultiqcModule):
                     ):
                         input_fqs.append(x)
                 if input_fqs:
-                    s_name = self.clean_s_name(input_fqs, f)
+                    s_name = SampleName(self.clean_s_name(input_fqs, f))
                 else:
                     # Manage case where sample name is '-' (reading from stdin)
-                    s_name = f["s_name"]
+                    s_name = SampleName(f["s_name"])
 
                 if s_name in self.cutadapt_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
@@ -257,7 +268,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if cutadapt_version is not None:
                     self.add_software_version(cutadapt_version, s_name)
 
-                self.add_data_source(f, s_name)
+                self.add_data_source(f, str(s_name))
 
                 # Search regexes for overview stats
                 for k, r in regexes[parsing_version].items():
@@ -270,14 +281,15 @@ class MultiqcModule(BaseMultiqcModule):
                     log_section = line.strip().strip("=").strip()
 
                 # Detect whether 3' or 5'
-                end_regex = re.search(r"Type: regular (\d)'", line)
-                if end_regex:
-                    end = end_regex.group(1)
+                end_match = re.search(r"Type: regular (\d)'", line)
+                if end_match:
+                    end = end_match.group(1)
 
                 if "Overview of removed sequences" in line:
                     if "' end" in line:
-                        res = re.search(r"(\d)' end", line)
-                        end = res.group(1)
+                        end_match = re.search(r"(\d)' end", line)
+                        if end_match:
+                            end = end_match.group(1)
 
                     # Initialise dictionaries for length data if not already done
                     if end not in self.cutadapt_length_counts:
@@ -285,11 +297,10 @@ class MultiqcModule(BaseMultiqcModule):
                         self.cutadapt_length_exp[end] = dict()
                         self.cutadapt_length_obsexp[end] = dict()
 
-                # Histogram showing lengths trimmed
                 if "length" in line and "count" in line and "expect" in line:
                     plot_sname = s_name
                     if log_section is not None:
-                        plot_sname = f"{s_name} - {log_section}"
+                        plot_sname = SampleName(f"{s_name} - {log_section}")
                     self.cutadapt_length_counts[end][plot_sname] = dict()
                     self.cutadapt_length_exp[end][plot_sname] = dict()
                     self.cutadapt_length_obsexp[end][plot_sname] = dict()
@@ -331,22 +342,34 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the Cutadapt report and add it to the
         basic stats table at the top of the report"""
 
-        headers = {
-            "percent_trimmed": {
-                "title": "% BP Trimmed",
-                "description": "% Total Base Pairs trimmed",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "RdYlBu-rev",
-            }
-        }
-        self.general_stats_addcols(self.cutadapt_data, headers)
+        # Merge Read 1 + Read 2 data
+        self.general_stats_addcols(
+            {s: {ColumnKey(k): v for k, v in d.items()} for s, d in self.cutadapt_data.items()},
+            {
+                ColumnKey("percent_trimmed"): {
+                    "title": "Trimmed bases",
+                    "description": "% total base pairs trimmed",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "RdYlBu-rev",
+                }
+            },
+            group_samples_config=SampleGroupingConfig(
+                cols_to_weighted_average=[
+                    (ColumnKey("percent_trimmed"), ColumnKey("bp_processed")),
+                ],
+            ),
+        )
 
     def cutadapt_filtered_barplot(self):
         """Bar plot showing proportion of reads trimmed"""
 
-        pconfig = {"id": "cutadapt_filtered_reads_plot", "title": "Cutadapt: Filtered Reads", "ylab": "Counts"}
+        pconfig = {
+            "id": "cutadapt_filtered_reads_plot",
+            "title": "Cutadapt: Filtered Reads",
+            "ylab": "Counts",
+        }
 
         # We just use all categories. If a report is generated with a mixture
         # of SE and PE data then this means quite a lot of categories.

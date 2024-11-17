@@ -71,8 +71,8 @@ class Dataset(BaseDataset):
     def create_figure(
         self,
         layout: go.Layout,
-        is_log=False,
-        is_pct=False,
+        is_log: bool = False,
+        is_pct: bool = False,
         **kwargs,
     ) -> go.Figure:
         """
@@ -92,13 +92,13 @@ class Dataset(BaseDataset):
         return fig
 
     def save_data_file(self) -> None:
-        vals_by_sample = {}
+        vals_by_sample: Dict[str, BoxT] = {}
         for sample, values in zip(self.samples, self.data):
             vals_by_sample[sample] = values
         report.write_data_file(vals_by_sample, self.uid)
 
 
-class BoxPlot(Plot[Dataset]):
+class BoxPlot(Plot[Dataset, BoxPlotConfig]):
     datasets: List[Dataset]
 
     @staticmethod
@@ -106,20 +106,18 @@ class BoxPlot(Plot[Dataset]):
         pconfig: BoxPlotConfig,
         list_of_data_by_sample: List[Dict[str, BoxT]],
     ) -> "BoxPlot":
-        max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
-
-        model = Plot.initialize(
+        model: Plot[Dataset, BoxPlotConfig] = Plot.initialize(
             plot_type=PlotType.BOX,
             pconfig=pconfig,
-            n_datasets=len(list_of_data_by_sample),
-            n_samples=max_n_samples,
+            n_samples_per_dataset=[len(x) for x in list_of_data_by_sample],
         )
 
         model.datasets = [
             Dataset.create(ds, data_by_sample) for ds, data_by_sample in zip(model.datasets, list_of_data_by_sample)
         ]
 
-        height = determine_barplot_height(max_n_samples)
+        max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
+        height: int = determine_barplot_height(max_n_samples)
 
         model.layout.update(
             height=height,

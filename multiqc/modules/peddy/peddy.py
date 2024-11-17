@@ -1,28 +1,25 @@
-"""MultiQC module to parse output from Peddy"""
-
 import json
 import logging
 import random
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import scatter
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    Peddy module class, parses stderr logs.
-    """
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Peddy",
             anchor="peddy",
             href="https://github.com/brentp/peddy",
-            info="calculates genotype :: pedigree correspondence checks, ancestry checks and sex checks using VCF files.",
+            info="Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF.",
+            extra="It samples the VCF at about 25000 sites (plus chrX) to accurately estimate relatedness, IBS0, "
+            "heterozygosity, sex and ancestry. It uses 2504 thousand genome samples as backgrounds to calibrate "
+            "the relatedness calculation and to make ancestry predictions.\n\n"
+            "It does this very quickly by sampling, by using C for computationally intensive parts, and parallelization.",
             doi="10.1016/j.ajhg.2017.01.017",
         )
 
@@ -122,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_peddy_csv(self, f, pattern):
         """Parse csv output from peddy"""
-        parsed_data = dict()
+        parsed_data: Dict[str, Dict] = dict()
         headers = None
         s_name_idx = None
         for line in f["f"].splitlines():
@@ -316,9 +313,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name, d in self.peddy_data.items():
             if "sex_het_ratio" in d and "ped_sex_sex_check" in d:
+                color = {
+                    "male": "#7cb5ec",
+                    "female": "#f15c80",
+                }.get(d.get("predicted_sex_sex_check"), "#434348")
                 data[s_name] = {
                     "x": sex_index.get(d["ped_sex_sex_check"], 2) + (random.random() - 0.5) * 0.1,
                     "y": d["sex_het_ratio"],
+                    "color": color,
                 }
 
         pconfig = {

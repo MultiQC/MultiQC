@@ -26,68 +26,65 @@ bbduk:
   contents: "Executing jgi.BBDuk"
   num_lines: 2
 bbmap/stats:
-  contents: "#Name	Reads	ReadsPct"
-  num_lines: 4
+  contents: ["#File", "#Total", "#Matched", "#Name	Reads	ReadsPct"]
+  num_lines: 10
 bbmap/aqhist:
   contents: "#Quality	count1	fraction1	count2	fraction2"
-  num_lines: 1
+  num_lines: 10
 bbmap/bhist:
   contents: "#Pos	A	C	G	T	N"
-  num_lines: 1
+  num_lines: 10
 bbmap/bincov:
-  # 3rd line (1st is #Mean)
   contents: "#RefName	Cov	Pos	RunningPos"
-  num_lines: 3
+  num_lines: 10
 bbmap/bqhist:
   contents: "#BaseNum	count_1	min_1	max_1	mean_1	Q1_1	med_1	Q3_1	LW_1	RW_1	count_2	min_2	max_2	mean_2	Q1_2	med_2	Q3_2	LW_2	RW_2"
-  num_lines: 1
+  num_lines: 10
 bbmap/covhist:
   contents: "#Coverage	numBases"
-  num_lines: 1
+  num_lines: 10
 bbmap/covstats:
   contents: "#ID	Avg_fold"
-  num_lines: 1
+  num_lines: 10
 bbmap/ehist:
   contents: "#Errors	Count"
-  num_lines: 1
+  num_lines: 10
 bbmap/gchist:
-  # 5th line (1st is #Mean)
-  contents: "#GC	Count"
-  num_lines: 5
+  contents: ["#Mean	", "#GC	Count"]
+  num_lines: 10
 bbmap/idhist:
-  contents: "#Mean_reads"
-  num_lines: 1
+  contents: ["#Mean_reads", "#Identity	Reads	Bases"]
+  num_lines: 10
 bbmap/ihist:
-  # 6th line (first is #Mean)
-  contents: "#InsertSize	Count"
-  num_lines: 6
+  contents: ["#Mean	", "#InsertSize	Count"]
+  num_lines: 10
 bbmap/indelhist:
   contents: "#Length	Deletions	Insertions"
-  num_lines: 1
+  num_lines: 10
 bbmap/lhist:
   contents: "#Length	Count"
-  num_lines: 1
+  num_lines: 10
 bbmap/mhist:
   contents: "#BaseNum	Match1	Sub1	Del1	Ins1	N1	Other1	Match2	Sub2	Del2	Ins2	N2	Other2"
-  num_lines: 1
+  num_lines: 10
 bbmap/qahist:
-  contents: "#Deviation"
-  num_lines: 1
+  contents: "#Quality	Match	Sub	Ins	Del"
+  num_lines: 10
 bbmap/qchist:
   contents_re: "#Quality	count1	fraction1$"
-  num_lines: 1
+  num_lines: 10
 bbmap/qhist:
-  contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured"
-  num_lines: 1
+  contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured"
+  num_lines: 10
 bbmap/rpkm:
-  contents: "#File	"
-  num_lines: 1
+  contents: ["#File	", "#Reads	", "#Mapped	", "#RefSequences	", "#Name Length"]
+  num_lines: 10
 bbmap/statsfile_machine:
   contents: "Reads Used="
-  num_lines: 1
+  num_lines: 10
 bbmap/statsfile:
-  contents: "Reads Used:"
-  num_lines: 1
+  contents: ["Reads Used:", "Mapping:", "Reads/sec:", "kBases/sec:"]
+  num_lines: 10
 bcftools/stats:
   contents: "This file was produced by bcftools stats"
 bcl2fastq:
@@ -191,9 +188,6 @@ bowtie2:
     - "bisulfite"
     - "HiC-Pro"
   shared: true
-bracken:
-  contents_re: '^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)root'
-  num_lines: 1
 busco:
   fn: "short_summary*"
   contents: "BUSCO version is:"
@@ -286,6 +280,9 @@ deeptools/plotProfile:
   num_lines: 1
 diamond:
   fn: "diamond.log"
+disambiguate:
+  contents: "unique species A pairs"
+  num_lines: 2
 dragen/vc_metrics:
   fn: "*.vc_metrics.csv"
 dragen/gvcf_metrics:
@@ -359,6 +356,9 @@ freyja:
   fn: "*.tsv"
   contents: "summarized\t["
   num_lines: 6
+ganon:
+  contents: ["ganon-classify processed"]
+  num_lines: 100
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
 gatk/base_recalibrator:
@@ -388,9 +388,13 @@ happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
 htseq:
-  contents_re: '^(feature\tcount|\w+.*\t\d+)$'
-  num_lines: 1
-  shared: true
+  - contents_re: '^feature\tcount$'
+    num_lines: 1
+    shared: true
+  # can lack header and start with a GENE\tNUMBER line
+  - contents_re: '^\w+.*\t\d+$'
+    num_lines: 1
+    shared: true
 hicexplorer:
   contents: "Min rest. site distance"
   max_filesize: 4096
@@ -482,19 +486,11 @@ kaiju:
   num_lines: 1
 kallisto:
   contents: "[quant] finding pseudoalignments for the reads"
-nanostat:
-  max_filesize: 4096
-  contents_re: "Metrics\\s+dataset\\s*"
-  num_lines: 1
-nanostat/legacy:
-  max_filesize: 4096
-  contents_re: "General summary:\\s*"
-  num_lines: 1
 kat:
   fn: "*.dist_analysis.json"
 kraken:
-  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)unclassified'
-  num_lines: 1
+  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)[root|unclassified]'
+  num_lines: 2
 librarian:
   fn: "librarian_heatmap.txt"
 leehom:
@@ -559,12 +555,33 @@ motus:
   num_lines: 2
 multivcfanalyzer:
   fn: "MultiVCFAnalyzer.json"
-disambiguate:
-  contents: "unique species A pairs"
-  num_lines: 2
+nanostat:
+  max_filesize: 4096
+  contents_re: "Metrics\\s+dataset\\s*"
+  num_lines: 1
+nanostat/legacy:
+  max_filesize: 4096
+  contents_re: "General summary:\\s*"
+  num_lines: 1
+nanoq:
+  contents: "Nanoq Read Summary"
+  num_lines: 3
 nextclade:
   contents: "seqName;clade;"
   num_lines: 1
+ngsbits/readqc:
+  - fn: "*.qcML"
+    contents: "ReadQC"
+    num_lines: 20
+  - fn: "*.qcML"
+    contents: "SeqPurge"
+    num_lines: 20
+ngsbits/mappingqc:
+  - fn: "*.qcML"
+    contents: "MappingQC"
+    num_lines: 20
+ngsbits/samplegender:
+  - fn: "*_ngsbits_sex.tsv"
 ngsderive/strandedness:
   contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1
@@ -596,6 +613,9 @@ odgi:
   - fn: "*.og.stats.yml"
   - fn: "*.odgi.stats.yaml"
   - fn: "*.odgi.stats.yml"
+pairtools:
+  contents: ["total_single_sided_mapped\t", "cis\t", "trans\t", "pair_types/"]
+  num_lines: 20
 peddy/summary_table:
   fn: "*.peddy.ped"
 peddy/het_check:
@@ -684,6 +704,7 @@ picard/quality_yield_metrics:
 picard/rnaseqmetrics:
   - contents: "# picard.analysis.Collectrnaseqmetrics"
   - contents: "# picard.analysis.CollectRnaSeqMetrics"
+  - contents: "# CollectRnaSeqMetrics"
   - contents_re: "# CollectMultipleMetrics .*RnaSeqMetrics"
     shared: true
 picard/rrbs_metrics:
@@ -925,6 +946,9 @@ truvari/bench:
   contents_re: ".*truvari.* bench.*"
   fn: "log.txt"
   num_lines: 2
+umicollapse:
+  num_lines: 100
+  contents: "UMI collapsing finished in "
 umitools/extract:
   contents: "# output generated by extract"
   num_lines: 3

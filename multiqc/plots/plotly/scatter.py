@@ -1,19 +1,18 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Dict, List, Union, Optional, Any, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 from plotly import graph_objects as go  # type: ignore
 
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import report
+from multiqc.plots.plotly.plot import BaseDataset, PConfig, Plot, PlotType
 
 logger = logging.getLogger(__name__)
 
 
 class ScatterConfig(PConfig):
-    ylab: str
     categories: Optional[List[str]] = None
     extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
     marker_size: Optional[int] = None
@@ -23,7 +22,8 @@ class ScatterConfig(PConfig):
 
 
 # {'color': 'rgb(211,211,211,0.05)', 'name': 'background: EUR', 'x': -0.294, 'y': -1.527}
-PointT = Dict[str, Union[str, float, int]]
+ValueT = Union[str, float, int]
+PointT = Dict[str, ValueT]
 
 
 def plot(points_lists: List[List[PointT]], pconfig: ScatterConfig) -> "ScatterPlot":
@@ -42,7 +42,7 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        points: List[Dict],
+        points: List[Dict[str, Any]],
         pconfig: ScatterConfig,
     ) -> "Dataset":
         dataset = Dataset(
@@ -71,8 +71,8 @@ class Dataset(BaseDataset):
     def create_figure(
         self,
         layout: go.Layout,
-        is_log=False,
-        is_pct=False,
+        is_log: bool = False,
+        is_pct: bool = False,
         **kwargs,
     ) -> go.Figure:
         """
@@ -98,7 +98,7 @@ class Dataset(BaseDataset):
                 if x_std == 0 and y_std == 0:
                     logger.warning(f"Scatter plot {self.plot_id}: all {len(points)} points have the same coordinates")
                     if len(points) == 1:  # Only single point - annotate it!
-                        for i, point in points:
+                        for _, point in points:
                             point["annotation"] = point["name"]
                 else:
                     x_z_scores = np.abs((x_values - np.mean(x_values)) / x_std) if x_std else np.zeros_like(x_values)
@@ -113,7 +113,7 @@ class Dataset(BaseDataset):
                         # If there are too many outliers, we increase the threshold until we have less than 10
                         threshold += 0.2
                     # 3. Annotate outliers that pass the threshold
-                    for (i, point), x_z_score, y_z_score in zip(points, x_z_scores, y_z_scores):
+                    for (_, point), x_z_score, y_z_score in zip(points, x_z_scores, y_z_scores):
                         # Check if point is an outlier or if total points are less than 10
                         if x_z_score > threshold or y_z_score > threshold:
                             point["annotation"] = point["name"]
@@ -129,7 +129,7 @@ class Dataset(BaseDataset):
             names_by_legend_key[legend_key].add(name)
         layout.showlegend = True
 
-        in_legend = set()
+        in_legend: Set[Tuple[Any, Any, Any, Any]] = set()
         for el in self.points:
             x = el["x"]
             name = el["name"]
@@ -183,6 +183,38 @@ class Dataset(BaseDataset):
         fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
+    def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+        if not self.points:
+            return None, None
+        xmax, xmin = None, None
+        for point in self.points:
+            x = point["x"]
+            if xmax is not None:
+                xmax = max(xmax, x)
+            else:
+                xmax = x
+            if xmin is not None:
+                xmin = min(xmin, x)
+            else:
+                xmin = x
+        return xmin, xmax
+
+    def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+        if not self.points:
+            return None, None
+        ymax, ymin = None, None
+        for point in self.points:
+            y = point["y"]
+            if ymax is not None:
+                ymax = max(ymax, y)
+            else:
+                ymax = y
+            if ymin is not None:
+                ymin = min(ymin, y)
+            else:
+                ymin = y
+        return ymin, ymax
+
     def save_data_file(self) -> None:
         data = [
             {
@@ -195,20 +227,22 @@ class Dataset(BaseDataset):
         report.write_data_file(data, self.uid)
 
 
-class ScatterPlot(Plot):
+class ScatterPlot(Plot[Dataset, ScatterConfig]):
     datasets: List[Dataset]
 
     @staticmethod
     def create(pconfig: ScatterConfig, points_lists: List[List[PointT]]) -> "ScatterPlot":
-        model = Plot.initialize(
+        model: Plot[Dataset, ScatterConfig] = Plot.initialize(
             plot_type=PlotType.SCATTER,
             pconfig=pconfig,
-            n_datasets=len(points_lists),
-            n_samples=len(points_lists[0]) if len(points_lists) > 0 else 0,
+            n_samples_per_dataset=[len(x) for x in points_lists],
             default_tt_label="<br><b>X</b>: %{x}<br><b>Y</b>: %{y}",
         )
 
         model.datasets = [Dataset.create(d, points, pconfig) for d, points in zip(model.datasets, points_lists)]
+
+        model._set_x_bands_and_range(pconfig)
+        model._set_y_bands_and_range(pconfig)
 
         # Make a tooltip always show on hover over nearest point on plot
         model.layout.hoverdistance = -1

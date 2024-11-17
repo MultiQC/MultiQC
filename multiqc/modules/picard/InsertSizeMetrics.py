@@ -92,8 +92,8 @@ def parse_reports(module):
 
                     vals = f["f"].readline().strip("\n").split("\t")
 
-            if line.startswith("## HISTOGRAM"):
-                keys = f["f"].readline().strip("\n").split("\t")
+            if line.startswith("insert_size\t"):
+                keys = line.strip("\n").split("\t")
                 assert len(keys) >= 2, (keys, f)
                 in_hist = True
                 histogram_by_sample[s_name] = dict()

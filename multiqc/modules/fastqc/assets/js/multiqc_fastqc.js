@@ -34,7 +34,7 @@ callAfterDecompressed.push(function (mqc_plotdata) {
   var fastqc_modules = $(".fastqc_passfails").closest(".mqc-module-section");
   fastqc_modules.each(function () {
     var module_element = $(this);
-    var module_key = module_element.attr("id").replace(/-/g, "_").replace("mqc_module_section_", "");
+    var module_key = module_element.data("moduleAnchor");
     fastqc_module(module_element, module_key);
   });
 });
@@ -53,11 +53,10 @@ function fastqc_module(module_element, module_key) {
   var current_single_plot = undefined;
 
   // Make a lookup hash of sample names, in case we rename stuff later
-  module_element;
-  orig_s_names = {};
+  module_element.orig_s_names = {};
   for (var s_name in fastqc_seq_content[module_key]) {
     if (Object.prototype.hasOwnProperty.call(fastqc_seq_content[module_key], s_name)) {
-      orig_s_names[s_name] = s_name;
+      module_element.orig_s_names[s_name] = s_name;
     }
   }
 
@@ -79,7 +78,7 @@ function fastqc_module(module_element, module_key) {
           s_name = s_name.replace(f_text, window.mqc_rename_t_texts[idx]);
         }
       });
-      orig_s_names[s_name] = orig_s_name;
+      module_element.orig_s_names[s_name] = orig_s_name;
       if (fastqc_passfails[module_key] !== undefined) {
         let t_status = fastqc_passfails[module_key]["per_base_sequence_content"][s_name];
         sample_statuses[s_name] = t_status;
@@ -281,7 +280,7 @@ function fastqc_module(module_element, module_key) {
       "</div> \
         </div>";
     module_element
-      .find("[id^=fastqc_" + k + "]")
+      .find("[id*=fastqc_" + k + "]")
       .first()
       .append(p_bar);
   });
@@ -449,7 +448,7 @@ function fastqc_module(module_element, module_key) {
     // Get label from y position
     let idx = Math.floor(y / s_height);
     let s_name = sample_names[idx];
-    let orig_s_name = orig_s_names[sample_names[idx]];
+    let orig_s_name = module_element.orig_s_names[sample_names[idx]];
     if (s_name === undefined) {
       return false;
     }
@@ -520,12 +519,12 @@ function fastqc_module(module_element, module_key) {
     let y = e.pageY - pos.y;
     let idx = Math.floor(y / s_height);
     let s_name = sample_names[idx];
-    let orig_s_name = orig_s_names[sample_names[idx]];
+    let orig_s_name = module_element.orig_s_names[sample_names[idx]];
     if (orig_s_name !== undefined) {
       plot_single_seqcontent(s_name);
     }
   });
-  module_element.on("click", ".fastqc_seqcontent_single_prevnext", function (e) {
+  module_element.on("click", "." + module_key + "_seqcontent_single_prevnext", function (e) {
     e.preventDefault();
     // Find next / prev sample name
     let idx = sample_names.indexOf(current_single_plot);
@@ -541,7 +540,7 @@ function fastqc_module(module_element, module_key) {
       idx = 0;
     }
     let s_name = sample_names[idx];
-    let orig_s_name = orig_s_names[sample_names[idx]];
+    let orig_s_name = module_element.orig_s_names[sample_names[idx]];
     current_single_plot = s_name;
     // Prep the new plot data
     let plot_data = [[], [], [], []];
@@ -559,13 +558,16 @@ function fastqc_module(module_element, module_key) {
     // Update the chart
     plot_single_seqcontent(s_name);
   });
-  module_element.on("click", "#fastqc_sequence_content_single_back", function (e) {
+
+  function sequenceContentSingleClose(e) {
     e.preventDefault();
     module_element.find("#fastqc_per_base_sequence_content_plot_div").slideDown();
     module_element.find("#fastqc_sequence_content_single_wrapper").slideUp(function () {
       $(this).remove();
     });
-  });
+  }
+  module_element.on("click", "#" + module_key + "_sequence_content_single_back", sequenceContentSingleClose);
+  $(document).on("mqc_toolbox_open", sequenceContentSingleClose);
 
   // Highlight the custom heatmap
   $(document).on("mqc_highlights mqc_hidesamples mqc_renamesamples mqc_plotresize", function (e) {
@@ -578,7 +580,7 @@ function fastqc_module(module_element, module_key) {
 
   function plot_single_seqcontent(s_name) {
     current_single_plot = s_name;
-    let orig_s_name = orig_s_names[s_name];
+    let orig_s_name = module_element.orig_s_names[s_name];
     let data = fastqc_seq_content[module_key][orig_s_name];
     let plot_data = [
       { name: "% T", data: [] },
@@ -606,17 +608,25 @@ function fastqc_module(module_element, module_key) {
       let newplot =
         '<div id="fastqc_sequence_content_single_wrapper"> \
             <div id="fastqc_sequence_content_single_controls">\
-                <button class="btn btn-primary btn-sm" id="fastqc_sequence_content_single_back">Back to overview heatmap</button> \
+                <button class="btn btn-primary btn-sm" id="' +
+        module_key +
+        '_sequence_content_single_back">Back to overview heatmap</button> \
                 <div class="btn-group btn-group-sm"> \
-                    <button class="btn btn-default fastqc_seqcontent_single_prevnext" data-action="prev">&laquo; Prev</button> \
-                    <button class="btn btn-default fastqc_seqcontent_single_prevnext" data-action="next">Next &raquo;</button> \
+                    <button class="btn btn-default ' +
+        module_key +
+        '_seqcontent_single_prevnext" data-action="prev">&laquo; Prev</button> \
+                    <button class="btn btn-default ' +
+        module_key +
+        '_seqcontent_single_prevnext" data-action="next">Next &raquo;</button> \
                 </div>\
             </div>\
-            <div class="hc-plot-wrapper"><div id="fastqc_sequence_content_single" class="hc-plot hc-line-plot"><small>loading..</small></div></div></div>';
+            <div class="hc-plot-wrapper"><div id="' +
+        module_key +
+        '_sequence_content_single" class="hc-plot hc-line-plot"><small>loading..</small></div></div></div>';
       $(newplot).insertAfter(plot_div).hide().slideDown();
     }
 
-    let target = "fastqc_sequence_content_single";
+    let target = module_key + "_sequence_content_single";
     let traces = plot_data.map((d) => {
       return {
         type: "line",

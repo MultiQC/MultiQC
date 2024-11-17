@@ -1,23 +1,32 @@
-"""MultiQC module to parse output files from miRTrace"""
-
 import json
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="miRTrace",
             anchor="mirtrace",
             href="https://github.com/friedlanderlab/mirtrace",
-            info="is a quality control software for small RNA sequencing data developed by Friedländer lab (KTH, Sweden).",
+            info="Quality control for small RNA sequencing data.",
+            extra="""
+            miRTrace performs adapter trimming and discards the reads that fail to pass
+            the QC filters. miRTrace specifically addresses sequencing quality, read length,
+            sequencing depth and miRNA complexity and also identifies the presence of both
+            miRNAs and undesirable sequences derived from tRNAs, rRNAs, or Illumina artifact
+            sequences.
+        
+            miRTrace also profiles clade-specific miRNAs based on a comprehensive catalog
+            of clade-specific miRNA families identified previously. With this information,
+            miRTrace can detect exogenous miRNAs, which could be contamination derived,
+            e.g. index mis-assignment on sample demultiplexing, or biologically derived,
+            e.g. parasitic RNAs.
+            """,
             doi="10.1186/s13059-018-1588-9",
         )
 

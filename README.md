@@ -8,7 +8,7 @@
 
 ### Aggregate bioinformatics results across many samples into a single report
 
-##### Find [documentation](http://multiqc.info/docs) and [example reports](https://multiqc.info/example-reports/) at [http://multiqc.info](http://multiqc.info)
+##### Find [documentation](https://docs.seqera.io/multiqc) and [example reports](https://multiqc.info/example-reports/) at [http://multiqc.info](http://multiqc.info)
 
 [![PyPI Version](https://img.shields.io/pypi/v/multiqc)](https://pypi.python.org/pypi/multiqc/)
 [![Bioconda Version](https://img.shields.io/conda/v/bioconda/multiqc?label=bioconda)](https://bioconda.github.io/recipes/multiqc/README.html)
@@ -24,8 +24,8 @@ for all logs found. MultiQC reports can describe multiple analysis steps and
 large numbers of samples within a single plot, and multiple analysis tools making
 it ideal for routine fast quality control.
 
-A very large number of Bioinformatics tools are supported by MultiQC. Please see the MultiQC website for a [complete list](https://multiqc.info/modules/).
-MultiQC can also easily parse data from custom scripts, if correctly formatted / configured - a feature called [Custom Content](https://multiqc.info/docs/custom_content/).
+A very large number of Bioinformatics tools are supported by MultiQC. Please see the MultiQC website for a [complete list](https://docs.seqera.io/multiqc/modules/).
+MultiQC can also easily parse data from custom scripts, if correctly formatted / configured - a feature called [Custom Content](https://docs.seqera.io/multiqc/custom_content).
 
 More modules are being written all the time. Please suggest any ideas as a new
 [issue](https://github.com/MultiQC/MultiQC/issues) _(please include example log files)_.
@@ -54,7 +54,7 @@ pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.g
 
 MultiQC is also available via Docker and Singularity images, Galaxy wrappers, and
 many more software distribution systems.
-See [the documentation](https://multiqc.info/docs/getting_started/installation/) for details.
+See [the documentation](https://docs.seqera.io/multiqc/getting_started/installation/) for details.
 
 ## Usage
 
@@ -78,7 +78,7 @@ These can be easily inspected using Excel (use `--data-format` to get `yaml`
 or `json` instead).
 
 For more detailed instructions, run `multiqc -h` or see the
-[documentation](http://multiqc.info/docs/#running-multiqc).
+[documentation](https://docs.seqera.io/multiqc/getting_started/running_multiqc).
 
 ## Citation
 
@@ -112,7 +112,7 @@ of these, including example reports where possible.
 Pull-requests for fixes and additions are very welcome.
 Please see the [contributing notes](https://github.com/MultiQC/MultiQC/blob/main/.github/CONTRIBUTING.md) for more information about how the process works.
 
-MultiQC has extensive [documentation](http://multiqc.info/docs/development/)
+MultiQC has extensive [documentation](https://docs.seqera.io/multiqc/development)
 describing how to write new modules, plugins and templates.
 
 If in doubt, feel free to get in touch with the author directly:

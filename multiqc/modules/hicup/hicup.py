@@ -1,25 +1,19 @@
-"""MultiQC module to parse output from HiCUP"""
-
 import logging
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """HiCUP module, parses log files saved by HiCUP."""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HiCUP",
             anchor="hicup",
             href="http://www.bioinformatics.babraham.ac.uk/projects/hicup/",
-            info="(Hi-C User Pipeline) is a tool for mapping and performing quality control on Hi-C data.",
+            info="Mapping and quality control on Hi-C data.",
             doi="10.12688/f1000research.7334.1",
         )
 
@@ -95,66 +89,68 @@ class MultiqcModule(BaseMultiqcModule):
 
     def hicup_stats_table(self):
         """Add core HiCUP stats to the general stats table"""
-        headers = {
-            "Percentage_Ditags_Passed_Through_HiCUP": {
-                "title": "% Passed",
-                "description": "Percentage Di-Tags Passed Through HiCUP",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "YlGn",
+        self.general_stats_addcols(
+            self.hicup_data,
+            {
+                "Percentage_Ditags_Passed_Through_HiCUP": {
+                    "title": "Passed",
+                    "description": "Percentage Di-Tags Passed Through HiCUP",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "YlGn",
+                },
+                "Deduplication_Read_Pairs_Uniques": {
+                    "title": "Unique",
+                    "description": f"Unique Di-Tags ({config.read_count_desc})",
+                    "min": 0,
+                    "scale": "PuRd",
+                    "modify": lambda x: x * config.read_count_multiplier,
+                    "shared_key": "read_count",
+                },
+                "Percentage_Uniques": {
+                    "title": "Dups",
+                    "description": "Percent Duplicate Di-Tags",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "YlGn-rev",
+                    "modify": lambda x: 100 - x,
+                },
+                "Valid_Pairs": {
+                    "title": "Valid",
+                    "description": f"Valid Pairs ({config.read_count_desc})",
+                    "min": 0,
+                    "scale": "PuRd",
+                    "modify": lambda x: x * config.read_count_multiplier,
+                    "shared_key": "read_count",
+                },
+                "Percentage_Valid": {
+                    "title": "Valid",
+                    "description": "Percent Valid Pairs",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "YlGn",
+                },
+                "Paired_Read_1": {
+                    "title": "Pairs Aligned",
+                    "description": f"Paired Alignments ({config.read_count_desc})",
+                    "min": 0,
+                    "scale": "PuRd",
+                    "modify": lambda x: x * config.read_count_multiplier,
+                    "shared_key": "read_count",
+                },
+                "Percentage_Mapped": {
+                    "title": "Aligned",
+                    "description": "Percentage of Paired Alignments",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "YlGn",
+                },
             },
-            "Deduplication_Read_Pairs_Uniques": {
-                "title": f"{config.read_count_prefix} Unique",
-                "description": f"Unique Di-Tags ({config.read_count_desc})",
-                "min": 0,
-                "scale": "PuRd",
-                "modify": lambda x: x * config.read_count_multiplier,
-                "shared_key": "read_count",
-            },
-            "Percentage_Uniques": {
-                "title": "% Duplicates",
-                "description": "Percent Duplicate Di-Tags",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "YlGn-rev",
-                "modify": lambda x: 100 - x,
-            },
-            "Valid_Pairs": {
-                "title": f"{config.read_count_prefix} Valid",
-                "description": f"Valid Pairs ({config.read_count_desc})",
-                "min": 0,
-                "scale": "PuRd",
-                "modify": lambda x: x * config.read_count_multiplier,
-                "shared_key": "read_count",
-            },
-            "Percentage_Valid": {
-                "title": "% Valid",
-                "description": "Percent Valid Pairs",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "YlGn",
-            },
-            "Paired_Read_1": {
-                "title": f"{config.read_count_prefix} Pairs Aligned",
-                "description": f"Paired Alignments ({config.read_count_desc})",
-                "min": 0,
-                "scale": "PuRd",
-                "modify": lambda x: x * config.read_count_multiplier,
-                "shared_key": "read_count",
-            },
-            "Percentage_Mapped": {
-                "title": "% Aligned",
-                "description": "Percentage of Paired Alignments",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "YlGn",
-            },
-        }
-        self.general_stats_addcols(self.hicup_data, headers)
+        )
 
     def hicup_truncating_chart(self):
         """Generate the HiCUP Truncated reads plot"""

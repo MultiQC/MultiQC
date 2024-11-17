@@ -59,15 +59,19 @@ megaqc_timeout: 30
 export_plots: false
 make_report: true
 make_pdf: false
+
 plots_force_flat: false
+plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false
-plots_flat_numseries: 1000
-num_datasets_plot_limit: 50
-lineplot_style: lines # "lines+markers"
+plots_flat_numseries: 2000
+plots_defer_loading_numseries: 100 # lot will require user to press button to render plot
+num_datasets_plot_limit: 100 # DEPRECATED in favour of plots_defer_loading_numseries
+lineplot_number_of_points_to_hide_markers: 50 # sum of data points in all samples
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
 violin_downsample_after: 2000 # downsample data for violin plot starting from this number os samples
 violin_min_threshold_outliers: 100 # for more than this number of samples, show only outliers
 violin_min_threshold_no_points: 1000 # for more than this number of samples, show no points
+
 collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
@@ -79,6 +83,8 @@ table_cond_formatting_colours:
   - pass: "#5cb85c"
   - warn: "#f0ad4e"
   - fail: "#d9534f"
+  - male: "#5bc0de"
+  - female: "#d9534f"
 table_cond_formatting_rules:
   all_columns:
     pass:
@@ -93,6 +99,12 @@ table_cond_formatting_rules:
       - s_eq: "fail"
       - s_eq: "false"
       - s_eq: "no"
+    male:
+      - s_eq: "male"
+      - s_eq: "M"
+    female:
+      - s_eq: "female"
+      - s_eq: "F"
   # PURPLE module - QC Status column
   # TODO: Should update the table plotting code so that this can go in pconfig
   QCStatus:
@@ -275,6 +287,7 @@ fn_clean_exts:
   - "ccs"
   - "_NanoStats"
   - ".cutadapt"
+  - ".qcML"
   - ".mosdepth"
   - "_gopeaks"
   - ".readCounts"
@@ -308,6 +321,18 @@ fn_clean_exts:
   - ".error.spl"
   - ".error.grp"
   - ".vgstats"
+
+# Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
+# Affects all modules that support it (e.g. fastqc, cutadapt)
+table_sample_merge:
+#   "R1":
+#     - "_R1"
+#     - type: regex
+#       pattern: "[_.-][rR]?1$"
+#   "R2":
+#     - "_R2"
+#     - type: regex
+#       pattern: "[_.-][rR]?2$"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -407,7 +432,6 @@ module_order:
   - mirtrace
   - happy
   - mirtop
-  - sambamba
   - glimpse
   # Post-alignment processing
   - gopeaks
@@ -419,7 +443,7 @@ module_order:
   - gatk
   - htseq
   - bcftools
-  - featureCounts
+  - featurecounts
   - fgbio
   - dragen
   - dragen_fastqc
@@ -435,22 +459,28 @@ module_order:
   - bakta
   - prokka
   - qc3C
+  - nanoq
   - nanostat
   - samblaster
   - samtools
+  - bamtools
+  - sambamba
+  - ngsbits
+  - pairtools
   - sexdeterrmine
   - seqera_cli
   - eigenstratdatabasetools
-  - bamtools
   - jellyfish
   - vcftools
   - longranger
   - stacks
   - varscan2
   - snippy
+  - umicollapse
   - umitools
   - truvari
   - megahit
+  - ganon
   # Alignment tool stats
   - bbmap
   - bismark
@@ -488,7 +518,6 @@ module_order:
   - flexbar
   - sourmash
   - kaiju
-  - bracken
   - kraken
   - malt
   - motus

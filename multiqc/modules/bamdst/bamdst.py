@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Bamdst"""
-
 import logging
 from collections import defaultdict
 from typing import Dict, Union
@@ -11,8 +9,8 @@ import fnmatch
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table, bargraph, linegraph
 from multiqc import config
+from multiqc.types import LoadedFileDict
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -65,26 +63,88 @@ def _read_config():
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module reads data from two types of Bamdst logs:
+
+    - `coverage.report`: used to build a table with coverage statistics. The sample name is read from this file.
+    - `chromosomes.report`: if this file is found in the same directory as the file above, additionally a per-contig coverage plot will be generated. This file must be named exactly this way, with the `.report` extension.
+
+    Note that for the sample names, the module will attempt to use the input BAM name
+    in the header in the `coverage.report` file:
+
+    ```
+    ## The file was created by bamdst
+    ## Version : 1.0.9
+    ## Files : ST0217_Lg.bam
+    ...
+    ```
+
+    However, if the tool was run in a piped manner, the file name will be just `-` or `/dev/stdin`,
+    and instead MultiQC will fall back to using the log file name `coverage.report`.
+    Make sure to run MultiQC with `--dirs` if use have multiple samples run in this way,
+    otherwise MultiQC will only report the first found sample under the name `coverage`.
+
+    For the per-contig coverage plot, you can include and exclude contigs based on name or pattern.
+
+    For example, you could add the following to your MultiQC config file:
+
+    ```yaml
+    bamdst:
+      include_contigs:
+        - "chr*"
+      exclude_contigs:
+        - "*_alt"
+        - "*_decoy"
+        - "*_random"
+        - "*_fix"
+        - "HLA*"
+        - "chrUn*"
+        - "chrEBV"
+        - "chrM"
+    ```
+
+    Note that exclusion supersedes inclusion for the contig filters.
+
+    To additionally avoid cluttering the plot, MultiQC can exclude contigs with a low relative coverage.
+
+    ```yaml
+    bamdst:
+      # Should be a fraction, e.g. 0.001 (exclude contigs with 0.1% coverage of sum of
+      # coverages across all contigs)
+      perchrom_fraction_cutoff: 0.001
+    ```
+
+    If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
+
+    ```yaml
+    bamdst:
+      show_excluded_debug_logs: True
+    ```
+
+    This will then print a debug log message (use `multiqc -v`) for each excluded contig.
+    This is disabled by default as there can be very many in some cases.
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Bamdst",
             anchor="bamdst",
             href="https://https://github.com/shiquan/bamdst",
-            info="""is a lightweight tool to stat the depth coverage of target regions of bam file(s)""",
+            info="Lightweight tool to stat the depth coverage of target regions of BAM file(s)",
             # doi="", # No DOI
         )
 
         self.cfg = _read_config()
-        data_by_sample = dict()
-        data_by_chromosome_by_sample = dict()
+        data_by_sample: Dict[str, Dict[str, Union[float, int]]] = dict()
+        data_by_chromosome_by_sample: Dict[str, Dict[str, Dict[str, Union[float, str]]]] = dict()
         for f in self.find_log_files("bamdst/coverage"):
             if data := self._parse_coverage_report(f):
                 data_by_sample[f["s_name"]] = data
 
                 # Parse "chromosomes.report" sitting next to the "coverage.report" file:
                 if os.path.exists(chroms_path := os.path.join(f["root"], "chromosomes.report")):
-                    if data := self._parse_chromosomes_report(chroms_path, f["s_name"]):
-                        data_by_chromosome_by_sample[f["s_name"]] = data
+                    if data_by_chrom := self._parse_chromosomes_report(chroms_path, f["s_name"]):
+                        data_by_chromosome_by_sample[f["s_name"]] = data_by_chrom
 
         data_by_sample = self.ignore_samples(data_by_sample)
         data_by_chromosome_by_sample = self.ignore_samples(data_by_chromosome_by_sample)
@@ -99,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
         if data_by_chromosome_by_sample:
             self._build_per_chrom_plot(data_by_chromosome_by_sample)
 
-    def _parse_coverage_report(self, f: Dict) -> Dict:
+    def _parse_coverage_report(self, f: LoadedFileDict) -> Dict[str, Union[float, int]]:
         """
         Parse one coverage report.
         """
@@ -115,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for ext in [".bam", ".cram", ".sam"]:
                     path_line = path_line.replace(ext, "<EXT>")
                 names = [
-                    self.clean_s_name(sn.strip())
+                    self.clean_s_name(sn.strip(), f)
                     for sn in path_line.split("<EXT>")
                     if sn
                     if sn.strip() not in ["-", "/dev/stdin"]
@@ -153,7 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
         return data
 
     def _parse_chromosomes_report(self, path: str, s_name: str) -> Dict[str, Dict[str, Union[float, str]]]:
-        data_by_contig = defaultdict(dict)
+        data_by_contig: Dict[str, Dict[str, Union[float, str]]] = defaultdict(dict)
         with open(path) as fh:
             reader: csv.DictReader = csv.DictReader(fh, delimiter="\t")
             for row in reader:
@@ -169,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data_by_contig[contig][k.strip()] = v
 
         if data_by_contig:
-            self.add_data_source(source=path, s_name=s_name, section="per-chromosome")
+            self.add_data_source(path=path, s_name=s_name, section="per-chromosome")
         return data_by_contig
 
     def build_tables(self, data_by_sample):

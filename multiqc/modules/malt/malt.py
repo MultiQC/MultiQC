@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from MALT"""
-
 import logging
 import re
 
@@ -13,15 +11,21 @@ VERSION_REGEX = r"Version\s+MALT \(version ([\d\.]+),.*"
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Malt Module"""
+    """
+    The MALT MultiQC module reads the header of the MALT log files and produces three MultiQC sections:
+
+    - A MALT summary statistics table
+    - A Mappability bargraph
+    - A Taxonomic assignment success bargraph
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MALT",
             anchor="malt",
             href="http://ab.inf.uni-tuebingen.de/software/malt/",
-            info="performs alignment of metagenomic reads against a database of reference sequences (such as NR, GenBank or Silva) and produces a MEGAN RMA file as output.",
+            info="Aligns of metagenomic reads to a database of reference sequences "
+            "(such as NR, GenBank or Silva) and outputs a MEGAN RMA file",
             doi="10.1101/050559 ",
         )
 

@@ -1,5 +1,3 @@
-"""MultiQC submodule to parse output from Samtools stats"""
-
 import logging
 import re
 from typing import Dict
@@ -7,7 +5,6 @@ from typing import Dict
 from multiqc import config, BaseMultiqcModule
 from multiqc.plots import bargraph, violin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 # Regex to grab version number from samtools stats contents
@@ -125,6 +122,14 @@ def parse_samtools_stats(module: BaseMultiqcModule):
             "title": "Total seqs",
             "description": f"Total sequences in the bam file ({config.read_count_desc})",
             "shared_key": "read_count",
+        },
+        "insert_size_average": {
+            "title": "Mean insert",
+            "description": "Average insert size",
+            "suffix": "bp",
+            "format": "{:,.1f}",
+            "scale": "Oranges",
+            "hidden": True,
         },
     }
     module.general_stats_addcols(samtools_stats, stats_headers, namespace="stats")

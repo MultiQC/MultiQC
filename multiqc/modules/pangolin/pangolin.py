@@ -1,7 +1,3 @@
-#! /usr/bin/env python
-
-"""MultiQC module to parse output from Pangolin"""
-
 import csv
 import logging
 from typing import Optional
@@ -10,20 +6,21 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Pangolin module"""
-
     def __init__(self):
-        # Initialise the parent module
         super().__init__(
             name="Pangolin",
             anchor="pangolin",
             href="https://github.com/cov-lineages/pangolin",
-            info="uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.",
+            info="Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.",
+            extra="""
+            Implements the dynamic nomenclature of SARS-CoV-2 lineages, known as the Pango nomenclature.
+            It allows a user to assign a SARS-CoV-2 genome sequence the most likely lineage (Pango lineage) 
+            to SARS-CoV-2 query sequences.
+            """,
             doi="10.1093/ve/veab064",
         )
 

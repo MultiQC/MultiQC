@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from nonpareil"""
-
 import logging
 from typing import List
 
@@ -11,25 +9,42 @@ from multiqc.plots.plotly.line import Series
 from multiqc.utils import mqc_colour
 
 
-# Initialise the logger
 from multiqc.plots import table, linegraph
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Nonpareil analysis is split into two parts: the first (written in C++)
-    performs the subsampling, while the second (written in R) performs the
-    statistical analyses. As such, this model requires the user to post-process
-    the R object from the second part."""
+    """
+    Since Nonpareil main output has no model information, it is necessary extract the `curves` object as a `JSON` file.
+    From version `v3.5.5` this can be done with an auxiliary `R` script, briefly:
+    ```bash
+    NonpareilCurves.R --json out.json model.npo
+    ```
+
+    #### Module config options
+
+    The module plots a line graph for each sample, with a tab panel to switch between only observed data, only models,
+    or both combined (model with a dashed line). It will use the colors specified in the JSON file by `nonpareil` and,
+    if some is missing use one from a MultiQC colour scheme (default: Paired) that can be defined with:
+
+    ```yaml
+    nonpareil:
+      plot_colours: Paired
+    ```
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Nonpareil",
             anchor="nonpareil",
             href="https://github.com/lmrodriguezr/nonpareil",
-            info="Estimate metagenomic coverage and sequence diversity ",
+            info="Estimates metagenomic coverage and sequence diversity ",
+            extra="""
+            Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate
+            the average coverage and predict the amount of sequences that will be required
+            to achieve "nearly complete coverage", defined as ≥95% or ≥99% average coverage.
+            """,
             doi="10.1093/bioinformatics/btt584",
         )
         # Config options
@@ -324,8 +339,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         data_colors_default = mqc_colour.mqc_colour_scale().get_colours(self.plot_colours)
         data_colors = {
-            s_name: data.get("nonpareil_col", data_colors_default.pop(0))
-            for s_name, data in self.data_by_sample.items()
+            s_name: data.get("nonpareil_col", data_colors_default[i % len(data_colors_default)])
+            for i, (s_name, data) in enumerate(self.data_by_sample.items())
         }
 
         data_labels = [

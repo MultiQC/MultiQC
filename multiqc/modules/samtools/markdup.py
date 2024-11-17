@@ -1,5 +1,3 @@
-"""MultiQC submodule to parse output from Samtools markdup"""
-
 import json
 import logging
 import re
@@ -106,7 +104,7 @@ def parse_samtools_markdup(module) -> int:
             "format": "{:,d}",
         },
     }
-    module.general_stats_addcols(data=val_by_metric_by_sample, headers=genstats_headers, namespace="markdup")
+    module.general_stats_addcols(data_by_sample=val_by_metric_by_sample, headers=genstats_headers, namespace="markdup")
 
     module.add_section(
         name="Markdup: stats",

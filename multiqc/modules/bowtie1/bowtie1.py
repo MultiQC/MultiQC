@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Bowtie 1"""
-
 import logging
 import re
 
@@ -7,21 +5,17 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Bowtie 1 module, parses stderr logs."""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bowtie 1",
             anchor="bowtie1",
             target="Bowtie 1",
             href="http://bowtie-bio.sourceforge.net/",
-            info="is an ultrafast, memory-efficient short read aligner.",
+            info="Ultrafast, memory-efficient short read aligner.",
             doi="10.1186/gb-2009-10-3-r25",
         )
 

@@ -95,11 +95,11 @@ class ViolinPlot extends Plot {
       }
     });
     if (outliersWarning)
-      $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
+      $("#table-violin-info-" + this.anchor).append(" For efficiency, separate points are shown only for outliers.");
 
     let layout = this.layout;
     layout.height = this.violinHeight * metrics.length + this.extraHeight;
-    $("#" + this.target + "-wrapper").css("height", layout.height + "px");
+    $("#" + this.anchor + "-wrapper").css("height", layout.height + "px");
     if (metrics.length === 0) return [];
 
     layout.grid.rows = metrics.length;
@@ -282,24 +282,28 @@ class ViolinPlot extends Plot {
     let sep = format === "tsv" ? "\t" : ",";
     // Export all data points as a table, samples are rows, metrics are columns
     let titles = metrics.map((metric) => headerByMetric[metric].title);
+    // Escape titles that contain the separator character
+    titles = titles.map((title) => (title.includes(sep) ? `"${title}"` : title));
     let csv = "Sample" + sep + titles.join(sep) + "\n";
     for (let i = 0; i < allSamples.length; i++) {
       let sample = allSamples[i];
       if (sampleSettings[i].hidden) continue;
       csv += sample + sep;
-      metrics.map((metric) => {
-        let val = violinValuesBySampleByMetric[metric][sample];
-        if (val === undefined) val = ".";
-        csv += val + sep;
-      });
+      csv += metrics
+        .map((metric) => {
+          let val = violinValuesBySampleByMetric[metric][sample];
+          if (val === undefined) val = ".";
+          return val;
+        })
+        .join(sep);
       csv += "\n";
     }
     return csv;
   }
 
   afterPlotCreated() {
-    let target = this.target;
-    let plot = document.getElementById(target);
+    let anchor = this.anchor;
+    let plot = document.getElementById(anchor);
 
     plot.on("plotly_hover", function (eventdata) {
       if (!eventdata.points) return;
@@ -312,7 +316,7 @@ class ViolinPlot extends Plot {
         });
         // console.log("hover", point.curveNumber);
         // hoverInfoDiv.html(point.data.text);
-        Plotly.Fx.hover(target, points, curveAxis);
+        Plotly.Fx.hover(anchor, points, curveAxis);
       }
     });
   }

@@ -17,7 +17,6 @@ def test_sorting():
     """
     Versions should be sorted by component
     """
-    report.reset()
     mod = multiqc.BaseMultiqcModule()
 
     mod.add_software_version("1.10.1")
@@ -36,7 +35,6 @@ def test_with_software_name():
     """
     Versions should be sorted by component
     """
-    report.reset()
     mod = multiqc.BaseMultiqcModule()
 
     mod.add_software_version("1.10.1", software_name="tool1")
@@ -55,7 +53,6 @@ def test_parsing_and_sorting():
     """
     Versions should be parsed for sorting, but represented originally
     """
-    report.reset()
     mod = multiqc.BaseMultiqcModule()
     versions = [
         "v1.1.1-r505",
@@ -74,7 +71,6 @@ def test_software_versions_from_module(data_dir, capsys):
     """
     Verify versions added by another module are captured
     """
-    report.reset()
     mod_dir = data_dir / "modules" / "bismark"
     assert mod_dir.exists() and mod_dir.is_dir()
 
@@ -83,15 +79,10 @@ def test_software_versions_from_module(data_dir, capsys):
     assert "<td>Bismark</td><td><samp>0.14.0, 0.14.4</samp></td>" in captured.out
 
 
-def test_software_versions_from_data_and_config(tmp_path, data_dir, capsys):
+def test_software_versions_from_config(tmp_path, data_dir, capsys):
     """
-    Verify finding versions from '*_mqc_versions.yaml' files.
     Verify finding versions from the config section.
     """
-    report.reset()
-    mod_dir = data_dir / "software_versions"
-    assert mod_dir.exists() and mod_dir.is_dir()
-
     conf_path = tmp_path / "multiqc_config.yaml"
     with open(conf_path, "w") as f:
         yaml.dump(
@@ -105,8 +96,21 @@ def test_software_versions_from_data_and_config(tmp_path, data_dir, capsys):
             f,
         )
 
-    multiqc.parse_logs(mod_dir, config_files=[conf_path])
+    # Need some data to be passed besides the bare config
+    multiqc.parse_logs(data_dir / "software_versions", config_files=[conf_path])
+    multiqc.write_report(filename="stdout")
+    captured = capsys.readouterr()
+    assert "<td>example_tool</td><td><samp>1.4.2</samp></td>" in captured.out
+
+
+def test_software_versions_from_mqc_files(tmp_path, data_dir, capsys):
+    """
+    Verify finding versions from '*_mqc_versions.yaml' files.
+    """
+    mod_dir = data_dir / "software_versions"
+    assert mod_dir.exists() and mod_dir.is_dir()
+
+    multiqc.parse_logs(mod_dir)
     multiqc.write_report(filename="stdout")
     captured = capsys.readouterr()
     assert "<td>quast</td><td><samp>4.5.1, 5.1.5</samp></td>" in captured.out
-    assert "<td>example_tool</td><td><samp>1.4.2</samp></td>" in captured.out

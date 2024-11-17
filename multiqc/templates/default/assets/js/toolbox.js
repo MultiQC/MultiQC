@@ -106,9 +106,9 @@ $(function () {
 
   // Listener to re-plot graphs if config loaded
   $(document).on("mqc_config_loaded", function (e) {
-    $(".hc-plot").each(function () {
-      var target = $(this).attr("id");
-      plot_graph(target, undefined, mqc_config["num_datasets_plot_limit"]);
+    $(".hc-plot:not(.not_rendered)").each(function () {
+      let target = $(this).attr("id");
+      renderPlot(target);
     });
   });
 
@@ -367,23 +367,23 @@ $(function () {
         let format = mime.replace("image/", "").split("+")[0];
         let f_width = parseInt($("#mqc_exp_width").val());
         let f_height = parseInt($("#mqc_exp_height").val());
-        const f_scale = parseFloat($("#mqc_export_scaling").val());
+        const font_scale = parseFloat($("#mqc_export_scaling").val());
         checked_plots.each(function () {
           const target = $(this).val();
 
           promises.push(
             Plotly.toImage(target, {
               format: format,
-              width: f_width / f_scale,
-              height: f_height / f_scale,
-              scale: f_scale,
+              width: f_width / font_scale,
+              height: f_height / font_scale,
+              scale: font_scale,
             }).then(function (img) {
               if (format === "svg") {
                 Plotly.Snapshot.downloadImage(target, {
                   format: format,
-                  width: f_width / f_scale,
-                  height: f_height / f_scale,
-                  scale: f_scale,
+                  width: f_width / font_scale,
+                  height: f_height / font_scale,
+                  scale: font_scale,
                   filename: target,
                 });
                 // if (checked_plots.length <= zip_threshold) {
@@ -491,14 +491,14 @@ $(function () {
   $(".export-plot").click(function (e) {
     e.preventDefault();
     // Get the id of the span element that was clicked
-    let id = e.target.dataset.pid;
+    let id = e.target.dataset.plotAnchor;
     let isTable = e.target.dataset.type === "table";
     // Tick only this plot in the toolbox and slide out
     $("#mqc_export_selectplots input").prop("checked", false);
     $('#mqc_export_selectplots input[value="' + id + '"]').prop("checked", true);
     // Special case - Table scatter plots are in a modal, need to close this first
-    if (id === "tableScatterPlot") {
-      $("#tableScatterModal").modal("hide");
+    if (id === "table_scatter_plot") {
+      $("#table_scatter_modal").modal("hide");
     }
     mqc_toolbox_openclose(
       "#mqc_exportplots",

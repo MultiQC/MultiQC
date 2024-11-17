@@ -1,23 +1,19 @@
-"""MultiQC module to parse output from sargasso"""
-
 import logging
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Sargasso",
             anchor="sargasso",
             href="http://biomedicalinformaticsgroup.github.io/Sargasso/",
-            info="is a tool to separate mixed-species RNA-seq reads" "according to their species of origin.",
+            info="Separates mixed-species RNA-seq reads according to their species of origin.",
             doi="10.1038/s41596-018-0029-2",
         )
 
