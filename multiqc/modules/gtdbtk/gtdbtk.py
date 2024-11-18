@@ -8,9 +8,11 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The module parses summary.tsv outputs from GTDB-Tk's classify.py and classify_wf.py .
+    The module parses `summary.tsv` outputs from GTDB-Tk's `classify.py` and `classify_wf.py`.
 
-    Only works for >= 2.4.0 because column names changed.
+    The module only works for version >= 2.4.0 because column names changed.
+
+    `classify.py` and `classify_wf.py` are used to determine the taxonomic classification of input genomes.
     """
 
     def __init__(self):
@@ -35,16 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.closest_taxa_table()
 
     def parse_file(self, f):
-        # loop through every line
-        # split on tabs
-        # grab the first two columns
-        # grab the 13th column to say how it classified
-        # classification_method: indicates the rule used to classify the genome.
-        # This field will be one of:
-        # i) ANI, indicating a species assignement was based solely on the calculated ANI and AF with a reference genome;
-        # ii) ANI/Placement, indicating a species assignment was made based on both ANI and the placement of the genome in the reference tree;
-        # iii) taxonomic classification fully defined by topology, indicating that the classification could be determine based solely on the genome’s position in the reference tree; or
-        # iv) taxonomic novelty determined using RED, indicating that the relative evolutionary divergence (RED) and placement of the genome in the reference tree were used to determine the classification.
+        """Parse the summary.tsv outputs."""
         column_names = (
             "user_genome",
             "classification",
@@ -77,11 +70,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def closest_taxa_table(self):
         """Add a table showing the closest taxa for each query genome."""
-        # generate a table with :
-        # rows: a MAG
-        # columns: MAG name, classifcation, classification_method, classification_value, note, warnings
-        # classifacation_value is just the following:
-        # if classification_method:
         classication_method_translate_dict = {
             "taxonomic classification defined by topology and ANI": ["closest_genome_ani", "closest_genome_af"],
             "ani_screen": ["closest_genome_ani", "closest_genome_af"],
@@ -94,7 +82,9 @@ class MultiqcModule(BaseMultiqcModule):
         table_data = {}
         for sample_name in self.gtdbtk_data:
             sample = self.gtdbtk_data[sample_name]
-            classification_value_columns = classication_method_translate_dict.get(sample.get("classification_method"), [None, None])
+            classification_value_columns = classication_method_translate_dict.get(
+                sample.get("classification_method"), [None, None]
+            )
             table_data[sample.get("user_genome")] = {
                 "classification": sample.get("classification", None),
                 "classification_method": sample.get("classification_method", None),
