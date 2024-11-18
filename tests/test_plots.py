@@ -244,7 +244,7 @@ def test_linegraph_multiple_datasets():
 )
 @pytest.mark.filterwarnings("ignore:setDaemon")
 def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, export_plots):
-    monkeypatch.setattr(tempfile, "mkdtemp", lambda: tmp_path)
+    monkeypatch.setattr(tempfile, "mkdtemp", lambda *args, **kwargs: tmp_path)
 
     plot_id = "test_plot"
     plot = linegraph.plot(
