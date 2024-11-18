@@ -32,12 +32,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_software_version(None)
 
-        # Configuration for Haplocheck Table
-        config_table = {
-            "id": "haplocheck",
-            "title": "Haplocheck",
-        }
-
         # Headers dictionary for Contamination Data
         headers = {
             "Contamination Status": {
@@ -76,7 +70,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="Haplocheck",
             anchor="haplocheck",
             description="Haplocheck detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.",
-            plot=table.plot(data=haplocheck_data, headers=headers, pconfig=config_table),
+            plot=table.plot(
+                data=haplocheck_data,
+                headers=headers,
+                pconfig={
+                    "id": "haplocheck-table",
+                    "title": "Haplocheck",
+                },
+            ),
         )
 
         for header in headers.values():
