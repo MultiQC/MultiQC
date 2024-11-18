@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The module parses summary.tsv outputs from GTDB-Tk.
+    The module parses summary.tsv outputs from GTDB-Tk's classify.py and classify_wf.py .
 
     Only works for >= 2.4.0 because column names changed.
     """
@@ -97,8 +97,8 @@ class MultiqcModule(BaseMultiqcModule):
             classification_value_columns = classication_method_translate_dict.get(sample.get("classification_method"), [None, None])
             table_data[sample.get("user_genome")] = {
                 "user_genome": sample.get("user_genome"),
-                "classification": sample.get("classification"),
-                "classification_method": sample.get("classification_method"),
+                "classification": sample.get("classification", None),
+                "classification_method": sample.get("classification_method", None),
                 "classification_value_1": sample.get(classification_value_columns[0], None),
                 "classification_value_1_unit": classification_value_columns[0],
                 "classification_value_2": sample.get(classification_value_columns[1], None),
