@@ -319,9 +319,9 @@ class MultiqcModule(BaseMultiqcModule):
                     # Undetermined samples did not have R1 and R2 information
                     for r_num in range(1, 5):
                         try:
-                            s[f"R{r}_yield"] += sample[f"R{r_num}_yield"]
-                            s[f"R{r}_Q30"] += sample[f"R{r_num}_Q30"]
-                            s[f"R{r}_trimmed_bases"] += sample[f"R{r_num}_trimmed_bases"]
+                            s[f"R{r_num}_yield"] += sample[f"R{r_num}_yield"]
+                            s[f"R{r_num}_Q30"] += sample[f"R{r_num}_Q30"]
+                            s[f"R{r_num}_trimmed_bases"] += sample[f"R{r_num}_trimmed_bases"]
                         except KeyError:
                             pass
                     try:
@@ -345,7 +345,7 @@ class MultiqcModule(BaseMultiqcModule):
                     for r_num in range(1, 5):
                         try:
                             if (
-                                not self.bcl2fastq_bysample[sample_id][f"R{r}_yield"]
+                                not self.bcl2fastq_bysample[sample_id][f"R{r_num}_yield"]
                                 and not self.bcl2fastq_bysample[sample_id][f"R{r_num}_Q30"]
                                 and not self.bcl2fastq_bysample[sample_id][f"R{r_num}_trimmed_bases"]
                             ):
