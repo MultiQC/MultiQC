@@ -259,7 +259,7 @@ sp:
 
     out = capsys.readouterr().out
     assert '<h2 class="mqc-module-title" id="concordance">Concordance Rates</h2>' in out
-    assert '<div class="mqc-section mqc-section-concordance">' in out
+    assert '<div class="mqc-section mqc-section-concordance"' in out
     assert 'value="0.378"' in out
 
 
