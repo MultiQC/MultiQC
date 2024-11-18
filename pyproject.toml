@@ -10,7 +10,7 @@ dependencies = [
     "humanize",
     "importlib_metadata",
     "jinja2>=3.0.0",
-    "kaleido",  # for flat plot export
+    "kaleido==0.2.1",  # for flat plot export
     "markdown",
     "numpy",
     "packaging",
