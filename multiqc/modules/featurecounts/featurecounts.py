@@ -76,7 +76,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_table(data_by_sample)
 
         # Assignment bar plot
-        self.add_section(plot=featurecounts_chart(data_keys, data_by_sample))
+        self.add_section(
+            name="Assignments",
+            anchor="featurecounts_assignments",
+            plot=featurecounts_chart(data_keys, data_by_sample),
+        )
 
     def parse_featurecounts_report(self, f, data_by_sample, data_keys):
         """Parse the featureCounts log file."""
