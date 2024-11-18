@@ -61,7 +61,7 @@ make_report: true
 make_pdf: false
 ai_summary: false
 ai_summary_full: false
-ai_provider: "seqera"
+ai_provider: "anthropic"
 ai_model: "claude-3-5-sonnet-20241022"
 
 plots_force_flat: false
