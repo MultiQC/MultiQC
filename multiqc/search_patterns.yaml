@@ -385,7 +385,7 @@ goleft_indexcov/ped:
 gopeaks:
   fn: "*_gopeaks.json"
 haplocheck:
-  contents: "Contamination Status"
+  contents: ["Sample", "Contamination Status", "Contamination Level", "Distance", "Sample Coverage"]
 happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
