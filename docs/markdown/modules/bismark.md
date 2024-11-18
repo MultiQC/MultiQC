@@ -1,5 +1,6 @@
 ---
 title: Bismark
+displayed_sidebar: multiqcSidebar
 description: >
   Maps bisulfite converted sequence reads and determine cytosine methylation states
 ---

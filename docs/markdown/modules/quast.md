@@ -1,5 +1,6 @@
 ---
 title: QUAST
+displayed_sidebar: multiqcSidebar
 description: >
   Quality assessment tool for genome assemblies
 ---

@@ -1,5 +1,6 @@
 ---
 title: Truvari
+displayed_sidebar: multiqcSidebar
 description: >
   Benchmarking, merging, and annotating structural variants
 ---

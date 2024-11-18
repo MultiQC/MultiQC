@@ -1,5 +1,6 @@
 ---
 title: PRINSEQ++
+displayed_sidebar: multiqcSidebar
 description: >
   C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and metagenomic reads
 ---

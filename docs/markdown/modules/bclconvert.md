@@ -1,5 +1,6 @@
 ---
 title: BCL Convert
+displayed_sidebar: multiqcSidebar
 description: >
   Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
 ---

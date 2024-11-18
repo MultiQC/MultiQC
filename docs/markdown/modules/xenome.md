@@ -1,5 +1,6 @@
 ---
 title: Xenome
+displayed_sidebar: multiqcSidebar
 description: >
   Classifies reads from xenograft sources
 ---

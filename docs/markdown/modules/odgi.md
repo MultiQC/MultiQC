@@ -1,5 +1,6 @@
 ---
 title: ODGI
+displayed_sidebar: multiqcSidebar
 description: >
   Analysis and manipulation of pangenome graphs structured in the variation graph model
 ---

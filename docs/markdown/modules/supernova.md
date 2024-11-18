@@ -1,5 +1,6 @@
 ---
 title: Supernova
+displayed_sidebar: multiqcSidebar
 description: >
   De novo genome assembler of 10X Genomics linked-reads
 ---

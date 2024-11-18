@@ -1,5 +1,6 @@
 ---
 title: BUSCO
+displayed_sidebar: multiqcSidebar
 description: >
   Assesses genome assembly and annotation completeness
 ---

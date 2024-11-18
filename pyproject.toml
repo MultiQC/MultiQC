@@ -10,9 +10,7 @@ dependencies = [
     "humanize",
     "importlib_metadata",
     "jinja2>=3.0.0",
-    "kaleido",  # for flat plot export
-    # "orca",  # for flat plot export, alternative for kaleido
-    # "psutil",  # for flat plot export with orca
+    "kaleido==0.2.1",  # for flat plot export
     "markdown",
     "numpy",
     "packaging",
@@ -28,6 +26,7 @@ dependencies = [
     "typeguard",
     "tqdm",  # progress bar in notebooks
     "python-dotenv",
+    "natsort",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -147,6 +146,7 @@ gatk = "multiqc.modules.gatk:MultiqcModule"
 glimpse = "multiqc.modules.glimpse:MultiqcModule"
 goleft_indexcov = "multiqc.modules.goleft_indexcov:MultiqcModule"
 gopeaks = "multiqc.modules.gopeaks:MultiqcModule"
+haplocheck = "multiqc.modules.haplocheck:MultiqcModule"
 happy = "multiqc.modules.happy:MultiqcModule"
 hicexplorer = "multiqc.modules.hicexplorer:MultiqcModule"
 hicpro = "multiqc.modules.hicpro:MultiqcModule"

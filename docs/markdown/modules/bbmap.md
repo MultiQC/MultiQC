@@ -1,5 +1,6 @@
 ---
 title: BBTools
+displayed_sidebar: multiqcSidebar
 description: >
   Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads
 ---

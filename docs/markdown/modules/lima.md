@@ -1,5 +1,6 @@
 ---
 title: Lima
+displayed_sidebar: multiqcSidebar
 description: >
   Demultiplex PacBio single-molecule sequencing reads
 ---

@@ -1,5 +1,6 @@
 ---
 title: fgbio
+displayed_sidebar: multiqcSidebar
 description: >
   Processing and evaluating data containing UMIs
 ---

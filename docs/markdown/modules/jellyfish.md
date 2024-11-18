@@ -1,5 +1,6 @@
 ---
 title: Jellyfish
+displayed_sidebar: multiqcSidebar
 description: >
   Counting k-mers in DNA
 ---
