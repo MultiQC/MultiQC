@@ -15,6 +15,7 @@ on:
   release:
     # Build release
     types: [published]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -35,12 +36,14 @@ jobs:
 
       - name: "Log in to Docker Hub"
         uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: "Login to GitHub Container Registry"
         uses: docker/login-action@v2
+        if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -48,7 +51,7 @@ jobs:
 
       - name: "Build dev"
         uses: docker/build-push-action@v3
-        if: github.event_name != 'release'
+        if: github.event_name != 'pull_request' && github.event_name != 'release'
         with:
           # All available with python:3.X-slim are:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
@@ -62,7 +65,7 @@ jobs:
 
       - name: "Build release"
         uses: docker/build-push-action@v3
-        if: github.event_name == 'release'
+        if: github.event_name != 'pull_request' && github.event_name == 'release'
         with:
           # All available with python:3.X-slim are:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
