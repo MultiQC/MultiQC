@@ -89,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "closest_placement_ani",
                 "closest_placement_af",
             ],
-            "taxonomic novelty determined using RED": ["red_value", ""],
+            "taxonomic novelty determined using RED": [None, None],
         }
         table_data = {}
         for sample_name in self.gtdbtk_data:
@@ -98,16 +98,57 @@ class MultiqcModule(BaseMultiqcModule):
             table_data[sample.get("user_genome")] = {
                 "classification": sample.get("classification", None),
                 "classification_method": sample.get("classification_method", None),
-                "classification_value_1": sample.get(classification_value_columns[0], None),
-                "classification_value_1_unit": classification_value_columns[0],
-                "classification_value_2": sample.get(classification_value_columns[1], None),
-                "classification_value_2_unit": classification_value_columns[1],
+                "ANI": sample.get(classification_value_columns[0], None),
+                "AF": sample.get(classification_value_columns[1], None),
+                "red_value": sample.get("red_value", None),
                 "note": sample.get("note"),
                 "warnings": sample.get("warnings"),
             }
+        headers = {
+            "classification": {
+                "title": "Classification",
+                "description": "GTDB taxonomy string inferred by the GTDB-Tk.",
+            },
+            "classification_method": {
+                "title": "Classification Method",
+                "description": "Indicates the rule used to classify the genome.",
+            },
+            "ANI": {
+                "title": "ANI to closest genome",
+                "description": "Depending on the classification method, either the 'closest_genome_ani' or 'closest_placement_ani'.",
+                "min": 0,
+                "max": 100,
+            },
+            "AF": {
+                "title": "AF to closest genome",
+                "description": "Depending on the classification method, either the 'closest_genome_af' or 'closest_placement_af'.",
+                "min": 0,
+                "max": 1,
+                "scale": "Purples",
+            },
+            "red_value": {
+                "title": "Relative Evolutionary Divergence (RED)",
+                "description": "Indicates the relative evolutionary divergence (RED) for a query genome. RED is not calculated when a query genome can be classified based on ANI.",
+                "min": 0,
+                "max": 1,
+            },
+            "note": {
+                "title": "Notes",
+                "description": "Provides additional information regarding the classification of the genome.",
+            },
+            "warnings": {
+                "title": "Warnings",
+                "description": "Indicates unusual characteristics of the query genome that may impact the taxonomic assignment.",
+            },
+        }
+        pconfig = TableConfig(
+            title="Taxonomy classifications",
+            id="gtdbtk-first-table",
+        )
         self.add_section(
             name="MAG taxonomy",
             anchor="gtdbtk-taxonomy",
             description="The taxonomy of a MAG as found by GTDB.",
-            plot=table.plot(data=table_data),
+            helptext="GTDB-Tk is a software toolkit for assigning objective taxonomic classifications to bacterial and archaeal genomes based on the Genome Database Taxonomy GTDB. It is designed to work with recent advances that allow hundreds or thousands of metagenome-assembled genomes (MAGs) to be obtained directly from environmental samples. It can also be applied to isolate and single-cell genomes. ",
+            plot=table.plot(data=table_data, headers=headers, pconfig=pconfig),
         )
