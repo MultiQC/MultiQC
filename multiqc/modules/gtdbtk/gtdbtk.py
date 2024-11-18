@@ -96,7 +96,6 @@ class MultiqcModule(BaseMultiqcModule):
             sample = self.gtdbtk_data[sample_name]
             classification_value_columns = classication_method_translate_dict.get(sample.get("classification_method"), [None, None])
             table_data[sample.get("user_genome")] = {
-                "user_genome": sample.get("user_genome"),
                 "classification": sample.get("classification", None),
                 "classification_method": sample.get("classification_method", None),
                 "classification_value_1": sample.get(classification_value_columns[0], None),
