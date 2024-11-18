@@ -966,9 +966,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html = f"<div class='row'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
 
-    def print_class(self):
-        print("plot")
-
 
 def _export_plot(fig, file_ext, plot_path, write_kwargs) -> Optional[str]:
     if is_running_under_rosetta():

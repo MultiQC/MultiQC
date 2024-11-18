@@ -303,8 +303,9 @@ class SeqeraClient(Client):
             response = run_with_spinner("ai", "Summarizing report with AI...", send_request)
 
         if response.status_code != 200:
-            msg = f"Failed to get a response from Seqera: {response.status_code} {response.text}"
+            msg = f"Failed to get a response from Seqera. Status code: {response.status_code} ({response.reason})"
             logger.error(msg)
+            logger.debug(f"Response: {response.text}")
             if config.strict:
                 raise RuntimeError(msg)
             return None
