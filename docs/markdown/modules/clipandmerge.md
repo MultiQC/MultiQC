@@ -1,5 +1,6 @@
 ---
 title: ClipAndMerge
+displayed_sidebar: multiqcSidebar
 description: >
   Adapter clipping and read merging for ancient DNA data
 ---

@@ -1,5 +1,6 @@
 ---
 title: RSEM
+displayed_sidebar: multiqcSidebar
 description: >
   Estimates gene and isoform expression levels from RNA-Seq data
 ---

@@ -1,5 +1,6 @@
 ---
 title: Trimmomatic
+displayed_sidebar: multiqcSidebar
 description: >
   Read trimming tool for Illumina NGS data
 ---

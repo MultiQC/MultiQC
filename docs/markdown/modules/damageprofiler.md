@@ -1,5 +1,6 @@
 ---
 title: DamageProfiler
+displayed_sidebar: multiqcSidebar
 description: >
   DNA damage pattern retrieval for ancient DNA analysis
 ---

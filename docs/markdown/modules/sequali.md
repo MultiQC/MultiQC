@@ -1,5 +1,6 @@
 ---
 title: Sequali
+displayed_sidebar: multiqcSidebar
 description: >
   Sequencing quality control for both long-read and short-read data
 ---

@@ -1,5 +1,6 @@
 ---
 title: Disambiguate
+displayed_sidebar: multiqcSidebar
 description: >
   Disambiguate reads aligned to two different species (e.g. human and mouse)
 ---

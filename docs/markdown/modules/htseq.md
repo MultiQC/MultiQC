@@ -1,5 +1,6 @@
 ---
 title: HTSeq Count
+displayed_sidebar: multiqcSidebar
 description: >
   Part of the HTSeq package: counts reads covering specified genomic features
 ---

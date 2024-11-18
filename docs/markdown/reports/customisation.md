@@ -656,19 +656,6 @@ custom_plot_config:
         color: "#c3e6c3"
 ```
 
-As of version 1.8, this also works for customising the config of bargraph categories:
-
-```yaml
-custom_plot_config:
-  bowtie1_alignment:
-    reads_aligned:
-      color: "#d84e2f"
-    multimapped:
-      color: "#f2e63f"
-    not_aligned:
-      color: "#8bbc21"
-```
-
 ## Customising tables
 
 Much like with the custom plot config above, you can override almost any configuration options for tables.
@@ -714,8 +701,8 @@ To change the number of decimals used in the General Statistics table for the si
 ```yaml
 custom_table_header_config:
   general_stats_table:
-    mean_coverage:
-      format: "{:,.20f}"
+    "Mean Coverage":
+      format: "{:,.2f}"
 ```
 
 The first key is the table ID, the second is the header ID for the column you want to change.

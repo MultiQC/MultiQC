@@ -410,6 +410,7 @@ module_order:
   - isoseq
   - lima
   - peddy
+  - haplocheck
   - somalier
   - methylqa
   - mosdepth

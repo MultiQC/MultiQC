@@ -1,5 +1,6 @@
 ---
 title: Bakta
+displayed_sidebar: multiqcSidebar
 description: >
   Rapid & standardized annotation of bacterial genomes, MAGs & plasmids
 ---

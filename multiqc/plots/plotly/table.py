@@ -6,6 +6,7 @@ from multiqc import config, report
 from multiqc.plots.table_object import ColumnAnchor, DataTable, SampleGroup, SampleName, ValueT
 from multiqc.utils import mqc_colour
 from typing import TYPE_CHECKING
+from natsort import natsorted
 
 if TYPE_CHECKING:  # to avoid circular import
     from multiqc.plots.plotly.violin import ViolinPlot
@@ -402,7 +403,7 @@ def make_table(
     html += "<tbody>"
     t_row_group_names = list(group_to_sample_to_anchor_to_td.keys())
     if dt.pconfig.sort_rows:
-        t_row_group_names = sorted(t_row_group_names)
+        t_row_group_names = natsorted(t_row_group_names)
 
     non_trivial_groups_present = any(len(group_to_sample_to_anchor_to_td[g_name]) > 1 for g_name in t_row_group_names)
 

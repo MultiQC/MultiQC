@@ -1,5 +1,6 @@
 ---
 title: Somalier
+displayed_sidebar: multiqcSidebar
 description: >
   Genotype to pedigree correspondence checks from sketches derived from BAM/CRAM or VCF
 ---
