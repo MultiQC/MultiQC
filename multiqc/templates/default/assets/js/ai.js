@@ -120,9 +120,12 @@ Don't waste words: mention only the important QC issues. If there are no issues,
 Limit it to 1-2 sentences.
 
 Use markdown to format your reponse for readability. Use directives with pre-defined classes
-.text-green, .text-red, and .text-yellow to highlight the severity of the issue, e.g.
-:sample[A1001.2003]{.text-yellow} for sample names, or :span[39.2%]{.text-red} for other text 
-spans like values.
+.text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}. 
+Highlight any mentioned sample names or sample named prefixes or suffixes with a sample directive, 
+and make sure to use the same color classes for severity, e.g. :sample[A1001.2003]{.text-yellow}
+or :sample[A1001]{.text-yellow}. Do not put multiple sample names inside one directive.
+
+Please do not add any extra headers to the response.
 
 After the summary, you can add a more detailed summary (detailed_summary). Highlight sample names 
 with the pre-defined classes as well.
