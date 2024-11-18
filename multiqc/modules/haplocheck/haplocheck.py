@@ -37,13 +37,11 @@ class MultiqcModule(BaseMultiqcModule):
             "Contamination Status": {
                 "title": "Contamination Status",
                 "description": "Indicates whether contamination was detected in the sample.",
-                "namespace": "haplocheck",
                 "scale": False,
             },
             "Contamination Level": {
                 "title": "Contamination Level",
                 "description": "Estimated level of contamination (if applicable).",
-                "namespace": "haplocheck",
                 "min": 0,
                 "scale": "Oranges",
                 "format": "{:,.2f}",
@@ -51,7 +49,6 @@ class MultiqcModule(BaseMultiqcModule):
             "Distance": {
                 "title": "Distance",
                 "description": "Genomic distance value associated with contamination.",
-                "namespace": "haplocheck",
                 "min": 0,
                 "scale": "Greens",
                 "format": "{:,.0f}",
@@ -59,7 +56,6 @@ class MultiqcModule(BaseMultiqcModule):
             "Sample Coverage": {
                 "title": "Sample Coverage",
                 "description": "The total coverage of the sample sequence.",
-                "namespace": "haplocheck",
                 "min": 0,
                 "scale": "Blues",
                 "format": "{:,.0f}",
@@ -68,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Haplocheck",
-            anchor="haplocheck",
+            anchor="haplocheck-section",
             description="Haplocheck detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.",
             plot=table.plot(
                 data=haplocheck_data,
