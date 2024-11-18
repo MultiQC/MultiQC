@@ -75,8 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Haplocheck",
             anchor="haplocheck",
-            description='<a href="https://github.com/genepi/haplocheck/" target="_blank">Haplocheck</a>'
-            " detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.",
+            description="Haplocheck detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.",
             plot=table.plot(data=haplocheck_data, headers=headers, pconfig=config_table),
         )
 
