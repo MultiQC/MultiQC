@@ -282,8 +282,8 @@ class MultiqcModule(BaseMultiqcModule):
                     sample["mean_qscore"] = "NA"
 
     def split_data_by_lane_and_sample(self):
-        for run_id, r in self.bcl2fastq_data.items():
-            for lane_id, lane in r.items():
+        for run_id, run_dict in self.bcl2fastq_data.items():
+            for lane_id, lane in run_dict.items():
                 uniqLaneName = self.prepend_runid(run_id, lane_id)
                 self.bcl2fastq_bylane[uniqLaneName] = {
                     "total": lane["total"],
