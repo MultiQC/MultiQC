@@ -40,7 +40,7 @@ from multiqc import config
 
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
-from multiqc.base_module import BaseMultiqcModule, Section
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.core import log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
