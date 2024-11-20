@@ -4,9 +4,10 @@ This checklist is for my own reference, as I forget the steps every time.
 
 1. Check that everything is up-to-date and ready to go
 2. Update version numbers in `pyproject.toml`
-3. Generate a new changelog section stub:
+3. Generate a new changelog section stub (make sure to export a GitHub token to avoid rate limits):
 
    ```bash
+   export GITHUB_TOKEN=<your token>
    python scripts/print_changelog.py
    ```
 
