@@ -19,17 +19,20 @@ This checklist is for my own reference, as I forget the steps every time.
    python scripts/make_module_docs.py
    ```
 
-5. Install the package again in the `install` mode:
+5. Install the package again in the `install` mode. Make sure to remove the build directory and egg info that might cache outdated metadata such as entry point names:
 
    ```bash
+   rm -rf build/ *.egg-info
    pip install .
    ```
 
    This removes the commit hash from the version number when MultiQC runs.
 
 6. Run using test data
+
    - Check for any command line or javascript errors
    - Check version numbers are printed correctly
+
 7. Create new demo reports for the website
 
    - Comment out any config in `~/.multiqc_config.yaml`
@@ -38,9 +41,10 @@ This checklist is for my own reference, as I forget the steps every time.
      mv ~/.multiqc_config.yml ~/.multiqc_config.yml.bkup
      ```
 
-   - Generate reports in the multiqc/website repo.
+   - Generate reports in the seqeralabs/web repo.
 
      ```bash
+     cd ../seqeralabs/web/packages/website
      bash update_examples.sh
      ```
 
