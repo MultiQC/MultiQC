@@ -269,7 +269,7 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         else:
             report.write_data_file(y_by_x_by_sample, self.uid)
 
-    def format_for_ai_prompt(self, pconfig: LinePlotConfig) -> str:
+    def format_for_ai_prompt(self, pconfig: PConfig) -> str:
         prompt = ""
         for series in self.lines:
             pairs = [f"{self.fmt_value_for_llm(x[0])}: {self.fmt_value_for_llm(x[1])}" for x in series.pairs]

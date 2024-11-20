@@ -8,7 +8,7 @@ import numpy as np
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType
+from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType, PConfig
 from multiqc.plots.plotly.table import make_table
 from multiqc.plots.table_object import ColumnAnchor, ColumnMeta, DataTable, ValueT, TableConfig
 from multiqc.types import SampleName, Section
@@ -375,7 +375,7 @@ class Dataset(BaseDataset):
 
         report.write_data_file(data, self.uid)
 
-    def format_for_ai_prompt(self, pconfig: TableConfig) -> str:
+    def format_for_ai_prompt(self, pconfig: PConfig) -> str:
         """Format as a markdown table"""
         headers = self.dt.get_headers_in_order()
 

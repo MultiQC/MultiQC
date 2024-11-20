@@ -470,10 +470,11 @@ Plot type: {plot.plot_type}
     # strip triple newlines
     content = re.sub(r"\n\n\n", "\n\n", content)
 
+    response: Optional[InterpretationResponse]
     if config.ai_summary_full:
-        response: Optional[InterpretationResponse] = client.interpret_report_full(content)
+        response = client.interpret_report_full(content)
     else:
-        response: Optional[InterpretationResponse] = client.interpret_report_short(content)
+        response = client.interpret_report_short(content)
     if not response:
         return None
 

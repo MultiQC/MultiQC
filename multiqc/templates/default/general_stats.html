@@ -10,10 +10,6 @@ This block generates the General Statistics table at the top of the report.
 <div id="general_stats" class="mqc-module-section">
   <h2>General Statistics</h2>
 
-  {% if report.general_stats_ai_summary | length > 0 %}
-  <div class="ai-summary">{{ report.general_stats_ai_summary }}</div>
-  {% endif %}
-
   {% if config.section_comments.general_stats is not none and config.section_comments.general_stats | length > 0 %}<blockquote class="mqc-section-comment">{{ config.section_comments.general_stats }}</blockquote>{% endif %}
 
   {{ report.general_stats_html }}

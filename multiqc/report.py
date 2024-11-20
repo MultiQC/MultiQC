@@ -140,7 +140,6 @@ def reset():
     global general_stats_plot
     global software_versions
     global plot_compressed_json
-    global general_stats_ai_summary
     global ai_summary
 
     # Create new temporary directory for module data exports
@@ -168,7 +167,6 @@ def reset():
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
-    general_stats_ai_summary = ""
     ai_summary = ""
 
     reset_file_search()
