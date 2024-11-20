@@ -1,5 +1,55 @@
 # MultiQC Version History
 
+## [MultiQC v1.25.2](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.2) - 2024-11-20
+
+Multiple bug fixes and minor updates.
+
+### Updates
+
+- Add natural sort for sample sorting ([#2959](https://github.com/MultiQC/MultiQC/pull/2959))
+- Custom content: for `plot_type: image`, support `custom_data` config with section name and description. Fix misleading logging ([#2939](https://github.com/MultiQC/MultiQC/pull/2939))
+- Config validation improvements (group messages, cast types, validate column headers) ([#2899](https://github.com/MultiQC/MultiQC/pull/2899))
+
+### Fixes
+
+- Workaround for displaying sample grouping in Safari because of missing `visibility: collapse` ([#2941](https://github.com/MultiQC/MultiQC/pull/2941))
+- Fix table CSV export where a title contains a comma ([#2911](https://github.com/MultiQC/MultiQC/pull/2911))
+- Showing table in notebooks: respect `col1_header` ([#2914](https://github.com/MultiQC/MultiQC/pull/2914))
+- Customizing `custom_table_header_config`: fix docs, support both the old and the new ways ([#2955](https://github.com/MultiQC/MultiQC/pull/2955))
+- Table scatter mini-plots: fix rounding and range ([#2956](https://github.com/MultiQC/MultiQC/pull/2956))
+- File line block iterator: fix reading long lines that do not fit one block ([#2935](https://github.com/MultiQC/MultiQC/pull/2935))
+- Fix `cond_formatting_rules` type hint to avoid validation error ([#2922](https://github.com/MultiQC/MultiQC/pull/2922))
+- Fix `config.prepend_dirs` or `-d -dd 1` ([#2913](https://github.com/MultiQC/MultiQC/pull/2913))
+- Sample grouping fixes ([#2920](https://github.com/MultiQC/MultiQC/pull/2920)):
+  - Keep sample name column fix width to avoid jumping
+  - Fix hiding columns through the modal
+- Custom content fixes:
+  - Avoid showing `section_comment` both for module and section when they have the same ID ([#2954](https://github.com/MultiQC/MultiQC/pull/2954))
+  - Address issue of sections without search patterns and headers in files ([#2921](https://github.com/MultiQC/MultiQC/pull/2921))
+  - Fix duplicated custom content sections in the report ([#2921](https://github.com/MultiQC/MultiQC/pull/2921))
+  - Fix support for `plot_type: violin` ([#2957](https://github.com/MultiQC/MultiQC/pull/2957))
+
+### Module updates
+
+- ngsbits: add submodule samplegender ([#2854](https://github.com/MultiQC/MultiQC/pull/2854))
+- nanoq: change lineplots for barplots ([#2934](https://github.com/MultiQC/MultiQC/pull/2934))
+- Qualimap: clarify the direction of the transcript in coverage plot ([#2946](https://github.com/MultiQC/MultiQC/pull/2946))
+- picard: add table with all metrics to VariantCallingMetrics section ([#2885](https://github.com/MultiQC/MultiQC/pull/2885))
+- Nanostat: add general stats columns ([#2961](https://github.com/MultiQC/MultiQC/pull/2961))
+- Samtools: add insert size to general stats table ([#2905](https://github.com/MultiQC/MultiQC/pull/2905))
+
+### Module fixes
+
+- bcl2fastq: fix missing `R1_*`/`R2_*` metrics ([#2965](https://github.com/MultiQC/MultiQC/pull/2965))
+- Cutadapt: fix for null values from r2 data ([#2936](https://github.com/MultiQC/MultiQC/pull/2936))
+- Qualimap: fix parsing ∞ value ([#2937](https://github.com/MultiQC/MultiQC/pull/2937))
+- bclconvert: fix undetermined barcodes plot ([#2976](https://github.com/MultiQC/MultiQC/pull/2976))
+- featurecounts: fix missing section name and anchor ([#2967](https://github.com/MultiQC/MultiQC/pull/2967))
+
+### Infrastructure
+
+- Pin kaleido to 0.2.1 (new 0.4.1 does not embed a browser and thus not portable) ([#2963](https://github.com/MultiQC/MultiQC/pull/2963))
+
 ## [MultiQC v1.25.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.1) - 2024-09-30
 
 Python 3.13, bugs fixed, improved sample grouping UI, and handling freezes in containers with incompatible architectures.

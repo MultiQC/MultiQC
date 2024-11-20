@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.types import Anchor, ColumnKey
+from multiqc.types import ColumnKey
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="featureCounts",
-            anchor=Anchor("featurecounts"),
+            anchor="featurecounts",
             target="Subread featureCounts",
             href="http://subread.sourceforge.net/",
             info="Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, "
