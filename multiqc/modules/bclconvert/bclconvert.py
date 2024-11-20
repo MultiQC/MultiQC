@@ -238,7 +238,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self._clusters_by_sample_barplot(data_by_sample)
 
-        TOP_N_UNDETERMINED_BARCODES = 20
+        TOP_N_UNDETERMINED_BARCODES = 40
 
         # Add section with undetermined barcodes
         if len(data_by_run) == 1:
@@ -257,6 +257,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "ylab": "Count",
                             "use_legend": True,
                             "tt_suffix": "reads",
+                            "sort_samples": False,
                         },
                     ),
                 )
