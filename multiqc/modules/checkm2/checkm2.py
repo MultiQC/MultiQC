@@ -1,8 +1,11 @@
 import logging
 
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.plots import table
+from multiqc.plots.table_object import TableConfig
 
 log = logging.getLogger(__name__)
+
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -16,4 +19,147 @@ class MultiqcModule(BaseMultiqcModule):
             info="A rapid, scalable and accurate tool for assessing microbial genome quality using machine learning.",
             doi=["10.1038/s41592-023-01940-w"],
         )
-        print('Hello world')
+
+        self.checkm2_data = {}
+        for f in self.find_log_files(
+            "checkm2",
+            filehandles=True,
+        ):
+            self.parse_file(f)
+            self.add_data_source(f)
+        self.checkm2_data = self.ignore_samples(self.checkm2_data)
+        if len(self.checkm2_data) == 0:
+            raise ModuleNotFoundError
+        log.info(f"Found {len(self.checkm2_data)} reports")
+        self.add_software_version()
+
+        self.mag_quality_table()
+
+    def parse_file(self, f):
+        """Parse the quality_report.tsv output."""
+        column_names = (
+            "Name",
+            "Completeness",
+            "Contamination",
+            "Completeness_Model_Used",
+            "Translation_Table_Used",
+            "Coding_Density",
+            "Contig_N50",
+            "Average_Gene_Length",
+            "Genome_Size",
+            "GC_Content",
+            "Total_Coding_Sequences",
+            "Total_Contigs",
+            "Max_Contig_Length",
+            "Additional_Notes",
+        )
+        parsed_data = {}
+        for line in f["f"]:
+            if line.startswith("Name\t"):
+                continue
+            column_values = line.rstrip().split("\t")
+            parsed_data[column_values[0]] = dict(zip(column_names, column_values))
+        self.checkm2_data = parsed_data
+
+    def mag_quality_table(self):
+        """Write some quality stats and measures into a table."""
+        headers = {
+            "Completeness": {
+                "title": "Predicted Completeness",
+                "description": "The percentage of MAG length relative to predicted total MAG length.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "Contamination": {
+                "title": "Predicted Contamination",
+                "description": "The length of the contaminating portion relative to the expected (complete, uncontaminated) genome length.",
+                "min": 0,
+                "suffix": "%",
+                "format": "{:,.2f}",
+                "scale": "YlOrRd",
+            },
+            "Completeness_Model_Used": {
+                "title": "Completness Model Used",
+                "description": "Which ML model was used to predict completeness.",
+                "hidden": True,
+            },
+            "Translation_Table_Used": {
+                "title": "Translation Table Used",
+                "description": "Genetic code translation table Prodigal used for gene predition.",
+                "scale": False,
+                "hidden": True,
+            },
+            "Coding_Density": {
+                "title": "Coding Density",
+                "description": "Fraction of bases that are in predicted coding regions.",
+                "min": 0,
+                "max": 1,
+                "scale": "YlGn",
+                "format": "{:,.3f}",
+            },
+            "Contig_N50": {
+                "title": "Contig N50",
+                "description": "The contig length such that the sum of all contigs at least as long will be 50% of the total MAG length.",
+                "hidden": True,
+                # "min":
+                # "scale":
+            },
+            "Average_Gene_Length": {
+                "title": "Average Gene Leght",
+                "description": "The average number of amino acids in predicted genes.",
+                # "min":
+                # "scale":
+                "suffix": "a.a.",
+                "format": "{:,.0f}",
+            },
+            "Genome_Size": {
+                "title": "Genome Size",
+                "description": "The predicted size of the genome",
+                "scale": "YlGn",
+            },
+            "GC_Content": {
+                "title": "GC Content",
+                "description": "The fraction of the binned contig seqence that is G or C.",
+                "format": "{:,.2f}",
+            },
+            "Total_Coding_Sequences": {
+                "title": "Total Coding Sequences",
+                "description": "The number of predicted coding sequences from Prodigal.",
+                "scale": "YlGn",
+            },
+            "Total_Contigs": {
+                "title": "Total Contigs",
+                "description": "The number of contigs in the bin.",
+                "hidden": True,
+            },
+            "Max_Contig_Length": {
+                "title": "Max Contig Length",
+                "description": "The length of the largest contig.",
+                "hidden": True,
+                "scale": "YlGn",
+            },
+            "Additional_Notes": {
+                "title": "Additional Notes",
+                "description": "Any additional notes output by CheckM2.",
+                # "min":
+                # "scale":
+            },
+        }
+        # table_data = {}
+        # for sample_name in self.checkm2_data:
+        #     sample = self.checkm2_data[sample_name]
+        #     table_data[sample_name] = {
+        # }
+        pconfig = TableConfig(
+            title="Genome Quality",
+            id="checkm2-first-table",
+        )
+        self.add_section(
+            name="Bin quality",
+            anchor="checkm2-quality",
+            description="Rapid assessment of genome bin quality using machine learning.",
+            helptext="The main use of CheckM2 is to predict the completeness and contamination of metagenome-assembled genomes (MAGs) and single-amplified genomes (SAGs), although it can also be applied to isolate genomes.",
+            plot=table.plot(data=self.checkm2_data, headers=headers, pconfig=pconfig),
+        )
