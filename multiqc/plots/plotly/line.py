@@ -5,7 +5,6 @@ import random
 from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 import plotly.graph_objects as go  # type: ignore
-from plotly.graph_objs.layout.shape import Label  # type: ignore
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
