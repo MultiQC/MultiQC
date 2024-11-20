@@ -1145,13 +1145,61 @@ tr.row-empty {
 .ai-summary sample:hover {
   opacity: 0.9;
 }
-.ai-summary button.ai-generate-more {
+.ai-summary .ai-generate-more-container {
   margin-left: -4px;
-  padding: 3px 8px;
   margin-bottom: 10px;
 }
+.ai-summary .ai-generate-more {
+  padding: 2px 8px;
+  margin-left: -4px;
+}
+.ai-generate-more {
+  border-bottom-right-radius: 0;
+  border-top-right-radius: 0;
+}
+.ai-settings-button {
+  margin-left: -8px;
+  padding-top: 4px;
+  padding-bottom: 6px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+}
+.ai-summary .ai-settings-button {
+  margin-left: -6px;
+  padding-top: 1px;
+  padding-bottom: 3px;
+}
+
 .ai-summary .ai-detailed-summary {
   margin-bottom: 10px;
+}
+.ai-loading {
+  margin: 15px 0;
+  font-style: italic;
+  color: #666;
+}
+.ai-summary .ai-summary-error {
+  margin: 10px 0;
+  font-style: italic;
+  color: #ea4f4f;
+}
+
+.ai-settings-button svg {
+  vertical-align: middle;
+}
+.ai-provider-setting {
+  margin-bottom: 20px;
+}
+.ai-provider-setting:last-child {
+  margin-bottom: 0;
+}
+#aiSettingsModal .input-group {
+  width: 100%;
+}
+#aiSettingsModal .input-group input {
+  width: 100%;
 }
 
 .spinner {
