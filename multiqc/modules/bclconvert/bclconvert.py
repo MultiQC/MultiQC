@@ -238,20 +238,22 @@ class MultiqcModule(BaseMultiqcModule):
 
         self._clusters_by_sample_barplot(data_by_sample)
 
+        TOP_N_UNDETERMINED_BARCODES = 20
+
         # Add section with undetermined barcodes
         if len(data_by_run) == 1:
-            undetermined_data = self.get_bar_data_from_undetermined(data_by_run)
+            undetermined_data = self.get_bar_data_from_undetermined(data_by_run, top_n=TOP_N_UNDETERMINED_BARCODES)
             if undetermined_data:
                 self.add_section(
-                    name="Undetermined barcodes by lane",
+                    name="Undetermined barcodes",
                     anchor="undetermine_by_lane",
-                    description="Undetermined barcodes by lanes",
+                    description=f"Top {TOP_N_UNDETERMINED_BARCODES} undetermined barcodes",
                     plot=bargraph.plot(
                         undetermined_data,
                         None,
                         {
                             "id": "bclconvert_undetermined",
-                            "title": "bclconvert: Undetermined barcodes by lane",
+                            "title": f"bclconvert: top {TOP_N_UNDETERMINED_BARCODES} undetermined barcodes",
                             "ylab": "Count",
                             "use_legend": True,
                             "tt_suffix": "reads",
@@ -1073,7 +1075,9 @@ class MultiqcModule(BaseMultiqcModule):
         return bar_data
 
     @staticmethod
-    def get_bar_data_from_undetermined(data_by_run: Dict[str, RunSummary]) -> Dict[str, Dict[str, int]]:
+    def get_bar_data_from_undetermined(
+        data_by_run: Dict[str, RunSummary], top_n: int = 20
+    ) -> Dict[str, Dict[str, int]]:
         """
         Get data to plot for undetermined barcodes.
         """
@@ -1083,11 +1087,13 @@ class MultiqcModule(BaseMultiqcModule):
         for _, run in data_by_run.items():
             for lane_id, lane in run.lanes.items():
                 try:
-                    for barcode, count in islice(lane.top_unknown_barcodes.items(), 20):
+                    for barcode, count in islice(lane.top_unknown_barcodes.items(), top_n):
                         bar_data[barcode][lane_id] = count
                 except AttributeError:
                     pass
                 except KeyError:
                     pass
 
-        return {key: value for key, value in islice(bar_data.items(), 20)}
+        # Sort by value
+        bar_data = dict(sorted(bar_data.items(), key=lambda item: sum(item[1].values()), reverse=True))
+        return {key: value for key, value in islice(bar_data.items(), top_n)}
