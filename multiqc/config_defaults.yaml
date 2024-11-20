@@ -62,7 +62,7 @@ make_pdf: false
 ai_summary: false
 ai_summary_full: false
 ai_provider: "anthropic"
-ai_model: "claude-3-5-sonnet-20241022"
+ai_model: "claude-3-5-sonnet-latest"
 
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
