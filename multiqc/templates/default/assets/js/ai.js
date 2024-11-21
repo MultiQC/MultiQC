@@ -73,6 +73,13 @@ $(function () {
     $("#aiSettingsModal").modal("hide");
   });
 
+  // Add handler for Enter key in the modal
+  $("#aiSettingsModal").on("keypress", function (e) {
+    if (e.which === 13) {
+      $("#saveAiSettings").click();
+    }
+  });
+
   // // Add this to update the API key field when provider changes
   // $("#defaultProvider").change(function () {
   //   const provider = $(this).val();
@@ -216,10 +223,28 @@ ${formattedData}
 
   // Add this to the $(function() {...}) block to set the initial selected provider
   $("#defaultProvider").val(sessionStorage.getItem("multiqc_default_ai_provider") || "Anthropic");
+
+  // Handle modal shown event
+  $("#aiSettingsModal").on("shown.bs.modal", function () {
+    // Focus first empty input field
+    const inputs = $("#aiSettingsModal").find("input");
+    const firstEmptyInput = inputs
+      .filter(function () {
+        return !this.value;
+      })
+      .first();
+
+    if (firstEmptyInput.length) {
+      firstEmptyInput.focus();
+    } else {
+      inputs.first().focus();
+    }
+  });
 });
 
 async function generateMoreHandler(event) {
   event.preventDefault();
+  let button = $(event.currentTarget);
 
   // Check for stored API key
   let provider = getStoredProvider();
@@ -237,61 +262,64 @@ async function generateMoreHandler(event) {
         $("#saveAiSettings").off("click", saveHandler);
 
         // Continue with generation
-        generateDetailedSummary();
+        generateMore();
       }
     };
     $("#saveAiSettings").on("click", saveHandler);
     $("#aiSettingsModal").modal("show");
     return;
+  } else {
+    generateMore();
   }
 
-  let button = $(event.currentTarget);
-  // Disable button and show loading state
-  button.prop("disabled", true);
-  button.text("Generating...");
-  let buttonContainer = button.parent();
+  async function generateMore() {
+    // Disable button and show loading state
+    button.prop("disabled", true);
+    button.text("Generating...");
+    let buttonContainer = button.parent();
 
-  const contentBase64 = button.data("content-base64");
-  const content = atob(contentBase64);
+    const contentBase64 = button.data("content-base64");
+    const content = atob(contentBase64);
 
-  const summaryDiv = buttonContainer.prev(".ai-short-summary");
+    const summaryDiv = buttonContainer.prev(".ai-short-summary");
 
-  let fullModelName = null;
+    let fullModelName = null;
 
-  const startTime = performance.now();
-  await generateDetailedSummary();
-  async function generateDetailedSummary() {
-    const responseDiv = $('<div class="ai-detailed-summary"></div>');
-    summaryDiv.after(responseDiv);
+    const startTime = performance.now();
+    await generateDetailedSummary();
+    async function generateDetailedSummary() {
+      const responseDiv = $('<div class="ai-detailed-summary"></div>');
+      summaryDiv.after(responseDiv);
 
-    const errorDiv = $('<div class="ai-summary-error"></div>');
-    responseDiv.after(errorDiv);
+      const errorDiv = $('<div class="ai-summary-error"></div>');
+      responseDiv.after(errorDiv);
 
-    let receievedText = "";
-    streamGeneration(
-      function onStreamStart(model) {
-        buttonContainer.hide();
-        fullModelName = model;
-      },
-      function onStreamNewToken(token) {
-        receievedText += token;
-        responseDiv.html(markdownToHtml(receievedText));
-      },
-      function onStreamError(error) {
-        errorDiv.html(error);
-      },
-      function onStreamComplete() {
-        const provider = getStoredProvider();
-        responseDiv.append(
-          `<div class="ai-summary-disclaimer">This summary is AI-generated. 
-          Provider: ${provider}, model: ${fullModelName}</div>`,
-        );
-        const endTime = performance.now();
-        console.log(`Time to generate more: ${endTime - startTime}ms`);
-      },
-      systemPromptReport,
-      content,
-      ["multiqc", "multiqc-generate-more"],
-    );
+      let receievedText = "";
+      streamGeneration(
+        function onStreamStart(model) {
+          buttonContainer.hide();
+          fullModelName = model;
+        },
+        function onStreamNewToken(token) {
+          receievedText += token;
+          responseDiv.html(markdownToHtml(receievedText));
+        },
+        function onStreamError(error) {
+          errorDiv.html(error);
+        },
+        function onStreamComplete() {
+          const provider = getStoredProvider();
+          responseDiv.append(
+            `<div class="ai-summary-disclaimer">This summary is AI-generated. 
+            Provider: ${provider}, model: ${fullModelName}</div>`,
+          );
+          const endTime = performance.now();
+          console.log(`Time to generate more: ${endTime - startTime}ms`);
+        },
+        systemPromptReport,
+        content,
+        ["multiqc", "multiqc-generate-more"],
+      );
+    }
   }
 }
