@@ -143,16 +143,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "suffix": "%",
                 "scale": "Purples",
-                "format":"{:,.2f}",
+                "format": "{:,.2f}",
             },
             "Contamination": {
                 "title": "Contamination",
                 "description": "Estimated contamination of genome as determined by the presence of multi-copy marker genes and the expected collocalization of these genes",
                 "min": 0,
                 "max": 100,
-                "suffix":  "%",
+                "suffix": "%",
                 "scale": "Reds",
-                "format":"{:,.2f}",
+                "format": "{:,.2f}",
             },
         }
         pconfig = TableConfig(
