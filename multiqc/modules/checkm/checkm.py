@@ -111,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
             column_values = re.split(r"\t| {3,}", line.rstrip())
             column_values = [None if x == "None" else x for x in column_values]
             parsed_data[column_values[0]] = {k: v for k, v in zip(column_names, column_values) if v}
-        self.checkm_data = parsed_data
+        self.checkm_data.update(parsed_data)
 
     def mag_quality_table(self):
         pass
