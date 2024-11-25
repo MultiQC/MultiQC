@@ -42,7 +42,76 @@ class MultiqcModule(BaseMultiqcModule):
         self.mag_quality_table()
 
     def parse_file(self, f):
-        pass
+        """Parses the file from `checkm qa`.
+        Outputs from this command can come in several formats and with spaces or tabs.
+        This is tested with formats 1 and 2 `-o [1|2]`, and with spaces (default) and tabs `--tab-file`
+        """
+
+        column_names_format_1 = (
+            "Bin Id",
+            "Marker lineage",
+            "# genomes",
+            "# markers",
+            "# marker sets",
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5+",
+            "Completeness",
+            "Contamination",
+            "Strain heterogeneity",
+        )
+        column_names_format_2 = (
+            "Bin Id",
+            "Marker lineage",
+            "# genomes",
+            "# markers",
+            "# marker sets",
+            "Completeness",
+            "Contamination",
+            "Strain heterogeneity",
+            "Genome size (bp)",
+            "# ambiguous bases",
+            "# scaffolds",
+            "# contigs",
+            "N50 (scaffolds)",
+            "N50 (contigs)",
+            "Mean scaffold length (bp)",
+            "Mean contig length (bp)",
+            "Longest scaffold (bp)",
+            "Longest contig (bp)",
+            "GC",
+            "GC std (scaffolds > 1kbp)",
+            "Coding density",
+            "Translation table",
+            "# predicted genes",
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5+",
+        )
+        parsed_data = {}
+        for line in f["f"]:
+            if line.startswith("--"):
+                continue
+            elif line.startswith(("  Bin Id ", "Bin Id\t")):
+                # we need to check which format the data is in so we can grab the correct columns later
+                format_different_column = re.split(r"\t| {3,}", line.rstrip())[5]
+                if format_different_column == "0":
+                    column_names = column_names_format_1
+                elif format_different_column == "Completeness":
+                    column_names = column_names_format_2
+                else:
+                    raise ValueError
+                continue
+            column_values = re.split(r"\t| {3,}", line.rstrip())
+            column_values = [None if x == "None" else x for x in column_values]
+            parsed_data[column_values[0]] = {k: v for k, v in zip(column_names, column_values) if v}
+        self.checkm_data = parsed_data
 
     def mag_quality_table(self):
         pass
