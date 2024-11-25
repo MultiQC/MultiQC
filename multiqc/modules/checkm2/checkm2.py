@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             column_values = line.rstrip().split("\t")
             column_values = [None if x == "None" else x for x in column_values]
-            parsed_data[column_values[0]] = {k: v for k, v in zip(column_names, column_values) if v}
+            parsed_data[column_values[0]] = {k: v for k, v in zip(column_names, column_values) if v is not None}
         self.checkm2_data = parsed_data
 
     def mag_quality_table(self):
