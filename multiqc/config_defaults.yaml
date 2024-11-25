@@ -421,6 +421,7 @@ module_order:
   - rsem
   - rseqc
   - busco
+  - checkm
   - bustools
   - goleft_indexcov
   - gffcompare
