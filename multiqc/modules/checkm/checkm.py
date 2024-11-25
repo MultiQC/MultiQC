@@ -114,4 +114,55 @@ class MultiqcModule(BaseMultiqcModule):
         self.checkm_data.update(parsed_data)
 
     def mag_quality_table(self):
-        pass
+        headers = {
+            "Marker lineage": {
+                "title": "Marker lineage",
+                "description": "indicates lineage used for inferring marker set (a precise indication of where a bin was placed in CheckM's reference tree can be obtained with the tree_qa command)",
+            },
+            "# genomes": {
+                "title": "# of genomes",
+                "description": "Number of reference genomes used to infer marker set.",
+                "min": 0,
+            },
+            "# markers": {
+                "title": "# of markers",
+                "description": "Number of inferred marker genes.",
+                "min": 0,
+                "scale": "YlGn",
+            },
+            "# marker sets": {
+                "title": "# of marker sets",
+                "description": "Number of inferred co-located marker sets",
+                "min": 0,
+                "scale": "YlOrRd-rev",
+            },
+            "Completeness": {
+                "title": "Completeness",
+                "description": "Estimated completeness of genome as determined from the presence/absence of marker genes and the expected collocalization of these genes",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Purples",
+                "format":"{:,.2f}",
+            },
+            "Contamination": {
+                "title": "Contamination",
+                "description": "Estimated contamination of genome as determined by the presence of multi-copy marker genes and the expected collocalization of these genes",
+                "min": 0,
+                "max": 100,
+                "suffix":  "%",
+                "scale": "Reds",
+                "format":"{:,.2f}",
+            },
+        }
+        pconfig = TableConfig(
+            title="Genome Quality",
+            id="checkm-first-table",
+        )
+        self.add_section(
+            name="Bin quality",
+            anchor="checkm-quality",
+            description="The quality of microbial genomes recovered from isolates, single cells, and metagenomes.",
+            helptext="An automated method for assessing the quality of a genome using a broader set of marker genes specific to the position of a genome within a reference genome tree and information about the collocation of these genes.",
+            plot=table.plot(data=self.checkm_data, headers=headers, pconfig=pconfig),
+        )
