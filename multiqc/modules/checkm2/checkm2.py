@@ -1,6 +1,6 @@
 import logging
 
-from multiqc.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from multiqc.plots.table_object import TableConfig
 
@@ -24,15 +24,12 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.checkm2_data = {}
-        for f in self.find_log_files(
-            "checkm2",
-            filehandles=True,
-        ):
+        for f in self.find_log_files("checkm2", filehandles=True):
             self.parse_file(f)
             self.add_data_source(f)
         self.checkm2_data = self.ignore_samples(self.checkm2_data)
         if len(self.checkm2_data) == 0:
-            raise ModuleNotFoundError
+            raise ModuleNoSamplesFound
         log.info(f"Found {len(self.checkm2_data)} reports")
         self.add_software_version()
 
