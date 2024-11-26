@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             column_values = line.rstrip().split("\t")
             parsed_data[column_values[0]] = dict(zip(column_names, column_values))
-        self.gtdbtk_data = parsed_data
+        self.gtdbtk_data.update(parsed_data)
 
     def closest_taxa_table(self):
         """Add a table showing the closest taxa for each query genome."""
