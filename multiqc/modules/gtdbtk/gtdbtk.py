@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f)
         self.gtdbtk_data = self.ignore_samples(self.gtdbtk_data)
         if len(self.gtdbtk_data) == 0:
-            raise ModuleNotFoundError
+            raise ModuleNoSamplesFound
         log.info(f"Found {len(self.gtdbtk_data)} reports")
         self.add_software_version(None)  # may need to fix this?
 
