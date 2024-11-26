@@ -247,7 +247,9 @@ cutadapt:
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
-  fn: "*dedup.json"
+  fn: "*.json"
+  contents: '"tool_name": "DeDup"'
+  num_lines: 20
 deeptools/bamPEFragmentSizeTable:
   contents: "	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu."
   num_lines: 1
@@ -387,6 +389,9 @@ goleft_indexcov/ped:
   fn: "*-indexcov.ped"
 gopeaks:
   fn: "*_gopeaks.json"
+haplocheck:
+  contents: '"Sample"	"Contamination Status"	"Contamination Level"	"Distance"	"Sample Coverage"'
+  num_lines: 10
 happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
