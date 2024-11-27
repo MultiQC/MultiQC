@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 import subprocess
+from typing import TypedDict
 
 
 def extract_first_second_level_section(markdown) -> str:
@@ -15,13 +16,20 @@ def extract_first_second_level_section(markdown) -> str:
     return match.group(1).strip()
 
 
-def extract_latest_version(changelog_content):
+class ChangelogData(TypedDict):
+    version: str
+    url: str
+    date: str
+    summary: str
+    the_rest: str
+
+
+def extract_latest_version(changelog_content) -> ChangelogData:
     """Extract the latest version section from the changelog."""
     # Skip the first header line
     last_version_changelog = extract_first_second_level_section(changelog_content)
 
-    # Find the first version section
-    # Parse line like this: ## [MultiQC v1.25.2](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.2) - 2024-11-20
+    # Find the first version section and extract the version, url and date
     matches = re.search(r"^## \[MultiQC v([\d.]+)\]\((.*?)\) - ([\d-]+)", last_version_changelog)
     if not matches:
         raise ValueError("Could not find version information in changelog")
@@ -60,7 +68,7 @@ if not docs_dir.exists():
 
 # Extract latest version
 with open(changelog_path) as f:
-    changelog_data: dict[str, str] = extract_latest_version(f.read())
+    changelog_data: ChangelogData = extract_latest_version(f.read())
 
 # Create output directory
 output_dir = docs_dir / "changelog" / "multiqc"
@@ -68,7 +76,7 @@ output_dir.mkdir(parents=True, exist_ok=True)
 
 # Create output file
 mdx_content: str = f"""---
-title: MultiQC {changelog_data['version']}
+title: MultiQC v{changelog_data['version']}
 date: {changelog_data['date']}
 tags: [multiqc]
 ---
@@ -79,7 +87,7 @@ tags: [multiqc]
 
 {changelog_data['the_rest']}
 """
-with open(output_path := output_dir / f"{changelog_data['version']}.mdx", "w") as f:
+with open(output_path := output_dir / f"v{changelog_data['version']}.mdx", "w") as f:
     f.write(mdx_content)
 
 # Print version for GitHub Actions
