@@ -10,6 +10,13 @@ const zip_threshold = 8;
 // TOOLBOX LISTENERS
 //////////////////////////////////////////////////////
 $(function () {
+  // Close toolbox when Escape key is pressed
+  $(document).keyup(function (e) {
+    if (e.key === "Escape" && $(".mqc-toolbox").hasClass("active")) {
+      mqc_toolbox_openclose(undefined, false);
+    }
+  });
+
   // Batch sample renaming buttons
   $(".mqc_sname_switches").click(function (e) {
     e.preventDefault();

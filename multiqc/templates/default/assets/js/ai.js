@@ -37,9 +37,6 @@ window.continueInChatHandler = function (event) {
 };
 
 $(function () {
-  // Add settings button and modal
-  $("body").append(getSettingsModalHtml());
-
   // Set initial values when opening modal
   const provider = getStoredProvider() || "Anthropic";
   $("#ai-provider").val(provider);
@@ -47,12 +44,6 @@ $(function () {
   $("#ai-model").val(model);
   const apiKey = getStoredApiKey(provider);
   $("#ai-api-key").val(apiKey || "");
-
-  // Handle settings button click
-  $(".ai-settings-button").click(function (e) {
-    e.preventDefault();
-    $("#aiSettingsModal").modal("show");
-  });
 
   // Add handler to update model when provider changes
   $("#ai-provider").change(function () {
@@ -70,22 +61,7 @@ $(function () {
     storeModelName(provider, model);
     const apiKey = $("#ai-api-key").val();
     storeApiKey(provider, apiKey);
-    $("#aiSettingsModal").modal("hide");
   });
-
-  // Add handler for Enter key in the modal
-  $("#aiSettingsModal").on("keypress", function (e) {
-    if (e.which === 13) {
-      $("#saveAiSettings").click();
-    }
-  });
-
-  // // Add this to update the API key field when provider changes
-  // $("#defaultProvider").change(function () {
-  //   const provider = $(this).val();
-  //   const storedKey = getStoredApiKey(provider);
-  //   $("#ai-token").val(storedKey || "");
-  // });
 
   // Add "Show More" button to AI summary
   $(".ai-summary").each(function () {
@@ -223,23 +199,6 @@ ${formattedData}
 
   // Add this to the $(function() {...}) block to set the initial selected provider
   $("#defaultProvider").val(sessionStorage.getItem("multiqc_default_ai_provider") || "Anthropic");
-
-  // Handle modal shown event
-  $("#aiSettingsModal").on("shown.bs.modal", function () {
-    // Focus first empty input field
-    const inputs = $("#aiSettingsModal").find("input");
-    const firstEmptyInput = inputs
-      .filter(function () {
-        return !this.value;
-      })
-      .first();
-
-    if (firstEmptyInput.length) {
-      firstEmptyInput.focus();
-    } else {
-      inputs.first().focus();
-    }
-  });
 });
 
 async function generateMoreHandler(event) {
@@ -266,7 +225,8 @@ async function generateMoreHandler(event) {
       }
     };
     $("#saveAiSettings").on("click", saveHandler);
-    $("#aiSettingsModal").modal("show");
+    // Open the AI toolbox section
+    mqc_toolbox_openclose("#mqc_ai", true);
     return;
   } else {
     generateMore();

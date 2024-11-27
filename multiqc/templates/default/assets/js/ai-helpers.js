@@ -124,19 +124,6 @@ async function streamGeneration(
   }
 }
 
-// Add these constants at the top of the file
-const AI_PROVIDERS = {
-  Anthropic: {
-    defaultModel: "claude-3-5-sonnet-20241022",
-  },
-  OpenAI: {
-    defaultModel: "gpt-4o",
-  },
-  "Seqera AI": {
-    defaultModel: "claude-3-5-sonnet-20241022",
-  },
-};
-
 // Storing user settings
 function getStoredProvider() {
   return sessionStorage.getItem(`multiqc_provider`);
@@ -155,46 +142,6 @@ function storeApiKey(provider, key) {
 }
 function storeModelName(provider, modelName) {
   sessionStorage.setItem(`multiqc_${provider}_model`, modelName);
-}
-
-// Add after getApiKeyInputHtml function
-function getSettingsModalHtml() {
-  const providerSelectOptions = Object.keys(AI_PROVIDERS)
-    .map((name) => `<option value="${name}">${name}</option>`)
-    .join("");
-
-  return `
-      <div class="modal fade" id="aiSettingsModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal">&times;</button>
-              <h4 class="modal-title">AI Settings</h4>
-            </div>
-            <div class="modal-body">
-              <div class="form-group">
-                <label for="ai-provider">Provider</label>
-                <select class="form-control" id="ai-provider">
-                  ${providerSelectOptions}
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="ai-model">Model</label>
-                <input type="text" class="form-control" id="ai-model" placeholder="Enter model name">
-              </div>
-              <div class="form-group">
-                <label for="ai-api-key">API Key</label>
-                <input type="password" class="form-control" id="ai-api-key" placeholder="Enter API key">
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-primary" id="saveAiSettings">Save changes</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
 }
 
 function markdownToHtml(text) {
