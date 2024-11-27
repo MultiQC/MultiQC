@@ -6,6 +6,19 @@ let mqc_colours_idx = 0;
 const mqc_colours = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a9a904", "#a65628", "#f781bf", "#999999"];
 const zip_threshold = 8;
 
+// Add these constants at the top of the file
+const AI_PROVIDERS = {
+  Anthropic: {
+    defaultModel: "claude-3-5-sonnet-20241022",
+  },
+  OpenAI: {
+    defaultModel: "gpt-4o",
+  },
+  "Seqera AI": {
+    defaultModel: "claude-3-5-sonnet-20241022",
+  },
+};
+
 //////////////////////////////////////////////////////
 // TOOLBOX LISTENERS
 //////////////////////////////////////////////////////
@@ -299,6 +312,35 @@ $(function () {
     if (apply_mqc_hidesamples()) {
       $(this).attr("disabled", true).removeClass("btn-primary").addClass("btn-default");
     }
+  });
+
+  // Populate provider dropdown dynamically
+  const aiProviderSelect = $("#ai-provider");
+  aiProviderSelect.empty();
+  Object.keys(AI_PROVIDERS).forEach((provider) => {
+    aiProviderSelect.append(
+      $("<option>", {
+        value: provider,
+        text: provider,
+      }),
+    );
+  });
+
+  // Set initial values when opening modal
+  const provider = getStoredProvider() || Object.keys(AI_PROVIDERS)[0];
+  aiProviderSelect.val(provider);
+  const model = getStoredModelName(provider) || AI_PROVIDERS[provider].defaultModel;
+  $("#ai-model").val(model);
+  const apiKey = getStoredApiKey(provider);
+  $("#ai-api-key").val(apiKey || "");
+
+  // Update model field when provider changes
+  aiProviderSelect.change(function () {
+    const selectedProvider = $(this).val();
+    const defaultModel = AI_PROVIDERS[selectedProvider].defaultModel;
+    const storedModel = getStoredModelName(selectedProvider);
+    $("#ai-model").val(storedModel || defaultModel);
+    $("#ai-api-key").val(getStoredApiKey(selectedProvider) || "");
   });
 
   // EXPORTING PLOTS
@@ -1251,4 +1293,92 @@ function addLogo(imageDataUrl, callback) {
     callback(canvas.toDataURL());
   };
   plotlyImage.src = imageDataUrl;
+}
+
+// Storage helper functions
+function saveToLocalStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn("Failed to save to localStorage:", e);
+  }
+}
+
+function getFromLocalStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.warn("Failed to read from localStorage:", e);
+    return null;
+  }
+}
+
+// AI settings handlers
+$(function () {
+  // Populate provider dropdown dynamically
+  const aiProviderSelect = $("#ai-provider");
+  aiProviderSelect.empty();
+  Object.keys(AI_PROVIDERS).forEach((provider) => {
+    aiProviderSelect.append(
+      $("<option>", {
+        value: provider,
+        text: provider,
+      }),
+    );
+  });
+
+  // Set initial values
+  const provider = getStoredProvider();
+  aiProviderSelect.val(provider);
+
+  const model = getStoredModelName(provider);
+  $("#ai-model").val(model);
+
+  const apiKey = getStoredApiKey(provider);
+  $("#ai-api-key").val(apiKey || "");
+
+  // Save provider changes
+  aiProviderSelect.change(function () {
+    const selectedProvider = $(this).val();
+    saveToLocalStorage("mqc_ai_provider", selectedProvider);
+
+    // Update model field with stored or default value for new provider
+    const storedModel = getFromLocalStorage(`mqc_ai_model_${selectedProvider}`);
+    const defaultModel = AI_PROVIDERS[selectedProvider].defaultModel;
+    $("#ai-model").val(storedModel || defaultModel);
+
+    // Update API key field
+    const storedKey = getFromLocalStorage(`mqc_ai_key_${selectedProvider}`);
+    $("#ai-api-key").val(storedKey || "");
+  });
+
+  // Save model changes
+  $("#ai-model").change(function () {
+    const provider = $("#ai-provider").val();
+    const model = $(this).val();
+    saveToLocalStorage(`mqc_ai_model_${provider}`, model);
+  });
+
+  // Save API key changes
+  $("#ai-api-key").change(function () {
+    const provider = $("#ai-provider").val();
+    const apiKey = $(this).val();
+    saveToLocalStorage(`mqc_ai_key_${provider}`, apiKey);
+  });
+
+  // Also save on blur (when field loses focus)
+  $("#ai-model, #ai-api-key").blur(function () {
+    $(this).trigger("change");
+  });
+});
+
+// Storing user settings
+function getStoredProvider() {
+  return getFromLocalStorage("mqc_ai_provider") || Object.keys(AI_PROVIDERS)[0];
+}
+function getStoredApiKey(provider) {
+  return getFromLocalStorage(`mqc_ai_key_${provider}`);
+}
+function getStoredModelName(provider) {
+  return getFromLocalStorage(`mqc_ai_model_${provider}`) || AI_PROVIDERS[provider].defaultModel;
 }

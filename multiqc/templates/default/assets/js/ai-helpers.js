@@ -124,26 +124,6 @@ async function streamGeneration(
   }
 }
 
-// Storing user settings
-function getStoredProvider() {
-  return sessionStorage.getItem(`multiqc_provider`);
-}
-function getStoredApiKey(provider) {
-  return sessionStorage.getItem(`multiqc_${provider}_api_key`);
-}
-function getStoredModelName(provider) {
-  return sessionStorage.getItem(`multiqc_${provider}_model`);
-}
-function storeProvider(provider) {
-  sessionStorage.setItem(`multiqc_provider`, provider);
-}
-function storeApiKey(provider, key) {
-  sessionStorage.setItem(`multiqc_${provider}_api_key`, key);
-}
-function storeModelName(provider, modelName) {
-  sessionStorage.setItem(`multiqc_${provider}_model`, modelName);
-}
-
 function markdownToHtml(text) {
   if (!text) return "";
 
