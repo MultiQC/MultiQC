@@ -1,4 +1,4 @@
-name: Update Seqera Docs
+name: Push changelog to Seqera Docs
 
 on:
   release:
@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Git user for the bot
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Clone seqeralabs/docs
         run: |
@@ -33,14 +38,14 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.SEQERALABS_DOCS }}
           path: seqeralabs-docs
-          commit-message: "docs: add MultiQC ${{ steps.convert.outputs.version }} changelog"
-          title: "docs: add MultiQC ${{ steps.convert.outputs.version }} changelog"
+          commit-message: "Changelog: MultiQC ${{ steps.convert.outputs.version }}"
+          title: "Changelog: MultiQC ${{ steps.convert.outputs.version }}"
           body: |
             This PR adds the changelog for MultiQC ${{ steps.convert.outputs.version }} to the Seqera documentation.
 
             This is an automated PR created from the MultiQC repository.
-          branch: multiqc-changelog-${{ steps.convert.outputs.version }}
+          branch: changelog-multiqc-${{ steps.convert.outputs.version }}
           base: master
           delete-branch: true
