@@ -4,7 +4,7 @@
 
 Multiple bug fixes and minor updates.
 
-### Updates
+### Feature updates and improvements
 
 - Add natural sort for sample sorting ([#2959](https://github.com/MultiQC/MultiQC/pull/2959))
 - Custom content: for `plot_type: image`, support `custom_data` config with section name and description. Fix misleading logging ([#2939](https://github.com/MultiQC/MultiQC/pull/2939))

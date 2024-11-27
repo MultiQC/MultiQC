@@ -1,0 +1,42 @@
+name: Update Seqera Docs
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone seqeralabs/docs
+        run: |
+          git clone https://github.com/seqeralabs/docs.git seqeralabs-docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Convert changelog
+        id: convert
+        run: python scripts/changelog_to_docs.py
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: seqeralabs-docs
+          commit-message: "docs: add MultiQC ${{ steps.convert.outputs.version }} changelog"
+          title: "docs: add MultiQC ${{ steps.convert.outputs.version }} changelog"
+          body: |
+            This PR adds the changelog for MultiQC ${{ steps.convert.outputs.version }} to the Seqera documentation.
+
+            This is an automated PR created from the MultiQC repository.
+          branch: multiqc-changelog-${{ steps.convert.outputs.version }}
+          base: master
+          delete-branch: true
