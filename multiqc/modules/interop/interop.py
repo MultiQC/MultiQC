@@ -104,6 +104,16 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     @staticmethod
+    def parse_value(value: str):
+        try:
+            return int(value)
+        except ValueError:
+            try:
+                return float(value)
+            except ValueError:
+                return value
+
+    @staticmethod
     def parse_summary_csv(f):
         metrics = {"summary": {}, "details": {}}
         header = []
@@ -130,13 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # process summary
                 metrics["summary"][data[0]] = {}
                 for idx in range(1, len(data)):
-                    try:
-                        metrics["summary"][data[0]][header[idx]] = int(data[idx])
-                    except ValueError:
-                        try:
-                            metrics["summary"][data[0]][header[idx]] = float(data[idx])
-                        except ValueError:
-                            metrics["summary"][data[0]][header[idx]] = data[idx]
+                    metrics["summary"][data[0]][header[idx]] = MultiqcModule.parse_value(data[idx])
                 if line.startswith("Total"):
                     section = None
             elif line.startswith("Read") and (section is None or section == "details"):
@@ -168,19 +172,10 @@ class MultiqcModule(BaseMultiqcModule):
                             vals = data[idx].split(" - ")
                             linedata[header[idx]] = max(int(v) for v in vals)
                         else:
-                            try:
-                                linedata[header[idx]] = int(data[idx])
-                            except ValueError:
-                                linedata[header[idx]] = float(data[idx])
+                            linedata[header[idx]] = MultiqcModule.parse_value(data[idx])
                     except ValueError:
                         val = re.sub(pattern=r"\+/-.*", repl="", string=data[idx]).strip()
-                        try:
-                            linedata[header[idx]] = int(val)
-                        except ValueError:
-                            try:
-                                linedata[header[idx]] = float(val)
-                            except ValueError:
-                                linedata[header[idx]] = val
+                        linedata[header[idx]] = MultiqcModule.parse_value(val)
                 metrics["details"][f"Lane {data[0]} - {read}"] = linedata
 
         return metrics, version
@@ -259,7 +254,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "",
                 "min": 0,
                 "max": 100,
-                "suffix": "%",
                 "scale": "OrRd",
             },
             "Intensity C1": {
@@ -356,7 +350,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "The percentage that aligned to the PhiX genome.",
                 "min": 0,
                 "max": 100,
-                "suffix": "%",
                 "scale": "PiYG",
             },
             "Error": {
@@ -364,7 +357,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "The calculated error rate, as determined by the PhiX alignment.",
                 "min": 0,
                 "max": 100,
-                "suffix": "%",
                 "scale": "OrRd",
             },
             "Error (35)": {
