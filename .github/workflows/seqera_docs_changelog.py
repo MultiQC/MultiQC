@@ -54,13 +54,10 @@ if not changelog_path.exists():
 
 # Create seqeralabs-docs directory if it doesn't exist
 docs_dir = Path("seqeralabs-docs")
-if not docs_dir.exists():
-    raise FileNotFoundError("seqeralabs-docs directory not found. Cloning the repository")
-
 # Clone seqeralabs-docs repo if it doesn't exist
 if not docs_dir.exists():
     print("Cloning seqeralabs-docs repository...")
-    repo_url = "https://github.com/seqeralabs/seqeralabs-docs.git"
+    repo_url = "https://github.com/seqeralabs/docs.git"
     try:
         subprocess.run(["git", "clone", repo_url, str(docs_dir)], check=True)
     except subprocess.CalledProcessError as e:
