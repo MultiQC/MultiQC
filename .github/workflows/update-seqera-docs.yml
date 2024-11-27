@@ -4,6 +4,10 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  # Temporarilty trigger workflow on commit for testing:
+  push:
+    branches:
+      - create-changelog-pr-to-docs
 
 jobs:
   update-docs:
