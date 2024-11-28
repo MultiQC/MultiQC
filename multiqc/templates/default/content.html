@@ -8,11 +8,12 @@ the output from each module and print it in sections.
 #}
 
 <script>
-  const aiProviderTitle = "{{ report.ai_provider_title }}";
-  const aiModel = "{{ report.ai_model }}";
+  const reportUuid = "{{ report.report_uuid }}";
   const seqeraApiUrl = "{{ report.seqera_api_url }}";
   const seqeraWebsite = "{{ report.seqera_website }}";
 
+  const aiProviderTitle = "{{ report.ai_provider_title }}";
+  const aiModel = "{{ report.ai_model }}";
   storeProvider(aiProviderTitle);
   storeModelName(aiProviderTitle, aiModel);
 </script>

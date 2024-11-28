@@ -90,6 +90,7 @@ peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, Set[Path]]
 files: Dict[ModuleId, List[FileDict]]
+report_uuid: str
 
 # Fields below are kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
