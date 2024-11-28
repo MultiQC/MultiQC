@@ -7,6 +7,10 @@ the output from each module and print it in sections.
 
 #}
 
+<script>
+  const reportUuid = "{{ report.report_uuid }}";
+</script>
+
 {% for m in report.modules %}
   {% if not m.hidden %}
     {% if m.sections | length > 0 %}
