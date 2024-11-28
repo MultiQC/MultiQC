@@ -1073,7 +1073,7 @@ tr.row-empty {
 }
 .ai-summary {
   position: relative;
-  padding: 8px 12px 0px 18px;
+  padding: 8px 12px 0px 14px;
   border: 1px solid #ccc;
   border-radius: 4px;
   color: #160f26;
@@ -1088,11 +1088,7 @@ tr.row-empty {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
-}
-
-.ai-summary .ai-short-summary {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 /* Hide the default triangle in Safari */
@@ -1145,29 +1141,14 @@ tr.row-empty {
 .ai-summary sample:hover {
   opacity: 0.9;
 }
-.ai-summary .ai-generate-more-container {
-  margin-left: -4px;
+.ai-summary .ai-generate-more-global-wrapper {
   margin-bottom: 10px;
 }
+
 .ai-summary .ai-generate-more {
   padding: 2px 8px;
   margin-left: -4px;
 }
-.ai-settings-button {
-  margin-left: -8px;
-  padding-top: 4px;
-  padding-bottom: 6px;
-  padding-left: 4px;
-  padding-right: 4px;
-  border-bottom-left-radius: 0;
-  border-top-left-radius: 0;
-}
-.ai-summary .ai-settings-button {
-  margin-left: -6px;
-  padding-top: 1px;
-  padding-bottom: 3px;
-}
-
 .ai-summary .ai-detailed-summary {
   margin-bottom: 10px;
 }
@@ -1196,6 +1177,11 @@ tr.row-empty {
 }
 #aiSettingsModal .input-group input {
   width: 100%;
+}
+.ai-reset-response {
+  margin-left: 8px;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
 }
 
 .spinner {

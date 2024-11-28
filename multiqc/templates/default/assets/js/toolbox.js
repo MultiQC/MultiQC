@@ -9,13 +9,13 @@ const zip_threshold = 8;
 // Add these constants at the top of the file
 const AI_PROVIDERS = {
   Anthropic: {
-    defaultModel: "claude-3-5-sonnet-20241022",
+    defaultModel: "claude-3-5-sonnet-latest",
   },
   OpenAI: {
     defaultModel: "gpt-4o",
   },
   "Seqera AI": {
-    defaultModel: "claude-3-5-sonnet-20241022",
+    defaultModel: "claude-3-5-sonnet-latest",
   },
 };
 

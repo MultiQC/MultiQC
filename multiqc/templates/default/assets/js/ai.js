@@ -36,34 +36,97 @@ window.continueInChatHandler = function (event) {
   }
 };
 
+async function globalGenerateButtonCallback(e) {
+  e.preventDefault();
+
+  const button = $(e.currentTarget);
+  const contentBase64 = button.data("content-base64");
+  const content = atob(contentBase64);
+
+  const container = button.parent();
+  const responseDiv = container.find(".ai-detailed-summary");
+  const errorDiv = container.find(".ai-summary-error");
+  const disclaimerDiv = container.find(".ai-summary-disclaimer");
+
+  generateWithLLM(
+    button,
+    responseDiv,
+    errorDiv,
+    disclaimerDiv,
+    content,
+    systemPromptReport,
+    globalGenerateButtonCallback,
+    null,
+    "Generate more details...",
+  );
+}
+
+async function plotGenerateSummaryReset(button) {
+  let sectionAnchor = button.data("section-anchor");
+  const wrapperDiv = $("#" + sectionAnchor + "_ai_summary");
+  wrapperDiv.hide();
+}
+
+async function plotGenerateSummaryButtonCallback(e) {
+  e.preventDefault();
+  const button = $(e.currentTarget);
+
+  let moduleAnchor = button.data("module-anchor");
+  let sectionAnchor = button.data("section-anchor");
+  let plotAnchor = button.data("plot-anchor");
+
+  let plot = mqc_plots[plotAnchor];
+  let formattedData = plot.prepDataForLlm();
+
+  let moduleWrapper = $("#mqc-module-section-" + moduleAnchor);
+  let moduleName = moduleWrapper.find(".mqc-module-title").text();
+  let moduleSummary = moduleWrapper.find(".mqc-module-section-first > p").text();
+  let moduleComment = moduleWrapper.find(".mqc-section-comment").text();
+
+  let sectionName = button.data("section-name");
+  let sectionWrapper = $("#mqc-section-wrapper-" + sectionAnchor);
+  let description = sectionWrapper.find(".mqc-section-description").text();
+  let comment = sectionWrapper.find(".mqc-section-comment").text();
+  let helptext = sectionWrapper.find(".mqc-section-helptext").text();
+
+  // Elements to populate
+  const responseDiv = $("#" + sectionAnchor + "_ai_detailed_summary");
+  const disclaimerDiv = $("#" + sectionAnchor + "_ai_summary_disclaimer");
+  const errorDiv = $("#" + sectionAnchor + "_ai_summary_error");
+  $("#" + sectionAnchor + "_ai_summary").show();
+
+  let reportData = `
+QC tool that generated data for the plot: ${moduleName} (${moduleSummary}). ${
+    moduleComment ? `\nComment: ${moduleComment}` : ""
+  }
+
+Section: ${sectionName} ${description ? `(${description})` : ""}. ${comment ? `\nComment: ${comment}` : ""} ${
+    helptext ? `\nHelptext: ${helptext}` : ""
+  }
+
+Plot type: ${plot.plotType}. ${plot.plotDescription ? `\nPlot description: ${plot.plotDescription}` : ""} ${
+    plot.plotHelptext ? `\nPlot helptext: ${plot.plotHelptext}` : ""
+  }
+
+Plot data:
+${formattedData}
+`;
+
+  generateWithLLM(
+    button,
+    responseDiv,
+    errorDiv,
+    disclaimerDiv,
+    reportData,
+    systemPromptPlot,
+    plotGenerateSummaryButtonCallback,
+    plotGenerateSummaryReset,
+    "AI summary",
+  );
+}
+
 $(function () {
-  // Set initial values when opening modal
-  const provider = getStoredProvider() || "Anthropic";
-  $("#ai-provider").val(provider);
-  const model = getStoredModelName(provider) || AI_PROVIDERS[provider].defaultModel;
-  $("#ai-model").val(model);
-  const apiKey = getStoredApiKey(provider);
-  $("#ai-api-key").val(apiKey || "");
-
-  // Add handler to update model when provider changes
-  $("#ai-provider").change(function () {
-    const provider = $(this).val();
-    const defaultModel = AI_PROVIDERS[provider].defaultModel;
-    $("#ai-model").val(defaultModel);
-  });
-
-  // Handle settings save
-  $("#saveAiSettings").click(function () {
-    // Save API key for selected provider
-    const provider = $("#ai-provider").val();
-    storeProvider(provider);
-    const model = $("#ai-model").val();
-    storeModelName(provider, model);
-    const apiKey = $("#ai-api-key").val();
-    storeApiKey(provider, apiKey);
-  });
-
-  // Add "Show More" button to AI summary
+  // "Show More" button to expand pre-generated full AI summary
   $(".ai-summary").each(function () {
     const $details = $(this).find("details");
     const $showMoreBtn = $(this).find(".ai-summary-expand");
@@ -81,98 +144,61 @@ $(function () {
     });
   });
 
-  $(".ai-summary sample").hover(function () {
-    $(this).css("opacity", 0.9);
-  });
-
-  $(".ai-generate-more-plot").click(async function (e) {
-    e.preventDefault();
-    let button = $(this);
-    let buttonContainer = button.parent();
-    // Disable button and show spinner
-    button.prop("disabled", true);
-    button.html("Generating...");
-
-    let moduleAnchor = button.data("module-anchor");
-    let sectionAnchor = button.data("section-anchor");
-    let plotAnchor = button.data("plot-anchor");
-    let multiqcVersion = button.data("multiqc-version");
-    let plot = mqc_plots[plotAnchor];
-    let formattedData = plot.prepDataForLlm();
-
-    let moduleWrapper = $("#mqc-module-section-" + moduleAnchor);
-    let moduleName = moduleWrapper.find(".mqc-module-title").text();
-    let moduleSummary = moduleWrapper.find(".mqc-module-section-first > p").text();
-    let moduleComment = moduleWrapper.find(".mqc-section-comment").text();
-
-    let sectionName = button.data("section-name");
-    let sectionWrapper = $("#mqc-section-wrapper-" + sectionAnchor);
-    let description = sectionWrapper.find(".mqc-section-description").text();
-    let comment = sectionWrapper.find(".mqc-section-comment").text();
-    let helptext = sectionWrapper.find(".mqc-section-helptext").text();
-
-    let reportData = `
-QC tool that generated data for the plot: ${moduleName} (${moduleSummary}). ${
-      moduleComment ? `\nComment: ${moduleComment}` : ""
+  // Click handler for "AI Summary" button to dynamically generate plot summaries
+  $("button.ai-generate-more").each(function () {
+    const button = $(this);
+    let elementId = null;
+    let generateCallback = null;
+    let resetCallback = null;
+    let responseDiv = null;
+    let disclaimerDiv = null;
+    let errorDiv = null;
+    let wrapperDiv = null;
+    if (button.data("plot-anchor")) {
+      sectionAnchor = button.data("section-anchor");
+      elementId = button.data("plot-anchor");
+      generateCallback = plotGenerateSummaryButtonCallback;
+      resetCallback = plotGenerateSummaryReset;
+      responseDiv = $("#" + sectionAnchor + "_ai_detailed_summary").show();
+      disclaimerDiv = $("#" + sectionAnchor + "_ai_summary_disclaimer").show();
+      errorDiv = $("#" + sectionAnchor + "_ai_summary_error");
+      wrapperDiv = $("#" + sectionAnchor + "_ai_summary");
+    } else {
+      elementId = "global";
+      generateCallback = globalGenerateButtonCallback;
+      resetCallback = null;
+      container = button.parent();
+      responseDiv = container.find(".ai-detailed-summary").show();
+      disclaimerDiv = container.find(".ai-summary-disclaimer").show();
     }
-
-Section: ${sectionName} ${description ? `(${description})` : ""}. ${comment ? `\nComment: ${comment}` : ""} ${
-      helptext ? `\nHelptext: ${helptext}` : ""
-    }
-
-Plot type: ${plot.plotType}. ${plot.plotDescription ? `\nPlot description: ${plot.plotDescription}` : ""} ${
-      plot.plotHelptext ? `\nPlot helptext: ${plot.plotHelptext}` : ""
-    }
-
-Plot data:
-${formattedData}
-`;
-
-    const responseDiv = $("#" + sectionAnchor + "_ai_summary .ai-summary-main-text");
-
-    const errorDiv = $("#" + sectionAnchor + "_ai_summary .ai-summary-error");
-
-    let fullModelName = null;
-
-    const startTime = performance.now();
-    await generateDetailedSummary();
-    async function generateDetailedSummary() {
-      let receievedText = "";
-      streamGeneration(
-        function onStreamStart(model) {
-          $("#" + sectionAnchor + "_ai_summary").show();
-          fullModelName = model;
-        },
-        function onStreamNewToken(token) {
-          receievedText += token;
-          responseDiv.html(markdownToHtml(receievedText));
-        },
-        function onStreamError(error) {
-          errorDiv.html(error);
-        },
-        function onStreamComplete() {
-          const provider = getStoredProvider();
-          responseDiv.append(
-            `<div class="ai-summary-disclaimer">This summary is AI-generated. 
-            Provider: ${provider}, model: ${fullModelName}</div>`,
-          );
-          const endTime = performance.now();
-          console.log(`Time to generate more: ${endTime - startTime}ms`);
-          buttonContainer.hide();
-        },
-        systemPromptPlot,
-        reportData,
-        ["multiqc", "multiqc-plot-summary", `multiqc-${multiqcVersion}`],
+    const originalButtonText = button.text();
+    const cachedResponse = localStorage.getItem(`ai_response_${reportUuid}_${elementId}`);
+    if (cachedResponse) {
+      // Load cached AI responses on page load
+      const responseData = JSON.parse(cachedResponse);
+      responseDiv.html(markdownToHtml(responseData.text));
+      if (wrapperDiv) wrapperDiv.show();
+      wrapUpResponse(
+        responseDiv,
+        disclaimerDiv,
+        button,
+        responseData.provider,
+        responseData.model,
+        generateCallback,
+        resetCallback,
+        originalButtonText,
       );
+    } else {
+      button.click(generateCallback);
     }
   });
 
-  // Add click event listeners to clickable samples
+  // Click handler to highlight samples
   $(document).on("click", "sample", function (e) {
     e.preventDefault();
-    var sampleName = $(this).text();
-    var color = $(this).css("color");
-    var highlightedSamples = window.mqc_highlight_f_texts;
+    let sampleName = $(this).text();
+    let color = $(this).css("color");
+    let highlightedSamples = window.mqc_highlight_f_texts;
     if (!highlightedSamples.includes(sampleName)) {
       $("#mqc_colour_filter").val(sampleName);
       $("#mqc_colour_filter_color").val(rgbToHex(color));
@@ -196,90 +222,104 @@ ${formattedData}
     $("#mqc_color_form").trigger("submit");
     $("#mqc_cols_apply").click();
   });
-
-  // Add this to the $(function() {...}) block to set the initial selected provider
-  $("#defaultProvider").val(sessionStorage.getItem("multiqc_default_ai_provider") || "Anthropic");
 });
 
-async function generateMoreHandler(event) {
-  event.preventDefault();
-  let button = $(event.currentTarget);
+async function wrapUpResponse(
+  responseDiv,
+  disclaimerDiv,
+  button,
+  provider,
+  model,
+  generateCallback,
+  resetCallback,
+  originalButtonText,
+) {
+  disclaimerDiv.html(`This summary is AI-generated. Provider: ${provider}, model: ${model}`).show();
+  const elementId = button.data("plot-anchor") || "global";
+  button
+    .text("Reset")
+    .prop("disabled", false)
+    .off("click")
+    .on("click", function (e) {
+      e.preventDefault();
+      if (resetCallback) resetCallback(button);
+      localStorage.removeItem(`ai_response_${reportUuid}_${elementId}`);
+      responseDiv.html("");
+      disclaimerDiv.html("");
+      button.text(originalButtonText).off("click").click(generateCallback);
+    });
+}
 
+async function generateWithLLM(
+  button,
+  responseDiv,
+  errorDiv,
+  disclaimerDiv,
+  content,
+  systemPrompt,
+  generateCallback,
+  resetCallback,
+  originalButtonText,
+) {
   // Check for stored API key
   let provider = getStoredProvider();
   let aiApiKey = getStoredApiKey(provider);
   if (!aiApiKey || aiApiKey === undefined) {
-    // Add one-time handler for the save button
-    const saveHandler = function () {
-      const provider = $("#ai-provider").val();
-      storeProvider(provider);
-      const apiKey = $("#ai-api-key").val();
-      if (apiKey) {
-        storeApiKey(provider, apiKey);
-        $("#aiSettingsModal").modal("hide");
-        // Remove this one-time handler
-        $("#saveAiSettings").off("click", saveHandler);
-
-        // Continue with generation
-        generateMore();
-      }
-    };
-    $("#saveAiSettings").on("click", saveHandler);
     // Open the AI toolbox section
     mqc_toolbox_openclose("#mqc_ai", true);
     return;
-  } else {
-    generateMore();
   }
 
-  async function generateMore() {
-    // Disable button and show loading state
-    button.prop("disabled", true);
-    button.text("Generating...");
-    let buttonContainer = button.parent();
+  // Disable button and show loading state
+  button.prop("disabled", true);
+  button.text("Generating...");
 
-    const contentBase64 = button.data("content-base64");
-    const content = atob(contentBase64);
-
-    const summaryDiv = buttonContainer.prev(".ai-short-summary");
-
-    let fullModelName = null;
-
-    const startTime = performance.now();
-    await generateDetailedSummary();
-    async function generateDetailedSummary() {
-      const responseDiv = $('<div class="ai-detailed-summary"></div>');
-      summaryDiv.after(responseDiv);
-
-      const errorDiv = $('<div class="ai-summary-error"></div>');
-      responseDiv.after(errorDiv);
-
-      let receievedText = "";
-      streamGeneration(
-        function onStreamStart(model) {
-          buttonContainer.hide();
-          fullModelName = model;
-        },
-        function onStreamNewToken(token) {
-          receievedText += token;
-          responseDiv.html(markdownToHtml(receievedText));
-        },
-        function onStreamError(error) {
-          errorDiv.html(error);
-        },
-        function onStreamComplete() {
-          const provider = getStoredProvider();
-          responseDiv.append(
-            `<div class="ai-summary-disclaimer">This summary is AI-generated. 
-            Provider: ${provider}, model: ${fullModelName}</div>`,
-          );
-          const endTime = performance.now();
-          console.log(`Time to generate more: ${endTime - startTime}ms`);
-        },
-        systemPromptReport,
-        content,
-        ["multiqc", "multiqc-generate-more"],
-      );
-    }
+  const startTime = performance.now();
+  let fullModelName = null;
+  await generateDetailedSummary();
+  async function generateDetailedSummary() {
+    let receievedText = "";
+    streamGeneration(
+      function onStreamStart(model) {
+        fullModelName = model;
+        responseDiv.show();
+      },
+      function onStreamNewToken(token) {
+        receievedText += token;
+        responseDiv.html(markdownToHtml(receievedText));
+      },
+      function onStreamError(error) {
+        errorDiv.html(error);
+      },
+      function onStreamComplete() {
+        const provider = getStoredProvider();
+        wrapUpResponse(
+          responseDiv,
+          disclaimerDiv,
+          button,
+          provider,
+          fullModelName,
+          generateCallback,
+          resetCallback,
+          originalButtonText,
+        );
+        // Save response to localStorage
+        const elementId = button.data("plot-anchor") || "global";
+        localStorage.setItem(
+          `ai_response_${reportUuid}_${elementId}`,
+          JSON.stringify({
+            text: receievedText,
+            provider: provider,
+            model: fullModelName,
+            timestamp: Date.now(),
+          }),
+        );
+        const endTime = performance.now();
+        console.log(`Time to generate more: ${endTime - startTime}ms`);
+      },
+      systemPrompt,
+      content,
+      ["multiqc"],
+    );
   }
 }

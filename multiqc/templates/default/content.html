@@ -14,8 +14,6 @@ the output from each module and print it in sections.
 
   const aiProviderTitle = "{{ report.ai_provider_title }}";
   const aiModel = "{{ report.ai_model }}";
-  storeProvider(aiProviderTitle);
-  storeModelName(aiProviderTitle, aiModel);
 </script>
 
 {% for m in report.modules %}
@@ -68,6 +66,7 @@ the output from each module and print it in sections.
                   <div class="ai-generate-more-container pull-right" style="margin-left: 8px;">
                     <button
                       class="btn btn-default btn-sm ai-generate-more ai-generate-more-plot" 
+                      id="ai-generate-more-plot-{{ s['anchor'] }}"
                       type="button" 
                       data-toggle="collapse" 
                       data-section-anchor="{{ s['anchor'] }}" 
@@ -101,10 +100,12 @@ the output from each module and print it in sections.
                     <div style="display: flex; justify-content: space-between; align-items: center">
                       <b>AI Summary</b>
                     </div>
-                    <div class="ai-summary-main-text"></div>
+                    <div class="ai-detailed-summary" id="{{ s['anchor'] }}_ai_detailed_summary" style="display: none;"></div>
+                    <div class="ai-summary-disclaimer" id="{{ s['anchor'] }}_ai_summary_disclaimer" style="display: none;"></div>
+                    <div class="ai-summary-error" id="{{ s['anchor'] }}_ai_summary_error" style="display: none;"></div>
                   </summary>
                   <!-- <div class="ai-summary-extra-content"></div> -->
-                  <p class="ai-disclaimer" style="color: gray; font-style: italic"></p>
+                  <!-- <p class="ai-disclaimer" style="color: gray; font-style: italic"></p> -->
                 </details>
                 <!-- <div class="mqc-table-expand ai-summary-expand">
                   <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>

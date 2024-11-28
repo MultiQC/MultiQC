@@ -552,18 +552,6 @@ Plot type: {plot.plot_type}
     else:
         content_base64 = base64.b64encode(content.encode()).decode()
 
-        generate_more_button = f"""
-        <div class="ai-generate-more-container">
-            <button
-                class="btn btn-sm btn-default ai-generate-more" 
-                data-content-base64="{content_base64}"
-                onclick="generateMoreHandler(event)"
-            >
-                Generate more details...
-            </button>
-        </div>
-        """
-
         report.ai_summary = f"""
         <div class="ai-short-summary">
             <div class="ai-summary-header">
@@ -572,5 +560,18 @@ Plot type: {plot.plot_type}
             </div>
             {interpretation.markdown_to_html(interpretation.summary)}
         </div>
-        {generate_more_button}
+        <div class="ai-generate-more-global-wrapper">
+            <div class="ai-detailed-summary" style="display: none;"></div>
+            <div class="ai-summary-disclaimer" style="display: none;"></div>
+            <div class="ai-summary-error" style="display: none;"></div>
+            <button
+                class="btn btn-sm btn-default ai-generate-more"
+                style="margin-top: 8px;"
+                id="ai-generate-more-global" 
+                data-content-base64="{content_base64}"
+                data-element-id="report"
+            >
+                Generate more details...
+            </button>
+        </div>
         """
