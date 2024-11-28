@@ -127,18 +127,21 @@ async function streamGeneration(
 function markdownToHtml(text) {
   if (!text) return "";
 
-  // Convert directives :span[text]{.text-color} -> <span>...
-  text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, '<span class="text-$2">$1</span>');
+  // Convert directives :span[text]{.text-color} -> <span>... (preserving underscores)
+  text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
+    return `<span class="text-${p2}">${p1}</span>`;
+  });
 
-  // Convert directives :sample[text]{.text-color} -> <sample>...
-  text = text.replace(
-    /:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g,
-    '<sample data-toggle="tooltip" title="Click to highlight in the report" class="text-$2">$1</sample>',
-  );
+  // Convert directives :sample[text]{.text-color} -> <sample>... (preserving underscores)
+  text = text.replace(/:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
+    return `<sample data-toggle="tooltip" title="Click to highlight in the report" class="text-${p2}">${p1}</sample>`;
+  });
 
   // Convert markdown to html
   try {
-    let converter = new showdown.Converter();
+    let converter = new showdown.Converter({
+      literalMidWordUnderscores: true, // Prevents interpretation of underscores within words
+    });
     return converter.makeHtml(text);
   } catch (e) {
     return text;
