@@ -202,6 +202,14 @@ $(function () {
   $(document).on("click", "sample", function (e) {
     e.preventDefault();
     let sampleName = $(this).text();
+
+    if (sampleName.includes("*")) {
+      // Replace * character with regex
+      sampleName = sampleName.replace(/\*/g, ".*");
+      // Turn on regex mode
+      $(".mqc_regex_mode").find(".re_mode").removeClass("off").addClass("on").text("on");
+    }
+
     let color = $(this).css("color");
     let highlightedSamples = window.mqc_highlight_f_texts;
     if (!highlightedSamples.includes(sampleName)) {
@@ -224,6 +232,7 @@ $(function () {
         if ($(this).text().indexOf(sampleName) > -1) $(this).css("font-weight", "normal");
       });
     }
+
     $("#mqc_color_form").trigger("submit");
     $("#mqc_cols_apply").click();
   });
@@ -244,8 +253,8 @@ async function wrapUpResponse(
   disclaimerDiv.html(`This summary is AI-generated. Provider: ${provider}, model: ${model}`).show();
   const elementId = button.data("plot-anchor") || "global";
   button
-    .text("Reset local content")
-    .prop("sa", "background-color: #f2f2f2;")
+    .text("Clear response")
+    .prop("style", "background-color: #f2f2f2;")
     .prop("disabled", false)
     .off("click")
     .on("click", function (e) {
