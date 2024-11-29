@@ -94,6 +94,13 @@ the output from each module and print it in sections.
                   </button>
                 {% endif %}
               </h3>
+              {% if s['description'] is not none and s['description'] | length > 0 %}<div class="mqc-section-description">{{ s['description'] }}</div>{% endif %}
+              {% if s['comment'] is not none and s['comment'] | length > 0 %}<blockquote class="mqc-section-comment">{{ s['comment'] }}</blockquote>{% endif %}
+              {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
+                <div class="collapse mqc-section-helptext " id="{{ s['anchor'] }}_helptext">
+                  <div class="well">{{ s['helptext'] }}</div>
+                </div>  
+              {% endif %}
               <div class="ai-summary ai-local-content" id="{{ s['anchor'] }}_ai_summary" style="display: none; margin-bottom: 7px">
                 <details>
                   <summary>
@@ -111,13 +118,6 @@ the output from each module and print it in sections.
                   <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
                 </div> -->
               </div>
-              {% if s['description'] is not none and s['description'] | length > 0 %}<div class="mqc-section-description">{{ s['description'] }}</div>{% endif %}
-              {% if s['comment'] is not none and s['comment'] | length > 0 %}<blockquote class="mqc-section-comment">{{ s['comment'] }}</blockquote>{% endif %}
-              {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
-                <div class="collapse mqc-section-helptext " id="{{ s['anchor'] }}_helptext">
-                  <div class="well">{{ s['helptext'] }}</div>
-                </div>  
-              {% endif %}
               {{ s['content_before_plot'] if s['content_before_plot'] }}
               {% if s['plot'] is not none %}<div class="mqc-section-plot">{{ s['plot'] }}</div>{% endif %}
               {{ s['content'] if s['content'] }}
