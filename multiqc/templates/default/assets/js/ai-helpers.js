@@ -22,30 +22,64 @@ async function streamGeneration(
         buffer = lines.reduce((acc, line) => {
           line = line.trim();
           if (!line) return acc;
-
           if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
+            let jsonString = line.slice(6);
+            if (jsonString === "[DONE]") {
+              // OpenAI last line is "data: [DONE]"
+              onStreamComplete();
+              return acc;
+            }
+            const data = JSON.parse(jsonString);
+            let type = data.type;
+            let content = undefined;
+            let model = undefined;
+            let role = undefined;
+            let finish_reason = undefined;
 
-              // Handle different event types
-              switch (data.type) {
-                case "message_start":
-                  onStreamStart(data.message.model);
-                  break;
-                case "content_block_delta":
-                  if (data.delta.type === "text_delta") {
-                    onStreamNewToken(data.delta.text);
-                  }
-                  break;
-                case "message_stop":
-                  onStreamComplete();
-                  break;
-                case "error":
-                  onStreamError(data.error);
-                  break;
+            // OpenAI doesn't define type
+            if (type === undefined) {
+              content = data.choices[0].delta.content;
+              model = data.model;
+              role = data.choices[0].delta.role;
+              finish_reason = data.choices[0].finish_reason;
+              if (role === "assistant") {
+                type = "message_start";
+              } else if (finish_reason === "stop") {
+                type = "message_stop";
+              } else if (content) {
+                type = "content_block_delta";
+              } else if (finish_reason && finish_reason !== "stop") {
+                type = "error";
+              } else {
+                type = "unknown";
               }
-            } catch (e) {
-              onStreamError(e);
+              error = finish_reason;
+            } else {
+              if (type === "content_block_delta" && data.delta.type === "text_delta") content = data.delta.text;
+              if (type === "message_start") {
+                model = data.message.model;
+                role = data.message.role;
+              }
+              finish_reason = data.finish_reason;
+              error = data.error;
+            }
+
+            console.log(type, line);
+
+            // Handle different event types
+            switch (type) {
+              case "message_start":
+                onStreamStart(model);
+                break;
+              case "content_block_delta":
+                if (content) onStreamNewToken(content);
+                break;
+              case "message_stop":
+                onStreamComplete();
+                break;
+              case "error":
+                onStreamError(error);
+                break;
             }
           }
           return acc;
@@ -55,7 +89,11 @@ async function streamGeneration(
       });
     }
 
-    return processStream();
+    try {
+      return processStream();
+    } catch (e) {
+      onStreamError(e);
+    }
   }
 
   const provider = getStoredProvider();

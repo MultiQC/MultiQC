@@ -245,7 +245,7 @@ async function wrapUpResponse(
   const elementId = button.data("plot-anchor") || "global";
   button
     .text("Reset local content")
-    .prop("style", "background-color: #f2f2f2;")
+    .prop("sa", "background-color: #f2f2f2;")
     .prop("disabled", false)
     .off("click")
     .on("click", function (e) {
@@ -300,7 +300,8 @@ async function generateWithLLM(
         responseDiv.html(markdownToHtml(receievedMarkdown));
       },
       function onStreamError(error) {
-        errorDiv.html(error);
+        errorDiv.html(error).show();
+        wrapperDiv.show();
       },
       function onStreamComplete() {
         const provider = getStoredProvider();
