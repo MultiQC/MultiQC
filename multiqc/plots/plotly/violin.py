@@ -612,6 +612,11 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             super().save(filename, **kwargs)
 
     def add_to_report(self, plots_dir_name: Optional[str] = None, section: Optional[Section] = None) -> str:
+        if section:
+            self.section_anchor = section.anchor
+            self.section_name = section.name
+            self.module_anchor = section.module_anchor
+
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (

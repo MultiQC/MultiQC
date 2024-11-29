@@ -469,24 +469,24 @@ Plot type: {plot.plot_type}
     # strip triple newlines
     content = re.sub(r"\n\n\n", "\n\n", content)
 
-    # response: Optional[InterpretationResponse]
-    # if config.ai_summary_full:
-    #     response = client.interpret_report_full(content)
-    # else:
-    #     response = client.interpret_report_short(content)
-    # if not response:
-    #     return None
+    response: Optional[InterpretationResponse]
+    if config.ai_summary_full:
+        response = client.interpret_report_full(content)
+    else:
+        response = client.interpret_report_short(content)
+    if not response:
+        return None
 
-    # logger.debug(f"Interpretation: {response.interpretation}")
-    # if not response.interpretation:
-    #     return None
-    response = InterpretationResponse(
-        interpretation=InterpretationOutput(
-            summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
-        ),
-        model="test-model",
-        uuid=None,
-    )
+    logger.debug(f"Interpretation: {response.interpretation}")
+    if not response.interpretation:
+        return None
+    # response = InterpretationResponse(
+    #     interpretation=InterpretationOutput(
+    #         summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
+    #     ),
+    #     model="test-model",
+    #     uuid=None,
+    # )
 
     interpretation: InterpretationOutput = response.interpretation
 

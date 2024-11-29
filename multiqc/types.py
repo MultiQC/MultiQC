@@ -93,6 +93,7 @@ class Section:
     id: SectionId  # unlike anchor, doesn't have to be different from the module or plot ids
     description: str
     module: str
+    module_anchor: Anchor
     module_info: str = ""
     comment: str = ""
     helptext: str = ""
