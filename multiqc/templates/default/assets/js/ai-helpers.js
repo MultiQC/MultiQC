@@ -176,7 +176,6 @@ You must use only multiples of 4 spaces to indent nested lists.
 
 This is the example response:
 
-**Analysis**
 - :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
 - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
     - Extremely high duplicate rates (:span[65.54%]{.text-red} and :span[83.14%]{.text-red})

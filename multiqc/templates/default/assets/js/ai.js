@@ -43,16 +43,17 @@ async function globalGenerateButtonCallback(e) {
   const contentBase64 = button.data("content-base64");
   const content = atob(contentBase64);
 
-  const container = button.parent();
-  const responseDiv = container.find(".ai-detailed-summary");
-  const errorDiv = container.find(".ai-summary-error");
-  const disclaimerDiv = container.find(".ai-summary-disclaimer");
+  const wrapperDiv = $("#global_ai_summary");
+  const responseDiv = $("#global_ai_detailed_summary");
+  const errorDiv = $("#global_ai_summary_error");
+  const disclaimerDiv = $("#global_ai_summary_disclaimer");
 
   generateWithLLM(
     button,
     responseDiv,
     errorDiv,
     disclaimerDiv,
+    wrapperDiv,
     content,
     systemPromptReport,
     globalGenerateButtonCallback,
@@ -93,7 +94,7 @@ async function plotGenerateSummaryButtonCallback(e) {
   const responseDiv = $("#" + sectionAnchor + "_ai_detailed_summary");
   const disclaimerDiv = $("#" + sectionAnchor + "_ai_summary_disclaimer");
   const errorDiv = $("#" + sectionAnchor + "_ai_summary_error");
-  $("#" + sectionAnchor + "_ai_summary").show();
+  const wrapperDiv = $("#" + sectionAnchor + "_ai_summary");
 
   let reportData = `
 QC tool that generated data for the plot: ${moduleName} (${moduleSummary}). ${
@@ -117,6 +118,7 @@ ${formattedData}
     responseDiv,
     errorDiv,
     disclaimerDiv,
+    wrapperDiv,
     reportData,
     systemPromptPlot,
     plotGenerateSummaryButtonCallback,
@@ -167,9 +169,10 @@ $(function () {
       elementId = "global";
       generateCallback = globalGenerateButtonCallback;
       resetCallback = null;
-      container = button.parent();
-      responseDiv = container.find(".ai-detailed-summary").show();
-      disclaimerDiv = container.find(".ai-summary-disclaimer").show();
+      responseDiv = $("#global_ai_detailed_summary");
+      disclaimerDiv = $("#global_ai_summary_disclaimer");
+      errorDiv = $("#global_ai_summary_error");
+      wrapperDiv = $("#global_ai_summary");
     }
     const originalButtonText = button.text();
     const cachedResponse = localStorage.getItem(`ai_response_${reportUuid}_${elementId}`);
@@ -181,6 +184,8 @@ $(function () {
       wrapUpResponse(
         responseDiv,
         disclaimerDiv,
+        errorDiv,
+        wrapperDiv,
         button,
         responseData.provider,
         responseData.model,
@@ -227,6 +232,8 @@ $(function () {
 async function wrapUpResponse(
   responseDiv,
   disclaimerDiv,
+  errorDiv,
+  wrapperDiv,
   button,
   provider,
   model,
@@ -237,7 +244,8 @@ async function wrapUpResponse(
   disclaimerDiv.html(`This summary is AI-generated. Provider: ${provider}, model: ${model}`).show();
   const elementId = button.data("plot-anchor") || "global";
   button
-    .text("Reset")
+    .text("Reset local content")
+    .prop("style", "background-color: #f2f2f2;")
     .prop("disabled", false)
     .off("click")
     .on("click", function (e) {
@@ -245,8 +253,10 @@ async function wrapUpResponse(
       if (resetCallback) resetCallback(button);
       localStorage.removeItem(`ai_response_${reportUuid}_${elementId}`);
       responseDiv.html("");
+      errorDiv.html("");
       disclaimerDiv.html("");
-      button.text(originalButtonText).off("click").click(generateCallback);
+      wrapperDiv.hide();
+      button.text(originalButtonText).prop("style", "background-color: white;").off("click").click(generateCallback);
     });
 }
 
@@ -255,6 +265,7 @@ async function generateWithLLM(
   responseDiv,
   errorDiv,
   disclaimerDiv,
+  wrapperDiv,
   content,
   systemPrompt,
   generateCallback,
@@ -278,15 +289,15 @@ async function generateWithLLM(
   let fullModelName = null;
   await generateDetailedSummary();
   async function generateDetailedSummary() {
-    let receievedText = "";
+    let receievedMarkdown = "";
     streamGeneration(
       function onStreamStart(model) {
         fullModelName = model;
-        responseDiv.show();
+        wrapperDiv.show();
       },
       function onStreamNewToken(token) {
-        receievedText += token;
-        responseDiv.html(markdownToHtml(receievedText));
+        receievedMarkdown += token;
+        responseDiv.html(markdownToHtml(receievedMarkdown));
       },
       function onStreamError(error) {
         errorDiv.html(error);
@@ -296,6 +307,8 @@ async function generateWithLLM(
         wrapUpResponse(
           responseDiv,
           disclaimerDiv,
+          errorDiv,
+          wrapperDiv,
           button,
           provider,
           fullModelName,
@@ -308,7 +321,7 @@ async function generateWithLLM(
         localStorage.setItem(
           `ai_response_${reportUuid}_${elementId}`,
           JSON.stringify({
-            text: receievedText,
+            text: receievedMarkdown,
             provider: provider,
             model: fullModelName,
             timestamp: Date.now(),

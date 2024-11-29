@@ -1073,7 +1073,7 @@ tr.row-empty {
 }
 .ai-summary {
   position: relative;
-  padding: 8px 12px 0px 14px;
+  padding: 8px 12px 0px 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   color: #160f26;
@@ -1097,8 +1097,8 @@ tr.row-empty {
 }
 
 .ai-summary .ai-summary-disclaimer {
-  color: rgb(191, 190, 190);
-  font-style: italic;
+  color: rgb(158, 158, 158);
+  font-size: 12px;
 }
 
 .ai-summary ul,
@@ -1141,16 +1141,9 @@ tr.row-empty {
 .ai-summary sample:hover {
   opacity: 0.9;
 }
-.ai-summary .ai-generate-more-global-wrapper {
-  margin-bottom: 10px;
-}
-
 .ai-summary .ai-generate-more {
   padding: 2px 8px;
-  margin-left: -4px;
-}
-.ai-summary .ai-detailed-summary {
-  margin-bottom: 10px;
+  margin-left: -1px;
 }
 .ai-loading {
   margin: 15px 0;
@@ -1162,7 +1155,6 @@ tr.row-empty {
   font-style: italic;
   color: #ea4f4f;
 }
-
 .ai-settings-button svg {
   vertical-align: middle;
 }
@@ -1182,6 +1174,9 @@ tr.row-empty {
   margin-left: 8px;
   font-size: 0.875rem;
   padding: 0.25rem 0.5rem;
+}
+.ai-local-content {
+  background-color: #f2f2f2;
 }
 
 .spinner {

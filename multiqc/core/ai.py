@@ -480,6 +480,13 @@ Plot type: {plot.plot_type}
     logger.debug(f"Interpretation: {response.interpretation}")
     if not response.interpretation:
         return None
+    response = InterpretationResponse(
+        interpretation=InterpretationOutput(
+            summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
+        ),
+        model="test-model",
+        uuid=None,
+    )
 
     interpretation: InterpretationOutput = response.interpretation
 
@@ -528,10 +535,9 @@ Plot type: {plot.plot_type}
         </svg>
     </span>
     """
+    disclaimer = f"This summary is AI-generated. Provider: {client.title}, model: {response.model}"
 
     if config.ai_summary_full:
-        disclaimer = f"This summary is AI-generated. Provider: {client.title}, model: {response.model}"
-
         report.ai_summary = f"""
         <details>
         <summary>
@@ -556,22 +562,25 @@ Plot type: {plot.plot_type}
         <div class="ai-short-summary">
             <div class="ai-summary-header">
                 <b>Report AI Summary {seqera_ai_beta_icon if client.title == 'Seqera AI' else ''}</b> 
-                <span class="ai-summary-disclaimer">&nbsp;Provider: {client.title}, model: {response.model}</span>
             </div>
             {interpretation.markdown_to_html(interpretation.summary)}
         </div>
-        <div class="ai-generate-more-global-wrapper">
-            <div class="ai-detailed-summary" style="display: none;"></div>
-            <div class="ai-summary-disclaimer" style="display: none;"></div>
-            <div class="ai-summary-error" style="display: none;"></div>
+        <div class="ai-local-content" id="global_ai_summary" style="display: none; margin: 0px -12px 0px -10px; padding: 10px;">
+            <p style="display: flex; justify-content: space-between; align-items: center;">
+                <b>Analysis</b>
+            </p>
+            <div class="ai-detailed-summary" id="global_ai_detailed_summary"></div>
+            <div class="ai-summary-error" id="global_ai_summary_error"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; margin-bottom: 8px;">
             <button
                 class="btn btn-sm btn-default ai-generate-more"
-                style="margin-top: 8px;"
                 id="ai-generate-more-global" 
                 data-content-base64="{content_base64}"
                 data-element-id="report"
             >
                 Generate more details...
             </button>
+            <span class="ai-summary-disclaimer" style="margin-top: 2px;">{disclaimer}</span>
         </div>
         """
