@@ -2,7 +2,7 @@
 // AI stuff
 ////////////////////////////////////////////////
 
-window.continueInChatHandler = function (event) {
+window.continueInSeqeraChatHandler = function (event) {
   let el = $(event.currentTarget);
   let seqeraWebsite = el.data("seqera-website");
 
@@ -12,9 +12,7 @@ window.continueInChatHandler = function (event) {
   let encodedChatMessages = el.data("encoded-chat-messages");
 
   let url = seqeraWebsite + "/ask-ai/";
-  if (generationId) {
-    url += "?generation-id=" + generationId;
-  }
+  if (generationId) url += "?generation-id=" + generationId;
 
   const chatWindow = window.open(url, "_blank");
 
@@ -36,6 +34,7 @@ window.continueInChatHandler = function (event) {
   }
 };
 
+// Global (report-level) summary generation
 async function globalGenerateButtonCallback(e) {
   e.preventDefault();
 
@@ -311,6 +310,18 @@ async function generateWithLLM(
       function onStreamError(error) {
         errorDiv.html(error).show();
         wrapperDiv.show();
+        wrapUpResponse(
+          responseDiv,
+          disclaimerDiv,
+          errorDiv,
+          wrapperDiv,
+          button,
+          provider,
+          getStoredModelName(provider),
+          generateCallback,
+          resetCallback,
+          originalButtonText,
+        );
       },
       function onStreamComplete() {
         const provider = getStoredProvider();

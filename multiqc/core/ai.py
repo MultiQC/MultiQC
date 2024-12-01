@@ -480,13 +480,6 @@ Plot type: {plot.plot_type}
     logger.debug(f"Interpretation: {response.interpretation}")
     if not response.interpretation:
         return None
-    # response = InterpretationResponse(
-    #     interpretation=InterpretationOutput(
-    #         summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
-    #     ),
-    #     model="test-model",
-    #     uuid=None,
-    # )
 
     interpretation: InterpretationOutput = response.interpretation
 
@@ -506,7 +499,7 @@ Plot type: {plot.plot_type}
             + f" data-generation-id={response.uuid}"
             + f" data-seqera-website={seqera_website}"
             + f" {seqera_api_token}"
-            + " onclick='continueInChatHandler(event)'"
+            + " onclick='continueInSeqeraChatHandler(event)'"
             + f">Continue with {sparkle_icon} <strong>Seqera AI</strong></button>"
         )
     else:
@@ -549,7 +542,7 @@ Plot type: {plot.plot_type}
         </summary>
         {detailed_summary}
         {recommendations}
-        <p class="ai-summary-disclaimer">{disclaimer}</p>
+        <p class="ai-summary-disclaimer" id="global_ai_summary_disclaimer">{disclaimer}</p>
         </details>
         <div class="mqc-table-expand ai-summary-expand">
             <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
@@ -581,6 +574,6 @@ Plot type: {plot.plot_type}
             >
                 Generate more details...
             </button>
-            <span class="ai-summary-disclaimer" style="margin-top: 2px;">{disclaimer}</span>
+            <span class="ai-summary-disclaimer" id="global_ai_summary_disclaimer" style="margin-top: 2px;">{disclaimer}</span>
         </div>
         """
