@@ -295,8 +295,7 @@ async function generateWithLLM(
 
   const startTime = performance.now();
   let fullModelName = null;
-  await generateDetailedSummary();
-  async function generateDetailedSummary() {
+  await (async () => {
     let receievedMarkdown = "";
     streamGeneration(
       function onStreamStart(model) {
@@ -355,5 +354,5 @@ async function generateWithLLM(
       content,
       ["multiqc"],
     );
-  }
+  })();
 }
