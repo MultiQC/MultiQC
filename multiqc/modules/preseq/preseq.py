@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
     shows 80% of its maximum y-value (unique molecules).
 
     To disable this feature and show all the data, add the following to your
-    [MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
+    [MultiQC configuration](https://docs.seqera.io/multiqc/getting_started/config):
 
     ```yaml
     preseq:
@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
     Preseq reports its numbers as "Molecule counts". This isn't always very intuitive,
     and it's often easier to talk about sequencing depth in terms of coverage.
     You can plot the estimated coverage instead by specifying the reference genome or target size,
-    and the read length in your [MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
+    and the read length in your [MultiQC configuration](https://docs.seqera.io/multiqc/getting_started/config):
 
     ```yaml
     preseq:
@@ -250,7 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for line in real_counts_file_raw.splitlines():
                     if not line.startswith("#"):
                         cols = line.strip().split()  # Split on any whitespace
-                        sn = self.clean_s_name(cols[0], None)
+                        sn = self.clean_s_name(cols[0], f)
                         if sn in sample_names:
                             if len(cols) >= 2:
                                 if cols[1].isdigit():

@@ -1,12 +1,94 @@
 # MultiQC Version History
 
+## [MultiQC v1.25.2](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.2) - 2024-11-20
+
+Multiple bug fixes and minor updates.
+
+### Feature updates and improvements
+
+- Add natural sort for sample sorting ([#2959](https://github.com/MultiQC/MultiQC/pull/2959))
+- Custom content: for `plot_type: image`, support `custom_data` config with section name and description. Fix misleading logging ([#2939](https://github.com/MultiQC/MultiQC/pull/2939))
+- Config validation improvements (group messages, cast types, validate column headers) ([#2899](https://github.com/MultiQC/MultiQC/pull/2899))
+
+### Fixes
+
+- Workaround for displaying sample grouping in Safari because of missing `visibility: collapse` ([#2941](https://github.com/MultiQC/MultiQC/pull/2941))
+- Fix table CSV export where a title contains a comma ([#2911](https://github.com/MultiQC/MultiQC/pull/2911))
+- Showing table in notebooks: respect `col1_header` ([#2914](https://github.com/MultiQC/MultiQC/pull/2914))
+- Customizing `custom_table_header_config`: fix docs, support both the old and the new ways ([#2955](https://github.com/MultiQC/MultiQC/pull/2955))
+- Table scatter mini-plots: fix rounding and range ([#2956](https://github.com/MultiQC/MultiQC/pull/2956))
+- File line block iterator: fix reading long lines that do not fit one block ([#2935](https://github.com/MultiQC/MultiQC/pull/2935))
+- Fix `cond_formatting_rules` type hint to avoid validation error ([#2922](https://github.com/MultiQC/MultiQC/pull/2922))
+- Fix `config.prepend_dirs` or `-d -dd 1` ([#2913](https://github.com/MultiQC/MultiQC/pull/2913))
+- Sample grouping fixes ([#2920](https://github.com/MultiQC/MultiQC/pull/2920)):
+  - Keep sample name column fix width to avoid jumping
+  - Fix hiding columns through the modal
+- Custom content fixes:
+  - Avoid showing `section_comment` both for module and section when they have the same ID ([#2954](https://github.com/MultiQC/MultiQC/pull/2954))
+  - Address issue of sections without search patterns and headers in files ([#2921](https://github.com/MultiQC/MultiQC/pull/2921))
+  - Fix duplicated custom content sections in the report ([#2921](https://github.com/MultiQC/MultiQC/pull/2921))
+  - Fix support for `plot_type: violin` ([#2957](https://github.com/MultiQC/MultiQC/pull/2957))
+
+### Module updates
+
+- ngsbits: add submodule samplegender ([#2854](https://github.com/MultiQC/MultiQC/pull/2854))
+- nanoq: change lineplots for barplots ([#2934](https://github.com/MultiQC/MultiQC/pull/2934))
+- Qualimap: clarify the direction of the transcript in coverage plot ([#2946](https://github.com/MultiQC/MultiQC/pull/2946))
+- picard: add table with all metrics to VariantCallingMetrics section ([#2885](https://github.com/MultiQC/MultiQC/pull/2885))
+- Nanostat: add general stats columns ([#2961](https://github.com/MultiQC/MultiQC/pull/2961))
+- Samtools: add insert size to general stats table ([#2905](https://github.com/MultiQC/MultiQC/pull/2905))
+
+### Module fixes
+
+- bcl2fastq: fix missing `R1_*`/`R2_*` metrics ([#2965](https://github.com/MultiQC/MultiQC/pull/2965))
+- Cutadapt: fix for null values from r2 data ([#2936](https://github.com/MultiQC/MultiQC/pull/2936))
+- Qualimap: fix parsing ∞ value ([#2937](https://github.com/MultiQC/MultiQC/pull/2937))
+- bclconvert: fix undetermined barcodes plot ([#2976](https://github.com/MultiQC/MultiQC/pull/2976))
+- featurecounts: fix missing section name and anchor ([#2967](https://github.com/MultiQC/MultiQC/pull/2967))
+
+### Infrastructure
+
+- Pin kaleido to 0.2.1 (new 0.4.1 does not embed a browser and thus not portable) ([#2963](https://github.com/MultiQC/MultiQC/pull/2963))
+
+## [MultiQC v1.25.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.1) - 2024-09-30
+
+Python 3.13, bugs fixed, improved sample grouping UI, and handling freezes in containers with incompatible architectures.
+
+### Updates
+
+- Support Python 3.13 (officially to be released on Oct 7). Python 3.8 is supported for now, but might drop support in future releases, so make sure you update! ([#2871](https://github.com/MultiQC/MultiQC/pull/2862))
+- Table sample groups UI: allow clicking the entire row to expand, add cursor pointer ([#2871](https://github.com/MultiQC/MultiQC/pull/2871))
+- Disable plot export in incompatible architecture containers (when running through rosetta) ([#2888](https://github.com/MultiQC/MultiQC/pull/2888))
+
+### Fixes
+
+- Fix export general stats to `multiqc_data.json`: flatten row groups for back-compatibility ([#2879](https://github.com/MultiQC/MultiQC/pull/2879))
+- Custom content:
+  - Fix the generalstats `headers` key name in documentation ([#2901](https://github.com/MultiQC/MultiQC/pull/2901))
+  - Validate table header config instead of failing ([#2875](https://github.com/MultiQC/MultiQC/pull/2875))
+
+### Modules
+
+- Kraken:
+  - Re-add the "Unclassified" tab to the "Top taxa" barplot ([#2881](https://github.com/MultiQC/MultiQC/pull/2881))
+  - Fix the minimizers heatmap ([#2895](https://github.com/MultiQC/MultiQC/pull/2895))
+  - Remove the separate Bracken module as it's just Kraken internally. Fixes the issues when Kraken reports without unclassified are misidentified for Bracken reports ([#2894](https://github.com/MultiQC/MultiQC/pull/2894))
+- bbmap: support qhist outputs with only R1 and extra header ([#2882](https://github.com/MultiQC/MultiQC/pull/2882))
+- Picard HsMetrics: fix collecting data sources ([#2880](https://github.com/MultiQC/MultiQC/pull/2880))
+
+### Refactoring & infrastructure
+
+- Test Docker image builds on every PR commit ([#2886](https://github.com/MultiQC/MultiQC/pull/2886))
+- Suppress "SyntaxWarning: invalid escape sequence" warnings from `colormath` ([#2889](https://github.com/MultiQC/MultiQC/pull/2889))
+- Check the `add_data_source` args (either `path` or `f` should be specified), use `strict_helpers.lint_error` ([#2865](https://github.com/MultiQC/MultiQC/pull/2865))
+
 ## [MultiQC v1.25](https://github.com/MultiQC/MultiQC/releases/tag/v1.25) - 2024-09-16
 
 ### Highlights - sample grouping
 
 New feature: grouping samples in the General Statistics table.
 
-<img width="400" src="docs/images/changelog/v1.25-grouping-samples.png">
+<img width="400" src="docs/images/changelog/v1.25-grouping-samples.png"/>
 
 Some modules - prominently FastQC - may produce multiple results per sample, e.g. for the forward and the reverse reads. To group such results in the table together, a new [configuration option](https://multiqc.info/docs/reports/customisation/#sample-grouping) is introduced.
 
@@ -381,7 +463,7 @@ This release also introduces some huge performance improvements thanks to [@rhpv
 
 Finally, support for the depreciated HighCharts plotting library is fully removed in v1.22, bringing to a close a long standing project to migrate to Plotly.
 
-For more information, please see the MultiQC release blog article on the Seqera website: <https://seqera.io/blog/>
+For more information, please see the MultiQC release blog article on the [Seqera website](https://seqera.io/blog)
 
 ### MultiQC updates
 
@@ -514,7 +596,7 @@ self.add_section(
 )
 ```
 
-<img width="400" src="https://raw.githubusercontent.com/MultiQC/MultiQC/1e2ad5529d547ab9dc04c99274da49ad6a2e556f/docs/images/changelog/v1.21-boxplot.png">
+<img width="400" src="https://raw.githubusercontent.com/MultiQC/MultiQC/1e2ad5529d547ab9dc04c99274da49ad6a2e556f/docs/images/changelog/v1.21-boxplot.png"/>
 
 Note the difference with the violin plot: the box plot visualises the distributions of many values within one sample, whereas the violin plot shows the distribution of one metric across many samples.
 
@@ -2134,7 +2216,7 @@ string beginning with the name of your module, anything you like after the first
 #### New MultiQC Features
 
 - New MultiQC docker image
-  - Ready to use docker image now available at <https://hub.docker.com/r/MultiQC/MultiQC/> (200 MB)
+  - Ready to use docker image now available at [https://hub.docker.com/r/MultiQC/MultiQC/](https://hub.docker.com/r/MultiQC/MultiQC/) (200 MB)
   - Uses automated builds - pull `:latest` to get the development version, future releases will have stable tags.
   - Written by [@MaxUlysse](https://github.com/MaxUlysse/)
 - New `module_order` config options allow modules to be run multiple times
@@ -2693,7 +2775,7 @@ who worked on MultiQC projects.
 - **General Statistics**
   - Some tweaks to the display defaults (FastQC, Bismark, Qualimap, SnpEff)
   - Now possible to skip the General Statistics section of the report with `--exclude general_stats`
-- **Cutadapt** module updated to recognise logs from old versions of cutadapt (<= v1.6)
+- **Cutadapt** module updated to recognise logs from old versions of cutadapt (`<= v1.6`)
 - **Trimmomatic**
   - Now handles `,` decimal places in percentage values.
   - Can cope with line breaks in log files (see issue #212)
@@ -2822,7 +2904,7 @@ Bugfixes:
 - Updated HighCharts from `v4.2.2` to `v4.2.3`, fixes tooltip hover bug.
 - Nicer export button. Now tied to the export toolbox, hopefully more intuitive.
 - FastQC: Per base sequence content heatmap can now be clicked to show line graph for single sample
-- FastQC: No longer show adapter contamination datasets with <= 0.1% contamination.
+- FastQC: No longer show adapter contamination datasets with `<= 0.1%` contamination.
 - Picard: Added support for `CollectOxoGMetrics` reports.
 - Changed command line option `--name` to `--filename`
 - `--name` also used for filename if `--filename` not specified.

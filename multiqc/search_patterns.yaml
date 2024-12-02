@@ -188,9 +188,6 @@ bowtie2:
     - "bisulfite"
     - "HiC-Pro"
   shared: true
-bracken:
-  contents_re: '^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)root'
-  num_lines: 1
 busco:
   fn: "short_summary*"
   contents: "BUSCO version is:"
@@ -247,7 +244,9 @@ cutadapt:
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
-  fn: "*dedup.json"
+  fn: "*.json"
+  contents: '"tool_name": "DeDup"'
+  num_lines: 20
 deeptools/bamPEFragmentSizeTable:
   contents: "	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu."
   num_lines: 1
@@ -387,6 +386,9 @@ goleft_indexcov/ped:
   fn: "*-indexcov.ped"
 gopeaks:
   fn: "*_gopeaks.json"
+haplocheck:
+  contents: '"Sample"	"Contamination Status"	"Contamination Level"	"Distance"	"Sample Coverage"'
+  num_lines: 10
 happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
@@ -495,8 +497,8 @@ kallisto:
 kat:
   fn: "*.dist_analysis.json"
 kraken:
-  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)unclassified'
-  num_lines: 1
+  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)[root|unclassified]'
+  num_lines: 2
 librarian:
   fn: "librarian_heatmap.txt"
 leehom:
@@ -586,6 +588,8 @@ ngsbits/mappingqc:
   - fn: "*.qcML"
     contents: "MappingQC"
     num_lines: 20
+ngsbits/samplegender:
+  - fn: "*_ngsbits_sex.tsv"
 ngsderive/strandedness:
   contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1

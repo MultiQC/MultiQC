@@ -32,7 +32,7 @@ from typing import (
 import markdown
 import packaging.version
 
-from multiqc import config, report
+from multiqc import config, report, validation
 from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
 from multiqc.core.strict_helpers import lint_error
@@ -44,9 +44,8 @@ from multiqc.plots.table_object import (
     SampleGroup,
     SampleName,
     ValueT,
-    is_valid_value,
 )
-from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +81,6 @@ class Section:
 
 ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleName, SampleName]]], None]
 
-
 DataT = TypeVar("DataT")
 SampleNameT = TypeVar("SampleNameT", str, SampleName)
 
@@ -113,6 +111,8 @@ class BaseMultiqcModule:
         autoformat_type: str = "markdown",
         doi: Optional[Union[str, List[str]]] = None,
     ):
+        validation.reset()
+
         # Custom options from user config that can overwrite base module values
         self.name: str = name
         _cust_name = self.mod_cust_config.get("name")
@@ -170,8 +170,7 @@ class BaseMultiqcModule:
         self.anchor = Anchor(report.save_htmlid(str(self.anchor)))
 
         # See if we have a user comment in the config
-        _config_section_comment = config.section_comments.get(str(self.anchor))
-        if _config_section_comment:
+        if _config_section_comment := config.section_comments.get(str(self.anchor)):
             self.comment = _config_section_comment
 
         self.info = self.info.strip().strip(".")
@@ -216,7 +215,8 @@ class BaseMultiqcModule:
             for doi in self.doi:
                 # Build the HTML link for the DOI
                 doi_links.append(
-                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" '
+                    f'target="_blank">{doi}</a>'
                 )
             doi_html = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}</em>'.format(
                 "; ".join(doi_links)
@@ -323,7 +323,8 @@ class BaseMultiqcModule:
                 )
                 if any(exclusion_hits):
                     logger.debug(
-                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for "
+                        f"'{self.name}'"
                     )
                     continue
 
@@ -339,16 +340,18 @@ class BaseMultiqcModule:
                 )
                 if not any(inclusion_hits):
                     logger.debug(
-                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '"
+                        f"{self.name}'"
                     )
                     continue
                 else:
                     logger.debug(
-                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '{self.name}'"
+                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '"
+                        f"{self.name}'"
                     )
 
             # Make a sample name from the filename
-            s_name = self.clean_s_name(f["fn"])
+            s_name = self.clean_s_name(f["fn"], f)
 
             if filehandles or filecontents:
                 try:
@@ -369,7 +372,8 @@ class BaseMultiqcModule:
                                     contents = fh.read()
                                 except UnicodeDecodeError as e:
                                     logger.debug(
-                                        f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode characters\n{e}"
+                                        f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode "
+                                        f"characters\n{e}"
                                     )
                                     try:
                                         with io.open(
@@ -445,11 +449,13 @@ class BaseMultiqcModule:
             logger.debug(f"Skipping section with id '{id}' because specified in user config")
             return
 
-        # See if we have a user comment in the config
-        if str(id) in config.section_comments:
-            comment = config.section_comments[str(id)]
-        elif str(anchor) in config.section_comments:
-            comment = config.section_comments[str(anchor)]
+        # See if we have a user comment in the config, but only if the section ID is different from the module ID
+        # (otherwise it's a duplicate comment)
+        if self.anchor != id and self.anchor != anchor:
+            if str(id) in config.section_comments:
+                comment = config.section_comments[str(id)]
+            elif str(anchor) in config.section_comments:
+                comment = config.section_comments[str(anchor)]
 
         # Format the content
         if autoformat:
@@ -538,12 +544,24 @@ class BaseMultiqcModule:
                 grouping_exts = [grouping_exts]
             if grouping_exts:
                 s_name_without_ext = SampleName(
-                    self.clean_s_name(s_name, fn_clean_exts=grouping_exts, fn_clean_trim=[], prepend_dirs=False)
+                    self._clean_s_name(
+                        s_name,
+                        fn_clean_exts=grouping_exts,
+                        fn_clean_trim=[],
+                        prepend_dirs=False,
+                    )
                 )
                 if s_name_without_ext != s_name:  # matched the label
                     matched_label = label
                     # Clean the rest of the name
-                    group_name = SampleGroup(self.clean_s_name(s_name_without_ext))
+                    group_name = SampleGroup(
+                        # Leaving out fn_clean_exts and fn_clean_trim, so the default values are used, to make sure
+                        # all default extentions are trimmed after we trimmed the groupping pattern.
+                        self._clean_s_name(
+                            s_name_without_ext,
+                            prepend_dirs=False,
+                        )
+                    )
                     break
 
         return group_name, matched_label
@@ -587,7 +605,8 @@ class BaseMultiqcModule:
         grouping_config: SampleGroupingConfig,
     ) -> Dict[SampleGroup, List[InputRow]]:
         """
-        Group samples and merges numeric metrics by averaging them, optionally normalizing using `normalization_metric_name`
+        Group samples and merges numeric metrics by averaging them, optionally normalizing using
+        `normalization_metric_name`
         """
 
         rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
@@ -691,7 +710,29 @@ class BaseMultiqcModule:
     def clean_s_name(
         self,
         s_name: Union[str, List[str]],
-        f: Optional[Union[LoadedFileDict[Any], str]] = None,
+        f: Union[LoadedFileDict[Any], FileDict],
+        root: Optional[str] = None,
+        filename: Optional[str] = None,
+    ) -> str:
+        """
+        Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
+        This is a user-facing version of _clean_s_name and the one that should be called in modules on raw sample names,
+        because it gurantees the config options like config.prepend_dirs, config.fn_clean_exts, config.fn_clean_trim.
+
+        search_pattern_key: the search pattern key that this file matched
+        """
+        return self._clean_s_name(
+            s_name=s_name,
+            f=f,
+            root=root or f["root"],
+            filename=filename or f["fn"],
+            search_pattern_key=f["sp_key"],
+        )
+
+    def _clean_s_name(
+        self,
+        s_name: Union[str, List[str]],
+        f: Optional[Union[LoadedFileDict[Any], FileDict]] = None,
         root: Optional[str] = None,
         filename: Optional[str] = None,
         search_pattern_key: Optional[str] = None,
@@ -705,7 +746,8 @@ class BaseMultiqcModule:
         search_pattern_key: the search pattern key that this file matched
         fn_clean_exts: patterns to use for cleaning (default: config.fn_clean_exts)
         fn_clean_trim: patterns to use for trimming (default: config.fn_clean_trim)
-        prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs)
+        prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs).
+            requires `f` to be set.
         """
         if isinstance(s_name, list):
             if len(s_name) == 0:
@@ -714,7 +756,7 @@ class BaseMultiqcModule:
             # Extract a sample name from a list of file names (for example, FASTQ pairs).
             # Each name is cleaned separately first:
             clean_names = [
-                self.clean_s_name(
+                self._clean_s_name(
                     sn,
                     f=f,
                     root=root,
@@ -742,23 +784,14 @@ class BaseMultiqcModule:
         sn = SampleNameMeta(original_name=SampleName(s_name))
         trimmed_name: SampleName = sn.original_name
 
-        # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
-        if isinstance(f, str):
-            root = f
-            f = None
-
         # Set string variables from f if it was a dict from find_log_files()
-        elif f is not None:
+        if f is not None:
             if "root" in f and root is None:
                 root = f["root"]
             if "fn" in f and filename is None:
                 filename = f["fn"]
             if "sp_key" in f and search_pattern_key is None:
                 search_pattern_key = f["sp_key"]
-        else:
-            root = None
-            filename = None
-            search_pattern_key = None
 
         # For modules setting s_name from file contents, set s_name back to the filename
         # (if wanted in the config)

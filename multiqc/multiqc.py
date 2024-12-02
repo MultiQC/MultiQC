@@ -14,7 +14,7 @@ from typing import Optional, Tuple
 
 import rich_click as click
 
-from multiqc import config, report
+from multiqc import config, report, validation
 from multiqc.core import log_and_rich, plugin_hooks
 from multiqc.core.exceptions import NoAnalysisFound, RunError
 from multiqc.core.exec_modules import exec_modules
@@ -23,7 +23,8 @@ from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.validation import ConfigValidationError
+from multiqc.utils import util_functions
+from multiqc.validation import ModuleConfigValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,11 @@ click.rich_click.HEADER_TEXT = (
     f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/]{emoji} [dim]v{config.version}[/]"
 )
 click.rich_click.FOOTER_TEXT = "See [link=http://multiqc.info]http://multiqc.info[/] for more details."
-click.rich_click.ERRORS_SUGGESTION = f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, run '[yellow]multiqc --help[/]' or visit [link=http://multiqc.info]http://multiqc.info[/]"
+click.rich_click.ERRORS_SUGGESTION = (
+    f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, "
+    f"run '[yellow]multiqc --help[/]' or visit ["
+    f"link=http://multiqc.info]http://multiqc.info[/]"
+)
 click.rich_click.STYLE_ERRORS_SUGGESTION = ""
 click.rich_click.OPTION_GROUPS = {
     "multiqc": [
@@ -348,7 +353,8 @@ click.rich_click.OPTION_GROUPS = {
     "make_pdf",
     is_flag=True,
     default=None,
-    help="Creates PDF report with the [i]'simple'[/] template. Requires [link=https://pandoc.org/]Pandoc[/] to be installed.",
+    help="Creates PDF report with the [i]'simple'[/] template. Requires [link=https://pandoc.org/]Pandoc[/] to be "
+    "installed.",
 )
 @click.option(
     "--no-megaqc-upload",
@@ -397,7 +403,8 @@ click.rich_click.OPTION_GROUPS = {
     "profile_memory",
     is_flag=True,
     default=None,
-    help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, so the runtime metrics could scale up a few times",
+    help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, "
+    "so the runtime metrics could scale up a few times",
 )
 @click.option(
     NO_ANSI_FLAG,
@@ -447,6 +454,8 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.model_fields}
     cfg = ClConfig(**cl_config_kwargs, unknown_options=other_fields)
 
+    validation.collapse_repeated_messages = True  # to avoid cluttering output
+
     # Pass on to a regular function that can be used easily without click
     result = run(*analysis_dir, clean_up=clean_up, cfg=cfg, interactive=False)
 
@@ -484,7 +493,8 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
     # In case if run() is called multiple times in the same session:
     report.reset()
     config.reset()
-    update_config(*analysis_dir, cfg=cfg, log_to_file=not interactive)
+
+    update_config(*analysis_dir, cfg=cfg, log_to_file=not interactive, print_intro_fn=print_intro)
 
     check_version()
 
@@ -515,8 +525,11 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
         logger.warning(f"{e.message}. Cleaning up…")
         return RunResult(message="No analysis results found", sys_exit_code=e.sys_exit_code)
 
-    except ConfigValidationError as e:
-        logger.warning("Config validation error. Exiting because strict mode is enabled. Cleaning up…")
+    except ModuleConfigValidationError as e:
+        logger.error(
+            "Config validation error. Exiting because the _strict_ mode is enabled. Please refer to the errors show "
+            "above. Cleaning up…"
+        )
         return RunResult(message=e.message, sys_exit_code=1)
 
     except RunError as e:
@@ -548,15 +561,15 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
                 log_and_rich.rich_console_print(
                     "[blue]|           multiqc[/] | "
                     "Flat-image plots used. Disable with '--interactive'. "
-                    "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
+                    "See [link=https://docs.seqera.io/multiqc/#flat--interactive-plots]docs[/link]."
                 )
 
         sys_exit_code = 0
         if config.strict and len(report.lint_errors) > 0:
-            logger.error(f"Found {len(report.lint_errors)} linting errors!\n" + "\n".join(report.lint_errors))
+            logger.error(f"{len(report.lint_errors)} linting errors:\n" + "\n".join(report.lint_errors))
             sys_exit_code = 1
 
-        logger.info("MultiQC complete")
+        logger.info("MultiQC complete") if sys_exit_code == 0 else logger.error("MultiQC complete with errors")
         return RunResult(sys_exit_code=sys_exit_code)
 
     finally:
@@ -583,3 +596,36 @@ def _check_pdf_export_possible():
         return RunResult(message="LaTeX is required to create PDF reports", sys_exit_code=1)
 
     logger.info("--pdf specified. Using non-interactive HTML template.")
+
+
+def print_intro():
+    if not config.quiet:
+        if util_functions.is_running_in_notebook():
+            _print_intro_with_coloredlogs()
+        else:
+            _print_intro_with_rich()
+
+
+def _print_intro_with_coloredlogs():
+    # Print intro
+    if config.no_ansi is False:
+        BOLD = "\033[1m"
+        DIM = "\033[2m"
+        DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
+        RESET = "\033[0m"
+    else:
+        BOLD = ""
+        DIM = ""
+        DARK_ORANGE = ""
+        RESET = ""
+    emoji = log_and_rich.choose_emoji()
+    emoji = f" {emoji}" if emoji else ""
+    intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET}{emoji} {DIM}v{config.version}{RESET}"
+    if not util_functions.is_running_in_notebook():
+        intro = f"\n{intro}\n"
+    logger.info(intro)
+
+
+def _print_intro_with_rich():
+    if log_and_rich.rich_console is not None:
+        log_and_rich.rich_console.print(f"\n{log_and_rich.rich_click.rich_click.HEADER_TEXT}\n")

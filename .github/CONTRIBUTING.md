@@ -23,7 +23,7 @@ is as follows:
 
 If you're not used to this workflow with git, you can start with some [basic docs from GitHub](https://help.github.com/articles/fork-a-repo/).
 
-When it comes to MultiQC, please consult the [MultiQC documentation](http://multiqc.info/docs/) and don't hesitate to get in touch on the [community forums](https://community.seqera.io) for help and feedback.
+When it comes to MultiQC, please consult the [MultiQC documentation](https://docs.seqera.io/multiqc) and don't hesitate to get in touch on the [community forums](https://community.seqera.io) for help and feedback.
 
 A few pointers to bear in mind:
 

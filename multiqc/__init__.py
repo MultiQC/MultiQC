@@ -8,8 +8,11 @@ Makes the following available under the main multiqc namespace:
 """
 
 import sys
+import warnings
 
-OLDEST_SUPPORTED_PYTHON_VERSION = "3.9"
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+
+OLDEST_SUPPORTED_PYTHON_VERSION = "3.8"
 
 if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
     raise RuntimeError(

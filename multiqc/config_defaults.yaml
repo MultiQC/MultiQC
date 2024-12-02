@@ -83,6 +83,8 @@ table_cond_formatting_colours:
   - pass: "#5cb85c"
   - warn: "#f0ad4e"
   - fail: "#d9534f"
+  - male: "#5bc0de"
+  - female: "#d9534f"
 table_cond_formatting_rules:
   all_columns:
     pass:
@@ -97,6 +99,12 @@ table_cond_formatting_rules:
       - s_eq: "fail"
       - s_eq: "false"
       - s_eq: "no"
+    male:
+      - s_eq: "male"
+      - s_eq: "M"
+    female:
+      - s_eq: "female"
+      - s_eq: "F"
   # PURPLE module - QC Status column
   # TODO: Should update the table plotting code so that this can go in pconfig
   QCStatus:
@@ -398,6 +406,7 @@ module_order:
   - isoseq
   - lima
   - peddy
+  - haplocheck
   - somalier
   - methylqa
   - mosdepth
@@ -511,7 +520,6 @@ module_order:
   - flexbar
   - sourmash
   - kaiju
-  - bracken
   - kraken
   - malt
   - motus

@@ -8,7 +8,7 @@ from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.plotly.line import LinePlotConfig, Series
 from multiqc.types import Anchor
-from multiqc.validation import ConfigValidationError
+from multiqc.validation import ModuleConfigValidationError
 
 
 def _verify_rendered(plot) -> Plot:
@@ -244,7 +244,7 @@ def test_linegraph_multiple_datasets():
 )
 @pytest.mark.filterwarnings("ignore:setDaemon")
 def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, export_plots):
-    monkeypatch.setattr(tempfile, "mkdtemp", lambda: tmp_path)
+    monkeypatch.setattr(tempfile, "mkdtemp", lambda *args, **kwargs: tmp_path)
 
     plot_id = "test_plot"
     plot = linegraph.plot(
@@ -310,16 +310,16 @@ def test_incorrect_fields(strict, reset):
     }
 
     if strict:
-        with pytest.raises(ConfigValidationError):
+        with pytest.raises(ModuleConfigValidationError):
             linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig)
     else:
         with patch("logging.Logger.error") as err, patch("logging.Logger.warning") as warn:
             _verify_rendered(linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig))
-            errors = [call.args[0] for call in err.mock_calls if call.args]
-            assert "• 'x_lines': failed to parse value 'wrong_type'" in errors
-            assert any(e for e in errors if e.startswith("Errors parsing LinePlotConfig"))
-            warnings = [call.args[0] for call in warn.mock_calls if call.args]
-            assert any(w for w in warnings if w.startswith("• unrecognized field 'unknown_field'"))
+            errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
+            assert "• 'x_lines': failed to parse value 'wrong_type'" in errs
+            assert "errors while parsing LinePlotConfig" in errs
+            warnings = "\n".join(call.args[0] for call in warn.mock_calls if call.args)
+            assert "• unrecognized field 'unknown_field'" in warnings
         assert "test_incorrect_fields" in report.plot_data
 
 
@@ -329,12 +329,12 @@ def test_missing_id_and_title(strict, reset):
 
     config.strict = strict
     if strict:
-        with pytest.raises(ConfigValidationError):
+        with pytest.raises(ModuleConfigValidationError):
             linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig={})
     else:
         with patch("logging.Logger.error") as log:
             _verify_rendered(linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig={}))
-            errs = [call.args[0] for call in log.mock_calls if call.args]
+            errs = "\n".join(call.args[0] for call in log.mock_calls if call.args)
             assert "• missing required field 'id'" in errs
             assert "• missing required field 'title'" in errs
         plot_id = list(report.plot_data.keys())[0]
@@ -353,8 +353,8 @@ def test_incorrect_color():
                 },
             )
         )
-        errors = [call.args[0] for call in err.mock_calls if call.args]
-        assert "• invalid color value 'invalid'" in errors
+        errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
+        assert "• invalid color value 'invalid'" in errs
 
 
 def test_extra_series_multiple_datasets():
@@ -480,7 +480,7 @@ def test_dash_styles():
     anchor = Anchor(plot_id)
     with patch("logging.Logger.warning") as log:
         _verify_rendered(linegraph.plot(data, pconfig=pconfig))
-        warnings = [call.args[0] for call in log.mock_calls if call.args]
+        warnings = "\n".join(call.args[0] for call in log.mock_calls if call.args)
         assert "• 'dashStyle' field is deprecated. Please use 'dash' instead" in warnings
         assert "• 'ShortDash' is a deprecated dash style, use 'dash'" in warnings
     assert len(report.plot_data[anchor]["datasets"][0]["lines"]) == 5

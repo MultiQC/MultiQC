@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     If you want to include the Lima results in the General Statistics table, you
     can rename the `barcode1--barcode2` filenames to their apropriate samples using
-    the [--replace-names](https://multiqc.info/docs/#sample-name-replacement)
+    the [--replace-names](https://docs.seqera.io/multiqc/#sample-name-replacement)
     option. Each sample that is specified in this way will be moved from the Lima
     section to the General Statistics table.
     """
@@ -237,7 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="""
                 Per sample or per barcode statistics from Lima.
                 For instructions on how to display sample names instead of `barcode--barcode` pairs,
-                please see the [MultiQC Lima documentation](https://multiqc.info/docs/#lima).
+                please see the [MultiQC Lima documentation](https://docs.seqera.io/multiqc/#lima).
             """,
             plot=table.plot(counts, headers, tconfig),
         )

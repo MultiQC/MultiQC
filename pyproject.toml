@@ -4,37 +4,45 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.26dev"
+version = "1.25.2"
 dependencies = [
     "click",
     "humanize",
     "importlib_metadata",
     "jinja2>=3.0.0",
-    "kaleido",  # for flat plot export
+    "kaleido==0.2.1",     # for flat plot export
     "markdown",
     "numpy",
     "packaging",
     "requests",
-    "Pillow>=10",  # to add a logo into flat plots
+    "Pillow>=10",         # to add a logo into flat plots
     "plotly>=5.18",
     "pyyaml>=4",
     "rich>=10",
     "rich-click",
-    "coloredlogs",  # logging in notebooks
+    "coloredlogs",        # logging in notebooks
     "spectra>=0.0.10",
     "pydantic>=2.7.0",
     "typeguard",
-    "tqdm",  # progress bar in notebooks
+    "tqdm",               # progress bar in notebooks
+    "natsort",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 authors = [
-    {name = "Phil Ewels", email = "phil.ewels@seqera.io"},
-    {name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io"},
+    { name = "Phil Ewels", email = "phil.ewels@seqera.io" },
+    { name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io" },
 ]
 description = "Create aggregate bioinformatics analysis reports across many samples and tools"
 readme = "README.md"
-license = {file = "LICENSE"}
-keywords = ["bioinformatics", "biology", "sequencing", "NGS", "next generation sequencing", "quality control"]
+license = { file = "LICENSE" }
+keywords = [
+    "bioinformatics",
+    "biology",
+    "sequencing",
+    "NGS",
+    "next generation sequencing",
+    "quality control",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
@@ -59,9 +67,10 @@ dev = [
     "pdoc3",
     "pytest",
     "pytest-cov",
-    "pytest-xdist",  # for parallel testing with `pytest -n`
-    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that 
+    "pytest-xdist", # for parallel testing with `pytest -n`
+    "syrupy",       # to compare html snpashots, alternative to pytest-snapshot that
     # does work better with parametrized tests
+    "pygithub",             # to generate changelog
     "mypy",
     "types-PyYAML",
     "types-tqdm",
@@ -75,7 +84,7 @@ dev = [
 Homepage = "https://multiqc.info"
 Repository = "https://github.com/MultiQC/MultiQC"
 Issues = "https://github.com/MultiQC/MultiQC/issues"
-Documentation = "https://multiqc.info/docs"
+Documentation = "https://docs.seqera.io/multiqc"
 Changelog = "https://github.com/MultiQC/MultiQC/blob/main/CHANGELOG.md"
 
 [project.entry-points.console_scripts]
@@ -99,7 +108,6 @@ biscuit = "multiqc.modules.biscuit:MultiqcModule"
 bismark = "multiqc.modules.bismark:MultiqcModule"
 bowtie1 = "multiqc.modules.bowtie1:MultiqcModule"
 bowtie2 = "multiqc.modules.bowtie2:MultiqcModule"
-bracken = "multiqc.modules.bracken:MultiqcModule"
 busco = "multiqc.modules.busco:MultiqcModule"
 bustools = "multiqc.modules.bustools:MultiqcModule"
 ccs = "multiqc.modules.ccs:MultiqcModule"
@@ -108,7 +116,7 @@ checkqc = "multiqc.modules.checkqc:MultiqcModule"
 clipandmerge = "multiqc.modules.clipandmerge:MultiqcModule"
 clusterflow = "multiqc.modules.clusterflow:MultiqcModule"
 conpair = "multiqc.modules.conpair:MultiqcModule"
-custom_content = "multiqc.modules.custom_content:custom_module_classes"  # special case
+custom_content = "multiqc.modules.custom_content:custom_module_classes"           # special case
 cutadapt = "multiqc.modules.cutadapt:MultiqcModule"
 damageprofiler = "multiqc.modules.damageprofiler:MultiqcModule"
 dedup = "multiqc.modules.dedup:MultiqcModule"
@@ -133,6 +141,7 @@ gatk = "multiqc.modules.gatk:MultiqcModule"
 glimpse = "multiqc.modules.glimpse:MultiqcModule"
 goleft_indexcov = "multiqc.modules.goleft_indexcov:MultiqcModule"
 gopeaks = "multiqc.modules.gopeaks:MultiqcModule"
+haplocheck = "multiqc.modules.haplocheck:MultiqcModule"
 happy = "multiqc.modules.happy:MultiqcModule"
 hicexplorer = "multiqc.modules.hicexplorer:MultiqcModule"
 hicpro = "multiqc.modules.hicpro:MultiqcModule"
@@ -245,7 +254,7 @@ simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
 geo = "multiqc.templates.geo"
 
-### See https://multiqc.info/docs/#multiqc-plugins for documentation
+### See https://docs.seqera.io/multiqc/development/plugins for documentation
 #[project.entry-points."multiqc.cli_options.v1"]
 #my-new-option = "myplugin.cli:new_option"
 #
@@ -260,13 +269,13 @@ geo = "multiqc.templates.geo"
 
 [tool.setuptools]
 packages = ["multiqc"]
-package-data = {multiqc = ["py.typed"]}
+package-data = { multiqc = ["py.typed"] }
 
 [tool.ruff]
 line-length = 120
 target-version = "py312"
 
-lint.ignore = ["F401"]  # unused-import
+lint.ignore = ["F401"]   # unused-import
 
 [tool.mypy]
 check_untyped_defs = true
@@ -275,3 +284,5 @@ plugins = ["pydantic.mypy"]
 files = ["multiqc", "tests"]
 exclude = "multiqc/modules/*"
 
+[tool.pyright]
+include = ["multiqc", "scripts", "tests"]

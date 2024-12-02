@@ -18,10 +18,8 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
-from tkinter import N
 from typing import (
     Any,
-    Callable,
     Dict,
     Iterator,
     List,
@@ -31,7 +29,6 @@ from typing import (
     Set,
     TextIO,
     Tuple,
-    TypedDict,
     Union,
 )
 
@@ -42,7 +39,7 @@ from multiqc import config
 
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
-from multiqc.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, Section
 from multiqc.core import log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
@@ -205,7 +202,7 @@ def file_line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tup
         if number_of_newlines == 0:
             # Use readline function so only one call is needed to complete the
             # block.
-            block = fp.readline()
+            block += fp.readline()
             number_of_newlines = 1
             block_end = len(block)
         else:
@@ -366,7 +363,7 @@ def is_searching_in_source_dir(path: Path) -> bool:
 
     if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
         logger.error(f"Error: MultiQC is running in source code directory! {path}")
-        logger.warning("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
+        logger.warning("Please see the docs for how to use MultiQC: https://docs.seqera.io/multiqc/#running-multiqc")
         return True
     else:
         return False
@@ -915,7 +912,7 @@ def write_data_file(
                 rows.append(sep.join(headers_str))
 
             # The rest of the rows
-            for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):
+            for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):  # type: ignore
                 # Make a list starting with the sample name, then each field in order of the header cols
                 if headers:
                     assert isinstance(d, dict)
@@ -996,15 +993,17 @@ def multiqc_dump_json():
                 elif pymod == "report":
                     val = getattr(sys.modules[__name__], name)
                     if name == "general_stats_data":
-                        # val == general_stats_data
                         # List[Dict[SampleGroup, List[InputRow]]]
                         # flattening sample groups for export
                         flattened_sections: List[Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = []
                         for section in general_stats_data:
                             fl_sec: Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]] = dict()
                             for _, rows in section.items():
-                                for row in rows:
-                                    fl_sec[row.sample] = row.data
+                                if isinstance(rows, list):
+                                    for row in rows:
+                                        fl_sec[row.sample] = row.data
+                                else:
+                                    fl_sec = rows  # old format without grouping, in case if use plugins override it
                             flattened_sections.append(fl_sec)
                         val = flattened_sections
                     d = {f"{pymod}_{name}": val}
@@ -1027,7 +1026,7 @@ def multiqc_dump_json():
     return exported_data
 
 
-def get_all_sections() -> List:
+def get_all_sections() -> List[Section]:
     return [s for mod in modules for s in mod.sections if not mod.hidden]
 
 
