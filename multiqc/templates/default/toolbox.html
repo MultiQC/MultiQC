@@ -142,8 +142,6 @@ of the report.
         <div class="form-group">
           <label for="ai-provider">AI Provider</label>
           <select class="form-control input-sm" id="ai-provider">
-            <option value="Anthropic">Anthropic</option>
-            <option value="OpenAI">OpenAI</option>
           </select>
         </div>
 
@@ -155,6 +153,13 @@ of the report.
         <div class="form-group">
           <label for="ai-api-key">API Key</label>
           <input type="password" class="form-control input-sm" id="ai-api-key" placeholder="Enter your API key">
+          <p>
+            You can find your API key in the <a style="text-decoration: underline;" href="https://console.anthropic.com/" target="_blank">Anthropic console</a> or the <a style="text-decoration: underline;" href="https://platform.openai.com/api-keys" target="_blank">OpenAI dashboard</a>.
+          </p>
+          <p>
+            Keys entered here will be only used to make API requests directly to the specified AI provider from your browser, 
+            and will be only stored in your browser's local storage for reuse with other MultiQC reports that you open in this browser.
+          </p>
         </div>
       </form>
     </div>
