@@ -1,4 +1,4 @@
-async function streamGeneration(
+async function runStreamGeneration({
   onStreamStart,
   onStreamNewToken,
   onStreamError,
@@ -6,110 +6,7 @@ async function streamGeneration(
   systemPrompt,
   userMessage,
   tags = [],
-) {
-  function handleAnthropicOrOpenAiStream(reader) {
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    function processStream() {
-      return reader
-        .read()
-        .then(({ value, done }) => {
-          if (done) {
-            onStreamComplete();
-            return;
-          }
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-
-          // Process all complete lines
-          buffer = lines.reduce((acc, line) => {
-            line = line.trim();
-            if (!line) return acc;
-            if (line.startsWith("data: ")) {
-              let jsonString = line.slice(6);
-              if (jsonString === "[DONE]") {
-                // OpenAI last line is "data: [DONE]"
-                onStreamComplete();
-                return acc;
-              }
-              let data;
-              try {
-                data = JSON.parse(jsonString);
-              } catch (e) {
-                // Unexpected JSON format. Ignore the line, but if somethings is really wrong,
-                // we should anyway call onStreamComplete in the end
-                console.log(`Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`);
-                return acc;
-              }
-              let type = data.type;
-              let content = undefined;
-              let model = undefined;
-              let role = undefined;
-              let finish_reason = undefined;
-
-              // OpenAI doesn't define type
-              if (type === undefined) {
-                content = data.choices[0].delta.content;
-                model = data.model;
-                role = data.choices[0].delta.role;
-                finish_reason = data.choices[0].finish_reason;
-                if (role === "assistant") {
-                  type = "message_start";
-                } else if (finish_reason === "stop") {
-                  type = "message_stop";
-                } else if (content) {
-                  type = "content_block_delta";
-                } else if (finish_reason && finish_reason !== "stop") {
-                  type = "error";
-                } else {
-                  type = "unknown";
-                }
-                error = finish_reason;
-              } else {
-                if (type === "content_block_delta" && data.delta.type === "text_delta") content = data.delta.text;
-                if (type === "message_start") {
-                  model = data.message.model;
-                  role = data.message.role;
-                }
-                finish_reason = data.finish_reason;
-                error = data.error;
-              }
-
-              console.log(type, line);
-
-              // Handle different event types
-              switch (type) {
-                case "message_start":
-                  onStreamStart(model);
-                  break;
-                case "content_block_delta":
-                  if (content) onStreamNewToken(content);
-                  break;
-                case "message_stop":
-                  onStreamComplete();
-                  return acc;
-                case "error":
-                  onStreamError(error);
-                  break;
-              }
-            }
-            return acc;
-          }, "");
-
-          return processStream();
-        })
-        .catch((error) => onStreamError(error));
-    }
-
-    try {
-      return processStream();
-    } catch (e) {
-      onStreamError(e);
-    }
-  }
-
+}) {
   const provider = getStoredProvider();
   const modelName = getStoredModelName(provider);
   const apiKey = getStoredApiKey(provider);
@@ -147,7 +44,7 @@ async function streamGeneration(
       }),
     })
       .then((response) => response.body.getReader())
-      .then(handleAnthropicOrOpenAiStream)
+      .then((reader) => decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete))
       .catch((error) => onStreamError(error));
   } else if (provider === "Anthropic") {
     fetch(`https://api.anthropic.com/v1/messages`, {
@@ -169,10 +66,118 @@ async function streamGeneration(
       }),
     })
       .then((response) => response.body.getReader())
-      .then(handleAnthropicOrOpenAiStream)
+      .then((reader) => decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete))
       .catch((error) => onStreamError(error));
   } else {
     onStreamError(`Unsupported AI provider: ${provider}`);
+  }
+}
+
+function decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete) {
+  // Decode the stream. Supports Anthropic and OpenAI streaming responses
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    return recursivelyProcessStream();
+  } catch (e) {
+    onStreamError(e);
+  }
+
+  function recursivelyProcessStream() {
+    // Inner function to recursively process the stream reader
+    return reader
+      .read()
+      .then(({ value, done }) => {
+        if (done) {
+          onStreamComplete();
+          return;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+
+        // Process all complete lines
+        buffer = lines.reduce((acc, line) => {
+          line = line.trim();
+          if (!line) return acc;
+          if (!line.startsWith("data: ")) {
+            if (line.includes('"type":"invalid_request_error"')) {
+              // "{"type":"error","error":{"type":"invalid_request_error","message":"messages.1.content: Input should be a valid list"}}"
+              onStreamError(line);
+            }
+            return acc;
+          }
+          let jsonString = line.slice(6);
+          if (jsonString === "[DONE]") {
+            // OpenAI last line is "data: [DONE]"
+            onStreamComplete();
+            return acc;
+          }
+          let data;
+          try {
+            data = JSON.parse(jsonString);
+          } catch (e) {
+            // Unexpected JSON format. Ignore the line, but if somethings is really wrong,
+            // we should anyway call onStreamComplete in the end
+            onStreamError(`Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`);
+            return acc;
+          }
+          let type = data.type;
+          let content = undefined;
+          let model = undefined;
+          let role = undefined;
+          let finish_reason = undefined;
+
+          // OpenAI doesn't define type
+          if (type === undefined) {
+            content = data.choices[0].delta.content;
+            model = data.model;
+            role = data.choices[0].delta.role;
+            finish_reason = data.choices[0].finish_reason;
+            if (role === "assistant") {
+              type = "message_start";
+            } else if (finish_reason === "stop") {
+              type = "message_stop";
+            } else if (content) {
+              type = "content_block_delta";
+            } else if (finish_reason && finish_reason !== "stop") {
+              type = "error";
+            } else {
+              type = "unknown";
+            }
+            error = finish_reason;
+          } else {
+            if (type === "content_block_delta" && data.delta.type === "text_delta") content = data.delta.text;
+            if (type === "message_start") {
+              model = data.message.model;
+              role = data.message.role;
+            }
+            finish_reason = data.finish_reason;
+            error = data.error;
+          }
+
+          // Handle different event types
+          switch (type) {
+            case "message_start":
+              onStreamStart(model);
+              break;
+            case "content_block_delta":
+              if (content) onStreamNewToken(content);
+              break;
+            case "message_stop":
+              onStreamComplete();
+              return acc;
+            case "error":
+              onStreamError(error);
+              break;
+          }
+          return acc;
+        }, "");
+
+        return recursivelyProcessStream();
+      })
+      .catch((error) => onStreamError(error));
   }
 }
 

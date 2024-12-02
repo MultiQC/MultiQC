@@ -62,31 +62,6 @@ the output from each module and print it in sections.
                 {% if s['name'] is not none and s['name'] | length > 0 %}
                   {{ s['name'] }}
                 {% endif %}
-                <!-- {% if s['plot_anchor'] is not none %}
-                  <div class="ai-generate-more-container pull-right" style="margin-left: 8px;">
-                    <button
-                      class="btn btn-default btn-sm ai-generate-more ai-generate-more-plot" 
-                      id="ai-generate-more-plot-{{ s['anchor'] }}"
-                      type="button" 
-                      data-toggle="collapse" 
-                      data-section-anchor="{{ s['anchor'] }}" 
-                      data-plot-anchor="{{ s['plot_anchor'] }}"
-                      data-module-anchor="{{ m.anchor }}"
-                      data-section-name="{{ s['name'] }}"
-                      data-multiqc-version="{{ config.version }}"
-                      aria-expanded="false" 
-                      aria-controls="{{ s['anchor'] }}_ai_summary"
-                  >
-                    <span style="vertical-align: baseline">
-                      <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"/>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"/>
-                      </svg>
-                    </span>
-                    AI summary
-                  </button>
-                </div>
-                {% endif %} -->
                 {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
                   <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
                     <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
