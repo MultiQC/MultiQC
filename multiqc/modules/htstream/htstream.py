@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         # iterates through files found by "find_log_files" (located in base_module.py, re patterns found in search_patterns.yml)
         for file in self.find_log_files("htstream"):
             # clean sample name
-            s_name = self.clean_s_name(file["s_name"], file["root"])  # sample name
+            s_name = self.clean_s_name(file["s_name"], file)  # sample name
 
             # do not parse excluded samples
             if self.is_ignore_sample(s_name):
