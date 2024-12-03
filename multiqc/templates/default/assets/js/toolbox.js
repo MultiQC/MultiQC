@@ -707,6 +707,65 @@ $(function () {
       }
     });
   }
+
+  // AI settings handlers
+  $(function () {
+    // Populate provider dropdown dynamically
+    const aiProviderSelect = $("#ai-provider");
+    aiProviderSelect.empty();
+    Object.keys(AI_PROVIDERS).forEach((provider) => {
+      aiProviderSelect.append(
+        $("<option>", {
+          value: provider,
+          text: provider,
+        }),
+      );
+    });
+
+    // Set initial values
+    const provider = getStoredProvider();
+    aiProviderSelect.val(provider);
+
+    const model = getStoredModelName(provider);
+    $("#ai-model").val(model);
+
+    const apiKey = getStoredApiKey(provider);
+    $("#ai-api-key").val(apiKey || "");
+
+    // Save provider changes
+    aiProviderSelect.change(function () {
+      const selectedProvider = $(this).val();
+      saveToLocalStorage("mqc_ai_provider", selectedProvider);
+
+      // Update model field with stored or default value for new provider
+      const storedModel = getFromLocalStorage(`mqc_ai_model_${selectedProvider}`);
+      const defaultModel = AI_PROVIDERS[selectedProvider].defaultModel;
+      $("#ai-model").val(storedModel || defaultModel);
+
+      // Update API key field
+      const storedKey = getFromLocalStorage(`mqc_ai_key_${selectedProvider}`);
+      $("#ai-api-key").val(storedKey || "");
+    });
+
+    // Save model changes
+    $("#ai-model").change(function () {
+      const provider = $("#ai-provider").val();
+      const model = $(this).val();
+      saveToLocalStorage(`mqc_ai_model_${provider}`, model);
+    });
+
+    // Save API key changes
+    $("#ai-api-key").change(function () {
+      const provider = $("#ai-provider").val();
+      const apiKey = $(this).val();
+      saveToLocalStorage(`mqc_ai_key_${provider}`, apiKey);
+    });
+
+    // Also save on blur (when field loses focus)
+    $("#ai-model, #ai-api-key").blur(function () {
+      $(this).trigger("change");
+    });
+  });
 });
 
 //////////////////////////////////////////////////////
@@ -1370,6 +1429,28 @@ $(function () {
   $("#ai-model, #ai-api-key").blur(function () {
     $(this).trigger("change");
   });
+
+  // Add toggle button handler
+  $("#ai-toggle-buttons").click(function () {
+    const $checkbox = $(this);
+    if ($checkbox.is(":checked")) {
+      $(".ai-generate-more-container").show();
+      saveToLocalStorage("mqc_ai_buttons_visible", "true");
+    } else {
+      $(".ai-generate-more-container").hide();
+      saveToLocalStorage("mqc_ai_buttons_visible", "false");
+    }
+  });
+
+  // Set initial visibility state based on stored preference
+  if (getFromLocalStorage("mqc_ai_buttons_visible") === "true" || aiEnabled) {
+    $("#ai-toggle-buttons").prop("checked", true);
+    $(".ai-generate-more-container").show();
+    saveToLocalStorage("mqc_ai_buttons_visible", "true");
+  } else {
+    $("#ai-toggle-buttons").prop("checked", false);
+    $(".ai-generate-more-container").hide();
+  }
 });
 
 // Storing user settings

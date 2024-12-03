@@ -970,13 +970,14 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if not flat:
             export_btn = self._btn(
                 cls="export-plot",
-                style="float: right; margin-left: 7px;",
-                label="Export Plot",
+                style="float: right; margin-left: 5px;",
+                label='<span style="vertical-align: baseline"><svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg></span> Export Plot',
                 data_attrs={"plot-anchor": str(self.anchor), "type": str(self.plot_type)},
             )
             if self.section_anchor and self.module_anchor and self.section_name:
+                # make button visible if config.ai_summary is True
                 ai_btn = f"""
-                    <div class="ai-generate-more-container pull-right" style="float: right;">
+                <div class="ai-generate-more-container" style="float: right; display: {'' if config.ai_summary else 'none'};">
                     <button
                         class="btn btn-default btn-sm ai-generate-more ai-generate-more-plot"
                         id="ai-generate-more-plot-{self.section_anchor}"
@@ -989,14 +990,37 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                         data-multiqc-version="{config.version}"
                         aria-expanded="false"
                         aria-controls="{self.section_anchor}_ai_summary"
+                        title="Dynamically generate AI summary for this plot"
                     >
-                    <span style="vertical-align: baseline">
-                        <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"/>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
-                    AI summary
+                        <span style="vertical-align: baseline">
+                            <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"/>
+                            <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                        AI summary
+                    </button>
+                    <button 
+                        class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot"
+                        style="margin-left: 1px;"
+                        id="ai-copy-content-plot-{self.section_anchor}"
+                        type="button"
+                        data-toggle="collapse"
+                        data-plot-anchor="{self.anchor}"
+                        data-section-anchor="{self.section_anchor}"
+                        data-module-anchor="{self.module_anchor}"
+                        data-section-name="{self.section_name}"
+                        data-multiqc-version="{config.version}"
+                        aria-expanded="false"
+                        title="Copy plot data for use with AI tools like ChatGPT"
+                    >
+                        <span style="vertical-align: baseline">
+                            <svg width="10" height="10" viewBox="0 0 24 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16 3H4C3.45 3 3 3.45 3 4V16C3 16.55 3.45 17 4 17H16C16.55 17 17 16.55 17 16V4C17 3.45 16.55 3 16 3ZM15 15H5V5H15V15Z" fill="currentColor"/>
+                                <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
+                            </svg>
+                        </span>
+                        Copy for AI
                     </button>
                 </div>
                 """
