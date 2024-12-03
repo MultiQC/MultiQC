@@ -165,9 +165,27 @@ of the report.
         <!-- Add toggle button -->
         <div class="form-group checkbox">
           <label>
-            <input type="checkbox" id="ai-toggle-buttons"> Show AI Buttons
+            <input type="checkbox" id="ai-toggle-buttons"> Show AI Buttons for plots (AI Summary, Copy for AI)
           </label>
         </div>
+
+        <!-- Add Copy Report button -->
+        <hr>
+        <button 
+          type="button"
+          class="btn btn-default btn-sm ai-copy-content ai-copy-content-report"
+          id="ai-copy-content-report"
+          data-toggle="collapse" 
+          title="Copy report data for use with AI tools like ChatGPT"
+        >
+          <span style="vertical-align: baseline">
+            <svg width="10" height="10" viewBox="0 0 24 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 3H4C3.45 3 3 3.45 3 4V16C3 16.55 3.45 17 4 17H16C16.55 17 17 16.55 17 16V4C17 3.45 16.55 3 16 3ZM15 15H5V5H15V15Z" fill="currentColor"/>
+              <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
+            </svg>
+          </span>
+          Copy Report for AI
+        </button>
       </form>
     </div>
 

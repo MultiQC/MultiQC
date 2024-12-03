@@ -1435,9 +1435,11 @@ $(function () {
     const $checkbox = $(this);
     if ($checkbox.is(":checked")) {
       $(".ai-generate-more-container").show();
+      $(".ai-copy-content").show();
       saveToLocalStorage("mqc_ai_buttons_visible", "true");
     } else {
       $(".ai-generate-more-container").hide();
+      $(".ai-copy-content").hide();
       saveToLocalStorage("mqc_ai_buttons_visible", "false");
     }
   });
@@ -1446,10 +1448,12 @@ $(function () {
   if (getFromLocalStorage("mqc_ai_buttons_visible") === "true" || aiEnabled) {
     $("#ai-toggle-buttons").prop("checked", true);
     $(".ai-generate-more-container").show();
+    $(".ai-copy-content").show();
     saveToLocalStorage("mqc_ai_buttons_visible", "true");
   } else {
     $("#ai-toggle-buttons").prop("checked", false);
     $(".ai-generate-more-container").hide();
+    $(".ai-copy-content").hide();
   }
 });
 

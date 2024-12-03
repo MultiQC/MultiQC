@@ -380,6 +380,28 @@ def make_table(
         """
         )
 
+        buttons.append(
+            f"""
+        <button 
+            type="button"
+            class="btn btn-default btn-sm ai-copy-content ai-copy-content-table"
+            id="ai-copy-content-table-{dt.anchor}"
+            data-toggle="collapse"
+            data-table-anchor="{dt.anchor}"
+            title="Copy table data for use with AI tools like ChatGPT"
+            style="float: right;"
+        >
+            <span style="vertical-align: baseline">
+                <svg width="10" height="10" viewBox="0 0 24 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 3H4C3.45 3 3 3.45 3 4V16C3 16.55 3.45 17 4 17H16C16.55 17 17 16.55 17 16V4C17 3.45 16.55 3 16 3ZM15 15H5V5H15V15Z" fill="currentColor"/>
+                    <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
+                </svg>
+            </span>
+            Copy for AI
+        </button>
+        """
+        )
+
         panel = "\n".join(buttons)
         html += f"""
         <div class='row'>\n<div class='col-xs-12'>\n{panel}\n</div>\n</div>
