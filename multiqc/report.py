@@ -54,6 +54,7 @@ from multiqc.utils.util_functions import (
     replace_defaultdicts,
     rmtree_with_retries,
 )
+from multiqc.core import ai
 
 load_dotenv()
 
@@ -107,6 +108,7 @@ ai_summary: str = ""
 ai_provider_title: str = ""
 ai_model: str = ""
 ai_token: Optional[str] = None
+ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
 
 # For "Continue in Seqera AI" buttons defined in templates/default/content.html
 seqera_api_token: Optional[str] = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
@@ -1069,12 +1071,4 @@ def reset_tmp_dir():
 
 
 def add_ai_summary():
-    if config.ai_summary:
-        try:
-            from multiqc.core import ai
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError(
-                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[ai]`"
-            )
-
-        ai.add_ai_summary_to_report()
+    ai.add_ai_summary_to_report()

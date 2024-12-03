@@ -397,7 +397,7 @@ def make_table(
                     <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
                 </svg>
             </span>
-            Copy for AI
+            <span class="button-text">Copy for AI</span>
         </button>
         """
         )

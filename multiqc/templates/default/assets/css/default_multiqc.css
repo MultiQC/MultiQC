@@ -1119,14 +1119,17 @@ tr.row-empty {
 .ai-summary .ai-continue-in-chat:focus {
   background-color: #f2f2f2;
 }
-.ai-summary .mqc-table-expand {
-  margin-left: -18px;
+.ai-summary .ai-summary-expand {
+  margin-left: -11px;
   margin-right: -12px;
   border-radius: 0 0 4px 4px;
   background-color: rgba(0, 0, 0, 0.04);
 }
-.ai-summary .mqc-table-expand:hover {
+.ai-summary .ai-summary-expand:hover {
   background-color: rgba(0, 0, 0, 0.08);
+}
+.ai-summary .ai-summary-expand-closed {
+  margin-top: -5px;
 }
 .ai-summary sample {
   cursor: pointer;

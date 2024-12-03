@@ -1431,28 +1431,24 @@ $(function () {
   });
 
   // Add toggle button handler
-  $("#ai-toggle-buttons").click(function () {
+  $("#ai_toggle_buttons").click(function () {
     const $checkbox = $(this);
     if ($checkbox.is(":checked")) {
-      $(".ai-generate-more-container").show();
-      $(".ai-copy-content").show();
       saveToLocalStorage("mqc_ai_buttons_visible", "true");
+      $(".ai-copy-content").show();
     } else {
-      $(".ai-generate-more-container").hide();
-      $(".ai-copy-content").hide();
       saveToLocalStorage("mqc_ai_buttons_visible", "false");
+      $(".ai-copy-content").hide();
     }
   });
 
   // Set initial visibility state based on stored preference
   if (getFromLocalStorage("mqc_ai_buttons_visible") === "true" || aiEnabled) {
-    $("#ai-toggle-buttons").prop("checked", true);
-    $(".ai-generate-more-container").show();
-    $(".ai-copy-content").show();
     saveToLocalStorage("mqc_ai_buttons_visible", "true");
+    $("#ai_toggle_buttons").prop("checked", true);
+    $(".ai-copy-content").show();
   } else {
-    $("#ai-toggle-buttons").prop("checked", false);
-    $(".ai-generate-more-container").hide();
+    $("#ai_toggle_buttons").prop("checked", false);
     $(".ai-copy-content").hide();
   }
 });

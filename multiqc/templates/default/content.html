@@ -15,6 +15,8 @@ the output from each module and print it in sections.
   const aiEnabled = "{{ config.ai_summary }}";
   const aiProviderTitle = "{{ report.ai_provider_title }}";
   const aiModel = "{{ report.ai_model }}";
+
+  const aiReportMetadataBase64 = "{{ report.ai_report_metadata_base64 }}";
 </script>
 
 {% for m in report.modules %}

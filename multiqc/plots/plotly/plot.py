@@ -1,6 +1,7 @@
 import base64
 from functools import lru_cache
 import io
+import json
 import logging
 import math
 import platform
@@ -976,19 +977,22 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             )
             if self.section_anchor and self.module_anchor and self.section_name:
                 # make button visible if config.ai_summary is True
+                parameters = {
+                    "plot-anchor": self.anchor,
+                    "section-anchor": self.section_anchor,
+                    "module-anchor": self.module_anchor,
+                    "section-name": self.section_name,
+                    "multiqc-version": config.version,
+                }
+                encoded_parameters = base64.b64encode(json.dumps(parameters).encode("utf-8")).decode("utf-8")
                 ai_btn = f"""
                 <div class="ai-generate-more-container" style="float: right; display: {'' if config.ai_summary else 'none'};">
                     <button
                         class="btn btn-default btn-sm ai-generate-more ai-generate-more-plot"
                         id="ai-generate-more-plot-{self.section_anchor}"
                         type="button"
-                        data-toggle="collapse"
-                        data-plot-anchor="{self.anchor}"
                         data-section-anchor="{self.section_anchor}"
-                        data-module-anchor="{self.module_anchor}"
-                        data-section-name="{self.section_name}"
-                        data-multiqc-version="{config.version}"
-                        aria-expanded="false"
+                        data-section-metadata-base64="{encoded_parameters}"
                         aria-controls="{self.section_anchor}_ai_summary"
                         title="Dynamically generate AI summary for this plot"
                     >
@@ -998,20 +1002,15 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                             <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"/>
                             </svg>
                         </span>
-                        AI summary
+                        <span class="button-text">Summarize with AI</span>
                     </button>
                     <button 
                         class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot"
                         style="margin-left: 1px;"
                         id="ai-copy-content-plot-{self.section_anchor}"
                         type="button"
-                        data-toggle="collapse"
-                        data-plot-anchor="{self.anchor}"
                         data-section-anchor="{self.section_anchor}"
-                        data-module-anchor="{self.module_anchor}"
-                        data-section-name="{self.section_name}"
-                        data-multiqc-version="{config.version}"
-                        aria-expanded="false"
+                        data-section-metadata-base64="{encoded_parameters}"
                         title="Copy plot data for use with AI tools like ChatGPT"
                     >
                         <span style="vertical-align: baseline">
@@ -1020,7 +1019,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                                 <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
                             </svg>
                         </span>
-                        Copy for AI
+                        <span class="button-text">Copy for AI</span>
                     </button>
                 </div>
                 """

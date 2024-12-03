@@ -1,9 +1,10 @@
 import base64
+import json
 import logging
 import os
 import re
 from textwrap import dedent
-from typing import Dict, Optional, Tuple, cast, TYPE_CHECKING
+from typing import Dict, Optional, cast, TYPE_CHECKING
 from markdown import markdown
 from pydantic import BaseModel, Field
 import requests
@@ -175,6 +176,15 @@ class LangchainClient(Client):
         self.llm: BaseChatModel
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
+        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
+            return InterpretationResponse(
+                interpretation=InterpretationOutput(
+                    summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
+                ),
+                model="test-model",
+                uuid=None,
+            )
+
         from langsmith import Client as LangSmithClient  # type: ignore
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
 
@@ -215,6 +225,17 @@ class LangchainClient(Client):
         )
 
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
+        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
+            return InterpretationResponse(
+                interpretation=InterpretationOutput(
+                    summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
+                    detailed_summary="Here  are more details about this report",
+                    recommendations="And here are recommendations for the next steps",
+                ),
+                model="test-model",
+                uuid=None,
+            )
+
         from langsmith import Client as LangSmithClient  # type: ignore
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
 
@@ -400,7 +421,12 @@ def get_llm_client() -> Optional[Client]:
             )
             return None
         model = config.ai_model if config.ai_model.startswith("claude") else "claude-3-5-sonnet-20240620"
-        return AnthropicClient(model, token)
+        try:
+            return AnthropicClient(model, token)
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[ai]`"
+            )
 
     if config.ai_provider == "openai":
         token = os.environ.get("OPENAI_API_KEY")
@@ -411,7 +437,12 @@ def get_llm_client() -> Optional[Client]:
             )
             return None
         model = config.ai_model if config.ai_model.startswith("gpt") else "gpt-4o"
-        return OpenAiClient(model, token)
+        try:
+            return OpenAiClient(model, token)
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[ai]`"
+            )
 
     return None
 
@@ -424,6 +455,25 @@ PLOT_TYPES_FOR_OVERALL_SUMMARY = [PlotType.TABLE.value, PlotType.BAR.value]
 
 
 def add_ai_summary_to_report():
+    report_metadata = {
+        "sections": [
+            {
+                "module-anchor": section.module_anchor,
+                "module-name": section.module,
+                "section-anchor": section.plot_anchor,
+                "plot-anchor": section.plot_anchor,
+                "section-name": section.name,
+            }
+            for section in report.get_all_sections()
+            if section.plot_anchor and section.plot_anchor in report.plot_by_id
+        ]
+    }
+    report.ai_report_metadata_base64 = base64.b64encode(json.dumps(report_metadata).encode()).decode()
+
+    if not config.ai_summary:
+        # Not generating report in Python, leaving for JS runtime
+        return
+
     if not (client := get_llm_client()):
         return
 
@@ -544,13 +594,11 @@ Plot type: {plot.plot_type}
         {recommendations}
         <p class="ai-summary-disclaimer" id="global_ai_summary_disclaimer">{disclaimer}</p>
         </details>
-        <div class="mqc-table-expand ai-summary-expand">
+        <div class="mqc-table-expand ai-summary-expand ai-summary-expand-closed">
             <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
         </div>
         """
     else:
-        content_base64 = base64.b64encode(content.encode()).decode()
-
         report.ai_summary = f"""
         <div class="ai-short-summary">
             <div class="ai-summary-header">
@@ -568,9 +616,8 @@ Plot type: {plot.plot_type}
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; margin-bottom: 8px;">
             <button
                 class="btn btn-sm btn-default ai-generate-more"
-                id="ai-generate-more-global" 
-                data-content-base64="{content_base64}"
-                data-element-id="report"
+                id="ai_generate_more_global" 
+                data-report-metadata-base64="{report.ai_report_metadata_base64}"
             >
                 Generate more details...
             </button>
