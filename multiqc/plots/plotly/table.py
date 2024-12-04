@@ -413,7 +413,6 @@ def make_table(
                 data-module-anchor="{module_anchor}"
                 data-section-anchor="{section_anchor}"
                 title="Copy table data for use with AI tools like ChatGPT"
-                style="float: right;"
             >
                 <span style="vertical-align: baseline">
                     <svg width="10" height="10" viewBox="0 0 24 21" fill="none" xmlns="http://www.w3.org/2000/svg">
