@@ -59,34 +59,6 @@ class OutputPaths:
     report_overwritten: bool = False
 
 
-def set_ai_section_metadata():
-    report_metadata = {
-        "tools": {
-            mod.anchor: {
-                "name": mod.name,
-                "info": mod.info,
-                "href": mod.href,
-                "comment": mod.comment,
-            }
-            for mod in report.modules
-            if not mod.hidden and mod.name != "Software Versions"
-        },
-        "sections": {
-            section.anchor: {
-                "name": section.name,
-                "description": section.description,
-                "comment": section.comment,
-                "helptext": section.helptext,
-                "plot_anchor": section.plot_anchor,
-                "content": section.content,
-                "content_before_plot": section.content_before_plot,
-            }
-            for section in report.get_all_sections()
-        },
-    }
-    report.ai_report_metadata_base64 = base64.b64encode(json.dumps(report_metadata).encode()).decode()
-
-
 def write_results() -> None:
     plugin_hooks.mqc_trigger("before_report_generation")
 
@@ -100,8 +72,6 @@ def write_results() -> None:
 
     if not config.skip_generalstats:
         _render_general_stats_table(plots_dir_name=output_file_names.plots_dir_name)
-
-    set_ai_section_metadata()
 
     report.add_ai_summary()
 

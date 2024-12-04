@@ -213,25 +213,25 @@ MultiQC supports various bioinformatics tools that output QC metrics, and aggreg
 into a single report. It outputs a "General Statistics" table with key metrics for each sample across 
 all tools. That table is followed by more detailed sections from specific tools, that can include tables,
 as well as plots of different types (bar plot, line plot, scatter plot, heatmap, etc.)
-
 `;
 
 let systemPromptReport =
   multiqcDescription +
-  `\
+  `
 You are given data from such a report. Your task is to analyse this data and
-generate an overall summary for the results. Please don't print any introductory words, just get to the 
-point. You task is to just generate a concise summary of the report, nothing else. 
+generate an overall summary for the results. 
+
+Please don't print any introductory words, just get to the point. 
+You task is to just generate a concise summary of the report, nothing else. 
 Don't waste words: mention only the important QC issues. If there are no issues, just say so. 
 Try to format the response with bullet points. Follow up with recommendations for the next steps.
+Please do not add any extra headers to the response.
 
-Make sure to use markdown to format your reponse for readability. Use directives with pre-defined classes
+Use markdown to format your reponse for readability. Use directives with pre-defined classes
 .text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}. 
 If there are any sample names mentioned, or sample name prefixes or suffixes, you must warp them in
 a sample directive, making sure to use same color classes as for severity, for example: :sample[A1001.2003]{.text-yellow}
 or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one directive.
-
-Please do not add any extra headers to the response.
 
 You must use only multiples of 4 spaces to indent nested lists.
 
@@ -263,7 +263,7 @@ This is the example response:
 
 let systemPromptPlot =
   multiqcDescription +
-  `\
+  `
 You are given a single MultiQC report section with a plot or a table. 
 Your task is to analyse the data and give a very short and concise overall summary of the results.
 Don't waste words: mention only the important QC issues. If there are no issues, just say so.

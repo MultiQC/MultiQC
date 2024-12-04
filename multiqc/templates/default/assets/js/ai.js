@@ -44,7 +44,7 @@ function formatReportForAi(onlyGeneralStats = false) {
   Object.entries(aiReportMetadata.tools).forEach(([modAnchor, mod], modIdx) => {
     result += `${modIdx + 1}. ${mod.name}`;
     if (mod.info) result += `\nDescription: ${mod.info}`;
-    if (mod.href && mod.href.length > 0) result += `\nURL: ${mod.href}`;
+    if (mod.href && mod.href.length > 0) result += `\nLinks: ${mod.href}`;
     if (mod.comment) result += `\nComment: ${mod.comment}`;
     result += "\n\n";
   });
@@ -59,7 +59,9 @@ function formatReportForAi(onlyGeneralStats = false) {
 
   if (!onlyGeneralStats) {
     Object.entries(aiReportMetadata.sections).forEach(([sectionAnchor, section]) => {
-      result += "\n" + formatSectionForAi(sectionAnchor, section.module_anchor);
+      const mod = aiReportMetadata.tools[section.module_anchor];
+      result += `\nTool: ${mod.name}`;
+      result += "\n" + formatSectionForAi(sectionAnchor);
       result += "\n\n----------------------";
     });
   }
@@ -104,8 +106,8 @@ function formatSectionForAi(sectionAnchor, moduleAnchor, options) {
   if (result) result += "\n";
 
   const section = aiReportMetadata.sections[sectionAnchor];
-  if (section.content_before_plot) result += section.content_before_plot + "\n";
-  if (section.content) result += section.content + "\n";
+  if (section.content_before_plot) result += section.content_before_plot + "\n\n";
+  if (section.content) result += section.content + "\n\n";
 
   const plotAnchor = section.plot_anchor;
   let plot = mqc_plots[plotAnchor];
@@ -348,7 +350,7 @@ $(function () {
 
     systemPrompt += ". Your task is to analyse the data and give a concise summary.";
 
-    const text = multiqcDescription + systemPrompt + "\n\n" + content;
+    const text = multiqcDescription + "\n" + systemPrompt + "\n\n" + content;
 
     navigator.clipboard.writeText(text);
     const originalButtonText = button.find(".button-text").text();

@@ -765,10 +765,11 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
     def format_for_ai_prompt(self) -> str:
-        if len(self.datasets) == 1:
-            return self.datasets[0].format_for_ai_prompt(self.pconfig)
+        prompt = "Plot type: " + str(self.plot_type) + "\n\n"
 
-        prompt = ""
+        if len(self.datasets) == 1:
+            return prompt + self.datasets[0].format_for_ai_prompt(self.pconfig)
+
         for dataset in self.datasets:
             formatted_dataset = dataset.format_for_ai_prompt(self.pconfig)
             if not formatted_dataset:

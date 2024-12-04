@@ -38,7 +38,6 @@ class BarPlot extends Plot {
     let prompt = "Plot type: barplot\n\n";
 
     if (this.pconfig.ylab) prompt += `Values: ${this.pconfig.ylab}\n`;
-    const suffix = this.layout.xaxis.ticksuffix;
     prompt += "\n";
 
     let cats = this.datasets[this.activeDatasetIdx]["cats"];
@@ -46,6 +45,16 @@ class BarPlot extends Plot {
 
     prompt += "| Sample | " + cats.map((cat) => cat.name).join(" | ") + " |\n";
     prompt += "| --- | " + cats.map(() => "---").join(" | ") + " |\n";
+
+    let suffix = "";
+    if (this.pActive) {
+      suffix += "%";
+      if (this.layout.xaxis.ticksuffix && this.layout.xaxis.ticksuffix !== "%") {
+        suffix += " " + this.layout.xaxis.ticksuffix;
+      }
+    } else if (this.layout.xaxis.ticksuffix) {
+      suffix += " " + this.layout.xaxis.ticksuffix;
+    }
 
     // Create data rows
     samples.forEach((sample, idx) => {
@@ -55,8 +64,7 @@ class BarPlot extends Plot {
           .map((cat) => {
             let val = this.pActive ? cat.data_pct[idx] : cat.data[idx];
             val = Number.isInteger(val) ? val : Number.isFinite(val) ? parseFloat(val.toFixed(2)) : val;
-            if (this.pActive) val = val + "%";
-            if (suffix && (!this.pActive || suffix !== "%")) val = val + suffix;
+            if (suffix) val = val + " " + suffix;
             return val;
           })
           .join(" | ") +

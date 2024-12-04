@@ -171,13 +171,26 @@ class Dataset(BaseDataset):
 
     def format_for_ai_prompt(self, pconfig: PConfig) -> str:
         """Format as a markdown table"""
-        prompt = "| Sample | " + " | ".join(cat.name for cat in self.cats) + " |\n"
+        prompt = ""
+        if pconfig.ylab:
+            prompt += f"Values: {pconfig.ylab}\n\n"
+
+        suffix = ""
+        if not pconfig.cpswitch_c_active:
+            suffix += "%"
+            if self.layout["xaxis"]["ticksuffix"] and self.layout["xaxis"]["ticksuffix"] != "%":
+                suffix += " " + self.layout["xaxis"]["ticksuffix"]
+        else:
+            if self.layout["xaxis"]["ticksuffix"]:
+                suffix += " " + self.layout["xaxis"]["ticksuffix"]
+
+        prompt += "| Sample | " + " | ".join(cat.name for cat in self.cats) + " |\n"
         prompt += "| --- | " + " | ".join("---" for _ in self.cats) + " |\n"
         for sidx, sample in enumerate(self.samples):
             prompt += (
                 f"| {sample} | "
                 + " | ".join(
-                    self.fmt_value_for_llm((cat.data if pconfig.cpswitch_c_active else cat.data_pct)[sidx])
+                    self.fmt_value_for_llm((cat.data if pconfig.cpswitch_c_active else cat.data_pct)[sidx]) + suffix
                     for cat in self.cats
                 )
                 + " |\n"
