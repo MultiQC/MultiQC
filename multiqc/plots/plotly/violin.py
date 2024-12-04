@@ -11,7 +11,7 @@ from multiqc import config, report
 from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType, PConfig
 from multiqc.plots.plotly.table import make_table
 from multiqc.plots.table_object import ColumnAnchor, ColumnMeta, DataTable, ValueT, TableConfig
-from multiqc.types import SampleName, Section
+from multiqc.types import Anchor, SampleName, Section
 
 logger = logging.getLogger(__name__)
 
@@ -495,7 +495,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             n_samples=max_n_samples,
         )
 
-    def buttons(self, flat: bool) -> List[str]:
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """Add a control panel to the plot"""
         buttons: List[str] = []
         if not flat and any(len(ds.metrics) > 1 for ds in self.datasets):
@@ -515,7 +515,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 )
             )
 
-        return buttons + super().buttons(flat=flat)
+        return buttons + super().buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor)
 
     def show(
         self,
@@ -611,12 +611,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         else:
             super().save(filename, **kwargs)
 
-    def add_to_report(self, plots_dir_name: Optional[str] = None, section: Optional[Section] = None) -> str:
-        if section:
-            self.section_anchor = section.anchor
-            self.section_name = section.name
-            self.module_anchor = section.module_anchor
-
+    def add_to_report(self, module_anchor: Anchor, section_anchor: Anchor, plots_dir_name: Optional[str] = None) -> str:
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (
@@ -639,19 +634,25 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
         if not self.show_table:
             # Show violin alone.
-            # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
-            # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
-            html = warning + super().add_to_report(plots_dir_name=plots_dir_name)
-        elif self.no_violin:
-            assert self.datasets[0].dt is not None
-            # Show table alone
-            table_html, configuration_modal = make_table(self.datasets[0].dt)
-            html = warning + table_html + configuration_modal
+            html = warning + super().add_to_report(
+                plots_dir_name=plots_dir_name,
+                module_anchor=module_anchor,
+                section_anchor=section_anchor,
+            )
         else:
             assert self.datasets[0].dt is not None
             # Render both, add a switch between table and violin
-            table_html, configuration_modal = make_table(self.datasets[0].dt, violin_anchor=self.anchor)
-            violin_html = super().add_to_report(plots_dir_name=plots_dir_name)
+            table_html, configuration_modal = make_table(
+                self.datasets[0].dt,
+                violin_anchor=self.anchor,
+                module_anchor=module_anchor,
+                section_anchor=section_anchor,
+            )
+            violin_html = super().add_to_report(
+                plots_dir_name=plots_dir_name,
+                module_anchor=module_anchor,
+                section_anchor=section_anchor,
+            )
 
             violin_visibility = "style='display: none;'" if self.show_table_by_default else ""
             html = f"<div id='mqc_violintable_wrapper_{self.anchor}' {violin_visibility}>{warning}{violin_html}</div>"

@@ -34,53 +34,108 @@ window.continueInSeqeraChatHandler = function (event) {
   }
 };
 
-async function formatReportForAi(report) {
-  let reportData = "";
-  for (const section of report.sections) {
-    reportData += await formatSectionForAi(section);
-    reportData += "\n\n----------------------\n\n";
+async function formatReportForAi() {
+  let contentPrompt = "";
+
+  // General statistics section
+  contentPrompt += "\n----------------------\n\n";
+  contentPrompt += "Tools used in the report:\n\n";
+
+  Object.entries(aiReportMetadata.modules).forEach(([modAnchor, mod], modIdx) => {
+    contentPrompt += `${modIdx + 1}. ${mod.name}`;
+    if (mod.info) contentPrompt += `\nDescription: ${mod.info}`;
+    if (mod.href && mod.href.length > 0) contentPrompt += `\nURL: ${mod.href}`;
+    if (mod.comment) contentPrompt += `\nComment: ${mod.comment}`;
+    contentPrompt += "\n\n";
+  });
+
+  contentPrompt += "\n----------------------\n";
+  const generalStatsPlot = mqc_plots["general_stats_table"];
+  if (generalStatsPlot) {
+    contentPrompt += `\nMultiQC General Statistics (overview of key QC metrics for each sample, across all tools)`;
+    contentPrompt += `\n${generalStatsPlot.prepDataForLlm()}`;
+    contentPrompt += "\n----------------------\n";
   }
-  // TODO: add general statistics section
-  return reportData;
+  // TODO: suffixes and metric descriptions to general stats (and other tables)
+
+  Object.entries(aiReportMetadata.sections).forEach(([sectionAnchor, section]) => {
+    let plotContent = section.plot_content;
+    let plot = null;
+    if (!plotContent) {
+      plot = mqc_plots[section.plot_anchor];
+      if (plot) {
+        if (plot.title) plotContent += `\nTitle: ${plot.title}`;
+        plotContent += plot.prepDataForLlm();
+      }
+    }
+    if (!plotContent) return;
+
+    contentPrompt += `\n\nSection: ${section.name}`;
+    if (section.description) contentPrompt += `\nDescription: ${section.description}`;
+    if (section.comment) contentPrompt += `\nComment: ${section.comment}`;
+    if (section.helptext) contentPrompt += `\nHelp text: ${section.helptext}`;
+
+    if (plot) {
+      let plotType = plot.plotType;
+      if (plotType == "xy_line") plotType = "line";
+      if (plotType == "violin") plotType = "table";
+      contentPrompt += `\nPlot type: ${plotType}`;
+      if (plot.plotDescription) contentPrompt += `\nPlot description: ${plot.plotDescription}`;
+      if (plot.plotHelptext) contentPrompt += `\nPlot helptext: ${plot.plotHelptext}`;
+    }
+
+    contentPrompt += `\n${plotContent}`;
+    contentPrompt += "\n\n----------------------";
+  });
+  return contentPrompt;
 }
 
-async function formatSectionForAi(section) {
-  let moduleAnchor = section["module-anchor"];
-  let sectionAnchor = section["section-anchor"];
-  let plotAnchor = section["plot-anchor"];
+function formatSectionMetadata(mod, section) {
+  let contentPrompt = "";
+  if (mod) {
+    let moduleName = mod["name"];
+    let moduleSummary = mod["info"];
+    let moduleHref = mod["href"];
+    let moduleComment = mod["comment"];
+    contentPrompt += `\nTool that generated data: ${moduleName}`;
+    if (moduleSummary) contentPrompt += `\nTool description: ${moduleSummary}`;
+    if (moduleHref) contentPrompt += `\nTool URL: ${moduleHref}`;
+    if (moduleComment) contentPrompt += `\nTool comment: ${moduleComment}`;
+  }
+  if (section) {
+    let sectionName = section["name"];
+    let sectionDescription = section["description"];
+    let sectionComment = section["comment"];
+    let sectionHelptext = section["helptext"];
+    contentPrompt += `\n\nSection: ${sectionName}`;
+    if (sectionDescription) contentPrompt += `\nSection description: ${sectionDescription}`;
+    if (sectionComment) contentPrompt += `\nSection comment: ${sectionComment}`;
+    if (sectionHelptext) contentPrompt += `\nSection help text: ${sectionHelptext}`;
+  }
+  return contentPrompt;
+}
+
+async function formatSectionForAi(sectionAnchor, moduleAnchor) {
+  let result = "";
+  let plotAnchor = null;
+  if (sectionAnchor !== "general_stats_table") {
+    mod = aiReportMetadata.tools[moduleAnchor];
+    section = aiReportMetadata.sections[sectionAnchor];
+    result += formatSectionMetadata(mod, section);
+    plotAnchor = section["plot_anchor"];
+  } else {
+    plotAnchor = "general_stats_table";
+  }
 
   let plot = mqc_plots[plotAnchor];
-  let formattedData = plot.prepDataForLlm();
+  let plotType = plot.plotType;
+  if (plotType == "xy_line") plotType = "line";
+  if (plotType == "violin") plotType = "table";
 
-  let moduleWrapper = $("#mqc-module-section-" + moduleAnchor);
-  let moduleName = moduleWrapper.find(".mqc-module-title").text();
-  let moduleSummary = moduleWrapper.find(".mqc-module-section-first > p").text();
-  let moduleComment = moduleWrapper.find(".mqc-section-comment").text();
-
-  let sectionName = section["section-name"];
-  let sectionWrapper = $("#mqc-section-wrapper-" + sectionAnchor);
-  let description = sectionWrapper.find(".mqc-section-description").text();
-  let comment = sectionWrapper.find(".mqc-section-comment").text();
-  let helptext = sectionWrapper.find(".mqc-section-helptext").text();
-
-  let reportData = `
-QC tool that generated data for the plot: ${moduleName} (${moduleSummary}). ${
-    moduleComment ? `\nComment: ${moduleComment}` : ""
-  }
-
-Section: ${sectionName}${description ? ` (${description})` : ""}. ${comment ? `\nComment: ${comment}` : ""} ${
-    helptext ? `\nHelptext: ${helptext}` : ""
-  }
-
-Plot type: ${plot.plotType}. ${plot.plotDescription ? `\nPlot description: ${plot.plotDescription}` : ""} ${
-    plot.plotHelptext ? `\nPlot helptext: ${plot.plotHelptext}` : ""
-  }
-
-Plot data:
-${formattedData}
-`;
-
-  return reportData;
+  result += `\nPlot type: ${plotType}\n`;
+  if (plot.pconfig && plot.pconfig.title) result += `Title: ${plot.pconfig.title}\n`;
+  result += "\n" + plot.prepDataForLlm();
+  return result;
 }
 
 // Global (report-level) summary generation
@@ -96,9 +151,10 @@ async function generateCallback(e) {
     const metadata = JSON.parse(atob(button.data("report-metadata-base64")));
     content = await formatReportForAi(metadata);
     systemPrompt = systemPromptReport;
-  } else if (button.data("section-metadata-base64")) {
-    const metadata = JSON.parse(atob(button.data("section-metadata-base64")));
-    content = await formatSectionForAi(metadata);
+  } else if (button.data("section-anchor") && button.data("module-anchor")) {
+    const sectionAnchor = button.data("section-anchor");
+    const moduleAnchor = button.data("module-anchor");
+    content = await formatSectionForAi(sectionAnchor, moduleAnchor);
     systemPrompt = systemPromptPlot;
   }
 
@@ -205,9 +261,9 @@ $(function () {
   // Click handler for "AI Summary" button to dynamically generate plot summaries
   $("button.ai-generate-more").each(function () {
     const button = $(this);
-    const metadata = JSON.parse(atob(button.data("section-metadata-base64")));
-    const sectionAnchor = metadata["section-anchor"] || "global";
-    const plotAnchor = metadata["plot-anchor"] || "global";
+    const sectionAnchor = button.data("section-anchor") || "global";
+    const plotAnchor = button.data("plot-anchor") || "global";
+
     const responseDiv = $("#" + sectionAnchor + "_ai_detailed_summary").show();
     const disclaimerDiv = $("#" + sectionAnchor + "_ai_summary_disclaimer").show();
     const errorDiv = $("#" + sectionAnchor + "_ai_summary_error");
@@ -278,50 +334,45 @@ $(function () {
   $("button.ai-copy-content-plot").click(async function (e) {
     e.preventDefault();
 
-    const systemPrompt = `\
-You are an expert in bioinformatics, sequencing technologies, genomics data analysis, and adjacent fields.
-
-You are given findings from a MultiQC report, generated by a bioinformatics workflow.
-MultiQC consists of so called modules that support different tools that output QC metrics
-(e.g. bclconvert, FastQC, samtools stats, bcftools stats, fastp, Picard, SnpEff, etc), and
-it aggregates results from different tools. It outputs a "General Statistics" section that
-has a table with a summary of key metrics from all modules across each sample. That table
-is followed by module-specific sections that usually have more detail on the same samples.
-
-You are given data of a single plot from a MultiQC report section that was generated by a bioinformatics workflow.
-Your task is to analyse the data, and give a a concise summary of the results.
-    `;
     const button = $(this);
-    const metadata = JSON.parse(atob(button.data("section-metadata-base64")));
-    const plotContent = await formatSectionForAi(metadata);
+    const sectionAnchor = button.data("section-anchor");
+    const moduleAnchor = button.data("module-anchor");
+    const plotContent = await formatSectionForAi(sectionAnchor, moduleAnchor);
+
+    const systemPrompt =
+      multiqcDescription +
+      `\
+You are given a single MultiQC report section with a plot. 
+Your task is to analyse the data and give a concise summary.
+    `;
     navigator.clipboard.writeText(systemPrompt + plotContent);
+    const originalButtonText = button.find(".button-text").text();
     button.find(".button-text").text("Copied!");
+    setTimeout(() => {
+      button.find(".button-text").text(originalButtonText);
+    }, 2000);
   });
 
   // Click handler for "Copy Report Data" button to copy report data to clipboard
   $("button#ai_copy_content_report").click(async function (e) {
     e.preventDefault();
 
-    const systemPrompt = `\
-You are an expert in bioinformatics, sequencing technologies, genomics data analysis, and adjacent fields.
-
-You are given findings from a MultiQC report, generated by a bioinformatics workflow.
-MultiQC consists of so called modules that support different tools that output QC metrics
-(e.g. bclconvert, FastQC, samtools stats, bcftools stats, fastp, Picard, SnpEff, etc), and
-it aggregates results from different tools. It outputs a "General Statistics" section that
-has a table with a summary of key metrics from all modules across each sample. That table
-is followed by module-specific sections that usually have more detail on the same samples.
-
-You are given data from such a report, split by section. Your task is to generate a concise
-summary of the report.
+    const systemPrompt =
+      multiqcDescription +
+      `\
+You are given data from such a report. Your task is to analyse this data and generate
+a concise summary of the report.
     `;
 
     const button = $(this);
-    const reportMetadata = JSON.parse(atob(aiReportMetadataBase64));
-    const content = await formatReportForAi(reportMetadata);
+    const content = await formatReportForAi();
 
     navigator.clipboard.writeText(systemPrompt + content);
+    const originalButtonText = button.find(".button-text").text();
     button.find(".button-text").text("Copied!");
+    setTimeout(() => {
+      button.find(".button-text").text(originalButtonText);
+    }, 2000);
   });
 
   // Click handler for "Copy Table Data" button to copy table data to clipboard
@@ -330,13 +381,28 @@ summary of the report.
 
     const button = $(this);
     const tableAnchor = button.data("table-anchor");
+    const sectionAnchor = button.data("section-anchor");
+    const moduleAnchor = button.data("module-anchor");
+    let mod = null;
+    let section = null;
+    if (sectionAnchor != "general_stats_table") {
+      mod = aiReportMetadata.tools[moduleAnchor];
+      section = aiReportMetadata.sections[sectionAnchor];
+    }
+
     const table = $("#" + tableAnchor);
 
     // Get table headers
     const headers = [];
     table.find("thead th").each(function () {
-      const header = $(this).text().trim();
-      if (header) headers.push(header);
+      const tt = $(this).find(".mqc_table_tooltip");
+      let header;
+      if (tt.length > 0) {
+        header = tt.data("original-title");
+      } else {
+        header = $(this).text().trim();
+      }
+      headers.push(header);
     });
 
     // Get table data
@@ -344,7 +410,7 @@ summary of the report.
     table.find("tbody tr").each(function () {
       const row = [];
       $(this)
-        .find("td")
+        .find("td,th")
         .each(function () {
           row.push($(this).text().trim());
         });
@@ -352,29 +418,25 @@ summary of the report.
     });
 
     // Format data as markdown table
-    const content = `\
-Table data:
-
+    const content = `
 | ${headers.join(" | ")} |
-|${headers.map(() => "---").join("|")}|
+|${headers.map(() => " --- ").join("|")}|
 ${rows.map((row) => `| ${row.join(" | ")} |`).join("\n")}`;
 
-    const systemPrompt = `\
-You are an expert in bioinformatics, sequencing technologies, genomics data analysis, and adjacent fields.
+    const contentPrompt = formatSectionMetadata(mod, section) + content;
 
-You are given findings from a MultiQC report, generated by a bioinformatics workflow.
-MultiQC consists of so called modules that support different tools that output QC metrics
-(e.g. bclconvert, FastQC, samtools stats, bcftools stats, fastp, Picard, SnpEff, etc), and
-it aggregates results from different tools. It outputs a "General Statistics" section that
-has a table with a summary of key metrics from all modules across each sample. That table
-is followed by module-specific sections that usually have more detail on the same samples.
-
-You are given data from a table in a MultiQC report section that was generated by a bioinformatics workflow.
-Your task is to analyse the data, and give a concise summary of the results.
-  `;
-
-    navigator.clipboard.writeText(systemPrompt + content);
+    const systemPrompt =
+      multiqcDescription +
+      `\
+You are given a General Statistics table from such a report. Your task is to analyse the data and generate
+a concise summary.
+    `;
+    navigator.clipboard.writeText(systemPrompt + contentPrompt);
+    const originalButtonText = button.find(".button-text").text();
     button.find(".button-text").text("Copied!");
+    setTimeout(() => {
+      button.find(".button-text").text(originalButtonText);
+    }, 2000);
   });
 });
 

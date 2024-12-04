@@ -89,7 +89,13 @@ class ViolinPlot extends Plot {
     metrics.forEach((metric) => {
       prompt +=
         `| ${headerByMetric[metric].title} | ` +
-        allSamples.map((sample) => violinValuesBySampleByMetric[metric][sample]).join(" | ") +
+        allSamples
+          .map((sample) => {
+            const value = violinValuesBySampleByMetric[metric][sample];
+            const suffix = headerByMetric[metric].suffix;
+            return value !== undefined ? value + (suffix || "") : value;
+          })
+          .join(" | ") +
         " |\n";
     });
     return prompt;

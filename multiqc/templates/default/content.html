@@ -7,18 +7,6 @@ the output from each module and print it in sections.
 
 #}
 
-<script>
-  const reportUuid = "{{ report.report_uuid }}";
-  const seqeraApiUrl = "{{ report.seqera_api_url }}";
-  const seqeraWebsite = "{{ report.seqera_website }}";
-
-  const aiEnabled = "{{ config.ai_summary }}";
-  const aiProviderTitle = "{{ report.ai_provider_title }}";
-  const aiModel = "{{ report.ai_model }}";
-
-  const aiReportMetadataBase64 = "{{ report.ai_report_metadata_base64 }}";
-</script>
-
 {% for m in report.modules %}
   {% if not m.hidden %}
     {% if m.sections | length > 0 %}

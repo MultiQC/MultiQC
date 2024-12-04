@@ -24,26 +24,39 @@ class LinePlot extends Plot {
 
   prepDataForLlm() {
     // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
+    let prompt = super.prepDataForLlm();
+    if (this.pconfig.xlab) prompt += `X axis: ${this.pconfig.xlab}\n`;
+    if (this.pconfig.ylab) prompt += `Y axis: ${this.pconfig.ylab}\n`;
+
+    const xsuffix = this.layout.xaxis.ticksuffix;
+    const ysuffix = this.layout.yaxis.ticksuffix;
+
     let dataset = this.datasets[this.activeDatasetIdx];
 
     let lines = dataset.lines.map((line) => {
       return {
         name: line.name,
         pairs: line.pairs.map((p) =>
-          p.map((x) => (Number.isInteger(x) ? x : Number.isFinite(x) ? parseFloat(x.toFixed(2)) : x)),
+          p.map((x, i) => {
+            let val = Number.isInteger(x) ? x : Number.isFinite(x) ? parseFloat(x.toFixed(2)) : x;
+            if (i === 0 && xsuffix) val += xsuffix;
+            if (i === 1 && ysuffix) val += ysuffix;
+            return val;
+          }),
         ),
       };
     });
 
     return (
-      "Samples: " +
-      lines.map((line) => line.name).join(", ") +
-      "\n\n" +
-      lines
-        .map((line) => {
-          return line.name + " " + line.pairs.map((p) => "(" + p.join(": ") + ")").join(", ");
-        })
-        .join("\n\n")
+      prompt +
+      ("Samples: " +
+        lines.map((line) => line.name).join(", ") +
+        "\n\n" +
+        lines
+          .map((line) => {
+            return line.name + " " + line.pairs.map((p) => "(" + p.join(": ") + ")").join(", ");
+          })
+          .join("\n\n"))
     );
   }
 

@@ -455,25 +455,6 @@ PLOT_TYPES_FOR_OVERALL_SUMMARY = [PlotType.TABLE.value, PlotType.BAR.value]
 
 
 def add_ai_summary_to_report():
-    report_metadata = {
-        "sections": [
-            {
-                "module-anchor": section.module_anchor,
-                "module-name": section.module,
-                "section-anchor": section.plot_anchor,
-                "plot-anchor": section.plot_anchor,
-                "section-name": section.name,
-            }
-            for section in report.get_all_sections()
-            if section.plot_anchor and section.plot_anchor in report.plot_by_id
-        ]
-    }
-    report.ai_report_metadata_base64 = base64.b64encode(json.dumps(report_metadata).encode()).decode()
-
-    if not config.ai_summary:
-        # Not generating report in Python, leaving for JS runtime
-        return
-
     if not (client := get_llm_client()):
         return
 
@@ -485,9 +466,8 @@ def add_ai_summary_to_report():
     if report.general_stats_plot:
         content += f"""
 Section: MultiQC General Statistics (Overview of key QC metrics for each sample)
-
 Plot type: table
-
+Plot data:
 {report.general_stats_plot.format_for_ai_prompt()}
 """
 

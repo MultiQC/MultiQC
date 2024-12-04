@@ -1071,4 +1071,8 @@ def reset_tmp_dir():
 
 
 def add_ai_summary():
+    if not config.ai_summary:
+        # Not generating report in Python, leaving for JS runtime
+        return
+
     ai.add_ai_summary_to_report()

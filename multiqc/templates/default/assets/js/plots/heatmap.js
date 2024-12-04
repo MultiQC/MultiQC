@@ -44,10 +44,25 @@ class HeatmapPlot extends Plot {
 
   prepDataForLlm() {
     let [rows, xcats, ycats] = this.prepData();
-    rows = rows.map((row) =>
-      row.map((val) => (Number.isInteger(val) ? val : Number.isFinite(val) ? parseFloat(val.toFixed(2)) : val)),
-    );
-    return "```\n" + JSON.stringify([rows, xcats, ycats], null, 2) + "\n```";
+    let prompt = "";
+    if (xcats) {
+      if (ycats) {
+        prompt = "|";
+        if (this.yCatsAreSamples) prompt += " Sample ";
+      }
+      prompt += "| " + xcats.join(" | ") + " |\n";
+      if (ycats) {
+        prompt += "| --- ";
+      }
+      prompt += "| " + xcats.map(() => "---").join(" | ") + " |\n";
+    }
+    for (let i = 0; i < rows.length; i++) {
+      if (ycats) {
+        prompt += "| " + ycats[i] + " ";
+      }
+      prompt += "| " + rows[i].map((x) => x?.toString() || "").join(" | ") + " |\n";
+    }
+    return prompt;
   }
 
   buildTraces() {

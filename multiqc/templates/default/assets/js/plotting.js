@@ -31,6 +31,7 @@ class Plot {
     this.pActive = dump["p_active"];
     this.deferRender = dump["defer_render"];
     this.plotType = dump["plot_type"];
+    this.pconfig = dump["pconfig"];
   }
 
   activeDatasetSize() {
@@ -63,6 +64,10 @@ class Plot {
 
   afterPlotCreated() {
     // Do nothing
+  }
+
+  prepDataForLlm() {
+    return "";
   }
 
   recalculateTicks(filteredSettings, axis, maxTicks) {

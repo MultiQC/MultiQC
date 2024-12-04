@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 from multiqc import config, report
 from multiqc.plots.table_object import ColumnAnchor, DataTable, SampleGroup, SampleName, ValueT
+from multiqc.types import Anchor
 from multiqc.utils import mqc_colour
 from typing import TYPE_CHECKING
 from natsort import natsorted
@@ -22,7 +23,9 @@ def plot(dt: List[DataTable]) -> "ViolinPlot":
 
 def make_table(
     dt: DataTable,
-    violin_anchor: Optional[str] = None,
+    violin_anchor: Anchor,
+    module_anchor: Anchor,
+    section_anchor: Anchor,
     add_control_panel: bool = True,
 ) -> Tuple[str, str]:
     """
@@ -388,6 +391,9 @@ def make_table(
             id="ai-copy-content-table-{dt.anchor}"
             data-toggle="collapse"
             data-table-anchor="{dt.anchor}"
+            data-plot-anchor="{violin_anchor}"
+            data-module-anchor="{module_anchor}"
+            data-section-anchor="{section_anchor}"
             title="Copy table data for use with AI tools like ChatGPT"
             style="float: right;"
         >

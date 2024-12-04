@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
@@ -12,6 +13,7 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     split_long_string,
 )
+from multiqc.types import Anchor
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +132,24 @@ class Dataset(BaseDataset):
             data.append(new_row)
 
         report.write_data_file(data, self.uid)
+
+    def format_for_ai_prompt(self, pconfig: HeatmapConfig) -> str:
+        """
+        Format heatmap as a markdown table
+        """
+        prompt = ""
+        if self.xcats:
+            if self.ycats:
+                prompt = "|"
+            prompt += "| " + " | ".join(self.xcats) + " |\n"
+            if self.ycats:
+                prompt += "| --- "
+            prompt += "| " + " | ".join("---" for _ in self.xcats) + " |\n"
+        for i, row in enumerate(self.rows):
+            if self.ycats:
+                prompt += "| " + self.ycats[i] + " "
+            prompt += "| " + " | ".join(str(x) for x in row) + " |\n"
+        return prompt
 
 
 class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
@@ -357,11 +377,11 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             max=maxval,
         )
 
-    def buttons(self, flat: bool) -> List[str]:
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """
         Heatmap-specific controls, only for the interactive version.
         """
-        buttons = super().buttons(flat=flat)
+        buttons = super().buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor)
 
         if not flat:
             # find min val across all datasets across all cols and rows

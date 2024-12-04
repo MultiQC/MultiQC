@@ -24,16 +24,27 @@ class BoxPlot extends Plot {
   }
 
   prepDataForLlm() {
+    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
+    let prompt = super.prepDataForLlm() + "\n";
+    const suffix = this.layout.yaxis.ticksuffix;
+
     let [data, samples] = this.prepData();
-    data = data.map((d) => d.map((x) => (Number.isInteger(x) ? x : Number.isFinite(x) ? parseFloat(x.toFixed(2)) : x)));
+    data = data.map((d) =>
+      d.map((x) => {
+        let val = Number.isInteger(x) ? x : Number.isFinite(x) ? parseFloat(x.toFixed(2)) : x;
+        if (suffix) val = val + suffix;
+        return val;
+      }),
+    );
 
     return (
+      prompt +
       "Samples: " +
       samples.join(", ") +
       "\n\n" +
       data
         .map((values, idx) => {
-          return samples[idx] + " " + values.map((p) => "(" + p.join(": ") + ")").join(", ");
+          return samples[idx] + " " + values.join(", ");
         })
         .join("\n\n")
     );

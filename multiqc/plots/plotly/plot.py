@@ -18,7 +18,7 @@ from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
-from multiqc.types import Anchor, PlotType, Section
+from multiqc.types import Anchor, PlotType
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
@@ -273,7 +273,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
     section_anchor: Optional[Anchor] = None
     module_anchor: Optional[Anchor] = None
-    section_name: Optional[str] = None
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -782,17 +781,13 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
     def add_to_report(
         self,
+        module_anchor: Anchor,
+        section_anchor: Anchor,
         plots_dir_name: Optional[str] = None,
-        section: Optional[Section] = None,
     ) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
-        if section:
-            self.section_anchor = section.anchor
-            self.section_name = section.name
-            self.module_anchor = section.module_anchor
-
         for ds in self.datasets:
             ds.uid = self.id
             if len(self.datasets) > 1:  # for flat plots, each dataset will have its own unique ID
@@ -801,17 +796,26 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if self.flat:
             if is_running_under_rosetta():
                 # Kaleido is unstable under rosetata, falling back to interactive plots
-                return self.interactive_plot()
+                return self.interactive_plot(module_anchor, section_anchor)
             try:
-                html = self.flat_plot(plots_dir_name=plots_dir_name)
+                html = self.flat_plot(
+                    module_anchor=module_anchor,
+                    section_anchor=section_anchor,
+                    plots_dir_name=plots_dir_name,
+                )
             except ValueError:
                 logger.error(f"Unable to export plot to flat images: {self.id}, falling back to interactive plot")
-                html = self.interactive_plot()
+                html = self.interactive_plot(module_anchor, section_anchor)
         else:
-            html = self.interactive_plot()
+            html = self.interactive_plot(module_anchor, section_anchor)
             if config.export_plots and not is_running_under_rosetta():
                 try:
-                    self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
+                    self.flat_plot(
+                        module_anchor=module_anchor,
+                        section_anchor=section_anchor,
+                        embed_in_html=False,
+                        plots_dir_name=plots_dir_name,
+                    )
                 except ValueError:
                     logger.error(f"Unable to export plot to flat images: {self.id}")
 
@@ -822,10 +826,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             for dataset in self.datasets:
                 dataset.save_data_file()
 
-    def interactive_plot(self) -> str:
+    def interactive_plot(self, module_anchor: Anchor, section_anchor: Anchor) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
 
-        html += self.__control_panel(flat=False)
+        html += self.__control_panel(flat=False, module_anchor=module_anchor, section_anchor=section_anchor)
 
         # This width only affects the space before plot is rendered, and the initial
         # height for the resizing function. For the actual plot container, Plotly will
@@ -846,7 +850,13 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         report.plot_data[self.anchor] = self.model_dump(warnings=False)
         return html
 
-    def flat_plot(self, embed_in_html: Optional[bool] = None, plots_dir_name: Optional[str] = None) -> str:
+    def flat_plot(
+        self,
+        module_anchor: Anchor,
+        section_anchor: Anchor,
+        embed_in_html: Optional[bool] = None,
+        plots_dir_name: Optional[str] = None,
+    ) -> str:
         embed_in_html = embed_in_html if embed_in_html is not None else not config.development
         if not embed_in_html and plots_dir_name is None:
             raise ValueError("plots_dir_name is required for non-embedded plots")
@@ -864,7 +874,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.anchor}" data-plot-anchor={self.anchor}>'
 
         if not config.simple_output:
-            html += self.__control_panel(flat=True)
+            html += self.__control_panel(flat=True, module_anchor=module_anchor, section_anchor=section_anchor)
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
@@ -927,7 +937,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         return f'<button {attrs_str} class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
 
-    def buttons(self, flat: bool) -> List[str]:
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """
         Build buttons for control panel
         """
@@ -975,62 +985,54 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 label='<span style="vertical-align: baseline"><svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg></span> Export Plot',
                 data_attrs={"plot-anchor": str(self.anchor), "type": str(self.plot_type)},
             )
-            if self.section_anchor and self.module_anchor and self.section_name:
-                # make button visible if config.ai_summary is True
-                parameters = {
-                    "plot-anchor": self.anchor,
-                    "section-anchor": self.section_anchor,
-                    "module-anchor": self.module_anchor,
-                    "section-name": self.section_name,
-                    "multiqc-version": config.version,
-                }
-                encoded_parameters = base64.b64encode(json.dumps(parameters).encode("utf-8")).decode("utf-8")
-                ai_btn = f"""
-                <div class="ai-generate-more-container" style="float: right; display: {'' if config.ai_summary else 'none'};">
-                    <button
-                        class="btn btn-default btn-sm ai-generate-more ai-generate-more-plot"
-                        id="ai-generate-more-plot-{self.section_anchor}"
-                        type="button"
-                        data-section-anchor="{self.section_anchor}"
-                        data-section-metadata-base64="{encoded_parameters}"
-                        aria-controls="{self.section_anchor}_ai_summary"
-                        title="Dynamically generate AI summary for this plot"
-                    >
-                        <span style="vertical-align: baseline">
-                            <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"/>
-                            <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"/>
-                            </svg>
-                        </span>
-                        <span class="button-text">Summarize with AI</span>
-                    </button>
-                    <button 
-                        class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot"
-                        style="margin-left: 1px;"
-                        id="ai-copy-content-plot-{self.section_anchor}"
-                        type="button"
-                        data-section-anchor="{self.section_anchor}"
-                        data-section-metadata-base64="{encoded_parameters}"
-                        title="Copy plot data for use with AI tools like ChatGPT"
-                    >
-                        <span style="vertical-align: baseline">
-                            <svg width="10" height="10" viewBox="0 0 24 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M16 3H4C3.45 3 3 3.45 3 4V16C3 16.55 3.45 17 4 17H16C16.55 17 17 16.55 17 16V4C17 3.45 16.55 3 16 3ZM15 15H5V5H15V15Z" fill="currentColor"/>
-                                <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
-                            </svg>
-                        </span>
-                        <span class="button-text">Copy for AI</span>
-                    </button>
-                </div>
-                """
+            ai_btn = f"""
+            <div class="ai-generate-more-container" style="float: right; display: {'' if config.ai_summary else 'none'};">
+                <button
+                    class="btn btn-default btn-sm ai-generate-more ai-generate-more-plot"
+                    id="ai-generate-more-plot-{section_anchor}"
+                    type="button"
+                    data-plot-anchor="{self.anchor}"
+                    data-module-anchor="{module_anchor}"
+                    data-section-anchor="{section_anchor}"
+                    aria-controls="{section_anchor}_ai_summary"
+                    title="Dynamically generate AI summary for this plot"
+                >
+                    <span style="vertical-align: baseline">
+                        <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"/>
+                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <span class="button-text">Summarize with AI</span>
+                </button>
+                <button 
+                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot"
+                    style="margin-left: 1px;"
+                    id="ai-copy-content-plot-{section_anchor}"
+                    type="button"
+                    data-plot-anchor="{self.anchor}"
+                    data-module-anchor="{module_anchor}"
+                    data-section-anchor="{section_anchor}"
+                    title="Copy plot data for use with AI tools like ChatGPT"
+                >
+                    <span style="vertical-align: baseline">
+                        <svg width="10" height="10" viewBox="0 0 24 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 3H4C3.45 3 3 3.45 3 4V16C3 16.55 3.45 17 4 17H16C16.55 17 17 16.55 17 16V4C17 3.45 16.55 3 16 3ZM15 15H5V5H15V15Z" fill="currentColor"/>
+                            <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
+                        </svg>
+                    </span>
+                    <span class="button-text">Copy for AI</span>
+                </button>
+            </div>
+            """
 
         return [switch_buttons, export_btn, ai_btn]
 
-    def __control_panel(self, flat: bool) -> str:
+    def __control_panel(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> str:
         """
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
-        buttons = "\n".join(self.buttons(flat=flat))
+        buttons = "\n".join(self.buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor))
         html = f"<div class='row'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
 

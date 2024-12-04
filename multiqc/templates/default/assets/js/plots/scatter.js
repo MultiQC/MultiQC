@@ -23,13 +23,23 @@ class ScatterPlot extends Plot {
   }
 
   prepDataForLlm() {
+    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
+    let prompt = super.prepDataForLlm();
+    if (this.pconfig.xlab) prompt += `X axis: ${this.pconfig.xlab}\n`;
+    if (this.pconfig.ylab) prompt += `Y axis: ${this.pconfig.ylab}\n`;
+    if (this.pconfig.categories) prompt += `X categories: ${this.pconfig.categories.join(", ")}\n`;
+
+    const xsuffix = this.layout.xaxis.ticksuffix;
+    const ysuffix = this.layout.yaxis.ticksuffix;
+
     let [samples, points] = this.prepData();
     points = points.map((p) => ({
       name: p.name,
-      x: Number.isInteger(p.x) ? p.x : Number.isFinite(p.x) ? parseFloat(p.x.toFixed(2)) : p.x,
-      y: Number.isInteger(p.y) ? p.y : Number.isFinite(p.y) ? parseFloat(p.y.toFixed(2)) : p.y,
+      x: (Number.isInteger(p.x) ? p.x : Number.isFinite(p.x) ? parseFloat(p.x.toFixed(2)) : p.x) + (xsuffix ?? ""),
+      y: (Number.isInteger(p.y) ? p.y : Number.isFinite(p.y) ? parseFloat(p.y.toFixed(2)) : p.y) + (ysuffix ?? ""),
     }));
-    return "```\n" + JSON.stringify([samples, points], null, 2) + "\n```";
+
+    return prompt + "\n" + points.map((p) => `${p.name} (${p.x}, ${p.y})`).join("\n");
   }
 
   buildTraces() {

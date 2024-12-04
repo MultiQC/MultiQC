@@ -34,12 +34,16 @@ class BarPlot extends Plot {
   }
 
   prepDataForLlm() {
+    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
+    let prompt = super.prepDataForLlm();
+    if (this.pconfig.ylab) prompt += `Values: ${this.pconfig.ylab}\n`;
+    const suffix = this.layout.xaxis.ticksuffix;
+    prompt += "\n";
+
     let cats = this.datasets[this.activeDatasetIdx]["cats"];
     let samples = this.datasets[this.activeDatasetIdx]["samples"];
 
-    // Create header row
-    let prompt = "| Sample | " + cats.map((cat) => cat.name).join(" | ") + " |\n";
-    // Create separator row
+    prompt += "| Sample | " + cats.map((cat) => cat.name).join(" | ") + " |\n";
     prompt += "| --- | " + cats.map(() => "---").join(" | ") + " |\n";
 
     // Create data rows
@@ -49,7 +53,10 @@ class BarPlot extends Plot {
         cats
           .map((cat) => {
             let val = this.pActive ? cat.data_pct[idx] : cat.data[idx];
-            return Number.isInteger(val) ? val : Number.isFinite(val) ? parseFloat(val.toFixed(2)) : val;
+            val = Number.isInteger(val) ? val : Number.isFinite(val) ? parseFloat(val.toFixed(2)) : val;
+            if (this.pActive) val = val + "%";
+            if (suffix && (!this.pActive || suffix !== "%")) val = val + suffix;
+            return val;
           })
           .join(" | ") +
         " |\n";

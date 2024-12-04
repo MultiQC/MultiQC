@@ -2,6 +2,7 @@ import base64
 import dataclasses
 import errno
 import io
+import json
 import logging
 import os
 import re
@@ -58,6 +59,32 @@ class OutputPaths:
     report_overwritten: bool = False
 
 
+def set_ai_section_metadata():
+    report_metadata = {
+        "tools": {
+            mod.anchor: {
+                "name": mod.name,
+                "info": mod.info,
+                "href": mod.href,
+                "comment": mod.comment,
+            }
+            for mod in report.modules
+            if not mod.hidden and mod.name != "Software Versions"
+        },
+        "sections": {
+            section.anchor: {
+                "name": section.name,
+                "description": section.description,
+                "comment": section.comment,
+                "helptext": section.helptext,
+                "plot_anchor": section.plot_anchor,
+            }
+            for section in report.get_all_sections()
+        },
+    }
+    report.ai_report_metadata_base64 = base64.b64encode(json.dumps(report_metadata).encode()).decode()
+
+
 def write_results() -> None:
     plugin_hooks.mqc_trigger("before_report_generation")
 
@@ -72,8 +99,9 @@ def write_results() -> None:
     if not config.skip_generalstats:
         _render_general_stats_table(plots_dir_name=output_file_names.plots_dir_name)
 
-    if config.ai_summary:
-        report.add_ai_summary()
+    set_ai_section_metadata()
+
+    report.add_ai_summary()
 
     paths: OutputPaths = _create_or_override_dirs(output_file_names)
 
@@ -259,7 +287,8 @@ def render_and_export_plots(plots_dir_name: str):
             if isinstance(_plot, Plot):
                 s.plot = _plot.add_to_report(
                     plots_dir_name=plots_dir_name,
-                    section=s,
+                    module_anchor=s.module_anchor,
+                    section_anchor=s.anchor,
                 )
             elif isinstance(_plot, str):
                 s.plot = _plot
@@ -354,7 +383,15 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
         p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
         report.general_stats_plot = p
         report.plot_by_id[p.anchor] = p
-        report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name) if isinstance(p, Plot) else p
+        report.general_stats_html = (
+            p.add_to_report(
+                plots_dir_name=plots_dir_name,
+                module_anchor=Anchor("general_stats_table"),
+                section_anchor=Anchor("general_stats_table"),
+            )
+            if isinstance(p, Plot)
+            else p
+        )
     else:
         config.skip_generalstats = True
     return None
