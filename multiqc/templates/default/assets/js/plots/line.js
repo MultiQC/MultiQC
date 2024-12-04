@@ -24,9 +24,10 @@ class LinePlot extends Plot {
 
   prepDataForLlm() {
     // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
-    let prompt = super.prepDataForLlm();
-    if (this.pconfig.xlab) prompt += `X axis: ${this.pconfig.xlab}\n`;
-    if (this.pconfig.ylab) prompt += `Y axis: ${this.pconfig.ylab}\n`;
+    let header = "Plot type: x/y line\n";
+
+    if (this.pconfig.xlab) header += `X axis: ${this.pconfig.xlab}\n`;
+    if (this.pconfig.ylab) header += `Y axis: ${this.pconfig.ylab}\n`;
 
     const xsuffix = this.layout.xaxis.ticksuffix;
     const ysuffix = this.layout.yaxis.ticksuffix;
@@ -48,15 +49,15 @@ class LinePlot extends Plot {
     });
 
     return (
-      prompt +
-      ("Samples: " +
-        lines.map((line) => line.name).join(", ") +
-        "\n\n" +
-        lines
-          .map((line) => {
-            return line.name + " " + line.pairs.map((p) => "(" + p.join(": ") + ")").join(", ");
-          })
-          .join("\n\n"))
+      header +
+      "\nSamples: " +
+      lines.map((line) => line.name).join(", ") +
+      "\n\n" +
+      lines
+        .map((line) => {
+          return line.name + " " + line.pairs.map((p) => "(" + p.join(": ") + ")").join(", ");
+        })
+        .join("\n\n")
     );
   }
 

@@ -78,6 +78,8 @@ def set_ai_section_metadata():
                 "comment": section.comment,
                 "helptext": section.helptext,
                 "plot_anchor": section.plot_anchor,
+                "content": section.content,
+                "content_before_plot": section.content_before_plot,
             }
             for section in report.get_all_sections()
         },

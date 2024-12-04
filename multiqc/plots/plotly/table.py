@@ -385,26 +385,45 @@ def make_table(
 
         buttons.append(
             f"""
-        <button 
-            type="button"
-            class="btn btn-default btn-sm ai-copy-content ai-copy-content-table"
-            id="ai-copy-content-table-{dt.anchor}"
-            data-toggle="collapse"
-            data-table-anchor="{dt.anchor}"
-            data-plot-anchor="{violin_anchor}"
-            data-module-anchor="{module_anchor}"
-            data-section-anchor="{section_anchor}"
-            title="Copy table data for use with AI tools like ChatGPT"
-            style="float: right;"
-        >
-            <span style="vertical-align: baseline">
-                <svg width="10" height="10" viewBox="0 0 24 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16 3H4C3.45 3 3 3.45 3 4V16C3 16.55 3.45 17 4 17H16C16.55 17 17 16.55 17 16V4C17 3.45 16.55 3 16 3ZM15 15H5V5H15V15Z" fill="currentColor"/>
-                    <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
-                </svg>
-            </span>
-            <span class="button-text">Copy for AI</span>
-        </button>
+        <div class="ai-generate-more-container" style="float: right; display: {'' if config.ai_summary else 'none'};">
+            <button
+                class="btn btn-default btn-sm ai-generate-more ai-generate-more-table"
+                id="ai_generate_more_table_{section_anchor}"
+                type="button"
+                data-plot-anchor="{violin_anchor}"
+                data-module-anchor="{module_anchor}"
+                data-section-anchor="{section_anchor}"
+                aria-controls="{dt.anchor}_ai_summary"
+                title="Dynamically generate AI summary for this table"
+            >
+                <span style="vertical-align: baseline">
+                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"/>
+                    <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="button-text">Summarize with AI</span>
+            </button>
+            <button
+                class="btn btn-default btn-sm ai-copy-content ai-copy-content-table"
+                id="ai_copy_content_table_{section_anchor}"
+                type="button"
+                data-toggle="collapse"
+                data-plot-anchor="{violin_anchor}"
+                data-module-anchor="{module_anchor}"
+                data-section-anchor="{section_anchor}"
+                title="Copy table data for use with AI tools like ChatGPT"
+                style="float: right;"
+            >
+                <span style="vertical-align: baseline">
+                    <svg width="10" height="10" viewBox="0 0 24 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 3H4C3.45 3 3 3.45 3 4V16C3 16.55 3.45 17 4 17H16C16.55 17 17 16.55 17 16V4C17 3.45 16.55 3 16 3ZM15 15H5V5H15V15Z" fill="currentColor"/>
+                        <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
+                    </svg>
+                </span>
+                <span class="button-text">Copy for AI</span>
+            </button>
+        </div>
         """
         )
 

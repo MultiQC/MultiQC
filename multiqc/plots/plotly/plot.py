@@ -989,7 +989,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             <div class="ai-generate-more-container" style="float: right; display: {'' if config.ai_summary else 'none'};">
                 <button
                     class="btn btn-default btn-sm ai-generate-more ai-generate-more-plot"
-                    id="ai-generate-more-plot-{section_anchor}"
+                    id="ai_generate_more_plot_{section_anchor}"
                     type="button"
                     data-plot-anchor="{self.anchor}"
                     data-module-anchor="{module_anchor}"
@@ -1006,9 +1006,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     <span class="button-text">Summarize with AI</span>
                 </button>
                 <button 
-                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot"
+                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-section"
                     style="margin-left: 1px;"
-                    id="ai-copy-content-plot-{section_anchor}"
+                    id="ai_copy_content_section_{section_anchor}"
                     type="button"
                     data-plot-anchor="{self.anchor}"
                     data-module-anchor="{module_anchor}"

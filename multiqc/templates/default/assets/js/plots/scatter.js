@@ -24,10 +24,10 @@ class ScatterPlot extends Plot {
 
   prepDataForLlm() {
     // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
-    let prompt = super.prepDataForLlm();
-    if (this.pconfig.xlab) prompt += `X axis: ${this.pconfig.xlab}\n`;
-    if (this.pconfig.ylab) prompt += `Y axis: ${this.pconfig.ylab}\n`;
-    if (this.pconfig.categories) prompt += `X categories: ${this.pconfig.categories.join(", ")}\n`;
+    let header = "Plot type: scatter plot\n";
+    if (this.pconfig.xlab) header += `X axis: ${this.pconfig.xlab}\n`;
+    if (this.pconfig.ylab) header += `Y axis: ${this.pconfig.ylab}\n`;
+    if (this.pconfig.categories) header += `X categories: ${this.pconfig.categories.join(", ")}\n`;
 
     const xsuffix = this.layout.xaxis.ticksuffix;
     const ysuffix = this.layout.yaxis.ticksuffix;
@@ -39,7 +39,7 @@ class ScatterPlot extends Plot {
       y: (Number.isInteger(p.y) ? p.y : Number.isFinite(p.y) ? parseFloat(p.y.toFixed(2)) : p.y) + (ysuffix ?? ""),
     }));
 
-    return prompt + "\n" + points.map((p) => `${p.name} (${p.x}, ${p.y})`).join("\n");
+    return header + "\n" + points.map((p) => `${p.name} (${p.x}, ${p.y})`).join("\n");
   }
 
   buildTraces() {

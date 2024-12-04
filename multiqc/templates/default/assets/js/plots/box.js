@@ -25,7 +25,6 @@ class BoxPlot extends Plot {
 
   prepDataForLlm() {
     // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
-    let prompt = super.prepDataForLlm() + "\n";
     const suffix = this.layout.yaxis.ticksuffix;
 
     let [data, samples] = this.prepData();
@@ -38,7 +37,7 @@ class BoxPlot extends Plot {
     );
 
     return (
-      prompt +
+      "Plot type: boxplot\n\n" +
       "Samples: " +
       samples.join(", ") +
       "\n\n" +

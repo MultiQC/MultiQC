@@ -3,6 +3,8 @@ class ViolinPlot extends Plot {
     super(dump);
     this.violinHeight = dump["violin_height"];
     this.extraHeight = dump["extra_height"];
+    this.showTableByDefault = dump["show_table_by_default"];
+    this.tableAnchor = dump["table_anchor"];
   }
 
   activeDatasetSize() {
@@ -75,7 +77,45 @@ class ViolinPlot extends Plot {
     ];
   }
 
-  prepDataForLlm() {
+  prepTableViewForLlm() {
+    const table = $("#" + this.tableAnchor);
+
+    // Get table headers
+    const headers = [];
+    table.find("thead th").each(function () {
+      const tt = $(this).find(".mqc_table_tooltip");
+      let header;
+      if (tt.length > 0) {
+        header = tt.data("original-title");
+      } else {
+        header = $(this).text().trim();
+      }
+      headers.push(header);
+    });
+
+    // Get table data
+    const rows = [];
+    table.find("tbody tr").each(function () {
+      const row = [];
+      $(this)
+        .find("td,th")
+        .each(function () {
+          row.push($(this).text().trim());
+        });
+      if (row.length > 0) rows.push(row);
+    });
+
+    // Format data as markdown table
+    const content = `\
+| ${headers.join(" | ")} |
+|${headers.map(() => " --- ").join("|")}|
+${rows.map((row) => `| ${row.join(" | ")} |`).join("\n")}
+    `;
+
+    return "Section type: table\n\n" + content;
+  }
+
+  prepViolinViewForLlm() {
     let [
       metrics,
       headerByMetric,
@@ -84,6 +124,7 @@ class ViolinPlot extends Plot {
       violinValuesBySampleByMetric,
       scatterValuesBySampleByMetric,
     ] = this.prepData();
+
     let prompt = "| Metric | " + allSamples.join(" | ") + " |\n";
     prompt += "| --- | " + allSamples.map(() => "---").join(" | ") + " |\n";
     metrics.forEach((metric) => {
@@ -98,7 +139,14 @@ class ViolinPlot extends Plot {
           .join(" | ") +
         " |\n";
     });
-    return prompt;
+    return "Plot type: violin\n\n" + prompt;
+  }
+
+  prepDataForLlm(options) {
+    if ((options && options.view && options.view == "table") || this.showTableByDefault) {
+      return this.prepTableViewForLlm();
+    }
+    return this.prepViolinViewForLlm();
   }
 
   // Constructs and returns traces for the Plotly plot

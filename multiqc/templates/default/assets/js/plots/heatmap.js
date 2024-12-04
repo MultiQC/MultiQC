@@ -43,8 +43,9 @@ class HeatmapPlot extends Plot {
   }
 
   prepDataForLlm() {
+    let prompt = "Plot type: heatmap\n\n";
+
     let [rows, xcats, ycats] = this.prepData();
-    let prompt = "";
     if (xcats) {
       if (ycats) {
         prompt = "|";

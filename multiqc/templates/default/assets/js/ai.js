@@ -34,127 +34,106 @@ window.continueInSeqeraChatHandler = function (event) {
   }
 };
 
-async function formatReportForAi() {
-  let contentPrompt = "";
+function formatReportForAi(onlyGeneralStats = false) {
+  let result = "";
 
   // General statistics section
-  contentPrompt += "\n----------------------\n\n";
-  contentPrompt += "Tools used in the report:\n\n";
+  result += "\n----------------------\n\n";
+  result += "Tools used in the report:\n\n";
 
-  Object.entries(aiReportMetadata.modules).forEach(([modAnchor, mod], modIdx) => {
-    contentPrompt += `${modIdx + 1}. ${mod.name}`;
-    if (mod.info) contentPrompt += `\nDescription: ${mod.info}`;
-    if (mod.href && mod.href.length > 0) contentPrompt += `\nURL: ${mod.href}`;
-    if (mod.comment) contentPrompt += `\nComment: ${mod.comment}`;
-    contentPrompt += "\n\n";
+  Object.entries(aiReportMetadata.tools).forEach(([modAnchor, mod], modIdx) => {
+    result += `${modIdx + 1}. ${mod.name}`;
+    if (mod.info) result += `\nDescription: ${mod.info}`;
+    if (mod.href && mod.href.length > 0) result += `\nURL: ${mod.href}`;
+    if (mod.comment) result += `\nComment: ${mod.comment}`;
+    result += "\n\n";
   });
 
-  contentPrompt += "\n----------------------\n";
+  result += "\n----------------------\n";
   const generalStatsPlot = mqc_plots["general_stats_table"];
   if (generalStatsPlot) {
-    contentPrompt += `\nMultiQC General Statistics (overview of key QC metrics for each sample, across all tools)`;
-    contentPrompt += `\n${generalStatsPlot.prepDataForLlm()}`;
-    contentPrompt += "\n----------------------\n";
-  }
-  // TODO: suffixes and metric descriptions to general stats (and other tables)
-
-  Object.entries(aiReportMetadata.sections).forEach(([sectionAnchor, section]) => {
-    let plotContent = section.plot_content;
-    let plot = null;
-    if (!plotContent) {
-      plot = mqc_plots[section.plot_anchor];
-      if (plot) {
-        if (plot.title) plotContent += `\nTitle: ${plot.title}`;
-        plotContent += plot.prepDataForLlm();
-      }
-    }
-    if (!plotContent) return;
-
-    contentPrompt += `\n\nSection: ${section.name}`;
-    if (section.description) contentPrompt += `\nDescription: ${section.description}`;
-    if (section.comment) contentPrompt += `\nComment: ${section.comment}`;
-    if (section.helptext) contentPrompt += `\nHelp text: ${section.helptext}`;
-
-    if (plot) {
-      let plotType = plot.plotType;
-      if (plotType == "xy_line") plotType = "line";
-      if (plotType == "violin") plotType = "table";
-      contentPrompt += `\nPlot type: ${plotType}`;
-      if (plot.plotDescription) contentPrompt += `\nPlot description: ${plot.plotDescription}`;
-      if (plot.plotHelptext) contentPrompt += `\nPlot helptext: ${plot.plotHelptext}`;
-    }
-
-    contentPrompt += `\n${plotContent}`;
-    contentPrompt += "\n\n----------------------";
-  });
-  return contentPrompt;
-}
-
-function formatSectionMetadata(mod, section) {
-  let contentPrompt = "";
-  if (mod) {
-    let moduleName = mod["name"];
-    let moduleSummary = mod["info"];
-    let moduleHref = mod["href"];
-    let moduleComment = mod["comment"];
-    contentPrompt += `\nTool that generated data: ${moduleName}`;
-    if (moduleSummary) contentPrompt += `\nTool description: ${moduleSummary}`;
-    if (moduleHref) contentPrompt += `\nTool URL: ${moduleHref}`;
-    if (moduleComment) contentPrompt += `\nTool comment: ${moduleComment}`;
-  }
-  if (section) {
-    let sectionName = section["name"];
-    let sectionDescription = section["description"];
-    let sectionComment = section["comment"];
-    let sectionHelptext = section["helptext"];
-    contentPrompt += `\n\nSection: ${sectionName}`;
-    if (sectionDescription) contentPrompt += `\nSection description: ${sectionDescription}`;
-    if (sectionComment) contentPrompt += `\nSection comment: ${sectionComment}`;
-    if (sectionHelptext) contentPrompt += `\nSection help text: ${sectionHelptext}`;
-  }
-  return contentPrompt;
-}
-
-async function formatSectionForAi(sectionAnchor, moduleAnchor) {
-  let result = "";
-  let plotAnchor = null;
-  if (sectionAnchor !== "general_stats_table") {
-    mod = aiReportMetadata.tools[moduleAnchor];
-    section = aiReportMetadata.sections[sectionAnchor];
-    result += formatSectionMetadata(mod, section);
-    plotAnchor = section["plot_anchor"];
-  } else {
-    plotAnchor = "general_stats_table";
+    result += `\nMultiQC General Statistics (overview of key QC metrics for each sample, across all tools)`;
+    result += `\n${generalStatsPlot.prepDataForLlm()}`;
+    result += "\n----------------------\n";
   }
 
-  let plot = mqc_plots[plotAnchor];
-  let plotType = plot.plotType;
-  if (plotType == "xy_line") plotType = "line";
-  if (plotType == "violin") plotType = "table";
+  if (!onlyGeneralStats) {
+    Object.entries(aiReportMetadata.sections).forEach(([sectionAnchor, section]) => {
+      result += "\n" + formatSectionForAi(sectionAnchor, section.module_anchor);
+      result += "\n\n----------------------";
+    });
+  }
 
-  result += `\nPlot type: ${plotType}\n`;
-  if (plot.pconfig && plot.pconfig.title) result += `Title: ${plot.pconfig.title}\n`;
-  result += "\n" + plot.prepDataForLlm();
   return result;
 }
 
-// Global (report-level) summary generation
-async function generateCallback(e) {
-  e.preventDefault();
+function formatModuleHeader(mod) {
+  let result = `Tool that produced data: ${mod.name}`;
+  if (mod.info) result += `\nTool description: ${mod.info}`;
+  if (mod.href && mod.href.length > 0) result += `\nTool URL: ${mod.href}`;
+  if (mod.comment) result += `\nTool comment: ${mod.comment}`;
+  return result;
+}
 
-  const button = $(e.currentTarget);
+function formatSectionHeader(section) {
+  let result = `Section: ${section.name}`;
+  if (section.description) result += `\nSection description: ${section.description}`;
+  if (section.comment) result += `\nSection comment: ${section.comment}`;
+  if (section.helptext) result += `\nSection help text: ${section.helptext}`;
+  return result;
+}
+
+function formatModAndSectionMetadata(sectionAnchor, moduleAnchor) {
+  if (sectionAnchor === "general_stats_table") return "";
+  let result = "";
+  if (moduleAnchor) {
+    const mod = aiReportMetadata.tools[moduleAnchor];
+    result += formatModuleHeader(mod) + "\n\n";
+  }
+  const section = aiReportMetadata.sections[sectionAnchor];
+  result += formatSectionHeader(section);
+  return result;
+}
+
+function formatSectionForAi(sectionAnchor, moduleAnchor, options) {
+  if (sectionAnchor === "general_stats_table") {
+    return formatReportForAi(true);
+  }
+
+  let result = formatModAndSectionMetadata(sectionAnchor, moduleAnchor);
+  if (result) result += "\n";
+
+  const section = aiReportMetadata.sections[sectionAnchor];
+  if (section.content_before_plot) result += section.content_before_plot + "\n";
+  if (section.content) result += section.content + "\n";
+
+  const plotAnchor = section.plot_anchor;
+  let plot = mqc_plots[plotAnchor];
+  if (!plot) return result;
+
+  if (plot.pconfig && plot.pconfig.title) result += `Title: ${plot.pconfig.title}\n`;
+
+  result += "\n" + plot.prepDataForLlm(options);
+
+  return result;
+}
+
+async function summarizeWithAi(button, options) {
+  const { wholeReport, table } = options;
+
+  const sectionAnchor = button.data("section-anchor");
+  const moduleAnchor = button.data("module-anchor");
+
   let content;
   let systemPrompt;
-
-  const sectionAnchor = button.data("section-anchor") || "global";
-  if (button.data("report-metadata-base64")) {
-    const metadata = JSON.parse(atob(button.data("report-metadata-base64")));
-    content = await formatReportForAi(metadata);
+  if (wholeReport) {
+    content = formatReportForAi();
     systemPrompt = systemPromptReport;
-  } else if (button.data("section-anchor") && button.data("module-anchor")) {
-    const sectionAnchor = button.data("section-anchor");
-    const moduleAnchor = button.data("module-anchor");
-    content = await formatSectionForAi(sectionAnchor, moduleAnchor);
+  } else if (table) {
+    content = formatSectionForAi(sectionAnchor, moduleAnchor, { view: "table" });
+    systemPrompt = systemPromptPlot;
+  } else {
+    content = formatSectionForAi(sectionAnchor, moduleAnchor);
     systemPrompt = systemPromptPlot;
   }
 
@@ -237,6 +216,20 @@ async function generateCallback(e) {
   })();
 }
 
+// Global (report-level) summary generation
+async function generateCallback(e) {
+  e.preventDefault();
+  const button = $(e.currentTarget);
+
+  if (button.hasClass("ai-generate-more-plot")) {
+    summarizeWithAi(button, { wholeReport: false, table: false });
+  } else if (button.hasClass("ai-generate-more-table")) {
+    summarizeWithAi(button, { wholeReport: false, table: true });
+  } else {
+    summarizeWithAi(button, { wholeReport: false, table: false });
+  }
+}
+
 $(function () {
   // "Show More" button to expand pre-generated full AI summary
   $(".ai-summary").each(function () {
@@ -261,6 +254,7 @@ $(function () {
   // Click handler for "AI Summary" button to dynamically generate plot summaries
   $("button.ai-generate-more").each(function () {
     const button = $(this);
+
     const sectionAnchor = button.data("section-anchor") || "global";
     const plotAnchor = button.data("plot-anchor") || "global";
 
@@ -330,114 +324,43 @@ $(function () {
     $("#mqc_cols_apply").click();
   });
 
-  // Click handler for "Copy Plot Data" button to copy plot data to clipboard
-  $("button.ai-copy-content-plot").click(async function (e) {
+  function copyForAi(e, options) {
     e.preventDefault();
+    const button = $(e.currentTarget);
 
-    const button = $(this);
+    const { wholeReport, table } = options;
+
     const sectionAnchor = button.data("section-anchor");
     const moduleAnchor = button.data("module-anchor");
-    const plotContent = await formatSectionForAi(sectionAnchor, moduleAnchor);
 
-    const systemPrompt =
-      multiqcDescription +
-      `\
-You are given a single MultiQC report section with a plot. 
-Your task is to analyse the data and give a concise summary.
-    `;
-    navigator.clipboard.writeText(systemPrompt + plotContent);
-    const originalButtonText = button.find(".button-text").text();
-    button.find(".button-text").text("Copied!");
-    setTimeout(() => {
-      button.find(".button-text").text(originalButtonText);
-    }, 2000);
-  });
-
-  // Click handler for "Copy Report Data" button to copy report data to clipboard
-  $("button#ai_copy_content_report").click(async function (e) {
-    e.preventDefault();
-
-    const systemPrompt =
-      multiqcDescription +
-      `\
-You are given data from such a report. Your task is to analyse this data and generate
-a concise summary of the report.
-    `;
-
-    const button = $(this);
-    const content = await formatReportForAi();
-
-    navigator.clipboard.writeText(systemPrompt + content);
-    const originalButtonText = button.find(".button-text").text();
-    button.find(".button-text").text("Copied!");
-    setTimeout(() => {
-      button.find(".button-text").text(originalButtonText);
-    }, 2000);
-  });
-
-  // Click handler for "Copy Table Data" button to copy table data to clipboard
-  $("button.ai-copy-content-table").click(async function (e) {
-    e.preventDefault();
-
-    const button = $(this);
-    const tableAnchor = button.data("table-anchor");
-    const sectionAnchor = button.data("section-anchor");
-    const moduleAnchor = button.data("module-anchor");
-    let mod = null;
-    let section = null;
-    if (sectionAnchor != "general_stats_table") {
-      mod = aiReportMetadata.tools[moduleAnchor];
-      section = aiReportMetadata.sections[sectionAnchor];
+    let content;
+    let systemPrompt;
+    if (wholeReport) {
+      content = formatReportForAi();
+      systemPrompt = "You are given data of a MultiQC report";
+    } else if (table) {
+      content = formatSectionForAi(sectionAnchor, moduleAnchor, { view: "table" });
+      systemPrompt = "You are given a single MultiQC report table";
+    } else {
+      content = formatSectionForAi(sectionAnchor, moduleAnchor);
+      systemPrompt = "You are given data of a single MultiQC report section with a plot";
     }
 
-    const table = $("#" + tableAnchor);
+    systemPrompt += ". Your task is to analyse the data and give a concise summary.";
 
-    // Get table headers
-    const headers = [];
-    table.find("thead th").each(function () {
-      const tt = $(this).find(".mqc_table_tooltip");
-      let header;
-      if (tt.length > 0) {
-        header = tt.data("original-title");
-      } else {
-        header = $(this).text().trim();
-      }
-      headers.push(header);
-    });
+    const text = multiqcDescription + systemPrompt + "\n\n" + content;
 
-    // Get table data
-    const rows = [];
-    table.find("tbody tr").each(function () {
-      const row = [];
-      $(this)
-        .find("td,th")
-        .each(function () {
-          row.push($(this).text().trim());
-        });
-      if (row.length > 0) rows.push(row);
-    });
-
-    // Format data as markdown table
-    const content = `
-| ${headers.join(" | ")} |
-|${headers.map(() => " --- ").join("|")}|
-${rows.map((row) => `| ${row.join(" | ")} |`).join("\n")}`;
-
-    const contentPrompt = formatSectionMetadata(mod, section) + content;
-
-    const systemPrompt =
-      multiqcDescription +
-      `\
-You are given a General Statistics table from such a report. Your task is to analyse the data and generate
-a concise summary.
-    `;
-    navigator.clipboard.writeText(systemPrompt + contentPrompt);
+    navigator.clipboard.writeText(text);
     const originalButtonText = button.find(".button-text").text();
     button.find(".button-text").text("Copied!");
     setTimeout(() => {
       button.find(".button-text").text(originalButtonText);
     }, 2000);
-  });
+  }
+
+  $("button#ai_copy_content_report").click((e) => copyForAi(e, { wholeReport: true, table: false }));
+  $("button.ai-copy-content-section").click((e) => copyForAi(e, { wholeReport: false, table: false }));
+  $("button.ai-copy-content-table").click((e) => copyForAi(e, { wholeReport: false, table: true }));
 });
 
 async function wrapUpResponse(

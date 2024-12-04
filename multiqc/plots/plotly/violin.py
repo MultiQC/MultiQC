@@ -409,6 +409,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     show_table: bool
     show_table_by_default: bool
     n_samples: int
+    table_anchor: Anchor
 
     @staticmethod
     def create(
@@ -493,6 +494,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             show_table=show_table,
             show_table_by_default=show_table_by_default,
             n_samples=max_n_samples,
+            table_anchor=model.datasets[0].dt.anchor,
         )
 
     def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
@@ -511,7 +513,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 self._btn(
                     cls="mqc-violin-to-table",
                     label="<span class='glyphicon glyphicon-th-list'></span> Table",
-                    data_attrs={"table-anchor": self.datasets[0].dt.anchor, "violin-anchor": self.anchor},
+                    data_attrs={"table-anchor": self.table_anchor, "violin-anchor": self.anchor},
                 )
             )
 

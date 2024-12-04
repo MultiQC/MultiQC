@@ -466,7 +466,7 @@ def add_ai_summary_to_report():
     if report.general_stats_plot:
         content += f"""
 Section: MultiQC General Statistics (Overview of key QC metrics for each sample)
-Plot type: table
+Section type: table
 Plot data:
 {report.general_stats_plot.format_for_ai_prompt()}
 """
@@ -597,7 +597,6 @@ Plot type: {plot.plot_type}
             <button
                 class="btn btn-sm btn-default ai-generate-more"
                 id="ai_generate_more_global" 
-                data-report-metadata-base64="{report.ai_report_metadata_base64}"
             >
                 Generate more details...
             </button>

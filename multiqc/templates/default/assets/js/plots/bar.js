@@ -35,7 +35,8 @@ class BarPlot extends Plot {
 
   prepDataForLlm() {
     // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
-    let prompt = super.prepDataForLlm();
+    let prompt = "Plot type: barplot\n\n";
+
     if (this.pconfig.ylab) prompt += `Values: ${this.pconfig.ylab}\n`;
     const suffix = this.layout.xaxis.ticksuffix;
     prompt += "\n";
