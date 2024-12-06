@@ -107,7 +107,6 @@ plot_compressed_json: str
 ai_summary: str = ""
 ai_provider_title: str = ""
 ai_model: str = ""
-ai_token: Optional[str] = None
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
 
 # For "Continue in Seqera AI" buttons defined in templates/default/content.html

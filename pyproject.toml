@@ -81,16 +81,9 @@ dev = [
     "types-Pillow",
     "beautifulsoup4",
 ]
-anthropic = [
-    "langchain",
-    "langsmith",
-    "langchain-anthropic",
-]
-openai = [
-    "langchain",
-    "langsmith",
-    "langchain-openai",
-]
+anthropic = ["langchain", "langsmith", "langchain-anthropic"]
+openai = ["langchain", "langsmith", "langchain-openai"]
+ai = ["langchain", "tiktoken", "langchain-anthropic", "langchain-openai"]
 
 [project.urls]
 Homepage = "https://multiqc.info"

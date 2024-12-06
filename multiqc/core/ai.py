@@ -159,10 +159,10 @@ class InterpretationResponse(BaseModel):
 
 
 class Client:
-    def __init__(self, model: str, token: Optional[str]):
+    def __init__(self, model: str, api_key: Optional[str]):
         self.title: str
         self.model: str = model
-        self.token: Optional[str] = token
+        self.api_key: Optional[str] = api_key
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         raise NotImplementedError
@@ -170,10 +170,34 @@ class Client:
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
         raise NotImplementedError
 
+    def max_tokens(self) -> int:
+        raise NotImplementedError
+
+    def n_tokens(self, text: str) -> int:
+        """
+        Estimate tokens for Seqera's API
+        Using tiktoken for GPT models, falling back to Claude's tokenizer for others
+        """
+        try:
+            if self.model.startswith("gpt"):
+                import tiktoken
+
+                encoding = tiktoken.encoding_for_model(self.model)
+                return len(encoding.encode(text))
+            else:
+                from anthropic import Anthropic
+
+                return Anthropic().count_tokens(text)
+        except ImportError:
+            logger.warning(
+                "Fallback to rough estimation if tokenizers not available. Install `tiktoken` or `anthropic` to get more accurate token counts."
+            )
+            return len(text) // 4
+
 
 class LangchainClient(Client):
-    def __init__(self, model: str, token: Optional[str]):
-        super().__init__(model, token)
+    def __init__(self, model: str, api_key: Optional[str]):
+        super().__init__(model, api_key)
         self.llm: BaseChatModel
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
@@ -284,41 +308,52 @@ class LangchainClient(Client):
 
 
 class OpenAiClient(LangchainClient):
-    def __init__(self, model: str, token: str):
+    def __init__(self, model: str, api_key: str):
         from langchain_openai import ChatOpenAI  # type: ignore
 
-        super().__init__(model, token)
+        super().__init__(model, api_key)
         self.title = "OpenAI"
         self.llm = ChatOpenAI(
             model=self.model,
-            api_key=SecretStr(token),
+            api_key=SecretStr(api_key),
             temperature=0.0,
         )
 
+    def max_tokens(self) -> int:
+        return 128000
+
 
 class AnthropicClient(LangchainClient):
-    def __init__(self, model: str, token: str):
+    def __init__(self, model: str, api_key: str):
         from langchain_anthropic import ChatAnthropic  # type: ignore
 
-        super().__init__(model, token)
+        super().__init__(model, api_key)
         self.title = "Anthropic"
         self.llm = ChatAnthropic(
             model=self.model,  # type: ignore
-            api_key=SecretStr(token),
+            api_key=SecretStr(api_key),
             temperature=0.0,
         )  # type: ignore
 
+    def max_tokens(self) -> int:
+        return 200000
+
 
 class SeqeraClient(Client):
-    def __init__(self, model: str, token: Optional[str]):
-        super().__init__(model, token)
+    def __init__(self, model: str, api_key: Optional[str]):
+        super().__init__(model, api_key)
         self.title = "Seqera AI"
+
+    def max_tokens(self) -> int:
+        if self.model.startswith("gpt"):
+            return 128000
+        return 200000
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                f"{config.seqera_api_url}/invoke-with-token" if self.token else f"{config.seqera_api_url}/invoke",
-                headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
+                f"{config.seqera_api_url}/invoke-with-token" if self.api_key else f"{config.seqera_api_url}/invoke",
+                headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
                 json={
                     "system_message": PROMPT_SHORT,
                     "user_message": report_content,
@@ -352,8 +387,8 @@ class SeqeraClient(Client):
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                f"{config.seqera_api_url}/invoke-with-token" if self.token else f"{config.seqera_api_url}/invoke",
-                headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
+                f"{config.seqera_api_url}/invoke-with-token" if self.api_key else f"{config.seqera_api_url}/invoke",
+                headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
                 json={
                     "system_message": PROMPT_FULL,
                     "user_message": report_content,
@@ -405,17 +440,17 @@ def get_llm_client() -> Optional[Client]:
         return None
 
     if config.ai_provider == "seqera":
-        token = config.seqera_api_key or os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
-        if not token:
+        api_key = config.seqera_api_key or os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
+        if not api_key:
             logger.warning(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', but Seqera tower access "
                 "token is not set. Please set the TOWER_ACCESS_TOKEN environment variable, or change config.ai_provider"
             )
-        return SeqeraClient(config.ai_model, token)
+        return SeqeraClient(config.ai_model, api_key)
 
     if config.ai_provider == "anthropic":
-        token = config.anthropic_api_key or os.environ.get("ANTHROPIC_API_KEY")
-        if not token:
+        api_key = config.anthropic_api_key or os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'anthropic', but Anthropic API "
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
@@ -423,15 +458,15 @@ def get_llm_client() -> Optional[Client]:
             return None
         model = config.ai_model if config.ai_model.startswith("claude") else "claude-3-5-sonnet-20240620"
         try:
-            return AnthropicClient(model, token)
+            return AnthropicClient(model, api_key)
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
-                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[ai]`"
+                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[anthropic]`"
             )
 
     if config.ai_provider == "openai":
-        token = config.openai_api_key or os.environ.get("OPENAI_API_KEY")
-        if not token:
+        api_key = config.openai_api_key or os.environ.get("OPENAI_API_KEY")
+        if not api_key:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'openai', but OpenAI API "
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
@@ -439,10 +474,10 @@ def get_llm_client() -> Optional[Client]:
             return None
         model = config.ai_model if config.ai_model.startswith("gpt") else "gpt-4o"
         try:
-            return OpenAiClient(model, token)
+            return OpenAiClient(model, api_key)
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
-                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[ai]`"
+                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[openai]`"
             )
 
     return None
@@ -519,73 +554,86 @@ def add_ai_summary_to_report():
 
     report.ai_provider_title = client.title
     report.ai_model = client.model
-    report.ai_token = client.token
 
-    content: str = ""  # data formatted for the LLM
-    content += "\n----------------------\n\n"
-    content += "Tools used in the report:\n\n"
+    tools_context: str = ""  # data formatted for the LLM
+    tools_context += "Tools used in the report:\n\n"
 
     for i, tool in enumerate(metadata.tools.values()):
-        content += f"{i+1}. {tool.name} ({tool.info})\n"
+        tools_context += f"{i+1}. {tool.name} ({tool.info})\n"
         if tool.info:
-            content += f"Description: {tool.info}\n"
+            tools_context += f"Description: {tool.info}\n"
         if tool.href:
-            content += f"Links: {tool.href}\n"
+            tools_context += f"Links: {tool.href}\n"
         if tool.comment:
-            content += f"Comment: {tool.comment}\n"
-        content += "\n\n"
+            tools_context += f"Comment: {tool.comment}\n"
+        tools_context += "\n\n"
+        tools_context += "\n----------------------\n\n"
 
-    content += "\n----------------------\n\n"
+    prompt_parts = [tools_context]
 
     if report.general_stats_plot:
-        content += f"""
+        prompt_parts.append(f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
 {report.general_stats_plot.format_for_ai_prompt()}
 ----------------------
-"""
+""")
+
+    system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
+    current_length = sum(client.n_tokens(part) for part in [system_prompt] + prompt_parts)
 
     for section in metadata.sections.values():
         tool = metadata.tools[section.module_anchor]
-        content += f"Tool: {tool.name}\n"
-        content += f"Section: {section.name}\n"
+        section_prompt = ""
+        section_prompt += f"Tool: {tool.name}\n"
+        section_prompt += f"Section: {section.name}\n"
         if section.description:
-            content += f"Section description: {_strip_html(section.description)}\n"
+            section_prompt += f"Section description: {_strip_html(section.description)}\n"
         if section.comment:
-            content += f"Section comment: {_strip_html(section.comment)}\n"
+            section_prompt += f"Section comment: {_strip_html(section.comment)}\n"
         if section.helptext:
-            content += f"Section help text: {_strip_html(section.helptext)}\n"
+            section_prompt += f"Section help text: {_strip_html(section.helptext)}\n"
 
         if section.content_before_plot:
-            content += section.content_before_plot + "\n\n"
+            section_prompt += section.content_before_plot + "\n\n"
         if section.content:
-            content += section.content + "\n\n"
+            section_prompt += section.content + "\n\n"
 
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
             if plot_content := plot.format_for_ai_prompt():
                 if plot.pconfig.title:
-                    content += f"Title: {plot.pconfig.title}\n"
-                content += "\n" + plot_content
+                    section_prompt += f"Title: {plot.pconfig.title}\n"
+                section_prompt += "\n" + plot_content
 
-        content += "\n----------------------\n\n"
+        section_prompt += "\n----------------------\n\n"
 
-    if not content:
-        return
+        # Check if adding this section would exceed the limit
+        # Using rough estimate of 4 chars per token
+        section_prompt_length = client.n_tokens(section_prompt)
+        if current_length + section_prompt_length > client.max_tokens() * 0.95:  # Leave 5% buffer
+            logger.warning(
+                f"Truncating report content to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
+                f"Used context length is {current_length} tokens, adding section {section.name} will sum up to {current_length + section_prompt_length} tokens."
+            )
+            break
 
-    # strip triple newlines
-    content = re.sub(r"\n\n\n", "\n\n", content)
+        prompt_parts.append(section_prompt)
+        current_length += section_prompt_length
+
+    prompt = "".join(prompt_parts)
+    prompt = re.sub(r"\n\n\n", "\n\n", prompt)  # strip triple newlines
 
     if config.development:
         # Save content to file for debugging
         path = Path(config.output_dir) / "ai_content.txt"
         logger.debug(f"Saving AI prompt to {path}")
-        path.write_text(content)
+        path.write_text(prompt)
 
     response: Optional[InterpretationResponse]
     if config.ai_summary_full:
-        response = client.interpret_report_full(content)
+        response = client.interpret_report_full(prompt)
     else:
-        response = client.interpret_report_short(content)
+        response = client.interpret_report_short(prompt)
     if not response:
         return None
 
@@ -605,12 +653,10 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
     """
 
     if response.uuid:
-        seqera_api_token = f"data-seqera-api-token={client.token} " if client.token else ""
         continue_chat_btn = (
             "<button class='btn btn-default btn-sm ai-continue-in-chat'"
             + f" data-generation-id={response.uuid}"
             + f" data-seqera-website={config.seqera_website}"
-            + f" {seqera_api_token}"
             + " onclick='continueInSeqeraChatHandler(event)'"
             + f">Continue with {sparkle_icon} <strong>Seqera AI</strong></button>"
         )
