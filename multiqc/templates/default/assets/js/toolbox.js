@@ -206,6 +206,7 @@ $(function () {
   $("#mqc_cols_apply").click(function (e) {
     if (apply_mqc_highlights()) {
       $(this).attr("disabled", true).removeClass("btn-primary").addClass("btn-default");
+      mqc_auto_save_config();
     }
   });
 
@@ -247,6 +248,7 @@ $(function () {
   $("#mqc_rename_apply").click(function (e) {
     if (apply_mqc_renamesamples()) {
       $(this).attr("disabled", true).removeClass("btn-primary").addClass("btn-default");
+      mqc_auto_save_config();
     }
   });
 
@@ -311,6 +313,7 @@ $(function () {
   $("#mqc_hide_apply").click(function (e) {
     if (apply_mqc_hidesamples()) {
       $(this).attr("disabled", true).removeClass("btn-primary").addClass("btn-default");
+      mqc_auto_save_config();
     }
   });
 
@@ -766,6 +769,20 @@ $(function () {
       $(this).trigger("change");
     });
   });
+
+  // Load auto-saved config on page load
+  try {
+    const autoSaveKey = AUTO_SAVE_PREFIX + window.reportUuid;
+    const local_config = localStorage.getItem("mqc_config");
+    if (local_config) {
+      const configs = JSON.parse(local_config);
+      if (configs[autoSaveKey]) {
+        load_mqc_config(autoSaveKey);
+      }
+    }
+  } catch (e) {
+    console.log("Could not load auto-saved config:", e);
+  }
 });
 
 //////////////////////////////////////////////////////
@@ -1042,18 +1059,17 @@ function mqc_save_config(name, clear, as_default) {
   if (name === undefined) {
     return false;
   }
-  var config = {};
-
-  // Collect the toolbox vars
-  config["highlights_f_texts"] = window.mqc_highlight_f_texts;
-  config["highlights_f_cols"] = window.mqc_highlight_f_cols;
-  config["highlight_regex"] = window.mqc_highlight_regex_mode;
-  config["rename_from_texts"] = window.mqc_rename_f_texts;
-  config["rename_to_texts"] = window.mqc_rename_t_texts;
-  config["rename_regex"] = window.mqc_rename_regex_mode;
-  config["hidesamples_mode"] = window.mqc_hide_mode;
-  config["hidesamples_f_texts"] = window.mqc_hide_f_texts;
-  config["hidesamples_regex"] = window.mqc_hide_regex_mode;
+  const config = {
+    highlights_f_texts: window.mqc_highlight_f_texts,
+    highlights_f_cols: window.mqc_highlight_f_cols,
+    highlight_regex: window.mqc_highlight_regex_mode,
+    rename_from_texts: window.mqc_rename_f_texts,
+    rename_to_texts: window.mqc_rename_t_texts,
+    rename_regex: window.mqc_rename_regex_mode,
+    hidesamples_mode: window.mqc_hide_mode,
+    hidesamples_f_texts: window.mqc_hide_f_texts,
+    hidesamples_regex: window.mqc_hide_regex_mode,
+  };
 
   var prev_config = {};
   // Load existing configs (inc. from other reports)
@@ -1327,6 +1343,45 @@ function load_mqc_config(name) {
 
   // Trigger loaded event to initialise plots
   $(document).trigger("mqc_config_loaded");
+}
+
+//////////////////////////////////////////////////////
+// SAVE SETTINGS AUTOMATICALLY
+//////////////////////////////////////////////////////
+const AUTO_SAVE_PREFIX = "autosave_";
+
+function mqc_auto_save_config() {
+  // Get the current config
+  var config = {
+    highlights_f_texts: window.mqc_highlight_f_texts,
+    highlights_f_cols: window.mqc_highlight_f_cols,
+    highlight_regex: window.mqc_highlight_regex_mode,
+    rename_from_texts: window.mqc_rename_f_texts,
+    rename_to_texts: window.mqc_rename_t_texts,
+    rename_regex: window.mqc_rename_regex_mode,
+    hidesamples_mode: window.mqc_hide_mode,
+    hidesamples_f_texts: window.mqc_hide_f_texts,
+    hidesamples_regex: window.mqc_hide_regex_mode,
+    last_updated: Date(),
+  };
+
+  try {
+    // Save to localStorage with report UUID
+    var prev_config = {};
+    try {
+      prev_config = localStorage.getItem("mqc_config");
+      prev_config = prev_config ? JSON.parse(prev_config) : {};
+    } catch (e) {
+      console.log("Could not access localStorage");
+    }
+
+    // Add/update the auto-saved config
+    const autoSaveKey = AUTO_SAVE_PREFIX + window.reportUuid;
+    prev_config[autoSaveKey] = config;
+    localStorage.setItem("mqc_config", JSON.stringify(prev_config));
+  } catch (e) {
+    console.log("Error auto-saving config:", e);
+  }
 }
 
 function addLogo(imageDataUrl, callback) {
