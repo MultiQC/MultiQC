@@ -6,6 +6,7 @@ from collections import OrderedDict
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
 
 from importlib_metadata import EntryPoint
+from natsort import natsorted
 
 from multiqc import config
 from multiqc.core.exceptions import RunError
@@ -135,7 +136,7 @@ def plot(
             # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
             pass
         elif pconf.sort_samples:
-            hc_samples = sorted([SampleName(s) for s in d.keys()])
+            hc_samples = natsorted([SampleName(s) for s in d.keys()])
         hc_data: List[CatDataDict] = list()
         sample_d_count: Dict[SampleName, int] = dict()
         for cat_idx, c in enumerate(categories_per_ds[ds_idx].keys()):

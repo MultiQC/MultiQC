@@ -133,7 +133,7 @@ class Dataset(BaseDataset):
 
         report.write_data_file(data, self.uid)
 
-    def format_for_ai_prompt(self, pconfig: HeatmapConfig) -> str:
+    def format_for_ai_prompt(self, pconfig: PConfig) -> str:
         """
         Format heatmap as a markdown table
         """

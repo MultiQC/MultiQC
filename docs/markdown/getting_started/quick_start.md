@@ -20,7 +20,6 @@ Arguably, the easiest way to do this is with Conda
 3. Restart your terminal shell.
 4. [Configure your conda channels](https://bioconda.github.io/#usage) to work with BioConda:
    ```bash
-   conda config --add channels defaults
    conda config --add channels bioconda
    conda config --add channels conda-forge
    conda config --set channel_priority strict
