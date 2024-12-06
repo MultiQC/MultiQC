@@ -34,35 +34,76 @@ window.continueInSeqeraChatHandler = function (event) {
   }
 };
 
-function formatReportForAi(onlyGeneralStats = false, generalStatsView = "table") {
+function formatReportForAi(systemPrompt, onlyGeneralStats = false, generalStatsView = "table") {
   let result = "";
+  let currentTokens = 0;
+  const provider = getStoredProvider();
+  const maxTokens =
+    {
+      OpenAI: 128000,
+      Anthropic: 200000,
+      "Seqera AI": 128000,
+    }[provider] || 128000;
 
-  // General statistics section
+  // Tools section is highest priority - always include
   result += "\n----------------------\n\n";
   result += "Tools used in the report:\n\n";
 
   Object.entries(aiReportMetadata.tools).forEach(([modAnchor, mod], modIdx) => {
-    result += `${modIdx + 1}. ${mod.name}`;
-    if (mod.info) result += `\nDescription: ${mod.info}`;
-    if (mod.href && mod.href.length > 0) result += `\nLinks: ${mod.href}`;
-    if (mod.comment) result += `\nComment: ${mod.comment}`;
-    result += "\n\n";
+    const toolContent =
+      `${modIdx + 1}. ${mod.name}` +
+      (mod.info ? `\nDescription: ${mod.info}` : "") +
+      (mod.href && mod.href.length > 0 ? `\nLinks: ${mod.href}` : "") +
+      (mod.comment ? `\nComment: ${mod.comment}` : "") +
+      "\n\n";
+    result += toolContent;
   });
 
   result += "\n----------------------\n";
+  currentTokens = estimateTokenCount(systemPrompt + result);
+
+  // General stats are second priority
   const generalStatsPlot = mqc_plots["general_stats_table"];
   if (generalStatsPlot) {
-    result += `\nMultiQC General Statistics (overview of key QC metrics for each sample, across all tools)`;
-    result += `\n${generalStatsPlot.formatForAiPrompt(generalStatsView)}`;
-    result += "\n----------------------\n";
+    const statsContent =
+      `\nMultiQC General Statistics (overview of key QC metrics for each sample, across all tools)` +
+      `\n${generalStatsPlot.formatForAiPrompt(generalStatsView)}` +
+      "\n----------------------\n";
+
+    const statsTokens = estimateTokenCount(statsContent);
+    if (currentTokens + statsTokens < maxTokens * 0.95) {
+      // Leave 5% buffer
+      result += statsContent;
+      currentTokens += statsTokens;
+    } else {
+      console.error(
+        `Including general stats alone in AI summary would exceed ${provider}'s token limit (${
+          currentTokens + statsTokens
+        } > ${maxTokens}). Aborting`,
+      );
+      return result;
+    }
   }
 
   if (!onlyGeneralStats) {
+    // Add sections until we approach the token limit
     Object.entries(aiReportMetadata.sections).forEach(([sectionAnchor, section]) => {
       const mod = aiReportMetadata.tools[section.module_anchor];
-      result += `\nTool: ${mod.name}`;
-      result += "\n" + formatSectionForAi(sectionAnchor);
-      result += "\n\n----------------------";
+      let sectionContent = `\nTool: ${mod.name}\n`;
+      sectionContent += formatSectionForAi(sectionAnchor);
+      sectionContent += "\n\n----------------------";
+
+      const sectionTokens = estimateTokenCount(sectionContent);
+      if (currentTokens + sectionTokens < maxTokens * 0.95) {
+        result += sectionContent;
+        currentTokens += sectionTokens;
+      } else {
+        console.warn(
+          `Truncating report content to fit within ${provider}'s context window. ` +
+            `Current tokens: ${currentTokens}, section would add ${sectionTokens} tokens`,
+        );
+        return result;
+      }
     });
   }
 
@@ -99,7 +140,7 @@ function formatModAndSectionMetadata(sectionAnchor, moduleAnchor) {
 
 function formatSectionForAi(sectionAnchor, moduleAnchor, view) {
   if (sectionAnchor === "general_stats_table") {
-    return formatReportForAi(true, view);
+    return formatReportForAi("", true, view);
   }
 
   let result = formatModAndSectionMetadata(sectionAnchor, moduleAnchor);
@@ -127,25 +168,44 @@ async function summarizeWithAi(button, options) {
   const moduleAnchor = button.data("module-anchor");
   const view = button.data("view");
 
-  let content;
-  let systemPrompt;
-  if (wholeReport) {
-    content = formatReportForAi();
-    systemPrompt = systemPromptReport;
-  } else if (table) {
-    content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
-    systemPrompt = systemPromptPlot;
-  } else {
-    content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
-    systemPrompt = systemPromptPlot;
-  }
-
   const responseDiv = $("#" + sectionAnchor + "_ai_detailed_summary");
   const errorDiv = $("#" + sectionAnchor + "_ai_summary_error");
   const disclaimerDiv = $("#" + sectionAnchor + "_ai_summary_disclaimer");
   const wrapperDiv = $("#" + sectionAnchor + "_ai_summary");
 
-  let provider = getStoredProvider();
+  let content;
+  let systemPrompt;
+  if (wholeReport) {
+    systemPrompt = systemPromptReport;
+    content = formatReportForAi(systemPrompt);
+  } else if (table) {
+    systemPrompt = systemPromptPlot;
+    content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
+  } else {
+    systemPrompt = systemPromptPlot;
+    content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
+  }
+
+  // Check total tokens before making the request
+  const totalTokens = estimateTokenCount(systemPrompt + content);
+  const provider = getStoredProvider();
+  const maxTokens =
+    {
+      OpenAI: 128000,
+      Anthropic: 200000,
+      "Seqera AI": 128000,
+    }[provider] || 128000;
+
+  if (totalTokens > maxTokens * 0.95) {
+    errorDiv
+      .html(
+        `Content exceeds ${provider}'s token limit (${totalTokens} > ${maxTokens}). Try analyzing a smaller section.`,
+      )
+      .show();
+    wrapperDiv.show();
+    return;
+  }
+
   // Check for stored API key
   let aiApiKey = getStoredApiKey(provider);
   if (!aiApiKey || aiApiKey === undefined) {
@@ -340,18 +400,17 @@ $(function () {
     let content;
     let systemPrompt;
     if (wholeReport) {
-      content = formatReportForAi();
       systemPrompt = "You are given data of a MultiQC report";
+      content = formatReportForAi(systemPrompt);
     } else if (table) {
-      content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
       systemPrompt = "You are given a single MultiQC report table";
-    } else {
       content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
+    } else {
       systemPrompt = "You are given data of a single MultiQC report section with a plot";
+      content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
     }
 
     systemPrompt += ". Your task is to analyse the data and give a concise summary.";
-
     const text = multiqcDescription + "\n" + systemPrompt + "\n\n" + content;
 
     navigator.clipboard.writeText(text);
@@ -400,3 +459,44 @@ async function wrapUpResponse(
       button.html(originalButtonHtml).prop("style", "background-color: white;").off("click").click(generateCallback);
     });
 }
+
+function estimateTokenCount(text) {
+  const provider = getStoredProvider();
+
+  try {
+    if (provider === "OpenAI") {
+      // Use GPT-3 Tokenizer if available
+      if (window.GPT3Tokenizer) {
+        const tokenizer = new window.GPT3Tokenizer({ type: "gpt3" });
+        return tokenizer.encode(text).bpe.length;
+      }
+    } else if (provider === "Anthropic") {
+      // Use Claude's tokenizer if available
+      if (window.AnthropicTokenizer) {
+        return window.AnthropicTokenizer.countTokens(text);
+      }
+    }
+  } catch (e) {
+    console.warn("Error using tokenizer:", e);
+  }
+
+  // Fallback to character-based estimation
+  // Different models have different ratios, but ~4 chars per token is a reasonable estimate
+  return Math.ceil(text.length / 4);
+}
+
+// Load tokenizers if available
+document.addEventListener("DOMContentLoaded", function () {
+  // Load GPT-3 Tokenizer
+  const gpt3Script = document.createElement("script");
+  gpt3Script.src = "https://cdn.jsdelivr.net/npm/gpt3-tokenizer/dist/gpt3-tokenizer.min.js";
+  gpt3Script.async = true;
+
+  // Load Claude's Tokenizer
+  const claudeScript = document.createElement("script");
+  claudeScript.src = "https://cdn.jsdelivr.net/npm/@anthropic-ai/tokenizer/dist/tokenizer.min.js";
+  claudeScript.async = true;
+
+  document.head.appendChild(gpt3Script);
+  document.head.appendChild(claudeScript);
+});
