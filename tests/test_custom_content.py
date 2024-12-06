@@ -55,7 +55,7 @@ def test_custom_content(tmp_path):
     assert len(report.plot_by_id) == 1
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == id
-    assert report.plot_by_id[anchor].plot_type == "xy_line"
+    assert report.plot_by_id[anchor].plot_type == "x/y line"
 
 
 def test_deprecated_fields(tmp_path, capsys):
@@ -92,7 +92,7 @@ def test_deprecated_fields(tmp_path, capsys):
     anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == id
-    assert report.plot_by_id[anchor].plot_type == "xy_line"
+    assert report.plot_by_id[anchor].plot_type == "x/y line"
 
     err = str(capsys.readouterr().err)
     assert "Line plot's x_lines or y_lines 'label' field is expected to be a string" in err
@@ -149,7 +149,7 @@ def test_wrong_fields(tmp_path, caplog, strict, monkeypatch):
         anchor = Anchor(f"{id}-section-plot")
         assert anchor in report.plot_by_id
         assert report.plot_by_id[anchor].id == id
-        assert report.plot_by_id[anchor].plot_type == "xy_line"
+        assert report.plot_by_id[anchor].plot_type == "x/y line"
         assert report.plot_by_id[anchor].pconfig.title == "DupRadar General Linear Model"
         assert (
             report.plot_by_id[anchor].pconfig.xlab == "True"  # cast to string
@@ -184,7 +184,7 @@ def test_missing_id_and_title(tmp_path):
     anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == id
-    assert report.plot_by_id[anchor].plot_type == "xy_line"
+    assert report.plot_by_id[anchor].plot_type == "x/y line"
     assert report.plot_by_id[anchor].pconfig.xlab == "expression"
 
 
@@ -306,7 +306,7 @@ target___test2	2
     anchor = Anchor("last_o2o-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == "last_o2o"
-    assert report.plot_by_id[anchor].plot_type == "violin"
+    assert report.plot_by_id[anchor].plot_type == "violin plot"
 
 
 @pytest.mark.parametrize(
@@ -377,7 +377,7 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
     assert len(report.plot_by_id) == 1
     anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].plot_type == "violin"
+    assert report.plot_by_id[anchor].plot_type == "violin plot"
     assert len(report.plot_by_id[anchor].datasets) == 1
     assert report.plot_by_id[anchor].datasets[0].header_by_metric.keys() == {
         "SEQUENCE",
