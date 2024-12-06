@@ -981,6 +981,19 @@ class BaseMultiqcModule:
             if "description" not in _headers[col_id]:
                 _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
 
+            # Add grouping information to description if table_sample_merge is enabled
+            if config.table_sample_merge:
+                desc = _headers[col_id].get("description", "")
+                if group_samples_config.cols_to_weighted_average and any(
+                    col_id == c for c, _ in group_samples_config.cols_to_weighted_average
+                ):
+                    desc += " (weighted average for grouped samples)"
+                elif group_samples_config.cols_to_average and col_id in group_samples_config.cols_to_average:
+                    desc += " (averaged for grouped samples)"
+                elif group_samples_config.cols_to_sum and col_id in group_samples_config.cols_to_sum:
+                    desc += " (summed for grouped samples)"
+                _headers[col_id]["description"] = desc
+
         # Append to report.general_stats for later assembly into table
         report.general_stats_data.append(rows_by_group)
         report.general_stats_headers.append(_headers)  # type: ignore
