@@ -38,12 +38,8 @@ function formatReportForAi(systemPrompt, onlyGeneralStats = false, generalStatsV
   let result = "";
   let currentTokens = 0;
   const provider = getStoredProvider();
-  const maxTokens =
-    {
-      OpenAI: 128000,
-      Anthropic: 200000,
-      "Seqera AI": 128000,
-    }[provider] || 128000;
+  const model = getStoredModelName(provider);
+  const maxTokens = getMaxTokens(model);
 
   // Tools section is highest priority - always include
   result += "\n----------------------\n\n";
@@ -161,6 +157,12 @@ function formatSectionForAi(sectionAnchor, moduleAnchor, view) {
   return result;
 }
 
+function getMaxTokens(model) {
+  if (model.startsWith("gpt")) return 128000;
+  if (model.startsWith("claude")) return 200000;
+  return 128000;
+}
+
 async function summarizeWithAi(button, options) {
   const { wholeReport, table } = options;
 
@@ -189,12 +191,8 @@ async function summarizeWithAi(button, options) {
   // Check total tokens before making the request
   const totalTokens = estimateTokenCount(systemPrompt + content);
   const provider = getStoredProvider();
-  const maxTokens =
-    {
-      OpenAI: 128000,
-      Anthropic: 200000,
-      "Seqera AI": 128000,
-    }[provider] || 128000;
+  const model = getStoredModelName(provider);
+  const maxTokens = getMaxTokens(model);
 
   if (totalTokens > maxTokens * 0.95) {
     errorDiv
