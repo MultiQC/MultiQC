@@ -206,6 +206,7 @@ $(function () {
   $("#mqc_cols_apply").click(function (e) {
     if (apply_mqc_highlights()) {
       $(this).attr("disabled", true).removeClass("btn-primary").addClass("btn-default");
+      mqc_auto_save_config();
     }
   });
 
@@ -247,6 +248,7 @@ $(function () {
   $("#mqc_rename_apply").click(function (e) {
     if (apply_mqc_renamesamples()) {
       $(this).attr("disabled", true).removeClass("btn-primary").addClass("btn-default");
+      mqc_auto_save_config();
     }
   });
 
@@ -311,6 +313,7 @@ $(function () {
   $("#mqc_hide_apply").click(function (e) {
     if (apply_mqc_hidesamples()) {
       $(this).attr("disabled", true).removeClass("btn-primary").addClass("btn-default");
+      mqc_auto_save_config();
     }
   });
 
@@ -766,6 +769,20 @@ $(function () {
       $(this).trigger("change");
     });
   });
+
+  // Load auto-saved config on page load
+  try {
+    const autoSaveKey = AUTO_SAVE_PREFIX + window.reportUuid;
+    const local_config = localStorage.getItem("mqc_config");
+    if (local_config) {
+      const configs = JSON.parse(local_config);
+      if (configs[autoSaveKey]) {
+        load_mqc_config(autoSaveKey);
+      }
+    }
+  } catch (e) {
+    console.log("Could not load auto-saved config:", e);
+  }
 });
 
 //////////////////////////////////////////////////////
@@ -1037,24 +1054,27 @@ function apply_mqc_hidesamples(mode) {
 // SAVE TOOLBOX SETTINGS
 //////////////////////////////////////////////////////
 
+// Add these helper functions
+function getConfigObject() {
+  return {
+    highlights_f_texts: window.mqc_highlight_f_texts,
+    highlights_f_cols: window.mqc_highlight_f_cols,
+    highlight_regex: window.mqc_highlight_regex_mode,
+    rename_from_texts: window.mqc_rename_f_texts,
+    rename_to_texts: window.mqc_rename_t_texts,
+    rename_regex: window.mqc_rename_regex_mode,
+    hidesamples_mode: window.mqc_hide_mode,
+    hidesamples_f_texts: window.mqc_hide_f_texts,
+    hidesamples_regex: window.mqc_hide_regex_mode,
+  };
+}
+
 // Save the current configuration setup
 function mqc_save_config(name, clear, as_default) {
   if (name === undefined) {
     return false;
   }
-  var config = {};
-
-  // Collect the toolbox vars
-  config["highlights_f_texts"] = window.mqc_highlight_f_texts;
-  config["highlights_f_cols"] = window.mqc_highlight_f_cols;
-  config["highlight_regex"] = window.mqc_highlight_regex_mode;
-  config["rename_from_texts"] = window.mqc_rename_f_texts;
-  config["rename_to_texts"] = window.mqc_rename_t_texts;
-  config["rename_regex"] = window.mqc_rename_regex_mode;
-  config["hidesamples_mode"] = window.mqc_hide_mode;
-  config["hidesamples_f_texts"] = window.mqc_hide_f_texts;
-  config["hidesamples_regex"] = window.mqc_hide_regex_mode;
-
+  const config = getConfigObject();
   var prev_config = {};
   // Load existing configs (inc. from other reports)
   try {
@@ -1207,25 +1227,25 @@ function populate_mqc_saveselect() {
 //////////////////////////////////////////////////////
 // LOAD TOOLBOX SETTINGS
 //////////////////////////////////////////////////////
-function load_mqc_config(name) {
+function load_mqc_config(name, config_obj) {
   if (name === undefined) {
     return false;
   }
   var config = {};
-  try {
+  if (config_obj) {
+    // Use provided config object
+    config = config_obj;
+  } else {
+    // Load from localStorage
     try {
       var local_config = localStorage.getItem("mqc_config");
+      if (local_config !== null && local_config !== undefined) {
+        local_config = JSON.parse(local_config);
+        config = local_config[name];
+      }
     } catch (e) {
       console.log("Could not access localStorage");
     }
-    if (local_config !== null && local_config !== undefined) {
-      local_config = JSON.parse(local_config);
-      for (var attr in local_config[name]) {
-        config[attr] = local_config[name][attr];
-      }
-    }
-  } catch (e) {
-    console.log("Could not load local config: " + e);
   }
 
   // Apply config - rename samples
@@ -1329,29 +1349,117 @@ function load_mqc_config(name) {
   $(document).trigger("mqc_config_loaded");
 }
 
-function addLogo(imageDataUrl, callback) {
-  // Append "watermark" to the image
-  let plotlyImage = new Image();
-  plotlyImage.onload = function () {
-    let canvas = document.createElement("canvas");
-    let ctx = canvas.getContext("2d");
+//////////////////////////////////////////////////////
+// SAVE SETTINGS TO FILE
+//////////////////////////////////////////////////////
+function downloadConfigFile(name) {
+  const config = getConfigObject();
+  const blob = new Blob([JSON.stringify(config, null, 2)], { type: "application/json" });
+  const filename = `multiqc_config_${name || "settings"}.json`;
+  saveAs(blob, filename);
+}
 
-    // Set canvas size to double for retina display
-    canvas.width = plotlyImage.width;
-    canvas.height = plotlyImage.height; // additional height for the text
+function loadConfigFromFile(file) {
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const config = JSON.parse(e.target.result);
 
-    ctx.drawImage(plotlyImage, 0, 0, plotlyImage.width, plotlyImage.height);
+      // Validate that this config matches the current report
+      if (config.report_id && config.report_id !== window.reportUuid) {
+        if (!confirm("This configuration is from a different report. Load it anyway?")) {
+          return;
+        }
+      }
 
-    // Text properties
-    ctx.font = "9px Lucida Grande"; // Set the desired font-size and type
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#9f9f9f"; // Semi-transparent black text
+      // Load the config
+      load_mqc_config("custom_file_load", config);
 
-    ctx.fillText("Created with MultiQC", plotlyImage.width - 15, plotlyImage.height - 6);
-    // Callback with the combined image
-    callback(canvas.toDataURL());
+      // Auto-save the newly loaded config
+      mqc_auto_save_config();
+
+      // Show success message
+      $.toast({
+        heading: "Configuration Loaded",
+        text: "Settings have been loaded from file successfully",
+        icon: "success",
+        position: "bottom-right",
+      });
+    } catch (err) {
+      $.toast({
+        heading: "Error Loading Configuration",
+        text: "Could not parse the configuration file: " + err.message,
+        icon: "error",
+        position: "bottom-right",
+      });
+    }
   };
-  plotlyImage.src = imageDataUrl;
+  reader.readAsText(file);
+}
+
+$(function () {
+  // // Add file input handler
+  // $("#mqc_load_config_file").on("change", function (e) {
+  //   if (this.files && this.files[0]) {
+  //     loadConfigFromFile(this.files[0]);
+  //   }
+  // });
+  // // Add download handler
+  // $("#mqc_download_config").click(function (e) {
+  //   e.preventDefault();
+  //   const name = $("#mqc_saveconfig_form input").val().trim() || "settings";
+  //   downloadConfigFile(name);
+  // });
+
+  // Lazy load file input handler
+  let fileInputInitialized = false;
+  $("#mqc_saveconfig").on("mouseenter", function () {
+    if (!fileInputInitialized) {
+      // Initialize file input handler only when user interacts with the save section
+      $("#mqc_load_config_file_wrapper").append('<input type="file" id="mqc_load_config_file" accept=".json">');
+      $("#mqc_load_config_file").on("change", function (e) {
+        if (this.files && this.files[0]) {
+          loadConfigFromFile(this.files[0]);
+        }
+      });
+      fileInputInitialized = true;
+    }
+  });
+  // Add download handler
+  $("#mqc_download_config").click(function (e) {
+    e.preventDefault();
+    const name = $("#mqc_saveconfig_form input").val().trim() || "settings";
+    downloadConfigFile(name);
+  });
+});
+
+//////////////////////////////////////////////////////
+// SAVE SETTINGS AUTOMATICALLY
+//////////////////////////////////////////////////////
+const AUTO_SAVE_PREFIX = "autosave_";
+
+function mqc_auto_save_config() {
+  // Get the current config
+  var config = getConfigObject();
+  config.last_updated = Date();
+
+  try {
+    // Save to localStorage with report UUID
+    var prev_config = {};
+    try {
+      prev_config = localStorage.getItem("mqc_config");
+      prev_config = prev_config ? JSON.parse(prev_config) : {};
+    } catch (e) {
+      console.log("Could not access localStorage");
+    }
+
+    // Add/update the auto-saved config
+    const autoSaveKey = AUTO_SAVE_PREFIX + window.reportUuid;
+    prev_config[autoSaveKey] = config;
+    localStorage.setItem("mqc_config", JSON.stringify(prev_config));
+  } catch (e) {
+    console.log("Error auto-saving config:", e);
+  }
 }
 
 // Storage helper functions
@@ -1372,7 +1480,9 @@ function getFromLocalStorage(key) {
   }
 }
 
+//////////////////////////////////////////////////////
 // AI settings handlers
+//////////////////////////////////////////////////////
 $(function () {
   // Populate provider dropdown dynamically
   const aiProviderSelect = $("#ai-provider");
@@ -1462,4 +1572,29 @@ function getStoredApiKey(provider) {
 }
 function getStoredModelName(provider) {
   return getFromLocalStorage(`mqc_ai_model_${provider}`) || AI_PROVIDERS[provider].defaultModel;
+}
+
+function addLogo(imageDataUrl, callback) {
+  // Append "watermark" to the image
+  let plotlyImage = new Image();
+  plotlyImage.onload = function () {
+    let canvas = document.createElement("canvas");
+    let ctx = canvas.getContext("2d");
+
+    // Set canvas size to double for retina display
+    canvas.width = plotlyImage.width;
+    canvas.height = plotlyImage.height; // additional height for the text
+
+    ctx.drawImage(plotlyImage, 0, 0, plotlyImage.width, plotlyImage.height);
+
+    // Text properties
+    ctx.font = "9px Lucida Grande"; // Set the desired font-size and type
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#9f9f9f"; // Semi-transparent black text
+
+    ctx.fillText("Created with MultiQC", plotlyImage.width - 15, plotlyImage.height - 6);
+    // Callback with the combined image
+    callback(canvas.toDataURL());
+  };
+  plotlyImage.src = imageDataUrl;
 }

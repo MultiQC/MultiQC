@@ -280,27 +280,49 @@ of the report.
 
     <!-- Save Config -->
     <div id="mqc_saveconfig" class="mqc_filter_section">
+      <div class="alert alert-info">
+        <span class="glyphicon glyphicon-info-sign"></span>
+        Settings are automatically saved. You can also save named configurations below.
+      </div>
       <h4>Save Settings</h4>
-      <p>You can save the toolbox settings for this report to the browser.</p>
+      <p>You can save the toolbox settings for this report to the browser or as a file.</p>
       <form class="form-inline" id="mqc_saveconfig_form">
         <input type="text" class="form-control input-sm" placeholder="Config Name">
-        <button type="submit" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
+        <button type="submit" class="btn btn-sm btn-default">
+          <span class="glyphicon glyphicon-floppy-disk"></span> Save to Browser
+        </button>
+        <button type="button" class="btn btn-sm btn-default" id="mqc_download_config">
+          <span class="glyphicon glyphicon-download-alt"></span> Save to File
+        </button>
       </form>
       <hr>
 
       <h4>Load Settings</h4>
-      <p>Choose a saved report profile from the dropdown box below:</p>
+      <p>Choose a saved report profile from the browser or load from a file:</p>
       <form id="mqc_loadconfig_form">
         <div class="form-group">
           <select class="form-control input-sm">
-            <option value="">[ select ]</option>
+            <option value="">[ select from browser ]</option>
           </select>
         </div>
         <div class="form-group actions">
-          <button type="submit" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-open"></span> Load</button>
-          <button class="mqc_config_clear btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Delete</button>
-          <button class="mqc_config_set_default btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-saved"></span> Set default</button>
-          <button class="mqc_config_clear_default btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-remove"></span> Clear default</button>
+          <button type="submit" class="btn btn-sm btn-default">
+            <span class="glyphicon glyphicon-floppy-open"></span> Load
+          </button>
+          <button class="mqc_config_clear btn btn-sm btn-default">
+            <span class="glyphicon glyphicon-trash"></span> Delete
+          </button>
+          <button class="mqc_config_set_default btn btn-sm btn-default">
+            <span class="glyphicon glyphicon-floppy-saved"></span> Set default
+          </button>
+          <button class="mqc_config_clear_default btn btn-sm btn-default">
+            <span class="glyphicon glyphicon-floppy-remove"></span> Clear default
+          </button>
+        </div>
+        <div class="form-group">
+          <span class="glyphicon glyphicon-folder-open"></span><span>&nbsp; Load from File</span>
+          <span class="btn btn-sm btn-default btn-file" id="mqc_load_config_file_wrapper">
+          </span>
         </div>
       </form>
     </div>
