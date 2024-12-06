@@ -22,17 +22,16 @@ class LinePlot extends Plot {
     return [samples, lines];
   }
 
-  prepDataForLlm() {
-    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
-    let header = "Plot type: x/y line\n";
+  plotAiHeader() {
+    let result = super.plotAiHeader();
+    if (this.pconfig.xlab) result += `X axis: ${this.pconfig.xlab}\n`;
+    if (this.pconfig.ylab) result += `Y axis: ${this.pconfig.ylab}\n`;
+    return result;
+  }
 
-    if (this.pconfig.xlab) header += `X axis: ${this.pconfig.xlab}\n`;
-    if (this.pconfig.ylab) header += `Y axis: ${this.pconfig.ylab}\n`;
-
+  formatDatasetForAiPrompt(dataset) {
     const xsuffix = this.layout.xaxis.ticksuffix;
     const ysuffix = this.layout.yaxis.ticksuffix;
-
-    let dataset = this.datasets[this.activeDatasetIdx];
 
     let lines = dataset.lines.map((line) => {
       return {
@@ -49,8 +48,7 @@ class LinePlot extends Plot {
     });
 
     return (
-      header +
-      "\nSamples: " +
+      "Samples: " +
       lines.map((line) => line.name).join(", ") +
       "\n\n" +
       lines

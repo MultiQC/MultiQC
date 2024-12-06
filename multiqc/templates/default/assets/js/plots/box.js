@@ -9,9 +9,10 @@ class BoxPlot extends Plot {
     return this.datasets[this.activeDatasetIdx]["samples"].length;
   }
 
-  prepData() {
-    let data = this.datasets[this.activeDatasetIdx]["data"];
-    let samples = this.datasets[this.activeDatasetIdx]["samples"];
+  prepData(dataset) {
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
+    let data = dataset["data"];
+    let samples = dataset["samples"];
 
     let samplesSettings = applyToolboxSettings(samples);
 
@@ -23,11 +24,11 @@ class BoxPlot extends Plot {
     return [data, samples];
   }
 
-  prepDataForLlm() {
+  formatDatasetForAiPrompt(dataset) {
     // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
     const suffix = this.layout.yaxis.ticksuffix;
 
-    let [data, samples] = this.prepData();
+    let [data, samples] = this.prepData(dataset);
     data = data.map((d) =>
       d.map((x) => {
         let val = Number.isInteger(x) ? x : Number.isFinite(x) ? parseFloat(x.toFixed(2)) : x;

@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import os
+from pathlib import Path
 import re
 from textwrap import dedent
 from typing import Dict, Optional, cast, TYPE_CHECKING
@@ -542,8 +543,6 @@ def add_ai_summary_to_report():
     if report.general_stats_plot:
         content += f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-Section type: table
-
 {report.general_stats_plot.format_for_ai_prompt()}
 ----------------------
 """
@@ -579,8 +578,11 @@ Section type: table
     # strip triple newlines
     content = re.sub(r"\n\n\n", "\n\n", content)
 
-    with open("/Users/vlad/tmp/ai_content.txt", "w") as f:
-        f.write(content)
+    if config.development:
+        # Save content to file for debugging
+        path = Path(config.output_dir) / "ai_content.txt"
+        logger.debug(f"Saving AI prompt to {path}")
+        path.write_text(content)
 
     response: Optional[InterpretationResponse]
     if config.ai_summary_full:

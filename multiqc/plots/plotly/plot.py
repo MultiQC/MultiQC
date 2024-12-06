@@ -242,7 +242,7 @@ class BaseDataset(BaseModel):
             pass
         return f"{value:.1f}"
 
-    def format_for_ai_prompt(self, pconfig: PConfig) -> str:
+    def format_dataset_for_ai_prompt(self, pconfig: Any) -> str:
         return ""
 
 
@@ -764,14 +764,21 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
+    def _plot_ai_header(self) -> str:
+        result = f"Plot type: {self.plot_type}\n"
+        return result
+
     def format_for_ai_prompt(self) -> str:
-        prompt = "Plot type: " + str(self.plot_type) + "\n\n"
+        """
+        Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
+        """
+        prompt = self._plot_ai_header() + "\n\n"
 
         if len(self.datasets) == 1:
-            return prompt + self.datasets[0].format_for_ai_prompt(self.pconfig)
+            return prompt + self.datasets[0].format_dataset_for_ai_prompt(self.pconfig)
 
         for dataset in self.datasets:
-            formatted_dataset = dataset.format_for_ai_prompt(self.pconfig)
+            formatted_dataset = dataset.format_dataset_for_ai_prompt(self.pconfig)
             if not formatted_dataset:
                 continue
             prompt += f"### {dataset.label}\n"
@@ -995,6 +1002,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-plot-anchor="{self.anchor}"
                     data-module-anchor="{module_anchor}"
                     data-section-anchor="{section_anchor}"
+                    data-view="plot"
                     aria-controls="{section_anchor}_ai_summary"
                     title="Dynamically generate AI summary for this plot"
                 >
@@ -1014,6 +1022,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-plot-anchor="{self.anchor}"
                     data-module-anchor="{module_anchor}"
                     data-section-anchor="{section_anchor}"
+                    data-view="plot"
                     title="Copy plot data for use with AI tools like ChatGPT"
                 >
                     <span style="vertical-align: baseline">

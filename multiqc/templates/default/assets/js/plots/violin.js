@@ -12,15 +12,15 @@ class ViolinPlot extends Plot {
     return this.datasets[this.activeDatasetIdx]["all_samples"].length;
   }
 
-  prepData() {
-    let dataset = this.datasets[this.activeDatasetIdx];
+  prepData(dataset, keepHidden = false) {
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
     let metrics = dataset["metrics"];
     let headerByMetric = dataset["header_by_metric"];
 
     // Hidden metrics
     metrics = metrics.filter((metric) => {
       let header = headerByMetric[metric];
-      return header["hidden"] !== true;
+      return header["hidden"] !== true || keepHidden;
     });
 
     let violinValuesBySampleByMetric = dataset["violin_value_by_sample_by_metric"];
@@ -35,7 +35,7 @@ class ViolinPlot extends Plot {
       scatterValuesBySampleByMetric[metric] = scatterValuesBySample;
     });
 
-    let allSamples = this.datasets[this.activeDatasetIdx]["all_samples"];
+    let allSamples = dataset["all_samples"];
     let sampleSettings = applyToolboxSettings(allSamples);
 
     // Hidden samples
@@ -77,45 +77,12 @@ class ViolinPlot extends Plot {
     ];
   }
 
-  prepTableViewForLlm() {
-    const table = $("#" + this.tableAnchor);
-
-    // Get table headers
-    const headers = [];
-    table.find("thead th").each(function () {
-      const tt = $(this).find(".mqc_table_tooltip");
-      let header;
-      if (tt.length > 0) {
-        header = tt.data("original-title");
-      } else {
-        header = $(this).text().trim();
-      }
-      headers.push(header);
-    });
-
-    // Get table data
-    const rows = [];
-    table.find("tbody tr").each(function () {
-      const row = [];
-      $(this)
-        .find("td,th")
-        .each(function () {
-          row.push($(this).text().trim());
-        });
-      if (row.length > 0) rows.push(row);
-    });
-
-    // Format data as markdown table
-    const content = `\
-| ${headers.join(" | ")} |
-|${headers.map(() => " --- ").join("|")}|
-${rows.map((row) => `| ${row.join(" | ")} |`).join("\n")}
-    `;
-
-    return "Section type: table\n\n" + content;
+  plotAiHeader(view) {
+    if (view === "table") return "Plot type: table\n";
+    return "Plot type: violin plot\n";
   }
 
-  prepViolinViewForLlm() {
+  formatDatasetForAiPrompt(dataset, view) {
     let [
       metrics,
       headerByMetric,
@@ -123,30 +90,54 @@ ${rows.map((row) => `| ${row.join(" | ")} |`).join("\n")}
       sampleSettings,
       violinValuesBySampleByMetric,
       scatterValuesBySampleByMetric,
-    ] = this.prepData();
+    ] = this.prepData(dataset, true);
 
-    let prompt = "| Metric | " + allSamples.join(" | ") + " |\n";
-    prompt += "| --- | " + allSamples.map(() => "---").join(" | ") + " |\n";
-    metrics.forEach((metric) => {
-      prompt +=
-        `| ${headerByMetric[metric].title} | ` +
-        allSamples
-          .map((sample) => {
-            const value = violinValuesBySampleByMetric[metric][sample];
-            const suffix = headerByMetric[metric].suffix;
-            return value !== undefined ? value + (suffix || "") : value;
-          })
-          .join(" | ") +
-        " |\n";
-    });
-    return "Plot type: violin\n\n" + prompt;
-  }
+    let results = "";
 
-  prepDataForLlm(options) {
-    if ((options && options.view && options.view == "table") || this.showTableByDefault) {
-      return this.prepTableViewForLlm();
+    results += "Metrics:\n";
+    results += Object.entries(headerByMetric)
+      .map(([metric, header]) => `${header.title} - ${header.description}`)
+      .join("\n");
+    results += "\n\n";
+
+    view = view ? view : this.showTableByDefault ? "table" : "plot";
+
+    if (view === "table") {
+      results +=
+        `| ${this.pconfig.col1_header} | ` + metrics.map((metric) => headerByMetric[metric].title).join(" | ") + " |\n";
+      results += "| --- | " + metrics.map(() => "---").join(" | ") + " |\n";
+      results += allSamples
+        .map((sample) => {
+          return (
+            `| ${sample} | ` +
+            metrics
+              .map((metric) => {
+                const value = violinValuesBySampleByMetric[metric][sample];
+                const suffix = headerByMetric[metric].suffix;
+                return value !== undefined ? value.toFixed(2) + (suffix || "") : value;
+              })
+              .join(" | ") +
+            " |\n"
+          );
+        })
+        .join("");
+    } else {
+      results += "| Metric | " + allSamples.join(" | ") + " |\n";
+      results += "| --- | " + allSamples.map(() => "---").join(" | ") + " |\n";
+      metrics.forEach((metric) => {
+        results +=
+          `| ${headerByMetric[metric].title} | ` +
+          allSamples
+            .map((sample) => {
+              const value = violinValuesBySampleByMetric[metric][sample];
+              const suffix = headerByMetric[metric].suffix;
+              return value !== undefined ? value.toFixed(2) + (suffix || "") : value;
+            })
+            .join(" | ") +
+          " |\n";
+      });
     }
-    return this.prepViolinViewForLlm();
+    return results;
   }
 
   // Constructs and returns traces for the Plotly plot

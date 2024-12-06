@@ -15,9 +15,9 @@ class HeatmapPlot extends Plot {
     return rows[0].length; // no columns in a row
   }
 
-  prepData() {
+  prepData(dataset) {
     // Prepare data to either build Plotly traces or export as a file
-    let dataset = this.datasets[this.activeDatasetIdx];
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
     let rows = dataset["rows"];
     let xcats = dataset["xcats"];
     let ycats = dataset["ycats"];
@@ -42,10 +42,17 @@ class HeatmapPlot extends Plot {
     return [rows, xcats, ycats];
   }
 
-  prepDataForLlm() {
-    let prompt = "Plot type: heatmap\n\n";
+  plotAiHeader() {
+    let result = super.plotAiHeader();
+    if (this.pconfig.xlab) result += `X axis: ${this.pconfig.xlab}\n`;
+    if (this.pconfig.ylab) result += `Y axis: ${this.pconfig.ylab}\n`;
+    if (this.pconfig.zlab) result += `Z axis: ${this.pconfig.zlab}\n`;
+    return result;
+  }
 
-    let [rows, xcats, ycats] = this.prepData();
+  formatDatasetForAiPrompt(dataset) {
+    let prompt = "";
+    let [rows, xcats, ycats] = this.prepData(dataset);
     if (xcats) {
       if (ycats) {
         prompt = "|";

@@ -226,6 +226,12 @@ class Dataset(BaseDataset):
         ]
         report.write_data_file(data, self.uid)
 
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig) -> str:
+        xsuffix = self.layout.get("xaxis", {}).get("ticksuffix", "")
+        ysuffix = self.layout.get("yaxis", {}).get("ticksuffix", "")
+
+        return "\n".join(f"{point['name']} ({point['x']}{xsuffix}, {point['y']}{ysuffix})" for point in self.points)
+
 
 class ScatterPlot(Plot[Dataset, ScatterConfig]):
     datasets: List[Dataset]
@@ -248,3 +254,13 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
         model.layout.hoverdistance = -1
 
         return ScatterPlot(**model.__dict__)
+
+    def _plot_ai_header(self) -> str:
+        result = super()._plot_ai_header()
+        if self.pconfig.xlab:
+            result += f"X axis: {self.pconfig.xlab}\n"
+        if self.pconfig.ylab:
+            result += f"Y axis: {self.pconfig.ylab}\n"
+        if self.pconfig.categories:
+            result += f"X categories: {', '.join(self.pconfig.categories)}\n"
+        return result

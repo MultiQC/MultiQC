@@ -34,7 +34,7 @@ window.continueInSeqeraChatHandler = function (event) {
   }
 };
 
-function formatReportForAi(onlyGeneralStats = false) {
+function formatReportForAi(onlyGeneralStats = false, generalStatsView = "table") {
   let result = "";
 
   // General statistics section
@@ -53,7 +53,7 @@ function formatReportForAi(onlyGeneralStats = false) {
   const generalStatsPlot = mqc_plots["general_stats_table"];
   if (generalStatsPlot) {
     result += `\nMultiQC General Statistics (overview of key QC metrics for each sample, across all tools)`;
-    result += `\n${generalStatsPlot.prepDataForLlm()}`;
+    result += `\n${generalStatsPlot.formatForAiPrompt(generalStatsView)}`;
     result += "\n----------------------\n";
   }
 
@@ -97,9 +97,9 @@ function formatModAndSectionMetadata(sectionAnchor, moduleAnchor) {
   return result;
 }
 
-function formatSectionForAi(sectionAnchor, moduleAnchor, options) {
+function formatSectionForAi(sectionAnchor, moduleAnchor, view) {
   if (sectionAnchor === "general_stats_table") {
-    return formatReportForAi(true);
+    return formatReportForAi(true, view);
   }
 
   let result = formatModAndSectionMetadata(sectionAnchor, moduleAnchor);
@@ -115,7 +115,7 @@ function formatSectionForAi(sectionAnchor, moduleAnchor, options) {
 
   if (plot.pconfig && plot.pconfig.title) result += `Title: ${plot.pconfig.title}\n`;
 
-  result += "\n" + plot.prepDataForLlm(options);
+  result += "\n" + plot.formatForAiPrompt(view);
 
   return result;
 }
@@ -125,6 +125,7 @@ async function summarizeWithAi(button, options) {
 
   const sectionAnchor = button.data("section-anchor");
   const moduleAnchor = button.data("module-anchor");
+  const view = button.data("view");
 
   let content;
   let systemPrompt;
@@ -132,10 +133,10 @@ async function summarizeWithAi(button, options) {
     content = formatReportForAi();
     systemPrompt = systemPromptReport;
   } else if (table) {
-    content = formatSectionForAi(sectionAnchor, moduleAnchor, { view: "table" });
+    content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
     systemPrompt = systemPromptPlot;
   } else {
-    content = formatSectionForAi(sectionAnchor, moduleAnchor);
+    content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
     systemPrompt = systemPromptPlot;
   }
 
@@ -334,6 +335,7 @@ $(function () {
 
     const sectionAnchor = button.data("section-anchor");
     const moduleAnchor = button.data("module-anchor");
+    const view = button.data("view");
 
     let content;
     let systemPrompt;
@@ -341,10 +343,10 @@ $(function () {
       content = formatReportForAi();
       systemPrompt = "You are given data of a MultiQC report";
     } else if (table) {
-      content = formatSectionForAi(sectionAnchor, moduleAnchor, { view: "table" });
+      content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
       systemPrompt = "You are given a single MultiQC report table";
     } else {
-      content = formatSectionForAi(sectionAnchor, moduleAnchor);
+      content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
       systemPrompt = "You are given data of a single MultiQC report section with a plot";
     }
 

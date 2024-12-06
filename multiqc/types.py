@@ -37,11 +37,11 @@ class PlotType(Enum):
     Plot labels used in custom content, as well as in JS to load plot into Plotly-js
     """
 
-    BAR = "bar_graph"
-    LINE = "xy_line"
-    BOX = "box"
-    SCATTER = "scatter"
-    VIOLIN = "violin"
+    BAR = "bar plot"
+    LINE = "x/y line"
+    BOX = "box plot"
+    SCATTER = "scatter plot"
+    VIOLIN = "violin plot"
     TABLE = "table"
     HEATMAP = "heatmap"
     HTML = "html"
@@ -54,15 +54,25 @@ class PlotType(Enum):
             return None
         if isinstance(val, PlotType):
             return val
-        if val in ["bar", "bargraph", "bar_graph"]:
+        if val in ["bar", "bargraph", "bar_graph", "bar graph", "barplot", "bar plot", "bar_plot"]:
             return PlotType.BAR
-        elif val in ["line", "linegraph", "xy_line"]:
+        elif val in [
+            "line",
+            "linegraph",
+            "line_graph",
+            "line graph",
+            "lineplot",
+            "line_plot",
+            "line plot",
+            "xy_line",
+            "x/y line",
+        ]:
             return PlotType.LINE
-        elif val in ["box", "boxplot", "box_plot"]:
+        elif val in ["box", "boxplot", "box_plot", "box plot"]:
             return PlotType.BOX
-        elif val in ["scatter", "scatterplot"]:
+        elif val in ["scatter", "scatterplot", "scatter_plot", "scatter plot"]:
             return PlotType.SCATTER
-        elif val in ["violin", "beeswarm", "violin_plot"]:
+        elif val in ["violin", "beeswarm", "violinplot", "violin_plot", "violin plot"]:
             return PlotType.VIOLIN
         elif val in ["heatmap"]:
             return PlotType.HEATMAP
@@ -72,7 +82,7 @@ class PlotType(Enum):
             return PlotType.HTML
         elif val in ["image"]:
             return PlotType.IMAGE
-        elif val in ["generalstats"]:
+        elif val in ["generalstats", "general_stats", "general stats"]:
             return PlotType.GENERALSTATS
         return None
 

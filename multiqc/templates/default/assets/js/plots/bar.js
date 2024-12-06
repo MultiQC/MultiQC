@@ -11,9 +11,10 @@ class BarPlot extends Plot {
     return cats[0].data.length; // no data for a category
   }
 
-  prepData() {
-    let cats = this.datasets[this.activeDatasetIdx]["cats"];
-    let samples = this.datasets[this.activeDatasetIdx]["samples"];
+  prepData(dataset) {
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
+    let cats = dataset["cats"];
+    let samples = dataset["samples"];
 
     let samplesSettings = applyToolboxSettings(samples);
 
@@ -33,16 +34,17 @@ class BarPlot extends Plot {
     return [cats, samples];
   }
 
-  prepDataForLlm() {
-    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
-    let prompt = "Plot type: barplot\n\n";
+  plotAiHeader() {
+    let result = super.plotAiHeader();
+    if (this.pconfig.ylab) result += `Values: ${this.pconfig.ylab}\n`;
+    return result;
+  }
 
-    if (this.pconfig.ylab) prompt += `Values: ${this.pconfig.ylab}\n`;
-    prompt += "\n";
+  formatDatasetForAiPrompt(dataset) {
+    let prompt = "";
 
-    let cats = this.datasets[this.activeDatasetIdx]["cats"];
-    let samples = this.datasets[this.activeDatasetIdx]["samples"];
-
+    let cats = dataset.cats;
+    let samples = dataset.samples;
     prompt += "| Sample | " + cats.map((cat) => cat.name).join(" | ") + " |\n";
     prompt += "| --- | " + cats.map(() => "---").join(" | ") + " |\n";
 

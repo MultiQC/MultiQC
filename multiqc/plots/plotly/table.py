@@ -393,6 +393,7 @@ def make_table(
                 data-plot-anchor="{violin_anchor}"
                 data-module-anchor="{module_anchor}"
                 data-section-anchor="{section_anchor}"
+                data-view="table"
                 aria-controls="{dt.anchor}_ai_summary"
                 title="Dynamically generate AI summary for this table"
             >
@@ -412,6 +413,7 @@ def make_table(
                 data-plot-anchor="{violin_anchor}"
                 data-module-anchor="{module_anchor}"
                 data-section-anchor="{section_anchor}"
+                data-view="table"
                 title="Copy table data for use with AI tools like ChatGPT"
             >
                 <span style="vertical-align: baseline">

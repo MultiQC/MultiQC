@@ -2,7 +2,7 @@ import copy
 import logging
 import math
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
@@ -63,6 +63,7 @@ class Dataset(BaseDataset):
     all_samples: List[SampleName]  # unique list of all samples in this dataset
     scatter_trace_params: Dict[str, Any]
     dt: DataTable
+    show_table_by_default: bool
 
     @staticmethod
     def values_and_headers_from_dt(
@@ -102,6 +103,7 @@ class Dataset(BaseDataset):
     def create(
         dataset: BaseDataset,
         dt: DataTable,
+        show_table_by_default: bool,
     ) -> "Dataset":
         value_by_sample_by_metric, dt_column_by_metric = Dataset.values_and_headers_from_dt(dt)
 
@@ -222,6 +224,7 @@ class Dataset(BaseDataset):
             all_samples=sorted(all_samples),
             scatter_trace_params=dict(),
             dt=dt,
+            show_table_by_default=show_table_by_default,
         )
 
         ds.trace_params.update(
@@ -375,30 +378,45 @@ class Dataset(BaseDataset):
 
         report.write_data_file(data, self.uid)
 
-    def format_for_ai_prompt(self, pconfig: PConfig) -> str:
+    def format_dataset_for_ai_prompt(self, pconfig: TableConfig) -> str:
         """Format as a markdown table"""
         headers = self.dt.get_headers_in_order()
+        samples = self.all_samples
 
-        value_by_sample_by_rid: Dict[SampleName, Dict[ColumnAnchor, str]] = {}
+        result = ""
+
+        # List metrics: metric name to description
+        result += "Metrics:\n" + "\n".join(f"{col.title} - {col.description}" for _, _, col in headers)
+        result += "\n\n"
+
+        # Format values for the view
+        formatted_val_by_rid_by_sample: Dict[SampleName, Dict[ColumnAnchor, str]] = {}
         for idx, metric_name, header in headers:
             for _, group_rows in self.dt.sections[idx].rows_by_sgroup.items():
                 row = group_rows[0]  # take only the first row in a group
                 v = row.formatted_data.get(metric_name, "")
                 if header.suffix:
                     v += header.suffix
-                value_by_sample_by_rid.setdefault(row.sample, {})[header.rid] = v
+                formatted_val_by_rid_by_sample.setdefault(row.sample, {})[header.rid] = v
 
-        prompt = "| Sample | " + " | ".join(dt_column.description for (_, _, dt_column) in headers) + " |\n"
-        prompt += "| --- | " + " | ".join("---" for _ in headers) + " |\n"
+        if self.show_table_by_default:
+            # Table view - rows are samples, columns are metrics
+            result += "| " + pconfig.col1_header + " | " + " | ".join(col.title for (_, _, col) in headers) + " |\n"
+            result += "| --- | " + " | ".join("---" for _ in headers) + " |\n"
+            for sample, val_by_rid in formatted_val_by_rid_by_sample.items():
+                result += f"| {sample} | " + " | ".join(val_by_rid.get(col.rid, "") for (_, _, col) in headers) + " |\n"
+        else:
+            # Violin view - rows are metrics, columns are samples
+            result += "| Metric | " + " | ".join(samples) + " |\n"
+            result += "| --- | " + " | ".join("---" for _ in samples) + " |\n"
+            for _, _, col in headers:
+                result += (
+                    f"| {col.title} | "
+                    + " | ".join(formatted_val_by_rid_by_sample.get(sample, {}).get(col.rid, "") for sample in samples)
+                    + " |\n"
+                )
 
-        for sample, val_by_rid in value_by_sample_by_rid.items():
-            prompt += (
-                f"| {sample} | "
-                + " | ".join(val_by_rid.get(dt_column.rid, "") for (_, _, dt_column) in headers)
-                + " |\n"
-            )
-
-        return prompt
+        return result
 
 
 class ViolinPlot(Plot[Dataset, TableConfig]):
@@ -440,7 +458,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         show_table_by_default = show_table_by_default or no_violin
 
         model.datasets = [
-            Dataset.create(ds, dt)
+            Dataset.create(ds, dt, show_table_by_default)
             for ds, dt in zip(
                 model.datasets,
                 dts,
@@ -667,6 +685,11 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             html += configuration_modal
 
         return html
+
+    def _plot_ai_header(self) -> str:
+        if self.show_table_by_default:
+            return "Plot type: table\n"
+        return "Plot type: violin plot\n"
 
 
 def find_outliers(

@@ -133,7 +133,7 @@ class Dataset(BaseDataset):
 
         report.write_data_file(data, self.uid)
 
-    def format_for_ai_prompt(self, pconfig: PConfig) -> str:
+    def format_dataset_for_ai_prompt(self, pconfig: HeatmapConfig) -> str:
         """
         Format heatmap as a markdown table
         """
@@ -141,6 +141,8 @@ class Dataset(BaseDataset):
         if self.xcats:
             if self.ycats:
                 prompt = "|"
+                if pconfig.ycats_samples:
+                    prompt += " Sample "
             prompt += "| " + " | ".join(self.xcats) + " |\n"
             if self.ycats:
                 prompt += "| --- "
@@ -406,3 +408,13 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             """
             )
         return buttons
+
+    def _plot_ai_header(self) -> str:
+        result = super()._plot_ai_header()
+        if self.pconfig.xlab:
+            result += f"X axis: {self.pconfig.xlab}\n"
+        if self.pconfig.ylab:
+            result += f"Y axis: {self.pconfig.ylab}\n"
+        if self.pconfig.zlab:
+            result += f"Z axis: {self.pconfig.zlab}\n"
+        return result

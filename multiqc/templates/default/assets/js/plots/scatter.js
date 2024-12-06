@@ -4,9 +4,9 @@ class ScatterPlot extends Plot {
     return this.datasets[this.activeDatasetIdx].points; // no data points in a dataset
   }
 
-  prepData() {
+  prepData(dataset) {
     // Prepare data to either build Plotly traces or export as a file
-    let dataset = this.datasets[this.activeDatasetIdx];
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
 
     let points = dataset.points;
 
@@ -22,24 +22,26 @@ class ScatterPlot extends Plot {
     return [samples, points];
   }
 
-  prepDataForLlm() {
-    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
-    let header = "Plot type: scatter plot\n";
-    if (this.pconfig.xlab) header += `X axis: ${this.pconfig.xlab}\n`;
-    if (this.pconfig.ylab) header += `Y axis: ${this.pconfig.ylab}\n`;
-    if (this.pconfig.categories) header += `X categories: ${this.pconfig.categories.join(", ")}\n`;
+  plotAiHeader() {
+    let result = super.plotAiHeader();
+    if (this.pconfig.xlab) result += `X axis: ${this.pconfig.xlab}\n`;
+    if (this.pconfig.ylab) result += `Y axis: ${this.pconfig.ylab}\n`;
+    if (this.pconfig.categories) result += `X categories: ${this.pconfig.categories.join(", ")}\n`;
+    return result;
+  }
 
+  formatDatasetForAiPrompt(dataset) {
     const xsuffix = this.layout.xaxis.ticksuffix;
     const ysuffix = this.layout.yaxis.ticksuffix;
 
-    let [samples, points] = this.prepData();
+    let [samples, points] = this.prepData(dataset);
     points = points.map((p) => ({
       name: p.name,
       x: (Number.isInteger(p.x) ? p.x : Number.isFinite(p.x) ? parseFloat(p.x.toFixed(2)) : p.x) + (xsuffix ?? ""),
       y: (Number.isInteger(p.y) ? p.y : Number.isFinite(p.y) ? parseFloat(p.y.toFixed(2)) : p.y) + (ysuffix ?? ""),
     }));
 
-    return header + "\n" + points.map((p) => `${p.name} (${p.x}, ${p.y})`).join("\n");
+    return points.map((p) => `${p.name} (${p.x}, ${p.y})`).join("\n");
   }
 
   buildTraces() {
