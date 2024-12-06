@@ -115,6 +115,15 @@ ai_summary_full: bool
 ai_provider: Literal["seqera", "openai", "anthropic"]
 ai_model: str
 
+seqera_api_url: str
+seqera_website: str
+openai_api_key: Optional[str]
+anthropic_api_key: Optional[str]
+seqera_api_key: Optional[str]
+langchain_api_key: Optional[str]
+langchain_project: Optional[str]
+langchain_endpoint: Optional[str]
+
 plots_force_flat: bool
 plots_export_font_scale: float
 plots_force_interactive: bool

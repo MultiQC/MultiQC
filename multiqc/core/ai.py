@@ -22,9 +22,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-seqera_api_url: str = os.environ.get("SEQERA_API_URL", "https://seqera.io")
-seqera_website: str = os.environ.get("SEQERA_WEBSITE", "https://seqera.io")
-
 
 _PROMPT_BASE = """\
 You are an expert in bioinformatics, sequencing technologies, and genomics data analysis.
@@ -196,10 +193,10 @@ class LangchainClient(Client):
 
         def send_request():
             with tracing_v2_enabled(
-                project_name=os.environ.get("LANGCHAIN_PROJECT"),
+                project_name=config.langchain_project,
                 client=LangSmithClient(
-                    api_key=os.environ.get("LANGCHAIN_API_KEY"),
-                    api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
+                    api_key=config.langchain_api_key,
+                    api_url=config.langchain_endpoint,
                 ),
             ):
                 response = llm.invoke(
@@ -320,7 +317,7 @@ class SeqeraClient(Client):
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                f"{seqera_api_url}/invoke-with-token" if self.token else f"{seqera_api_url}/invoke",
+                f"{config.seqera_api_url}/invoke-with-token" if self.token else f"{config.seqera_api_url}/invoke",
                 headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
                 json={
                     "system_message": PROMPT_SHORT,
@@ -355,7 +352,7 @@ class SeqeraClient(Client):
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                f"{seqera_api_url}/invoke-with-token" if self.token else f"{seqera_api_url}/invoke",
+                f"{config.seqera_api_url}/invoke-with-token" if self.token else f"{config.seqera_api_url}/invoke",
                 headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
                 json={
                     "system_message": PROMPT_FULL,
@@ -408,7 +405,7 @@ def get_llm_client() -> Optional[Client]:
         return None
 
     if config.ai_provider == "seqera":
-        token = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
+        token = config.seqera_api_key or os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
         if not token:
             logger.warning(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', but Seqera tower access "
@@ -417,7 +414,7 @@ def get_llm_client() -> Optional[Client]:
         return SeqeraClient(config.ai_model, token)
 
     if config.ai_provider == "anthropic":
-        token = os.environ.get("ANTHROPIC_API_KEY")
+        token = config.anthropic_api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not token:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'anthropic', but Anthropic API "
@@ -433,7 +430,7 @@ def get_llm_client() -> Optional[Client]:
             )
 
     if config.ai_provider == "openai":
-        token = os.environ.get("OPENAI_API_KEY")
+        token = config.openai_api_key or os.environ.get("OPENAI_API_KEY")
         if not token:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'openai', but OpenAI API "
@@ -612,7 +609,7 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
         continue_chat_btn = (
             "<button class='btn btn-default btn-sm ai-continue-in-chat'"
             + f" data-generation-id={response.uuid}"
-            + f" data-seqera-website={seqera_website}"
+            + f" data-seqera-website={config.seqera_website}"
             + f" {seqera_api_token}"
             + " onclick='continueInSeqeraChatHandler(event)'"
             + f">Continue with {sparkle_icon} <strong>Seqera AI</strong></button>"
