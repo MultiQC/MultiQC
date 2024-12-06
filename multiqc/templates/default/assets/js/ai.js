@@ -123,7 +123,7 @@ function formatSectionForAi(sectionAnchor, moduleAnchor, view) {
 async function summarizeWithAi(button, options) {
   const { wholeReport, table } = options;
 
-  const sectionAnchor = button.data("section-anchor");
+  const sectionAnchor = button.data("section-anchor") || "global";
   const moduleAnchor = button.data("module-anchor");
   const view = button.data("view");
 
@@ -229,7 +229,7 @@ async function generateCallback(e) {
   } else if (button.hasClass("ai-generate-more-table")) {
     summarizeWithAi(button, { wholeReport: false, table: true });
   } else {
-    summarizeWithAi(button, { wholeReport: false, table: false });
+    summarizeWithAi(button, { wholeReport: true, table: false });
   }
 }
 
