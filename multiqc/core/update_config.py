@@ -64,6 +64,8 @@ class ClConfig(BaseModel):
     extra_fn_clean_exts: List = []
     extra_fn_clean_trim: List = []
     unknown_options: Optional[Dict] = None
+    ai_summary: Optional[bool] = None
+    ai_summary_full: Optional[bool] = None
 
 
 def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
@@ -199,6 +201,10 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.fn_clean_trim = list(cfg.extra_fn_clean_trim) + config.fn_clean_trim
     if cfg.preserve_module_raw_data is not None:
         config.preserve_module_raw_data = cfg.preserve_module_raw_data
+    if cfg.ai_summary is not None:
+        config.ai_summary = cfg.ai_summary
+    if cfg.ai_summary_full is not None:
+        config.ai_summary_full = cfg.ai_summary_full
 
     if config.development and "png" not in config.export_plot_formats:
         config.export_plot_formats.append("png")
