@@ -180,12 +180,12 @@ class Client:
         """
         try:
             if self.model.startswith("gpt"):
-                import tiktoken
+                import tiktoken  # type: ignore
 
                 encoding = tiktoken.encoding_for_model(self.model)
                 return len(encoding.encode(text))
             else:
-                from anthropic import Anthropic
+                from anthropic import Anthropic  # type: ignore
 
                 return Anthropic().count_tokens(text)
         except ImportError:
