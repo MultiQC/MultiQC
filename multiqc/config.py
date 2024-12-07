@@ -447,6 +447,8 @@ def _env_vars_config() -> Dict:
                 except ValueError:
                     logger.warning(f"Could not parse a float value from the environment variable ${k}={v}")
                     continue
+            elif globals()[conf_key] is None:
+                env_config[conf_key] = v
             elif not isinstance(globals()[conf_key], str) and globals()[conf_key] is not None:
                 logger.warning(
                     f"Can only set scalar config entries (str, int, float, bool) with environment variable, "
