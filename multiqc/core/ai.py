@@ -540,7 +540,7 @@ def ai_section_metadata() -> AiReportMetadata:
     )
 
 
-def add_ai_summary_to_report():
+def add_ai_summary_to_report(data_dir: Optional[Path] = None):
     metadata: AiReportMetadata = ai_section_metadata()
     # Set data for JS runtime
     report.ai_report_metadata_base64 = base64.b64encode(metadata.model_dump_json().encode()).decode()
@@ -623,11 +623,11 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
     prompt = "".join(prompt_parts)
     prompt = re.sub(r"\n\n\n", "\n\n", prompt)  # strip triple newlines
 
-    if config.development:
-        # Save content to file for debugging
-        path = Path(config.output_dir) / "ai_content.txt"
-        logger.debug(f"Saving AI prompt to {path}")
+    # Save content to file for debugging
+    if data_dir:
+        path = Path(data_dir) / "multiqc_ai_prompt.txt"
         path.write_text(prompt)
+        logger.debug(f"Saving AI prompt to {path}")
 
     response: Optional[InterpretationResponse]
     if config.ai_summary_full:
