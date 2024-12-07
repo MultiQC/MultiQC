@@ -31,7 +31,6 @@ def test_parse_name(tmp_path):
     report.search_files(["umitools"])
     m = MultiqcModule()
     assert len(m.saved_raw_data) > 0
-    print(m.saved_raw_data)
     assert list(m.saved_raw_data["multiqc_umitools_extract"].keys())[0] == "OUTPUT"
     assert list(m.saved_raw_data["multiqc_umitools_extract"].keys())[1] == "INPUT"
     assert list(m.saved_raw_data["multiqc_umitools_extract"].keys())[2] == "filename"

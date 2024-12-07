@@ -32,7 +32,6 @@ UMI collapsing finished in 1077.717 seconds!
     report.search_files(["umicollapse"])
     m = MultiqcModule()
     assert len(m.saved_raw_data) == 1
-    print(m.saved_raw_data)
 
     data = m.saved_raw_data["multiqc_umicollapse"]
 

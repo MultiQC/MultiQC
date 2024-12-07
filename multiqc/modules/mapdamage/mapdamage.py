@@ -111,8 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
             misincorporation_dict["dmg_" + readend] = values
             return misincorporation_dict
         except Exception as e:
-            print(e)
-            log.warning(f"Could not parse mapDamage misincorporation file: '{f['fn']}'")
+            log.warning(f"Could not parse mapDamage misincorporation file: '{f['fn']}': {e}")
             return None
 
     ## Parse length distribution file into a dict with 2 keys ('lendist_fw' and 'lendist_rv') and 1 value each (dict of {length : count})
@@ -135,8 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
                     length_distribution_dict["lendist_" + strand][line[1]] = int(line[2])
             return length_distribution_dict
         except Exception as e:
-            print(e)
-            log.warning(f"Could not parse mapDamage length distribution file: '{f['fn']}'")
+            log.warning(f"Could not parse mapDamage length distribution file: '{f['fn']}': {e}")
             return None
 
     # Parse input files
