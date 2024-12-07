@@ -38,9 +38,9 @@ class LinePlot extends Plot {
         name: line.name,
         pairs: line.pairs.map((p) =>
           p.map((x, i) => {
-            let val = Number.isInteger(x) ? x : Number.isFinite(x) ? parseFloat(x.toFixed(2)) : x;
-            if (i === 0 && xsuffix) val += xsuffix;
-            if (i === 1 && ysuffix) val += ysuffix;
+            let val = !Number.isFinite(x) ? "" : Number.isInteger(x) ? x : parseFloat(x.toFixed(2));
+            if (val !== "" && i === 0 && xsuffix) val += xsuffix;
+            if (val !== "" && i === 1 && ysuffix) val += ysuffix;
             return val;
           }),
         ),

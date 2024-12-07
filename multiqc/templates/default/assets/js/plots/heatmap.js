@@ -68,7 +68,12 @@ class HeatmapPlot extends Plot {
       if (ycats) {
         prompt += "| " + ycats[i] + " ";
       }
-      prompt += "| " + rows[i].map((x) => x?.toString() || "").join(" | ") + " |\n";
+      prompt +=
+        "| " +
+        rows[i]
+          .map((x) => (!Number.isFinite(x) ? "" : Number.isInteger(x) ? x : parseFloat(x.toFixed(2))))
+          .join(" | ") +
+        " |\n";
     }
     return prompt;
   }

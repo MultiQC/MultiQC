@@ -37,8 +37,8 @@ class ScatterPlot extends Plot {
     let [samples, points] = this.prepData(dataset);
     points = points.map((p) => ({
       name: p.name,
-      x: (Number.isInteger(p.x) ? p.x : Number.isFinite(p.x) ? parseFloat(p.x.toFixed(2)) : p.x) + (xsuffix ?? ""),
-      y: (Number.isInteger(p.y) ? p.y : Number.isFinite(p.y) ? parseFloat(p.y.toFixed(2)) : p.y) + (ysuffix ?? ""),
+      x: !Number.isFinite(p.x) ? "" : (Number.isInteger(p.x) ? p.x : parseFloat(p.x.toFixed(2))) + (xsuffix ?? ""),
+      y: !Number.isFinite(p.y) ? "" : (Number.isInteger(p.y) ? p.y : parseFloat(p.y.toFixed(2))) + (ysuffix ?? ""),
     }));
 
     return points.map((p) => `${p.name} (${p.x}, ${p.y})`).join("\n");

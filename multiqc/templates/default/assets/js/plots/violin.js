@@ -114,7 +114,9 @@ class ViolinPlot extends Plot {
               .map((metric) => {
                 const value = violinValuesBySampleByMetric[metric][sample];
                 const suffix = headerByMetric[metric].suffix;
-                return value !== undefined ? value.toFixed(2) + (suffix || "") : value;
+                return !Number.isFinite(value)
+                  ? ""
+                  : (Number.isInteger(value) ? value : value.toFixed(2)) + (suffix ?? "");
               })
               .join(" | ") +
             " |\n"
@@ -131,7 +133,9 @@ class ViolinPlot extends Plot {
             .map((sample) => {
               const value = violinValuesBySampleByMetric[metric][sample];
               const suffix = headerByMetric[metric].suffix;
-              return value !== undefined ? value.toFixed(2) + (suffix || "") : value;
+              return !Number.isFinite(value)
+                ? ""
+                : (Number.isInteger(value) ? value : value.toFixed(2)) + (suffix ?? "");
             })
             .join(" | ") +
           " |\n";

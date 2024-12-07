@@ -31,8 +31,8 @@ class BoxPlot extends Plot {
     let [data, samples] = this.prepData(dataset);
     data = data.map((d) =>
       d.map((x) => {
-        let val = Number.isInteger(x) ? x : Number.isFinite(x) ? parseFloat(x.toFixed(2)) : x;
-        if (suffix) val = val + suffix;
+        let val = !Number.isFinite(x) ? "" : Number.isInteger(x) ? x : parseFloat(x.toFixed(2));
+        if (val !== "" && suffix) val += suffix;
         return val;
       }),
     );
