@@ -81,7 +81,6 @@ was generated and the button that launches the welcome tour.
   {% if not report.ai_global_summary %}
     <button 
       class="btn btn-default btn-sm ai-generate-button ai-generate-button-global"
-      style="display: flex;"
       data-response-div="global_ai_summary_response"
       data-error-div="global_ai_summary_error"
       data-disclaimer-div="global_ai_summary_disclaimer"
@@ -89,16 +88,16 @@ was generated and the button that launches the welcome tour.
       data-section-anchor="global"
       data-action="{% if report.ai_global_summary %}clear{% else %}generate{% endif %}"
       data-clear-text="Clear summary"
-      title="Adds a block on top of the report with a concise summary and interpretation of the report."
       type="button"
+      title="Adds a block on top of the report with a concise summary and interpretation of the report."
     >
       <span style="vertical-align: baseline">
         <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
           <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
           <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
         </svg>
-      </span> 
-      Summarize report
+      </span>
+      <span class="button-text">Summarize report</span>
     </button>
   {% endif %}
   </div>
@@ -199,6 +198,7 @@ was generated and the button that launches the welcome tour.
     <span 
       class="ai-summary-disclaimer" 
       id="global_ai_summary_disclaimer" 
+      style="display: {% if report.ai_global_summary | length > 0 %}block{% else %}none{% endif %};"
     >
       This summary is AI-generated. Provider: {{ report.ai_provider_title }}, model: {{ report.ai_model }}
     </span>

@@ -332,6 +332,7 @@ $(function () {
     const button = $(this);
 
     const originalButtonHtml = button.html();
+    button.data("original-html", originalButtonHtml).removeClass("ai-local-content");
     const clearText = button.data("clear-text");
 
     const isMore = button.hasClass("ai-generate-button-more");
@@ -341,6 +342,7 @@ $(function () {
     const responseDiv = $("#" + button.data("response-div"));
     const disclaimerDiv = $("#" + button.data("disclaimer-div"));
     const wrapperDiv = $("#" + button.data("wrapper-div"));
+    if (wrapperDiv) wrapperDiv.addClass("ai-local-content");
 
     if (action === "clear") {
       button.html(clearText).addClass("ai-local-content");
@@ -356,8 +358,6 @@ $(function () {
           .html(`This summary is AI-generated. Provider: ${cachedSummary.provider}, model: ${cachedSummary.model}`)
           .show();
         button.html(clearText).data("action", "clear").prop("disabled", false).addClass("ai-local-content");
-      } else {
-        button.data("original-html", originalButtonHtml).removeClass("ai-local-content");
       }
     }
 
@@ -483,8 +483,7 @@ document.addEventListener("DOMContentLoaded", function () {
   document.head.appendChild(claudeScript);
 });
 
-$(document).ready(function () {
-  // Initialize button states from localStorage or defaults
+$(function () {
   const showCopyButtons = localStorage.getItem("mqc_show_copy_buttons") === "true";
   const showSummaryButtons = localStorage.getItem("mqc_show_summary_buttons") !== "false";
 
@@ -511,11 +510,19 @@ function updateAiButtonVisibility() {
 
   // Update copy buttons visibility
   $(".ai-copy-content-table, .ai-copy-content-plot").each(function () {
-    $(this).toggle(showCopyButtons);
+    if (showCopyButtons) {
+      $(this).show();
+    } else {
+      $(this).hide();
+    }
   });
 
   // Update summary buttons visibility
   $(".ai-generate-button-table, .ai-generate-button-plot").each(function () {
-    $(this).toggle(showSummaryButtons);
+    if (showSummaryButtons) {
+      $(this).show();
+    } else {
+      $(this).hide();
+    }
   });
 }

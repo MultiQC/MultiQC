@@ -219,8 +219,7 @@ generate an overall summary for the results.
 Please don't print any introductory words, just get to the point. 
 You task is to just generate a concise summary of the report, nothing else. 
 Don't waste words: mention only the important QC issues. If there are no issues, just say so. 
-Try to format the response with bullet points. Follow up with recommendations for the next steps.
-Please do not add any extra headers to the response.
+Try to format the response with bullet points. Please do not add any extra headers to the response.
 
 Use markdown to format your reponse for readability. Use directives with pre-defined classes
 .text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}. 
@@ -246,6 +245,8 @@ Limit the response to 1-2 bullet points. Two such examples of short summaries:
 let systemPromptReportFull =
   systemPromptReport +
   `
+Follow up with recommendations for the next steps.
+
 This is the example response:
 
 **Analysis**
