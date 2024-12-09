@@ -24,19 +24,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-# Truncate the messages from the anthropic logger. It would print the entire user message which is too long.
-class TruncateFilter(logging.Filter):
-    def filter(self, record):
-        if hasattr(record, "msg") and isinstance(record.msg, str) and len(record.msg) > 100:
-            record.msg = record.msg[:100] + "..."
-        return True
-
-
-# Get the anthropic logger and add the filter
-anthropic_logger = logging.getLogger("anthropic")
-anthropic_logger.addFilter(TruncateFilter())
-
-
 _MULTIQC_DESCRIPTION = """\
 You are an expert in bioinformatics, sequencing technologies, genomics data analysis, and adjacent fields.
 
@@ -275,11 +262,18 @@ class LangchainClient(Client):
                 raise RuntimeError(msg)
             logger.error(msg)
             return None
+
+        resolved_model_name = self.model
+        if "model" in response.response_metadata:
+            resolved_model_name = response.response_metadata["model"]
+        elif "model_name" in response.response_metadata:
+            resolved_model_name = response.response_metadata["model_name"]
+
         return InterpretationResponse(
             interpretation=InterpretationOutput(
                 summary=cast(str, response.content),
             ),
-            model=response.response_metadata["model"],
+            model=resolved_model_name,
         )
 
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
@@ -341,15 +335,25 @@ class LangchainClient(Client):
                     raise RuntimeError(msg)
                 logger.error(msg)
                 return None
+
+        resolved_model_name = self.model
+        if "model" in response["raw"].response_metadata:
+            resolved_model_name = response["raw"].response_metadata["model"]
+        elif "model_name" in response["raw"].response_metadata:
+            resolved_model_name = response["raw"].response_metadata["model_name"]
+
         return InterpretationResponse(
             interpretation=response["parsed"],
-            model=response["raw"].response_metadata["model"],
+            model=resolved_model_name,
         )
 
 
 class OpenAiClient(LangchainClient):
     def __init__(self, model: str, api_key: str):
         from langchain_openai import ChatOpenAI  # type: ignore
+
+        openai_logger = logging.getLogger("openai._base_client")
+        openai_logger.addFilter(TruncateOpenAiLogFilter())
 
         super().__init__(model, api_key)
         self.title = "OpenAI"
@@ -363,9 +367,35 @@ class OpenAiClient(LangchainClient):
         return 128000
 
 
+# Truncate the messages from the anthropic logger. It would print the entire user message which is too long.
+class TruncateAnthropicLogFilter(logging.Filter):
+    def filter(self, record):
+        try:
+            messages = record.args["json_data"]["messages"]  # type: ignore
+            messages[0]["content"] = messages[0]["content"][:1000] + "<truncated>"
+            record.args["json_data"]["system"] = record.args["json_data"]["system"][:500] + "<truncated>"  # type: ignore
+        except Exception:
+            pass
+        return True
+
+
+class TruncateOpenAiLogFilter(logging.Filter):
+    def filter(self, record):
+        try:
+            for m in record.args["json_data"]["messages"]:  # type: ignore
+                m["content"] = m["content"][:1000] + "<truncated>"  # type: ignore
+        except Exception:
+            pass
+        return True
+
+
 class AnthropicClient(LangchainClient):
     def __init__(self, model: str, api_key: str):
         from langchain_anthropic import ChatAnthropic  # type: ignore
+
+        # Get the anthropic logger and add the filter
+        anthropic_logger = logging.getLogger("anthropic._base_client")
+        anthropic_logger.addFilter(TruncateAnthropicLogFilter())
 
         super().__init__(model, api_key)
         self.title = "Anthropic"
