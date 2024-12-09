@@ -12,20 +12,29 @@ async function runStreamGeneration({
   const apiKey = getStoredApiKey(provider);
 
   if (provider === "Seqera AI") {
-    response = await fetch(`${seqeraApiUrl}/invoke`, {
+    fetch(`${seqeraApiUrl}/internal-ai/query`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
       },
       body: JSON.stringify({
+        message: userMessage,
         system_message: systemPrompt,
-        user_message: userMessage,
         model: modelName,
+        stream: false,
         tags: ["multiqc", ...tags],
-        stream: true,
-        cache: false,
       }),
+    }).then(async (response) => {
+      if (!response.ok) {
+        const errorData = await response.json();
+        onStreamError(`HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"}`);
+        throw new Error(errorData.error?.message || "Unknown error");
+      }
+      data = await response.json();
+      onStreamStart();
+      onStreamNewToken(data.generation);
+      onStreamComplete();
     });
   } else if (provider === "OpenAI") {
     fetch(`https://api.openai.com/v1/chat/completions`, {

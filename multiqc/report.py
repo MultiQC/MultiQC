@@ -111,11 +111,6 @@ ai_provider_title: str = ""
 ai_model: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
 
-# For "Continue in Seqera AI" buttons defined in templates/default/content.html
-seqera_api_token: Optional[str] = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
-seqera_api_url: str = os.environ.get("SEQERA_API_URL", "https://seqera.io")
-seqera_website: str = os.environ.get("SEQERA_WEBSITE", "https://seqera.io")
-
 
 def reset():
     # Set up global variables shared across modules. Inside a function so that the global
