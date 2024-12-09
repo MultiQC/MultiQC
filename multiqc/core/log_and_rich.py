@@ -58,6 +58,8 @@ def init_log(log_to_file: bool = False):
     logging.getLogger("httpcore").setLevel(logging.INFO)
     if not config.verbose:  # to suppress log messages inside rich.progress.Progress
         logging.getLogger("httpx").setLevel(logging.WARNING)
+    else:
+        logging.getLogger("httpx").setLevel(logging.INFO)
 
     # Automatically set no_ansi if not a tty terminal
     if config.no_ansi is False:
