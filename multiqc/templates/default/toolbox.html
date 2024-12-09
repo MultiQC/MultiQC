@@ -136,8 +136,9 @@ of the report.
     <!-- AI Configuration -->
     <div id="mqc_ai" class="mqc_filter_section">
       <h4>Explain with AI</h4>
+
       <p>Configure AI settings to get explanations of plots and data in this report.</p>
-      
+
       <form id="mqc_ai_form">
         <div class="form-group">
           <label for="ai-provider">AI Provider</label>
@@ -162,20 +163,36 @@ of the report.
           </p>
         </div>
 
-        <!-- Add toggle button -->
-        <div class="form-group checkbox">
-          <label>
-            <input type="checkbox" id="ai_toggle_buttons"> Show AI Buttons for plots (AI Summary, Copy for AI)
-          </label>
-        </div>
-
-        <!-- Add Copy Report button -->
         <hr>
+          {% if not report.ai_global_summary %}
+          <button 
+            class="btn btn-default btn-sm ai-generate-button ai-generate-button-global"
+            data-response-div="global_ai_summary_response"
+            data-error-div="global_ai_summary_error"
+            data-disclaimer-div="global_ai_summary_disclaimer"
+            data-wrapper-div="global_ai_summary_wrapper"
+            data-section-anchor="global"
+            title="Adds a block on top of the report with a concise summary and interpretation of the report"
+            type="button"
+          >
+            <span style="vertical-align: baseline">
+              <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
+                <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+            Summarize report
+          </button>
+          <p>
+            Adds a block on top of the report with a concise summary and interpretation of the report
+          </p>
+          <hr>
+        {% endif %}
         <button 
           type="button"
           class="btn btn-default btn-sm ai-copy-content ai-copy-content-report"
-          id="ai_copy_content_report"
-          title="Copy report data for use with AI tools like ChatGPT"
+          data-section-anchor="global"
+          title="Copies the report data to the clipboard formatted to discuss with AI chats like ChatGPT or Claude"
         >
           <span style="vertical-align: baseline">
             <svg width="10" height="10" viewBox="0 0 24 21" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -183,9 +200,26 @@ of the report.
               <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
             </svg>
           </span>
-          Copy Report for AI
+          Copy prompt
         </button>
+        <p>
+          Copies the report data to the clipboard formatted to discuss with AI chats like ChatGPT or Claude
+        </p>
       </form>
+
+      <hr>
+
+      <div class="form-group checkbox">
+        <label>
+          <input type="checkbox" id="ai_toggle_copy_buttons"> <p>Show "Copy prompt" buttons next to plots and tables</p>
+        </label>
+      </div>
+
+      <div class="form-group checkbox">
+        <label>
+          <input type="checkbox" id="ai_toggle_summary_buttons" checked> <p>Show "Summarize" buttons next to plots and tables</p>
+        </label>
+      </div>
     </div>
 
     <!-- Export Plots -->

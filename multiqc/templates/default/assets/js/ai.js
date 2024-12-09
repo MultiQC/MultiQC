@@ -66,10 +66,10 @@ function formatReportForAi(systemPrompt, onlyGeneralStats = false, generalStatsV
       `\n${generalStatsPlot.formatForAiPrompt(generalStatsView)}` +
       "\n----------------------\n";
 
+    result += statsContent;
     const statsTokens = estimateTokenCount(statsContent);
     if (currentTokens + statsTokens < maxTokens * 0.95) {
       // Leave 5% buffer
-      result += statsContent;
       currentTokens += statsTokens;
     } else {
       console.error(
@@ -134,9 +134,9 @@ function formatModAndSectionMetadata(sectionAnchor, moduleAnchor) {
   return result;
 }
 
-function formatSectionForAi(sectionAnchor, moduleAnchor, view) {
+function formatSectionForAi(sectionAnchor, moduleAnchor, plotView) {
   if (sectionAnchor === "general_stats_table") {
-    return formatReportForAi("", true, view);
+    return formatReportForAi("", true, plotView);
   }
 
   let result = formatModAndSectionMetadata(sectionAnchor, moduleAnchor);
@@ -152,7 +152,7 @@ function formatSectionForAi(sectionAnchor, moduleAnchor, view) {
 
   if (plot.pconfig && plot.pconfig.title) result += `Title: ${plot.pconfig.title}\n`;
 
-  result += "\n" + plot.formatForAiPrompt(view);
+  result += "\n" + plot.formatForAiPrompt(plotView);
 
   return result;
 }
@@ -163,36 +163,35 @@ function getMaxTokens(model) {
   return 128000;
 }
 
-async function summarizeWithAi(button, options) {
-  const { wholeReport, table } = options;
+async function summarizeWithAi(button) {
+  const isGlobal = button.hasClass("ai-generate-button-global");
+  const isMore = button.hasClass("ai-generate-button-more");
+
+  const responseDiv = $("#" + button.data("response-div"));
+  const errorDiv = $("#" + button.data("error-div"));
+  const disclaimerDiv = $("#" + button.data("disclaimer-div"));
+  const wrapperDiv = $("#" + button.data("wrapper-div"));
 
   const sectionAnchor = button.data("section-anchor") || "global";
   const moduleAnchor = button.data("module-anchor");
-  const view = button.data("view");
-
-  const responseDiv = $("#" + sectionAnchor + "_ai_detailed_summary");
-  const errorDiv = $("#" + sectionAnchor + "_ai_summary_error");
-  const disclaimerDiv = $("#" + sectionAnchor + "_ai_summary_disclaimer");
-  const wrapperDiv = $("#" + sectionAnchor + "_ai_summary");
+  const plotView = button.data("plot-view");
+  const clearText = button.data("clear-text");
 
   let content;
   let systemPrompt;
-  if (wholeReport) {
-    systemPrompt = systemPromptReport;
+  if (isGlobal) {
+    systemPrompt = isMore ? systemPromptReportFull : systemPromptReportShort;
     content = formatReportForAi(systemPrompt);
-  } else if (table) {
-    systemPrompt = systemPromptPlot;
-    content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
   } else {
     systemPrompt = systemPromptPlot;
-    content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
+    content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
   }
 
   // Check total tokens before making the request
   const totalTokens = estimateTokenCount(systemPrompt + content);
   const provider = getStoredProvider();
-  const model = getStoredModelName(provider);
-  const maxTokens = getMaxTokens(model);
+  let modelName = getStoredModelName(provider);
+  const maxTokens = getMaxTokens(modelName);
 
   if (totalTokens > maxTokens * 0.95) {
     errorDiv
@@ -200,7 +199,7 @@ async function summarizeWithAi(button, options) {
         `Content exceeds ${provider}'s token limit (${totalTokens} > ${maxTokens}). Try analyzing a smaller section.`,
       )
       .show();
-    wrapperDiv.show();
+    if (wrapperDiv) wrapperDiv.show();
     return;
   }
 
@@ -213,21 +212,25 @@ async function summarizeWithAi(button, options) {
   }
 
   // Disable button and show loading state
-  button.prop("disabled", true);
-  originalButtonHtml = button.html();
-  button.html("Generating...");
+  button.prop("disabled", true).html(`Requesting ${provider}...`);
+
+  function wrapUpResponse() {
+    disclaimerDiv.html(`This summary is AI-generated. Provider: ${provider}, model: ${modelName}`).show();
+    button.data("action", "clear").prop("disabled", false).html(clearText).addClass("ai-local-content");
+  }
 
   const startTime = performance.now();
-  let fullModelName = null;
   await (async () => {
     let receievedMarkdown = "";
     runStreamGeneration({
       systemPrompt: systemPrompt,
       userMessage: content,
       tags: ["multiqc"],
-      onStreamStart: (model) => {
-        fullModelName = model;
-        wrapperDiv.show();
+      onStreamStart: (resolvedModelName) => {
+        modelName = resolvedModelName;
+        if (wrapperDiv) wrapperDiv.show();
+        responseDiv.show();
+        button.html(`Generating...`);
       },
       onStreamNewToken: (token) => {
         receievedMarkdown += token;
@@ -235,38 +238,19 @@ async function summarizeWithAi(button, options) {
       },
       onStreamError: (error) => {
         errorDiv.html(error).show();
-        wrapperDiv.show();
-        wrapUpResponse(
-          button,
-          originalButtonHtml,
-          responseDiv,
-          disclaimerDiv,
-          errorDiv,
-          wrapperDiv,
-          provider,
-          getStoredModelName(provider),
-        );
+        wrapUpResponse();
+        if (wrapperDiv) wrapperDiv.show();
       },
       onStreamComplete: () => {
-        const provider = getStoredProvider();
-        wrapUpResponse(
-          button,
-          originalButtonHtml,
-          responseDiv,
-          disclaimerDiv,
-          errorDiv,
-          wrapperDiv,
-          provider,
-          fullModelName,
-        );
+        wrapUpResponse();
         // Save response to localStorage
         const elementId = button.data("plot-anchor") || "global";
         localStorage.setItem(
-          `ai_response_${reportUuid}_${elementId}`,
+          `ai_response_${reportUuid}_${elementId}${isMore ? "_more" : ""}`,
           JSON.stringify({
             text: receievedMarkdown,
             provider: provider,
-            model: fullModelName,
+            model: modelName,
             timestamp: Date.now(),
           }),
         );
@@ -281,69 +265,103 @@ async function summarizeWithAi(button, options) {
 async function generateCallback(e) {
   e.preventDefault();
   const button = $(e.currentTarget);
+  const isMore = button.hasClass("ai-generate-button-more");
+  const action = button.data("action");
+  const responseDiv = $("#" + button.data("response-div"));
+  const errorDiv = $("#" + button.data("error-div"));
+  const wrapperDiv = $("#" + button.data("wrapper-div"));
+  const originalButtonHtml = button.data("original-html");
+  const elementId = button.data("plot-anchor") || "global";
 
-  if (button.hasClass("ai-generate-more-plot")) {
-    summarizeWithAi(button, { wholeReport: false, table: false });
-  } else if (button.hasClass("ai-generate-more-table")) {
-    summarizeWithAi(button, { wholeReport: false, table: true });
+  if (action === "clear") {
+    e.preventDefault();
+    localStorage.removeItem(`ai_response_${reportUuid}_${elementId}${isMore ? "_more" : ""}`);
+    responseDiv.html("").hide();
+    errorDiv.html("").hide();
+    if (wrapperDiv) wrapperDiv.hide();
+    button.html(originalButtonHtml).data("action", "generate").removeClass("ai-local-content");
   } else {
-    summarizeWithAi(button, { wholeReport: true, table: false });
+    summarizeWithAi(button);
   }
 }
 
 $(function () {
-  // "Show More" button to expand pre-generated full AI summary
-  $(".ai-summary").each(function () {
-    const $details = $(this).find("details");
-    const $showMoreBtn = $(this).find(".ai-summary-expand");
-    $showMoreBtn.on("click", function (e) {
-      if ($details.prop("open")) {
-        $details.prop("open", false);
-        $showMoreBtn.addClass("ai-summary-expand-closed");
+  $("#global_ai_summary_expand").each(function () {
+    const responseDiv = $("#global_ai_summary_detailed_analysis_response");
+    const expandBtn = $("#global_ai_summary_expand");
+    const expandBtnGlyphicon = expandBtn.find(".glyphicon");
+
+    let isExpanded = $(this).hasClass("ai-summary-expand-expanded");
+    const storedState = localStorage.getItem("mqc_ai_global_summary_expanded");
+    if (storedState === "expanded") isExpanded = true;
+    if (storedState === "collapsed") isExpanded = false;
+
+    if (isExpanded) {
+      responseDiv.show();
+      expandBtn.addClass("ai-summary-expand-expanded");
+      expandBtnGlyphicon.addClass("glyphicon-chevron-up");
+      expandBtnGlyphicon.removeClass("glyphicon-chevron-down");
+    } else {
+      responseDiv.hide();
+      expandBtn.removeClass("ai-summary-expand-expanded");
+      expandBtnGlyphicon.addClass("glyphicon-chevron-down");
+      expandBtnGlyphicon.removeClass("glyphicon-chevron-up");
+    }
+
+    expandBtn.on("click", (e) => {
+      e.preventDefault();
+      isExpanded = !isExpanded;
+      if (isExpanded) {
+        responseDiv.show();
+        expandBtn.addClass("ai-summary-expand-expanded");
       } else {
-        $details.prop("open", true);
-        $showMoreBtn.removeClass("ai-summary-expand-closed");
+        responseDiv.hide();
+        expandBtn.removeClass("ai-summary-expand-expanded");
       }
+      localStorage.setItem("mqc_ai_global_summary_expanded", isExpanded ? "expanded" : "collapsed");
     });
 
     // Do no expand when clicked on the whole area
-    $details.on("click", function (e) {
+    responseDiv.on("click", function (e) {
       e.preventDefault();
     });
   });
 
   // Click handler for "AI Summary" button to dynamically generate plot summaries
-  $("button.ai-generate-more").each(function () {
+  $("button.ai-generate-button").each(function () {
     const button = $(this);
 
-    const sectionAnchor = button.data("section-anchor") || "global";
-    const plotAnchor = button.data("plot-anchor") || "global";
-
-    const responseDiv = $("#" + sectionAnchor + "_ai_detailed_summary").show();
-    const disclaimerDiv = $("#" + sectionAnchor + "_ai_summary_disclaimer").show();
-    const errorDiv = $("#" + sectionAnchor + "_ai_summary_error");
-    const wrapperDiv = $("#" + sectionAnchor + "_ai_summary");
-
     const originalButtonHtml = button.html();
-    const cachedSummaryDump = localStorage.getItem(`ai_response_${reportUuid}_${plotAnchor}`);
-    if (cachedSummaryDump) {
-      // Load cached AI responses on page load
-      const cachedSummary = JSON.parse(cachedSummaryDump);
-      responseDiv.html(markdownToHtml(cachedSummary.text));
-      if (wrapperDiv) wrapperDiv.show();
-      wrapUpResponse(
-        button,
-        originalButtonHtml,
-        responseDiv,
-        disclaimerDiv,
-        errorDiv,
-        wrapperDiv,
-        cachedSummary.provider,
-        cachedSummary.model,
-      );
+    const clearText = button.data("clear-text");
+
+    const isMore = button.hasClass("ai-generate-button-more");
+
+    const action = button.data("action");
+
+    const responseDiv = $("#" + button.data("response-div"));
+    const disclaimerDiv = $("#" + button.data("disclaimer-div"));
+    const wrapperDiv = $("#" + button.data("wrapper-div"));
+
+    if (action === "clear") {
+      button.html(clearText).addClass("ai-local-content");
     } else {
-      button.click(generateCallback);
+      // Load cached AI responses on page load
+      const plotAnchor = button.data("plot-anchor") || "global";
+      const cachedSummaryDump = localStorage.getItem(`ai_response_${reportUuid}_${plotAnchor}${isMore ? "_more" : ""}`);
+      if (cachedSummaryDump) {
+        const cachedSummary = JSON.parse(cachedSummaryDump);
+        responseDiv.show().html(markdownToHtml(cachedSummary.text));
+        if (wrapperDiv) wrapperDiv.show();
+        disclaimerDiv
+          .html(`This summary is AI-generated. Provider: ${cachedSummary.provider}, model: ${cachedSummary.model}`)
+          .show();
+        button.html(clearText).data("action", "clear").prop("disabled", false).addClass("ai-local-content");
+      } else {
+        button.data("original-html", originalButtonHtml).removeClass("ai-local-content");
+      }
     }
+
+    button.on("click", generateCallback);
   });
 
   // Click handler to highlight samples
@@ -393,7 +411,7 @@ $(function () {
 
     const sectionAnchor = button.data("section-anchor");
     const moduleAnchor = button.data("module-anchor");
-    const view = button.data("view");
+    const plotView = button.data("plot-view");
 
     let content;
     let systemPrompt;
@@ -402,10 +420,10 @@ $(function () {
       content = formatReportForAi(systemPrompt);
     } else if (table) {
       systemPrompt = "You are given a single MultiQC report table";
-      content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
+      content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
     } else {
       systemPrompt = "You are given data of a single MultiQC report section with a plot";
-      content = formatSectionForAi(sectionAnchor, moduleAnchor, view);
+      content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
     }
 
     systemPrompt += ". Your task is to analyse the data and give a concise summary.";
@@ -419,44 +437,10 @@ $(function () {
     }, 2000);
   }
 
-  $("button#ai_copy_content_report").click((e) => copyForAi(e, { wholeReport: true, table: false }));
-  $("button.ai-copy-content-section").click((e) => copyForAi(e, { wholeReport: false, table: false }));
+  $("button.ai-copy-content-report").click((e) => copyForAi(e, { wholeReport: true, table: false }));
+  $("button.ai-copy-content-plot").click((e) => copyForAi(e, { wholeReport: false, table: false }));
   $("button.ai-copy-content-table").click((e) => copyForAi(e, { wholeReport: false, table: true }));
 });
-
-async function wrapUpResponse(
-  button,
-  originalButtonHtml,
-  responseDiv,
-  disclaimerDiv,
-  errorDiv,
-  wrapperDiv,
-  provider,
-  model,
-) {
-  disclaimerDiv.html(`This summary is AI-generated. Provider: ${provider}, model: ${model}`).show();
-  const elementId = button.data("plot-anchor") || "global";
-  // Change button to "Reset" state
-  button
-    .text("Clear AI summary")
-    .prop("style", "background-color: #f2f2f2;")
-    .prop("disabled", false)
-    .off("click")
-    .on("click", function (e) {
-      // Reset and change button back to "Generate" state
-      e.preventDefault();
-      let sectionAnchor = button.data("section-anchor");
-      if (sectionAnchor) {
-        $("#" + sectionAnchor + "_ai_summary").hide();
-      }
-      localStorage.removeItem(`ai_response_${reportUuid}_${elementId}`);
-      responseDiv.html("");
-      errorDiv.html("");
-      disclaimerDiv.html("");
-      wrapperDiv.hide();
-      button.html(originalButtonHtml).prop("style", "background-color: white;").off("click").click(generateCallback);
-    });
-}
 
 function estimateTokenCount(text) {
   const provider = getStoredProvider();
@@ -498,3 +482,40 @@ document.addEventListener("DOMContentLoaded", function () {
   document.head.appendChild(gpt3Script);
   document.head.appendChild(claudeScript);
 });
+
+$(document).ready(function () {
+  // Initialize button states from localStorage or defaults
+  const showCopyButtons = localStorage.getItem("mqc_show_copy_buttons") === "true";
+  const showSummaryButtons = localStorage.getItem("mqc_show_summary_buttons") !== "false";
+
+  $("#ai_toggle_copy_buttons").prop("checked", showCopyButtons);
+  $("#ai_toggle_summary_buttons").prop("checked", showSummaryButtons);
+
+  updateAiButtonVisibility();
+
+  // Add event listeners for checkbox changes
+  $("#ai_toggle_copy_buttons").change(function () {
+    localStorage.setItem("mqc_show_copy_buttons", this.checked);
+    updateAiButtonVisibility();
+  });
+
+  $("#ai_toggle_summary_buttons").change(function () {
+    localStorage.setItem("mqc_show_summary_buttons", this.checked);
+    updateAiButtonVisibility();
+  });
+});
+
+function updateAiButtonVisibility() {
+  const showCopyButtons = $("#ai_toggle_copy_buttons").is(":checked");
+  const showSummaryButtons = $("#ai_toggle_summary_buttons").is(":checked");
+
+  // Update copy buttons visibility
+  $(".ai-copy-content-table, .ai-copy-content-plot").each(function () {
+    $(this).toggle(showCopyButtons);
+  });
+
+  // Update summary buttons visibility
+  $(".ai-generate-button-table, .ai-generate-button-plot").each(function () {
+    $(this).toggle(showSummaryButtons);
+  });
+}

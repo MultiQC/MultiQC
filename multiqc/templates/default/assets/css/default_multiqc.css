@@ -203,7 +203,7 @@ h2.mqc-module-title {
 #analysis_dirs_wrapper {
   max-height: 80px;
   overflow: auto;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 #mqc_sname_switches_txt {
   margin-bottom: 15px;
@@ -1058,6 +1058,7 @@ td.column-hidden {
 tr.row-empty {
   display: none;
 }
+
 .text-green {
   color: rgb(18, 106, 50);
 }
@@ -1067,6 +1068,7 @@ tr.row-empty {
 .text-red {
   color: rgb(184, 31, 31);
 }
+
 .ai-summary {
   position: relative;
   padding: 8px 12px 0px 10px;
@@ -1128,8 +1130,8 @@ tr.row-empty {
 .ai-summary .ai-summary-expand:hover {
   background-color: rgba(0, 0, 0, 0.08);
 }
-.ai-summary .ai-summary-expand-closed {
-  margin-top: -5px;
+.ai-summary .ai-summary-expand-expanded {
+  /* margin-top: -5px; */
 }
 .ai-summary sample {
   cursor: pointer;
@@ -1170,13 +1172,20 @@ tr.row-empty {
 #aiSettingsModal .input-group input {
   width: 100%;
 }
-.ai-reset-response {
+/* .ai-reset-response {
   margin-left: 8px;
   font-size: 0.875rem;
   padding: 0.25rem 0.5rem;
-}
+} */
 .ai-local-content {
   background-color: #f2f2f2;
+}
+#global_ai_summary_detailed_analysis_response {
+  margin: 0px -12px 0px -10px;
+  padding: 10px 10px 0 10px;
+}
+#global_ai_summary_detailed_analysis_response.ai-local-content {
+  padding-bottom: 1px;
 }
 
 .spinner {
@@ -1184,4 +1193,8 @@ tr.row-empty {
   display: inline-block;
   width: 10px;
   height: 10px;
+}
+
+.btn-sm {
+  padding: 5px 10px 5px 8px;
 }

@@ -12,14 +12,14 @@ This block generates the General Statistics table at the top of the report.
 
   {% if config.section_comments.general_stats is not none and config.section_comments.general_stats | length > 0 %}<blockquote class="mqc-section-comment">{{ config.section_comments.general_stats }}</blockquote>{% endif %}
 
-  <div class="ai-summary ai-local-content" id="general_stats_table_ai_summary" style="display: none; margin-bottom: 7px">
+  <div class="ai-summary ai-local-content" id="general_stats_table_ai_summary_wrapper" style="display: none; margin-bottom: 7px">
     <details>
       <summary>
         <div style="display: flex; justify-content: space-between; align-items: center">
           <b>AI Summary</b>
         </div>
-        <div class="ai-detailed-summary" id="general_stats_table_ai_detailed_summary" style="display: none; margin-bottom: -5px;"></div>
-        <div class="ai-summary-disclaimer" id="general_stats_table_ai_summary_disclaimer" style="display: none;"></div>
+        <div class="ai-summary-response" id="general_stats_table_ai_summary_response" style="margin-bottom: -5px;"></div>
+        <div class="ai-summary-disclaimer" id="general_stats_table_ai_summary_disclaimer"></div>
         <div class="ai-summary-error" id="general_stats_table_ai_summary_error" style="display: none;"></div>
       </summary>
       <!-- <div class="ai-summary-extra-content"></div> -->
@@ -29,7 +29,6 @@ This block generates the General Statistics table at the top of the report.
       <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
     </div> -->
   </div>
-
 
   {{ report.general_stats_html }}
 </div>

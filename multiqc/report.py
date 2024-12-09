@@ -104,7 +104,9 @@ software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to uniq
 plot_compressed_json: str
 
 # AI stuff, set dynamically in ai.py to be used in content.html and ai.js
-ai_summary: str = ""
+ai_global_summary: str = ""
+ai_global_detailed_analysis: str = ""
+ai_generation_id: str = ""
 ai_provider_title: str = ""
 ai_model: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
@@ -142,7 +144,12 @@ def reset():
     global general_stats_plot
     global software_versions
     global plot_compressed_json
-    global ai_summary
+    global ai_global_summary
+    global ai_global_detailed_analysis
+    global ai_generation_id
+    global ai_provider_title
+    global ai_model
+    global ai_report_metadata_base64
 
     # Create new temporary directory for module data exports
     initialized = True
@@ -169,7 +176,12 @@ def reset():
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
-    ai_summary = ""
+    ai_global_summary = ""
+    ai_global_detailed_analysis = ""
+    ai_generation_id = ""
+    ai_provider_title = ""
+    ai_model = ""
+    ai_report_metadata_base64 = ""
 
     reset_file_search()
     tmp_dir.new_tmp_dir()

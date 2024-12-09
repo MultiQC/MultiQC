@@ -78,12 +78,7 @@ function decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, on
   const decoder = new TextDecoder();
   let buffer = "";
 
-  try {
-    return recursivelyProcessStream();
-  } catch (e) {
-    onStreamError(e);
-  }
-
+  return recursivelyProcessStream();
   function recursivelyProcessStream() {
     // Inner function to recursively process the stream reader
     return reader
@@ -234,8 +229,26 @@ a sample directive, making sure to use same color classes as for severity, for e
 or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one directive.
 
 You must use only multiples of 4 spaces to indent nested lists.
+`;
 
+let systemPromptReportShort =
+  systemPromptReport +
+  `
+Limit the response to 1-2 bullet points. Two such examples of short summaries:
+
+- :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
+- :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
+
+- All samples show good quality metrics with :span[75.7-77.0%]{.text-green} CpG methylation and :span[76.3-86.0%]{.text-green} alignment rates
+- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green})'
+`;
+
+let systemPromptReportFull =
+  systemPromptReport +
+  `
 This is the example response:
+
+**Analysis**
 
 - :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
 - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
@@ -253,6 +266,7 @@ This is the example response:
 - HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
 
 **Recommendations**
+
 - Remove :sample[A1001.2003]{.text-red} and :sample[A1200.2004]{.text-red} from further analysis due to severe quality issues.
 - Investigate the cause of low valid pairs and passed Di-Tags in :sample[A1002-1007]{.text-yellow}. Consider removing it if the issue cannot be resolved.
 - Perform adapter trimming on all samples, particularly focusing on :sample[A1001]{.text-red} group.

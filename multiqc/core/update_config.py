@@ -204,6 +204,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     if cfg.ai_summary is not None:
         config.ai_summary = cfg.ai_summary
     if cfg.ai_summary_full is not None:
+        config.ai_summary = cfg.ai_summary_full
         config.ai_summary_full = cfg.ai_summary_full
 
     if config.development and "png" not in config.export_plot_formats:
