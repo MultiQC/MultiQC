@@ -289,3 +289,4 @@ exclude = "multiqc/modules/*"
 
 [tool.pyright]
 include = ["multiqc", "scripts", "tests"]
+ignore = ["**/build", "**/dist", "**/venv*"]
