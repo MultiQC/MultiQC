@@ -43,7 +43,16 @@ async function runStreamGeneration({
         stream: true,
       }),
     })
-      .then((response) => response.body.getReader())
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json();
+          onStreamError(
+            `HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"}`,
+          );
+          throw new Error(errorData.error?.message || "Unknown error");
+        }
+        return response.body.getReader();
+      })
       .then((reader) => decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete))
       .catch((error) => onStreamError(error));
   } else if (provider === "Anthropic") {
@@ -65,7 +74,16 @@ async function runStreamGeneration({
         stream: true,
       }),
     })
-      .then((response) => response.body.getReader())
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json();
+          onStreamError(
+            `HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"}`,
+          );
+          throw new Error(errorData.error?.message || "Unknown error");
+        }
+        return response.body.getReader();
+      })
       .then((reader) => decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete))
       .catch((error) => onStreamError(error));
   } else {
