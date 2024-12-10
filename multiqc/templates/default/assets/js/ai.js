@@ -414,6 +414,9 @@ $(function () {
     if (wholeReport) {
       systemPrompt = "You are given data of a MultiQC report";
       content = formatReportForAi();
+    } else if (sectionAnchor === "general_stats_table") {
+      systemPrompt = "You are given the general statistics report table";
+      content = formatReportForAi(0, true, plotView);
     } else if (table) {
       systemPrompt = "You are given a single MultiQC report table";
       content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
