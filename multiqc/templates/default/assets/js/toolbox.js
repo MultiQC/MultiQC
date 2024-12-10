@@ -1567,6 +1567,15 @@ $(function () {
 function getStoredProvider() {
   return getFromLocalStorage("mqc_ai_provider") || Object.keys(AI_PROVIDERS)[0];
 }
+// Read the JWT local cookie in in the seqera.io domain - that's our API key:
+$(function () {
+  const jwt = document.cookie.split("; ").find((row) => row.startsWith("jwt="));
+  if (jwt) {
+    const jwtValue = jwt.split("=")[1];
+    saveToLocalStorage("mqc_ai_key_Seqera AI", jwtValue);
+  }
+});
+
 function getStoredApiKey(provider) {
   return getFromLocalStorage(`mqc_ai_key_${provider}`);
 }
