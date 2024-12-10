@@ -1076,5 +1076,5 @@ def reset_tmp_dir():
     tmp_dir.get_tmp_dir()
 
 
-def add_ai_summary(data_dir: Optional[Path] = None):
-    ai.add_ai_summary_to_report(data_dir)
+def add_ai_summary():
+    ai.add_ai_summary_to_report()

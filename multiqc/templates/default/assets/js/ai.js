@@ -83,14 +83,14 @@ function formatReportForAi(systemPrompt, onlyGeneralStats = false, generalStatsV
 
   if (!onlyGeneralStats) {
     // Add sections until we approach the token limit
-    Object.entries(aiReportMetadata.sections).forEach(([sectionAnchor, section]) => {
+    for (const [sectionAnchor, section] of Object.entries(aiReportMetadata.sections)) {
       const mod = aiReportMetadata.tools[section.module_anchor];
       let sectionContent = `\nTool: ${mod.name}\n`;
       sectionContent += formatSectionForAi(sectionAnchor);
       sectionContent += "\n\n----------------------";
 
       const sectionTokens = estimateTokenCount(sectionContent);
-      if (currentTokens + sectionTokens < maxTokens * 0.95) {
+      if (currentTokens + sectionTokens < maxTokens * 0.9) {
         result += sectionContent;
         currentTokens += sectionTokens;
       } else {
@@ -98,9 +98,9 @@ function formatReportForAi(systemPrompt, onlyGeneralStats = false, generalStatsV
           `Truncating report content to fit within ${provider}'s context window. ` +
             `Current tokens: ${currentTokens}, section would add ${sectionTokens} tokens`,
         );
-        return result;
+        break; // Stop iterating through sections
       }
-    });
+    }
   }
 
   return result;
@@ -193,7 +193,7 @@ async function summarizeWithAi(button) {
   let modelName = getStoredModelName(provider);
   const maxTokens = getMaxTokens(modelName);
 
-  if (totalTokens > maxTokens * 0.95) {
+  if (totalTokens > maxTokens * 0.9) {
     errorDiv
       .html(
         `Content exceeds ${provider}'s token limit (${totalTokens} > ${maxTokens}). Try analyzing a smaller section.`,
@@ -463,8 +463,8 @@ function estimateTokenCount(text) {
   }
 
   // Fallback to character-based estimation
-  // Different models have different ratios, but ~4 chars per token is a reasonable estimate
-  return Math.ceil(text.length / 4);
+  // Different models have different ratios, but ~3 chars per token is a reasonable estimate
+  return Math.ceil(text.length / 3);
 }
 
 // Load tokenizers if available

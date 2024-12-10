@@ -378,43 +378,44 @@ class Dataset(BaseDataset):
 
         report.write_data_file(data, self.uid)
 
-    def format_dataset_for_ai_prompt(self, pconfig: TableConfig) -> str:
+    def format_dataset_for_ai_prompt(self, pconfig: TableConfig, keep_hidden: bool = True) -> str:
         """Format as a markdown table"""
-        headers = self.dt.get_headers_in_order()
+        headers = self.dt.get_headers_in_order(keep_hidden=keep_hidden)
         samples = self.all_samples
 
-        result = ""
+        result = "Number of samples: " + str(len(samples)) + "\n"
+        if config.violin_downsample_after is not None and len(samples) > config.violin_downsample_after:
+            result += (
+                f"Note: sample number {len(samples)} is greater than the threshold {config.violin_downsample_after}, "
+                "so data points were downsampled to fit the context window. However, outliers for each metric were "
+                "identified and kept in the datasets.\n"
+            )
+        result += "\n"
 
         # List metrics: metric name to description
         result += "Metrics:\n" + "\n".join(f"{col.title} - {col.description}" for _, _, col in headers)
         result += "\n\n"
 
-        # Format values for the view
-        formatted_val_by_rid_by_sample: Dict[SampleName, Dict[ColumnAnchor, str]] = {}
-        for idx, metric_name, header in headers:
-            for _, group_rows in self.dt.sections[idx].rows_by_sgroup.items():
-                row = group_rows[0]  # take only the first row in a group
-                v = row.formatted_data.get(metric_name, "")
-                if header.suffix:
-                    v += header.suffix
-                formatted_val_by_rid_by_sample.setdefault(row.sample, {})[header.rid] = v
-
-        if self.show_table_by_default:
-            # Table view - rows are samples, columns are metrics
-            result += "| " + pconfig.col1_header + " | " + " | ".join(col.title for (_, _, col) in headers) + " |\n"
-            result += "| --- | " + " | ".join("---" for _ in headers) + " |\n"
-            for sample, val_by_rid in formatted_val_by_rid_by_sample.items():
-                result += f"| {sample} | " + " | ".join(val_by_rid.get(col.rid, "") for (_, _, col) in headers) + " |\n"
-        else:
-            # Violin view - rows are metrics, columns are samples
-            result += "| Metric | " + " | ".join(samples) + " |\n"
-            result += "| --- | " + " | ".join("---" for _ in samples) + " |\n"
+        # Table view - rows are samples, columns are metrics
+        result += "| " + pconfig.col1_header + " | " + " | ".join(col.title for (_, _, col) in headers) + " |\n"
+        result += "| --- | " + " | ".join("---" for _ in headers) + " |\n"
+        for sample in samples:
+            if all(
+                sample not in self.violin_value_by_sample_by_metric[col.rid]
+                and sample not in self.scatter_value_by_sample_by_metric[col.rid]
+                for _, _, col in headers
+            ):
+                continue
+            row = []
             for _, _, col in headers:
-                result += (
-                    f"| {col.title} | "
-                    + " | ".join(formatted_val_by_rid_by_sample.get(sample, {}).get(col.rid, "") for sample in samples)
-                    + " |\n"
+                value = self.violin_value_by_sample_by_metric[col.rid].get(
+                    sample, self.scatter_value_by_sample_by_metric[col.rid].get(sample, "")
                 )
+                if value != "":
+                    if col.suffix:
+                        value = f"{value}{col.suffix}"
+                row.append(str(value))
+            result += f"| {sample} | " + " | ".join(row) + " |\n"
 
         return result
 

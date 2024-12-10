@@ -226,7 +226,7 @@ class Dataset(BaseDataset):
         ]
         report.write_data_file(data, self.uid)
 
-    def format_dataset_for_ai_prompt(self, pconfig: PConfig) -> str:
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
         xsuffix = self.layout.get("xaxis", {}).get("ticksuffix", "")
         ysuffix = self.layout.get("yaxis", {}).get("ticksuffix", "")
 

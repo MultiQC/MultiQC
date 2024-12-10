@@ -242,7 +242,7 @@ class BaseDataset(BaseModel):
             pass
         return f"{value:.1f}"
 
-    def format_dataset_for_ai_prompt(self, pconfig: Any) -> str:
+    def format_dataset_for_ai_prompt(self, pconfig: Any, keep_hidden: bool = True) -> str:
         return ""
 
 
@@ -768,17 +768,17 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         result = f"Plot type: {self.plot_type}\n"
         return result
 
-    def format_for_ai_prompt(self) -> str:
+    def format_for_ai_prompt(self, keep_hidden: bool = True) -> str:
         """
         Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
         """
         prompt = self._plot_ai_header() + "\n\n"
 
         if len(self.datasets) == 1:
-            return prompt + self.datasets[0].format_dataset_for_ai_prompt(self.pconfig)
+            return prompt + self.datasets[0].format_dataset_for_ai_prompt(self.pconfig, keep_hidden=keep_hidden)
 
         for dataset in self.datasets:
-            formatted_dataset = dataset.format_dataset_for_ai_prompt(self.pconfig)
+            formatted_dataset = dataset.format_dataset_for_ai_prompt(self.pconfig, keep_hidden=keep_hidden)
             if not formatted_dataset:
                 continue
             prompt += f"### {dataset.label}\n"

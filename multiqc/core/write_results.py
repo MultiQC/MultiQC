@@ -73,6 +73,8 @@ def write_results() -> None:
     if not config.skip_generalstats:
         _render_general_stats_table(plots_dir_name=output_file_names.plots_dir_name)
 
+    report.add_ai_summary()
+
     paths: OutputPaths = _create_or_override_dirs(output_file_names)
 
     if config.make_data_dir and not paths.to_stdout and paths.data_dir:
@@ -86,8 +88,6 @@ def write_results() -> None:
     else:
         paths.data_dir = None
         logger.info("Data        : None")
-
-    report.add_ai_summary(paths.data_dir)
 
     if config.make_report:
         # Render report HTML, write to file or stdout

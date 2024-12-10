@@ -169,7 +169,7 @@ class Dataset(BaseDataset):
                 val_by_cat_by_sample[s_name][cat.name] = str(d_val)
         report.write_data_file(val_by_cat_by_sample, self.uid)
 
-    def format_dataset_for_ai_prompt(self, pconfig: PConfig) -> str:
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
         """Format dataset as a markdown table"""
         prompt = ""
         prompt += "| Sample | " + " | ".join(cat.name for cat in self.cats) + " |\n"

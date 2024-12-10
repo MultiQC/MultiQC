@@ -614,11 +614,11 @@ def ai_section_metadata() -> AiReportMetadata:
 def build_prompt(client: Client, metadata: AiReportMetadata) -> Optional[str]:
     system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
 
-    # Account for system message, plus leave 5% buffer
-    max_tokens = client.max_tokens() * 0.95 - client.n_tokens(system_prompt)
+    # Account for system message, plus leave 10% buffer
+    max_tokens = client.max_tokens() * 0.90
 
     prompt_parts: list[str] = []
-    current_n_tokens = 0
+    current_n_tokens = client.n_tokens(system_prompt)
 
     # Details about modules used in the report - include first in the prompt
     tools_context: str = ""
@@ -637,18 +637,24 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Optional[str]:
 
     # General stats - also always include, otherwise we don't have anything to summarize
     if report.general_stats_plot:
-        prompt_parts.append(f"""
+        genstats_prompt = f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
 {report.general_stats_plot.format_for_ai_prompt()}
-""")
-
-    # Now calculate the length of the prompt, and if it's too long already, we truncate
-    current_n_tokens = sum(client.n_tokens(part) for part in prompt_parts)
-    if current_n_tokens > max_tokens:  # Leave 5% buffer
-        logger.warning(
-            f"General stats exceed the {client.title}'s context window ({client.max_tokens()} tokens). AI summary will not be generated."
-        )
-        return None
+"""
+        # Now calculate the length of the prompt, and if it's too long already, try without hidden columns
+        if current_n_tokens + client.n_tokens(genstats_prompt) > max_tokens:
+            genstats_prompt = f"""
+MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
+{report.general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
+"""
+            current_n_tokens += client.n_tokens(genstats_prompt)
+            if current_n_tokens > max_tokens:
+                logger.warning(
+                    f"General stats (almost) exceeds the {client.title}'s context window (current: {current_n_tokens} tokens, max: {client.max_tokens()} tokens). AI summary will not be generated."
+                )
+                return None
+        prompt_parts.append(genstats_prompt)
+        current_n_tokens += client.n_tokens(genstats_prompt)
 
     for section in metadata.sections.values():
         tool = metadata.tools[section.module_anchor]
@@ -669,7 +675,7 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
 
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
-            if plot_content := plot.format_for_ai_prompt():
+            if plot_content := plot.format_for_ai_prompt(keep_hidden=True):
                 if plot.pconfig.title:
                     section_context += f"Title: {plot.pconfig.title}\n"
                 section_context += "\n" + plot_content
@@ -680,7 +686,9 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
         if current_n_tokens + section_n_tokens > max_tokens:  # Leave 5% buffer
             logger.warning(
                 f"Truncating report content to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
-                f"Used context length is {current_n_tokens} tokens, adding section {section.name} will sum up to {current_n_tokens + section_n_tokens} tokens."
+                f"Used context length is {current_n_tokens} tokens, adding section '{section.name}' "
+                f"will sum up to {current_n_tokens + section_n_tokens} tokens which is close to the limit since we have "
+                f"to allow for some overhead."
             )
             break
 
@@ -692,7 +700,7 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
     return prompt
 
 
-def add_ai_summary_to_report(data_dir: Optional[Path] = None):
+def add_ai_summary_to_report():
     metadata: AiReportMetadata = ai_section_metadata()
     # Set data for JS runtime
     report.ai_report_metadata_base64 = base64.b64encode(metadata.model_dump_json().encode()).decode()
@@ -712,10 +720,9 @@ def add_ai_summary_to_report(data_dir: Optional[Path] = None):
         return
 
     # Save content to file for debugging
-    if data_dir:
-        path = Path(data_dir) / "multiqc_ai_prompt.txt"
-        path.write_text(prompt)
-        logger.debug(f"Saving AI prompt to {path}")
+    path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
+    path.write_text(prompt)
+    logger.debug(f"Saving AI prompt to {path}")
 
     response: Optional[InterpretationResponse]
     if config.ai_summary_full:
