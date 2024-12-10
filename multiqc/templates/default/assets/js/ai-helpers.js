@@ -7,11 +7,12 @@ async function runStreamGeneration({
   userMessage,
   tags = [],
 }) {
-  const provider = getStoredProvider();
-  const modelName = getStoredModelName(provider);
-  const apiKey = getStoredApiKey(provider);
+  const providerId = $("#ai-provider").val();
+  const provider = AI_PROVIDERS[providerId];
+  const modelName = $("#ai-model").val();
+  const apiKey = $("#ai-api-key").val();
 
-  if (provider === "Seqera AI") {
+  if (provider.name === "Seqera AI") {
     fetch(`${seqeraApiUrl}/internal-ai/query`, {
       method: "POST",
       headers: {
@@ -36,7 +37,7 @@ async function runStreamGeneration({
       onStreamNewToken(data.generation);
       onStreamComplete();
     });
-  } else if (provider === "OpenAI") {
+  } else if (provider.name === "OpenAI") {
     fetch(`https://api.openai.com/v1/chat/completions`, {
       method: "POST",
       headers: {
@@ -64,7 +65,7 @@ async function runStreamGeneration({
       })
       .then((reader) => decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete))
       .catch((error) => onStreamError(error));
-  } else if (provider === "Anthropic") {
+  } else if (provider.name === "Anthropic") {
     fetch(`https://api.anthropic.com/v1/messages`, {
       method: "POST",
       headers: {
@@ -96,7 +97,7 @@ async function runStreamGeneration({
       .then((reader) => decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete))
       .catch((error) => onStreamError(error));
   } else {
-    onStreamError(`Unsupported AI provider: ${provider}`);
+    onStreamError(`Unsupported AI provider: ${provider.name}`);
   }
 }
 
@@ -307,6 +308,24 @@ let systemPromptPlot =
   multiqcDescription +
   `
 You are given a single MultiQC report section with a plot or a table. 
+Your task is to analyse the data and give a very short and concise overall summary of the results.
+Don't waste words: mention only the important QC issues. If there are no issues, just say so.
+Limit it to 1-2 sentences.
+
+Make sure to use markdown to format your reponse for readability. Use directives with pre-defined classes
+.text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}. 
+If there are any sample names mentioned, or sample name prefixes or suffixes, you must warp them in
+a sample directive, making sure to use same color classes as for severity, for example: :sample[A1001.2003]{.text-yellow}
+or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one directive.
+
+Please do not add any extra headers to the response.
+
+Make sure to use a multiple of 4 spaces to indent nested lists.`;
+
+let systemPromptGeneralStats =
+  multiqcDescription +
+  `
+You are given general statistics data from a MultiQC report.
 Your task is to analyse the data and give a very short and concise overall summary of the results.
 Don't waste words: mention only the important QC issues. If there are no issues, just say so.
 Limit it to 1-2 sentences.

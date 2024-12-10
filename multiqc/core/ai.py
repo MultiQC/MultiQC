@@ -172,6 +172,7 @@ class InterpretationResponse(BaseModel):
 
 class Client:
     def __init__(self, model: str, api_key: Optional[str]):
+        self.name: str
         self.title: str
         self.model: str = model
         self.api_key: Optional[str] = api_key
@@ -204,7 +205,7 @@ class Client:
             logger.warning(
                 "Fallback to rough estimation if tokenizers not available. Install `tiktoken` or `anthropic` to get more accurate token counts."
             )
-            return len(text) // 4
+            return int(len(text) / 1.5)
 
 
 class LangchainClient(Client):
@@ -356,6 +357,7 @@ class OpenAiClient(LangchainClient):
         openai_logger.addFilter(TruncateOpenAiLogFilter())
 
         super().__init__(model, api_key)
+        self.name = "openai"
         self.title = "OpenAI"
         self.llm = ChatOpenAI(
             model=self.model,
@@ -398,6 +400,7 @@ class AnthropicClient(LangchainClient):
         anthropic_logger.addFilter(TruncateAnthropicLogFilter())
 
         super().__init__(model, api_key)
+        self.name = "anthropic"
         self.title = "Anthropic"
         self.llm = ChatAnthropic(
             model=self.model,  # type: ignore
@@ -412,6 +415,7 @@ class AnthropicClient(LangchainClient):
 class SeqeraClient(Client):
     def __init__(self, model: str, api_key: Optional[str]):
         super().__init__(model, api_key)
+        self.name = "seqera"
         self.title = "Seqera AI"
 
     def max_tokens(self) -> int:
@@ -615,9 +619,9 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Optional[str]:
     system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
 
     # Account for system message, plus leave 10% buffer
-    max_tokens = client.max_tokens() * 0.90
+    max_tokens = client.max_tokens()
 
-    prompt_parts: list[str] = []
+    user_prompt: str = ""
     current_n_tokens = client.n_tokens(system_prompt)
 
     # Details about modules used in the report - include first in the prompt
@@ -633,71 +637,69 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Optional[str]:
             tools_context += f"Comment: {tool.comment}\n"
         tools_context += "\n\n"
         tools_context += "\n----------------------\n\n"
-    prompt_parts.append(tools_context)
+    user_prompt += tools_context
 
     # General stats - also always include, otherwise we don't have anything to summarize
     if report.general_stats_plot:
-        genstats_prompt = f"""
+        genstats_context = f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
 {report.general_stats_plot.format_for_ai_prompt()}
 """
-        # Now calculate the length of the prompt, and if it's too long already, try without hidden columns
-        if current_n_tokens + client.n_tokens(genstats_prompt) > max_tokens:
-            genstats_prompt = f"""
+        if current_n_tokens + client.n_tokens(genstats_context) > max_tokens:
+            # If it's too long already, try without hidden columns
+            genstats_context = f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
 {report.general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
 """
-            current_n_tokens += client.n_tokens(genstats_prompt)
-            if current_n_tokens > max_tokens:
+            if current_n_tokens + client.n_tokens(genstats_context) > max_tokens:
                 logger.warning(
                     f"General stats (almost) exceeds the {client.title}'s context window (current: {current_n_tokens} tokens, max: {client.max_tokens()} tokens). AI summary will not be generated."
                 )
                 return None
-        prompt_parts.append(genstats_prompt)
-        current_n_tokens += client.n_tokens(genstats_prompt)
+        user_prompt += genstats_context
+        current_n_tokens += client.n_tokens(genstats_context)
 
+    user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
+
+    # Build sections context and use it unless it's too long for the LLM context
+    sec_context: str = ""
     for section in metadata.sections.values():
         tool = metadata.tools[section.module_anchor]
-        section_context = "\n----------------------\n\n"
-        section_context += f"Tool: {tool.name}\n"
-        section_context += f"Section: {section.name}\n"
+        sec_context += "\n----------------------\n\n"
+        sec_context += f"Tool: {tool.name}\n"
+        sec_context += f"Section: {section.name}\n"
         if section.description:
-            section_context += f"Section description: {_strip_html(section.description)}\n"
+            sec_context += f"Section description: {_strip_html(section.description)}\n"
         if section.comment:
-            section_context += f"Section comment: {_strip_html(section.comment)}\n"
+            sec_context += f"Section comment: {_strip_html(section.comment)}\n"
         if section.helptext:
-            section_context += f"Section help text: {_strip_html(section.helptext)}\n"
+            sec_context += f"Section help text: {_strip_html(section.helptext)}\n"
 
         if section.content_before_plot:
-            section_context += section.content_before_plot + "\n\n"
+            sec_context += section.content_before_plot + "\n\n"
         if section.content:
-            section_context += section.content + "\n\n"
+            sec_context += section.content + "\n\n"
 
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
             if plot_content := plot.format_for_ai_prompt(keep_hidden=True):
                 if plot.pconfig.title:
-                    section_context += f"Title: {plot.pconfig.title}\n"
-                section_context += "\n" + plot_content
+                    sec_context += f"Title: {plot.pconfig.title}\n"
+                sec_context += "\n" + plot_content
 
         # Check if adding this section would exceed the limit
         # Using rough estimate of 4 chars per token
-        section_n_tokens = client.n_tokens(section_context)
-        if current_n_tokens + section_n_tokens > max_tokens:  # Leave 5% buffer
+        sec_n_tokens = client.n_tokens(sec_context)
+        if current_n_tokens + sec_n_tokens > max_tokens:
             logger.warning(
-                f"Truncating report content to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
-                f"Used context length is {current_n_tokens} tokens, adding section '{section.name}' "
-                f"will sum up to {current_n_tokens + section_n_tokens} tokens which is close to the limit since we have "
-                f"to allow for some overhead."
+                f"Truncating prompt to only the general stats to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
+                f"Tokens estimate: {current_n_tokens}, with sections: at least {current_n_tokens + sec_n_tokens}"
             )
-            break
+            return user_prompt
 
-        prompt_parts.append(section_context)
-        current_n_tokens += section_n_tokens
-
-    prompt = "".join(prompt_parts)
-    prompt = re.sub(r"\n\n\n", "\n\n", prompt)  # strip triple newlines
-    return prompt
+    user_prompt += sec_context
+    user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
+    return user_prompt
 
 
 def add_ai_summary_to_report():
@@ -712,6 +714,7 @@ def add_ai_summary_to_report():
     if not (client := get_llm_client()):
         return
 
+    report.ai_provider_id = client.name
     report.ai_provider_title = client.title
     report.ai_model = client.model
 

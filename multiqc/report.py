@@ -107,6 +107,7 @@ plot_compressed_json: str
 ai_global_summary: str = ""
 ai_global_detailed_analysis: str = ""
 ai_generation_id: str = ""
+ai_provider_id: str = ""
 ai_provider_title: str = ""
 ai_model: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
@@ -142,6 +143,7 @@ def reset():
     global ai_global_summary
     global ai_global_detailed_analysis
     global ai_generation_id
+    global ai_provider_id
     global ai_provider_title
     global ai_model
     global ai_report_metadata_base64
@@ -174,6 +176,7 @@ def reset():
     ai_global_summary = ""
     ai_global_detailed_analysis = ""
     ai_generation_id = ""
+    ai_provider_id = ""
     ai_provider_title = ""
     ai_model = ""
     ai_report_metadata_base64 = ""

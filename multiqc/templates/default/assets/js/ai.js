@@ -34,76 +34,75 @@ window.continueInSeqeraChatHandler = function (event) {
   }
 };
 
-function formatReportForAi(systemPrompt, onlyGeneralStats = false, generalStatsView = "table") {
-  let result = "";
-  let currentTokens = 0;
-  const provider = getStoredProvider();
-  const model = getStoredModelName(provider);
+function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsView = "table") {
+  let userPrompt = "";
+  let currentTokens = systemTokens ?? 0;
+  const providerId = $("#ai-provider").val();
+  const provider = AI_PROVIDERS[providerId];
+  const model = $("#ai-model").val();
+
   const maxTokens = getMaxTokens(model);
 
   // Tools section is highest priority - always include
-  result += "\n----------------------\n\n";
-  result += "Tools used in the report:\n\n";
+  userPrompt += "\n----------------------\n\n";
+  userPrompt += "Tools used in the report:\n\n";
 
   Object.entries(aiReportMetadata.tools).forEach(([modAnchor, mod], modIdx) => {
-    const toolContent =
+    const toolsContext =
       `${modIdx + 1}. ${mod.name}` +
       (mod.info ? `\nDescription: ${mod.info}` : "") +
       (mod.href && mod.href.length > 0 ? `\nLinks: ${mod.href}` : "") +
       (mod.comment ? `\nComment: ${mod.comment}` : "") +
       "\n\n";
-    result += toolContent;
+    userPrompt += toolsContext;
   });
 
-  result += "\n----------------------\n";
-  currentTokens = estimateTokenCount(systemPrompt + result);
+  userPrompt += "\n----------------------\n";
+  currentTokens += countTokens(userPrompt);
 
   // General stats are second priority
   const generalStatsPlot = mqc_plots["general_stats_table"];
   if (generalStatsPlot) {
-    const statsContent =
+    const genStatsContext =
       `\nMultiQC General Statistics (overview of key QC metrics for each sample, across all tools)` +
       `\n${generalStatsPlot.formatForAiPrompt(generalStatsView)}` +
       "\n----------------------\n";
 
-    result += statsContent;
-    const statsTokens = estimateTokenCount(statsContent);
-    if (currentTokens + statsTokens < maxTokens * 0.95) {
-      // Leave 5% buffer
-      currentTokens += statsTokens;
+    userPrompt += genStatsContext;
+    const genStatsTokens = countTokens(genStatsContext);
+    if (currentTokens + genStatsTokens <= maxTokens) {
+      currentTokens += genStatsTokens;
     } else {
       console.error(
-        `Including general stats alone in AI summary would exceed ${provider}'s token limit (${
-          currentTokens + statsTokens
-        } > ${maxTokens}). Aborting`,
+        `General stats alone would already exceed the token limit of ${provider.name} (${
+          currentTokens + genStatsTokens
+        } > ${maxTokens}). Cannot summarize the report`,
       );
-      return result;
+      return userPrompt;
     }
   }
 
+  let sectionsContext = "";
   if (!onlyGeneralStats) {
     // Add sections until we approach the token limit
     for (const [sectionAnchor, section] of Object.entries(aiReportMetadata.sections)) {
       const mod = aiReportMetadata.tools[section.module_anchor];
-      let sectionContent = `\nTool: ${mod.name}\n`;
-      sectionContent += formatSectionForAi(sectionAnchor);
-      sectionContent += "\n\n----------------------";
+      sectionsContext += `\nTool: ${mod.name}\n`;
+      sectionsContext += formatSectionForAi(sectionAnchor);
+      sectionsContext += "\n\n----------------------";
 
-      const sectionTokens = estimateTokenCount(sectionContent);
-      if (currentTokens + sectionTokens < maxTokens * 0.9) {
-        result += sectionContent;
-        currentTokens += sectionTokens;
-      } else {
+      const sectionsTokens = countTokens(sectionsContext);
+      if (currentTokens + sectionsTokens > maxTokens) {
         console.warn(
-          `Truncating report content to fit within ${provider}'s context window. ` +
-            `Current tokens: ${currentTokens}, section would add ${sectionTokens} tokens`,
+          `Truncating prompt to only the general stats to fit within the context window of ${provider.name} (${maxTokens} tokens). ` +
+            `Tokens estimate: ${currentTokens}, with sections: at least ${currentTokens + sectionsTokens}`,
         );
-        break; // Stop iterating through sections
+        return userPrompt; // Stop iterating through sections and return only general stats
       }
     }
   }
-
-  return result;
+  userPrompt += sectionsContext;
+  return userPrompt;
 }
 
 function formatModuleHeader(mod) {
@@ -135,10 +134,6 @@ function formatModAndSectionMetadata(sectionAnchor, moduleAnchor) {
 }
 
 function formatSectionForAi(sectionAnchor, moduleAnchor, plotView) {
-  if (sectionAnchor === "general_stats_table") {
-    return formatReportForAi("", true, plotView);
-  }
-
   let result = formatModAndSectionMetadata(sectionAnchor, moduleAnchor);
   if (result) result += "\n";
 
@@ -181,26 +176,30 @@ async function summarizeWithAi(button) {
   let systemPrompt;
   if (isGlobal) {
     systemPrompt = isMore ? systemPromptReportFull : systemPromptReportShort;
-    content = formatReportForAi(systemPrompt);
+    content = formatReportForAi(countTokens(systemPrompt));
+  } else if (sectionAnchor === "general_stats_table") {
+    systemPrompt = systemPromptGeneralStats;
+    content = formatReportForAi(countTokens(systemPrompt), true, plotView);
   } else {
     systemPrompt = systemPromptPlot;
     content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
   }
 
   // Check total tokens before making the request
-  const totalTokens = estimateTokenCount(systemPrompt + content);
-  const provider = getStoredProvider();
-  let modelName = getStoredModelName(provider);
+  const totalTokens = countTokens(systemPrompt + content);
+  const providerId = $("#ai-provider").val();
+  const provider = AI_PROVIDERS[providerId];
+  let modelName = $("#ai-model").val();
   const maxTokens = getMaxTokens(modelName);
 
-  if (totalTokens > maxTokens * 0.9) {
-    errorDiv.html(`Content exceeds ${provider}'s token limit (${totalTokens} > ${maxTokens})`).show();
+  if (totalTokens > maxTokens) {
+    errorDiv.html(`Content exceeds the token limit of ${provider.name} (${totalTokens} > ${maxTokens})`).show();
     if (wrapperDiv) wrapperDiv.show();
     return;
   }
 
   // Check for stored API key
-  let aiApiKey = getStoredApiKey(provider);
+  let aiApiKey = $("#ai-api-key").val();
   if (!aiApiKey || aiApiKey === undefined) {
     // Open the AI toolbox section
     mqc_toolbox_openclose("#mqc_ai", true);
@@ -208,10 +207,10 @@ async function summarizeWithAi(button) {
   }
 
   // Disable button and show loading state
-  button.prop("disabled", true).html(`Requesting ${provider}...`);
+  button.prop("disabled", true).html(`Requesting ${provider.name}...`);
 
   function wrapUpResponse() {
-    disclaimerDiv.html(`This summary is AI-generated. Provider: ${provider}, model: ${modelName}`).show();
+    disclaimerDiv.html(`This summary is AI-generated. Provider: ${provider.name}, model: ${modelName}`).show();
     button.data("action", "clear").prop("disabled", false).html(clearText).addClass("ai-local-content");
   }
 
@@ -245,7 +244,7 @@ async function summarizeWithAi(button) {
           `ai_response_${reportUuid}_${elementId}${isMore ? "_more" : ""}`,
           JSON.stringify({
             text: receievedMarkdown,
-            provider: provider,
+            provider: providerId,
             model: modelName,
             timestamp: Date.now(),
           }),
@@ -350,8 +349,9 @@ $(function () {
         const cachedSummary = JSON.parse(cachedSummaryDump);
         responseDiv.show().html(markdownToHtml(cachedSummary.text));
         if (wrapperDiv) wrapperDiv.show();
+        const provider = AI_PROVIDERS[cachedSummary.provider];
         disclaimerDiv
-          .html(`This summary is AI-generated. Provider: ${cachedSummary.provider}, model: ${cachedSummary.model}`)
+          .html(`This summary is AI-generated. Provider: ${provider.name}, model: ${cachedSummary.model}`)
           .show();
         button.html(clearText).data("action", "clear").prop("disabled", false).addClass("ai-local-content");
       }
@@ -413,7 +413,7 @@ $(function () {
     let systemPrompt;
     if (wholeReport) {
       systemPrompt = "You are given data of a MultiQC report";
-      content = formatReportForAi(systemPrompt);
+      content = formatReportForAi();
     } else if (table) {
       systemPrompt = "You are given a single MultiQC report table";
       content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
@@ -438,29 +438,11 @@ $(function () {
   $("button.ai-copy-content-table").click((e) => copyForAi(e, { wholeReport: false, table: true }));
 });
 
-function estimateTokenCount(text) {
-  const provider = getStoredProvider();
-
-  try {
-    if (provider === "OpenAI") {
-      // Use GPT-3 Tokenizer if available
-      if (window.GPT3Tokenizer) {
-        const tokenizer = new window.GPT3Tokenizer({ type: "gpt3" });
-        return tokenizer.encode(text).bpe.length;
-      }
-    } else if (provider === "Anthropic") {
-      // Use Claude's tokenizer if available
-      if (window.AnthropicTokenizer) {
-        return window.AnthropicTokenizer.countTokens(text);
-      }
-    }
-  } catch (e) {
-    console.warn("Error using tokenizer:", e);
-  }
-
-  // Fallback to character-based estimation
-  // Different models have different ratios, but ~3 chars per token is a reasonable estimate
-  return Math.ceil(text.length / 3);
+function countTokens(text) {
+  // Use simple character-based estimation. Since the data has a lot of numbers
+  // and repetitive special characters, using a more conservative estimate than
+  // 4 chars per token suitable for real texts - 1.5 chars per token
+  return Math.ceil(text.length / 1.5);
 }
 
 // Load tokenizers if available

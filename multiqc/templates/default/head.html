@@ -35,9 +35,9 @@ reportUuid = "{{ report.report_uuid }}";
 seqeraApiUrl = "{{ config.seqera_api_url }}";
 seqeraWebsite = "{{ config.seqera_website }}";
 
-aiEnabled = "{{ config.ai_summary }}";
-aiProviderTitle = "{{ report.ai_provider_title }}";
-aiModel = "{{ report.ai_model }}";
+aiConfigEnabled = "{{ config.ai_summary }}";
+aiConfigProviderId = "{{ report.ai_provider_id }}";
+aiConfigModel = "{{ report.ai_model }}";
 
 aiReportMetadataBase64 = "{{ report.ai_report_metadata_base64 }}";
 aiReportMetadata = JSON.parse(atob(aiReportMetadataBase64));
