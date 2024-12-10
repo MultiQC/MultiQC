@@ -194,11 +194,7 @@ async function summarizeWithAi(button) {
   const maxTokens = getMaxTokens(modelName);
 
   if (totalTokens > maxTokens * 0.9) {
-    errorDiv
-      .html(
-        `Content exceeds ${provider}'s token limit (${totalTokens} > ${maxTokens}). Try analyzing a smaller section.`,
-      )
-      .show();
+    errorDiv.html(`Content exceeds ${provider}'s token limit (${totalTokens} > ${maxTokens})`).show();
     if (wrapperDiv) wrapperDiv.show();
     return;
   }

@@ -45,6 +45,8 @@ class BarPlot extends Plot {
 
     let cats = dataset.cats;
     let samples = dataset.samples;
+    let samplesSettings = applyToolboxSettings(samples);
+
     prompt += "| Sample | " + cats.map((cat) => cat.name).join(" | ") + " |\n";
     prompt += "| --- | " + cats.map(() => "---").join(" | ") + " |\n";
 
@@ -60,6 +62,7 @@ class BarPlot extends Plot {
 
     // Create data rows
     samples.forEach((sample, idx) => {
+      if (samplesSettings[idx].hidden) return;
       prompt +=
         `| ${sample} | ` +
         cats

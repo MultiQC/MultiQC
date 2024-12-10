@@ -5,6 +5,7 @@ class ViolinPlot extends Plot {
     this.extraHeight = dump["extra_height"];
     this.showTableByDefault = dump["show_table_by_default"];
     this.tableAnchor = dump["table_anchor"];
+    this.isDownsampled = dump["is_downsampled"];
   }
 
   activeDatasetSize() {
@@ -82,7 +83,7 @@ class ViolinPlot extends Plot {
     return "Plot type: violin plot\n";
   }
 
-  formatDatasetForAiPrompt(dataset, view) {
+  formatDatasetForAiPrompt(dataset) {
     let [
       metrics,
       headerByMetric,
@@ -92,7 +93,13 @@ class ViolinPlot extends Plot {
       scatterValuesBySampleByMetric,
     ] = this.prepData(dataset, true);
 
-    let results = "";
+    let results = "Number of samples: " + allSamples.length + "\n";
+    if (this.isDownsampled)
+      results +=
+        "Note: sample number " +
+        allSamples.length +
+        " is greater than the threshold  so data points were downsampled to fit the context window. However, outliers for each metric were identified and kept in the datasets.\n";
+    results += "\n";
 
     results += "Metrics:\n";
     results += Object.entries(headerByMetric)
@@ -100,47 +107,37 @@ class ViolinPlot extends Plot {
       .join("\n");
     results += "\n\n";
 
-    view = view ? view : this.showTableByDefault ? "table" : "plot";
+    results +=
+      `| ${this.pconfig.col1_header} | ` + metrics.map((metric) => headerByMetric[metric].title).join(" | ") + " |\n";
+    results += "| --- | " + metrics.map(() => "---").join(" | ") + " |\n";
+    results += allSamples
+      .map((sample) => {
+        if (sampleSettings[allSamples.indexOf(sample)].hidden) return "";
+        if (
+          metrics.every(
+            (metric) =>
+              violinValuesBySampleByMetric[metric][sample] === undefined &&
+              scatterValuesBySampleByMetric[metric][sample] === undefined,
+          )
+        )
+          return "";
 
-    if (view === "table") {
-      results +=
-        `| ${this.pconfig.col1_header} | ` + metrics.map((metric) => headerByMetric[metric].title).join(" | ") + " |\n";
-      results += "| --- | " + metrics.map(() => "---").join(" | ") + " |\n";
-      results += allSamples
-        .map((sample) => {
-          return (
-            `| ${sample} | ` +
-            metrics
-              .map((metric) => {
-                const value = violinValuesBySampleByMetric[metric][sample];
-                const suffix = headerByMetric[metric].suffix;
-                return !Number.isFinite(value)
-                  ? ""
-                  : (Number.isInteger(value) ? value : value.toFixed(2)) + (suffix ?? "");
-              })
-              .join(" | ") +
-            " |\n"
-          );
-        })
-        .join("");
-    } else {
-      results += "| Metric | " + allSamples.join(" | ") + " |\n";
-      results += "| --- | " + allSamples.map(() => "---").join(" | ") + " |\n";
-      metrics.forEach((metric) => {
-        results +=
-          `| ${headerByMetric[metric].title} | ` +
-          allSamples
-            .map((sample) => {
-              const value = violinValuesBySampleByMetric[metric][sample];
+        return (
+          `| ${sample} | ` +
+          metrics
+            .map((metric) => {
+              const value =
+                violinValuesBySampleByMetric[metric][sample] ?? scatterValuesBySampleByMetric[metric][sample];
               const suffix = headerByMetric[metric].suffix;
               return !Number.isFinite(value)
                 ? ""
                 : (Number.isInteger(value) ? value : value.toFixed(2)) + (suffix ?? "");
             })
             .join(" | ") +
-          " |\n";
-      });
-    }
+          " |\n"
+        );
+      })
+      .join("");
     return results;
   }
 

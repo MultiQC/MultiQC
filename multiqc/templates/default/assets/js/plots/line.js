@@ -4,9 +4,9 @@ class LinePlot extends Plot {
     return this.datasets[this.activeDatasetIdx].lines.length; // no samples in a dataset
   }
 
-  prepData() {
+  prepData(dataset) {
     // Prepare data to either build Plotly traces or export as a file
-    let dataset = this.datasets[this.activeDatasetIdx];
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
 
     let lines = dataset.lines;
 
@@ -30,10 +30,12 @@ class LinePlot extends Plot {
   }
 
   formatDatasetForAiPrompt(dataset) {
+    let [samples, lines] = this.prepData(dataset);
+
     const xsuffix = this.layout.xaxis.ticksuffix;
     const ysuffix = this.layout.yaxis.ticksuffix;
 
-    let lines = dataset.lines.map((line) => {
+    const formattedLines = lines.map((line) => {
       return {
         name: line.name,
         pairs: line.pairs.map((p) =>
@@ -49,9 +51,9 @@ class LinePlot extends Plot {
 
     return (
       "Samples: " +
-      lines.map((line) => line.name).join(", ") +
+      formattedLines.map((line) => line.name).join(", ") +
       "\n\n" +
-      lines
+      formattedLines
         .map((line) => {
           return line.name + " " + line.pairs.map((p) => "(" + p.join(": ") + ")").join(", ");
         })

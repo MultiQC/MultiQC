@@ -68,7 +68,7 @@ class Plot {
     return "Plot type: " + this.plotType + "\n";
   }
 
-  formatDatasetForAiPrompt(dataset, view) {
+  formatDatasetForAiPrompt(dataset) {
     return "";
   }
 
@@ -77,11 +77,11 @@ class Plot {
     let result = this.plotAiHeader(view) + "\n\n";
 
     if (this.datasets.length === 1) {
-      return result + this.formatDatasetForAiPrompt(this.datasets[0], view);
+      return result + this.formatDatasetForAiPrompt(this.datasets[0]);
     }
 
     for (let dataset of this.datasets) {
-      let formattedDataset = this.formatDatasetForAiPrompt(dataset, view);
+      let formattedDataset = this.formatDatasetForAiPrompt(dataset);
       if (!formattedDataset) continue;
       result += "### " + dataset.label + "\n";
       result += "\n";

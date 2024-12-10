@@ -64,6 +64,7 @@ class Dataset(BaseDataset):
     scatter_trace_params: Dict[str, Any]
     dt: DataTable
     show_table_by_default: bool
+    is_downsampled: bool
 
     @staticmethod
     def values_and_headers_from_dt(
@@ -215,6 +216,10 @@ class Dataset(BaseDataset):
             all_samples.update(set(list(violin_value_by_sample.keys())))
             metrics.append(col_anchor)
 
+        is_downsampled = (
+            config.violin_downsample_after is not None and len(all_samples) > config.violin_downsample_after
+        )
+
         ds = Dataset(
             **dataset.model_dump(),
             metrics=metrics,
@@ -225,6 +230,7 @@ class Dataset(BaseDataset):
             scatter_trace_params=dict(),
             dt=dt,
             show_table_by_default=show_table_by_default,
+            is_downsampled=is_downsampled,
         )
 
         ds.trace_params.update(
@@ -384,7 +390,7 @@ class Dataset(BaseDataset):
         samples = self.all_samples
 
         result = "Number of samples: " + str(len(samples)) + "\n"
-        if config.violin_downsample_after is not None and len(samples) > config.violin_downsample_after:
+        if self.is_downsampled:
             result += (
                 f"Note: sample number {len(samples)} is greater than the threshold {config.violin_downsample_after}, "
                 "so data points were downsampled to fit the context window. However, outliers for each metric were "
@@ -747,5 +753,5 @@ def find_outliers(
         outlier_status[indices] = True
 
     if added_values:
-        outlier_status = outlier_status[: -len(added_values)]
+        outlier_status = outlier_status[: -len(added_values)]  # type: ignore
     return outlier_status
