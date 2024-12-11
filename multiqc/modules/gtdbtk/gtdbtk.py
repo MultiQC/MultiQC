@@ -93,13 +93,15 @@ class MultiqcModule(BaseMultiqcModule):
             "taxonomic novelty determined using RED": [None, None],
         }
         table_data = {}
-        for sample_name in data_by_sample:
-            data = data_by_sample[sample_name]
+        for sname, data in data_by_sample.items():
             classification_value_columns = classication_method_translate_dict.get(
                 data.get("classification_method"), [None, None]
             )
-            table_data[data.get("user_genome")] = {
-                "classification": data.get("classification", None),
+            classification = data.get("classification", "").split(";")
+            last_classification = classification[-1]
+            table_data[sname] = {
+                "classification": last_classification,
+                "full_classification": "; ".join(classification),
                 "classification_method": data.get("classification_method", None),
                 "ANI": data.get(classification_value_columns[0], None),
                 "AF": data.get(classification_value_columns[1], None),
@@ -112,9 +114,15 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Classification",
                 "description": "GTDB taxonomy string inferred by the GTDB-Tk.",
             },
+            "full_classification": {
+                "title": "Full classification",
+                "description": "Full GTDB taxonomy string inferred by the GTDB-Tk.",
+                "hidden": True,
+            },
             "classification_method": {
-                "title": "Classification Method",
+                "title": "Classification method",
                 "description": "Indicates the rule used to classify the genome.",
+                "hidden": True,
             },
             "ANI": {
                 "title": "ANI to closest genome",
@@ -130,18 +138,18 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "Purples",
             },
             "red_value": {
-                "title": "Relative Evolutionary Divergence (RED)",
+                "title": "RED",
                 "description": "Indicates the relative evolutionary divergence (RED) for a query genome. RED is not calculated when a query genome can be classified based on ANI.",
                 "min": 0,
                 "max": 1,
             },
-            "note": {
-                "title": "Notes",
-                "description": "Provides additional information regarding the classification of the genome.",
-            },
             "warnings": {
                 "title": "Warnings",
                 "description": "Indicates unusual characteristics of the query genome that may impact the taxonomic assignment.",
+            },
+            "note": {
+                "title": "Notes",
+                "description": "Provides additional information regarding the classification of the genome.",
             },
         }
         pconfig = TableConfig(
