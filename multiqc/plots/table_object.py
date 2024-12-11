@@ -260,7 +260,7 @@ class InputRow(BaseModel):
     """
 
     sample: SampleName
-    data: Dict[ColumnKey, Optional[ValueT]] = dict()
+    data: Dict[ColumnKey, Optional[ValueT]] = Field(default_factory=dict)
 
     def __init__(self, sample: SampleName, data: Mapping[Union[str, ColumnKey], Any]):
         super().__init__(

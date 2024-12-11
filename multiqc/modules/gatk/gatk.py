@@ -2,14 +2,14 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from .analyze_saturation_mutagenesis import AnalyzeSaturationMutagenesisMixin
-from .base_recalibrator import BaseRecalibratorMixin
-from .varianteval import VariantEvalMixin
+from .analyze_saturation_mutagenesis import parse_gatk_analyze_saturation_mutagenesis
+from .base_recalibrator import parse_gatk_base_recalibrator
+from .varianteval import parse_gatk_varianteval
 
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRecalibratorMixin, VariantEvalMixin):
+class MultiqcModule(BaseMultiqcModule):
     """
     Supported tools:
 
@@ -55,9 +55,9 @@ class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRe
 
         # Call submodule functions
         n_reports_found = 0
-        n_reports_found += self.parse_gatk_analyze_saturation_mutagenesis()
-        n_reports_found += self.parse_gatk_base_recalibrator()
-        n_reports_found += self.parse_gatk_varianteval()
+        n_reports_found += parse_gatk_analyze_saturation_mutagenesis(self)
+        n_reports_found += parse_gatk_base_recalibrator(self)
+        n_reports_found += parse_gatk_varianteval(self)
 
         # Exit if we didn't find anything
         if n_reports_found == 0:
@@ -65,52 +65,3 @@ class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRe
 
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
-
-    def parse_report(self, lines, table_names):
-        """Parse a GATK report https://software.broadinstitute.org/gatk/documentation/article.php?id=1244
-
-        Only GATTable entries are parsed.  Tables are returned as a dict of tables.
-        Each table is a dict of arrays, where names correspond to column names, and arrays
-        correspond to column values.
-
-        Args:
-            lines (file handle): an iterable over the lines of a GATK report.
-            table_names (dict): a dict with keys that are GATK report table names
-                (e.g. "#:GATKTable:Quantized:Quality quantization map"), and values that are the
-                keys in the returned dict.
-
-        Returns:
-            {
-                table_1:
-                    {
-                        col_1: [ val_1, val_2, ... ]
-                        col_2: [ val_1, val_2, ... ]
-                        ...
-                    }
-                table_2:
-                    ...
-            }
-        """
-
-        report = dict()
-        lines = (line for line in lines)
-        for line in lines:
-            line = line.rstrip()
-            if line in table_names.keys():
-                report[table_names[line]] = self.parse_gatk_report_table(lines)
-        return report
-
-    @staticmethod
-    def parse_gatk_report_table(lines):
-        headers = next(lines).rstrip().split()
-        table = {h: [] for h in headers}
-        for line in lines:
-            line = line.rstrip()
-
-            # testing to see if we have reached the end of a table in a GATKReport
-            if line == "":
-                break
-
-            for index, value in enumerate(line.split()):
-                table[headers[index]].append(value)
-        return table
