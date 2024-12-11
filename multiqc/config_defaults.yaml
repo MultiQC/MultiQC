@@ -460,6 +460,7 @@ module_order:
   - vep
   - bakta
   - prokka
+  - checkm2
   - qc3C
   - nanoq
   - nanostat
