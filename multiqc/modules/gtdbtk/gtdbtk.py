@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Skipping file {f['fn']} because it has no data")
             return
         for line in lines[1:]:
-            row = line.rstrip().split("\t")
+            row = line.rstrip("\n").split("\t")
             if len(row) != len(column_names):
                 log.warning(f"Skipping line {line} because it has {len(row)} columns instead of {len(column_names)}")
                 continue
