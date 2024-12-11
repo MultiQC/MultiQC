@@ -691,5 +691,5 @@ def find_outliers(
         outlier_status[indices] = True
 
     if added_values:
-        outlier_status = outlier_status[: -len(added_values)]
+        outlier_status = outlier_status[: -len(added_values)]  # type: ignore
     return outlier_status
