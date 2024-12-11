@@ -1,4 +1,5 @@
 import logging
+from typing import Dict, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -23,19 +24,23 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1038/s41592-023-01940-w"],
         )
 
-        self.checkm2_data = {}
-        for f in self.find_log_files("checkm2", filehandles=True):
-            self.parse_file(f)
+        data_by_sample = {}
+        for f in self.find_log_files("checkm2"):
+            self.parse_file(f, data_by_sample)
             self.add_data_source(f)
-        self.checkm2_data = self.ignore_samples(self.checkm2_data)
-        if len(self.checkm2_data) == 0:
+
+        data_by_sample = self.ignore_samples(data_by_sample)
+        if len(data_by_sample) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.checkm2_data)} reports")
+        log.info(f"Found {len(data_by_sample)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
         self.add_software_version()
 
-        self.mag_quality_table()
+        self.mag_quality_table(data_by_sample)
 
-    def parse_file(self, f):
+    def parse_file(self, f, data_by_sample):
         """Parse the quality_report.tsv output."""
         column_names = (
             "Name",
@@ -53,16 +58,21 @@ class MultiqcModule(BaseMultiqcModule):
             "Max_Contig_Length",
             "Additional_Notes",
         )
-        parsed_data = {}
-        for line in f["f"]:
-            if line.startswith("Name\t"):
+        lines = f["f"].splitlines()
+        if len(lines) <= 1:
+            log.warning(f"Skipping file {f['fn']} because it has no data")
+            return
+        for line in lines[1:]:
+            row = line.rstrip().split("\t")
+            if len(row) != len(column_names):
+                log.warning(f"Skipping line {line} because it has {len(row)} columns instead of {len(column_names)}")
                 continue
-            column_values = line.rstrip().split("\t")
-            column_values = [None if x == "None" else x for x in column_values]
-            parsed_data[column_values[0]] = {k: v for k, v in zip(column_names, column_values) if v is not None}
-        self.checkm2_data.update(parsed_data)
+            sname = row[0]
+            if sname in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {sname}")
+            data_by_sample[sname] = {k: v for k, v in zip(column_names[1:], row[1:]) if v != "None"}
 
-    def mag_quality_table(self):
+    def mag_quality_table(self, data_by_sample):
         """Write some quality stats and measures into a table."""
         headers = {
             "Completeness": {
@@ -151,5 +161,5 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="checkm2-quality",
             description="Rapid assessment of genome bin quality using machine learning.",
             helptext="The main use of CheckM2 is to predict the completeness and contamination of metagenome-assembled genomes (MAGs) and single-amplified genomes (SAGs), although it can also be applied to isolate genomes.",
-            plot=table.plot(data=self.checkm2_data, headers=headers, pconfig=pconfig),
+            plot=table.plot(data=data_by_sample, headers=headers, pconfig=pconfig),
         )
