@@ -127,6 +127,7 @@ config = {
     "xsuffix": "%",                           # Suffix for the X-axis values and labels. Parsed from tt_label by default
     "tt_label": "{x}: {y:.2f}%",              # Customise tooltip label, e.g. '{point.x} base pairs'
     "stacking": "relative",                   # Set to "group" to have category bars side by side
+    "sort_samples": True,                     # Sort samples by name
     "tt_decimals": 0,                         # Number of decimal places to use in the tooltip number
     "tt_suffix": "",                          # Suffix to add after tooltip number
     "height": 500                             # The default height of the plot, in pixels
