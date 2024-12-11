@@ -38,6 +38,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Replace None with actual version if it is available
         self.add_software_version()
 
+        # Write parsed report data to a file
+        self.write_data_file(data_by_sample, "multiqc_checkm2")
+
         self.mag_quality_table(data_by_sample)
 
     def parse_file(self, f, data_by_sample):
