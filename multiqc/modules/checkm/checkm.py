@@ -1,7 +1,7 @@
 import logging
 import re
 
-from multiqc.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from multiqc.plots.table_object import TableConfig
 
@@ -26,22 +26,26 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1101/gr.186072.114"],
         )
 
-        self.checkm_data = {}
-        for f in self.find_log_files(
-            "checkm",
-            filehandles=True,
-        ):
-            self.parse_file(f)
+        data_by_sample = {}
+        for f in self.find_log_files("checkm"):
+            self.parse_file(f, data_by_sample)
             self.add_data_source(f)
-        self.checkm_data = self.ignore_samples(self.checkm_data)
-        if len(self.checkm_data) == 0:
+
+        data_by_sample = self.ignore_samples(data_by_sample)
+        if len(data_by_sample) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.checkm_data)} reports")
+        log.info(f"Found {len(data_by_sample)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
         self.add_software_version()
 
-        self.mag_quality_table()
+        # Write parsed report data to a file
+        self.write_data_file(data_by_sample, "multiqc_checkm")
 
-    def parse_file(self, f):
+        self.mag_quality_table(data_by_sample)
+
+    def parse_file(self, f, data_by_sample):
         """Parses the file from `checkm qa`.
         Outputs from this command can come in several formats and with spaces or tabs.
         This is tested with formats 1 and 2 `-o [1|2]`, and with spaces (default) and tabs `--tab-file`
@@ -94,44 +98,55 @@ class MultiqcModule(BaseMultiqcModule):
             "4",
             "5+",
         )
-        parsed_data = {}
-        for line in f["f"]:
-            if line.startswith("--"):
-                continue
-            elif line.startswith(("  Bin Id ", "Bin Id\t")):
-                # we need to check which format the data is in so we can grab the correct columns later
-                format_different_column = re.split(r"\t| {3,}", line.rstrip())[5]
-                if format_different_column == "0":
-                    column_names = column_names_format_1
-                elif format_different_column == "Completeness":
-                    column_names = column_names_format_2
-                else:
-                    raise ValueError
-                continue
-            column_values = re.split(r"\t| {3,}", line.rstrip())
-            column_values = [None if x == "None" else x for x in column_values]
-            parsed_data[column_values[0]] = {k: v for k, v in zip(column_names, column_values) if v}
-        self.checkm_data.update(parsed_data)
+        lines = f["f"].splitlines()
+        lines = [line.strip() for line in lines if line.strip() and not line.startswith("--")]
+        if len(lines) <= 1:
+            log.warning(f"Skipping file {f['fn']} because it has no data")
+            return
 
-    def mag_quality_table(self):
+        header = lines[0].strip()
+        if not header.startswith(("Bin Id")):
+            log.warning(f"Unrecognized header in {f['fn']}: {header}")
+            return
+
+        # Check which format the data is in so we can grab the correct columns later
+        column_names = []
+        cols = re.split(r"\t| {3,}", header.rstrip())
+        format_different_column = cols[5]
+        if format_different_column == "0":
+            column_names = column_names_format_1
+        elif format_different_column == "Completeness":
+            column_names = column_names_format_2
+        else:
+            log.warning(f"Unrecognized header in {f['fn']}: {header}")
+            return
+
+        for line in lines[1:]:
+            row = re.split(r"\t| {3,}", line.rstrip())
+            sname = row[0]
+            if sname in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {sname}")
+            data_by_sample[sname] = {k: v for k, v in zip(column_names[1:], row[1:]) if v is not None}
+
+    def mag_quality_table(self, data_by_sample):
         headers = {
             "Marker lineage": {
                 "title": "Marker lineage",
                 "description": "indicates lineage used for inferring marker set (a precise indication of where a bin was placed in CheckM's reference tree can be obtained with the tree_qa command)",
             },
             "# genomes": {
-                "title": "# of genomes",
+                "title": "Genomes",
                 "description": "Number of reference genomes used to infer marker set.",
                 "min": 0,
             },
             "# markers": {
-                "title": "# of markers",
+                "title": "Markers",
                 "description": "Number of inferred marker genes.",
                 "min": 0,
                 "scale": "YlGn",
             },
             "# marker sets": {
-                "title": "# of marker sets",
+                "title": "Marker sets",
                 "description": "Number of inferred co-located marker sets",
                 "min": 0,
                 "scale": "YlOrRd-rev",
@@ -158,11 +173,12 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = TableConfig(
             title="Genome Quality",
             id="checkm-first-table",
+            col1_header="Bin Id",
         )
         self.add_section(
             name="Bin quality",
             anchor="checkm-quality",
             description="The quality of microbial genomes recovered from isolates, single cells, and metagenomes.",
             helptext="An automated method for assessing the quality of a genome using a broader set of marker genes specific to the position of a genome within a reference genome tree and information about the collocation of these genes.",
-            plot=table.plot(data=self.checkm_data, headers=headers, pconfig=pconfig),
+            plot=table.plot(data=data_by_sample, headers=headers, pconfig=pconfig),
         )
