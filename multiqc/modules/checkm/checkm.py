@@ -4,6 +4,7 @@ import re
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from multiqc.plots.table_object import TableConfig
+from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
 
@@ -129,10 +130,15 @@ class MultiqcModule(BaseMultiqcModule):
             data_by_sample[sname] = {k: v for k, v in zip(column_names[1:], row[1:]) if v is not None}
 
     def mag_quality_table(self, data_by_sample):
+        lineages = list(set(d.get("Marker lineage") for d in data_by_sample.values()))
+        scale = mqc_colour.mqc_colour_scale("Dark2")
+        lineages_colors = [{v: scale.get_colour(i, lighten=0.5)} for i, v in enumerate(lineages)]
         headers = {
             "Marker lineage": {
                 "title": "Marker lineage",
                 "description": "indicates lineage used for inferring marker set (a precise indication of where a bin was placed in CheckM's reference tree can be obtained with the tree_qa command)",
+                "cond_formatting_colours": lineages_colors,
+                "cond_formatting_rules": {v: [{"s_eq": v}] for v in lineages},
             },
             "# genomes": {
                 "title": "Genomes",
