@@ -406,6 +406,7 @@ module_order:
   - isoseq
   - lima
   - peddy
+  - haplocheck
   - somalier
   - methylqa
   - mosdepth
@@ -421,6 +422,7 @@ module_order:
   - rsem
   - rseqc
   - busco
+  - checkm
   - bustools
   - goleft_indexcov
   - gffcompare
@@ -458,6 +460,7 @@ module_order:
   - vep
   - bakta
   - prokka
+  - checkm2
   - qc3C
   - nanoq
   - nanostat

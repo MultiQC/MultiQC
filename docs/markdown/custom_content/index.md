@@ -448,4 +448,4 @@ The MultiQC automated testing runs with a
 which you can look through for inspiration.
 
 For example, to see a file which generates a table in a report by itself, you can
-have a look at `embedded_config/table_headers_mqc.txt` ([link](https://github.com/MultiQC/test-data/blob/main/data/custom_content/embedded_config/table_headers_mqc.txt)).
+have a look at `embedded_config/table_headers_txt_mqc.txt` ([link](https://github.com/MultiQC/test-data/blob/main/data/custom_content/embedded_config/table_headers_txt_mqc.txt)).

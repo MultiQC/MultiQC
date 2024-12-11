@@ -4,39 +4,45 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.26dev"
+version = "1.25.2"
 dependencies = [
     "click",
     "humanize",
     "importlib_metadata",
     "jinja2>=3.0.0",
-    "kaleido",  # for flat plot export
-    # "orca",  # for flat plot export, alternative for kaleido
-    # "psutil",  # for flat plot export with orca
+    "kaleido==0.2.1",     # for flat plot export
     "markdown",
     "numpy",
     "packaging",
     "requests",
-    "Pillow>=10",  # to add a logo into flat plots
+    "Pillow>=10",         # to add a logo into flat plots
     "plotly>=5.18",
     "pyyaml>=4",
     "rich>=10",
     "rich-click",
-    "coloredlogs",  # logging in notebooks
+    "coloredlogs",        # logging in notebooks
     "spectra>=0.0.10",
     "pydantic>=2.7.0",
     "typeguard",
-    "tqdm",  # progress bar in notebooks
+    "tqdm",               # progress bar in notebooks
+    "natsort",
 ]
 requires-python = ">=3.8"
 authors = [
-    {name = "Phil Ewels", email = "phil.ewels@seqera.io"},
-    {name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io"},
+    { name = "Phil Ewels", email = "phil.ewels@seqera.io" },
+    { name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io" },
 ]
 description = "Create aggregate bioinformatics analysis reports across many samples and tools"
 readme = "README.md"
-license = {file = "LICENSE"}
-keywords = ["bioinformatics", "biology", "sequencing", "NGS", "next generation sequencing", "quality control"]
+license = { file = "LICENSE" }
+keywords = [
+    "bioinformatics",
+    "biology",
+    "sequencing",
+    "NGS",
+    "next generation sequencing",
+    "quality control",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
@@ -61,10 +67,10 @@ dev = [
     "pdoc3",
     "pytest",
     "pytest-cov",
-    "pytest-xdist",  # for parallel testing with `pytest -n`
-    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that
+    "pytest-xdist", # for parallel testing with `pytest -n`
+    "syrupy",       # to compare html snpashots, alternative to pytest-snapshot that
     # does work better with parametrized tests
-    "pygithub",  # to generate changelog
+    "pygithub",             # to generate changelog
     "mypy",
     "types-PyYAML",
     "types-tqdm",
@@ -106,11 +112,13 @@ busco = "multiqc.modules.busco:MultiqcModule"
 bustools = "multiqc.modules.bustools:MultiqcModule"
 ccs = "multiqc.modules.ccs:MultiqcModule"
 cellranger = "multiqc.modules.cellranger:MultiqcModule"
+checkm = "multiqc.modules.checkm:MultiqcModule"
+checkm2 = "multiqc.modules.checkm2:MultiqcModule"
 checkqc = "multiqc.modules.checkqc:MultiqcModule"
 clipandmerge = "multiqc.modules.clipandmerge:MultiqcModule"
 clusterflow = "multiqc.modules.clusterflow:MultiqcModule"
 conpair = "multiqc.modules.conpair:MultiqcModule"
-custom_content = "multiqc.modules.custom_content:custom_module_classes"  # special case
+custom_content = "multiqc.modules.custom_content:custom_module_classes"           # special case
 cutadapt = "multiqc.modules.cutadapt:MultiqcModule"
 damageprofiler = "multiqc.modules.damageprofiler:MultiqcModule"
 dedup = "multiqc.modules.dedup:MultiqcModule"
@@ -136,6 +144,7 @@ glimpse = "multiqc.modules.glimpse:MultiqcModule"
 goleft_indexcov = "multiqc.modules.goleft_indexcov:MultiqcModule"
 gopeaks = "multiqc.modules.gopeaks:MultiqcModule"
 gtdbtk = "multiqc.modules.gtdbtk:MultiqcModule"
+haplocheck = "multiqc.modules.haplocheck:MultiqcModule"
 happy = "multiqc.modules.happy:MultiqcModule"
 hicexplorer = "multiqc.modules.hicexplorer:MultiqcModule"
 hicpro = "multiqc.modules.hicpro:MultiqcModule"
@@ -262,12 +271,12 @@ geo = "multiqc.templates.geo"
 
 [tool.setuptools]
 packages = ["multiqc"]
-package-data = {multiqc = ["py.typed"]}
+package-data = { multiqc = ["py.typed"] }
 
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-lint.ignore = ["F401"]  # unused-import
+lint.ignore = ["F401"]   # unused-import
 
 [tool.mypy]
 check_untyped_defs = true
