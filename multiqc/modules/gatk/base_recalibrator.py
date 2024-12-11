@@ -18,19 +18,24 @@ recal_table_type = RecalTableType(0, 1)
 def parse_gatk_base_recalibrator(module: BaseMultiqcModule) -> int:
     """Find GATK BaseRecalibrator logs and parse their data"""
 
-    report_table_headers = {
-        "#:GATKTable:Arguments:Recalibration argument collection values used in this run": "arguments",
-        "#:GATKTable:Quantized:Quality quantization map": "quality_quantization_map",
-        "#:GATKTable:RecalTable0:": "recal_table_0",
-        "#:GATKTable:RecalTable1:": "recal_table_1",
-        "#:GATKTable:RecalTable2:": "recal_table_2",
+    PREFIXES = {
+        "gatk": "#:GATKTable:",
+        "sentieon": "#:SENTIEON_QCAL_TABLE:",
+    }
+
+    REPORT_TABLE_HEADERS = {
+        "Arguments:Recalibration argument collection values used in this run": "arguments",
+        "Quantized:Quality quantization map": "quality_quantization_map",
+        "RecalTable0:": "recal_table_0",
+        "RecalTable1:": "recal_table_1",
+        "RecalTable2:": "recal_table_2",
     }
     samples_kept = {rt_type: set() for rt_type in recal_table_type}
     data = {
-        recal_type: {table_name: {} for table_name in report_table_headers.values()} for recal_type in recal_table_type
+        recal_type: {table_name: {} for table_name in REPORT_TABLE_HEADERS.values()} for recal_type in recal_table_type
     }
 
-    for f in module.find_log_files("gatk/base_recalibrator", filehandles=True):
+    for f in module.find_log_files("gatk/base_recalibrator"):
         # Check that we're not ignoring this sample name
         if module.is_ignore_sample(f["s_name"]):
             continue
@@ -39,7 +44,19 @@ def parse_gatk_base_recalibrator(module: BaseMultiqcModule) -> int:
         # Replace None with actual version if it is available
         module.add_software_version(None, f["s_name"])
 
-        parsed_data = parse_report(f["f"].readlines(), report_table_headers)
+        # Try GATK first
+        parsed_data = parse_report(
+            f["f"].splitlines(),
+            {PREFIXES["gatk"] + k: v for k, v in REPORT_TABLE_HEADERS.items()},
+        )
+        if len(parsed_data) == 0:
+            parsed_data = parse_report(
+                f["f"].splitlines(),
+                {PREFIXES["sentieon"] + k: v for k, v in REPORT_TABLE_HEADERS.items()},
+            )
+        if len(parsed_data) == 0:
+            continue
+
         rt_type = determine_recal_table_type(parsed_data)
         if len(parsed_data) > 0:
             if f["s_name"] in samples_kept[rt_type]:
@@ -56,16 +73,16 @@ def parse_gatk_base_recalibrator(module: BaseMultiqcModule) -> int:
             data[rt_type][table_name] = module.ignore_samples(sample_tables)
 
     n_reports_found = sum([len(samples_kept[rt_type]) for rt_type in recal_table_type])
+    if n_reports_found == 0:
+        return 0
 
-    if n_reports_found > 0:
-        log.info(f"Found {n_reports_found} BaseRecalibrator reports")
+    log.info(f"Found {n_reports_found} BaseRecalibrator reports")
 
-        # Write data to file
-        module.write_data_file(data, "gatk_base_recalibrator")
+    # Write data to file
+    module.write_data_file(data, "gatk_base_recalibrator")
 
-        add_quality_score_vs_no_of_observations_section(module, data)
-        add_reported_vs_empirical_section(module, data)
-
+    add_quality_score_vs_no_of_observations_section(module, data)
+    add_reported_vs_empirical_section(module, data)
     return n_reports_found
 
 
