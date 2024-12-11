@@ -1,6 +1,6 @@
 import logging
 
-from multiqc.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from multiqc.plots.table_object import TableConfig
 
@@ -25,19 +25,25 @@ class MultiqcModule(BaseMultiqcModule):
             doi=["10.1093/bioinformatics/btac672"],
         )
 
-        self.gtdbtk_data = {}
-        for f in self.find_log_files("gtdbtk", filehandles=True):
-            self.parse_file(f)
+        data_by_sample = {}
+        for f in self.find_log_files("gtdbtk"):
+            self.parse_file(f, data_by_sample)
             self.add_data_source(f)
-        self.gtdbtk_data = self.ignore_samples(self.gtdbtk_data)
-        if len(self.gtdbtk_data) == 0:
+
+        data_by_sample = self.ignore_samples(data_by_sample)
+        if len(data_by_sample) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.gtdbtk_data)} reports")
-        self.add_software_version(None)  # may need to fix this?
+        log.info(f"Found {len(data_by_sample)} reports")
 
-        self.closest_taxa_table()
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version()
 
-    def parse_file(self, f):
+        self.write_data_file(data_by_sample, "multiqc_gtdbtk")
+
+        self.closest_taxa_table(data_by_sample)
+
+    def parse_file(self, f, data_by_sample):
         """Parse the summary.tsv outputs."""
         column_names = (
             "user_genome",
@@ -61,16 +67,21 @@ class MultiqcModule(BaseMultiqcModule):
             "red_value",
             "warnings",
         )
-        parsed_data = {}
-        for line in f["f"]:
-            if line.startswith("user_genome\t"):
+        lines = f["f"].splitlines()
+        if len(lines) <= 1:
+            log.warning(f"Skipping file {f['fn']} because it has no data")
+            return
+        for line in lines[1:]:
+            row = line.rstrip().split("\t")
+            if len(row) != len(column_names):
+                log.warning(f"Skipping line {line} because it has {len(row)} columns instead of {len(column_names)}")
                 continue
-            column_values = line.rstrip().split("\t")
-            column_values = [None if x == "None" else x for x in column_values]
-            parsed_data[column_values[0]] = {k: v for k, v in zip(column_names, column_values) if v is not None}
-        self.gtdbtk_data.update(parsed_data)
+            sname = row[0]
+            if sname in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {sname}")
+            data_by_sample[sname] = {k: v for k, v in zip(column_names[1:], row[1:]) if v}
 
-    def closest_taxa_table(self):
+    def closest_taxa_table(self, data_by_sample):
         """Add a table showing the closest taxa for each query genome."""
         classication_method_translate_dict = {
             "taxonomic classification defined by topology and ANI": ["closest_genome_ani", "closest_genome_af"],
@@ -82,19 +93,19 @@ class MultiqcModule(BaseMultiqcModule):
             "taxonomic novelty determined using RED": [None, None],
         }
         table_data = {}
-        for sample_name in self.gtdbtk_data:
-            sample = self.gtdbtk_data[sample_name]
+        for sample_name in data_by_sample:
+            data = data_by_sample[sample_name]
             classification_value_columns = classication_method_translate_dict.get(
-                sample.get("classification_method"), [None, None]
+                data.get("classification_method"), [None, None]
             )
-            table_data[sample.get("user_genome")] = {
-                "classification": sample.get("classification", None),
-                "classification_method": sample.get("classification_method", None),
-                "ANI": sample.get(classification_value_columns[0], None),
-                "AF": sample.get(classification_value_columns[1], None),
-                "red_value": sample.get("red_value", None),
-                "note": sample.get("note"),
-                "warnings": sample.get("warnings"),
+            table_data[data.get("user_genome")] = {
+                "classification": data.get("classification", None),
+                "classification_method": data.get("classification_method", None),
+                "ANI": data.get(classification_value_columns[0], None),
+                "AF": data.get(classification_value_columns[1], None),
+                "red_value": data.get("red_value", None),
+                "note": data.get("note"),
+                "warnings": data.get("warnings"),
             }
         headers = {
             "classification": {
@@ -136,6 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = TableConfig(
             title="Taxonomy classifications",
             id="gtdbtk-first-table",
+            col1_header="User genome",
         )
         self.add_section(
             name="MAG taxonomy",
