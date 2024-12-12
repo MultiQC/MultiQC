@@ -159,7 +159,6 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.percolator) == 0:
             raise ModuleNoSamplesFound
         log.info(f"Found {len(self.percolator)} logs")
-        self.write_data_file(self.percolator, "multiqc_percolator_full")
 
         # Summarize the data from all samples by computing the median across all samples for each feature
         self.summarized_data = {group: dict() for group in feature_name_dict.keys()}
@@ -175,9 +174,9 @@ class MultiqcModule(BaseMultiqcModule):
         helptext = """For each feature, the associated weight is the median value calculated over all input samples. 
         Prior to computing the median, the absolute value was calculated, 
         as only the magnitude is of interest in this context."""
-        self.add_section(
-            plot=self.percolator_barplot(), helptext=helptext, description=descr_plot
-        )
+        self.add_section(plot=self.percolator_barplot(), helptext=helptext, description=descr_plot)
+
+        self.write_data_file(self.percolator, "multiqc_percolator_full")
 
     def parse_percolator(self, file):
         """Extract the normalized weights for each feature from the percolator logs."""
@@ -203,11 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Collect the values for each feature across all samples
         for sample_dict in self.percolator.values():
             for feature, value in sample_dict.items():
-                group = [
-                    group
-                    for group, features in feature_name_dict.items()
-                    if feature in features
-                ]
+                group = [group for group, features in feature_name_dict.items() if feature in features]
                 assert len(group) == 1
                 group = group[0]
                 if feature not in self.summarized_data[group]:
