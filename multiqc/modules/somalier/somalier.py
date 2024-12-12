@@ -79,9 +79,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
-        # Write parsed report data to a file
-        self.write_data_file(self.somalier_data, "multiqc_somalier")
-
         # Somalier Stats Table
         self.somalier_stats_table()
 
@@ -99,6 +96,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.somalier_ancestry_barplot()
 
         self.somalier_ancestry_pca_plot()
+
+        # Write parsed report data to a file
+        self.write_data_file(self.somalier_data, "multiqc_somalier")
 
     @staticmethod
     def parse_somalier_samples(f):
