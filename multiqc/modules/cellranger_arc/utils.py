@@ -6,11 +6,12 @@ def update_dict(rows_list, help):
     table = dict()
     headers = dict()
 
-    help_dict = {lst[0]: lst[1][0] for lst in help}
+    help_dict = {lst[0]: lst[1][0].strip(".") for lst in help}
     for col_name, col_data in rows_list:
         # Sanitize numeric data
         is_percentage = "%" in col_data
         col_data = col_data.replace(",", "").replace("%", "")
+        is_integer = col_data.isdigit()
 
         # Convert to float when possible
         try:
@@ -23,7 +24,7 @@ def update_dict(rows_list, help):
         # Assign shared/regular keys
         if col_name == "Sequenced read pairs":
             headers[col_name] = {
-                "title": f"{config.read_count_prefix} {col_name}",
+                "title": col_name,
                 "description": f"{help_dict[col_name]} ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
@@ -36,6 +37,8 @@ def update_dict(rows_list, help):
             }
         if col_name == "Estimated number of cells":
             headers[col_name]["shared_key"] = "cell_count"
+
+        if is_integer:
             headers[col_name]["format"] = "{:,.0f}"
 
         if is_percentage:
