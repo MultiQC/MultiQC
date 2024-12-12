@@ -93,18 +93,11 @@ def parse_time_metrics_file(f):
     data = {}
     for line in f["f"].splitlines():
         tokens = line.split(",")
-        if len(tokens) == 4:
-            analysis, _, metric, stat = tokens
-            percentage = None
-        elif len(tokens) == 5:
-            analysis, _, metric, stat, percentage = tokens
-        else:
-            raise ValueError(f"Unexpected number of tokens in line {line}")
-
+        analysis, _, metric, timestr, seconds = tokens
         try:
-            stat = float(stat)
+            seconds = float(seconds)
         except ValueError:
-            pass
-        data[metric] = stat
+            seconds = 0
+        data[metric] = seconds
 
     return data
