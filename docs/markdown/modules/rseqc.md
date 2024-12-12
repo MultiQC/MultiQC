@@ -1,5 +1,6 @@
 ---
 title: RSeQC
+displayed_sidebar: multiqcSidebar
 description: >
   Evaluates high throughput RNA-seq data
 ---

@@ -1,5 +1,6 @@
 ---
 title: CheckQC
+displayed_sidebar: multiqcSidebar
 description: >
   Checks a set of quality criteria against an Illumina runfolder
 ---

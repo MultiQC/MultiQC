@@ -1,5 +1,6 @@
 ---
 title: MEGAHIT
+displayed_sidebar: multiqcSidebar
 description: >
   NGS read assembler
 ---

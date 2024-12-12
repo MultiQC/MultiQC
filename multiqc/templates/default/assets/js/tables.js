@@ -381,10 +381,22 @@ $(function () {
     let col2 = $("#table_scatter_col2").val().replace("header_", "");
     let col1_name = $("#table_scatter_col1 option:selected").text();
     let col2_name = $("#table_scatter_col2 option:selected").text();
-    let col1_max = parseFloat($("#" + tableAnchor + " thead th#header_" + col1).data("dmax"));
     let col1_min = parseFloat($("#" + tableAnchor + " thead th#header_" + col1).data("dmin"));
+    let col1_max = parseFloat($("#" + tableAnchor + " thead th#header_" + col1).data("dmax"));
     let col2_max = parseFloat($("#" + tableAnchor + " thead th#header_" + col2).data("dmax"));
     let col2_min = parseFloat($("#" + tableAnchor + " thead th#header_" + col2).data("dmin"));
+    if (!isNaN(col1_min) && !isNaN(col1_max) && col1_max != 0) {
+      col1_max += (col1_max - col1_min) * 0.05;
+    }
+    if (!isNaN(col1_min) && !isNaN(col1_max) && col1_min != 0) {
+      col1_min -= (col1_max - col1_min) * 0.05;
+    }
+    if (!isNaN(col2_min) && !isNaN(col2_max) && col2_max != 0) {
+      col2_max += (col2_max - col2_min) * 0.05;
+    }
+    if (!isNaN(col2_min) && !isNaN(col2_max) && col2_min != 0) {
+      col2_min -= (col2_max - col2_min) * 0.05;
+    }
     if (isNaN(col1_max)) {
       col1_max = undefined;
     }
@@ -406,34 +418,15 @@ $(function () {
       } else {
         plotTitle = tableAnchor.replace(/_/g, " ");
       }
-      // Get the data values
-      // let plot = {
-      //   plot_type: "scatter",
-      //   config: {
-      //     anchor: "table_scatter_" + tableAnchor,
-      //     title: plotTitle,
-      //     xlab: col1_name,
-      //     ylab: col2_name,
-      //     xmin: col1_min,
-      //     xmax: col1_max,
-      //     ymin: col2_min,
-      //     ymax: col2_max,
-      //   },
-      //   datasets: [[]],
-      //   // activeDatasetIdx: 0,
-      //   // axisControlledBySwitches: [],
-      // };
       let plotDataset = [];
       $("#" + tableAnchor + " tbody tr").each(function (e) {
         let sName = $(this).children("th.rowheader").text();
         let val_1 = $(this)
           .children("td." + col1)
-          .text()
-          .replace(/[^\d\.]/g, "");
+          .data("sorting-val");
         let val_2 = $(this)
           .children("td." + col2)
-          .text()
-          .replace(/[^\d\.]/g, "");
+          .data("sorting-val");
         if (!isNaN(parseFloat(val_1)) && isFinite(val_1) && !isNaN(parseFloat(val_2)) && isFinite(val_2)) {
           plotDataset.push({
             name: sName,

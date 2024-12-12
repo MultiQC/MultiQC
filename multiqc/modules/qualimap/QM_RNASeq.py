@@ -240,7 +240,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
             "id": "qualimap_gene_coverage_profile",
             "title": "QualiMap: RNAseq: Coverage Profile Along Genes (total)",
             "ylab": "Cumulative mapped-read depth",
-            "xlab": "Transcript Position (%)",
+            "xlab": "Transcript Position 5'->3' (%)",
             "ymin": 0,
             "xmin": 0,
             "xmax": 100,

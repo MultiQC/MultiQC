@@ -1,5 +1,6 @@
 ---
 title: QualiMap
+displayed_sidebar: multiqcSidebar
 description: >
   Quality control of alignment data and its derivatives like feature counts
 ---

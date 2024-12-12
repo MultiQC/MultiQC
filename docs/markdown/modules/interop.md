@@ -1,5 +1,6 @@
 ---
 title: Illumina InterOp Statistics
+displayed_sidebar: multiqcSidebar
 description: >
   Reading and writing InterOp metric files
 ---

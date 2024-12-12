@@ -219,6 +219,12 @@ cellranger_arc:
   - fn: "*.html"
     contents: "Cell Ranger ARC"
     num_lines: 250
+checkm:
+  - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})# markers(?:\t| {3,})# marker sets.*"
+    num_lines: 10
+checkm2:
+  contents: "Name	Completeness	Contamination	Completeness_Model_Used	Translation_Table_Used	Coding_Density	Contig_N50	Average_Gene_Length	Genome_Size	GC_Content	Total_Coding_Sequences	Total_Contigs	Max_Contig_Length"
+  num_lines: 10
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"
@@ -248,7 +254,9 @@ cutadapt:
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
-  fn: "*dedup.json"
+  fn: "*.json"
+  contents: '"tool_name": "DeDup"'
+  num_lines: 20
 deeptools/bamPEFragmentSizeTable:
   contents: "	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu."
   num_lines: 1
@@ -366,8 +374,10 @@ ganon:
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
 gatk/base_recalibrator:
-  contents: "#:GATKTable:Arguments:Recalibration"
-  num_lines: 3
+  - contents: "#:GATKTable:Arguments:Recalibration"
+    num_lines: 3
+  - contents: "#:SENTIEON_QCAL_TABLE:Arguments:Recalibration"
+    num_lines: 3
 gatk/analyze_saturation_mutagenesis:
   fn: "*.readCounts"
   contents: ">>Reads in disjoint pairs evaluated separately:"
@@ -388,6 +398,12 @@ goleft_indexcov/ped:
   fn: "*-indexcov.ped"
 gopeaks:
   fn: "*_gopeaks.json"
+gtdbtk:
+  contents: "user_genome	classification	closest_genome_reference	closest_genome_reference_radius	closest_genome_taxonomy	closest_genome_ani"
+  num_lines: 10
+haplocheck:
+  contents: '"Sample"	"Contamination Status"	"Contamination Level"	"Distance"	"Sample Coverage"'
+  num_lines: 10
 happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"

@@ -1,5 +1,6 @@
 ---
 title: QoRTs
+displayed_sidebar: multiqcSidebar
 description: >
   Toolkit for analysis, QC, and data management of RNA-Seq datasets
 ---

@@ -170,8 +170,7 @@ class BaseMultiqcModule:
         self.anchor = Anchor(report.save_htmlid(str(self.anchor)))
 
         # See if we have a user comment in the config
-        _config_section_comment = config.section_comments.get(str(self.anchor))
-        if _config_section_comment:
+        if _config_section_comment := config.section_comments.get(str(self.anchor)):
             self.comment = _config_section_comment
 
         self.info = self.info.strip().strip(".")
@@ -450,11 +449,13 @@ class BaseMultiqcModule:
             logger.debug(f"Skipping section with id '{id}' because specified in user config")
             return
 
-        # See if we have a user comment in the config
-        if str(id) in config.section_comments:
-            comment = config.section_comments[str(id)]
-        elif str(anchor) in config.section_comments:
-            comment = config.section_comments[str(anchor)]
+        # See if we have a user comment in the config, but only if the section ID is different from the module ID
+        # (otherwise it's a duplicate comment)
+        if self.anchor != id and self.anchor != anchor:
+            if str(id) in config.section_comments:
+                comment = config.section_comments[str(id)]
+            elif str(anchor) in config.section_comments:
+                comment = config.section_comments[str(anchor)]
 
         # Format the content
         if autoformat:
@@ -1002,6 +1003,19 @@ class BaseMultiqcModule:
                 _headers[col_id]["namespace"] = self.name + ": " + str(namespace)
             if "description" not in _headers[col_id]:
                 _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
+
+            # Add grouping information to description if table_sample_merge is enabled
+            if config.table_sample_merge:
+                desc = _headers[col_id].get("description", "")
+                if group_samples_config.cols_to_weighted_average and any(
+                    col_id == c for c, _ in group_samples_config.cols_to_weighted_average
+                ):
+                    desc += " (weighted average for grouped samples)"
+                elif group_samples_config.cols_to_average and col_id in group_samples_config.cols_to_average:
+                    desc += " (averaged for grouped samples)"
+                elif group_samples_config.cols_to_sum and col_id in group_samples_config.cols_to_sum:
+                    desc += " (summed for grouped samples)"
+                _headers[col_id]["description"] = desc
 
         # Append to report.general_stats for later assembly into table
         report.general_stats_data.append(rows_by_group)

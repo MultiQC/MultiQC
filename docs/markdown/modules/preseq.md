@@ -1,5 +1,6 @@
 ---
 title: Preseq
+displayed_sidebar: multiqcSidebar
 description: >
   Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count
 ---

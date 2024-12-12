@@ -1,5 +1,6 @@
 ---
 title: Sourmash
+displayed_sidebar: multiqcSidebar
 description: >
   Quickly searches, compares, and analyzes genomic and metagenomic data sets
 ---

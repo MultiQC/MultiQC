@@ -154,9 +154,9 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     "section_name": f["s_name"].replace("_", " ").replace("-", " ").replace(".", " "),
                     "data": img_html,
                 }
-                # # If the search pattern 'k' has an associated custom content section config, use it:
-                # if config_custom_data_id in ccdict_by_id:
-                #     parsed_dict.update(ccdict_by_id[config_custom_data_id].config)
+                # If the search pattern 'k' has an associated custom content section config, use it:
+                if config_custom_data_id in ccdict_by_id:
+                    parsed_dict.update(ccdict_by_id[config_custom_data_id].config)  # type: ignore
             elif f_extension == ".html":
                 parsed_dict = {"id": f["s_name"], "plot_type": "html", "data": str(f["f"])}
                 parsed_dict.update(_find_html_file_header(f))
@@ -493,7 +493,7 @@ class MultiqcModule(BaseMultiqcModule):
                     pass
 
             # Table
-            if plot_type == PlotType.TABLE:
+            if plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
                 headers = ccdict.config.get("headers")
 
                 # handle some legacy fields for backwards compat
@@ -504,7 +504,9 @@ class MultiqcModule(BaseMultiqcModule):
                 if no_violin is not None:
                     pconfig["no_violin"] = no_violin
 
-                plot = table.plot(plot_datasets, headers=headers, pconfig=pconfig)  # type: ignore
+                plot = (table if plot_type == PlotType.TABLE else violin).plot(
+                    plot_datasets, headers=headers, pconfig=pconfig
+                )
 
             # Bar plot
             elif plot_type == PlotType.BAR:
@@ -529,13 +531,13 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Raw HTML
             elif plot_type == PlotType.HTML:
-                if len(ccdict.data) > 1:
+                if isinstance(ccdict.data, list) and len(ccdict.data) > 1:
                     log.warning(f"HTML plot type found with more than one dataset in {section_id}")
                 content = cast(str, ccdict.data)
 
             # Raw image file as html
             elif plot_type == PlotType.IMAGE:
-                if len(ccdict.data) > 1:
+                if isinstance(ccdict.data, list) and len(ccdict.data) > 1:
                     log.warning(f"Image plot type found with more than one dataset in {section_id}")
                 content = cast(str, ccdict.data)
 
@@ -760,7 +762,7 @@ def _parse_txt(
         return box_ddict, conf, plot_type
 
     # Header row of strings, or configured as table
-    if strings_in_first_row == len(matrix[0]) or plot_type == PlotType.TABLE:
+    if strings_in_first_row == len(matrix[0]) or plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
         data_ddict = dict()
         for row in matrix[1:]:
             s_name = str(row[0])
@@ -780,12 +782,12 @@ def _parse_txt(
                 plot_type = PlotType.TABLE
         # Set table col_1 header
         col_name = str(matrix[0][0])
-        if conf.get("plot_type") == "table" and col_name.strip() != "":
+        if plot_type in [PlotType.TABLE, PlotType.VIOLIN] and col_name.strip() != "":
             conf["pconfig"] = conf.get("pconfig", {})
             if not conf["pconfig"].get("col1_header"):
                 conf["pconfig"]["col1_header"] = col_name.strip()
         # Return parsed data
-        if plot_type == PlotType.BAR or plot_type == PlotType.TABLE:
+        if plot_type in [PlotType.BAR, PlotType.TABLE, PlotType.VIOLIN]:
             return data_ddict, conf, plot_type
         else:
             data_ddict = dict()  # reset

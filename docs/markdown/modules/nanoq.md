@@ -1,5 +1,6 @@
 ---
 title: nanoq
+displayed_sidebar: multiqcSidebar
 description: >
   Reports read quality and length from nanopore sequencing data
 ---

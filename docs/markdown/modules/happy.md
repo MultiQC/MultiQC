@@ -1,5 +1,6 @@
 ---
 title: hap.py
+displayed_sidebar: multiqcSidebar
 description: >
   Benchmarks variant calls against gold standard truth datasets
 ---

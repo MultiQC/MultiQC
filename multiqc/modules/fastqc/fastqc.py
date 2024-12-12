@@ -737,6 +737,8 @@ class MultiqcModule(BaseMultiqcModule):
                 for base in ["a", "c", "t", "g"]:
                     if math.isnan(float(data_by_sample[s_name][b][base])):
                         data_by_sample[s_name][b][base] = 0
+                    else:
+                        data_by_sample[s_name][b][base] = round(data_by_sample[s_name][b][base], 2)
 
         if len(data_by_sample) == 0:
             log.debug("sequence_content not found in FastQC reports")
