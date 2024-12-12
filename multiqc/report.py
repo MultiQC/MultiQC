@@ -1080,7 +1080,7 @@ def multiqc_dump_json(data_dir: Path):
             logger.warning(f"Couldn't write raw data to JSON file: {e}")
 
         if config.megaqc_url:
-            megaqc.multiqc_api_post(exported_data)
+            megaqc.multiqc_api_post(out_path)
 
 
 def get_all_sections() -> List[Section]:
