@@ -1,5 +1,6 @@
 ---
 title: Sickle
+displayed_sidebar: multiqcSidebar
 description: >
   A windowed adaptive trimming tool for FASTQ files using quality
 ---

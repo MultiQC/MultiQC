@@ -1,5 +1,6 @@
 ---
 title: Tophat
+displayed_sidebar: multiqcSidebar
 description: >
   Splice junction RNA-Seq reads mapper for mammalian-sized genomes
 ---

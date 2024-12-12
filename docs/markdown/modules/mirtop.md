@@ -1,5 +1,6 @@
 ---
 title: mirtop
+displayed_sidebar: multiqcSidebar
 description: >
   Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format
 ---

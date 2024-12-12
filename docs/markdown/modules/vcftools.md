@@ -1,5 +1,6 @@
 ---
 title: VCFTools
+displayed_sidebar: multiqcSidebar
 description: >
   Program to analyse and reporting on VCF files
 ---

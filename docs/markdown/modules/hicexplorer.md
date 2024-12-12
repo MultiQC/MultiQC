@@ -1,5 +1,6 @@
 ---
 title: HiCExplorer
+displayed_sidebar: multiqcSidebar
 description: >
   Hi-C analysis from processing to visualization
 ---

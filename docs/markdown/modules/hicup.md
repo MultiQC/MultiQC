@@ -1,5 +1,6 @@
 ---
 title: HiCUP
+displayed_sidebar: multiqcSidebar
 description: >
   Mapping and quality control on Hi-C data
 ---

@@ -116,8 +116,10 @@ class ColumnMeta(ValidatedConfig):
         table_anchor: Anchor,
     ) -> "ColumnMeta":
         # Overwrite any header config if set in config
-        for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_key, {}).items():
-            col_dict[custom_k] = custom_v  # type: ignore
+        if header_config := config.custom_table_header_config.get(pconfig.id, {}):
+            if col_config := header_config.get(col_key, {}):
+                for custom_k, custom_v in col_config.items():
+                    col_dict[custom_k] = custom_v  # type: ignore
 
         namespace = col_dict.get("namespace", pconfig.namespace) or ""
         assert isinstance(namespace, str)
@@ -130,6 +132,12 @@ class ColumnMeta(ValidatedConfig):
             ns_slugified = re.sub(r"\W+", "_", str(namespace)).strip().strip("_").lower()
             _rid = f"{ns_slugified}-{_rid}"
         col_dict["rid"] = ColumnAnchor(report.save_htmlid(_rid, scope=table_anchor))
+
+        # Additionally override the header config assuming rid is used (for legacy docs)
+        if header_config:
+            if col_config := header_config.get(col_dict["rid"], {}):
+                for custom_k, custom_v in col_config.items():
+                    col_dict[custom_k] = custom_v  # type: ignore
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
         shared_key = col_dict.get("shared_key", None)
@@ -252,7 +260,7 @@ class InputRow(BaseModel):
     """
 
     sample: SampleName
-    data: Dict[ColumnKey, Optional[ValueT]] = dict()
+    data: Dict[ColumnKey, Optional[ValueT]] = Field(default_factory=dict)
 
     def __init__(self, sample: SampleName, data: Mapping[Union[str, ColumnKey], Any]):
         super().__init__(

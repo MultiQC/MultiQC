@@ -1,5 +1,6 @@
 ---
 title: RNA-SeQC
+displayed_sidebar: multiqcSidebar
 description: >
   RNA-Seq metrics for quality control and process optimization
 ---

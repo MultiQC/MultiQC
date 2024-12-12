@@ -1,5 +1,6 @@
 ---
 title: miRTrace
+displayed_sidebar: multiqcSidebar
 description: >
   Quality control for small RNA sequencing data
 ---

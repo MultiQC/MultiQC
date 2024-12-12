@@ -1,5 +1,6 @@
 ---
 title: Kallisto
+displayed_sidebar: multiqcSidebar
 description: >
   Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data
 ---

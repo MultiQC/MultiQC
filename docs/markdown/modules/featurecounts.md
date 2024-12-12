@@ -1,5 +1,6 @@
 ---
 title: featureCounts
+displayed_sidebar: multiqcSidebar
 description: >
   Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations
 ---

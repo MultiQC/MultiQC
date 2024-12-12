@@ -1,5 +1,6 @@
 ---
 title: UMI-tools
+displayed_sidebar: multiqcSidebar
 description: >
   Tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes
 ---

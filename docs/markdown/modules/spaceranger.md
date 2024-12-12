@@ -1,5 +1,6 @@
 ---
 title: Space Ranger
+displayed_sidebar: multiqcSidebar
 description: >
   Tool to analyze 10x Genomics spatial transcriptomics data
 ---

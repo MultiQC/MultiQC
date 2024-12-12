@@ -1,5 +1,6 @@
 ---
 title: HOPS
+displayed_sidebar: multiqcSidebar
 description: >
   Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT
 ---

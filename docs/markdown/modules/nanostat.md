@@ -1,5 +1,6 @@
 ---
 title: NanoStat
+displayed_sidebar: multiqcSidebar
 description: >
   Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp)
 ---

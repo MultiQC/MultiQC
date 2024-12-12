@@ -1,5 +1,6 @@
 ---
 title: STAR
+displayed_sidebar: multiqcSidebar
 description: >
   Universal RNA-seq aligner
 ---

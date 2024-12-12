@@ -1,5 +1,6 @@
 ---
 title: SNPsplit
+displayed_sidebar: multiqcSidebar
 description: >
   Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions
 ---

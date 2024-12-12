@@ -4,20 +4,35 @@ This checklist is for my own reference, as I forget the steps every time.
 
 1. Check that everything is up-to-date and ready to go
 2. Update version numbers in `pyproject.toml`
-3. Run `python scripts/print_changelog.py` to generate a new changelog section stub, paste it into `CHANGELOG.md` and edit accordingly: group changes if needed, add highlights.
-4. Run `python scripts/make_module_docs.py` to update markdown files for module
-5. Install the package again in `install` mode:
+3. Generate a new changelog section stub (make sure to export a GitHub token to avoid rate limits):
 
    ```bash
+   export GITHUB_TOKEN=<your token>
+   python scripts/print_changelog.py
+   ```
+
+   Then paste it into `CHANGELOG.md` and edit accordingly: group changes if needed, add highlights.
+
+4. Update module documentation markdown files:
+
+   ```bash
+   python scripts/make_module_docs.py
+   ```
+
+5. Install the package again in the `install` mode. Make sure to remove the build directory and egg info that might cache outdated metadata such as entry point names:
+
+   ```bash
+   rm -rf build/ *.egg-info
    pip install .
    ```
 
-   - This removes the commit hash from the version number when MultiQC runs
-   - If still getting the commit hash in the version, check that the `venv` isn't in a subdirectory of the cloned MultiQC git repo
+   This removes the commit hash from the version number when MultiQC runs.
 
 6. Run using test data
+
    - Check for any command line or javascript errors
    - Check version numbers are printed correctly
+
 7. Create new demo reports for the website
 
    - Comment out any config in `~/.multiqc_config.yaml`
@@ -26,9 +41,10 @@ This checklist is for my own reference, as I forget the steps every time.
      mv ~/.multiqc_config.yml ~/.multiqc_config.yml.bkup
      ```
 
-   - Generate reports in the multiqc/website repo.
+   - Generate reports in the seqeralabs/web repo.
 
      ```bash
+     cd ../seqeralabs/web/packages/website
      bash update_examples.sh
      ```
 
