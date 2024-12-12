@@ -40,6 +40,10 @@ class DragenRnaQuantMetrics(BaseMultiqcModule):
         if not data_by_sample:
             return set()
 
+        # Only plot data, don't want to write this to a file
+        # (can do so with --export-plots already)
+        # self.write_data_file(data_by_sample, "dragen_quant_metrics")
+
         # Warn if mixed styles are detected
         if has_old_style and has_new_style:
             log.warning(
