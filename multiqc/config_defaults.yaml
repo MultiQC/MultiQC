@@ -406,6 +406,7 @@ module_order:
   - isoseq
   - lima
   - peddy
+  - percolator
   - haplocheck
   - somalier
   - methylqa
