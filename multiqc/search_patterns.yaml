@@ -394,6 +394,9 @@ goleft_indexcov/ped:
   fn: "*-indexcov.ped"
 gopeaks:
   fn: "*_gopeaks.json"
+gtdbtk:
+  contents: "user_genome	classification	closest_genome_reference	closest_genome_reference_radius	closest_genome_taxonomy	closest_genome_ani"
+  num_lines: 10
 haplocheck:
   contents: '"Sample"	"Contamination Status"	"Contamination Level"	"Distance"	"Sample Coverage"'
   num_lines: 10

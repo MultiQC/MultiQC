@@ -112,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Check which format the data is in so we can grab the correct columns later
         column_names = []
-        cols = re.split(r"\t| {3,}", header.rstrip())
+        cols = re.split(r"\t| {3,}", header.rstrip("\n"))
         format_different_column = cols[5]
         if format_different_column == "0":
             column_names = column_names_format_1
@@ -123,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         for line in lines[1:]:
-            row = re.split(r"\t| {3,}", line.rstrip())
+            row = re.split(r"\t| {3,}", line.rstrip("\n"))
             sname = row[0]
             if sname in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {sname}")

@@ -484,6 +484,7 @@ module_order:
   - truvari
   - megahit
   - ganon
+  - gtdbtk
   # Alignment tool stats
   - bbmap
   - bismark
