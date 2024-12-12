@@ -65,14 +65,14 @@ def write_results() -> None:
     if len(report.modules) == 0:
         raise NoAnalysisFound("No analysis data for any module. Check that input files and directories exist")
 
-    output_names: OutputNames = _set_output_names()
+    output_file_names: OutputNames = _set_output_names()
 
-    render_and_export_plots(plots_dir_name=output_names.plots_dir_name)
+    render_and_export_plots(plots_dir_name=output_file_names.plots_dir_name)
 
     if not config.skip_generalstats:
-        _render_general_stats_table(plots_dir_name=output_names.plots_dir_name)
+        _render_general_stats_table(plots_dir_name=output_file_names.plots_dir_name)
 
-    paths: OutputPaths = _create_or_override_dirs(output_names)
+    paths: OutputPaths = _create_or_override_dirs(output_file_names)
 
     if config.make_data_dir and not paths.to_stdout and paths.data_dir:
         _write_data_files(paths.data_dir)
@@ -233,9 +233,9 @@ def _create_or_override_dirs(output_names: OutputNames) -> OutputPaths:
                 report_num += 1
             if config.make_report and isinstance(paths.report_path, Path):
                 output_names.output_fn_name = paths.report_path.name
-            if config.data_dir:
+            if config.data_dir and paths.data_dir:
                 output_names.data_dir_name = paths.data_dir.name
-            if config.plots_dir:
+            if config.plots_dir and paths.plots_dir:
                 output_names.plots_dir_name = paths.plots_dir.name
             logger.info("Existing reports found, adding suffix to filenames. Use '--force' to overwrite.")
 

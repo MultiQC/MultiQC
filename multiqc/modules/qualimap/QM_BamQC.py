@@ -85,8 +85,11 @@ def parse_genome_results(module: BaseMultiqcModule) -> Tuple[Dict, Dict]:
             "number of mapped reads": "mapped_reads",
             "number of mapped reads inside": "regions_mapped_reads",
             "number of mapped bases": "mapped_bases",
+            "number of mapped paired reads (both in pair)": "mapped_paired_reads",
             "number of sequenced bases": "sequenced_bases",
             "regions size": "regions_size",
+            "number of N's": "ns",
+            "number of duplicated reads (flagged)": "duplicated_reads_flagged",
         }
         float_metrics = {
             "mean insert size": "mean_insert_size",
@@ -170,12 +173,16 @@ def parse_genome_results(module: BaseMultiqcModule) -> Tuple[Dict, Dict]:
             in [
                 "total_reads",
                 "mapped_reads",
+                "mapped_paired_reads",
                 "general_error_rate",
                 "mean_coverage",
                 "regions_size",
                 "regions_mapped_reads",
                 "percentage_aligned",
                 "percentage_aligned_on_target",
+                "ns",
+                "duplication_rate",
+                "duplicated_reads_flagged",
             ]
         }
 
@@ -694,12 +701,37 @@ def general_stats_headers(threshs, hidden_threshs) -> Dict:
         "shared_key": "read_count",
         "hidden": True,
     }
+    headers["mapped_paired_reads"] = {
+        "title": f"{config.read_count_prefix} Paired",
+        "description": f"Number of mapped paired reads ({config.read_count_desc})",
+        "scale": "RdYlGn",
+        "shared_key": "read_count",
+        "hidden": True,
+    }
     headers["total_reads"] = {
         "title": f"{config.read_count_prefix} Total reads",
         "description": f"Number of reads ({config.read_count_desc})",
         "scale": "Blues",
         "shared_key": "read_count",
         "hidden": True,
+    }
+    headers["ns"] = {
+        "title": "N's",
+        "description": "Number of N's",
+        "scale": "RdYlGn",
+        "hidden": True,
+    }
+    headers["duplicated_reads_flagged"] = {
+        "title": "Duplicated",
+        "description": "Number of duplicated reads (flagged)",
+        "scale": "RdYlGn",
+        "hidden": True,
+    }
+    headers["duplication_rate"] = {
+        "title": "Dup rate",
+        "description": "Duplication rate",
+        "suffix": "%",
+        "scale": "RdYlGn",
     }
     return headers
 
