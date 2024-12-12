@@ -118,6 +118,7 @@ TrimmomaticSE: Completed successfully""")
             fn_clean_sample_names=fn_clean_sample_names,
             prepend_dirs=prepend_dirs,
             dirs_depth=1 if prepend_dirs else None,
+            preserve_module_raw_data=True,
         )
     )
 
@@ -128,6 +129,7 @@ TrimmomaticSE: Completed successfully""")
 
     m = MultiqcModule()
 
+    assert m.saved_raw_data is not None
     assert expected_sample_name in m.saved_raw_data[f"multiqc_{MODULE_NAME}"]
 
 
@@ -166,12 +168,15 @@ def test_path_filters(multiqc_reset, tmp_path, data_dir):
                 },
             },
         ],
+        preserve_module_raw_data=True,
     )
 
     assert len(report.modules) == 2
     assert len(report.general_stats_data) == 2
     assert report.modules[0].name == "adapterremoval (single end)"
     assert report.modules[1].name == "adapterremoval (paired end)"
+    assert report.modules[0].saved_raw_data is not None
+    assert report.modules[1].saved_raw_data is not None
     assert report.modules[0].saved_raw_data["multiqc_adapter_removal_my_anchor_se"].keys() == {
         Path(fn).name for fn in expected_se_files
     }

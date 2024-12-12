@@ -1,7 +1,7 @@
 import glob
 
 import pytest
-from multiqc import report
+from multiqc import config, report
 from multiqc.modules.cellranger_arc import MultiqcModule
 from multiqc.utils import testing
 
@@ -17,7 +17,9 @@ def test_cellranger_arc(data_dir):
         report.analysis_files = [file]
         report.search_files(["cellranger_arc"])
 
+    config.preserve_module_raw_data = True
     m = MultiqcModule()
+    assert m.saved_raw_data is not None
     assert len(m.saved_raw_data) > 0
 
     ## check if both sameples are present in the data

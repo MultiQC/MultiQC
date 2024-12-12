@@ -47,6 +47,7 @@ from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
 from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup
+from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
     dump_json,
     replace_defaultdicts,
@@ -78,7 +79,6 @@ general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
 some_plots_are_deferred: bool
-saved_raw_data: Dict[str, Dict[str, Any]]  # indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
@@ -95,6 +95,7 @@ general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
+saved_raw_data_keys: Set[str]  # to make sure write_data_file don't overwrite for repeated modules
 
 
 def reset():
@@ -110,7 +111,6 @@ def reset():
     global lint_errors
     global num_flat_plots
     global some_plots_are_deferred
-    global saved_raw_data
     global last_found_file
     global runtimes
     global peak_memory_bytes_per_module
@@ -123,6 +123,7 @@ def reset():
     global general_stats_headers
     global software_versions
     global plot_compressed_json
+    global saved_raw_data_keys
 
     # Create new temporary directory for module data exports
     initialized = True
@@ -135,7 +136,6 @@ def reset():
     lint_errors = []
     num_flat_plots = 0
     some_plots_are_deferred = False
-    saved_raw_data = dict()
     last_found_file = None
     runtimes = Runtimes()
     peak_memory_bytes_per_module = dict()
@@ -148,6 +148,7 @@ def reset():
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
+    saved_raw_data_keys = set()
 
     reset_file_search()
     tmp_dir.new_tmp_dir()
@@ -949,10 +950,10 @@ def write_data_file(
     logger.debug(f"Wrote data file {fn}")
 
 
-def multiqc_dump_json():
+def multiqc_dump_json(data_dir: Path):
     """
     Export the parsed data in memory to a JSON file.
-    Used for MegaQC and other data export.
+    Upload to MegaQC if requested.
     WARNING: May be depreciated and removed in future versions.
     """
     exported_data: Dict[str, Any] = dict()
@@ -963,7 +964,6 @@ def multiqc_dump_json():
             "general_stats_headers",
             "multiqc_command",
             "plot_data",
-            "saved_raw_data",
         ],
         "config": [
             "analysis_dir",
@@ -1015,15 +1015,72 @@ def multiqc_dump_json():
                     exported_data.update(d)
             except (TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"Couldn't export data key '{pymod}.{name}': {e}")
-        # Get the absolute paths of analysis directories
-        config_analysis_dir_abs: List[str] = list()
-        for config_analysis_dir in exported_data.get("config_analysis_dir", []):
-            try:
-                config_analysis_dir_abs.append(str(os.path.abspath(config_analysis_dir)))
-            except Exception:
-                pass
-        exported_data["config_analysis_dir_abs"] = config_analysis_dir_abs
-    return exported_data
+
+    # Get the absolute paths of analysis directories
+    config_analysis_dir_abs: List[str] = list()
+    for config_analysis_dir in exported_data.get("config_analysis_dir", []):
+        try:
+            config_analysis_dir_abs.append(str(os.path.abspath(config_analysis_dir)))
+        except Exception:
+            pass
+    exported_data["config_analysis_dir_abs"] = config_analysis_dir_abs
+
+    # Write to file
+    out_path = data_dir / "multiqc_data.json"
+    if config.data_dump_file:
+        with out_path.open("w") as f:
+            dump_json(exported_data, f, indent=4, ensure_ascii=False)
+
+    # Add raw data - but instead of all in one, write key by key to avoid loading all in memory
+    if config.data_dump_file_write_raw or config.megaqc_url:
+        try:
+            # Instead of storing in exported_data, write directly to file
+            with open(out_path, "rb+") as fh:
+                # Move cursor to end of file
+                fh.seek(0, 2)
+                # Move back until we find the last }
+                pos = fh.tell()
+                while pos > 0:
+                    pos -= 1
+                    fh.seek(pos)
+                    char = fh.read(1)
+                    if char == b"}":
+                        fh.seek(pos - 1)
+                        fh.truncate()
+                        break
+
+            # Now append the new data
+            with open(out_path, "a", encoding="utf-8") as fh:
+                fh.write(',\n    "report_saved_raw_data": {\n')
+
+                # Write each key's data individually
+                for i, key in enumerate(saved_raw_data_keys):
+                    if (json_path := data_dir / f"{key}.json").exists():
+                        fh.write(f'        "{key}": ')
+                        # Stream the contents of the individual JSON file
+                        with open(json_path, "r", encoding="utf-8") as single_fh:
+                            content = single_fh.read().strip()
+                            # Indent the content
+                            content = content.replace("\n", "\n        ")
+                            # Write the content
+                            fh.write(content)
+                        # Add comma if not last item
+                        if i < len(saved_raw_data_keys) - 1:
+                            fh.write(",\n")
+                        else:
+                            fh.write("\n")
+
+                        # Clean up individual JSON file if no longer needed
+                        json_path.unlink()
+
+                # Close the JSON object
+                fh.write("    }\n")
+                fh.write("}")
+        except Exception as e:
+            logger.warning(f"Couldn't write raw data to JSON file: {e}")
+
+        if config.megaqc_url:
+            megaqc.multiqc_api_post(exported_data)
 
 
 def get_all_sections() -> List[Section]:
