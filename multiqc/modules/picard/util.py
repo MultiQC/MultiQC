@@ -72,7 +72,7 @@ def read_histogram(module, program_key, headers, formats, picard_tool, sentieon_
     data = module.ignore_samples(all_data)
 
     # Write data to file
-    module.write_data_file(data, f"{module.anchor}_histogram")
+    module.write_data_file(data, f"{module.anchor}_{picard_tool}_histogram")
 
     return data
 

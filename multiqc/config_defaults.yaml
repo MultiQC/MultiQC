@@ -53,6 +53,8 @@ version_check_url: https://api.multiqc.info/version
 make_data_dir: true
 zip_data_dir: false
 data_dump_file: true
+data_dump_file_write_raw: true # Write the `saved_raw_data` section in multiqc_data.json - useful to set to
+# false for large datasets as the raw data can be prohibitively large
 megaqc_url: false
 megaqc_access_token: null
 megaqc_timeout: 30
@@ -560,5 +562,5 @@ module_order:
   - metaphlan
   - seqwho
 
-# Set to "false" to trade the `saved_raw_data` section in multiqc_data.json for memory
-preserve_module_raw_data: true
+# Preserves `saved_raw_data` section in modules - default for interactive runs
+preserve_module_raw_data: false
