@@ -96,7 +96,6 @@ general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
 saved_raw_data_keys: Set[str]  # to make sure write_data_file don't overwrite for repeated modules
-saved_raw_data_keys: Set[str]  # to make sure write_data_file don't overwrite for repeated modules
 
 
 def reset():
@@ -125,7 +124,6 @@ def reset():
     global software_versions
     global plot_compressed_json
     global saved_raw_data_keys
-    global saved_raw_data_keys
 
     # Create new temporary directory for module data exports
     initialized = True
@@ -150,7 +148,6 @@ def reset():
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
-    saved_raw_data_keys = set()
     saved_raw_data_keys = set()
 
     reset_file_search()
@@ -956,7 +953,6 @@ def write_data_file(
 def multiqc_dump_json(data_dir: Path):
     """
     Export the parsed data in memory to a JSON file.
-    Upload to MegaQC if requested.
     Upload to MegaQC if requested.
     WARNING: May be depreciated and removed in future versions.
     """
