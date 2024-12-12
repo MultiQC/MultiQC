@@ -259,13 +259,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(self.fastqc_data)} reports")
 
-        # Write the summary stats to a file
-        dump_data: Dict[SampleName, Dict[str, Any]] = dict()
-        for s_name in self.fastqc_data:
-            dump_data[s_name] = self.fastqc_data[s_name]["basic_statistics"]
-            dump_data[s_name].update(self.fastqc_data[s_name]["statuses"])
-        self.write_data_file(dump_data, "multiqc_fastqc")
-
         # Add to self.css and self.js to be included in template
         self.css = {
             "assets/css/multiqc_fastqc.css": os.path.join(
@@ -313,6 +306,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_content_plot(status_checks)
         if status_checks:
             self.status_heatmap()
+
+        # Write the summary stats to a file
+        dump_data: Dict[SampleName, Dict[str, Any]] = dict()
+        for s_name in self.fastqc_data:
+            dump_data[s_name] = self.fastqc_data[s_name]["basic_statistics"]
+            dump_data[s_name].update(self.fastqc_data[s_name]["statuses"])
+        self.write_data_file(dump_data, "multiqc_fastqc")
+
         del self.fastqc_data
 
     def parse_fastqc_report(
@@ -438,7 +439,7 @@ class MultiqcModule(BaseMultiqcModule):
             if data_by_sample[s_name].total_sequences == 0:
                 log.warning(f"Sample had zero reads: '{s_name}'")
 
-            if "total_deduplicated_percentage" in bs:
+            if bs.get("total_deduplicated_percentage") is not None:
                 # Older versions of FastQC don't have this
                 data_by_sample[s_name].percent_duplicates = 100 - bs["total_deduplicated_percentage"]
 
@@ -619,7 +620,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         data_by_sample: Dict[str, Dict[int, float]] = dict()
         for s_name, sd in self.fastqc_data.items():
-            if "per_base_sequence_quality" not in sd:
+            if sd.get("per_base_sequence_quality") is None:
                 continue
             data_by_sample[s_name] = {
                 int(_range_bp_to_num(d["base"], method="start")): d["mean"] for d in sd["per_base_sequence_quality"]
@@ -675,7 +676,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         data_by_sample: Dict[str, Dict[int, float]] = dict()
         for s_name, sd in self.fastqc_data.items():
-            if "per_sequence_quality_scores" not in sd:
+            if sd.get("per_sequence_quality_scores") is None:
                 continue
             data_by_sample[s_name] = {d["quality"]: d["count"] for d in sd["per_sequence_quality_scores"]}
         if len(data_by_sample) == 0:
@@ -724,7 +725,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         data_by_sample: Dict[str, Dict[int, Dict[str, int]]] = dict()
         for s_name in sorted(self.fastqc_data.keys()):
-            if "per_base_sequence_content" not in self.fastqc_data[s_name]:
+            if self.fastqc_data[s_name].get("per_base_sequence_content") is None:
                 continue
 
             data_by_sample[s_name] = {
@@ -812,7 +813,7 @@ class MultiqcModule(BaseMultiqcModule):
         data_by_sample: Dict[str, Dict[int, float]] = dict()
         data_norm_by_sample: Dict[str, Dict[int, float]] = dict()
         for s_name, sd in self.fastqc_data.items():
-            if "per_sequence_gc_content" not in sd:
+            if sd.get("per_sequence_gc_content") is None:
                 continue
 
             data_by_sample[s_name] = {d["gc_content"]: d["count"] for d in sd["per_sequence_gc_content"]}
@@ -934,7 +935,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         data_by_sample: Dict[str, Dict[int, int]] = dict()
         for s_name, sd in self.fastqc_data.items():
-            if "per_base_n_content" not in sd:
+            if sd.get("per_base_n_content") is None:
                 continue
             data_by_sample[s_name] = {
                 int(_range_bp_to_num(d["base"], method="start")): d["n-count"] for d in sd["per_base_n_content"]
@@ -993,7 +994,7 @@ class MultiqcModule(BaseMultiqcModule):
         all_ranges_across_samples: Set[int] = set()
         only_single_length: bool = True
         for s_name, sd in self.fastqc_data.items():
-            if "sequence_length_distribution" not in sd:
+            if sd.get("sequence_length_distribution") is None:
                 continue
             cnt_by_range_by_sample[s_name] = {
                 int(_range_bp_to_num(d["length"], method="start")): d["count"]
@@ -1279,7 +1280,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pct_by_pos_by_sample: Dict[str, Dict[int, int]] = dict()
         for s_name, data_by_sample in self.fastqc_data.items():
-            if "adapter_content" not in data_by_sample:
+            if data_by_sample.get("adapter_content") is None:
                 continue
             for adapters in data_by_sample["adapter_content"]:
                 pos = int(
