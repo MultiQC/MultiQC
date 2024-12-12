@@ -1,4 +1,5 @@
 from multiqc import report
+from multiqc import config
 from multiqc.modules.umitools import MultiqcModule
 
 
@@ -29,7 +30,9 @@ def test_parse_name(tmp_path):
 
     report.analysis_files = [f1, f2, f3]
     report.search_files(["umitools"])
+    config.preserve_module_raw_data = True
     m = MultiqcModule()
+    assert m.saved_raw_data is not None
     assert len(m.saved_raw_data) > 0
     print(m.saved_raw_data)
     assert list(m.saved_raw_data["multiqc_umitools_extract"].keys())[0] == "OUTPUT"
