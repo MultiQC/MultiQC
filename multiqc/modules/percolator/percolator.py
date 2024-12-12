@@ -6,7 +6,7 @@ from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
-feature_name_dict = {
+FEATURE_NAME_DICT = {
     "psm_file_combined": [
         "MS:1002255",
         "MS:1002252",
@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(self.percolator)} logs")
 
         # Summarize the data from all samples by computing the median across all samples for each feature
-        self.summarized_data = {group: dict() for group in feature_name_dict.keys()}
+        self.summarized_data = {group: dict() for group in FEATURE_NAME_DICT.keys()}
         self.compute_median()
         self.write_data_file(self.summarized_data, "multiqc_percolator_summarized")
 
@@ -202,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Collect the values for each feature across all samples
         for sample_dict in self.percolator.values():
             for feature, value in sample_dict.items():
-                group = [group for group, features in feature_name_dict.items() if feature in features]
+                group = [group for group, features in FEATURE_NAME_DICT.items() if feature in features]
                 assert len(group) == 1
                 group = group[0]
                 if feature not in self.summarized_data[group]:
