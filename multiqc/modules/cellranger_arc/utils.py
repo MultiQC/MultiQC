@@ -1,8 +1,16 @@
+import logging
+from typing import Dict, List, Tuple
+
 from multiqc import config
 
+log = logging.getLogger(__name__)
 
-def update_dict(rows_list, help):
-    """update the data dict and headers dict"""
+
+def table_data_and_headers(
+    rows_list: List[Tuple[str, str]],
+    help: List[Tuple[str, List[str]]],
+) -> Tuple[Dict, Dict]:
+    """Update the data dict and headers dict"""
     table = dict()
     headers = dict()
 
@@ -37,6 +45,11 @@ def update_dict(rows_list, help):
             }
         if col_name == "Estimated number of cells":
             headers[col_name]["shared_key"] = "cell_count"
+            headers[col_name]["title"] = "Est. cells"
+            headers[col_name]["description"] += " (which estimates the number of cells)"
+
+        if col_name == "Fraction of high-quality fragments in cells":
+            headers[col_name]["title"] = "High-qual fragments"
 
         if is_integer:
             headers[col_name]["format"] = "{:,.0f}"

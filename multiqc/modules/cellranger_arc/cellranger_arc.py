@@ -4,7 +4,12 @@ import re
 from typing import Dict, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.modules.cellranger_arc.utils import set_hidden_cols, update_dict, extract_plot_data, subset_header
+from multiqc.modules.cellranger_arc.utils import (
+    extract_plot_data,
+    subset_header,
+    table_data_and_headers,
+    set_hidden_cols,
+)
 from multiqc.plots import linegraph, table
 
 log = logging.getLogger(__name__)
@@ -42,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         data_by_sample: Dict[str, Dict] = dict()
         warnings_by_sample: Dict[str, Dict] = dict()
         self.warnings_headers: Dict[str, Dict] = dict()
-        self.headers: Dict[str, Dict] = dict()
+        self.all_headers: Dict[str, Dict] = dict()
         self.plots_data_by_sample: Dict[str, Dict] = {
             "tss": dict(),
             "insert_size": dict(),
@@ -98,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_by_sample, "multiqc_cellranger_arc")
 
         ## Add general stats table
-        self.general_stats_table(data_by_sample, self.headers)
+        self.general_stats_table(data_by_sample, self.all_headers)
 
         # Add sections to the report
         if len(warnings_by_sample) > 0:
@@ -117,8 +122,8 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
             )
 
-        self.atac_summary_table(data_by_sample, self.headers)
-        self.gex_summary_table(data_by_sample, self.headers)
+        self.atac_summary_table(data_by_sample, self.all_headers)
+        self.gex_summary_table(data_by_sample, self.all_headers)
         if self.plots_data_by_sample:
             self.atac_plots(self.plots_data_by_sample)
             self.gex_plots(self.plots_data_by_sample)
@@ -152,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
             + summary["atac_targeting_helptext"]["data"]
         )
 
-        parsed_data, self.headers = update_dict(
+        parsed_data, self.all_headers = table_data_and_headers(
             data_rows,
             help_text,
         )
@@ -232,6 +237,8 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
         self.add_section(
+            name="ATAC - Cell & Mapping metrics",
+            anchor="cellranger-atac-cell-mapping",
             description="ATAC: Cell & Mapping metrics",
             plot=table.plot(
                 data_by_sample,
