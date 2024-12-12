@@ -90,15 +90,21 @@ def parse_time_metrics_file(f):
     RUN TIME,,Time sorting and marking duplicates,00:00:07.368,7.37
     RUN TIME,,Time DRAGStr calibration,00:00:07.069,7.07
     """
-    data = defaultdict(dict)
+    data = {}
     for line in f["f"].splitlines():
         tokens = line.split(",")
-        analysis, _, metric, timestr, seconds = tokens
+        if len(tokens) == 4:
+            analysis, _, metric, stat = tokens
+            percentage = None
+        elif len(tokens) == 5:
+            analysis, _, metric, stat, percentage = tokens
+        else:
+            raise ValueError(f"Unexpected number of tokens in line {line}")
 
         try:
-            seconds = float(seconds)
+            stat = float(stat)
         except ValueError:
             pass
-        data[metric] = seconds
+        data[metric] = stat
 
     return data
