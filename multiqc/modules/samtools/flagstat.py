@@ -31,9 +31,6 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
     # Replace None with actual version if it is available
     module.add_software_version(None)
 
-    # Write parsed report data to a file (restructure first)
-    module.write_data_file(samtools_flagstat, "multiqc_samtools_flagstat")
-
     # General Stats Table
     flagstat_headers = {
         "flagstat_total": {
@@ -126,6 +123,9 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
             },
         ),
     )
+
+    # Write parsed report data to a file (restructure first)
+    module.write_data_file(samtools_flagstat, "multiqc_samtools_flagstat")
 
     # Return the number of logs that were found
     return len(samtools_flagstat)

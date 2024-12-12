@@ -85,8 +85,6 @@ def parse_samtools_markdup(module) -> int:
         d["duplicate_non_primary_non_optical"] = d["duplicate_non_primary"] - d["duplicate_non_primary_optical"]
         d["non_duplicate"] = d["paired"] + d["single"] - d["duplicate_total"]
 
-    module.write_data_file(val_by_metric_by_sample, fn="multiqc_samtools_markdup")
-
     genstats_headers = {
         "duplicate_fraction": {
             "title": "Duplicates",
@@ -183,5 +181,7 @@ def parse_samtools_markdup(module) -> int:
         ),
         plot=bargraph.plot(data=val_by_metric_by_sample, cats=keys, pconfig=pconfig),
     )
+
+    module.write_data_file(val_by_metric_by_sample, fn="multiqc_samtools_markdup")
 
     return len(val_by_metric_by_sample)
