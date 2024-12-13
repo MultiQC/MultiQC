@@ -81,6 +81,12 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_data_source(f, s_name)
 
+            self.add_software_version(
+                version=content[0]["ataqv_version"],
+                sample=s_name,
+                software_name="ataqv",
+            )
+
             # Extract key metrics
             parsed_data[s_name] = {
                 "tss_enrichment": metrics["tss_enrichment"],
