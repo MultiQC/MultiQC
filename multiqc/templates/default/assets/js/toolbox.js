@@ -11,14 +11,21 @@ const AI_PROVIDERS = {
   anthropic: {
     name: "Anthropic",
     defaultModel: "claude-3-5-sonnet-latest",
+    autosuggestModels: ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest"],
+    apiKeysUrl: "https://console.anthropic.com/settings/keys",
+    modelsUrl: "https://docs.anthropic.com/en/docs/intro-to-claude#model-options",
   },
   openai: {
     name: "OpenAI",
     defaultModel: "gpt-4o",
+    autosuggestModels: ["gpt-4o", "gpt-4o-mini", "chatgpt-4o-latest"],
+    apiKeysUrl: "https://platform.openai.com/api-keys",
+    modelsUrl: "https://platform.openai.com/docs/models",
   },
   seqera: {
     name: "Seqera AI",
     defaultModel: "claude-3-5-sonnet-latest",
+    apiKeysUrl: "https://cloud.seqera.io/tokens",
   },
 };
 
@@ -1395,6 +1402,30 @@ function getFromLocalStorage(key) {
   }
 }
 
+function updateToolboxInfo(providerId) {
+  const provider = AI_PROVIDERS[providerId];
+
+  // Add label dynamically
+  if (providerId === "seqera") {
+    $("#ai_api_key_info").html(
+      `You can find your API key in the <a style='text-decoration: underline;' href='${provider.apiKeysUrl}' target='_blank'>${provider.name} dashboard</a>`,
+    );
+    const anthropic = AI_PROVIDERS["anthropic"];
+    const openai = AI_PROVIDERS["openai"];
+    $("#ai_model_info").html(
+      `You can use any <a style='text-decoration: underline;' href='${anthropic.modelsUrl}' target='_blank'>${anthropic.name}</a> or ` +
+        `<a style='text-decoration: underline;' href='${openai.modelsUrl}' target='_blank'>${openai.name}</a> model.`,
+    );
+  } else {
+    $("#ai_api_key_info").html(
+      `You can find your API key in the <a style='text-decoration: underline;' href='${provider.apiKeysUrl}' target='_blank'>${provider.name} console</a>`,
+    );
+    $("#ai_model_info").html(
+      `You can find the available models for ${provider.name} in the <a style='text-decoration: underline;' href='${provider.modelsUrl}' target='_blank'>${provider.name} documentation</a>.`,
+    );
+  }
+}
+
 //////////////////////////////////////////////////////
 // AI settings handlers
 //////////////////////////////////////////////////////
@@ -1415,6 +1446,8 @@ $(function () {
   const providerId = getStoredProvider() || aiConfigProviderId;
   aiProviderSelect.val(providerId);
 
+  updateToolboxInfo(providerId);
+
   const model = getStoredModelName(providerId) || aiConfigModel;
   $("#ai-model").val(model);
 
@@ -1434,6 +1467,8 @@ $(function () {
     // Update API key field
     const storedKey = getStoredApiKey(selectedProviderId);
     $("#ai-api-key").val(storedKey || "");
+
+    updateToolboxInfo(selectedProviderId);
   });
 
   // Save model changes

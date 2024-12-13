@@ -192,15 +192,15 @@ class Client:
         Using tiktoken for GPT models, falling back to Claude's tokenizer for others
         """
         try:
-            if self.model.startswith("gpt"):
+            if self.model.startswith("claude"):
+                from anthropic import Anthropic  # type: ignore
+
+                return Anthropic().count_tokens(text)
+            else:
                 import tiktoken  # type: ignore
 
                 encoding = tiktoken.encoding_for_model(self.model)
                 return len(encoding.encode(text))
-            else:
-                from anthropic import Anthropic  # type: ignore
-
-                return Anthropic().count_tokens(text)
         except ImportError:
             logger.warning(
                 "Fallback to rough estimation if tokenizers not available. Install `tiktoken` or `anthropic` to get more accurate token counts."
