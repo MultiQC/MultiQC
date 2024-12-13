@@ -955,6 +955,9 @@ supernova/kmers:
   fn: "histogram_kmer_count.json"
   num_lines: 10
   contents: '"description": "kmer_count",'
+telseq:
+  num_lines: 3
+  contents: "ReadGroup	Library	Sample	Total	Mapped	Duplicates	LENGTH_ESTIMATE"
 theta2:
   fn: "*.BEST.results"
 tophat:
