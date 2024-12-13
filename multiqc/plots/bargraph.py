@@ -170,7 +170,7 @@ def plot(
                 cat_count += 1
                 sample_d_count[s] += 1
             if cat_count > 0:
-                if pconf.hide_zero_cats is False or max(x for x in this_data if not math.isnan(x)) > 0:
+                if pconf.hide_zero_cats is False or not all(x == 0 for x in this_data if not math.isnan(x)):
                     color: str = categories_per_ds[ds_idx][c].color or scale.get_colour(cat_idx, lighten=1)
                     this_dict: CatDataDict = {
                         "name": categories_per_ds[ds_idx][c].name,

@@ -1047,6 +1047,9 @@ data_by_sample = {
 self.write_data_file(data_by_sample, "multiqc_mymodule")
 ```
 
+Make sure to call `self.write_data_file` in the end of the module, because it
+may modify `data_by_sample` to be JSON-serializable.
+
 If your output has a lot of columns, you can supply the additional
 argument `sort_cols = True` to have the columns alphabetically sorted.
 

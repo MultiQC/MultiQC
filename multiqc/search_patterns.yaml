@@ -215,6 +215,10 @@ cellranger/vdj_html:
   - fn: "*.html"
     contents: '"command": "Cell Ranger", "subcommand": "vdj"'
     num_lines: 20
+cellranger_arc:
+  - fn: "*.html"
+    contents: "Cell Ranger ARC"
+    num_lines: 250
 checkm:
   - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})# markers(?:\t| {3,})# marker sets.*"
     num_lines: 10

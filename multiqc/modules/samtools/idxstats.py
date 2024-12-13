@@ -28,9 +28,6 @@ def parse_samtools_idxstats(module):
     if len(module.samtools_idxstats) == 0:
         return 0
 
-    # Write parsed report data to a file (restructure first)
-    module.write_data_file(module.samtools_idxstats, "multiqc_samtools_idxstats")
-
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
     module.add_software_version(None)
@@ -157,6 +154,9 @@ def parse_samtools_idxstats(module):
         + f"Chromosomes with &lt; {cutoff * 100}% of the total aligned reads are omitted from this plot.",
         plot=linegraph.plot([pdata_norm, pdata_obs_exp, pdata], pconfig),
     )
+
+    # Write parsed report data to a file (restructure first)
+    module.write_data_file(module.samtools_idxstats, "multiqc_samtools_idxstats")
 
     # Return the number of logs that were found
     return len(module.samtools_idxstats)
