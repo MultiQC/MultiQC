@@ -11,20 +11,21 @@ const AI_PROVIDERS = {
   anthropic: {
     name: "Anthropic",
     defaultModel: "claude-3-5-sonnet-latest",
-    autosuggestModels: ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest"],
+    suggestedModels: ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest"],
     apiKeysUrl: "https://console.anthropic.com/settings/keys",
     modelsUrl: "https://docs.anthropic.com/en/docs/intro-to-claude#model-options",
   },
   openai: {
     name: "OpenAI",
     defaultModel: "gpt-4o",
-    autosuggestModels: ["gpt-4o", "gpt-4o-mini", "chatgpt-4o-latest"],
+    suggestedModels: ["gpt-4o", "gpt-4o-mini"],
     apiKeysUrl: "https://platform.openai.com/api-keys",
     modelsUrl: "https://platform.openai.com/docs/models",
   },
   seqera: {
     name: "Seqera AI",
     defaultModel: "claude-3-5-sonnet-latest",
+    suggestedModels: ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest", "gpt-4o"],
     apiKeysUrl: "https://cloud.seqera.io/tokens",
   },
 };
@@ -1406,24 +1407,37 @@ function updateToolboxInfo(providerId) {
   const provider = AI_PROVIDERS[providerId];
 
   // Add label dynamically
+  let aiModelInfo = "";
+  let aiApiKeyInfo = "";
   if (providerId === "seqera") {
-    $("#ai_api_key_info").html(
-      `You can find your API key in the <a style='text-decoration: underline;' href='${provider.apiKeysUrl}' target='_blank'>${provider.name} dashboard</a>`,
-    );
+    aiApiKeyInfo = `You can find your API key in the <a style='text-decoration: underline;' href='${provider.apiKeysUrl}' target='_blank'>${provider.name} dashboard</a>`;
     const anthropic = AI_PROVIDERS["anthropic"];
     const openai = AI_PROVIDERS["openai"];
-    $("#ai_model_info").html(
+    aiModelInfo =
       `You can use any <a style='text-decoration: underline;' href='${anthropic.modelsUrl}' target='_blank'>${anthropic.name}</a> or ` +
-        `<a style='text-decoration: underline;' href='${openai.modelsUrl}' target='_blank'>${openai.name}</a> model.`,
-    );
+      `<a style='text-decoration: underline;' href='${openai.modelsUrl}' target='_blank'>${openai.name}</a> model.`;
   } else {
-    $("#ai_api_key_info").html(
-      `You can find your API key in the <a style='text-decoration: underline;' href='${provider.apiKeysUrl}' target='_blank'>${provider.name} console</a>`,
-    );
-    $("#ai_model_info").html(
-      `You can find the available models for ${provider.name} in the <a style='text-decoration: underline;' href='${provider.modelsUrl}' target='_blank'>${provider.name} documentation</a>.`,
-    );
+    aiApiKeyInfo = `You can find your API key in the <a style='text-decoration: underline;' href='${provider.apiKeysUrl}' target='_blank'>${provider.name} console</a>`;
+    aiModelInfo = `You can find the available models for ${provider.name} in the <a style='text-decoration: underline;' href='${provider.modelsUrl}' target='_blank'>${provider.name} documentation</a>.`;
   }
+
+  // Add clickable model suggestions if available
+  let suggestedModels = provider.suggestedModels || [];
+  if (suggestedModels.length > 0) {
+    aiModelInfo += " For example: ";
+    aiModelInfo += suggestedModels
+      .map((model) => `<a href="#" class="ai-model-suggestion" data-model="${model}"><code>${model}</code></a>`)
+      .join(", ");
+  }
+  $("#ai_model_info").html(aiModelInfo);
+  $("#ai_api_key_info").html(aiApiKeyInfo);
+
+  // Add click handlers for model suggestions
+  $(".ai-model-suggestion").click(function (e) {
+    e.preventDefault();
+    const modelName = $(this).data("model");
+    $("#ai-model").val(modelName).trigger("change");
+  });
 }
 
 //////////////////////////////////////////////////////
