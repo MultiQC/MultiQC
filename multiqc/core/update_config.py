@@ -60,12 +60,13 @@ class ClConfig(BaseModel):
     cl_config: List[str] = []
     custom_css_files: List[str] = []
     module_order: List[Union[str, Dict]] = []
-    preserve_module_raw_data: Optional[bool] = None
     extra_fn_clean_exts: List = []
     extra_fn_clean_trim: List = []
-    unknown_options: Optional[Dict] = None
+    preserve_module_raw_data: Optional[bool] = None
+    data_dump_file_write_raw: Optional[bool] = None
     ai_summary: Optional[bool] = None
     ai_summary_full: Optional[bool] = None
+    unknown_options: Optional[Dict] = None
 
 
 def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
@@ -201,6 +202,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.fn_clean_trim = list(cfg.extra_fn_clean_trim) + config.fn_clean_trim
     if cfg.preserve_module_raw_data is not None:
         config.preserve_module_raw_data = cfg.preserve_module_raw_data
+    if cfg.data_dump_file_write_raw is not None:
+        config.data_dump_file_write_raw = cfg.data_dump_file_write_raw
     if cfg.ai_summary is not None:
         config.ai_summary = cfg.ai_summary
     if cfg.ai_summary_full is not None:

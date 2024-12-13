@@ -507,7 +507,9 @@ def make_table(
             for s_name, s_data in g_data.items():
                 flatten_raw_vals[str(s_name)] = {str(k): v for k, v in s_data.items()}
         report.write_data_file(flatten_raw_vals, fname)
-        report.saved_raw_data[fname] = flatten_raw_vals
+        if config.data_dump_file_write_raw:
+            report.write_data_file(flatten_raw_vals, fname, data_format="json")
+            report.saved_raw_data_keys.add(fname)
 
     # Build the bootstrap modal to customise columns and order
     modal = ""

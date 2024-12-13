@@ -408,12 +408,7 @@ def _write_data_files(data_dir: Path) -> None:
 
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
     if config.data_dump_file or (config.megaqc_url and config.megaqc_upload):
-        dump = report.multiqc_dump_json()
-        if config.data_dump_file:
-            with (data_dir / "multiqc_data.json").open("w") as f:
-                util_functions.dump_json(dump, f, indent=4, ensure_ascii=False)
-        if config.megaqc_url:
-            megaqc.multiqc_api_post(dump)
+        report.multiqc_dump_json(data_dir)
 
     if config.development:
         with (data_dir / "multiqc_plots.js").open("w") as f:

@@ -90,15 +90,14 @@ def parse_time_metrics_file(f):
     RUN TIME,,Time sorting and marking duplicates,00:00:07.368,7.37
     RUN TIME,,Time DRAGStr calibration,00:00:07.069,7.07
     """
-    data = defaultdict(dict)
+    data = {}
     for line in f["f"].splitlines():
         tokens = line.split(",")
         analysis, _, metric, timestr, seconds = tokens
-
         try:
             seconds = float(seconds)
         except ValueError:
-            pass
+            seconds = 0
         data[metric] = seconds
 
     return data
