@@ -62,7 +62,13 @@ def plot(
     for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
         list_of_series: List[Series[Any, Any]] = []
         for s in sorted(raw_data_by_sample.keys()):
-            series: Series[Any, Any] = _make_series_dict(pconf, ds_idx, s, raw_data_by_sample[s])
+            x_to_y = raw_data_by_sample[s]
+            if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
+                if isinstance(x_to_y[0], tuple):
+                    x_to_y = dict(x_to_y)
+                else:
+                    x_to_y = {i: y for i, y in enumerate(x_to_y)}
+            series: Series[Any, Any] = _make_series_dict(pconf, ds_idx, s, x_to_y)
             if pconf.hide_empty and not series.pairs:
                 continue
             list_of_series.append(series)
