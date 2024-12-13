@@ -1019,3 +1019,7 @@ xenome:
 xengsort:
   contents: "# Xengsort classify"
   num_lines: 2
+ataqv:
+  fn: "*.json"
+  contents: "ataqv_version"
+  num_lines: 10
