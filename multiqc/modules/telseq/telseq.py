@@ -1,7 +1,5 @@
 import logging
-import re
 
-from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 log = logging.getLogger(__name__)
@@ -56,8 +54,8 @@ class MultiqcModule(BaseMultiqcModule):
                     headers = tokens
                     break
             if headers is None:
-                log.debug("Not a telseq file (header not found)")
-                return
+                log.debug(f"{f['root']}/{f['fn']}: Probably not a telseq file (header not found in line {line}")
+                continue
             for line in f["f"]:
                 data = dict(zip(headers, line.strip().split("\t")))
                 s_name = self.clean_s_name(data["Sample"], f)
