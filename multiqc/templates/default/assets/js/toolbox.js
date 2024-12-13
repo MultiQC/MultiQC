@@ -24,8 +24,6 @@ const AI_PROVIDERS = {
   },
   seqera: {
     name: "Seqera AI",
-    defaultModel: "claude-3-5-sonnet-latest",
-    suggestedModels: ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest", "gpt-4o"],
     apiKeysUrl: "https://cloud.seqera.io/tokens",
   },
 };
@@ -1403,41 +1401,38 @@ function getFromLocalStorage(key) {
   }
 }
 
-function updateToolboxInfo(providerId) {
+function updatePanel(providerId) {
   const provider = AI_PROVIDERS[providerId];
 
   // Add label dynamically
   let aiModelInfo = "";
   let aiApiKeyInfo = "";
+
+  // Update model field with stored or default value for new provider
   if (providerId === "seqera") {
-    aiApiKeyInfo = `You can find your API key in the <a style='text-decoration: underline;' href='${provider.apiKeysUrl}' target='_blank'>${provider.name} dashboard</a>`;
-    const anthropic = AI_PROVIDERS["anthropic"];
-    const openai = AI_PROVIDERS["openai"];
-    aiModelInfo =
-      `You can use any <a style='text-decoration: underline;' href='${anthropic.modelsUrl}' target='_blank'>${anthropic.name}</a> or ` +
-      `<a style='text-decoration: underline;' href='${openai.modelsUrl}' target='_blank'>${openai.name}</a> model.`;
+    $("#ai_model_group").hide();
+    $("#ai_api_key_info").html(
+      `You can find your API key in the <a style='text-decoration: underline;' href='${provider.apiKeysUrl}' target='_blank'>${provider.name} dashboard</a>`,
+    );
   } else {
+    $("#ai_model_group").show();
+    const storedModel = getStoredModelName(providerId);
+    const defaultModel = provider.defaultModel;
+    $("#ai-model").val(storedModel || defaultModel);
     aiApiKeyInfo = `You can find your API key in the <a style='text-decoration: underline;' href='${provider.apiKeysUrl}' target='_blank'>${provider.name} console</a>`;
+
+    // Add clickable model suggestions if available
+    let suggestedModels = provider.suggestedModels || [];
     aiModelInfo = `You can find the available models for ${provider.name} in the <a style='text-decoration: underline;' href='${provider.modelsUrl}' target='_blank'>${provider.name} documentation</a>.`;
+    if (suggestedModels.length > 0) {
+      aiModelInfo += " For example: ";
+      aiModelInfo += suggestedModels
+        .map((model) => `<a href="#" class="ai-model-suggestion" data-model="${model}"><code>${model}</code></a>`)
+        .join(", ");
+    }
+    $("#ai_model_info").html(aiModelInfo);
+    $("#ai_api_key_info").html(aiApiKeyInfo);
   }
-
-  // Add clickable model suggestions if available
-  let suggestedModels = provider.suggestedModels || [];
-  if (suggestedModels.length > 0) {
-    aiModelInfo += " For example: ";
-    aiModelInfo += suggestedModels
-      .map((model) => `<a href="#" class="ai-model-suggestion" data-model="${model}"><code>${model}</code></a>`)
-      .join(", ");
-  }
-  $("#ai_model_info").html(aiModelInfo);
-  $("#ai_api_key_info").html(aiApiKeyInfo);
-
-  // Add click handlers for model suggestions
-  $(".ai-model-suggestion").click(function (e) {
-    e.preventDefault();
-    const modelName = $(this).data("model");
-    $("#ai-model").val(modelName).trigger("change");
-  });
 }
 
 //////////////////////////////////////////////////////
@@ -1456,33 +1451,24 @@ $(function () {
     );
   });
 
-  // Set initial values
+  // Set initial values from storage or values from Python
   const providerId = getStoredProvider() || aiConfigProviderId;
   aiProviderSelect.val(providerId);
+  $("#ai-model").val(getStoredModelName(providerId) || aiConfigModel);
+  $("#ai-api-key").val(getStoredApiKey(providerId) || "");
 
-  updateToolboxInfo(providerId);
-
-  const model = getStoredModelName(providerId) || aiConfigModel;
-  $("#ai-model").val(model);
-
-  const apiKey = getStoredApiKey(providerId);
-  $("#ai-api-key").val(apiKey || "");
+  updatePanel(providerId);
 
   // Save provider changes
   aiProviderSelect.change(function () {
     const selectedProviderId = $(this).val();
     storeProvider(selectedProviderId);
 
-    // Update model field with stored or default value for new provider
-    const storedModel = getStoredModelName(selectedProviderId);
-    const defaultModel = AI_PROVIDERS[selectedProviderId].defaultModel;
-    $("#ai-model").val(storedModel || defaultModel);
-
     // Update API key field
     const storedKey = getStoredApiKey(selectedProviderId);
     $("#ai-api-key").val(storedKey || "");
 
-    updateToolboxInfo(selectedProviderId);
+    updatePanel(selectedProviderId);
   });
 
   // Save model changes
@@ -1502,6 +1488,13 @@ $(function () {
   // Also save on blur (when field loses focus)
   $("#ai-model, #ai-api-key").blur(function () {
     $(this).trigger("change");
+  });
+
+  // Add click handlers for model suggestions
+  $(".ai-model-suggestion").click(function (e) {
+    e.preventDefault();
+    const modelName = $(this).data("model");
+    $("#ai-model").val(modelName).trigger("change");
   });
 
   // Add toggle button handler

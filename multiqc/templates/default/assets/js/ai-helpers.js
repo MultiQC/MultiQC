@@ -22,7 +22,6 @@ async function runStreamGeneration({
       body: JSON.stringify({
         message: userMessage,
         system_message: systemPrompt,
-        model: modelName,
         stream: false,
         tags: ["multiqc", ...tags],
       }),

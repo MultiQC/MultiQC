@@ -431,7 +431,6 @@ class SeqeraClient(Client):
                 json={
                     "system_message": PROMPT_SHORT,
                     "message": report_content,
-                    "model": self.model,
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
                 },
             )
