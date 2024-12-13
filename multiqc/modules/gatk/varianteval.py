@@ -8,87 +8,82 @@ from multiqc.plots import bargraph, table
 log = logging.getLogger(__name__)
 
 
-class VariantEvalMixin:
-    def parse_gatk_varianteval(self):
-        """Find GATK varianteval logs and parse their data"""
+def parse_gatk_varianteval(module):
+    """Find GATK varianteval logs and parse their data"""
 
-        self.gatk_varianteval = dict()
-        for f in self.find_log_files("gatk/varianteval", filehandles=True):
-            parsed_data = parse_single_report(f["f"])
-            if len(parsed_data) > 1:
-                if f["s_name"] in self.gatk_varianteval:
-                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-                self.add_data_source(f, section="varianteval")
-                self.gatk_varianteval[f["s_name"]] = parsed_data
+    data = dict()
+    for f in module.find_log_files("gatk/varianteval", filehandles=True):
+        parsed_data = parse_single_report(f["f"])
+        if len(parsed_data) > 1:
+            if f["s_name"] in data:
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+            module.add_data_source(f, section="varianteval")
+            data[f["s_name"]] = parsed_data
 
-        # Filter to strip out ignored sample names
-        self.gatk_varianteval = self.ignore_samples(self.gatk_varianteval)
+    # Filter to strip out ignored sample names
+    data = module.ignore_samples(data)
 
-        n_reports_found = len(self.gatk_varianteval)
-        if n_reports_found == 0:
-            return 0
+    n_reports_found = len(data)
+    if n_reports_found == 0:
+        return 0
 
-        log.info(f"Found {n_reports_found} VariantEval reports")
+    log.info(f"Found {n_reports_found} VariantEval reports")
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None)
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    module.add_software_version(None)
 
-        # Write parsed report data to a file (restructure first)
-        self.write_data_file(self.gatk_varianteval, "multiqc_gatk_varianteval")
+    # Write parsed report data to a file (restructure first)
+    module.write_data_file(data, "multiqc_gatk_varianteval")
 
-        # Get consensus TiTv references
-        titv_ref = None
-        for s_name in self.gatk_varianteval:
-            if titv_ref is None:
-                titv_ref = self.gatk_varianteval[s_name]["titv_reference"]
-            elif titv_ref != self.gatk_varianteval[s_name]["titv_reference"]:
-                titv_ref = "Multiple"
-                break
+    # Get consensus TiTv references
+    titv_ref = None
+    for s_name in data:
+        if titv_ref is None:
+            titv_ref = data[s_name]["titv_reference"]
+        elif titv_ref != data[s_name]["titv_reference"]:
+            titv_ref = "Multiple"
+            break
 
-        # General Stats Table
-        varianteval_headers = dict()
-        varianteval_headers["known_titv"] = {
-            "title": "TiTV ratio (known)",
-            "description": f"TiTV ratio from variants found in '{titv_ref}'",
-            "min": 0,
-            "scale": "Blues",
-            "shared_key": "titv_ratio",
-        }
-        varianteval_headers["novel_titv"] = {
-            "title": "TiTV ratio (novel)",
-            "description": f"TiTV ratio from variants NOT found in '{titv_ref}'",
-            "min": 0,
-            "scale": "Blues",
-            "shared_key": "titv_ratio",
-        }
-        varianteval_headers["called_titv"] = {
-            "title": "TiTV ratio (called)",
-            "description": f"TiTV ratio from variants found in '{titv_ref}'",
-            "min": 0,
-            "scale": "Blues",
-            "shared_key": "titv_ratio",
-        }
-        varianteval_headers["filtered_titv"] = {
-            "title": "TiTV ratio (filtered)",
-            "description": f"TiTV ratio from variants NOT found in '{titv_ref}'",
-            "min": 0,
-            "scale": "Blues",
-            "shared_key": "titv_ratio",
-        }
-        self.general_stats_addcols(self.gatk_varianteval, varianteval_headers, "GATK VariantEval")
+    # General Stats Table
+    headers = dict()
+    headers["known_titv"] = {
+        "title": "TiTV ratio (known)",
+        "description": f"TiTV ratio from variants found in '{titv_ref}'",
+        "min": 0,
+        "scale": "Blues",
+        "shared_key": "titv_ratio",
+    }
+    headers["novel_titv"] = {
+        "title": "TiTV ratio (novel)",
+        "description": f"TiTV ratio from variants NOT found in '{titv_ref}'",
+        "min": 0,
+        "scale": "Blues",
+        "shared_key": "titv_ratio",
+    }
+    headers["called_titv"] = {
+        "title": "TiTV ratio (called)",
+        "description": f"TiTV ratio from variants found in '{titv_ref}'",
+        "min": 0,
+        "scale": "Blues",
+        "shared_key": "titv_ratio",
+    }
+    headers["filtered_titv"] = {
+        "title": "TiTV ratio (filtered)",
+        "description": f"TiTV ratio from variants NOT found in '{titv_ref}'",
+        "min": 0,
+        "scale": "Blues",
+        "shared_key": "titv_ratio",
+    }
+    module.general_stats_addcols(data, headers, "GATK VariantEval")
 
-        # Variant Counts plot
-        self.add_section(
-            name="Variant Counts", anchor="gatk-count-variants", plot=count_variants_barplot(self.gatk_varianteval)
-        )
+    # Variant Counts plot
+    module.add_section(name="Variant Counts", anchor="gatk-count-variants", plot=count_variants_barplot(data))
 
-        # Compare Overlap Table
-        self.add_section(
-            name="Compare Overlap", anchor="gatk-compare-overlap", plot=comp_overlap_table(self.gatk_varianteval)
-        )
+    # Compare Overlap Table
+    module.add_section(name="Compare Overlap", anchor="gatk-compare-overlap", plot=comp_overlap_table(data))
 
-        return n_reports_found
+    return n_reports_found
 
 
 def parse_single_report(f):

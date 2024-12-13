@@ -314,6 +314,11 @@ def get_module_data(
         if module and (m.name.lower() != module and m.anchor != module):
             continue
 
+        if m.saved_raw_data is None:
+            raise ValueError(
+                f"`'{m.name}' raw module data is not available - set `parse_logs(preserve_module_raw_data=True)` to preserve it"
+            )
+
         data_by_key: Dict[str, Dict] = m.saved_raw_data
         if sample:
             data_by_key = {data_key: data_by_sample.get(sample, {}) for data_key, data_by_sample in data_by_key.items()}

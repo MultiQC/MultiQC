@@ -39,9 +39,6 @@ def parse_samtools_rmdup(module: BaseMultiqcModule):
     if len(samtools_rmdup) == 0:
         return 0
 
-    # Write parsed report data to a file
-    module.write_data_file(samtools_rmdup, "multiqc_samtools_rmdup")
-
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
     module.add_software_version(None)
@@ -76,5 +73,8 @@ def parse_samtools_rmdup(module: BaseMultiqcModule):
         }
     }
     module.general_stats_addcols(samtools_rmdup, stats_headers, namespace="rmdup")
+
+    # Write parsed report data to a file
+    module.write_data_file(samtools_rmdup, "multiqc_samtools_rmdup")
 
     return len(samtools_rmdup)

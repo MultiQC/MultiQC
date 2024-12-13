@@ -1,5 +1,6 @@
 ---
 title: HiC-Pro
+displayed_sidebar: multiqcSidebar
 description: >
   Pipeline for Hi-C data processing
 ---

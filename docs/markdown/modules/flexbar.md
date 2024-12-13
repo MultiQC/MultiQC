@@ -1,5 +1,6 @@
 ---
 title: Flexbar
+displayed_sidebar: multiqcSidebar
 description: >
   Barcode and adapter removal tool
 ---

@@ -25,7 +25,6 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
-    cast,
     overload,
 )
 
@@ -44,9 +43,8 @@ from multiqc.plots.table_object import (
     SampleGroup,
     SampleName,
     ValueT,
-    is_valid_value,
 )
-from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId
 
 logger = logging.getLogger(__name__)
 
@@ -171,8 +169,7 @@ class BaseMultiqcModule:
         self.anchor = Anchor(report.save_htmlid(str(self.anchor)))
 
         # See if we have a user comment in the config
-        _config_section_comment = config.section_comments.get(str(self.anchor))
-        if _config_section_comment:
+        if _config_section_comment := config.section_comments.get(str(self.anchor)):
             self.comment = _config_section_comment
 
         self.info = self.info.strip().strip(".")
@@ -200,7 +197,8 @@ class BaseMultiqcModule:
 
         self.hidden = False
 
-        self.__saved_raw_data: Dict[str, Dict[str, Any]] = dict()  # Saved raw data. Identical to report.saved_raw_data
+        # Saved raw data. Written only if `preserve_module_raw_data` is set to `True`
+        self.__saved_raw_data: Optional[Dict[str, Dict[str, Any]]] = None
 
         self.css: Dict[str, str] = dict()
         self.js: Dict[str, str] = dict()
@@ -247,7 +245,7 @@ class BaseMultiqcModule:
                 delattr(self, key)
 
     @property
-    def saved_raw_data(self):
+    def saved_raw_data(self) -> Optional[Dict[str, Dict[str, Any]]]:
         """
         Wrapper to give access to private __saved_raw_data. We could have just called __saved_raw_data without the
         underscore: saved_raw_data, and that would work just fine. But users might override saved_raw_data in
@@ -353,7 +351,7 @@ class BaseMultiqcModule:
                     )
 
             # Make a sample name from the filename
-            s_name = self.clean_s_name(f["fn"])
+            s_name = self.clean_s_name(f["fn"], f)
 
             if filehandles or filecontents:
                 try:
@@ -451,11 +449,13 @@ class BaseMultiqcModule:
             logger.debug(f"Skipping section with id '{id}' because specified in user config")
             return
 
-        # See if we have a user comment in the config
-        if str(id) in config.section_comments:
-            comment = config.section_comments[str(id)]
-        elif str(anchor) in config.section_comments:
-            comment = config.section_comments[str(anchor)]
+        # See if we have a user comment in the config, but only if the section ID is different from the module ID
+        # (otherwise it's a duplicate comment)
+        if self.anchor != id and self.anchor != anchor:
+            if str(id) in config.section_comments:
+                comment = config.section_comments[str(id)]
+            elif str(anchor) in config.section_comments:
+                comment = config.section_comments[str(anchor)]
 
         # Format the content
         if autoformat:
@@ -544,12 +544,24 @@ class BaseMultiqcModule:
                 grouping_exts = [grouping_exts]
             if grouping_exts:
                 s_name_without_ext = SampleName(
-                    self.clean_s_name(s_name, fn_clean_exts=grouping_exts, fn_clean_trim=[], prepend_dirs=False)
+                    self._clean_s_name(
+                        s_name,
+                        fn_clean_exts=grouping_exts,
+                        fn_clean_trim=[],
+                        prepend_dirs=False,
+                    )
                 )
                 if s_name_without_ext != s_name:  # matched the label
                     matched_label = label
                     # Clean the rest of the name
-                    group_name = SampleGroup(self.clean_s_name(s_name_without_ext))
+                    group_name = SampleGroup(
+                        # Leaving out fn_clean_exts and fn_clean_trim, so the default values are used, to make sure
+                        # all default extentions are trimmed after we trimmed the groupping pattern.
+                        self._clean_s_name(
+                            s_name_without_ext,
+                            prepend_dirs=False,
+                        )
+                    )
                     break
 
         return group_name, matched_label
@@ -698,7 +710,29 @@ class BaseMultiqcModule:
     def clean_s_name(
         self,
         s_name: Union[str, List[str]],
-        f: Optional[Union[LoadedFileDict[Any], str]] = None,
+        f: Union[LoadedFileDict[Any], FileDict],
+        root: Optional[str] = None,
+        filename: Optional[str] = None,
+    ) -> str:
+        """
+        Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
+        This is a user-facing version of _clean_s_name and the one that should be called in modules on raw sample names,
+        because it gurantees the config options like config.prepend_dirs, config.fn_clean_exts, config.fn_clean_trim.
+
+        search_pattern_key: the search pattern key that this file matched
+        """
+        return self._clean_s_name(
+            s_name=s_name,
+            f=f,
+            root=root or f["root"],
+            filename=filename or f["fn"],
+            search_pattern_key=f["sp_key"],
+        )
+
+    def _clean_s_name(
+        self,
+        s_name: Union[str, List[str]],
+        f: Optional[Union[LoadedFileDict[Any], FileDict]] = None,
         root: Optional[str] = None,
         filename: Optional[str] = None,
         search_pattern_key: Optional[str] = None,
@@ -712,7 +746,8 @@ class BaseMultiqcModule:
         search_pattern_key: the search pattern key that this file matched
         fn_clean_exts: patterns to use for cleaning (default: config.fn_clean_exts)
         fn_clean_trim: patterns to use for trimming (default: config.fn_clean_trim)
-        prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs)
+        prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs).
+            requires `f` to be set.
         """
         if isinstance(s_name, list):
             if len(s_name) == 0:
@@ -721,7 +756,7 @@ class BaseMultiqcModule:
             # Extract a sample name from a list of file names (for example, FASTQ pairs).
             # Each name is cleaned separately first:
             clean_names = [
-                self.clean_s_name(
+                self._clean_s_name(
                     sn,
                     f=f,
                     root=root,
@@ -749,23 +784,14 @@ class BaseMultiqcModule:
         sn = SampleNameMeta(original_name=SampleName(s_name))
         trimmed_name: SampleName = sn.original_name
 
-        # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
-        if isinstance(f, str):
-            root = f
-            f = None
-
         # Set string variables from f if it was a dict from find_log_files()
-        elif f is not None:
+        if f is not None:
             if "root" in f and root is None:
                 root = f["root"]
             if "fn" in f and filename is None:
                 filename = f["fn"]
             if "sp_key" in f and search_pattern_key is None:
                 search_pattern_key = f["sp_key"]
-        else:
-            root = None
-            filename = None
-            search_pattern_key = None
 
         # For modules setting s_name from file contents, set s_name back to the filename
         # (if wanted in the config)
@@ -978,6 +1004,19 @@ class BaseMultiqcModule:
             if "description" not in _headers[col_id]:
                 _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
 
+            # Add grouping information to description if table_sample_merge is enabled
+            if config.table_sample_merge:
+                desc = _headers[col_id].get("description", "")
+                if group_samples_config.cols_to_weighted_average and any(
+                    col_id == c for c, _ in group_samples_config.cols_to_weighted_average
+                ):
+                    desc += " (weighted average for grouped samples)"
+                elif group_samples_config.cols_to_average and col_id in group_samples_config.cols_to_average:
+                    desc += " (averaged for grouped samples)"
+                elif group_samples_config.cols_to_sum and col_id in group_samples_config.cols_to_sum:
+                    desc += " (summed for grouped samples)"
+                _headers[col_id]["description"] = desc
+
         # Append to report.general_stats for later assembly into table
         report.general_stats_data.append(rows_by_group)
         report.general_stats_headers.append(_headers)  # type: ignore
@@ -1059,14 +1098,22 @@ class BaseMultiqcModule:
         # Generate a unique filename if the file already exists (running module multiple times)
         i = 1
         base_fn = fn
-        while fn in report.saved_raw_data:
+        while fn in report.saved_raw_data_keys:
             fn = f"{base_fn}_{i}"
             i += 1
 
-        if config.preserve_module_raw_data:
-            report.saved_raw_data[fn] = data
-            # Keep also in the module instance, so it's possible to map back data to specific module
-            self.__saved_raw_data[fn] = data
+        # To map back keys data to specific module
+        report.saved_raw_data_keys.add(fn)
 
-        # Save the file
+        # Save the file (usualy TSV)
         report.write_data_file(data, fn, sort_cols, data_format)
+
+        # Also write data to JSON to later load into multiqc_data.json
+        if config.data_dump_file_write_raw:
+            report.write_data_file(data, fn, sort_cols, "json")
+
+        # Also save the data to the module instance to enable `get_module_data()` in interactive sessions
+        if config.preserve_module_raw_data:
+            if self.__saved_raw_data is None:
+                self.__saved_raw_data = dict()
+            self.__saved_raw_data[fn] = data

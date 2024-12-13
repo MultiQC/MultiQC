@@ -282,16 +282,20 @@ class ViolinPlot extends Plot {
     let sep = format === "tsv" ? "\t" : ",";
     // Export all data points as a table, samples are rows, metrics are columns
     let titles = metrics.map((metric) => headerByMetric[metric].title);
+    // Escape titles that contain the separator character
+    titles = titles.map((title) => (title.includes(sep) ? `"${title}"` : title));
     let csv = "Sample" + sep + titles.join(sep) + "\n";
     for (let i = 0; i < allSamples.length; i++) {
       let sample = allSamples[i];
       if (sampleSettings[i].hidden) continue;
       csv += sample + sep;
-      metrics.map((metric) => {
-        let val = violinValuesBySampleByMetric[metric][sample];
-        if (val === undefined) val = ".";
-        csv += val + sep;
-      });
+      csv += metrics
+        .map((metric) => {
+          let val = violinValuesBySampleByMetric[metric][sample];
+          if (val === undefined) val = ".";
+          return val;
+        })
+        .join(sep);
       csv += "\n";
     }
     return csv;

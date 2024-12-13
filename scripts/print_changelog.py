@@ -86,7 +86,7 @@ def main():
         "module: new": "New modules",
         "bug: module": "Module fixes",
         "module: enhancement": "Module updates",
-        "module: change": "Updates",
+        "module: change": "### Feature updates and improvements",
         "bug: core": "Fixes",
         "core: infrastructure": "Infrastructure and packaging",
         "core: refactoring": "Refactoring and typing",
@@ -94,7 +94,7 @@ def main():
     }
     sections_to_prs: Dict[str, List[PullRequest]] = {
         "New modules": [],
-        "Updates": [],
+        "Feature updates and improvements": [],
         "Module updates": [],
         "Fixes": [],
         "Module fixes": [],
@@ -107,10 +107,10 @@ def main():
             continue
         if pr.labels:
             for label in pr.labels:
-                section_name = label_to_section.get(label.name, "Updates")
+                section_name = label_to_section.get(label.name, "Feature updates and improvements")
                 sections_to_prs[section_name].append(pr)
         else:
-            sections_to_prs["Updates"].append(pr)
+            sections_to_prs["Feature updates and improvements"].append(pr)
 
     print("")
     print(f"## [MultiQC {current_tag}]({REPO_URL}/releases/tag/{current_tag}) - {datetime.date.today().isoformat()}")

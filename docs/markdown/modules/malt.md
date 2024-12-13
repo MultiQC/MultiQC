@@ -1,5 +1,6 @@
 ---
 title: MALT
+displayed_sidebar: multiqcSidebar
 description: >
   Aligns of metagenomic reads to a database of reference sequences (such as NR, GenBank or Silva) and outputs a MEGAN RMA file
 ---

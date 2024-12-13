@@ -1,5 +1,6 @@
 ---
 title: mtnucratio
+displayed_sidebar: multiqcSidebar
 description: >
   Computes mitochondrial to nuclear genome ratios in NGS datasets
 ---

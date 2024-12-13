@@ -1,5 +1,6 @@
 ---
 title: Librarian
+displayed_sidebar: multiqcSidebar
 description: >
   Predicts the sequencing library type from the base composition of a FastQ file
 ---

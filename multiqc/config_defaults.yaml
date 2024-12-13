@@ -53,6 +53,8 @@ version_check_url: https://api.multiqc.info/version
 make_data_dir: true
 zip_data_dir: false
 data_dump_file: true
+data_dump_file_write_raw: true # Write the `saved_raw_data` section in multiqc_data.json - useful to set to
+# false for large datasets as the raw data can be prohibitively large
 megaqc_url: false
 megaqc_access_token: null
 megaqc_timeout: 30
@@ -83,6 +85,8 @@ table_cond_formatting_colours:
   - pass: "#5cb85c"
   - warn: "#f0ad4e"
   - fail: "#d9534f"
+  - male: "#5bc0de"
+  - female: "#d9534f"
 table_cond_formatting_rules:
   all_columns:
     pass:
@@ -97,6 +101,12 @@ table_cond_formatting_rules:
       - s_eq: "fail"
       - s_eq: "false"
       - s_eq: "no"
+    male:
+      - s_eq: "male"
+      - s_eq: "M"
+    female:
+      - s_eq: "female"
+      - s_eq: "F"
   # PURPLE module - QC Status column
   # TODO: Should update the table plotting code so that this can go in pconfig
   QCStatus:
@@ -398,6 +408,7 @@ module_order:
   - isoseq
   - lima
   - peddy
+  - haplocheck
   - somalier
   - methylqa
   - mosdepth
@@ -413,6 +424,7 @@ module_order:
   - rsem
   - rseqc
   - busco
+  - checkm
   - bustools
   - goleft_indexcov
   - gffcompare
@@ -450,6 +462,7 @@ module_order:
   - vep
   - bakta
   - prokka
+  - checkm2
   - qc3C
   - nanoq
   - nanostat
@@ -473,6 +486,7 @@ module_order:
   - truvari
   - megahit
   - ganon
+  - gtdbtk
   # Alignment tool stats
   - bbmap
   - bismark
@@ -548,5 +562,5 @@ module_order:
   - seqwho
   - telseq
 
-# Set to "false" to trade the `saved_raw_data` section in multiqc_data.json for memory
-preserve_module_raw_data: true
+# Preserves `saved_raw_data` section in modules - default for interactive runs
+preserve_module_raw_data: false

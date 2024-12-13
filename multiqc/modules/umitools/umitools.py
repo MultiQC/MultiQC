@@ -120,13 +120,13 @@ class MultiqcModule(BaseMultiqcModule):
         if out_m:
             out_name = out_m.group(1)
             if out_name != "<stdout>":
-                return self.clean_s_name(out_name)
+                return self.clean_s_name(out_name, f)
 
         in_m = re.search(r"stdin\s+:\s+<_io\.TextIOWrapper name='([^\']+)'", f["f"])
         if in_m:
             in_name = in_m.group(1)
             if in_name != "<stdin>":
-                return self.clean_s_name(in_name)
+                return self.clean_s_name(in_name, f)
 
         return f["s_name"]
 

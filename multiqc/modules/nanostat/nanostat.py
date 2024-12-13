@@ -48,6 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.has_seq_summary = False
         self.has_fastq = False
         self.has_fasta = False
+        self.general_stats_added = False
         for f in self.find_log_files("nanostat", filehandles=True):
             nano_stats_by_sample = self.parse_nanostat_log(f)
             for s_name, nano_stats in nano_stats_by_sample.items():
@@ -93,28 +94,33 @@ class MultiqcModule(BaseMultiqcModule):
         Note: Tool can be run in two different modes, giving two variants to the output.
         To avoid overwriting keys from different modes, keys are given a suffix.
         """
-        snames = [f["s_name"]]
-        nano_stats_by_sname = defaultdict(dict)
+        sname = f["s_name"]
+        nano_stats_by_sname = {sname: dict()}
         for line in f["f"]:
+            if line.strip() == "":
+                continue
             parts = line.strip().split("\t")
             if len(parts) < 2:
+                log.warning(f"Expected at least 2 parts in line, got: {len(parts)}: {parts} - in {f['root']}/{f['fn']}")
+                continue
+            if len(parts) > 2:
+                log.warning(f"Expected at most 2 parts in line, got: {len(parts)}: {parts} - in {f['root']}/{f['fn']}")
                 continue
 
-            key = parts[0]
+            key, val = parts
             if key == "Metrics":
-                snames = parts[1:]
+                # A static header line "Metrics dataset", ignore.
+                pass
 
             elif key in self._KEYS_MAPPING.keys():
                 key = self._KEYS_MAPPING.get(key)
                 if key:
-                    for sname, val in zip(snames, parts[1:]):
-                        nano_stats_by_sname[sname][key] = float(val)
+                    nano_stats_by_sname[sname][key] = float(val)
             else:
                 key = key.replace("Reads ", "").strip(":")
                 if key.startswith(">Q"):
-                    for sname, val in zip(snames, parts[1:]):
-                        # Number of reads above Q score cutoff
-                        nano_stats_by_sname[sname][key] = int(val.split()[0])
+                    # Number of reads above Q score cutoff
+                    nano_stats_by_sname[sname][key] = int(val.split()[0])
         return nano_stats_by_sname
 
     def parse_legacy_nanostat_log(self, f):
@@ -300,6 +306,20 @@ class MultiqcModule(BaseMultiqcModule):
             anchor=f"nanostat_{stat_type.replace(' ', '_')}_stats",
             plot=table.plot(self.nanostat_data, headers, table_config),
         )
+
+        if not self.general_stats_added:
+            # Remove the hidden metrics, hide the rest apart from Read N50
+            general_stats_headers = {}
+            for k in headers:
+                if headers[k].get("hidden"):
+                    continue
+                general_stats_headers[k] = headers[k]
+                general_stats_headers[k]["description"] = headers[k]["description"] + f" ({stat_title})"
+                if k != f"Read length N50_{stat_type}":
+                    general_stats_headers[k]["hidden"] = True
+
+            self.general_stats_addcols(self.nanostat_data, general_stats_headers)
+            self.general_stats_added = True
 
     def reads_by_quality_plot(self):
         def _get_total_reads(_data_dict):

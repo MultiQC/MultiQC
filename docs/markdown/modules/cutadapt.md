@@ -1,5 +1,6 @@
 ---
 title: Cutadapt
+displayed_sidebar: multiqcSidebar
 description: >
   Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences
 ---

@@ -13,19 +13,30 @@ def base_module():
 def test_no_trim(base_module):
     config.fn_clean_exts[:] = []
     config.fn_clean_trim[:] = []
-    assert base_module.clean_s_name("foo.bar.fastq.gz") == "foo.bar.fastq.gz"
+    assert base_module._clean_s_name("foo.bar.fastq.gz") == "foo.bar.fastq.gz"
 
 
 def test_default_trim(base_module):
-    assert base_module.clean_s_name("foo.bar.fastq.gz") == "foo.bar"
+    assert base_module._clean_s_name("foo.bar.fastq.gz") == "foo.bar"
 
 
 def test_custom_clean_ext(base_module):
     config.fn_clean_exts = ["chop_this_off"]
-    assert base_module.clean_s_name("foo.chop_this_off") == "foo"
+    assert base_module._clean_s_name("foo.chop_this_off") == "foo"
 
 
 def test_regex_keep(base_module):
     config.fn_clean_exts = [{"type": "regex_keep", "pattern": "abc..X"}]
-    assert base_module.clean_s_name("foo_abc12X_bar") == "abc12X"
-    assert base_module.clean_s_name("foo_abc123_bar") == "foo_abc123_bar"
+    assert base_module._clean_s_name("foo_abc12X_bar") == "abc12X"
+    assert base_module._clean_s_name("foo_abc123_bar") == "foo_abc123_bar"
+
+
+def test_prepend_dirs(base_module):
+    assert (
+        base_module._clean_s_name(
+            "foo.bar.fastq.gz",
+            {"root": "path/to/dir"},
+            prepend_dirs=True,
+        )
+        == "path | to | dir | foo.bar"
+    )

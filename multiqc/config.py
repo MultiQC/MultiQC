@@ -104,6 +104,7 @@ version_check_url: str
 make_data_dir: bool
 zip_data_dir: bool
 data_dump_file: bool
+data_dump_file_write_raw: Optional[bool]
 megaqc_url: str
 megaqc_access_token: Optional[str]
 megaqc_timeout: float
@@ -129,7 +130,7 @@ table_columns_visible: Dict[str, Union[bool, Dict[str, bool]]]
 table_columns_placement: Dict[str, Dict[str, float]]
 table_columns_name: Dict[str, Union[str, Dict[str, str]]]
 table_cond_formatting_colours: List[Dict[str, str]]
-table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]]
+table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, Union[str, int, float]]]]]
 decimalPoint_format: str
 thousandsSep_format: str
 remove_sections: List[str]

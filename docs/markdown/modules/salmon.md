@@ -1,5 +1,6 @@
 ---
 title: Salmon
+displayed_sidebar: multiqcSidebar
 description: >
   Quantifies expression of transcripts using RNA-seq data
 ---

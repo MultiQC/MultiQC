@@ -1,11 +1,12 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from multiqc import config, report
 from multiqc.plots.table_object import ColumnAnchor, DataTable, SampleGroup, SampleName, ValueT
 from multiqc.utils import mqc_colour
 from typing import TYPE_CHECKING
+from natsort import natsorted
 
 if TYPE_CHECKING:  # to avoid circular import
     from multiqc.plots.plotly.violin import ViolinPlot
@@ -50,8 +51,6 @@ def make_table(
     # empty_cells: Dict[ColumnKeyT, str] = dict()
     hidden_cols = 1
     table_title = dt.pconfig.title
-    if table_title is None:
-        table_title = dt.id.replace("_", " ").title()
 
     def escape(s: str) -> str:
         return s.replace('"', "&quot;").replace("'", "&#39;").replace("<", "&lt;").replace(">", "&gt;")
@@ -115,7 +114,7 @@ def make_table(
             )
 
         # Collect conditional formatting config
-        cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
+        cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, Union[str, int, float]]]]] = {}
         if header.cond_formatting_rules:
             cond_formatting_rules[col_anchor] = header.cond_formatting_rules
         cond_formatting_rules.update(config.table_cond_formatting_rules)
@@ -286,8 +285,9 @@ def make_table(
     # Put everything together
     #
 
-    # Buttons above the table
     html = ""
+
+    # Buttons above the table
     if not config.simple_output and add_control_panel:
         # Copy Table Button
         buttons: List[str] = []
@@ -403,7 +403,7 @@ def make_table(
     html += "<tbody>"
     t_row_group_names = list(group_to_sample_to_anchor_to_td.keys())
     if dt.pconfig.sort_rows:
-        t_row_group_names = sorted(t_row_group_names)
+        t_row_group_names = natsorted(t_row_group_names)
 
     non_trivial_groups_present = any(len(group_to_sample_to_anchor_to_td[g_name]) > 1 for g_name in t_row_group_names)
 
@@ -436,7 +436,7 @@ def make_table(
             for col_anchor in col_to_th.keys():
                 cell_html = group_to_sample_to_anchor_to_td[g_name][s_name].get(col_anchor)
                 if not cell_html:
-                    td_hide_cls = "hide" if col_to_hidden[col_anchor] else ""
+                    td_hide_cls = "column-hidden" if col_to_hidden[col_anchor] else ""
                     sorting_val = group_to_sorting_to_anchor_to_val.get(g_name, {}).get(col_anchor, "")
                     cell_html = (
                         f'<td class="data-coloured {col_anchor} {td_hide_cls}" data-sorting-val="{sorting_val}"></td>'
@@ -456,7 +456,9 @@ def make_table(
             for s_name, s_data in g_data.items():
                 flatten_raw_vals[str(s_name)] = {str(k): v for k, v in s_data.items()}
         report.write_data_file(flatten_raw_vals, fname)
-        report.saved_raw_data[fname] = flatten_raw_vals
+        if config.data_dump_file_write_raw:
+            report.write_data_file(flatten_raw_vals, fname, data_format="json")
+            report.saved_raw_data_keys.add(fname)
 
     # Build the bootstrap modal to customise columns and order
     modal = ""

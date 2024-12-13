@@ -1,4 +1,4 @@
-from multiqc import report
+from multiqc import config, report
 from multiqc.modules.umicollapse import MultiqcModule
 from multiqc.plots.table_object import InputRow
 
@@ -30,7 +30,10 @@ UMI collapsing finished in 1077.717 seconds!
 
     report.analysis_files = [f1, f2, f3]
     report.search_files(["umicollapse"])
+
+    config.preserve_module_raw_data = True
     m = MultiqcModule()
+    assert m.saved_raw_data is not None
     assert len(m.saved_raw_data) == 1
     print(m.saved_raw_data)
 

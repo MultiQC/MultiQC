@@ -1,5 +1,6 @@
 ---
 title: Stacks
+displayed_sidebar: multiqcSidebar
 description: >
   Analyzes restriction enzyme-based data (e.g. RAD-seq)
 ---

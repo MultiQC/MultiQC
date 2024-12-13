@@ -1,5 +1,6 @@
 ---
 title: DIAMOND
+displayed_sidebar: multiqcSidebar
 description: >
   Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST
 ---

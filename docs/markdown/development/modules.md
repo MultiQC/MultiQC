@@ -699,7 +699,7 @@ If you are using non-standard values for the logfile root, filename or search pa
 key, these can be specified. The function def looks like this:
 
 ```python
-def clean_s_name(self, s_name, f=None, root=None, filename=None, search_pattern_key=None):
+def clean_s_name(self, s_name, f, root=None):
 ```
 
 A typical example is when the sample name is the log file directory.
@@ -1046,6 +1046,9 @@ data_by_sample = {
 }
 self.write_data_file(data_by_sample, "multiqc_mymodule")
 ```
+
+Make sure to call `self.write_data_file` in the end of the module, because it
+may modify `data_by_sample` to be JSON-serializable.
 
 If your output has a lot of columns, you can supply the additional
 argument `sort_cols = True` to have the columns alphabetically sorted.

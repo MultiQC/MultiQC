@@ -9,6 +9,7 @@ import fnmatch
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table, bargraph, linegraph
 from multiqc import config
+from multiqc.types import LoadedFileDict
 
 log = logging.getLogger(__name__)
 
@@ -158,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
         if data_by_chromosome_by_sample:
             self._build_per_chrom_plot(data_by_chromosome_by_sample)
 
-    def _parse_coverage_report(self, f: Dict) -> Dict[str, Union[float, int]]:
+    def _parse_coverage_report(self, f: LoadedFileDict) -> Dict[str, Union[float, int]]:
         """
         Parse one coverage report.
         """
@@ -174,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for ext in [".bam", ".cram", ".sam"]:
                     path_line = path_line.replace(ext, "<EXT>")
                 names = [
-                    self.clean_s_name(sn.strip())
+                    self.clean_s_name(sn.strip(), f)
                     for sn in path_line.split("<EXT>")
                     if sn
                     if sn.strip() not in ["-", "/dev/stdin"]

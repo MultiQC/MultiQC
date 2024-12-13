@@ -1,5 +1,6 @@
 ---
 title: Adapter Removal
+displayed_sidebar: multiqcSidebar
 description: >
   Removes adapter sequences, trims low quality bases from 3' ends, or merges overlapping pairs into consensus
 ---

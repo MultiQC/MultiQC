@@ -1,6 +1,6 @@
 import logging
 from copy import copy
-from typing import Dict
+from typing import Dict, Tuple, Union
 
 from multiqc import config, BaseMultiqcModule
 from multiqc.modules.ngsbits.utils import parse_qcml_by
@@ -13,8 +13,8 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find ngs-bits MappingQC reports and parse their data"""
 
-    mappingqc: Dict = dict()
-    mappingqc_keys: Dict = dict()
+    mappingqc: Dict[str, Dict[str, Union[float, str]]] = dict()
+    mappingqc_keys: Dict[str, Tuple[str, str]] = dict()
 
     for f in module.find_log_files("ngsbits/mappingqc"):
         values, params = parse_qcml_by(f["f"], "qualityParameter")
@@ -151,7 +151,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
             "format": "{:,.2f}",
             "floor": 0,
             "ceiling": 10,
-            "minRange": 10,
+            "minrange": 10,
             "scale": "Greys",
             "hidden": True,
         }

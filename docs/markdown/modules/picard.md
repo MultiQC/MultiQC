@@ -1,5 +1,6 @@
 ---
 title: Picard
+displayed_sidebar: multiqcSidebar
 description: >
   Tools for manipulating high-throughput sequencing data
 ---
