@@ -190,6 +190,11 @@ async function summarizeWithAi(button) {
   const providerId = $("#ai-provider").val();
   const provider = AI_PROVIDERS[providerId];
   let modelName = $("#ai-model").val();
+  if (!modelName) {
+    modelName = provider.defaultModel;
+    $("#ai-model").val(modelName);
+    storeModelName(providerId, modelName);
+  }
   const maxTokens = getMaxTokens(modelName);
 
   if (totalTokens > maxTokens) {

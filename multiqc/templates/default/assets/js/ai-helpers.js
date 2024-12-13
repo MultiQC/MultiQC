@@ -87,10 +87,9 @@ async function runStreamGeneration({
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json();
-          onStreamError(
-            `HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"}`,
-          );
-          throw new Error(errorData.error?.message || "Unknown error");
+          const errMessage = errorData.error ? `${errorData.error.type}: ${errorData.error.message}` : "Unknown error";
+          onStreamError(`HTTP ${response.status}: ${response.statusText} ${errMessage}`);
+          throw new Error(errMessage);
         }
         return response.body.getReader();
       })
