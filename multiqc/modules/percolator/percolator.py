@@ -146,6 +146,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="percolator",
             href="https://github.com/percolator/percolator",
             info="Semi-supervised learning for peptide identification from shotgun proteomics datasets.",
+            doi="10.1007/s13361-016-1460-7",
         )
 
         # Parse logs
