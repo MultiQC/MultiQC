@@ -1,9 +1,6 @@
-from ast import arg
 import base64
-import json
 import logging
 import os
-from pathlib import Path
 import re
 from textwrap import indent
 from typing import Dict, Optional, cast, TYPE_CHECKING
@@ -15,7 +12,7 @@ from pydantic.types import SecretStr
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
-from multiqc.types import Anchor, PlotType
+from multiqc.types import Anchor
 
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
