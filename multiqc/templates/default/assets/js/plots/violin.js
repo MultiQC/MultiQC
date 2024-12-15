@@ -18,10 +18,14 @@ class ViolinPlot extends Plot {
     let metrics = dataset["metrics"];
     let headerByMetric = dataset["header_by_metric"];
 
-    // Hidden metrics
+    // Hidden metrics - check both the header and table configuration
     metrics = metrics.filter((metric) => {
       let header = headerByMetric[metric];
-      return header["hidden"] !== true || keepHidden;
+      // Check if column is hidden in table configuration
+      let tableCheckbox = $(`#${this.tableAnchor}_config_modal_table .mqc_table_col_visible[value="${metric}"]`);
+      let hiddenInTable = tableCheckbox.length > 0 && !tableCheckbox.is(":checked");
+
+      return (header["hidden"] !== true || keepHidden) && !hiddenInTable;
     });
 
     let violinValuesBySampleByMetric = dataset["violin_value_by_sample_by_metric"];
