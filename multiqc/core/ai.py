@@ -226,12 +226,12 @@ class LangchainClient(Client):
         llm = self.llm
 
         def send_request():
-            if config.langchain_api_key and config.langchain_endpoint and config.langchain_project:
+            if os.environ.get("LANGCHAIN_API_KEY"):
                 with tracing_v2_enabled(
-                    project_name=config.langchain_project,
+                    project_name=os.environ.get("LANGCHAIN_PROJECT"),
                     client=LangSmithClient(
-                        api_key=config.langchain_api_key,
-                        api_url=config.langchain_endpoint,
+                        api_key=os.environ.get("LANGCHAIN_API_KEY"),
+                        api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
                     ),
                 ):
                     response = llm.invoke(
@@ -510,7 +510,7 @@ def get_llm_client() -> Optional[Client]:
         return None
 
     if config.ai_provider == "seqera":
-        api_key = config.seqera_api_key or os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
+        api_key = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
         if not api_key:
             logger.warning(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', but TOWER_ACCESS_TOKEN "
@@ -520,7 +520,7 @@ def get_llm_client() -> Optional[Client]:
         return SeqeraClient(config.ai_model, api_key)
 
     if config.ai_provider == "anthropic":
-        api_key = config.anthropic_api_key or os.environ.get("ANTHROPIC_API_KEY")
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'anthropic', but Anthropic API "
@@ -536,7 +536,7 @@ def get_llm_client() -> Optional[Client]:
             )
 
     if config.ai_provider == "openai":
-        api_key = config.openai_api_key or os.environ.get("OPENAI_API_KEY")
+        api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'openai', but OpenAI API "

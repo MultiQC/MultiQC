@@ -111,17 +111,13 @@ megaqc_timeout: float
 export_plots: bool
 make_report: bool
 make_pdf: bool
+
 ai_summary: bool
 ai_summary_full: bool
 ai_provider: Literal["seqera", "openai", "anthropic"]
 ai_model: str
-
 seqera_api_url: str
 seqera_website: str
-openai_api_key: Optional[str]
-anthropic_api_key: Optional[str]
-seqera_api_key: Optional[str]
-langchain_api_key: Optional[str]
 langchain_project: Optional[str]
 langchain_endpoint: Optional[str]
 
