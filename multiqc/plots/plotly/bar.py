@@ -188,7 +188,10 @@ class Dataset(BaseDataset):
             prompt += (
                 f"| {sample} | "
                 + " | ".join(
-                    self.fmt_value_for_llm((cat.data if pconfig.cpswitch_c_active else cat.data_pct)[sidx]) + suffix
+                    self.fmt_value_for_llm(
+                        (cat.data if not pconfig.cpswitch or pconfig.cpswitch_c_active else cat.data_pct)[sidx]
+                    )
+                    + suffix
                     for cat in self.cats
                 )
                 + " |\n"
