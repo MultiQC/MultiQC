@@ -62,10 +62,13 @@ export_plots: false
 make_report: true
 make_pdf: false
 
+# AI settings:
 ai_summary: false
 ai_summary_full: false
 ai_provider: "anthropic"
 ai_model: "claude-3-5-sonnet-latest"
+
+# Development settings:
 seqera_api_url: "https://seqera.io"
 seqera_website: "https://seqera.io"
 langchain_project: null
