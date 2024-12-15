@@ -659,6 +659,15 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
             )
 
+        assert self.datasets[0].dt is not None
+        # Render both, add a switch between table and violin
+        table_html, configuration_modal = make_table(
+            self.datasets[0].dt,
+            violin_anchor=self.anchor,
+            module_anchor=module_anchor,
+            section_anchor=section_anchor,
+        )
+
         if not self.show_table:
             # Show violin alone.
             html = warning + super().add_to_report(
@@ -667,14 +676,6 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 section_anchor=section_anchor,
             )
         else:
-            assert self.datasets[0].dt is not None
-            # Render both, add a switch between table and violin
-            table_html, configuration_modal = make_table(
-                self.datasets[0].dt,
-                violin_anchor=self.anchor,
-                module_anchor=module_anchor,
-                section_anchor=section_anchor,
-            )
             violin_html = super().add_to_report(
                 plots_dir_name=plots_dir_name,
                 module_anchor=module_anchor,
@@ -689,7 +690,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 f"<div id='mqc_violintable_wrapper_{self.datasets[0].dt.anchor}' {table_visibility}>{table_html}</div>"
             )
 
-            html += configuration_modal
+        html += configuration_modal
 
         return html
 
