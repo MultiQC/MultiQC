@@ -178,7 +178,7 @@ async function summarizeWithAi(button) {
     systemPrompt = isMore ? systemPromptReportFull : systemPromptReportShort;
     content = formatReportForAi(countTokens(systemPrompt));
   } else if (sectionAnchor === "general_stats_table") {
-    systemPrompt = systemPromptGeneralStats;
+    systemPrompt = systemPromptPlot;
     content = formatReportForAi(countTokens(systemPrompt), true, plotView);
   } else {
     systemPrompt = systemPromptPlot;

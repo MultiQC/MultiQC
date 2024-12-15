@@ -318,22 +318,8 @@ or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one 
 
 Please do not add any extra headers to the response.
 
-Make sure to use a multiple of 4 spaces to indent nested lists.`;
+Make sure to use a multiple of 4 spaces to indent nested lists.
 
-let systemPromptGeneralStats =
-  multiqcDescription +
-  `
-You are given general statistics data from a MultiQC report.
-Your task is to analyse the data and give a very short and concise overall summary of the results.
-Don't waste words: mention only the important QC issues. If there are no issues, just say so.
-Limit it to 1-2 sentences.
-
-Make sure to use markdown to format your reponse for readability. Use directives with pre-defined classes
-.text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}. 
-If there are any sample names mentioned, or sample name prefixes or suffixes, you must warp them in
-a sample directive, making sure to use same color classes as for severity, for example: :sample[A1001.2003]{.text-yellow}
-or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one directive.
-
-Please do not add any extra headers to the response.
-
-Make sure to use a multiple of 4 spaces to indent nested lists.`;
+If no data is present, it's likely that the user has hidden all samples though the toolbox - in this case
+suggest to check the toolbox configuration. For tables, also there is a chance the user has made all
+columns invisible - in this case suggest to check the table column configuration.`;
