@@ -735,6 +735,9 @@ def add_ai_summary_to_report():
     if not response.interpretation:
         return None
 
+    if response.model:
+        report.ai_model = response.model
+
     if response.uuid:
         report.ai_generation_id = response.uuid
 
@@ -743,45 +746,3 @@ def add_ai_summary_to_report():
 
     if config.ai_summary_full and interpretation.detailed_analysis:
         report.ai_global_detailed_analysis = interpretation.markdown_to_html(interpretation.detailed_analysis)
-
-    #     report.ai_global_summary = f"""
-    #     <details>
-    #     <summary>
-    #     <div class="ai-summary-header">
-    #         <b>Report AI Summary {seqera_ai_beta_icon if client.title == 'Seqera AI' else ''}</b>
-    #         {continue_chat_btn}
-    #     </div>
-    #     {interpretation.markdown_to_html(interpretation.summary)}
-    #     </summary>
-    #     {detailed_summary}
-    #     {recommendations}
-    #     <p class="ai-summary-disclaimer" id="global_ai_summary_disclaimer">{disclaimer}</p>
-    #     </details>
-    #     <div class="mqc-table-expand ai-summary-expand ai-summary-expand-closed">
-    #         <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
-    #     </div>
-    #     """
-    #
-    # report.ai_summary = f"""
-    # <div class="ai-short-summary">
-    #     <div class="ai-summary-header">
-    #         <b>Report AI Summary {seqera_ai_beta_icon if client.title == 'Seqera AI' else ''}</b>
-    #     </div>
-    #     {interpretation.markdown_to_html(interpretation.summary)}
-    # </div>
-    # <div class="ai-local-content" id="global_ai_summary" style="display: none; margin: 0px -12px 0px -10px; padding: 10px;">
-    #     <p style="display: flex; justify-content: space-between; align-items: center;">
-    #         <b>Analysis</b>
-    #     </p>
-    #     <div class="ai-detailed-summary" id="global_ai_detailed_summary"></div>
-    #     <div class="ai-summary-error" id="global_ai_summary_error"></div>
-    # </div>
-    # <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; margin-bottom: 8px;">
-    #     <button
-    #         class="btn btn-sm btn-default ai-generate-more ai-generate-more-global"
-    #     >
-    #         Generate more details...
-    #     </button>
-    #     <span class="ai-summary-disclaimer" id="global_ai_summary_disclaimer" style="margin-top: 2px;">{disclaimer}</span>
-    # </div>
-    # """

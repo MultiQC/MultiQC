@@ -77,12 +77,7 @@ the output from each module and print it in sections.
                     <div class="ai-summary-disclaimer" id="{{ s['anchor'] }}_ai_summary_disclaimer" style="display: none;"></div>
                     <div class="ai-summary-error" id="{{ s['anchor'] }}_ai_summary_error" style="display: none;"></div>
                   </summary>
-                  <!-- <div class="ai-summary-extra-content"></div> -->
-                  <!-- <p class="ai-disclaimer" style="color: gray; font-style: italic"></p> -->
                 </details>
-                <!-- <div class="mqc-table-expand ai-summary-expand">
-                  <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
-                </div> -->
               </div>
               {{ s['content_before_plot'] if s['content_before_plot'] }}
               {% if s['plot'] is not none %}<div class="mqc-section-plot">{{ s['plot'] }}</div>{% endif %}
