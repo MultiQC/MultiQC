@@ -385,7 +385,7 @@ def make_table(
 
         buttons.append(
             f"""
-        <div class="ai-plot-buttons-container" style="float: right; display: {'' if config.ai_summary else 'none'};">
+        <div class="ai-plot-buttons-container" style="float: right">
             <button
                 class="btn btn-default btn-sm ai-copy-content ai-copy-content-table"
                 data-section-anchor="{section_anchor}"
