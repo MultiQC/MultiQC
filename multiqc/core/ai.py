@@ -228,10 +228,10 @@ class LangchainClient(Client):
         def send_request():
             if os.environ.get("LANGCHAIN_API_KEY"):
                 with tracing_v2_enabled(
-                    project_name=os.environ.get("LANGCHAIN_PROJECT"),
+                    project_name=os.environ.get("LANGCHAIN_PROJECT", config.langchain_project),
                     client=LangSmithClient(
                         api_key=os.environ.get("LANGCHAIN_API_KEY"),
-                        api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
+                        api_url=os.environ.get("LANGCHAIN_ENDPOINT", config.langchain_endpoint),
                     ),
                 ):
                     response = llm.invoke(
@@ -291,12 +291,12 @@ class LangchainClient(Client):
         llm = self.llm.with_structured_output(InterpretationOutput, include_raw=True)
 
         def send_request():
-            if config.langchain_api_key and config.langchain_endpoint and config.langchain_project:
+            if os.environ.get("LANGCHAIN_API_KEY"):
                 with tracing_v2_enabled(
-                    project_name=config.langchain_project,
+                    project_name=os.environ.get("LANGCHAIN_PROJECT", config.langchain_project),
                     client=LangSmithClient(
-                        api_key=config.langchain_api_key,
-                        api_url=config.langchain_endpoint,
+                        api_key=os.environ.get("LANGCHAIN_API_KEY"),
+                        api_url=os.environ.get("LANGCHAIN_ENDPOINT", config.langchain_endpoint),
                     ),
                 ):
                     response = llm.invoke(
