@@ -1,25 +1,26 @@
-MultiQC is a command-line reporting tool that discovers and parses results and statistics from bioinformatics tool outputs, such as: log files, console outputs, or other reports; aggregates them accross samples and tools, and generates a standalone poratble HTML report. This report helps to analyse containing multiple samples and multiple analysis steps and perform quality control.
+You are an expert programming assistant helping build a project called MultiQC.
 
-MultiQC is typically used as a last step in bioinformatics pipelines to perform quality control and summarise results from all previous steps. When run, it recursively searches the output folder of this pipeline to discover all the relevant files. 
+MultiQC is a command-line reporting tool that discovers and parses results and logs from bioinformatics tools, such as: log files, console outputs, or reports they write to disk. Then MultiQC aggregates parsed data accross samples and tools, and generates a standalone poratble HTML report. This report helps to analyse containing multiple samples and multiple analysis steps and perform quality control.
 
-MultiQC primary output is a standalone portable HTML file. It contains a "General Statistics" table with key metrics across all samples and tools. It is followed by more detailed sections for each specific tool, that can include tables,
-as well as plots of different types (bar plot, line plot, scatter plot, heatmap, etc.)
+MultiQC is typically called as a last step in bioinformatics pipelines to aggregate quality control metrics from all previous steps. When run on a pipeline output folder, it recursively searches it to discover and load all the relevant files.
+
+MultiQC primary output is a standalone portable HTML file. It starts with a "General Statistics" table with key metrics across all samples and tools. Followed, more detailed sections split by specific tools, that can include tables, as well as plots of different types (bar plot, line plot, scatter plot, heatmap, etc.)
 
 In addition to a HTML report, MultiQC generates a directory of parsed data files with consistent data structure. It also places there a JSON file with the same data, which can be used as an input for other tools, or for downstream analysis.
 
-MultiQC is written in Python for backend, and uses JavaScript with jQuery for frontend. 
+Base MultiQC codebase is written in Python, and it also uses JavaScript with jQuery inside the HTML report. 
 
-MultiQC supports bioformatics tools through so-called "modules". Each module is a Python module placed in `multiqc/modules` that is dynamically loaded as an "entry point" specified in `pyproject.toml`. A module describes how parse outputs/logs from a corresponding tool, what data to extract, how to summarise it, and what kinds of plots to use to present it in the report. There is also a file `multiqc/search_patterns.yaml` that describes file name patterns and content patterns to discover output files/logs from each tool/module.
+MultiQC supports bioformatics tools through so-called "modules". Each "module" is a Python module placed in `multiqc/modules`, and it is dynamically loaded as an "entry point" specified in `pyproject.toml`. A module describes how MultiQC should parse outputs/logs from the corresponding tool, what data to extract, how to summarise it, and what kinds of plots and tables to use to present data in the report. There is also a file `multiqc/search_patterns.yaml` that describes file name patterns and content patterns to discover output files/logs from each tool/module.
 
-Code structure:
+Codebase structure:
 
-- `multiqc/modules` - MultiQC "modules".
+- `multiqc/modules` - all the MultiQC "modules", plus 3 special-case modules: "software_versions", "profile_runtime", and "custom_content". The latter includes code to parse custom, non-tool sections and plots passed by end user directly thought configs or TSV/CSV files.
 - `multiqc/core` - core codebase for log discovery, running modules, logging, output writing, and AI summarization.
-- `multiqc/plots` - plotting code: describes how to prepare data and layouts to render with Plotly plots. Plots can be rendered both statically with Python Plotly library, as well as dynamically in browser with Plotly-JS library, so this code also prepares required data to generate a dump to be loaded with JavaScript.
-- `multiqc/templates` - HTML templates for MultiQC report. Only `multiqc/templates/default` is worth attention here. It includes HTML templates to be combined and rendered with Jinja2 to produce the final HTML report, as well as `asserts` - the folder with JavaScript code for all dynamic features like loading and decompressing the plot JSON dumps, rendering it with Plotly-JS, the toolbox with features to highlight/hide/rename samples in the report, etc. It also contains `default_multiqc.css` - where all the HTML styles are specified.
+- `multiqc/plots` - plotting code: describes how to prepare data and layouts to render with Plotly. Plots can be rendered both statically with Python Plotly library, as well as dynamically in browser with Plotly-JS library, so this code also prepares required data dumps to be loaded with JavaScript.
+- `multiqc/templates` - HTML templates for MultiQC report. Only `multiqc/templates/default` is worth attention here. It includes HTML templates to be combined and rendered with Jinja2 to produce the final HTML report, as well as `assets` - the folder with JavaScript code for all dynamic features like loading and decompressing the plot JSON dumps, rendering it with Plotly-JS, the toolbox with features to highlight/hide/rename samples in the report, etc. It also contains `default_multiqc.css` - all CSS goes there.
+- `multiqc/base_module.py` - a base module class for all modules to inherit. Povides a lot of sample name cleaning and grouping logic.
 - `multiqc/utils` - common Python utility functions.
-- `multiqc/base_module.py` - a base module class for all tools to inherit. Provides a lot of sample name cleaning and grouping logic.
-- `multiqc/config.py` - a configuration class that contains all the configuration variables for MultiQC, as well as configuration discovery logic.
+- `multiqc/config.py` - a configuration class that contains all the configuration variables for MultiQC, as well as all the configuration discovery logic.
 - `multiqc/interactive.py` - function helpers to construct a MultiQC report in interactive mode, e.g. in a Jupyter notebook.
 - `multiqc/report.py` - a singleton class with globale variables that are passed to Jinja2 to render a report. Holds the "state" of the report, i.e. modules, sections, discovered files, list of HTML anchor to keep them unique, etc., as well as multiple helper functions.
 - `multiqc/multiqc.py` - main entry point of MultiQC. Includes command line interface logic.
