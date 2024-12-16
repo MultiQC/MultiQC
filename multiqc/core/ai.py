@@ -641,19 +641,26 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Optional[str]:
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
 {report.general_stats_plot.format_for_ai_prompt()}
 """
-        if current_n_tokens + client.n_tokens(genstats_context) > max_tokens:
+        genstats_n_tokens = client.n_tokens(genstats_context)
+        if current_n_tokens + genstats_n_tokens > max_tokens:
             # If it's too long already, try without hidden columns
             genstats_context = f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
 {report.general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
 """
-            if current_n_tokens + client.n_tokens(genstats_context) > max_tokens:
+            genstats_n_tokens = client.n_tokens(genstats_context)
+            if current_n_tokens + genstats_n_tokens > max_tokens:
                 logger.warning(
-                    f"General stats (almost) exceeds the {client.title}'s context window (current: {current_n_tokens} tokens, max: {client.max_tokens()} tokens). AI summary will not be generated."
+                    f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
+                    f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
+                    "AI summary will not be generated. Try hiding some columns in the general stats table "
+                    "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context. "
+                    "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
+                    "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
                 )
                 return None
         user_prompt += genstats_context
-        current_n_tokens += client.n_tokens(genstats_context)
+        current_n_tokens += genstats_n_tokens
 
     user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
 

@@ -77,7 +77,11 @@ You can also copy the prompt for the entire report by clicking the "Copy prompt"
 
 ## Context window
 
-Modern LLM to date have a context window size in 128,000-200,000 tokens, which translates to about 100,000-160,000 characters in report data. Meaning that large reports for thousands of samples might not fit in the context window. If the entire report doesn't fit the context window, only the general statistics table will be included in the prompt, as it represents the essential overall information of the report. However, if even the general statistics can't be included, it would not be possible to generate an AI summary. Try hiding samples and/or table columns until the general statistics table fits the context
+Modern LLM to date have a context window size in 128,000-200,000 tokens, which translates to about 100,000-160,000 characters in report data. That means that very large reports - of thousands of samples - might not fit the context window. If the entire report doesn't fit the context window, only the general statistics table will be included in the prompt, as it represents the essential overall information of the report. If it doesn't fit, hidden-by-default columns be excluded from the prompt. If even that doesn't help, it wouldn't be possible to generate an AI summary - however, you can try the following:
+
+- Hide some columns in the general statistics table (see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context.
+- Open the HTML report in the browser, hide columns with the "Configure columns" button, or filter shown samples dynamically with the toolbox, and request the AI summary dynamically.
+- Copy the prompt from `multiqc_data/multiqc_ai_prompt.txt` or into clipboard with the "Copy prompt" button in the toolbox, and use it with extrenal services with a larger context window.
 
 ## Security Considerations
 
