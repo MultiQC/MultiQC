@@ -1,8 +1,7 @@
 import logging
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 log = logging.getLogger(__name__)
 
@@ -14,142 +13,127 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mosaicatcher",
             href="https://github.com/friendsofstrandseq/mosaicatcher",
             info=(
-                "Mosaicatcher counts Strand-seq reads and classifies strand states "
+                "Counts strand-seq reads and classifies strand states "
                 "of each chromosome in each cell using a Hidden Markov Model."
             ),
             doi="10.1038/s41587-019-0366-x",
         )
-        log_files = self.find_log_files("mosaicatcher", filehandles=False)
 
-        samples = dict()
-        for f in list(log_files):
-            if not f or "f" not in f:
-                log.warning("Malformed log file object: {}".format(f))
-            else:
-                print("Parsing log file:", f["fn"])
-                samples = self._parse_samples(f, samples)
-                self.add_data_source(f)
-
-        self._samples = samples
+        data_by_sample = dict()
+        for f in list(self.find_log_files("mosaicatcher", filehandles=False)):
+            data_by_sample = self._parse_samples(f, data_by_sample)
+            self.add_data_source(f)
 
         # Filter to strip out ignored sample names
-        self._samples = self.ignore_samples(self._samples)
+        data_by_sample = self.ignore_samples(data_by_sample)
+        if len(data_by_sample) == 0:
+            raise ModuleNoSamplesFound
+        log.info(f"Found {len(data_by_sample)} reports")
 
-        if len(self._samples) == 0:
-            raise UserWarning
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
-        self._add_table(samples)
-        self._add_coverage_plot(samples)
+        self._add_table(data_by_sample)
+        self._add_coverage_plot(data_by_sample)
 
-        self.write_data_file(self._samples, "multiqc_mosaicatcher")
-        log.info("Found {} samples".format(len(samples)))
+        self.write_data_file(data_by_sample, "multiqc_mosaicatcher")
 
-    def _add_table(self, samples):
-        self.add_section(
-            plot=table.plot(
-                data=samples,
-                headers=self._setup_headers(),
-                pconfig={"id": "mosaicatcher-table", "namespace": "MosaiCatcher"},
-            )
-        )
-
-    def _add_coverage_plot(self, samples):
-        coverage_plot = bargraph.plot(
-            data=samples,
-            cats=["mapq", "dupl", "good", "reads2", "suppl"],
-            pconfig={
-                "id": "mosaicatcher-coverage",
-                "title": "MosaiCatcher: coverage",
-                "height": 1024,
-                "ymax": 4e6,
-                "ylab": "Cells",
-            },
-        )
-        self.add_section(
-            name="Average coverage per cell",
-            anchor="mosaicatcher-coverage-id",
-            description="Average coverage per cell",
-            plot=coverage_plot,
-        )
-
-    def _setup_headers(self):
-        unwanted_keys = ["medbin", "nb_p", "nb_a", "nb_r", "bam"]
-
-        headers = OrderedDict()
-        for k in list(self._samples.values())[0]:
-            if k in unwanted_keys:
-                continue
-            if k == "mapped":
-                k = "mapped_reads"
-            headers[k] = {"title": k, "hidden": True}
-
+    def _add_table(self, data_by_sample):
+        headers = {}
         headers["sample"] = {
             "title": "Sample",
             "description": "Sample (has multiple cells)",
             "hidden": True,
-            "namespace": "MosaiCatcher",
         }
         headers["cell"] = {
             "title": "Cell",
             "description": "Name of the cell.",
             "hidden": False,
-            "namespace": "MosaiCatcher",
         }
-        headers["mapped_reads"] = {
-            "title": "Mapped reads",
-            "max": 4e6,
+        headers["mapped"] = {
+            "title": "Mapped",
             "description": "Total number of reads seen",
             "format": "{:,d}",
             "scale": "RdYlGn",
-            "hidden": False,
-            "namespace": "MosaiCatcher",
+            "shared_key": "reads",
         }
         headers["suppl"] = {
-            "title": "Supplementary reads",
+            "title": "Supplementary",
             "description": "Supplementary, secondary or QC-failed reads (filtered out)",
             "format": "{:,d}",
             "hidden": True,
-            "namespace": "MosaiCatcher",
+            "shared_key": "reads",
         }
         headers["dupl"] = {
-            "title": "Duplicate reads",
-            "max": 3e6,
+            "title": "Duplicate",
             "description": "Reads filtered out as PCR duplicates",
             "format": "{:,d}",
             "scale": "OrRd",
             "hidden": False,
-            "namespace": "MosaiCatcher",
+            "shared_key": "reads",
         }
         headers["mapq"] = {
-            "title": "Mapping quality",
+            "title": "Low MQ",
             "description": "Reads filtered out due to low mapping quality",
             "format": "{:,d}",
             "hidden": True,
-            "namespace": "MosaiCatcher",
+            "shared_key": "reads",
         }
         headers["read2"] = {
-            "title": "2nd read of pair",
+            "title": "2nd in pair",
             "description": "Reads filtered out as 2nd read of pair",
             "format": "{:,d}",
             "hidden": True,
-            "namespace": "MosaiCatcher",
+            "shared_key": "reads",
         }
         headers["good"] = {
             "title": "Good quality reads",
-            "max": 8e5,
             "scale": "RdYlGn",
             "description": "Reads used for counting.",
             "format": "{:,d}",
-            "hidden": False,
-            "namespace": "MosaiCatcher",
+            "shared_key": "reads",
         }
         headers["pass1"] = {
             "title": "Enough coverage?",
             "description": "Enough coverage? If false, ignore all columns from now",
             "hidden": False,
-            "namespace": "MosaiCatcher",
         }
-        return headers
+        self.add_section(
+            name="MosaiCatcher statistics",
+            anchor="mosaicatcher-table-section",
+            plot=table.plot(
+                data=data_by_sample,
+                headers=headers,
+                pconfig={"id": "mosaicatcher-table", "title": "MosaiCatcher: statistics"},
+            ),
+        )
+
+    def _add_coverage_plot(self, data_by_sample):
+        self.add_section(
+            name="Average coverage per cell",
+            anchor="mosaicatcher-coverage-section",
+            description="Average coverage per cell",
+            plot=bargraph.plot(
+                data=data_by_sample,
+                cats=[
+                    {
+                        "mapq": {"name": "Low MQ"},
+                        "dupl": {"name": "Duplicate"},
+                        "good": {"name": "Good quality reads"},
+                        "reads2": {"name": "2nd in pair"},
+                        "suppl": {"name": "Supplementary"},
+                    }
+                ],
+                pconfig={
+                    "id": "mosaicatcher-coverage",
+                    "title": "MosaiCatcher: coverage",
+                    "height": 1024,
+                    "ymax": 4e6,
+                    "ylab": "Cells",
+                },
+            ),
+        )
 
     @staticmethod
     def _parse_samples(f, samples):
