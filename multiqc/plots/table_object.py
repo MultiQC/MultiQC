@@ -31,6 +31,7 @@ class TableConfig(PConfig):
     no_violin: bool = False
     scale: Union[str, bool] = "GnBu"
     min: Optional[Union[int, float]] = None
+    parse_numeric: bool = True
 
 
 ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
@@ -399,7 +400,9 @@ class DataTable(BaseModel):
                             continue
                         if optional_val is None or str(optional_val).strip() == "":  # empty
                             continue
-                        val, valstr = _process_and_format_value(optional_val, column_by_key[col_key])
+                        val, valstr = _process_and_format_value(
+                            optional_val, column_by_key[col_key], parse_numeric=pconfig.parse_numeric
+                        )
                         row.raw_data[col_key] = val
                         row.formatted_data[col_key] = valstr
                     if row.raw_data:
@@ -516,19 +519,22 @@ def _get_or_create_headers(
     return header_by_key_copy
 
 
-def _process_and_format_value(val: ValueT, column: ColumnMeta) -> Tuple[ValueT, str]:
+def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bool = True) -> Tuple[ValueT, str]:
     """
     Takes row value, applies "modify" and "format" functions, and returns a tuple:
     the modified value and its formatted string.
+
+    "parse_numeric=False" assumes that the numeric values are already pre-parsed
     """
     # Try parse as a number
-    if str(val).isdigit():
-        val = int(val)
-    else:
-        try:
-            val = float(val)
-        except ValueError:
-            pass
+    if parse_numeric:
+        if str(val).isdigit():
+            val = int(val)
+        else:
+            try:
+                val = float(val)
+            except ValueError:
+                pass
 
     # Apply modify
     if column.modify:
