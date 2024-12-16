@@ -424,6 +424,17 @@ Alternatively, you can customise the column name by including a 'header row' in 
 or `csv` itself specifying the column names, with the first column with the name of your choice, and
 subsequent columns including the key(s) defined in the header.
 
+### Quoting strings
+
+If you happen to use sample names or other values that appear number-like, and want to prevent MultiQC from attempt to parse them, you can quote them. For example, in this TSV defining a table al values would have been interpreted as numbers if they were not wrapped in quotes `"`:
+
+```
+# plot_type: "table"
+Sample Name,Size,Representative Id
+"01","1446399400_1_131"
+"02","782510898_278_395"
+```
+
 ## Linting
 
 MultiQC has been developed to be as forgiving as possible and will handle lots of

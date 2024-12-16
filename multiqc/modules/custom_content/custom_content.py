@@ -8,7 +8,7 @@ import os
 import re
 from collections import defaultdict
 from token import OP
-from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, Union, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
 
 import yaml
 from pydantic import BaseModel
@@ -282,8 +282,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         plot_type = PlotType.from_str(ccdict.config.get("plot_type"))
         if plot_type == PlotType.GENERALSTATS:
             assert isinstance(ccdict.data, dict), ccdict.data
-            gs_headers = ccdict.config.get("headers", ccdict.config.get("pconfig", {}))
-            if gs_headers is None:
+            if (gs_headers := ccdict.config.get("headers", ccdict.config.get("pconfig", {}))) is None:
                 headers_set: Set[str] = set()
                 for _hd in ccdict.data.values():
                     headers_set.update(_hd.keys())
@@ -503,6 +502,7 @@ class MultiqcModule(BaseMultiqcModule):
                 no_violin = pconfig.pop("no_beeswarm", None)
                 if no_violin is not None:
                     pconfig["no_violin"] = no_violin
+                pconfig["parse_numeric"] = False
 
                 plot = (table if plot_type == PlotType.TABLE else violin).plot(
                     plot_datasets, headers=headers, pconfig=pconfig
@@ -671,6 +671,21 @@ def _guess_file_format(f):
     return "spaces"
 
 
+T = TypeVar("T")
+
+
+def unquote(s: T) -> T:
+    """Remove quotes from the start and end of a string if present"""
+    if isinstance(s, str) and (s.startswith('"') and s.endswith('"') or s.startswith("'") and s.endswith("'")):
+        return s[1:-1]  # type: ignore
+    return s
+
+
+def isnumber(val: Any) -> bool:
+    """Check if a value is a number"""
+    return isinstance(val, float) or isinstance(val, int)
+
+
 def _parse_txt(
     f, conf: Dict, non_header_lines: List[str]
 ) -> Tuple[Union[str, Dict, List, None], Dict, Optional[PlotType]]:
@@ -699,89 +714,98 @@ def _parse_txt(
         return "\n".join(lines), conf, plot_type
 
     # Not HTML, need to parse data
-    matrix: List[List[Union[str, float, int]]] = []
     ncols = None
+    matrix_str: List[List[str]] = []
+    row_str: List[str]
     for line in non_header_lines:
         if line.rstrip():
-            sections = cast(List[Any], line.rstrip().split(sep))
-            matrix.append(sections)
+            row_str = line.rstrip().split(sep)
+            matrix_str.append(row_str)
             if ncols is None:
-                ncols = len(sections)
-            elif ncols != len(sections):
+                ncols = len(row_str)
+            elif ncols != len(row_str):
                 log.warning(f"Inconsistent number of columns found in {f['fn']}! Skipping..")
                 return None, conf, plot_type
 
     # Convert values to floats if we can
-    strings_in_first_row = 0
-    for i, sections in enumerate(matrix):
-        for j, v in enumerate(sections):
-            try:
-                v = float(v)
-            except ValueError:
-                pass
-            if isinstance(v, str):
-                if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
-                    v = v[1:-1]
-                # Count strings in first row (header?)
-                if i == 0:
-                    strings_in_first_row += 1
-            matrix[i][j] = v
-
-    all_numeric = all(isinstance(v, (float, int)) for s in matrix[1:] for v in s[1:])
+    matrix: List[List[Union[str, float, int]]] = []
+    first_row_all_strings = True
+    inner_cells_all_numeric = True
+    v_str: str
+    v: Union[str, float, int]
+    for i, row_str in enumerate(matrix_str):
+        matrix.append([])
+        for j, v_str in enumerate(row_str):
+            # Count strings in first row (header?)
+            if (v := unquote(v_str)) != v_str:
+                # do not parse quoted strings
+                matrix_str[i][j] = v
+            else:
+                # parse strings to numbers to count numerics
+                if v_str.isdigit():
+                    v = int(v_str)
+                else:
+                    try:
+                        v = float(v_str)
+                    except ValueError:
+                        pass
+            matrix[i].append(v)
+            if i == 0 and not isinstance(v, str):
+                first_row_all_strings = False
+            if i != 0 and j != 0 and isinstance(v, str):
+                inner_cells_all_numeric = False
 
     # General stat info files - expected to have at least 2 rows (first row always being the header)
     # and have at least 2 columns (first column always being sample name)
     if plot_type == PlotType.GENERALSTATS and len(matrix) >= 2 and ncols and ncols >= 2:
         data_ddict: Dict[str, Dict] = defaultdict(dict)
-        for i, section in enumerate(matrix[1:], 1):
-            for j, v in enumerate(section[1:], 1):
-                s_name = str(section[0])
-                data_ddict[s_name][matrix[0][j]] = v
+        for i, row in enumerate(matrix[1:], 1):
+            for j, v in enumerate(row[1:], 1):
+                s_name = matrix_str[i][0]
+                col_name = matrix_str[0][j]
+                data_ddict[s_name][col_name] = v
         return data_ddict, conf, plot_type
 
-    # Heatmap: number of headers == number of lines
-    if plot_type is None and strings_in_first_row == len(non_header_lines) and all_numeric:
+    # Heatmap: square, all inner cells numeric, all headers strings
+    if plot_type is None and first_row_all_strings and len(matrix[0]) == len(matrix) and inner_cells_all_numeric:
         plot_type = PlotType.HEATMAP
     if plot_type == PlotType.HEATMAP:
-        conf["xcats"] = matrix[0][1:]
-        conf["ycats"] = [s[0] for s in matrix[1:]]
-        data_list: List = [s[1:] for s in matrix[1:]]
+        conf["xcats"] = matrix_str[0][1:]
+        conf["ycats"] = [row_str[0] for row_str in matrix_str[1:]]
+        data_list: List = [row[1:] for row in matrix[1:]]
         return data_list, conf, plot_type
 
     # Header row of strings box plot
-    if strings_in_first_row == len(matrix[0]) and plot_type == PlotType.BOX:
-        box_ddict: Dict[str, List[float]] = {str(v): [] for v in matrix[0]}
-        for sidx, s in enumerate(matrix[0]):
+    if first_row_all_strings and plot_type == PlotType.BOX:
+        box_ddict: Dict[str, List[float]] = dict()
+        for sidx, s_name in enumerate(matrix_str[0]):
+            box_ddict[s_name] = []
             for row in matrix[1:]:
                 try:
                     val = float(row[sidx])
                 except ValueError:
                     pass
                 else:
-                    box_ddict[str(s)].append(val)
+                    box_ddict[s_name].append(val)
         return box_ddict, conf, plot_type
 
     # Header row of strings, or configured as table
-    if strings_in_first_row == len(matrix[0]) or plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
+    if first_row_all_strings or plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
         data_ddict = dict()
-        for row in matrix[1:]:
-            s_name = str(row[0])
+        for i, row in enumerate(matrix[1:], 1):
+            s_name = matrix_str[i][0]
             data_ddict[s_name] = dict()
-            for i, v in enumerate(row[1:]):
-                cat = str(matrix[0][i + 1])
-                data_ddict[s_name][cat] = v
+            for j, v in enumerate(row[1:]):
+                col_name = matrix_str[0][j + 1]
+                data_ddict[s_name][col_name] = v
         # Bar graph or table - if numeric data, go for bar graph
         if plot_type is None:
-            allfloats = True
-            for r in matrix[1:]:
-                for v in r[1:]:
-                    allfloats = allfloats and isinstance(v, float)
-            if allfloats:
+            if inner_cells_all_numeric:
                 plot_type = PlotType.BAR
             else:
                 plot_type = PlotType.TABLE
         # Set table col_1 header
-        col_name = str(matrix[0][0])
+        col_name = matrix_str[0][0]
         if plot_type in [PlotType.TABLE, PlotType.VIOLIN] and col_name.strip() != "":
             conf["pconfig"] = conf.get("pconfig", {})
             if not conf["pconfig"].get("col1_header"):
@@ -796,7 +820,7 @@ def _parse_txt(
     if (
         plot_type is None
         and len(matrix[0]) == 3
-        and not isinstance(matrix[0][0], float)
+        and isinstance(matrix[0][0], str)
         and isinstance(matrix[0][1], float)
         and isinstance(matrix[0][2], float)
     ):
@@ -804,9 +828,9 @@ def _parse_txt(
 
     if plot_type == PlotType.SCATTER:
         dicts: Dict[str, Dict[str, float]] = dict()
-        for row in matrix:
+        for i, row in enumerate(matrix):
             try:
-                dicts[str(row[0])] = {"x": float(row[1]), "y": float(row[2])}
+                dicts[matrix_str[i][0]] = {"x": float(row[1]), "y": float(row[2])}
             except (IndexError, ValueError):
                 pass
         return dicts, conf, plot_type
@@ -819,57 +843,52 @@ def _parse_txt(
 
         # Single-sample box plot
         if len(matrix[0]) == 1:
-            if plot_type is None and isinstance(matrix[0][0], float):
+            if plot_type is None and isnumber(matrix[0][0]):
                 plot_type = PlotType.BOX
             if plot_type == PlotType.BOX:
-                return {f["s_name"]: [float(r[0]) for r in matrix]}, conf, plot_type
+                return {f["s_name"]: [r[0] for r in matrix]}, conf, plot_type
 
         # Single sample line/bar plot - first row has two columns
         if len(matrix[0]) == 2:
             # Line graph - num : num
-            if plot_type is None and isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
+            if plot_type is None and isnumber(matrix[0][0]) and isnumber(matrix[0][1]):
                 plot_type = PlotType.LINE
             # Bar graph - str : num
-            if plot_type is None and not isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
+            if plot_type is None and not isnumber(matrix[0][0]) and isnumber(matrix[0][1]):
                 plot_type = PlotType.BAR
 
             # Data structure is the same
             if plot_type in [PlotType.LINE, PlotType.BAR]:
                 data_dict: Dict = dict()
                 for row in matrix:
-                    data_dict[row[0]] = row[1]
+                    data_dict[unquote(row[0])] = unquote(row[1])
                 return {f["s_name"]: data_dict}, conf, plot_type
 
     # Multi-sample line graph: No header row, lots of num columns
-    if plot_type is None and len(matrix[0]) > 4 and all_numeric:
+    if plot_type is None and len(matrix[0]) > 4 and inner_cells_all_numeric:
         plot_type = PlotType.LINE
 
     if plot_type == PlotType.LINE:
         data_ddict = dict()
-        # If the first row has no header, use it as axis labels
-        x_labels = []
-        s_name = str(matrix[0][0])
-        if s_name.strip() == "":
-            x_labels = matrix.pop(0)[1:]
+        # If the first row has empty first column, it's the header - use it as x-axis labels
+        x_vals: List[Union[str, float, int]] = []
+        if matrix_str[0][0].strip() == "":
+            x_vals = [str(unquote(v)) for v in matrix.pop(0)[1:]]
         # Use 1..n range for x values
-        for row in matrix:
-            name = str(row[0])
-            data_ddict[name] = dict()
+        for i, row in enumerate(matrix):
+            s_name = str(unquote(row[0]))
+            data_ddict[s_name] = dict()
             for i, v in enumerate(row[1:]):
                 try:
-                    x_val = x_labels[i]
-                    try:
-                        x_val = float(x_val)
-                    except ValueError:
-                        pass
+                    x_val = x_vals[i]
                 except IndexError:
                     x_val = i + 1
-                data_ddict[name][x_val] = v
+                data_ddict[s_name][x_val] = v
         return data_ddict, conf, plot_type
 
     # Got to the end and haven't returned. It's a mystery, capn'!
     log.debug(
         f"Not able to figure out a plot type for '{f['fn']}' "
-        + f"plot type = {plot_type}, all numeric = {all_numeric}, first row str = {strings_in_first_row}"
+        + f"plot type = {plot_type}, all numeric = {inner_cells_all_numeric}, first row str = {first_row_all_strings}"
     )
     return None, conf, plot_type

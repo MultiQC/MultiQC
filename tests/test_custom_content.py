@@ -262,6 +262,16 @@ sp:
     assert '<div class="mqc-section mqc-section-concordance">' in out
     assert 'value="0.378"' in out
 
+    assert len(report.plot_by_id) == 1
+    anchor = Anchor("concordance_heatmap")
+    assert anchor in report.plot_by_id
+    assert report.plot_by_id[anchor].id == "concordance_heatmap"
+    assert report.plot_by_id[anchor].plot_type == "heatmap"
+    assert len(report.plot_by_id[anchor].datasets) == 1
+    assert report.plot_by_id[anchor].datasets[0].rows == [[1.0, 0.378]]
+    assert report.plot_by_id[anchor].datasets[0].xcats == ["08021342", "08027127"]
+    assert report.plot_by_id[anchor].datasets[0].ycats == ["08021342"]
+
 
 def test_mqc_ext_match_custom_op(tmp_path):
     """
@@ -429,6 +439,10 @@ def test_heatmap_with_numerical_cats(tmp_path):
     assert report.plot_by_id[anchor].id == plot_id
     assert report.plot_by_id[anchor].plot_type == "heatmap"
 
+    assert report.plot_by_id[anchor].datasets[0].rows == [[0.9, 0.87, 0.73, 0], [0, 1, 0, 0.7]]
+    assert report.plot_by_id[anchor].datasets[0].xcats == ["1", "2", "3", "4"]
+    assert report.plot_by_id[anchor].datasets[0].ycats == ["sample 1", "sample 2"]
+
 
 def test_on_all_example_files(data_dir):
     """
@@ -441,3 +455,39 @@ def test_on_all_example_files(data_dir):
 
     file_search()
     custom_module_classes()
+
+
+def test_custom_content_boxplot(tmp_path):
+    file = tmp_path / "mysample_mqc.json"
+    file.write_text(
+        """\
+{
+    "id": "boxplot",
+    "plot_type": "box",
+    "pconfig": {
+        "title": "Boxplot"
+    },
+    "data": {
+        "sample 1": [1, 2, 3, 4],
+        "sample 2": [1.1, 0.2, 3.3, 4.4, 5.5]
+    }
+}
+"""
+    )
+
+    report.analysis_files = [file]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    assert len(report.plot_by_id) == 1
+    anchor = Anchor("boxplot-section-plot")
+    assert anchor in report.plot_by_id
+    assert report.plot_by_id[anchor].id == "boxplot"
+    assert report.plot_by_id[anchor].plot_type == "box"
+    assert len(report.plot_by_id[anchor].datasets) == 1
+    assert report.plot_by_id[anchor].datasets[0].data[
+        report.plot_by_id[anchor].datasets[0].samples.index("sample 1")
+    ] == [1, 2, 3, 4]
+    assert report.plot_by_id[anchor].datasets[0].data[
+        report.plot_by_id[anchor].datasets[0].samples.index("sample 2")
+    ] == [1.1, 0.2, 3.3, 4.4, 5.5]
