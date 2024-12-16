@@ -711,13 +711,14 @@ def _parse_txt(
     # Not HTML, need to parse data
     ncols = None
     matrix_str: List[List[str]] = []
+    row_str: List[str]
     for line in non_header_lines:
         if line.rstrip():
-            rows_str = line.rstrip().split(sep)
-            matrix_str.append(rows_str)
+            row_str = line.rstrip().split(sep)
+            matrix_str.append(row_str)
             if ncols is None:
-                ncols = len(rows_str)
-            elif ncols != len(rows_str):
+                ncols = len(row_str)
+            elif ncols != len(row_str):
                 log.warning(f"Inconsistent number of columns found in {f['fn']}! Skipping..")
                 return None, conf, plot_type
 
@@ -725,9 +726,11 @@ def _parse_txt(
     matrix: List[List[Union[str, float, int]]] = []
     first_row_all_strings = True
     inner_cells_all_numeric = True
-    for i, rows_str in enumerate(matrix_str):
+    v_str: str
+    v: Union[str, float, int]
+    for i, row_str in enumerate(matrix_str):
         matrix.append([])
-        for j, v_str in enumerate(rows_str):
+        for j, v_str in enumerate(row_str):
             # Count strings in first row (header?)
             if (v := unquote(v_str)) != v_str:
                 # do not parse quoted strings
@@ -863,17 +866,16 @@ def _parse_txt(
     if plot_type == PlotType.LINE:
         data_ddict = dict()
         # If the first row has no header, use it as axis labels
-        x_labels = []
-        s_name = matrix_str[0][0]
-        if s_name.strip() == "":
-            x_labels = [v_str for v_str in matrix_str.pop(0)[1:]]
+        x_vals: List[Union[str, float, int]] = []
+        if matrix_str[0][0].strip() == "":
+            x_vals = [str(unquote(v)) for v in matrix.pop(0)[1:]]
         # Use 1..n range for x values
         for i, row in enumerate(matrix):
-            s_name = matrix_str[i][0]
+            s_name = str(unquote(row[0]))
             data_ddict[s_name] = dict()
             for i, v in enumerate(row[1:]):
                 try:
-                    x_val = x_labels[i]
+                    x_val = x_vals[i]
                     try:
                         x_val = float(x_val)
                     except ValueError:
