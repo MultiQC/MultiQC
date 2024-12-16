@@ -715,16 +715,17 @@ def _parse_txt(
     strings_in_first_row = 0
     for i, sections in enumerate(matrix):
         for j, v in enumerate(sections):
-            try:
-                v = float(v)
-            except ValueError:
-                pass
+            # Count strings in first row (header?)
             if isinstance(v, str):
-                if (v.startswith('"') and v.endswith('"')) or (v.startswith("'") and v.endswith("'")):
-                    v = v[1:-1]
-                # Count strings in first row (header?)
-                if i == 0:
-                    strings_in_first_row += 1
+                if v.startswith('"') and v.endswith('"') or v.startswith("'") and v.endswith("'"):
+                    pass  # do not parse quoted strings
+                else:
+                    try:
+                        v = float(v)
+                    except ValueError:
+                        pass
+            if i == 0 and isinstance(v, str):
+                strings_in_first_row += 1
             matrix[i][j] = v
 
     all_numeric = all(isinstance(v, (float, int)) for s in matrix[1:] for v in s[1:])

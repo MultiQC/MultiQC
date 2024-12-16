@@ -537,7 +537,12 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta) -> Tuple[ValueT, 
             val = column.modify(val)
         except Exception as e:  # User-provided modify function can raise any exception
             logger.error(f"Error modifying table value '{column.rid}': '{val}'. {e}")
-    # section.raw_data[s_name][col_key] = val
+
+    # Values can be quoted to avoid parsing as a number, so need to remove those quotes
+    if isinstance(val, str) and (
+        val.startswith('"') and val.endswith('"') or val.startswith("'") and val.endswith("'")
+    ):
+        val = val[1:-1]
 
     # Now also calculate formatted values
     valstr = str(val)
