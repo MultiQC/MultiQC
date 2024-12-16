@@ -32,13 +32,13 @@ Note that they will only be used for `--ai-summary`/`--ai-summary-full` generati
 
 The in-browser summary can be added by clicking the "Summarize report" button in the top right corner of the report, or thought the corresponding toolbox section:
 
-![ai_summarize_report](../images/ai_empty.png)
+![ai_summarize_report](../../../docs/images/ai_empty.png)
 
-![ai_summarize_report_toolbox](../images/ai_toolbox.png)
+![ai_summarize_report_toolbox](../../../docs/images/ai_toolbox.png)
 
 In browser, you can put your API keys in the corresponding field in the "AI" section of the report toolbox. They will be stored only in your browser's local storage, and used to send report data directly to your AI provider of choice.
 
-![ai_summarize_report_toolbox_keys](../images/ai_toolbox_keys.png)
+![ai_summarize_report_toolbox_keys](../../../docs/images/ai_toolbox_keys.png)
 
 ## Configuring AI Providers
 
@@ -61,19 +61,19 @@ In browser, the provider and the model name can be set in the toolbox panel ("AI
 
 Besides a global report-level AI summary, you can generate a summary for each plot or table separately using buttons next to each section:
 
-![ai_summarize_buttons](../images/ai_summarize_buttons.png)
+![ai_summarize_buttons](../../../docs/images/ai_summarize_buttons.png)
 
 You can also copy the entire prompt that MultiQC would use to generate a summary. Using the toolbox, you can enable the "Copy prompt" buttons to be shown next to each "Summarize" button:
 
-![ai_toolbox_copy_checkbox](../images/ai_toolbox_copy_checkbox.png)
+![ai_toolbox_copy_checkbox](../../../docs/images/ai_toolbox_copy_checkbox.png)
 
-![ai_copy_buttons](../images/ai_copy_buttons.png)
+![ai_copy_buttons](../../../docs/images/ai_copy_buttons.png)
 
 A button will copy the LLM-friendly formatted report data along with the system prompt into your clipboard, which you can then paste into your an AI chat interace of your provider of choice.
 
 You can also copy the prompt for the entire report by clicking the "Copy prompt" button in the toolbox:
 
-![ai_toolbox_copy_button](../images/ai_toolbox_copy_button.png)
+![ai_toolbox_copy_button](../../../docs/images/ai_toolbox_copy_button.png)
 
 ## Context window
 
