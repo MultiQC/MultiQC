@@ -1035,8 +1035,6 @@ for more information.
   - Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a sequencing dataset.
 - [**Librarian**](https://github.com/DesmondWillowbrook/Librarian)
   - A tool to predict the sequencing library type from the base composition of a supplied FastQ file.
-- [**MosaiCatcher**](https://github.com/friendsofstrandseq/mosaicatcher/README.md)
-  - MosaiCatcher counts Strand-seq reads and classifies strand states of each chromosome in each cell using a Hidden Markov Model.
 
 ### Module updates
 
