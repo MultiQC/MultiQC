@@ -1,30 +1,24 @@
-""" MultiQC module to parse output from ngsderive """
-
-
 import csv
 import io
 import logging
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    ngsderive module class, parses stderr logs.
-    """
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="ngsderive",
             anchor="ngsderive",
             href="https://github.com/stjudecloud/ngsderive",
-            info="attempts to predict library information from next-generation sequencing data.",
+            info="Forensic tool for by backwards computing library information in sequencing data",
+            extra="""
+            Results are provided as a 'best guess' — the tool does not claim 100% accuracy and results 
+            should be considered with that understanding. Please see the documentation for more information.
+            """,
             # Can't find a DOI // doi=
         )
 
@@ -48,10 +42,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "strandedness",
                 expected_header_count_strandedness,
             )
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
 
         for f in self.find_log_files("ngsderive/instrument"):
             self.parse(
@@ -96,7 +86,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
         if num_results_found == 0:
             raise ModuleNoSamplesFound
-        log.info("Found {} reports".format(num_results_found))
+        log.info(f"Found {num_results_found} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         if self.strandedness:
             self.add_strandedness_data()
@@ -113,7 +107,8 @@ class MultiqcModule(BaseMultiqcModule):
         if self.junctions:
             self.add_junctions_data()
 
-    def probe_file_for_dictreader_kwargs(self, f, expected_header_count):
+    @staticmethod
+    def probe_file_for_dictreader_kwargs(f, expected_header_count):
         """In short, this function was created to figure out which
         kwargs need to be passed to csv.DictReader. First,
         it tries to extract commonly known delimiters without
@@ -127,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
             if delim in header and len(header.split(delim)) == expected_header_count:
                 return {"delimiter": delim}
 
-        log.warn("Could not easily detect delimiter for file. Trying csv.Sniffer()")
+        log.warning("Could not easily detect delimiter for file. Trying csv.Sniffer()")
         dialect = csv.Sniffer().sniff(f.read(4096))  # 4096 is the buffer size
         f.seek(0)
         return {"dialect": dialect}
@@ -139,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             sample_name = self.clean_s_name(row.get("File"), found_file)
             if sample_name in sample_dict:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {sample_name}")
 
             sample_dict[sample_name] = row
             self.add_data_source(f=found_file, s_name=sample_name)
@@ -156,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "reverse": round(float(strandedness.get("ReversePct")) * 100.0, 2),
             }
 
-        bardata = OrderedDict()
+        bardata = {}
         sorted_data = sorted(data.items(), key=lambda x: x[1].get("forward"))
         for k, v in sorted_data:
             bardata[k] = v
@@ -165,6 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
             "predicted": {
                 "title": "Strandedness",
                 "description": "Predicted strandedness from ngsderive",
+                "scale": False,
             }
         }
         self.general_stats_addcols(data, headers)
@@ -176,8 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "% Read Evidence",
             "ymin": 0,
             "ymax": 100,
-            "tt_percentages": True,
-            "ylab_format": "{value}%",
+            "ysuffix": "%",
             "cpswitch": False,
         }
 
@@ -193,7 +188,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.instrument, "ngsderive_instrument")
 
-        bgcols = {"low confidence": "#f8d7da", "medium confidence": "#fff3cd", "high confidence": "#d1e7dd"}
+        bgcols = {
+            "low confidence": "#f8d7da",
+            "medium confidence": "#fff3cd",
+            "high confidence": "#d1e7dd",
+        }
         cond_formatting_rules = {
             "pass": [{"s_eq": "high confidence"}],
             "warn": [{"s_eq": "medium confidence"}],
@@ -207,17 +206,18 @@ class MultiqcModule(BaseMultiqcModule):
                 "confidence": instrument_data.get("Confidence"),
             }
 
-        general_headers = OrderedDict()
-        general_headers["instrument"] = {
-            "title": "Predicted Instrument",
-            "description": "Predicted instrument from ngsderive",
-        }
-        general_headers["confidence"] = {
-            "title": "Instrument: Confidence",
-            "description": "Level of confidence (low, medium, high) that the predicted instrument is correct.",
-            "bgcols": bgcols,
-            "cond_formatting_rules": cond_formatting_rules,
-            "hidden": True,
+        general_headers = {
+            "instrument": {
+                "title": "Predicted Instrument",
+                "description": "Predicted instrument from ngsderive",
+            },
+            "confidence": {
+                "title": "Instrument: Confidence",
+                "description": "Level of confidence (low, medium, high) that the predicted instrument is correct.",
+                "bgcols": bgcols,
+                "cond_formatting_rules": cond_formatting_rules,
+                "hidden": True,
+            },
         }
         self.general_stats_addcols(general_data, general_headers)
 
@@ -232,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
             instruments.remove("multiple instruments")
             instruments.append("multiple instruments")
 
-        headers = OrderedDict()
+        headers = {}
         for instrument in instruments:
             headers[instrument] = {
                 "title": instrument,
@@ -256,6 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "ngsderive_instruments_plot",
             "title": "ngsderive: Instruments",
+            "scale": False,
         }
 
         self.add_section(
@@ -274,23 +275,24 @@ class MultiqcModule(BaseMultiqcModule):
         for sample, readlen in self.readlen.items():
             data[sample] = {
                 "evidence": readlen.get("Evidence"),
-                "majoritypctdetected": round(float(readlen.get("MajorityPctDetected")) * 100.0, 2),
+                "majoritypctdetected": round(float(readlen.get("MajorityPctDetected").strip("%")) * 100.0, 2),
                 "consensusreadlength": int(readlen.get("ConsensusReadLength")),
             }
 
-        headers = OrderedDict()
-        headers["consensusreadlength"] = {
-            "title": "Read Length (bp)",
-            "description": "Predicted read length from ngsderive.",
-            "format": "{:,.d}",
-        }
-        headers["majoritypctdetected"] = {
-            "title": "Read Length: % Supporting",
-            "description": "Percentage of reads which were measured at the predicted read length.",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "hidden": True,
+        headers = {
+            "consensusreadlength": {
+                "title": "Read Length (bp)",
+                "description": "Predicted read length from ngsderive.",
+                "format": "{:,d}",
+            },
+            "majoritypctdetected": {
+                "title": "Read Length: % Supporting",
+                "description": "Percentage of reads which were measured at the predicted read length.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "hidden": True,
+            },
         }
         self.general_stats_addcols(data, headers)
 
@@ -314,8 +316,14 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "ngsderive: Read Length",
             "xlab": "Read Length",
             "ylab": "% Evidence for Read Length",
+            "xsuffix": " bp",
             "data_labels": [
-                {"name": "Percentages", "ylab": "% Evidence for Read Length"},
+                {
+                    "name": "Percentages",
+                    "ylab": "% Evidence for Read Length",
+                    "ymax": 100,
+                    "y_decimals": 2,
+                },
                 {"name": "Counts", "ylab": "Number of reads"},
             ],
         }
@@ -339,15 +347,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "evidence": encoding_data.get("Evidence"),
             }
 
-        general_headers = OrderedDict()
-        general_headers["probable_encoding"] = {
-            "title": "Probable Encoding",
-            "description": "Predicted PHRED score encoding from ngsderive",
-        }
-        general_headers["evidence"] = {
-            "title": "Encoding: Evidence",
-            "description": "Observed ASCII value ranges in PHRED score encoding",
-            "hidden": True,
+        general_headers = {
+            "probable_encoding": {
+                "title": "Probable Encoding",
+                "description": "Predicted PHRED score encoding from ngsderive",
+            },
+            "evidence": {
+                "title": "Encoding: Evidence",
+                "description": "Observed ASCII value ranges in PHRED score encoding",
+                "hidden": True,
+            },
         }
         self.general_stats_addcols(general_data, general_headers)
 
@@ -368,58 +377,56 @@ class MultiqcModule(BaseMultiqcModule):
                 "novel_spliced_reads": junctions_data.get("complete_novel_spliced_reads"),
             }
 
-        headers = OrderedDict(
-            {
-                "total_junctions": {
-                    "title": "Total junctions",
-                    "description": "Total number of junctions found by ngsderive",
-                    "hidden": True,
-                    "format": "{:,d}",
-                },
-                "known_junctions": {
-                    "title": "Known junctions",
-                    "description": "Number of annotated junctions found by ngsderive",
-                    "format": "{:,d}",
-                },
-                "partial_novel_junctions": {
-                    "title": "Partially novel junctions",
-                    "description": "Number of partially annotated junctions found by ngsderive",
-                    "format": "{:,d}",
-                },
-                "novel_junctions": {
-                    "title": "Novel junctions",
-                    "description": "Number of completely novel junctions found by ngsderive",
-                    "format": "{:,d}",
-                },
-                "total_splice_events": {
-                    "title": "Total splice events",
-                    "description": "Total number of spliced reads found by ngsderive",
-                    "hidden": True,
-                    "format": "{:,d}",
-                },
-                "known_spliced_reads": {
-                    "title": "Annotated spliced reads",
-                    "description": "Number of annotated spliced reads found by ngsderive",
-                    "hidden": True,
-                    "format": "{:,d}",
-                },
-                "partial_novel_spliced_reads": {
-                    "title": "Partially annotated spliced reads",
-                    "description": "Number of partially annotated spliced reads found by ngsderive",
-                    "hidden": True,
-                    "format": "{:,d}",
-                },
-                "novel_spliced_reads": {
-                    "title": "Novel spliced reads",
-                    "description": "Number of completely un-annotated spliced reads found by ngsderive",
-                    "hidden": True,
-                    "format": "{:,d}",
-                },
-            }
-        )
+        headers = {
+            "total_junctions": {
+                "title": "Total junctions",
+                "description": "Total number of junctions found by ngsderive",
+                "hidden": True,
+                "format": "{:,d}",
+            },
+            "known_junctions": {
+                "title": "Known junctions",
+                "description": "Number of annotated junctions found by ngsderive",
+                "format": "{:,d}",
+            },
+            "partial_novel_junctions": {
+                "title": "Partially novel junctions",
+                "description": "Number of partially annotated junctions found by ngsderive",
+                "format": "{:,d}",
+            },
+            "novel_junctions": {
+                "title": "Novel junctions",
+                "description": "Number of completely novel junctions found by ngsderive",
+                "format": "{:,d}",
+            },
+            "total_splice_events": {
+                "title": "Total splice events",
+                "description": "Total number of spliced reads found by ngsderive",
+                "hidden": True,
+                "format": "{:,d}",
+            },
+            "known_spliced_reads": {
+                "title": "Annotated spliced reads",
+                "description": "Number of annotated spliced reads found by ngsderive",
+                "hidden": True,
+                "format": "{:,d}",
+            },
+            "partial_novel_spliced_reads": {
+                "title": "Partially annotated spliced reads",
+                "description": "Number of partially annotated spliced reads found by ngsderive",
+                "hidden": True,
+                "format": "{:,d}",
+            },
+            "novel_spliced_reads": {
+                "title": "Novel spliced reads",
+                "description": "Number of completely un-annotated spliced reads found by ngsderive",
+                "hidden": True,
+                "format": "{:,d}",
+            },
+        }
         self.general_stats_addcols(data, headers)
 
-        bardata = OrderedDict()
+        bardata = {}
         sorted_junction_data = sorted(data.items(), key=lambda x: int(x[1].get("total_junctions")), reverse=True)
         for k, v in sorted_junction_data:
             bardata[k] = {
@@ -436,7 +443,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "ngsderive_junctions_plot",
             "title": "ngsderive: Junction Annotation",
             "cpswitch_counts_label": "Number",
-            "yDecimals": False,
+            "y_decimals": False,
             "ylab": "Number of junctions",
             "data_labels": [
                 {"name": "Junctions", "ylab": "Number of junctions"},
@@ -444,14 +451,18 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
 
-        cats = [OrderedDict(), OrderedDict()]
-        cats[0]["known_junctions"] = {"name": "Known junctions"}
-        cats[0]["partial_novel_junctions"] = {"name": "Partially novel junctions"}
-        cats[0]["novel_junctions"] = {"name": "Novel junctions"}
-        cats[1]["known_spliced_reads"] = {"name": "Annotated spliced reads"}
-        cats[1]["partial_novel_spliced_reads"] = {"name": "Partially annotated spliced reads"}
-        cats[1]["novel_spliced_reads"] = {"name": "Novel spliced reads"}
-
+        cats = [
+            {
+                "known_junctions": {"name": "Known junctions"},
+                "partial_novel_junctions": {"name": "Partially novel junctions"},
+                "novel_junctions": {"name": "Novel junctions"},
+            },
+            {
+                "known_spliced_reads": {"name": "Annotated spliced reads"},
+                "partial_novel_spliced_reads": {"name": "Partially annotated spliced reads"},
+                "novel_spliced_reads": {"name": "Novel spliced reads"},
+            },
+        ]
         self.add_section(
             name="Junction Annotations",
             anchor="ngsderive-junctions",

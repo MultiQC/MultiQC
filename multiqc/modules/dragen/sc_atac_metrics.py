@@ -1,6 +1,6 @@
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.dragen.utils import Metric, make_headers
 from multiqc.plots import table
 
@@ -35,7 +35,7 @@ class DragenScAtacMetrics(BaseMultiqcModule):
             data = parse_scatac_metrics_file(f)
             s_name = f["s_name"]
             if s_name in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="sc_atac_metrics")
             data_by_sample[s_name] = data
 
@@ -69,6 +69,10 @@ class DragenScAtacMetrics(BaseMultiqcModule):
                     for sample_name, metric in data_by_sample.items()
                 },
                 table_headers,
+                pconfig={
+                    "namespace": "Single-Cell ATAC Metrics",
+                    "id": "dragen-sc-atac-metrics-table",
+                },
             ),
         )
 

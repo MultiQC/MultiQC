@@ -1,19 +1,27 @@
-#!/usr/bin/env python
 """
 Helper functions to manipulate colours and colour scales
 """
 
+import functools
+import hashlib
 
 # Default logger will be replaced by caller
 import logging
 import re
+from typing import Optional, Tuple, Union
 
 import numpy as np
-import spectra
+import spectra  # type: ignore
 
-from multiqc.utils import config, report
+from multiqc import config, report
 
 logger = logging.getLogger(__name__)
+
+
+@functools.lru_cache(128)  # 34 unique colourmaps found using multiqc-test-data
+def cached_spectra_colour_scale(colours: Tuple[str]):
+    """Caches spectra color scale calls as these are expensive"""
+    return spectra.scale(list(colours))
 
 
 class mqc_colour_scale(object):
@@ -321,20 +329,34 @@ class mqc_colour_scale(object):
         ],
     }
 
-    def __init__(self, name="GnBu", minval=0, maxval=100, id=None):
+    def __init__(
+        self,
+        name="GnBu",
+        minval: Optional[Union[float, int, str]] = None,
+        maxval: Optional[Union[float, int, str]] = None,
+        id=None,
+    ):
         """Initialise class with a colour scale"""
 
-        self.name = name
-        self.id = id
-        self.colours = self.get_colours(name)
+        if minval is None:
+            minval = 0.0
+        if maxval is None:
+            maxval = 100.0
+        assert minval is not None
+        assert maxval is not None
 
         # Sanity checks
         minval = re.sub(r"[^0-9\.\-e]", "", str(minval))
         maxval = re.sub(r"[^0-9\.\-e]", "", str(maxval))
         if minval == "":
-            minval = 0
+            minval = 0.0
         if maxval == "":
-            maxval = 100
+            maxval = 100.0
+
+        self.name = name
+        self.id = id
+        self.colours = self.get_colours(name)
+
         if float(minval) == float(maxval):
             self.minval = float(minval)
             self.maxval = float(minval) + 1.0
@@ -345,14 +367,26 @@ class mqc_colour_scale(object):
             self.minval = float(minval)
             self.maxval = float(maxval)
 
-    def get_colour(self, val, colformat="hex", lighten=0.3, source=None):
+    def get_colour(
+        self,
+        val: Optional[Union[float, str]],
+        colformat: str = "hex",
+        lighten: float = 0.3,
+        source: Optional[str] = None,
+    ) -> str:
         """Given a value, return a colour within the colour scale"""
+
+        if val is None:
+            return ""
+        assert val is not None
 
         # Ported from the original JavaScript for continuity
         # Seems to work better than adjusting brightness / saturation / luminosity
-        rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
+        def rgb_converter(x: float) -> float:
+            return max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
+            thecolour: spectra.Color
             if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float):
                 if config.strict:
                     sequential_scales = [
@@ -371,37 +405,45 @@ class mqc_colour_scale(object):
                     # scale (Set1, Set3, etc.), we don't want to attempt to parse numbers, otherwise we might end up with all
                     # values assigned with the same color. But instead we will get a hash from a string to hope to assign
                     # a unique color for each possible enumeration value.
-                    val = hash(val)
+                    val = deterministic_hash(str(val))
                 thecolour = spectra.html(self.colours[val % len(self.colours)])
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
+                thecolour = spectra.rgb(*[rgb_converter(float(v)) for v in thecolour.rgb])
                 return thecolour.hexcode
 
-            # When there is only 1 color in scale, spectra.scale() will crash with DevisionByZero
+            # When there is only 1 color in scale, spectra.scale() will crash with DivisionByZero
             elif len(self.colours) == 1:
                 thecolour = spectra.html(self.colours[0])
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
+                thecolour = spectra.rgb(*[rgb_converter(float(v)) for v in thecolour.rgb])
                 return thecolour.hexcode
 
             else:
                 # Sanity checks
-                val = re.sub(r"[^0-9\.\-e]", "", str(val))
-                if val == "":
-                    val = self.minval
-                val = float(val)
-                val = max(val, self.minval)
-                val = min(val, self.maxval)
+                val_stripped = re.sub(r"[^0-9\.\-e]", "", str(val))
+                val_float: float
+                if val_stripped == "":
+                    val_float = self.minval
+                else:
+                    try:
+                        val_float = float(val_stripped)
+                    except ValueError:
+                        # No color formatting for non-numeric values
+                        return ""
+                    val_float = max(val_float, self.minval)
+                    val_float = min(val_float, self.maxval)
 
                 domain_nums = list(np.linspace(self.minval, self.maxval, len(self.colours)))
-                my_scale = spectra.scale(self.colours).domain(domain_nums)
+                my_spectra_scale = cached_spectra_colour_scale(tuple(self.colours))
+                my_scale = my_spectra_scale.domain(domain_nums)
 
                 # Lighten colours
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val).rgb])
+                thecolour = spectra.rgb(*[rgb_converter(float(v)) for v in my_scale(val_float).rgb])
 
                 return thecolour.hexcode
 
-        except:
+        except Exception as e:
             # Shouldn't crash all of MultiQC just for colours
-            return ""
+            logger.warning(f"{self.id + ': ' if self.id else ''}Error getting colour: {e}")
+        return ""
 
     def get_colours(self, name="GnBu"):
         """Function to get a colour scale by name
@@ -423,7 +465,7 @@ class mqc_colour_scale(object):
 
         # Default colour scale
         if name not in mqc_colour_scale.COLORBREWER_SCALES:
-            errmsg = f"{self.id+': ' if self.id else ''}Colour scale {name} not found - defaulting to GnBu"
+            errmsg = f"{self.id + ': ' if self.id else ''}Colour scale {name} not found - defaulting to GnBu"
             if config.strict:
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
@@ -589,3 +631,14 @@ class mqc_colour_scale(object):
         "lightyellow": "#FFFFE0",
         "ivory": "#FFFFF0",
     }
+
+
+def deterministic_hash(x: str) -> int:
+    """
+    Deterministic hash function for strings. This is useful for assigning a unique color
+    to each possible value of a categorical variable.
+
+    Unlike the built-in hash function, this function always returns the same value for
+    the same input string (see https://docs.python.org/3/using/cmdline.html#cmdoption-R)
+    """
+    return int(hashlib.sha1(x.encode("utf-8")).hexdigest(), 16) % (10**8)

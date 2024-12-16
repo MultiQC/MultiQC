@@ -1,38 +1,34 @@
-""" MultiQC module to parse output from QoRTs """
-
-
 import logging
 import os
 import re
-from collections import OrderedDict
+from typing import List, Dict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="QoRTs",
             anchor="qorts",
             href="http://hartleys.github.io/QoRTs/",
-            info="is toolkit for analysis, QC and data management of RNA-Seq datasets.",
+            info="Toolkit for analysis, QC, and data management of RNA-Seq datasets.",
+            extra="Aids in the detection and identification of errors, biases, and artifacts produced "
+            "by paired-end high-throughput RNA-Seq technology. In addition, it can produce "
+            "count data designed for use with differential expression and differential "
+            "exon usage tools, as well as individual-sample and/or group-summary genome "
+            "track files suitable for use with the UCSC genome browser.",
             doi="10.1186/s12859-015-0670-5",
         )
 
         # Parse logs
-        self.qorts_data = dict()
+        self.qorts_data: Dict = dict()
         for f in self.find_log_files("qorts", filehandles=True):
             self.parse_qorts(f)
             self.add_data_source(f)
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
 
         # Remove empty samples
         self.qorts_data = {s: v for s, v in self.qorts_data.items() if len(v) > 0}
@@ -43,7 +39,12 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.qorts_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.qorts_data)))
+        log.info(f"Found {len(self.qorts_data)} logs")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         self.write_data_file(self.qorts_data, "multiqc_qorts")
 
         # Make plots
@@ -54,10 +55,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.qorts_strandedness_plot()
 
     def parse_qorts(self, f):
-        s_names = None
-        for l in f["f"]:
-            s = l.split("\t")
-            if s_names is None:
+        s_names: List[str] = []
+        for line in f["f"]:
+            s = line.split("\t")
+            if not s_names:
                 raw_s_names = s[1:]
                 s_names = [self.clean_s_name(s_name, f) for s_name in raw_s_names]
                 if len(s_names) <= 2 and raw_s_names[0].endswith("COUNT"):
@@ -67,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
                         s_names = [f["s_name"]]
                 for s_name in s_names:
                     if s_name in self.qorts_data:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.qorts_data[s_name] = dict()
             else:
                 for i, s_name in enumerate(s_names):
@@ -84,19 +85,20 @@ class MultiqcModule(BaseMultiqcModule):
 
     def qorts_general_stats(self):
         """Add columns to the General Statistics table"""
-        headers = OrderedDict()
-        headers["Genes_PercentWithNonzeroCounts"] = {
-            "title": "% Genes with Counts",
-            "description": "Percent of Genes with Non-Zero Counts",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["NumberOfChromosomesCovered"] = {
-            "title": "Chrs Covered",
-            "description": "Number of Chromosomes Covered",
-            "format": "{:,.0f}",
+        headers = {
+            "Genes_PercentWithNonzeroCounts": {
+                "title": "% Genes with Counts",
+                "description": "Percent of Genes with Non-Zero Counts",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "NumberOfChromosomesCovered": {
+                "title": "Chrs Covered",
+                "description": "Number of Chromosomes Covered",
+                "format": "{:,.0f}",
+            },
         }
         self.general_stats_addcols(self.qorts_data, headers)
 
@@ -112,10 +114,10 @@ class MultiqcModule(BaseMultiqcModule):
             "ReadPairs_NoGene_TenKbFromGene",
             "ReadPairs_NoGene_MiddleOfNowhere",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("ReadPairs_", "").replace("_", ": ")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -124,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QoRTs: Alignment Locations",
             "ylab": "# Read Pairs",
             "cpswitch_counts_label": "Number of Read Pairs",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
 
         self.add_section(
@@ -155,7 +157,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def qorts_splice_loci_barplot(self):
-        """Make the HighCharts HTML to plot the qorts splice loci"""
         # Specify the order of the different possible categories
         keys = [
             "SpliceLoci_Known_ManyReads",
@@ -164,10 +165,10 @@ class MultiqcModule(BaseMultiqcModule):
             "SpliceLoci_Novel_ManyReads",
             "SpliceLoci_Novel_FewReads",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("SpliceLoci_", "").replace("_", ": ")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -176,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QoRTs: Splice Loci",
             "ylab": "# Splice Loci",
             "cpswitch_counts_label": "Number of Splice Loci",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
 
         self.add_section(
@@ -212,7 +213,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def qorts_splice_events_barplot(self):
-        """Make the HighCharts HTML to plot the qorts splice events"""
         # Specify the order of the different possible categories
         keys = [
             "SpliceEvents_KnownLociWithManyReads",
@@ -220,10 +220,10 @@ class MultiqcModule(BaseMultiqcModule):
             "SpliceEvents_NovelLociWithManyReads",
             "SpliceEvents_NovelLociWithFewReads",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("SpliceEvents_", "")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -232,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QoRTs: Splice Events",
             "ylab": "# Splice Events",
             "cpswitch_counts_label": "Number of Splice Events",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
 
         self.add_section(
@@ -273,10 +273,10 @@ class MultiqcModule(BaseMultiqcModule):
             "StrandTest_ambig_noGenes",
             "StrandTest_ambig_other",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("StrandTest_", "").replace("_", " ").replace("ambig", "ambig:")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name.title()}
 
         # Config for the plot

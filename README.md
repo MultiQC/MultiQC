@@ -1,11 +1,14 @@
-&nbsp;
-![MultiQC](docs/images/MultiQC_logo.png#gh-light-mode-only)
-![MultiQC](docs/images/MultiQC_logo_darkbg.png#gh-dark-mode-only)
-&nbsp;
+<h1>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo_darkbg.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png">
+  <img src="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png" alt="MultiQC">
+</picture>
+</h1>
 
 ### Aggregate bioinformatics results across many samples into a single report
 
-##### Find [documentation](http://multiqc.info/docs) and [example reports](https://multiqc.info/example-reports/) at [http://multiqc.info](http://multiqc.info)
+##### Find [documentation](https://docs.seqera.io/multiqc) and [example reports](https://multiqc.info/example-reports/) at [http://multiqc.info](http://multiqc.info)
 
 [![PyPI Version](https://img.shields.io/pypi/v/multiqc)](https://pypi.python.org/pypi/multiqc/)
 [![Bioconda Version](https://img.shields.io/conda/v/bioconda/multiqc?label=bioconda)](https://bioconda.github.io/recipes/multiqc/README.html)
@@ -21,11 +24,11 @@ for all logs found. MultiQC reports can describe multiple analysis steps and
 large numbers of samples within a single plot, and multiple analysis tools making
 it ideal for routine fast quality control.
 
-A very large number of Bioinformatics tools are supported by MultiQC. Please see the MultiQC website for a [complete list](https://multiqc.info/modules/).
-MultiQC can also easily parse data from custom scripts, if correctly formatted / configured - a feature called [Custom Content](https://multiqc.info/docs/custom_content/).
+A very large number of Bioinformatics tools are supported by MultiQC. Please see the MultiQC website for a [complete list](https://docs.seqera.io/multiqc/modules/).
+MultiQC can also easily parse data from custom scripts, if correctly formatted / configured - a feature called [Custom Content](https://docs.seqera.io/multiqc/custom_content).
 
-More modules are being written all of the time. Please suggest any ideas as a new
-[issue](https://github.com/ewels/MultiQC/issues) _(please include example log files)_.
+More modules are being written all the time. Please suggest any ideas as a new
+[issue](https://github.com/MultiQC/MultiQC/issues) _(please include example log files)_.
 
 ## Installation
 
@@ -46,12 +49,12 @@ conda install multiqc
 If you would like the development version from GitHub instead, you can install it with `pip`:
 
 ```bash
-pip install --upgrade --force-reinstall git+https://github.com/ewels/MultiQC.git
+pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
 ```
 
 MultiQC is also available via Docker and Singularity images, Galaxy wrappers, and
 many more software distribution systems.
-See [the documentation](https://multiqc.info/docs/getting_started/installation/) for details.
+See [the documentation](https://docs.seqera.io/multiqc/getting_started/installation/) for details.
 
 ## Usage
 
@@ -67,7 +70,7 @@ and produce a report detailing whatever it finds.
 
 <!-- RICH-CODEX fake_command: "multiqc ." -->
 
-![`cd test_data/data/modules/fastqc/v0.10.1 && multiqc .`](docs/images/screenshots/fastqc-run.svg)
+![`cd test-data/data/modules/fastqc/v0.10.1 && multiqc .`](https://github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/fastqc-run.svg)
 
 The report is created in `multiqc_report.html` by default. Tab-delimited data
 files are also created in `multiqc_data/`, containing extra information.
@@ -75,7 +78,7 @@ These can be easily inspected using Excel (use `--data-format` to get `yaml`
 or `json` instead).
 
 For more detailed instructions, run `multiqc -h` or see the
-[documentation](http://multiqc.info/docs/#running-multiqc).
+[documentation](https://docs.seqera.io/multiqc/getting_started/running_multiqc).
 
 ## Citation
 
@@ -104,12 +107,12 @@ Please consider citing MultiQC if you use it in your analysis.
 ## Contributions & Support
 
 Contributions and suggestions for new features are welcome, as are bug reports!
-Please create a new [issue](https://github.com/ewels/MultiQC/issues) for any
+Please create a new [issue](https://github.com/MultiQC/MultiQC/issues) for any
 of these, including example reports where possible.
 Pull-requests for fixes and additions are very welcome.
-Please see the [contributing notes](https://github.com/ewels/MultiQC/blob/master/.github/CONTRIBUTING.md) for more information about how the process works.
+Please see the [contributing notes](https://github.com/MultiQC/MultiQC/blob/main/.github/CONTRIBUTING.md) for more information about how the process works.
 
-MultiQC has extensive [documentation](http://multiqc.info/docs/development/)
+MultiQC has extensive [documentation](https://docs.seqera.io/multiqc/development)
 describing how to write new modules, plugins and templates.
 
 If in doubt, feel free to get in touch with the author directly:
@@ -121,6 +124,6 @@ MultiQC is developed and maintained by Phil Ewels ([@ewels](https://github.com/e
 It was originally written at the [National Genomics Infrastructure](https://ngisweden.scilifelab.se/), part of [SciLifeLab](https://www.scilifelab.se/) in Sweden.
 
 A huge thank you to all code contributors - there are a lot of you!
-See the [Contributors Graph](https://github.com/ewels/MultiQC/graphs/contributors) for details.
+See the [Contributors Graph](https://github.com/MultiQC/MultiQC/graphs/contributors) for details.
 
 MultiQC is released under the GPL v3 or later licence.

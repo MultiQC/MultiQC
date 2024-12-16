@@ -1,1 +1,1 @@
-from .custom_content import *
+from .custom_content import *  # noqa: F403

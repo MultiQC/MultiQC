@@ -1,7 +1,9 @@
+from typing import Dict
+
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
@@ -15,19 +17,18 @@ class DragenTrimmerMetrics(BaseMultiqcModule):
             data = parse_trimmer_metrics_file(f)
             s_name = f["s_name"]
             if s_name in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="trimmer_metrics")
             data_by_sample[s_name] = data
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
-
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
-
         if not data_by_sample:
             return set()
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Save data file
         self.write_data_file(data_by_sample, "dragen_trimmer_metrics")
@@ -39,25 +40,24 @@ class DragenTrimmerMetrics(BaseMultiqcModule):
             description="""
             Metrics on trimmed reads.
             """,
-            plot=table.plot(table_data),
+            plot=table.plot(
+                table_data,
+                pconfig={
+                    "id": "dragen-trimmer-metrics-table",
+                    "namespace": "Trimmer Metrics",
+                    "title": "DRAGEN: Trimmer Metrics",
+                },
+            ),
         )
 
         return data_by_sample.keys()
 
     @staticmethod
-    def __get_table_data(data_by_sample: dict) -> dict:
-        analysis = "TRIMMER STATISTICS"
+    def __get_table_data(data_by_sample: Dict) -> Dict:
+        ANALYSIS = "TRIMMER STATISTICS"
         trimmer_data = {}
-        for (
-            sample,
-            data,
-        ) in data_by_sample.items():
-            trimmer_data[sample] = {}
-            for metric, stat in data[analysis].items():
-                number, percentage = stat
-                display_stat = f"{number} ({percentage}%)" if percentage else f"{number}"
-                trimmer_data[sample][metric] = display_stat
-
+        for sample, data in data_by_sample.items():
+            trimmer_data[sample] = {metric: stat for metric, stat in data[ANALYSIS].items()}
         return trimmer_data
 
 
@@ -79,16 +79,24 @@ def parse_trimmer_metrics_file(f):
         tokens = line.split(",")
         if len(tokens) == 4:
             analysis, _, metric, stat = tokens
-            percentage = None
+            try:
+                stat = int(stat)
+            except ValueError:
+                try:
+                    stat = float(stat)
+                except ValueError:
+                    pass
+            val = stat
         elif len(tokens) == 5:
             analysis, _, metric, stat, percentage = tokens
+            try:
+                percentage = float(percentage)
+            except ValueError:
+                pass
+            val = percentage
         else:
-            raise ValueError(f"Unexpected number of tokens in line {line}")
-
-        try:
-            stat = float(stat)
-        except ValueError:
-            pass
-        data[analysis][metric] = (stat, percentage)
+            log.error(f"DRAGEN trimming metrics: unexpected number of tokens in line {line}")
+            continue
+        data[analysis][metric] = val
 
     return data

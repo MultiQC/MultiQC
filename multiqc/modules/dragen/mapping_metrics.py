@@ -5,7 +5,7 @@ import itertools
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
 
 from .utils import Metric, exist_and_number, make_headers
@@ -109,7 +109,15 @@ class DragenMappingMetics(BaseMultiqcModule):
             Shown on per read group level. To see per-sample level metrics, refer to the general
             stats table.
             """,
-            plot=table.plot(data_by_rg, own_tabl_headers, pconfig={"namespace": NAMESPACE}),
+            plot=table.plot(
+                data_by_rg,
+                own_tabl_headers,
+                pconfig={
+                    "id": "dragen-mapping-metrics-table",
+                    "namespace": NAMESPACE,
+                    "title": "DRAGEN: Mapping metrics",
+                },
+            ),
         )
 
         # Skip adding the barplot if it's not informative, such as if all

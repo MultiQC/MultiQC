@@ -10,7 +10,7 @@ the output from each module and print it to a single section.
 <div id="mqc-module-section-detailed-stats" class="mqc-module-section">
   <h2 id="detailed_stats">Detailed Statistics</h2>
   <div class="mqc-section mqc-section-detailed-stats">
-  {% for m in report.modules_output %}
+  {% for m in report.modules %}
     {% if m.sections | length > 0 %}
       {% if m['comment'] %}<blockquote class="mqc-section-comment">{{ m['comment'] }}</blockquote>{% endif %}
       {% for s in m.sections %}

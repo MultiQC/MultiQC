@@ -1,15 +1,13 @@
-#!/usr/bin/env python
-
-""" Super Special-Case MultiQC module to produce report section on software versions """
-
+"""Super Special-Case MultiQC module to produce report section on software versions"""
 
 import logging
 from textwrap import dedent
+from typing import Dict, List
 
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.utils import config as mqc_config
-from multiqc.utils import report as mqc_report
-from multiqc.utils import util_functions
+from multiqc import config as mqc_config
+from multiqc import report as mqc_report
+from multiqc.base_module import BaseMultiqcModule
+from multiqc.types import Anchor
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -20,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Software Versions",
-            anchor="multiqc_software_versions",
+            anchor=Anchor("multiqc_software_versions"),
             info="lists versions of software tools extracted from file contents.",
         )
 
@@ -53,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
         html = [
             dedent(
                 f"""\
-                <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{table_id}">
+                <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{table_id}">
                     <span class="glyphicon glyphicon-copy"></span> Copy table
                 </button>
                 <table class="table mqc_versions_table" id="{table_id}">
@@ -79,17 +77,22 @@ class MultiqcModule(BaseMultiqcModule):
 
     @staticmethod
     def write_software_versions_data_file():
-        """Write software versions to a file for downstream use."""
+        """
+        Write software versions to a file for downstream use
+        """
         # Get rid of the default dicts and Version objects
-        flat_software_versions = {
-            group: {software: list(map(str, software_versions)) for software, software_versions in versions.items()}
+        clean_software_versions: Dict[str, Dict[str, List[str]]] = {
+            group: {software: list(map(str, svs)) for software, svs in versions.items()}
             for group, versions in mqc_report.software_versions.items()
         }
+
         # TSV only allows 2 levels of nesting.
         if mqc_config.data_format == "tsv":
-            flat_software_versions = {
-                group: {software: ", ".join(software_versions) for software, software_versions in versions.items()}
-                for group, versions in flat_software_versions.items()
+            flat_software_versions: Dict[str, Dict[str, str]] = {
+                group: {software: ", ".join(svs) for software, svs in versions.items()}
+                for group, versions in clean_software_versions.items()
             }
-        # Write to a file for downstream use
-        util_functions.write_data_file(flat_software_versions, "multiqc_software_versions")
+            mqc_report.write_data_file(flat_software_versions, "multiqc_software_versions")
+
+        else:
+            mqc_report.write_data_file(clean_software_versions, "multiqc_software_versions")

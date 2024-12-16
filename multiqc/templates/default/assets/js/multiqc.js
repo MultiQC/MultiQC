@@ -2,13 +2,17 @@
 // Base JS for MultiQC Reports
 ////////////////////////////////////////////////
 
+// Collect functions to be called after plot data is decompressed.
+// Includes functions in plotting.js, and any module-specific JS like multiqc_fastqc.js
+let callAfterDecompressed = [];
+
 // Helper config - is defined and object length > 0?
 function notEmptyObj(obj) {
   try {
     if (obj === undefined) {
       return false;
     }
-    if (obj.length == 0) {
+    if (obj.length === 0) {
       return false;
     }
   } catch (e) {
@@ -33,10 +37,10 @@ $(function () {
 
   // Hide welcome alert if setting saved
   try {
-    var hide_welcome = localStorage.getItem("mqc_hide_welcome");
+    let hide_welcome = localStorage.getItem("mqc_hide_welcome");
     if (hide_welcome !== "true") {
-      $("#mqc_header_hr").slideUp();
-      $("#mqc_welcome").slideDown();
+      $("#mqc_header_hr").show();
+      $("#mqc_welcome").show();
     }
     $("#mqc_hide_welcome_btn").click(function (e) {
       localStorage.setItem("mqc_hide_welcome", "true");
@@ -56,7 +60,7 @@ $(function () {
   $(".module-doi").click(function (e) {
     // Don't follow the link
     e.preventDefault();
-    var el = $(this);
+    let el = $(this);
 
     // Check if we already have a popover
     if (el.data("bs.popover")) {

@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools bamPEFragmentSize for read length distribution """
+"""MultiQC submodule to parse output from deepTools bamPEFragmentSize for read length distribution"""
 
 import logging
 
@@ -16,7 +16,7 @@ class bamPEFragmentSizeDistributionMixin:
             parsed_data = self.parseBamPEFDistributionFile(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_bamPEFragmentSizeDistribution:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_bamPEFragmentSizeDistribution[k] = v
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="bamPEFragmentSizeDistribution")
@@ -35,11 +35,10 @@ class bamPEFragmentSizeDistributionMixin:
                 "id": "fragment_size_distribution_plot",
                 "title": "deeptools: Fragment Size Distribution Plot",
                 "ylab": "Occurrence",
-                "xlab": "Fragment Size (bp)",
+                "xlab": "Fragment Size",
                 "smooth_points": 50,
                 "xmax": 1000,
-                "xDecimals": False,
-                "tt_label": "<b>Fragment Size (bp) {point.x}</b>: {point.y} Occurrence",
+                "tt_label": "<b>{point.x} bp</b>: {point.y}th occurrence",
             }
 
             self.add_section(

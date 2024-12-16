@@ -1,14 +1,9 @@
-""" MultiQC module to parse output from Flexbar """
-
-
 import logging
 import re
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"Flexbar - flexible barcode and adapter removal, version ([\d\.]+)"
@@ -16,12 +11,16 @@ VERSION_REGEX = r"Flexbar - flexible barcode and adapter removal, version ([\d\.
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Flexbar",
             anchor="flexbar",
             href="https://github.com/seqan/flexbar",
-            info="is a barcode and adapter removal tool.",
+            info="Barcode and adapter removal tool.",
+            extra="""
+            Flexbar efficiently preprocesses high-throughput sequencing data. It demultiplexes 
+            barcoded runs and removes adapter sequences. Moreover, trimming and filtering features are provided.
+            Flexbar increases read mapping rates and improves genome as well as transcriptome assemblies.
+            """,
             doi="10.1093/bioinformatics/btx330",
         )
 
@@ -37,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.flexbar_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.flexbar_data)))
+        log.info(f"Found {len(self.flexbar_data)} logs")
         self.write_data_file(self.flexbar_data, "multiqc_flexbar")
 
         # Add drop rate to the general stats table
@@ -68,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                     except ZeroDivisionError:
                         parsed_data["removed_bases_pct"] = 0
                 if s_name in self.flexbar_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.flexbar_data[s_name] = parsed_data
 
         regexes = {
@@ -85,15 +84,15 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         parsed_data = dict()
         version = None
-        for l in f["f"]:
+        for line in f["f"]:
             # The version appears in the before the sample name in the log so we
             # assign it to a variable for now.
-            version_match = re.search(VERSION_REGEX, l)
+            version_match = re.search(VERSION_REGEX, line)
             if version_match:
                 version = version_match.group(1)
 
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     if k == "output_filename":
                         s_name = self.clean_s_name(match.group(1), f)
@@ -103,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
                         parsed_data[k] = int(match.group(1))
 
             # End of log output. Save and reset in case of more logs.
-            if "Flexbar completed" in l:
+            if "Flexbar completed" in line:
                 _save_data(parsed_data)
                 s_name = f["s_name"]
                 parsed_data = dict()
@@ -112,14 +111,13 @@ class MultiqcModule(BaseMultiqcModule):
         _save_data(parsed_data)
 
     def flexbar_barplot(self):
-        """Make the HighCharts HTML to plot the flexbar rates"""
-
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["remaining_reads"] = {"color": "#437bb1", "name": "Remaining reads"}
-        keys["skipped_due_to_uncalled_bases"] = {"color": "#e63491", "name": "Skipped due to uncalled bases"}
-        keys["short_prior_to_adapter_removal"] = {"color": "#b1084c", "name": "Short prior to adapter removal"}
-        keys["finally_skipped_short_reads"] = {"color": "#7f0000", "name": "Finally skipped short reads"}
+        keys = {
+            "remaining_reads": {"color": "#437bb1", "name": "Remaining reads"},
+            "skipped_due_to_uncalled_bases": {"color": "#e63491", "name": "Skipped due to uncalled bases"},
+            "short_prior_to_adapter_removal": {"color": "#b1084c", "name": "Short prior to adapter removal"},
+            "finally_skipped_short_reads": {"color": "#7f0000", "name": "Finally skipped short reads"},
+        }
 
         # Config for the plot
         pconfig = {
@@ -127,7 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Flexbar: Processed Reads",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
 
         self.add_section(plot=bargraph.plot(self.flexbar_data, keys, pconfig))

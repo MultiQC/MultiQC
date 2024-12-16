@@ -1,30 +1,22 @@
-""" MultiQC module to parse output from Samblaster """
-
-
 import logging
 import os
 import re
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"Version\ (\d{1}.\d+.\d+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Samblaster"""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Samblaster",
             anchor="samblaster",
             href="https://github.com/GregoryFaust/samblaster",
-            info="is a tool to mark duplicates and extract discordant and split reads from sam files.",
+            info="Marks duplicates and extracts discordant and split reads from sam files.",
             doi="10.1093/bioinformatics/btu314",
         )
 
@@ -38,14 +30,15 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.samblaster_data) == 0:
             raise ModuleNoSamplesFound
 
-        headers = OrderedDict()
-        headers["pct_dups"] = {
-            "title": "% Dups",
-            "description": "Percent Duplication",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "OrRd",
+        headers = {
+            "pct_dups": {
+                "title": "% Dups",
+                "description": "Percent Duplication",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "OrRd",
+            }
         }
 
         self.general_stats_addcols(self.samblaster_data, headers)
@@ -53,15 +46,16 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.samblaster_data, "multiqc_samblaster")
 
-        log.info("Found {} reports".format(len(self.samblaster_data)))
+        log.info(f"Found {len(self.samblaster_data)} reports")
 
         self.add_barplot()
 
     def add_barplot(self):
         """Generate the Samblaster bar plot."""
-        cats = OrderedDict()
-        cats["n_nondups"] = {"name": "Non-duplicates"}
-        cats["n_dups"] = {"name": "Duplicates"}
+        cats = {
+            "n_nondups": {"name": "Non-duplicates"},
+            "n_dups": {"name": "Duplicates"},
+        }
 
         pconfig = {
             "id": "samblaster_duplicates",
@@ -72,7 +66,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_samblaster(self, f):
         """Go through log file looking for samblaster output.
-        If the
         Grab the name from the RG tag of the preceding bwa command"""
 
         # Should capture the following:
@@ -82,24 +75,24 @@ class MultiqcModule(BaseMultiqcModule):
             r"samblaster: (Removed|Marked)\s+(\d+)\s+of\s+(\d+) \((\d+.\d+)%\)\s*(total)?\s*read ids as duplicates"
         )
 
-        input_file_regex = "samblaster: Opening (\S+) for read."
-        rgtag_name_regex = "\\\\tID:(\S*?)\\\\t"
+        input_file_regex = r"samblaster: Opening (\S+) for read."
+        rgtag_name_regex = r"\\\\tID:(\S*?)\\\\t"
         data = {}
         s_name = None
         version = None
         fh = f["f"]
-        for l in fh:
-            match = re.search(VERSION_REGEX, l)
+        for line in fh:
+            match = re.search(VERSION_REGEX, line)
             if match is not None:
                 version = match.group(1)
             # try to find name from RG-tag. If bwa mem is used upstream samblaster with pipes, then the bwa mem command
             # including the read group will be written in the log
-            match = re.search(rgtag_name_regex, l)
+            match = re.search(rgtag_name_regex, line)
             if match:
                 s_name = self.clean_s_name(match.group(1), f)
 
             # try to find name from the input file name, if used
-            match = re.search(input_file_regex, l)
+            match = re.search(input_file_regex, line)
             if match:
                 basefn = os.path.basename(match.group(1))
                 fname, ext = os.path.splitext(basefn)
@@ -107,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if fname != "stdin":
                     s_name = self.clean_s_name(fname, f)
 
-            match = re.search(dups_regex, l)
+            match = re.search(dups_regex, line)
             if match:
                 data["n_dups"] = int(match.group(2))
                 data["n_tot"] = int(match.group(3))
@@ -122,6 +115,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(data) > 0:
             if s_name in self.samblaster_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
             self.samblaster_data[s_name] = data

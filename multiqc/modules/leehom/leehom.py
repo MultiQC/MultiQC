@@ -1,28 +1,25 @@
-""" MultiQC module to parse output from leeHom """
-
-
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    leeHom module class, parses stderr logs.
-    """
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="leeHom",
             anchor="leehom",
             href="https://github.com/grenaud/leeHom",
-            info="is a program for the Bayesian reconstruction of ancient DNA",
+            info="Bayesian reconstruction of ancient DNA",
+            extra="""
+            leeHom is a Bayesian maximum a posteriori algorithm for stripping
+            sequencing adapters and merging overlapping portions of reads.
+            The algorithm is mostly aimed at ancient DNA and Illumina data but
+            can be used for any dataset.
+            """,
             doi="10.1093/nar/gku699",
         )
 
@@ -45,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.leehom_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.leehom_data)))
+        log.info(f"Found {len(self.leehom_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.leehom_data, "multiqc_leehom")
@@ -65,10 +62,10 @@ class MultiqcModule(BaseMultiqcModule):
             "failed_key": r"Failed Key\s+(\d+)",
         }
         parsed_data = dict()
-        for l in f["f"]:
+        for line in f["f"]:
             # Search regexes for overview stats
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     parsed_data[k] = int(match.group(1))
         return parsed_data
@@ -79,16 +76,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {}
         headers["merged_trimming"] = {
-            "title": "{} Merged (Trimming)".format(config.read_count_prefix),
-            "description": "Merged clusters from trimming ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Merged (Trimming)",
+            "description": f"Merged clusters from trimming ({config.read_count_desc})",
             "min": 0,
             "scale": "PuRd",
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
         }
         headers["merged_overlap"] = {
-            "title": "{} Merged (Overlap)".format(config.read_count_prefix),
-            "description": "Merged clusters from overlapping reads ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Merged (Overlap)",
+            "description": f"Merged clusters from overlapping reads ({config.read_count_desc})",
             "min": 0,
             "scale": "PuRd",
             "modify": lambda x: x * config.read_count_multiplier,

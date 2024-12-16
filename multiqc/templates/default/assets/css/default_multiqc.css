@@ -23,8 +23,8 @@ kbd {
 .radio.input-sm input {
   margin: 2px 0 0 -20px;
 }
-.mqc_thousandSep {
-  padding: 0 2px;
+.mqc_small_space {
+  padding: 0 1px;
 }
 
 /* Page Template */
@@ -677,6 +677,7 @@ input.form-control[type="color"] {
 }
 .mqc_table tbody tr td .wrapper .val {
   z-index: -1;
+  white-space: nowrap; /* keep suffix stick to the value */
 }
 .mqc_table tbody tr td .wrapper .val .label {
   font-size: 100%;
@@ -705,7 +706,7 @@ input.form-control[type="color"] {
 .mqc_table thead td {
   background-color: #ffffff;
 }
-.mqc_table thead th:after {
+.mqc_table thead th .tablesorter-header-inner:after {
   content: "";
   display: inline-block;
   width: 0;
@@ -715,14 +716,14 @@ input.form-control[type="color"] {
   border-right: 4px solid transparent;
   border-left: 4px solid transparent;
 }
-.mqc_table thead th.headerSortDown:after {
+.mqc_table thead th.tablesorter-headerAsc .tablesorter-header-inner:after {
   border-bottom: 4px dashed;
 }
-.mqc_table thead th.headerSortUp:after {
+.mqc_table thead th.tablesorter-headerDesc .tablesorter-header-inner:after {
   border-top: 4px dashed;
 }
-.mqc_table thead th.headerSortDown,
-.mqc_table thead th.headerSortUp {
+.mqc_table thead th.tablesorter-headerAsc,
+.mqc_table thead th.tablesorter-headerDesc {
   background-color: #ededed;
   color: #1ca8dd;
   border-bottom: 2px solid #1ca8dd;
@@ -760,7 +761,7 @@ tbody .sorthandle {
   cursor: pointer;
   color: #ccc;
 }
-.mqc_configModal_table tbody .sorthandle {
+.mqc_config_modal_table tbody .sorthandle {
   color: #999;
 }
 .mqc_table .rowheader {
@@ -876,21 +877,22 @@ tbody .sorthandle {
 }
 .mqc_table .val {
   display: block;
-  position: absolute;
   padding: 5px;
   left: 0;
 }
 
-/* Flat MatPlotLib plots */
+/* Flat plots */
 .mqc_mplplot {
   border: 1px solid #dedede;
-  margin-top: 15px;
+  margin-top: 0;
+  width: 100%;
 }
 .mqc_mplplot img {
   max-width: 100%;
+  height: auto;
 }
 
-/* Draggable height bar for HighCharts Plots */
+/* Draggable height bar interactive plots */
 .hc-plot {
   height: 500px;
   width: 100%;
@@ -913,21 +915,21 @@ tbody .sorthandle {
   height: 512px;
   position: relative;
   border: 1px solid #dedede;
-  border-bottom: 1px solid #ccc;
-  margin-top: 15px;
+  margin-top: 5px;
 }
 .hc-plot-handle {
   position: absolute;
-  bottom: 0;
   width: 100%;
   height: 10px;
   background-color: #dedede;
   cursor: row-resize;
-  padding: 1px 0;
   border-top: 1px solid #ededed;
   -moz-transition: background-color 0.1s;
   -webkit-transition: background-color 0.1s;
   transition: background-color 0.1s;
+  /* two lines below are a hack to hide hanging plotly long vertical tick labels */
+  border-bottom: 2px solid white;
+  bottom: -3px;
 }
 .hc-plot-handle span {
   display: block;
@@ -949,7 +951,6 @@ tbody .sorthandle {
 .mqc_hcplot_range_sliders div {
   display: inline-block;
   white-space: nowrap;
-  margin-left: 30px;
 }
 .mqc_hcplot_range_sliders input {
   display: inline-block;
@@ -961,7 +962,7 @@ tbody .sorthandle {
 .mqc_hcplot_yaxis_limit_toggle {
   float: right;
   font-size: 11px;
-  margin-top: -30px;
+  margin-top: -26px;
 }
 .mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper {
   margin-left: 20px;
@@ -994,4 +995,73 @@ tbody .sorthandle {
 
 .mqc_versions_table tbody:nth-child(even) {
   background-color: #f2f2f2;
+}
+
+g.annotation {
+  position: absolute !important;
+}
+
+.export-plot {
+  float: right;
+}
+
+.col-xs-12 button {
+  margin-top: 0;
+  margin-bottom: 2px;
+}
+
+hr {
+  border-top: 0;
+}
+
+.mqc-section-description > p {
+  margin-bottom: 4px;
+}
+
+.created-with-multiqc {
+  position: absolute;
+  bottom: 7px;
+  right: 4px;
+  margin-bottom: 0;
+  padding: 0;
+  color: #999999;
+  font-size: 8px;
+  font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
+}
+
+tr.expandable-row-secondary {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+tr.expandable-row-primary {
+  cursor: pointer;
+}
+tr.expandable-row-primary .expandable-row-caret {
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 4 16 16"><path d="M11.8152 13.1989L10.0167 11.1432C9.80447 10.9013 9.97697 10.5214 10.2991 10.5214H13.8961C13.9682 10.5214 14.0388 10.5421 14.0994 10.5811C14.16 10.6201 14.2081 10.6758 14.2379 10.7414C14.2677 10.8071 14.2779 10.8799 14.2674 10.9512C14.2569 11.0226 14.226 11.0893 14.1785 11.1435L12.38 13.1985C12.3448 13.2388 12.3014 13.2711 12.2527 13.2932C12.204 13.3153 12.1511 13.3268 12.0976 13.3268C12.0441 13.3268 11.9912 13.3153 11.9425 13.2932C11.8938 13.2711 11.8504 13.2388 11.8152 13.1985V13.1989Z" /></svg>')
+    50% / 24px 24px;
+  transform: rotate(-90deg);
+}
+tr.expandable-row-primary.expanded .expandable-row-caret {
+  transform: rotate(0deg);
+}
+tr.expandable-row-secondary-hidden {
+  visibility: collapse;
+}
+tr.sample-hidden {
+  display: none;
+}
+th.column-hidden,
+td.column-hidden {
+  display: none;
+}
+tr.row-empty {
+  display: none;
+}
+
+/* Safari-specific fix using @supports
+ Safari doesn't support visibility: collapse, so we use display: none instead
+ */
+@supports (-webkit-hyphens: none) {
+  tr.expandable-row-secondary-hidden {
+    display: none;
+  }
 }

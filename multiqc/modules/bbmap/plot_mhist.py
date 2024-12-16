@@ -10,9 +10,6 @@ def plot_mhist(samples, file_type, **plot_args):
     samples = bbmap.MultiqcModule.mod_data[file_type]
     """
 
-    sumy = sum([int(samples[sample]["data"][x][0]) for sample in samples for x in samples[sample]["data"]])
-
-    cutoff = sumy * 0.999
     all_x = set()
     for item in sorted(chain(*[samples[sample]["data"].items() for sample in samples])):
         all_x.add(item[0])
@@ -52,6 +49,7 @@ def plot_mhist(samples, file_type, **plot_args):
         "id": "bbmap-" + file_type + "_plot",
         "title": "BBTools: " + plot_args["plot_title"],
         "xlab": "Location in read",
+        "xsuffix": " bp",
         "ylab": "Proportion",
         "data_labels": [
             {"name": "Read 1", "ylab": "Proportion"},

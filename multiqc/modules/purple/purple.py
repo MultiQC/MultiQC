@@ -1,31 +1,25 @@
-""" MultiQC module to parse QC output from PURPLE """
-# Initialise the logger
 import logging
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    PURPLE is a purity ploidy estimator. It combines B-allele frequency (BAF) from AMBER,
-    read depth ratios from COBALT, somatic variants and structural variants to estimate the
-    purity and copy number profile of a tumor sample.
-    """
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="PURPLE",
             anchor="purple",
             href="https://github.com/hartwigmedical/hmftools/",
-            info="""combines B-allele frequency (BAF), read depth ratios, somatic variants and
-                    structural variant breakpoints to estimate the purity and copy number profile
-                    of a tumor sample, and also predicts gender, the MSI status, tumor mutational
-                    load and burden, clonality and the whole genome duplication status.""",
+            info="A purity, ploidy and copy number estimator for whole genome tumor data",
+            extra="""
+            PURPLE combines B-allele frequency (BAF), read depth ratios, somatic variants and
+            structural variant breakpoints to estimate the purity and copy number profile
+            of a tumor sample, and also predicts gender, the MSI status, tumor mutational
+            load and burden, clonality and the whole genome duplication status.
+            """,
             doi="10.1038/s41586-019-1689-y",
         )
 
@@ -35,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = _parse_purple_qc(f)
             if data is not None:
                 if f["s_name"] in data_by_sample:
-                    log.debug("Duplicate PURPLE output prefix found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate PURPLE output prefix found! Overwriting: {f['s_name']}")
                 self.add_data_source(f, section="stats")
                 data_by_sample[f["s_name"]].update(data)
 
@@ -43,16 +37,16 @@ class MultiqcModule(BaseMultiqcModule):
             data = _parse_purple_purity(f)
             if data is not None:
                 if f["s_name"] in data_by_sample:
-                    log.debug("Duplicate PURPLE output prefix found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate PURPLE output prefix found! Overwriting: {f['s_name']}")
                 self.add_data_source(f, section="stats")
                 data_by_sample[f["s_name"]].update(data)
-                self.add_software_version(data["version"], f["s_name"])
+                self.add_software_version(data.get("version"), f["s_name"])
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
         if not data_by_sample:
             raise ModuleNoSamplesFound
-        log.info("Found {} reports".format(len(data_by_sample)))
+        log.info(f"Found {len(data_by_sample)} reports")
 
         # Write data to file
         self.write_data_file(data_by_sample, "purple")
@@ -71,7 +65,6 @@ class MultiqcModule(BaseMultiqcModule):
                 headers,
                 {
                     "id": "purple_summary",
-                    "namespace": "PURPLE",
                     "title": "PURPLE summary",
                 },
             ),
@@ -103,83 +96,84 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 def _make_table_headers():
-    headers = OrderedDict()
-    headers["QCStatus"] = {
-        "title": "QC Status",
-        "description": "One of PASS, FAIL_SEGMENT, FAIL_GENDER, or FAIL_DELETED_GENES. "
-        "For details, use the help button.",
-        "scale": False,
-    }
-    headers["ploidy"] = {
-        "title": "Ploidy",
-        "description": "Average ploidy of the tumor sample after adjusting for purity",
-        "scale": "RdYlGn",
-        "min": 0,
-    }
-    headers["purity"] = {
-        "title": "Purity",
-        "description": "Purity of tumor in the sample",
-        "scale": "RdYlGn",
-        "min": 0,
-        "max": 100,
-        "suffix": "%",
-        "modify": lambda x: float(x) * 100.0,
-    }
-    headers["gender"] = {"title": "Gender", "description": "One of MALE, FEMALE or MALE_KLINEFELTER", "scale": False}
-    headers["status"] = {
-        "title": "Ploidy status",
-        "description": "One of NORMAL, HIGHLY_DIPLOID, SOMATIC, or NO_TUMOR. For details, use the help button.",
-        "scale": False,
-    }
-    headers["polyclonalProportion"] = {
-        "title": "Polyclonal",
-        "description": "Polyclonal proportion. Proportion of copy number regions that are more than 0.25 "
-        "from a whole copy number",
-        "scale": "RdYlGn",
-        "min": 0,
-        "max": 100,
-        "suffix": "%",
-        "modify": lambda x: float(x) * 100.0,
-    }
-    headers["wholeGenomeDuplication"] = {
-        "title": "WGD",
-        "description": "Whole genome duplication. True if more than 10 autosomes have major allele ploidy > 1.5",
-        "scale": False,
-    }
-    headers["msIndelsPerMb"] = {
-        "title": "MS indel per Mb",
-        "description": "Microsatellite indels per mega base",
-        "scale": "RdYlGn",
-        "hidden": True,
-    }
-    headers["msStatus"] = {
-        "title": "MS status",
-        "description": "Microsatellite status. One of MSI, MSS or UNKNOWN if somatic variants not supplied",
-        "scale": False,
-    }
-    headers["tml"] = {
-        "title": "TML",
-        "description": "Tumor mutational load (# of missense variants in sample)",
-        "scale": "RdYlGn",
-        "hidden": True,
-    }
-    headers["tmlStatus"] = {
-        "title": "TML status",
-        "description": "Tumor mutational load status (# of missense variants in sample). One of HIGH, LOW or UNKNOWN "
-        "if somatic variants not supplied",
-        "scale": False,
-    }
-    headers["tmbPerMb"] = {
-        "title": "TMB per Mb",
-        "description": "Tumor mutational burden (# of passing variants) per mega base",
-        "scale": "RdYlGn",
-        "hidden": True,
-    }
-    headers["tmbStatus"] = {
-        "title": "TMB status",
-        "description": "Tumor mutational burden (# of passing variants per Mb) status. One of HIGH, LOW or UNKNOWN "
-        "if somatic variants not supplied",
-        "scale": False,
+    headers = {
+        "QCStatus": {
+            "title": "QC Status",
+            "description": "One of PASS, FAIL_SEGMENT, FAIL_GENDER, or FAIL_DELETED_GENES. "
+            "For details, use the help button.",
+            "scale": False,
+        },
+        "ploidy": {
+            "title": "Ploidy",
+            "description": "Average ploidy of the tumor sample after adjusting for purity",
+            "scale": "RdYlGn",
+            "min": 0,
+        },
+        "purity": {
+            "title": "Purity",
+            "description": "Purity of tumor in the sample",
+            "scale": "RdYlGn",
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
+            "modify": lambda x: float(x) * 100.0,
+        },
+        "gender": {"title": "Gender", "description": "One of MALE, FEMALE or MALE_KLINEFELTER", "scale": False},
+        "status": {
+            "title": "Ploidy status",
+            "description": "One of NORMAL, HIGHLY_DIPLOID, SOMATIC, or NO_TUMOR. For details, use the help button.",
+            "scale": False,
+        },
+        "polyclonalProportion": {
+            "title": "Polyclonal",
+            "description": "Polyclonal proportion. Proportion of copy number regions that are more than 0.25 "
+            "from a whole copy number",
+            "scale": "RdYlGn",
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
+            "modify": lambda x: float(x) * 100.0,
+        },
+        "wholeGenomeDuplication": {
+            "title": "WGD",
+            "description": "Whole genome duplication. True if more than 10 autosomes have major allele ploidy > 1.5",
+            "scale": False,
+        },
+        "msIndelsPerMb": {
+            "title": "MS indel per Mb",
+            "description": "Microsatellite indels per mega base",
+            "scale": "RdYlGn",
+            "hidden": True,
+        },
+        "msStatus": {
+            "title": "MS status",
+            "description": "Microsatellite status. One of MSI, MSS or UNKNOWN if somatic variants not supplied",
+            "scale": False,
+        },
+        "tml": {
+            "title": "TML",
+            "description": "Tumor mutational load (# of missense variants in sample)",
+            "scale": "RdYlGn",
+            "hidden": True,
+        },
+        "tmlStatus": {
+            "title": "TML status",
+            "description": "Tumor mutational load status (# of missense variants in sample). One of HIGH, LOW or UNKNOWN "
+            "if somatic variants not supplied",
+            "scale": False,
+        },
+        "tmbPerMb": {
+            "title": "TMB per Mb",
+            "description": "Tumor mutational burden (# of passing variants) per mega base",
+            "scale": "RdYlGn",
+            "hidden": True,
+        },
+        "tmbStatus": {
+            "title": "TMB status",
+            "description": "Tumor mutational burden (# of passing variants per Mb) status. One of HIGH, LOW or UNKNOWN "
+            "if somatic variants not supplied",
+            "scale": False,
+        },
     }
     return headers
 

@@ -1,8 +1,10 @@
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, table
+from multiqc.plots.plotly.line import LinePlotConfig
+from multiqc.plots.table_object import TableConfig
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ class DragenGcMetrics(BaseMultiqcModule):
             data = parse_gc_metrics_file(f)
             s_name = f["s_name"]
             if s_name in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="gc_metrics")
             data_by_sample[s_name] = data
 
@@ -48,17 +50,16 @@ class DragenGcMetrics(BaseMultiqcModule):
                 """,
             plot=linegraph.plot(
                 hist_data,
-                {
-                    "id": "gc-bias-hist",
-                    "title": "Dragen: GC Bias Histogram",
-                    "ylab": "Normalized Coverage",
-                    "xlab": "% GC",
-                    "ymin": 0,
-                    "xmin": 0,
-                    "tt_label": "<b>{point.x} % GC</b>: {point.y} Normalized coverage",
-                    "smooth_points": smooth_points,
-                    "namespace": DragenGcMetrics.NAMESPACE,
-                },
+                LinePlotConfig(
+                    id="gc-bias-hist",
+                    title="Dragen: GC Bias Histogram",
+                    ylab="Normalized Coverage",
+                    xlab="% GC",
+                    ymin=0,
+                    xmin=0,
+                    tt_label="<b>{point.x} % GC</b>: {point.y} Normalized coverage",
+                    smooth_points=smooth_points,
+                ),
             ),
         )
 
@@ -69,7 +70,14 @@ class DragenGcMetrics(BaseMultiqcModule):
             description="""
             Summary GC metrics shown on the sample level.
             """,
-            plot=table.plot(table_data, pconfig={"namespace": DragenGcMetrics.NAMESPACE}),
+            plot=table.plot(
+                table_data,
+                pconfig=TableConfig(
+                    id="dragen-gc-metrics-summary-table",
+                    namespace=DragenGcMetrics.NAMESPACE,
+                    title="Dragen: GC Metrics Summary",
+                ),
+            ),
         )
 
         return data_by_sample.keys()

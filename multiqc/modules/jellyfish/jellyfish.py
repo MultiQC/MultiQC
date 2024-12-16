@@ -1,23 +1,38 @@
-""" MultiQC module to parse results from jellyfish  """
-
-
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module parses _only_ `*_jf.hist` files. The general usage of jellyfish to be parsed by MultiQC module needs to be:
+
+    - `gunzip -c file.fastq.gz | jellyfish count -o file.jf -m ...`
+    - `jellyfish histo -o file_jf.hist -f file.jf`
+
+    In case a user wants to customise the matching pattern for jellyfish, then multiqc can be run with the option `--cl-config "sp: { jellyfish: { fn: 'PATTERN' } }"` where `PATTERN` is the pattern to be matched. For example:
+
+    ```bash
+    multiqc . --cl-config "sp: { jellyfish: { fn: '*.hist' } }"
+    ```
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Jellyfish",
             anchor="jellyfish",
             href="https://github.com/gmarcais/Jellyfish",
-            info="is a tool for fast, memory-efficient counting of k-mers in DNA.",
+            info="Counting k-mers in DNA.",
+            extra="""
+            A k-mer is a substring of length k, and counting the occurrences of all such substrings 
+            is a central step in many analyses of DNA sequence. JELLYFISH can count k-mers using an order of 
+            magnitude less memory and an order of magnitude faster than other k-mer counting packages by using 
+            an efficient encoding of a hash table and by exploiting the "compare-and-swap" CPU instruction to 
+            increase parallelism.
+            """,
             doi="10.1093/bioinformatics/btr011",
         )
 
@@ -45,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.jellyfish_data, "jellyfish")
 
-        log.info("Found {} reports".format(len(self.jellyfish_data)))
+        log.info(f"Found {len(self.jellyfish_data)} reports")
 
         self.frequencies_plot(xmax=self.jellyfish_max_x)
 
@@ -65,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.jellyfish_max_x = max(self.jellyfish_max_x, self.max_key)
         if len(histogram) > 0:
             if f["s_name"] in self.jellyfish_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.add_data_source(f)
             self.jellyfish_data[f["s_name"]] = histogram
 
@@ -92,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Jellyfish: K-mer plot",
             "ylab": "Counts",
             "xlab": "k-mer frequency",
-            "xDecimals": False,
+            "x_decimals": False,
             "xmin": xmin,
             "xmax": xmax,
         }

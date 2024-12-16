@@ -1,30 +1,26 @@
-#! /usr/bin/env python
-
-""" MultiQC module to parse output from Pangolin """
-
-
 import csv
 import logging
-from collections import OrderedDict
+from typing import Optional
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Pangolin module"""
-
     def __init__(self):
-        # Initialise the parent module
         super().__init__(
             name="Pangolin",
             anchor="pangolin",
             href="https://github.com/cov-lineages/pangolin",
-            info="uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.",
+            info="Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.",
+            extra="""
+            Implements the dynamic nomenclature of SARS-CoV-2 lineages, known as the Pango nomenclature.
+            It allows a user to assign a SARS-CoV-2 genome sequence the most likely lineage (Pango lineage) 
+            to SARS-CoV-2 query sequences.
+            """,
             doi="10.1093/ve/veab064",
         )
 
@@ -33,7 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.lineage_colours = dict()
         for f in self.find_log_files("pangolin", filehandles=True):
             self.parse_pangolin_log(f)
-            self.add_data_source(f)
+            for s_name in self.pangolin_data:
+                self.add_data_source(f, s_name=s_name)
 
         # Filter out parsed samples based on sample name
         self.pangolin_data = self.ignore_samples(self.pangolin_data)
@@ -41,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Stop if we didn't find anything
         if len(self.pangolin_data) == 0:
             raise ModuleNoSamplesFound
-        log.info("Found {} samples".format(len(self.pangolin_data)))
+        log.info(f"Found {len(self.pangolin_data)} samples")
         self.write_data_file(self.pangolin_data, "multiqc_pangolin")
 
         # Assign some lineage colours
@@ -89,7 +86,8 @@ class MultiqcModule(BaseMultiqcModule):
             if version is not None:
                 self.add_software_version(version, sample, name)
 
-        for row in csv.DictReader(f["f"]):
+        reader: csv.DictReader = csv.DictReader(f["f"])
+        for row in reader:
             try:
                 taxon_name = row["taxon"]
                 row.pop("taxon")
@@ -99,10 +97,13 @@ class MultiqcModule(BaseMultiqcModule):
                 taxon_name = taxon_name.replace("/", "_")
                 s_name = self.clean_s_name(taxon_name, f)
                 if s_name in self.pangolin_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 # Avoid generic header ID that clashes with other modules
                 if "qc_status" not in row:
                     row["qc_status"] = row.pop("status")
+                if "qc_notes" in row:
+                    row["qc_notes"] = _format_qc_notes(row["qc_notes"])
+
                 self.pangolin_data[s_name] = row
                 # Just save the lineage key for now - we will sort out the colours later
                 self.lineage_colours[row["lineage"]] = None
@@ -110,128 +111,147 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Version info
                 # Note: Excluded "version" field from software versions as this refers to
-                #       how the reference data was prepared. This info is still available
-                #       in the "Run table" table
+                # how the reference data was prepared. This info is still available
+                # in the "Run table" table
                 add_version_not_none(row.get("pangolin_version"), s_name, self.name)
                 add_version_not_none(row.get("pango_version"), s_name, "Pango")
                 add_version_not_none(row.get("pangoLEARN_version"), s_name, "PangoLEARN")
                 add_version_not_none(row.get("scorpio_version"), s_name, "Scorpio")
-                # constellation_version is someimes "TRUE" or "FALSE" - ignore these
+                # constellation_version is sometimes "TRUE" or "FALSE" - ignore these
                 constellation_version = row.get("constellation_version")
                 if constellation_version not in {None, "TRUE", "FALSE"}:
                     self.add_software_version(constellation_version, s_name, "Constellations")
             except KeyError:
-                log.debug("File '{}' could not be parsed - no taxon field found.".format(f["fn"]))
+                log.debug(f"File '{f['fn']}' could not be parsed - no taxon field found.")
 
     def pangolin_general_stats_table(self):
         """Takes the parsed sample data and adds it to the general stats table"""
 
-        headers = OrderedDict()
-        headers["lineage"] = {
-            "title": "Lineage",
-            "description": "Lineage",
-            "min": 0,
-            "scale": "RdYlGn",
-            "bgcols": self.lineage_colours,
+        headers = {
+            "lineage": {
+                "title": "Lineage",
+                "description": "Lineage",
+                "min": 0,
+                "scale": "RdYlGn",
+                "bgcols": self.lineage_colours,
+            }
         }
         self.general_stats_addcols(self.pangolin_data, headers)
 
     def pangolin_table(self):
         """Creates the table of all data for the samples"""
 
-        headers = OrderedDict()
-        headers["lineage"] = {
-            "title": "Lineage",
-            "description": """
+        headers = {
+            "lineage": {
+                "title": "Lineage",
+                "description": """
                 The most likely lineage assigned to a given sequence based on the inference engine used
-                and the SARS-CoV-2 diversity designated.
-            """,
-            "scale": False,
-            "bgcols": self.lineage_colours,
-        }
-        headers["conflict"] = {
-            "title": "Conflict",
-            "description": "Conflict between categories in decision tree",
-            "min": 0,
-            "max": 1,
-            "scale": "RdBu-rev",
-        }
-
-        headers["ambiguity_score"] = {
-            "title": "Ambiguity",
-            "description": "Quantity of missing data in a sequence",
-            "min": 0,
-            "max": 1,
-            "scale": "RdYlGn",
-        }
-        headers["scorpio_call"] = {
-            "title": "S call",
-            "description": "Scorpio: If a query is assigned a constellation by scorpio this call is output in this column",
-            "scale": False,
-            "bgcols": self.lineage_colours,
-        }
-
-        headers["scorpio_support"] = {
-            "title": "S support",
-            "description": "Scorpio: The proportion of defining variants which have the alternative allele in the sequence.",
-            "min": 0,
-            "max": 1,
-            "scale": "RdYlBu",
-        }
-
-        headers["scorpio_conflict"] = {
-            "title": "S conflict",
-            "description": "Scorpio: The proportion of defining variants which have the reference allele in the sequence.",
-            "min": 0,
-            "max": 1,
-            "scale": "RdYlGn-rev",
-        }
-        headers["version"] = {
-            "title": "Version",
-            "description": "A version number that represents both the pango-designation number and the inference engine used to assign the lineage",
-            "scale": False,
-            "hidden": True,
-        }
-
-        headers["pangolin_version"] = {
-            "title": "Pangolin version",
-            "description": "The version of pangolin software running.",
-            "scale": False,
-            "hidden": True,
-        }
-
-        headers["pangoLEARN_version"] = {
-            "title": "PangoLEARN version",
-            "description": "The dated version of the pangoLEARN model installed.",
-            "scale": False,
-            "hidden": True,
-        }
-
-        headers["pango_version"] = {
-            "title": "Pango version",
-            "description": "The version of pango-designation lineages that this assignment is based on.",
-            "scale": False,
-            "hidden": True,
-        }
-
-        headers["qc_status"] = {
-            "title": "QC Status",
-            "description": "Indicates whether the sequence passed the QC thresholds for minimum length and maximum N content.",
-            "scale": False,
-            "modify": lambda x: "Pass" if x == "passed_qc" else x.capitalize(),
-        }
-
-        headers["note"] = {
-            "title": "Note",
-            "description": "Additional information from Pangolin",
-            "scale": False,
+                and the SARS-CoV-2 diversity designated
+                """,
+                "scale": False,
+                "bgcols": self.lineage_colours,
+            },
+            "conflict": {
+                "title": "Conflict",
+                "description": "Conflict between categories in decision tree",
+                "min": 0,
+                "max": 1,
+                "scale": "RdBu-rev",
+            },
+            "ambiguity_score": {
+                "title": "Ambiguity",
+                "description": "Quantity of missing data in a sequence",
+                "min": 0,
+                "max": 1,
+                "scale": "RdYlGn",
+            },
+            "scorpio_call": {
+                "title": "S call",
+                "description": "Scorpio: If a query is assigned a constellation by scorpio this call is output in this column",
+                "scale": False,
+                "bgcols": self.lineage_colours,
+            },
+            "scorpio_support": {
+                "title": "S support",
+                "description": "Scorpio: The proportion of defining variants which have the alternative allele in the sequence",
+                "min": 0,
+                "max": 1,
+                "scale": "RdYlBu",
+            },
+            "scorpio_conflict": {
+                "title": "S conflict",
+                "description": "Scorpio: The proportion of defining variants which have the reference allele in the sequence",
+                "min": 0,
+                "max": 1,
+                "scale": "RdYlGn-rev",
+            },
+            "version": {
+                "title": "Version",
+                "description": "A version number that represents both the pango-designation number and the inference engine used to assign the lineage",
+                "scale": False,
+                "hidden": True,
+            },
+            "pangolin_version": {
+                "title": "Pangolin version",
+                "description": "The version of pangolin software running",
+                "scale": False,
+                "hidden": True,
+            },
+            "scorpio_version": {
+                "title": "Scorpio version",
+                "description": "The version of the scorpio software installed",
+                "scale": False,
+                "hidden": True,
+            },
+            "constellation_version": {
+                "title": "Constellations version",
+                "description": "The version of Constellations that scorpio has used to curate the lineage assignment",
+                "scale": False,
+                "hidden": True,
+            },
+            "qc_status": {
+                "title": "QC Status",
+                "description": "Indicates whether the sequence passed the QC thresholds for minimum length and maximum N content",
+                "scale": False,
+                "modify": lambda x: "Pass" if x == "passed_qc" else x.capitalize(),
+            },
+            "qc_notes": {
+                "title": "QC Note",
+                "description": "Notes specific to the QC checks run on the sequences",
+                "scale": False,
+            },
+            "note": {
+                "title": "Note",
+                "description": "Additional information from Pangolin",
+                "scale": False,
+            },
         }
 
         # Main table config
         table_config = {
             "namespace": "Pangolin",
             "id": "pangolin_run_table",
-            "table_title": "Pangolin Run details",
+            "title": "Pangolin Run details",
         }
 
         return table.plot(self.pangolin_data, headers, table_config)
+
+
+def _format_qc_notes(raw: str) -> Optional[str]:
+    """
+    Parses QC notes, they appear to come from:
+    https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L91-L97
+    https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L179
+    """
+    if raw.startswith("Ambiguous_content"):
+        # e.g. Ambiguous_content:0.03
+        split = raw.split(":")
+        if len(split) != 2:
+            logging.warning(f"Expected label of format 'Ambiguous_content:0.01', found: '{raw}'")
+            return None
+        proportion_n = float(split[1])
+        percent_n = int(proportion_n * 100)
+        return f"Ambiguous content: {percent_n}%"
+
+    # Unrecognized notes, just return them, capitalized
+    return raw.capitalize()

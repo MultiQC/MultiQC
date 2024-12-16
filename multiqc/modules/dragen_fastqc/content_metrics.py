@@ -4,11 +4,9 @@ import json
 import logging
 from collections import defaultdict
 
-from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
-from multiqc.utils import report
+from multiqc.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph
+from multiqc import report
 
 from .util import average_from_range, average_pos_from_metric
 
@@ -50,7 +48,7 @@ class DragenContentMetrics(BaseMultiqcModule):
                         non_n[avg_pos] += value
 
                 # Convert Total and Non-N counts into N%
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = dict()
                 for pos, count in totals.items():
                     if count == 0:
@@ -69,14 +67,12 @@ class DragenContentMetrics(BaseMultiqcModule):
             "title": "DRAGEN-QC: Per-Position N Content",
             "ylab": "Percentage N-Count",
             "xlab": "Position in Read (bp)",
-            "yCeiling": 100,
-            "yMinRange": 5,
+            "y_clipmax": 100,
+            "y_minrange": 5,
             "ymin": 0,
             "xmin": 0,
-            "xDecimals": False,
-            # 'colors': self.get_status_cols('per_base_n_content'),
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
-            "yPlotBands": [
+            "y_bands": [
                 {"from": 20, "to": 100, "color": "#e6c3c3"},
                 {"from": 5, "to": 20, "color": "#e6dcc3"},
                 {"from": 0, "to": 5, "color": "#c3e6c3"},
@@ -108,7 +104,7 @@ class DragenContentMetrics(BaseMultiqcModule):
         GROUP = "POSITIONAL BASE CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = dict()
                 group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
 
@@ -134,7 +130,7 @@ class DragenContentMetrics(BaseMultiqcModule):
                     for base in "acgt":
                         try:
                             data[r_name][pos][base] = (float(data[r_name][pos][base]) / float(total)) * 100.0
-                        except:
+                        except Exception:
                             pass
                     data[r_name][pos]["base"] = pos
 
@@ -148,7 +144,6 @@ class DragenContentMetrics(BaseMultiqcModule):
                Click a sample row to see a line plot for that dataset.
             </div>
             <h5><span class="s_name text-primary"><span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name</span></h5>
-            <button id="dragen_fastqc_per_base_sequence_content_export_btn"><span class="glyphicon glyphicon-download-alt"></span> Export Plot</button>
             <div class="fastqc_seq_heatmap_key">
                 Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
                 <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>
@@ -229,7 +224,7 @@ class DragenContentMetrics(BaseMultiqcModule):
                     pos = average_from_range(parts[1][:-2])
                     adps[pos] += int(value)
 
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = dict()
                 cumsum = 0
                 for pos, adp_count in sorted(adps.items()):
@@ -243,13 +238,12 @@ class DragenContentMetrics(BaseMultiqcModule):
             "title": "FastQC: Adapter Content",
             "ylab": "% of Sequences",
             "xlab": "Position (bp)",
-            "yCeiling": 100,
-            "yMinRange": 5,
+            "y_clipmax": 100,
+            "y_minrange": 5,
             "ymin": 0,
-            "xDecimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
-            "yPlotBands": [
+            "y_bands": [
                 {"from": 20, "to": 100, "color": "#e6c3c3"},
                 {"from": 5, "to": 20, "color": "#e6dcc3"},
                 {"from": 0, "to": 5, "color": "#c3e6c3"},
@@ -262,7 +256,7 @@ class DragenContentMetrics(BaseMultiqcModule):
             description="""The cumulative percentage count of the proportion of your
             library which has seen each of the adapter sequences at each position.""",
             helptext="""
-            Note that only samples with &ge; 0.1% adapter contamination are shown.
+            Note that only samples with ≥ 0.1% adapter contamination are shown.
 
             There may be several lines per sample, as one is shown for each adapter
             detected in the file.
