@@ -8,7 +8,7 @@ import os
 import re
 from collections import defaultdict
 from token import OP
-from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, Union, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
 
 import yaml
 from pydantic import BaseModel
@@ -671,6 +671,16 @@ def _guess_file_format(f):
     return "spaces"
 
 
+T = TypeVar("T")
+
+
+def unquote(s: T) -> T:
+    """Remove quotes from the start and end of a string if present"""
+    if isinstance(s, str) and (s.startswith('"') and s.endswith('"') or s.startswith("'") and s.endswith("'")):
+        return s[1:-1]  # type: ignore
+    return s
+
+
 def _parse_txt(
     f, conf: Dict, non_header_lines: List[str]
 ) -> Tuple[Union[str, Dict, List, None], Dict, Optional[PlotType]]:
@@ -713,13 +723,19 @@ def _parse_txt(
 
     # Convert values to floats if we can
     strings_in_first_row = 0
+    first_column_strings = []
     for i, sections in enumerate(matrix):
         for j, v in enumerate(sections):
+            if j == 0:
+                first_column_strings.append(str(v))
+
             # Count strings in first row (header?)
             if isinstance(v, str):
-                if v.startswith('"') and v.endswith('"') or v.startswith("'") and v.endswith("'"):
-                    pass  # do not parse quoted strings
+                if unquote(v) != v:
+                    # do not parse quoted strings
+                    pass
                 else:
+                    # parse strings to numbers to count numerics
                     try:
                         v = float(v)
                     except ValueError:
@@ -736,7 +752,8 @@ def _parse_txt(
         data_ddict: Dict[str, Dict] = defaultdict(dict)
         for i, section in enumerate(matrix[1:], 1):
             for j, v in enumerate(section[1:], 1):
-                s_name = str(section[0])
+                s_name = first_column_strings[i]
+                s_name = unquote(s_name)
                 data_ddict[s_name][matrix[0][j]] = v
         return data_ddict, conf, plot_type
 
@@ -744,33 +761,35 @@ def _parse_txt(
     if plot_type is None and strings_in_first_row == len(non_header_lines) and all_numeric:
         plot_type = PlotType.HEATMAP
     if plot_type == PlotType.HEATMAP:
-        conf["xcats"] = matrix[0][1:]
-        conf["ycats"] = [s[0] for s in matrix[1:]]
-        data_list: List = [s[1:] for s in matrix[1:]]
+        conf["xcats"] = [unquote(_v) for _v in matrix[0][1:]]
+        conf["ycats"] = [unquote(_row[0]) for _row in matrix[1:]]
+        data_list: List = [[unquote(_v) for _v in _row[1:]] for _row in matrix[1:]]
         return data_list, conf, plot_type
 
     # Header row of strings box plot
     if strings_in_first_row == len(matrix[0]) and plot_type == PlotType.BOX:
-        box_ddict: Dict[str, List[float]] = {str(v): [] for v in matrix[0]}
-        for sidx, s in enumerate(matrix[0]):
+        box_ddict: Dict[str, List[float]] = {str(unquote(s_name)): [] for s_name in matrix[0]}
+        for sidx, s_name in enumerate(matrix[0]):
             for row in matrix[1:]:
                 try:
                     val = float(row[sidx])
                 except ValueError:
                     pass
                 else:
-                    box_ddict[str(s)].append(val)
+                    box_ddict[str(unquote(s_name))].append(val)
         return box_ddict, conf, plot_type
 
     # Header row of strings, or configured as table
     if strings_in_first_row == len(matrix[0]) or plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
         data_ddict = dict()
-        for row in matrix[1:]:
-            s_name = str(row[0])
+        for i, row in enumerate(matrix[1:], 1):
+            s_name = first_column_strings[i]
+            s_name = unquote(s_name)
             data_ddict[s_name] = dict()
-            for i, v in enumerate(row[1:]):
-                cat = str(matrix[0][i + 1])
-                data_ddict[s_name][cat] = v
+            for j, v in enumerate(row[1:]):
+                col_name = str(matrix[0][j + 1])
+                col_name = unquote(col_name)
+                data_ddict[s_name][col_name] = v
         # Bar graph or table - if numeric data, go for bar graph
         if plot_type is None:
             allfloats = True
@@ -782,7 +801,7 @@ def _parse_txt(
             else:
                 plot_type = PlotType.TABLE
         # Set table col_1 header
-        col_name = str(matrix[0][0])
+        col_name = str(unquote(matrix[0][0]))
         if plot_type in [PlotType.TABLE, PlotType.VIOLIN] and col_name.strip() != "":
             conf["pconfig"] = conf.get("pconfig", {})
             if not conf["pconfig"].get("col1_header"):
@@ -807,7 +826,7 @@ def _parse_txt(
         dicts: Dict[str, Dict[str, float]] = dict()
         for row in matrix:
             try:
-                dicts[str(row[0])] = {"x": float(row[1]), "y": float(row[2])}
+                dicts[str(unquote(row[0]))] = {"x": float(row[1]), "y": float(row[2])}
             except (IndexError, ValueError):
                 pass
         return dicts, conf, plot_type
@@ -838,7 +857,7 @@ def _parse_txt(
             if plot_type in [PlotType.LINE, PlotType.BAR]:
                 data_dict: Dict = dict()
                 for row in matrix:
-                    data_dict[row[0]] = row[1]
+                    data_dict[unquote(row[0])] = unquote(row[1])
                 return {f["s_name"]: data_dict}, conf, plot_type
 
     # Multi-sample line graph: No header row, lots of num columns
@@ -849,12 +868,12 @@ def _parse_txt(
         data_ddict = dict()
         # If the first row has no header, use it as axis labels
         x_labels = []
-        s_name = str(matrix[0][0])
+        s_name = str(unquote(matrix[0][0]))
         if s_name.strip() == "":
-            x_labels = matrix.pop(0)[1:]
+            x_labels = [unquote(_v) for _v in matrix.pop(0)[1:]]
         # Use 1..n range for x values
         for row in matrix:
-            name = str(row[0])
+            name = str(unquote(row[0]))
             data_ddict[name] = dict()
             for i, v in enumerate(row[1:]):
                 try:
