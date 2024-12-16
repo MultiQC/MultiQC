@@ -768,15 +768,17 @@ def _parse_txt(
 
     # Header row of strings box plot
     if strings_in_first_row == len(matrix[0]) and plot_type == PlotType.BOX:
-        box_ddict: Dict[str, List[float]] = {str(unquote(s_name)): [] for s_name in matrix[0]}
-        for sidx, s_name in enumerate(matrix[0]):
+        box_ddict: Dict[str, List[float]] = dict()
+        for sidx, _s_name in enumerate(matrix[0]):
+            s_name = str(unquote(_s_name))
+            box_ddict[s_name] = []
             for row in matrix[1:]:
                 try:
                     val = float(row[sidx])
                 except ValueError:
                     pass
                 else:
-                    box_ddict[str(unquote(s_name))].append(val)
+                    box_ddict[s_name].append(val)
         return box_ddict, conf, plot_type
 
     # Header row of strings, or configured as table
