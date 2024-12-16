@@ -53,6 +53,14 @@ class HeatmapPlot extends Plot {
   formatDatasetForAiPrompt(dataset) {
     let prompt = "";
     let [rows, xcats, ycats] = this.prepData(dataset);
+
+    // Check if all samples are hidden
+    if (xcats.length === 0 || ycats.length === 0) {
+      prompt +=
+        "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
+      return prompt;
+    }
+
     if (xcats) {
       if (ycats) {
         prompt = "|";

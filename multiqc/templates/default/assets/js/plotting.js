@@ -65,7 +65,8 @@ class Plot {
   afterPlotCreated() {}
 
   plotAiHeader(view) {
-    return "Plot type: " + this.plotType + "\n";
+    let prompt = "Plot type: " + this.plotType + "\n";
+    return prompt;
   }
 
   formatDatasetForAiPrompt(dataset) {

@@ -47,6 +47,13 @@ class BarPlot extends Plot {
     let samples = dataset.samples;
     let samplesSettings = applyToolboxSettings(samples);
 
+    // Check if all samples are hidden
+    if (samplesSettings.every((s) => s.hidden)) {
+      prompt +=
+        "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
+      return prompt;
+    }
+
     prompt += "| Sample | " + cats.map((cat) => cat.name).join(" | ") + " |\n";
     prompt += "| --- | " + cats.map(() => "---").join(" | ") + " |\n";
 

@@ -32,6 +32,11 @@ class LinePlot extends Plot {
   formatDatasetForAiPrompt(dataset) {
     let [samples, lines] = this.prepData(dataset);
 
+    // Check if all samples are hidden
+    if (samples.length === 0) {
+      return "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
+    }
+
     const xsuffix = this.layout.xaxis.ticksuffix;
     const ysuffix = this.layout.yaxis.ticksuffix;
 

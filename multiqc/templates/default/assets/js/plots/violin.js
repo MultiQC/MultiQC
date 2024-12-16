@@ -83,8 +83,10 @@ class ViolinPlot extends Plot {
   }
 
   plotAiHeader(view) {
-    if (view === "table") return "Plot type: table\n";
-    return "Plot type: violin plot\n";
+    let prompt = "";
+    if (view === "table") prompt += "Plot type: table\n";
+    else prompt += "Plot type: violin plot\n";
+    return prompt;
   }
 
   formatDatasetForAiPrompt(dataset) {
@@ -105,9 +107,22 @@ class ViolinPlot extends Plot {
         " is greater than the threshold  so data points were downsampled to fit the context window. However, outliers for each metric were identified and kept in the datasets.\n";
     results += "\n";
 
+    if (metrics.length === 0) {
+      results +=
+        'All columns are hidden by user, so no data to analyse. Please inform user to use the "Configure columns" button to make some columns visible.\n';
+      return results;
+    }
+
+    // Check if all samples are hidden
+    if (sampleSettings.every((s) => s.hidden)) {
+      results +=
+        "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
+      return results;
+    }
+
     results += "Metrics:\n";
-    results += Object.entries(headerByMetric)
-      .map(([metric, header]) => `${header.title} - ${header.description}`)
+    results += metrics
+      .map((metric) => `${headerByMetric[metric].title} - ${headerByMetric[metric].description}`)
       .join("\n");
     results += "\n\n";
 
