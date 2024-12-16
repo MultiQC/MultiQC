@@ -163,7 +163,7 @@ async function summarizeWithAi(button) {
   const isMore = button.hasClass("ai-generate-button-more");
 
   const responseDiv = $("#" + button.data("response-div"));
-  const errorDiv = $("#" + button.data("error-div"));
+  const errorDiv = $("#" + button.data("error-div")).hide();
   const disclaimerDiv = $("#" + button.data("disclaimer-div"));
   const wrapperDiv = $("#" + button.data("wrapper-div"));
 
