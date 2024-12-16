@@ -3,7 +3,7 @@ import logging
 import os
 import re
 from textwrap import indent
-from typing import Dict, Optional, cast, TYPE_CHECKING
+from typing import Dict, Optional, Tuple, cast, TYPE_CHECKING
 from markdown import markdown
 from pydantic import BaseModel, Field
 import requests
@@ -611,7 +611,7 @@ def ai_section_metadata() -> AiReportMetadata:
     )
 
 
-def build_prompt(client: Client, metadata: AiReportMetadata) -> Optional[str]:
+def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]:
     system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
 
     # Account for system message, plus leave 10% buffer
@@ -658,7 +658,7 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
                     "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
                     "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
                 )
-                return None
+                return user_prompt + genstats_context, True
         user_prompt += genstats_context
         current_n_tokens += genstats_n_tokens
 
@@ -698,11 +698,19 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
                 f"Truncating prompt to only the general stats to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
                 f"Tokens estimate: {current_n_tokens}, with sections: at least {current_n_tokens + sec_n_tokens}"
             )
-            return user_prompt
+            return user_prompt, False
 
     user_prompt += sec_context
     user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
-    return user_prompt
+    return user_prompt, False
+
+
+def _save_prompt_to_file(prompt: str):
+    # Save content to file for debugging
+    path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
+    system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
+    path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}")
+    logger.debug(f"Saved AI prompt to {path}")
 
 
 def add_ai_summary_to_report():
@@ -721,14 +729,12 @@ def add_ai_summary_to_report():
     report.ai_provider_title = client.title
     report.ai_model = client.model
 
-    prompt = build_prompt(client, metadata)
-    if not prompt:
-        return
+    prompt, exceeded_context_window = build_prompt(client, metadata)
 
-    # Save content to file for debugging
-    path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
-    path.write_text(prompt)
-    logger.debug(f"Saving AI prompt to {path}")
+    _save_prompt_to_file(prompt)
+
+    if exceeded_context_window:
+        return
 
     response: Optional[InterpretationResponse]
     if config.ai_summary_full:
