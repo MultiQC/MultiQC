@@ -681,6 +681,11 @@ def unquote(s: T) -> T:
     return s
 
 
+def isnumber(val: Any) -> bool:
+    """Check if a value is a number"""
+    return isinstance(val, float) or isinstance(val, int)
+
+
 def _parse_txt(
     f, conf: Dict, non_header_lines: List[str]
 ) -> Tuple[Union[str, Dict, List, None], Dict, Optional[PlotType]]:
@@ -838,18 +843,18 @@ def _parse_txt(
 
         # Single-sample box plot
         if len(matrix[0]) == 1:
-            if plot_type is None and isinstance(matrix[0][0], float):
+            if plot_type is None and isnumber(matrix[0][0]):
                 plot_type = PlotType.BOX
             if plot_type == PlotType.BOX:
-                return {f["s_name"]: [float(r[0]) for r in matrix]}, conf, plot_type
+                return {f["s_name"]: [r[0] for r in matrix]}, conf, plot_type
 
         # Single sample line/bar plot - first row has two columns
         if len(matrix[0]) == 2:
             # Line graph - num : num
-            if plot_type is None and isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
+            if plot_type is None and isnumber(matrix[0][0]) and isnumber(matrix[0][1]):
                 plot_type = PlotType.LINE
             # Bar graph - str : num
-            if plot_type is None and not isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
+            if plot_type is None and not isnumber(matrix[0][0]) and isnumber(matrix[0][1]):
                 plot_type = PlotType.BAR
 
             # Data structure is the same
@@ -865,7 +870,7 @@ def _parse_txt(
 
     if plot_type == PlotType.LINE:
         data_ddict = dict()
-        # If the first row has no header, use it as axis labels
+        # If the first row has empty first column, it's the header - use it as x-axis labels
         x_vals: List[Union[str, float, int]] = []
         if matrix_str[0][0].strip() == "":
             x_vals = [str(unquote(v)) for v in matrix.pop(0)[1:]]
@@ -876,10 +881,6 @@ def _parse_txt(
             for i, v in enumerate(row[1:]):
                 try:
                     x_val = x_vals[i]
-                    try:
-                        x_val = float(x_val)
-                    except ValueError:
-                        pass
                 except IndexError:
                     x_val = i + 1
                 data_ddict[s_name][x_val] = v
