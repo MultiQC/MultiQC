@@ -260,14 +260,6 @@ simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
 geo = "multiqc.templates.geo"
 
-### See https://multiqc.info/docs/#multiqc-plugins for documentation
-[project.entry-points."multiqc.cli_options.v1"]
-mgikit_disable_plugin = "multiqc.modules.mgikit.cli:mgikit_disable_plugin"
-mgikit_undetermined_barcode_threshold = "multiqc.modules.mgikit.cli:undetermined_barcode_threshold"
-mgikit_brief_report = "multiqc.modules.mgikit.cli:brief_report"
-mgikit_keep_core_samples = "multiqc.modules.mgikit.cli:keep_core_samples"
-mgikit_decimal_positions = "multiqc.modules.mgikit.cli:decimal_positions"
-
 #my-new-option = "myplugin.cli:new_option"
 #
 #[project.entry-points."multiqc.hooks.v1"]

@@ -551,6 +551,8 @@ methylqa:
   shared: true
 mgikit/mgi_ambiguous_barcode:
   fn: "*.mgikit.ambiguous_barcode"
+mgikit/mgi_sample_stats:
+  fn: "*.mgikit.sample_stats"
 mgikit/mgi_general_info:
   fn: "*.mgikit.general"
 mgikit/mgi_sample_reads:

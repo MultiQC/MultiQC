@@ -3,6 +3,7 @@ from multiqc.plots import table, bargraph
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.base_module import ModuleNoSamplesFound
 import logging
+from csv import DictReader
 
 log = logging.getLogger(__name__)
 
@@ -53,95 +54,102 @@ class MultiqcModule(BaseMultiqcModule):
         if not show_all_samples:
             log.warning("Undetermined and Ambiguous cases will be eliminated in this report!")
 
-        decimal_positions = str(config.kwargs.get("decimal_positions", 2))
-        mgi_general_statistics = {}
+        decimal_positions = str(getattr(config, "mgikit", {}).get("decimal_positions", 2))
+        fmt = "{:,." + decimal_positions + "f}"
         columns_headers = {}
-        columns_headers["M Clusters"] = {
-            "namespace": "mgikit",
-            "title": "M Total Clusters",  # Short title, table column title
-            "description": "Total number of clusters for this sample (millions)",
-            "format": "{:,." + decimal_positions + "f}",
+        columns_headers["Clusters"] = {
+            "title": "Clusters",
+            "description": f"Total number of clusters for this sample ({config.read_count_desc})",
+            "scale": "Blues",
+            "shared_key": "read_count",
+            "suffix": config.read_count_prefix,
+            "format": fmt,
         }
-        columns_headers["Mb Yield"] = {
-            "namespace": "mgikit",
-            "title": "Mb Yield",  # Short title, table column title
-            "description": "Number of bases (millions)",
-            "format": "{:,." + decimal_positions + "f}",
+        columns_headers["Yield"] = {
+            "title": "Yield",
+            "description": f"Total number of bases for this sample ({config.base_count_desc})",
+            "scale": "Greens",
+            "shared_key": "base_count",
+            "suffix": config.base_count_prefix,
+            "format": fmt,
         }
-        columns_headers["Mb Yield ≥ Q30"] = {
-            "namespace": "mgikit",
-            "title": "Mb Yield ≥ Q30",  # Short title, table column title
-            "description": "Number of bases (millions)",
-            "format": "{:,." + decimal_positions + "f}",
+        columns_headers["Yield ≥ Q30"] = {
+            "title": "Yield ≥ Q30",
+            "description": f"Number of bases with a Phred score of 30 or higher, passing filter ({config.base_count_desc})",
+            "scale": "Greens",
+            "shared_key": "base_count",
+            "suffix": config.base_count_prefix,
+            "format": fmt,
+            "hidden": True,
         }
         columns_headers["% R1 Yield ≥ Q30"] = {
-            "namespace": "mgikit",
-            "title": "% R1 Yield ≥ Q30",  # Short title, table column title
-            "description": "Percent of bases in R1 with phred qualty score  ≥ Q30",
-            "max": 100,  # Minimum value in range, for bar / colour coding
-            "min": 0,  # Maximum value in range, for bar / colour coding
-            "suffix": "%",  # Suffix for value (eg. '%')
-            "format": "{:,." + decimal_positions + "f}",
+            "title": "R1 Yield ≥ Q30",
+            "description": "Percent of bases in R1 with phred qualty score ≥ Q30",
+            "scale": "Greens",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "hidden": True,
         }
         columns_headers["% R2 Yield ≥ Q30"] = {
-            "namespace": "mgikit",
-            "title": "% R2 Yield ≥ Q30",  # Short title, table column title
-            "description": "Percent of bases in R2 with phred qualty score  ≥ Q30",
-            "max": 100,  # Minimum value in range, for bar / colour coding
-            "min": 0,  # Maximum value in range, for bar / colour coding
-            "suffix": "%",  # Suffix for value (eg. '%')
-            "format": "{:,." + decimal_positions + "f}",
+            "title": "R2 Yield ≥ Q30",
+            "description": "Percent of bases in R2 with phred qualty score ≥ Q30",
+            "scale": "Greens",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
+            "hidden": True,
         }
         columns_headers["% R3 Yield ≥ Q30"] = {
-            "namespace": "mgikit",
-            "title": "% R3 Yield ≥ Q30",  # Short title, table column title
-            "description": "Percent of bases in R3 with phred qualty score  ≥ Q30",
-            "max": 100,  # Minimum value in range, for bar / colour coding
-            "min": 0,  # Maximum value in range, for bar / colour coding
-            "suffix": "%",  # Suffix for value (eg. '%')
+            "title": "R3 Yield ≥ Q30",
+            "description": "Percent of bases in R3 with phred qualty score ≥ Q30",
+            "scale": "Greens",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
             "hidden": True,
-            "format": "{:,." + decimal_positions + "f}",
         }
         columns_headers["% Perfect Index"] = {
-            "namespace": "mgikit",
-            "title": "% Perfect Index",  # Short title, table column title
+            "title": "Perfect Index",
             "description": "Percent of reads with perfect index (0 mismatches)",
-            # Longer description, goes in mouse hover text
-            "max": 100,  # Minimum value in range, for bar / colour coding
-            "min": 0,  # Maximum value in range, for bar / colour coding
-            "suffix": "%",  # Suffix for value (eg. '%')
-            "format": "{:,." + decimal_positions + "f}",
+            "scale": "Blues",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
         }
 
+        mgi_general_statistics = {}
         file_cnt = 0
-        for f in self.find_log_files("mgikit/mgi_general_info"):
+        for f in self.find_log_files("mgikit/mgi_sample_stats"):
             file_cnt += 1
-            collect_data = False
-            lines = f["f"].splitlines()
-            line_itr = 0
-            header = []
-            while line_itr < len(lines):
-                line = lines[line_itr]
-                if collect_data:
-                    if len(line) == 0:
-                        break
-                    else:
-                        vals = line.split("\t")
-                        mgi_general_statistics[vals[0]] = {}
-                        for i in range(1, len(header)):
-                            mgi_general_statistics[vals[0]][header[i]] = vals[i]
 
-                if line.startswith("#sample general info"):
-                    collect_data = True
-                    line_itr += 1
-                    header = lines[line_itr].split("\t")
-                line_itr += 1
+            for row in DictReader(f["f"].splitlines(), delimiter="\t"):
+                sample = row["sample_id"]
+
+                # Calculate total bases and Q30 bases
+                total_bases = float(row["r1_bases"]) + float(row["r2_bases"]) + float(row["r3_bases"])
+                q30_bases = float(row["r1_qc_30"]) + float(row["r2_qc_30"]) + float(row["r3_qc_30"])
+
+                # Calculate percentages
+                r1_q30_pct = (float(row["r1_qc_30"]) / float(row["r1_bases"])) * 100
+                r2_q30_pct = (float(row["r2_qc_30"]) / float(row["r2_bases"])) * 100
+                r3_q30_pct = (float(row["r3_qc_30"]) / float(row["r3_bases"])) * 100
+                perfect_index_pct = (float(row["0-mismatches"]) / float(row["all_reads"])) * 100
+
+                mgi_general_statistics[sample] = {
+                    "Clusters": int(row["all_reads"]),
+                    "Yield": total_bases,
+                    "Yield ≥ Q30": q30_bases,
+                    "% R1 Yield ≥ Q30": r1_q30_pct,
+                    "% R2 Yield ≥ Q30": r2_q30_pct,
+                    "% R3 Yield ≥ Q30": r3_q30_pct,
+                    "% Perfect Index": perfect_index_pct,
+                }
 
         if len(mgi_general_statistics.keys()) == 0:
             raise ModuleNoSamplesFound
         if file_cnt > 0:
-            log.info(f"{file_cnt} general information log files (*.mgikit.general) were loaded")
-
+            log.info(f"{file_cnt} general information log files (*.mgikit.sample_stats) were loaded")
         self.general_stats_addcols(mgi_general_statistics, columns_headers)
         self.write_data_file(mgi_general_statistics, "multiqc_mgikit_general")
 
@@ -149,53 +157,47 @@ class MultiqcModule(BaseMultiqcModule):
         mgi_lane_statistics = {}
         columns_headers = {}
         columns_headers["Mb Total Yield"] = {
-            "namespace": "mgikit",
-            "title": "Mb Total Yield",  # Short title, table column title
-            "description": "Number of bases (millions)",
-            # Longer description, goes in mouse hover text
-            "min": 0,  # Maximum value in range, for bar / colour coding
-            "format": "{:,." + decimal_positions + "f}",
+            "title": "Yield",
+            "description": "Number of megabases",
+            "scale": "Greens",
+            "suffix": "Mb",
+            "format": fmt,
+            "min": 0,
         }
 
         columns_headers["M Total Clusters"] = {
-            "namespace": "mgikit",
-            "title": "M Total Clusters",  # Short title, table column title
+            "title": "Clusters",
             "description": "Total number of clusters for this lane (millions)",
-            # Longer description, goes in mouse hover text
-            "min": 0,  # Maximum value in range, for bar / colour coding
-            "format": "{:,." + decimal_positions + "f}",
+            "scale": "Blues",
+            "suffix": "M",
+            "format": fmt,
+            "min": 0,
         }
 
         columns_headers["% bases ≥ Q30"] = {
-            "namespace": "mgikit",
-            "title": "% bases ≥ Q30",  # Short title, table column title
-            "description": "Number of bases (millions)",
-            # Longer description, goes in mouse hover text
-            "max": 100,  # Minimum value in range, for bar / colour coding
-            "min": 0,  # Maximum value in range, for bar / colour coding
-            "suffix": "%",  # Suffix for value (eg. '%')
-            "format": "{:,." + decimal_positions + "f}",
+            "title": "Bases ≥ Q30",
+            "description": "Percent of bases with a Phred score of 30 or higher, passing filter",
+            "scale": "Greens",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
         }
 
         columns_headers["Mean Quality"] = {
-            "namespace": "mgikit",
-            "title": "Mean Quality",  # Short title, table column title
+            "title": "Mean Quality",
             "description": "Average phred qualty score",
-            # Longer description, goes in mouse hover text
-            "max": 40,  # Minimum value in range, for bar / colour coding
-            "min": 0,  # Maximum value in range, for bar / colour coding
-            "format": "{:,." + decimal_positions + "f}",
+            "scale": "Oranges",
+            "max": 40,
+            "min": 0,
         }
 
         columns_headers["% Perfect Index"] = {
-            "namespace": "mgikit",
-            "title": "% Perfect Index",  # Short title, table column title
+            "title": "Perfect Index",
             "description": "Percent of reads with perfect index (0 mismatches)",
-            # Longer description, goes in mouse hover text
-            "max": 100,  # Minimum value in range, for bar / colour coding
-            "min": 0,  # Maximum value in range, for bar / colour coding
-            "suffix": "%",  # Suffix for value (eg. '%')
-            "format": "{:,." + decimal_positions + "f}",
+            "scale": "Blues",
+            "max": 100,
+            "min": 0,
+            "suffix": "%",
         }
 
         for f in self.find_log_files("mgikit/mgi_general_info"):
@@ -320,6 +322,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "xlab": "Sample",
                 "ylab": "Matching reads",
                 "hide_zero_cats": True,
+                "tt_decimals": 0,
             }
 
             sample_read_plt = bargraph.plot(mgi_sample_reads_data_filtered, cats, pconfig=pconfig)
@@ -339,17 +342,18 @@ class MultiqcModule(BaseMultiqcModule):
                     cntr += 1
                     pconfig = {
                         "id": "mgi_sample_read_plot" + str(cntr),
-                        "title": module_name + ": Clusters by sample for Lane (" + lane + ")",
+                        "title": module_name + ": Clusters by sample for lane (" + lane + ")",
                         "xlab": "Sample",
                         "ylab": "Matching reads",
                         "hide_zero_cats": True,
+                        "tt_decimals": 0,
                     }
 
                     sample_read_plt = bargraph.plot(mgi_lane_sample_read_data[lane], cats, pconfig=pconfig)
 
                     # Add a report section with the line plot
                     self.add_section(
-                        name="Clusters by sample for Lane: " + lane,
+                        name="Clusters by sample for lane: " + lane,
                         anchor="mgikit-lane-sample_reads-" + str(cntr),
                         description="This plot shows the number of reads per sample for Lane: " + lane,
                         helptext="This longer string (can be **markdown**) helps explain how to interpret the plot",
@@ -397,6 +401,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "xlab": "Barcode",
                 "ylab": "# Reads",
                 "hide_zero_cats": True,
+                "sort_samples": False,
+                "tt_decimals": 0,
             }
 
             sorted_dic = {
@@ -453,22 +459,14 @@ class MultiqcModule(BaseMultiqcModule):
             # Add a report section with the line plot
             columns_headers = {}
             columns_headers["Frequency"] = {
-                "namespace": "mgikit",
-                "title": "Frequency",  # Short title, table column title
+                "title": "Frequency",
                 "description": "The frequency of this barcode in the dataset",
-                "min": 0,  # Maximum value in range, for bar / colour coding
-                "format": "{:,." + decimal_positions + "f}",
-            }
-
-            columns_headers["Samples"] = {
-                "namespace": "mgikit",
-                "title": "Samples",  # Short title, table column title
-                "description": "Samples that could match with this barcode",
+                "min": 0,
             }
             self.add_section(
                 name="Ambiguous barcodes by lane",
                 anchor="mgikit-ambiguous-barcode",
-                description="This Table shows the ambiguous barcodes that could match to multiple samples.",
+                description="Ambiguous barcodes that could match to multiple samples.",
                 helptext="This longer string (can be **markdown**) helps explain how to interpret the plot",
                 plot=table.plot(
                     sorted_dic,
