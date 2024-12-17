@@ -647,7 +647,7 @@ peddy/sex_check:
 peddy/background_pca:
   fn: "*.background_pca.json"
 percolator:
-  fn: "*feature_weights.tsv"
+  fn: "*percolator_feature_weights.tsv"
 seqera_cli/run_dump:
   fn: "runs_*.tar.gz"
 seqera_cli/json:
