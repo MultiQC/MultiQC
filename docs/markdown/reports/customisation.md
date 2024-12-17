@@ -1011,6 +1011,33 @@ Clicking on the row header will expand the row to show the individual chunks dat
 
 ![Table: General Statistics table with sample groups expanded](../../../docs/images/genstats_grouping_expanded.png)
 
+You can use multiple patterns. For example, you have FastQC reports not only for each read type, but also for each lane separately:
+
+```
+mySample_S9_L001_R1_001.fastq.gz
+mySample_S9_L001_R2_001.fastq.gz
+mySample_S9_L002_R1_001.fastq.gz
+mySample_S9_L002_R2_001.fastq.gz
+mySample_S9_L003_R1_001.fastq.gz
+mySample_S9_L003_R2_001.fastq.gz
+mySample_S9_L004_R1_001.fastq.gz
+mySample_S9_L004_R2_001.fastq.gz
+```
+
+You can group all reports by sample together using the following config:
+
+```yaml
+table_sample_merge:
+  "Lane 1 R1": "_L001_R1_001"
+  "Lane 1 R2": "_L001_R2_001"
+  "Lane 2 R1": "_L002_R1_001"
+  "Lane 2 R2": "_L002_R2_001"
+  "Lane 3 R1": "_L003_R1_001"
+  "Lane 3 R2": "_L003_R2_001"
+  "Lane 4 R1": "_L004_R1_001"
+  "Lane 4 R2": "_L004_R2_001"
+```
+
 More sophisticated patterns are supported such as listing multiple strings, or using regular expression with `type: regex`:
 
 ```yaml

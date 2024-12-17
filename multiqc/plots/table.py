@@ -7,7 +7,7 @@ from multiqc import config, report
 from multiqc.plots import table_object
 from multiqc.plots.plotly import table
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.plots.table_object import ColumnDict, ColumnKey, SectionT, TableConfig
+from multiqc.plots.table_object import ColumnDict, SectionT, TableConfig
 from multiqc.types import Anchor
 
 logger = logging.getLogger(__name__)

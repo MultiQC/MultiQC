@@ -1,0 +1,270 @@
+You are an expert programming assistant helping build a project called MultiQC.
+
+## About MultiQC
+
+MultiQC is a command-line reporting tool that discovers and parses results and logs from bioinformatics tools, such as: log files, console outputs, or reports they write to disk. Then MultiQC aggregates parsed data accross samples and tools, and generates a standalone poratble HTML report. This report helps to analyse containing multiple samples and multiple analysis steps and perform quality control.
+
+MultiQC is typically called as a last step in bioinformatics pipelines to aggregate quality control metrics from all previous steps. When run on a pipeline output folder, it recursively searches it to discover and load all the relevant files.
+
+Base MultiQC codebase is written in Python, and it also uses JavaScript with jQuery and CSS embedded in the HTML report.
+
+## Output
+
+MultiQC primary output is a standalone portable HTML file. It starts with a "General Statistics" table with key metrics across all samples and tools. Followed, more detailed sections split by specific tools, that can include tables, as well as plots of different types (bar plot, line plot, scatter plot, heatmap, etc.)
+
+In addition to a HTML report, MultiQC generates a directory of parsed data files with consistent data structure. It also places there a JSON file with the same data, which can be used as an input for other tools, or for downstream analysis.
+
+## Modules
+
+MultiQC supports bioformatics tools through so-called "modules". Each "module" is a Python module placed in `multiqc/modules`, and it is dynamically loaded as an "entry point" specified in `pyproject.toml`. A module describes how MultiQC should parse outputs/logs from the corresponding tool, what data to extract, how to summarise it, and what kinds of plots and tables to use to present data in the report. There is also a file `multiqc/search_patterns.yaml` that describes file name patterns and content patterns to discover output files/logs from each tool/module.
+
+### Rules for writing new modules
+
+When writing new modules, you must follow the rules from `docs/markdown/development/modules.md`. Use the most modern style:
+
+- raise `ModuleNoSamplesFound` when no samples are found. DO NOT RAISE `UserWarning`!
+- use f-strings and other modern Python 3 syntax. do not use `__future__` imports or `OrderedDict`'s.
+- call `self.add_software_version()`, even if version is not found, as it's required by linting.
+- call `self.write_data_file(...)` in the very end of the module, after all sections are added. IT IS IMPORTANT TO CALL IT IN THE END!
+- do not add shebang lines to Python files, like `#!/usr/bin/env python`!! THIS IS VERY IMPORTANT!
+- add entry point into `pyproject.toml`. Ignore `setup.py`.
+- do not add separate markdown docs or module-level docstrings. Instead add a docstring to the module class with the information about the files that module discovers, about any configuration options used by the module, if the outputs need to be postprocessed renamed before fed into MultiQC, or any other considerations.
+- `info` must be a self-contained sentence, starting with a capital letter.
+
+Follow examples of other good standard modules like `multiqc/modules/nanoq/nanoq.py` and `multiqc/modules/kallisto/kallisto.py`. Follow their style and guidelines from `modules.md`.
+
+THIS IS VERY IMPORTANT. YOU MUST FOLLOW THESE GUIDELINES. 
+
+Example of a good module to follow:
+
+```python
+import logging
+import re
+from collections import defaultdict
+from copy import deepcopy
+from typing import Callable, Dict, List, Any, Tuple, Union
+
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import table, bargraph
+from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.table_object import TableConfig
+from multiqc.utils import mqc_colour
+
+log = logging.getLogger(__name__)
+
+
+class MultiqcModule(BaseMultiqcModule):
+    def __init__(self):
+        super(MultiqcModule, self).__init__(
+            name="nanoq",
+            anchor="nanoq",
+            href="https://github.com/nerdna/nanoq/",
+            info="Reports read quality and length from nanopore sequencing data",
+            doi="10.21105/joss.02991",
+        )
+
+        # Find and load any nanoq reports
+        data_by_sample: Dict[str, Dict[str, float]] = {}
+        for f in self.find_log_files("nanoq", filehandles=True):
+            sample_data = parse_nanoq_log(f)
+            if sample_data:
+                data_by_sample[f["s_name"]] = sample_data
+                if f["s_name"] in data_by_sample:
+                    log.debug(f"Duplicate sample data found! Overwriting: {f['s_name']}")
+                self.add_data_source(f)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
+        # Filter to strip out ignored sample names
+        data_by_sample = self.ignore_samples(data_by_sample)
+        if len(data_by_sample) == 0:
+            raise ModuleNoSamplesFound
+        log.info(f"Found {len(data_by_sample)} reports")
+
+        # Add Nanoq summary to the general stats table
+        self.add_table(data_by_sample)
+
+        # Quality distribution Plot
+        self.reads_by_quality_plot(data_by_sample)
+
+        # Read length distribution Plot
+        self.reads_by_length_plot(data_by_sample)
+
+        # Write parsed report data to a file
+        self.write_data_file(data_by_sample, "multiqc_nanoq")
+
+    def add_table(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
+        headers: Dict[str, Dict] = {
+            "Number of reads": {
+                "title": "Reads",
+                "description": "Number of reads",
+                "scale": "Greens",
+                "shared_key": "read_count",
+            },
+            "Number of bases": {
+                "title": "Bases",
+                "description": "Total bases sequenced",
+                "scale": "Purples",
+                "shared_key": "base_count",
+            },
+            "N50 read length": {
+                "title": "Read N50",
+                "description": "N50 read length",
+                "scale": "Blues",
+                "suffix": "bp",
+                "format": "{:,.0f}",
+            },
+            "Longest read": {
+                "title": "Longest Read",
+                "description": "Longest read length",
+                "suffix": "bp",
+                "scale": "Oranges",
+                "format": "{:,.0f}",
+            },
+            "Mean read length": {
+                "title": "Mean Length",
+                "description": "Mean read length",
+                "suffix": "bp",
+                "scale": "PuBuGn",
+            },
+            "Median read length": {
+                "title": "Median Length",
+                "description": "Median read length (bp)",
+                "scale": "RdYlBu",
+                "format": "{:,.0f}",
+            },
+            "Mean read quality": {
+                "title": "Mean Qual",
+                "description": "Mean read quality (Phred scale)",
+                "scale": "PiYG",
+            },
+            "Median read quality": {
+                "title": "Median Qual",
+                "description": "Median read quality (Phred scale)",
+                "scale": "Spectral",
+            },
+        }
+
+        self.add_section(
+            name="Nanoq Summary",
+            anchor="nanoq-summary",
+            description="Statistics from Nanoq reports",
+            plot=table.plot(
+                data_by_sample,
+                headers,
+                pconfig=TableConfig(
+                    id="nanoq_table",
+                    title="Nanoq Summary",
+                ),
+            ),
+        )
+
+        general_stats_headers = deepcopy(headers)
+        for h in general_stats_headers.values():
+            h["hidden"] = True
+        general_stats_headers["Number of reads"]["hidden"] = False
+        general_stats_headers["N50 read length"]["hidden"] = False
+
+        # Add columns to the general stats table
+        self.general_stats_addcols(data_by_sample, general_stats_headers)
+
+    def reads_by_quality_plot(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
+        barplot_data: Dict[str, Dict[str, float]] = defaultdict(dict)
+        keys: List[str] = []
+        min_quality = 10
+
+        for name, d in data_by_sample.items():
+            reads_by_q = {int(re.search(r"\d+", k).group(0)): v for k, v in d.items() if k.startswith("Reads > Q")}
+            if not reads_by_q:
+                continue
+
+            thresholds = sorted(th for th in reads_by_q if th >= min_quality)
+            if not thresholds:
+                continue
+
+            barplot_data[name], keys = get_ranges_from_cumsum(
+                data=reads_by_q, thresholds=thresholds, total=d["Number of reads"], formatter=lambda x: f"Q{x}"
+            )
+
+        colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(keys))
+        cats = {
+            k: {"name": f"Reads {k}", "color": colours.get_colour(idx, lighten=1)} for idx, k in enumerate(keys[::-1])
+        }
+
+        # Plot
+        self.add_section(
+            name="Read quality",
+            anchor="nanoq_plot_quality",
+            description="Read counts categorised by read quality (Phred score).",
+            helptext="""
+            Sequencing machines assign each generated read a quality score using the
+            [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score).
+            The phred score represents the liklelyhood that a given read contains errors.
+            High quality reads have a high score.
+            """,
+            plot=bargraph.plot(
+                barplot_data,
+                cats,
+                pconfig=bargraph.BarPlotConfig(
+                    id="nanoq_plot_quality_plot",
+                    title="Nanoq: read qualities",
+                ),
+            ),
+        )
+
+
+def parse_nanoq_log(f) -> Dict[str, float]:
+    """Parse output from nanoq"""
+    stats: Dict[str, float] = dict()
+
+    # Parse the file content
+    segment = None
+    summary_lines = []
+    length_threshold_lines = []
+    quality_threshold_lines = []
+
+    for line in f["f"]:
+        line = line.strip()
+        if line.startswith("Nanoq Read Summary"):
+            segment = "summary"
+            continue
+        elif line.startswith("Read length thresholds"):
+            segment = "length_thresholds"
+            continue
+        elif line.startswith("Read quality thresholds"):
+            segment = "quality_thresholds"
+            continue
+
+        if segment == "summary":
+            summary_lines.append(line)
+        elif segment == "length_thresholds":
+            length_threshold_lines.append(line)
+        elif segment == "quality_thresholds":
+            quality_threshold_lines.append(line)
+
+    for line in summary_lines:
+        if ":" in line:
+            metric, value = line.split(":", 1)
+            stats[metric.strip()] = float(value.strip())
+
+    return stats
+```
+
+## Codebase structure
+
+- `multiqc/modules` - all the MultiQC "modules", plus 3 special-case modules: "software_versions", "profile_runtime", and "custom_content". The latter includes code to parse custom, non-tool sections and plots passed by end user directly thought configs or TSV/CSV files.
+- `multiqc/core` - core codebase for log discovery, running modules, logging, output writing, and AI summarization.
+- `multiqc/plots` - plotting code: describes how to prepare data and layouts to render with Plotly. Plots can be rendered both statically with Python Plotly library, as well as dynamically in browser with Plotly-JS library, so this code also prepares required data dumps to be loaded with JavaScript.
+- `multiqc/templates` - HTML templates for MultiQC report. Only `multiqc/templates/default` is worth attention here. It includes HTML templates to be combined and rendered with Jinja2 to produce the final HTML report, as well as `assets` - the folder with JavaScript code for all dynamic features like loading and decompressing the plot JSON dumps, rendering it with Plotly-JS, the toolbox with features to highlight/hide/rename samples in the report, etc. It also contains `default_multiqc.css` - all CSS goes there.
+- `multiqc/base_module.py` - a base module class for all modules to inherit. Povides a lot of sample name cleaning and grouping logic.
+- `multiqc/utils` - common Python utility functions.
+- `multiqc/config.py` - a configuration class that contains all the configuration variables for MultiQC, as well as all the configuration discovery logic.
+- `multiqc/interactive.py` - function helpers to construct a MultiQC report in interactive mode, e.g. in a Jupyter notebook.
+- `multiqc/report.py` - a singleton class with globale variables that are passed to Jinja2 to render a report. Holds the "state" of the report, i.e. modules, sections, discovered files, list of HTML anchor to keep them unique, etc., as well as multiple helper functions.
+- `multiqc/multiqc.py` - main entry point of MultiQC. Includes command line interface logic.
+- `multiqc/validation.py` - helpers to validate plot configs and user custom content with Pydantic.
+- `scripts` - auxiliarry scripts for development.
+- `tests` - test suite for MultiQC.
+- `docs` - documentation for MultiQC. `docs/markdown/modules` and `docs/markdown/modules.mdx` are autogenerated from the class docstrings in `multiqc/modules` using `scripts/make_module_docs.py`, the rest is written manually.
