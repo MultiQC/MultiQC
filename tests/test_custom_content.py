@@ -442,7 +442,7 @@ def test_on_all_example_files(data_dir):
     custom_module_classes()
 
 
-def test_custom_content_boxplot(tmp_path):
+def test_boxplot_json(tmp_path):
     file = tmp_path / "mysample_mqc.json"
     file.write_text(
         """\
@@ -476,3 +476,163 @@ def test_custom_content_boxplot(tmp_path):
     assert report.plot_by_id[anchor].datasets[0].data[
         report.plot_by_id[anchor].datasets[0].samples.index("sample 2")
     ] == [1.1, 0.2, 3.3, 4.4, 5.5]
+
+
+def test_boxplot_txt(tmp_path):
+    file = tmp_path / "mysample_mqc.txt"
+    file.write_text(
+        """\
+#plot_type: 'box'
+Sample1	Sample2	Sample3
+1.2	2.3	3.4
+2.1	3.2	4.3
+1.5	2.5	3.5
+"""
+    )
+
+    report.analysis_files = [file]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    assert len(report.plot_by_id) == 1
+    anchor = Anchor("mysample-section-plot")
+    assert anchor in report.plot_by_id
+    assert report.plot_by_id[anchor].plot_type == "box"
+    assert len(report.plot_by_id[anchor].datasets[0].data) == 3  # 3 groups
+    assert report.plot_by_id[anchor].datasets[0].data == [[3.4, 4.3, 3.5], [2.3, 3.2, 2.5], [1.2, 2.1, 1.5]]
+
+
+def test_scatter_plot_parsing(tmp_path):
+    """Test scatter plot data parsing"""
+    file = tmp_path / "scatter_mqc.txt"
+    file.write_text(
+        """\
+#plot_type: 'scatter'
+A	1.2	2.3
+B	2.1	3.2
+C	1.5	2.5
+"""
+    )
+
+    report.analysis_files = [file]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    assert len(report.plot_by_id) == 1
+    anchor = Anchor("scatter-section-plot")
+    assert anchor in report.plot_by_id
+    assert report.plot_by_id[anchor].plot_type == "scatter"
+    assert len(report.plot_by_id[anchor].datasets[0].points) == 3  # 3 samples
+    assert report.plot_by_id[anchor].datasets[0].points[0] == {"x": 1.2, "y": 2.3, "name": "A"}
+
+
+def test_line_plot_with_x_labels(tmp_path):
+    """Test line plot with x-axis labels in first row"""
+    file = tmp_path / "line_mqc.txt"
+    file.write_text(
+        """\
+#plot_type: 'linegraph'
+	t0	t1	t2	t3
+sample1	1.0	1.2	1.1	0.9
+sample2	0.8	1.4	1.6	1.2
+"""
+    )
+
+    report.analysis_files = [file]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    assert len(report.plot_by_id) == 1
+    anchor = Anchor("line-section-plot")
+    assert anchor in report.plot_by_id
+    assert report.plot_by_id[anchor].plot_type == "xy_line"
+    assert len(report.plot_by_id[anchor].datasets[0].lines) == 2  # 2 samples
+    assert report.plot_by_id[anchor].datasets[0].lines[0].name == "sample1"
+    assert report.plot_by_id[anchor].datasets[0].lines[0].pairs == [("t0", 1.0), ("t1", 1.2), ("t2", 1.1), ("t3", 0.9)]
+
+
+def test_general_stats_with_config(tmp_path):
+    """Test general stats with custom headers config"""
+    file = tmp_path / "stats_mqc.txt"
+    file.write_text(
+        """\
+#plot_type: 'generalstats'
+#pconfig:
+#    namespace: 'My Stats'
+#headers:
+#    value1:
+#        title: 'Value 1'
+#        description: 'First value'
+#        max: 100
+#    value2:
+#        title: 'Value 2'
+#        description: 'Second value'
+#        min: 0
+Sample	value1	value2
+A	85	42
+B	90	38
+C	95	45
+"""
+    )
+
+    report.analysis_files = [file]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    # General stats are added directly to the report
+    assert len(report.general_stats_data) > 0
+    assert "A" in report.general_stats_data[-1]
+    assert report.general_stats_data[-1]["A"][0].data["value1"] == 85
+    assert report.general_stats_data[-1]["A"][0].data["value2"] == 42
+    assert report.general_stats_headers[-1]["value1"]["title"] == "Value 1"
+    assert report.general_stats_headers[-1]["value2"]["title"] == "Value 2"
+
+
+def test_quoted_strings_handling(tmp_path):
+    """Test handling of quoted strings in data"""
+    file = tmp_path / "quoted_mqc.txt"
+    file.write_text(
+        """\
+#plot_type: 'table'
+Sample	"Group Name"	'Value'
+"Sample 1"	"Group A"	4_2
+'Sample 2'	'Group B'	"3_8"
+Sample 3	Group C	'4_5'
+"""
+    )
+
+    report.analysis_files = [file]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    assert len(report.plot_by_id) == 1
+    anchor = Anchor("quoted-section-plot")
+    assert anchor in report.plot_by_id
+    plot = report.plot_by_id[anchor]
+    assert plot.plot_type == "violin"
+
+    # Check that quotes were properly stripped
+    assert plot.datasets[0].all_samples == ["Sample 1", "Sample 2", "Sample 3"]
+    assert plot.datasets[0].header_by_metric.keys() == {"Group_Name", "Value"}
+    assert plot.datasets[0].violin_value_by_sample_by_metric == {
+        "Group_Name": {"Sample 1": "Group A", "Sample 2": "Group B", "Sample 3": "Group C"},
+        "Value": {"Sample 1": 42.0, "Sample 2": "3_8", "Sample 3": "4_5"},
+    }
+    assert plot.datasets[0].dt.sections[0].column_by_key.keys() == {"Group Name", "Value"}
+    assert plot.datasets[0].dt.sections[0].column_by_key["Group Name"].title == "Group Name"
+    assert plot.datasets[0].dt.sections[0].rows_by_sgroup.keys() == {"Sample 1", "Sample 2", "Sample 3"}
+    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 1"][0].sample == "Sample 1"
+    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 1"][0].raw_data == {
+        "Group Name": "Group A",
+        "Value": 42.0,
+    }
+    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 2"][0].sample == "Sample 2"
+    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 2"][0].raw_data == {
+        "Group Name": "Group B",
+        "Value": "3_8",
+    }
+    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 3"][0].sample == "Sample 3"
+    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 3"][0].raw_data == {
+        "Group Name": "Group C",
+        "Value": "4_5",
+    }
