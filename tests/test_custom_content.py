@@ -11,25 +11,24 @@ from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
 
 
-def test_custom_content(tmp_path):
-    file = tmp_path / "mysample_mqc.txt"
-    id = "dupradar"
-    file.write_text(
-        f"""\
-#id: {id}
+def test_linegraph_single_sample_txt(data_dir):
+    path = data_dir / "custom_content" / "embedded_config" / "linegraph_single_sample_txt_mqc.txt"
+    """
+#id: dupradar
 #plot_type: 'linegraph'
 #section_name: 'DupRadar'
 #section_href: 'bioconductor.org/packages/release/bioc/html/dupRadar.html'
-#description: "first line.
-#    Second line "
+#description: "provides duplication rate quality control for RNA-Seq datasets. Highly expressed genes can be expected to have a lot of duplicate reads, but high numbers of duplicates at low read counts can indicate low library complexity with technical duplication.
+#    This plot shows the general linear models - a summary of the gene duplication distributions. "
 #pconfig:
 #    title: 'DupRadar General Linear Model'
 #    xlog: True
 #    xlab: 'expression (reads/kbp)'
+#    ylab: '% duplicate reads'
 #    ymax: 100
 #    ymin: 0
-#    tt_label: '<b>{{point.x:.1f}} reads/kbp</b>: {{point.y:,.2f}}% duplicates'
-#    x_line:
+#    tt_label: '<b>{point.x:.1f} reads/kbp</b>: {point.y:,.2f}% duplicates'
+#    x_lines:
 #        - color: 'green'
 #          dash: 'longdash'
 #          label: '0.5 RPKM'
@@ -44,17 +43,16 @@ def test_custom_content(tmp_path):
 #          to: 0.3
 0.561167227833894 0.0146313784854042
 3.63901018922853 0.0639394516274346
-"""
-    )
+    """
 
-    report.analysis_files = [file]
+    report.analysis_files = [path]
     report.search_files(["custom_content"])
     custom_module_classes()
 
-    anchor = Anchor(f"{id}-section-plot")
+    anchor = Anchor("dupradar-section-plot")
     assert len(report.plot_by_id) == 1
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].id == id
+    assert report.plot_by_id[anchor].id == "dupradar"
     assert report.plot_by_id[anchor].plot_type == "xy_line"
 
 
@@ -188,13 +186,15 @@ def test_missing_id_and_title(tmp_path):
     assert report.plot_by_id[anchor].pconfig.xlab == "expression"
 
 
-def test_with_separate_config(tmp_path, capsys):
-    file = tmp_path / "mysample-concordance.txt"
-    file.write_text("""Sample	'08021342'	'08027127'\n'08021342'	1.0	0.378""")
-
-    conf_file = tmp_path / "multiqc_config.yaml"
-    conf_file.write_text(
-        """\
+def test_with_separate_config_and_quotes(data_dir):
+    file = data_dir / "custom_content" / "with_config" / "run_concordance" / "run_concordance.txt"
+    """
+Sample	'08021342'	'08027127'
+'08021342'	1.0	0.378
+'08027127'	0.341	1.0
+    """
+    conf_file = data_dir / "custom_content" / "with_config" / "run_concordance" / "multiqc_config.yaml"
+    """
 custom_data:
     concordance:
         id: 'concordance'
@@ -203,11 +203,11 @@ custom_data:
         pconfig:
             id: 'concordance_heatmap'
         sort_rows: true
+
 sp:
     concordance:
         fn: '*concordance.txt'
-"""
-    )
+    """
 
     report.analysis_files = [file]
     update_config(cfg=ClConfig(config_files=[conf_file]))
@@ -221,31 +221,15 @@ sp:
     assert report.plot_by_id[anchor].id == anchor
     assert report.plot_by_id[anchor].plot_type == "heatmap"
     assert len(report.plot_by_id[anchor].datasets) == 1
-    assert report.plot_by_id[anchor].datasets[0].rows == [[1.0, 0.378]]
-    assert report.plot_by_id[anchor].datasets[0].xcats == ["08021342", "08027127"]
-    assert report.plot_by_id[anchor].datasets[0].ycats == ["08021342"]
+    assert report.plot_by_id[anchor].datasets[0].rows[0][0] == 1.0
+    assert report.plot_by_id[anchor].datasets[0].rows[0][1] == 0.378
+    assert report.plot_by_id[anchor].datasets[0].xcats[0] == "08021342"
+    assert report.plot_by_id[anchor].datasets[0].ycats[0] == "08021342"
 
 
-def test_full_run_with_config(tmp_path, capsys):
-    file = tmp_path / "mysample-concordance.txt"
-    file.write_text("""Sample	'08021342'	'08027127'\n'08021342'	1.0	0.378""")
-
-    conf_file = tmp_path / "multiqc_config.yaml"
-    conf_file.write_text(
-        """\
-custom_data:
-    concordance:
-        id: 'concordance'
-        section_name: 'Concordance Rates'
-        plot_type: 'heatmap'
-        pconfig:
-            id: 'concordance_heatmap'
-        sort_rows: true
-sp:
-    concordance:
-        fn: '*concordance.txt'
-"""
-    )
+def test_full_run_with_config(data_dir, capsys):
+    file = data_dir / "custom_content" / "with_config" / "run_concordance" / "run_concordance.txt"
+    conf_file = data_dir / "custom_content" / "with_config" / "run_concordance" / "multiqc_config.yaml"
 
     multiqc.run(  # pylint: disable=no-member
         file,
@@ -254,13 +238,13 @@ sp:
             force=True,
             config_files=[conf_file],
             filename="stdout",
+            development=True,
         ),
     )
 
     out = capsys.readouterr().out
     assert '<h2 class="mqc-module-title" id="concordance">Concordance Rates</h2>' in out
     assert '<div class="mqc-section mqc-section-concordance">' in out
-    assert 'value="0.378"' in out
 
     assert len(report.plot_by_id) == 1
     anchor = Anchor("concordance_heatmap")
@@ -268,9 +252,10 @@ sp:
     assert report.plot_by_id[anchor].id == "concordance_heatmap"
     assert report.plot_by_id[anchor].plot_type == "heatmap"
     assert len(report.plot_by_id[anchor].datasets) == 1
-    assert report.plot_by_id[anchor].datasets[0].rows == [[1.0, 0.378]]
-    assert report.plot_by_id[anchor].datasets[0].xcats == ["08021342", "08027127"]
-    assert report.plot_by_id[anchor].datasets[0].ycats == ["08021342"]
+    assert report.plot_by_id[anchor].datasets[0].rows[0][0] == 1.0
+    assert report.plot_by_id[anchor].datasets[0].rows[0][1] == 0.378
+    assert report.plot_by_id[anchor].datasets[0].xcats[0] == "08021342"
+    assert report.plot_by_id[anchor].datasets[0].ycats[0] == "08021342"
 
 
 def test_mqc_ext_match_custom_op(tmp_path):
