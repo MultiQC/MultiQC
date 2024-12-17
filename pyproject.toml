@@ -63,7 +63,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "pre-commit",
-    "ruff",
+    "ruff>=0.8.3",
     "pdoc3",
     "pytest",
     "pytest-cov",
@@ -176,6 +176,7 @@ mapdamage = "multiqc.modules.mapdamage:MultiqcModule"
 megahit = "multiqc.modules.megahit:MultiqcModule"
 metaphlan = "multiqc.modules.metaphlan:MultiqcModule"
 methylqa = "multiqc.modules.methylqa:MultiqcModule"
+mgikit = "multiqc.modules.mgikit:MultiqcModule"
 minionqc = "multiqc.modules.minionqc:MultiqcModule"
 mirtop = "multiqc.modules.mirtop:MultiqcModule"
 mirtrace = "multiqc.modules.mirtrace:MultiqcModule"
@@ -195,6 +196,7 @@ pangolin = "multiqc.modules.pangolin:MultiqcModule"
 pairtools = "multiqc.modules.pairtools:MultiqcModule"
 pbmarkdup = "multiqc.modules.pbmarkdup:MultiqcModule"
 peddy = "multiqc.modules.peddy:MultiqcModule"
+percolator = "multiqc.modules.percolator:MultiqcModule"
 phantompeakqualtools = "multiqc.modules.phantompeakqualtools:MultiqcModule"
 picard = "multiqc.modules.picard:MultiqcModule"
 porechop = "multiqc.modules.porechop:MultiqcModule"
@@ -291,3 +293,7 @@ exclude = "multiqc/modules/*"
 
 [tool.pyright]
 include = ["multiqc", "scripts", "tests"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests", "multiqc/modules"]
