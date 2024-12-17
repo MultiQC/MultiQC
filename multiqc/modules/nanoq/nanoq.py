@@ -30,10 +30,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("nanoq", filehandles=True):
             sample_data = parse_nanoq_log(f)
             if sample_data:
-                data_by_sample[f["s_name"]] = sample_data
                 if f["s_name"] in data_by_sample:
-                    log.debug(f"Duplicate sample data found! Overwriting: {f['s_name']}")
-
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                data_by_sample[f["s_name"]] = sample_data
                 self.add_data_source(f)
 
         # Superfluous function call to confirm that it is used in this module
