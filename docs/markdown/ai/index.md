@@ -5,57 +5,152 @@ description: Using AI to summarise MultiQC reports
 
 # AI Summaries
 
-You can add AI-powered summaries of your reports. Summaries can be generated both when creating the report, as well as dynamically in browser in an existing HTML report.
+MultiQC can generate AI-powered summaries of your reports. These can be created at two points:
 
-## Enabling AI Summaries
+- When creating the report (baked into the report HTML)
+- Dynamically in the browser, whilst viewing an existing HTML report (ephemeral)
+
+The AI summaries are generated using LLMs (large-language models) AI, using
+[Seqera AI](https://seqera.io/ask-ai/), [OpenAI](https://openai.com/) or [Anthropic](https://www.anthropic.com/).
+MultiQC reports also have an option to copy a prompt to your clipboard, to paste into any provider you have access to.
+
+:::warning
+
+Never rely on AI-generated summaries. Whilst these summaries can be useful to get you started quickly with a report, they may give inaccurate analysis and miss important details.
+
+:::
+
+:::warning
+
+AI summaries work by sending report data to an LLM provider of your choice, via an API over the internet.
+Be aware of what data you are sending, and to who.
+
+:::
+
+## Choosing a provider
+
+To use native summary generation, MultiQC needs to communicate with an LLM provider's API.
+All three supported services require an API key to work.
+
+Seqera AI is free to use, though there are usage limits.
+OpenAI / Anthropic API usage is billed based on consumption.
+
+1. [Seqera AI](https://seqera.io/ask-ai/)
+   - Register for free at [seqera.io](https://seqera.io/)
+   - Create a new key on the _"User tokens"_ page: [https://cloud.seqera.io/tokens](https://cloud.seqera.io/tokens)
+2. [OpenAI](https://openai.com/)
+   - Register at [platform.openai.com](https://platform.openai.com/signup) (NB: different to ChatGPT)
+   - Add a payment method to your account to enable API usage beyond any trial credits
+   - Create a new secret key on the _API Keys_ section under your profile
+3. [Anthropic](https://www.anthropic.com/)
+   - Sign up at [https://console.anthropic.com](https://console.anthropic.com)
+   - Add a payment method to enable API access
+   - Create a new key on on the _API Keys_ section in your account settings
+
+:::note
+
+Treat your API key like a password and do not share it.
+
+:::
+
+### Choosing a model
+
+If you're using OpenAI or Anthropic you can choose the exact model used for report summaries.
+This is done by setting `ai_model` in the MultiQC config.
+
+- Anthropic:
+  - Model names must begin with `claude`
+  - Default: `claude-3-5-sonnet-latest`. Tested with `claude-3-5-sonnet` and `claude-3-5-haiku`.
+- OpenAI:
+  - Model names must being with `gpt`
+  - Default: `gpt-4o`. Tested with `gpt-4o`.
+
+This model will then be used during report generation and also set as the default toolbox panel setting for browser report summaries.
+
+## Summaries during report generation
+
+MultiQC can generate AI summaries at run time, when generating reports.
+Summary text will be included within the report HTML as static text and will be visible to anyone viewing the report,
+however it is shared.
+
+AI summaries are disabled by default when running MultiQC.
+To use, you must enable them either on the command line or via a MultiQC config file.
 
 1. Command line flags:
 
-- `--ai-summary`: Generate a short report summary and put it on top of the report
-- `--ai-summary-full`: Generate a detailed version of the report summary with analysis and recommendations
+   - `--ai` / `--ai-summary`: Generate a short report summary and put it on top of the report (fast)
+   - `--ai-summary-full`: Generate a detailed version of the summary with analysis and recommendations (slower)
+   - `--ai-provider <provider>`: Choose AI provider. `seqera`, `openai` or `anthropic`. Default `seqera`.
 
-2. Configuration file:
+2. Alternatively, MultiQC configuration file:
    ```yaml
-   ai_summary: true
-   ai_summary_full: true
+   ai_summary: false # Set to 'true' for short summaries
+   ai_summary_full: false # Set to 'true' for  long summaries
+   ai_provider: "seqera" # 'seqera', 'openai' or 'anthropic'. Default: 'seqera'
    ```
 
-You will need to find and set your provider's API key in order to access its service. In command line, the API keys can be passed through the environment variables (or an `.env` file):
+You will need to find and set your provider's API key in order to access its service
+_(see [Choosing a provider](#choosing-a-provider) for how to get an API key)_.
+The API keys are supplied by setting the following environment variables:
 
 ```bash
-export OPENAI_API_KEY=sk-...
-export ANTHROPIC_API_KEY=sk-...
-export TOWER_ACCESS_TOKEN=...
+export TOWER_ACCESS_TOKEN="..."  # or SEQERA_ACCESS_TOKEN
+export OPENAI_API_KEY="..."
+export ANTHROPIC_API_KEY="..."
 ```
 
-Note that they will only be used for `--ai-summary`/`--ai-summary-full` generation and discarded afterwards, so they will not be seen by the HTML report for security reasons.
+Only one key is needed, according to which service you want to use.
+If you run MultiQC without the appropriate key you will get a warning printed to the console,
+but report generation will otherwise proceed without the summary and MultiQC will not return an error exit code.
 
-The in-browser summary can be added by clicking the "Summarize report" button in the top right corner of the report, or thought the corresponding toolbox section:
+MultiQC uses the [python-dotenv](https://saurabh-kumar.com/python-dotenv/) package,
+so you can also use an `.env` file either in the current working directory or the MultiQC source code directory.
+
+:::note
+
+These environment variables will only be used for `--ai-summary`/`--ai-summary-full` generation.
+They are not saved by MultiQC and cannot be used for summary generation within reports.
+
+:::
+
+## Summaries when browsing reports
+
+In addition to summaries during report generation, MultiQC can also create summaries dynamically in reports.
+This can be useful as the person viewing a report is often different to the person who generated it.
+It also means that summaries can be generated on demand, only when needed.
+
+Summaries generated when browsing reports are _ephemeral_ - that is, they are not saved in the HTML.
+If you generate a summary and share the report then others will not see it.
+MultiQC tries to save the summary response within your browser's [local storage](https://www.w3schools.com/html/html5_webstorage.asp)
+so that it shows the next time you open the same report, but this process is imperfect and may not always work.
+
+### Configuring the AI provider
+
+When you first try to generate a summary in the browser, you must supply the LLM provider's API key.
+
+Click either the the "Summarize report" button in the top right corner of the report, or the AI toolbox icon:
 
 ![ai_summarize_report](../../../docs/images/ai_empty.png)
 
-![ai_summarize_report_toolbox](../../../docs/images/ai_toolbox.png)
+Choose an AI provider and enter the relevant API key
+_(see [Choosing a provider](#choosing-a-provider) for how to get an API key)_.
 
-In browser, you can put your API keys in the corresponding field in the "AI" section of the report toolbox. They will be stored only in your browser's local storage, and used to send report data directly to your AI provider of choice.
+API keys will be stored only in your browser's local storage, so will not be shared with anyone if you send the HTML report to someone else.
+They are used to send report data directly to your AI provider of choice.
 
 ![ai_summarize_report_toolbox_keys](../../../docs/images/ai_toolbox_keys.png)
 
-## Configuring AI Providers
+### Summarising the report
 
-MultiQC supports the following AI providers:
+Once your provider API key is configured, click _"Summarize report"_ to generate an overview summary of the entire report.
 
-- Anthropic (Claude models; tested to work well with `claude-3-5-sonnet`, but `claude-3-5-haiku` also generates generally good summaries)
-- OpenAI (GPT models; tested to work well with `gpt-4o`)
-- SeqeraAI (it's hardcoded to use `claude-3-5-sonnet` by default; good option if you have a Seqera Platform account)
+:::info
 
-You can specify the provider and model name in config file:
+The summary text is interactive! Click an underlined sample name to highlight that sample throughout the report.
 
-```yaml
-ai_provider: "anthropic" # or "openai" or "seqera"
-ai_model: "claude-3-5-sonnet-latest"
-```
+:::
 
-In browser, the provider and the model name can be set in the toolbox panel ("AI" section). The configuration will be stored in your browser's local storage, so it will preserved when you reopen report, or open another MultiQC report in the same computer.
+![ai_summarize_report_toolbox](../../../docs/images/ai_toolbox.png)
 
 ## In-browser AI Summaries
 
