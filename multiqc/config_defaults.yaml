@@ -65,7 +65,7 @@ make_pdf: false
 # AI settings:
 ai_summary: false
 ai_summary_full: false
-ai_provider: "anthropic"
+ai_provider: "seqera"
 ai_model: "claude-3-5-sonnet-latest"
 
 # Development settings:

@@ -460,7 +460,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option(
     "--ai-provider",
     type=click.Choice(["seqera", "openai", "anthropic"]),
-    help="Select AI provider for report summarization",
+    help=f"Select AI provider for report summarization. [dim yellow](Default: {config.ai_provider})",
 )
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
@@ -504,7 +504,12 @@ class RunResult:
         self.message = message
 
 
-def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, interactive: bool = True) -> RunResult:
+def run(
+    *analysis_dir,
+    clean_up: bool = True,
+    cfg: Optional[ClConfig] = None,
+    interactive: bool = True,
+) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
@@ -597,7 +602,7 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
             logger.error(f"{len(report.lint_errors)} linting errors:\n" + "\n".join(report.lint_errors))
             sys_exit_code = 1
 
-        logger.info("MultiQC complete") if sys_exit_code == 0 else logger.error("MultiQC complete with errors")
+        (logger.info("MultiQC complete") if sys_exit_code == 0 else logger.error("MultiQC complete with errors"))
         return RunResult(sys_exit_code=sys_exit_code)
 
     finally:
