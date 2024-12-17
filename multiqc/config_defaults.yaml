@@ -575,6 +575,7 @@ module_order:
   - seqwho
   - telseq
   - ataqv
+  - mgikit
   - mosaicatcher
 
 # Preserves `saved_raw_data` section in modules - default for interactive runs
