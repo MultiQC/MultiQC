@@ -251,6 +251,7 @@ whatshap = "multiqc.modules.whatshap:MultiqcModule"
 xenome = "multiqc.modules.xenome:MultiqcModule"
 xengsort = "multiqc.modules.xengsort:MultiqcModule"
 ataqv = "multiqc.modules.ataqv:MultiqcModule"
+mosaicatcher = "multiqc.modules.mosaicatcher:MultiqcModule"
 
 [project.entry-points."multiqc.templates.v1"]
 default = "multiqc.templates.default"
