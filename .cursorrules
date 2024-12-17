@@ -40,14 +40,14 @@ MultiQC supports bioformatics tools through so-called "modules". Each "module" i
 When writing code, you must follow the following rules:
 
 - Use f-strings and other MODERN Python 3 syntax. Do not use `__future__` imports or `OrderedDict`'s.
-- Use single quotes for strings.
+- Use double quotes for strings.
 - Do not add shebang lines to Python files unless they are placed in the `scripts/` folder.
 
 When writing modules, you must follow the following rules:
 
 - Raise `ModuleNoSamplesFound` when no samples are found. DO NOT RAISE `UserWarning`!
 - Call `self.add_software_version()`, even if version is not found, as it's required by linting.
-- Call `self.write_data_file(...)` in the very end of the module, after all sections are added. IT IS IMPORTANT TO CALL IT IN THE END!
+- Call `self.write_data_file` in the very end of the module, after all sections are added. IT IS IMPORTANT TO CALL IT IN THE END!
 - Add entry point into `pyproject.toml`. Ignore `setup.py`.
 - Do not add separate markdown files or module-level docstrings. Instead add a docstring to the module class.
 - Module's `info` MUST start with a capital letter.
