@@ -1,5 +1,59 @@
 # MultiQC Version History
 
+## [MultiQC v1.26](https://github.com/MultiQC/MultiQC/releases/tag/v1.26) - 2024-12-17
+
+### New modules
+
+- [**MosaiCatcher**](https://github.com/friendsofstrandseq/mosaicatcher) - tool for classifying strand states of each chromosome in each cell using a Hidden Markov Model ([#1910](https://github.com/MultiQC/MultiQC/pull/1910))
+- [**ataqv**](https://github.com/ParkerLab/ataqv) - tool for assessing the quality of a genome using a broader set of marker genes ([#3013](https://github.com/MultiQC/MultiQC/pull/3013))
+- [**telseq**](https://github.com/zd1/telseq) - a software that estimates telomere length from whole genome sequencing data (BAMs) ([#2910](https://github.com/MultiQC/MultiQC/pull/2910))
+- [**Cell Ranger ARC**](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) - analysis of single cell expression or VDJ data produced by 10X Genomics ([#2925](https://github.com/MultiQC/MultiQC/pull/2925))
+- [**GTDB-Tk**](https://ecogenomics.github.io/GTDBTk/index.html) - toolkit for assigning objective taxonomic classifications to bacterial and archaeal genomes ([#2970](https://github.com/MultiQC/MultiQC/pull/2970))
+- [**Checkm**](https://github.com/Ecogenomics/CheckM) - genome completeness and contamination based on the presence or absence of marker genes ([#2990](https://github.com/MultiQC/MultiQC/pull/2990))
+- [**Checkm2**](https://github.com/chklovski/CheckM2): rapid, scalable and accurate tool for assessing microbial genome quality using machine learning ([#2978](https://github.com/MultiQC/MultiQC/pull/2978))
+- [**Haplocheck**](https://github.com/genepi/haplocheck/) - Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content ([#2933](https://github.com/MultiQC/MultiQC/pull/2933))
+
+### Module updates
+
+- Pychopper: add UMI barpot ([#3024](https://github.com/MultiQC/MultiQC/pull/3024))
+- phantompeakqualtools: Adjust minimum value to 1 for NSC coeff ([#3021](https://github.com/MultiQC/MultiQC/pull/3021))
+- RNA SeqC: more metrics in gen stats ([#3017](https://github.com/MultiQC/MultiQC/pull/3017))
+- QualiMap RNASeq: add gen stats columns for exonic, intronic, intergenic, overlapping ([#3018](https://github.com/MultiQC/MultiQC/pull/3018))
+- DRAGEN: RNA quant metrics: support forward and reverse fragments in barplot ([#3012](https://github.com/MultiQC/MultiQC/pull/3012))
+- GATK BQSR: support Sentieon QualCal output ([#3008](https://github.com/MultiQC/MultiQC/pull/3008))
+- fastp: add overrepresented sequences plot and table ([#3000](https://github.com/MultiQC/MultiQC/pull/3000))
+- Interop: remove % suffix for nan values ([#2995](https://github.com/MultiQC/MultiQC/pull/2995))
+- QualiMap BamQC: add dup rate, Ns, mapped paired reads ([#2989](https://github.com/MultiQC/MultiQC/pull/2989))
+- Dedup: more specific search pattern ([#2988](https://github.com/MultiQC/MultiQC/pull/2988))
+- Bclconvert: group samples and lanes, refactor ([#2872](https://github.com/MultiQC/MultiQC/pull/2872))
+
+### Module fixes
+
+- Nanostat new format: fix parsing sample name ([#3007](https://github.com/MultiQC/MultiQC/pull/3007))
+
+### Other feature updates and improvements
+
+- Naturally sort bar graph bar names ([#2999](https://github.com/MultiQC/MultiQC/pull/2999))
+- Custom content: allow quoting values in CSV ([#3020](https://github.com/MultiQC/MultiQC/pull/3020))
+- Tooltips about merged values in groupped samples ([#3002](https://github.com/MultiQC/MultiQC/pull/3002))
+- Save dynamic toolbox settings automatically and to a file ([#3001](https://github.com/MultiQC/MultiQC/pull/3001))
+
+### Refactoring and typing
+
+- Violin: add `dt` to `Dataset` objects instead of `main_table_dt` ([#2968](https://github.com/MultiQC/MultiQC/pull/2968))
+- Support Python 3.13, drop 3.8 ([#2862](https://github.com/MultiQC/MultiQC/pull/2862))
+- Do not preserve `saved_raw_data` in modules, write directly to files instead ([#3010](https://github.com/MultiQC/MultiQC/pull/3010))
+
+### Infrastructure and packaging
+
+- Add Cursor rules for module generation ([#3025](https://github.com/MultiQC/MultiQC/pull/3025))
+- Fix docker build: remove docs from `.dockerignore` ([#2994](https://github.com/MultiQC/MultiQC/pull/2994))
+- Workflow to sync changelog with Seqera docs ([#2993](https://github.com/MultiQC/MultiQC/pull/2993))
+- Docker build: add workflow_dispatch, do not push on pull_request ([#2962](https://github.com/MultiQC/MultiQC/pull/2962))
+- Build Docker image in PRs ([#2958](https://github.com/MultiQC/MultiQC/pull/2958))
+- Fix Docker CI for forks: skip login step ([#2953](https://github.com/MultiQC/MultiQC/pull/2953))
+- Document barplot `sort_samples` ([#3006](https://github.com/MultiQC/MultiQC/pull/3006))
+
 ## [MultiQC v1.25.2](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.2) - 2024-11-20
 
 Multiple bug fixes and minor updates.
