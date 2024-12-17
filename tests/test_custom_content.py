@@ -7,7 +7,7 @@ from multiqc import config, report
 from multiqc.core.file_search import file_search
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.modules.custom_content import custom_module_classes
-from multiqc.types import Anchor
+from multiqc.types import Anchor, ColumnKey, SampleGroup
 from multiqc.validation import ModuleConfigValidationError
 
 
@@ -582,10 +582,10 @@ C	95	45
     # General stats are added directly to the report
     assert len(report.general_stats_data) > 0
     assert "A" in report.general_stats_data[-1]
-    assert report.general_stats_data[-1]["A"][0].data["value1"] == 85
-    assert report.general_stats_data[-1]["A"][0].data["value2"] == 42
-    assert report.general_stats_headers[-1]["value1"]["title"] == "Value 1"
-    assert report.general_stats_headers[-1]["value2"]["title"] == "Value 2"
+    assert report.general_stats_data[-1][SampleGroup("A")][0].data[ColumnKey("value1")] == 85
+    assert report.general_stats_data[-1][SampleGroup("A")][0].data[ColumnKey("value2")] == 42
+    assert report.general_stats_headers[-1][ColumnKey("value1")]["title"] == "Value 1"
+    assert report.general_stats_headers[-1][ColumnKey("value2")]["title"] == "Value 2"
 
 
 def test_quoted_strings_handling(tmp_path):
