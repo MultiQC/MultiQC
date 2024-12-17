@@ -347,11 +347,13 @@ class LangchainClient(Client):
 
 
 class OpenAiClient(LangchainClient):
-    def __init__(self, model: str, api_key: str):
+    def __init__(self, api_key: str):
         from langchain_openai import ChatOpenAI  # type: ignore
 
         openai_logger = logging.getLogger("openai._base_client")
         openai_logger.addFilter(TruncateOpenAiLogFilter())
+
+        model = config.ai_model if config.ai_model and config.ai_model.startswith("gpt") else "gpt-4o"
 
         super().__init__(model, api_key)
         self.name = "openai"
@@ -389,12 +391,16 @@ class TruncateOpenAiLogFilter(logging.Filter):
 
 
 class AnthropicClient(LangchainClient):
-    def __init__(self, model: str, api_key: str):
+    def __init__(self, api_key: str):
         from langchain_anthropic import ChatAnthropic  # type: ignore
 
         # Get the anthropic logger and add the filter
         anthropic_logger = logging.getLogger("anthropic._base_client")
         anthropic_logger.addFilter(TruncateAnthropicLogFilter())
+
+        model = (
+            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-3-5-sonnet-latest"
+        )
 
         super().__init__(model, api_key)
         self.name = "anthropic"
@@ -527,9 +533,8 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        model = config.ai_model if config.ai_model.startswith("claude") else "claude-3-5-sonnet-latest"
         try:
-            return AnthropicClient(model, api_key)
+            return AnthropicClient(api_key)
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[anthropic]`"
@@ -543,9 +548,8 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        model = config.ai_model if config.ai_model.startswith("gpt") else "gpt-4o"
         try:
-            return OpenAiClient(model, api_key)
+            return OpenAiClient(api_key)
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[openai]`"
@@ -749,7 +753,7 @@ def add_ai_summary_to_report():
         return None
 
     if response.model:
-        report.ai_model = response.model
+        report.ai_model_resolved = response.model
 
     if response.uuid:
         report.ai_generation_id = response.uuid

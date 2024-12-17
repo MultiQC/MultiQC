@@ -111,6 +111,7 @@ ai_generation_id: str = ""
 ai_provider_id: str = ""
 ai_provider_title: str = ""
 ai_model: str = ""
+ai_model_resolved: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
 
 
