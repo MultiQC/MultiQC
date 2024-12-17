@@ -70,6 +70,7 @@ click.rich_click.OPTION_GROUPS = {
             "options": [
                 "--module",
                 "--exclude",
+                "--require-logs",
             ],
         },
         {
@@ -105,6 +106,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--data-format",
                 "--zip-data-dir",
                 "--no-report",
+                "--clean-up",
                 "--pdf",
             ],
         },
@@ -113,9 +115,9 @@ click.rich_click.OPTION_GROUPS = {
             "options": [
                 "--verbose",
                 "--quiet",
+                "--no-version-check",
                 "--strict",
                 "--development",
-                "--require-logs",
                 "--profile-runtime",
                 "--profile-memory",
                 "--no-megaqc-upload",
@@ -602,7 +604,10 @@ def run(
             logger.error(f"{len(report.lint_errors)} linting errors:\n" + "\n".join(report.lint_errors))
             sys_exit_code = 1
 
-        (logger.info("MultiQC complete") if sys_exit_code == 0 else logger.error("MultiQC complete with errors"))
+        if sys_exit_code == 0:
+            logger.info("MultiQC complete")
+        else:
+            logger.error("MultiQC complete with errors")
         return RunResult(sys_exit_code=sys_exit_code)
 
     finally:
