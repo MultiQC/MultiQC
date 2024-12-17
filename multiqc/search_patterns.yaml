@@ -1036,3 +1036,5 @@ ataqv:
   fn: "*.json"
   contents: "ataqv_version"
   num_lines: 10
+mosaicatcher:
+  fn: "*.mosaicatcher_info_raw.txt"

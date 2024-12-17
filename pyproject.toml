@@ -63,7 +63,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "pre-commit",
-    "ruff",
+    "ruff>=0.8.3",
     "pdoc3",
     "pytest",
     "pytest-cov",
@@ -252,6 +252,7 @@ whatshap = "multiqc.modules.whatshap:MultiqcModule"
 xenome = "multiqc.modules.xenome:MultiqcModule"
 xengsort = "multiqc.modules.xengsort:MultiqcModule"
 ataqv = "multiqc.modules.ataqv:MultiqcModule"
+mosaicatcher = "multiqc.modules.mosaicatcher:MultiqcModule"
 
 [project.entry-points."multiqc.templates.v1"]
 default = "multiqc.templates.default"
