@@ -176,6 +176,16 @@ For example, [Visual Studio Code](https://code.visualstudio.com/) has
 [built-in support for Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff) and
 plugins for [Prettier](https://github.com/prettier/prettier-vscode).
 
+## Other style considerations
+
+1. We use modern Python 3, thus:
+
+   - Alwayy use f-strings (e.g. `f"{var}"`) over the legacy `"{var}".format()` calls.
+   - Built-in `dict` preserve order, thus most of the time you don't need to use `OrderedDict`.
+   - Avoid unnecessary `__future__` imports.
+
+2. Unless a Python file is located in the root `scripts` directory, it must NOT have shebang lines like `#!/usr/bin/env python`.
+
 ### Pre-commit
 
 MultiQC uses [pre-commit](https://pre-commit.com/) to test your code when you open a pull-request.
@@ -224,6 +234,7 @@ you will need to edit or create follow the structure below:
 │   │           ├── __init__.py
 │   │           └── test_<your_module>.py
 │   └── search_patterns.yaml
+│   └── config_defaults.yaml
 └── pyproject.toml
 ```
 
@@ -268,7 +279,7 @@ pip install -e .
 So that MultiQC knows what order modules should be run in, you need to add
 your module to the core config file.
 
-In `multiqc/utils/config_defaults.yaml` you should see a list variable called
+In `multiqc/config_defaults.yaml` you should see a list variable called
 `module_order`. This contains the name of modules in order of precedence. Add your
 module here in an appropriate position.
 
@@ -390,7 +401,7 @@ The consideration can be:
 - Configuration parameters that the tool can read from the user config;
 - Any post-processing needed to be done by the user before running the module;
 - Performance considerations;
-- Conflicts with other MultiC modules.
+- Conflicts with other MultiQC modules.
 
 ### Logging
 
@@ -1140,7 +1151,7 @@ MultiQC `config` module and have sensible defaults. For example:
 ```python
 from multiqc import config
 
-mymod_config = getattr(config, 'mymod_config', {})
+mymod_config = getattr(config, 'mymod', {})
 my_custom_config_var = mymod_config.get('my_custom_config_var', 5)
 ```
 
@@ -1148,7 +1159,7 @@ You now have a variable `my_custom_config_var` with a default value of 5, but th
 can be configured by a user as follows:
 
 ```yaml
-mymod_config:
+mymod:
   my_custom_config_var: 200
 ```
 
