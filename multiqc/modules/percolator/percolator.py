@@ -12,7 +12,11 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """
     The module assumes that the Percolator output file is named `*percolator_feature_weights.tsv`.
-    Make sure to run it using `percolator ... > samples.percolator_feature_weights.tsv`
+    Make sure to run it using:
+
+    ```
+    percolator ... > samples.percolator_feature_weights.tsv
+    ```
 
     The module accepts one configuration option:
      - `group_to_feature`: A dictionary mapping group names to feature names (empty per default), e.g. in `multiqc_config.yaml`:
