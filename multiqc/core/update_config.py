@@ -2,14 +2,13 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional, Union, Dict, Set
+from typing import List, Literal, Optional, Union, Dict, cast
 
 from pydantic import BaseModel
 
 from multiqc import report, config
 from multiqc.core.exceptions import RunError
 from multiqc.core import log_and_rich, plugin_hooks
-from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +66,7 @@ class ClConfig(BaseModel):
     ai_summary: Optional[bool] = None
     ai_summary_full: Optional[bool] = None
     unknown_options: Optional[Dict] = None
-    ai_provider: Optional[str] = None
+    ai_provider: Optional[Literal["seqera", "openai", "anthropic"]] = None
 
 
 def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
