@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Cell Ranger ARC",
             anchor="cellranger-arc",
             href="https://www.10xgenomics.com/support/software/cell-ranger-arc/latest",
-            info="Analyzes Single Cell Multiome ATAC + Gene Expression data produced by 10X Genomics.",
+            info="Analyzes single-cell multiome ATAC and gene expression data produced by 10X Genomics.",
             doi="10.1038/ncomms14049",
         )
         data_by_sample: Dict[str, Dict] = dict()
