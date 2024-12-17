@@ -11,7 +11,9 @@
 - [**GTDB-Tk**](https://ecogenomics.github.io/GTDBTk/index.html) - toolkit for assigning objective taxonomic classifications to bacterial and archaeal genomes ([#2970](https://github.com/MultiQC/MultiQC/pull/2970))
 - [**Checkm**](https://github.com/Ecogenomics/CheckM) - genome completeness and contamination based on the presence or absence of marker genes ([#2990](https://github.com/MultiQC/MultiQC/pull/2990))
 - [**Checkm2**](https://github.com/chklovski/CheckM2): rapid, scalable and accurate tool for assessing microbial genome quality using machine learning ([#2978](https://github.com/MultiQC/MultiQC/pull/2978))
-- [**Haplocheck**](https://github.com/genepi/haplocheck/) - Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content ([#2933](https://github.com/MultiQC/MultiQC/pull/2933))
+- [**Haplocheck**](https://github.com/genepi/haplocheck/) - detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content ([#2933](https://github.com/MultiQC/MultiQC/pull/2933))
+- [**mgikit**](https://github.com/sagc-bioinformatics/mgikit) - demultiplexes FASTQ files from an MGI sequencing instrument ([#3023](https://github.com/MultiQC/MultiQC/pull/3023))
+- [**Percolator**](https://github.com/percolator/percolator) - semi-supervised learning for peptide identification from shotgun proteomics datasets ([#3011](https://github.com/MultiQC/MultiQC/pull/3011))
 
 ### Module updates
 
@@ -50,6 +52,9 @@
 - Build and test Docker image in PRs ([#2958](https://github.com/MultiQC/MultiQC/pull/2958))
 - Fix Docker CI for forks: skip login step ([#2953](https://github.com/MultiQC/MultiQC/pull/2953))
 - Document bar plot's `sort_samples` ([#3006](https://github.com/MultiQC/MultiQC/pull/3006))
+- Update ruff to 0.8.3 ([#3029](https://github.com/MultiQC/MultiQC/pull/3029))
+- Add more tests for custom-content ([#3028](https://github.com/MultiQC/MultiQC/pull/3028))
+- Add pytest ini options to `pyproject.toml` - to set default test targets ([#3030](https://github.com/MultiQC/MultiQC/pull/3030))
 
 ## [MultiQC v1.25.2](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.2) - 2024-11-20
 
