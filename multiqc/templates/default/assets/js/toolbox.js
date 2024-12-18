@@ -8,6 +8,10 @@ const zip_threshold = 8;
 
 // Add these constants at the top of the file
 const AI_PROVIDERS = {
+  seqera: {
+    name: "Seqera AI",
+    apiKeysUrl: "https://cloud.seqera.io/tokens",
+  },
   anthropic: {
     name: "Anthropic",
     defaultModel: "claude-3-5-sonnet-latest",
@@ -21,10 +25,6 @@ const AI_PROVIDERS = {
     suggestedModels: ["gpt-4o", "gpt-4o-mini"],
     apiKeysUrl: "https://platform.openai.com/api-keys",
     modelsUrl: "https://platform.openai.com/docs/models",
-  },
-  seqera: {
-    name: "Seqera AI",
-    apiKeysUrl: "https://cloud.seqera.io/tokens",
   },
 };
 
