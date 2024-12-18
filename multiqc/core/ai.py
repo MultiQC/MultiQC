@@ -429,8 +429,8 @@ class SeqeraClient(Client):
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                (f"{config.seqera_api_url}/internal-ai/query" if self.api_key else f"{config.seqera_api_url}/invoke"),
-                headers=({"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}),
+                f"{config.seqera_api_url}/internal-ai/query" if self.api_key else f"{config.seqera_api_url}/invoke",
+                headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
                 json={
                     "system_message": PROMPT_SHORT,
                     "message": report_content,
@@ -463,8 +463,8 @@ class SeqeraClient(Client):
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                (f"{config.seqera_api_url}/invoke-with-token" if self.api_key else f"{config.seqera_api_url}/invoke"),
-                headers=({"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}),
+                f"{config.seqera_api_url}/invoke-with-token" if self.api_key else f"{config.seqera_api_url}/invoke",
+                headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
                 json={
                     "system_message": PROMPT_FULL,
                     "user_message": report_content,
