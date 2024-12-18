@@ -46,11 +46,11 @@ OpenAI / Anthropic API usage is billed based on consumption.
 2. [OpenAI](https://openai.com/)
    - Register at [platform.openai.com](https://platform.openai.com/signup) (NB: different to ChatGPT)
    - Add a payment method to your account to enable API usage beyond any trial credits
-   - Create a new secret key on the _API Keys_ section under your profile
+   - Create a new secret key on the _API Keys_ section [under your profile](https://platform.openai.com/api-keys)
 3. [Anthropic](https://www.anthropic.com/)
    - Sign up at [https://console.anthropic.com](https://console.anthropic.com)
    - Add a payment method to enable API access
-   - Create a new key on on the _API Keys_ section in your account settings
+   - Create a new key on on the _API Keys_ section in your [account settings](https://console.anthropic.com/settings/keys)
 4. Any other provider, via your clipboard
    - You can use buttons in MultiQC reports to copy a prompt to your clipboard,
      in order to manually summarise report data.
@@ -68,9 +68,9 @@ If you're using OpenAI or Anthropic you can choose the exact model used for repo
 This is done by setting `ai_model` in the MultiQC config.
 
 - Anthropic model names must begin with `claude`
-  - Default: `claude-3-5-sonnet-latest`. Tested with `claude-3-5-sonnet` and `claude-3-5-haiku`.
+  - Default: `claude-3-5-sonnet-latest`. Tested with Sonnet and Haiku. See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
 - OpenAI model names must being with `gpt`
-  - Default: `gpt-4o`. Tested with `gpt-4o`.
+  - Default: `gpt-4o`. Tested with GPT-4o and GPT-4o-mini. See the [OpenAI docs](https://platform.openai.com/docs/models).
 
 This model will then be used during report generation and also set as the default toolbox panel setting for browser report summaries.
 
