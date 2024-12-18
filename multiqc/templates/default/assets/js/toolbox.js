@@ -1511,7 +1511,7 @@ $(function () {
   });
 
   // Set initial visibility state based on stored preference
-  if (getFromLocalStorage("mqc_ai_buttons_visible") === "true" || aiEnabled) {
+  if (getFromLocalStorage("mqc_ai_buttons_visible") === "true") {
     saveToLocalStorage("mqc_ai_buttons_visible", "true");
     $("#ai_toggle_buttons").prop("checked", true);
     $(".ai-copy-content").show();
