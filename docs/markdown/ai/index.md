@@ -68,7 +68,7 @@ If you're using OpenAI or Anthropic you can choose the exact model used for repo
 This is done by setting `ai_model` in the MultiQC config.
 
 - Anthropic model names must begin with `claude`
-  - Default: `claude-3-5-sonnet-latest`. Tested with Sonnet and Haiku. See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
+  - Default: `claude-3-5-sonnet-latest`. Tested with Sonnet 3.5 and Haiku 3.5. See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
 - OpenAI model names must being with `gpt`
   - Default: `gpt-4o`. Tested with GPT-4o and GPT-4o-mini. See the [OpenAI docs](https://platform.openai.com/docs/models).
 
