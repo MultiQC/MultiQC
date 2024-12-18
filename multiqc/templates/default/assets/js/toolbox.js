@@ -1452,9 +1452,10 @@ $(function () {
   });
 
   // Set initial values from storage or values from Python
-  const providerId = getStoredProvider() || aiConfigProviderId;
+  const providerId = getStoredProvider() || aiConfigProviderId || "seqera";
   aiProviderSelect.val(providerId);
-  $("#ai-model").val(getStoredModelName(providerId) || aiConfigModel);
+  const provider = AI_PROVIDERS[providerId];
+  $("#ai-model").val(getStoredModelName(providerId) || aiConfigModel || provider.defaultModel);
   $("#ai-api-key").val(getStoredApiKey(providerId) || "");
 
   updatePanel(providerId);
