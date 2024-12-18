@@ -538,7 +538,8 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 self._btn(
                     cls="mqc-violin-to-table",
                     label="<span class='glyphicon glyphicon-th-list'></span> Table",
-                    data_attrs={"table-anchor": self.table_anchor, "violin-anchor": self.anchor},
+                    attrs={"title": "Show as a table"},
+                    data_attrs={"table-anchor": self.table_anchor, "violin-anchor": self.anchor, "toggle": "tooltip"},
                 )
             )
 

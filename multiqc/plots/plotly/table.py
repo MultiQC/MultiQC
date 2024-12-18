@@ -297,7 +297,7 @@ def make_table(
 
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.anchor}">
+        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.anchor}" data-toggle="tooltip" title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
         """
@@ -316,7 +316,7 @@ def make_table(
             buttons.append(
                 f"""
             <button type="button" class="mqc_table_config_modal_btn btn btn-default btn-sm {disabled_class}" data-toggle="modal"
-                data-target="#{dt.anchor}_config_modal" {disabled_attrs}>
+                data-target="#{dt.anchor}_config_modal" {disabled_attrs} title="Configure visibility and ordering of columns">
                 <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
             """
@@ -326,7 +326,7 @@ def make_table(
         buttons.append(
             f"""
         <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm"
-            data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;">
+            data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;" data-toggle="tooltip" title="Place highlighted samples on top">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
         """
@@ -337,7 +337,7 @@ def make_table(
             buttons.append(
                 f"""
             <button type="button" class="mqc_table_make_scatter btn btn-default btn-sm"
-                data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.anchor}">
+                data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.anchor}" title="Visualize pairs of values on a scatter plot">
                 <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
             </button>
             """
@@ -347,7 +347,7 @@ def make_table(
             buttons.append(
                 f"""
             <button type="button" class="mqc-table-to-violin btn btn-default btn-sm"
-                data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}">
+                data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle="tooltip" title="View as a violin plot">
                 <span class="glyphicon glyphicon-align-left"></span> Violin plot
             </button>
             """
@@ -356,8 +356,8 @@ def make_table(
         buttons.append(
             f"""
         <button type="button" class="export-plot btn btn-default btn-sm"
-            data-plot-anchor="{violin_anchor or dt.anchor}" data-type="table"
-        >Export as CSV</button>
+            data-plot-anchor="{violin_anchor or dt.anchor}" data-type="table" data-toggle="tooltip" title="Show export options"
+        >Export as CSV...</button>
         """
         )
 
@@ -393,6 +393,7 @@ def make_table(
                 data-module-anchor="{module_anchor}"
                 data-plot-view="table"
                 type="button"
+                data-toggle="tooltip" 
                 title="Copy table data for use with AI tools like ChatGPT"
             >
                 <span style="vertical-align: baseline">
@@ -416,6 +417,7 @@ def make_table(
                 data-action="generate"
                 data-clear-text="Clear summary"
                 type="button"
+                data-toggle="tooltip" 
                 aria-controls="{dt.anchor}_ai_summary_wrapper"
                 title="Dynamically generate AI summary for this table"
             >
