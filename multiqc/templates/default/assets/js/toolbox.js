@@ -29,6 +29,9 @@ const AI_PROVIDERS = {
     apiKeysUrl: "https://platform.openai.com/api-keys",
     modelsUrl: "https://platform.openai.com/docs/models",
   },
+  none: {
+    name: "None",
+  },
 };
 
 //////////////////////////////////////////////////////
@@ -1429,6 +1432,12 @@ function updatePanel(providerId) {
     $("#ai_provider_info").html(
       `Copy formatted report data to the clipboard to discuss with AI chats like ChatGPT and Claude.`,
     );
+  } else if (providerId === "none") {
+    $(".ai-generate-button-wrapper").hide();
+    $(".ai-copy-button-wrapper").hide();
+    $("#ai_provider_info").html("");
+    $("#ai_model_group").hide();
+    $("#ai_api_key_group").hide();
   } else {
     $(".ai-generate-button-wrapper").show();
     $(".ai-copy-button-wrapper").hide();
