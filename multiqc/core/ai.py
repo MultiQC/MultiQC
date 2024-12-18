@@ -455,7 +455,7 @@ class SeqeraClient(Client):
         return InterpretationResponse(
             uuid=uuid,
             interpretation=InterpretationOutput(summary=generation),
-            model=self.model,
+            model=self.model or "claude-3-5-sonnet-latest",
         )
 
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
