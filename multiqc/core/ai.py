@@ -189,7 +189,7 @@ class Client:
         Using tiktoken for GPT models, falling back to Claude's tokenizer for others
         """
         try:
-            if self.model.startswith("claude"):
+            if self.name == "anthropic":
                 from anthropic import Anthropic  # type: ignore
 
                 return Anthropic().count_tokens(text)
