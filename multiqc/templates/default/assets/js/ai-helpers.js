@@ -331,8 +331,4 @@ or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one 
 
 Please do not add any extra headers to the response.
 
-Make sure to use a multiple of 4 spaces to indent nested lists.
-
-If no data is present, it's likely that the user has hidden all samples though the toolbox - in this case
-suggest to check the toolbox configuration. For tables, also there is a chance the user has made all
-columns invisible - in this case suggest to check the table column configuration.`;
+Make sure to use a multiple of 4 spaces to indent nested lists.`;
