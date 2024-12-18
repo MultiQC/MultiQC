@@ -519,8 +519,10 @@ def get_llm_client() -> Optional[Client]:
         api_key = os.environ.get("SEQERA_ACCESS_TOKEN", os.environ.get("TOWER_ACCESS_TOKEN"))
         if not api_key:
             logger.warning(
-                "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', but TOWER_ACCESS_TOKEN / SEQERA_ACCESS_TOKEN "
-                "is not set. Please set the TOWER_ACCESS_TOKEN / SEQERA_ACCESS_TOKEN environment variable or change config.ai_provider"
+                "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', "
+                "but Seqera access token is not set. "
+                "Please set the SEQERA_ACCESS_TOKEN / TOWER_ACCESS_TOKEN environment variable "
+                "or change config.ai_provider"
             )
             return None
         return SeqeraClient(config.ai_model, api_key)

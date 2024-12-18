@@ -94,7 +94,7 @@ _(see [Choosing a provider](#choosing-a-provider) for how to get an API key)_.
 The API keys are supplied by setting the following environment variables:
 
 ```bash
-export TOWER_ACCESS_TOKEN="..."  # or SEQERA_ACCESS_TOKEN
+export SEQERA_ACCESS_TOKEN="..."  # or TOWER_ACCESS_TOKEN
 export OPENAI_API_KEY="..."
 export ANTHROPIC_API_KEY="..."
 ```
