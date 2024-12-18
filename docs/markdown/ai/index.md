@@ -50,14 +50,14 @@ OpenAI / Anthropic API usage is billed based on consumption.
    - Sign up at [https://console.anthropic.com](https://console.anthropic.com)
    - Add a payment method to enable API access
    - Create a new key on on the _API Keys_ section in your account settings
-
-If you have access to another LLM provider, you can use buttons in MultiQC reports to
-copy a prompt to your clipboard in order to manually summarise report data.
-See [Copying prompts](#copying-prompts) for instructions.
+4. Any other provider, via your clipboard
+   - You can use buttons in MultiQC reports to copy a prompt to your clipboard,
+     in order to manually summarise report data.
+     See [Copying prompts](#copying-prompts) for instructions.
 
 :::note
 
-Treat your API key like a password and do not share it.
+Treat your API keys like passwords, and do not share them.
 
 :::
 
