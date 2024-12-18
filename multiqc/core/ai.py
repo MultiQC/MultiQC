@@ -422,8 +422,6 @@ class SeqeraClient(Client):
         self.title = "Seqera AI"
 
     def max_tokens(self) -> int:
-        if self.model.startswith("gpt"):
-            return 128000
         return 200000
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
