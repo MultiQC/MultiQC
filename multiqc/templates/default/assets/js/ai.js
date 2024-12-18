@@ -472,24 +472,3 @@ document.addEventListener("DOMContentLoaded", function () {
   document.head.appendChild(gpt3Script);
   document.head.appendChild(claudeScript);
 });
-
-$(function () {
-  const showCopyButtons = localStorage.getItem("mqc_show_copy_buttons") === "true";
-  const showSummaryButtons = localStorage.getItem("mqc_show_summary_buttons") !== "false";
-
-  $("#ai_toggle_copy_buttons").prop("checked", showCopyButtons);
-  $("#ai_toggle_summary_buttons").prop("checked", showSummaryButtons);
-
-  updateAiButtonVisibility();
-
-  // Add event listeners for checkbox changes
-  $("#ai_toggle_copy_buttons").change(function () {
-    localStorage.setItem("mqc_show_copy_buttons", this.checked);
-    updateAiButtonVisibility();
-  });
-
-  $("#ai_toggle_summary_buttons").change(function () {
-    localStorage.setItem("mqc_show_summary_buttons", this.checked);
-    updateAiButtonVisibility();
-  });
-});
