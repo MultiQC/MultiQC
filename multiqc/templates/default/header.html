@@ -78,9 +78,9 @@ was generated and the button that launches the welcome tour.
       {% endif %}
     {% endif %}
   </span>
-  {% if not report.ai_global_summary %}
+  {% if not config.no_ai and not report.ai_global_summary %}
   <div class="ai-generate-button-wrapper">
-    <button 
+    <button
       class="btn btn-default btn-sm ai-generate-button ai-generate-button-global"
       data-response-div="global_ai_summary_response"
       data-error-div="global_ai_summary_error"
@@ -89,7 +89,7 @@ was generated and the button that launches the welcome tour.
       data-section-anchor="global"
       data-action="{% if report.ai_global_summary %}clear{% else %}generate{% endif %}"
       data-clear-text="Clear summary"
-      data-toggle="tooltip" 
+      data-toggle="tooltip"
       type="button"
       title="Adds a block on top of the report with a concise summary and interpretation of the report."
     >
@@ -103,6 +103,7 @@ was generated and the button that launches the welcome tour.
     </button>
   </div>
   {% endif %}
+  {% if not config.no_ai %}
   <div class="ai-copy-button-wrapper">
     <button 
       type="button"
@@ -120,6 +121,7 @@ was generated and the button that launches the welcome tour.
       <span class="button-text">Copy Prompt</span>
     </button>
   </div>
+  {% endif %}
 </div>
 {% endif %}
 

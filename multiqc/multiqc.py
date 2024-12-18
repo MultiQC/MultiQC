@@ -129,9 +129,11 @@ click.rich_click.OPTION_GROUPS = {
         {
             "name": "AI Features",
             "options": [
+                "--ai",
                 "--ai-summary",
                 "--ai-summary-full",
                 "--ai-provider",
+                "--no-ai",
             ],
         },
     ],
@@ -463,6 +465,13 @@ click.rich_click.OPTION_GROUPS = {
     "--ai-provider",
     type=click.Choice(["seqera", "openai", "anthropic"]),
     help=f"Select AI provider for report summarization. [dim yellow](Default: {config.ai_provider})",
+)
+@click.option(
+    "--no-ai",
+    "no_ai",
+    is_flag=True,
+    default=None,
+    help="Hide AI features in the report",
 )
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):

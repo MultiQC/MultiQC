@@ -65,8 +65,9 @@ class ClConfig(BaseModel):
     data_dump_file_write_raw: Optional[bool] = None
     ai_summary: Optional[bool] = None
     ai_summary_full: Optional[bool] = None
-    unknown_options: Optional[Dict] = None
     ai_provider: Optional[Literal["seqera", "openai", "anthropic"]] = None
+    no_ai: Optional[bool] = None
+    unknown_options: Optional[Dict] = None
 
 
 def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
@@ -211,6 +212,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.ai_summary_full = cfg.ai_summary_full
     if cfg.ai_provider is not None:
         config.ai_provider = cfg.ai_provider
+    if cfg.no_ai is not None:
+        config.no_ai = cfg.no_ai
 
     if config.development and "png" not in config.export_plot_formats:
         config.export_plot_formats.append("png")

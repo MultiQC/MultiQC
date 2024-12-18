@@ -116,6 +116,7 @@ ai_summary: bool
 ai_summary_full: bool
 ai_provider: Literal["seqera", "openai", "anthropic"]
 ai_model: str
+no_ai: bool
 
 seqera_api_url: str
 seqera_website: str

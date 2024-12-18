@@ -67,6 +67,7 @@ ai_summary: false
 ai_summary_full: false
 ai_provider: "seqera"
 ai_model: null
+no_ai: false
 
 # Development settings:
 seqera_api_url: "https://seqera.io"

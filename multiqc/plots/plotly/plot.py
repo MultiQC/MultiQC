@@ -985,7 +985,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             switch_buttons += "</div>\n\n"
 
         export_btn = ""
-        ai_btn = ""
         if not flat:
             export_btn = self._btn(
                 cls="export-plot",
@@ -998,6 +997,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     "toggle": "tooltip",
                 },
             )
+
+        ai_btn = ""
+        if not config.no_ai:
             ai_btn = f"""
             <div class="ai-plot-buttons-container" style="float: right;">
                 <button 
