@@ -12,9 +12,6 @@ const AI_PROVIDERS = {
     name: "Seqera AI",
     apiKeysUrl: "https://cloud.seqera.io/tokens",
   },
-  clipboard: {
-    name: "Copy prompt to clipboard",
-  },
   anthropic: {
     name: "Anthropic",
     defaultModel: "claude-3-5-sonnet-latest",
@@ -29,9 +26,16 @@ const AI_PROVIDERS = {
     apiKeysUrl: "https://platform.openai.com/api-keys",
     modelsUrl: "https://platform.openai.com/docs/models",
   },
-  none: {
-    name: "None",
+  clipboard: {
+    name: "Copy prompts",
   },
+  none: {
+    name: "Remove AI buttons",
+  },
+};
+const AI_PROVIDER_GROUPS = {
+  "In-report summaries": ["seqera", "anthropic", "openai"],
+  Alternatives: ["clipboard", "none"],
 };
 
 //////////////////////////////////////////////////////
@@ -1470,13 +1474,17 @@ $(function () {
   // Populate provider dropdown dynamically
   const aiProviderSelect = $("#ai-provider");
   aiProviderSelect.empty();
-  Object.entries(AI_PROVIDERS).forEach(([providerId, providerInfo]) => {
-    aiProviderSelect.append(
-      $("<option>", {
-        value: providerId,
-        text: providerInfo.name,
-      }),
-    );
+  Object.entries(AI_PROVIDER_GROUPS).forEach(([groupName, groupProviders]) => {
+    let optgroup = $("<optgroup>", { label: groupName });
+    groupProviders.forEach((groupProviderID) => {
+      optgroup.append(
+        $("<option>", {
+          value: groupProviderID,
+          text: AI_PROVIDERS[groupProviderID].name,
+        }),
+      );
+    });
+    aiProviderSelect.append(optgroup);
   });
 
   // Set initial values from storage or values from Python
