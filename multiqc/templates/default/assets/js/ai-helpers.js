@@ -1,3 +1,10 @@
+function handleStreamError(error) {
+  if (error.toString().includes("Failed to fetch")) {
+    error = "Failed to connect to AI provider. Please check your internet connection and the API key, and try again.";
+  }
+  return error;
+}
+
 async function runStreamGeneration({
   onStreamStart,
   onStreamNewToken,
@@ -25,17 +32,23 @@ async function runStreamGeneration({
         stream: false,
         tags: ["multiqc", ...tags],
       }),
-    }).then(async (response) => {
-      if (!response.ok) {
-        const errorData = await response.json();
-        onStreamError(`HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"}`);
-        throw new Error(errorData.error?.message || "Unknown error");
-      }
-      data = await response.json();
-      onStreamStart();
-      onStreamNewToken(data.generation);
-      onStreamComplete();
-    });
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorData = await response.json();
+          onStreamError(
+            `HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"}`,
+          );
+          throw new Error(errorData.error?.message || "Unknown error");
+        }
+        data = await response.json();
+        onStreamStart();
+        onStreamNewToken(data.generation);
+        onStreamComplete();
+      })
+      .catch((error) => {
+        onStreamError(handleStreamError(error));
+      });
   } else if (provider.name === "OpenAI") {
     fetch(`https://api.openai.com/v1/chat/completions`, {
       method: "POST",
@@ -63,7 +76,7 @@ async function runStreamGeneration({
         return response.body.getReader();
       })
       .then((reader) => decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete))
-      .catch((error) => onStreamError(error));
+      .catch((error) => onStreamError(handleStreamError(error)));
   } else if (provider.name === "Anthropic") {
     fetch(`https://api.anthropic.com/v1/messages`, {
       method: "POST",
@@ -93,7 +106,7 @@ async function runStreamGeneration({
         return response.body.getReader();
       })
       .then((reader) => decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete))
-      .catch((error) => onStreamError(error));
+      .catch((error) => onStreamError(handleStreamError(error)));
   } else {
     onStreamError(`Unsupported AI provider: ${provider.name}`);
   }

@@ -240,6 +240,8 @@ async function summarizeWithAi(button) {
         errorDiv.html(error).show();
         wrapUpResponse();
         if (wrapperDiv) wrapperDiv.show();
+        if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").hide();
+        disclaimerDiv.hide();
       },
       onStreamComplete: () => {
         wrapUpResponse();
@@ -256,6 +258,8 @@ async function summarizeWithAi(button) {
         );
         const endTime = performance.now();
         console.log(`Time to generate more: ${endTime - startTime}ms`);
+        if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").show();
+        disclaimerDiv.show();
       },
     });
   })();
