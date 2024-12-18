@@ -108,6 +108,19 @@ export ANTHROPIC_API_KEY="..."
 If you run MultiQC without the appropriate key you will get a warning printed to the console,
 but report generation will otherwise proceed without the summary. MultiQC will not return an error exit code.
 
+:::tip
+
+Any MultiQC config option can also be set using environment variables
+(see [Config with environment variables](../getting_started/config.md#config-with-environment-variables)),
+so you can set up everything this way:
+
+```bash
+export MULTIQC_AI_SUMMARY=1
+export SEQERA_ACCESS_TOKEN="..."
+```
+
+:::
+
 MultiQC uses the [python-dotenv](https://saurabh-kumar.com/python-dotenv/) package,
 so you can also use an `.env` file either in the current working directory or the MultiQC source code directory.
 
