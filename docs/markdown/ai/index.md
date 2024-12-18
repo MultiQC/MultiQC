@@ -87,13 +87,15 @@ To generate them, you must enable them either on the command line or via a Multi
 
    - `--ai` / `--ai-summary`: Generate a short report summary and put it on top of the report (fast)
    - `--ai-summary-full`: Generate a detailed version of the summary with analysis and recommendations (slower)
-   - `--ai-provider <provider>`: Choose AI provider. `seqera`, `openai` or `anthropic`. Default `seqera`.
+   - `--ai-provider <provider>`: Choose AI provider. `seqera`, `openai` or `anthropic`. Default `seqera`
+   - `--no-ai`: Disable AI toolbox and buttons in the report
 
 2. Alternatively, MultiQC configuration file:
    ```yaml
-   ai_summary: false # Set to 'true' for short summaries
-   ai_summary_full: false # Set to 'true' for  long summaries
+   ai_summary: false # Set to true for short summaries
+   ai_summary_full: false # Set to true for  long summaries
    ai_provider: "seqera" # 'seqera', 'openai' or 'anthropic'. Default: 'seqera'
+   no_ai: false # Set to true to disable AI toolbox and buttons in the report
    ```
 
 You will need to set your provider's API key in an environment variable in order to access its service
@@ -137,6 +139,9 @@ They are not saved by MultiQC and cannot be used for in-browser summary generati
 In addition to summaries during report generation, MultiQC can also create summaries dynamically in reports.
 This can be useful as the person viewing a report is often different to the person who generated it.
 Summaries can be generated on demand, when needed.
+
+The AI toolbox and _Summarize_ buttons are shown by default in all reports. To prevent this, run MultiQC with the `--no-ai` flag.
+This can be done on a per-user basis by selecting _Remove AI buttons_ in the _AI Provider_ dropdown in the AI toolbox.
 
 Summaries generated in reports are _ephemeral_ - that is, they are not saved in the HTML.
 If you generate a summary and share the report then others will not see it.
