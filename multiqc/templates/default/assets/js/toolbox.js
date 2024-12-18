@@ -12,6 +12,9 @@ const AI_PROVIDERS = {
     name: "Seqera AI",
     apiKeysUrl: "https://cloud.seqera.io/tokens",
   },
+  clipboard: {
+    name: "Copy prompt to clipboard",
+  },
   anthropic: {
     name: "Anthropic",
     defaultModel: "claude-3-5-sonnet-latest",
@@ -1410,12 +1413,28 @@ function updatePanel(providerId) {
 
   // Update model field with stored or default value for new provider
   if (providerId === "seqera") {
+    $(".ai-generate-button-wrapper").show();
+    $(".ai-copy-button-wrapper").hide();
+    $("#ai_provider_info").html("");
     $("#ai_model_group").hide();
+    $("#ai_api_key_group").show();
     $("#ai_api_key_info").html(
       `You can find your API key in the <a style='text-decoration: underline;' href='${provider.apiKeysUrl}' target='_blank'>${provider.name} dashboard</a>`,
     );
+  } else if (providerId === "clipboard") {
+    $(".ai-generate-button-wrapper").hide();
+    $(".ai-copy-button-wrapper").show();
+    $("#ai_model_group").hide();
+    $("#ai_api_key_group").hide();
+    $("#ai_provider_info").html(
+      `Copy formatted report data to the clipboard to discuss with AI chats like ChatGPT and Claude.`,
+    );
   } else {
+    $(".ai-generate-button-wrapper").show();
+    $(".ai-copy-button-wrapper").hide();
+    $("#ai_provider_info").html("");
     $("#ai_model_group").show();
+    $("#ai_api_key_group").show();
     const storedModel = getStoredModelName(providerId);
     const defaultModel = provider.defaultModel;
     $("#ai-model").val(storedModel || defaultModel);
@@ -1497,28 +1516,6 @@ $(function () {
     const modelName = $(this).data("model");
     $("#ai-model").val(modelName).trigger("change");
   });
-
-  // Add toggle button handler
-  $("#ai_toggle_buttons").click(function () {
-    const $checkbox = $(this);
-    if ($checkbox.is(":checked")) {
-      saveToLocalStorage("mqc_ai_buttons_visible", "true");
-      $(".ai-copy-content").show();
-    } else {
-      saveToLocalStorage("mqc_ai_buttons_visible", "false");
-      $(".ai-copy-content").hide();
-    }
-  });
-
-  // Set initial visibility state based on stored preference
-  if (getFromLocalStorage("mqc_ai_buttons_visible") === "true") {
-    saveToLocalStorage("mqc_ai_buttons_visible", "true");
-    $("#ai_toggle_buttons").prop("checked", true);
-    $(".ai-copy-content").show();
-  } else {
-    $("#ai_toggle_buttons").prop("checked", false);
-    $(".ai-copy-content").hide();
-  }
 });
 
 // Read the JWT local cookie in in the seqera.io domain - that's our API key:

@@ -489,26 +489,3 @@ $(function () {
     updateAiButtonVisibility();
   });
 });
-
-function updateAiButtonVisibility() {
-  const showCopyButtons = $("#ai_toggle_copy_buttons").is(":checked");
-  const showSummaryButtons = $("#ai_toggle_summary_buttons").is(":checked");
-
-  // Update copy buttons visibility
-  $(".ai-copy-content-table, .ai-copy-content-plot").each(function () {
-    if (showCopyButtons) {
-      $(this).show();
-    } else {
-      $(this).hide();
-    }
-  });
-
-  // Update summary buttons visibility
-  $(".ai-generate-button-table, .ai-generate-button-plot").each(function () {
-    if (showSummaryButtons) {
-      $(this).show();
-    } else {
-      $(this).hide();
-    }
-  });
-}

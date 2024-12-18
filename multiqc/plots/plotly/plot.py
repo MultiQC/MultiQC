@@ -996,7 +996,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             ai_btn = f"""
             <div class="ai-plot-buttons-container" style="float: right;">
                 <button 
-                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot"
+                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
                     style="margin-left: 1px;"
                     data-section-anchor="{section_anchor}"
                     data-plot-anchor="{self.anchor}"
@@ -1011,10 +1011,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                             <path d="M20 7H18V19H8V21C8 21.55 8.45 22 9 22H20C20.55 22 21 21.55 21 21V8C21 7.45 20.55 7 20 7Z" fill="currentColor"/>
                         </svg>
                     </span>
-                    <span class="button-text">Copy prompt</span>
+                    <span class="button-text">Copy Prompt</span>
                 </button>
                 <button
-                    class="btn btn-default btn-sm ai-generate-button ai-generate-button-plot"
+                    class="btn btn-default btn-sm ai-generate-button ai-generate-button-plot ai-generate-button-wrapper"
                     data-response-div="{section_anchor}_ai_summary_response"
                     data-error-div="{section_anchor}_ai_summary_error"
                     data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"

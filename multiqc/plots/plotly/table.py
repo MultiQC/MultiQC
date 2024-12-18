@@ -387,7 +387,7 @@ def make_table(
             f"""
         <div class="ai-plot-buttons-container" style="float: right">
             <button
-                class="btn btn-default btn-sm ai-copy-content ai-copy-content-table"
+                class="btn btn-default btn-sm ai-copy-content ai-copy-content-table ai-copy-button-wrapper"
                 data-section-anchor="{section_anchor}"
                 data-plot-anchor="{violin_anchor}"
                 data-module-anchor="{module_anchor}"
@@ -404,7 +404,7 @@ def make_table(
                 <span class="button-text">Copy prompt</span>
             </button>
             <button
-                class="btn btn-default btn-sm ai-generate-button ai-generate-button-table"
+                class="btn btn-default btn-sm ai-generate-button ai-generate-button-table ai-generate-button-wrapper"
                 data-response-div="{section_anchor}_ai_summary_response"
                 data-error-div="{section_anchor}_ai_summary_error"
                 data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
