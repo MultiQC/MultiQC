@@ -50,8 +50,60 @@ THIS IS VERY IMPORTANT. YOU MUST FOLLOW THESE GUIDELINES.
 
 ## Configuration
 
-Configuration is handled by `multiqc/config.py`, where the variables for config options are defined and typed as globals. Default values for those globals are loaded from `multiqc/config_defaults.yaml`, and on top custom user configuration is discovered from e.g. user files or environment variables. `multiqc.config` handles loading config from all possible palces.
+MultiQC configuration is handled by `multiqc/config.py`, where the variables for config options are defined and typed as globals, e.g.
 
-Many parameters are also duplicated as command line options in `multiqc/multiqc.py`, implemented using the `click` and `rich-click` libraries. Each command line parameter also belongs to a group in `rich_click.OPTION_GROUPS`. The module responsible for updating `multiqc.config` from command line parameters is `multiqc/core/update_config.py`.
+```python
+ai_summary: bool = False
+```
 
-Some parameters are passed down to the browser runtime. It is done through setting them to JS variabels in the template `multiqc/templates/default/head.html`, above any further embedded JS code. Tempaltes have access to `multiqc.report` and `multiqc.config` globals.
+Default values for those globals are loaded from `multiqc/config_defaults.yaml`, e.g.
+
+```yaml
+ai_summary: false
+```
+
+And on top of those defaults, custom user configuration is discovered from sources like user files or environment variables - the logic for loading is defined in `multiqc/config.py`.
+
+Many parameters are also duplicated as command line options in `multiqc/multiqc.py`, implemented using the `click` decorators. Each parameter must have a decorator defined:
+
+```python
+@click.option(
+    "--ai",
+    "--ai-summary",
+    "ai_summary",
+    is_flag=True,
+    default=None,
+    help="Enable AI summary",
+)
+```
+
+Each command line parameter must also belong to a group in `rich_click.OPTION_GROUPS`.
+
+Each command line parameter must also be in the `ClConfig` model in `multiqc/core/update_config.py`:
+
+```python
+class ClConfig(BaseModel):
+    ...
+    ai_summary: bool = Field(default=None, description="Enable AI summary")
+    ...
+```
+
+You must also add a block in the `update_config` function defined in `multiqc/core/update_config.py` to update `multiqc.config` globals from the provided command line parameter value, e.g.:
+
+```python
+def update_config(cfg: ClConfig):
+    ...
+    if cfg.ai_summary is not None:
+        config.ai_summary = cfg.ai_summary
+    ...
+```
+
+Some parameters are passed down to the browser runtime. It is done through setting them to JS variabels in the template `multiqc/templates/default/head.html`, above any further embedded JS code. Jinja has access to `multiqc.report` and `multiqc.config` globals when rendering the template. E.g.:
+
+```html
+<script type="text/javascript">
+...
+aiConfigEnabled = "{{ config.ai_summary }}";
+...
+</script>
+```
