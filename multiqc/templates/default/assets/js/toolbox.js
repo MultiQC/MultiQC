@@ -1434,12 +1434,12 @@ function updatePanel(providerId) {
     $("#ai_model_group").hide();
     $("#ai_api_key_group").hide();
     $("#ai_provider_info").html(
-      `Copy formatted report data to the clipboard to discuss with AI chats like ChatGPT and Claude.`,
+      `Copy AI LLM prompt, including report data, to the clipboard. For use with any 3rd party AI tools.`,
     );
   } else if (providerId === "none") {
     $(".ai-generate-button-wrapper").hide();
     $(".ai-copy-button-wrapper").hide();
-    $("#ai_provider_info").html("");
+    $("#ai_provider_info").html("Remove 'Summarize' buttons from report if you're not going to use AI summaries.");
     $("#ai_model_group").hide();
     $("#ai_api_key_group").hide();
   } else {
