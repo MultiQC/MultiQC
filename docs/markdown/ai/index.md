@@ -5,7 +5,7 @@ description: Using AI to summarise MultiQC reports
 
 # AI Summaries
 
-MultiQC can generate AI-powered summaries of your reports. These can be created at two points:
+MultiQC v1.27 onwards can generate AI-powered summaries of your reports. These can be created at two points:
 
 - When creating the report (baked into the report HTML)
 - Dynamically in the browser, whilst viewing an existing HTML report (ephemeral)
@@ -20,7 +20,7 @@ Never rely on AI-generated summaries. Whilst these summaries can be useful to ge
 
 :::
 
-:::warning
+:::note
 
 AI summaries work by sending report data to an LLM provider of your choice, via an API over the internet.
 Be aware of what data you are sending, and to who.
@@ -32,8 +32,12 @@ Be aware of what data you are sending, and to who.
 To use native summary generation, MultiQC needs to communicate with an LLM provider's API.
 All three supported services require an API key to work.
 
+:::info
+
 Seqera AI is free to use, though there are usage limits.
 OpenAI / Anthropic API usage is billed based on consumption.
+
+:::
 
 1. [Seqera AI](https://seqera.io/ask-ai/)
    - Register for free at [seqera.io](https://seqera.io/)
@@ -47,6 +51,10 @@ OpenAI / Anthropic API usage is billed based on consumption.
    - Add a payment method to enable API access
    - Create a new key on on the _API Keys_ section in your account settings
 
+If you have access to another LLM provider, you can use buttons in MultiQC reports to
+copy a prompt to your clipboard in order to manually summarise report data.
+See [Copying prompts](#copying-prompts) for instructions.
+
 :::note
 
 Treat your API key like a password and do not share it.
@@ -58,11 +66,9 @@ Treat your API key like a password and do not share it.
 If you're using OpenAI or Anthropic you can choose the exact model used for report summaries.
 This is done by setting `ai_model` in the MultiQC config.
 
-- Anthropic:
-  - Model names must begin with `claude`
+- Anthropic model names must begin with `claude`
   - Default: `claude-3-5-sonnet-latest`. Tested with `claude-3-5-sonnet` and `claude-3-5-haiku`.
-- OpenAI:
-  - Model names must being with `gpt`
+- OpenAI model names must being with `gpt`
   - Default: `gpt-4o`. Tested with `gpt-4o`.
 
 This model will then be used during report generation and also set as the default toolbox panel setting for browser report summaries.
@@ -74,7 +80,7 @@ Summary text will be included within the report HTML as static text and will be 
 however it is shared.
 
 AI summaries are disabled by default when running MultiQC.
-To use, you must enable them either on the command line or via a MultiQC config file.
+To generate them, you must enable them either on the command line or via a MultiQC config file.
 
 1. Command line flags:
 
@@ -89,7 +95,7 @@ To use, you must enable them either on the command line or via a MultiQC config 
    ai_provider: "seqera" # 'seqera', 'openai' or 'anthropic'. Default: 'seqera'
    ```
 
-You will need to find and set your provider's API key in order to access its service
+You will need to set your provider's API key in an environment variable in order to access its service
 _(see [Choosing a provider](#choosing-a-provider) for how to get an API key)_.
 The API keys are supplied by setting the following environment variables:
 
@@ -99,17 +105,16 @@ export OPENAI_API_KEY="..."
 export ANTHROPIC_API_KEY="..."
 ```
 
-Only one key is needed, according to which service you want to use.
 If you run MultiQC without the appropriate key you will get a warning printed to the console,
-but report generation will otherwise proceed without the summary and MultiQC will not return an error exit code.
+but report generation will otherwise proceed without the summary. MultiQC will not return an error exit code.
 
 MultiQC uses the [python-dotenv](https://saurabh-kumar.com/python-dotenv/) package,
 so you can also use an `.env` file either in the current working directory or the MultiQC source code directory.
 
 :::note
 
-These environment variables will only be used for `--ai-summary`/`--ai-summary-full` generation.
-They are not saved by MultiQC and cannot be used for summary generation within reports.
+Environment variables will only be used for `--ai-summary`/`--ai-summary-full` generation.
+They are not saved by MultiQC and cannot be used for in-browser summary generation, within reports.
 
 :::
 
@@ -117,26 +122,33 @@ They are not saved by MultiQC and cannot be used for summary generation within r
 
 In addition to summaries during report generation, MultiQC can also create summaries dynamically in reports.
 This can be useful as the person viewing a report is often different to the person who generated it.
-It also means that summaries can be generated on demand, only when needed.
+Summaries can be generated on demand, when needed.
 
-Summaries generated when browsing reports are _ephemeral_ - that is, they are not saved in the HTML.
+Summaries generated in reports are _ephemeral_ - that is, they are not saved in the HTML.
 If you generate a summary and share the report then others will not see it.
 MultiQC tries to save the summary response within your browser's [local storage](https://www.w3schools.com/html/html5_webstorage.asp)
 so that it shows the next time you open the same report, but this process is imperfect and may not always work.
 
 ### Configuring the AI provider
 
+<div style={{float:"right"}}>
+
+![ai_summarize_report](../../../docs/images/ai_toolbox_icon.png)
+
+</div>
+
 When you first try to generate a summary in the browser, you must supply the LLM provider's API key.
+Open the AI settings by clicking the icon in the toolbox:
 
-Click either the the "Summarize report" button in the top right corner of the report, or the AI toolbox icon:
-
-![ai_summarize_report](../../../docs/images/ai_empty.png)
-
-Choose an AI provider and enter the relevant API key
+Then, choose an AI provider and enter the relevant API key
 _(see [Choosing a provider](#choosing-a-provider) for how to get an API key)_.
+
+:::info
 
 API keys will be stored only in your browser's local storage, so will not be shared with anyone if you send the HTML report to someone else.
 They are used to send report data directly to your AI provider of choice.
+
+:::
 
 ![ai_summarize_report_toolbox_keys](../../../docs/images/ai_toolbox_keys.png)
 
@@ -166,20 +178,45 @@ You can also copy the entire prompt that MultiQC would use to generate a summary
 
 A button will copy the LLM-friendly formatted report data along with the system prompt into your clipboard, which you can then paste into your an AI chat interace of your provider of choice.
 
-You can also copy the prompt for the entire report by clicking the "Copy prompt" button in the toolbox:
+### Copying prompts
+
+If you have access to an LLM that is not directly supported by MultiQC, you can copy the exact prompt
+that MultiQC uses to your clipboard. This can be pasted into whatever you have access to.
+
+To do this, click the "Copy prompt" button in the toolbox:
 
 ![ai_toolbox_copy_button](../../../docs/images/ai_toolbox_copy_button.png)
 
 ## Context window
 
-At the time of writing, modern LLMs typically have a context window size in `128,000` - `200,000` tokens, which translates to about `100,000` - `160,000` characters in report data. That means that very large reports - of thousands of samples - might not fit the context window. If the entire report doesn't fit the context window, only the general statistics table will be included in the prompt, as it represents the essential overall information of the report. If it doesn't fit, hidden-by-default columns be excluded from the prompt. If even that doesn't help, it wouldn't be possible to generate an AI summary - however, you can try the following:
+A context window refers to the amount of text (in tokens) that an AI model can consider at once
+when processing input and generating responses, encompassing both the input prompt and the output.
+At the time of writing, modern LLMs typically have a context window size in 128k - 200k tokens,
+which translates to about 100k - 160k characters of report data.
+That means that very large reports - of thousands of samples - might not fit in the available LLM context window.
 
-- Hide some columns in the general statistics table (see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context.
-- Open the HTML report in the browser, hide columns with the "Configure columns" button, or filter shown samples dynamically with the toolbox, and request the AI summary dynamically.
+MultiQC uses the following logic, moving on to the next step if the prompt is still too large:
+
+1. Attempt to include all report data in the prompt.
+2. Include just the general statistics table.
+3. Include the general statistics table, without hidden-by-default columns.
+4. Abort AI summary.
+
+If you're struggling to generate an AI summary, you can try the following:
+
+- Hide additional columns in the general statistics table (see [Hiding Columns](../reports/customisation.md#hiding-columns)).
+- Hide General statistics data in the browser, and request the AI summary dynamically:
+  - Hide columns with the "Configure columns" button
+  - Filter shown samples dynamically with the toolbox
 - Copy the prompt from `multiqc_data/multiqc_ai_prompt.txt` or into clipboard with the "Copy prompt" button in the toolbox, and use it with extrenal services with a larger context window.
 
 ## Security Considerations
 
+MultiQC AI summaries are used at your own risk.
+Please treat results with appropriate mistrust and consider what data you are sending to external services.
+
+- API keys set in environment variables are not saved in report outputs
 - API keys put in the toolbox are stored only in your browser's local storage
 - No report data or keys are sent to any servers except the chosen AI provider
-- However, consider security implications when sending reports with sensitive data to your AI provider
+
+Seqera AI does not use inputs for subsequent fine-tuning or direct model improvement.
