@@ -29,7 +29,7 @@ async function runStreamGeneration({
       body: JSON.stringify({
         message: userMessage,
         system_message: systemPrompt,
-        stream: false,
+        stream: true,
         tags: ["multiqc", ...tags],
       }),
     })
@@ -41,14 +41,12 @@ async function runStreamGeneration({
           );
           throw new Error(errorData.error?.message || "Unknown error");
         }
-        data = await response.json();
-        onStreamStart();
-        onStreamNewToken(data.generation);
-        onStreamComplete();
+        return response.body.getReader();
       })
-      .catch((error) => {
-        onStreamError(handleStreamError(error));
-      });
+      .then((reader) =>
+        decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
+      )
+      .catch((error) => onStreamError(handleStreamError(error)));
   } else if (provider.name === "OpenAI") {
     fetch(`https://api.openai.com/v1/chat/completions`, {
       method: "POST",
@@ -75,7 +73,9 @@ async function runStreamGeneration({
         }
         return response.body.getReader();
       })
-      .then((reader) => decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete))
+      .then((reader) =>
+        decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
+      )
       .catch((error) => onStreamError(handleStreamError(error)));
   } else if (provider.name === "Anthropic") {
     fetch(`https://api.anthropic.com/v1/messages`, {
@@ -105,14 +105,16 @@ async function runStreamGeneration({
         }
         return response.body.getReader();
       })
-      .then((reader) => decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete))
+      .then((reader) =>
+        decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
+      )
       .catch((error) => onStreamError(handleStreamError(error)));
   } else {
     onStreamError(`Unsupported AI provider: ${provider.name}`);
   }
 }
 
-function decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete) {
+function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete) {
   // Decode the stream. Supports Anthropic and OpenAI streaming responses
   const decoder = new TextDecoder();
   let buffer = "";
@@ -139,6 +141,7 @@ function decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, on
             if (line.includes('"type":"invalid_request_error"')) {
               // "{"type":"error","error":{"type":"invalid_request_error","message":"messages.1.content: Input should be a valid list"}}"
               onStreamError(line);
+              return acc;
             }
             return acc;
           }
@@ -157,49 +160,73 @@ function decodeStream(reader, onStreamStart, onStreamNewToken, onStreamError, on
             onStreamError(`Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`);
             return acc;
           }
-          let type = data.type;
+
+          let type = undefined;
           let content = undefined;
           let model = undefined;
           let role = undefined;
           let finish_reason = undefined;
 
-          // OpenAI doesn't define type
-          if (type === undefined) {
+          // Detect provider
+          if (providerId === "seqera") {
+            type = data.type; // on_chat_model_start, on_chat_model_stream, on_chat_model_end
+            content = data.content;
+            model = data.metadata?.ls_model_name;
+            finish_reason = data.response_metadata?.stop_reason;
+            if (finish_reason && finish_reason !== "end_turn") {
+              type = "error";
+              error = `Streaming unexpectedly stopped. Reason: ${finish_reason}`;
+            }
+          } else if (providerId === "openai") {
             content = data.choices[0].delta.content;
             model = data.model;
             role = data.choices[0].delta.role;
             finish_reason = data.choices[0].finish_reason;
+            // OpenAI doesn't define type, so we need to infer it from the other fields
             if (role === "assistant") {
-              type = "message_start";
+              type = "on_chat_model_start";
             } else if (finish_reason === "stop") {
-              type = "message_stop";
+              type = "on_chat_model_end";
             } else if (content) {
-              type = "content_block_delta";
+              type = "on_chat_model_stream";
             } else if (finish_reason && finish_reason !== "stop") {
               type = "error";
+              error = `Streaming unexpectedly stopped. Reason: ${finish_reason}`;
             } else {
               type = "unknown";
             }
-            error = finish_reason;
-          } else {
-            if (type === "content_block_delta" && data.delta.type === "text_delta") content = data.delta.text;
-            if (type === "message_start") {
+          } else if (providerId === "anthropic") {
+            type = data.type;
+            if (type === "content_block_delta" && data.delta.type === "text_delta") {
+              content = data.delta.text;
+              type = "on_chat_model_stream";
+            } else if (type === "message_start") {
               model = data.message.model;
               role = data.message.role;
+              type = "on_chat_model_start";
+            } else if (data.finish_reason) {
+              if (data.finish_reason === "end_turn") {
+                type = "on_chat_model_end";
+              } else {
+                type = "error";
+                error = `Streaming unexpectedly stopped. Reason: ${data.finish_reason}`;
+                if (data.error) error += `. Error: ${data.error}`;
+              }
+            } else if (data.error) {
+              type = "error";
+              error = `Streaming unexpectedly stopped. Error: ${data.error}`;
             }
-            finish_reason = data.finish_reason;
-            error = data.error;
           }
 
           // Handle different event types
           switch (type) {
-            case "message_start":
+            case "on_chat_model_start":
               onStreamStart(model);
               break;
-            case "content_block_delta":
+            case "on_chat_model_stream":
               if (content) onStreamNewToken(content);
               break;
-            case "message_stop":
+            case "on_chat_model_end":
               onStreamComplete();
               return acc;
             case "error":
