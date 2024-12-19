@@ -229,6 +229,63 @@ If you're struggling to generate an AI summary, you can try the following:
   - Filter shown samples dynamically with the toolbox
 - Copy the prompt from `multiqc_data/multiqc_ai_prompt.txt` or into clipboard with the "Copy prompt" button in the toolbox, and use it with extrenal services with a larger context window.
 
+## Configuring within Nextflow
+
+If you're running MultiQC within a Nextflow pipeline, you probably don't want to edit the workflow code to configure AI summaries.
+Most nf-core pipelines with MultiQC have a `--multiqc_config` option to provide additional YAML config for MultiQC.
+However, because API keys must be passed using environment variables anyway, the recommended method is to use
+environment vars for everything.
+
+Using this approach means that no pipeline code needs adjustment, only a small addition to the Nextflow config
+by using the [`env` config scope](https://nextflow.io/docs/latest/reference/config.html#env).
+
+For example, to use with OpenAI you would set the following in your Nextflow config:
+
+```groovy
+env {
+   MULTIQC_AI_SUMMARY_FULL = 1              // Enable long summaries during report generation
+   MULTIQC_AI_PROVIDER = "openai"           // Select OpenAI as provider
+   OPENAI_API_KEY = secrets.OPENAI_API_KEY  // Access key for OpenAI
+}
+```
+
+The relevant environment variables are [described above](#summaries-during-report-generation).
+
+:::note
+
+The above example uses [Nextflow Secrets](https://nextflow.io/docs/latest/secrets.html)
+to securely manage your API keys outside of your config file.
+To add this Nextflow secret you would run the following command in the terminal:
+
+```bash
+$ nextflow secrets set OPENAI_API_KEY "xxxx"
+```
+
+:::
+
+:::tip
+
+Add this config to `~/.nextflow/config` and it will be applied to every Nextflow pipeline you launch.
+
+:::
+
+### Using Seqera Platform
+
+If using Seqera Platform the above config can be used when launching pipelines or adding them to the launchpad.
+However, environment variables can also be added at _Compute Environment_ level and will then affect every pipeline
+run using that CE, without further modification.
+This effectively means that provider API keys can be managed at workspace level.
+
+To do this, toggle the _"Environment variables"_ section when creating a Compute Environment and click _"Add variable"_.
+
+Make sure that the _"Target environment"_ has _"Compute job"_ toggled on.
+
+![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_var_create.png)
+
+Once added:
+
+![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_vars.png)
+
 ## Security Considerations
 
 MultiQC AI summaries are used at your own risk.
