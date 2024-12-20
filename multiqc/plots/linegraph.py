@@ -68,7 +68,8 @@ def plot(
                     x_to_y = dict(x_to_y)
                 else:
                     x_to_y = {i: y for i, y in enumerate(x_to_y)}
-            series: Series[Any, Any] = _make_series_dict(pconf, ds_idx, s, x_to_y)
+            dl = pconf.data_labels[ds_idx] if pconf.data_labels else None
+            series: Series[Any, Any] = _make_series_dict(pconf, dl, s, x_to_y)
             if pconf.hide_empty and not series.pairs:
                 continue
             list_of_series.append(series)
@@ -115,7 +116,7 @@ def plot(
 
 def _make_series_dict(
     pconfig: LinePlotConfig,
-    ds_idx: int,
+    data_label: Union[Dict[str, Any], str, None],
     s: str,
     y_by_x: XToYDictT[KeyT, ValT],
 ) -> Series[KeyT, ValT]:
@@ -127,16 +128,15 @@ def _make_series_dict(
     xmax = pconfig.xmax
     xmin = pconfig.xmin
     colors = pconfig.colors
-    if pconfig.data_labels:
-        dl = pconfig.data_labels[ds_idx]
-        if isinstance(dl, dict):
-            _x_are_categories = dl.get("categories", x_are_categories)
+    if data_label:
+        if isinstance(data_label, dict):
+            _x_are_categories = data_label.get("categories", x_are_categories)
             assert isinstance(_x_are_categories, bool)
             x_are_categories = _x_are_categories
-            _ymax = dl.get("ymax", ymax)
-            _ymin = dl.get("ymin", ymin)
-            _xmax = dl.get("xmax", xmax)
-            _xmin = dl.get("xmin", xmin)
+            _ymax = data_label.get("ymax", ymax)
+            _ymin = data_label.get("ymin", ymin)
+            _xmax = data_label.get("xmax", xmax)
+            _xmin = data_label.get("xmin", xmin)
             assert isinstance(_ymax, (int, float, type(None)))
             assert isinstance(_ymin, (int, float, type(None)))
             assert isinstance(_xmax, (int, float, type(None)))
@@ -145,18 +145,18 @@ def _make_series_dict(
             ymin = _ymin
             xmax = _xmax
             xmin = _xmin
-            _colors = dl.get("colors")
+            _colors = data_label.get("colors")
             if _colors and isinstance(_colors, dict):
                 colors = {**colors, **cast(Dict[str, str], _colors)}
+
+    xs = [x for x in y_by_x.keys()]
+    if not x_are_categories:
+        xs = sorted(xs)
 
     # Discard > ymax or just hide?
     # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
     discard_ymax = None
     discard_ymin = None
-    xs = [x for x in y_by_x.keys()]
-    if not x_are_categories:
-        xs = sorted(xs)
-
     for x in xs:
         if not x_are_categories:
             if xmax is not None and float(x) > float(xmax):
