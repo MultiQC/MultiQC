@@ -431,8 +431,8 @@ If you happen to use sample names or other values that appear number-like, and w
 ```
 # plot_type: "table"
 Sample Name,Size,Representative Id
-"01","1446399400_1_131"
-"02","782510898_278_395"
+"01",100,"1446399400_1_131"
+"02",120,"782510898_278_395"
 ```
 
 ## Linting

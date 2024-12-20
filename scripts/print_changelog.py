@@ -89,7 +89,7 @@ def main():
         "module: change": "Module updates",
         "bug: core": "Fixes",
         "core: infrastructure": "Infrastructure and packaging",
-        "core: refactoring": "Refactoring and typing",
+        "core: refactoring": "Optimization, refactoring and typing",
         "documentation": "Chores",
     }
     sections_to_prs: Dict[str, List[PullRequest]] = {

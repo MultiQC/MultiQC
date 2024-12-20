@@ -2,6 +2,14 @@
 
 ## [MultiQC v1.26](https://github.com/MultiQC/MultiQC/releases/tag/v1.26) - 2024-12-17
 
+Christmas release! 10 new modules, 11 improved modules, and a few core improvements.
+
+### Highlights
+
+- Custom content: allow quoting strings in CSV to prevent interpreting them as numbers ([#3020](https://github.com/MultiQC/MultiQC/pull/3020)):
+- Naturally sort samples in tables and bar plots ([#2999](https://github.com/MultiQC/MultiQC/pull/2999))
+- Auto-save dynamic toolbox settings ([#3001](https://github.com/MultiQC/MultiQC/pull/3001))
+
 ### New modules
 
 - [**MosaiCatcher**](https://github.com/friendsofstrandseq/mosaicatcher) - tool for classifying strand states of each chromosome in each cell using a Hidden Markov Model ([#1910](https://github.com/MultiQC/MultiQC/pull/1910))
@@ -21,24 +29,28 @@
 - Pychopper: add section with UMI barpot ([#3024](https://github.com/MultiQC/MultiQC/pull/3024))
 - fastp: add overrepresented sequences plot and table ([#3000](https://github.com/MultiQC/MultiQC/pull/3000))
 - RNA-SeqC: more metrics in general statistics table ([#3017](https://github.com/MultiQC/MultiQC/pull/3017))
-- phantompeakqualtools: Adjust minimum value to 1 for NSC coeff ([#3021](https://github.com/MultiQC/MultiQC/pull/3021))
+- phantompeakqualtools: adjust minimum value to 1 for NSC coeff ([#3021](https://github.com/MultiQC/MultiQC/pull/3021))
 - QualiMap RNASeq: add gen stats columns for exonic, intronic, intergenic, overlapping ([#3018](https://github.com/MultiQC/MultiQC/pull/3018))
+- QualiMap BamQC: add general stats columns for dup rate, number of Ns, mapped paired reads ([#2989](https://github.com/MultiQC/MultiQC/pull/2989))
 - DRAGEN: RNA quant metrics: support forward and reverse fragments in barplot ([#3012](https://github.com/MultiQC/MultiQC/pull/3012))
 - Interop: remove "%" suffix for `nan` values ([#2995](https://github.com/MultiQC/MultiQC/pull/2995))
-- QualiMap BamQC: add general stats columns for dup rate, number of Ns, mapped paired reads ([#2989](https://github.com/MultiQC/MultiQC/pull/2989))
 - Dedup: use a more specific search pattern ([#2988](https://github.com/MultiQC/MultiQC/pull/2988))
 - Bclconvert: group samples and lanes, refactor ([#2872](https://github.com/MultiQC/MultiQC/pull/2872))
-- Nanostat new format: fix parsing sample names ([#3007](https://github.com/MultiQC/MultiQC/pull/3007))
+- Nanostat: new format: fix parsing sample names ([#3007](https://github.com/MultiQC/MultiQC/pull/3007))
 
-### Other feature updates and improvements
+### Feature updates and improvements
 
+- Custom content: allow quoting strings in CSV ([#3020](https://github.com/MultiQC/MultiQC/pull/3020))
+- Naturally sort samples in tables and bar plots ([#2999](https://github.com/MultiQC/MultiQC/pull/2999))
+- Auto-save dynamic toolbox settings to session and to a file ([#3001](https://github.com/MultiQC/MultiQC/pull/3001))
 - Support Python 3.13, drop 3.8 ([#2862](https://github.com/MultiQC/MultiQC/pull/2862))
-- Custom content: allow quoting values in CSV ([#3020](https://github.com/MultiQC/MultiQC/pull/3020))
-- Naturally sort bar plot bar names ([#2999](https://github.com/MultiQC/MultiQC/pull/2999))
-- Save dynamic toolbox settings automatically and to a file ([#3001](https://github.com/MultiQC/MultiQC/pull/3001))
 - Add table tooltips about merged values in groupped samples ([#3002](https://github.com/MultiQC/MultiQC/pull/3002))
 
-### Refactoring and typing
+### Fixes
+
+- Align order of lineplot categories across samples ([#3033](https://github.com/MultiQC/MultiQC/pull/3033))
+
+### Optimization, refactoring and typing
 
 - Memory optimization: do not preserve `saved_raw_data` in modules, write directly to files instead ([#3010](https://github.com/MultiQC/MultiQC/pull/3010))
 - Violin plot: add `dt` into `Dataset` objects instead of `main_table_dt` ([#2968](https://github.com/MultiQC/MultiQC/pull/2968))
