@@ -93,6 +93,24 @@ def plot(
                 if i < len(datasets):
                     datasets[i].append(series)
 
+    for ds_idx, series_by_sample in enumerate(datasets):
+        if pconf.categories and series_by_sample:
+            if isinstance(pconf.categories, list):
+                categories = pconf.categories
+            else:
+                categories = [pair[0] for pair in series_by_sample[0].pairs]
+            for si, series in enumerate(series_by_sample):
+                if si != 0:
+                    # If categories come in different order in different samples, reorder them
+                    xs = [p[0] for p in series.pairs]
+                    xs_set = set(xs)
+                    xs_in_categories = [c for c in categories if c in xs_set]
+                    categories_set = set(categories)
+                    xs_not_in_categories = [x for x in xs if x not in categories_set]
+                    xs = xs_in_categories + xs_not_in_categories
+                    pairs = dict(series.pairs)
+                    series.pairs = [(x, pairs[x]) for x in xs]
+
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
     for _, series_by_sample in enumerate(datasets):
         for si, series in enumerate(series_by_sample):
