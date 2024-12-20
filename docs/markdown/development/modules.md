@@ -180,7 +180,8 @@ plugins for [Prettier](https://github.com/prettier/prettier-vscode).
 
 1. We use modern Python 3, thus:
 
-   - Alwayy use f-strings (e.g. `f"{var}"`) over the legacy `"{var}".format()` calls.
+   - Always use f-strings (e.g. `f"{var}"`) over the legacy `"{var}".format()` calls.
+   - Use double quotes for strings.
    - Built-in `dict` preserve order, thus most of the time you don't need to use `OrderedDict`.
    - Avoid unnecessary `__future__` imports.
 
@@ -316,8 +317,8 @@ from multiqc.base_module import BaseMultiqcModule
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
-          name='My Module',
-          anchor='mymodule',
+          name="My Module",
+          anchor="mymodule",
           href="https://www.awesome_bioinfo.com/mymodule",
           info="Example analysis module used for writing documentation.",
           doi=["01.2345/journal/abc123", "01.2345/journal/abc124"],
@@ -331,9 +332,9 @@ The available arguments when initialising a module as follows:
 
 - `name` - Name of your module
 - `anchor` - A HTML-safe anchor that will be used after the `#` in the URL
-- `href` - Link to the homepage for the tool
+- `href` - Link(s) to the homepage for the tool
 - `info` - Very short description text about the tool
-- `doi` - One or more publication DOIs (`str`, or `list` of `str`s)
+- `doi` - One or more publication DOIs (can be a string or a list)
 - `comment` - Additional comment text for module. Usually user-supplied in a config.
 - `extra` - Optional additional description. Will appear in the documentation and in the report, but not on the list of modules on the website.
 - `target` - Name of the module in the description (default: `name`)
@@ -415,7 +416,7 @@ Instead, use the `logger` module as follows:
 import logging
 log = logging.getLogger(__name__)
 
-log.info('Hello World!')
+log.info("Hello World!")
 ```
 
 Log messages can come in a range of formats:
@@ -490,9 +491,9 @@ The following search criteria sub-keys can then be used:
 - `exclude_contents_re`
   - A regex which will exclude the file if matched within the file contents (checked line by line)
 - `num_lines`
-  - The number of lines to search through for the `contents` string. Defaults to 1000 (configurable via `filesearch_lines_limit`).
+  - The number of lines to search through for the `contents` string. Defaults to 1000 (configurable via `filesearch_lines_limit`). Set or a low number like 10 if it's e.g. a header of a TSV file. Do not set it to 1 (!!!) because there is a chance that other versions of this file can have extra-headers.
 - `shared`
-  - By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file is likely to be shared between multiple tools.
+  - By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file is likely to be shared between multiple tools, or has a too generic search pattern.
 - `max_filesize`
   - Files larger than the `log_filesize_limit` config key (default: 50MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
 
@@ -570,7 +571,7 @@ Once your strings are added, you can find files in your module with the
 base function `self.find_log_files()`, using the key you set in the YAML:
 
 ```python
-self.find_log_files('mymodule')
+self.find_log_files("mymodule")
 ```
 
 This function yields a dictionary with various information about each matching
@@ -578,20 +579,20 @@ file. The `f` key contains the contents of the matching file:
 
 ```python
 # Find all files for mymod
-for f in self.find_log_files('mymodule'):
-    print(f['f'])  # File contents
-    print(f['s_name'])  # Sample name (from cleaned filename)
-    print(f['fn'])  # Filename
-    print(f['root'])  # Directory file was in
+for f in self.find_log_files("mymodule"):
+    print(f["f"])  # File contents
+    print(f["s_name"])  # Sample name (from cleaned filename)
+    print(f["fn"])  # Filename
+    print(f["root"])  # Directory file was in
 ```
 
 If `filehandles=True` is specified, the `f` key contains a file handle
 instead:
 
 ```python
-for f in self.find_log_files('mymodule', filehandles=True):
+for f in self.find_log_files("mymodule", filehandles=True):
     # f['f'] is now a filehandle instead of contents
-    for line in f['f']:
+    for line in f["f"]:
         print(line)
 ```
 
@@ -614,11 +615,11 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         ...
         data_by_sample: Dict[str, Dict[str, Union[float, int]]] = dict()
-        for f in self.find_log_files('mymod'):
-            s_name = f['s_name']
+        for f in self.find_log_files("mymod"):
+            s_name = f["s_name"]
             if s_name in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            data_by_sample[s_name] = parse_file(f['f'])
+            data_by_sample[s_name] = parse_file(f["f"])
 
 
 def parse_file(f) -> Dict[str, Union[float, int]]:
@@ -652,7 +653,7 @@ you can check each sample name individually using the
 `self.is_ignore_sample()` function:
 
 ```python
-if self.is_ignore_sample(f['s_name']):
+if self.is_ignore_sample(f["s_name"]):
     print("We will not use this sample!")
 ```
 
@@ -687,7 +688,7 @@ sample name from the input file name. For that, you should use the `self.clean_s
 method, as this will prepend the directory name if requested on the command line:
 
 ```python
-for f in self.find_log_files('mymodule'):
+for f in self.find_log_files("mymodule"):
     input_fname, data = parse_file(f)
     s_name = self.clean_s_name(input_fname, f)
     ...
@@ -729,7 +730,7 @@ for debugging. However, most of the time it makes sense - programs often
 create log files _and_ print to `stdout` for example.
 
 ```python
-if f['s_name'] in data_by_sample:
+if f["s_name"] in data_by_sample:
     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 ```
 
@@ -745,7 +746,7 @@ If you've used the `self.find_log_files` function, writing to the sources file
 is as simple as passing the log file variable to the `self.add_data_source` function:
 
 ```python
-for f in self.find_log_files('mymodule'):
+for f in self.find_log_files("mymodule"):
     self.add_data_source(f)
 ```
 
@@ -846,20 +847,22 @@ MultiQC report. At the top of every report is the 'General Statistics'
 table. This contains metrics from all modules, allowing cross-module
 comparison.
 
+Do not add a lot of columns to the General Statistics table. There should be 1-2 columns visible-by-default columns per module, plus there can be a bunch of more hidden columns.
+
 There is a helper function to add your data to this table. It can take
 a lot of configuration options, but most have sensible defaults. At
 it's simplest, it works as follows:
 
 ```python
 data_by_sample: Dict[str, Dict[str, float]] = {
-    'sample_1': {
-        'first_col': 91.4,
-        'second_col': 78.2,
+    "sample_1": {
+        "first_col": 91.4,
+        "second_col": 78.2,
     },
-    'sample_2': {
-        'first_col': 138.3,
-        'second_col': 66.3,
-    }
+    "sample_2": {
+        "first_col": 138.3,
+        "second_col": 66.3,
+    },
 }
 self.general_stats_addcols(data_by_sample)
 ```
@@ -870,18 +873,18 @@ data scales and colour schemes, you can supply an extra dict:
 ```python
 from multiqc.plots.table_object import ColumnMeta
 headers = {
-    'first_col': ColumnMeta(
-        title='First',
-        description='My First Column',
-        scale='RdYlGn-rev'
+    "first_col": ColumnMeta(
+        title="First",
+        description="My First Column",
+        scale="RdYlGn-rev",
     ),
-    'second_col': ColumnMeta(
-        title='Second',
-        description='My Second Column',
+    "second_col": ColumnMeta(
+        title="Second",
+        description="My Second Column",
         max=100,
         min=0,
-        scale='Blues',
-        suffix='%'
+        scale="Blues",
+        suffix="%",
     )
 }
 self.general_stats_addcols(data_by_sample, headers)
@@ -890,19 +893,19 @@ self.general_stats_addcols(data_by_sample, headers)
 Here are all options for headers, with defaults:
 
 ```python
-headers['name'] = TableColumn(
-    namespace='',                # Module name. Auto-generated for core modules in General Statistics.
-    title='[ dict key ]',        # Short title, table column title
-    description='[ dict key ]',  # Longer description, goes in mouse hover text
+headers["name"] = TableColumn(
+    namespace="",                # Module name. Auto-generated for core modules in General Statistics.
+    title="[ dict key ]",        # Short title, table column title
+    description="[ dict key ]",  # Longer description, goes in mouse hover text
     max=None,                    # Minimum value in range, for bar / colour coding
     min=None,                    # Maximum value in range, for bar / colour coding
-    scale='GnBu',                # Colour scale for colour coding. Set to False to disable.
+    scale="GnBu",                # Colour scale for colour coding. Set to False to disable.
     suffix=None,                 # Suffix for value (eg. '%')
-    format='{:,.1f}',            # Output format() string. Can also be a lambda function.
+    format="{:,.1f}",            # Output format() string. Can also be a lambda function.
     shared_key=None,             # See below for description
     modify=None,                 # Lambda function to modify values
     hidden=False,                # Set to True to hide the column on page load
-    placement= 1000.0,           # Alter the default ordering of columns in the table
+    placement=1000.0,            # Alter the default ordering of columns in the table
 )
 ```
 
@@ -1103,9 +1106,9 @@ self.add_section(
     )),
 )
 self.add_section(
-    name='First Module Section',
-    anchor='mymodule-first',
-    description='My amazing module output, from the first section',
+    name="First Module Section",
+    anchor="mymodule-first",
+    description="My amazing module output, from the first section",
     helptext="""
         If you're not sure _how_ to interpret the data, we can help!
         Most modules use multi-line strings for these text blocks,
@@ -1122,7 +1125,7 @@ self.add_section(
     ))
 )
 self.add_section(
-    content='<p>Some custom HTML.</p>'
+    content="<p>Some custom HTML.</p>"
 )
 ```
 
@@ -1228,4 +1231,304 @@ self.css = {
 self.js = {
     "assets/js/multiqc_fastqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_fastqc.js")
 }
+```
+
+## Addendum - example module
+
+Below is an example of a good-quality module written for a made-up tool Qualalyser:
+
+### File system structure:
+
+```
+├── multiqc
+│   ├── modules
+│   |   └── qualalyser
+│   │       ├── __init__.py
+│   │       ├── qualalyser.py
+│   │       └── tests
+│   │           ├── __init__.py
+│   │           └── test_qualalyser.py
+│   └── search_patterns.yaml
+└── pyproject.toml
+```
+
+### `__init__.py`
+
+```python
+from .qualalyser import MultiqcModule
+
+__all__ = ["MultiqcModule"]
+```
+
+### `qualalyser.py`
+
+```python
+import logging
+import re
+from collections import defaultdict
+from copy import deepcopy
+from typing import Callable, Dict, List, Any, Tuple, Union
+
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import table, bargraph
+from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.table_object import TableConfig, ColumnMeta
+from multiqc.utils import mqc_colour
+from multiqc import config
+
+log = logging.getLogger(__name__)
+
+
+class MultiqcModule(BaseMultiqcModule):
+    """
+    Qualalyser provides multiple subcommands, and the MultiQC module currently only supports `quality`.
+
+    Qualalyser outputs useful information into stdout, and you need to capture it to
+    a file for the module to recognize. To pipe stderr into a file, run the tool
+    as follows:
+
+    qualalyser quality 2> sample1.log
+
+    Note the that the sample name is parsed from the filename by default, in this case,
+    the reported name will be "sample1".
+
+    #### Configuration
+
+    By default, Qualalyser uses the following quality threshold: 10.
+
+    To override it, use the following config:
+
+    qualalyser:
+      min_quality: 10
+
+    Version 1.1.0 of Qualalyser is tested.
+    """
+
+    def __init__(self):
+        super(MultiqcModule, self).__init__(
+            name="Qualalyser",
+            anchor="qualalyser",
+            href="https://github.com/bioinformatics-centre/qualalyser/",
+            info="Reports read quality and length from sequencing data",
+            doi="10.21105/joss.02991",
+        )
+
+        # Find and load any Qualalyser reports
+        data_by_sample: Dict[str, Dict[str, float]] = {}
+        for f in self.find_log_files("qualalyser/quality", filehandles=True):
+            sample_data = parse_qualalyser_log(f)
+            if sample_data:
+                s_name = f['s_name']
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                data_by_sample[s_name] = sample_data
+                self.add_data_source(f)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
+        # Filter to strip out ignored sample names
+        data_by_sample = self.ignore_samples(data_by_sample)
+        if len(data_by_sample) == 0:
+            raise ModuleNoSamplesFound
+        log.info(f"Found {len(data_by_sample)} reports")
+
+        # Add Qualalyser summary to the general stats table
+        self.add_table(data_by_sample)
+
+        # Quality distribution Plot
+        self.reads_by_quality_plot(data_by_sample)
+
+        # Read length distribution Plot
+        self.reads_by_length_plot(data_by_sample)
+
+        # Write parsed report data to a file
+        self.write_data_file(data_by_sample, "multiqc_qualalyser")
+
+    def add_table(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
+        headers: Dict[str, Dict] = {
+            "Number of reads": ColumnMeta(
+                title="Reads",
+                description="Number of reads",
+                scale="Greens",
+                shared_key="read_count",
+            ),
+            "Number of bases": ColumnMeta(
+                title="Bases",
+                description="Total bases sequenced",
+                scale="Purples",
+                shared_key="base_count",
+            ),
+            "N50 read length": ColumnMeta(
+                title="Read N50",
+                description="N50 read length",
+                scale="Blues",
+                suffix="bp",
+                format="{:,.0f}",
+            ),
+            "Longest read": ColumnMeta(
+                title="Longest Read",
+                description="Longest read length",
+                suffix="bp",
+                scale="Oranges",
+                format="{:,.0f}",
+            ),
+            "Mean read length": ColumnMeta(
+                title="Mean Length",
+                description="Mean read length",
+                suffix="bp",
+                scale="PuBuGn",
+            ),
+            "Median read length": ColumnMeta(
+                title="Median Length",
+                description="Median read length (bp)",
+                scale="RdYlBu",
+                format="{:,.0f}",
+            ),
+            "Mean read quality": ColumnMeta(
+                title="Mean Qual",
+                description="Mean read quality (Phred scale)",
+                scale="PiYG",
+            ),
+            "Median read quality": ColumnMeta(
+                title="Median Qual",
+                description="Median read quality (Phred scale)",
+                scale="Spectral",
+            ),
+        }
+
+        self.add_section(
+            name="Qualalyser Summary",
+            anchor="qualalyser-summary",
+            description="Statistics from Qualalyser reports",
+            plot=table.plot(
+                data_by_sample,
+                headers,
+                pconfig=TableConfig(
+                    id="qualalyser_table",
+                    title="Qualalyser Summary",
+                ),
+            ),
+        )
+
+        # Add general stats table - hide all columns except for two
+        general_stats_headers = deepcopy(headers)
+        for h in general_stats_headers.values():
+            h["hidden"] = True
+        general_stats_headers["Number of reads"]["hidden"] = False
+        general_stats_headers["N50 read length"]["hidden"] = False
+
+        # Add columns to the general stats table
+        self.general_stats_addcols(data_by_sample, general_stats_headers)
+
+    def reads_by_quality_plot(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
+        barplot_data: Dict[str, Dict[str, float]] = defaultdict(dict)
+        keys: List[str] = []
+        min_quality = getattr(config, "qualalyser", {}).get("min_quality", 10)
+
+        for name, d in data_by_sample.items():
+            reads_by_q = {int(re.search(r"\d+", k).group(0)): v for k, v in d.items() if k.startswith("Reads > Q")}
+            if not reads_by_q:
+                continue
+
+            thresholds = sorted(th for th in reads_by_q if th >= min_quality)
+            if not thresholds:
+                continue
+
+            barplot_data[name], keys = get_ranges_from_cumsum(
+                data=reads_by_q, thresholds=thresholds, total=d["Number of reads"], formatter=lambda x: f"Q{x}"
+            )
+
+        colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(keys))
+        cats = {
+            k: {"name": f"Reads {k}", "color": colours.get_colour(idx, lighten=1)} for idx, k in enumerate(keys[::-1])
+        }
+
+        # Plot
+        self.add_section(
+            name="Read quality",
+            anchor="qualalyser_plot_quality",
+            description="Read counts categorised by read quality (Phred score).",
+            helptext="""
+            Sequencing machines assign each generated read a quality score using the
+            [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score).
+            The phred score represents the liklelyhood that a given read contains errors.
+            High quality reads have a high score.
+            """,
+            plot=bargraph.plot(
+                barplot_data,
+                cats,
+                pconfig=bargraph.BarPlotConfig(
+                    id="qualalyser_plot_quality_plot",
+                    title="Qualalyser: read qualities",
+                ),
+            ),
+        )
+
+
+def parse_qualalyser_log(f) -> Dict[str, float]:
+    """Parse output from Qualalyser"""
+    stats: Dict[str, float] = dict()
+
+    # Parse the file content
+    segment = None
+    summary_lines = []
+    length_threshold_lines = []
+    quality_threshold_lines = []
+
+    for line in f["f"]:
+        line = line.strip()
+        if line.startswith("Qualalyser Read Summary"):
+            segment = "summary"
+            continue
+        elif line.startswith("Read length thresholds"):
+            segment = "length_thresholds"
+            continue
+        elif line.startswith("Read quality thresholds"):
+            segment = "quality_thresholds"
+            continue
+
+        if segment == "summary":
+            summary_lines.append(line)
+        elif segment == "length_thresholds":
+            length_threshold_lines.append(line)
+        elif segment == "quality_thresholds":
+            quality_threshold_lines.append(line)
+
+    for line in summary_lines:
+        if ":" in line:
+            metric, value = line.split(":", 1)
+            stats[metric.strip()] = float(value.strip())
+
+    return stats
+```
+
+### `pyproject.toml`
+
+```toml
+...
+[project.entry-points."multiqc.modules.v1"]
+qualalyser = "multiqc.modules.qualalyser:MultiqcModule"
+...
+```
+
+### `search_patterns.yaml`
+
+```yaml
+---
+qualalyser/quality:
+  fn: "*.log"
+  contents: "Qualalyser Read Summary"
+  num_lines: 10
+```
+
+### `config_defaults.yaml`
+
+```yaml
+---
+# Order that modules should appear in report. Try to list in order of analysis.
+module_order: ...
+  - qualalyser
+  ...
 ```

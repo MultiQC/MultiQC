@@ -1,11 +1,11 @@
 import fnmatch
 import logging
 from collections import defaultdict
-from typing import Dict, List, Mapping, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from multiqc import Plot, config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
+from multiqc.modules.qualimap.QM_BamQC import genome_fraction_helptext
 from multiqc.plots import bargraph, linegraph
 from multiqc.plots.linegraph import smooth_array
 from multiqc.utils.util_functions import update_dict
@@ -253,7 +253,7 @@ class MultiqcModule(BaseMultiqcModule):
                 xmax = 0
                 for sample, cum_cov_by_x in cum_cov_dist_by_sample.items():
                     for x, cumcov in cum_cov_by_x.items():
-                        if cumcov > 1:  # require >1% to prevent long flat tail
+                        if cumcov is not None and cumcov > 1:  # require >1% to prevent long flat tail
                             xmax = max(xmax, x)
 
                 # Write data to file, sort columns numerically and convert to strings
@@ -309,12 +309,12 @@ class MultiqcModule(BaseMultiqcModule):
                             "title": "Mosdepth: Coverage per contig",
                             "xlab": "Region",
                             "ylab": "Average Coverage",
-                            "categories": True,
                             "tt_decimals": 1,
                             "tt_suffix": "x",
                             "smooth_points": 500,
                             "logswitch": True,
                             "hide_empty": False,
+                            "categories": True,
                         },
                     )
                 else:
@@ -327,6 +327,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "ylab": "Average Coverage",
                             "tt_suffix": "x",
                             "hide_empty": False,
+                            "categories": True,
                         },
                     )
 
