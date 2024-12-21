@@ -10,7 +10,7 @@ was generated and the button that launches the welcome tour.
 
 <h1 id="page_title">
     {% if config.custom_logo is not none %}
-      <div class="pull-right">
+      <div class="float-end">
       {{ '<a href="'+config.custom_logo_url+'" target="_blank">' if config.custom_logo_url is not none }}
         <img src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}" title="{{ config.custom_logo_title if config.custom_logo_title is not none }}" class="custom_logo">
       {{ '</a>' if config.custom_logo_url is not none }}
@@ -39,25 +39,30 @@ was generated and the button that launches the welcome tour.
 {% endif %}
 
 {% if config.report_header_info and config.report_header_info | length > 0 %}
-<div class="well">
-  <dl class="dl-horizontal" style="margin-bottom:0;">
-    {% for d in config.report_header_info %}{% for k, v in d.items() %}
-      <dt>{{ k }}</dt><dd>{{ v }}</dd>
-    {% endfor %}{% endfor %}
-  </dl>
+<div class="card">
+  <div class="card-body">
+    <dl class="row mb-0">
+      {% for d in config.report_header_info %}{% for k, v in d.items() %}
+        <dt class="col-sm-3">{{ k }}</dt>
+        <dd class="col-sm-9">{{ v }}</dd>
+      {% endfor %}{% endfor %}
+    </dl>
+  </div>
 </div>
 {% endif %}
 
 <noscript>
-  <div class="alert alert-danger">
-    <h4>JavaScript Disabled</h4>
+  <div class="alert alert-danger" role="alert">
+    <h4 class="alert-heading">JavaScript Disabled</h4>
     <p>MultiQC reports use JavaScript for plots and toolbox functions. It looks like
     you have JavaScript disabled in your web browser. Please note that many of the report
     functions will not work as intended.</p>
   </div>
 </noscript>
 
-<div class="alert alert-warning mqc_loading_warning" style="display:none;"><span class="glyphicon glyphicon-time"></span> &nbsp;Loading report..</div>
+<div class="alert alert-warning mqc_loading_warning" style="display:none;">
+  <i class="bi bi-clock"></i> &nbsp;Loading report..
+</div>
 
 {% if config.show_analysis_time or config.show_analysis_paths %}
 <div id="analysis_dirs_wrapper">
@@ -105,8 +110,8 @@ was generated and the button that launches the welcome tour.
 
 <hr id="mqc_header_hr">
 
-<div class="alert alert-info alert-dismissible hidden-print" id="mqc_welcome" style="display: none;">
-  <button type="button" data-dismiss="alert" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+<div class="alert alert-info alert-dismissible fade show hidden-print" id="mqc_welcome" style="display: none;">
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
   <button type="button" data-dismiss="alert" class="btn-link btn-sm" id="mqc_hide_welcome_btn">don't show again</button>
   <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
   <strong>Welcome!</strong> Not sure where to start? &nbsp;

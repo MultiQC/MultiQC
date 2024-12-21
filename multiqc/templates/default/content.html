@@ -43,8 +43,8 @@ the output from each module and print it in sections.
         {% endif %}
           {% if s['print_section'] %}
             {% if (s['name'] is none or s['name'] | length == 0) and s['helptext'] is not none and s['helptext'] | length > 0 %}
-              <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
-                <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+              <button class="btn btn-secondary btn-sm float-end btn-help" type="button" data-bs-toggle="collapse" data-bs-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+                <i class="bi bi-question-circle" aria-hidden="true"></i>
                 Help
               </button>
             {% endif %}
@@ -53,8 +53,8 @@ the output from each module and print it in sections.
                 <h3 id="{{ s['anchor'] }}">
                     {{ s['name'] }}
                     {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
-                      <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
-                        <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+                      <button class="btn btn-secondary btn-sm float-end btn-help" type="button" data-bs-toggle="collapse" data-bs-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+                        <i class="bi bi-question-circle" aria-hidden="true"></i>
                         Help
                       </button>
                     {% endif %}

@@ -9,24 +9,24 @@ eg. Modals / other HTML to be hidden out of the way.
 
 
 <!-- Table Scatter Plot Modal -->
-<div class="modal fade" id="table_scatter_modal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
+<div class="modal fade" id="table_scatter_modal" tabindex="-1" aria-labelledby="table_scatter_modal_label" aria-hidden="true">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h3 class="modal-title">Plot Table Data</h3>
+        <h5 class="modal-title" id="table_scatter_modal_label">Plot Table Data</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form id="table_scatter_form">
           <input type="hidden" id="table_scatter_table_anchor" name="table_scatter_table_anchor" value="" />
           <div class="row">
             <div class="col-sm-6">
-              <select id="table_scatter_col1" name="table_scatter_col1" class="form-control">
+              <select id="table_scatter_col1" name="table_scatter_col1" class="form-select">
                 <option value="">Select Column</option>
               </select>
             </div>
             <div class="col-sm-6">
-              <select id="table_scatter_col2" name="table_scatter_col2" class="form-control">
+              <select id="table_scatter_col2" name="table_scatter_col2" class="form-select">
                 <option value="">Select Column</option>
               </select>
             </div>
@@ -39,7 +39,7 @@ eg. Modals / other HTML to be hidden out of the way.
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -48,12 +48,12 @@ eg. Modals / other HTML to be hidden out of the way.
 
 
 <!-- Regex Help Modal -->
-<div class="modal fade" id="regex_help_modal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
+<div class="modal fade" id="regex_help_modal" tabindex="-1" aria-labelledby="regex_help_modal_label" aria-hidden="true">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h3 class="modal-title">Regex Help</h3>
+        <h5 class="modal-title" id="regex_help_modal_label">Regex Help</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <p>Toolbox search strings can behave as regular expressions (regexes). Click a button below to see an example of it in action. Try modifying them yourself in the text box.</p>
@@ -95,7 +95,7 @@ eg. Modals / other HTML to be hidden out of the way.
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
