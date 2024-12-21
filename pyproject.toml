@@ -78,6 +78,7 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+    "jupyter",              # for jupyter notebook example
 ]
 
 [project.urls]
