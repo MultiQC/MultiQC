@@ -96,6 +96,7 @@ general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
 saved_raw_data_keys: Set[str]  # to make sure write_data_file don't overwrite for repeated modules
+saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
 
 
 def reset():
@@ -124,6 +125,7 @@ def reset():
     global software_versions
     global plot_compressed_json
     global saved_raw_data_keys
+    global saved_raw_data
 
     # Create new temporary directory for module data exports
     initialized = True
@@ -149,6 +151,7 @@ def reset():
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
     saved_raw_data_keys = set()
+    saved_raw_data = dict()
 
     reset_file_search()
     tmp_dir.new_tmp_dir()

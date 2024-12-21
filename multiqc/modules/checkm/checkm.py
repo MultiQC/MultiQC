@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="CheckM",
             anchor="checkm",
             href="https://github.com/Ecogenomics/CheckM",
-            info="CheckM estimates genome completeness and contamination based on the presence or absence of marker genes.",
+            info="Estimates genome completeness and contamination based on the presence or absence of marker genes.",
             doi=["10.1101/gr.186072.114"],
         )
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.25.2"
+version = "1.26"
 dependencies = [
     "click",
     "humanize",
@@ -78,6 +78,7 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+    "jupyter",              # for jupyter notebook example
 ]
 
 [project.urls]

@@ -1,5 +1,74 @@
 # MultiQC Version History
 
+## [MultiQC v1.26](https://github.com/MultiQC/MultiQC/releases/tag/v1.26) - 2024-12-17
+
+Christmas release! 10 new modules, 11 improved modules, and a few core improvements.
+
+### Highlights
+
+- Custom content: allow quoting strings in CSV to prevent interpreting them as numbers ([#3020](https://github.com/MultiQC/MultiQC/pull/3020)):
+- Naturally sort samples in tables and bar plots ([#2999](https://github.com/MultiQC/MultiQC/pull/2999))
+- Auto-save dynamic toolbox settings ([#3001](https://github.com/MultiQC/MultiQC/pull/3001))
+- `report.saved_raw_data` is not preserved by default to save on memory footprint ([#3010](https://github.com/MultiQC/MultiQC/pull/3010)). You can enable it with `preserve_module_raw_data: true` in your config file.
+
+### New modules
+
+- [**MosaiCatcher**](https://github.com/friendsofstrandseq/mosaicatcher) - tool for classifying strand states of each chromosome in each cell using a Hidden Markov Model ([#1910](https://github.com/MultiQC/MultiQC/pull/1910))
+- [**ataqv**](https://github.com/ParkerLab/ataqv) - tool for assessing the quality of a genome using a broader set of marker genes ([#3013](https://github.com/MultiQC/MultiQC/pull/3013))
+- [**telseq**](https://github.com/zd1/telseq) - a software that estimates telomere length from whole genome sequencing data (BAMs) ([#2910](https://github.com/MultiQC/MultiQC/pull/2910))
+- [**Cell Ranger ARC**](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger) - analysis of single cell expression or VDJ data produced by 10X Genomics ([#2925](https://github.com/MultiQC/MultiQC/pull/2925))
+- [**GTDB-Tk**](https://ecogenomics.github.io/GTDBTk/index.html) - toolkit for assigning objective taxonomic classifications to bacterial and archaeal genomes ([#2970](https://github.com/MultiQC/MultiQC/pull/2970))
+- [**Checkm**](https://github.com/Ecogenomics/CheckM) - genome completeness and contamination based on the presence or absence of marker genes ([#2990](https://github.com/MultiQC/MultiQC/pull/2990))
+- [**Checkm2**](https://github.com/chklovski/CheckM2): rapid, scalable and accurate tool for assessing microbial genome quality using machine learning ([#2978](https://github.com/MultiQC/MultiQC/pull/2978))
+- [**Haplocheck**](https://github.com/genepi/haplocheck/) - detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content ([#2933](https://github.com/MultiQC/MultiQC/pull/2933))
+- [**mgikit**](https://github.com/sagc-bioinformatics/mgikit) - demultiplexes FASTQ files from an MGI sequencing instrument ([#3023](https://github.com/MultiQC/MultiQC/pull/3023))
+- [**Percolator**](https://github.com/percolator/percolator) - semi-supervised learning for peptide identification from shotgun proteomics datasets ([#3011](https://github.com/MultiQC/MultiQC/pull/3011))
+
+### Module updates
+
+- GATK BQSR: support Sentieon QualCal output ([#3008](https://github.com/MultiQC/MultiQC/pull/3008))
+- Pychopper: add section with UMI barpot ([#3024](https://github.com/MultiQC/MultiQC/pull/3024))
+- fastp: add overrepresented sequences plot and table ([#3000](https://github.com/MultiQC/MultiQC/pull/3000))
+- RNA-SeqC: more metrics in general statistics table ([#3017](https://github.com/MultiQC/MultiQC/pull/3017))
+- phantompeakqualtools: adjust minimum value to 1 for NSC coeff ([#3021](https://github.com/MultiQC/MultiQC/pull/3021))
+- QualiMap RNASeq: add gen stats columns for exonic, intronic, intergenic, overlapping ([#3018](https://github.com/MultiQC/MultiQC/pull/3018))
+- QualiMap BamQC: add general stats columns for dup rate, number of Ns, mapped paired reads ([#2989](https://github.com/MultiQC/MultiQC/pull/2989))
+- DRAGEN: RNA quant metrics: support forward and reverse fragments in barplot ([#3012](https://github.com/MultiQC/MultiQC/pull/3012))
+- Interop: remove "%" suffix for `nan` values ([#2995](https://github.com/MultiQC/MultiQC/pull/2995))
+- Dedup: use a more specific search pattern ([#2988](https://github.com/MultiQC/MultiQC/pull/2988))
+- Bclconvert: group samples and lanes, refactor ([#2872](https://github.com/MultiQC/MultiQC/pull/2872))
+- Nanostat: new format: fix parsing sample names ([#3007](https://github.com/MultiQC/MultiQC/pull/3007))
+
+### Feature updates and improvements
+
+- Custom content: allow quoting strings in CSV ([#3020](https://github.com/MultiQC/MultiQC/pull/3020))
+- Naturally sort samples in tables and bar plots ([#2999](https://github.com/MultiQC/MultiQC/pull/2999))
+- Auto-save dynamic toolbox settings to session and to a file ([#3001](https://github.com/MultiQC/MultiQC/pull/3001))
+- Support Python 3.13, drop 3.8 ([#2862](https://github.com/MultiQC/MultiQC/pull/2862))
+- Add table tooltips about merged values in groupped samples ([#3002](https://github.com/MultiQC/MultiQC/pull/3002))
+
+### Fixes
+
+- Align order of lineplot categories across samples ([#3033](https://github.com/MultiQC/MultiQC/pull/3033))
+
+### Optimization, refactoring and typing
+
+- Memory optimization: do not preserve `saved_raw_data` in modules, write directly to files instead ([#3010](https://github.com/MultiQC/MultiQC/pull/3010))
+- Violin plot: add `dt` into `Dataset` objects instead of `main_table_dt` ([#2968](https://github.com/MultiQC/MultiQC/pull/2968))
+
+### Infrastructure and packaging
+
+- Add Cursor rules for module creation ([#3025](https://github.com/MultiQC/MultiQC/pull/3025))
+- Fix docker build: remove docs from `.dockerignore` ([#2994](https://github.com/MultiQC/MultiQC/pull/2994))
+- Add workflow to sync changelog with Seqera docs ([#2993](https://github.com/MultiQC/MultiQC/pull/2993))
+- Docker build: add workflow_dispatch, do not push on pull_request ([#2962](https://github.com/MultiQC/MultiQC/pull/2962))
+- Build and test Docker image in PRs ([#2958](https://github.com/MultiQC/MultiQC/pull/2958))
+- Fix Docker CI for forks: skip login step ([#2953](https://github.com/MultiQC/MultiQC/pull/2953))
+- Document bar plot's `sort_samples` ([#3006](https://github.com/MultiQC/MultiQC/pull/3006))
+- Update ruff to 0.8.3 ([#3029](https://github.com/MultiQC/MultiQC/pull/3029))
+- Add more tests for custom-content ([#3028](https://github.com/MultiQC/MultiQC/pull/3028))
+- Add pytest ini options to `pyproject.toml` - to set default test targets ([#3030](https://github.com/MultiQC/MultiQC/pull/3030))
+
 ## [MultiQC v1.25.2](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.2) - 2024-11-20
 
 Multiple bug fixes and minor updates.

@@ -33,5 +33,7 @@ ancient_read_count_multiplier: 0.001
 
 ```yaml
 dedup:
-  fn: "*dedup.json"
+  contents: '"tool_name": "DeDup"'
+  fn: "*.json"
+  num_lines: 20
 ```

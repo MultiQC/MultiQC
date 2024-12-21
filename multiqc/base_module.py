@@ -1117,3 +1117,4 @@ class BaseMultiqcModule:
             if self.__saved_raw_data is None:
                 self.__saved_raw_data = dict()
             self.__saved_raw_data[fn] = data
+            report.saved_raw_data[fn] = data
