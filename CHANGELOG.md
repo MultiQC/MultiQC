@@ -9,6 +9,7 @@ Christmas release! 10 new modules, 11 improved modules, and a few core improveme
 - Custom content: allow quoting strings in CSV to prevent interpreting them as numbers ([#3020](https://github.com/MultiQC/MultiQC/pull/3020)):
 - Naturally sort samples in tables and bar plots ([#2999](https://github.com/MultiQC/MultiQC/pull/2999))
 - Auto-save dynamic toolbox settings ([#3001](https://github.com/MultiQC/MultiQC/pull/3001))
+- `report.saved_raw_data` is not preserved by default to save on memory footprint ([#3010](https://github.com/MultiQC/MultiQC/pull/3010)). You can enable it with `preserve_module_raw_data: true` in your config file.
 
 ### New modules
 
