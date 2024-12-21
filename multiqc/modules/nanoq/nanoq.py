@@ -46,9 +46,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(data_by_sample)} reports")
 
-        # Write parsed report data to a file
-        self.write_data_file(data_by_sample, "multiqc_nanoq")
-
         # Add Nanoq summary to the general stats table
         self.add_table(data_by_sample)
 
@@ -57,6 +54,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Read length distribution Plot
         self.reads_by_length_plot(data_by_sample)
+
+        # Write parsed report data to a file
+        self.write_data_file(data_by_sample, "multiqc_nanoq")
 
     def add_table(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
         headers: Dict[str, Dict] = {

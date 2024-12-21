@@ -103,6 +103,7 @@ general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
 saved_raw_data_keys: Set[str]  # to make sure write_data_file don't overwrite for repeated modules
+saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
 
 # AI stuff, set dynamically in ai.py to be used in content.html and ai.js
 ai_global_summary: str = ""
@@ -149,6 +150,8 @@ def reset():
     global ai_provider_title
     global ai_model
     global ai_report_metadata_base64
+    global saved_raw_data_keys
+    global saved_raw_data
 
     # Create new temporary directory for module data exports
     initialized = True
@@ -183,6 +186,8 @@ def reset():
     ai_provider_title = ""
     ai_model = ""
     ai_report_metadata_base64 = ""
+    saved_raw_data_keys = set()
+    saved_raw_data = dict()
 
     reset_file_search()
     tmp_dir.new_tmp_dir()
@@ -429,7 +434,13 @@ class SearchPattern(BaseModel):
             return None
 
         # Convert the values that can be lists/sets or str into sets
-        for k in ["contents", "contents_re", "exclude_fn", "exclude_fn_re" "exclude_contents", "exclude_contents_re"]:
+        for k in [
+            "contents",
+            "contents_re",
+            "exclude_fn",
+            "exclude_fn_re" "exclude_contents",
+            "exclude_contents_re",
+        ]:
             val = d.get(k, [])
             if val:
                 strs = [val] if isinstance(val, str) else val
@@ -537,7 +548,15 @@ def prep_ordered_search_files_list(
 
     # Sort patterns for faster access. File searches with fewer lines or
     # smaller file sizes go first.
-    sorted_spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+    ]
     sorted_spatterns[0] = spatterns[0]  # Only filename matching
     sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
     sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
@@ -661,7 +680,12 @@ def search_files(sp_keys: List[str]):
     run_search_files(spatterns, searchfiles)
 
 
-def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleId, is_ignore_file: bool = False):
+def search_file(
+    pattern: SearchPattern,
+    f: SearchFile,
+    module_key: ModuleId,
+    is_ignore_file: bool = False,
+):
     """
     Function to search a single file for a single search pattern.
     """

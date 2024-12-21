@@ -12,7 +12,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Haplocheck",
             anchor="haplocheck",
             href="https://github.com/genepi/haplocheck/",
-            info="Haplocheck detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.",
+            info="Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.",
             doi=["10.1101/gr.256545.119"],
         )
         haplocheck_data: Dict = dict()

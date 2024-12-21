@@ -43,7 +43,7 @@ jobs:
           path: test-data
 
       - name: "Run unit tests"
-        run: pytest -vv tests -n ${{ env.worker_cores }} --cov=multiqc --cov-report=xml
+        run: pytest -vv -n ${{ env.worker_cores }} --cov=multiqc --cov-report=xml
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v4

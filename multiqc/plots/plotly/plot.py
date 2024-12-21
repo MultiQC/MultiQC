@@ -1,7 +1,6 @@
 import base64
 from functools import lru_cache
 import io
-import json
 import logging
 import math
 import platform
@@ -9,7 +8,18 @@ import random
 import re
 from pathlib import Path
 import subprocess
-from typing import Any, Dict, Generic, List, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
@@ -329,7 +339,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         _anchor = Anchor(report.save_htmlid(_anchor))  # make sure it's unique
 
         # Counts / Percentages / Log10 switch
-        add_log_tab: bool = pconfig.logswitch is True and plot_type in [PlotType.BAR, PlotType.LINE]
+        add_log_tab: bool = pconfig.logswitch is True and plot_type in [
+            PlotType.BAR,
+            PlotType.LINE,
+        ]
         add_pct_tab: bool = pconfig.cpswitch is not False and plot_type == PlotType.BAR
         l_active = add_log_tab and pconfig.logswitch_active
         p_active = add_pct_tab and not pconfig.cpswitch_c_active
@@ -803,7 +816,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         if self.flat:
             if is_running_under_rosetta():
-                # Kaleido is unstable under rosetata, falling back to interactive plots
+                # Kaleido is unstable under rosetta, falling back to interactive plots
                 return self.interactive_plot(module_anchor, section_anchor)
             try:
                 html = self.flat_plot(
@@ -1213,7 +1226,10 @@ def add_logo(
         # text block width, given the font size.
         # noinspection PyArgumentList
         text_width: float = draw.textlength(text, font_size=font_size)
-        position: Tuple[int, int] = (image.width - int(text_width) - 3, image.height - 30)
+        position: Tuple[int, int] = (
+            image.width - int(text_width) - 3,
+            image.height - 30,
+        )
 
         # Draw the text
         draw.text(position, text, fill="#9f9f9f", font_size=font_size)
@@ -1449,7 +1465,10 @@ def convert_dash_style(dash_style: Optional[str], _clss: Optional[List[type]] = 
     if dash_style in mapping.values():  # Plotly style?
         return dash_style
     elif dash_style in mapping.keys():  # Highcharts style?
-        add_validation_warning(_clss or [], f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'")
+        add_validation_warning(
+            _clss or [],
+            f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'",
+        )
         return mapping[dash_style]
     return "solid"
 

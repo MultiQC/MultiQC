@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.25.2"
+version = "1.27dev"
 dependencies = [
     "click",
     "humanize",
@@ -80,6 +80,7 @@ dev = [
     "types-beautifulsoup4",
     "types-Pillow",
     "beautifulsoup4",
+    "jupyter",              # for jupyter notebook example
 ]
 anthropic = ["langchain", "langsmith", "langchain-anthropic"]
 openai = ["langchain", "langsmith", "langchain-openai"]
