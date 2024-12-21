@@ -751,7 +751,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         if self.flat:
             if is_running_under_rosetta():
-                # Kaleido is unstable under rosetata, falling back to interactive plots
+                # Kaleido is unstable under rosetta, falling back to interactive plots
                 return self.interactive_plot()
             try:
                 html = self.flat_plot(plots_dir_name=plots_dir_name)
