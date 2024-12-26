@@ -222,6 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Plot perfect library as dashed line
         pconfig["extra_series"].append(
             Series(
+                path_in_cfg=("perfect_library",),
                 name="A perfect library where each read is unique",
                 pairs=[(0, 0), (max_yx, max_y)],
                 dash="dash",
@@ -446,6 +447,7 @@ def _real_counts_to_plot_series(
             if sn in yx_by_sample:
                 y = float(yx_by_sample[sn])
                 point = Series(
+                    path_in_cfg=("external_real_counts",),
                     pairs=[(x, y)],
                     name=f"{sn}: actual read count vs. deduplicated read count (externally calculated)",
                     **series_config,
@@ -464,6 +466,7 @@ def _real_counts_to_plot_series(
                 else:
                     interp_y = np.interp(x, xs, ys)
                     point = Series(
+                        path_in_cfg=("external_real_counts",),
                         pairs=[(x, interp_y)],
                         name=f"{sn}: actual read count (externally calculated)",
                         **series_config,

@@ -317,9 +317,9 @@ def test_incorrect_fields(strict, reset):
             _verify_rendered(linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig))
             errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
             assert "• 'x_lines': failed to parse value 'wrong_type'" in errs
-            assert "errors while parsing LinePlotConfig" in errs
+            assert "errors while parsing lineplot.pconfig[id='test_incorrect_fields']" in errs
             warnings = "\n".join(call.args[0] for call in warn.mock_calls if call.args)
-            assert "• unrecognized field 'unknown_field'" in warnings
+            assert "• 'unknown_field': unrecognized field" in warnings
         assert "test_incorrect_fields" in report.plot_data
 
 

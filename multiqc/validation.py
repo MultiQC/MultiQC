@@ -135,8 +135,9 @@ class ValidatedConfig(BaseModel):
                 if len(wrns_by_cfg_path) > 1:
                     msg += f" (total messages: {len(wrns_by_cfg_path)})"
                 msg += ":"
-                for path, warning in sorted(wrns_by_cfg_path.items()):
-                    msg += f"\n• {path[-1]}: {warning}"
+                for path, _warnings in sorted(wrns_by_cfg_path.items()):
+                    for _warning in _warnings:
+                        msg += f"\n• '{path[-1]}': {_warning}"
                     _warnings_by_cfg_path[path].clear()  # Reset for interactive usage
                 _print_warning(msg)
 
@@ -145,8 +146,9 @@ class ValidatedConfig(BaseModel):
                 if len(errs_by_cfg_path) > 1:
                     msg += f" (total messages: {len(errs_by_cfg_path)})"
                 msg += ":"
-                for path, err in sorted(errs_by_cfg_path.items()):
-                    msg += f"\n• {path[-1]}: {err}"
+                for path, _errors in sorted(errs_by_cfg_path.items()):
+                    for _error in _errors:
+                        msg += f"\n• '{path[-1]}': {_error}"
                     _errors_by_cfg_path[path].clear()  # Reset for interactive usage
                 _print_error(msg)
 
@@ -173,7 +175,7 @@ class ValidatedConfig(BaseModel):
             if name not in cls.model_fields:
                 add_validation_warning(
                     path_in_cfg + (name,),
-                    f"unrecognized field '{name}'. Available fields: {', '.join(available_fields)}",
+                    f"unrecognized field. Available fields: {', '.join(available_fields)}",
                 )
             else:
                 filtered_values[name] = val
@@ -184,7 +186,7 @@ class ValidatedConfig(BaseModel):
         for name, val in values.items():
             new_name = cls.model_fields[name].deprecated
             if isinstance(new_name, str) and new_name not in values:
-                add_validation_warning(path_in_cfg + (name,), f"deprecated field '{name}'. Use '{new_name}' instead")
+                add_validation_warning(path_in_cfg + (name,), f"deprecated field. Use '{new_name}' instead")
                 values_without_deprecateds[new_name] = val
                 continue
             values_without_deprecateds[name] = val
@@ -194,7 +196,7 @@ class ValidatedConfig(BaseModel):
         for name, field in cls.model_fields.items():
             if field.is_required():
                 if name not in values:
-                    add_validation_error(path_in_cfg + (name,), f"missing required field '{name}'")
+                    add_validation_error(path_in_cfg + (name,), "missing required field")
                     try:
                         values[name] = field.annotation() if field.annotation else None
                     except TypeError:
@@ -212,7 +214,7 @@ class ValidatedConfig(BaseModel):
                 try:
                     val = parse_method(val, path_in_cfg=path_in_cfg + (name,))
                 except Exception as e:
-                    msg = f"'{name}': failed to parse value '{val}': {e}"
+                    msg = f"failed to parse value '{val}': {e}"
                     add_validation_error(path_in_cfg + (name,), msg)
                     logger.debug(f"{msg}: {e}")
                     continue
@@ -230,7 +232,7 @@ class ValidatedConfig(BaseModel):
                     if len(v_str) > 20:
                         v_str = v_str[:20] + "..."
                     expected_type_str = str(expected_type).replace("typing.", "")
-                    msg = rf"• '{name}': expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
+                    msg = rf"expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
                     add_validation_error(path_in_cfg + (name,), msg)
                     logger.debug(f"{msg}: {e}")
                 else:

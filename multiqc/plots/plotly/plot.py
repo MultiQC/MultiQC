@@ -51,7 +51,8 @@ class FlatLine(ValidatedConfig):
             return value["text"]
         return value
 
-    def __init__(self, path_in_cfg: Tuple[str, ...], **data):
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        path_in_cfg = path_in_cfg or ("FlatLine",)
         if "dashStyle" in data:
             data["dash"] = convert_dash_style(data.pop("dashStyle"), path_in_cfg=path_in_cfg + ("dash",))
         if "dash" in data:
@@ -68,7 +69,8 @@ class LineBand(ValidatedConfig):
     to: Union[float, int]
     color: Optional[str] = None
 
-    def __init__(self, path_in_cfg: Tuple[str, ...], **data: Any):
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
+        path_in_cfg = path_in_cfg or ("LineBand",)
         super().__init__(**data, path_in_cfg=path_in_cfg)
 
 
@@ -170,19 +172,19 @@ class PConfig(ValidatedConfig):
 
     @classmethod
     def parse_x_bands(cls, data, path_in_cfg: Tuple[str, ...]):
-        return [LineBand(**d, path_in_cfg=path_in_cfg) for d in ([data] if isinstance(data, dict) else data)]
+        return [LineBand(path_in_cfg=path_in_cfg, **d) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
     def parse_y_bands(cls, data, path_in_cfg: Tuple[str, ...]):
-        return [LineBand(**d, path_in_cfg=path_in_cfg) for d in ([data] if isinstance(data, dict) else data)]
+        return [LineBand(path_in_cfg=path_in_cfg, **d) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
     def parse_x_lines(cls, data, path_in_cfg: Tuple[str, ...]):
-        return [FlatLine(**d, path_in_cfg=path_in_cfg) for d in ([data] if isinstance(data, dict) else data)]
+        return [FlatLine(path_in_cfg=path_in_cfg, **d) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
     def parse_y_lines(cls, data, path_in_cfg: Tuple[str, ...]):
-        return [FlatLine(**d, path_in_cfg=path_in_cfg) for d in ([data] if isinstance(data, dict) else data)]
+        return [FlatLine(path_in_cfg=path_in_cfg, **d) for d in ([data] if isinstance(data, dict) else data)]
 
 
 class BaseDataset(BaseModel):

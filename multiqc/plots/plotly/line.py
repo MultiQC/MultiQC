@@ -31,7 +31,7 @@ class Marker(ValidatedConfig):
     width: int = 1
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
-        super().__init__(path_in_cfg=path_in_cfg or ("marker",), **data)
+        super().__init__(path_in_cfg=path_in_cfg or ("Marker",), **data)
 
 
 class Series(ValidatedConfig, Generic[KeyT, ValT]):
@@ -44,7 +44,7 @@ class Series(ValidatedConfig, Generic[KeyT, ValT]):
     marker: Optional[Marker] = None
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
-        path_in_cfg = path_in_cfg or ("series",)
+        path_in_cfg = path_in_cfg or ("Series",)
 
         if "dashStyle" in data:
             add_validation_warning(path_in_cfg, "'dashStyle' field is deprecated. Please use 'dash' instead")
@@ -101,9 +101,9 @@ class LinePlotConfig(PConfig):
     ) -> Union[Series, List[Series], List[List[Series]]]:
         if isinstance(data, list):
             if isinstance(data[0], list):
-                return [[Series(**d, path_in_cfg=path_in_cfg) if isinstance(d, dict) else d for d in ds] for ds in data]  # type: ignore
-            return [Series(**d, path_in_cfg=path_in_cfg) if isinstance(d, dict) else d for d in data]  # type: ignore
-        return Series(**data, path_in_cfg=path_in_cfg) if isinstance(data, dict) else data  # type: ignore
+                return [[Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in ds] for ds in data]  # type: ignore
+            return [Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in data]  # type: ignore
+        return Series(path_in_cfg=path_in_cfg, **data) if isinstance(data, dict) else data  # type: ignore
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("lineplot",), **data)
