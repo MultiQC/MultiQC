@@ -1,3 +1,7 @@
+"""
+Better validation of configs. Build on top of Pydantic, but prints more helpful error messages.
+"""
+
 import inspect
 import logging
 import re
@@ -5,8 +9,7 @@ from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Union, Type, cast
 
 from PIL import ImageColor
-from pydantic import BaseModel, model_validator
-from pydantic import ValidationError as PydanticValidationError
+from pydantic import BaseModel
 from typeguard import TypeCheckError, check_type
 
 from multiqc import config
@@ -15,7 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 class ModuleConfigValidationError(Exception):
-    # Thrown in strict mode when some ValidatedConfig fails validation
+    """
+    Thrown in strict mode when some ValidatedConfig fails validation
+    """
+
     def __init__(self, message: str, module_name: str):
         self.message = message
         self.module_name = module_name
@@ -79,21 +85,18 @@ def _print_error(msg: str):
 
 
 class ValidatedConfig(BaseModel):
-    def __init__(self, _clss: Optional[List[Type["ValidatedConfig"]]] = None, **data: Any):
-        _cls_name = self.__class__.__name__
-        _classes: List[Type["ValidatedConfig"]] = []
-        if _clss:
-            for _c in _clss:
-                _classes.append(_c)
-        _classes.append(self.__class__)
-        _full_cls_name = ".".join(_c.__name__ for _c in _classes)
+    """
+    Wrapper of BaseModel with better validation error messages
+    """
 
-        try:
-            super().__init__(**data, _clss=_clss)
-        except PydanticValidationError:
-            if not _errors_by_cls.get(_cls_name) or not _errors_by_cls.get(_full_cls_name):
-                # Unhandled PydanticValidationError
-                raise
+    def __init__(self, _clss: Optional[List[Type["ValidatedConfig"]]] = None, **data: Any):
+        # Parent class names are passed to reference where exactly the error happened in error messages in nested configs
+        _cls_name = self.__class__.__name__
+        _clss = _clss or [self.__class__]
+        _full_cls_name = ".".join(_c.__name__ for _c in _clss)
+
+        # Validate and cast values and remove invalid ones
+        data = self.validate_fields(_clss, data)
 
         errors = _errors_by_cls.get(_cls_name, set()) | _errors_by_cls.get(_full_cls_name, set())
         warnings = _warnings_by_cls.get(_cls_name, set()) | _warnings_by_cls.get(_full_cls_name, set())
@@ -123,16 +126,11 @@ class ValidatedConfig(BaseModel):
                 if config.strict:
                     raise ModuleConfigValidationError(message=msg, module_name=modname)
 
-    # noinspection PyNestedDecorators
-    @model_validator(mode="before")
-    @classmethod
-    def validate_fields(cls, values: Any) -> Dict[str, Any]:
-        # Check unrecognized fields
-        if not isinstance(values, dict):
-            return values
-        values = cast(Dict[str, Any], values)
-        _clss = cast(List[Type[ValidatedConfig]], values.pop("_clss", None) or [cls])
+        # By this point, data is a valid dict with only valid fields, but it still can raise PydanticValidationError with unexpected errors
+        super().__init__(**data, _clss=_clss)
 
+    @classmethod
+    def validate_fields(cls, _clss: List[Type["ValidatedConfig"]], values: Dict[str, Any]) -> Dict[str, Any]:
         # Remove underscores from field names (used for names matching reserved keywords, e.g. from_)
         for k in cls.model_fields.keys():
             if k.endswith("_") and k[:-1] in values:
@@ -155,15 +153,13 @@ class ValidatedConfig(BaseModel):
         values = filtered_values
 
         # Convert deprecated fields
-        values_without_deprecateds = {}
+        values_without_deprecateds: Dict[str, Any] = {}
         for name, val in values.items():
-            if cls.model_fields[name].deprecated:
-                new_name = cls.model_fields[name].deprecated
+            if isinstance(new_name := cls.model_fields[name].deprecated, str) and new_name not in values:
                 add_validation_warning(_clss, f"deprecated field '{name}'. Use '{new_name}' instead")
-                if new_name not in values:
-                    values_without_deprecateds[new_name] = val
-            else:
-                values_without_deprecateds[name] = val
+                values_without_deprecateds[new_name] = val
+                continue
+            values_without_deprecateds[name] = val
         values = values_without_deprecateds
 
         # Check missing fields

@@ -155,7 +155,7 @@ class PConfig(ValidatedConfig):
             return cls(**pconfig)
 
     def __init__(self, **data: Any):
-        super().__init__(**data, _clss=[self.__class__])
+        super().__init__(**data)
 
         self._actual_cls = self.__class__
 
