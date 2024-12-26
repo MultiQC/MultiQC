@@ -4,7 +4,7 @@ import copy
 import logging
 import math
 from collections import defaultdict
-from typing import Any, Dict, List, Literal, Optional, Sequence, Type, TypedDict, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Type, TypedDict, Union
 
 import plotly.graph_objects as go  # type: ignore
 import spectra  # type: ignore
@@ -33,7 +33,7 @@ class BarPlotConfig(PConfig):
     suffix: Optional[str] = None
     lab_format: Optional[str] = None
 
-    def __init__(self, _clss: Optional[List[Type["ValidatedConfig"]]] = None, **data):
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         if "suffix" in data:
             data["ysuffix"] = data["suffix"]
             del data["suffix"]
@@ -41,7 +41,7 @@ class BarPlotConfig(PConfig):
             data["ylab_format"] = data["lab_format"]
             del data["lab_format"]
 
-        super().__init__(**data, _clss=_clss)
+        super().__init__(path_in_cfg=path_in_cfg or ("barplot",), **data)
 
 
 SampleNameT = Union[SampleName, str]
