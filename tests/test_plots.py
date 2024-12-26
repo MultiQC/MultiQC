@@ -482,7 +482,7 @@ def test_dash_styles():
         _verify_rendered(linegraph.plot(data, pconfig=pconfig))
         warnings = "\n".join(call.args[0] for call in log.mock_calls if call.args)
         assert "• 'extra_series': 'dashStyle' field is deprecated. Please use 'dash' instead" in warnings
-        assert " 'dash': 'ShortDash' is a deprecated dash style, use 'dash'" in warnings
+        assert "• 'dash': 'ShortDash' is a deprecated dash style, use 'dash'" in warnings
     assert len(report.plot_data[anchor]["datasets"][0]["lines"]) == 5
     for line in report.plot_data[anchor]["datasets"][0]["lines"][1:]:
         assert line["dash"] == "dash"
