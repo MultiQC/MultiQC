@@ -45,6 +45,7 @@ class HeatmapConfig(PConfig):
     cluster_rows: bool = True
     cluster_cols: bool = True
     cluster_method: str = "complete"  # linkage method: single, complete, average, weighted, etc.
+    cluster_switch_clustered_active: bool = False
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("heatmap",), **data)
@@ -200,6 +201,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     ycats_samples: bool
     min: Optional[float] = None
     max: Optional[float] = None
+    cluster_switch_clustered_active: bool = False
 
     @staticmethod
     def create(
@@ -420,6 +422,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             ycats_samples=ycats_samples,
             min=minval,
             max=maxval,
+            cluster_switch_clustered_active=pconfig.cluster_switch_clustered_active,
         )
 
     def buttons(self, flat: bool) -> List[str]:
@@ -427,40 +430,24 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
         Heatmap-specific controls, only for the interactive version.
         """
         buttons = super().buttons(flat=flat)
-
-        if not flat:
-            # find min val across all datasets across all cols and rows
-            buttons.append(
-                f"""
-            <div class="mqc_hcplot_range_sliders">
-                <div class="input-group-sm">
-                    <label for="{self.id}_range_slider_min_txt" style="margin-right: 5px;">Min:</label>
-                    <input id="{self.id}_range_slider_min_txt" type="number" style="margin-right: 5px;" class="form-control" 
-                        value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" />
-                    <input id="{self.id}_range_slider_min" type="range" style="margin-right: 20px;"
-                        value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" step="any" />
-                </div>
-                <div class="input-group-sm">
-                    <label for="{self.id}_range_slider_max_txt" style="margin-right: 5px;">Max:</label>
-                    <input id="{self.id}_range_slider_max_txt" type="number" style="margin-right: 5px;" class="form-control" 
-                        value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" />
-                    <input id="{self.id}_range_slider_max" type="range" style="margin-right: 20px;" 
-                        value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" step="any" />
-                </div>
-            </div>
-            """
-            )
-
-        if not flat and any(ds.rows_clustered for ds in self.datasets):
+        if any(ds.rows_clustered for ds in self.datasets):
             buttons.append(
                 f"""
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default btn-sm active" 
-                            data-action="unclustered" data-plot-anchor="{self.anchor}">
-                        Raw data
+                    <button
+                        type="button" 
+                        class="btn btn-default btn-sm {'' if self.pconfig.cluster_switch_clustered_active else 'active'}" 
+                        data-action="unclustered" 
+                        data-plot-anchor="{self.anchor}"
+                    >
+                        Sorted by sample
                     </button>
-                    <button type="button" class="btn btn-default btn-sm" 
-                            data-action="clustered" data-plot-anchor="{self.anchor}">
+                    <button
+                        type="button" 
+                        class="btn btn-default btn-sm {'active' if self.pconfig.cluster_switch_clustered_active else ''}" 
+                        data-action="clustered" 
+                        data-plot-anchor="{self.anchor}"
+                    >
                         Clustered
                     </button>
                 </div>

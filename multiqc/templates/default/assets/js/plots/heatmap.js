@@ -6,7 +6,7 @@ class HeatmapPlot extends Plot {
     this.square = dump["square"];
     this.filtXCatsSettings = [];
     this.filtYCatsSettings = [];
-    this.clustered = false;
+    this.clusterSwitchClusteredActive = dump["cluster_switch_clustered_active"];
   }
 
   activeDatasetSize() {
@@ -19,9 +19,12 @@ class HeatmapPlot extends Plot {
   prepData() {
     // Prepare data to either build Plotly traces or export as a file
     let dataset = this.datasets[this.activeDatasetIdx];
-    let rows = this.clustered && dataset["rows_clustered"] ? dataset["rows_clustered"] : dataset["rows"];
-    let xcats = this.clustered && dataset["xcats_clustered"] ? dataset["xcats_clustered"] : dataset["xcats"];
-    let ycats = this.clustered && dataset["ycats_clustered"] ? dataset["ycats_clustered"] : dataset["ycats"];
+    let rows =
+      this.clusterSwitchClusteredActive && dataset["rows_clustered"] ? dataset["rows_clustered"] : dataset["rows"];
+    let xcats =
+      this.clusterSwitchClusteredActive && dataset["xcats_clustered"] ? dataset["xcats_clustered"] : dataset["xcats"];
+    let ycats =
+      this.clusterSwitchClusteredActive && dataset["ycats_clustered"] ? dataset["ycats_clustered"] : dataset["ycats"];
 
     if (this.xCatsAreSamples) {
       let xcatsSettings = applyToolboxSettings(xcats);
@@ -118,10 +121,10 @@ $(function () {
     let plot = mqc_plots[plotAnchor];
 
     // Toggle buttons
-    $btn.addClass("active").siblings().removeClass("active");
+    $btn.toggleClass("active").siblings().toggleClass("active");
 
     // Update plot
-    plot.clustered = $btn.data("action") === "clustered";
+    plot.clusterSwitchClusteredActive = $btn.data("action") === "clustered";
     renderPlot(plotAnchor); // re-render
   });
 });
