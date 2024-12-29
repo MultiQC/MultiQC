@@ -26,6 +26,7 @@ dependencies = [
     "typeguard",
     "tqdm",               # progress bar in notebooks
     "natsort",
+    "scipy",
 ]
 requires-python = ">=3.8"
 authors = [
