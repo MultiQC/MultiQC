@@ -36,6 +36,10 @@ class plotCorrelationMixin:
             config = {
                 "id": "deeptools_correlation_plot",
                 "title": "deeptools: Correlation Plot",
+                # "show_dendrogram": True,
+                # "dendrogram_method": "complete",
+                "cluster_rows": True,
+                "cluster_cols": True,
             }
             samples = sorted(self.deeptools_plotCorrelationData.keys())
             rows = []

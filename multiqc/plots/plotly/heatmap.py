@@ -4,6 +4,10 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
+import numpy as np
+from scipy.cluster import hierarchy
+from scipy.spatial.distance import pdist
+
 from multiqc import report
 from multiqc.plots.plotly.plot import (
     BaseDataset,
@@ -39,6 +43,12 @@ class HeatmapConfig(PConfig):
     datalabels: Optional[bool] = Field(None, deprecated="display_values")
     display_values: Optional[bool] = None
     angled_xticks: bool = True
+    # show_dendrogram: bool = False
+    # dendrogram_method: str = (
+    #     "complete"  # linkage method: 'single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward'
+    # )
+    cluster_rows: bool = True
+    cluster_cols: bool = True
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("heatmap",), **data)
@@ -352,6 +362,35 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             ds.layout["xaxis"]["title"] = None
             ds.layout["yaxis"]["title"] = None
 
+        # Create row dendrogram
+        if pconfig.cluster_rows:
+            row_dendro, row_leaves = create_dendrogram(rows, orientation="right", dendrogram_method="complete")
+            rows = [rows[i] for i in row_leaves]
+            if ycats:
+                ycats = [ycats[i] for i in row_leaves]
+            model.row_dendro = row_dendro
+
+        # Create column dendrogram
+        if pconfig.cluster_cols:
+            col_dendro, col_leaves = create_dendrogram(
+                np.array(rows).T, orientation="bottom", dendrogram_method="complete"
+            )
+            rows = [[row[i] for i in col_leaves] for row in rows]
+            if xcats:
+                xcats = [xcats[i] for i in col_leaves]
+            model.col_dendro = col_dendro
+
+        if pconfig.cluster_rows or pconfig.cluster_cols:
+            # Update layout to make room for dendrograms
+            model.layout.update(
+                grid=dict(
+                    rows=2 if pconfig.cluster_cols else 1,
+                    columns=2 if pconfig.cluster_rows else 1,
+                    pattern="independent",
+                ),
+                margin=dict(l=100, r=100, t=100, b=100),
+            )
+
         return HeatmapPlot(
             **model.__dict__,
             xcats_samples=xcats_samples,
@@ -389,3 +428,28 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             """
             )
         return buttons
+
+
+def create_dendrogram(data, orientation="right", dendrogram_method="complete") -> Tuple[go.Scatter, List[int]]:
+    """Create a dendrogram trace"""
+    if not isinstance(data, np.ndarray):
+        data = np.array(data)
+
+    # Calculate distance matrix and linkage
+    dist_matrix = pdist(data)
+    linkage_matrix = hierarchy.linkage(dist_matrix, method=dendrogram_method)
+
+    # Create dendrogram
+    dendro = hierarchy.dendrogram(linkage_matrix, orientation=orientation, no_plot=True)
+
+    # Create dendrogram trace
+    dendro_trace = go.Scatter(
+        x=dendro["icoord"] if orientation == "bottom" else dendro["dcoord"],
+        y=dendro["dcoord"] if orientation == "bottom" else dendro["icoord"],
+        mode="lines",
+        line=dict(color="black", width=1),
+        hoverinfo="none",
+        showlegend=False,
+    )
+
+    return dendro_trace, dendro["leaves"]
