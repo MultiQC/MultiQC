@@ -6,6 +6,7 @@ class HeatmapPlot extends Plot {
     this.square = dump["square"];
     this.filtXCatsSettings = [];
     this.filtYCatsSettings = [];
+    this.clustered = false;
   }
 
   activeDatasetSize() {
@@ -18,9 +19,9 @@ class HeatmapPlot extends Plot {
   prepData() {
     // Prepare data to either build Plotly traces or export as a file
     let dataset = this.datasets[this.activeDatasetIdx];
-    let rows = dataset["rows"];
-    let xcats = dataset["xcats"];
-    let ycats = dataset["ycats"];
+    let rows = this.clustered && dataset["rows_clustered"] ? dataset["rows_clustered"] : dataset["rows"];
+    let xcats = this.clustered && dataset["xcats_clustered"] ? dataset["xcats_clustered"] : dataset["xcats"];
+    let ycats = this.clustered && dataset["ycats_clustered"] ? dataset["ycats_clustered"] : dataset["ycats"];
 
     if (this.xCatsAreSamples) {
       let xcatsSettings = applyToolboxSettings(xcats);
@@ -107,5 +108,20 @@ $(function () {
     $("#" + anchor + "_range_slider_" + minmax + ", #" + anchor + "_range_slider_" + minmax + "_txt").val(
       $(this).val(),
     );
+  });
+
+  // Listener for clustering toggle
+  $('button[data-action="unclustered"], button[data-action="clustered"]').on("click", function (e) {
+    e.preventDefault();
+    let $btn = $(this);
+    let plotAnchor = $(this).data("plot-anchor");
+    let plot = mqc_plots[plotAnchor];
+
+    // Toggle buttons
+    $btn.addClass("active").siblings().removeClass("active");
+
+    // Update plot
+    plot.clustered = $btn.data("action") === "clustered";
+    renderPlot(plotAnchor); // re-render
   });
 });

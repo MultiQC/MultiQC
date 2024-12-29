@@ -1,12 +1,8 @@
 import logging
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union, Any
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
-
-import numpy as np
-from scipy.cluster import hierarchy
-from scipy.spatial.distance import pdist
 
 from multiqc import report
 from multiqc.plots.plotly.plot import (
@@ -16,6 +12,9 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     split_long_string,
 )
+from scipy.cluster import hierarchy  # type: ignore
+from scipy.spatial.distance import pdist  # type: ignore
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -43,15 +42,41 @@ class HeatmapConfig(PConfig):
     datalabels: Optional[bool] = Field(None, deprecated="display_values")
     display_values: Optional[bool] = None
     angled_xticks: bool = True
-    # show_dendrogram: bool = False
-    # dendrogram_method: str = (
-    #     "complete"  # linkage method: 'single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward'
-    # )
     cluster_rows: bool = True
     cluster_cols: bool = True
+    cluster_method: str = "complete"  # linkage method: single, complete, average, weighted, etc.
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("heatmap",), **data)
+
+
+def _cluster_data(
+    data: List[List[ElemT]], cluster_rows: bool = True, cluster_cols: bool = True, method: str = "complete"
+) -> Tuple[List[List[ElemT]], List[int], List[int]]:
+    """Cluster the heatmap data and return clustered data with new indices"""
+    data_array = np.array([[0.0 if x is None else float(x) for x in row] for row in data])
+    row_idx = list(range(len(data)))
+    col_idx = list(range(len(data[0])))
+
+    if cluster_rows and len(data) > 1:
+        try:
+            row_dist = pdist(data_array, metric="euclidean")
+            row_linkage = hierarchy.linkage(row_dist, method=method)
+            row_idx = hierarchy.leaves_list(row_linkage)
+            data_array = data_array[row_idx]
+        except Exception as e:
+            logger.warning(f"Row clustering failed: {str(e)}")
+
+    if cluster_cols and len(data[0]) > 1:
+        try:
+            col_dist = pdist(data_array.T, metric="euclidean")
+            col_linkage = hierarchy.linkage(col_dist, method=method)
+            col_idx = hierarchy.leaves_list(col_linkage)
+            data_array = data_array[:, col_idx]
+        except Exception as e:
+            logger.warning(f"Column clustering failed: {str(e)}")
+
+    return data_array.tolist(), row_idx, col_idx
 
 
 def plot(
@@ -73,8 +98,11 @@ def plot(
 
 class Dataset(BaseDataset):
     rows: List[List[ElemT]]
+    rows_clustered: Optional[List[List[ElemT]]] = None
     xcats: Optional[Sequence[str]]
     ycats: Optional[Sequence[str]]
+    xcats_clustered: Optional[Sequence[str]] = None
+    ycats_clustered: Optional[Sequence[str]] = None
 
     @staticmethod
     def create(
@@ -82,6 +110,9 @@ class Dataset(BaseDataset):
         rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
         xcats: Optional[Sequence[Union[str, int]]] = None,
         ycats: Optional[Sequence[Union[str, int]]] = None,
+        cluster_rows: bool = True,
+        cluster_cols: bool = True,
+        cluster_method: str = "complete",
     ) -> "Dataset":
         if isinstance(rows, dict):
             # Re-key the dict to be strings
@@ -100,11 +131,29 @@ class Dataset(BaseDataset):
                             xcats.append(x)
             rows = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
 
+        rows_clustered = None
+        xcats_clustered = None
+        ycats_clustered = None
+
+        if cluster_rows or cluster_cols:
+            try:
+                clustered_rows, row_idx, col_idx = _cluster_data(rows, cluster_rows, cluster_cols, cluster_method)
+                rows_clustered = clustered_rows
+                if xcats:
+                    xcats_clustered = [xcats[i] for i in col_idx] if cluster_cols else xcats
+                if ycats:
+                    ycats_clustered = [ycats[i] for i in row_idx] if cluster_rows else ycats
+            except Exception as e:
+                logger.warning(f"Clustering failed: {str(e)}")
+
         dataset = Dataset(
             **dataset.__dict__,
             rows=rows,
+            rows_clustered=rows_clustered,
             xcats=[str(x) for x in xcats] if xcats else None,
             ycats=[str(y) for y in ycats] if ycats else None,
+            xcats_clustered=[str(x) for x in xcats_clustered] if xcats_clustered else None,
+            ycats_clustered=[str(y) for y in ycats_clustered] if ycats_clustered else None,
         )
         return dataset
 
@@ -210,6 +259,9 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                 rows=rows,
                 xcats=xcats,
                 ycats=ycats,
+                cluster_rows=pconfig.cluster_rows,
+                cluster_cols=pconfig.cluster_cols,
+                cluster_method=pconfig.cluster_method,
             )
         ]
 
@@ -362,35 +414,6 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             ds.layout["xaxis"]["title"] = None
             ds.layout["yaxis"]["title"] = None
 
-        # Create row dendrogram
-        if pconfig.cluster_rows:
-            row_dendro, row_leaves = create_dendrogram(rows, orientation="right", dendrogram_method="complete")
-            rows = [rows[i] for i in row_leaves]
-            if ycats:
-                ycats = [ycats[i] for i in row_leaves]
-            model.row_dendro = row_dendro
-
-        # Create column dendrogram
-        if pconfig.cluster_cols:
-            col_dendro, col_leaves = create_dendrogram(
-                np.array(rows).T, orientation="bottom", dendrogram_method="complete"
-            )
-            rows = [[row[i] for i in col_leaves] for row in rows]
-            if xcats:
-                xcats = [xcats[i] for i in col_leaves]
-            model.col_dendro = col_dendro
-
-        if pconfig.cluster_rows or pconfig.cluster_cols:
-            # Update layout to make room for dendrograms
-            model.layout.update(
-                grid=dict(
-                    rows=2 if pconfig.cluster_cols else 1,
-                    columns=2 if pconfig.cluster_rows else 1,
-                    pattern="independent",
-                ),
-                margin=dict(l=100, r=100, t=100, b=100),
-            )
-
         return HeatmapPlot(
             **model.__dict__,
             xcats_samples=xcats_samples,
@@ -410,46 +433,38 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             buttons.append(
                 f"""
             <div class="mqc_hcplot_range_sliders">
-                <div>
-                    <label for="{self.id}_range_slider_min_txt">Min:</label>
-                    <input id="{self.id}_range_slider_min_txt" type="number" class="form-control" 
+                <div class="input-group-sm">
+                    <label for="{self.id}_range_slider_min_txt" style="margin-right: 5px;">Min:</label>
+                    <input id="{self.id}_range_slider_min_txt" type="number" style="margin-right: 5px;" class="form-control" 
                         value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" />
-                    <input id="{self.id}_range_slider_min" type="range" 
+                    <input id="{self.id}_range_slider_min" type="range" style="margin-right: 20px;"
                         value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" step="any" />
                 </div>
-                <div style="margin-left: 30px;">
-                    <label for="{self.id}_range_slider_max_txt">Max:</label>
-                    <input id="{self.id}_range_slider_max_txt" type="number" class="form-control" 
+                <div class="input-group-sm">
+                    <label for="{self.id}_range_slider_max_txt" style="margin-right: 5px;">Max:</label>
+                    <input id="{self.id}_range_slider_max_txt" type="number" style="margin-right: 5px;" class="form-control" 
                         value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" />
-                    <input id="{self.id}_range_slider_max" type="range" 
+                    <input id="{self.id}_range_slider_max" type="range" style="margin-right: 20px;" 
                         value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" step="any" />
                 </div>
             </div>
             """
             )
+
+        if not flat and any(ds.rows_clustered for ds in self.datasets):
+            buttons.append(
+                f"""
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-default btn-sm active" 
+                            data-action="unclustered" data-plot-anchor="{self.anchor}">
+                        Raw data
+                    </button>
+                    <button type="button" class="btn btn-default btn-sm" 
+                            data-action="clustered" data-plot-anchor="{self.anchor}">
+                        Clustered
+                    </button>
+                </div>
+                """
+            )
+
         return buttons
-
-
-def create_dendrogram(data, orientation="right", dendrogram_method="complete") -> Tuple[go.Scatter, List[int]]:
-    """Create a dendrogram trace"""
-    if not isinstance(data, np.ndarray):
-        data = np.array(data)
-
-    # Calculate distance matrix and linkage
-    dist_matrix = pdist(data)
-    linkage_matrix = hierarchy.linkage(dist_matrix, method=dendrogram_method)
-
-    # Create dendrogram
-    dendro = hierarchy.dendrogram(linkage_matrix, orientation=orientation, no_plot=True)
-
-    # Create dendrogram trace
-    dendro_trace = go.Scatter(
-        x=dendro["icoord"] if orientation == "bottom" else dendro["dcoord"],
-        y=dendro["dcoord"] if orientation == "bottom" else dendro["icoord"],
-        mode="lines",
-        line=dict(color="black", width=1),
-        hoverinfo="none",
-        showlegend=False,
-    )
-
-    return dendro_trace, dendro["leaves"]
