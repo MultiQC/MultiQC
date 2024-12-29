@@ -40,6 +40,9 @@ class HeatmapConfig(PConfig):
     display_values: Optional[bool] = None
     angled_xticks: bool = True
 
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("heatmap",), **data)
+
 
 def plot(
     rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],

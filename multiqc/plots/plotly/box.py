@@ -1,6 +1,6 @@
 import copy
 import logging
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import plotly.graph_objects as go  # type: ignore
 
@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 class BoxPlotConfig(PConfig):
     sort_samples: bool = True
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("boxplot",), **data)
 
 
 # Type of single box (matching one sample)

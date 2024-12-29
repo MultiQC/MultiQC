@@ -3,7 +3,7 @@
 import logging
 import math
 from collections import OrderedDict
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
 
 from importlib_metadata import EntryPoint
 from natsort import natsorted
@@ -38,6 +38,9 @@ DatasetT = Dict[SampleNameT, Dict[str, Union[int, float]]]
 class CatConf(ValidatedConfig):
     name: str
     color: Optional[str] = None
+
+    def __init__(self, path_in_cfg: Tuple[str, ...], **data):
+        super().__init__(path_in_cfg=path_in_cfg, **data)
 
 
 # Either a list of strings, or a dictionary mapping category names to their properties dicts or objects
@@ -103,7 +106,7 @@ def plot(
         ds_categories: Dict[str, CatConf] = dict()
         if isinstance(raw_ds_cats, list):
             for cat_name in raw_ds_cats:
-                ds_categories[cat_name] = CatConf(name=cat_name)
+                ds_categories[cat_name] = CatConf(path_in_cfg=("cats",), name=cat_name)
         elif isinstance(raw_ds_cats, dict):
             for cat_name, cat_props in raw_ds_cats.items():
                 if isinstance(cat_props, CatConf):
@@ -111,7 +114,7 @@ def plot(
                 else:
                     if "name" not in cat_props:
                         cat_props["name"] = cat_name
-                    ds_categories[cat_name] = CatConf(**cat_props, _clss=[bar.BarPlot])
+                    ds_categories[cat_name] = CatConf(path_in_cfg=("cats",), **cat_props)
         else:
             raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
         categories_per_ds.append(ds_categories)

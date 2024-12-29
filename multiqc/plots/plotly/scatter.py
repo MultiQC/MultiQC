@@ -20,6 +20,9 @@ class ScatterConfig(PConfig):
     color: Optional[str] = None
     opacity: Optional[float] = None
 
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("scatterplot",), **data)
+
 
 # {'color': 'rgb(211,211,211,0.05)', 'name': 'background: EUR', 'x': -0.294, 'y': -1.527}
 ValueT = Union[str, float, int]

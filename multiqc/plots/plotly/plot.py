@@ -41,23 +41,23 @@ class FlatLine(ValidatedConfig):
     label: Optional[Union[str, Dict[str, Any]]] = None
 
     @classmethod
-    def parse_label(cls, value: Any, _clss: List[Type[Any]]) -> Any:
+    def parse_label(cls, value: Any, path_in_cfg: Tuple[str, ...]) -> Any:
         if isinstance(value, dict):
             add_validation_warning(
-                _clss,
+                path_in_cfg,
                 "Line plot's x_lines or y_lines 'label' field is expected to be a string. "
                 "Other fields other than 'text' are deprecated and will be ignored",
             )
             return value["text"]
         return value
 
-    def __init__(self, _clss=None, **data):
-        _clss = _clss or []
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        path_in_cfg = path_in_cfg or ("FlatLine",)
         if "dashStyle" in data:
-            data["dash"] = convert_dash_style(data.pop("dashStyle"), _clss=_clss + [self.__class__])
+            data["dash"] = convert_dash_style(data.pop("dashStyle"), path_in_cfg=path_in_cfg + ("dash",))
         if "dash" in data:
-            data["dash"] = convert_dash_style(data["dash"], _clss=_clss + [self.__class__])
-        super().__init__(**data, _clss=_clss)
+            data["dash"] = convert_dash_style(data["dash"], path_in_cfg=path_in_cfg + ("dash",))
+        super().__init__(**data, path_in_cfg=path_in_cfg)
 
 
 class LineBand(ValidatedConfig):
@@ -69,8 +69,9 @@ class LineBand(ValidatedConfig):
     to: Union[float, int]
     color: Optional[str] = None
 
-    def __init__(self, _clss: Optional[List[Type[ValidatedConfig]]] = None, **data: Any):
-        super().__init__(**data, _clss=_clss or [self.__class__])
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
+        path_in_cfg = path_in_cfg or ("LineBand",)
+        super().__init__(**data, path_in_cfg=path_in_cfg)
 
 
 class PConfig(ValidatedConfig):
@@ -139,7 +140,6 @@ class PConfig(ValidatedConfig):
     y_bands: Optional[List[LineBand]] = None
     x_lines: Optional[List[FlatLine]] = None
     y_lines: Optional[List[FlatLine]] = None
-    _actual_cls = None
 
     @classmethod
     def from_pconfig_dict(cls, pconfig: Union[Mapping[str, Any], "PConfig", None]):
@@ -152,12 +152,15 @@ class PConfig(ValidatedConfig):
         elif isinstance(pconfig, PConfig):
             return pconfig
         else:
-            return cls(**pconfig)
+            return cls(path_in_cfg=(), **pconfig)
 
-    def __init__(self, **data: Any):
-        super().__init__(**data, _clss=[self.__class__])
-
-        self._actual_cls = self.__class__
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
+        path_in_cfg = path_in_cfg or ()
+        _path_component = "pconfig"
+        if id := data.get("id"):
+            _path_component = f"{_path_component}[id='{id}']"
+        path_in_cfg += (_path_component,)
+        super().__init__(path_in_cfg=path_in_cfg, **data)
 
         if not self.id:
             self.id = f"{self.__class__.__name__.lower().replace('config', '')}-{random.randint(1000000, 9999999)}"
@@ -168,20 +171,20 @@ class PConfig(ValidatedConfig):
                 setattr(self, k, v)
 
     @classmethod
-    def parse_x_bands(cls, data, _clss: List[Type]):
-        return [LineBand(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
+    def parse_x_bands(cls, data, path_in_cfg: Tuple[str, ...]):
+        return [LineBand(path_in_cfg=path_in_cfg, **d) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
-    def parse_y_bands(cls, data, _clss: List[Type]):
-        return [LineBand(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
+    def parse_y_bands(cls, data, path_in_cfg: Tuple[str, ...]):
+        return [LineBand(path_in_cfg=path_in_cfg, **d) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
-    def parse_x_lines(cls, data, _clss: List[Type]):
-        return [FlatLine(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
+    def parse_x_lines(cls, data, path_in_cfg: Tuple[str, ...]):
+        return [FlatLine(path_in_cfg=path_in_cfg, **d) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
-    def parse_y_lines(cls, data, _clss: List[Type]):
-        return [FlatLine(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
+    def parse_y_lines(cls, data, path_in_cfg: Tuple[str, ...]):
+        return [FlatLine(path_in_cfg=path_in_cfg, **d) for d in ([data] if isinstance(data, dict) else data)]
 
 
 class BaseDataset(BaseModel):
@@ -1301,7 +1304,7 @@ def split_long_string(s: str, max_width=80) -> List[str]:
     return lines
 
 
-def convert_dash_style(dash_style: Optional[str], _clss: Optional[List[type]] = None) -> Optional[str]:
+def convert_dash_style(dash_style: Optional[str], path_in_cfg: Tuple[str, ...]) -> Optional[str]:
     """Convert dash style from Highcharts to Plotly"""
     if dash_style is None:
         return None
@@ -1321,9 +1324,11 @@ def convert_dash_style(dash_style: Optional[str], _clss: Optional[List[type]] = 
     if dash_style in mapping.values():  # Plotly style?
         return dash_style
     elif dash_style in mapping.keys():  # Highcharts style?
-        add_validation_warning(_clss or [], f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'")
+        add_validation_warning(path_in_cfg, f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'")
         return mapping[dash_style]
-    return "solid"
+    else:
+        add_validation_warning(path_in_cfg, f"'{dash_style}' is not a valid dash style, using 'solid' instead")
+        return "solid"
 
 
 ROSETTA_WARNING = (
