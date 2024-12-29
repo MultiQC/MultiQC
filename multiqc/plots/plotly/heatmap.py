@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union, Any
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union, Any, cast
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
@@ -115,6 +115,7 @@ class Dataset(BaseDataset):
         cluster_cols: bool = True,
         cluster_method: str = "complete",
     ) -> "Dataset":
+        data: List[List[ElemT]]
         if isinstance(rows, dict):
             # Re-key the dict to be strings
             rows_str: Dict[str, Dict[str, ElemT]] = {
@@ -130,7 +131,9 @@ class Dataset(BaseDataset):
                     for x, _ in value_by_x.items():
                         if x not in xcats:
                             xcats.append(x)
-            rows = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
+            data = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
+        else:
+            data = cast(List[List[ElemT]], rows)
 
         rows_clustered = None
         xcats_clustered = None
@@ -138,7 +141,7 @@ class Dataset(BaseDataset):
 
         if cluster_rows or cluster_cols:
             try:
-                clustered_rows, row_idx, col_idx = _cluster_data(rows, cluster_rows, cluster_cols, cluster_method)
+                clustered_rows, row_idx, col_idx = _cluster_data(data, cluster_rows, cluster_cols, cluster_method)
                 rows_clustered = clustered_rows
                 if xcats:
                     xcats_clustered = [xcats[i] for i in col_idx] if cluster_cols else xcats
@@ -149,7 +152,7 @@ class Dataset(BaseDataset):
 
         dataset = Dataset(
             **dataset.__dict__,
-            rows=rows,
+            rows=data,
             rows_clustered=rows_clustered,
             xcats=[str(x) for x in xcats] if xcats else None,
             ycats=[str(y) for y in ycats] if ycats else None,
