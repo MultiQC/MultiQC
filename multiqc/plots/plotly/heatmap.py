@@ -77,7 +77,7 @@ def _cluster_data(
         except Exception as e:
             logger.warning(f"Column clustering failed: {str(e)}")
 
-    return data_array.tolist(), row_idx, col_idx
+    return cast(List[List[ElemT]], data_array.tolist()), row_idx, col_idx
 
 
 def plot(
