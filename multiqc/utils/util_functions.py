@@ -291,7 +291,7 @@ def scipy_hierarchy_linkage(distances: np.ndarray, method: str = "complete") -> 
     dist_matrix = np.zeros((n, n))
     idx = np.triu_indices(n, k=1)
     dist_matrix[idx] = distances
-    dist_matrix = dist_matrix + dist_matrix.T
+    dist_matrix = dist_matrix + dist_matrix.T  # type: ignore
 
     # Initialize arrays for clustering
     n_clusters = n
@@ -316,7 +316,7 @@ def scipy_hierarchy_linkage(distances: np.ndarray, method: str = "complete") -> 
 
         # Create new cluster
         new_cluster_idx = n_clusters + i
-        cluster_sizes = np.append(cluster_sizes, cluster_sizes[cluster1] + cluster_sizes[cluster2])
+        cluster_sizes = np.append(cluster_sizes, cluster_sizes[cluster1] + cluster_sizes[cluster2])  # type: ignore
 
         # Calculate distances to new cluster based on chosen method
         remaining_clusters = [x for x in active_nodes if x not in (cluster1, cluster2)]
@@ -340,10 +340,10 @@ def scipy_hierarchy_linkage(distances: np.ndarray, method: str = "complete") -> 
             new_distances[j] = new_dist
 
         # Update distance matrix
-        dist_matrix = np.vstack((dist_matrix, np.zeros(dist_matrix.shape[1])))
-        dist_matrix = np.hstack((dist_matrix, np.zeros((dist_matrix.shape[0], 1))))
-        dist_matrix[new_cluster_idx, remaining_clusters] = new_distances
-        dist_matrix[remaining_clusters, new_cluster_idx] = new_distances
+        dist_matrix = np.vstack((dist_matrix, np.zeros(dist_matrix.shape[1])))  # type: ignore
+        dist_matrix = np.hstack((dist_matrix, np.zeros((dist_matrix.shape[0], 1))))  # type: ignore
+        dist_matrix[new_cluster_idx, remaining_clusters] = new_distances  # type: ignore
+        dist_matrix[remaining_clusters, new_cluster_idx] = new_distances  # type: ignore
 
         # Update active nodes
         active_nodes.remove(cluster1)
@@ -359,7 +359,7 @@ def scipy_hierarchy_leaves_list(Z: np.ndarray) -> List[int]:
     Reimplements scipy.hierarchy.leaves_list to avoid heavy scipy dependency.
 
     Args:
-        Z: The linkage matrix from hierarchy_linkage
+        Z: The linkage matrix from scipy_hierarchy_linkage
 
     Returns:
         List of original observation indices in the order they appear in the dendrogram
