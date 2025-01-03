@@ -95,8 +95,10 @@ class MultiqcModule(BaseMultiqcModule):
         reads_data = dict()
         bases_data = dict()
         for f in self.find_log_files("preseq"):
-            sample_data_raw, sample_data_is_bases = _parse_preseq_logs(f)
-            if sample_data_raw is None:
+            try:
+                sample_data_raw, sample_data_is_bases = _parse_preseq_logs(f)
+            except ValueError as e:
+                log.warning(f"Skipping {f['fn']}: {e}")
                 continue
 
             if f["s_name"] in sample_data_raw:
@@ -277,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
         return real_counts_total, real_counts_unique
 
 
-def _parse_preseq_logs(f):
+def _parse_preseq_logs(f) -> Tuple[Dict[float, float], bool]:
     """Go through log file looking for preseq output"""
 
     lines = f["f"].splitlines()
@@ -291,16 +293,18 @@ def _parse_preseq_logs(f):
     elif header.startswith("total_reads	distinct_reads"):
         pass
     else:
-        log.debug(f"First line of preseq file {f['fn']} did not look right")
-        return None, None
+        raise ValueError(f"First line of preseq file does not look right: {header}")
 
-    data = dict()
+    data: Dict[float, float] = dict()
     for line in lines:
         s = line.split()
         # Sometimes the Expected_distinct count drops to 0, not helpful
         if float(s[1]) == 0 and float(s[0]) > 0:
             continue
-        data[float(s[0])] = float(s[1])
+        x, y = float(s[0]), float(s[1])
+        if not np.isfinite(y):
+            continue
+        data[x] = y
 
     return data, data_is_bases
 
