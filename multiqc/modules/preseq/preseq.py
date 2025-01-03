@@ -6,7 +6,8 @@ import numpy as np
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
-from multiqc.plots.plotly.line import Series, Marker
+from multiqc.plots.plotly.line import LinePlotConfig, Series, Marker
+from multiqc.plots.plotly.plot import PConfig
 from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
@@ -185,21 +186,21 @@ class MultiqcModule(BaseMultiqcModule):
         name = "Complexity curve"
         description = ""
         section_id = "preseq_plot"
-        pconfig = {
-            "id": "preseq_complexity_plot",
-            "title": "Preseq: Complexity curve",
-            "xlab": x_axis_name,
-            "ylab": y_axis_name,
-            "xmin": 0,
-            "ymin": 0,
-            "tt_label": "<b>" + y_tt_lbl + "</b>: " + x_tt_lbl,
-            "xsuffix": x_suffix,
-            "ysuffix": y_suffix,
-            "extra_series": [],
-        }
+        pconfig = LinePlotConfig(
+            id="preseq_complexity_plot",
+            title="Preseq: Complexity curve",
+            xlab=x_axis_name,
+            ylab=y_axis_name,
+            xmin=0,
+            ymin=0,
+            tt_label="<b>" + y_tt_lbl + "</b>: " + x_tt_lbl,
+            xsuffix=x_suffix,
+            ysuffix=y_suffix,
+            extra_series=[],
+        )
         if not is_basepairs:
-            pconfig["title"] += " (molecule count)"
-            pconfig["id"] += "_molecules"
+            pconfig.title += " (molecule count)"
+            pconfig.id += "_molecules"
             name += " (molecule count)"
             section_id += "_molecules"
 
@@ -208,8 +209,8 @@ class MultiqcModule(BaseMultiqcModule):
         real_vals_all, real_vals_unq = _prep_real_counts(
             real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, x_axis, y_axis
         )
-        pconfig["extra_series"].extend(
-            _real_counts_to_plot_series(data, real_vals_unq, real_vals_all, x_suffix, y_suffix, y_tt_lbl)
+        pconfig.extra_series = _real_counts_to_plot_series(
+            data, real_vals_unq, real_vals_all, x_suffix, y_suffix, y_tt_lbl
         )
         if real_vals_unq:
             description += "<p>Points show read count versus deduplicated read counts (externally calculated).</p>"
@@ -220,17 +221,17 @@ class MultiqcModule(BaseMultiqcModule):
         if getattr(config, "preseq", {}).get("notrim", False) is not True:
             max_y *= 0.8
             max_yx *= 0.8
-            max_x = 0
+            max_x = 0.0
             for x in sorted(list(data[max_sn].keys())):
                 max_x = max(max_x, x)
                 if data[max_sn][x] > max_y and x > real_vals_all.get(max_sn, 0) and x > real_vals_unq.get(max_sn, 0):
                     break
-            pconfig["xmax"] = max_x
+            pconfig.xmax = max_x
             description += "<p>Note that the x-axis is trimmed at the point where all the datasets \
                 show 80% of their maximum y-value, to avoid ridiculous scales.</p>"
 
         # Plot perfect library as dashed line
-        pconfig["extra_series"].append(
+        pconfig.extra_series.append(
             Series(
                 path_in_cfg=("perfect_library",),
                 name="A perfect library where each read is unique",
@@ -359,8 +360,7 @@ def _calc_count_in_1x(data_is_basepairs: bool) -> Optional[float]:
             return genome_size
         elif read_length:
             return genome_size / read_length
-    else:
-        return None
+    return None
 
 
 def _prepare_labels(is_basepairs: bool, max_y: float, x_axis: str, y_axis: str) -> Tuple[str, str, str, str, str, str]:
