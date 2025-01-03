@@ -3,6 +3,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union, Any, c
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
+import numpy as np
 
 from multiqc import report
 from multiqc.plots.plotly.plot import (
@@ -12,9 +13,7 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     split_long_string,
 )
-from scipy.cluster import hierarchy  # type: ignore
-from scipy.spatial.distance import pdist  # type: ignore
-import numpy as np
+from multiqc.utils.util_functions import scipy_pdist, scipy_hierarchy_linkage, scipy_hierarchy_leaves_list
 
 logger = logging.getLogger(__name__)
 
@@ -55,24 +54,25 @@ def _cluster_data(
     data: List[List[ElemT]], cluster_rows: bool = True, cluster_cols: bool = True, method: str = "complete"
 ) -> Tuple[List[List[ElemT]], List[int], List[int]]:
     """Cluster the heatmap data and return clustered data with new indices"""
-    data_array = np.array([[0.0 if x is None else float(x) for x in row] for row in data])
     row_idx = list(range(len(data)))
     col_idx = list(range(len(data[0])))
 
+    data_array = np.array([[0.0 if x is None else float(x) for x in row] for row in data])
+
     if cluster_rows and len(data) > 1:
         try:
-            row_dist = pdist(data_array, metric="euclidean")
-            row_linkage = hierarchy.linkage(row_dist, method=method)
-            row_idx = hierarchy.leaves_list(row_linkage)
+            row_dist = scipy_pdist(data_array)
+            row_linkage = scipy_hierarchy_linkage(row_dist, method=method)
+            row_idx = scipy_hierarchy_leaves_list(row_linkage)
             data_array = data_array[row_idx]
         except Exception as e:
             logger.warning(f"Row clustering failed: {str(e)}")
 
     if cluster_cols and len(data[0]) > 1:
         try:
-            col_dist = pdist(data_array.T, metric="euclidean")
-            col_linkage = hierarchy.linkage(col_dist, method=method)
-            col_idx = hierarchy.leaves_list(col_linkage)
+            col_dist = scipy_pdist(data_array.T)
+            col_linkage = scipy_hierarchy_linkage(col_dist, method=method)
+            col_idx = scipy_hierarchy_leaves_list(col_linkage)
             data_array = data_array[:, col_idx]
         except Exception as e:
             logger.warning(f"Column clustering failed: {str(e)}")
