@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
         if reads_data:
             self._make_preseq_length_trimmed_plot(reads_data, False)
 
-    def _make_preseq_length_trimmed_plot(self, data_raw, is_basepairs):
+    def _make_preseq_length_trimmed_plot(self, data_raw: Dict[str, Dict[float, float]], is_basepairs: bool) -> None:
         """Generate the preseq plot.
 
         For Y axis, plot coverages if `config.preseq.read_length` and `config.preseq.genome_size`
@@ -140,36 +140,46 @@ class MultiqcModule(BaseMultiqcModule):
         For X axis, plot counts (or base pairs) in X axis (unless coverages requested
         explicitly in `config.preseq.x_axis`).
         """
-        counts_in_1x = _get_counts_in_1x(is_basepairs)
-        x_axis = getattr(config, "preseq", {}).get("x_axis", "counts")
-        y_axis = getattr(config, "preseq", {}).get("y_axis", "coverage" if counts_in_1x else "counts")
-
         # Modify counts
         d_cnts = {sn: _modify_raw_data(sample_data, is_basepairs) for sn, sample_data in data_raw.items()}
 
-        # Convert counts (base pairs) -> depths
-        d_covs = {
-            sn: _counts_to_coverages(sample_data, counts_in_1x) if counts_in_1x else None
-            for sn, sample_data in data_raw.items()
-        }
+        # Plot depths of counts
+        counts_in_1x: Optional[float] = _calc_count_in_1x(is_basepairs)
+        x_axis = getattr(config, "preseq", {}).get("x_axis", "counts")
+        y_axis = getattr(config, "preseq", {}).get("y_axis", "coverage" if counts_in_1x is not None else "counts")
 
-        # Prepare final dataset for plotting
-        data = dict()
-        for sn, s_d_cnts, s_d_covs in zip(d_cnts, d_cnts.values(), d_covs.values()):
-            keys = s_d_covs.keys() if x_axis == "coverage" else s_d_cnts.keys()
-            values = s_d_covs.values() if y_axis == "coverage" else s_d_cnts.values()
-            data[sn] = dict(zip(keys, values))
-
-        # Count maximum values to draw the "ideal" line
         max_y_raw, max_sn = max((max(sd.values()), sn) for sn, sd in data_raw.items())
-        max_y_cnt = list(_modify_raw_data({max_y_raw: max_y_raw}, is_basepairs).items())[0][0]
-        max_y_cov = list(_counts_to_coverages({max_y_raw: max_y_raw}, counts_in_1x).items())[0][0]
-        max_y = max_y_cov if y_axis == "coverage" else max_y_cnt
-        max_yx = max_y_cov if x_axis == "coverage" else max_y_cnt
+
+        data: Dict[str, Dict[float, float]]
+        max_y: float
+        max_yx: float
+        if counts_in_1x is not None:
+            # Convert counts (base pairs) -> depths
+            d_covs = {sn: _counts_to_coverages(sample_data, counts_in_1x) for sn, sample_data in data_raw.items()}
+            # Prepare final dataset for plotting
+            data = dict()
+            for sn, s_d_covs in zip(d_cnts, d_covs.values()):
+                keys = s_d_covs.keys()
+                values = s_d_covs.values()
+                data[sn] = dict(zip(keys, values))
+
+            # Count maximum values to draw the "ideal" line
+            max_y_cov = list(_counts_to_coverages({max_y_raw: max_y_raw}, counts_in_1x).items())[0][0]
+            max_y = max_y_cov
+            max_yx = max_y_cov
+
+        else:
+            d_covs = {sn: {} for sn in data_raw.keys()}
+            # Prepare final dataset for plotting
+            data = d_cnts
+            # Count maximum values to draw the "ideal" line
+            max_y_cnt = list(_modify_raw_data({max_y_raw: max_y_raw}, is_basepairs).items())[0][0]
+            max_y = max_y_cnt
+            max_yx = max_y_cnt
 
         # Preparing axis and tooltip labels
         x_suffix, y_tt_lbl, x_axis_name, y_suffix, x_tt_lbl, y_axis_name = _prepare_labels(
-            is_basepairs, max_y_cov, x_axis, y_axis
+            is_basepairs, max_y, x_axis, y_axis
         )
 
         name = "Complexity curve"
@@ -302,28 +312,25 @@ def _modify_raw_data(sample_data, is_basepairs):
     return {_modify_raw_val(x, is_basepairs): _modify_raw_val(y, is_basepairs) for x, y in sample_data.items()}
 
 
-def _modify_raw_val(val, is_basepairs):
+def _modify_raw_val(val: float, is_basepairs: bool) -> float:
     """Modify counts or base pairs according to `read_count_multiplier`
     or `base_count_multiplier`.
     """
     return float(val) * (config.base_count_multiplier if is_basepairs else config.read_count_multiplier)
 
 
-def _counts_to_coverages(sample_data, counts_in_1x):
+def _counts_to_coverages(sample_data: Dict[float, float], counts_in_1x: float) -> Dict[float, float]:
     """If the user specified read length and genome size in the config,
     convert the raw counts/bases into the depth of coverage.
     """
-    if not counts_in_1x:
-        return {None: None}
-
     return {_count_to_coverage(x, counts_in_1x): _count_to_coverage(y, counts_in_1x) for x, y in sample_data.items()}
 
 
-def _count_to_coverage(val, counts_in_1x):
+def _count_to_coverage(val: float, counts_in_1x: float) -> float:
     return val / counts_in_1x
 
 
-def _get_counts_in_1x(data_is_basepairs):
+def _calc_count_in_1x(data_is_basepairs: bool) -> Optional[float]:
     """Read length and genome size from the config and calculate
     the approximate number of counts (or base pairs) in 1x of depth
     """
@@ -356,15 +363,15 @@ def _get_counts_in_1x(data_is_basepairs):
         return None
 
 
-def _prepare_labels(is_basepairs, max_y_cov, x_axis, y_axis):
+def _prepare_labels(is_basepairs: bool, max_y: float, x_axis: str, y_axis: str) -> Tuple[str, str, str, str, str, str]:
     cov_suffix = "x"
 
-    cov_lbl = None
+    cov_lbl: str = ""
     if x_axis == "coverage" or y_axis == "coverage":
         cov_precision = "2"
-        if max_y_cov > 30:  # no need to be so precise when the depth numbers are high
+        if max_y > 30:  # no need to be so precise when the depth numbers are high
             cov_precision = "1"
-        if max_y_cov > 300:  # when the depth are very high, decimal digits are excessive
+        if max_y > 300:  # when the depth are very high, decimal digits are excessive
             cov_precision = "0"
         cov_lbl = "{value:,." + cov_precision + "f}x"
 
