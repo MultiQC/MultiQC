@@ -196,7 +196,6 @@ class MultiqcModule(BaseMultiqcModule):
             tt_label="<b>" + y_tt_lbl + "</b>: " + x_tt_lbl,
             xsuffix=x_suffix,
             ysuffix=y_suffix,
-            extra_series=[],
         )
         if not is_basepairs:
             pconfig.title += " (molecule count)"
