@@ -203,8 +203,6 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         for series in self.lines:
             xs = [x[0] for x in series.pairs]
             ys = [x[1] for x in series.pairs]
-            if series.dash:
-                print(series)
             params: Dict[str, Any] = {
                 "showlegend": series.showlegend,
                 "line": {
