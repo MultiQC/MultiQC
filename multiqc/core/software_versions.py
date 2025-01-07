@@ -33,7 +33,7 @@ def update_versions_from_config():
         # Map normalized module software names to the nicely formatted names.
         module_softwares = {}
         if module is not None:
-            module_softwares = {normalize_name(m_software): m_software for m_software in module.versions}
+            module_softwares = {normalize_name(m_software): m_software for m_software in module.versions.keys()}
 
             # Use the nicely formatted module name as group name
             group = module.name
@@ -49,7 +49,7 @@ def update_versions_from_config():
                     module.add_software_version(str(version), software_name=software_name)
 
                 # Get the updated software versions from the module
-                software_versions = module.versions[software_name]
+                software_versions = [version for _, version in module.versions[software_name]]
 
             # Add updated software versions to the report
             report.software_versions[group][software_name] = software_versions

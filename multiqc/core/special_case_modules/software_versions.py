@@ -60,10 +60,11 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         for group, group_versions in sorted(versions.items()):
             html.append("<tbody>")
-            for i, (tool, versions) in enumerate(sorted(group_versions.items())):
+            tool_versions: List[str]
+            for i, (tool, tool_versions) in enumerate(sorted(group_versions.items())):
                 rows = [
                     f"<td>{tool}</td>",
-                    f"<td><samp>{', '.join(list(map(str, versions)))}</samp></td>",
+                    f"<td><samp>{', '.join(list(map(str, tool_versions)))}</samp></td>",
                 ]
                 if not ignore_groups:
                     rows.insert(0, f"<td>{group if (i == 0) else ''}</td>")

@@ -964,6 +964,7 @@ def multiqc_dump_json(data_dir: Path):
     exported_data: Dict[str, Any] = dict()
     export_vars = {
         "report": [
+            "modules",
             "data_sources",
             "general_stats_data",
             "general_stats_headers",
@@ -1011,6 +1012,25 @@ def multiqc_dump_json(data_dir: Path):
                                     fl_sec = rows  # old format without grouping, in case if use plugins override it
                             flattened_sections.append(fl_sec)
                         val = flattened_sections
+                    elif name == "modules":
+                        val = [
+                            {
+                                "name": mod.name,
+                                "anchor": mod.anchor,
+                                "versions": [
+                                    {
+                                        "name": software_name,
+                                        "versions": software_versions,
+                                    }
+                                    for software_name, software_versions in mod.versions.items()
+                                ],
+                                "info": mod.info,
+                                "intro": mod.intro,
+                                "comment": mod.comment,
+                                "sections": [s.__dict__ for s in mod.sections],
+                            }
+                            for mod in modules
+                        ]
                     d = {f"{pymod}_{name}": val}
                 if d:
                     with open(os.devnull, "wt") as f:
