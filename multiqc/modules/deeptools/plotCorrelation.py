@@ -36,6 +36,9 @@ class plotCorrelationMixin:
             config = {
                 "id": "deeptools_correlation_plot",
                 "title": "deeptools: Correlation Plot",
+                "cluster_rows": True,
+                "cluster_cols": True,
+                "cluster_switch_clustered_active": True,
             }
             samples = sorted(self.deeptools_plotCorrelationData.keys())
             rows = []

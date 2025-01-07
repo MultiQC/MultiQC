@@ -1,8 +1,9 @@
 import logging
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union, Any, cast
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
+import numpy as np
 
 from multiqc import report
 from multiqc.plots.plotly.plot import (
@@ -12,6 +13,7 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     split_long_string,
 )
+from multiqc.utils.util_functions import scipy_pdist, scipy_hierarchy_linkage, scipy_hierarchy_leaves_list
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +41,43 @@ class HeatmapConfig(PConfig):
     datalabels: Optional[bool] = Field(None, deprecated="display_values")
     display_values: Optional[bool] = None
     angled_xticks: bool = True
+    cluster_rows: bool = True
+    cluster_cols: bool = True
+    cluster_method: str = "complete"  # linkage method: single, complete, average, weighted, etc.
+    cluster_switch_clustered_active: bool = False
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("heatmap",), **data)
+
+
+def _cluster_data(
+    data: List[List[ElemT]], cluster_rows: bool = True, cluster_cols: bool = True, method: str = "complete"
+) -> Tuple[List[List[ElemT]], List[int], List[int]]:
+    """Cluster the heatmap data and return clustered data with new indices"""
+    row_idx = list(range(len(data)))
+    col_idx = list(range(len(data[0])))
+
+    data_array = np.array([[0.0 if x is None else float(x) for x in row] for row in data])
+
+    if cluster_rows and len(data) > 1:
+        try:
+            row_dist = scipy_pdist(data_array)
+            row_linkage = scipy_hierarchy_linkage(row_dist, method=method)
+            row_idx = scipy_hierarchy_leaves_list(row_linkage)
+            data_array = data_array[row_idx]
+        except Exception as e:
+            logger.warning(f"Row clustering failed: {str(e)}")
+
+    if cluster_cols and len(data[0]) > 1:
+        try:
+            col_dist = scipy_pdist(data_array.T)
+            col_linkage = scipy_hierarchy_linkage(col_dist, method=method)
+            col_idx = scipy_hierarchy_leaves_list(col_linkage)
+            data_array = data_array[:, col_idx]
+        except Exception as e:
+            logger.warning(f"Column clustering failed: {str(e)}")
+
+    return cast(List[List[ElemT]], data_array.tolist()), row_idx, col_idx
 
 
 def plot(
@@ -63,8 +99,11 @@ def plot(
 
 class Dataset(BaseDataset):
     rows: List[List[ElemT]]
+    rows_clustered: Optional[List[List[ElemT]]] = None
     xcats: Optional[Sequence[str]]
     ycats: Optional[Sequence[str]]
+    xcats_clustered: Optional[Sequence[str]] = None
+    ycats_clustered: Optional[Sequence[str]] = None
 
     @staticmethod
     def create(
@@ -72,7 +111,11 @@ class Dataset(BaseDataset):
         rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
         xcats: Optional[Sequence[Union[str, int]]] = None,
         ycats: Optional[Sequence[Union[str, int]]] = None,
+        cluster_rows: bool = True,
+        cluster_cols: bool = True,
+        cluster_method: str = "complete",
     ) -> "Dataset":
+        data: List[List[ElemT]]
         if isinstance(rows, dict):
             # Re-key the dict to be strings
             rows_str: Dict[str, Dict[str, ElemT]] = {
@@ -88,13 +131,33 @@ class Dataset(BaseDataset):
                     for x, _ in value_by_x.items():
                         if x not in xcats:
                             xcats.append(x)
-            rows = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
+            data = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
+        else:
+            data = cast(List[List[ElemT]], rows)
+
+        rows_clustered = None
+        xcats_clustered = None
+        ycats_clustered = None
+
+        if cluster_rows or cluster_cols:
+            try:
+                clustered_rows, row_idx, col_idx = _cluster_data(data, cluster_rows, cluster_cols, cluster_method)
+                rows_clustered = clustered_rows
+                if xcats:
+                    xcats_clustered = [xcats[i] for i in col_idx] if cluster_cols else xcats
+                if ycats:
+                    ycats_clustered = [ycats[i] for i in row_idx] if cluster_rows else ycats
+            except Exception as e:
+                logger.warning(f"Clustering failed: {str(e)}")
 
         dataset = Dataset(
             **dataset.__dict__,
-            rows=rows,
+            rows=data,
+            rows_clustered=rows_clustered,
             xcats=[str(x) for x in xcats] if xcats else None,
             ycats=[str(y) for y in ycats] if ycats else None,
+            xcats_clustered=[str(x) for x in xcats_clustered] if xcats_clustered else None,
+            ycats_clustered=[str(y) for y in ycats_clustered] if ycats_clustered else None,
         )
         return dataset
 
@@ -141,6 +204,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     ycats_samples: bool
     min: Optional[float] = None
     max: Optional[float] = None
+    cluster_switch_clustered_active: bool = False
 
     @staticmethod
     def create(
@@ -200,6 +264,9 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                 rows=rows,
                 xcats=xcats,
                 ycats=ycats,
+                cluster_rows=pconfig.cluster_rows,
+                cluster_cols=pconfig.cluster_cols,
+                cluster_method=pconfig.cluster_method,
             )
         ]
 
@@ -358,6 +425,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             ycats_samples=ycats_samples,
             min=minval,
             max=maxval,
+            cluster_switch_clustered_active=pconfig.cluster_switch_clustered_active,
         )
 
     def buttons(self, flat: bool) -> List[str]:
@@ -365,27 +433,28 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
         Heatmap-specific controls, only for the interactive version.
         """
         buttons = super().buttons(flat=flat)
-
-        if not flat:
-            # find min val across all datasets across all cols and rows
+        if any(ds.rows_clustered for ds in self.datasets):
             buttons.append(
                 f"""
-            <div class="mqc_hcplot_range_sliders">
-                <div>
-                    <label for="{self.id}_range_slider_min_txt">Min:</label>
-                    <input id="{self.id}_range_slider_min_txt" type="number" class="form-control" 
-                        value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" />
-                    <input id="{self.id}_range_slider_min" type="range" 
-                        value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" step="any" />
+                <div class="btn-group" role="group">
+                    <button
+                        type="button" 
+                        class="btn btn-default btn-sm {'' if self.pconfig.cluster_switch_clustered_active else 'active'}" 
+                        data-action="unclustered" 
+                        data-plot-anchor="{self.anchor}"
+                    >
+                        Sorted by sample
+                    </button>
+                    <button
+                        type="button" 
+                        class="btn btn-default btn-sm {'active' if self.pconfig.cluster_switch_clustered_active else ''}" 
+                        data-action="clustered" 
+                        data-plot-anchor="{self.anchor}"
+                    >
+                        Clustered
+                    </button>
                 </div>
-                <div style="margin-left: 30px;">
-                    <label for="{self.id}_range_slider_max_txt">Max:</label>
-                    <input id="{self.id}_range_slider_max_txt" type="number" class="form-control" 
-                        value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" />
-                    <input id="{self.id}_range_slider_max" type="range" 
-                        value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" step="any" />
-                </div>
-            </div>
-            """
+                """
             )
+
         return buttons
