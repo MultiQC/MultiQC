@@ -34,6 +34,7 @@ from typing import (
 
 import yaml
 from pydantic import BaseModel, Field
+import packaging.version
 
 from multiqc import config
 
@@ -93,7 +94,8 @@ plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
 plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
-software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
+# Map software tools to unique versions
+software_versions: Dict[str, Dict[str, List[str]]]
 plot_compressed_json: str
 saved_raw_data_keys: Set[str]  # to make sure write_data_file don't overwrite for repeated modules
 saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled

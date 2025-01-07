@@ -160,7 +160,7 @@ class BaseMultiqcModule:
         self.skip_generalstats = True if self.mod_cust_config.get("generalstats") is False else False
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
-        self.versions: Dict[str, List[Tuple[Optional[packaging.version.Version], str]]] = defaultdict(list)
+        self.versions: Dict[str, List[str]] = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})

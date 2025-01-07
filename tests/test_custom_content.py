@@ -6,7 +6,7 @@ import multiqc
 from multiqc import config, report
 from multiqc.core.file_search import file_search
 from multiqc.core.update_config import ClConfig, update_config
-from multiqc.modules.custom_content import custom_module_classes
+from multiqc.core.special_case_modules.custom_content import custom_module_classes
 from multiqc.types import Anchor, ColumnKey, SampleGroup
 from multiqc.validation import ModuleConfigValidationError
 
