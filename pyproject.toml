@@ -93,7 +93,6 @@ multiqc = "multiqc.__main__:run_multiqc"
 
 [project.entry-points."multiqc.modules.v1"]
 custom_content = "multiqc.core.special_case_modules.custom_content:custom_module_classes"  # special case
-multiqc_data = "multiqc.core.special_case_modules.multiqc_data:MultiqcModule"  # special case
 adapterremoval = "multiqc.modules.adapterremoval:MultiqcModule"
 afterqc = "multiqc.modules.afterqc:MultiqcModule"
 anglerfish = "multiqc.modules.anglerfish:MultiqcModule"

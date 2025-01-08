@@ -527,7 +527,7 @@ def _get_or_create_headers(
 
 def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bool = True) -> Tuple[ValueT, str]:
     """
-    Takes row value, applies "modify" and "format" functions, and returns a tuple:
+    Takes row value, applies "modify" functions and "format" string, and returns a tuple:
     the modified value and its formatted string.
 
     "parse_numeric=False" assumes that the numeric values are already pre-parsed

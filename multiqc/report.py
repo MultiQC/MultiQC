@@ -964,12 +964,12 @@ def multiqc_dump_json(data_dir: Path):
     exported_data: Dict[str, Any] = dict()
     export_vars = {
         "report": [
-            "modules",
+            "multiqc_command",
             "data_sources",
             "general_stats_data",
             "general_stats_headers",
-            "multiqc_command",
             "plot_data",
+            "modules",
         ],
         "config": [
             "analysis_dir",
@@ -1017,13 +1017,10 @@ def multiqc_dump_json(data_dir: Path):
                             {
                                 "name": mod.name,
                                 "anchor": mod.anchor,
-                                "versions": [
-                                    {
-                                        "name": software_name,
-                                        "versions": software_versions,
-                                    }
-                                    for software_name, software_versions in mod.versions.items()
-                                ],
+                                "versions": {
+                                    software_name: [version for _, version in versions_tuples]
+                                    for software_name, versions_tuples in mod.versions.items()
+                                },
                                 "info": mod.info,
                                 "intro": mod.intro,
                                 "comment": mod.comment,

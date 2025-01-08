@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc.plots.plotly.violin import ViolinPlot
+from multiqc.plots.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, ValueT
 from multiqc.types import ColumnKey, LoadedFileDict, SampleGroup, SampleName
 

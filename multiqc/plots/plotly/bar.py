@@ -4,11 +4,11 @@ import copy
 import logging
 import math
 from collections import defaultdict
-from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Type, TypedDict, Union
+from typing import Dict, List, Literal, Optional, Sequence, Tuple, TypedDict, Union
 
 import plotly.graph_objects as go  # type: ignore
 import spectra  # type: ignore
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 
 from multiqc import config, report
 from multiqc.plots.plotly import determine_barplot_height
@@ -20,7 +20,6 @@ from multiqc.plots.plotly.plot import (
     split_long_string,
 )
 from multiqc.types import SampleName
-from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 

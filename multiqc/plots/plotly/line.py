@@ -2,11 +2,10 @@ import io
 import logging
 import os
 import random
-from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Tuple, TypeVar, Union
 
 import plotly.graph_objects as go  # type: ignore
-from plotly.graph_objs.layout.shape import Label  # type: ignore
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from multiqc import config, report
 from multiqc.plots.plotly.plot import BaseDataset, PConfig, Plot, PlotType, convert_dash_style

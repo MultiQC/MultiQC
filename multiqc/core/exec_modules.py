@@ -14,6 +14,7 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core import plugin_hooks
 from multiqc.core.exceptions import NoAnalysisFound, RunError
 from multiqc.core import software_versions
+from multiqc.core.special_case_modules.multiqc_data import LoadMultiqcData
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,9 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
     """
     Execute the modules that have been found and loaded.
     """
+    # First, load existing state from multiqc_data.json. Can't run this as a regular module because it needs
+    # to modify the multiqc.report singleton
+    LoadMultiqcData()
 
     # Only run the modules for which any files were found
     non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
