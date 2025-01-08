@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 import jinja2
 
@@ -23,6 +23,7 @@ from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor
 from multiqc.utils import util_functions
 
@@ -345,13 +346,14 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
             "raw_data_fn": "multiqc_general_stats",
         }
         # Check if plot data is loaded from previous session
-        if p := report.plot_by_id.get(Anchor("general_stats_table")):
-            p.extend(report.general_stats_data, report.general_stats_headers, pconfig)
+        if existing_table := report.plot_by_id.get(Anchor("general_stats_table")):
+            cast(ViolinPlot, existing_table).extend(report.general_stats_data, report.general_stats_headers, pconfig)
         else:
             p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
             report.plot_by_id[Anchor("general_stats_table")] = p
-        report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name)
 
+    if p := report.plot_by_id.get(Anchor("general_stats_table")):
+        report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name)
     else:
         config.skip_generalstats = True
 

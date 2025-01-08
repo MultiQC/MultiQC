@@ -19,8 +19,8 @@ from multiqc.plots.table_object import (
     ColumnMeta,
     DataTable,
     SectionT,
-    ValueT,
     TableConfig,
+    ValueT,
 )
 from multiqc.types import Anchor, SampleName
 
@@ -407,21 +407,11 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     n_samples: int
 
     @staticmethod
-    def create(
+    def data_to_dts(
         data: Union[List[SectionT], SectionT],
         headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
         pconfig: Union[Dict[str, Any], TableConfig, None] = None,
-        show_table_by_default: bool = False,
-    ) -> "ViolinPlot":
-        """
-        Helper HTML for a violin plot.
-        :param data: A list of data dicts
-        :param headers: A list of dicts with information
-                        for the series, such as colour scales, min and
-                        max values etc.
-        :param pconfig: plot config dict
-        :return: plot object
-        """
+    ) -> List[DataTable]:
         pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
 
         if not isinstance(data, list):
@@ -440,16 +430,48 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
             dt = table_object.DataTable.create(d, table_id, table_anchor, pconf.model_copy(), h)
             dts.append(dt)
+        return dts
 
+    @staticmethod
+    def create(
+        data: Union[List[SectionT], SectionT],
+        headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
+        pconfig: Union[Dict[str, Any], TableConfig, None] = None,
+        show_table_by_default: bool = False,
+    ) -> "ViolinPlot":
+        """
+        Helper HTML for a violin plot.
+        :param data: A list of data dicts
+        :param headers: A list of dicts with information
+                        for the series, such as colour scales, min and
+                        max values etc.
+        :param pconfig: plot config dict
+        :return: plot object
+        """
+        dts = ViolinPlot.data_to_dts(data, headers, pconfig)
         return ViolinPlot.create_from_dts(dts, show_table_by_default)
 
     def extend(
         self,
-        data: List[SectionT],
+        data: Union[List[SectionT], SectionT],
         headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
         pconfig: Union[Dict[str, Any], TableConfig, None] = None,
-    ):
-        pass
+    ) -> "ViolinPlot":
+        """
+        Extend the existing violin plot with new data.
+
+        :param data: A list of data dicts to add
+        :param headers: A list of dicts with information for the series
+        :param pconfig: plot config dict
+        """
+        existing_dts = [ds.dt for ds in self.datasets]
+        new_dts = ViolinPlot.data_to_dts(data, headers, pconfig)
+
+        # Extend each existing dataset's DataTable with the new data
+        for existing_dt, new_dt in zip(existing_dts, new_dts):
+            existing_dt.extend(new_dt)
+
+        return ViolinPlot.create_from_dts(existing_dts, self.show_table_by_default)
 
     @staticmethod
     def create_from_dts(
