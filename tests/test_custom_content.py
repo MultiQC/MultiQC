@@ -94,10 +94,10 @@ def test_deprecated_fields(tmp_path, capsys):
 
     err = str(capsys.readouterr().err)
     assert "Line plot's x_lines or y_lines 'label' field is expected to be a string" in err
-    assert "'LongDash' is a deprecated dash style, use 'longdash'" in err
-    assert "deprecated field 'colour'. Use 'color' instead" in err
-    assert "deprecated field 'xLog'. Use 'xlog' instead" in err
-    assert "deprecated field 'xPlotLines'. Use 'x_lines' instead" in err
+    assert "• 'dash': 'LongDash' is a deprecated dash style, use 'longdash'" in err
+    assert "• 'colour': deprecated field. Use 'color' instead" in err
+    assert "• 'xLog': deprecated field. Use 'xlog' instead" in err
+    assert "• 'xPlotLines': deprecated field. Use 'x_lines' instead" in err
 
 
 @pytest.mark.parametrize("strict", [True, False])
@@ -135,7 +135,7 @@ def test_wrong_fields(tmp_path, caplog, strict, monkeypatch):
         custom_module_classes()
 
     out = caplog.text
-    assert "unrecognized field 'y__lab'" in out
+    assert "• 'y__lab': unrecognized field" in out
     assert (
         "• 'ymax': expected type '<class 'float'>', got 'list' [1, 2]" in out
         or "• 'ymax': expected type 'Union[float, int, NoneType]', got 'list' [1, 2]" in out  # Python < 3.10

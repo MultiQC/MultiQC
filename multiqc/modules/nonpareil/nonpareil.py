@@ -363,6 +363,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if data["nonpareil_has.model"]:
                         extra_series[idx].append(
                             Series(
+                                path_in_cfg=("nonpareil-redundancy-plot extra_series",),
                                 name=s_name,
                                 pairs=[(x, y) for x, y in data["nonpareil_model"].items()],
                                 color=data_colors[s_name],

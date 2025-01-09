@@ -555,7 +555,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "FastQC: Sequence Counts",
             "ylab": "Number of reads",
             "cpswitch_counts_label": "Number of reads",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
 
         # Calculate the number of unique and duplicate reads if we can
@@ -897,9 +897,15 @@ class MultiqcModule(BaseMultiqcModule):
                 "color": "black",
                 "showlegend": False if status_checks else True,
             }
-            s1: Series[float, float] = Series(pairs=theoretical_gc, **extra_series_config)
+            s1: Series[float, float] = Series(
+                path_in_cfg=("fastqc-gc-content-plot", "theoretical-gc-content"),
+                pairs=theoretical_gc,
+                **extra_series_config,
+            )
             s2: Series[float, float] = Series(
-                pairs=[(d[0], (d[1] / 100.0) * max_total) for d in theoretical_gc], **extra_series_config
+                path_in_cfg=("fastqc-gc-content-plot", "theoretical-gc-content-count"),
+                pairs=[(d[0], (d[1] / 100.0) * max_total) for d in theoretical_gc],
+                **extra_series_config,
             )
             pconfig["extra_series"] = [[s1], [s2]]
             desc = f" **The dashed black line shows theoretical GC content:** `{theoretical_gc_name}`"

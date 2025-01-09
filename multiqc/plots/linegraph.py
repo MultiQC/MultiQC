@@ -214,7 +214,7 @@ def _make_series_dict(
     if pconfig.smooth_points is not None:
         pairs = smooth_array(pairs, pconfig.smooth_points)
 
-    return Series(name=s, pairs=pairs, color=colors.get(s), _clss=[LinePlotConfig])
+    return Series(name=s, pairs=pairs, color=colors.get(s), path_in_cfg=("lineplot", "pconfig", "pairs"))
 
 
 def smooth_line_data(data_by_sample: DatasetT[KeyT, ValT], numpoints: int) -> Dict[SampleName, Dict[KeyT, ValT]]:

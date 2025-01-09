@@ -33,6 +33,9 @@ class TableConfig(PConfig):
     min: Optional[Union[int, float]] = None
     parse_numeric: bool = True
 
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("table",), **data)
+
 
 ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
 
@@ -253,6 +256,9 @@ class ColumnMeta(ValidatedConfig):
                 col.placement = float(item)
 
         return col
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("table", "column"), **data)
 
 
 class InputRow(BaseModel):

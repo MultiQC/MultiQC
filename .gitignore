@@ -25,6 +25,7 @@ eggs/
 *.egg
 build/
 dist/
+.mypy_cache
 
 # OS generated files
 .DS_Store
