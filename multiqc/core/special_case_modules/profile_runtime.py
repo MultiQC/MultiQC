@@ -8,7 +8,7 @@ from typing import Dict, Union
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
-from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table_object import TableConfig
 from multiqc.types import Anchor, ColumnKey
 

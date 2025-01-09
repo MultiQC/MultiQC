@@ -476,7 +476,7 @@ class DataTable(BaseModel):
                 res.append((section_idx, col_key, self.sections[section_idx].column_by_key[col_key]))
         return res
 
-    def extend(self, new_dt: "DataTable") -> None:
+    def merge(self, new_dt: "DataTable"):
         """
         Extend the existing DataTable with new data. If multiple DataTables are provided,
         they are zipped with the sections in this table (first new dt extends first section, etc).

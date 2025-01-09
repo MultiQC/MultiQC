@@ -347,7 +347,10 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
         }
         # Check if plot data is loaded from previous session
         p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
-        report.plot_by_id[Anchor("general_stats_table")] = p
+        if isinstance(p, str):
+            report.general_stats_html = p
+        else:
+            report.plot_by_id[Anchor("general_stats_table")] = p
 
     if p := report.plot_by_id.get(Anchor("general_stats_table")):
         report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name)

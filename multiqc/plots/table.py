@@ -33,7 +33,7 @@ def plot(
         ]
     ] = None,
     pconfig: Union[Dict[str, Any], TableConfig, None] = None,
-) -> "ViolinPlot":
+) -> Union["ViolinPlot", str]:
     """Return HTML for a MultiQC table.
     :param data: A list of data dicts
     :param headers: A list of dicts with information
@@ -42,9 +42,9 @@ def plot(
     :param pconfig: plot config dict
     :return: plot object
     """
-    from multiqc.plots.violin import ViolinPlot
+    from multiqc.plots.violin import plot as violin_plot
 
-    return ViolinPlot.create(data, headers, pconfig, show_table_by_default=True)
+    return violin_plot(data, headers, pconfig, show_table_by_default=True)
 
 
 def render_html(

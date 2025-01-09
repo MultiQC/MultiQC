@@ -61,8 +61,6 @@ class LoadMultiqcData(BaseMultiqcModule):
     def load_data_json(self, path: Union[str, Path]):
         """
         Try find multiqc_data.json in the given directory, and load it into the report.
-
-        @param path: Path to the directory containing multiqc_data.json or the path to the file itself.
         """
         path = Path(path)
         assert path.suffix == ".json"
@@ -71,7 +69,7 @@ class LoadMultiqcData(BaseMultiqcModule):
             with path.open("r") as f:
                 data = json.load(f)
 
-            # Load modules data
+            # Load module instances (doesn't include data)
             for mod_dict in data["report_modules"]:
                 sections = [Section(**section) for section in mod_dict.pop("sections")]
                 versions: Dict[str, List[Tuple[Optional[packaging.version.Version], str]]] = {
@@ -92,10 +90,10 @@ class LoadMultiqcData(BaseMultiqcModule):
                     for sname, source in sources.items():
                         report.data_sources[mod][section][sname] = source
 
-            # Load plot data
-            for id, plot_dump in data["report_plot_data"].items():
-                report.plot_data[id] = plot_dump
-                report.plot_by_id[id] = load_plot(plot_dump)
+            # Load normalized plot data pointers
+            if "report_plot_input_data" in data:
+                for plot_id, plot_input in data["report_plot_input_data"].items():
+                    report.plot_input_data[plot_id] = plot_input
 
         except (json.JSONDecodeError, KeyError) as e:
             log.error(f"Error loading data from multiqc_data.json: {e}")

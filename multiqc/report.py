@@ -90,8 +90,10 @@ files: Dict[ModuleId, List[FileDict]]
 # Fields below are kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
-plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
+
+plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html and load with js
 plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
+plot_input_data: Dict[Anchor, Any] = dict()  # to combine data from previous runs
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 # Map software tools to unique versions
@@ -122,6 +124,7 @@ def reset():
     global html_ids_by_scope
     global plot_data
     global plot_by_id
+    global plot_input_data
     global general_stats_data
     global general_stats_headers
     global software_versions
@@ -148,6 +151,7 @@ def reset():
     html_ids_by_scope = defaultdict(set)
     plot_data = dict()
     plot_by_id = dict()
+    plot_input_data = dict()
     general_stats_data = []
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
@@ -968,7 +972,7 @@ def multiqc_dump_json(data_dir: Path):
             "data_sources",
             "general_stats_data",
             "general_stats_headers",
-            "plot_data",
+            "plot_input_data",
             "modules",
         ],
         "config": [
@@ -999,9 +1003,9 @@ def multiqc_dump_json(data_dir: Path):
                 elif pymod == "report":
                     val = getattr(sys.modules[__name__], name)
                     if name == "general_stats_data":
-                        # List[Dict[SampleGroup, List[InputRow]]]
-                        # flattening sample groups for export
+                        # Flattening sample groups for export
                         flattened_sections: List[Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = []
+                        section: Dict[SampleGroup, List[InputRow]]
                         for section in general_stats_data:
                             fl_sec: Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]] = dict()
                             for _, rows in section.items():
@@ -1009,7 +1013,7 @@ def multiqc_dump_json(data_dir: Path):
                                     for row in rows:
                                         fl_sec[row.sample] = row.data
                                 else:
-                                    fl_sec = rows  # old format without grouping, in case if use plugins override it
+                                    fl_sec = rows  # old format without grouping, in case if user plugins override it
                             flattened_sections.append(fl_sec)
                         val = flattened_sections
                     elif name == "modules":

@@ -1,14 +1,15 @@
 """MultiQC functions to plot a bargraph"""
 
 import copy
+from itertools import zip_longest
 import logging
 import math
 from collections import OrderedDict, defaultdict
-from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Tuple, TypedDict, Union, cast
+from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
+import pyarrow.parquet as pq
 import spectra  # type: ignore
-from importlib_metadata import EntryPoint
 from natsort import natsorted
 from pydantic import BaseModel, Field
 
@@ -28,12 +29,10 @@ from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
-################################################################################
-## Input types
-
 SampleNameT = Union[SampleName, str]
-InputDatasetT = Mapping[SampleNameT, Mapping[str, Union[int, float]]]
-DatasetT = Dict[SampleNameT, Dict[str, Union[int, float]]]
+CatName = NewType("CatName", str)
+CatNameT = Union[CatName, str]
+InputDatasetT = Mapping[SampleNameT, Mapping[CatNameT, Union[int, float]]]
 
 
 class CatConf(ValidatedConfig):
@@ -44,12 +43,8 @@ class CatConf(ValidatedConfig):
         super().__init__(path_in_cfg=path_in_cfg or ("cats",), **data)
 
 
-# Either a list of strings, or a dictionary mapping category names to their properties dicts or objects
-CategoriesT = Union[Sequence[str], Mapping[str, Union[Mapping[str, str], CatConf]]]
-
-
-################################################################################
-# Output types
+# Either a list of strings, or a cat conf - a mapping from category names to their properties dicts or objects
+InputCategoriesT = Union[Sequence[CatNameT], Mapping[CatNameT, Union[Mapping[str, str], CatConf]]]
 
 
 class BarPlotConfig(PConfig):
@@ -72,35 +67,35 @@ class BarPlotConfig(PConfig):
         super().__init__(path_in_cfg=path_in_cfg or ("barplot",), **data)
 
 
-SampleNameT = Union[SampleName, str]
-
-
 class CatDataDict(TypedDict):
+    """
+    The way data is prepared and serialized for plotting
+    """
+
     name: str
     color: str
     data: List[float]
     data_pct: List[float]
 
 
-class NormalizedBarPlotData(BaseModel):
-    data: List[Dict[SampleName, Dict[str, Union[int, float]]]]
-    cats: List[Dict[str, CatConf]]
+DatasetT = Dict[SampleName, Dict[CatName, Union[int, float]]]
 
 
-def plot(
+class BarPlotInputData(BaseModel):
+    data: List[DatasetT]
+    cats: List[Dict[CatName, CatConf]]
+    pconfig: BarPlotConfig
+
+
+def normalize_inputs(
     data: Union[InputDatasetT, Sequence[InputDatasetT]],
-    cats: Optional[Union[CategoriesT, Sequence[CategoriesT]]] = None,
+    cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
     pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
-) -> Union["BarPlot", str]:
+) -> BarPlotInputData:
     """
-    Plot a horizontal bar graph. Expects a 2D dict of sample
-    data. Also, can take info about categories. There are quite a
-    few variants of how to use this function, see the docs for details.
-    :param data: 2D dict, first keys as sample names, then x:y data pairs
-                 Can supply a list of dicts and will have buttons to switch
-    :param cats: optional list or dict with plot categories
-    :param pconfig: optional dict with config key:value pairs
-    :return: HTML and JS, ready to be inserted into the page
+    We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
+    allow optional categories, categories as strings or as dicts or as objects. We want
+    to normalize the input data before we save it to intermediate format and plot.
     """
     pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
 
@@ -113,20 +108,20 @@ def plot(
     del data
 
     # Make list of cats from different inputs
-    raw_cats_per_ds: List[CategoriesT]
+    raw_cats_per_ds: List[InputCategoriesT]
     if not cats:
         # Not supplied, generate default categories
         raw_cats_per_ds = []
         for val_by_cat_by_sample in raw_datasets:
-            ds_cats: List[str] = []
+            ds_cats: List[CatName] = []
             for sample_name, val_by_cat in val_by_cat_by_sample.items():
                 for cat_name in val_by_cat.keys():
                     if cat_name not in raw_cats_per_ds:
-                        ds_cats.append(cat_name)
+                        ds_cats.append(CatName(cat_name))
             raw_cats_per_ds.append(ds_cats)
     elif isinstance(cats, List) and isinstance(cats[0], str):
         # ["Cat1", "Cat2"] - list of strings for one dataset
-        raw_cats_per_ds = [[cat_name for cat_name in cast(List[str], cats)]]
+        raw_cats_per_ds = [[CatName(cat_name) for cat_name in cast(List[str], cats)]]
     elif isinstance(cats, Sequence):
         # [["Cat1", "Cat2"], {"Cat3": {}, "Cat4": {}}] - list of lists or dicts for multiple datasets
         raw_cats_per_ds = [ds_cats for ds_cats in cast(List[Dict], cats)]
@@ -142,20 +137,20 @@ def plot(
         )
 
     # Parse the categories into pydantic objects
-    categories_per_ds: List[Dict[str, CatConf]] = []
+    categories_per_ds: List[Dict[CatName, CatConf]] = []
     for raw_ds_cats in raw_cats_per_ds:
-        ds_categories: Dict[str, CatConf] = dict()
+        ds_categories: Dict[CatName, CatConf] = dict()
         if isinstance(raw_ds_cats, list):
             for cat_name in raw_ds_cats:
-                ds_categories[cat_name] = CatConf(path_in_cfg=("cats",), name=cat_name)
+                ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), name=cat_name)
         elif isinstance(raw_ds_cats, dict):
             for cat_name, cat_props in raw_ds_cats.items():
                 if isinstance(cat_props, CatConf):
-                    ds_categories[cat_name] = cat_props
+                    ds_categories[CatName(cat_name)] = cat_props
                 else:
                     if "name" not in cat_props:
                         cat_props = {"name": cat_name, **cat_props}
-                    ds_categories[cat_name] = CatConf(path_in_cfg=("cats",), **cat_props)
+                    ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), **cat_props)
         else:
             raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
         categories_per_ds.append(ds_categories)
@@ -166,39 +161,138 @@ def plot(
             for ds_idx in range(len(categories_per_ds)):
                 if cat_name in categories_per_ds[ds_idx].keys():
                     for prop_name, prop_val in user_cat_props.items():
-                        setattr(categories_per_ds[ds_idx][cat_name], prop_name, prop_val)
+                        setattr(categories_per_ds[ds_idx][CatName(cat_name)], prop_name, prop_val)
 
-    pid = pconf.anchor or pconf.id
-    if prev_plot := report.plot_by_id.get(Anchor(pid)):
-        assert isinstance(prev_plot, BarPlot)
-        return BarPlot.update(prev_plot, pconf, categories_per_ds, raw_datasets)
+    return BarPlotInputData(data=raw_datasets, cats=categories_per_ds, pconfig=pconf)
+
+
+def save_normalized_data(pid: Anchor, input_data: BarPlotInputData):
+    """
+    Save data to report.plot_input_data for future runs to merge with
+    """
+    report.plot_input_data[pid] = input_data.model_dump()
+
+
+def load_previous_data(pid: Anchor) -> Optional[BarPlotInputData]:
+    """
+    Load previous normalized data
+    """
+    if pid not in report.plot_input_data:
+        return None
+
+    return BarPlotInputData(**report.plot_input_data[pid])
+
+
+def merge_normalized_data(old_data: BarPlotInputData, new_data: BarPlotInputData) -> BarPlotInputData:
+    """
+    Merge normalized data from old run and new run
+    """
+    # Merge datasets
+    merged_datasets: List[DatasetT] = []
+    for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
+        if old_ds is None:
+            merged_datasets.append(new_ds)
+            continue
+        if new_ds is None:
+            merged_datasets.append(old_ds)
+            continue
+
+        # Merge samples within dataset
+        merged_ds = defaultdict(dict)
+        for sample, cat_vals in old_ds.items():
+            for cat, val in cat_vals.items():
+                merged_ds[sample][cat] = val
+        for sample, cat_vals in new_ds.items():
+            for cat, val in cat_vals.items():
+                merged_ds[sample][cat] = val
+        merged_datasets.append(merged_ds)
+
+    # Merge categories
+    merged_cats: List[Dict[CatName, CatConf]] = []
+    for old_cats, new_cats in zip_longest(old_data.cats, new_data.cats):
+        if old_cats is None:
+            merged_cats.append(new_cats)
+            continue
+        if new_cats is None:
+            merged_cats.append(old_cats)
+            continue
+
+        # Merge category configs
+        merged_ds_cats = {}
+        for cat, conf in old_cats.items():
+            merged_ds_cats[cat] = conf
+        for cat, conf in new_cats.items():
+            if cat in merged_ds_cats:
+                # Keep old category config but update with new values
+                for field, value in conf.model_dump().items():
+                    if value is not None:
+                        setattr(merged_ds_cats[cat], field, value)
+            else:
+                merged_ds_cats[cat] = conf
+        merged_cats.append(merged_ds_cats)
+
+    # Use new config but preserve old values if not overridden
+    merged_pconf = new_data.pconfig
+    for field, value in old_data.pconfig.model_dump().items():
+        if getattr(new_data.pconfig, field) is None:
+            setattr(merged_pconf, field, value)
+
+    return BarPlotInputData(data=merged_datasets, cats=merged_cats, pconfig=merged_pconf)
+
+
+def plot(
+    data: Union[InputDatasetT, Sequence[InputDatasetT]],
+    cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
+    pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
+) -> Union["BarPlot", str]:
+    """
+    Create a horizontal bar graph. Also save data to intermediate format.
+
+    Expects a 2D dict of sample data. Also, can take info about categories. There are quite a
+    few options of how to use this function, see the docs for details.
+    :param data: 2D dict, first keys as sample names, then x:y data pairs
+                 Can supply a list of dicts and will have buttons to switch
+    :param cats: optional list or dict with plot categories
+    :param pconfig: optional dict with config key:value pairs
+    :return: HTML and JS, ready to be inserted into the page
+    """
+    # We want to be permissive to user inputs - but normalizing them now to simplify further processing
+    plot_input: BarPlotInputData = normalize_inputs(data, cats, pconfig)
+
+    # Try load and merge with any found previous data for this plot
+    pid = Anchor(plot_input.pconfig.anchor or plot_input.pconfig.id)
+    if prev_data := load_previous_data(pid):
+        plot_input = merge_normalized_data(prev_data, plot_input)
+
+    # Save normalized data for future runs
+    save_normalized_data(pid, plot_input)
 
     # Parse the data into a chart friendly format
     scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set
     plot_samples: List[List[SampleName]] = list()
     plot_data: List[List[CatDataDict]] = list()
-    for ds_idx, d in enumerate(raw_datasets):
-        hc_samples: List[SampleName] = [SampleName(s) for s in d.keys()]
+    for ds_idx, d in enumerate(plot_input.data):
+        ordered_samples_names: List[SampleName] = [SampleName(s) for s in d.keys()]
         if isinstance(d, OrderedDict):
             # Legacy: users assumed that passing an OrderedDict indicates that we
             # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
             pass
-        elif pconf.sort_samples:
-            hc_samples = natsorted([SampleName(s) for s in d.keys()])
-        hc_data: List[CatDataDict] = list()
+        elif plot_input.pconfig.sort_samples:
+            ordered_samples_names = natsorted([SampleName(s) for s in d.keys()])
+        cat_data_dicts: List[CatDataDict] = list()
         sample_d_count: Dict[SampleName, int] = dict()
-        for cat_idx, c in enumerate(categories_per_ds[ds_idx].keys()):
-            this_data: List[Union[int, float]] = list()
+        for cat_idx, cat_name in enumerate(plot_input.cats[ds_idx].keys()):
+            cat_data: List[Union[int, float]] = list()
             cat_count = 0
-            for s in hc_samples:
+            for s in ordered_samples_names:
                 if s not in sample_d_count:
                     sample_d_count[s] = 0
 
-                if s not in d or c not in d[s]:
+                if s not in d or cat_name not in d[s]:
                     # Pad with NaNs when we have missing categories in a sample
-                    this_data.append(float("nan"))
+                    cat_data.append(float("nan"))
                     continue
-                val = d[SampleName(s)][c]
+                val = d[SampleName(s)][cat_name]
                 if not isinstance(val, (float, int)):
                     try:
                         val = int(val)
@@ -209,42 +303,42 @@ def plot(
                             val = None
                 if val is None:
                     # Pad with NaNs when we have missing categories in a sample
-                    this_data.append(float("nan"))
+                    cat_data.append(float("nan"))
                     continue
                 if isinstance(val, float):
                     if math.floor(val) == val:
                         val = int(val)
-                this_data.append(val)
+                cat_data.append(val)
                 cat_count += 1
                 sample_d_count[s] += 1
             if cat_count > 0:
-                if pconf.hide_zero_cats is False or not all(x == 0 for x in this_data if not math.isnan(x)):
-                    color: str = categories_per_ds[ds_idx][c].color or scale.get_colour(cat_idx, lighten=1)
+                if plot_input.pconfig.hide_zero_cats is False or not all(x == 0 for x in cat_data if not math.isnan(x)):
+                    color: str = plot_input.cats[ds_idx][cat_name].color or scale.get_colour(cat_idx, lighten=1)
                     this_dict: CatDataDict = {
-                        "name": categories_per_ds[ds_idx][c].name,
+                        "name": plot_input.cats[ds_idx][cat_name].name,
                         "color": color,
-                        "data": this_data,
+                        "data": cat_data,
                         "data_pct": [],
                     }
-                    hc_data.append(this_dict)
+                    cat_data_dicts.append(this_dict)
 
         # Remove empty samples
         for sample_name, cnt in sample_d_count.items():
             if cnt == 0:
-                sample_idx = hc_samples.index(sample_name)
-                del hc_samples[sample_idx]
-                for hc_data_idx, _ in enumerate(hc_data):
-                    del hc_data[hc_data_idx]["data"][sample_idx]
-        if len(hc_data) > 0:
-            plot_samples.append(hc_samples)
-            plot_data.append(hc_data)
+                sample_idx = ordered_samples_names.index(sample_name)
+                del ordered_samples_names[sample_idx]
+                for cat_data_idx, _ in enumerate(cat_data_dicts):
+                    del cat_data_dicts[cat_data_idx]["data"][sample_idx]
+        if len(cat_data_dicts) > 0:
+            plot_samples.append(ordered_samples_names)
+            plot_data.append(cat_data_dicts)
 
     if len(plot_data) == 0:
-        logger.warning(f"Tried to make bar plot, but had no data: {pconf.id}")
+        logger.warning(f"Tried to make bar plot, but had no data: {plot_input.pconfig.id}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     return BarPlot.create(
-        pconfig=pconf,
+        pconfig=plot_input.pconfig,
         cats_lists=plot_data,
         samples_lists=plot_samples,
     )
@@ -260,90 +354,6 @@ class Category(BaseModel):
 class Dataset(BaseDataset):
     cats: List[Category]
     samples: List[str]
-
-    @staticmethod
-    def update(
-        dataset: "Dataset",
-        new_pconfig: BarPlotConfig,
-        new_cats: Sequence[CatDataDict],
-        new_samples: Sequence[SampleNameT],
-    ) -> "Dataset":
-        """
-        Update a dataset with new data. Creates a new instance.
-        """
-        # Convert plot data back to input form
-        data_by_sample_by_cat: Dict[SampleName, Dict[str, Union[int, float]]] = defaultdict(dict)
-        cats: List[CatConf] = []
-
-        # Convert previous dataset back to input form
-        for cat_obj in dataset.cats:
-            cats.append(CatConf(name=cat_obj.name, color=cat_obj.color))
-            for sample, val in zip(dataset.samples, cat_obj.data):
-                data_by_sample_by_cat[SampleName(sample)][cat_obj.name] = val
-
-        for new_cat in new_cats:
-            existing_cat = next((existing_cat for existing_cat in cats if existing_cat.name == new_cat["name"]), None)
-            if not existing_cat:
-                existing_cat = CatConf(name=new_cat["name"], color=new_cat["color"])
-                for new_sample, new_val in zip(samples, new_cat["data"]):
-                    existing_cat.data[new_sample] = new_val
-            else:
-                cat_confs.append(CatConf(name=new_cat["name"], color=new_cat["color"]))
-                for sample, val in zip(samples, new_cat["data"]):
-                    data_by_sample_by_cat[sample][new_cat["name"]] = val
-
-        combined_samples = dataset.samples[:]
-        for new_sample in samples:
-            if new_sample not in combined_samples:
-                combined_samples.append(new_sample)
-        if pconfig.sort_samples:
-            combined_samples = natsorted(combined_samples)
-
-        sample_to_cat_to_val: Dict[SampleName, Dict[str, float]] = defaultdict(dict)
-        sample_to_cat_to_pct: Dict[SampleName, Dict[str, float]] = defaultdict(dict)
-        for cat in dataset.cats:
-            for sample, val in zip(dataset.samples, cat.data):
-                sample_to_cat_to_val[sample][cat.name] = val
-
-        combined_cats = dataset.cats
-        for new_cat in cats:
-            # Find if this category already exists
-            if matching_old_cat := next((cat for cat in dataset.cats if cat.name == new_cat["name"]), None):
-                # Update existing category data with new values
-                # Create a mapping of sample to value for the new data
-                new_data_by_sample = {sample: value for sample, value in zip(samples, new_cat["data"])}
-                for sample_idx_in_old, sample in enumerate(dataset.samples):
-                    if sample in new_data_by_sample:
-                        matching_old_cat.data[sample_idx_in_old] = new_data_by_sample[sample]
-
-                # Update percentages if they exist
-                if new_cat.get("data_pct") and matching_old_cat.data_pct:
-                    new_pct_by_sample = {sample: value for sample, value in zip(samples, new_cat["data_pct"])}
-                    for sample_dx_in_old, sample in enumerate(dataset.samples):
-                        if sample in new_pct_by_sample:
-                            matching_old_cat.data_pct[sample_dx_in_old] = new_pct_by_sample[sample]
-                combined_cats.append(matching_old_cat)
-            else:
-                # Add new category
-                for prev_sample in dataset.samples:
-                    if prev_sample in samples:
-                        this_sample_idx_in_new = samples.index(prev_sample)
-                        combined_data.append(new_cat["data"][this_sample_idx_in_new])
-                        if "data_pct" in new_cat:
-                            combined_data_pct.append(new_cat["data_pct"][this_sample_idx_in_new])
-                    else:
-                        combined_data.append(0)
-                        if "data_pct" in new_cat:
-                            combined_data_pct.append(0)
-
-                combined_cats.append(
-                    Category(
-                        name=new_cat["name"],
-                        color=new_cat["color"],
-                        data=combined_data,
-                        data_pct=combined_data_pct if "data_pct" in new_cat else [],
-                    )
-                )
 
     @staticmethod
     def create(
@@ -428,77 +438,6 @@ class Dataset(BaseDataset):
 
 class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
-
-    @staticmethod
-    def update(
-        plot: "BarPlot",
-        data: Sequence[InputDatasetT],
-        cats: Sequence[CatConf],
-        pconfig: BarPlotConfig,
-    ) -> "BarPlot":
-        """
-        Create plot from existing instance and new data. Returns a new instance.
-        """
-        datasets: List[Dataset] = []
-
-        # For each dataset
-        for ds_idx, (dataset, ds_data, ds_cats) in enumerate(zip(plot.datasets, data, cats)):
-            datasets.append(Dataset.update(dataset, pconfig, ds_cats, ds_data))
-
-        return BarPlot.create(
-            pconfig,
-            [dataset.cats for dataset in datasets],
-            [dataset.samples for dataset in datasets],
-        )
-
-        #     # Process each new category
-        #     for new_cat in new_cats:
-        #         # Find if this category already exists
-        #         existing_cat = next((cat for cat in dataset.cats if cat.name == new_cat["name"]), None)
-        #         if existing_cat:
-        #             # Update existing category data
-        #             # Create a mapping of sample to value for the new data
-        #             new_data_by_sample = {sample: value for sample, value in zip(new_samples, new_cat["data"])}
-
-        #             # Update the existing data array
-        #             for sample_idx, sample in enumerate(dataset.samples):
-        #                 if sample in new_data_by_sample:
-        #                     existing_cat.data[sample_idx] = new_data_by_sample[sample]
-
-        #             # Update percentages if they exist
-        #             if new_cat.get("data_pct") and existing_cat.data_pct:
-        #                 new_pct_by_sample = {sample: value for sample, value in zip(new_samples, new_cat["data_pct"])}
-        #                 for sample_idx, sample in enumerate(dataset.samples):
-        #                     if sample in new_pct_by_sample:
-        #                         existing_cat.data_pct[sample_idx] = new_pct_by_sample[sample]
-        #             combined_cat_lists.append(existing_cat)
-        #         else:
-        #             # Add new category
-        #             # Pad the data array with zeros for existing samples that aren't in the new data
-        #             full_data = []
-        #             full_data_pct = []
-
-        #             for sample in dataset.samples:
-        #                 if sample in new_samples:
-        #                     idx = new_samples.index(sample)
-        #                     full_data.append(new_cat["data"][idx])
-        #                     if "data_pct" in new_cat:
-        #                         full_data_pct.append(new_cat["data_pct"][idx])
-        #                 else:
-        #                     full_data.append(0)
-        #                     if "data_pct" in new_cat:
-        #                         full_data_pct.append(0)
-
-        #             combined_cat_lists.append(
-        #                 Category(
-        #                     name=new_cat["name"],
-        #                     color=new_cat["color"],
-        #                     data=full_data,
-        #                     data_pct=full_data_pct if "data_pct" in new_cat else [],
-        #                 )
-        #             )
-
-        # return BarPlot.create(pconfig, combined_cat_lists, combined_sample_lists)
 
     @staticmethod
     def create(
