@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Dict
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.plotly.bar import BarPlotConfig
 from multiqc.plots.plotly.line import LinePlotConfig

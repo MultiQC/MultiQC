@@ -9,14 +9,15 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import packaging.version
+
 from multiqc import report
 from multiqc.base_module import BaseMultiqcModule, Section
-from multiqc.plots.plotly.bar import BarPlot
+from multiqc.plots.bargraph import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
 from multiqc.plots.plotly.heatmap import HeatmapPlot
 from multiqc.plots.plotly.line import LinePlot
-from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, PlotType
 
@@ -65,7 +66,7 @@ class LoadMultiqcData(BaseMultiqcModule):
         """
         path = Path(path)
         assert path.suffix == ".json"
-        log.info(f"Loading data from {path}")
+        log.info(f"Loading previous run from {path}")
         try:
             with path.open("r") as f:
                 data = json.load(f)
@@ -82,7 +83,7 @@ class LoadMultiqcData(BaseMultiqcModule):
                 mod.sections = sections
                 mod.versions = versions
                 mod.intro = intro
-                log.info(f"Loaded module {mod.name}")
+                log.info(f"Loading module {mod.name}")
                 report.modules.append(mod)
 
             # Load data sources

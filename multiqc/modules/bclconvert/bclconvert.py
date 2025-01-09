@@ -4,7 +4,7 @@ import logging
 from collections import defaultdict
 from itertools import islice
 from pathlib import Path
-from typing import List, Mapping, Set, Tuple, Dict, Optional, TypedDict, Union
+from typing import Dict, List, Mapping, Optional, Set, Tuple, TypedDict, Union
 from xml.etree import ElementTree
 
 from pydantic import BaseModel
@@ -12,8 +12,8 @@ from pydantic import BaseModel
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc.plots.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, ValueT
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import ColumnKey, LoadedFileDict, SampleGroup, SampleName
 
 log = logging.getLogger(__name__)

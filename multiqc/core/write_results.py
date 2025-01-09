@@ -346,11 +346,8 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
             "raw_data_fn": "multiqc_general_stats",
         }
         # Check if plot data is loaded from previous session
-        if existing_table := report.plot_by_id.get(Anchor("general_stats_table")):
-            cast(ViolinPlot, existing_table).extend(report.general_stats_data, report.general_stats_headers, pconfig)
-        else:
-            p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
-            report.plot_by_id[Anchor("general_stats_table")] = p
+        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
+        report.plot_by_id[Anchor("general_stats_table")] = p
 
     if p := report.plot_by_id.get(Anchor("general_stats_table")):
         report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name)

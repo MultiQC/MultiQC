@@ -2,9 +2,9 @@ import json
 import logging
 import os
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc import config
 
 log = logging.getLogger(__name__)
 

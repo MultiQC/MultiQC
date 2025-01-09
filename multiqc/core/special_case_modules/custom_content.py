@@ -1,14 +1,14 @@
 """Core MultiQC module to parse output from custom script output"""
 
 import base64
-from io import BufferedReader
 import json
 import logging
 import os
 import re
 from collections import defaultdict
+from io import BufferedReader
 from token import OP
-from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
 import yaml
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from multiqc import Plot, config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
-from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.plotly.box import BoxPlotConfig
 from multiqc.plots.plotly.heatmap import HeatmapConfig
 from multiqc.plots.plotly.line import LinePlotConfig

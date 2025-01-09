@@ -18,7 +18,7 @@ from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.plots.plotly.bar import BarPlot
+from multiqc.plots.bargraph import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
 from multiqc.plots.plotly.heatmap import HeatmapPlot
 from multiqc.plots.plotly.line import LinePlot

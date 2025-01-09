@@ -2,10 +2,10 @@ import logging
 import re
 from collections import defaultdict
 from copy import deepcopy
-from typing import Callable, Dict, List, Any, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import table, bargraph
+from multiqc.plots import bargraph, table
 from multiqc.plots.plotly.bar import BarPlotConfig
 from multiqc.plots.table_object import TableConfig
 from multiqc.utils import mqc_colour

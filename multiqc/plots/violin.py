@@ -41,7 +41,13 @@ def plot(
     :param pconfig: plot config dict
     :return: plot object
     """
-    return ViolinPlot.create(data, headers, pconfig)
+    pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
+    pid = pconf.anchor or pconf.id
+    if prev_plot := report.plot_by_id.get(Anchor(pid)):
+        assert isinstance(prev_plot, ViolinPlot)
+        return ViolinPlot.update(prev_plot, data, headers, pconf)
+    else:
+        return ViolinPlot.create(data, headers, pconf)
 
 
 @dataclass
@@ -451,27 +457,28 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         dts = ViolinPlot.data_to_dts(data, headers, pconfig)
         return ViolinPlot.create_from_dts(dts, show_table_by_default)
 
-    def extend(
-        self,
+    @staticmethod
+    def update(
+        plot: "ViolinPlot",
         data: Union[List[SectionT], SectionT],
         headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
         pconfig: Union[Dict[str, Any], TableConfig, None] = None,
     ) -> "ViolinPlot":
         """
-        Extend the existing violin plot with new data.
+        Create plot from existing instance and new data. Returns a new instance.
 
         :param data: A list of data dicts to add
         :param headers: A list of dicts with information for the series
         :param pconfig: plot config dict
         """
-        existing_dts = [ds.dt for ds in self.datasets]
+        existing_dts = [ds.dt for ds in plot.datasets]
         new_dts = ViolinPlot.data_to_dts(data, headers, pconfig)
 
         # Extend each existing dataset's DataTable with the new data
         for existing_dt, new_dt in zip(existing_dts, new_dts):
             existing_dt.extend(new_dt)
 
-        return ViolinPlot.create_from_dts(existing_dts, self.show_table_by_default)
+        return ViolinPlot.create_from_dts(existing_dts, plot.show_table_by_default)
 
     @staticmethod
     def create_from_dts(
