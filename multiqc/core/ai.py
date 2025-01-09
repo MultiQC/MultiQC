@@ -3,11 +3,11 @@ import logging
 import os
 import re
 from textwrap import indent
-from typing import Dict, Optional, Tuple, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Optional, Tuple, cast
+
+import requests
 from markdown import markdown
 from pydantic import BaseModel, Field
-import requests
-
 from pydantic.types import SecretStr
 
 from multiqc import config, report
@@ -168,11 +168,11 @@ class InterpretationResponse(BaseModel):
 
 
 class Client:
-    def __init__(self, model: str, api_key: Optional[str]):
+    def __init__(self, model: str, api_key: str):
         self.name: str
         self.title: str
         self.model: str = model
-        self.api_key: Optional[str] = api_key
+        self.api_key: str = api_key
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         raise NotImplementedError
@@ -206,7 +206,7 @@ class Client:
 
 
 class LangchainClient(Client):
-    def __init__(self, model: str, api_key: Optional[str]):
+    def __init__(self, model: str, api_key: str):
         super().__init__(model, api_key)
         self.llm: BaseChatModel
 
@@ -220,8 +220,8 @@ class LangchainClient(Client):
                 uuid=None,
             )
 
-        from langsmith import Client as LangSmithClient  # type: ignore
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
+        from langsmith import Client as LangSmithClient  # type: ignore
 
         llm = self.llm
 
@@ -285,8 +285,8 @@ class LangchainClient(Client):
                 uuid=None,
             )
 
-        from langsmith import Client as LangSmithClient  # type: ignore
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
+        from langsmith import Client as LangSmithClient  # type: ignore
 
         llm = self.llm.with_structured_output(InterpretationOutput, include_raw=True)
 
@@ -416,7 +416,7 @@ class AnthropicClient(LangchainClient):
 
 
 class SeqeraClient(Client):
-    def __init__(self, model: str, api_key: Optional[str]):
+    def __init__(self, model: str, api_key: str):
         super().__init__(model, api_key)
         self.name = "seqera"
         self.title = "Seqera AI"
@@ -427,8 +427,8 @@ class SeqeraClient(Client):
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                f"{config.seqera_api_url}/internal-ai/query" if self.api_key else f"{config.seqera_api_url}/invoke",
-                headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
+                f"{config.seqera_api_url}/internal-ai/query",
+                headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
                     "system_message": PROMPT_SHORT,
                     "message": report_content,
@@ -461,8 +461,8 @@ class SeqeraClient(Client):
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                f"{config.seqera_api_url}/internal-ai/query" if self.api_key else f"{config.seqera_api_url}/invoke",
-                headers={"Authorization": f"Bearer {self.api_key}"} if self.api_key else {},
+                f"{config.seqera_api_url}/internal-ai/query",
+                headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
                     "system_message": PROMPT_FULL,
                     "message": report_content,
@@ -504,7 +504,7 @@ class SeqeraClient(Client):
         return InterpretationResponse(
             uuid=uuid,
             interpretation=InterpretationOutput(**generation),
-            model=response_dict["raw"].response_metadata["model"],
+            model=self.model or "claude-3-5-sonnet-latest",
         )
 
 
@@ -515,7 +515,7 @@ def get_llm_client() -> Optional[Client]:
     if config.ai_provider == "seqera":
         api_key = os.environ.get("SEQERA_ACCESS_TOKEN", os.environ.get("TOWER_ACCESS_TOKEN"))
         if not api_key:
-            logger.warning(
+            logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', "
                 "but Seqera access token is not set. "
                 "Please set the SEQERA_ACCESS_TOKEN / TOWER_ACCESS_TOKEN environment variable "
