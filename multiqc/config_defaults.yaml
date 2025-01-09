@@ -70,7 +70,7 @@ ai_model: null
 no_ai: false
 
 # Development settings:
-seqera_api_url: "https://seqera.io"
+seqera_api_url: "https://intern.seqera.io"
 seqera_website: "https://seqera.io"
 langchain_project: null
 langchain_endpoint: null
