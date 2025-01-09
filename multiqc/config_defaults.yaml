@@ -53,6 +53,8 @@ version_check_url: https://api.multiqc.info/version
 make_data_dir: true
 zip_data_dir: false
 data_dump_file: true
+data_dump_file_write_raw: true # Write the `saved_raw_data` section in multiqc_data.json - useful to set to
+# false for large datasets as the raw data can be prohibitively large
 megaqc_url: false
 megaqc_access_token: null
 megaqc_timeout: 30
@@ -406,6 +408,7 @@ module_order:
   - isoseq
   - lima
   - peddy
+  - percolator
   - haplocheck
   - somalier
   - methylqa
@@ -422,6 +425,7 @@ module_order:
   - rsem
   - rseqc
   - busco
+  - checkm
   - bustools
   - goleft_indexcov
   - gffcompare
@@ -459,6 +463,7 @@ module_order:
   - vep
   - bakta
   - prokka
+  - checkm2
   - qc3C
   - nanoq
   - nanostat
@@ -482,6 +487,7 @@ module_order:
   - truvari
   - megahit
   - ganon
+  - gtdbtk
   # Alignment tool stats
   - bbmap
   - bismark
@@ -556,6 +562,10 @@ module_order:
   - xengsort
   - metaphlan
   - seqwho
+  - telseq
+  - ataqv
+  - mgikit
+  - mosaicatcher
 
-# Set to "false" to trade the `saved_raw_data` section in multiqc_data.json for memory
-preserve_module_raw_data: true
+# Preserves `saved_raw_data` section in modules - default for interactive runs
+preserve_module_raw_data: false

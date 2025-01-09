@@ -62,7 +62,14 @@ def plot(
     for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
         list_of_series: List[Series[Any, Any]] = []
         for s in sorted(raw_data_by_sample.keys()):
-            series: Series[Any, Any] = _make_series_dict(pconf, ds_idx, s, raw_data_by_sample[s])
+            x_to_y = raw_data_by_sample[s]
+            if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
+                if isinstance(x_to_y[0], tuple):
+                    x_to_y = dict(x_to_y)
+                else:
+                    x_to_y = {i: y for i, y in enumerate(x_to_y)}
+            dl = pconf.data_labels[ds_idx] if pconf.data_labels else None
+            series: Series[Any, Any] = _make_series_dict(pconf, dl, s, x_to_y)
             if pconf.hide_empty and not series.pairs:
                 continue
             list_of_series.append(series)
@@ -85,6 +92,24 @@ def plot(
             for series in list_of_raw_series:
                 if i < len(datasets):
                     datasets[i].append(series)
+
+    for ds_idx, series_by_sample in enumerate(datasets):
+        if pconf.categories and series_by_sample:
+            if isinstance(pconf.categories, list):
+                categories = pconf.categories
+            else:
+                categories = [pair[0] for pair in series_by_sample[0].pairs]
+            for si, series in enumerate(series_by_sample):
+                if si != 0:
+                    # If categories come in different order in different samples, reorder them
+                    xs = [p[0] for p in series.pairs]
+                    xs_set = set(xs)
+                    xs_in_categories = [c for c in categories if c in xs_set]
+                    categories_set = set(categories)
+                    xs_not_in_categories = [x for x in xs if x not in categories_set]
+                    xs = xs_in_categories + xs_not_in_categories
+                    pairs = dict(series.pairs)
+                    series.pairs = [(x, pairs[x]) for x in xs]
 
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
     for _, series_by_sample in enumerate(datasets):
@@ -109,7 +134,7 @@ def plot(
 
 def _make_series_dict(
     pconfig: LinePlotConfig,
-    ds_idx: int,
+    data_label: Union[Dict[str, Any], str, None],
     s: str,
     y_by_x: XToYDictT[KeyT, ValT],
 ) -> Series[KeyT, ValT]:
@@ -121,16 +146,15 @@ def _make_series_dict(
     xmax = pconfig.xmax
     xmin = pconfig.xmin
     colors = pconfig.colors
-    if pconfig.data_labels:
-        dl = pconfig.data_labels[ds_idx]
-        if isinstance(dl, dict):
-            _x_are_categories = dl.get("categories", x_are_categories)
+    if data_label:
+        if isinstance(data_label, dict):
+            _x_are_categories = data_label.get("categories", x_are_categories)
             assert isinstance(_x_are_categories, bool)
             x_are_categories = _x_are_categories
-            _ymax = dl.get("ymax", ymax)
-            _ymin = dl.get("ymin", ymin)
-            _xmax = dl.get("xmax", xmax)
-            _xmin = dl.get("xmin", xmin)
+            _ymax = data_label.get("ymax", ymax)
+            _ymin = data_label.get("ymin", ymin)
+            _xmax = data_label.get("xmax", xmax)
+            _xmin = data_label.get("xmin", xmin)
             assert isinstance(_ymax, (int, float, type(None)))
             assert isinstance(_ymin, (int, float, type(None)))
             assert isinstance(_xmax, (int, float, type(None)))
@@ -139,18 +163,18 @@ def _make_series_dict(
             ymin = _ymin
             xmax = _xmax
             xmin = _xmin
-            _colors = dl.get("colors")
+            _colors = data_label.get("colors")
             if _colors and isinstance(_colors, dict):
                 colors = {**colors, **cast(Dict[str, str], _colors)}
+
+    xs = [x for x in y_by_x.keys()]
+    if not x_are_categories:
+        xs = sorted(xs)
 
     # Discard > ymax or just hide?
     # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
     discard_ymax = None
     discard_ymin = None
-    xs = [x for x in y_by_x.keys()]
-    if not x_are_categories:
-        xs = sorted(xs)
-
     for x in xs:
         if not x_are_categories:
             if xmax is not None and float(x) > float(xmax):
@@ -190,7 +214,7 @@ def _make_series_dict(
     if pconfig.smooth_points is not None:
         pairs = smooth_array(pairs, pconfig.smooth_points)
 
-    return Series(name=s, pairs=pairs, color=colors.get(s), _clss=[LinePlotConfig])
+    return Series(name=s, pairs=pairs, color=colors.get(s), path_in_cfg=("lineplot", "pconfig", "pairs"))
 
 
 def smooth_line_data(data_by_sample: DatasetT[KeyT, ValT], numpoints: int) -> Dict[SampleName, Dict[KeyT, ValT]]:

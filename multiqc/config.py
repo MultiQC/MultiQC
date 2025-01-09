@@ -104,6 +104,7 @@ version_check_url: str
 make_data_dir: bool
 zip_data_dir: bool
 data_dump_file: bool
+data_dump_file_write_raw: Optional[bool]
 megaqc_url: str
 megaqc_access_token: Optional[str]
 megaqc_timeout: float

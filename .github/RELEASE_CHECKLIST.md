@@ -44,7 +44,7 @@ This checklist is for my own reference, as I forget the steps every time.
    - Generate reports in the seqeralabs/web repo.
 
      ```bash
-     cd ../seqeralabs/web/packages/website
+     cd ../seqeralabs/web/packages/website/public/examples
      bash update_examples.sh
      ```
 

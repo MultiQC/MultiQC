@@ -215,6 +215,16 @@ cellranger/vdj_html:
   - fn: "*.html"
     contents: '"command": "Cell Ranger", "subcommand": "vdj"'
     num_lines: 20
+cellranger_arc:
+  - fn: "*.html"
+    contents: "Cell Ranger ARC"
+    num_lines: 250
+checkm:
+  - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})# markers(?:\t| {3,})# marker sets.*"
+    num_lines: 10
+checkm2:
+  contents: "Name	Completeness	Contamination	Completeness_Model_Used	Translation_Table_Used	Coding_Density	Contig_N50	Average_Gene_Length	Genome_Size	GC_Content	Total_Coding_Sequences	Total_Contigs	Max_Contig_Length"
+  num_lines: 10
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"
@@ -364,8 +374,10 @@ ganon:
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
 gatk/base_recalibrator:
-  contents: "#:GATKTable:Arguments:Recalibration"
-  num_lines: 3
+  - contents: "#:GATKTable:Arguments:Recalibration"
+    num_lines: 3
+  - contents: "#:SENTIEON_QCAL_TABLE:Arguments:Recalibration"
+    num_lines: 3
 gatk/analyze_saturation_mutagenesis:
   fn: "*.readCounts"
   contents: ">>Reads in disjoint pairs evaluated separately:"
@@ -386,6 +398,9 @@ goleft_indexcov/ped:
   fn: "*-indexcov.ped"
 gopeaks:
   fn: "*_gopeaks.json"
+gtdbtk:
+  contents: "user_genome	classification	closest_genome_reference	closest_genome_reference_radius	closest_genome_taxonomy	closest_genome_ani"
+  num_lines: 10
 haplocheck:
   contents: '"Sample"	"Contamination Status"	"Contamination Level"	"Distance"	"Sample Coverage"'
   num_lines: 10
@@ -537,6 +552,16 @@ metaphlan:
 methylqa:
   fn: "*.report"
   shared: true
+mgikit/mgi_ambiguous_barcode:
+  fn: "*.mgikit.ambiguous_barcode"
+mgikit/mgi_sample_stats:
+  fn: "*.mgikit.sample_stats"
+mgikit/mgi_general_info:
+  fn: "*.mgikit.general"
+mgikit/mgi_sample_reads:
+  fn: "*.mgikit.info"
+mgikit/mgi_undetermined_barcode:
+  fn: "*.mgikit.undetermined_barcode"
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
@@ -634,6 +659,8 @@ peddy/sex_check:
   fn: "*.sex_check.csv"
 peddy/background_pca:
   fn: "*.background_pca.json"
+percolator:
+  fn: "*percolator_feature_weights.tsv"
 seqera_cli/run_dump:
   fn: "runs_*.tar.gz"
 seqera_cli/json:
@@ -943,6 +970,9 @@ supernova/kmers:
   fn: "histogram_kmer_count.json"
   num_lines: 10
   contents: '"description": "kmer_count",'
+telseq:
+  num_lines: 3
+  contents: "ReadGroup	Library	Sample	Total	Mapped	Duplicates	LENGTH_ESTIMATE"
 theta2:
   fn: "*.BEST.results"
 tophat:
@@ -1007,3 +1037,9 @@ xenome:
 xengsort:
   contents: "# Xengsort classify"
   num_lines: 2
+ataqv:
+  fn: "*.json"
+  contents: "ataqv_version"
+  num_lines: 10
+mosaicatcher:
+  fn: "*.mosaicatcher_info_raw.txt"

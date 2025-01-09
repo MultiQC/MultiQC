@@ -55,8 +55,10 @@ gatk/analyze_saturation_mutagenesis:
   fn: "*.readCounts"
   num_lines: 10
 gatk/base_recalibrator:
-  contents: "#:GATKTable:Arguments:Recalibration"
-  num_lines: 3
+  - contents: "#:GATKTable:Arguments:Recalibration"
+    num_lines: 3
+  - contents: "#:SENTIEON_QCAL_TABLE:Arguments:Recalibration"
+    num_lines: 3
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
 ```

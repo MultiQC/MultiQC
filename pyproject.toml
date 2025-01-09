@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.25.2"
+version = "1.27dev"
 dependencies = [
     "click",
     "humanize",
@@ -63,7 +63,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "pre-commit",
-    "ruff",
+    "ruff>=0.8.3",
     "pdoc3",
     "pytest",
     "pytest-cov",
@@ -78,6 +78,7 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+    "jupyter",              # for jupyter notebook example
 ]
 
 [project.urls]
@@ -112,6 +113,9 @@ busco = "multiqc.modules.busco:MultiqcModule"
 bustools = "multiqc.modules.bustools:MultiqcModule"
 ccs = "multiqc.modules.ccs:MultiqcModule"
 cellranger = "multiqc.modules.cellranger:MultiqcModule"
+cellranger_arc = "multiqc.modules.cellranger_arc:MultiqcModule"
+checkm = "multiqc.modules.checkm:MultiqcModule"
+checkm2 = "multiqc.modules.checkm2:MultiqcModule"
 checkqc = "multiqc.modules.checkqc:MultiqcModule"
 clipandmerge = "multiqc.modules.clipandmerge:MultiqcModule"
 clusterflow = "multiqc.modules.clusterflow:MultiqcModule"
@@ -141,6 +145,7 @@ gatk = "multiqc.modules.gatk:MultiqcModule"
 glimpse = "multiqc.modules.glimpse:MultiqcModule"
 goleft_indexcov = "multiqc.modules.goleft_indexcov:MultiqcModule"
 gopeaks = "multiqc.modules.gopeaks:MultiqcModule"
+gtdbtk = "multiqc.modules.gtdbtk:MultiqcModule"
 haplocheck = "multiqc.modules.haplocheck:MultiqcModule"
 happy = "multiqc.modules.happy:MultiqcModule"
 hicexplorer = "multiqc.modules.hicexplorer:MultiqcModule"
@@ -173,6 +178,7 @@ mapdamage = "multiqc.modules.mapdamage:MultiqcModule"
 megahit = "multiqc.modules.megahit:MultiqcModule"
 metaphlan = "multiqc.modules.metaphlan:MultiqcModule"
 methylqa = "multiqc.modules.methylqa:MultiqcModule"
+mgikit = "multiqc.modules.mgikit:MultiqcModule"
 minionqc = "multiqc.modules.minionqc:MultiqcModule"
 mirtop = "multiqc.modules.mirtop:MultiqcModule"
 mirtrace = "multiqc.modules.mirtrace:MultiqcModule"
@@ -192,6 +198,7 @@ pangolin = "multiqc.modules.pangolin:MultiqcModule"
 pairtools = "multiqc.modules.pairtools:MultiqcModule"
 pbmarkdup = "multiqc.modules.pbmarkdup:MultiqcModule"
 peddy = "multiqc.modules.peddy:MultiqcModule"
+percolator = "multiqc.modules.percolator:MultiqcModule"
 phantompeakqualtools = "multiqc.modules.phantompeakqualtools:MultiqcModule"
 picard = "multiqc.modules.picard:MultiqcModule"
 porechop = "multiqc.modules.porechop:MultiqcModule"
@@ -232,6 +239,7 @@ spaceranger = "multiqc.modules.spaceranger:MultiqcModule"
 stacks = "multiqc.modules.stacks:MultiqcModule"
 star = "multiqc.modules.star:MultiqcModule"
 supernova = "multiqc.modules.supernova:MultiqcModule"
+telseq = "multiqc.modules.telseq:MultiqcModule"
 theta2 = "multiqc.modules.theta2:MultiqcModule"
 tophat = "multiqc.modules.tophat:MultiqcModule"
 trimmomatic = "multiqc.modules.trimmomatic:MultiqcModule"
@@ -246,6 +254,8 @@ vg = "multiqc.modules.vg:MultiqcModule"
 whatshap = "multiqc.modules.whatshap:MultiqcModule"
 xenome = "multiqc.modules.xenome:MultiqcModule"
 xengsort = "multiqc.modules.xengsort:MultiqcModule"
+ataqv = "multiqc.modules.ataqv:MultiqcModule"
+mosaicatcher = "multiqc.modules.mosaicatcher:MultiqcModule"
 
 [project.entry-points."multiqc.templates.v1"]
 default = "multiqc.templates.default"
@@ -286,3 +296,7 @@ exclude = "multiqc/modules/*"
 
 [tool.pyright]
 include = ["multiqc", "scripts", "tests"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests", "multiqc/modules"]

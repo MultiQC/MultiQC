@@ -1,7 +1,7 @@
 """MultiQC functions to plot a heatmap"""
 
 import logging
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
+from typing import Any, Dict, Mapping, Optional, Sequence, Union, cast
 
 from importlib_metadata import EntryPoint
 

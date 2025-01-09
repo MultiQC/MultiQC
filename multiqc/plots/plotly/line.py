@@ -23,12 +23,15 @@ XToYDictT = Mapping[KeyT, ValT]
 DatasetT = Mapping[Union[str, SampleName], XToYDictT[KeyT, ValT]]
 
 
-class Marker(BaseModel):
+class Marker(ValidatedConfig):
     symbol: Optional[str] = None
     color: Optional[str] = None
     line_color: Optional[str] = None
     fill_color: Optional[str] = None
     width: int = 1
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("Marker",), **data)
 
 
 class Series(ValidatedConfig, Generic[KeyT, ValT]):
@@ -40,19 +43,16 @@ class Series(ValidatedConfig, Generic[KeyT, ValT]):
     showlegend: bool = True
     marker: Optional[Marker] = None
 
-    def __init__(self, _clss: Optional[List[Type[Any]]] = None, **data):
-        _clss = _clss or []
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        path_in_cfg = path_in_cfg or ("Series",)
+
         if "dashStyle" in data:
-            add_validation_warning(
-                [LinePlotConfig, Series], "'dashStyle' field is deprecated. Please use 'dash' instead"
-            )
-            data["dash"] = convert_dash_style(data.pop("dashStyle"), _clss=_clss + [self.__class__])
-        elif "dash" in data:
-            data["dash"] = convert_dash_style(data["dash"], _clss=_clss + [self.__class__])
+            add_validation_warning(path_in_cfg, "'dashStyle' field is deprecated. Please use 'dash' instead")
+            data["dash"] = data.pop("dashStyle")
 
         tuples: List[Tuple[KeyT, ValT]] = []
         if "data" in data:
-            add_validation_warning(_clss + [self.__class__], "'data' field is deprecated. Please use 'pairs' instead")
+            add_validation_warning(path_in_cfg + ("data",), "'data' field is deprecated. Please use 'pairs' instead")
         for p in data.pop("data") if "data" in data else data.get("pairs", []):
             if isinstance(p, list):
                 tuples.append(tuple(p))
@@ -60,7 +60,10 @@ class Series(ValidatedConfig, Generic[KeyT, ValT]):
                 tuples.append(p)
         data["pairs"] = tuples
 
-        super().__init__(**data, _clss=_clss)
+        super().__init__(**data, path_in_cfg=path_in_cfg)
+
+        if self.dash is not None:
+            self.dash = convert_dash_style(self.dash, path_in_cfg=path_in_cfg + ("dash",))
 
     def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         xs = [x[0] for x in self.pairs]
@@ -94,13 +97,16 @@ class LinePlotConfig(PConfig):
     def parse_extra_series(
         cls,
         data: Union[SeriesT, List[SeriesT], List[List[SeriesT]]],
-        _clss: List[Type[Any]],
+        path_in_cfg: Tuple[str, ...],
     ) -> Union[Series, List[Series], List[List[Series]]]:
         if isinstance(data, list):
             if isinstance(data[0], list):
-                return [[Series(**d, _clss=_clss) if isinstance(d, dict) else d for d in ds] for ds in data]  # type: ignore
-            return [Series(**d, _clss=_clss) if isinstance(d, dict) else d for d in data]  # type: ignore
-        return Series(**data, _clss=_clss) if isinstance(data, dict) else data  # type: ignore
+                return [[Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in ds] for ds in data]  # type: ignore
+            return [Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in data]  # type: ignore
+        return Series(path_in_cfg=path_in_cfg, **data) if isinstance(data, dict) else data  # type: ignore
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("lineplot",), **data)
 
 
 def plot(lists_of_lines: List[List[Series[KeyT, ValT]]], pconfig: LinePlotConfig) -> "LinePlot[KeyT, ValT]":
@@ -197,8 +203,6 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         for series in self.lines:
             xs = [x[0] for x in series.pairs]
             ys = [x[1] for x in series.pairs]
-            if series.dash:
-                print(series)
             params: Dict[str, Any] = {
                 "showlegend": series.showlegend,
                 "line": {

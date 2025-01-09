@@ -4,7 +4,7 @@ import copy
 import logging
 import math
 from collections import defaultdict
-from typing import Any, Dict, List, Literal, Optional, Sequence, TypedDict, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Type, TypedDict, Union
 
 import plotly.graph_objects as go  # type: ignore
 import spectra  # type: ignore
@@ -20,6 +20,7 @@ from multiqc.plots.plotly.plot import (
     split_long_string,
 )
 from multiqc.types import SampleName
+from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -32,17 +33,15 @@ class BarPlotConfig(PConfig):
     suffix: Optional[str] = None
     lab_format: Optional[str] = None
 
-    # noinspection PyNestedDecorators
-    @model_validator(mode="before")
-    @classmethod
-    def validate_fields(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        if "suffix" in values:
-            values["ysuffix"] = values["suffix"]
-            del values["suffix"]
-        if "lab_format" in values:
-            values["ylab_format"] = values["lab_format"]
-            del values["lab_format"]
-        return values
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        if "suffix" in data:
+            data["ysuffix"] = data["suffix"]
+            del data["suffix"]
+        if "lab_format" in data:
+            data["ylab_format"] = data["lab_format"]
+            del data["lab_format"]
+
+        super().__init__(path_in_cfg=path_in_cfg or ("barplot",), **data)
 
 
 SampleNameT = Union[SampleName, str]

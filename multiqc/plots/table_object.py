@@ -31,6 +31,10 @@ class TableConfig(PConfig):
     no_violin: bool = False
     scale: Union[str, bool] = "GnBu"
     min: Optional[Union[int, float]] = None
+    parse_numeric: bool = True
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("table",), **data)
 
 
 ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
@@ -253,6 +257,9 @@ class ColumnMeta(ValidatedConfig):
 
         return col
 
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("table", "column"), **data)
+
 
 class InputRow(BaseModel):
     """
@@ -260,7 +267,7 @@ class InputRow(BaseModel):
     """
 
     sample: SampleName
-    data: Dict[ColumnKey, Optional[ValueT]] = dict()
+    data: Dict[ColumnKey, Optional[ValueT]] = Field(default_factory=dict)
 
     def __init__(self, sample: SampleName, data: Mapping[Union[str, ColumnKey], Any]):
         super().__init__(
@@ -399,7 +406,9 @@ class DataTable(BaseModel):
                             continue
                         if optional_val is None or str(optional_val).strip() == "":  # empty
                             continue
-                        val, valstr = _process_and_format_value(optional_val, column_by_key[col_key])
+                        val, valstr = _process_and_format_value(
+                            optional_val, column_by_key[col_key], parse_numeric=pconfig.parse_numeric
+                        )
                         row.raw_data[col_key] = val
                         row.formatted_data[col_key] = valstr
                     if row.raw_data:
@@ -516,19 +525,22 @@ def _get_or_create_headers(
     return header_by_key_copy
 
 
-def _process_and_format_value(val: ValueT, column: ColumnMeta) -> Tuple[ValueT, str]:
+def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bool = True) -> Tuple[ValueT, str]:
     """
     Takes row value, applies "modify" and "format" functions, and returns a tuple:
     the modified value and its formatted string.
+
+    "parse_numeric=False" assumes that the numeric values are already pre-parsed
     """
     # Try parse as a number
-    if str(val).isdigit():
-        val = int(val)
-    else:
-        try:
-            val = float(val)
-        except ValueError:
-            pass
+    if parse_numeric:
+        if str(val).isdigit():
+            val = int(val)
+        else:
+            try:
+                val = float(val)
+            except ValueError:
+                pass
 
     # Apply modify
     if column.modify:
@@ -537,7 +549,12 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta) -> Tuple[ValueT, 
             val = column.modify(val)
         except Exception as e:  # User-provided modify function can raise any exception
             logger.error(f"Error modifying table value '{column.rid}': '{val}'. {e}")
-    # section.raw_data[s_name][col_key] = val
+
+    # Values can be quoted to avoid parsing as a number, so need to remove those quotes
+    if isinstance(val, str) and (
+        val.startswith('"') and val.endswith('"') or val.startswith("'") and val.endswith("'")
+    ):
+        val = val[1:-1]
 
     # Now also calculate formatted values
     valstr = str(val)

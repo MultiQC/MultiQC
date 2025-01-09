@@ -25,7 +25,6 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
-    cast,
     overload,
 )
 
@@ -198,7 +197,8 @@ class BaseMultiqcModule:
 
         self.hidden = False
 
-        self.__saved_raw_data: Dict[str, Dict[str, Any]] = dict()  # Saved raw data. Identical to report.saved_raw_data
+        # Saved raw data. Written only if `preserve_module_raw_data` is set to `True`
+        self.__saved_raw_data: Optional[Dict[str, Dict[str, Any]]] = None
 
         self.css: Dict[str, str] = dict()
         self.js: Dict[str, str] = dict()
@@ -245,7 +245,7 @@ class BaseMultiqcModule:
                 delattr(self, key)
 
     @property
-    def saved_raw_data(self):
+    def saved_raw_data(self) -> Optional[Dict[str, Dict[str, Any]]]:
         """
         Wrapper to give access to private __saved_raw_data. We could have just called __saved_raw_data without the
         underscore: saved_raw_data, and that would work just fine. But users might override saved_raw_data in
@@ -1004,6 +1004,19 @@ class BaseMultiqcModule:
             if "description" not in _headers[col_id]:
                 _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
 
+            # Add grouping information to description if table_sample_merge is enabled
+            if config.table_sample_merge:
+                desc = _headers[col_id].get("description", "")
+                if group_samples_config.cols_to_weighted_average and any(
+                    col_id == c for c, _ in group_samples_config.cols_to_weighted_average
+                ):
+                    desc += " (weighted average for grouped samples)"
+                elif group_samples_config.cols_to_average and col_id in group_samples_config.cols_to_average:
+                    desc += " (averaged for grouped samples)"
+                elif group_samples_config.cols_to_sum and col_id in group_samples_config.cols_to_sum:
+                    desc += " (summed for grouped samples)"
+                _headers[col_id]["description"] = desc
+
         # Append to report.general_stats for later assembly into table
         report.general_stats_data.append(rows_by_group)
         report.general_stats_headers.append(_headers)  # type: ignore
@@ -1085,14 +1098,23 @@ class BaseMultiqcModule:
         # Generate a unique filename if the file already exists (running module multiple times)
         i = 1
         base_fn = fn
-        while fn in report.saved_raw_data:
+        while fn in report.saved_raw_data_keys:
             fn = f"{base_fn}_{i}"
             i += 1
 
-        if config.preserve_module_raw_data:
-            report.saved_raw_data[fn] = data
-            # Keep also in the module instance, so it's possible to map back data to specific module
-            self.__saved_raw_data[fn] = data
+        # To map back keys data to specific module
+        report.saved_raw_data_keys.add(fn)
 
-        # Save the file
+        # Save the file (usualy TSV)
         report.write_data_file(data, fn, sort_cols, data_format)
+
+        # Also write data to JSON to later load into multiqc_data.json
+        if config.data_dump_file_write_raw:
+            report.write_data_file(data, fn, sort_cols, "json")
+
+        # Also save the data to the module instance to enable `get_module_data()` in interactive sessions
+        if config.preserve_module_raw_data:
+            if self.__saved_raw_data is None:
+                self.__saved_raw_data = dict()
+            self.__saved_raw_data[fn] = data
+            report.saved_raw_data[fn] = data

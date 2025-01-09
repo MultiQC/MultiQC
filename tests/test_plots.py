@@ -317,9 +317,9 @@ def test_incorrect_fields(strict, reset):
             _verify_rendered(linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig))
             errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
             assert "• 'x_lines': failed to parse value 'wrong_type'" in errs
-            assert "errors while parsing LinePlotConfig" in errs
+            assert "errors while parsing lineplot.pconfig[id='test_incorrect_fields']" in errs
             warnings = "\n".join(call.args[0] for call in warn.mock_calls if call.args)
-            assert "• unrecognized field 'unknown_field'" in warnings
+            assert "• 'unknown_field': unrecognized field" in warnings
         assert "test_incorrect_fields" in report.plot_data
 
 
@@ -335,8 +335,8 @@ def test_missing_id_and_title(strict, reset):
         with patch("logging.Logger.error") as log:
             _verify_rendered(linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig={}))
             errs = "\n".join(call.args[0] for call in log.mock_calls if call.args)
-            assert "• missing required field 'id'" in errs
-            assert "• missing required field 'title'" in errs
+            assert "• 'id': missing required field" in errs
+            assert "• 'title': missing required field" in errs
         plot_id = list(report.plot_data.keys())[0]
         assert plot_id.startswith("lineplot-")
 
@@ -354,7 +354,7 @@ def test_incorrect_color():
             )
         )
         errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
-        assert "• invalid color value 'invalid'" in errs
+        assert "• 'color': invalid color value 'invalid'" in errs
 
 
 def test_extra_series_multiple_datasets():
@@ -481,8 +481,8 @@ def test_dash_styles():
     with patch("logging.Logger.warning") as log:
         _verify_rendered(linegraph.plot(data, pconfig=pconfig))
         warnings = "\n".join(call.args[0] for call in log.mock_calls if call.args)
-        assert "• 'dashStyle' field is deprecated. Please use 'dash' instead" in warnings
-        assert "• 'ShortDash' is a deprecated dash style, use 'dash'" in warnings
+        assert "• 'extra_series': 'dashStyle' field is deprecated. Please use 'dash' instead" in warnings
+        assert "• 'dash': 'ShortDash' is a deprecated dash style, use 'dash'" in warnings
     assert len(report.plot_data[anchor]["datasets"][0]["lines"]) == 5
     for line in report.plot_data[anchor]["datasets"][0]["lines"][1:]:
         assert line["dash"] == "dash"

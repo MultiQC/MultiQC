@@ -31,14 +31,14 @@ def parse_samtools_coverage(module: BaseMultiqcModule):
     # Replace None with actual version if it is available
     module.add_software_version(None)
 
-    # Write parsed report data to a file (restructure first)
-    module.write_data_file(data_by_sample, "multiqc_samtools_coverage")
-
     # Make a table/violin summarising the stats across all regions (mean or sum)
     summary_table(module, data_by_sample)
 
     # Make a line plot showing coverage stats per region, with a tab switch between stats
     lineplot_per_region(module, data_by_sample)
+
+    # Write parsed report data to a file (restructure first)
+    module.write_data_file(data_by_sample, "multiqc_samtools_coverage")
 
     # Return the number of logs that were found
     return len(data_by_sample)
