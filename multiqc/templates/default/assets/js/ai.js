@@ -7,12 +7,12 @@ window.continueInSeqeraChatHandler = function (event) {
   let seqeraWebsite = el.data("seqera-website");
 
   // Either report uuid, or encoded system and chat messages
-  let generationId = el.data("generation-id");
+  let threadId = el.data("thread-id");
   let encodedSystemMessage = el.data("encoded-system-message");
   let encodedChatMessages = el.data("encoded-chat-messages");
 
   let url = seqeraWebsite + "/ask-ai/";
-  if (generationId) url += "?generation-id=" + generationId;
+  if (threadId) url += "?thread-id=" + threadId;
 
   const chatWindow = window.open(url, "_blank");
 

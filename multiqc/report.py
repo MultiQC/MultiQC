@@ -108,7 +108,7 @@ saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw
 # AI stuff, set dynamically in ai.py to be used in content.html and ai.js
 ai_global_summary: str = ""
 ai_global_detailed_analysis: str = ""
-ai_generation_id: str = ""
+ai_thread_id: str = ""
 ai_provider_id: str = ""
 ai_provider_title: str = ""
 ai_model: str = ""
@@ -145,7 +145,7 @@ def reset():
     global plot_compressed_json
     global ai_global_summary
     global ai_global_detailed_analysis
-    global ai_generation_id
+    global ai_thread_id
     global ai_provider_id
     global ai_provider_title
     global ai_model
@@ -181,7 +181,7 @@ def reset():
 
     ai_global_summary = ""
     ai_global_detailed_analysis = ""
-    ai_generation_id = ""
+    ai_thread_id = ""
     ai_provider_id = ""
     ai_provider_title = ""
     ai_model = ""

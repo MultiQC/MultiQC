@@ -42,9 +42,9 @@ Please do not add any extra headers to the response.
 
 Use markdown to format your reponse for readability. Use directives with pre-defined classes
 .text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}.
-Highlight any mentioned sample names or sample named prefixes or suffixes with a sample directive,
-and make sure to use the same color classes for severity, e.g. :sample[A1001.2003]{.text-yellow}
-or :sample[A1001]{.text-yellow}. Do not put multiple sample names inside one directive.
+Label any mentioned sample names or sample named prefixes or suffixes with class "sample",
+and also make sure to use the same color classes for severity, for example :span[A1001.2003]{.sample.text-yellow}
+or :span[A1001]{.sample.text-yellow}. Do not put multiple sample names inside one directive.
 
 You must use only multiples of 4 spaces to indent nested lists.
 """
@@ -54,10 +54,10 @@ _SHORT_EXAMPLE = """
 Two examples of short summaries:
 
 - :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
-- :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
+- :span[A1001.2003]{.sample.text-red} and :span[A1001.2004]{.sample.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
 
 - All samples show good quality metrics with :span[75.7-77.0%]{.text-green} CpG methylation and :span[76.3-86.0%]{.text-green} alignment rates
-- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green})'
+- :span[2wk]{.sample.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) compared to :span[1wk]{.sample.text-green} samples (:span[6-9%]{.text-green})'
 """
 
 _PROMPT_FULL_DETAILED_SUMMARY_INSTRUCTIONS = """
@@ -71,7 +71,7 @@ as in the example below.
 
 _EXAMPLE_SUMMARY_FOR_FULL = """\
 - :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
-- :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
+- :span[A1001.2003]{.sample.text-red} and :span[A1001.2004]{.sample.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
 """
 
 _PROMPT_EXAMPLE_SUMMARY_FOR_FULL = f"""\
@@ -84,29 +84,29 @@ summary: |
 _EXAMPLE_DETAILED_SUMMARY = """\
 **Analysis**
 
-- :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
-- :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
+- :span[A1002]{.sample.text-yellow} and :span[A1003]{.sample.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
+- :span[A1001.2003]{.sample.text-red} and :span[A1001.2004]{.sample.text-red} show severe quality issues:
     - Extremely high duplicate rates (:span[65.54%]{.text-red} and :span[83.14%]{.text-red})
     - Low percentages of valid pairs (:span[37.2%]{.text-red} and :span[39.2%]{.text-red})
     - High percentages of failed modules in FastQC (:span[33.33%]{.text-red})
     - Significantly higher total sequence counts (:span[141.9M]{.text-red} and :span[178.0M]{.text-red}) compared to other samples
-    - FastQC results indicate that :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} have a slight :span[GC content]{.text-red} bias at 39.5% against most other samples having 38.0%, which indicates a potential contamination that could be the source of other anomalies in quality metrics.
+    - FastQC results indicate that :span[A1001.2003]{.sample.text-red} and :span[A1001.2004]{.sample.text-red} have a slight :span[GC content]{.text-red} bias at 39.5% against most other samples having 38.0%, which indicates a potential contamination that could be the source of other anomalies in quality metrics.
 
-- :sample[A1002-1007]{.text-yellow} shows some quality concerns:
+- :span[A1002-1007]{.sample.text-yellow} shows some quality concerns:
     - Low percentage of valid pairs (:span[48.08%]{.text-yellow})
     - Low percentage of passed Di-Tags (:span[22.51%]{.text-yellow})
 
-- Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :sample[A1001.2003]{.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
-- HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
+- Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :span[A1001.2003]{.sample.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
+- HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :span[A1003]{.sample.text-green} group generally performing better than :span[A1002]{.sample.text-yellow} group.
 
 **Recommendations**
 
-- Remove :sample[A1001.2003]{.text-red} and :sample[A1200.2004]{.text-red} from further analysis due to severe quality issues.
-- Investigate the cause of low valid pairs and passed Di-Tags in :sample[A1002-1007]{.text-yellow}. Consider removing it if the issue cannot be resolved.
-- Perform adapter trimming on all samples, particularly focusing on :sample[A1001]{.text-red} group.
+- Remove :span[A1001.2003]{.sample.text-red} and :span[A1200.2004]{.sample.text-red} from further analysis due to severe quality issues.
+- Investigate the cause of low valid pairs and passed Di-Tags in :span[A1002-1007]{.sample.text-yellow}. Consider removing it if the issue cannot be resolved.
+- Perform adapter trimming on all samples, particularly focusing on :span[A1001]{.sample.text-red} group.
 - Re-run the Hi-C analysis pipeline after removing problematic samples and performing adapter trimming.
-- Investigate the cause of higher duplication rates in :sample[A1002]{.text-yellow} group compared to :sample[A1003]{.text-green} group, although they are still within acceptable ranges.
-- Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for :sample[A1002]{.text-yellow} group.
+- Investigate the cause of higher duplication rates in :span[A1002]{.sample.text-yellow} group compared to :span[A1003]{.sample.text-green} group, although they are still within acceptable ranges.
+- Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for :span[A1002]{.sample.text-yellow} group.
 """
 
 _PROMPT_EXAMPLE_DETAILED_SUMMARY = f"""\
@@ -140,16 +140,16 @@ class InterpretationOutput(BaseModel):
         Convert markdown to HTML
         """
         html = markdown(text)
-        # Find and replace directives :span[1.23%]{.text-red} -> <span>..., handle multiple matches in one string
+        # Find and replace directives :span[1.23%]{.text-red} -> <span..., handle multiple matches in one string
         html = re.sub(
             r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
             r"<span class='text-\2'>\1</span>",
             html,
         )
-        # similarly, find and replace directives:sample[A1001.2003]{.text-red} -> <sample>...
+        # similarly, find and replace directives :span[A1001.2003]{.sample.text-red} -> <span...
         html = re.sub(
-            r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<sample data-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
+            r":span\[([^\]]+?)\]\{\.sample\.text-(green|red|yellow)\}",
+            r"<span data-toggle='tooltip' title='Click to highlight in the report' class='sample text-\2'>\1</span>",
             html,
         )
         return html
@@ -164,7 +164,7 @@ class InterpretationOutput(BaseModel):
 class InterpretationResponse(BaseModel):
     interpretation: InterpretationOutput
     model: str
-    uuid: Optional[str] = None
+    thread_id: Optional[str] = None
 
 
 class Client:
@@ -214,10 +214,10 @@ class LangchainClient(Client):
         if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
             return InterpretationResponse(
                 interpretation=InterpretationOutput(
-                    summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
+                    summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :span[2wk]{.sample.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :span[1wk]{.sample.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
                 ),
                 model="test-model",
-                uuid=None,
+                thread_id=None,
             )
 
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
@@ -236,14 +236,14 @@ class LangchainClient(Client):
                 ):
                     response = llm.invoke(
                         [
-                            {"role": "system", "content": PROMPT_SHORT},
+                            {"role": "user", "content": PROMPT_SHORT},
                             {"role": "user", "content": report_content},
                         ],
                     )
             else:
                 response = llm.invoke(
                     [
-                        {"role": "system", "content": PROMPT_SHORT},
+                        {"role": "user", "content": PROMPT_SHORT},
                         {"role": "user", "content": report_content},
                     ],
                 )
@@ -282,7 +282,7 @@ class LangchainClient(Client):
                     detailed_analysis=_EXAMPLE_DETAILED_SUMMARY,
                 ),
                 model="test-model",
-                uuid=None,
+                thread_id=None,
             )
 
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
@@ -301,14 +301,14 @@ class LangchainClient(Client):
                 ):
                     response = llm.invoke(
                         [
-                            {"role": "system", "content": PROMPT_FULL},
+                            {"role": "user", "content": PROMPT_FULL},
                             {"role": "user", "content": report_content},
                         ],
                     )
             else:
                 response = llm.invoke(
                     [
-                        {"role": "system", "content": PROMPT_FULL},
+                        {"role": "user", "content": PROMPT_FULL},
                         {"role": "user", "content": report_content},
                     ],
                 )
@@ -372,9 +372,8 @@ class OpenAiClient(LangchainClient):
 class TruncateAnthropicLogFilter(logging.Filter):
     def filter(self, record):
         try:
-            messages = record.args["json_data"]["messages"]  # type: ignore
-            messages[0]["content"] = messages[0]["content"][:1000] + "<truncated>"
-            record.args["json_data"]["system"] = record.args["json_data"]["system"][:500] + "<truncated>"  # type: ignore
+            for m in record.args["json_data"]["messages"]:  # type: ignore
+                m["content"] = m["content"][:500] + "<truncated>"  # type: ignore
         except Exception:
             pass
         return True
@@ -430,8 +429,7 @@ class SeqeraClient(Client):
                 f"{config.seqera_api_url}/internal-ai/query",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "system_message": PROMPT_SHORT,
-                    "message": report_content,
+                    "message": PROMPT_SHORT + "\n\n" + report_content,
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
                 },
             )
@@ -450,10 +448,10 @@ class SeqeraClient(Client):
             return None
 
         response_dict = response.json()
-        uuid = response_dict.get("uuid")
+        thread_id = response_dict.get("thread_id")
         generation = response_dict.get("generation")
         return InterpretationResponse(
-            uuid=uuid,
+            thread_id=thread_id,
             interpretation=InterpretationOutput(summary=generation),
             model=self.model or "claude-3-5-sonnet-latest",
         )
@@ -464,8 +462,7 @@ class SeqeraClient(Client):
                 f"{config.seqera_api_url}/internal-ai/query",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "system_message": PROMPT_FULL,
-                    "message": report_content,
+                    "message": PROMPT_FULL + "\n\n" + report_content,
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
                     "response_schema": {
                         "name": "Interpretation",
@@ -499,10 +496,10 @@ class SeqeraClient(Client):
             return None
 
         response_dict = response.json()
-        uuid = response_dict.get("uuid")
+        thread_id = response_dict.get("thread_id")
         generation: Dict[str, str] = response_dict.get("generation")
         return InterpretationResponse(
-            uuid=uuid,
+            thread_id=thread_id,
             interpretation=InterpretationOutput(**generation),
             model=self.model or "claude-3-5-sonnet-latest",
         )
@@ -754,8 +751,8 @@ def add_ai_summary_to_report():
     if response.model:
         report.ai_model_resolved = response.model
 
-    if response.uuid:
-        report.ai_generation_id = response.uuid
+    if response.thread_id:
+        report.ai_thread_id = response.thread_id
 
     interpretation: InterpretationOutput = response.interpretation
     report.ai_global_summary = interpretation.markdown_to_html(interpretation.summary)
