@@ -232,10 +232,10 @@ async function summarizeWithAi(button) {
           $(".ai-continue-in-chat").data("thread-id", threadId).css("display", "flex");
         }
         if (wrapperDiv) wrapperDiv.show();
-        responseDiv.show();
         button.html(`Generating...`);
       },
       onStreamNewToken: (token) => {
+        responseDiv.show();
         receievedMarkdown += token;
         responseDiv.html(markdownToHtml(receievedMarkdown));
       },
@@ -300,6 +300,8 @@ async function generateCallback(e) {
 $(function () {
   $("#global_ai_summary_expand").each(function () {
     const responseDiv = $("#global_ai_summary_detailed_analysis_response");
+    const isLocalContent = responseDiv.hasClass("ai-local-content");
+
     const expandBtn = $("#global_ai_summary_expand");
     const expandBtnGlyphicon = expandBtn.find(".glyphicon");
 
@@ -308,7 +310,7 @@ $(function () {
     if (storedState === "expanded") isExpanded = true;
     if (storedState === "collapsed") isExpanded = false;
 
-    if (isExpanded) {
+    if (isExpanded && !isLocalContent) {
       responseDiv.show();
       expandBtn.addClass("ai-summary-expand-expanded");
       expandBtnGlyphicon.addClass("glyphicon-chevron-up");

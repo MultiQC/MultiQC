@@ -185,14 +185,17 @@ was generated and the button that launches the welcome tour.
   <div id="global_ai_summary_response">
     {{ report.ai_global_summary }}
   </div>
-  <div
-    {% if report.ai_global_detailed_analysis %}{% else %}class="ai-local-content"{% endif %}
-    id="global_ai_summary_detailed_analysis_response"
-    style="display: {% if report.ai_global_detailed_analysis %}block{% else %}none{% endif %};"
-  >
+
+  {% if report.ai_global_detailed_analysis %}
+  <div style="display: block" id="global_ai_summary_detailed_analysis_response">
     {{ report.ai_global_detailed_analysis }}
-    <!-- <p style="display: flex; justify-content: space-between; align-items: center;"><b>Analysis</b></p> -->
   </div>
+  {% else %}
+  <div class="ai-local-content" id="global_ai_summary_detailed_analysis_response">
+    {{ report.ai_global_detailed_analysis }}
+  </div>
+  {% endif %}
+
   <div id="global_ai_summary_more_button_and_disclaimer" style="margin-top: 8px; margin-bottom: 8px; margin-left: -1px; display: flex; justify-content: space-between; align-items: center;">
     {% if not report.ai_global_detailed_analysis %}
     <button
@@ -207,7 +210,7 @@ was generated and the button that launches the welcome tour.
       type="button"
       style="padding: 2px 8px; margin-right: 10px"
     >
-      Generate more...
+      More details...
     </button>
     {% endif %}
     <span 
@@ -219,6 +222,7 @@ was generated and the button that launches the welcome tour.
     </span>
   </div>
   <div class="ai-summary-error" id="global_ai_summary_error" style="display: none;"></div>
+  <!-- "Expand" arrow for when detailed summary is pre-generated with structured output: -->
   <div 
     id="global_ai_summary_expand" 
     class="mqc-table-expand ai-summary-expand"

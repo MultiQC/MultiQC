@@ -256,9 +256,9 @@ function markdownToHtml(text) {
     return `<span class="text-${p2}">${p1}</span>`;
   });
 
-  // Convert directives :span[text]{.sample.text-color} -> <span class="sample text-color">... (preserving underscores)
-  text = text.replace(/:span\[([^\]]+?)\]\{\.sample\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
-    return `<span data-toggle="tooltip" title="Click to highlight in the report" class="sample text-${p2}">${p1}</span>`;
+  // Convert directives :sample[text]{.text-color} -> <sample... (preserving underscores)
+  text = text.replace(/:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
+    return `<sample data-toggle="tooltip" title="Click to highlight in the report" class="text-${p2}">${p1}</sample>`;
   });
 
   // Convert markdown to html
@@ -296,8 +296,8 @@ Try to format the response with bullet points. Please do not add any extra heade
 Use markdown to format your reponse for readability. Use directives with pre-defined classes
 .text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}. 
 If there are any sample names mentioned, or sample name prefixes or suffixes, you must warp them in
-a sample directive, making sure to use same color classes as for severity, for example: :span[A1001.2003]{.sample.text-yellow}
-or :span[A1001]{.sample.text-yellow}. But never put multiple sample names inside one directive.
+a sample directive, making sure to use same color classes as for severity, for example: :sample[A1001.2003]{.text-yellow}
+or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one directive.
 
 You must use only multiples of 4 spaces to indent nested lists.
 `;
@@ -308,10 +308,10 @@ let systemPromptReportShort =
 Limit the response to 1-2 bullet points. Two such examples of short summaries:
 
 - :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
-- :span[A1001.2003]{.sample.text-red} and :span[A1001.2004]{.sample.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
+- :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
 
 - All samples show good quality metrics with :span[75.7-77.0%]{.text-green} CpG methylation and :span[76.3-86.0%]{.text-green} alignment rates
-- :span[2wk]{.sample.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) compared to :span[1wk]{.sample.text-green} samples (:span[6-9%]{.text-green})'
+- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green})'
 `;
 
 let systemPromptReportFull =
@@ -323,29 +323,29 @@ This is the example response:
 
 **Analysis**
 
-- :span[A1002]{.sample.text-yellow} and :span[A1003]{.sample.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
-- :span[A1001.2003]{.sample.text-red} and :span[A1001.2004]{.sample.text-red} show severe quality issues:
+- :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
+- :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
     - Extremely high duplicate rates (:span[65.54%]{.text-red} and :span[83.14%]{.text-red})
     - Low percentages of valid pairs (:span[37.2%]{.text-red} and :span[39.2%]{.text-red})
     - High percentages of failed modules in FastQC (:span[33.33%]{.text-red})
     - Significantly higher total sequence counts (:span[141.9M]{.text-red} and :span[178.0M]{.text-red}) compared to other samples
-    - FastQC results indicate that :span[A1001.2003]{.sample.text-red} and :span[A1001.2004]{.sample.text-red} have a slight :span[GC content]{.text-red} bias at 39.5% against most other samples having 38.0%, which indicates a potential contamination that could be the source of other anomalies in quality metrics.
+    - FastQC results indicate that :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} have a slight :span[GC content]{.text-red} bias at 39.5% against most other samples having 38.0%, which indicates a potential contamination that could be the source of other anomalies in quality metrics.
 
-- :span[A1002-1007]{.sample.text-yellow} shows some quality concerns:
+- :sample[A1002-1007]{.text-yellow} shows some quality concerns:
     - Low percentage of valid pairs (:span[48.08%]{.text-yellow})
     - Low percentage of passed Di-Tags (:span[22.51%]{.text-yellow})
 
-- Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :span[A1001.2003]{.sample.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
-- HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :span[A1003]{.sample.text-green} group generally performing better than :span[A1002]{.sample.text-yellow} group.
+- Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :sample[A1001.2003]{.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
+- HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
 
 **Recommendations**
 
-- Remove :span[A1001.2003]{.sample.text-red} and :span[A1200.2004]{.sample.text-red} from further analysis due to severe quality issues.
-- Investigate the cause of low valid pairs and passed Di-Tags in :span[A1002-1007]{.sample.text-yellow}. Consider removing it if the issue cannot be resolved.
-- Perform adapter trimming on all samples, particularly focusing on :span[A1001]{.sample.text-red} group.
+- Remove :sample[A1001.2003]{.text-red} and :sample[A1200.2004]{.text-red} from further analysis due to severe quality issues.
+- Investigate the cause of low valid pairs and passed Di-Tags in :sample[A1002-1007]{.text-yellow}. Consider removing it if the issue cannot be resolved.
+- Perform adapter trimming on all samples, particularly focusing on :sample[A1001]{.text-red} group.
 - Re-run the Hi-C analysis pipeline after removing problematic samples and performing adapter trimming.
-- Investigate the cause of higher duplication rates in :span[A1002]{.sample.text-yellow} group compared to :span[A1003]{.sample.text-green} group, although they are still within acceptable ranges.
-- Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for :span[A1002]{.sample.text-yellow} group.
+- Investigate the cause of higher duplication rates in :sample[A1002]{.text-yellow} group compared to :sample[A1003]{.text-green} group, although they are still within acceptable ranges.
+- Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for :sample[A1002]{.text-yellow} group.
 `;
 
 let systemPromptPlot =
@@ -359,8 +359,8 @@ Limit it to 1-2 sentences.
 Make sure to use markdown to format your reponse for readability. Use directives with pre-defined classes
 .text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}. 
 If there are any sample names mentioned, or sample name prefixes or suffixes, you must warp them in
-a sample directive, making sure to use same color classes as for severity, for example: :span[A1001.2003]{.sample.text-yellow}
-or :span[A1001]{.sample.text-yellow}. But never put multiple sample names inside one directive.
+a sample directive, making sure to use same color classes as for severity, for example: :sample[A1001.2003]{.text-yellow}
+or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one directive.
 
 Please do not add any extra headers to the response.
 
