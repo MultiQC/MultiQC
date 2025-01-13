@@ -231,11 +231,11 @@ async function summarizeWithAi(button) {
         if (threadId) {
           $(".ai-continue-in-chat").data("thread-id", threadId).css("display", "flex");
         }
-        if (wrapperDiv) wrapperDiv.show();
         button.html(`Generating...`);
       },
       onStreamNewToken: (token) => {
         responseDiv.show();
+        if (wrapperDiv) wrapperDiv.show();
         receievedMarkdown += token;
         responseDiv.html(markdownToHtml(receievedMarkdown));
       },
