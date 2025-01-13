@@ -278,7 +278,7 @@ This effectively means that provider API keys can be managed at workspace level.
 
 To do this, toggle the _"Environment variables"_ section when creating a Compute Environment and click _"Add variable"_.
 
-Make sure that the _"Target environment"_ has _"Compute job"_ toggled on.
+Ensure that the **Target environment** has **Compute job** enabled.
 
 ![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_var_create.png)
 
