@@ -274,7 +274,7 @@ Add this config to `~/.nextflow/config` and it will be applied to every Nextflow
 If using Seqera Platform the above config can be used when launching pipelines or adding them to the launchpad.
 However, environment variables can also be added at _Compute Environment_ level and will then affect every pipeline
 run using that CE, without further modification.
-This effectively means that provider API keys can be managed at workspace level.
+This effectively means that provider API keys can be managed at the workspace level.
 
 To do this, toggle the _"Environment variables"_ section when creating a Compute Environment and click _"Add variable"_.
 
