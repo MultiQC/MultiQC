@@ -226,8 +226,11 @@ async function summarizeWithAi(button) {
       systemPrompt: systemPrompt,
       userMessage: content,
       tags: ["multiqc"],
-      onStreamStart: (resolvedModelName) => {
+      onStreamStart: (resolvedModelName, threadId) => {
         modelName = resolvedModelName;
+        if (threadId) {
+          $(".ai-continue-in-chat").data("thread-id", threadId).css("display", "flex");
+        }
         if (wrapperDiv) wrapperDiv.show();
         responseDiv.show();
         button.html(`Generating...`);
