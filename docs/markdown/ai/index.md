@@ -289,7 +289,7 @@ Once added:
 ## Security Considerations
 
 MultiQC AI summaries are used at your own risk.
-Please treat results with appropriate mistrust and consider what data you are sending to external services.
+Treat results with appropriate mistrust and consider what data you are sending to external services.
 
 - API keys set in environment variables are not saved in report outputs
 - API keys put in the toolbox are stored only in your browser's local storage
