@@ -12,7 +12,7 @@ window.continueInSeqeraChatHandler = function (event) {
   let encodedChatMessages = el.data("encoded-chat-messages");
 
   let url = seqeraWebsite + "/ask-ai/";
-  if (threadId) url += "?thread-id=" + threadId;
+  if (threadId) url += "?from-thread=" + threadId;
 
   const chatWindow = window.open(url, "_blank");
 
