@@ -286,7 +286,7 @@ Once added:
 
 ![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_vars.png)
 
-## Security Considerations
+## Security considerations
 
 MultiQC AI summaries are used at your own risk.
 Treat results with appropriate mistrust and consider what data you are sending to external services.
