@@ -8,7 +8,7 @@ description: Using AI to summarise MultiQC reports
 MultiQC v1.27 and newer can generate AI-powered summaries of your reports. These can be created at two points:
 
 - When creating the report (baked into the report HTML)
-- Dynamically in the browser, whilst viewing an existing HTML report (ephemeral)
+- Dynamically in the browser, while viewing an existing HTML report (ephemeral)
 
 The AI summaries are generated using LLMs (large-language models) AI, using
 [Seqera AI](https://seqera.io/ask-ai/), [OpenAI](https://openai.com/) or [Anthropic](https://www.anthropic.com/).
