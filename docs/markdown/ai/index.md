@@ -5,7 +5,7 @@ description: Using AI to summarise MultiQC reports
 
 # AI Summaries
 
-MultiQC v1.27 onwards can generate AI-powered summaries of your reports. These can be created at two points:
+MultiQC v1.27 and newer can generate AI-powered summaries of your reports. These can be created at two points:
 
 - When creating the report (baked into the report HTML)
 - Dynamically in the browser, whilst viewing an existing HTML report (ephemeral)
