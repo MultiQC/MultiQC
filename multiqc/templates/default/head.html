@@ -41,6 +41,7 @@ aiConfigModel = "{{ report.ai_model or config.ai_model }}";
 
 aiReportMetadataBase64 = "{{ report.ai_report_metadata_base64 }}";
 aiReportMetadata = JSON.parse(atob(aiReportMetadataBase64));
+aiThreadId = "{{ report.ai_thread_id }}";
 </script>
 
 <!-- Instead of saving data directly into variables in a normal <script>, data is separated into

@@ -215,7 +215,19 @@ async function summarizeWithAi(button) {
   button.prop("disabled", true).html(`Requesting ${provider.name}...`);
 
   function wrapUpResponse() {
-    disclaimerDiv.html(`This summary is AI-generated. Provider: ${provider.name}, model: ${modelName}`).show();
+    if (provider.name === "Seqera AI") {
+      disclaimerDiv.find(".ai-summary-provider").html(
+        `<a 
+          class='ai-continue-in-chat'
+          title="Chat with Seqera AI"
+          href='${seqeraWebsite}/ask-ai/?messages=${aiThreadId || ""}'
+        >Seqera AI</a>`,
+      );
+    } else {
+      disclaimerDiv.find(".ai-summary-provider").text(provider.name);
+    }
+    disclaimerDiv.find(".ai-summary-model").text(modelName);
+    disclaimerDiv.show();
     button.data("action", "clear").prop("disabled", false).html(clearText).addClass("ai-local-content");
   }
 
@@ -229,15 +241,16 @@ async function summarizeWithAi(button) {
       onStreamStart: (resolvedModelName, threadId) => {
         modelName = resolvedModelName;
         if (threadId) {
-          $(".ai-continue-in-chat").data("thread-id", threadId).css("display", "flex");
+          $(".ai-continue-in-chat").data("thread-id", threadId).show();
         }
-        // button.html(`Generating...`);
+        button.html(`Starting generation...`);
       },
       onStreamNewToken: (token) => {
         responseDiv.show();
         if (wrapperDiv) wrapperDiv.show();
         receievedMarkdown += token;
         responseDiv.html(markdownToHtml(receievedMarkdown));
+        button.html(`Generating...`);
       },
       onStreamError: (error) => {
         $.toast({
@@ -369,9 +382,8 @@ $(function () {
         responseDiv.show().html(markdownToHtml(cachedSummary.text));
         if (wrapperDiv) wrapperDiv.show();
         const provider = AI_PROVIDERS[cachedSummary.provider];
-        disclaimerDiv
-          .html(`This summary is AI-generated. Provider: ${provider.name}, model: ${cachedSummary.model}`)
-          .show();
+        disclaimerDiv.find(".ai-summary-provider").text(provider.name);
+        disclaimerDiv.find(".ai-summary-model").text(cachedSummary.model);
         button.html(clearText).data("action", "clear").prop("disabled", false).addClass("ai-local-content");
       }
     }

@@ -1296,22 +1296,21 @@ tr.row-empty {
   padding: 0;
 }
 
-.ai-summary .ai-summary-more-button,
-.ai-summary .ai-continue-in-chat {
+.ai-summary .ai-generate-button-more {
+  /* .ai-summary .ai-continue-in-chat { */
   padding: 2px 8px;
 }
 
 .ai-summary .ai-continue-in-chat {
+  text-decoration: underline;
   /* background-color: #ffffff; */
   /* border: 1px solid #d2d2d2; */
   /* color: #666; */
 }
 
-.ai-summary .ai-continue-in-chat:hover,
-.ai-summary .ai-continue-in-chat:focus {
+/* .ai-summary .ai-continue-in-chat:hover,.ai-summary .ai-continue-in-chat:focus {
   background-color: #f2f2f2;
-}
-
+} */
 .ai-summary .ai-summary-expand {
   margin-left: -11px;
   margin-right: -12px;
