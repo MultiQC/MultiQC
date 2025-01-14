@@ -36,7 +36,7 @@ All three supported services require an API key to work.
 :::info
 
 Seqera AI is free to use, though there are usage limits.
-OpenAI / Anthropic API usage is billed based on consumption.
+Use of OpenAI and Anthropic APIs are billed by their respective providers based on consumption.
 
 :::
 
