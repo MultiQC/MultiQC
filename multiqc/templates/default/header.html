@@ -174,9 +174,9 @@ was generated and the button that launches the welcome tour.
   <div class="ai-summary-header">
     <b>Report AI Summary </b>
     <button class='btn btn-default btn-sm ai-continue-in-chat'
-      style="display: {% if report.ai_thread_id %}flex{% else %}none{% endif %};"
-      data-thread-id="{{ report.ai_thread_id }}"
+      style="display: flex;"
       data-seqera-website="{{ config.seqera_website }}"
+      data-seqera-api-url="{{ config.seqera_api_url }}"
       onclick="continueInSeqeraChatHandler(event)"
     >
        Continue with Seqera AI

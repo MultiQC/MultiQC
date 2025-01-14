@@ -168,7 +168,6 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
           let type = undefined;
           let content = undefined;
           let model = undefined;
-          let threadId = undefined;
           let role = undefined;
           let finishReason = undefined;
 
@@ -177,7 +176,6 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
             type = data.type; // on_chat_model_start, on_chat_model_stream, on_chat_model_end
             content = data.content;
             model = data.metadata?.ls_model_name;
-            threadId = threadId || data.thread_id;
             finishReason = data.response_metadata?.stop_reason;
             if (finishReason && finishReason !== "end_turn") {
               type = "error";

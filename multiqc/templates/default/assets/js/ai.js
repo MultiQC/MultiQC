@@ -5,33 +5,41 @@
 window.continueInSeqeraChatHandler = function (event) {
   let el = $(event.currentTarget);
   let seqeraWebsite = el.data("seqera-website");
+  let seqeraApiUrl = el.data("seqera-api-url");
 
-  // Either report uuid, or encoded system and chat messages
-  let threadId = el.data("thread-id");
-  let encodedSystemMessage = el.data("encoded-system-message");
-  let encodedChatMessages = el.data("encoded-chat-messages");
+  // Get the current response from the response div
+  const responseDiv = $("#global_ai_summary_response");
+  const isMore = responseDiv.hasClass("ai-local-content-more");
+  const currentResponse = responseDiv.text();
 
-  let url = seqeraWebsite + "/ask-ai/";
-  if (threadId) url += "?from-thread=" + threadId;
+  // Get the appropriate system prompt
+  const systemPrompt = isMore ? systemPromptReportFull : systemPromptReportShort;
+  const apiKey = $("#ai-api-key").val();
 
-  const chatWindow = window.open(url, "_blank");
-
-  // This is used only for Anthropic and OpenAI providers:
-  if (encodedSystemMessage && encodedChatMessages) {
-    function sendMessage() {
-      chatWindow.postMessage(
-        {
-          type: "chatInitialMessages",
-          content: {
-            encodedSystemMessage: encodedSystemMessage,
-            encodedChatMessages: encodedChatMessages,
-          },
-        },
-        seqeraWebsite,
-      );
-    }
-    setTimeout(sendMessage, 2000);
-  }
+  // Store messages temporarily
+  fetch(`${seqeraApiUrl}/ephemeral/store`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+    },
+    body: JSON.stringify({
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "assistant", content: currentResponse },
+      ],
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      const uuid = data.uuid;
+      // Open AI Chat with the temporary messages ID
+      window.open(`${seqeraWebsite}/ask-ai?messages=${uuid}`, "_blank");
+    })
+    .catch((error) => {
+      console.error("Failed to store messages:", error);
+      return null;
+    });
 };
 
 function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsView = "table") {

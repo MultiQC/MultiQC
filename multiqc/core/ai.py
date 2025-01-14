@@ -164,7 +164,6 @@ class InterpretationOutput(BaseModel):
 class InterpretationResponse(BaseModel):
     interpretation: InterpretationOutput
     model: str
-    thread_id: Optional[str] = None
 
 
 class Client:
@@ -217,7 +216,6 @@ class LangchainClient(Client):
                     summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
                 ),
                 model="test-model",
-                thread_id=None,
             )
 
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
@@ -282,7 +280,6 @@ class LangchainClient(Client):
                     detailed_analysis=_EXAMPLE_DETAILED_SUMMARY,
                 ),
                 model="test-model",
-                thread_id=None,
             )
 
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
@@ -448,10 +445,8 @@ class SeqeraClient(Client):
             return None
 
         response_dict = response.json()
-        thread_id = response_dict.get("thread_id")
         generation = response_dict.get("generation")
         return InterpretationResponse(
-            thread_id=thread_id,
             interpretation=InterpretationOutput(summary=generation),
             model=self.model or "claude-3-5-sonnet-latest",
         )
@@ -496,10 +491,8 @@ class SeqeraClient(Client):
             return None
 
         response_dict = response.json()
-        thread_id = response_dict.get("thread_id")
         generation: Dict[str, str] = response_dict.get("generation")
         return InterpretationResponse(
-            thread_id=thread_id,
             interpretation=InterpretationOutput(**generation),
             model=self.model or "claude-3-5-sonnet-latest",
         )
@@ -750,9 +743,6 @@ def add_ai_summary_to_report():
 
     if response.model:
         report.ai_model_resolved = response.model
-
-    if response.thread_id:
-        report.ai_thread_id = response.thread_id
 
     interpretation: InterpretationOutput = response.interpretation
     report.ai_global_summary = interpretation.markdown_to_html(interpretation.summary)
