@@ -24,7 +24,7 @@ Never rely on AI-generated summaries. Whilst these summaries can be useful to ge
 
 AI summaries work by sending report data to an LLM provider of your choice, via an API over the internet.
 Be aware of what data you are sending, and to who.
-Read more about privacy any Seqera AI [here](https://seqera.io/ai-trust/).
+For more information, see [Seqera AI: Your privacy matters](https://seqera.io/ai-trust/).
 
 :::
 
