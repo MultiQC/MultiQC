@@ -87,7 +87,7 @@ To generate them, you must enable them either on the command line or via a Multi
 
    - `--ai` / `--ai-summary`: Generate a short report summary and put it on top of the report (fast)
    - `--ai-summary-full`: Generate a detailed version of the summary with analysis and recommendations (slower)
-   - `--ai-provider <provider>`: Choose AI provider. `seqera`, `openai` or `anthropic`. Default `seqera`
+   - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai` or `anthropic`. Default `seqera`
    - `--no-ai`: Disable AI toolbox and buttons in the report
 
 2. Alternatively, MultiQC configuration file:
