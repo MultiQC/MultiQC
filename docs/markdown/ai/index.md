@@ -42,7 +42,7 @@ Use of OpenAI and Anthropic APIs are billed by their respective providers based 
 
 1. [Seqera AI](https://seqera.io/ask-ai/)
    - Register for free at [seqera.io](https://seqera.io/)
-   - Create a new key on the _"User tokens"_ page: [https://cloud.seqera.io/tokens](https://cloud.seqera.io/tokens)
+   - Create a new key on the **Access tokens** page: [https://cloud.seqera.io/tokens](https://cloud.seqera.io/tokens)
 2. [OpenAI](https://openai.com/)
    - Register at [platform.openai.com](https://platform.openai.com/signup) (NB: different to ChatGPT)
    - Add a payment method to your account to enable API usage beyond any trial credits
