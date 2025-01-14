@@ -175,9 +175,10 @@ def reset():
     general_stats_plot = None
     general_stats_data = []
     general_stats_headers = []
-    saved_raw_data_keys = set()
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
+    saved_raw_data_keys = []
+    saved_raw_data = dict()
 
     ai_global_summary = ""
     ai_global_detailed_analysis = ""
@@ -186,8 +187,6 @@ def reset():
     ai_provider_title = ""
     ai_model = ""
     ai_report_metadata_base64 = ""
-    saved_raw_data_keys = []
-    saved_raw_data = dict()
 
     reset_file_search()
     tmp_dir.new_tmp_dir()
