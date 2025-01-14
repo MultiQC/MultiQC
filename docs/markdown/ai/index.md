@@ -221,7 +221,7 @@ MultiQC uses the following logic, moving on to the next step if the prompt is st
 3. Include the general statistics table, without hidden-by-default columns.
 4. Abort AI summary.
 
-If you're struggling to generate an AI summary, you can try the following:
+If you're unable to generate an AI summary, you can try the following:
 
 - Hide additional columns in the general statistics table (see [Hiding Columns](../reports/customisation.md#hiding-columns)).
 - Hide General statistics data in the browser, and request the AI summary dynamically:
