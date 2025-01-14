@@ -715,7 +715,7 @@ button above the table in the report) will be sorted by "Largest contig".
 ### Configurable columns
 
 Table columns can be reodered and change visibility using the "Configure Columns" button
-in the report. However, for very wide tables, the performance degrades, so the button is disabled when the number of rows exceeds `config.max_configurable_table_columns` (default is 100). You can adjust this value in the config file.
+in the report. However, for very wide tables, the performance degrades, so the button is disabled when the number of rows exceeds `config.max_configurable_table_columns` (default is 200). You can adjust this value in the config file.
 
 ## Violin plots
 
