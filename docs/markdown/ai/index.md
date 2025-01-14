@@ -195,7 +195,7 @@ You can also copy the entire prompt that MultiQC would use to generate a summary
 
 ![ai_copy_buttons](../../../docs/images/ai_copy_buttons.png)
 
-A button will copy the LLM-friendly formatted report data along with the system prompt into your clipboard, which you can then paste into your an AI chat interace of your provider of choice.
+A button will copy the LLM-friendly formatted report data along with the system prompt into your clipboard, which you can then paste into your an AI chat interface of your provider of choice.
 
 ### Copying prompts
 
