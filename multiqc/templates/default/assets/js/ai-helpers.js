@@ -123,6 +123,9 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
   const decoder = new TextDecoder();
   let buffer = "";
 
+  let model = undefined;
+  let threadId = undefined;
+
   return recursivelyProcessStream();
   function recursivelyProcessStream() {
     // Inner function to recursively process the stream reader
@@ -130,7 +133,7 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
       .read()
       .then(({ value, done }) => {
         if (done) {
-          onStreamComplete();
+          onStreamComplete(threadId);
           return;
         }
 
@@ -167,8 +170,6 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
 
           let type = undefined;
           let content = undefined;
-          let model = undefined;
-          let threadId = undefined;
           let role = undefined;
           let finishReason = undefined;
 
@@ -227,13 +228,13 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
           // Handle different event types
           switch (type) {
             case "on_chat_model_start":
-              onStreamStart(model, threadId);
+              onStreamStart(model);
               break;
             case "on_chat_model_stream":
               if (content) onStreamNewToken(content);
               break;
             case "on_chat_model_end":
-              onStreamComplete();
+              onStreamComplete(threadId);
               return acc;
             case "error":
               onStreamError(error);

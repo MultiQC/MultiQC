@@ -205,22 +205,23 @@ was generated and the button that launches the welcome tour.
       More details...
     </button>
     {% endif %}
-    <div style="display: flex; gap: 5px; margin-left: auto; align-items: baseline;">
+    <div style="display: flex; gap: 9px; margin-left: auto; align-items: baseline;">
       <span 
         class="ai-summary-disclaimer" 
         id="global_ai_summary_disclaimer" 
-        style="display: {% if report.ai_global_summary | length > 0 %}flex{% else %}none{% endif %};"
+        style="display: {% if report.ai_global_summary | length > 0 %}inline{% else %}none{% endif %};"
       >
-        This summary is AI-generated. Provider: {{ report.ai_provider_title }}, model: {{ report.ai_model_resolved or report.ai_model }}
+        Provider: <span class="ai-summary-disclaimer-provider">{{ report.ai_provider_title }}</span>, 
+        model: <span class="ai-summary-disclaimer-model">{{ report.ai_model_resolved or report.ai_model }}</span>
       </span>
-      <button class='btn btn-default btn-sm ai-continue-in-chat'
+      <a class='btn btn-default btn-sm ai-continue-in-chat'
         style="display: {% if report.ai_thread_id %}block{% else %}none{% endif %};"
         data-thread-id="{{ report.ai_thread_id }}"
         data-seqera-website="{{ config.seqera_website }}"
-        onclick="continueInSeqeraChatHandler(event)"
+        href="{{ config.seqera_website }}/ask-ai/?messages={{ report.ai_thread_id }}"
       >
         Chat with Seqera AI
-      </button>
+      </a>
     </div>
   </div>
   <div class="ai-summary-error" id="global_ai_summary_error" style="display: none;"></div>
