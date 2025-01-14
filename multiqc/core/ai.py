@@ -211,15 +211,6 @@ class LangchainClient(Client):
         self.llm: BaseChatModel
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
-        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
-            return InterpretationResponse(
-                interpretation=InterpretationOutput(
-                    summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
-                ),
-                model="test-model",
-                thread_id=None,
-            )
-
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
         from langsmith import Client as LangSmithClient  # type: ignore
 
@@ -275,16 +266,6 @@ class LangchainClient(Client):
         )
 
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
-        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
-            return InterpretationResponse(
-                interpretation=InterpretationOutput(
-                    summary=_EXAMPLE_SUMMARY_FOR_FULL,
-                    detailed_analysis=_EXAMPLE_DETAILED_SUMMARY,
-                ),
-                model="test-model",
-                thread_id=None,
-            )
-
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
         from langsmith import Client as LangSmithClient  # type: ignore
 
@@ -738,9 +719,29 @@ def add_ai_summary_to_report():
 
     response: Optional[InterpretationResponse]
     if config.ai_summary_full:
-        response = client.interpret_report_full(prompt)
+        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
+            response = InterpretationResponse(
+                interpretation=InterpretationOutput(
+                    summary=_EXAMPLE_SUMMARY_FOR_FULL,
+                    detailed_analysis=_EXAMPLE_DETAILED_SUMMARY,
+                ),
+                model="test-model",
+                thread_id="68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None,
+            )
+        else:
+            response = client.interpret_report_full(prompt)
     else:
-        response = client.interpret_report_short(prompt)
+        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
+            response = InterpretationResponse(
+                interpretation=InterpretationOutput(
+                    summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
+                ),
+                model="test-model",
+                thread_id="68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None,
+            )
+        else:
+            response = client.interpret_report_short(prompt)
+
     if not response:
         return None
 

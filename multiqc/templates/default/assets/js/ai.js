@@ -8,30 +8,30 @@ window.continueInSeqeraChatHandler = function (event) {
 
   // Either report uuid, or encoded system and chat messages
   let threadId = el.data("thread-id");
-  let encodedSystemMessage = el.data("encoded-system-message");
-  let encodedChatMessages = el.data("encoded-chat-messages");
 
   let url = seqeraWebsite + "/ask-ai/";
   if (threadId) url += "?from-thread=" + threadId;
 
   const chatWindow = window.open(url, "_blank");
 
-  // This is used only for Anthropic and OpenAI providers:
-  if (encodedSystemMessage && encodedChatMessages) {
-    function sendMessage() {
-      chatWindow.postMessage(
-        {
-          type: "chatInitialMessages",
-          content: {
-            encodedSystemMessage: encodedSystemMessage,
-            encodedChatMessages: encodedChatMessages,
-          },
-        },
-        seqeraWebsite,
-      );
-    }
-    setTimeout(sendMessage, 2000);
-  }
+  // let encodedSystemMessage = el.data("encoded-system-message");
+  // let encodedChatMessages = el.data("encoded-chat-messages");
+  // // This is used only for Anthropic and OpenAI providers:
+  // if (encodedSystemMessage && encodedChatMessages) {
+  //   function sendMessage() {
+  //     chatWindow.postMessage(
+  //       {
+  //         type: "chatInitialMessages",
+  //         content: {
+  //           encodedSystemMessage: encodedSystemMessage,
+  //           encodedChatMessages: encodedChatMessages,
+  //         },
+  //       },
+  //       seqeraWebsite,
+  //     );
+  //   }
+  //   setTimeout(sendMessage, 2000);
+  // }
 };
 
 function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsView = "table") {
@@ -231,7 +231,7 @@ async function summarizeWithAi(button) {
         if (threadId) {
           $(".ai-continue-in-chat").data("thread-id", threadId).css("display", "flex");
         }
-        button.html(`Generating...`);
+        // button.html(`Generating...`);
       },
       onStreamNewToken: (token) => {
         responseDiv.show();

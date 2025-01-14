@@ -173,14 +173,6 @@ was generated and the button that launches the welcome tour.
 >
   <div class="ai-summary-header">
     <b>Report AI Summary </b>
-    <button class='btn btn-default btn-sm ai-continue-in-chat'
-      style="display: {% if report.ai_thread_id %}flex{% else %}none{% endif %};"
-      data-thread-id="{{ report.ai_thread_id }}"
-      data-seqera-website="{{ config.seqera_website }}"
-      onclick="continueInSeqeraChatHandler(event)"
-    >
-       Continue with Seqera AI
-    </button>
   </div>
   <div id="global_ai_summary_response">
     {{ report.ai_global_summary }}
@@ -196,7 +188,7 @@ was generated and the button that launches the welcome tour.
   </div>
   {% endif %}
 
-  <div id="global_ai_summary_more_button_and_disclaimer" style="margin-top: 8px; margin-bottom: 8px; margin-left: -1px; display: flex; justify-content: space-between; align-items: center;">
+  <div id="global_ai_summary_more_button_and_disclaimer" style="margin-top: 8px; margin-bottom: 8px; margin-left: -1px; display: flex; justify-content: space-between; align-items: baseline;">
     {% if not report.ai_global_detailed_analysis %}
     <button
       class="btn btn-sm btn-default ai-generate-button ai-generate-button-global ai-generate-button-more"
@@ -213,13 +205,23 @@ was generated and the button that launches the welcome tour.
       More details...
     </button>
     {% endif %}
-    <span 
-      class="ai-summary-disclaimer" 
-      id="global_ai_summary_disclaimer" 
-      style="display: {% if report.ai_global_summary | length > 0 %}block{% else %}none{% endif %};"
-    >
-      This summary is AI-generated. Provider: {{ report.ai_provider_title }}, model: {{ report.ai_model_resolved or report.ai_model }}
-    </span>
+    <div style="display: flex; gap: 5px; margin-left: auto; align-items: baseline;">
+      <span 
+        class="ai-summary-disclaimer" 
+        id="global_ai_summary_disclaimer" 
+        style="display: {% if report.ai_global_summary | length > 0 %}flex{% else %}none{% endif %};"
+      >
+        This summary is AI-generated. Provider: {{ report.ai_provider_title }}, model: {{ report.ai_model_resolved or report.ai_model }}
+      </span>
+      <button class='btn btn-default btn-sm ai-continue-in-chat'
+        style="display: {% if report.ai_thread_id %}block{% else %}none{% endif %};"
+        data-thread-id="{{ report.ai_thread_id }}"
+        data-seqera-website="{{ config.seqera_website }}"
+        onclick="continueInSeqeraChatHandler(event)"
+      >
+        Chat with Seqera AI
+      </button>
+    </div>
   </div>
   <div class="ai-summary-error" id="global_ai_summary_error" style="display: none;"></div>
   <!-- "Expand" arrow for when detailed summary is pre-generated with structured output: -->
