@@ -512,7 +512,12 @@ def make_table(
         report.write_data_file(flatten_raw_vals, fname)
         if config.data_dump_file_write_raw:
             report.write_data_file(flatten_raw_vals, fname, data_format="json")
-            report.saved_raw_data_keys.add(fname)
+            i = 1
+            base_fn = fname
+            while fname in report.saved_raw_data_keys:
+                fname = f"{base_fn}_{i}"
+                i += 1
+            report.saved_raw_data_keys.append(fname)
 
     # Build the bootstrap modal to customise columns and order
     modal = ""
