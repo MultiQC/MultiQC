@@ -16,6 +16,14 @@ of the report.
       <li><a href="#mqc_cols" title="Highlight" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-pushpin"></span></a></li>
       <li><a href="#mqc_renamesamples" title="Rename" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-font"></span></a></li>
       <li><a href="#mqc_hidesamples" title="Hide" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-eye-close"></span></a></li>
+      {% if not config.no_ai %}
+      <li><a href="#mqc_ai" title="AI" data-placement="left" data-toggle="tooltip">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" fill="currentColor" stroke="currentColor" stroke-width="0.75" stroke-linejoin="round"></path>
+          <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" fill="currentColor" stroke="currentColor" stroke-width="0.5" stroke-linejoin="round"></path>
+        </svg>
+      </a></li>
+      {% endif %}
       <li><a href="#mqc_exportplots" title="Export" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-download-alt"></span></a></li>
       <li><a href="#mqc_saveconfig" title="Save" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-floppy-disk"></span></a></li>
       <li><a href="#mqc_citations" title="Citations" data-placement="left" data-toggle="tooltip"><span class="glyphicon glyphicon-education"></span></a></li>
@@ -127,6 +135,39 @@ of the report.
       <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
     </div>
 
+    <!-- AI Configuration -->
+    <div id="mqc_ai" class="mqc_filter_section">
+      <h4>Explain with AI</h4>
+
+      <p>Configure AI settings to get explanations of plots and data in this report.</p>
+
+      <form id="mqc_ai_form">
+        <div class="form-group">
+          <label for="ai-provider">AI Provider</label>
+          <select class="form-control input-sm" id="ai-provider">
+          </select>
+          <div id="ai_provider_logo" style="text-align: center; margin: 1.5rem 0 0;"></div>
+          <p id="ai_provider_info"></p>
+        </div>
+
+        <div class="form-group" id="ai_model_group">
+          <label for="ai-model">Model</label>
+          <input type="text" class="form-control input-sm" id="ai-model" placeholder="Enter model name">
+          <p id="ai_model_info"></p>
+        </div>
+
+        <div class="form-group" id="ai_api_key_group">
+          <label for="ai-api-key">API Key</label>
+          <input type="password" class="form-control input-sm" id="ai-api-key" placeholder="Enter your API key">
+          <p id="ai_api_key_info"></p>
+          <p>
+            Keys entered here will be stored in your browser's local storage.
+            See <a href="https://docs.seqera.io/multiqc/ai#configuring-the-ai-provider" style='text-decoration: underline;' target="_blank">the docs</a>.
+          </p>
+        </div>
+      </form>
+    </div>
+
     <!-- Export Plots -->
     <div id="mqc_exportplots" class="mqc_filter_section">
       <h4>Export Plots</h4>
@@ -219,27 +260,49 @@ of the report.
 
     <!-- Save Config -->
     <div id="mqc_saveconfig" class="mqc_filter_section">
+      <div class="alert alert-info">
+        <span class="glyphicon glyphicon-info-sign"></span>
+        Settings are automatically saved. You can also save named configurations below.
+      </div>
       <h4>Save Settings</h4>
-      <p>You can save the toolbox settings for this report to the browser.</p>
+      <p>You can save the toolbox settings for this report to the browser or as a file.</p>
       <form class="form-inline" id="mqc_saveconfig_form">
         <input type="text" class="form-control input-sm" placeholder="Config Name">
-        <button type="submit" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-disk"></span> Save</button>
+        <button type="submit" class="btn btn-sm btn-default">
+          <span class="glyphicon glyphicon-floppy-disk"></span> Save to Browser
+        </button>
+        <button type="button" class="btn btn-sm btn-default" id="mqc_download_config">
+          <span class="glyphicon glyphicon-download-alt"></span> Save to File
+        </button>
       </form>
       <hr>
 
       <h4>Load Settings</h4>
-      <p>Choose a saved report profile from the dropdown box below:</p>
+      <p>Choose a saved report profile from the browser or load from a file:</p>
       <form id="mqc_loadconfig_form">
         <div class="form-group">
           <select class="form-control input-sm">
-            <option value="">[ select ]</option>
+            <option value="">[ select from browser ]</option>
           </select>
         </div>
         <div class="form-group actions">
-          <button type="submit" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-open"></span> Load</button>
-          <button class="mqc_config_clear btn btn-sm btn-default"><span class="glyphicon glyphicon-trash"></span> Delete</button>
-          <button class="mqc_config_set_default btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-saved"></span> Set default</button>
-          <button class="mqc_config_clear_default btn btn-sm btn-default"><span class="glyphicon glyphicon-floppy-remove"></span> Clear default</button>
+          <button type="submit" class="btn btn-sm btn-default">
+            <span class="glyphicon glyphicon-floppy-open"></span> Load
+          </button>
+          <button class="mqc_config_clear btn btn-sm btn-default">
+            <span class="glyphicon glyphicon-trash"></span> Delete
+          </button>
+          <button class="mqc_config_set_default btn btn-sm btn-default">
+            <span class="glyphicon glyphicon-floppy-saved"></span> Set default
+          </button>
+          <button class="mqc_config_clear_default btn btn-sm btn-default">
+            <span class="glyphicon glyphicon-floppy-remove"></span> Clear default
+          </button>
+        </div>
+        <div class="form-group">
+          <span class="glyphicon glyphicon-folder-open"></span><span>&nbsp; Load from File</span>
+          <span class="btn btn-sm btn-default btn-file" id="mqc_load_config_file_wrapper">
+          </span>
         </div>
       </form>
     </div>

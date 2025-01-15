@@ -103,95 +103,6 @@ $(function () {
       }
     });
 
-    /////// COLUMN CONFIG
-    // show + hide columns
-    $(".mqc_table_col_visible").change(function () {
-      let tableAnchor = $(this).data("table-anchor");
-      let violinAnchor = $(this).data("violin-anchor");
-      mqc_table_col_updateVisible(tableAnchor, violinAnchor);
-    });
-    // Bulk set visible / hidden
-    $(".mqc_config_modal_bulk_visible").click(function (e) {
-      e.preventDefault();
-      let tableAnchor = $(this).data("table-anchor");
-      let violinAnchor = $(this).data("violin-anchor");
-      let visible = $(this).data("action") === "showAll";
-      $("#" + tableAnchor + "_config_modal_table tbody .mqc_table_col_visible").prop("checked", visible);
-      mqc_table_col_updateVisible(tableAnchor, violinAnchor);
-    });
-    function mqc_table_col_updateVisible(tableAnchor, violinAnchor) {
-      let target = "#" + tableAnchor;
-
-      let metricsHidden = {};
-      $(target + "_config_modal_table .mqc_table_col_visible").each(function () {
-        let metric = $(this).val();
-        metricsHidden[metric] = !$(this).is(":checked");
-      });
-
-      Object.entries(metricsHidden).map(([metric, hidden]) => {
-        if (hidden) {
-          $(target + " ." + metric).addClass("column-hidden");
-          $(target + "_config_modal_table ." + metric).addClass("text-muted");
-        } else {
-          $(target + " ." + metric).removeClass("column-hidden");
-          $(target + "_config_modal_table ." + metric).removeClass("text-muted");
-        }
-      });
-      // Hide empty rows
-      $(target + " tbody tr").each(function () {
-        let trIsEmpty = true;
-        let tr = $(this);
-        tr.find("td").each(function () {
-          let td = $(this);
-          if (!td.hasClass("column-hidden") && !td.hasClass("sorthandle") && td.text() !== "") {
-            trIsEmpty = false;
-          }
-        });
-        if (trIsEmpty) {
-          tr.addClass("row-empty");
-        } else {
-          tr.removeClass("row-empty");
-        }
-      });
-      // Update counts
-      $(target + "_numrows").text($(target + " tbody tr:visible").length);
-      $(target + "_numcols").text($(target + " thead th:visible").length - 1);
-
-      // Also update the violin plot
-      if (violinAnchor !== undefined) {
-        let plot = mqc_plots[violinAnchor];
-        plot.datasets.map((dataset) => {
-          dataset["metrics"].map((metric) => {
-            dataset["header_by_metric"][metric]["hidden"] = metricsHidden[metric];
-          });
-        });
-        renderPlot(violinAnchor);
-      }
-    }
-
-    // Make rows in MultiQC "Configure Columns" tables sortable
-    $(".mqc_config_modal").on("show.bs.modal", function (e) {
-      $(e.target)
-        .find(".mqc_table.mqc_sortable tbody")
-        .sortable({
-          handle: ".sorthandle",
-          helper: function fixWidthHelper(e, ui) {
-            ui.children().each(function () {
-              $(this).width($(this).width());
-            });
-            return ui;
-          },
-        });
-    });
-
-    // Change order of columns
-    $(".mqc_config_modal_table").on("sortstop", function (e, ui) {
-      change_mqc_table_col_order($(this));
-    });
-    $(".mqc_config_modal_table").bind("sortEnd", function () {
-      change_mqc_table_col_order($(this));
-    });
-
     // TOOLBOX LISTENERS
 
     // highlight samples
@@ -489,6 +400,99 @@ $(function () {
       plotDiv.html("<small>Please select two table columns.</small>");
       plotDiv.addClass("not_rendered");
     }
+  });
+});
+
+// Column configuration modal. Always add even if we have to tables,
+// as we need to hide columns in the violin plot
+$(function () {
+  /////// COLUMN CONFIG
+  // show + hide columns
+  $(".mqc_table_col_visible").change(function () {
+    let tableAnchor = $(this).data("table-anchor");
+    let violinAnchor = $(this).data("violin-anchor");
+    mqc_table_col_updateVisible(tableAnchor, violinAnchor);
+  });
+  // Bulk set visible / hidden
+  $(".mqc_config_modal_bulk_visible").click(function (e) {
+    e.preventDefault();
+    let tableAnchor = $(this).data("table-anchor");
+    let violinAnchor = $(this).data("violin-anchor");
+    let visible = $(this).data("action") === "showAll";
+    $("#" + tableAnchor + "_config_modal_table tbody .mqc_table_col_visible").prop("checked", visible);
+    mqc_table_col_updateVisible(tableAnchor, violinAnchor);
+  });
+  function mqc_table_col_updateVisible(tableAnchor, violinAnchor) {
+    let target = "#" + tableAnchor;
+
+    let metricsHidden = {};
+    $(target + "_config_modal_table .mqc_table_col_visible").each(function () {
+      let metric = $(this).val();
+      metricsHidden[metric] = !$(this).is(":checked");
+    });
+
+    Object.entries(metricsHidden).map(([metric, hidden]) => {
+      if (hidden) {
+        $(target + " ." + metric).addClass("column-hidden");
+        $(target + "_config_modal_table ." + metric).addClass("text-muted");
+      } else {
+        $(target + " ." + metric).removeClass("column-hidden");
+        $(target + "_config_modal_table ." + metric).removeClass("text-muted");
+      }
+    });
+    // Hide empty rows
+    $(target + " tbody tr").each(function () {
+      let trIsEmpty = true;
+      let tr = $(this);
+      tr.find("td").each(function () {
+        let td = $(this);
+        if (!td.hasClass("column-hidden") && !td.hasClass("sorthandle") && td.text() !== "") {
+          trIsEmpty = false;
+        }
+      });
+      if (trIsEmpty) {
+        tr.addClass("row-empty");
+      } else {
+        tr.removeClass("row-empty");
+      }
+    });
+    // Update counts
+    $(target + "_numrows").text($(target + " tbody tr:visible").length);
+    $(target + "_numcols").text($(target + " thead th:visible").length - 1);
+
+    // Also update the violin plot
+    if (violinAnchor !== undefined) {
+      let plot = mqc_plots[violinAnchor];
+      plot.datasets.map((dataset) => {
+        dataset["metrics"].map((metric) => {
+          dataset["header_by_metric"][metric]["hidden"] = metricsHidden[metric];
+        });
+      });
+      renderPlot(violinAnchor);
+    }
+  }
+
+  // Make rows in MultiQC "Configure Columns" tables sortable
+  $(".mqc_config_modal").on("show.bs.modal", function (e) {
+    $(e.target)
+      .find(".mqc_table.mqc_sortable tbody")
+      .sortable({
+        handle: ".sorthandle",
+        helper: function fixWidthHelper(e, ui) {
+          ui.children().each(function () {
+            $(this).width($(this).width());
+          });
+          return ui;
+        },
+      });
+  });
+
+  // Change order of columns
+  $(".mqc_config_modal_table").on("sortstop", function (e, ui) {
+    change_mqc_table_col_order($(this));
+  });
+  $(".mqc_config_modal_table").bind("sortEnd", function () {
+    change_mqc_table_col_order($(this));
   });
 });
 

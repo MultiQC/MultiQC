@@ -4,9 +4,9 @@ class ScatterPlot extends Plot {
     return this.datasets[this.activeDatasetIdx].points; // no data points in a dataset
   }
 
-  prepData() {
+  prepData(dataset) {
     // Prepare data to either build Plotly traces or export as a file
-    let dataset = this.datasets[this.activeDatasetIdx];
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
 
     let points = dataset.points;
 
@@ -20,6 +20,34 @@ class ScatterPlot extends Plot {
     });
 
     return [samples, points];
+  }
+
+  plotAiHeader() {
+    let result = super.plotAiHeader();
+    if (this.pconfig.xlab) result += `X axis: ${this.pconfig.xlab}\n`;
+    if (this.pconfig.ylab) result += `Y axis: ${this.pconfig.ylab}\n`;
+    if (this.pconfig.categories) result += `X categories: ${this.pconfig.categories.join(", ")}\n`;
+    return result;
+  }
+
+  formatDatasetForAiPrompt(dataset) {
+    let [samples, points] = this.prepData(dataset);
+
+    // Check if all samples are hidden
+    if (samples.length === 0) {
+      return "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
+    }
+
+    const xsuffix = this.layout.xaxis.ticksuffix;
+    const ysuffix = this.layout.yaxis.ticksuffix;
+
+    points = points.map((p) => ({
+      name: p.name,
+      x: !Number.isFinite(p.x) ? "" : (Number.isInteger(p.x) ? p.x : parseFloat(p.x.toFixed(2))) + (xsuffix ?? ""),
+      y: !Number.isFinite(p.y) ? "" : (Number.isInteger(p.y) ? p.y : parseFloat(p.y.toFixed(2))) + (ysuffix ?? ""),
+    }));
+
+    return points.map((p) => `${p.name} (${p.x}, ${p.y})`).join("\n");
   }
 
   buildTraces() {

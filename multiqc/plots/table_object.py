@@ -463,7 +463,7 @@ class DataTable(BaseModel):
             pconfig=pconfig,
         )
 
-    def get_headers_in_order(self) -> List[Tuple[int, ColumnKey, ColumnMeta]]:
+    def get_headers_in_order(self, keep_hidden: bool = True) -> List[Tuple[int, ColumnKey, ColumnMeta]]:
         """
         Gets the headers in the order they want to be displayed.
         Returns a list of triplets: (bucket_idx, key, header_info)
@@ -473,7 +473,8 @@ class DataTable(BaseModel):
         placement: float
         for placement in sorted(self.headers_in_order.keys()):
             for section_idx, col_key in self.headers_in_order[placement]:
-                res.append((section_idx, col_key, self.sections[section_idx].column_by_key[col_key]))
+                if keep_hidden or not self.sections[section_idx].column_by_key[col_key].hidden:
+                    res.append((section_idx, col_key, self.sections[section_idx].column_by_key[col_key]))
         return res
 
     def merge(self, new_dt: "DataTable"):

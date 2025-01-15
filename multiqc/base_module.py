@@ -44,38 +44,13 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId, SampleNameMeta, Section
 
 logger = logging.getLogger(__name__)
 
 
 class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
-
-
-@dataclasses.dataclass
-class SampleNameMeta:
-    original_name: SampleName
-    trimmed_name: Optional[SampleName] = None
-    trimmed_suffixes: List[str] = dataclasses.field(default_factory=list)
-    group: Optional[SampleGroup] = None
-    labels: List[str] = dataclasses.field(default_factory=list)
-
-
-@dataclasses.dataclass
-class Section:
-    name: str
-    anchor: Anchor
-    id: SectionId  # unlike anchor, doesn't have to be different from the module or plot ids
-    description: str
-    module: str
-    comment: str = ""
-    helptext: str = ""
-    content_before_plot: str = ""
-    content: str = ""
-    plot: str = ""
-    print_section: bool = True
-    plot_anchor: Optional[Anchor] = None
 
 
 ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleName, SampleName]]], None]
@@ -256,7 +231,7 @@ class BaseMultiqcModule:
     @overload
     def find_log_files(
         self, sp_key: str, filecontents: Literal[False] = False, filehandles: Literal[True] = True
-    ) -> Iterable[LoadedFileDict[io.BufferedReader]]: ...
+    ) -> Union[Iterable[LoadedFileDict[io.TextIOWrapper]], Iterable[LoadedFileDict[io.BufferedReader]]]: ...
 
     @overload
     def find_log_files(
@@ -267,8 +242,8 @@ class BaseMultiqcModule:
         self, sp_key: str, filecontents: bool = True, filehandles: bool = False
     ) -> Union[
         Iterable[LoadedFileDict[str]],
-        Iterable[LoadedFileDict[io.BufferedReader]],
-        Iterable[LoadedFileDict[io.TextIOWrapper]],
+        Iterable[LoadedFileDict[io.BufferedReader]],  # image file
+        Iterable[LoadedFileDict[io.TextIOWrapper]],  # text file
         Iterable[LoadedFileDict[None]],
     ]:
         """
@@ -478,6 +453,8 @@ class BaseMultiqcModule:
             id=SectionId(id),
             description=description,
             module=self.name,
+            module_anchor=self.anchor,
+            module_info=self.info,
             comment=comment,
             helptext=helptext,
             content_before_plot=content_before_plot,

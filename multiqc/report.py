@@ -32,28 +32,31 @@ from typing import (
     Union,
 )
 
+from dotenv import load_dotenv
 import yaml
 from pydantic import BaseModel, Field
-import packaging.version
 
 from multiqc import config
 
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
-from multiqc.base_module import BaseMultiqcModule, Section
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.core import log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
-from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup
+from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
 from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
     dump_json,
     replace_defaultdicts,
     rmtree_with_retries,
 )
+from multiqc.core import ai
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +89,7 @@ peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, Set[Path]]
 files: Dict[ModuleId, List[FileDict]]
+report_uuid: str
 
 # Fields below are kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
@@ -96,11 +100,20 @@ plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactiv
 plot_input_data: Dict[Anchor, Any] = dict()  # to combine data from previous runs
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
-# Map software tools to unique versions
-software_versions: Dict[str, Dict[str, List[str]]]
+software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
 saved_raw_data_keys: List[str]  # to make sure write_data_file don't overwrite for repeated modules
 saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
+
+# AI stuff, set dynamically in ai.py to be used in content.html and ai.js
+ai_global_summary: str = ""
+ai_global_detailed_analysis: str = ""
+ai_generation_id: str = ""
+ai_provider_id: str = ""
+ai_provider_title: str = ""
+ai_model: str = ""
+ai_model_resolved: str = ""
+ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
 
 
 def reset():
@@ -127,8 +140,16 @@ def reset():
     global plot_input_data
     global general_stats_data
     global general_stats_headers
+    global saved_raw_data_keys
     global software_versions
     global plot_compressed_json
+    global ai_global_summary
+    global ai_global_detailed_analysis
+    global ai_generation_id
+    global ai_provider_id
+    global ai_provider_title
+    global ai_model
+    global ai_report_metadata_base64
     global saved_raw_data_keys
     global saved_raw_data
 
@@ -158,6 +179,14 @@ def reset():
     plot_compressed_json = ""
     saved_raw_data_keys = []
     saved_raw_data = dict()
+
+    ai_global_summary = ""
+    ai_global_detailed_analysis = ""
+    ai_generation_id = ""
+    ai_provider_id = ""
+    ai_provider_title = ""
+    ai_model = ""
+    ai_report_metadata_base64 = ""
 
     reset_file_search()
     tmp_dir.new_tmp_dir()
@@ -404,7 +433,13 @@ class SearchPattern(BaseModel):
             return None
 
         # Convert the values that can be lists/sets or str into sets
-        for k in ["contents", "contents_re", "exclude_fn", "exclude_fn_re" "exclude_contents", "exclude_contents_re"]:
+        for k in [
+            "contents",
+            "contents_re",
+            "exclude_fn",
+            "exclude_fn_re" "exclude_contents",
+            "exclude_contents_re",
+        ]:
             val = d.get(k, [])
             if val:
                 strs = [val] if isinstance(val, str) else val
@@ -512,7 +547,15 @@ def prep_ordered_search_files_list(
 
     # Sort patterns for faster access. File searches with fewer lines or
     # smaller file sizes go first.
-    sorted_spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+    ]
     sorted_spatterns[0] = spatterns[0]  # Only filename matching
     sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
     sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
@@ -636,7 +679,12 @@ def search_files(sp_keys: List[str]):
     run_search_files(spatterns, searchfiles)
 
 
-def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleId, is_ignore_file: bool = False):
+def search_file(
+    pattern: SearchPattern,
+    f: SearchFile,
+    module_key: ModuleId,
+    is_ignore_file: bool = False,
+):
     """
     Function to search a single file for a single search pattern.
     """
@@ -1128,3 +1176,7 @@ def reset_tmp_dir():
     """
     remove_tmp_dir()
     tmp_dir.get_tmp_dir()
+
+
+def add_ai_summary():
+    ai.add_ai_summary_to_report()

@@ -122,7 +122,7 @@ def plot(lists_of_lines: List[List[Series[KeyT, ValT]]], pconfig: LinePlotConfig
     # Create a violin of median values in each sample, showing dots for outliers
     # Clicking on a dot of a violin will show the line plot for that sample
 
-    return create(pconfig, lists_of_lines)
+    return LinePlot.create(pconfig, lists_of_lines)
 
 
 class Dataset(BaseDataset, Generic[KeyT, ValT]):
@@ -273,36 +273,57 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         else:
             report.write_data_file(y_by_x_by_sample, self.uid)
 
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
+        xsuffix = self.layout.get("xaxis", {}).get("ticksuffix")
+        ysuffix = self.layout.get("yaxis", {}).get("ticksuffix")
+
+        result = "Samples: " + ", ".join(series.name for series in self.lines) + "\n\n"
+        for series in self.lines:
+            pairs = [
+                f"({self.fmt_value_for_llm(x[0])}{xsuffix}: {self.fmt_value_for_llm(x[1])}{ysuffix})"
+                for x in series.pairs
+            ]
+            result += f"{series.name} {', '.join(pairs)}\n\n"
+        return result
+
 
 class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
     datasets: List[Dataset[KeyT, ValT]]
 
+    def _plot_ai_header(self) -> str:
+        result = super()._plot_ai_header()
+        if self.pconfig.xlab:
+            result += f"X axis: {self.pconfig.xlab}\n"
+        if self.pconfig.ylab:
+            result += f"Y axis: {self.pconfig.ylab}\n"
+        return result
 
-def create(
-    pconfig: LinePlotConfig,
-    lists_of_lines: List[List[Series[KeyT, ValT]]],
-) -> "LinePlot[KeyT, ValT]":
-    n_samples_per_dataset = [len(x) for x in lists_of_lines]
+    @staticmethod
+    def create(
+        pconfig: LinePlotConfig,
+        lists_of_lines: List[List[Series[KeyT, ValT]]],
+    ) -> "LinePlot[KeyT, ValT]":
+        n_samples_per_dataset = [len(x) for x in lists_of_lines]
 
-    model: Plot[Dataset[KeyT, ValT], LinePlotConfig] = Plot.initialize(
-        plot_type=PlotType.LINE,
-        pconfig=pconfig,
-        n_samples_per_dataset=n_samples_per_dataset,
-        axis_controlled_by_switches=["yaxis"],
-        default_tt_label="<br>%{x}: %{y}",
-    )
+        model: Plot[Dataset[KeyT, ValT], LinePlotConfig] = Plot.initialize(
+            plot_type=PlotType.LINE,
+            pconfig=pconfig,
+            n_samples_per_dataset=n_samples_per_dataset,
+            axis_controlled_by_switches=["yaxis"],
+            default_tt_label="<br>%{x}: %{y}",
+        )
 
-    # Very large legend for automatically enabled flat plot mode is not very helpful
-    max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
-    if pconfig.showlegend is None and max_n_samples > 250:
-        model.layout.showlegend = False
+        # Very large legend for automatically enabled flat plot mode is not very helpful
+        max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
+        if pconfig.showlegend is None and max_n_samples > 250:
+            model.layout.showlegend = False
 
-    model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
+        model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
 
-    # Make a tooltip always show on hover over any point on plot
-    model.layout.hoverdistance = -1
+        # Make a tooltip always show on hover over any point on plot
+        model.layout.hoverdistance = -1
 
-    return LinePlot(**model.__dict__)
+        return LinePlot(**model.__dict__)
 
 
 def remove_nones_and_empty_dicts(d: Mapping[Any, Any]) -> Dict[Any, Any]:

@@ -35,7 +35,6 @@ UMI collapsing finished in 1077.717 seconds!
     m = MultiqcModule()
     assert m.saved_raw_data is not None
     assert len(m.saved_raw_data) == 1
-    print(m.saved_raw_data)
 
     data = m.saved_raw_data["multiqc_umicollapse"]
 

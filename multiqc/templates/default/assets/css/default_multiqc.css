@@ -203,7 +203,7 @@ h2.mqc-module-title {
 #analysis_dirs_wrapper {
   max-height: 80px;
   overflow: auto;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 #mqc_sname_switches_txt {
   margin-bottom: 15px;
@@ -848,7 +848,7 @@ tbody .sorthandle {
     margin-left: 0;
   }
   /* no need to print buttons */
-  button.btn-help {
+  button {
     display: none;
   }
   /* printed link text is fairly ugly */
@@ -1001,10 +1001,6 @@ g.annotation {
   position: absolute !important;
 }
 
-.export-plot {
-  float: right;
-}
-
 .col-xs-12 button {
   margin-top: 0;
   margin-bottom: 2px;
@@ -1046,6 +1042,12 @@ tr.expandable-row-primary.expanded .expandable-row-caret {
 tr.expandable-row-secondary-hidden {
   visibility: collapse;
 }
+/* Safari doesn't support visibility: collapse */
+@supports (-webkit-hyphens: none) {
+  tr.expandable-row-secondary-hidden {
+    display: none;
+  }
+}
 tr.sample-hidden {
   display: none;
 }
@@ -1057,11 +1059,153 @@ tr.row-empty {
   display: none;
 }
 
-/* Safari-specific fix using @supports
- Safari doesn't support visibility: collapse, so we use display: none instead
- */
-@supports (-webkit-hyphens: none) {
-  tr.expandable-row-secondary-hidden {
-    display: none;
-  }
+.text-green {
+  color: rgb(18, 106, 50);
+}
+.text-yellow {
+  color: rgb(178, 122, 3);
+}
+.text-red {
+  color: rgb(184, 31, 31);
+}
+
+.ai-summary {
+  position: relative;
+  padding: 8px 12px 0px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #160f26;
+}
+.ai-summary summary {
+  padding-bottom: 8px;
+  position: relative;
+  list-style: none; /* Removes default marker in some browsers */
+}
+
+.ai-summary .ai-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Hide the default triangle in Safari */
+.ai-summary summary::-webkit-details-marker {
+  display: none;
+}
+
+.ai-summary .ai-summary-disclaimer {
+  color: rgb(158, 158, 158);
+  font-size: 12px;
+}
+
+.ai-summary ul,
+.ai-summary ol {
+  margin: 0;
+  margin-top: -5px;
+  margin-bottom: 10px;
+  list-style: disc outside;
+}
+.ai-summary li {
+  margin: 0;
+  margin-left: -9px;
+  margin-top: 5px;
+  padding: 0;
+}
+.ai-summary .ai-continue-in-chat {
+  margin: -2px -6px 4px 0;
+  padding: 2px 8px 1px;
+  background-color: #ffffff;
+}
+.ai-summary .ai-continue-in-chat:hover,
+.ai-summary .ai-continue-in-chat:focus {
+  background-color: #f2f2f2;
+}
+.ai-summary .ai-summary-expand {
+  margin-left: -11px;
+  margin-right: -12px;
+  border-radius: 0 0 4px 4px;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+.ai-summary .ai-summary-expand:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+.ai-summary .ai-summary-expand-expanded {
+  /* margin-top: -5px; */
+}
+.ai-summary sample {
+  cursor: pointer;
+  -webkit-text-decoration: underline dashed; /* Safari support */
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+}
+.ai-summary sample:hover {
+  opacity: 0.9;
+}
+.ai-summary .ai-generate-more {
+  padding: 2px 8px;
+  margin-left: -1px;
+  margin-right: 10px;
+}
+.ai-loading {
+  margin: 15px 0;
+  font-style: italic;
+  color: #666;
+}
+.ai-summary .ai-summary-error {
+  margin: 10px 0;
+  font-style: italic;
+  color: #ea4f4f;
+}
+.ai-settings-button svg {
+  vertical-align: middle;
+}
+.ai-provider-setting {
+  margin-bottom: 20px;
+}
+.ai-provider-setting:last-child {
+  margin-bottom: 0;
+}
+#aiSettingsModal .input-group {
+  width: 100%;
+}
+#aiSettingsModal .input-group input {
+  width: 100%;
+}
+/* .ai-reset-response {
+  margin-left: 8px;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+} */
+.ai-local-content {
+  background-color: #f2f2f2;
+}
+#global_ai_summary_detailed_analysis_response {
+  margin: 0px -12px 0px -10px;
+  padding: 10px 10px 0 10px;
+}
+#global_ai_summary_detailed_analysis_response.ai-local-content {
+  padding-bottom: 1px;
+}
+.ai-model-suggestion:hover {
+  opacity: 0.8;
+}
+.ai-model-suggestion code {
+  background-color: #dedede;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.ai-model-suggestion:hover code {
+  color: #333;
+}
+
+.spinner {
+  /* background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M304 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zm0 416a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM48 304a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm464-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM142.9 437A48 48 0 1 0 75 369.1 48 48 0 1 0 142.9 437zm0-294.2A48 48 0 1 0 75 75a48 48 0 1 0 67.9 67.9zM369.1 437A48 48 0 1 0 437 369.1 48 48 0 1 0 369.1 437z"/></svg>'); */
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+
+.btn-sm {
+  padding: 5px 10px 5px 8px;
 }

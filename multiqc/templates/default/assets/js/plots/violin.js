@@ -3,6 +3,9 @@ class ViolinPlot extends Plot {
     super(dump);
     this.violinHeight = dump["violin_height"];
     this.extraHeight = dump["extra_height"];
+    this.showTableByDefault = dump["show_table_by_default"];
+    this.tableAnchor = dump["table_anchor"];
+    this.isDownsampled = dump["is_downsampled"];
   }
 
   activeDatasetSize() {
@@ -10,15 +13,19 @@ class ViolinPlot extends Plot {
     return this.datasets[this.activeDatasetIdx]["all_samples"].length;
   }
 
-  prepData() {
-    let dataset = this.datasets[this.activeDatasetIdx];
+  prepData(dataset, keepHidden = false) {
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
     let metrics = dataset["metrics"];
     let headerByMetric = dataset["header_by_metric"];
 
-    // Hidden metrics
+    // Hidden metrics - check both the header and table configuration
     metrics = metrics.filter((metric) => {
       let header = headerByMetric[metric];
-      return header["hidden"] !== true;
+      // Check if column is hidden in table configuration
+      let tableCheckbox = $(`#${this.tableAnchor}_config_modal_table .mqc_table_col_visible[value="${metric}"]`);
+      let hiddenInTable = tableCheckbox.length > 0 && !tableCheckbox.is(":checked");
+
+      return (header["hidden"] !== true || keepHidden) && !hiddenInTable;
     });
 
     let violinValuesBySampleByMetric = dataset["violin_value_by_sample_by_metric"];
@@ -33,7 +40,7 @@ class ViolinPlot extends Plot {
       scatterValuesBySampleByMetric[metric] = scatterValuesBySample;
     });
 
-    let allSamples = this.datasets[this.activeDatasetIdx]["all_samples"];
+    let allSamples = dataset["all_samples"];
     let sampleSettings = applyToolboxSettings(allSamples);
 
     // Hidden samples
@@ -73,6 +80,84 @@ class ViolinPlot extends Plot {
       violinValuesBySampleByMetric,
       scatterValuesBySampleByMetric,
     ];
+  }
+
+  plotAiHeader(view) {
+    let prompt = "";
+    if (view === "table") prompt += "Plot type: table\n";
+    else prompt += "Plot type: violin plot\n";
+    return prompt;
+  }
+
+  formatDatasetForAiPrompt(dataset) {
+    let [
+      metrics,
+      headerByMetric,
+      allSamples,
+      sampleSettings,
+      violinValuesBySampleByMetric,
+      scatterValuesBySampleByMetric,
+    ] = this.prepData(dataset, true);
+
+    let results = "Number of samples: " + allSamples.length + "\n";
+    if (this.isDownsampled)
+      results +=
+        "Note: sample number " +
+        allSamples.length +
+        " is greater than the threshold  so data points were downsampled to fit the context window. However, outliers for each metric were identified and kept in the datasets.\n";
+    results += "\n";
+
+    if (metrics.length === 0) {
+      results +=
+        'All columns are hidden by user, so no data to analyse. Please inform user to use the "Configure columns" button to make some columns visible.\n';
+      return results;
+    }
+
+    // Check if all samples are hidden
+    if (sampleSettings.every((s) => s.hidden)) {
+      results +=
+        "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
+      return results;
+    }
+
+    results += "Metrics:\n";
+    results += metrics
+      .map((metric) => `${headerByMetric[metric].title} - ${headerByMetric[metric].description}`)
+      .join("\n");
+    results += "\n\n";
+
+    results +=
+      `| ${this.pconfig.col1_header} | ` + metrics.map((metric) => headerByMetric[metric].title).join(" | ") + " |\n";
+    results += "| --- | " + metrics.map(() => "---").join(" | ") + " |\n";
+    results += allSamples
+      .map((sample) => {
+        if (sampleSettings[allSamples.indexOf(sample)].hidden) return "";
+        if (
+          metrics.every(
+            (metric) =>
+              violinValuesBySampleByMetric[metric][sample] === undefined &&
+              scatterValuesBySampleByMetric[metric][sample] === undefined,
+          )
+        )
+          return "";
+
+        return (
+          `| ${sample} | ` +
+          metrics
+            .map((metric) => {
+              const value =
+                violinValuesBySampleByMetric[metric][sample] ?? scatterValuesBySampleByMetric[metric][sample];
+              const suffix = headerByMetric[metric].suffix;
+              return !Number.isFinite(value)
+                ? ""
+                : (Number.isInteger(value) ? value : value.toFixed(2)) + (suffix ?? "");
+            })
+            .join(" | ") +
+          " |\n"
+        );
+      })
+      .join("");
+    return results;
   }
 
   // Constructs and returns traces for the Plotly plot

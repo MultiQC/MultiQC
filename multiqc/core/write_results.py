@@ -2,6 +2,7 @@ import base64
 import dataclasses
 import errno
 import io
+import json
 import logging
 import os
 import re
@@ -12,6 +13,7 @@ import time
 import traceback
 from pathlib import Path
 from typing import Optional, cast
+import uuid
 
 import jinja2
 
@@ -23,7 +25,6 @@ from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor
 from multiqc.utils import util_functions
 
@@ -72,6 +73,8 @@ def write_results() -> None:
     if not config.skip_generalstats:
         _render_general_stats_table(plots_dir_name=output_file_names.plots_dir_name)
 
+    report.add_ai_summary()
+
     paths: OutputPaths = _create_or_override_dirs(output_file_names)
 
     if config.make_data_dir and not paths.to_stdout and paths.data_dir:
@@ -83,6 +86,7 @@ def write_results() -> None:
             )
         )
     else:
+        paths.data_dir = None
         logger.info("Data        : None")
 
     if config.make_report:
@@ -254,7 +258,11 @@ def render_and_export_plots(plots_dir_name: str):
         if s.plot_anchor:
             _plot = report.plot_by_id[s.plot_anchor]
             if isinstance(_plot, Plot):
-                s.plot = _plot.add_to_report(plots_dir_name=plots_dir_name)
+                s.plot = _plot.add_to_report(
+                    plots_dir_name=plots_dir_name,
+                    module_anchor=s.module_anchor,
+                    section_anchor=s.anchor,
+                )
             elif isinstance(_plot, str):
                 s.plot = _plot
             else:
@@ -314,7 +322,7 @@ def render_and_export_plots(plots_dir_name: str):
     )
 
 
-def _render_general_stats_table(plots_dir_name: str) -> None:
+def _render_general_stats_table(plots_dir_name: str):
     """
     Construct HTML for the general stats table.
     """
@@ -350,10 +358,14 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
         if isinstance(p, str):
             report.general_stats_html = p
         else:
-            report.plot_by_id[Anchor("general_stats_table")] = p
+            report.plot_by_id[p.anchor] = p
 
     if p := report.plot_by_id.get(Anchor("general_stats_table")):
-        report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name)
+        report.general_stats_html = p.add_to_report(
+            plots_dir_name=plots_dir_name,
+            module_anchor=Anchor("general_stats_table"),
+            section_anchor=Anchor("general_stats_table"),
+        )
     else:
         config.skip_generalstats = True
 
@@ -523,6 +535,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
 
     # Use jinja2 to render the template and overwrite
     report.analysis_files = [os.path.realpath(d) for d in report.analysis_files]
+    report.report_uuid = str(uuid.uuid4())
     report_output = j_template.render(report=report, config=config)
     if to_stdout:
         print(report_output, file=sys.stdout)
