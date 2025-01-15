@@ -712,6 +712,11 @@ in ascending order, then by "Starting Amount (ng)", in descending (default) orde
 table with the ID `quast_table` (which you can find by clicking the "Configure Columns"
 button above the table in the report) will be sorted by "Largest contig".
 
+### Configurable columns
+
+Table columns can be reodered and change visibility using the "Configure Columns" button
+in the report. However, for very wide tables, the performance degrades, so the button is disabled when the number of rows exceeds `config.max_configurable_table_columns` (default is 200). You can adjust this value in the config file.
+
 ## Violin plots
 
 Violin plots work from the exact same data structure as tables, so the
