@@ -5,10 +5,10 @@ description: Using AI to summarise MultiQC reports
 
 # AI Summaries
 
-MultiQC v1.27 onwards can generate AI-powered summaries of your reports. These can be created at two points:
+MultiQC v1.27 and newer can generate AI-powered summaries of your reports. These can be created at two points:
 
 - When creating the report (baked into the report HTML)
-- Dynamically in the browser, whilst viewing an existing HTML report (ephemeral)
+- Dynamically in the browser, while viewing an existing HTML report (ephemeral)
 
 The AI summaries are generated using LLMs (large-language models) AI, using
 [Seqera AI](https://seqera.io/ask-ai/), [OpenAI](https://openai.com/) or [Anthropic](https://www.anthropic.com/).
@@ -24,7 +24,7 @@ Never rely on AI-generated summaries. Whilst these summaries can be useful to ge
 
 AI summaries work by sending report data to an LLM provider of your choice, via an API over the internet.
 Be aware of what data you are sending, and to who.
-Read more about privacy any Seqera AI [here](https://seqera.io/ai-trust/).
+For more information, see [Seqera AI: Your privacy matters](https://seqera.io/ai-trust/).
 
 :::
 
@@ -36,13 +36,13 @@ All three supported services require an API key to work.
 :::info
 
 Seqera AI is free to use, though there are usage limits.
-OpenAI / Anthropic API usage is billed based on consumption.
+Use of OpenAI and Anthropic APIs are billed by their respective providers based on consumption.
 
 :::
 
 1. [Seqera AI](https://seqera.io/ask-ai/)
    - Register for free at [seqera.io](https://seqera.io/)
-   - Create a new key on the _"User tokens"_ page: [https://cloud.seqera.io/tokens](https://cloud.seqera.io/tokens)
+   - Create a new key on the **Access tokens** page: [https://cloud.seqera.io/tokens](https://cloud.seqera.io/tokens)
 2. [OpenAI](https://openai.com/)
    - Register at [platform.openai.com](https://platform.openai.com/signup) (NB: different to ChatGPT)
    - Add a payment method to your account to enable API usage beyond any trial credits
@@ -87,7 +87,7 @@ To generate them, you must enable them either on the command line or via a Multi
 
    - `--ai` / `--ai-summary`: Generate a short report summary and put it on top of the report (fast)
    - `--ai-summary-full`: Generate a detailed version of the summary with analysis and recommendations (slower)
-   - `--ai-provider <provider>`: Choose AI provider. `seqera`, `openai` or `anthropic`. Default `seqera`
+   - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai` or `anthropic`. Default `seqera`
    - `--no-ai`: Disable AI toolbox and buttons in the report
 
 2. Alternatively, MultiQC configuration file:
@@ -195,7 +195,7 @@ You can also copy the entire prompt that MultiQC would use to generate a summary
 
 ![ai_copy_buttons](../../../docs/images/ai_copy_buttons.png)
 
-A button will copy the LLM-friendly formatted report data along with the system prompt into your clipboard, which you can then paste into your an AI chat interace of your provider of choice.
+A button will copy the LLM-friendly formatted report data along with the system prompt into your clipboard, which you can then paste into your an AI chat interface of your provider of choice.
 
 ### Copying prompts
 
@@ -221,7 +221,7 @@ MultiQC uses the following logic, moving on to the next step if the prompt is st
 3. Include the general statistics table, without hidden-by-default columns.
 4. Abort AI summary.
 
-If you're struggling to generate an AI summary, you can try the following:
+If you're unable to generate an AI summary, you can try the following:
 
 - Hide additional columns in the general statistics table (see [Hiding Columns](../reports/customisation.md#hiding-columns)).
 - Hide General statistics data in the browser, and request the AI summary dynamically:
@@ -274,11 +274,11 @@ Add this config to `~/.nextflow/config` and it will be applied to every Nextflow
 If using Seqera Platform the above config can be used when launching pipelines or adding them to the launchpad.
 However, environment variables can also be added at _Compute Environment_ level and will then affect every pipeline
 run using that CE, without further modification.
-This effectively means that provider API keys can be managed at workspace level.
+This effectively means that provider API keys can be managed at the workspace level.
 
 To do this, toggle the _"Environment variables"_ section when creating a Compute Environment and click _"Add variable"_.
 
-Make sure that the _"Target environment"_ has _"Compute job"_ toggled on.
+Ensure that the **Target environment** has **Compute job** enabled.
 
 ![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_var_create.png)
 
@@ -286,10 +286,10 @@ Once added:
 
 ![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_vars.png)
 
-## Security Considerations
+## Security considerations
 
 MultiQC AI summaries are used at your own risk.
-Please treat results with appropriate mistrust and consider what data you are sending to external services.
+Treat results with appropriate mistrust and consider what data you are sending to external services.
 
 - API keys set in environment variables are not saved in report outputs
 - API keys put in the toolbox are stored only in your browser's local storage
