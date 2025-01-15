@@ -7,31 +7,12 @@ window.continueInSeqeraChatHandler = function (event) {
   let seqeraWebsite = el.data("seqera-website");
 
   // Either report uuid, or encoded system and chat messages
-  let generationId = el.data("generation-id");
-  let encodedSystemMessage = el.data("encoded-system-message");
-  let encodedChatMessages = el.data("encoded-chat-messages");
+  let threadId = el.data("thread-id");
 
   let url = seqeraWebsite + "/ask-ai/";
-  if (generationId) url += "?generation-id=" + generationId;
+  if (threadId) url += "?messages=" + threadId;
 
   const chatWindow = window.open(url, "_blank");
-
-  // This is used only for Anthropic and OpenAI providers:
-  if (encodedSystemMessage && encodedChatMessages) {
-    function sendMessage() {
-      chatWindow.postMessage(
-        {
-          type: "chatInitialMessages",
-          content: {
-            encodedSystemMessage: encodedSystemMessage,
-            encodedChatMessages: encodedChatMessages,
-          },
-        },
-        seqeraWebsite,
-      );
-    }
-    setTimeout(sendMessage, 2000);
-  }
 };
 
 function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsView = "table") {
@@ -215,7 +196,9 @@ async function summarizeWithAi(button) {
   button.prop("disabled", true).html(`Requesting ${provider.name}...`);
 
   function wrapUpResponse() {
-    disclaimerDiv.html(`This summary is AI-generated. Provider: ${provider.name}, model: ${modelName}`).show();
+    disclaimerDiv.find(".ai-summary-disclaimer-provider").text(provider.name);
+    disclaimerDiv.find(".ai-summary-disclaimer-model").text(modelName);
+    disclaimerDiv.show();
     button.data("action", "clear").prop("disabled", false).html(clearText).addClass("ai-local-content");
   }
 
@@ -228,13 +211,14 @@ async function summarizeWithAi(button) {
       tags: ["multiqc"],
       onStreamStart: (resolvedModelName) => {
         modelName = resolvedModelName;
-        if (wrapperDiv) wrapperDiv.show();
-        responseDiv.show();
-        button.html(`Generating...`);
+        button.html(`Starting generation...`);
       },
       onStreamNewToken: (token) => {
+        responseDiv.show();
+        if (wrapperDiv) wrapperDiv.show();
         receievedMarkdown += token;
         responseDiv.html(markdownToHtml(receievedMarkdown));
+        button.html(`Generating...`);
       },
       onStreamError: (error) => {
         $.toast({
@@ -244,12 +228,16 @@ async function summarizeWithAi(button) {
           position: "bottom-right",
           hideAfter: 5000,
         });
-        wrapUpResponse();
+        wrapUpResponse(disclaimerDiv, provider.name, modelName);
         if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").hide();
         disclaimerDiv.hide();
       },
-      onStreamComplete: () => {
-        wrapUpResponse();
+      onStreamComplete: (threadId) => {
+        wrapUpResponse(disclaimerDiv, provider.name, modelName);
+        // Update the "Chat with Seqera AI" button to point to new thread
+        if (threadId) {
+          $(".ai-continue-in-chat").attr("href", `${seqeraWebsite}/ask-ai/?messages=${threadId}`).show();
+        }
         // Save response to localStorage
         const elementId = button.data("plot-anchor") || "global";
         localStorage.setItem(
@@ -297,6 +285,8 @@ async function generateCallback(e) {
 $(function () {
   $("#global_ai_summary_expand").each(function () {
     const responseDiv = $("#global_ai_summary_detailed_analysis_response");
+    const isLocalContent = responseDiv.hasClass("ai-local-content");
+
     const expandBtn = $("#global_ai_summary_expand");
     const expandBtnGlyphicon = expandBtn.find(".glyphicon");
 
@@ -305,7 +295,7 @@ $(function () {
     if (storedState === "expanded") isExpanded = true;
     if (storedState === "collapsed") isExpanded = false;
 
-    if (isExpanded) {
+    if (isExpanded && !isLocalContent) {
       responseDiv.show();
       expandBtn.addClass("ai-summary-expand-expanded");
       expandBtnGlyphicon.addClass("glyphicon-chevron-up");
@@ -364,9 +354,9 @@ $(function () {
         responseDiv.show().html(markdownToHtml(cachedSummary.text));
         if (wrapperDiv) wrapperDiv.show();
         const provider = AI_PROVIDERS[cachedSummary.provider];
-        disclaimerDiv
-          .html(`This summary is AI-generated. Provider: ${provider.name}, model: ${cachedSummary.model}`)
-          .show();
+        disclaimerDiv.find(".ai-summary-disclaimer-provider").text(provider.name);
+        disclaimerDiv.find(".ai-summary-disclaimer-model").text(cachedSummary.model);
+        disclaimerDiv.show();
         button.html(clearText).data("action", "clear").prop("disabled", false).addClass("ai-local-content");
       }
     }

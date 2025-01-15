@@ -76,7 +76,7 @@ the output from each module and print it in sections.
               {{ s['content_before_plot'] if s['content_before_plot'] }}
               {% if s['plot'] is not none %}<div class="mqc-section-plot">{{ s['plot'] }}</div>{% endif %}
               {{ s['content'] if s['content'] }}
-  
+
               {{ '<hr>' if not loop.last }}
             </div>
           {% endif %}

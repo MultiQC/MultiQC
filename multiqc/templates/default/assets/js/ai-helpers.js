@@ -5,7 +5,7 @@ function handleStreamError(error) {
   return error;
 }
 
-async function runStreamGeneration({
+function runStreamGeneration({
   onStreamStart,
   onStreamNewToken,
   onStreamError,
@@ -27,20 +27,24 @@ async function runStreamGeneration({
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
       },
       body: JSON.stringify({
-        message: userMessage,
-        system_message: systemPrompt,
+        message: systemPrompt + "\n\n" + userMessage,
         stream: true,
         tags: ["multiqc", ...tags],
       }),
     })
-      .then(async (response) => {
+      .then((response) => {
         if (!response.ok) {
-          const errorData = await response.json();
-          onStreamError(
-            `HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"}`,
-          );
-          throw new Error(errorData.error?.message || "Unknown error");
+          return response.json().then((errorData) => {
+            const error = `HTTP ${response.status}: ${response.statusText} ${
+              errorData.error?.message || "Unknown error"
+            }`;
+            onStreamError(error);
+            throw new Error(error);
+          });
         }
+        return response;
+      })
+      .then((response) => {
         return response.body.getReader();
       })
       .then((reader) =>
@@ -119,6 +123,9 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
   const decoder = new TextDecoder();
   let buffer = "";
 
+  let model = undefined;
+  let threadId = undefined;
+
   return recursivelyProcessStream();
   function recursivelyProcessStream() {
     // Inner function to recursively process the stream reader
@@ -126,7 +133,7 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
       .read()
       .then(({ value, done }) => {
         if (done) {
-          onStreamComplete();
+          onStreamComplete(threadId);
           return;
         }
 
@@ -163,35 +170,35 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
 
           let type = undefined;
           let content = undefined;
-          let model = undefined;
           let role = undefined;
-          let finish_reason = undefined;
+          let finishReason = undefined;
 
           // Detect provider
           if (providerId === "seqera") {
             type = data.type; // on_chat_model_start, on_chat_model_stream, on_chat_model_end
             content = data.content;
             model = data.metadata?.ls_model_name;
-            finish_reason = data.response_metadata?.stop_reason;
-            if (finish_reason && finish_reason !== "end_turn") {
+            threadId = threadId || data.thread_id;
+            finishReason = data.response_metadata?.stop_reason;
+            if (finishReason && finishReason !== "end_turn") {
               type = "error";
-              error = `Streaming unexpectedly stopped. Reason: ${finish_reason}`;
+              error = `Streaming unexpectedly stopped. Reason: ${finishReason}`;
             }
           } else if (providerId === "openai") {
             content = data.choices[0].delta.content;
             model = data.model;
             role = data.choices[0].delta.role;
-            finish_reason = data.choices[0].finish_reason;
+            finishReason = data.choices[0].finish_reason;
             // OpenAI doesn't define type, so we need to infer it from the other fields
             if (role === "assistant") {
               type = "on_chat_model_start";
-            } else if (finish_reason === "stop") {
+            } else if (finishReason === "stop") {
               type = "on_chat_model_end";
             } else if (content) {
               type = "on_chat_model_stream";
-            } else if (finish_reason && finish_reason !== "stop") {
+            } else if (finishReason && finishReason !== "stop") {
               type = "error";
-              error = `Streaming unexpectedly stopped. Reason: ${finish_reason}`;
+              error = `Streaming unexpectedly stopped. Reason: ${finishReason}`;
             } else {
               type = "unknown";
             }
@@ -227,7 +234,7 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
               if (content) onStreamNewToken(content);
               break;
             case "on_chat_model_end":
-              onStreamComplete();
+              onStreamComplete(threadId);
               return acc;
             case "error":
               onStreamError(error);
@@ -245,12 +252,12 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
 function markdownToHtml(text) {
   if (!text) return "";
 
-  // Convert directives :span[text]{.text-color} -> <span>... (preserving underscores)
+  // Convert directives :span[text]{.text-color} -> <span class="text-color">... (preserving underscores)
   text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
     return `<span class="text-${p2}">${p1}</span>`;
   });
 
-  // Convert directives :sample[text]{.text-color} -> <sample>... (preserving underscores)
+  // Convert directives :sample[text]{.text-color} -> <sample... (preserving underscores)
   text = text.replace(/:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
     return `<sample data-toggle="tooltip" title="Click to highlight in the report" class="text-${p2}">${p1}</sample>`;
   });
