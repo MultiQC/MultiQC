@@ -1,13 +1,13 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+
+from natsort import natsorted
 
 from multiqc import config, report
 from multiqc.plots.table_object import ColumnAnchor, DataTable, SampleGroup, SampleName, ValueT
 from multiqc.types import Anchor
 from multiqc.utils import mqc_colour
-from typing import TYPE_CHECKING
-from natsort import natsorted
 
 if TYPE_CHECKING:  # to avoid circular import
     from multiqc.plots.plotly.violin import ViolinPlot
@@ -362,13 +362,13 @@ def make_table(
         )
 
         # "Showing x of y columns" text
-        row_visibilities = [
+        not_empty_rows_bool_vector = [
             all(group_to_sample_to_anchor_to_empty[s_name].values()) for s_name in group_to_sample_to_anchor_to_empty
         ]
-        visible_rows = [x for x in row_visibilities if not x]
+        n_visible_rows = len([x for x in not_empty_rows_bool_vector if x is True])
 
         # Visible rows
-        t_showing_rows_txt = f'Showing <sup id="{dt.anchor}_numrows" class="mqc_table_numrows">{len(visible_rows)}</sup>/<sub>{len(group_to_sample_to_anchor_to_td)}</sub> rows'
+        t_showing_rows_txt = f'Showing <sup id="{dt.anchor}_numrows" class="mqc_table_numrows">{n_visible_rows}</sup>/<sub>{len(group_to_sample_to_anchor_to_td)}</sub> rows'
 
         # How many columns are visible?
         ncols_vis = (len(col_to_th) + 1) - hidden_cols
@@ -622,4 +622,4 @@ def _get_sortlist(dt: DataTable) -> str:
 
 
 def _is_configure_columns_disabled(num_columns: int) -> bool:
-    return num_columns > 50
+    return num_columns > config.max_configurable_table_columns
