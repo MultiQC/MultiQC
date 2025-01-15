@@ -99,7 +99,7 @@ general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 # Map software tools to unique versions
 software_versions: Dict[str, Dict[str, List[str]]]
 plot_compressed_json: str
-saved_raw_data_keys: Set[str]  # to make sure write_data_file don't overwrite for repeated modules
+saved_raw_data_keys: List[str]  # to make sure write_data_file don't overwrite for repeated modules
 saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
 
 
@@ -156,7 +156,7 @@ def reset():
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
-    saved_raw_data_keys = set()
+    saved_raw_data_keys = []
     saved_raw_data = dict()
 
     reset_file_search()
