@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     The output file needs to be in format 1 (`-o 1`).
     All statistics for all samples are saved to `multiqc_data/checkm-table.txt`.
 
-    This has been tested with CheckM v1.2.1 .
+    Tested with CheckM v1.2.1
     """
 
     def __init__(self):
