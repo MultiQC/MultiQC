@@ -13,10 +13,10 @@ import packaging.version
 from multiqc import report
 from multiqc.base_module import BaseMultiqcModule, Section
 from multiqc.plots.bargraph import BarPlot
+from multiqc.plots.linegraph import LinePlot
+from multiqc.plots.plot import Plot
 from multiqc.plots.plotly.box import BoxPlot
 from multiqc.plots.plotly.heatmap import HeatmapPlot
-from multiqc.plots.plotly.line import LinePlot
-from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, PlotType

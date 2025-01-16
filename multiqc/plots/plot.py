@@ -16,7 +16,6 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
-    Type,
     TypeVar,
     Union,
 )
@@ -27,7 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
-from multiqc.plots.plotly import check_plotly_version
+from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, PlotType
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig, add_validation_warning
@@ -888,7 +887,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html = "".join(
             [
                 '<p class="text-info">',
-                "<small>" '<span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
+                '<small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
                 '(see the <a href="https://docs.seqera.io/multiqc/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
                 "</small>",

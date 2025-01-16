@@ -4,7 +4,7 @@ import logging
 from typing import List, Tuple, Union
 
 from multiqc.plots import table
-from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.plot import Plot
 
 # Initialise the logger
 log = logging.getLogger(__name__)

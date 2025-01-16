@@ -15,8 +15,8 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.core.exceptions import RunError
-from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import (
+from multiqc.plots.utils import determine_barplot_height
+from multiqc.plots.plot import (
     BaseDataset,
     PConfig,
     Plot,

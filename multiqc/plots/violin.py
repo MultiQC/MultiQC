@@ -12,7 +12,7 @@ from pydantic import BaseModel  # type: ignore
 from multiqc import config, report
 from multiqc.base_module import Section
 from multiqc.plots import table_object
-from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType
+from multiqc.plots.plot import BaseDataset, Plot, PlotType
 from multiqc.plots.table import render_html
 from multiqc.plots.table_object import (
     ColumnAnchor,

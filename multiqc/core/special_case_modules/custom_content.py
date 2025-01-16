@@ -7,7 +7,6 @@ import os
 import re
 from collections import defaultdict
 from io import BufferedReader
-from token import OP
 from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
 import yaml
@@ -17,10 +16,10 @@ from multiqc import Plot, config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.bargraph import BarPlotConfig
+from multiqc.plots.linegraph import LinePlotConfig
+from multiqc.plots.plot import PlotType
 from multiqc.plots.plotly.box import BoxPlotConfig
 from multiqc.plots.plotly.heatmap import HeatmapConfig
-from multiqc.plots.plotly.line import LinePlotConfig
-from multiqc.plots.plotly.plot import PlotType
 from multiqc.plots.plotly.scatter import ScatterConfig
 from multiqc.plots.table_object import TableConfig
 from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId

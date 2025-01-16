@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequen
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
-from multiqc.plots.plotly.plot import PConfig
+from multiqc.plots.plot import PConfig
 from multiqc.types import Anchor, ColumnKey, SampleGroup, SampleName
 from multiqc.validation import ValidatedConfig
 
