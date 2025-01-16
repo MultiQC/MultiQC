@@ -66,7 +66,7 @@ def plot(
                     if series_config.ymin is not None and float(point["y"]) < float(series_config.ymin):
                         continue
                 if "name" in point:
-                    point["name"] = f'{s_name}: {point["name"]}'
+                    point["name"] = f"{s_name}: {point['name']}"
                 else:
                     point["name"] = s_name
 

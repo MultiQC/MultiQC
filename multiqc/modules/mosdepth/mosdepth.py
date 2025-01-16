@@ -39,9 +39,9 @@ def read_config():
     if cfg["exclude_contigs"]:
         log.debug(f"Excluding these contigs from mosdepth: {', '.join(cfg['exclude_contigs'])}")
     if cfg.get("xchr"):
-        log.debug(f"Using \"{cfg['xchr']}\" as X chromosome name")
+        log.debug(f'Using "{cfg["xchr"]}" as X chromosome name')
     if cfg.get("ychr"):
-        log.debug(f"Using \"{cfg['ychr']}\" as Y chromosome name")
+        log.debug(f'Using "{cfg["ychr"]}" as Y chromosome name')
 
     cutoff = cfg.get("perchrom_fraction_cutoff", 0.0)
     try:
@@ -49,7 +49,7 @@ def read_config():
     except ValueError:
         cutoff = 0.0
     if cutoff != 0.0:
-        log.debug(f"Setting mosdepth coverage cutoff to display the contigs to " f"{cutoff * 100.0}%")
+        log.debug(f"Setting mosdepth coverage cutoff to display the contigs to {cutoff * 100.0}%")
     cfg["perchrom_fraction_cutoff"] = cutoff
 
     return cfg

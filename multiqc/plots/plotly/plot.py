@@ -808,7 +808,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html = "".join(
             [
                 '<p class="text-info">',
-                "<small>" '<span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
+                '<small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
                 '(see the <a href="https://docs.seqera.io/multiqc/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
                 "</small>",

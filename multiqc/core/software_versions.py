@@ -86,8 +86,7 @@ def load_versions_from_config():
 
         if not isinstance(versions_from_one_file, dict):
             log.error(
-                f"Expected the software versions file {file_name} to contain a dictionary structure, "
-                f"ignoring the file."
+                f"Expected the software versions file {file_name} to contain a dictionary structure, ignoring the file."
             )
             continue
         versions_from_one_file = validate_software_versions(versions_from_one_file)
