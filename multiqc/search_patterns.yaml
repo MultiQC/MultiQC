@@ -223,7 +223,7 @@ checkm:
   - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})# markers(?:\t| {3,})# marker sets.*"
     num_lines: 10
 checkm2:
-  contents: "Name	Completeness	Contamination	Completeness_Model_Used	Translation_Table_Used	Coding_Density	Contig_N50	Average_Gene_Length	Genome_Size	GC_Content	Total_Coding_Sequences	Total_Contigs	Max_Contig_Length"
+  contents: "Name	Completeness	Contamination	Completeness_Model_Used	Translation_Table_Used"
   num_lines: 10
 checkqc:
   contents: "instrument_and_reagent_type"
