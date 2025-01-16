@@ -9,19 +9,19 @@ repos:
       - id: check-hooks-apply
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.6.0"
+    rev: "v5.0.0"
     hooks:
       - id: check-added-large-files
       - id: check-merge-conflict
       - id: debug-statements
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: "v1.5.4"
+    rev: "v1.5.5"
     hooks:
       - id: remove-crlf
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v3.1.0"
+    rev: "v4.0.0-alpha.8"
     hooks:
       - id: prettier
 
