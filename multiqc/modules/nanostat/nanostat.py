@@ -404,8 +404,8 @@ class MultiqcModule(BaseMultiqcModule):
             )
             content_before_plot = (
                 f'<div class="alert alert-warning">Different quality score cutoffs used across different logs. '
-                f'Using ones from the first met sample, and hiding samples '
-                f'{", ".join("<code>" + s + "</code>" for s in samples_with_other_q_values)}.</div>'
+                f"Using ones from the first met sample, and hiding samples "
+                f"{', '.join('<code>' + s + '</code>' for s in samples_with_other_q_values)}.</div>"
             )
 
         # Add the report section

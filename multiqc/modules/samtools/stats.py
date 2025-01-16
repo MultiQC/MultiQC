@@ -206,7 +206,7 @@ def alignment_section(module, samples_data):
             bedgraph_data[sample_id] = data
         else:
             log.warning(
-                "sum of mapped/unmapped/filtered reads not matching total, " "skipping samtools plot for: {}".format(
+                "sum of mapped/unmapped/filtered reads not matching total, skipping samtools plot for: {}".format(
                     sample_id
                 )
             )

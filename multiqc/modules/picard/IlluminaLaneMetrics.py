@@ -15,7 +15,7 @@ def lane_metrics_table(module, data):
     headers = {
         "CLUSTER_DENSITY": {
             "title": "Cluster Density",
-            "description": "The number of clusters per unit area on this lane (cluster / " "mm^2`)",
+            "description": "The number of clusters per unit area on this lane (cluster / mm^2`)",
             "scale": "Greens",
         },
         "TYPE_NAME": {
