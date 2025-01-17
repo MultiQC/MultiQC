@@ -30,6 +30,7 @@ function runStreamGeneration({
         message: systemPrompt + "\n\n" + userMessage,
         stream: true,
         tags: ["multiqc", ...tags],
+        title: configTitle + ": MultiQC report, " + configCreationDate,
       }),
     })
       .then((response) => {

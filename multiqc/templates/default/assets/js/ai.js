@@ -187,8 +187,15 @@ async function summarizeWithAi(button) {
   // Check for stored API key
   let aiApiKey = $("#ai-api-key").val();
   if (!aiApiKey || aiApiKey === undefined) {
-    // Open the AI toolbox section
+    // Open the AI toolbox section, focus on the API key input
     mqc_toolbox_openclose("#mqc_ai", true);
+    $("#ai_api_key_group").addClass("has-error");
+    const apiKeyInput = $("#ai_api_key_group").find("input");
+    apiKeyInput.focus();
+    // Remove has-error class when user starts typing
+    apiKeyInput.one("input", function () {
+      $("#ai_api_key_group").removeClass("has-error");
+    });
     return;
   }
 

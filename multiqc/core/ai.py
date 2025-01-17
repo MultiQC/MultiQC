@@ -407,6 +407,7 @@ class SeqeraClient(Client):
                 json={
                     "message": PROMPT_SHORT + "\n\n" + report_content,
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
+                    "title": (config.title + ": " if config.title else "") + "MultiQC report, " + config.creation_date,
                 },
             )
 
