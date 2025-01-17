@@ -486,10 +486,10 @@ def get_llm_client() -> Optional[Client]:
         return None
 
     if config.ai_provider == "seqera":
-        if api_key := os.environ.get("TOWER_ACCESS_TOKEN"):
-            logger.debug("Using Seqera access token from $TOWER_ACCESS_TOKEN environment variable")
-        elif api_key := os.environ.get("SEQERA_ACCESS_TOKEN"):
+        if api_key := os.environ.get("SEQERA_ACCESS_TOKEN"):
             logger.debug("Using Seqera access token from $SEQERA_ACCESS_TOKEN environment variable")
+        elif api_key := os.environ.get("TOWER_ACCESS_TOKEN"):
+            logger.debug("Using Seqera access token from $TOWER_ACCESS_TOKEN environment variable")
         else:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', "
