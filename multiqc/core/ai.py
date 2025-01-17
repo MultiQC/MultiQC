@@ -12,6 +12,7 @@ from pydantic.types import SecretStr
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
+from multiqc.core.strict_helpers import lint_error
 from multiqc.types import Anchor
 
 if TYPE_CHECKING:
@@ -502,7 +503,7 @@ def get_llm_client() -> Optional[Client]:
             return None
         return SeqeraClient(config.ai_model, api_key)
 
-    if config.ai_provider == "anthropic":
+    elif config.ai_provider == "anthropic":
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             logger.error(
@@ -517,7 +518,7 @@ def get_llm_client() -> Optional[Client]:
                 "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[anthropic]`"
             )
 
-    if config.ai_provider == "openai":
+    elif config.ai_provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             logger.error(
@@ -532,7 +533,12 @@ def get_llm_client() -> Optional[Client]:
                 "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[openai]`"
             )
 
-    return None
+    else:
+        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(config.AVAILABLE_AI_PROVIDERS)}]'
+        if config.strict:
+            raise RuntimeError(msg)
+        logger.error(msg + ". Skipping AI summary")
+        return None
 
 
 def _strip_html(text: str) -> str:
@@ -605,7 +611,7 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
     tools_context: str = ""
     tools_context += "Tools used in the report:\n\n"
     for i, tool in enumerate(metadata.tools.values()):
-        tools_context += f"{i+1}. {tool.name} ({tool.info})\n"
+        tools_context += f"{i + 1}. {tool.name} ({tool.info})\n"
         if tool.info:
             tools_context += f"Description: {tool.info}\n"
         if tool.href:
