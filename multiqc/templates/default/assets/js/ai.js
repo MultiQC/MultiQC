@@ -189,12 +189,21 @@ async function summarizeWithAi(button) {
   if (!aiApiKey || aiApiKey === undefined) {
     // Open the AI toolbox section, focus on the API key input
     mqc_toolbox_openclose("#mqc_ai", true);
-    $("#ai_api_key_group").addClass("has-error");
-    const apiKeyInput = $("#ai_api_key_group").find("input");
+    const group = $("#ai_api_key_group");
+    const label = group.find("label");
+    group.addClass("has-error");
+    const required = group.find("#ai_api_key_info_required");
+    const originalRequiredColor = required.css("color");
+    const originalLabelColor = label.css("color");
+    required.css("color", "#a94442");
+    label.css("color", "#a94442");
+    const apiKeyInput = group.find("input");
     apiKeyInput.focus();
     // Remove has-error class when user starts typing
     apiKeyInput.one("input", function () {
-      $("#ai_api_key_group").removeClass("has-error");
+      group.removeClass("has-error");
+      required.css("color", originalRequiredColor);
+      label.css("color", originalLabelColor);
     });
     return;
   }
