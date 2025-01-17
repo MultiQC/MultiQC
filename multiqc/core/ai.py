@@ -692,7 +692,7 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
 
 
 def _save_prompt_to_file(prompt: str):
-    # Save content to file for debugging
+    """Save content to file for debugging"""
     path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
     system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
     path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}")
@@ -717,7 +717,8 @@ def add_ai_summary_to_report():
 
     prompt, exceeded_context_window = build_prompt(client, metadata)
 
-    _save_prompt_to_file(prompt)
+    if config.development or config.verbose:
+        _save_prompt_to_file(prompt)
 
     if exceeded_context_window:
         return
