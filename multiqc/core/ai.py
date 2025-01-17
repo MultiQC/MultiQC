@@ -140,13 +140,13 @@ class InterpretationOutput(BaseModel):
         Convert markdown to HTML
         """
         html = markdown(text)
-        # Find and replace directives :span[1.23%]{.text-red} -> <span>..., handle multiple matches in one string
+        # Find and replace directives :span[1.23%]{.text-red} -> <span..., handle multiple matches in one string
         html = re.sub(
             r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
             r"<span class='text-\2'>\1</span>",
             html,
         )
-        # similarly, find and replace directives:sample[A1001.2003]{.text-red} -> <sample>...
+        # similarly, find and replace directives :sample[A1001.2003]{.text-red} -> <sample...
         html = re.sub(
             r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
             r"<sample data-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
@@ -164,7 +164,7 @@ class InterpretationOutput(BaseModel):
 class InterpretationResponse(BaseModel):
     interpretation: InterpretationOutput
     model: str
-    uuid: Optional[str] = None
+    thread_id: Optional[str] = None
 
 
 class Client:
@@ -211,15 +211,6 @@ class LangchainClient(Client):
         self.llm: BaseChatModel
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
-        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
-            return InterpretationResponse(
-                interpretation=InterpretationOutput(
-                    summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
-                ),
-                model="test-model",
-                uuid=None,
-            )
-
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
         from langsmith import Client as LangSmithClient  # type: ignore
 
@@ -236,14 +227,14 @@ class LangchainClient(Client):
                 ):
                     response = llm.invoke(
                         [
-                            {"role": "system", "content": PROMPT_SHORT},
+                            {"role": "user", "content": PROMPT_SHORT},
                             {"role": "user", "content": report_content},
                         ],
                     )
             else:
                 response = llm.invoke(
                     [
-                        {"role": "system", "content": PROMPT_SHORT},
+                        {"role": "user", "content": PROMPT_SHORT},
                         {"role": "user", "content": report_content},
                     ],
                 )
@@ -275,16 +266,6 @@ class LangchainClient(Client):
         )
 
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
-        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
-            return InterpretationResponse(
-                interpretation=InterpretationOutput(
-                    summary=_EXAMPLE_SUMMARY_FOR_FULL,
-                    detailed_analysis=_EXAMPLE_DETAILED_SUMMARY,
-                ),
-                model="test-model",
-                uuid=None,
-            )
-
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
         from langsmith import Client as LangSmithClient  # type: ignore
 
@@ -301,14 +282,14 @@ class LangchainClient(Client):
                 ):
                     response = llm.invoke(
                         [
-                            {"role": "system", "content": PROMPT_FULL},
+                            {"role": "user", "content": PROMPT_FULL},
                             {"role": "user", "content": report_content},
                         ],
                     )
             else:
                 response = llm.invoke(
                     [
-                        {"role": "system", "content": PROMPT_FULL},
+                        {"role": "user", "content": PROMPT_FULL},
                         {"role": "user", "content": report_content},
                     ],
                 )
@@ -372,9 +353,8 @@ class OpenAiClient(LangchainClient):
 class TruncateAnthropicLogFilter(logging.Filter):
     def filter(self, record):
         try:
-            messages = record.args["json_data"]["messages"]  # type: ignore
-            messages[0]["content"] = messages[0]["content"][:1000] + "<truncated>"
-            record.args["json_data"]["system"] = record.args["json_data"]["system"][:500] + "<truncated>"  # type: ignore
+            for m in record.args["json_data"]["messages"]:  # type: ignore
+                m["content"] = m["content"][:500] + "<truncated>"  # type: ignore
         except Exception:
             pass
         return True
@@ -430,8 +410,7 @@ class SeqeraClient(Client):
                 f"{config.seqera_api_url}/internal-ai/query",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "system_message": PROMPT_SHORT,
-                    "message": report_content,
+                    "message": PROMPT_SHORT + "\n\n" + report_content,
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
                 },
             )
@@ -450,10 +429,10 @@ class SeqeraClient(Client):
             return None
 
         response_dict = response.json()
-        uuid = response_dict.get("uuid")
+        thread_id = response_dict.get("thread_id")
         generation = response_dict.get("generation")
         return InterpretationResponse(
-            uuid=uuid,
+            thread_id=thread_id,
             interpretation=InterpretationOutput(summary=generation),
             model=self.model or "claude-3-5-sonnet-latest",
         )
@@ -464,8 +443,7 @@ class SeqeraClient(Client):
                 f"{config.seqera_api_url}/internal-ai/query",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "system_message": PROMPT_FULL,
-                    "message": report_content,
+                    "message": PROMPT_FULL + "\n\n" + report_content,
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
                     "response_schema": {
                         "name": "Interpretation",
@@ -499,10 +477,10 @@ class SeqeraClient(Client):
             return None
 
         response_dict = response.json()
-        uuid = response_dict.get("uuid")
+        thread_id = response_dict.get("thread_id")
         generation: Dict[str, str] = response_dict.get("generation")
         return InterpretationResponse(
-            uuid=uuid,
+            thread_id=thread_id,
             interpretation=InterpretationOutput(**generation),
             model=self.model or "claude-3-5-sonnet-latest",
         )
@@ -741,9 +719,29 @@ def add_ai_summary_to_report():
 
     response: Optional[InterpretationResponse]
     if config.ai_summary_full:
-        response = client.interpret_report_full(prompt)
+        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
+            response = InterpretationResponse(
+                interpretation=InterpretationOutput(
+                    summary=_EXAMPLE_SUMMARY_FOR_FULL,
+                    detailed_analysis=_EXAMPLE_DETAILED_SUMMARY,
+                ),
+                model="test-model",
+                thread_id="68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None,
+            )
+        else:
+            response = client.interpret_report_full(prompt)
     else:
-        response = client.interpret_report_short(prompt)
+        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
+            response = InterpretationResponse(
+                interpretation=InterpretationOutput(
+                    summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
+                ),
+                model="test-model",
+                thread_id="68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None,
+            )
+        else:
+            response = client.interpret_report_short(prompt)
+
     if not response:
         return None
 
@@ -754,8 +752,8 @@ def add_ai_summary_to_report():
     if response.model:
         report.ai_model_resolved = response.model
 
-    if response.uuid:
-        report.ai_generation_id = response.uuid
+    if response.thread_id:
+        report.ai_thread_id = response.thread_id
 
     interpretation: InterpretationOutput = response.interpretation
     report.ai_global_summary = interpretation.markdown_to_html(interpretation.summary)
