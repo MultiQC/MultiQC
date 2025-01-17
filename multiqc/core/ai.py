@@ -328,12 +328,27 @@ class LangchainClient(Client):
         )
 
 
+# Truncate the messages from the anthropic or openai logger. It would print the entire user message which is too long.
+class TruncateLogFilter(logging.Filter):
+    def filter(self, record):
+        try:
+            for m in record.args["json_data"]["messages"]:  # type: ignore
+                if isinstance(m["content"], list):
+                    for chunk in m["content"]:
+                        chunk["text"] = chunk["text"][:200] + "<truncated>"  # type: ignore
+                elif isinstance(m["content"], str):
+                    m["content"] = m["content"][:200] + "<truncated>"  # type: ignore
+        except Exception:
+            pass
+        return True
+
+
 class OpenAiClient(LangchainClient):
     def __init__(self, api_key: str):
         from langchain_openai import ChatOpenAI  # type: ignore
 
         openai_logger = logging.getLogger("openai._base_client")
-        openai_logger.addFilter(TruncateOpenAiLogFilter())
+        openai_logger.addFilter(TruncateLogFilter())
 
         model = config.ai_model if config.ai_model and config.ai_model.startswith("gpt") else "gpt-4o"
 
@@ -350,34 +365,13 @@ class OpenAiClient(LangchainClient):
         return 128000
 
 
-# Truncate the messages from the anthropic logger. It would print the entire user message which is too long.
-class TruncateAnthropicLogFilter(logging.Filter):
-    def filter(self, record):
-        try:
-            for m in record.args["json_data"]["messages"]:  # type: ignore
-                m["content"] = m["content"][:500] + "<truncated>"  # type: ignore
-        except Exception:
-            pass
-        return True
-
-
-class TruncateOpenAiLogFilter(logging.Filter):
-    def filter(self, record):
-        try:
-            for m in record.args["json_data"]["messages"]:  # type: ignore
-                m["content"] = m["content"][:1000] + "<truncated>"  # type: ignore
-        except Exception:
-            pass
-        return True
-
-
 class AnthropicClient(LangchainClient):
     def __init__(self, api_key: str):
         from langchain_anthropic import ChatAnthropic  # type: ignore
 
         # Get the anthropic logger and add the filter
         anthropic_logger = logging.getLogger("anthropic._base_client")
-        anthropic_logger.addFilter(TruncateAnthropicLogFilter())
+        anthropic_logger.addFilter(TruncateLogFilter())
 
         model = (
             config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-3-5-sonnet-latest"
@@ -751,7 +745,6 @@ def add_ai_summary_to_report():
     if not response:
         return None
 
-    logger.debug(f"Interpretation: {response.interpretation}")
     if not response.interpretation:
         return None
 
