@@ -486,8 +486,11 @@ def get_llm_client() -> Optional[Client]:
         return None
 
     if config.ai_provider == "seqera":
-        api_key = os.environ.get("SEQERA_ACCESS_TOKEN", os.environ.get("TOWER_ACCESS_TOKEN"))
-        if not api_key:
+        if api_key := os.environ.get("TOWER_ACCESS_TOKEN"):
+            logger.debug("Using Seqera access token from $TOWER_ACCESS_TOKEN environment variable")
+        elif api_key := os.environ.get("SEQERA_ACCESS_TOKEN"):
+            logger.debug("Using Seqera access token from $SEQERA_ACCESS_TOKEN environment variable")
+        else:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', "
                 "but Seqera access token is not set. "
@@ -505,6 +508,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
             return None
+        logger.debug("Using Anthropic API key from $ANTHROPIC_API_KEY environment variable")
         try:
             return AnthropicClient(api_key)
         except ModuleNotFoundError:
@@ -520,6 +524,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
             return None
+        logger.debug("Using OpenAI API key from $OPENAI_API_KEY environment variable")
         try:
             return OpenAiClient(api_key)
         except ModuleNotFoundError:
