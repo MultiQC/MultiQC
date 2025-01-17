@@ -73,16 +73,16 @@ output_dir.mkdir(parents=True, exist_ok=True)
 
 # Create output file
 mdx_content: str = f"""---
-title: MultiQC v{changelog_data['version']}
-date: {changelog_data['date']}
+title: MultiQC v{changelog_data["version"]}
+date: {changelog_data["date"]}
 tags: [multiqc]
 ---
 
-{changelog_data['summary']}
+{changelog_data["summary"]}
 
 {{/* truncate */}}
 
-{changelog_data['the_rest']}
+{changelog_data["the_rest"]}
 """
 with open(output_path := output_dir / f"v{changelog_data['version']}.mdx", "w") as f:
     f.write(mdx_content)

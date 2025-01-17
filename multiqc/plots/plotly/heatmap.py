@@ -463,7 +463,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                 <div class="btn-group" role="group">
                     <button
                         type="button" 
-                        class="btn btn-default btn-sm {'' if self.pconfig.cluster_switch_clustered_active else 'active'}" 
+                        class="btn btn-default btn-sm {"" if self.pconfig.cluster_switch_clustered_active else "active"}" 
                         data-action="unclustered" 
                         data-plot-anchor="{self.anchor}"
                     >
@@ -471,7 +471,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                     </button>
                     <button
                         type="button" 
-                        class="btn btn-default btn-sm {'active' if self.pconfig.cluster_switch_clustered_active else ''}" 
+                        class="btn btn-default btn-sm {"active" if self.pconfig.cluster_switch_clustered_active else ""}" 
                         data-action="clustered" 
                         data-plot-anchor="{self.anchor}"
                     >

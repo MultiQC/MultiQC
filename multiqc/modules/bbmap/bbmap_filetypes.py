@@ -214,7 +214,7 @@ file_types: Dict = {
     },
     "idhist": {
         "title": "Identity histogram",
-        "descr": "Histogram of read count versus percent base pair identity " "of aligned reads (`idhist`).",
+        "descr": "Histogram of read count versus percent base pair identity of aligned reads (`idhist`).",
         "help_text": "",
         "kvrows": [
             "Mean_reads",
@@ -294,7 +294,7 @@ file_types: Dict = {
     },
     "mhist": {
         "title": "Match, substitution, deletion, and insertion rates",
-        "descr": "Histogram of match, substitution, deleletion, " "and insertion rates by read location (`mhist`).",
+        "descr": "Histogram of match, substitution, deleletion, and insertion rates by read location (`mhist`).",
         "help_text": "",
         "cols": {
             "BaseNum": int,

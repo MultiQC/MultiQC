@@ -90,15 +90,15 @@ def _print_large_dict(data: Dict[str, Any]) -> str:
     def _truncate_recursive(obj: Any, depth: int = 0) -> str:
         if isinstance(obj, dict):
             items = list(obj.items())[:10]
-            truncated = ", ".join(f"{k}: {_truncate_recursive(v, depth+1)}" for k, v in items)
+            truncated = ", ".join(f"{k}: {_truncate_recursive(v, depth + 1)}" for k, v in items)
             if len(obj) > 10:
-                truncated += f", ... ({len(obj)-10} more items)"
+                truncated += f", ... ({len(obj) - 10} more items)"
             return f"{{{truncated}}}"
         elif isinstance(obj, (list, tuple, set)):
             items = list(obj)[:10]
             truncated = ", ".join(_truncate_recursive(x, depth + 1) for x in items)
             if len(obj) > 10:
-                truncated += f", ... ({len(obj)-10} more items)"
+                truncated += f", ... ({len(obj) - 10} more items)"
             return f"[{truncated}]"
         else:
             return str(obj)

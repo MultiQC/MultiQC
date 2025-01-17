@@ -220,7 +220,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.warning(
                     f"Could not parse sample name from the fastp command:\n{cmd}\n"
                     f"Falling back to extracting it from the file name: "
-                    f"\"{f['fn']}\" -> \"{s_name}\""
+                    f'"{f["fn"]}" -> "{s_name}"'
                 )
 
         self.add_data_source(f, s_name)

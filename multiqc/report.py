@@ -433,13 +433,7 @@ class SearchPattern(BaseModel):
             return None
 
         # Convert the values that can be lists/sets or str into sets
-        for k in [
-            "contents",
-            "contents_re",
-            "exclude_fn",
-            "exclude_fn_re" "exclude_contents",
-            "exclude_contents_re",
-        ]:
+        for k in ["contents", "contents_re", "exclude_fn", "exclude_fn_re", "exclude_contents", "exclude_contents_re"]:
             val = d.get(k, [])
             if val:
                 strs = [val] if isinstance(val, str) else val
