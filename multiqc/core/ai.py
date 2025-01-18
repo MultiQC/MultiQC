@@ -697,7 +697,7 @@ def _save_prompt_to_file(prompt: str):
     path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
     system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
     path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}")
-    logger.debug(f"Saved AI prompt to {path}")
+    logger.debug("Saved AI prompt to 'multiqc_data")
 
 
 def add_ai_summary_to_report():
