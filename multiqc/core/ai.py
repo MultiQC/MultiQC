@@ -396,15 +396,13 @@ class SeqeraClient(Client):
         super().__init__(model, api_key)
         self.name = "seqera"
         self.title = "Seqera AI"
+        self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, {config.creation_date}."
 
     def max_tokens(self) -> int:
         return 200000
 
     def wrap_details(self, prompt) -> str:
-        timestamp = time.strftime("%Y-%m-%d, %H:%M:%S")
-        report_title = f": {config.title}" if config.title else ""
-        header = f"MultiQC report{report_title}. {timestamp}\n\n"
-        return f"{header}:::details\n\n{prompt}\n\n:::\n\n"
+        return f"{self.chat_title}\n\n:::details\n\n{prompt}\n\n:::\n\n"
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
@@ -414,7 +412,7 @@ class SeqeraClient(Client):
                 json={
                     "message": self.wrap_details(PROMPT_SHORT + "\n\n" + report_content),
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
-                    "title": (config.title + ": " if config.title else "") + "MultiQC report, " + config.creation_date,
+                    "title": self.chat_title,
                 },
             )
 
