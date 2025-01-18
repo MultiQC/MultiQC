@@ -2,6 +2,7 @@ import base64
 import logging
 import os
 import re
+import time
 from textwrap import indent
 from typing import TYPE_CHECKING, Dict, Optional, Tuple, cast
 
@@ -399,13 +400,19 @@ class SeqeraClient(Client):
     def max_tokens(self) -> int:
         return 200000
 
+    def wrap_details(self, prompt) -> str:
+        timestamp = time.strftime("%Y-%m-%d, %H:%M:%S")
+        report_title = f": {config.title}" if config.title else ""
+        header = f"MultiQC report{report_title}. {timestamp}\n\n"
+        return f"{header}:::details\n\n{prompt}\n\n:::\n\n"
+
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
                 f"{config.seqera_api_url}/internal-ai/query",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "message": PROMPT_SHORT + "\n\n" + report_content,
+                    "message": self.wrap_details(PROMPT_SHORT + "\n\n" + report_content),
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
                     "title": (config.title + ": " if config.title else "") + "MultiQC report, " + config.creation_date,
                 },
@@ -439,7 +446,7 @@ class SeqeraClient(Client):
                 f"{config.seqera_api_url}/internal-ai/query",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "message": PROMPT_FULL + "\n\n" + report_content,
+                    "message": self.wrap_details(PROMPT_FULL + "\n\n" + report_content),
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
                     "response_schema": {
                         "name": "Interpretation",
