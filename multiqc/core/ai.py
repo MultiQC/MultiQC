@@ -244,7 +244,7 @@ class LangchainClient(Client):
         if config.verbose:
             response = send_request()
         else:
-            response = run_with_spinner("ai", "Interpreting MultiQC report...", send_request)
+            response = run_with_spinner("ai", f"Summarizing report with {self.title}...", send_request)
 
         if not response:
             msg = f"Got empty response from the LLM {self.title} {self.model}"
@@ -299,7 +299,7 @@ class LangchainClient(Client):
         if config.verbose:
             response = send_request()
         else:
-            response = run_with_spinner("ai", "Interpreting MultiQC report...", send_request)
+            response = run_with_spinner("ai", f"Summarizing report with {self.title}...", send_request)
 
         response = cast(Dict, response)
         if not response["parsed"]:
@@ -414,7 +414,7 @@ class SeqeraClient(Client):
         if config.verbose:
             response = send_request()
         else:
-            response = run_with_spinner("ai", "Summarizing report with AI...", send_request)
+            response = run_with_spinner("ai", "Summarizing report with Seqera AI...", send_request)
 
         if response.status_code != 200:
             msg = f"Failed to get a response from Seqera. Status code: {response.status_code} ({response.reason})"
@@ -463,7 +463,7 @@ class SeqeraClient(Client):
         if config.verbose:
             response = send_request()
         else:
-            response = run_with_spinner("ai", "Summarizing report with AI...", send_request)
+            response = run_with_spinner("ai", "Summarizing report with Seqera AI...", send_request)
 
         if response.status_code != 200:
             msg = f"Failed to get a response from Seqera: {response.status_code} {response.text}"
@@ -514,7 +514,7 @@ def get_llm_client() -> Optional[Client]:
             return AnthropicClient(api_key)
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
-                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[anthropic]`"
+                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[anthropic]"'
             )
 
     elif config.ai_provider == "openai":
@@ -530,7 +530,7 @@ def get_llm_client() -> Optional[Client]:
             return OpenAiClient(api_key)
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
-                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[openai]`"
+                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"'
             )
 
     else:
@@ -766,3 +766,5 @@ def add_ai_summary_to_report():
 
     if config.ai_summary_full and interpretation.detailed_analysis:
         report.ai_global_detailed_analysis = interpretation.markdown_to_html(interpretation.detailed_analysis)
+
+    logger.info(f"Summarised report with {report.ai_provider_title}")

@@ -73,7 +73,10 @@ def write_results() -> None:
     if not config.skip_generalstats:
         _render_general_stats_table(plots_dir_name=output_file_names.plots_dir_name)
 
-    report.add_ai_summary()
+    try:
+        report.add_ai_summary()
+    except ModuleNotFoundError as e:
+        logger.error(e)
 
     paths: OutputPaths = _create_or_override_dirs(output_file_names)
 
