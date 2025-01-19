@@ -395,9 +395,13 @@ class SeqeraClient(Client):
         super().__init__(model, api_key)
         self.name = "seqera"
         self.title = "Seqera AI"
+        self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, {config.creation_date}."
 
     def max_tokens(self) -> int:
         return 200000
+
+    def wrap_details(self, prompt) -> str:
+        return f"{self.chat_title}\n\n:::details\n\n{prompt}\n\n:::\n\n"
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
@@ -405,9 +409,9 @@ class SeqeraClient(Client):
                 f"{config.seqera_api_url}/internal-ai/query",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "message": PROMPT_SHORT + "\n\n" + report_content,
+                    "message": self.wrap_details(PROMPT_SHORT + "\n\n" + report_content),
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
-                    "title": (config.title + ": " if config.title else "") + "MultiQC report, " + config.creation_date,
+                    "title": self.chat_title,
                 },
             )
 
@@ -439,7 +443,7 @@ class SeqeraClient(Client):
                 f"{config.seqera_api_url}/internal-ai/query",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "message": PROMPT_FULL + "\n\n" + report_content,
+                    "message": self.wrap_details(PROMPT_FULL + "\n\n" + report_content),
                     "tags": ["multiqc", f"multiqc_version:{config.version}"],
                     "response_schema": {
                         "name": "Interpretation",
