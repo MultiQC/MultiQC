@@ -396,6 +396,7 @@ class SeqeraClient(Client):
         self.name = "seqera"
         self.title = "Seqera AI"
         self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, {config.creation_date}."
+        self.tags = ["multiqc", f"multiqc_version:{config.version}"]
 
     def max_tokens(self) -> int:
         return 200000
@@ -410,7 +411,7 @@ class SeqeraClient(Client):
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
                     "message": self.wrap_details(PROMPT_SHORT + "\n\n" + report_content),
-                    "tags": ["multiqc", f"multiqc_version:{config.version}"],
+                    "tags": self.tags,
                     "title": self.chat_title,
                 },
             )
@@ -444,7 +445,8 @@ class SeqeraClient(Client):
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
                     "message": self.wrap_details(PROMPT_FULL + "\n\n" + report_content),
-                    "tags": ["multiqc", f"multiqc_version:{config.version}"],
+                    "tags": self.tags,
+                    "title": self.chat_title,
                     "response_schema": {
                         "name": "Interpretation",
                         "description": "Interpretation of a MultiQC report",
