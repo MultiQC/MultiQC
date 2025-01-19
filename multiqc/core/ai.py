@@ -518,7 +518,7 @@ def get_llm_client() -> Optional[Client]:
             return AnthropicClient(api_key)
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
-                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[anthropic]"'
+                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[anthropic]"`'
             )
 
     elif config.ai_provider == "openai":
@@ -534,7 +534,7 @@ def get_llm_client() -> Optional[Client]:
             return OpenAiClient(api_key)
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
-                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"'
+                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"`'
             )
 
     else:
@@ -701,7 +701,7 @@ def _save_prompt_to_file(prompt: str):
     path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
     system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
     path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}")
-    logger.debug("Saved AI prompt to 'multiqc_data")
+    logger.debug(f"Saved AI prompt to {path.parent.name}/{path.name}")
 
 
 def add_ai_summary_to_report():
