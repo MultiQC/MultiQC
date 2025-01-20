@@ -63,7 +63,7 @@ was generated and the button that launches the welcome tour.
 <div id="analysis_dirs_wrapper" style="display: flex; justify-content: space-between; align-items: center;">
   <span style="flex: 1;">Report 
     {% if config.show_analysis_time %}
-      generated on {{ config.creation_date }}
+      generated on {{ report.creation_date.strftime('%Y-%m-%d, %H:%M %Z') }}
     {% endif %}
     {% if config.show_analysis_paths %}
       based on data in:

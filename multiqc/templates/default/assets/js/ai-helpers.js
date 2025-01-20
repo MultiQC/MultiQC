@@ -20,7 +20,8 @@ function runStreamGeneration({
   const apiKey = $("#ai-api-key").val();
 
   if (provider.name === "Seqera AI") {
-    let aiTitle = (configTitle == "None" ? "" : configTitle + ": ") + "MultiQC report, " + configCreationDate;
+    let aiTitle =
+      (configTitle == "None" ? "" : configTitle + ": ") + "MultiQC report, created on " + configCreationDate;
     fetch(`${seqeraApiUrl}/internal-ai/query`, {
       method: "POST",
       headers: {

@@ -395,7 +395,8 @@ class SeqeraClient(Client):
         super().__init__(model, api_key)
         self.name = "seqera"
         self.title = "Seqera AI"
-        self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, {config.creation_date}"
+        creation_date = report.creation_date.strftime("%d %b %Y, %H:%M %Z")
+        self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, created on {creation_date}"
         self.tags = ["multiqc", f"multiqc_version:{config.version}"]
 
     def max_tokens(self) -> int:

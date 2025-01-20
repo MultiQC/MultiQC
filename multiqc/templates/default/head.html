@@ -43,7 +43,7 @@ aiReportMetadataBase64 = "{{ report.ai_report_metadata_base64 }}";
 aiReportMetadata = JSON.parse(atob(aiReportMetadataBase64));
 
 configTitle = "{{ config.title }}";
-configCreationDate = "{{ config.creation_date }}";
+configCreationDate = "{{ report.creation_date.strftime('%d %b %Y, %H:%M %Z') }}";
 </script>
 
 <!-- Instead of saving data directly into variables in a normal <script>, data is separated into
