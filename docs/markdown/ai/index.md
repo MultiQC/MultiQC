@@ -54,7 +54,7 @@ Use of OpenAI and Anthropic APIs are billed by their respective providers based 
 
 :::note
 
-Treat your API keys like passwords, and do not share them.
+Treat your API keys like passwords and do not share them.
 
 :::
 
@@ -70,12 +70,12 @@ This is done by setting `ai_model` in the MultiQC config.
   - Default: `gpt-4o`.
   - Tested with GPT-4o and GPT-4o-mini. See the [OpenAI docs](https://platform.openai.com/docs/models).
 
-This model will then be used during report generation and also set as the default toolbox panel setting for browser report summaries.
+This model is used during report generation and also set as the default toolbox panel setting for browser report summaries.
 
 ## Summaries during report generation
 
 MultiQC can generate AI summaries at run time, when generating reports.
-Summary text will be included within the report HTML as static text and will be visible to anyone viewing the report,
+Summary text is included within the report HTML as static text and will be visible to anyone viewing the report,
 however it is shared.
 
 AI summaries are disabled by default when running MultiQC.
@@ -96,7 +96,7 @@ To generate them, you must enable them either on the command line or via a Multi
   no_ai: false # Set to true to disable AI toolbox and buttons in the report
   ```
 
-You will need to set your provider's API key in an environment variable in order to access its service
+You must set your provider's API key in an environment variable in order to access its service
 _(see [Choosing a provider](#choosing-a-provider) for how to get an API key)_.
 The API keys are supplied by setting the following environment variables:
 
@@ -131,16 +131,16 @@ They are not saved by MultiQC and cannot be used for in-browser summary generati
 ## In-browser AI summaries
 
 In addition to summaries during report generation, MultiQC can also create summaries dynamically in reports.
-This can be useful as the person viewing a report is often different to the person who generated it.
-Summaries can be generated on demand, when needed.
+This can be useful as the person viewing a report is often different than the person who generated it.
+Summaries can be generated on demand when needed.
 
-The AI toolbox and _Summarize_ buttons are shown by default in all reports. To prevent this, run MultiQC with the `--no-ai` flag.
-This can be done on a per-user basis by selecting _Remove AI buttons_ in the _AI Provider_ dropdown in the AI toolbox.
+The AI toolbox and **Summarize** buttons are shown by default in all reports. To prevent this, run MultiQC with the `--no-ai` flag.
+This can be done on a per-user basis by selecting **Remove AI buttons** in the **AI Provider** dropdown in the AI toolbox.
 
-Summaries generated in reports are _ephemeral_ - that is, they are not saved in the HTML.
+Summaries generated in reports are _ephemeral_ and are not saved in the HTML.
 If you generate a summary and share the report then others will not see it.
 MultiQC tries to save the summary response within your browser's [local storage](https://www.w3schools.com/html/html5_webstorage.asp)
-so that it shows the next time you open the same report, but this process is imperfect and may not always work.
+so that it shows the next time you open the same report, but this process is imperfect and might not always work.
 
 ### Configuring the AI provider
 
@@ -158,7 +158,7 @@ _(see [Choosing a provider](#choosing-a-provider) for how to get an API key)_.
 
 :::info
 
-API keys will be stored only in your browser's local storage, so will not be shared with anyone if you send the HTML report to someone else.
+API keys are stored only in your browser's local storage and are not shared with anyone if you send the HTML report to someone else.
 They are used to send report data directly to your AI provider of choice.
 
 :::
@@ -167,7 +167,7 @@ They are used to send report data directly to your AI provider of choice.
 
 ### Summarising the report
 
-Once your provider API key is configured, click _"Summarize report"_ to generate an overview summary of the entire report.
+Once your provider API key is configured, click **Summarize report** to generate an overview summary of the entire report.
 
 :::info
 
@@ -183,7 +183,7 @@ Besides a global report-level AI summary, you can generate a summary for each pl
 
 ![ai_summarize_buttons](../../../docs/images/ai_summarize_buttons.png)
 
-You can also copy the entire prompt that MultiQC would use to generate a summary. Using the toolbox, you can enable the "Copy prompt" buttons to be shown next to each "Summarize" button:
+You can also copy the entire prompt that MultiQC would use to generate a summary. Using the toolbox, you can enable the **Copy prompt** buttons to be shown next to each **Summarize** button:
 
 ![ai_toolbox_copy_checkbox](../../../docs/images/ai_toolbox_copy_checkbox.png)
 
@@ -194,9 +194,9 @@ A button will copy the LLM-friendly formatted report data along with the system 
 ### Copying prompts
 
 If you have access to an LLM that is not directly supported by MultiQC, you can copy the exact prompt
-that MultiQC uses to your clipboard. This can be pasted into whatever you have access to.
+that MultiQC uses to your clipboard. This can be pasted into whatever LLM that you have access to.
 
-To do this, click the "Copy prompt" button in the toolbox:
+To do this, click the **Copy prompt** button in the toolbox:
 
 ![ai_toolbox_copy_button](../../../docs/images/ai_toolbox_copy_button.png)
 
@@ -204,9 +204,9 @@ To do this, click the "Copy prompt" button in the toolbox:
 
 A context window refers to the amount of text (in tokens) that an AI model can consider at once
 when processing input and generating responses, encompassing both the input prompt and the output.
-At the time of writing, modern LLMs typically have a context window size in 128k - 200k tokens,
-which translates to about 100k - 160k characters of report data.
-That means that very large reports - of thousands of samples - might not fit in the available LLM context window.
+At the time of writing, modern LLMs typically have a context window size in 128-200k tokens,
+which translates to about 100-160k characters of report data.
+That means that very large reports, of thousands of samples, might not fit in the available LLM context window.
 
 MultiQC uses the following logic, moving on to the next step if the prompt is still too large:
 
@@ -219,15 +219,15 @@ If you're unable to generate an AI summary, you can try the following:
 
 - Hide additional columns in the general statistics table (see [Hiding Columns](../reports/customisation.md#hiding-columns)).
 - Hide General statistics data in the browser, and request the AI summary dynamically:
-  - Hide columns with the "Configure columns" button
+  - Hide columns with the **Configure columns** button
   - Filter shown samples dynamically with the toolbox
-- Copy the prompt from `multiqc_data/multiqc_ai_prompt.txt` or into clipboard with the "Copy prompt" button in the toolbox, and use it with extrenal services with a larger context window.
+- Copy the prompt from `multiqc_data/multiqc_ai_prompt.txt` into clipboard with the **Copy prompt** button in the toolbox, and use it with external services with a larger context window.
 
 ## Configuring within Nextflow
 
 If you're running MultiQC within a Nextflow pipeline, you probably don't want to edit the workflow code to configure AI summaries.
-Most nf-core pipelines with MultiQC have a `--multiqc_config` option to provide additional YAML config for MultiQC.
-However, because API keys must be passed using environment variables anyway, the recommended method is to use
+Most nf-core pipelines with MultiQC have a `--multiqc_config` option to provide an additional YAML config for MultiQC.
+However, because API keys must be passed using environment variables, the recommended method is to use
 environment vars for everything.
 
 Using this approach means that no pipeline code needs adjustment, only a small addition to the Nextflow config
@@ -243,11 +243,11 @@ env {
 }
 ```
 
-The relevant environment variables are [described above](#summaries-during-report-generation).
+The relevant environment variables are described in [Summaries during report generation](#summaries-during-report-generation).
 
 :::note
 
-The above example uses [Nextflow Secrets](https://nextflow.io/docs/latest/secrets.html)
+In the previous example, [Nextflow Secrets](https://nextflow.io/docs/latest/secrets.html) are used.
 to securely manage your API keys outside of your config file.
 To add this Nextflow secret you would run the following command in the terminal:
 
@@ -265,12 +265,12 @@ Add this config to `~/.nextflow/config` and it will be applied to every Nextflow
 
 ### Using Seqera Platform
 
-If using Seqera Platform the above config can be used when launching pipelines or adding them to the launchpad.
-However, environment variables can also be added at _Compute Environment_ level and will then affect every pipeline
+If using Seqera Platform, the previously described config can be used when launching pipelines or adding them to the Launchpad.
+However, environment variables can also be added at the _Compute Environment_ level and then affects every pipeline
 run using that CE, without further modification.
 This effectively means that provider API keys can be managed at the workspace level.
 
-To do this, toggle the _"Environment variables"_ section when creating a Compute Environment and click _"Add variable"_.
+To do this, toggle the **Environment variables** section when creating a Compute Environment and select **Add variable**.
 
 Ensure that the **Target environment** has **Compute job** enabled.
 
