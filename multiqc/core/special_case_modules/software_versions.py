@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
                 </button>
                 <table class="table mqc_versions_table" id="{table_id}">
                     <thead>
-                        <tr>{''.join(header_rows)}</tr>
+                        <tr>{"".join(header_rows)}</tr>
                     </thead>
                 """
             )

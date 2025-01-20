@@ -121,9 +121,9 @@ class MultiqcModule(BaseMultiqcModule):
         assert title == expected_title, f"Expected '{expected_title}', got '{title}'"
         header = next(lines).strip().split("\t")
         expected_fields = ["count", "percent", "class"]
-        assert all(
-            field in header for field in expected_fields
-        ), f"Expected the header to contain '{expected_fields}', got {header}"
+        assert all(field in header for field in expected_fields), (
+            f"Expected the header to contain '{expected_fields}', got {header}"
+        )
 
         cnt_by_class = defaultdict(int)
         pct_by_class = defaultdict(float)

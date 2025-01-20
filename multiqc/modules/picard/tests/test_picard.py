@@ -49,6 +49,6 @@ def test_picard_data_parsed(tool, data_dir):
         else:
             samples_parsed = list(m.samples_parsed_by_tool.get(tool, []))
         expected_num_samples = NUM_SAMPLES_BY_FILE.get(path.name, 1)
-        assert (
-            len(samples_parsed) == expected_num_samples
-        ), f"{path.name}: expected {expected_num_samples} samples, got {len(samples_parsed)}"
+        assert len(samples_parsed) == expected_num_samples, (
+            f"{path.name}: expected {expected_num_samples} samples, got {len(samples_parsed)}"
+        )

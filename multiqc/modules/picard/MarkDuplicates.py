@@ -288,7 +288,7 @@ def estimate_library_size(d):
         M = 100.0
 
         if uniqueReadPairs >= readPairs or f(m * uniqueReadPairs, uniqueReadPairs, readPairs) < 0:
-            logging.warning("Picard recalculation of ESTIMATED_LIBRARY_SIZE skipped - metrics " "look wrong")
+            logging.warning("Picard recalculation of ESTIMATED_LIBRARY_SIZE skipped - metrics look wrong")
             return None
 
         # find value of M, large enough to act as other side for bisection method

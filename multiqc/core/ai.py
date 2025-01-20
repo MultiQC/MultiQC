@@ -12,6 +12,7 @@ from pydantic.types import SecretStr
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
+from multiqc.core.strict_helpers import lint_error
 from multiqc.types import Anchor
 
 if TYPE_CHECKING:
@@ -243,7 +244,7 @@ class LangchainClient(Client):
         if config.verbose:
             response = send_request()
         else:
-            response = run_with_spinner("ai", "Interpreting MultiQC report...", send_request)
+            response = run_with_spinner("ai", f"Summarizing report with {self.title}...", send_request)
 
         if not response:
             msg = f"Got empty response from the LLM {self.title} {self.model}"
@@ -298,7 +299,7 @@ class LangchainClient(Client):
         if config.verbose:
             response = send_request()
         else:
-            response = run_with_spinner("ai", "Interpreting MultiQC report...", send_request)
+            response = run_with_spinner("ai", f"Summarizing report with {self.title}...", send_request)
 
         response = cast(Dict, response)
         if not response["parsed"]:
@@ -327,12 +328,27 @@ class LangchainClient(Client):
         )
 
 
+# Truncate the messages from the anthropic or openai logger. It would print the entire user message which is too long.
+class TruncateLogFilter(logging.Filter):
+    def filter(self, record):
+        try:
+            for m in record.args["json_data"]["messages"]:  # type: ignore
+                if isinstance(m["content"], list):
+                    for chunk in m["content"]:
+                        chunk["text"] = chunk["text"][:200] + "<truncated>"  # type: ignore
+                elif isinstance(m["content"], str):
+                    m["content"] = m["content"][:200] + "<truncated>"  # type: ignore
+        except Exception:
+            pass
+        return True
+
+
 class OpenAiClient(LangchainClient):
     def __init__(self, api_key: str):
         from langchain_openai import ChatOpenAI  # type: ignore
 
         openai_logger = logging.getLogger("openai._base_client")
-        openai_logger.addFilter(TruncateOpenAiLogFilter())
+        openai_logger.addFilter(TruncateLogFilter())
 
         model = config.ai_model if config.ai_model and config.ai_model.startswith("gpt") else "gpt-4o"
 
@@ -349,34 +365,13 @@ class OpenAiClient(LangchainClient):
         return 128000
 
 
-# Truncate the messages from the anthropic logger. It would print the entire user message which is too long.
-class TruncateAnthropicLogFilter(logging.Filter):
-    def filter(self, record):
-        try:
-            for m in record.args["json_data"]["messages"]:  # type: ignore
-                m["content"] = m["content"][:500] + "<truncated>"  # type: ignore
-        except Exception:
-            pass
-        return True
-
-
-class TruncateOpenAiLogFilter(logging.Filter):
-    def filter(self, record):
-        try:
-            for m in record.args["json_data"]["messages"]:  # type: ignore
-                m["content"] = m["content"][:1000] + "<truncated>"  # type: ignore
-        except Exception:
-            pass
-        return True
-
-
 class AnthropicClient(LangchainClient):
     def __init__(self, api_key: str):
         from langchain_anthropic import ChatAnthropic  # type: ignore
 
         # Get the anthropic logger and add the filter
         anthropic_logger = logging.getLogger("anthropic._base_client")
-        anthropic_logger.addFilter(TruncateAnthropicLogFilter())
+        anthropic_logger.addFilter(TruncateLogFilter())
 
         model = (
             config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-3-5-sonnet-latest"
@@ -400,9 +395,14 @@ class SeqeraClient(Client):
         super().__init__(model, api_key)
         self.name = "seqera"
         self.title = "Seqera AI"
+        self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, {config.creation_date}"
+        self.tags = ["multiqc", f"multiqc_version:{config.version}"]
 
     def max_tokens(self) -> int:
         return 200000
+
+    def wrap_details(self, prompt) -> str:
+        return f"{self.chat_title}\n\n:::details\n\n{prompt}\n\n:::\n\n"
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
@@ -410,15 +410,16 @@ class SeqeraClient(Client):
                 f"{config.seqera_api_url}/internal-ai/query",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "message": PROMPT_SHORT + "\n\n" + report_content,
-                    "tags": ["multiqc", f"multiqc_version:{config.version}"],
+                    "message": self.wrap_details(PROMPT_SHORT + "\n\n" + report_content),
+                    "tags": self.tags,
+                    "title": self.chat_title,
                 },
             )
 
         if config.verbose:
             response = send_request()
         else:
-            response = run_with_spinner("ai", "Summarizing report with AI...", send_request)
+            response = run_with_spinner("ai", "Summarizing report with Seqera AI...", send_request)
 
         if response.status_code != 200:
             msg = f"Failed to get a response from Seqera. Status code: {response.status_code} ({response.reason})"
@@ -443,8 +444,9 @@ class SeqeraClient(Client):
                 f"{config.seqera_api_url}/internal-ai/query",
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
-                    "message": PROMPT_FULL + "\n\n" + report_content,
-                    "tags": ["multiqc", f"multiqc_version:{config.version}"],
+                    "message": self.wrap_details(PROMPT_FULL + "\n\n" + report_content),
+                    "tags": self.tags,
+                    "title": self.chat_title,
                     "response_schema": {
                         "name": "Interpretation",
                         "description": "Interpretation of a MultiQC report",
@@ -467,7 +469,7 @@ class SeqeraClient(Client):
         if config.verbose:
             response = send_request()
         else:
-            response = run_with_spinner("ai", "Summarizing report with AI...", send_request)
+            response = run_with_spinner("ai", "Summarizing report with Seqera AI...", send_request)
 
         if response.status_code != 200:
             msg = f"Failed to get a response from Seqera: {response.status_code} {response.text}"
@@ -491,8 +493,11 @@ def get_llm_client() -> Optional[Client]:
         return None
 
     if config.ai_provider == "seqera":
-        api_key = os.environ.get("SEQERA_ACCESS_TOKEN", os.environ.get("TOWER_ACCESS_TOKEN"))
-        if not api_key:
+        if api_key := os.environ.get("SEQERA_ACCESS_TOKEN"):
+            logger.debug("Using Seqera access token from $SEQERA_ACCESS_TOKEN environment variable")
+        elif api_key := os.environ.get("TOWER_ACCESS_TOKEN"):
+            logger.debug("Using Seqera access token from $TOWER_ACCESS_TOKEN environment variable")
+        else:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', "
                 "but Seqera access token is not set. "
@@ -502,7 +507,7 @@ def get_llm_client() -> Optional[Client]:
             return None
         return SeqeraClient(config.ai_model, api_key)
 
-    if config.ai_provider == "anthropic":
+    elif config.ai_provider == "anthropic":
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             logger.error(
@@ -510,14 +515,15 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
             return None
+        logger.debug("Using Anthropic API key from $ANTHROPIC_API_KEY environment variable")
         try:
             return AnthropicClient(api_key)
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
-                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[anthropic]`"
+                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[anthropic]"`'
             )
 
-    if config.ai_provider == "openai":
+    elif config.ai_provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             logger.error(
@@ -525,14 +531,20 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
             return None
+        logger.debug("Using OpenAI API key from $OPENAI_API_KEY environment variable")
         try:
             return OpenAiClient(api_key)
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
-                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[openai]`"
+                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"`'
             )
 
-    return None
+    else:
+        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(config.AVAILABLE_AI_PROVIDERS)}]'
+        if config.strict:
+            raise RuntimeError(msg)
+        logger.error(msg + ". Skipping AI summary")
+        return None
 
 
 def _strip_html(text: str) -> str:
@@ -605,7 +617,7 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
     tools_context: str = ""
     tools_context += "Tools used in the report:\n\n"
     for i, tool in enumerate(metadata.tools.values()):
-        tools_context += f"{i+1}. {tool.name} ({tool.info})\n"
+        tools_context += f"{i + 1}. {tool.name} ({tool.info})\n"
         if tool.info:
             tools_context += f"Description: {tool.info}\n"
         if tool.href:
@@ -687,11 +699,11 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
 
 
 def _save_prompt_to_file(prompt: str):
-    # Save content to file for debugging
+    """Save content to file for debugging"""
     path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
     system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
     path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}")
-    logger.debug(f"Saved AI prompt to {path}")
+    logger.debug(f"Saved AI prompt to {path.parent.name}/{path.name}")
 
 
 def add_ai_summary_to_report():
@@ -712,7 +724,8 @@ def add_ai_summary_to_report():
 
     prompt, exceeded_context_window = build_prompt(client, metadata)
 
-    _save_prompt_to_file(prompt)
+    if config.development or config.verbose:
+        _save_prompt_to_file(prompt)
 
     if exceeded_context_window:
         return
@@ -745,7 +758,6 @@ def add_ai_summary_to_report():
     if not response:
         return None
 
-    logger.debug(f"Interpretation: {response.interpretation}")
     if not response.interpretation:
         return None
 
@@ -760,3 +772,5 @@ def add_ai_summary_to_report():
 
     if config.ai_summary_full and interpretation.detailed_analysis:
         report.ai_global_detailed_analysis = interpretation.markdown_to_html(interpretation.detailed_analysis)
+
+    logger.info(f"Summarised report with {report.ai_provider_title}")

@@ -462,7 +462,7 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     "--ai-provider",
-    type=click.Choice(["seqera", "openai", "anthropic"]),
+    type=click.Choice(config.AVAILABLE_AI_PROVIDERS),
     help=f"Select AI provider for report summarization. [dim yellow](Default: {config.ai_provider})",
 )
 @click.option(

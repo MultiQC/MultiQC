@@ -719,8 +719,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "most_common_adapter_read1": {
                 "title": "Most common adapter for read 1.",
-                "description": "The most common adapter for read 1 as based on the overlap "
-                "between read 1 and read 2.",
+                "description": "The most common adapter for read 1 as based on the overlap between read 1 and read 2.",
             },
             "adapter_content_read2": {
                 "title": "Read 2: adapter content",
@@ -733,8 +732,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "most_common_adapter_read2": {
                 "title": "Most common adapter for read 2.",
-                "description": "The most common adapter for read 1 as based on the overlap "
-                "between read 1 and read 2.",
+                "description": "The most common adapter for read 1 as based on the overlap between read 1 and read 2.",
             },
         }
         self.add_section(
