@@ -6,7 +6,7 @@ import numpy as np
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
-from multiqc.plots.plotly.line import LinePlotConfig, Series, Marker
+from multiqc.plots.linegraph import LinePlotConfig, Series, Marker
 from multiqc.plots.plot import PConfig
 from multiqc.utils import mqc_colour
 
