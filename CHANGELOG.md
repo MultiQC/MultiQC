@@ -1,5 +1,29 @@
 # MultiQC Version History
 
+## [MultiQC v1.27](https://github.com/MultiQC/MultiQC/releases/tag/v1.27) - 2025-01-22
+
+### Highlights
+
+Generate AI-generated summaries with `--ai`, or dynamically in existing report. See [documentation](docs/markdown/ai/index.md) for usage details.
+
+### Feature updates and improvements
+
+- Support AI summaries ([#2915](https://github.com/MultiQC/MultiQC/pull/2915))
+- Add "Clustered" view to heatmaps ([#3035](https://github.com/MultiQC/MultiQC/pull/3035))
+- Make configurable when the table button "Configure Column" disabled ([#3045](https://github.com/MultiQC/MultiQC/pull/3045))
+
+### Fixes
+
+- Preserve order of `saved_raw_data_keys` in `multiqc_data.json` ([#3044](https://github.com/MultiQC/MultiQC/pull/3044))
+
+### Module updates
+
+- Checkm2: support v1.0.1, be less strict to header columns ([#3046](https://github.com/MultiQC/MultiQC/pull/3046))
+
+### Infrastructure and packaging
+
+- Update ruff and pre-commit ([#3048](https://github.com/MultiQC/MultiQC/pull/3048))
+
 ## [MultiQC v1.26](https://github.com/MultiQC/MultiQC/releases/tag/v1.26) - 2024-12-17
 
 Christmas release! 10 new modules, 11 improved modules, and a few core improvements.
