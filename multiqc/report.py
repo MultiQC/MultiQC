@@ -74,13 +74,13 @@ class Runtimes:
 
 
 initialized = False
-
-# Uninitialised global variables for static typing
+###########
+### Below are uninitialised global variables for static typing
+# Fields below are reset between interactive runs
 multiqc_command: str
 creation_date: datetime
 top_modules: List[Dict[str, Dict[str, str]]]
 module_order: List[Dict[str, Dict[str, Union[str, List[str]]]]]
-analysis_files: List[str]  # input files to search
 modules: List["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
 general_stats_plot: Optional[ViolinPlot]
 general_stats_html: str
@@ -91,20 +91,12 @@ last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
-file_search_stats: Dict[str, Set[Path]]
-files: Dict[ModuleId, List[FileDict]]
+report_uuid: str
 
-# Fields below are kept between interactive runs
-data_sources: Dict[str, Dict[str, Dict[str, Any]]]
-html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
-plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
-plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
-general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
-general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
-software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
-plot_compressed_json: str
-saved_raw_data_keys: List[str]  # to make sure write_data_file don't overwrite for repeated modules
-saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
+# File search state - also reset between interactive runs
+analysis_files: List[str]  # input files to search
+files: Dict[ModuleId, List[FileDict]]  # files found by each module
+file_search_stats: Dict[str, Set[Path]]
 
 # AI stuff, set dynamically in ai.py to be used in content.html and ai.js
 ai_global_summary: str = ""
@@ -115,6 +107,18 @@ ai_provider_title: str = ""
 ai_model: str = ""
 ai_model_resolved: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
+
+# Following fields are preserved between interactive runs
+data_sources: Dict[str, Dict[str, Dict[str, Any]]]
+html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
+plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
+plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
+general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
+general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
+software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
+plot_compressed_json: str
+saved_raw_data_keys: List[str]  # to make sure write_data_file don't overwrite for repeated modules
+saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
 
 
 def reset():
@@ -137,13 +141,16 @@ def reset():
     global runtimes
     global peak_memory_bytes_per_module
     global diff_memory_bytes_per_module
+    global file_search_stats
+    global files
+    global report_uuid
+
     global data_sources
     global html_ids_by_scope
     global plot_data
     global plot_by_id
     global general_stats_data
     global general_stats_headers
-    global general_stats_plot
     global software_versions
     global plot_compressed_json
     global saved_raw_data_keys
@@ -155,6 +162,7 @@ def reset():
     global ai_provider_id
     global ai_provider_title
     global ai_model
+    global ai_model_resolved
     global ai_report_metadata_base64
 
     # Create new temporary directory for module data exports
@@ -164,7 +172,6 @@ def reset():
     creation_date = datetime.now().astimezone()
     top_modules = []
     module_order = []
-    analysis_files = []
     modules = []
     general_stats_plot = None
     general_stats_html = ""
@@ -175,6 +182,19 @@ def reset():
     runtimes = Runtimes()
     peak_memory_bytes_per_module = dict()
     diff_memory_bytes_per_module = dict()
+    report_uuid = ""
+
+    reset_file_search()
+
+    ai_global_summary = ""
+    ai_global_detailed_analysis = ""
+    ai_thread_id = ""
+    ai_provider_id = ""
+    ai_provider_title = ""
+    ai_model = ""
+    ai_model_resolved = ""
+    ai_report_metadata_base64 = ""
+
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
     html_ids_by_scope = defaultdict(set)
     plot_data = dict()
@@ -186,15 +206,6 @@ def reset():
     saved_raw_data_keys = []
     saved_raw_data = dict()
 
-    ai_global_summary = ""
-    ai_global_detailed_analysis = ""
-    ai_thread_id = ""
-    ai_provider_id = ""
-    ai_provider_title = ""
-    ai_model = ""
-    ai_report_metadata_base64 = ""
-
-    reset_file_search()
     tmp_dir.new_tmp_dir()
 
 
