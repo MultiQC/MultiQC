@@ -51,6 +51,7 @@ venv*
 
 # Related repos
 /test-data
+/seqeralabs-docs
 
 node_modules/
 package-lock.json
