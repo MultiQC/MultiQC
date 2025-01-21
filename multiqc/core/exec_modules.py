@@ -90,8 +90,8 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
 
             # Clean up non-base attribute to save memory.
             trace_memory("before cleaning up attributes")
-            for m in these_modules:
-                m.clean_child_attributes()
+            for mod in these_modules:
+                mod.clean_child_attributes()
             trace_memory("after cleaning up attributes")
 
             # Merged duplicated outputs

@@ -85,10 +85,10 @@ class LoadMultiqcData(BaseMultiqcModule):
                 report.modules.append(mod)
 
             # Load data sources
-            for mod, sections in data["report_data_sources"].items():
-                for section, sources in sections.items():
+            for mod_id, source_dict in data["report_data_sources"].items():
+                for section, sources in source_dict.items():
                     for sname, source in sources.items():
-                        report.data_sources[mod][section][sname] = source
+                        report.data_sources[mod_id][section][sname] = source
 
             # Load normalized plot data pointers
             if "report_plot_input_data" in data:

@@ -2,7 +2,6 @@ import base64
 import dataclasses
 import errno
 import io
-import json
 import logging
 import os
 import re
@@ -13,7 +12,7 @@ import time
 import traceback
 import uuid
 from pathlib import Path
-from typing import Optional, cast
+from typing import Optional
 
 import jinja2
 
@@ -365,8 +364,8 @@ def _render_general_stats_table(plots_dir_name: str):
         else:
             report.plot_by_id[p.anchor] = p
 
-    if p := report.plot_by_id.get(Anchor("general_stats_table")):
-        report.general_stats_html = p.add_to_report(
+    if genstats_plot := report.plot_by_id.get(Anchor("general_stats_table")):
+        report.general_stats_html = genstats_plot.add_to_report(
             plots_dir_name=plots_dir_name,
             module_anchor=Anchor("general_stats_table"),
             section_anchor=Anchor("general_stats_table"),
