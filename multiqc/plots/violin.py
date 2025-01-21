@@ -52,7 +52,7 @@ def normalize_inputs(
         h = headers[i] if headers and len(headers) > i else None
         table_id = pconf.id
         table_anchor = Anchor(f"{pconf.anchor or table_id}_table")
-        if len(data) > 0:
+        if len(data) > 1:
             table_anchor = Anchor(f"{table_anchor}-{i + 1}")
         table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
         dt = table_object.DataTable.create(d, table_id, table_anchor, pconf.model_copy(), h)
