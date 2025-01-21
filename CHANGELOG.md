@@ -19,6 +19,7 @@ Generate AI-generated summaries with `--ai`, or dynamically in existing report. 
 ### Module updates
 
 - Checkm2: support v1.0.1, be less strict to header columns ([#3046](https://github.com/MultiQC/MultiQC/pull/3046))
+- Bustools: support 0.44.1 ([#3053](https://github.com/MultiQC/MultiQC/pull/3053))
 
 ### Infrastructure and packaging
 
