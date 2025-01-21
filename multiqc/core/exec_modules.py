@@ -14,6 +14,7 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core import plugin_hooks, software_versions
 from multiqc.core.exceptions import NoAnalysisFound, RunError
 from multiqc.core.special_case_modules.load_multiqc_data import LoadMultiqcData
+from multiqc.types import Anchor
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,16 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
         # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
         or list(m.keys())[0].lower() == "custom_content"
     ]
+
+    # Handle repeated modules: check anchors for possible duplicates. Modules with same anchor
+    # will be merged into one module, so need to make sure they are different for repeated modules.
+    for m in mod_dicts_in_order:
+        mod_id, mod_cust_config = list(m.items())[0]
+        anchor = mod_cust_config.get("anchor") or mod_id
+        anchor = Anchor(report.save_htmlid(str(anchor)))
+        if anchor != mod_id:
+            mod_cust_config["anchor"] = anchor
+
     # Special-case software_versions module must be run in the end
     mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0].lower() != "software_versions"]
     mod_names = [list(m.keys())[0] for m in mod_dicts_in_order]
@@ -86,9 +97,10 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
             # Merged duplicated outputs
             for prev_mod in report.modules:
                 for new_mod in these_modules:
-                    new_mod.merge(prev_mod)
-                    logger.info(f'Updating module "{prev_mod.name}"')
-                    report.modules.remove(prev_mod)
+                    if prev_mod.anchor == new_mod.anchor:
+                        new_mod.merge(prev_mod)
+                        logger.info(f'Updating module "{prev_mod.name}"')
+                        report.modules.remove(prev_mod)
             report.modules.extend(these_modules)
 
         except ModuleNoSamplesFound:

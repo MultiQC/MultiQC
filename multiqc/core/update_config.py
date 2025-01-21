@@ -241,15 +241,6 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     report.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
     report.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]
 
-    # Handle repeated modules: check anchors for possible duplicates. Modules with same anchor
-    # will be merged into one module, so need to make sure they are different for repeated modules.
-    for m in report.module_order:
-        mod_id, mod_cust_config = list(m.items())[0]
-        anchor = mod_cust_config.get("anchor") or mod_id
-        anchor = Anchor(report.save_htmlid(str(anchor)))
-        if anchor != mod_id:
-            mod_cust_config["anchor"] = anchor
-
     if cfg.unknown_options:
         config.kwargs = cfg.unknown_options  # plug in command line options
 
