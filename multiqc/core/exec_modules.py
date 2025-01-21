@@ -70,7 +70,7 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
 
         this_module: str = list(mod_dict.keys())[0]
         logger.debug(f"Running module: {this_module}")
-        mod_cust_config: Dict = list(mod_dict.values())[0] or {}
+        mod_cust_config = list(mod_dict.values())[0] or {}
         # noinspection PyBroadException
         try:
             entry_point: EntryPoint = config.avail_modules[this_module]

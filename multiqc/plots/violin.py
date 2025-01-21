@@ -6,11 +6,9 @@ from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
-import plotly.graph_objects as go
-from pydantic import BaseModel  # type: ignore
+import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.base_module import Section
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, Plot, PlotType
 from multiqc.plots.table import render_html

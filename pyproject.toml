@@ -288,7 +288,6 @@ package-data = { multiqc = ["py.typed"] }
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-lint.ignore = ["F401"]   # unused-import
 
 [tool.mypy]
 check_untyped_defs = true

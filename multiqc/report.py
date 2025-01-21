@@ -131,7 +131,6 @@ def reset():
     global module_order
     global analysis_files
     global modules
-    global general_stats_plot
     global general_stats_html
     global lint_errors
     global num_flat_plots
@@ -173,7 +172,6 @@ def reset():
     top_modules = []
     module_order = []
     modules = []
-    general_stats_plot = None
     general_stats_html = ""
     lint_errors = []
     num_flat_plots = 0

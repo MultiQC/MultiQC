@@ -8,7 +8,6 @@ from collections import OrderedDict, defaultdict
 from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
-import pyarrow.parquet as pq
 import spectra  # type: ignore
 from natsort import natsorted
 from pydantic import BaseModel, Field
@@ -198,7 +197,7 @@ def merge_normalized_data(old_data: BarPlotInputData, new_data: BarPlotInputData
             continue
 
         # Merge samples within dataset
-        merged_ds = defaultdict(dict)
+        merged_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = defaultdict(dict)
         for sample, cat_vals in old_ds.items():
             for cat, val in cat_vals.items():
                 merged_ds[sample][cat] = val
