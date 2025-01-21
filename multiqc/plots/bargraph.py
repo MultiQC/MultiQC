@@ -234,7 +234,7 @@ def merge_normalized_data(old_data: BarPlotInputData, new_data: BarPlotInputData
     # Use new config but preserve old values if not overridden
     merged_pconf = new_data.pconfig
     for field, value in old_data.pconfig.model_dump().items():
-        if getattr(new_data.pconfig, field) is None:
+        if getattr(new_data.pconfig.model_fields, field) is None:
             setattr(merged_pconf, field, value)
 
     return BarPlotInputData(data=merged_datasets, cats=merged_cats, pconfig=merged_pconf)
