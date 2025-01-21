@@ -11,9 +11,9 @@ import subprocess
 import sys
 import time
 import traceback
+import uuid
 from pathlib import Path
 from typing import Optional, cast
-import uuid
 
 import jinja2
 
@@ -348,7 +348,9 @@ def _render_general_stats_table(plots_dir_name: str):
     if len(report.general_stats_data) > 0 and not all_hidden:
         # Clean previous general stats table if running write_report interactively second time
         if Anchor("general_stats_table") in report.html_ids_by_scope[None]:
-            report.html_ids_by_scope[None].remove(Anchor("general_stats_table"))
+            report.html_ids_by_scope[None].remove(Anchor("general_stats_table"))  # Violin plot anchor
+            if Anchor("general_stats_table_table") in report.html_ids_by_scope[None]:
+                report.html_ids_by_scope[None].remove(Anchor("general_stats_table_table"))  # Table anchor
             del report.general_stats_html
         pconfig = {
             "id": "general_stats_table",
