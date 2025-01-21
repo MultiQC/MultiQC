@@ -5,6 +5,7 @@ modules. Contains helper functions to generate markup for report.
 
 import base64
 import dataclasses
+from datetime import datetime
 import fnmatch
 import gzip
 import inspect
@@ -60,8 +61,6 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-initialized = False
-
 
 @dataclasses.dataclass
 class Runtimes:
@@ -73,8 +72,11 @@ class Runtimes:
     mods: Dict[str, float] = dataclasses.field(default_factory=lambda: defaultdict())
 
 
+initialized = False
+
 # Uninitialised global variables for static typing
 multiqc_command: str
+creation_date: datetime
 top_modules: List[Dict[str, Dict[str, str]]]
 module_order: List[Dict[str, Dict[str, Union[str, List[str]]]]]
 analysis_files: List[str]  # input files to search
@@ -89,7 +91,6 @@ peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, Set[Path]]
 files: Dict[ModuleId, List[FileDict]]
-report_uuid: str
 
 # Fields below are kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
@@ -120,11 +121,14 @@ def reset():
     # Set up global variables shared across modules. Inside a function so that the global
     # vars are reset if MultiQC is run more than once within a single session / environment.
     global initialized
+
     global multiqc_command
+    global creation_date
     global top_modules
     global module_order
     global analysis_files
     global modules
+    global general_stats_plot
     global general_stats_html
     global lint_errors
     global num_flat_plots
@@ -140,9 +144,11 @@ def reset():
     global plot_input_data
     global general_stats_data
     global general_stats_headers
-    global saved_raw_data_keys
     global software_versions
     global plot_compressed_json
+    global saved_raw_data_keys
+    global saved_raw_data
+
     global ai_global_summary
     global ai_global_detailed_analysis
     global ai_thread_id
@@ -150,16 +156,17 @@ def reset():
     global ai_provider_title
     global ai_model
     global ai_report_metadata_base64
-    global saved_raw_data_keys
-    global saved_raw_data
 
     # Create new temporary directory for module data exports
     initialized = True
+
     multiqc_command = ""
+    creation_date = datetime.now().astimezone()
     top_modules = []
     module_order = []
     analysis_files = []
     modules = []
+    general_stats_plot = None
     general_stats_html = ""
     lint_errors = []
     num_flat_plots = 0
@@ -1016,10 +1023,10 @@ def multiqc_dump_json(data_dir: Path):
             "general_stats_headers",
             "plot_input_data",
             "modules",
+            "creation_date",
         ],
         "config": [
             "analysis_dir",
-            "creation_date",
             "git_hash",
             "intro_text",
             "report_comment",
@@ -1074,6 +1081,8 @@ def multiqc_dump_json(data_dir: Path):
                             }
                             for mod in modules
                         ]
+                    elif name == "creation_date":
+                        val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
                     d = {f"{pymod}_{name}": val}
                 if d:
                     with open(os.devnull, "wt") as f:

@@ -3,7 +3,7 @@ import logging
 import os
 import re
 from textwrap import indent
-from typing import TYPE_CHECKING, Dict, Optional, Tuple, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, TypeVar, cast
 
 import requests
 from markdown import markdown
@@ -17,7 +17,8 @@ from multiqc.types import Anchor
 
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
-
+    from langchain_core.messages import BaseMessage  # type: ignore
+    from langchain_core.runnables import Runnable  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -168,6 +169,9 @@ class InterpretationResponse(BaseModel):
     thread_id: Optional[str] = None
 
 
+ResponseT = TypeVar("ResponseT")
+
+
 class Client:
     def __init__(self, model: str, api_key: str):
         self.name: str
@@ -205,52 +209,86 @@ class Client:
             )
             return int(len(text) / 1.5)
 
+    def _request_with_error_handling_and_retries(
+        self, send_request: Callable[[], ResponseT], retries: int = 0
+    ) -> Optional[ResponseT]:
+        """Make a request with retries and exponential backoff.
+
+        Args:
+            send_request: Callable that makes the actual request
+            retries: Number of retries (0 means no retries)
+        """
+        import time
+
+        attempt = 0
+        while True:
+            try:
+                if config.verbose:
+                    response = send_request()
+                else:
+                    response = run_with_spinner("ai", f"Summarizing report with {self.title}...", send_request)
+                return response
+
+            except Exception as e:
+                attempt += 1
+                if attempt > retries:
+                    logger.error(f"Failed to get a response from {self.title}: {e}")
+                    return None
+
+                # Calculate backoff time - start at 1s and double each retry
+                backoff = 2 ** (attempt - 1)
+                logger.warning(
+                    f"Request to {self.title} failed (attempt {attempt}/{retries + 1}). "
+                    f"Retrying in {backoff}s... Error: {e}"
+                )
+                time.sleep(backoff)
+
 
 class LangchainClient(Client):
     def __init__(self, model: str, api_key: str):
         super().__init__(model, api_key)
         self.llm: BaseChatModel
 
-    def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
+    def send_request(self, llm: "Runnable", prompt: str, report_content: str) -> Optional["BaseMessage"]:
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
         from langsmith import Client as LangSmithClient  # type: ignore
 
-        llm = self.llm
-
-        def send_request():
-            if os.environ.get("LANGCHAIN_API_KEY"):
-                with tracing_v2_enabled(
-                    project_name=os.environ.get("LANGCHAIN_PROJECT", config.langchain_project),
-                    client=LangSmithClient(
-                        api_key=os.environ.get("LANGCHAIN_API_KEY"),
-                        api_url=os.environ.get("LANGCHAIN_ENDPOINT", config.langchain_endpoint),
-                    ),
-                ):
-                    response = llm.invoke(
-                        [
-                            {"role": "user", "content": PROMPT_SHORT},
-                            {"role": "user", "content": report_content},
-                        ],
-                    )
-            else:
+        if os.environ.get("LANGCHAIN_API_KEY"):
+            with tracing_v2_enabled(
+                project_name=os.environ.get("LANGCHAIN_PROJECT", config.langchain_project),
+                client=LangSmithClient(
+                    api_key=os.environ.get("LANGCHAIN_API_KEY"),
+                    api_url=os.environ.get("LANGCHAIN_ENDPOINT", config.langchain_endpoint),
+                ),
+            ):
                 response = llm.invoke(
                     [
-                        {"role": "user", "content": PROMPT_SHORT},
+                        {"role": "user", "content": prompt},
                         {"role": "user", "content": report_content},
                     ],
                 )
-            return response
-
-        if config.verbose:
-            response = send_request()
         else:
-            response = run_with_spinner("ai", f"Summarizing report with {self.title}...", send_request)
+            response = llm.invoke(
+                [
+                    {"role": "user", "content": prompt},
+                    {"role": "user", "content": report_content},
+                ],
+            )
 
         if not response:
             msg = f"Got empty response from the LLM {self.title} {self.model}"
             if config.strict:
                 raise RuntimeError(msg)
             logger.error(msg)
+            return None
+
+        return response
+
+    def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
+        response: Optional[BaseMessage] = self._request_with_error_handling_and_retries(
+            lambda: self.send_request(self.llm, PROMPT_SHORT, report_content)
+        )
+        if response is None:
             return None
 
         resolved_model_name = self.model
@@ -267,39 +305,12 @@ class LangchainClient(Client):
         )
 
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
-        from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
-        from langsmith import Client as LangSmithClient  # type: ignore
-
-        llm = self.llm.with_structured_output(InterpretationOutput, include_raw=True)
-
-        def send_request():
-            if os.environ.get("LANGCHAIN_API_KEY"):
-                with tracing_v2_enabled(
-                    project_name=os.environ.get("LANGCHAIN_PROJECT", config.langchain_project),
-                    client=LangSmithClient(
-                        api_key=os.environ.get("LANGCHAIN_API_KEY"),
-                        api_url=os.environ.get("LANGCHAIN_ENDPOINT", config.langchain_endpoint),
-                    ),
-                ):
-                    response = llm.invoke(
-                        [
-                            {"role": "user", "content": PROMPT_FULL},
-                            {"role": "user", "content": report_content},
-                        ],
-                    )
-            else:
-                response = llm.invoke(
-                    [
-                        {"role": "user", "content": PROMPT_FULL},
-                        {"role": "user", "content": report_content},
-                    ],
-                )
-            return response
-
-        if config.verbose:
-            response = send_request()
-        else:
-            response = run_with_spinner("ai", f"Summarizing report with {self.title}...", send_request)
+        llm: Runnable = self.llm.with_structured_output(InterpretationOutput, include_raw=True)
+        response = self._request_with_error_handling_and_retries(
+            lambda: self.send_request(llm, PROMPT_FULL, report_content)
+        )
+        if response is None:
+            return None
 
         response = cast(Dict, response)
         if not response["parsed"]:
@@ -395,8 +406,10 @@ class SeqeraClient(Client):
         super().__init__(model, api_key)
         self.name = "seqera"
         self.title = "Seqera AI"
-        self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, {config.creation_date}"
+        creation_date = report.creation_date.strftime("%d %b %Y, %H:%M %Z")
+        self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, created on {creation_date}"
         self.tags = ["multiqc", f"multiqc_version:{config.version}"]
+        self.retries = 3
 
     def max_tokens(self) -> int:
         return 200000
@@ -404,29 +417,33 @@ class SeqeraClient(Client):
     def wrap_details(self, prompt) -> str:
         return f"{self.chat_title}\n\n:::details\n\n{prompt}\n\n:::\n\n"
 
-    def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
-        def send_request() -> requests.Response:
-            return requests.post(
-                f"{config.seqera_api_url}/internal-ai/query",
-                headers={"Authorization": f"Bearer {self.api_key}"},
-                json={
-                    "message": self.wrap_details(PROMPT_SHORT + "\n\n" + report_content),
-                    "tags": self.tags,
-                    "title": self.chat_title,
-                },
-            )
-
-        if config.verbose:
-            response = send_request()
-        else:
-            response = run_with_spinner("ai", "Summarizing report with Seqera AI...", send_request)
-
+    def _send_request(
+        self, prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
+    ) -> Optional[requests.Response]:
+        response = requests.post(
+            f"{config.seqera_api_url}/internal-ai/query",
+            headers={"Authorization": f"Bearer {self.api_key}"},
+            json={
+                "message": self.wrap_details(prompt + "\n\n" + report_content),
+                "tags": self.tags,
+                "title": self.chat_title,
+                **(extra_options or {}),
+            },
+        )
         if response.status_code != 200:
             msg = f"Failed to get a response from Seqera. Status code: {response.status_code} ({response.reason})"
             logger.error(msg)
             logger.debug(f"Response: {response.text}")
             if config.strict:
                 raise RuntimeError(msg)
+            return None
+        return response
+
+    def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
+        response = self._request_with_error_handling_and_retries(
+            lambda: self._send_request(PROMPT_SHORT, report_content), retries=self.retries
+        )
+        if response is None:
             return None
 
         response_dict = response.json()
@@ -439,14 +456,11 @@ class SeqeraClient(Client):
         )
 
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
-        def send_request() -> requests.Response:
-            return requests.post(
-                f"{config.seqera_api_url}/internal-ai/query",
-                headers={"Authorization": f"Bearer {self.api_key}"},
-                json={
-                    "message": self.wrap_details(PROMPT_FULL + "\n\n" + report_content),
-                    "tags": self.tags,
-                    "title": self.chat_title,
+        response = self._request_with_error_handling_and_retries(
+            lambda: self._send_request(
+                PROMPT_FULL,
+                report_content,
+                extra_options={
                     "response_schema": {
                         "name": "Interpretation",
                         "description": "Interpretation of a MultiQC report",
@@ -464,18 +478,10 @@ class SeqeraClient(Client):
                         },
                     },
                 },
-            )
-
-        if config.verbose:
-            response = send_request()
-        else:
-            response = run_with_spinner("ai", "Summarizing report with Seqera AI...", send_request)
-
-        if response.status_code != 200:
-            msg = f"Failed to get a response from Seqera: {response.status_code} {response.text}"
-            logger.error(msg)
-            if config.strict:
-                raise RuntimeError(msg)
+            ),
+            retries=self.retries,
+        )
+        if response is None:
             return None
 
         response_dict = response.json()

@@ -199,7 +199,6 @@ sp: Dict = {}
 
 # Other defaults that can't be set in YAML
 modules_dir: str
-creation_date: str
 working_dir: str
 analysis_dir: List[str]
 output_dir: str
@@ -239,9 +238,8 @@ def load_defaults():
         sp = yaml.safe_load(f)
 
     # Other defaults that can't be set in defaults YAML
-    global modules_dir, creation_date, working_dir, analysis_dir, output_dir, megaqc_access_token, kwargs
+    global modules_dir, working_dir, analysis_dir, output_dir, megaqc_access_token, kwargs
     modules_dir = str(Path(MODULE_DIR) / "modules")
-    creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
     working_dir = os.getcwd()
     analysis_dir = [os.getcwd()]
     output_dir = os.path.realpath(os.getcwd())
