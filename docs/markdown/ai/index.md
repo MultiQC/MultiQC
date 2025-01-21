@@ -28,13 +28,7 @@ For more information, see [Seqera AI: Your privacy matters](https://seqera.io/ai
 
 To use native summary generation, MultiQC needs to communicate with an LLM provider's API.
 All three supported services require an API key to work.
-
-:::info
-
-Seqera AI is free to use, though there are usage limits.
-Use of OpenAI and Anthropic APIs are billed by their respective providers based on consumption.
-
-:::
+Remember: Treat your API keys like passwords and do not share them.
 
 - [Seqera AI](https://seqera.io/ask-ai/)
   - Register for free at [seqera.io](https://seqera.io/)
@@ -52,11 +46,9 @@ Use of OpenAI and Anthropic APIs are billed by their respective providers based 
     in order to manually summarise report data.
     See [Copying prompts](#copying-prompts) for instructions.
 
-:::note
-
-Treat your API keys like passwords and do not share them.
-
-:::
+Seqera AI is free to use.[^seqera-ai-usage-limits]
+Use of OpenAI and Anthropic APIs are billed by their respective providers based on consumption.
+Seqera AI uses the latest AI provider models under the hood, at the time of writing that is Anthropic Claude sonnet 3.5.
 
 ### Choosing a model
 
@@ -76,7 +68,7 @@ This model is used during report generation and also set as the default toolbox 
 
 MultiQC can generate AI summaries at run time, when generating reports.
 Summary text is included within the report HTML as static text and will be visible to anyone viewing the report,
-however it is shared.
+even when shared.
 
 AI summaries are disabled by default when running MultiQC.
 To generate them, you must enable them either on the command line or via a MultiQC config file.
@@ -96,9 +88,9 @@ To generate them, you must enable them either on the command line or via a Multi
   no_ai: false # Set to true to disable AI toolbox and buttons in the report
   ```
 
-You must set your provider's API key in an environment variable in order to access its service
+You must also set your provider's API key in an environment variable in order to access its service
 _(see [Choosing a provider](#choosing-a-provider) for how to get an API key)_.
-The API keys are supplied by setting the following environment variables:
+API keys are supplied by setting the following environment variables in your shell:
 
 ```bash
 export SEQERA_ACCESS_TOKEN="..."  # or TOWER_ACCESS_TOKEN
@@ -106,12 +98,16 @@ export OPENAI_API_KEY="..."
 export ANTHROPIC_API_KEY="..."
 ```
 
+It's possible to save these in an `.env` file instead of exporting to your shell's environment.
+This `.env` file can either be in the current working directory or the MultiQC source code directory.
+MultiQC uses the [python-dotenv](https://saurabh-kumar.com/python-dotenv/) package.
+
 If you run MultiQC without the appropriate key you will get a warning printed to the console,
 but report generation will otherwise proceed without the summary. MultiQC will not return an error exit code.
 
 :::tip
 
-Any MultiQC config option can also be set using environment variables
+MultiQC configuration options can also be set using environment variables
 (see [Config with environment variables](../getting_started/config.md#config-with-environment-variables)),
 so you can set up everything, including the command line flags / config this way:
 
@@ -121,9 +117,6 @@ export SEQERA_ACCESS_TOKEN="..."
 ```
 
 :::
-
-MultiQC uses the [python-dotenv](https://saurabh-kumar.com/python-dotenv/) package,
-so you can also use an `.env` file either in the current working directory or the MultiQC source code directory.
 
 Environment variables will only be used for `--ai-summary`/`--ai-summary-full` generation.
 They are not saved by MultiQC and cannot be used for in-browser summary generation, within reports.
@@ -135,7 +128,7 @@ This can be useful as the person viewing a report is often different than the pe
 Summaries can be generated on demand when needed.
 
 The AI toolbox and **Summarize** buttons are shown by default in all reports. To prevent this, run MultiQC with the `--no-ai` flag.
-This can be done on a per-user basis by selecting **Remove AI buttons** in the **AI Provider** dropdown in the AI toolbox.
+This can also be done on a per-user basis by selecting **Remove AI buttons** in the **AI Provider** dropdown in the AI toolbox.
 
 Summaries generated in reports are _ephemeral_ and are not saved in the HTML.
 If you generate a summary and share the report then others will not see it.
@@ -169,11 +162,7 @@ They are used to send report data directly to your AI provider of choice.
 
 Once your provider API key is configured, click **Summarize report** to generate an overview summary of the entire report.
 
-:::info
-
-The summary text is interactive! Click an underlined sample name to highlight that sample throughout the report.
-
-:::
+The summary text is interactive: click an underlined sample name to highlight that sample throughout the report.
 
 ![ai_summarize_report_toolbox](../../../docs/images/ai_toolbox.png)
 
@@ -182,14 +171,6 @@ The summary text is interactive! Click an underlined sample name to highlight th
 Besides a global report-level AI summary, you can generate a summary for each plot or table separately using buttons next to each section:
 
 ![ai_summarize_buttons](../../../docs/images/ai_summarize_buttons.png)
-
-You can also copy the entire prompt that MultiQC would use to generate a summary. Using the toolbox, you can enable the **Copy prompt** buttons to be shown next to each **Summarize** button:
-
-![ai_toolbox_copy_checkbox](../../../docs/images/ai_toolbox_copy_checkbox.png)
-
-![ai_copy_buttons](../../../docs/images/ai_copy_buttons.png)
-
-A button will copy the LLM-friendly formatted report data along with the system prompt into your clipboard, which you can then paste into your an AI chat interface of your provider of choice.
 
 ### Copying prompts
 
@@ -243,11 +224,7 @@ env {
 }
 ```
 
-The relevant environment variables are described in [Summaries during report generation](#summaries-during-report-generation).
-
-:::note
-
-In the previous example, [Nextflow Secrets](https://nextflow.io/docs/latest/secrets.html) are used.
+In this example, [Nextflow Secrets](https://nextflow.io/docs/latest/secrets.html) are used
 to securely manage your API keys outside of your config file.
 To add this Nextflow secret you would run the following command in the terminal:
 
@@ -255,23 +232,23 @@ To add this Nextflow secret you would run the following command in the terminal:
 $ nextflow secrets set OPENAI_API_KEY "xxxx"
 ```
 
-:::
-
 :::tip
 
-Add this config to `~/.nextflow/config` and it will be applied to every Nextflow pipeline you launch.
+Save this Nextflow config to `~/.nextflow/config` and it
+[will be applied](https://nextflow.io/docs/edge/config.html#configuration-file)
+to every Nextflow pipeline you launch.
 
 :::
 
 ### Using Seqera Platform
 
-If using Seqera Platform, the previously described config can be used when launching pipelines or adding them to the Launchpad.
-However, environment variables can also be added at the _Compute Environment_ level and then affects every pipeline
-run using that CE, without further modification.
-This effectively means that provider API keys can be managed at the workspace level.
+If using Seqera Platform, the Nextflow `env` config can be used when launching pipelines or adding them to the Launchpad.
+
+Environment variables can also be added at the _Compute Environment_ level, which affects every pipeline
+run using that CE without further modification.
+This allows managing provider API keys at the workspace level.
 
 To do this, toggle the **Environment variables** section when creating a Compute Environment and select **Add variable**.
-
 Ensure that the **Target environment** has **Compute job** enabled.
 
 ![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_var_create.png)
@@ -292,3 +269,10 @@ Treat results with appropriate mistrust and consider what data you are sending t
 Seqera AI does not use inputs for subsequent fine-tuning or direct model improvement.
 You can find our more information about Seqera's pledge for privacy at
 [https://seqera.io/ai-trust/](https://seqera.io/ai-trust/)
+
+[^seqera-ai-usage-limits]:
+    Seqera Cloud Basic is free for small teams.
+    It includes access to Seqera AI, with a usage cap of 100 messages per calendar month.
+    Seqera AI usage is unlimited for Seqera Cloud Pro users.
+    Researchers at qualifying academic institutions can apply for free access to Seqera Cloud Pro.
+    See [Seqera Pricing](https://seqera.io/pricing/) for more details
