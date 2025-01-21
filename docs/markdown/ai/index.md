@@ -70,6 +70,8 @@ MultiQC can generate AI summaries at run time, when generating reports.
 Summary text is included within the report HTML as static text and will be visible to anyone viewing the report,
 even when shared.
 
+### MultiQC configuration
+
 AI summaries are disabled by default when running MultiQC.
 To generate them, you must enable them either on the command line or via a MultiQC config file.
 
@@ -87,6 +89,8 @@ To generate them, you must enable them either on the command line or via a Multi
   ai_provider: "seqera" # 'seqera', 'openai' or 'anthropic'. Default: 'seqera'
   no_ai: false # Set to true to disable AI toolbox and buttons in the report
   ```
+
+### Environment variables
 
 You must also set your provider's API key in an environment variable in order to access its service
 _(see [Choosing a provider](#choosing-a-provider) for how to get an API key)_.
@@ -137,9 +141,9 @@ so that it shows the next time you open the same report, but this process is imp
 
 ### Configuring the AI provider
 
-<div style={{float:"right"}}>
+<div style={{float:"right", width:200}}>
 
-![ai_summarize_report](../../../docs/images/ai_toolbox_icon.png)
+![Configure AI providers within a MultiQC report](../../../docs/images/ai_toolbox_icon.png)
 
 </div>
 
@@ -149,37 +153,64 @@ Open the AI settings by clicking the icon in the toolbox:
 Then, choose an AI provider and enter the relevant API key
 _(see [Choosing a provider](#choosing-a-provider) for how to get an API key)_.
 
-:::info
+:::info[Important]
 
-API keys are stored only in your browser's local storage and are not shared with anyone if you send the HTML report to someone else.
+API keys are stored _only_ in your browser's [local storage](https://www.w3schools.com/html/html5_webstorage.asp)
+and are not shared if you send the HTML report to someone else.
 They are used to send report data directly to your AI provider of choice.
 
 :::
 
-![ai_summarize_report_toolbox_keys](../../../docs/images/ai_toolbox_keys.png)
+![Enter a provider API key in the report toolbox](../../../docs/images/ai_toolbox_keys.png)
 
 ### Summarising the report
 
 Once your provider API key is configured, click **Summarize report** to generate an overview summary of the entire report.
 
-The summary text is interactive: click an underlined sample name to highlight that sample throughout the report.
+![Button to summarize a MultiQC report](../../../docs/images/ai_summarize_button.png)
 
-![ai_summarize_report_toolbox](../../../docs/images/ai_toolbox.png)
+The summary text is interactive: click an <u>underlined</u> sample name to highlight that sample throughout the report:
+
+![Click underlined sample names in the summary to highlight them in the report](../../../docs/images/ai_highlight_samples.gif)
 
 ### Section-level summaries
 
 Besides a global report-level AI summary, you can generate a summary for each plot or table separately using buttons next to each section:
 
-![ai_summarize_buttons](../../../docs/images/ai_summarize_buttons.png)
+![Summarize with AI buttons in a report](../../../docs/images/ai_summarize_buttons.png)
 
 ### Copying prompts
 
 If you have access to an LLM that is not directly supported by MultiQC, you can copy the exact prompt
 that MultiQC uses to your clipboard. This can be pasted into whatever LLM that you have access to.
 
-To do this, click the **Copy prompt** button in the toolbox:
+To do this, select **Copy prompts** as the LLM provider in the report toolbox AI tab.
+The **Summarize** buttons will then change to **Copy Prompt** buttons and instead of injecting
+summaries into the report HTML, will copy the LLM prompt to your clipboard.
 
-![ai_toolbox_copy_button](../../../docs/images/ai_toolbox_copy_button.png)
+### Remove AI buttons
+
+If you're suffering from AI-overload and don't want to see the AI summary features in your reports,
+you can disable them by selecting **Remove AI buttons** in the toolbox as an AI provider.
+This will remove all **Summarize** buttons from the report.
+
+This is done at user level and will be stored in the browser's local storage and applied to all
+MultiQC reports that you open.
+You can also use `--no-ai` when generating reports, which removes this functionality from the HTML for all users.
+
+## Continue chat
+
+If using Seqera AI as a provider, you can click the **Chat with Seqera AI** button to open the Seqera AI
+chat interface in a new tab in order to ask further questions.
+This button is shown alongside the report-level summary after it's generated.
+
+![Chat with Seqera AI button location](../../../docs/images/ai_chat_with_seqera_ai_button.png)
+
+If you are logged in to [seqera.io](https://seqera.io) with the same user that generated the report summary,
+the chat history with the report prompt and AI summary response will be loaded allowing you to
+continue straight on with more in-depth questions.
+
+![Seqera AI with MultiQC report history](../../../docs/images/ai_continue_chat.png)
 
 ## Context window
 
