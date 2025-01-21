@@ -249,7 +249,7 @@ class LangchainClient(Client):
         super().__init__(model, api_key)
         self.llm: BaseChatModel
 
-    def send_request(self, llm: "Runnable", prompt: str, report_content: str) -> Optional["BaseMessage"]:
+    def send_request(self, llm: "Runnable", prompt: str, report_content: str):
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
         from langsmith import Client as LangSmithClient  # type: ignore
 
@@ -306,13 +306,12 @@ class LangchainClient(Client):
 
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
         llm: Runnable = self.llm.with_structured_output(InterpretationOutput, include_raw=True)
-        response = self._request_with_error_handling_and_retries(
+        response: Optional[Dict] = self._request_with_error_handling_and_retries(
             lambda: self.send_request(llm, PROMPT_FULL, report_content)
         )
         if response is None:
             return None
 
-        response = cast(Dict, response)
         if not response["parsed"]:
             if response["raw"]:
                 msg = f"Failed to parse the response from the LLM: {response['raw']}"
