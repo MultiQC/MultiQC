@@ -2,7 +2,7 @@
 title: CheckM
 displayed_sidebar: multiqcSidebar
 description: >
-  CheckM estimates genome completeness and contamination based on the presence or absence of marker genes
+  Estimates genome completeness and contamination based on the presence or absence of marker genes
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/checkm/checkm.py
 -->
 
 :::note
-CheckM estimates genome completeness and contamination based on the presence or absence of marker genes
+Estimates genome completeness and contamination based on the presence or absence of marker genes
 
 [https://github.com/Ecogenomics/CheckM](https://github.com/Ecogenomics/CheckM)
 :::
@@ -25,7 +25,7 @@ It will only parse an output file from `checkm lineage_wf`, `checkm taxonomy_wf`
 The output file needs to be in format 1 (`-o 1`).
 All statistics for all samples are saved to `multiqc_data/checkm-table.txt`.
 
-    This has been tested with CheckM v1.2.1 .
+    Tested with CheckM v1.2.1
 
 ### File search patterns
 
