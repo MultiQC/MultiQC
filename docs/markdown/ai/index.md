@@ -185,7 +185,7 @@ If you have access to an LLM that is not directly supported by MultiQC, you can 
 that MultiQC uses to your clipboard. This can be pasted into whatever LLM that you have access to.
 
 To do this, select **Copy prompts** as the LLM provider in the report toolbox AI tab.
-The **Summarize** buttons will then change to **Copy Prompt** buttons and instead of injecting
+The **Summarize** buttons will then change to **Copy prompt** buttons and instead of injecting
 summaries into the report HTML, will copy the LLM prompt to your clipboard.
 
 ### Remove AI buttons
