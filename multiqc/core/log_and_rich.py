@@ -8,7 +8,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Callable, List, Optional, TypeVar
 
 import coloredlogs  # type: ignore
 import rich
@@ -53,8 +53,13 @@ def init_log(log_to_file: bool = False):
         log_level = "WARNING"
     logger.setLevel(log_level)
 
-    # Remove DEBUG level for the PIL.PngImagePlugin logger
+    # Remove DEBUG level for the PIL.PngImagePlugin and other third-party dependency loggers
     logging.getLogger("PIL").setLevel(logging.INFO)
+    logging.getLogger("httpcore").setLevel(logging.INFO)
+    if not config.verbose:  # to suppress log messages inside rich.progress.Progress
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+    else:
+        logging.getLogger("httpx").setLevel(logging.INFO)
 
     # Automatically set no_ansi if not a tty terminal
     if config.no_ansi is False:
@@ -360,6 +365,34 @@ def iterate_using_progress_bar(items: List, desc: str, update_fn, item_to_str_fn
                 progress.update(mqc_task, advance=1, s_fn=item_to_str_fn(item)[-50:])
                 update_fn(i, item)
             progress.update(mqc_task, s_fn="")
+
+
+ReturnType = TypeVar("ReturnType")
+
+
+def run_with_spinner(
+    module_name: str,
+    desc: str,
+    update_fn: Callable[[], ReturnType],
+    disable_progress=False,
+) -> ReturnType:
+    disable_progress = disable_progress or config.no_ansi or config.quiet or os.getenv("CI") is not None
+    N_SPACES_BEFORE_PIPE = 17  # to align bar desc with other log entries
+    need_to_add_spaces = max(0, N_SPACES_BEFORE_PIPE - len(module_name))
+    with rich.progress.Progress(
+        " " * need_to_add_spaces,
+        "[blue]" + module_name + "[/]",
+        "|",
+        rich.progress.SpinnerColumn(),
+        "{task.description}",
+        console=rich_console,
+        disable=disable_progress,
+        transient=True,
+    ) as progress:
+        task = progress.add_task(desc, total=None)
+        result = update_fn()
+        progress.update(task, completed=True)
+    return result
 
 
 def rich_console_print(*args, **kwargs):

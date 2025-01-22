@@ -5,6 +5,7 @@ modules. Contains helper functions to generate markup for report.
 
 import base64
 import dataclasses
+from datetime import datetime
 import fnmatch
 import gzip
 import inspect
@@ -32,6 +33,7 @@ from typing import (
     Union,
 )
 
+from dotenv import load_dotenv
 import yaml
 from pydantic import BaseModel, Field
 
@@ -39,24 +41,26 @@ from multiqc import config
 
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
-from multiqc.base_module import BaseMultiqcModule, Section
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.core import log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
-from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup
+from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
 from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
     dump_json,
     replace_defaultdicts,
     rmtree_with_retries,
 )
+from multiqc.core import ai
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
-
-initialized = False
 
 
 @dataclasses.dataclass
@@ -69,12 +73,16 @@ class Runtimes:
     mods: Dict[str, float] = dataclasses.field(default_factory=lambda: defaultdict())
 
 
-# Uninitialised global variables for static typing
+initialized = False
+###########
+### Below are uninitialised global variables for static typing
+# Fields below are reset between interactive runs
 multiqc_command: str
+creation_date: datetime
 top_modules: List[Dict[str, Dict[str, str]]]
 module_order: List[Dict[str, Dict[str, Union[str, List[str]]]]]
-analysis_files: List[str]  # input files to search
 modules: List["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
+general_stats_plot: Optional[ViolinPlot]
 general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
@@ -83,10 +91,24 @@ last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
-file_search_stats: Dict[str, Set[Path]]
-files: Dict[ModuleId, List[FileDict]]
+report_uuid: str
 
-# Fields below are kept between interactive runs
+# File search state - also reset between interactive runs
+analysis_files: List[str]  # input files to search
+files: Dict[ModuleId, List[FileDict]]  # files found by each module
+file_search_stats: Dict[str, Set[Path]]
+
+# AI stuff, set dynamically in ai.py to be used in content.html and ai.js
+ai_global_summary: str = ""
+ai_global_detailed_analysis: str = ""
+ai_thread_id: str = ""
+ai_provider_id: str = ""
+ai_provider_title: str = ""
+ai_model: str = ""
+ai_model_resolved: str = ""
+ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
+
+# Following fields are preserved between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
 plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
@@ -103,11 +125,14 @@ def reset():
     # Set up global variables shared across modules. Inside a function so that the global
     # vars are reset if MultiQC is run more than once within a single session / environment.
     global initialized
+
     global multiqc_command
+    global creation_date
     global top_modules
     global module_order
     global analysis_files
     global modules
+    global general_stats_plot
     global general_stats_html
     global lint_errors
     global num_flat_plots
@@ -116,6 +141,10 @@ def reset():
     global runtimes
     global peak_memory_bytes_per_module
     global diff_memory_bytes_per_module
+    global file_search_stats
+    global files
+    global report_uuid
+
     global data_sources
     global html_ids_by_scope
     global plot_data
@@ -127,13 +156,24 @@ def reset():
     global saved_raw_data_keys
     global saved_raw_data
 
+    global ai_global_summary
+    global ai_global_detailed_analysis
+    global ai_thread_id
+    global ai_provider_id
+    global ai_provider_title
+    global ai_model
+    global ai_model_resolved
+    global ai_report_metadata_base64
+
     # Create new temporary directory for module data exports
     initialized = True
+
     multiqc_command = ""
+    creation_date = datetime.now().astimezone()
     top_modules = []
     module_order = []
-    analysis_files = []
     modules = []
+    general_stats_plot = None
     general_stats_html = ""
     lint_errors = []
     num_flat_plots = 0
@@ -142,6 +182,19 @@ def reset():
     runtimes = Runtimes()
     peak_memory_bytes_per_module = dict()
     diff_memory_bytes_per_module = dict()
+    report_uuid = ""
+
+    reset_file_search()
+
+    ai_global_summary = ""
+    ai_global_detailed_analysis = ""
+    ai_thread_id = ""
+    ai_provider_id = ""
+    ai_provider_title = ""
+    ai_model = ""
+    ai_model_resolved = ""
+    ai_report_metadata_base64 = ""
+
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
     html_ids_by_scope = defaultdict(set)
     plot_data = dict()
@@ -153,7 +206,6 @@ def reset():
     saved_raw_data_keys = []
     saved_raw_data = dict()
 
-    reset_file_search()
     tmp_dir.new_tmp_dir()
 
 
@@ -506,7 +558,15 @@ def prep_ordered_search_files_list(
 
     # Sort patterns for faster access. File searches with fewer lines or
     # smaller file sizes go first.
-    sorted_spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+    ]
     sorted_spatterns[0] = spatterns[0]  # Only filename matching
     sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
     sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
@@ -630,7 +690,12 @@ def search_files(sp_keys: List[str]):
     run_search_files(spatterns, searchfiles)
 
 
-def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleId, is_ignore_file: bool = False):
+def search_file(
+    pattern: SearchPattern,
+    f: SearchFile,
+    module_key: ModuleId,
+    is_ignore_file: bool = False,
+):
     """
     Function to search a single file for a single search pattern.
     """
@@ -967,10 +1032,10 @@ def multiqc_dump_json(data_dir: Path):
             "general_stats_headers",
             "multiqc_command",
             "plot_data",
+            "creation_date",
         ],
         "config": [
             "analysis_dir",
-            "creation_date",
             "git_hash",
             "intro_text",
             "report_comment",
@@ -1009,6 +1074,8 @@ def multiqc_dump_json(data_dir: Path):
                                     fl_sec = rows  # old format without grouping, in case if use plugins override it
                             flattened_sections.append(fl_sec)
                         val = flattened_sections
+                    elif name == "creation_date":
+                        val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
                     d = {f"{pymod}_{name}": val}
                 if d:
                     with open(os.devnull, "wt") as f:
@@ -1105,3 +1172,7 @@ def reset_tmp_dir():
     """
     remove_tmp_dir()
     tmp_dir.get_tmp_dir()
+
+
+def add_ai_summary():
+    ai.add_ai_summary_to_report()

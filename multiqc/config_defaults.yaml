@@ -62,6 +62,19 @@ export_plots: false
 make_report: true
 make_pdf: false
 
+# AI settings:
+ai_summary: false
+ai_summary_full: false
+ai_provider: "seqera"
+ai_model: null
+no_ai: false
+
+# Development settings:
+seqera_api_url: "https://intern.seqera.io"
+seqera_website: "https://seqera.io"
+langchain_project: null
+langchain_endpoint: null
+
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false

@@ -9,9 +9,10 @@ class BoxPlot extends Plot {
     return this.datasets[this.activeDatasetIdx]["samples"].length;
   }
 
-  prepData() {
-    let data = this.datasets[this.activeDatasetIdx]["data"];
-    let samples = this.datasets[this.activeDatasetIdx]["samples"];
+  prepData(dataset) {
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
+    let data = dataset["data"];
+    let samples = dataset["samples"];
 
     let samplesSettings = applyToolboxSettings(samples);
 
@@ -21,6 +22,38 @@ class BoxPlot extends Plot {
     data = data.filter((_, si) => !samplesSettings[si].hidden);
 
     return [data, samples];
+  }
+
+  formatDatasetForAiPrompt(dataset) {
+    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
+    const suffix = this.layout.yaxis.ticksuffix;
+
+    let [data, samples] = this.prepData(dataset);
+
+    // Check if all samples are hidden
+    if (samples.length === 0) {
+      return "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
+    }
+
+    data = data.map((d) =>
+      d.map((x) => {
+        let val = !Number.isFinite(x) ? "" : Number.isInteger(x) ? x : parseFloat(x.toFixed(2));
+        if (val !== "" && suffix) val += suffix;
+        return val;
+      }),
+    );
+
+    return (
+      "Plot type: boxplot\n\n" +
+      "Samples: " +
+      samples.join(", ") +
+      "\n\n" +
+      data
+        .map((values, idx) => {
+          return samples[idx] + " " + values.join(", ");
+        })
+        .join("\n\n")
+    );
   }
 
   resize(newHeight) {

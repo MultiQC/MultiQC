@@ -13,7 +13,7 @@ from multiqc.validation import ModuleConfigValidationError
 
 def _verify_rendered(plot) -> Plot:
     assert isinstance(plot, Plot)
-    plot.add_to_report()
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
     assert len(report.plot_data) == 1
     assert plot.id in report.plot_data
     return plot
@@ -259,7 +259,9 @@ def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, expo
     if export_plot_formats:
         config.export_plot_formats = export_plot_formats
 
-    html = plot.add_to_report(plots_dir_name=config.plots_dir_name)
+    html = plot.add_to_report(
+        module_anchor=Anchor("test"), section_anchor=Anchor("test"), plots_dir_name=config.plots_dir_name
+    )
 
     assert len(report.plot_data) == 0
     assert html is not None

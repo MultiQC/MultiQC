@@ -25,6 +25,7 @@ dependencies = [
     "pydantic>=2.7.0",
     "typeguard",
     "tqdm",               # progress bar in notebooks
+    "python-dotenv",
     "natsort",
 ]
 requires-python = ">=3.8"
@@ -78,8 +79,12 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+    "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
 ]
+anthropic = ["langchain", "langsmith", "langchain-anthropic"]
+openai = ["langchain", "langsmith", "langchain-openai"]
+ai = ["langchain", "tiktoken", "langchain-anthropic", "langchain-openai"]
 
 [project.urls]
 Homepage = "https://multiqc.info"
@@ -294,6 +299,7 @@ exclude = "multiqc/modules/*"
 
 [tool.pyright]
 include = ["multiqc", "scripts", "tests"]
+ignore = ["**/build", "**/dist", "**/venv*"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

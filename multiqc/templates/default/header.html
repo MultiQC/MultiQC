@@ -60,24 +60,67 @@ was generated and the button that launches the welcome tour.
 <div class="alert alert-warning mqc_loading_warning" style="display:none;"><span class="glyphicon glyphicon-time"></span> &nbsp;Loading report..</div>
 
 {% if config.show_analysis_time or config.show_analysis_paths %}
-<div id="analysis_dirs_wrapper">
-  <p>Report
-  {% if config.show_analysis_time %}
-    generated on {{ config.creation_date }}
-  {% endif %}
-  {% if config.show_analysis_paths %}
-    based on data in:
-    {% if report.analysis_files | length == 1 %}
-      <code class="mqc_analysis_path">{{ report.analysis_files[0] }}</code>
-      </p>
-    {% else %}
-      </p>
-      <ul>
-        {% for d in report.analysis_files %}
-        <li><code class="mqc_analysis_path">{{ d }}</code></li>
-        {%  endfor %}
-      </ul>
+<div id="analysis_dirs_wrapper" style="display: flex; justify-content: space-between; align-items: center;">
+  <span style="flex: 1;">Report 
+    {% if config.show_analysis_time %}
+      generated on {{ report.creation_date.strftime('%Y-%m-%d, %H:%M %Z') }}
     {% endif %}
+    {% if config.show_analysis_paths %}
+      based on data in:
+      {% if report.analysis_files | length == 1 %}
+        <code class="mqc_analysis_path">{{ report.analysis_files[0] }}</code>
+      {% else %}
+        <ul>
+          {% for d in report.analysis_files %}
+          <li><code class="mqc_analysis_path">{{ d }}</code></li>
+          {%  endfor %}
+        </ul>
+      {% endif %}
+    {% endif %}
+  </span>
+  {% if not config.no_ai and not report.ai_global_summary %}
+  <div class="ai-generate-button-wrapper">
+    <button
+      class="btn btn-default btn-sm ai-generate-button ai-generate-button-global"
+      data-response-div="global_ai_summary_response"
+      data-error-div="global_ai_summary_error"
+      data-disclaimer-div="global_ai_summary_disclaimer"
+      data-wrapper-div="global_ai_summary_wrapper"
+      data-section-anchor="global"
+      data-action="{% if report.ai_global_summary %}clear{% else %}generate{% endif %}"
+      data-clear-text="Clear summary"
+      data-toggle="tooltip"
+      type="button"
+      title="Adds a block on top of the report with a concise summary and interpretation of the report."
+    >
+      <span style="vertical-align: baseline">
+        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
+          <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
+        </svg>
+      </span>
+      <span class="button-text">Summarize Report</span>
+    </button>
+  </div>
+  {% endif %}
+  {% if not config.no_ai %}
+  <div class="ai-copy-button-wrapper">
+    <button 
+      type="button"
+      class="btn btn-default btn-sm ai-copy-content ai-copy-content-report"
+      data-toggle="tooltip" 
+      data-section-anchor="global"
+      title="Copies the report data to the clipboard formatted to discuss with AI chats like ChatGPT or Claude"
+    >
+      <span style="vertical-align: baseline">
+        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
+          <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
+        </svg>
+      </span>
+      <span class="button-text">Copy Report Prompt</span>
+    </button>
+  </div>
   {% endif %}
 </div>
 {% endif %}
@@ -122,3 +165,73 @@ was generated and the button that launches the welcome tour.
   <button id="mqc-render-all-plots" class="btn btn-default btn-sm">Render all plots</button>
 </div>
 {% endif %}
+
+<div 
+  id="global_ai_summary_wrapper" 
+  class="ai-summary"
+  style="display: {% if report.ai_global_summary | length > 0 %}block{% else %}none{% endif %};"
+>
+  <div class="ai-summary-header">
+    <b>Report AI Summary </b>
+  </div>
+  <div id="global_ai_summary_response">
+    {{ report.ai_global_summary }}
+  </div>
+
+  {% if report.ai_global_detailed_analysis %}
+  <div style="display: block" id="global_ai_summary_detailed_analysis_response">
+    {{ report.ai_global_detailed_analysis }}
+  </div>
+  {% else %}
+  <div class="ai-local-content" id="global_ai_summary_detailed_analysis_response">
+    {{ report.ai_global_detailed_analysis }}
+  </div>
+  {% endif %}
+
+  <div id="global_ai_summary_more_button_and_disclaimer" style="margin-top: 8px; margin-bottom: 8px; margin-left: -1px; display: flex; justify-content: space-between; align-items: baseline;">
+    {% if not report.ai_global_detailed_analysis %}
+    <button
+      class="btn btn-sm btn-default ai-generate-button ai-generate-button-global ai-generate-button-more"
+      data-response-div="global_ai_summary_detailed_analysis_response"
+      data-error-div="global_ai_summary_error"
+      data-disclaimer-div="global_ai_summary_disclaimer"
+      data-wrapper-div="global_ai_summary_detailed_analysis"
+      data-section-anchor="global"
+      data-action="{% if report.ai_global_detailed_analysis %}clear{% else %}generate{% endif %}"
+      data-clear-text="Clear response"
+      type="button"
+      style="padding: 2px 8px; margin-right: 10px"
+    >
+      More details...
+    </button>
+    {% endif %}
+    <div style="display: flex; gap: 9px; margin-left: auto; align-items: baseline;">
+      <span 
+        class="ai-summary-disclaimer" 
+        id="global_ai_summary_disclaimer" 
+        style="display: {% if report.ai_global_summary | length > 0 %}inline{% else %}none{% endif %};"
+      >
+        Provider: <span class="ai-summary-disclaimer-provider">{{ report.ai_provider_title }}</span>, 
+        model: <span class="ai-summary-disclaimer-model">{{ report.ai_model_resolved or report.ai_model }}</span>
+      </span>
+      <a class='btn btn-default btn-sm ai-continue-in-chat'
+        style="display: {% if report.ai_thread_id %}block{% else %}none{% endif %};"
+        data-thread-id="{{ report.ai_thread_id }}"
+        data-seqera-website="{{ config.seqera_website }}"
+        href="{{ config.seqera_website }}/ask-ai/?messages={{ report.ai_thread_id }}"
+        target="_blank"
+      >
+        Chat with Seqera AI
+      </a>
+    </div>
+  </div>
+  <div class="ai-summary-error" id="global_ai_summary_error" style="display: none;"></div>
+  <!-- "Expand" arrow for when detailed summary is pre-generated with structured output: -->
+  <div 
+    id="global_ai_summary_expand" 
+    class="mqc-table-expand ai-summary-expand"
+    style="display: {% if report.ai_global_detailed_analysis %}block{% else %}none{% endif %};"
+  >
+    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+  </div>
+</div>

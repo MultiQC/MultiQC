@@ -34,7 +34,6 @@ def test_parse_name(tmp_path):
     m = MultiqcModule()
     assert m.saved_raw_data is not None
     assert len(m.saved_raw_data) > 0
-    print(m.saved_raw_data)
     assert list(m.saved_raw_data["multiqc_umitools_extract"].keys())[0] == "OUTPUT"
     assert list(m.saved_raw_data["multiqc_umitools_extract"].keys())[1] == "INPUT"
     assert list(m.saved_raw_data["multiqc_umitools_extract"].keys())[2] == "filename"

@@ -126,6 +126,15 @@ click.rich_click.OPTION_GROUPS = {
                 "--help",
             ],
         },
+        {
+            "name": "AI Features",
+            "options": [
+                "--ai-summary",
+                "--ai-summary-full",
+                "--ai-provider",
+                "--no-ai",
+            ],
+        },
     ],
 }
 
@@ -435,6 +444,33 @@ click.rich_click.OPTION_GROUPS = {
     is_flag=True,
     default=None,
     help="Disable checking the latest MultiQC version on the server",
+)
+@click.option(
+    "--ai",
+    "--ai-summary",
+    "ai_summary",
+    is_flag=True,
+    default=None,
+    help="Generate an AI summary of the report",
+)
+@click.option(
+    "--ai-summary-full",
+    "ai_summary_full",
+    is_flag=True,
+    default=None,
+    help="Generate a detailed AI summary of the report",
+)
+@click.option(
+    "--ai-provider",
+    type=click.Choice(config.AVAILABLE_AI_PROVIDERS),
+    help=f"Select AI provider for report summarization. [dim yellow](Default: {config.ai_provider})",
+)
+@click.option(
+    "--no-ai",
+    "no_ai",
+    is_flag=True,
+    default=None,
+    help="Disable AI toolbox and buttons in the report",
 )
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):

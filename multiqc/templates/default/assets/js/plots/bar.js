@@ -11,9 +11,10 @@ class BarPlot extends Plot {
     return cats[0].data.length; // no data for a category
   }
 
-  prepData() {
-    let cats = this.datasets[this.activeDatasetIdx]["cats"];
-    let samples = this.datasets[this.activeDatasetIdx]["samples"];
+  prepData(dataset) {
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
+    let cats = dataset["cats"];
+    let samples = dataset["samples"];
 
     let samplesSettings = applyToolboxSettings(samples);
 
@@ -31,6 +32,58 @@ class BarPlot extends Plot {
     });
 
     return [cats, samples];
+  }
+
+  plotAiHeader() {
+    let result = super.plotAiHeader();
+    if (this.pconfig.ylab) result += `Values: ${this.pconfig.ylab}\n`;
+    return result;
+  }
+
+  formatDatasetForAiPrompt(dataset) {
+    let prompt = "";
+
+    let cats = dataset.cats;
+    let samples = dataset.samples;
+    let samplesSettings = applyToolboxSettings(samples);
+
+    // Check if all samples are hidden
+    if (samplesSettings.every((s) => s.hidden)) {
+      prompt +=
+        "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
+      return prompt;
+    }
+
+    prompt += "| Sample | " + cats.map((cat) => cat.name).join(" | ") + " |\n";
+    prompt += "| --- | " + cats.map(() => "---").join(" | ") + " |\n";
+
+    let suffix = "";
+    if (this.pActive) {
+      suffix += "%";
+      if (this.layout.xaxis.ticksuffix && this.layout.xaxis.ticksuffix !== "%") {
+        suffix += " " + this.layout.xaxis.ticksuffix;
+      }
+    } else if (this.layout.xaxis.ticksuffix) {
+      suffix += " " + this.layout.xaxis.ticksuffix;
+    }
+
+    // Create data rows
+    samples.forEach((sample, idx) => {
+      if (samplesSettings[idx].hidden) return;
+      prompt +=
+        `| ${sample} | ` +
+        cats
+          .map((cat) => {
+            let val = this.pActive ? cat.data_pct[idx] : cat.data[idx];
+            val = !Number.isFinite(val) ? "" : Number.isInteger(val) ? val : parseFloat(val.toFixed(2));
+            if (val !== "" && suffix) val += suffix;
+            return val;
+          })
+          .join(" | ") +
+        " |\n";
+    });
+
+    return prompt;
   }
 
   resize(newHeight) {

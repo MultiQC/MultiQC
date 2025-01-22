@@ -4,12 +4,22 @@ import io
 import logging
 import math
 import platform
-import queue
 import random
 import re
 from pathlib import Path
 import subprocess
-from typing import Any, Dict, Generic, List, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
@@ -165,6 +175,9 @@ class PConfig(ValidatedConfig):
         if not self.id:
             self.id = f"{self.__class__.__name__.lower().replace('config', '')}-{random.randint(1000000, 9999999)}"
 
+        if not self.title:
+            self.title = self.id.replace("_", " ").title()
+
         # Allow user to overwrite any given config for this plot
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
@@ -227,6 +240,24 @@ class BaseDataset(BaseModel):
     def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         return None, None
 
+    @staticmethod
+    def fmt_value_for_llm(value: Union[float, int, str, None]) -> str:
+        if isinstance(value, str):
+            return value
+        if value is None:
+            return "N/A"
+        if isinstance(value, int):
+            return f"{value:,d}"
+        try:  # maybe float can be formatted as int?
+            value = int(value)
+            return f"{value:,d}"
+        except ValueError:
+            pass
+        return f"{value:.1f}"
+
+    def format_dataset_for_ai_prompt(self, pconfig: Any, keep_hidden: bool = True) -> str:
+        return ""
+
 
 DatasetT = TypeVar("DatasetT", bound="BaseDataset")
 PConfigT = TypeVar("PConfigT", bound="PConfig")
@@ -252,6 +283,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
     square: bool = False
     flat: bool = False
     defer_render: bool = False
+
+    section_anchor: Optional[Anchor] = None
+    module_anchor: Optional[Anchor] = None
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -308,7 +342,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         _anchor = Anchor(report.save_htmlid(_anchor))  # make sure it's unique
 
         # Counts / Percentages / Log10 switch
-        add_log_tab: bool = pconfig.logswitch is True and plot_type in [PlotType.BAR, PlotType.LINE]
+        add_log_tab: bool = pconfig.logswitch is True and plot_type in [
+            PlotType.BAR,
+            PlotType.LINE,
+        ]
         add_pct_tab: bool = pconfig.cpswitch is not False and plot_type == PlotType.BAR
         l_active = add_log_tab and pconfig.logswitch_active
         p_active = add_pct_tab and not pconfig.cpswitch_c_active
@@ -743,7 +780,35 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
-    def add_to_report(self, plots_dir_name: Optional[str] = None) -> str:
+    def _plot_ai_header(self) -> str:
+        result = f"Plot type: {self.plot_type}\n"
+        return result
+
+    def format_for_ai_prompt(self, keep_hidden: bool = True) -> str:
+        """
+        Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
+        """
+        prompt = self._plot_ai_header() + "\n\n"
+
+        if len(self.datasets) == 1:
+            return prompt + self.datasets[0].format_dataset_for_ai_prompt(self.pconfig, keep_hidden=keep_hidden)
+
+        for dataset in self.datasets:
+            formatted_dataset = dataset.format_dataset_for_ai_prompt(self.pconfig, keep_hidden=keep_hidden)
+            if not formatted_dataset:
+                continue
+            prompt += f"### {dataset.label}\n"
+            prompt += "\n"
+            prompt += formatted_dataset
+            prompt += "\n\n"
+        return prompt
+
+    def add_to_report(
+        self,
+        module_anchor: Anchor,
+        section_anchor: Anchor,
+        plots_dir_name: Optional[str] = None,
+    ) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
@@ -755,17 +820,26 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if self.flat:
             if is_running_under_rosetta():
                 # Kaleido is unstable under rosetta, falling back to interactive plots
-                return self.interactive_plot()
+                return self.interactive_plot(module_anchor, section_anchor)
             try:
-                html = self.flat_plot(plots_dir_name=plots_dir_name)
+                html = self.flat_plot(
+                    module_anchor=module_anchor,
+                    section_anchor=section_anchor,
+                    plots_dir_name=plots_dir_name,
+                )
             except ValueError:
                 logger.error(f"Unable to export plot to flat images: {self.id}, falling back to interactive plot")
-                html = self.interactive_plot()
+                html = self.interactive_plot(module_anchor, section_anchor)
         else:
-            html = self.interactive_plot()
+            html = self.interactive_plot(module_anchor, section_anchor)
             if config.export_plots and not is_running_under_rosetta():
                 try:
-                    self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
+                    self.flat_plot(
+                        module_anchor=module_anchor,
+                        section_anchor=section_anchor,
+                        embed_in_html=False,
+                        plots_dir_name=plots_dir_name,
+                    )
                 except ValueError:
                     logger.error(f"Unable to export plot to flat images: {self.id}")
 
@@ -776,10 +850,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             for dataset in self.datasets:
                 dataset.save_data_file()
 
-    def interactive_plot(self) -> str:
+    def interactive_plot(self, module_anchor: Anchor, section_anchor: Anchor) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
 
-        html += self.__control_panel(flat=False)
+        html += self.__control_panel(flat=False, module_anchor=module_anchor, section_anchor=section_anchor)
 
         # This width only affects the space before plot is rendered, and the initial
         # height for the resizing function. For the actual plot container, Plotly will
@@ -800,7 +874,13 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         report.plot_data[self.anchor] = self.model_dump(warnings=False)
         return html
 
-    def flat_plot(self, embed_in_html: Optional[bool] = None, plots_dir_name: Optional[str] = None) -> str:
+    def flat_plot(
+        self,
+        module_anchor: Anchor,
+        section_anchor: Anchor,
+        embed_in_html: Optional[bool] = None,
+        plots_dir_name: Optional[str] = None,
+    ) -> str:
         embed_in_html = embed_in_html if embed_in_html is not None else not config.development
         if not embed_in_html and plots_dir_name is None:
             raise ValueError("plots_dir_name is required for non-embedded plots")
@@ -818,7 +898,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.anchor}" data-plot-anchor={self.anchor}>'
 
         if not config.simple_output:
-            html += self.__control_panel(flat=True)
+            html += self.__control_panel(flat=True, module_anchor=module_anchor, section_anchor=section_anchor)
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
@@ -864,6 +944,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         data_attrs: Optional[Dict[str, str]] = None,
         attrs: Optional[Dict[str, str]] = None,
         pressed: bool = False,
+        style: Optional[str] = None,
     ) -> str:
         """
         Build a switch button for the plot.
@@ -876,9 +957,11 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             data_attrs["plot-anchor"] = self.anchor
         data_attrs_str = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
 
-        return f'<button {attrs_str} class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str}>{label}</button>\n'
+        style_str = f'style="{style}"' if style else ""
 
-    def buttons(self, flat: bool) -> List[str]:
+        return f'<button {attrs_str} class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
+
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """
         Build buttons for control panel
         """
@@ -921,16 +1004,74 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if not flat:
             export_btn = self._btn(
                 cls="export-plot",
-                label="Export Plot",
-                data_attrs={"plot-anchor": str(self.anchor), "type": str(self.plot_type)},
+                style="float: right; margin-left: 5px;",
+                label='<span style="vertical-align: baseline"><svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg></span> Export...',
+                attrs={"title": "Show export options"},
+                data_attrs={
+                    "plot-anchor": str(self.anchor),
+                    "type": str(self.plot_type),
+                    "toggle": "tooltip",
+                },
             )
-        return [switch_buttons, export_btn]
 
-    def __control_panel(self, flat: bool) -> str:
+        ai_btn = ""
+        if not config.no_ai:
+            ai_btn = f"""
+            <div class="ai-plot-buttons-container" style="float: right;">
+                <button 
+                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
+                    style="margin-left: 1px;"
+                    data-section-anchor="{section_anchor}"
+                    data-plot-anchor="{self.anchor}"
+                    data-module-anchor="{module_anchor}"
+                    data-view="plot"
+                    type="button"
+                    data-toggle="tooltip" 
+                    title="Copy plot data for use with AI tools like ChatGPT"
+                >
+                    <span style="vertical-align: baseline">
+                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
+                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span class="button-text">Copy Prompt</span>
+                </button>
+                <button
+                    class="btn btn-default btn-sm ai-generate-button ai-generate-button-plot ai-generate-button-wrapper"
+                    data-response-div="{section_anchor}_ai_summary_response"
+                    data-error-div="{section_anchor}_ai_summary_error"
+                    data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
+                    data-wrapper-div="{section_anchor}_ai_summary_wrapper"
+                    data-plot-anchor="{self.anchor}"
+                    data-module-anchor="{module_anchor}"
+                    data-section-anchor="{section_anchor}"
+                    data-view="plot"
+                    data-action="generate"
+                    data-clear-text="Clear summary"
+                    type="button"
+                    data-toggle="tooltip" 
+                    aria-controls="{section_anchor}_ai_summary_wrapper"
+                    title="Dynamically generate AI summary for this plot"
+                >
+                    <span style="vertical-align: baseline">
+                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
+                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span class="button-text">Summarize</span>
+                </button>
+            </div>
+            """
+
+        return [switch_buttons, export_btn, ai_btn]
+
+    def __control_panel(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> str:
         """
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
-        buttons = "\n".join(self.buttons(flat=flat))
+        buttons = "\n".join(self.buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor))
         html = f"<div class='row' style='align-items: center;'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
 
@@ -1088,7 +1229,10 @@ def add_logo(
         # text block width, given the font size.
         # noinspection PyArgumentList
         text_width: float = draw.textlength(text, font_size=font_size)
-        position: Tuple[int, int] = (image.width - int(text_width) - 3, image.height - 30)
+        position: Tuple[int, int] = (
+            image.width - int(text_width) - 3,
+            image.height - 30,
+        )
 
         # Draw the text
         draw.text(position, text, fill="#9f9f9f", font_size=font_size)

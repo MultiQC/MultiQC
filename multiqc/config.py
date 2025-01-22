@@ -15,7 +15,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import importlib_metadata
 import yaml
@@ -112,6 +112,19 @@ export_plots: bool
 make_report: bool
 make_pdf: bool
 
+AVAILABLE_AI_PROVIDERS = ["seqera", "openai", "anthropic"]
+
+ai_summary: bool
+ai_summary_full: bool
+ai_provider: str
+ai_model: str
+no_ai: bool
+
+seqera_api_url: str
+seqera_website: str
+langchain_project: Optional[str]
+langchain_endpoint: Optional[str]
+
 plots_force_flat: bool
 plots_export_font_scale: float
 plots_force_interactive: bool
@@ -185,7 +198,6 @@ sp: Dict = {}
 
 # Other defaults that can't be set in YAML
 modules_dir: str
-creation_date: str
 working_dir: str
 analysis_dir: List[str]
 output_dir: str
@@ -225,9 +237,8 @@ def load_defaults():
         sp = yaml.safe_load(f)
 
     # Other defaults that can't be set in defaults YAML
-    global modules_dir, creation_date, working_dir, analysis_dir, output_dir, megaqc_access_token, kwargs
+    global modules_dir, working_dir, analysis_dir, output_dir, megaqc_access_token, kwargs
     modules_dir = str(Path(MODULE_DIR) / "modules")
-    creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
     working_dir = os.getcwd()
     analysis_dir = [os.getcwd()]
     output_dir = os.path.realpath(os.getcwd())
@@ -436,12 +447,15 @@ def _env_vars_config() -> Dict:
                 except ValueError:
                     logger.warning(f"Could not parse a float value from the environment variable ${k}={v}")
                     continue
-            elif not isinstance(globals()[conf_key], str) and globals()[conf_key] is not None:
+            elif globals()[conf_key] is None:
+                pass
+            elif not isinstance(globals()[conf_key], str):
                 logger.warning(
                     f"Can only set scalar config entries (str, int, float, bool) with environment variable, "
                     f"but config.{conf_key} expects a type '{type(globals()[conf_key]).__name__}'. Ignoring ${k}"
                 )
                 continue
+            env_config[conf_key] = v
             logger.debug(f"Setting config.{conf_key} from the environment variable ${k}")
     return env_config
 

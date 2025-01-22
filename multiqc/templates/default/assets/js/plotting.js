@@ -30,6 +30,8 @@ class Plot {
     this.lActive = dump["l_active"];
     this.pActive = dump["p_active"];
     this.deferRender = dump["defer_render"];
+    this.plotType = dump["plot_type"];
+    this.pconfig = dump["pconfig"];
   }
 
   activeDatasetSize() {
@@ -60,8 +62,35 @@ class Plot {
     throw new Error("buildTraces() not implemented");
   }
 
-  afterPlotCreated() {
-    // Do nothing
+  afterPlotCreated() {}
+
+  plotAiHeader(view) {
+    let prompt = "Plot type: " + this.plotType + "\n";
+    return prompt;
+  }
+
+  formatDatasetForAiPrompt(dataset) {
+    return "";
+  }
+
+  formatForAiPrompt(view) {
+    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
+    let result = this.plotAiHeader(view) + "\n\n";
+
+    if (this.datasets.length === 1) {
+      return result + this.formatDatasetForAiPrompt(this.datasets[0]);
+    }
+
+    for (let dataset of this.datasets) {
+      let formattedDataset = this.formatDatasetForAiPrompt(dataset);
+      if (!formattedDataset) continue;
+      result += "### " + dataset.label + "\n";
+      result += "\n";
+      result += formattedDataset;
+      result += "\n\n";
+    }
+
+    return result;
   }
 
   recalculateTicks(filteredSettings, axis, maxTicks) {
@@ -132,12 +161,12 @@ class Plot {
 }
 
 function initPlot(dump) {
-  if (dump["plot_type"] === "xy_line") return new LinePlot(dump);
-  if (dump["plot_type"] === "bar_graph") return new BarPlot(dump);
-  if (dump["plot_type"] === "box") return new BoxPlot(dump);
-  if (dump["plot_type"] === "scatter") return new ScatterPlot(dump);
+  if (dump["plot_type"] === "bar plot") return new BarPlot(dump);
+  if (dump["plot_type"] === "x/y line") return new LinePlot(dump);
+  if (dump["plot_type"] === "box plot") return new BoxPlot(dump);
+  if (dump["plot_type"] === "scatter plot") return new ScatterPlot(dump);
+  if (dump["plot_type"] === "violin plot") return new ViolinPlot(dump);
   if (dump["plot_type"] === "heatmap") return new HeatmapPlot(dump);
-  if (dump["plot_type"] === "violin") return new ViolinPlot(dump);
   console.log("Did not recognise plot type: " + dump["plot_type"]);
   return null;
 }

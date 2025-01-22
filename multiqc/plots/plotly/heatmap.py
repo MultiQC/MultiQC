@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union, Any, cast
 
@@ -13,6 +14,7 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     split_long_string,
 )
+from multiqc.types import Anchor
 from multiqc.utils.util_functions import scipy_pdist, scipy_hierarchy_linkage, scipy_hierarchy_leaves_list
 
 logger = logging.getLogger(__name__)
@@ -196,6 +198,26 @@ class Dataset(BaseDataset):
             data.append(new_row)
 
         report.write_data_file(data, self.uid)
+
+    def format_dataset_for_ai_prompt(self, pconfig: HeatmapConfig, keep_hidden: bool = True) -> str:
+        """
+        Format heatmap as a markdown table
+        """
+        prompt = ""
+        if self.xcats:
+            if self.ycats:
+                prompt = "|"
+                if pconfig.ycats_samples:
+                    prompt += " Sample "
+            prompt += "| " + " | ".join(self.xcats) + " |\n"
+            if self.ycats:
+                prompt += "| --- "
+            prompt += "| " + " | ".join("---" for _ in self.xcats) + " |\n"
+        for i, row in enumerate(self.rows):
+            if self.ycats:
+                prompt += "| " + self.ycats[i] + " "
+            prompt += "| " + " | ".join(str(x) for x in row) + " |\n"
+        return prompt
 
 
 class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
@@ -428,12 +450,14 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             cluster_switch_clustered_active=pconfig.cluster_switch_clustered_active,
         )
 
-    def buttons(self, flat: bool) -> List[str]:
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """
         Heatmap-specific controls, only for the interactive version.
+
         """
-        buttons = super().buttons(flat=flat)
+        buttons = super().buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor)
         if any(ds.rows_clustered for ds in self.datasets):
+            # find min val across all datasets across all cols and rows
             buttons.append(
                 f"""
                 <div class="btn-group" role="group">
@@ -458,3 +482,13 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             )
 
         return buttons
+
+    def _plot_ai_header(self) -> str:
+        result = super()._plot_ai_header()
+        if self.pconfig.xlab:
+            result += f"X axis: {self.pconfig.xlab}\n"
+        if self.pconfig.ylab:
+            result += f"Y axis: {self.pconfig.ylab}\n"
+        if self.pconfig.zlab:
+            result += f"Z axis: {self.pconfig.zlab}\n"
+        return result

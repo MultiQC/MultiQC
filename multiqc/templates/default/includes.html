@@ -53,6 +53,7 @@ it prints the contents of these files into the report.
 <script type="text/javascript">{{ include_file('assets/js/packages/jszip.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/plotly-2.27.0.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/pako_inflate.min.js') }}</script>
+  <script type="text/javascript">{{ include_file('assets/js/packages/showdown.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/decompress.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/flat.js') }}</script>
@@ -65,6 +66,8 @@ it prints the contents of these files into the report.
 <script type="text/javascript">{{ include_file('assets/js/plots/scatter.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/plots/heatmap.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/plots/violin.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/ai-helpers.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/ai.js') }}</script>
 {% set included_js = [] %}
 {%- for m in report.modules %}
   {% if m.js and m.js|length > 0 -%}
