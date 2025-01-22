@@ -4,13 +4,13 @@
 
 ### Highlights
 
-Generate AI-generated summaries with `--ai`, or dynamically in existing report. See [documentation](docs/markdown/ai/index.md) for usage details.
+You can now generate AI summaries of reports with `--ai`, or dynamically in existing reports. See [documentation](docs/markdown/ai/index.md) for more details.
 
 ### Feature updates and improvements
 
-- Support AI summaries ([#2915](https://github.com/MultiQC/MultiQC/pull/2915))
+- AI summaries ([#2915](https://github.com/MultiQC/MultiQC/pull/2915))
 - Add "Clustered" view to heatmaps ([#3035](https://github.com/MultiQC/MultiQC/pull/3035))
-- Make configurable when the table button "Configure Column" disabled ([#3045](https://github.com/MultiQC/MultiQC/pull/3045))
+- Config option to control when table "Configure Column" button is disabled ([#3045](https://github.com/MultiQC/MultiQC/pull/3045))
 
 ### Fixes
 
