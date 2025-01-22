@@ -26,6 +26,8 @@ function runStreamGeneration({
     },
   };
 
+  let reader;
+
   if (provider.name === "Seqera AI") {
     let aiTitle =
       (configTitle == "None" ? "" : configTitle + ": ") + "MultiQC report, created on " + configCreationDate;
@@ -52,9 +54,10 @@ function runStreamGeneration({
         }
         return response.body.getReader();
       })
-      .then((reader) =>
-        decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
-      )
+      .then((r) => {
+        reader = r;
+        return decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete);
+      })
       .catch((error) => {
         onStreamError(handleStreamError(error));
       });
@@ -80,9 +83,10 @@ function runStreamGeneration({
         }
         return response.body.getReader();
       })
-      .then((reader) =>
-        decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
-      )
+      .then((r) => {
+        reader = r;
+        return decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete);
+      })
       .catch((error) => {
         onStreamError(handleStreamError(error));
       });
@@ -113,9 +117,10 @@ function runStreamGeneration({
         }
         return response.body.getReader();
       })
-      .then((reader) =>
-        decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
-      )
+      .then((r) => {
+        reader = r;
+        return decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete);
+      })
       .catch((error) => {
         onStreamError(handleStreamError(error));
       });
@@ -128,7 +133,7 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
   // Decode the stream. Supports Anthropic and OpenAI streaming responses
   const decoder = new TextDecoder();
   let buffer = "";
-
+  let tokenStreamed = false;
   let model = undefined;
   let threadId = undefined;
 
@@ -159,25 +164,30 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
             return acc;
           }
           let jsonString = line.slice(6);
-          if (jsonString === "[DONE]") {
-            // OpenAI last line is "data: [DONE]"
-            onStreamComplete();
-            return acc;
-          }
-          let data;
-          try {
-            data = JSON.parse(jsonString);
-          } catch (e) {
-            // Unexpected JSON format. Ignore the line, but if somethings is really wrong,
-            // we should anyway call onStreamComplete in the end
-            onStreamError(`Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`);
-            return acc;
-          }
 
           let type = undefined;
           let content = undefined;
           let role = undefined;
           let finishReason = undefined;
+          let error = undefined;
+          let data = {};
+
+          if (jsonString === "[DONE]") {
+            // OpenAI last line is "data: [DONE]"
+            type = "on_chat_model_end";
+            onStreamComplete(threadId);
+            return acc;
+          } else {
+            try {
+              data = JSON.parse(jsonString);
+            } catch (e) {
+              // Unexpected JSON format. Ignore the line, but if somethings is really wrong,
+              // we should anyway call onStreamComplete in the end
+              error = `Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`;
+              onStreamError(error);
+              return acc;
+            }
+          }
 
           // Detect provider
           if (providerId === "seqera") {
@@ -237,6 +247,7 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
               onStreamStart(model);
               break;
             case "on_chat_model_stream":
+              tokenStreamed = true;
               if (content) onStreamNewToken(content);
               break;
             case "on_chat_model_end":
@@ -251,7 +262,10 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
 
         return recursivelyProcessStream();
       })
-      .catch((error) => onStreamError(error));
+      .catch((error) => {
+        onStreamError(error);
+        return acc;
+      });
   }
 }
 
