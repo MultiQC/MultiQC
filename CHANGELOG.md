@@ -4,7 +4,7 @@
 
 ### Highlights
 
-You can now generate AI summaries of reports with `--ai`, or dynamically in existing reports. See [documentation](docs/markdown/ai/index.md) for more details.
+You can now generate AI summaries of reports with `--ai`, or dynamically in existing reports. See [documentation](https://docs.seqera.io/multiqc/ai) for more details.
 
 ### Feature updates and improvements
 
