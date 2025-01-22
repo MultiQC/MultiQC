@@ -1060,7 +1060,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                         <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
                         </svg>
                     </span>
-                    <span class="button-text">Summarize</span>
+                    <span class="button-text">Summarize plot</span>
                 </button>
             </div>
             """

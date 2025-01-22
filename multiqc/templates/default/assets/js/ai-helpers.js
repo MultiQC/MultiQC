@@ -19,22 +19,27 @@ function runStreamGeneration({
   const modelName = $("#ai-model").val();
   const apiKey = $("#ai-api-key").val();
 
+  const fetchOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+
   if (provider.name === "Seqera AI") {
     let aiTitle =
       (configTitle == "None" ? "" : configTitle + ": ") + "MultiQC report, created on " + configCreationDate;
-    fetch(`${seqeraApiUrl}/internal-ai/query`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-      },
-      body: JSON.stringify({
-        message: aiTitle + "\n\n:::details\n\n" + systemPrompt + "\n\n" + userMessage + "\n\n:::\n\n",
-        stream: true,
-        tags: ["multiqc", ...tags],
-        title: aiTitle,
-      }),
-    })
+    if (apiKey) {
+      fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
+    }
+    fetchOptions.body = JSON.stringify({
+      message: aiTitle + "\n\n:::details\n\n" + systemPrompt + "\n\n" + userMessage + "\n\n:::\n\n",
+      stream: true,
+      tags: ["multiqc", ...tags],
+      title: aiTitle,
+    });
+
+    fetch(`${seqeraApiUrl}/internal-ai/query`, fetchOptions)
       .then((response) => {
         if (!response.ok) {
           return response.json().then((errorData) => {
@@ -45,31 +50,26 @@ function runStreamGeneration({
             throw new Error(error);
           });
         }
-        return response;
-      })
-      .then((response) => {
         return response.body.getReader();
       })
       .then((reader) =>
         decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
       )
-      .catch((error) => onStreamError(handleStreamError(error)));
+      .catch((error) => {
+        onStreamError(handleStreamError(error));
+      });
   } else if (provider.name === "OpenAI") {
-    fetch(`https://api.openai.com/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: modelName,
-        messages: [
-          { role: "user", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
-        stream: true,
-      }),
-    })
+    fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
+    fetchOptions.body = JSON.stringify({
+      model: modelName,
+      messages: [
+        { role: "user", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      stream: true,
+    });
+
+    fetch("https://api.openai.com/v1/chat/completions", fetchOptions)
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json();
@@ -83,26 +83,27 @@ function runStreamGeneration({
       .then((reader) =>
         decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
       )
-      .catch((error) => onStreamError(handleStreamError(error)));
+      .catch((error) => {
+        onStreamError(handleStreamError(error));
+      });
   } else if (provider.name === "Anthropic") {
-    fetch(`https://api.anthropic.com/v1/messages`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
-      body: JSON.stringify({
-        model: modelName,
-        max_tokens: 4096,
-        messages: [
-          { role: "user", content: systemPrompt },
-          { role: "user", content: userMessage },
-        ],
-        stream: true,
-      }),
-    })
+    fetchOptions.headers = {
+      ...fetchOptions.headers,
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    };
+    fetchOptions.body = JSON.stringify({
+      model: modelName,
+      max_tokens: 4096,
+      messages: [
+        { role: "user", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      stream: true,
+    });
+
+    fetch("https://api.anthropic.com/v1/messages", fetchOptions)
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json();
@@ -115,7 +116,9 @@ function runStreamGeneration({
       .then((reader) =>
         decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
       )
-      .catch((error) => onStreamError(handleStreamError(error)));
+      .catch((error) => {
+        onStreamError(handleStreamError(error));
+      });
   } else {
     onStreamError(`Unsupported AI provider: ${provider.name}`);
   }
