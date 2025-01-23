@@ -719,12 +719,16 @@ def _parse_txt(
     row_str: List[str]
     for line in non_header_lines:
         if line.rstrip():
-            row_str = line.rstrip().split(sep)
+            row_str = line.rstrip("\n").split(sep)
             matrix_str.append(row_str)
             if ncols is None:
                 ncols = len(row_str)
             elif ncols != len(row_str):
-                log.warning(f"Inconsistent number of columns found in {f['fn']}! Skipping..")
+                log.warning(
+                    f"Inconsistent number of columns found in {f['fn']}.\n"
+                    + f"Expected {ncols} columns as in first row:\n{matrix_str[0]}\n"
+                    + f"Got {len(row_str)} columns as in current row:\n{row_str}\nSkipping.."
+                )
                 return None, conf, plot_type
 
     # Convert values to floats if we can
