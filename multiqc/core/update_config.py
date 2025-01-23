@@ -2,15 +2,13 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Set, Union, cast
+from typing import Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel
 
 from multiqc import config, report
 from multiqc.core import log_and_rich, plugin_hooks
 from multiqc.core.exceptions import RunError
-from multiqc.types import Anchor
-from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +70,12 @@ class ClConfig(BaseModel):
     unknown_options: Optional[Dict] = None
 
 
-def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
+def update_config(
+    *analysis_dir,
+    cfg: Optional[ClConfig] = None,
+    log_to_file=False,
+    print_intro_fn=None,
+):
     """
     Update config and re-initialize logger.
 

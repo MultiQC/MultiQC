@@ -47,6 +47,7 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plot import Plot
+from multiqc.plots.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
 from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
 from multiqc.utils import megaqc
@@ -81,6 +82,7 @@ creation_date: datetime
 top_modules: List[Dict[str, Dict[str, str]]]
 module_order: List[Dict[str, Dict[str, Union[str, List[str]]]]]
 modules: List["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
+general_stats_plot: Optional[ViolinPlot]
 general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
@@ -131,6 +133,7 @@ def reset():
     global module_order
     global analysis_files
     global modules
+    global general_stats_plot
     global general_stats_html
     global lint_errors
     global num_flat_plots
@@ -172,6 +175,7 @@ def reset():
     top_modules = []
     module_order = []
     modules = []
+    general_stats_plot = None
     general_stats_html = ""
     lint_errors = []
     num_flat_plots = 0
@@ -614,7 +618,7 @@ def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searc
             return False
 
         # Use mimetypes to exclude binary files where possible
-        if not re.match(r".+_mqc\.(png|jpg|jpeg)", search_f.filename) and config.ignore_images:
+        if not re.match(r".+_mqc\.(png|jpg|jpeg|gif|webp|tiff)", search_f.filename) and config.ignore_images:
             (ftype, encoding) = mimetypes.guess_type(str(path))
             if encoding is not None and encoding != "gzip":
                 return False
@@ -1030,8 +1034,8 @@ def multiqc_dump_json(data_dir: Path):
             "data_sources",
             "general_stats_data",
             "general_stats_headers",
-            "plot_input_data",
-            "modules",
+            "multiqc_command",
+            "plot_data",
             "creation_date",
         ],
         "config": [

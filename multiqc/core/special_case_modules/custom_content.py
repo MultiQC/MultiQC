@@ -140,17 +140,22 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     break
                 assert parsed_dict is not None
                 parsed_dict["id"] = parsed_dict.get("id", f["s_name"])
-            elif f_extension == ".png" or f_extension == ".jpeg" or f_extension == ".jpg":
+            elif f_extension in [".png", ".jpeg", ".jpg", ".gif", ".webp", ".tiff"]:
                 # image is an exception - will return a file handler
                 image_string = base64.b64encode(cast(BufferedReader, f["f"]).read()).decode("utf-8")
-                image_format = "png" if f_extension == ".png" else "jpg"
+                image_format = "jpg" if f_extension in [".jpeg", ".jpg"] else f_extension[1:]
                 img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
                     image_format, image_string
                 )
                 parsed_dict = {
                     "id": f["s_name"],
                     "plot_type": "image",
-                    "section_name": f["s_name"].replace("_", " ").replace("-", " ").replace(".", " "),
+                    "section_name": f["s_name"]
+                    .rstrip(f_extension)
+                    .rstrip("_mqc")
+                    .replace("_", " ")
+                    .replace("-", " ")
+                    .replace(".", " "),
                     "data": img_html,
                 }
                 # If the search pattern 'k' has an associated custom content section config, use it:
@@ -718,12 +723,16 @@ def _parse_txt(
     row_str: List[str]
     for line in non_header_lines:
         if line.rstrip():
-            row_str = line.rstrip().split(sep)
+            row_str = line.rstrip("\n").split(sep)
             matrix_str.append(row_str)
             if ncols is None:
                 ncols = len(row_str)
             elif ncols != len(row_str):
-                log.warning(f"Inconsistent number of columns found in {f['fn']}! Skipping..")
+                log.warning(
+                    f"Inconsistent number of columns found in {f['fn']}.\n"
+                    + f"Expected {ncols} columns as in first row:\n{matrix_str[0]}\n"
+                    + f"Got {len(row_str)} columns as in current row:\n{row_str}\nSkipping.."
+                )
                 return None, conf, plot_type
 
     # Convert values to floats if we can

@@ -467,19 +467,3 @@ function countTokens(text) {
   // 4 chars per token suitable for real texts - 1.5 chars per token
   return Math.ceil(text.length / 1.5);
 }
-
-// Load tokenizers if available
-document.addEventListener("DOMContentLoaded", function () {
-  // Load GPT-3 Tokenizer
-  const gpt3Script = document.createElement("script");
-  gpt3Script.src = "https://cdn.jsdelivr.net/npm/gpt3-tokenizer/dist/gpt3-tokenizer.min.js";
-  gpt3Script.async = true;
-
-  // Load Claude's Tokenizer
-  const claudeScript = document.createElement("script");
-  claudeScript.src = "https://cdn.jsdelivr.net/npm/@anthropic-ai/tokenizer/dist/tokenizer.min.js";
-  claudeScript.async = true;
-
-  document.head.appendChild(gpt3Script);
-  document.head.appendChild(claudeScript);
-});

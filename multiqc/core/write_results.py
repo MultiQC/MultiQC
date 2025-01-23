@@ -2,6 +2,7 @@ import base64
 import dataclasses
 import errno
 import io
+import json
 import logging
 import os
 import re
@@ -324,7 +325,7 @@ def render_and_export_plots(plots_dir_name: str):
     )
 
 
-def _render_general_stats_table(plots_dir_name: str):
+def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
     """
     Construct HTML for the general stats table.
     """
@@ -372,6 +373,7 @@ def _render_general_stats_table(plots_dir_name: str):
         )
     else:
         config.skip_generalstats = True
+    return None
 
 
 def _write_data_files(data_dir: Path) -> None:
