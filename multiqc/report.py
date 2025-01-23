@@ -615,7 +615,7 @@ def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searc
             return False
 
         # Use mimetypes to exclude binary files where possible
-        if not re.match(r".+_mqc\.(png|jpg|jpeg)", search_f.filename) and config.ignore_images:
+        if not re.match(r".+_mqc\.(png|jpg|jpeg|gif|webp|tiff)", search_f.filename) and config.ignore_images:
             (ftype, encoding) = mimetypes.guess_type(str(path))
             if encoding is not None and encoding != "gzip":
                 return False
