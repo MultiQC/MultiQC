@@ -7,7 +7,7 @@ from pydantic import Field
 import numpy as np
 
 from multiqc import report
-from multiqc.plots.plotly.plot import (
+from multiqc.plots.plot import (
     BaseDataset,
     PConfig,
     Plot,

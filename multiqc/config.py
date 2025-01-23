@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import importlib_metadata
+import packaging.version
 import yaml
 from importlib_metadata import EntryPoint
 
@@ -154,7 +155,7 @@ strict: bool
 development: bool
 custom_plot_config: Dict
 custom_table_header_config: Dict
-software_versions: Dict
+software_versions: Dict[str, Dict[str, List[str]]]
 ignore_symlinks: bool
 ignore_images: bool
 fn_ignore_dirs: List[str]

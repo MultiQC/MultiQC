@@ -1,10 +1,9 @@
 """MultiQC submodule to parse output from Picard MarkDuplicates"""
 
 import logging
-from typing import Dict, List
-
 import math
 from collections import defaultdict
+from typing import Dict, List
 
 from multiqc import config
 from multiqc.modules.picard import util
