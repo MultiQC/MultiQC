@@ -175,16 +175,16 @@ was generated and the button that launches the welcome tour.
     <b>Report AI Summary </b>
   </div>
   <div id="global_ai_summary_response">
-    {{ report.ai_global_summary }}
+    <span class="response-text">{{ report.ai_global_summary }}</span><span class="interruption-notice" style="display: none;"> [streaming response was interrupted]</span>
   </div>
 
   {% if report.ai_global_detailed_analysis %}
   <div style="display: block" id="global_ai_summary_detailed_analysis_response">
-    {{ report.ai_global_detailed_analysis }}
+    <span class="response-text">{{ report.ai_global_detailed_analysis }}</span><span class="interruption-notice" style="display: none;"> [streaming response was interrupted]</span>
   </div>
   {% else %}
   <div class="ai-local-content" id="global_ai_summary_detailed_analysis_response">
-    {{ report.ai_global_detailed_analysis }}
+    <span class="response-text"></span>{{ report.ai_global_detailed_analysis }}</span><span class="interruption-notice" style="display: none;"> [streaming response was interrupted]</span>
   </div>
   {% endif %}
 

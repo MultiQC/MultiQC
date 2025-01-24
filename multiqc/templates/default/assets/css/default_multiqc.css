@@ -1357,6 +1357,10 @@ tr.row-empty {
   color: #ea4f4f;
 }
 
+.ai-summary .interruption-notice {
+  color: #ea4f4f;
+}
+
 .ai-settings-button svg {
   vertical-align: middle;
 }

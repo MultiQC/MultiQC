@@ -144,6 +144,8 @@ async function summarizeWithAi(button) {
   const isMore = button.hasClass("ai-generate-button-more");
 
   const responseDiv = $("#" + button.data("response-div"));
+  const responseTextDiv = responseDiv.find(".response-text");
+  const interruptionNoticeDiv = responseDiv.find(".interruption-notice").hide();
   const errorDiv = $("#" + button.data("error-div")).hide();
   const disclaimerDiv = $("#" + button.data("disclaimer-div"));
   const wrapperDiv = $("#" + button.data("wrapper-div"));
@@ -211,7 +213,7 @@ async function summarizeWithAi(button) {
   // Disable button and show loading state
   button.prop("disabled", true).html(`Requesting ${provider.name}...`);
 
-  function wrapUpResponse() {
+  function wrapUpResponse(wasError) {
     disclaimerDiv.find(".ai-summary-disclaimer-provider").text(provider.name);
     disclaimerDiv.find(".ai-summary-disclaimer-model").text(modelName);
     disclaimerDiv.show();
@@ -233,7 +235,7 @@ async function summarizeWithAi(button) {
         responseDiv.show();
         if (wrapperDiv) wrapperDiv.show();
         receievedMarkdown += token;
-        responseDiv.html(markdownToHtml(receievedMarkdown));
+        responseTextDiv.html(markdownToHtml(receievedMarkdown)).css("display", "inline");
         button.html(`Generating...`);
       },
       onStreamError: (error) => {
@@ -244,12 +246,13 @@ async function summarizeWithAi(button) {
           position: "bottom-right",
           hideAfter: 5000,
         });
-        wrapUpResponse(disclaimerDiv, provider.name, modelName);
+        wrapUpResponse(true);
         if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").hide();
         disclaimerDiv.hide();
+        interruptionNoticeDiv.css("display", "inline");
       },
       onStreamComplete: (threadId) => {
-        wrapUpResponse(disclaimerDiv, provider.name, modelName);
+        wrapUpResponse();
         // Update the "Chat with Seqera AI" button to point to new thread
         if (threadId) {
           $(".ai-continue-in-chat").attr("href", `${seqeraWebsite}/ask-ai/?messages=${threadId}`).show();
@@ -281,6 +284,8 @@ async function generateCallback(e) {
   const isMore = button.hasClass("ai-generate-button-more");
   const action = button.data("action");
   const responseDiv = $("#" + button.data("response-div"));
+  const responseTextDiv = responseDiv.find(".response-text");
+  const interruptionNoticeDiv = responseDiv.find(".interruption-notice");
   const errorDiv = $("#" + button.data("error-div"));
   const wrapperDiv = $("#" + button.data("wrapper-div"));
   const originalButtonHtml = button.data("original-html");
@@ -289,7 +294,8 @@ async function generateCallback(e) {
   if (action === "clear") {
     e.preventDefault();
     localStorage.removeItem(`ai_response_${reportUuid}_${elementId}${isMore ? "_more" : ""}`);
-    responseDiv.html("").hide();
+    responseTextDiv.html("").hide();
+    interruptionNoticeDiv.hide();
     errorDiv.html("").hide();
     if (wrapperDiv) wrapperDiv.hide();
     button.html(originalButtonHtml).data("action", "generate").removeClass("ai-local-content");
@@ -355,6 +361,8 @@ $(function () {
     const action = button.data("action");
 
     const responseDiv = $("#" + button.data("response-div"));
+    const responseTextDiv = responseDiv.find(".response-text");
+    const interruptionNoticeDiv = responseDiv.find(".interruption-notice");
     const disclaimerDiv = $("#" + button.data("disclaimer-div"));
     const wrapperDiv = $("#" + button.data("wrapper-div"));
     if (wrapperDiv) wrapperDiv.addClass("ai-local-content");
@@ -367,7 +375,9 @@ $(function () {
       const cachedSummaryDump = localStorage.getItem(`ai_response_${reportUuid}_${plotAnchor}${isMore ? "_more" : ""}`);
       if (cachedSummaryDump) {
         const cachedSummary = JSON.parse(cachedSummaryDump);
-        responseDiv.show().html(markdownToHtml(cachedSummary.text));
+        responseTextDiv.html(markdownToHtml(cachedSummary.text));
+        interruptionNoticeDiv.hide();
+        responseDiv.show();
         if (wrapperDiv) wrapperDiv.show();
         const provider = AI_PROVIDERS[cachedSummary.provider];
         disclaimerDiv.find(".ai-summary-disclaimer-provider").text(provider.name);
