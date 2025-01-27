@@ -27,6 +27,7 @@ dependencies = [
     "tqdm",               # progress bar in notebooks
     "python-dotenv",
     "natsort",
+    "tiktoken",
 ]
 requires-python = ">=3.8"
 authors = [
