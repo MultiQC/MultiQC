@@ -436,6 +436,8 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
                     data-response-div="{section_anchor}_ai_summary_response"
                     data-error-div="{section_anchor}_ai_summary_error"
                     data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
+                    data-continue-in-chat-button="{section_anchor}_ai_summary_continue_in_chat"
+                    data-detailed-analysis-div="{section_anchor}_ai_summary_detailed_analysis_response"
                     data-wrapper-div="{section_anchor}_ai_summary_wrapper"
                     data-section-anchor="{section_anchor}"
                     data-plot-anchor="{violin_anchor}"

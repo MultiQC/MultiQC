@@ -27,6 +27,7 @@ dependencies = [
     "tqdm",               # progress bar in notebooks
     "python-dotenv",
     "natsort",
+    "tiktoken",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -82,9 +83,6 @@ dev = [
     "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
 ]
-anthropic = ["langchain", "langsmith", "langchain-anthropic"]
-openai = ["langchain", "langsmith", "langchain-openai"]
-ai = ["langchain", "tiktoken", "langchain-anthropic", "langchain-openai"]
 
 [project.urls]
 Homepage = "https://multiqc.info"

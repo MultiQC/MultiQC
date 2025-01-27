@@ -12,7 +12,7 @@ window.continueInSeqeraChatHandler = function (event) {
   let url = seqeraWebsite + "/ask-ai/";
   if (threadId) url += "?messages=" + threadId;
 
-  const chatWindow = window.open(url, "_blank");
+  window.open(url, "_blank");
 };
 
 function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsView = "table") {
@@ -147,23 +147,30 @@ async function summarizeWithAi(button) {
   const errorDiv = $("#" + button.data("error-div")).hide();
   const disclaimerDiv = $("#" + button.data("disclaimer-div"));
   const wrapperDiv = $("#" + button.data("wrapper-div"));
+  const continueInChatButton = $("#" + button.data("continue-in-chat-button"));
 
   const sectionAnchor = button.data("section-anchor") || "global";
   const moduleAnchor = button.data("module-anchor");
   const plotView = button.data("plot-view");
   const clearText = button.data("clear-text");
 
+  let title = configTitle == "None" ? "" : configTitle + ": ";
+
   let content;
   let systemPrompt;
   if (isGlobal) {
     systemPrompt = isMore ? systemPromptReportFull : systemPromptReportShort;
     content = formatReportForAi(countTokens(systemPrompt));
+    title += "MultiQC report";
   } else if (sectionAnchor === "general_stats_table") {
     systemPrompt = systemPromptPlot;
     content = formatReportForAi(countTokens(systemPrompt), true, plotView);
+    title += "MultiQC General Statistics";
   } else {
     systemPrompt = systemPromptPlot;
     content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
+    const section = aiReportMetadata.sections[sectionAnchor];
+    title += `MultiQC ${section.name}`;
   }
 
   // Check total tokens before making the request
@@ -222,6 +229,7 @@ async function summarizeWithAi(button) {
   await (async () => {
     let receievedMarkdown = "";
     runStreamGeneration({
+      title: title + `, created on ${configCreationDate}`,
       systemPrompt: systemPrompt,
       userMessage: content,
       tags: ["multiqc"],
@@ -252,7 +260,7 @@ async function summarizeWithAi(button) {
         wrapUpResponse(disclaimerDiv, provider.name, modelName);
         // Update the "Chat with Seqera AI" button to point to new thread
         if (threadId) {
-          $(".ai-continue-in-chat").attr("href", `${seqeraWebsite}/ask-ai/?messages=${threadId}`).show();
+          continueInChatButton.attr("href", `${seqeraWebsite}/ask-ai/?messages=${threadId}`).show();
         }
         // Save response to localStorage
         const elementId = button.data("plot-anchor") || "global";
@@ -263,6 +271,7 @@ async function summarizeWithAi(button) {
             provider: providerId,
             model: modelName,
             timestamp: Date.now(),
+            threadId: threadId,
           }),
         );
         const endTime = performance.now();
@@ -281,17 +290,21 @@ async function generateCallback(e) {
   const isMore = button.hasClass("ai-generate-button-more");
   const action = button.data("action");
   const responseDiv = $("#" + button.data("response-div"));
+  const detailedAnalysisDiv = $("#" + button.data("detailed-analysis-div"));
   const errorDiv = $("#" + button.data("error-div"));
   const wrapperDiv = $("#" + button.data("wrapper-div"));
   const originalButtonHtml = button.data("original-html");
   const elementId = button.data("plot-anchor") || "global";
+  const continueInChatButton = $("#" + button.data("continue-in-chat-button"));
 
   if (action === "clear") {
     e.preventDefault();
     localStorage.removeItem(`ai_response_${reportUuid}_${elementId}${isMore ? "_more" : ""}`);
     responseDiv.html("").hide();
+    detailedAnalysisDiv.html("").hide();
     errorDiv.html("").hide();
     if (wrapperDiv) wrapperDiv.hide();
+    continueInChatButton.hide();
     button.html(originalButtonHtml).data("action", "generate").removeClass("ai-local-content");
   } else {
     summarizeWithAi(button);
@@ -357,6 +370,7 @@ $(function () {
     const responseDiv = $("#" + button.data("response-div"));
     const disclaimerDiv = $("#" + button.data("disclaimer-div"));
     const wrapperDiv = $("#" + button.data("wrapper-div"));
+    const continueInChatButton = $("#" + button.data("continue-in-chat-button"));
     if (wrapperDiv) wrapperDiv.addClass("ai-local-content");
 
     if (action === "clear") {
@@ -374,6 +388,12 @@ $(function () {
         disclaimerDiv.find(".ai-summary-disclaimer-model").text(cachedSummary.model);
         disclaimerDiv.show();
         button.html(clearText).data("action", "clear").prop("disabled", false).addClass("ai-local-content");
+
+        const threadId = cachedSummary.threadId;
+        if (threadId) {
+          continueInChatButton.attr("href", `${seqeraWebsite}/ask-ai/?messages=${threadId}`);
+          continueInChatButton.show();
+        }
       }
     }
 

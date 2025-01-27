@@ -123,8 +123,6 @@ no_ai: bool
 
 seqera_api_url: str
 seqera_website: str
-langchain_project: Optional[str]
-langchain_endpoint: Optional[str]
 
 plots_force_flat: bool
 plots_export_font_scale: float
