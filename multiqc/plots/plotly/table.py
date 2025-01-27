@@ -410,6 +410,7 @@ def make_table(
                     data-response-div="{section_anchor}_ai_summary_response"
                     data-error-div="{section_anchor}_ai_summary_error"
                     data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
+                    data-continue-in-chat-button="{section_anchor}_ai_summary_continue_in_chat"
                     data-wrapper-div="{section_anchor}_ai_summary_wrapper"
                     data-section-anchor="{section_anchor}"
                     data-plot-anchor="{violin_anchor}"
