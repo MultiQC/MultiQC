@@ -12,8 +12,9 @@ from pydantic.types import SecretStr
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
-from multiqc.core.strict_helpers import lint_error
 from multiqc.types import Anchor
+
+import tiktoken
 
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
@@ -188,25 +189,21 @@ class Client:
     def max_tokens(self) -> int:
         raise NotImplementedError
 
+    FALLBACK_LOG_PRINTED = False
+
     def n_tokens(self, text: str) -> int:
         """
-        Estimate tokens for Seqera's API
-        Using tiktoken for GPT models, falling back to Claude's tokenizer for others
+        Estimate token count. Using here tiktoken library. It's an OpenAI tokenizer, so it's not ideal for Anthropic,
+        but better than nothing. Anthropic's tokenizer is only available through API and counts towards the API quota :'(
         """
         try:
-            if self.name == "anthropic" or self.name == "seqera":
-                from anthropic import Anthropic  # type: ignore
-
-                return Anthropic().count_tokens(text)
-            else:
-                import tiktoken  # type: ignore
-
-                encoding = tiktoken.encoding_for_model(self.model)
-                return len(encoding.encode(text))
-        except ImportError:
-            logger.warning(
-                "Fallback to rough estimation if tokenizers not available. Install `tiktoken` or `anthropic` to get more accurate token counts."
-            )
+            model = self.model if self.name == "openai" else "gpt-4o"
+            encoding = tiktoken.encoding_for_model(model)
+            return len(encoding.encode(text))
+        except Exception as e:
+            if not self.FALLBACK_LOG_PRINTED:
+                logger.warning(f"Fail to call tiktoken, falling back to rough token estimation. Error: {e}")
+                self.FALLBACK_LOG_PRINTED = True
             return int(len(text) / 1.5)
 
     def _request_with_error_handling_and_retries(
