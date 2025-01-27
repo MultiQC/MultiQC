@@ -140,8 +140,6 @@ function getMaxTokens(model) {
 }
 
 async function summarizeWithAi(button) {
-  // TODO: for plot- or table- specific summaries, pass type and title to the prompt
-
   const isGlobal = button.hasClass("ai-generate-button-global");
   const isMore = button.hasClass("ai-generate-button-more");
 
@@ -156,17 +154,23 @@ async function summarizeWithAi(button) {
   const plotView = button.data("plot-view");
   const clearText = button.data("clear-text");
 
+  let title = configTitle == "None" ? "" : configTitle + ": ";
+
   let content;
   let systemPrompt;
   if (isGlobal) {
     systemPrompt = isMore ? systemPromptReportFull : systemPromptReportShort;
     content = formatReportForAi(countTokens(systemPrompt));
+    title += "MultiQC report";
   } else if (sectionAnchor === "general_stats_table") {
     systemPrompt = systemPromptPlot;
     content = formatReportForAi(countTokens(systemPrompt), true, plotView);
+    title += "MultiQC General Statistics";
   } else {
     systemPrompt = systemPromptPlot;
     content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
+    const section = aiReportMetadata.sections[sectionAnchor];
+    title += `MultiQC ${section.name}`;
   }
 
   // Check total tokens before making the request
@@ -225,6 +229,7 @@ async function summarizeWithAi(button) {
   await (async () => {
     let receievedMarkdown = "";
     runStreamGeneration({
+      title: title + `, created on ${configCreationDate}`,
       systemPrompt: systemPrompt,
       userMessage: content,
       tags: ["multiqc"],
