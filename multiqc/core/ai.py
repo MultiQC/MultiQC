@@ -1,13 +1,11 @@
-from ast import In
 import base64
 import json
 import logging
 import os
 import re
-from openai import OpenAI
 import yaml
 from textwrap import indent
-from typing import Any, Callable, Dict, NamedTuple, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, NamedTuple, Optional, Tuple, TypeVar, Union
 
 import requests
 from markdown import markdown
