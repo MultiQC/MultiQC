@@ -1,23 +1,19 @@
 import base64
+import json
 import logging
 import os
 import re
+import yaml
 from textwrap import indent
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, TypeVar, cast
+from typing import Any, Dict, NamedTuple, Optional, Tuple, TypeVar, Union
 
 import requests
 from markdown import markdown
 from pydantic import BaseModel, Field
-from pydantic.types import SecretStr
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
 from multiqc.types import Anchor
-
-if TYPE_CHECKING:
-    from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
-    from langchain_core.messages import BaseMessage  # type: ignore
-    from langchain_core.runnables import Runnable  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +72,7 @@ _EXAMPLE_SUMMARY_FOR_FULL = """\
 """
 
 _PROMPT_EXAMPLE_SUMMARY_FOR_FULL = f"""\
-Example, formatted as YAML of 3 sections (summary, detailed_summary, and recommendations):
+Example, formatted as YAML of 2 sections (summary, detailed_analysis):
 
 summary: |
 {indent(_EXAMPLE_SUMMARY_FOR_FULL, "    ")}
@@ -111,7 +107,7 @@ _EXAMPLE_DETAILED_SUMMARY = """\
 """
 
 _PROMPT_EXAMPLE_DETAILED_SUMMARY = f"""\
-detailed_summary: |
+detailed_analysis: |
 {indent(_EXAMPLE_DETAILED_SUMMARY, "    ")}
 """
 
@@ -134,7 +130,7 @@ PROMPT_FULL = f"""\
 
 class InterpretationOutput(BaseModel):
     summary: str = Field(description="A very short and concise overall summary")
-    detailed_analysis: Optional[str] = Field(default=None, description="Detailed analysis")
+    detailed_analysis: Optional[str] = Field(description="Detailed analysis", default=None)
 
     def markdown_to_html(self, text: str) -> str:
         """
@@ -178,11 +174,31 @@ class Client:
         self.model: str = model
         self.api_key: str = api_key
 
-    def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
+    def _query(self, system_prompt: str, report_content: str):
         raise NotImplementedError
 
-    def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
-        raise NotImplementedError
+    def interpret_report_short(self, report_content: str) -> InterpretationResponse:
+        response = self._query(PROMPT_SHORT, report_content)
+
+        return InterpretationResponse(
+            interpretation=InterpretationOutput(summary=response.content),
+            model=response.model,
+        )
+
+    def interpret_report_full(self, report_content: str) -> InterpretationResponse:
+        response = self._query(PROMPT_FULL, report_content)
+
+        try:
+            output = yaml.safe_load(response.content)
+            return InterpretationResponse(
+                interpretation=InterpretationOutput(**output),
+                model=response.model,
+            )
+        except Exception:
+            return InterpretationResponse(
+                interpretation=InterpretationOutput(summary=response.content),
+                model=response.model,
+            )
 
     def max_tokens(self) -> int:
         raise NotImplementedError
@@ -207,8 +223,8 @@ class Client:
             return int(len(text) / 1.5)
 
     def _request_with_error_handling_and_retries(
-        self, send_request: Callable[[], ResponseT], retries: int = 0
-    ) -> Optional[ResponseT]:
+        self, url: str, headers: Dict[str, Any], body: Dict[str, Any], retries: int = 1
+    ) -> Dict[str, Any]:
         """Make a request with retries and exponential backoff.
 
         Args:
@@ -221,180 +237,121 @@ class Client:
         while True:
             try:
                 if config.verbose:
-                    response = send_request()
+                    response = requests.post(url, headers=headers, json=body)
                 else:
-                    response = run_with_spinner("ai", f"Summarizing report with {self.title}...", send_request)
-                return response
+                    response = run_with_spinner(
+                        "ai",
+                        f"Summarizing report with {self.title}...",
+                        lambda: requests.post(url, headers=headers, json=body),
+                    )
+                response.raise_for_status()
+                return response.json()
 
             except Exception as e:
                 attempt += 1
                 if attempt > retries:
-                    logger.error(f"Failed to get a response from {self.title}: {e}")
-                    return None
+                    logger.error(f"Failed to get a response from {self.title}. Error: {e}")
+                    if config.verbose:
+                        # redact content in messages
+                        for m in body["messages"]:
+                            if isinstance(m["content"], list):
+                                for chunk in m["content"]:
+                                    chunk["text"] = "<redacted>"
+                            elif isinstance(m["content"], str):
+                                m["content"] = "<redacted>"
+                        logger.debug(f"Request body: {json.dumps(body, indent=2)}")
+                    raise
 
                 # Calculate backoff time - start at 1s and double each retry
                 backoff = 2 ** (attempt - 1)
                 logger.warning(
-                    f"Request to {self.title} failed (attempt {attempt}/{retries + 1}). "
-                    f"Retrying in {backoff}s... Error: {e}"
+                    f"Failed to get a response from {self.title} (attempt {attempt}/{retries}). Error: {e}. "
+                    f"Retrying in {backoff}s..."
                 )
                 time.sleep(backoff)
 
 
-class LangchainClient(Client):
-    def __init__(self, model: str, api_key: str):
-        super().__init__(model, api_key)
-        self.llm: BaseChatModel
-
-    def send_request(self, llm: "Runnable", prompt: str, report_content: str):
-        from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
-        from langsmith import Client as LangSmithClient  # type: ignore
-
-        if os.environ.get("LANGCHAIN_API_KEY"):
-            with tracing_v2_enabled(
-                project_name=os.environ.get("LANGCHAIN_PROJECT", config.langchain_project),
-                client=LangSmithClient(
-                    api_key=os.environ.get("LANGCHAIN_API_KEY"),
-                    api_url=os.environ.get("LANGCHAIN_ENDPOINT", config.langchain_endpoint),
-                ),
-            ):
-                response = llm.invoke(
-                    [
-                        {"role": "user", "content": prompt},
-                        {"role": "user", "content": report_content},
-                    ],
-                )
-        else:
-            response = llm.invoke(
-                [
-                    {"role": "user", "content": prompt},
-                    {"role": "user", "content": report_content},
-                ],
-            )
-
-        if not response:
-            msg = f"Got empty response from the LLM {self.title} {self.model}"
-            if config.strict:
-                raise RuntimeError(msg)
-            logger.error(msg)
-            return None
-
-        return response
-
-    def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
-        response: Optional[BaseMessage] = self._request_with_error_handling_and_retries(
-            lambda: self.send_request(self.llm, PROMPT_SHORT, report_content)
-        )
-        if response is None:
-            return None
-
-        resolved_model_name = self.model
-        if "model" in response.response_metadata:
-            resolved_model_name = response.response_metadata["model"]
-        elif "model_name" in response.response_metadata:
-            resolved_model_name = response.response_metadata["model_name"]
-
-        return InterpretationResponse(
-            interpretation=InterpretationOutput(
-                summary=cast(str, response.content),
-            ),
-            model=resolved_model_name,
-        )
-
-    def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
-        llm: Runnable = self.llm.with_structured_output(InterpretationOutput, include_raw=True)
-        response: Optional[Dict] = self._request_with_error_handling_and_retries(
-            lambda: self.send_request(llm, PROMPT_FULL, report_content)
-        )
-        if response is None:
-            return None
-
-        if not response["parsed"]:
-            if response["raw"]:
-                msg = f"Failed to parse the response from the LLM: {response['raw']}"
-                if config.strict:
-                    raise RuntimeError(msg)
-                logger.error(msg)
-                return None
-            else:
-                msg = f"Got empty response from the LLM {self.title} {self.model}"
-                if config.strict:
-                    raise RuntimeError(msg)
-                logger.error(msg)
-                return None
-
-        resolved_model_name = self.model
-        if "model" in response["raw"].response_metadata:
-            resolved_model_name = response["raw"].response_metadata["model"]
-        elif "model_name" in response["raw"].response_metadata:
-            resolved_model_name = response["raw"].response_metadata["model_name"]
-
-        return InterpretationResponse(
-            interpretation=response["parsed"],
-            model=resolved_model_name,
-        )
-
-
-# Truncate the messages from the anthropic or openai logger. It would print the entire user message which is too long.
-class TruncateLogFilter(logging.Filter):
-    def filter(self, record):
-        try:
-            for m in record.args["json_data"]["messages"]:  # type: ignore
-                if isinstance(m["content"], list):
-                    for chunk in m["content"]:
-                        chunk["text"] = chunk["text"][:200] + "<truncated>"  # type: ignore
-                elif isinstance(m["content"], str):
-                    m["content"] = m["content"][:200] + "<truncated>"  # type: ignore
-        except Exception:
-            pass
-        return True
-
-
-class OpenAiClient(LangchainClient):
+class OpenAiClient(Client):
     def __init__(self, api_key: str):
-        from langchain_openai import ChatOpenAI  # type: ignore
-
-        openai_logger = logging.getLogger("openai._base_client")
-        openai_logger.addFilter(TruncateLogFilter())
-
-        model = config.ai_model if config.ai_model and config.ai_model.startswith("gpt") else "gpt-4o"
-
+        model = (
+            config.ai_model
+            if config.ai_model and (config.ai_model.startswith("gpt") or config.ai_model.startswith("o"))
+            else "gpt-4o"
+        )
         super().__init__(model, api_key)
         self.name = "openai"
         self.title = "OpenAI"
-        self.llm = ChatOpenAI(
-            model=self.model,
-            api_key=SecretStr(api_key),
-            temperature=0.0,
-        )
 
     def max_tokens(self) -> int:
         return 128000
 
+    class ApiResponse(NamedTuple):
+        content: str
+        model: str
 
-class AnthropicClient(LangchainClient):
+    def _query(
+        self, system_prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
+    ) -> ApiResponse:
+        response = self._request_with_error_handling_and_retries(
+            "https://api.openai.com/v1/chat/completions",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}",
+            },
+            body={
+                "model": self.model,
+                "messages": [
+                    {"role": "user", "content": system_prompt},
+                    {"role": "user", "content": report_content},
+                ],
+                "temperature": 0.0,
+                **(extra_options or {}),
+            },
+        )
+        return OpenAiClient.ApiResponse(
+            content=response["choices"][0]["message"]["content"],
+            model=response.get("model", self.model),
+        )
+
+
+class AnthropicClient(Client):
     def __init__(self, api_key: str):
-        from langchain_anthropic import ChatAnthropic  # type: ignore
-
-        # Get the anthropic logger and add the filter
-        anthropic_logger = logging.getLogger("anthropic._base_client")
-        anthropic_logger.addFilter(TruncateLogFilter())
-
         model = (
             config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-3-5-sonnet-latest"
         )
-
         super().__init__(model, api_key)
         self.name = "anthropic"
         self.title = "Anthropic"
-        self.llm = ChatAnthropic(
-            model=self.model,  # type: ignore
-            api_key=SecretStr(api_key),
-            temperature=0.0,
-        )  # type: ignore
 
     def max_tokens(self) -> int:
         return 200000
+
+    class ApiResponse(NamedTuple):
+        content: str
+        model: str
+
+    def _query(self, system_prompt: str, report_content: str) -> ApiResponse:
+        response = self._request_with_error_handling_and_retries(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "Content-Type": "application/json",
+                "x-api-key": self.api_key,
+                "anthropic-version": "2023-06-01",
+            },
+            body={
+                "model": self.model,
+                "max_tokens": 4096,
+                "messages": [
+                    {"role": "user", "content": system_prompt},
+                    {"role": "user", "content": report_content},
+                ],
+                "temperature": 0.0,
+            },
+        )
+        return AnthropicClient.ApiResponse(
+            content=response["content"][0]["text"],
+            model=response.get("model", self.model),
+        )
 
 
 class SeqeraClient(Client):
@@ -405,7 +362,7 @@ class SeqeraClient(Client):
         creation_date = report.creation_date.strftime("%d %b %Y, %H:%M %Z")
         self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, created on {creation_date}"
         self.tags = ["multiqc", f"multiqc_version:{config.version}"]
-        self.retries = 3
+        self.model = model or "claude-3-5-sonnet-latest"
 
     def max_tokens(self) -> int:
         return 200000
@@ -413,81 +370,73 @@ class SeqeraClient(Client):
     def wrap_details(self, prompt) -> str:
         return f"{self.chat_title}\n\n:::details\n\n{prompt}\n\n:::\n\n"
 
+    class ApiResponse(NamedTuple):
+        content: Union[str, Dict[str, str]]
+        model: str
+        thread_id: Optional[str] = None
+
     def _send_request(
         self, prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
-    ) -> Optional[requests.Response]:
-        response = requests.post(
+    ) -> ApiResponse:
+        response = self._request_with_error_handling_and_retries(
             f"{config.seqera_api_url}/internal-ai/query",
             headers={"Authorization": f"Bearer {self.api_key}"},
-            json={
+            body={
                 "message": self.wrap_details(prompt + "\n\n" + report_content),
                 "tags": self.tags,
                 "title": self.chat_title,
                 **(extra_options or {}),
             },
         )
-        if response.status_code != 200:
-            msg = f"Failed to get a response from Seqera. Status code: {response.status_code} ({response.reason})"
-            logger.error(msg)
-            logger.debug(f"Response: {response.text}")
-            if config.strict:
-                raise RuntimeError(msg)
-            return None
-        return response
-
-    def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
-        response = self._request_with_error_handling_and_retries(
-            lambda: self._send_request(PROMPT_SHORT, report_content), retries=self.retries
+        return SeqeraClient.ApiResponse(
+            content=response["generation"],
+            model=response.get("model", self.model),
+            thread_id=response.get("thread_id"),
         )
-        if response is None:
-            return None
 
-        response_dict = response.json()
-        thread_id = response_dict.get("thread_id")
-        generation = response_dict.get("generation")
+    def interpret_report_short(self, report_content: str) -> InterpretationResponse:
+        response = self._send_request(PROMPT_SHORT, report_content, extra_options=None)
+
         return InterpretationResponse(
-            thread_id=thread_id,
-            interpretation=InterpretationOutput(summary=generation),
-            model=self.model or "claude-3-5-sonnet-latest",
+            interpretation=InterpretationOutput(summary=str(response.content)),
+            model=response.model,
+            thread_id=response.thread_id,
         )
 
-    def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
-        response = self._request_with_error_handling_and_retries(
-            lambda: self._send_request(
-                PROMPT_FULL,
-                report_content,
-                extra_options={
-                    "response_schema": {
-                        "name": "Interpretation",
-                        "description": "Interpretation of a MultiQC report",
-                        "input_schema": {
-                            "type": "object",
-                            "required": ["summary"],
-                            "properties": {
-                                key: {
-                                    "type": "string",
-                                    "description": value.description,
-                                    **({"default": value.default} if value.default is None else {}),
-                                }
-                                for key, value in InterpretationOutput.model_fields.items()
-                            },
+    def interpret_report_full(self, report_content: str) -> InterpretationResponse:
+        response = self._send_request(
+            PROMPT_FULL,
+            report_content,
+            extra_options={
+                "response_schema": {
+                    "name": "Interpretation",
+                    "description": "Interpretation of a MultiQC report",
+                    "input_schema": {
+                        "type": "object",
+                        "required": ["summary"],
+                        "properties": {
+                            key: {
+                                "type": "string",
+                                "description": value.description,
+                                **({"default": value.default} if value.default is None else {}),
+                            }
+                            for key, value in InterpretationOutput.model_fields.items()
                         },
                     },
                 },
-            ),
-            retries=self.retries,
+            },
         )
-        if response is None:
-            return None
 
-        response_dict = response.json()
-        thread_id = response_dict.get("thread_id")
-        generation: Dict[str, str] = response_dict.get("generation")
-        return InterpretationResponse(
-            thread_id=thread_id,
-            interpretation=InterpretationOutput(**generation),
-            model=self.model or "claude-3-5-sonnet-latest",
-        )
+        try:
+            output = InterpretationOutput.model_validate(response.content)
+            return InterpretationResponse(
+                interpretation=output,
+                model=response.model,
+                thread_id=response.thread_id,
+            )
+        except Exception as e:
+            logger.error(f"Failed to parse Seqera response as JSON: {e}")
+            raise
 
 
 def get_llm_client() -> Optional[Client]:
@@ -690,8 +639,8 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
         sec_n_tokens = client.n_tokens(sec_context)
         if current_n_tokens + sec_n_tokens > max_tokens:
             logger.warning(
-                f"Truncating prompt to only the general stats to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
-                f"Tokens estimate: {current_n_tokens}, with sections: at least {current_n_tokens + sec_n_tokens}"
+                f"Including only General Statistics table to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
+                f"Tokens estimate: {current_n_tokens}, with sections: {current_n_tokens + sec_n_tokens}"
             )
             return user_prompt, False
 
@@ -732,32 +681,35 @@ def add_ai_summary_to_report():
     if exceeded_context_window:
         return
 
-    response: Optional[InterpretationResponse]
-    if config.ai_summary_full:
-        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
-            response = InterpretationResponse(
-                interpretation=InterpretationOutput(
-                    summary=_EXAMPLE_SUMMARY_FOR_FULL,
-                    detailed_analysis=_EXAMPLE_DETAILED_SUMMARY,
-                ),
-                model="test-model",
-                thread_id="68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None,
-            )
+    response: InterpretationResponse
+    try:
+        if config.ai_summary_full:
+            if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
+                response = InterpretationResponse(
+                    interpretation=InterpretationOutput(
+                        summary=_EXAMPLE_SUMMARY_FOR_FULL,
+                        detailed_analysis=_EXAMPLE_DETAILED_SUMMARY,
+                    ),
+                    model="test-model",
+                    thread_id="68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None,
+                )
+            else:
+                response = client.interpret_report_full(prompt)
         else:
-            response = client.interpret_report_full(prompt)
-    else:
-        if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
-            response = InterpretationResponse(
-                interpretation=InterpretationOutput(
-                    summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
-                ),
-                model="test-model",
-                thread_id="68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None,
-            )
-        else:
-            response = client.interpret_report_short(prompt)
-
-    if not response:
+            if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
+                response = InterpretationResponse(
+                    interpretation=InterpretationOutput(
+                        summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
+                    ),
+                    model="test-model",
+                    thread_id="68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None,
+                )
+            else:
+                response = client.interpret_report_short(prompt)
+    except Exception as e:
+        logger.error(f"Failed to interpret report with {client.title}: {e}")
+        if config.strict:
+            raise
         return None
 
     if not response.interpretation:
