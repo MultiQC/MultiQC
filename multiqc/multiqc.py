@@ -581,10 +581,14 @@ def run(
         return RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
 
     except KeyboardInterrupt:
-        logger.critical(
-            "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
-            + "User Cancelled Execution!\nExiting MultiQC..."
-        )
+        if config.verbose:
+            msg = (
+                "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
+                + "User Cancelled Execution!\nExiting MultiQC..."
+            )
+        else:
+            msg = "User Cancelled Execution! Exiting MultiQC..."
+        logger.critical(msg)
         return RunResult(sys_exit_code=1)
 
     else:
