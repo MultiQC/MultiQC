@@ -290,6 +290,7 @@ async function generateCallback(e) {
   const isMore = button.hasClass("ai-generate-button-more");
   const action = button.data("action");
   const responseDiv = $("#" + button.data("response-div"));
+  const detailedAnalysisDiv = $("#" + button.data("detailed-analysis-div"));
   const errorDiv = $("#" + button.data("error-div"));
   const wrapperDiv = $("#" + button.data("wrapper-div"));
   const originalButtonHtml = button.data("original-html");
@@ -300,6 +301,7 @@ async function generateCallback(e) {
     e.preventDefault();
     localStorage.removeItem(`ai_response_${reportUuid}_${elementId}${isMore ? "_more" : ""}`);
     responseDiv.html("").hide();
+    detailedAnalysisDiv.html("").hide();
     errorDiv.html("").hide();
     if (wrapperDiv) wrapperDiv.hide();
     continueInChatButton.hide();
