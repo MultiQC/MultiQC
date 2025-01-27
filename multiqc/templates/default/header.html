@@ -201,7 +201,9 @@ was generated and the button that launches the welcome tour.
       data-clear-text="Clear response"
       type="button"
       style="padding: 2px 8px; margin-right: 10px"
-    >
+      data-toggle="tooltip"
+      title="Generate a more detailed analysis and recommendations"
+      >
       More details...
     </button>
     {% endif %}
@@ -220,6 +222,8 @@ was generated and the button that launches the welcome tour.
         data-seqera-website="{{ config.seqera_website }}"
         href="{{ config.seqera_website }}/ask-ai/?messages={{ report.ai_thread_id }}"
         target="_blank"
+        data-toggle="tooltip"
+        title="Continue this conversation with Seqera AI, a Claude 3.5-backed chatbot"
       >
         Chat with Seqera AI
       </a>
