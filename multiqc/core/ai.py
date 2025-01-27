@@ -14,8 +14,6 @@ from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
 from multiqc.types import Anchor
 
-import tiktoken
-
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
     from langchain_core.messages import BaseMessage  # type: ignore
@@ -197,6 +195,8 @@ class Client:
         but better than nothing. Anthropic's tokenizer is only available through API and counts towards the API quota :'(
         """
         try:
+            import tiktoken
+
             model = self.model if self.name == "openai" else "gpt-4o"
             encoding = tiktoken.encoding_for_model(model)
             return len(encoding.encode(text))
