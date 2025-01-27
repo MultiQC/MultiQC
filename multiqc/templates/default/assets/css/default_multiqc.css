@@ -1251,7 +1251,7 @@ tr.row-empty {
 
 .ai-summary {
   position: relative;
-  padding: 8px 12px 0px 10px;
+  padding: 8px 4px 0px 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   color: #160f26;
@@ -1279,6 +1279,11 @@ tr.row-empty {
 .ai-summary .ai-summary-disclaimer {
   color: rgb(158, 158, 158);
   font-size: 12px;
+  margin-right: 4px;
+}
+
+.ai-summary .ai-summary-response {
+  padding-right: 4px;
 }
 
 .ai-summary ul,
@@ -1314,7 +1319,7 @@ tr.row-empty {
 
 .ai-summary .ai-summary-expand {
   margin-left: -11px;
-  margin-right: -12px;
+  margin-right: -4px;
   border-radius: 0 0 4px 4px;
   background-color: rgba(0, 0, 0, 0.04);
 }
@@ -1387,7 +1392,7 @@ tr.row-empty {
 }
 
 #global_ai_summary_detailed_analysis_response {
-  margin: 0px -12px 0px -10px;
+  margin: 0px -4px 0px -10px;
   padding: 10px 10px 0 10px;
 }
 

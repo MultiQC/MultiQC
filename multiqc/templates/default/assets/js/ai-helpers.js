@@ -13,6 +13,7 @@ function runStreamGeneration({
   systemPrompt,
   userMessage,
   tags = [],
+  title = "",
 }) {
   const providerId = $("#ai-provider").val();
   const provider = AI_PROVIDERS[providerId];
@@ -27,16 +28,14 @@ function runStreamGeneration({
   };
 
   if (provider.name === "Seqera AI") {
-    let aiTitle =
-      (configTitle == "None" ? "" : configTitle + ": ") + "MultiQC report, created on " + configCreationDate;
     if (apiKey) {
       fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
     }
     fetchOptions.body = JSON.stringify({
-      message: aiTitle + "\n\n:::details\n\n" + systemPrompt + "\n\n" + userMessage + "\n\n:::\n\n",
+      message: title + "\n\n:::details\n\n" + systemPrompt + "\n\n" + userMessage + "\n\n:::\n\n",
       stream: true,
       tags: ["multiqc", ...tags],
-      title: aiTitle,
+      title: title,
     });
 
     fetch(`${seqeraApiUrl}/internal-ai/query`, fetchOptions)

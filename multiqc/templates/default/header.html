@@ -86,6 +86,7 @@ was generated and the button that launches the welcome tour.
       data-error-div="global_ai_summary_error"
       data-disclaimer-div="global_ai_summary_disclaimer"
       data-wrapper-div="global_ai_summary_wrapper"
+      data-continue-in-chat-button="global_ai_summary_continue_in_chat"
       data-section-anchor="global"
       data-action="{% if report.ai_global_summary %}clear{% else %}generate{% endif %}"
       data-clear-text="Clear summary"
@@ -174,7 +175,7 @@ was generated and the button that launches the welcome tour.
   <div class="ai-summary-header">
     <b>Report AI Summary </b>
   </div>
-  <div id="global_ai_summary_response">
+  <div id="global_ai_summary_response" class="ai-summary-response">
     {{ report.ai_global_summary }}
   </div>
 
@@ -188,7 +189,7 @@ was generated and the button that launches the welcome tour.
   </div>
   {% endif %}
 
-  <div id="global_ai_summary_more_button_and_disclaimer" style="margin-top: 8px; margin-bottom: 8px; margin-left: -1px; display: flex; justify-content: space-between; align-items: baseline;">
+  <div id="global_ai_summary_more_button_and_disclaimer" style="margin-bottom: 4px; margin-left: -5px; display: flex; justify-content: space-between; align-items: baseline;">
     {% if not report.ai_global_detailed_analysis %}
     <button
       class="btn btn-sm btn-default ai-generate-button ai-generate-button-global ai-generate-button-more"
@@ -196,6 +197,7 @@ was generated and the button that launches the welcome tour.
       data-error-div="global_ai_summary_error"
       data-disclaimer-div="global_ai_summary_disclaimer"
       data-wrapper-div="global_ai_summary_detailed_analysis"
+      data-continue-in-chat-button="global_ai_summary_continue_in_chat"
       data-section-anchor="global"
       data-action="{% if report.ai_global_detailed_analysis %}clear{% else %}generate{% endif %}"
       data-clear-text="Clear response"
@@ -207,7 +209,7 @@ was generated and the button that launches the welcome tour.
       More details...
     </button>
     {% endif %}
-    <div style="display: flex; gap: 9px; margin-left: auto; align-items: baseline;">
+    <div style="display: flex; gap: 4px; margin-left: auto; align-items: baseline;">
       <span 
         class="ai-summary-disclaimer" 
         id="global_ai_summary_disclaimer" 
@@ -216,14 +218,15 @@ was generated and the button that launches the welcome tour.
         Provider: <span class="ai-summary-disclaimer-provider">{{ report.ai_provider_title }}</span>, 
         model: <span class="ai-summary-disclaimer-model">{{ report.ai_model_resolved or report.ai_model }}</span>
       </span>
-      <a class='btn btn-default btn-sm ai-continue-in-chat'
+      <a 
+        class='btn btn-default btn-sm ai-continue-in-chat'
+        id="global_ai_summary_continue_in_chat"
         style="display: {% if report.ai_thread_id %}block{% else %}none{% endif %};"
         data-thread-id="{{ report.ai_thread_id }}"
         data-seqera-website="{{ config.seqera_website }}"
         href="{{ config.seqera_website }}/ask-ai/?messages={{ report.ai_thread_id }}"
         target="_blank"
         data-toggle="tooltip"
-        title="Continue this conversation with Seqera AI, a Claude 3.5-backed chatbot"
       >
         Chat with Seqera AI
       </a>
