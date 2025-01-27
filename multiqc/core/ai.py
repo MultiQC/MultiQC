@@ -176,11 +176,31 @@ class Client:
         self.model: str = model
         self.api_key: str = api_key
 
-    def interpret_report_short(self, report_content: str) -> InterpretationResponse:
+    def _query(self, system_prompt: str, report_content: str):
         raise NotImplementedError
 
+    def interpret_report_short(self, report_content: str) -> InterpretationResponse:
+        response = self._query(PROMPT_SHORT, report_content)
+
+        return InterpretationResponse(
+            interpretation=InterpretationOutput(summary=response.content),
+            model=response.model,
+        )
+
     def interpret_report_full(self, report_content: str) -> InterpretationResponse:
-        raise NotImplementedError
+        response = self._query(PROMPT_FULL, report_content)
+
+        try:
+            output = yaml.safe_load(response.content)
+            return InterpretationResponse(
+                interpretation=InterpretationOutput(**output),
+                model=response.model,
+            )
+        except Exception:
+            return InterpretationResponse(
+                interpretation=InterpretationOutput(summary=response.content),
+                model=response.model,
+            )
 
     def max_tokens(self) -> int:
         raise NotImplementedError
@@ -295,39 +315,6 @@ class OpenAiClient(Client):
             model=response.get("model", self.model),
         )
 
-    def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_SHORT, report_content)
-
-        return InterpretationResponse(
-            interpretation=InterpretationOutput(summary=response.content),
-            model=response.model,
-        )
-
-    def interpret_report_full(self, report_content: str) -> InterpretationResponse:
-        response = self._query(
-            PROMPT_FULL,
-            report_content,
-            extra_options={
-                "response_format": {
-                    "type": "json_schema",
-                    "json_schema": {
-                        "name": "Interpretation",
-                        "schema": InterpretationOutput.model_json_schema(),
-                    },
-                },
-            },
-        )
-
-        try:
-            output = InterpretationOutput.model_validate_json(response.content)
-            return InterpretationResponse(
-                interpretation=output,
-                model=response.model,
-            )
-        except Exception as e:
-            logger.error(f"Failed to parse OpenAI response as JSON: {e}")
-            raise
-
 
 class AnthropicClient(Client):
     def __init__(self, api_key: str):
@@ -345,7 +332,7 @@ class AnthropicClient(Client):
         content: str
         model: str
 
-    def _send_request(self, system_prompt: str, report_content: str) -> ApiResponse:
+    def _query(self, system_prompt: str, report_content: str) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -363,32 +350,10 @@ class AnthropicClient(Client):
                 "temperature": 0.0,
             },
         )
-        content = response["content"][0]["text"]
-        model_name = response.get("model", self.model)
-        return AnthropicClient.ApiResponse(content=content, model=model_name)
-
-    def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._send_request(PROMPT_SHORT, report_content)
-
-        return InterpretationResponse(
-            interpretation=InterpretationOutput(summary=response.content),
-            model=response.model,
+        return AnthropicClient.ApiResponse(
+            content=response["content"][0]["text"],
+            model=response.get("model", self.model),
         )
-
-    def interpret_report_full(self, report_content: str) -> InterpretationResponse:
-        response = self._send_request(PROMPT_FULL, report_content)
-
-        try:
-            output = yaml.safe_load(response.content)
-            return InterpretationResponse(
-                interpretation=InterpretationOutput(**output),
-                model=response.model,
-            )
-        except Exception:
-            return InterpretationResponse(
-                interpretation=InterpretationOutput(summary=response.content),
-                model=response.model,
-            )
 
 
 class SeqeraClient(Client):
