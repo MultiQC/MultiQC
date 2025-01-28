@@ -7,7 +7,7 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
 
 import yaml
 from pydantic import BaseModel
@@ -519,7 +519,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Scatter plot
             elif plot_type == PlotType.SCATTER:
-                plot = scatter.plot(ccdict.data, pconfig=scatter.ScatterConfig(**pconfig))
+                scatter_data = cast(Mapping[str, Any], ccdict.data)
+                plot = scatter.plot(scatter_data, pconfig=scatter.ScatterConfig(**pconfig))
 
             # Box plot
             elif plot_type == PlotType.BOX:
@@ -527,7 +528,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
-                plot = violin.plot(plot_datasets, pconfig=violin.TableConfig(**pconfig))
+                violin_data = cast(List[Mapping[str, Any]], plot_datasets)
+                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))
 
             # Raw HTML
             elif plot_type == PlotType.HTML:
