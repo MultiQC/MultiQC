@@ -1,6 +1,6 @@
 """MultiQC functions to plot a box plot"""
 
-from copy import copy
+import copy
 import logging
 from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 

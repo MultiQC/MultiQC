@@ -46,8 +46,8 @@ from multiqc.core import log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
-from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.plotly.violin import ViolinPlot
+from multiqc.plots.plot import Plot
+from multiqc.plots.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
 from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
 from multiqc.utils import megaqc
@@ -111,8 +111,9 @@ ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the re
 # Following fields are preserved between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
-plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
+plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html and load with js
 plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
+plot_input_data: Dict[Anchor, Any] = dict()  # to combine data from previous runs
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
@@ -149,6 +150,7 @@ def reset():
     global html_ids_by_scope
     global plot_data
     global plot_by_id
+    global plot_input_data
     global general_stats_data
     global general_stats_headers
     global software_versions
@@ -199,6 +201,7 @@ def reset():
     html_ids_by_scope = defaultdict(set)
     plot_data = dict()
     plot_by_id = dict()
+    plot_input_data = dict()
     general_stats_data = []
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
@@ -1027,10 +1030,10 @@ def multiqc_dump_json(data_dir: Path):
     exported_data: Dict[str, Any] = dict()
     export_vars = {
         "report": [
+            "multiqc_command",
             "data_sources",
             "general_stats_data",
             "general_stats_headers",
-            "multiqc_command",
             "plot_data",
             "creation_date",
         ],
@@ -1061,9 +1064,9 @@ def multiqc_dump_json(data_dir: Path):
                 elif pymod == "report":
                     val = getattr(sys.modules[__name__], name)
                     if name == "general_stats_data":
-                        # List[Dict[SampleGroup, List[InputRow]]]
-                        # flattening sample groups for export
+                        # Flattening sample groups for export
                         flattened_sections: List[Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = []
+                        section: Dict[SampleGroup, List[InputRow]]
                         for section in general_stats_data:
                             fl_sec: Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]] = dict()
                             for _, rows in section.items():
@@ -1071,9 +1074,25 @@ def multiqc_dump_json(data_dir: Path):
                                     for row in rows:
                                         fl_sec[row.sample] = row.data
                                 else:
-                                    fl_sec = rows  # old format without grouping, in case if use plugins override it
+                                    fl_sec = rows  # old format without grouping, in case if user plugins override it
                             flattened_sections.append(fl_sec)
                         val = flattened_sections
+                    elif name == "modules":
+                        val = [
+                            {
+                                "name": mod.name,
+                                "anchor": mod.anchor,
+                                "versions": {
+                                    software_name: [version for _, version in versions_tuples]
+                                    for software_name, versions_tuples in mod.versions.items()
+                                },
+                                "info": mod.info,
+                                "intro": mod.intro,
+                                "comment": mod.comment,
+                                "sections": [s.__dict__ for s in mod.sections],
+                            }
+                            for mod in modules
+                        ]
                     elif name == "creation_date":
                         val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
                     d = {f"{pymod}_{name}": val}

@@ -2,7 +2,6 @@ import base64
 import dataclasses
 import errno
 import io
-import json
 import logging
 import os
 import re
@@ -348,7 +347,9 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
     if len(report.general_stats_data) > 0 and not all_hidden:
         # Clean previous general stats table if running write_report interactively second time
         if Anchor("general_stats_table") in report.html_ids_by_scope[None]:
-            report.html_ids_by_scope[None].remove(Anchor("general_stats_table"))
+            report.html_ids_by_scope[None].remove(Anchor("general_stats_table"))  # Violin plot anchor
+            if Anchor("general_stats_table_table") in report.html_ids_by_scope[None]:
+                report.html_ids_by_scope[None].remove(Anchor("general_stats_table_table"))  # Table anchor
             del report.general_stats_html
         pconfig = {
             "id": "general_stats_table",
@@ -357,17 +358,18 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
             "raw_data_fn": "multiqc_general_stats",
         }
         p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
-        report.general_stats_plot = p
-        report.plot_by_id[p.anchor] = p
-        report.general_stats_html = (
-            p.add_to_report(
-                plots_dir_name=plots_dir_name,
-                module_anchor=Anchor("general_stats_table"),
-                section_anchor=Anchor("general_stats_table"),
-            )
-            if isinstance(p, Plot)
-            else p
+        if isinstance(p, str):
+            report.general_stats_html = p
+        else:
+            report.plot_by_id[p.anchor] = p
+
+    if genstats_plot := report.plot_by_id.get(Anchor("general_stats_table")):
+        report.general_stats_html = genstats_plot.add_to_report(
+            plots_dir_name=plots_dir_name,
+            module_anchor=Anchor("general_stats_table"),
+            section_anchor=Anchor("general_stats_table"),
         )
+
     else:
         config.skip_generalstats = True
     return None
