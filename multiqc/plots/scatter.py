@@ -9,7 +9,8 @@ import numpy as np
 from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
-from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType
+from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, plot_anchor
+from multiqc.types import Anchor
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,8 @@ def plot(
     :return: HTML and JS, ready to be inserted into the page
     """
     pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
+
+    anchor = plot_anchor(pconf)
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
@@ -118,7 +121,11 @@ def plot(
     except Exception:
         pass
 
-    return ScatterPlot.create(pconf, plotdata)
+    return ScatterPlot.create(
+        points_lists=plotdata,
+        pconfig=pconf,
+        anchor=anchor,
+    )
 
 
 class Dataset(BaseDataset):
@@ -322,10 +329,15 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
     datasets: List[Dataset]
 
     @staticmethod
-    def create(pconfig: ScatterConfig, points_lists: List[List[PointT]]) -> "ScatterPlot":
+    def create(
+        points_lists: List[List[PointT]],
+        pconfig: ScatterConfig,
+        anchor: Anchor,
+    ) -> "ScatterPlot":
         model: Plot[Dataset, ScatterConfig] = Plot.initialize(
             plot_type=PlotType.SCATTER,
             pconfig=pconfig,
+            anchor=anchor,
             n_samples_per_dataset=[len(x) for x in points_lists],
             default_tt_label="<br><b>X</b>: %{x}<br><b>Y</b>: %{y}",
         )

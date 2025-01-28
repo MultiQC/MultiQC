@@ -1,17 +1,17 @@
 """MultiQC functions to plot a linegraph"""
 
 import io
-from itertools import zip_longest
 import logging
 import os
 import random
+from itertools import zip_longest
 from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, TypeVar, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
-from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, convert_dash_style
+from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, convert_dash_style, plot_anchor
 from multiqc.types import Anchor, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.utils.util_functions import update_dict
@@ -287,14 +287,16 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
 
     @staticmethod
     def create(
-        pconfig: LinePlotConfig,
         lists_of_lines: List[List[Series[KeyT, ValT]]],
+        pconfig: LinePlotConfig,
+        anchor: Anchor,
     ) -> "LinePlot[KeyT, ValT]":
         n_samples_per_dataset = [len(x) for x in lists_of_lines]
 
         model: Plot[Dataset[KeyT, ValT], LinePlotConfig] = Plot.initialize(
             plot_type=PlotType.LINE,
             pconfig=pconfig,
+            anchor=anchor,
             n_samples_per_dataset=n_samples_per_dataset,
             axis_controlled_by_switches=["yaxis"],
             default_tt_label="<br>%{x}: %{y}",
@@ -431,12 +433,12 @@ def plot(
     plot_input: LinePlotInputData = normalize_inputs(data, pconfig)
 
     # Try load and merge with any found previous data for this plot
-    pid = Anchor(plot_input.pconfig.anchor or plot_input.pconfig.id)
-    if prev_data := load_previous_data(pid):
+    anchor = plot_anchor(plot_input.pconfig)
+    if prev_data := load_previous_data(anchor):
         plot_input = merge_normalized_data(prev_data, plot_input)
 
     # Save normalized data for future runs
-    save_normalized_data(pid, plot_input)
+    save_normalized_data(anchor, plot_input)
 
     pconf = plot_input.pconfig
     datasets = plot_input.data
@@ -484,7 +486,11 @@ def plot(
             if not series.color:
                 series.color = scale.get_colour(si, lighten=1)
 
-    return LinePlot.create(plot_input.pconfig, plot_input.data)
+    return LinePlot.create(
+        lists_of_lines=plot_input.data,
+        pconfig=plot_input.pconfig,
+        anchor=anchor,
+    )
 
 
 def remove_nones_and_empty_dicts(d: Mapping[Any, Any]) -> Dict[Any, Any]:

@@ -6,11 +6,12 @@ from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore
+import plotly.graph_objects as go
+from pydantic import BaseModel  # type: ignore
 
 from multiqc import config, report
 from multiqc.plots import table_object
-from multiqc.plots.plot import BaseDataset, Plot, PlotType
+from multiqc.plots.plot import BaseDataset, Plot, PlotType, plot_anchor
 from multiqc.plots.table import render_html
 from multiqc.plots.table_object import (
     ColumnAnchor,
@@ -27,7 +28,10 @@ from multiqc.types import Anchor, SampleName
 logger = logging.getLogger(__name__)
 
 
-ViolinPlotInputData = List[DataTable]
+class ViolinPlotInputData(BaseModel):
+    dts: List[DataTable]
+    pconfig: TableConfig
+    anchor: Anchor
 
 
 def normalize_inputs(
@@ -40,6 +44,8 @@ def normalize_inputs(
     """
     pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
 
+    anchor = plot_anchor(pconf)
+
     if not isinstance(data, list):
         data = [data]
     if headers is not None and not isinstance(headers, list):
@@ -48,28 +54,34 @@ def normalize_inputs(
     dts = []
     for i, d in enumerate(data):
         h = headers[i] if headers and len(headers) > i else None
-        table_id = pconf.id
-        table_anchor = Anchor(f"{pconf.anchor or table_id}_table")
+        table_anchor = Anchor(f"{anchor}_table")
         if len(data) > 1:
             table_anchor = Anchor(f"{table_anchor}-{i + 1}")
         table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
-        dt = table_object.DataTable.create(d, table_id, table_anchor, pconf.model_copy(), h)
+        dt = table_object.DataTable.create(
+            data=d,
+            table_id=pconf.id,
+            table_anchor=table_anchor,
+            pconfig=pconf.model_copy(),
+            headers=h,
+        )
         dts.append(dt)
-    return dts
+    return ViolinPlotInputData(dts=dts, pconfig=pconf, anchor=anchor)
 
 
-def save_normalized_data(pid: Anchor, dts: ViolinPlotInputData):
+def save_normalized_data(anchor: Anchor, inputs: ViolinPlotInputData):
     """
     Save data to report.plot_input_data for future runs to merge with
     """
-    report.plot_input_data[pid] = [dt.model_dump() for dt in dts]
+    report.plot_input_data[anchor] = [dt.model_dump() for dt in inputs.dts]
 
 
-def load_previous_data(pid: Anchor) -> Optional[ViolinPlotInputData]:
-    if pid not in report.plot_input_data:
+def load_previous_data(anchor: Anchor) -> Optional[ViolinPlotInputData]:
+    if anchor not in report.plot_input_data:
         return None
 
-    return [table_object.DataTable(**dt) for dt in report.plot_input_data[pid]]
+    dts = [table_object.DataTable(**dt) for dt in report.plot_input_data[anchor]]
+    return ViolinPlotInputData(dts=dts, pconfig=dts[0].pconfig, anchor=anchor)
 
 
 def merge_normalized_data(prev_data: ViolinPlotInputData, new_data: ViolinPlotInputData) -> ViolinPlotInputData:
@@ -78,7 +90,7 @@ def merge_normalized_data(prev_data: ViolinPlotInputData, new_data: ViolinPlotIn
     """
     # Merge datasets
     merged_dts: List[DataTable] = []
-    for prev_dt, new_dt in zip_longest(prev_data, new_data):
+    for prev_dt, new_dt in zip_longest(prev_data.dts, new_data.dts):
         if prev_dt is None:
             merged_dts.append(new_dt)
             continue
@@ -89,7 +101,7 @@ def merge_normalized_data(prev_data: ViolinPlotInputData, new_data: ViolinPlotIn
         prev_dt.merge(new_dt)
         merged_dts.append(prev_dt)
 
-    return merged_dts
+    return ViolinPlotInputData(dts=merged_dts, pconfig=prev_data.pconfig, anchor=prev_data.anchor)
 
 
 def plot(
@@ -111,18 +123,20 @@ def plot(
         logger.warning(f"Tried to make table/violin plot, but had no data. pconfig: {pconfig}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
-    dts: List[DataTable] = normalize_inputs(data, headers, pconfig)
-    pconf = dts[0].pconfig
+    inputs = normalize_inputs(data, headers, pconfig)
 
     # Try load and merge with any found previous data for this plot
-    pid = Anchor(pconf.anchor or pconf.id)
-    if prev_dts := load_previous_data(pid):
-        dts = merge_normalized_data(prev_dts, dts)
+    if prev_dts := load_previous_data(inputs.anchor):
+        inputs = merge_normalized_data(prev_dts, inputs)
 
     # Save normalized data for future runs
-    save_normalized_data(pid, dts)
+    save_normalized_data(inputs.anchor, inputs)
 
-    return ViolinPlot.create(dts, show_table_by_default=show_table_by_default)
+    return ViolinPlot.create(
+        inputs.dts,
+        show_table_by_default=show_table_by_default,
+        anchor=inputs.anchor,
+    )
 
 
 @dataclass
@@ -584,6 +598,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     @staticmethod
     def create(
         dts: List[DataTable],
+        anchor: Anchor,
         show_table_by_default: bool = False,
     ) -> "ViolinPlot":
         assert len(dts) > 0, "No datasets to plot"
@@ -600,6 +615,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             pconfig=dts[0].pconfig,
             n_samples_per_dataset=[len(x) for x in samples_per_dataset],
             id=dts[0].id,
+            anchor=anchor,
             default_tt_label=": %{x}",
             # Violins scale well, so can always keep them interactive and visible:
             defer_render_if_large=False,

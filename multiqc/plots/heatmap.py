@@ -13,6 +13,7 @@ from multiqc.plots.plot import (
     PConfig,
     Plot,
     PlotType,
+    plot_anchor,
     split_long_string,
 )
 from multiqc.types import Anchor
@@ -69,10 +70,12 @@ def plot(
     """
     pconf: HeatmapConfig = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
 
+    anchor = plot_anchor(pconf)
+
     if ycats is None:
         ycats = xcats
 
-    return HeatmapPlot.create(data, pconf, xcats, ycats)
+    return HeatmapPlot.create(data, pconf, anchor, xcats, ycats)
 
 
 def _cluster_data(
@@ -238,6 +241,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     def create(
         rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
         pconfig: HeatmapConfig,
+        anchor: Anchor,
         xcats: Optional[Sequence[Union[str, int]]],
         ycats: Optional[Sequence[Union[str, int]]],
     ) -> "HeatmapPlot":
@@ -252,6 +256,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
         model: Plot[Dataset, HeatmapConfig] = Plot.initialize(
             plot_type=PlotType.HEATMAP,
             pconfig=pconfig,
+            anchor=anchor,
             n_samples_per_dataset=[max_n_samples],
             defer_render_if_large=False,  # We hide samples on large heatmaps, so no need to defer render
             flat_if_very_large=True,  # However, the data is still embedded into the HTML, and we don't want the report size to inflate

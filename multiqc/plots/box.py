@@ -4,12 +4,12 @@ import copy
 import logging
 from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 
-from multiqc.plots.utils import determine_barplot_height
-from multiqc.plots.plot import PlotType, BaseDataset, Plot, PConfig
-from multiqc import report
-
 import plotly.graph_objects as go  # type: ignore
 
+from multiqc import report
+from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, plot_anchor
+from multiqc.plots.utils import determine_barplot_height
+from multiqc.types import Anchor
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,8 @@ def plot(
     """
     pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
 
+    anchor = plot_anchor(pconf)
+
     # Given one dataset - turn it into a list
     if not isinstance(list_of_data_by_sample, list):
         list_of_data_by_sample = [list_of_data_by_sample]
@@ -50,8 +52,9 @@ def plot(
             list_of_data_by_sample[i] = {s: list_of_data_by_sample[i][s] for s in samples}
 
     return BoxPlot.create(
-        pconfig=pconf,
         list_of_data_by_sample=list_of_data_by_sample,
+        pconfig=pconf,
+        anchor=anchor,
     )
 
 
@@ -121,12 +124,14 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
 
     @staticmethod
     def create(
-        pconfig: BoxPlotConfig,
         list_of_data_by_sample: List[Dict[str, BoxT]],
+        pconfig: BoxPlotConfig,
+        anchor: Anchor,
     ) -> "BoxPlot":
         model: Plot[Dataset, BoxPlotConfig] = Plot.initialize(
             plot_type=PlotType.BOX,
             pconfig=pconfig,
+            anchor=anchor,
             n_samples_per_dataset=[len(x) for x in list_of_data_by_sample],
         )
 

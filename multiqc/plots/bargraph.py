@@ -1,10 +1,10 @@
 """MultiQC functions to plot a bargraph"""
 
 import copy
-from itertools import zip_longest
 import logging
 import math
 from collections import OrderedDict, defaultdict
+from itertools import zip_longest
 from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
@@ -14,14 +14,15 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.core.exceptions import RunError
-from multiqc.plots.utils import determine_barplot_height
 from multiqc.plots.plot import (
     BaseDataset,
     PConfig,
     Plot,
     PlotType,
+    plot_anchor,
     split_long_string,
 )
+from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig
@@ -162,14 +163,35 @@ def normalize_inputs(
                     for prop_name, prop_val in user_cat_props.items():
                         setattr(categories_per_ds[ds_idx][CatName(cat_name)], prop_name, prop_val)
 
-    # Filter data to match the categories
-    for ds_idx in range(len(raw_datasets)):
-        for sample_name, val_by_cat in raw_datasets[ds_idx].items():
-            for cat_name in list(val_by_cat.keys()):
-                if cat_name not in categories_per_ds[ds_idx]:
-                    del raw_datasets[ds_idx][sample_name][cat_name]
+    # Filter data to keep only numerals, remove unknown categories and fill missing with NaNs
+    filtered_datasets: List[DatasetT] = []
+    for ds_idx, raw_ds in enumerate(raw_datasets):
+        filtered_ds = {}
+        filtered_datasets.append(filtered_ds)
+        for sample_name in list(raw_ds.keys()):
+            raw_val_by_cat = raw_ds[sample_name]
+            filtered_val_by_cat = {}
+            for cat_id, _ in categories_per_ds[ds_idx].items():
+                # Remove categories that are not in the categories_per_ds, and fill missing with NaNs
+                val = raw_val_by_cat.get(cat_id, None)
+                if val is not None and not isinstance(val, (float, int)):
+                    # Try to parse
+                    try:
+                        val = int(val)
+                    except ValueError:
+                        try:
+                            val = float(val)
+                        except ValueError:
+                            val = None
+                if val is None:
+                    val = float("nan")
+                elif isinstance(val, float):
+                    if math.floor(val) == val:
+                        val = int(val)
+                filtered_val_by_cat[cat_id] = val
+            filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
 
-    return BarPlotInputData(data=raw_datasets, cats=categories_per_ds, pconfig=pconf)
+    return BarPlotInputData(data=filtered_datasets, cats=categories_per_ds, pconfig=pconf)
 
 
 def save_normalized_data(pid: Anchor, input_data: BarPlotInputData):
@@ -266,12 +288,12 @@ def plot(
     plot_input: BarPlotInputData = normalize_inputs(data, cats, pconfig)
 
     # Try load and merge with any found previous data for this plot
-    pid = Anchor(plot_input.pconfig.anchor or plot_input.pconfig.id)
-    if prev_data := load_previous_data(pid):
+    anchor = plot_anchor(plot_input.pconfig)
+    if prev_data := load_previous_data(anchor):
         plot_input = merge_normalized_data(prev_data, plot_input)
 
     # Save normalized data for future runs
-    save_normalized_data(pid, plot_input)
+    save_normalized_data(anchor, plot_input)
 
     # Parse the data into a chart friendly format
     scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set
@@ -291,30 +313,9 @@ def plot(
             cat_data: List[Union[int, float]] = list()
             cat_count = 0
             for s in ordered_samples_names:
+                cat_data.append(d[SampleName(s)][cat_name])
                 if s not in sample_d_count:
                     sample_d_count[s] = 0
-
-                if s not in d or cat_name not in d[s]:
-                    # Pad with NaNs when we have missing categories in a sample
-                    cat_data.append(float("nan"))
-                    continue
-                val = d[SampleName(s)][cat_name]
-                if not isinstance(val, (float, int)):
-                    try:
-                        val = int(val)
-                    except ValueError:
-                        try:
-                            val = float(val)
-                        except ValueError:
-                            val = None
-                if val is None:
-                    # Pad with NaNs when we have missing categories in a sample
-                    cat_data.append(float("nan"))
-                    continue
-                if isinstance(val, float):
-                    if math.floor(val) == val:
-                        val = int(val)
-                cat_data.append(val)
                 cat_count += 1
                 sample_d_count[s] += 1
             if cat_count > 0:
@@ -344,9 +345,10 @@ def plot(
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     return BarPlot.create(
-        pconfig=plot_input.pconfig,
         cats_lists=plot_data,
         samples_lists=plot_samples,
+        pconfig=plot_input.pconfig,
+        anchor=anchor,
     )
 
 
@@ -476,9 +478,10 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
 
     @staticmethod
     def create(
-        pconfig: BarPlotConfig,
         cats_lists: Sequence[Sequence[CatDataDict]],
         samples_lists: Sequence[Sequence[SampleNameT]],
+        pconfig: BarPlotConfig,
+        anchor: Anchor,
     ) -> "BarPlot":
         """
         :param cats_lists: each dataset is a list of dicts with the keys: {name, color, data},
@@ -495,6 +498,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
         model: Plot[Dataset, BarPlotConfig] = Plot.initialize(
             plot_type=PlotType.BAR,
             pconfig=pconfig,
+            anchor=anchor,
             n_samples_per_dataset=[len(x) for x in samples_lists],
             axis_controlled_by_switches=["xaxis"],
             default_tt_label="%{meta}: <b>%{x}</b>",
