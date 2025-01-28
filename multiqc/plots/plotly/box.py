@@ -4,8 +4,8 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import plotly.graph_objects as go  # type: ignore
 
-from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
+from multiqc.plots.utils import determine_barplot_height
+from multiqc.plots.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import report
 
 logger = logging.getLogger(__name__)

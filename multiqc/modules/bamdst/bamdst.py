@@ -1,14 +1,14 @@
-import logging
-from collections import defaultdict
-from typing import Dict, Union
 import csv
+import fnmatch
+import logging
 import math
 import os
-import fnmatch
+from collections import defaultdict
+from typing import Dict, Union
 
-from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import table, bargraph, linegraph
 from multiqc import config
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, linegraph, table
 from multiqc.types import LoadedFileDict
 
 log = logging.getLogger(__name__)

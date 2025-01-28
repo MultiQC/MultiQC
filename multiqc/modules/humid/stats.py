@@ -1,4 +1,5 @@
 import logging
+
 from multiqc import config
 from multiqc.plots import bargraph
 

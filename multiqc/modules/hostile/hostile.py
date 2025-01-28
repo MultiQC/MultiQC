@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 

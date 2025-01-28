@@ -1,9 +1,9 @@
-from multiqc import config
-from multiqc.plots import table, bargraph
-from multiqc.base_module import BaseMultiqcModule
-from multiqc.base_module import ModuleNoSamplesFound
 import logging
 from csv import DictReader
+
+from multiqc import config
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 

@@ -35,7 +35,7 @@ from multiqc import config, report, validation
 from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
 from multiqc.core.strict_helpers import lint_error
-from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.plot import Plot
 from multiqc.plots.table_object import (
     ColumnDict,
     ColumnKey,
