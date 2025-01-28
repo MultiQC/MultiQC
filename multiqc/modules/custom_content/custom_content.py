@@ -7,7 +7,6 @@ import logging
 import os
 import re
 from collections import defaultdict
-from token import OP
 from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
 
 import yaml
@@ -16,14 +15,8 @@ from pydantic import BaseModel
 from multiqc import Plot, config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
-from multiqc.plots.plotly.bar import BarPlotConfig
-from multiqc.plots.plotly.box import BoxPlotConfig
-from multiqc.plots.plotly.heatmap import HeatmapConfig
-from multiqc.plots.plotly.line import LinePlotConfig
-from multiqc.plots.plotly.plot import PlotType
-from multiqc.plots.plotly.scatter import ScatterConfig
-from multiqc.plots.table_object import TableConfig
-from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
+from multiqc.plots.table import TableConfig
+from multiqc.types import Anchor, LoadedFileDict, ModuleId, PlotType, SectionId
 from multiqc.validation import ModuleConfigValidationError
 
 # Initialise the logger
@@ -483,7 +476,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ccdict.data,  # type: ignore
                 ccdict.config.get("xcats"),
                 ccdict.config.get("ycats"),
-                pconfig=HeatmapConfig(**pconfig),
+                pconfig=heatmap.HeatmapConfig(**pconfig),
             )
             plot_datasets = [ccdict.data]  # to save after rendering
         else:
@@ -516,23 +509,25 @@ class MultiqcModule(BaseMultiqcModule):
             # Bar plot
             elif plot_type == PlotType.BAR:
                 ccdict.data = [{str(k): v for k, v in ds.items()} for ds in plot_datasets]
-                plot = bargraph.plot(plot_datasets, ccdict.config.get("categories"), pconfig=BarPlotConfig(**pconfig))
+                plot = bargraph.plot(
+                    plot_datasets, ccdict.config.get("categories"), pconfig=bargraph.BarPlotConfig(**pconfig)
+                )
 
             # Line plot
             elif plot_type == PlotType.LINE:
-                plot = linegraph.plot(plot_datasets, pconfig=LinePlotConfig(**pconfig))  # type: ignore
+                plot = linegraph.plot(plot_datasets, pconfig=linegraph.LinePlotConfig(**pconfig))
 
             # Scatter plot
             elif plot_type == PlotType.SCATTER:
-                plot = scatter.plot(ccdict.data, pconfig=ScatterConfig(**pconfig))  # type: ignore
+                plot = scatter.plot(ccdict.data, pconfig=scatter.ScatterConfig(**pconfig))
 
             # Box plot
             elif plot_type == PlotType.BOX:
-                plot = box.plot(plot_datasets, pconfig=BoxPlotConfig(**pconfig))  # type: ignore
+                plot = box.plot(plot_datasets, pconfig=box.BoxPlotConfig(**pconfig))
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
-                plot = violin.plot(plot_datasets, pconfig=TableConfig(**pconfig))  # type: ignore
+                plot = violin.plot(plot_datasets, pconfig=violin.TableConfig(**pconfig))
 
             # Raw HTML
             elif plot_type == PlotType.HTML:
