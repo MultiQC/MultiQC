@@ -162,6 +162,13 @@ def normalize_inputs(
                     for prop_name, prop_val in user_cat_props.items():
                         setattr(categories_per_ds[ds_idx][CatName(cat_name)], prop_name, prop_val)
 
+    # Filter data to match the categories
+    for ds_idx in range(len(raw_datasets)):
+        for sample_name, val_by_cat in raw_datasets[ds_idx].items():
+            for cat_name in list(val_by_cat.keys()):
+                if cat_name not in categories_per_ds[ds_idx]:
+                    del raw_datasets[ds_idx][sample_name][cat_name]
+
     return BarPlotInputData(data=raw_datasets, cats=categories_per_ds, pconfig=pconf)
 
 
