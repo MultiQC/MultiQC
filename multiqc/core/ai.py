@@ -594,7 +594,7 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
 """
             genstats_n_tokens = client.n_tokens(genstats_context)
             if current_n_tokens + genstats_n_tokens > max_tokens:
-                logger.warning(
+                logger.debug(
                     f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
                     f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
                     "AI summary will not be generated. Try hiding some columns in the general stats table "
@@ -638,7 +638,7 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
         # Using rough estimate of 4 chars per token
         sec_n_tokens = client.n_tokens(sec_context)
         if current_n_tokens + sec_n_tokens > max_tokens:
-            logger.warning(
+            logger.debug(
                 f"Including only General Statistics table to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
                 f"Tokens estimate: {current_n_tokens}, with sections: {current_n_tokens + sec_n_tokens}"
             )
