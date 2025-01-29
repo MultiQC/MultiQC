@@ -107,6 +107,7 @@ ai_provider_title: str = ""
 ai_model: str = ""
 ai_model_resolved: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
+ai_pseudonym_map: Dict[str, str] = {}
 
 # Following fields are preserved between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
@@ -164,6 +165,7 @@ def reset():
     global ai_model
     global ai_model_resolved
     global ai_report_metadata_base64
+    global ai_pseudonym_map
 
     # Create new temporary directory for module data exports
     initialized = True
@@ -194,7 +196,7 @@ def reset():
     ai_model = ""
     ai_model_resolved = ""
     ai_report_metadata_base64 = ""
-
+    ai_pseudonym_map = {}
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
     html_ids_by_scope = defaultdict(set)
     plot_data = dict()

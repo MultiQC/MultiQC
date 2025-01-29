@@ -8,6 +8,7 @@ from importlib_metadata import EntryPoint
 from multiqc import config
 from multiqc.plots.plotly import scatter
 from multiqc.plots.plotly.scatter import ScatterConfig
+from multiqc.types import SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +37,15 @@ def plot(
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
-        data = [data]  # type: ignore
+        data = [data]  # typSampleName
+
+    sample_names = []
 
     plotdata: List[List[Dict[str, Any]]] = list()
     for data_index, ds in enumerate(data):
         d: List[Dict[str, Any]] = list()
         for s_name in ds:
+            sample_names.append(SampleName(s_name))
             # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config: ScatterConfig = pconf.model_copy()
             if pconf.data_labels:
@@ -121,4 +125,4 @@ def plot(
                 # debugging of modules
                 raise
 
-    return scatter.plot(plotdata, pconf)
+    return scatter.plot(plotdata, sample_names, pconf)

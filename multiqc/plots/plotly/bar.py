@@ -20,7 +20,6 @@ from multiqc.plots.plotly.plot import (
     split_long_string,
 )
 from multiqc.types import SampleName
-from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -184,8 +183,10 @@ class Dataset(BaseDataset):
                 suffix += " " + self.layout["xaxis"]["ticksuffix"]
 
         for sidx, sample in enumerate(self.samples):
+            # Use pseudonym if available, otherwise use original sample name
+            presudonym = report.ai_pseudonym_map.get(SampleName(sample), sample)
             prompt += (
-                f"| {sample} | "
+                f"| {presudonym} | "
                 + " | ".join(
                     self.fmt_value_for_llm(
                         (cat.data if not pconfig.cpswitch or pconfig.cpswitch_c_active else cat.data_pct)[sidx]
@@ -200,6 +201,12 @@ class Dataset(BaseDataset):
 
 class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
+
+    def samples_names(self) -> List[SampleName]:
+        names = []
+        for ds in self.datasets:
+            names.extend(SampleName(sample) for sample in ds.samples)
+        return names
 
     @staticmethod
     def create(

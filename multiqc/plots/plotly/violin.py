@@ -8,9 +8,9 @@ import numpy as np
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType, PConfig
+from multiqc.plots.plotly.plot import BaseDataset, PConfig, Plot, PlotType
 from multiqc.plots.plotly.table import make_table
-from multiqc.plots.table_object import ColumnAnchor, ColumnMeta, DataTable, ValueT, TableConfig
+from multiqc.plots.table_object import ColumnAnchor, ColumnMeta, DataTable, TableConfig, ValueT
 from multiqc.types import Anchor, SampleName, Section
 
 logger = logging.getLogger(__name__)
@@ -412,6 +412,8 @@ class Dataset(BaseDataset):
                 for _, _, col in headers
             ):
                 continue
+            # Use pseudonym if available, otherwise use original sample name
+            pseudonym = report.ai_pseudonym_map.get(SampleName(sample), sample)
             row = []
             for _, _, col in headers:
                 value = self.violin_value_by_sample_by_metric[col.rid].get(
@@ -421,7 +423,7 @@ class Dataset(BaseDataset):
                     if col.suffix:
                         value = f"{value}{col.suffix}"
                 row.append(str(value))
-            result += f"| {sample} | " + " | ".join(row) + " |\n"
+            result += f"| {pseudonym} | " + " | ".join(row) + " |\n"
 
         return result
 
@@ -435,6 +437,12 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     show_table_by_default: bool
     n_samples: int
     table_anchor: Anchor
+
+    def samples_names(self) -> List[SampleName]:
+        names = []
+        for ds in self.datasets:
+            names.extend(SampleName(s) for s in ds.all_samples)
+        return names
 
     @staticmethod
     def create(

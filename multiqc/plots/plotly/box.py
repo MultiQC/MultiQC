@@ -7,6 +7,7 @@ import plotly.graph_objects as go  # type: ignore
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import report
+from multiqc.types import SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +104,12 @@ class Dataset(BaseDataset):
 
 class BoxPlot(Plot[Dataset, BoxPlotConfig]):
     datasets: List[Dataset]
+
+    def samples_names(self) -> List[SampleName]:
+        names = []
+        for ds in self.datasets:
+            names.extend(SampleName(sample) for sample in ds.samples)
+        return names
 
     @staticmethod
     def create(
