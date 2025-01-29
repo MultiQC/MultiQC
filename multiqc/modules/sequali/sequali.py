@@ -2,7 +2,7 @@ import json
 import logging
 import textwrap
 from collections import defaultdict
-from typing import Dict, Any
+from typing import Any, Dict
 
 import multiqc
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
