@@ -423,6 +423,8 @@ def _env_vars_config() -> Dict:
     PREFIX = "MULTIQC_"  # Prefix for environment variables
     env_config: Dict[str, Union[str, int, float, bool]] = {}
     for k, v in os.environ.items():
+        if v.strip() == "":
+            continue
         if k.startswith(PREFIX) and k not in RESERVED_NAMES:
             conf_key = k[len(PREFIX) :].lower()
             if conf_key not in globals():
