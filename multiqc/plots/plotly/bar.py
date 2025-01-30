@@ -201,6 +201,12 @@ class Dataset(BaseDataset):
 class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
 
+    def samples_names(self) -> List[SampleName]:
+        names = []
+        for ds in self.datasets:
+            names.extend(SampleName(sample) for sample in ds.samples)
+        return names
+
     @staticmethod
     def create(
         pconfig: BarPlotConfig,

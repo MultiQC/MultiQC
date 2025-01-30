@@ -5,7 +5,7 @@ import os
 import re
 import yaml
 from textwrap import indent
-from typing import Any, Dict, NamedTuple, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypeVar, Union
 
 import requests
 from markdown import markdown
@@ -13,7 +13,9 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
-from multiqc.types import Anchor
+from multiqc.plots.plotly.line import LinePlot
+from multiqc.plots.plotly.violin import ViolinPlot
+from multiqc.types import Anchor, SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +158,95 @@ class InterpretationOutput(BaseModel):
         Format to markdown to display in Seqera AI
         """
         return f"## Analysis\n{self.summary}" + (f"\n\n{self.detailed_analysis}" if self.detailed_analysis else "")
+
+
+class AiToolMetadata(BaseModel):
+    name: str
+    info: Optional[str] = None
+    href: Optional[str] = None
+    comment: Optional[str] = None
+
+
+class AiSectionMetadata(BaseModel):
+    name: str
+    module_anchor: Anchor
+    description: Optional[str] = None
+    comment: Optional[str] = None
+    helptext: Optional[str] = None
+    plot_anchor: Optional[Anchor] = None
+    content: Optional[str] = None
+    content_before_plot: Optional[str] = None
+
+
+class AiReportMetadata(BaseModel):
+    tools: Dict[Anchor, AiToolMetadata]
+    sections: Dict[Anchor, AiSectionMetadata]
+
+
+def create_pseudonym_map(metadata: AiReportMetadata) -> Dict[SampleName, str]:
+    """
+    Create a pseudonym map for the report.
+    """
+    if not config.ai_anonymize_samples:
+        return {}
+
+    # First, find all sample names in the report
+    all_sample_names = []
+    if report.general_stats_plot:
+        all_sample_names.extend(report.general_stats_plot.samples_names())
+    for section in metadata.sections.values():
+        if section.plot_anchor:
+            plot = report.plot_by_id[section.plot_anchor]
+            if isinstance(plot, ViolinPlot):
+                all_sample_names.extend(plot.samples_names())
+            elif isinstance(plot, LinePlot):
+                all_sample_names.extend(plot.samples_names())
+
+    # Create a mapping from original to pseudonym
+    pseudonym_map = {}
+    for sample in all_sample_names:
+        pseudonym = f"SAMPLE_{len(pseudonym_map) + 1}"
+        pseudonym_map[sample] = pseudonym
+
+    return pseudonym_map
+
+
+def anonymize_sample_names(text: str, pseudonym_map: Dict[SampleName, str]) -> str:
+    """
+    Anonymise sample names in the text.
+    Only applies when config.ai_anonymize_samples is True.
+    """
+    if not config.ai_anonymize_samples:
+        return text
+
+    # Replace sample names with pseudonyms in the text
+    for sample, pseudonym in pseudonym_map.items():
+        text = text.replace(sample, pseudonym)
+
+    return text
+
+
+def deanonymize_sample_names(text: str, pseudonym_map: Dict[SampleName, str]) -> str:
+    """
+    Convert pseudonyms back to original sample names in the text.
+    Only applies when config.ai_anonymize_samples is True.
+    """
+    if not config.ai_anonymize_samples:
+        return text
+
+    # Create reverse mapping from pseudonym to original name
+    reverse_map = {v: k for k, v in pseudonym_map.items()}
+
+    # Replace pseudonyms with original names, being careful to only replace whole words
+    # and preserve the directive syntax
+    for pseudonym, original in reverse_map.items():
+        # Look for pseudonym in :sample[SAMPLE_1]{.text-*} directives
+        text = re.sub(f":sample\\[{re.escape(pseudonym)}\\](\\{{[^}}]+\\}})", f":sample[{original}]\\1", text)
+
+        # Look for standalone pseudonyms (not in directives)
+        text = re.sub(f"\\b{re.escape(pseudonym)}\\b", str(original), text)
+
+    return text
 
 
 class InterpretationResponse(BaseModel):
@@ -502,29 +593,6 @@ def _strip_html(text: str) -> str:
     return text.replace("<p>", "").replace("</p>", "")
 
 
-class AiToolMetadata(BaseModel):
-    name: str
-    info: Optional[str] = None
-    href: Optional[str] = None
-    comment: Optional[str] = None
-
-
-class AiSectionMetadata(BaseModel):
-    name: str
-    module_anchor: Anchor
-    description: Optional[str] = None
-    comment: Optional[str] = None
-    helptext: Optional[str] = None
-    plot_anchor: Optional[Anchor] = None
-    content: Optional[str] = None
-    content_before_plot: Optional[str] = None
-
-
-class AiReportMetadata(BaseModel):
-    tools: Dict[Anchor, AiToolMetadata]
-    sections: Dict[Anchor, AiSectionMetadata]
-
-
 def ai_section_metadata() -> AiReportMetadata:
     return AiReportMetadata(
         tools={
@@ -675,6 +743,10 @@ def add_ai_summary_to_report():
 
     prompt, exceeded_context_window = build_prompt(client, metadata)
 
+    if config.ai_anonymize_samples:
+        pseudonym_map = create_pseudonym_map(metadata)
+        prompt = anonymize_sample_names(prompt, pseudonym_map)
+
     _save_prompt_to_file(prompt)
 
     if exceeded_context_window:
@@ -721,6 +793,12 @@ def add_ai_summary_to_report():
         report.ai_thread_id = response.thread_id
 
     interpretation: InterpretationOutput = response.interpretation
+
+    if config.ai_anonymize_samples:
+        interpretation.summary = deanonymize_sample_names(interpretation.summary, pseudonym_map)
+        if interpretation.detailed_analysis:
+            interpretation.detailed_analysis = deanonymize_sample_names(interpretation.detailed_analysis, pseudonym_map)
+
     report.ai_global_summary = interpretation.markdown_to_html(interpretation.summary)
 
     if config.ai_summary_full and interpretation.detailed_analysis:

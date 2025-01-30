@@ -14,7 +14,7 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     split_long_string,
 )
-from multiqc.types import Anchor
+from multiqc.types import Anchor, SampleName
 from multiqc.utils.util_functions import scipy_pdist, scipy_hierarchy_linkage, scipy_hierarchy_leaves_list
 
 logger = logging.getLogger(__name__)
@@ -227,6 +227,18 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     min: Optional[float] = None
     max: Optional[float] = None
     cluster_switch_clustered_active: bool = False
+
+    def samples_names(self) -> List[SampleName]:
+        names = []
+        if self.xcats_samples:
+            for ds in self.datasets:
+                if ds.xcats:
+                    names.extend(SampleName(cat) for cat in ds.xcats)
+        if self.ycats_samples:
+            for ds in self.datasets:
+                if ds.ycats:
+                    names.extend(SampleName(cat) for cat in ds.ycats)
+        return names
 
     @staticmethod
     def create(

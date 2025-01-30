@@ -58,10 +58,13 @@ def plot(
     else:
         pconf.data_labels = []
 
+    sample_names = []
+
     datasets: List[List[Series[KeyT, ValT]]] = []
     for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
         list_of_series: List[Series[Any, Any]] = []
         for s in sorted(raw_data_by_sample.keys()):
+            sample_names.append(SampleName(s))
             x_to_y = raw_data_by_sample[s]
             if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
                 if isinstance(x_to_y[0], tuple):
@@ -129,7 +132,7 @@ def plot(
                 # debugging of modules
                 raise
 
-    return line.plot(datasets, pconf)
+    return line.plot(datasets, pconf, sample_names)
 
 
 def _make_series_dict(

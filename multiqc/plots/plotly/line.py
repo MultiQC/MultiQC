@@ -108,7 +108,9 @@ class LinePlotConfig(PConfig):
         super().__init__(path_in_cfg=path_in_cfg or ("lineplot",), **data)
 
 
-def plot(lists_of_lines: List[List[Series[KeyT, ValT]]], pconfig: LinePlotConfig) -> "LinePlot[KeyT, ValT]":
+def plot(
+    lists_of_lines: List[List[Series[KeyT, ValT]]], pconfig: LinePlotConfig, sample_names: List[SampleName]
+) -> "LinePlot[KeyT, ValT]":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param lists_of_lines: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -122,7 +124,7 @@ def plot(lists_of_lines: List[List[Series[KeyT, ValT]]], pconfig: LinePlotConfig
     # Create a violin of median values in each sample, showing dots for outliers
     # Clicking on a dot of a violin will show the line plot for that sample
 
-    return LinePlot.create(pconfig, lists_of_lines)
+    return LinePlot.create(pconfig, lists_of_lines, sample_names)
 
 
 class Dataset(BaseDataset, Generic[KeyT, ValT]):
@@ -289,6 +291,10 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
 
 class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
     datasets: List[Dataset[KeyT, ValT]]
+    sample_names: List[SampleName]
+
+    def samples_names(self) -> List[SampleName]:
+        return self.sample_names
 
     def _plot_ai_header(self) -> str:
         result = super()._plot_ai_header()
@@ -302,6 +308,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
     def create(
         pconfig: LinePlotConfig,
         lists_of_lines: List[List[Series[KeyT, ValT]]],
+        sample_names: List[SampleName],
     ) -> "LinePlot[KeyT, ValT]":
         n_samples_per_dataset = [len(x) for x in lists_of_lines]
 
@@ -323,7 +330,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
         # Make a tooltip always show on hover over any point on plot
         model.layout.hoverdistance = -1
 
-        return LinePlot(**model.__dict__)
+        return LinePlot(**model.__dict__, sample_names=sample_names)
 
 
 def remove_nones_and_empty_dicts(d: Mapping[Any, Any]) -> Dict[Any, Any]:

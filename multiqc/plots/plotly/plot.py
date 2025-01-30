@@ -28,7 +28,7 @@ from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
-from multiqc.types import Anchor, PlotType
+from multiqc.types import Anchor, PlotType, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
@@ -215,6 +215,9 @@ class BaseDataset(BaseModel):
     trace_params: Dict[str, Any]
     pct_range: Dict[str, Any]
     n_samples: int
+
+    def samples_names(self) -> List[SampleName]:
+        raise NotImplementedError
 
     def create_figure(
         self,
