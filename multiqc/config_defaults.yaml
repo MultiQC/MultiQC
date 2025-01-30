@@ -68,6 +68,7 @@ ai_summary_full: false
 ai_provider: "seqera"
 ai_model: null
 no_ai: false
+ai_anonymize_samples: false
 
 # Development settings:
 seqera_api_url: "https://intern.seqera.io"
