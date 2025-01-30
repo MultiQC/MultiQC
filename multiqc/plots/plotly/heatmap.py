@@ -242,7 +242,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     cluster_switch_clustered_active: bool = False
 
     def samples_names(self) -> List[SampleName]:
-        names = []
+        names: List[SampleName] = []
         if self.xcats_samples:
             for ds in self.datasets:
                 if ds.xcats:

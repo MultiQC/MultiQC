@@ -439,7 +439,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     table_anchor: Anchor
 
     def samples_names(self) -> List[SampleName]:
-        names = []
+        names: List[SampleName] = []
         for ds in self.datasets:
             names.extend(SampleName(s) for s in ds.all_samples)
         return names

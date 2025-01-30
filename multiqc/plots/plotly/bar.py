@@ -203,7 +203,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
 
     def samples_names(self) -> List[SampleName]:
-        names = []
+        names: List[SampleName] = []
         for ds in self.datasets:
             names.extend(SampleName(sample) for sample in ds.samples)
         return names

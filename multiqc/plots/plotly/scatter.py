@@ -1,7 +1,7 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 from plotly import graph_objects as go  # type: ignore
@@ -240,7 +240,7 @@ class Dataset(BaseDataset):
 
         for point in self.points:
             # Use pseudonym if available, otherwise use original sample name
-            sname = SampleName(point["name"])
+            sname = SampleName(cast(str, point["name"]))
             pseudonym = report.ai_pseudonym_map.get(sname, sname)
             prompt += f"| {pseudonym} | {point['x']}{xsuffix} | {point['y']}{ysuffix} |\n"
 
