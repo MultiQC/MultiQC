@@ -28,7 +28,6 @@ class BoxPlot extends Plot {
     let prompt = "";
 
     // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
-    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
     let [data, samples] = this.prepData(dataset);
 
     // Check if all samples are hidden
