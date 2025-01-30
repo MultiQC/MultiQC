@@ -675,8 +675,7 @@ def add_ai_summary_to_report():
 
     prompt, exceeded_context_window = build_prompt(client, metadata)
 
-    if config.development or config.verbose:
-        _save_prompt_to_file(prompt)
+    _save_prompt_to_file(prompt)
 
     if exceeded_context_window:
         return
