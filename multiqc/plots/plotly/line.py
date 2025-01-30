@@ -335,7 +335,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
         # Make a tooltip always show on hover over any point on plot
         model.layout.hoverdistance = -1
 
-        return LinePlot(**model.__dict__, samples_names=sample_names)
+        return LinePlot(**model.__dict__, sample_names=sample_names)
 
 
 def remove_nones_and_empty_dicts(d: Mapping[Any, Any]) -> Dict[Any, Any]:

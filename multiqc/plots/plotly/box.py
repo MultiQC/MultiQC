@@ -4,9 +4,9 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import plotly.graph_objects as go  # type: ignore
 
-from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import report
+from multiqc.plots.plotly import determine_barplot_height
+from multiqc.plots.plotly.plot import BaseDataset, PConfig, Plot, PlotType
 from multiqc.types import SampleName
 
 logger = logging.getLogger(__name__)
@@ -100,6 +100,45 @@ class Dataset(BaseDataset):
         for sample, values in zip(self.samples, self.data):
             vals_by_sample[sample] = values
         report.write_data_file(vals_by_sample, self.uid)
+
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
+        """Format dataset as a markdown table with basic statistics"""
+        prompt = "| Sample | Min | Q1 | Median | Q3 | Max | Mean |\n"
+        prompt += "| --- | --- | --- | --- | --- | --- | --- |\n"
+
+        suffix = ""
+        if self.layout["xaxis"]["ticksuffix"]:
+            suffix = " " + self.layout["xaxis"]["ticksuffix"]
+
+        for sample, values in zip(self.samples, self.data):
+            # Skip samples with no data
+            if len(values) == 0:
+                continue
+
+            # Use pseudonym if available, otherwise use original sample name
+            pseudonym = report.ai_pseudonym_map.get(SampleName(sample), sample)
+
+            # Calculate statistics
+            sorted_vals = sorted(values)
+            n = len(sorted_vals)
+
+            min_val = sorted_vals[0]
+            max_val = sorted_vals[-1]
+            median = sorted_vals[n // 2] if n % 2 == 1 else (sorted_vals[n // 2 - 1] + sorted_vals[n // 2]) / 2
+            q1 = sorted_vals[n // 4] if n >= 4 else sorted_vals[0]
+            q3 = sorted_vals[3 * n // 4] if n >= 4 else sorted_vals[-1]
+            mean = sum(values) / len(values)
+
+            prompt += (
+                f"| {pseudonym} | "
+                f"{self.fmt_value_for_llm(min_val)}{suffix} | "
+                f"{self.fmt_value_for_llm(q1)}{suffix} | "
+                f"{self.fmt_value_for_llm(median)}{suffix} | "
+                f"{self.fmt_value_for_llm(q3)}{suffix} | "
+                f"{self.fmt_value_for_llm(max_val)}{suffix} | "
+                f"{self.fmt_value_for_llm(mean)}{suffix} |\n"
+            )
+        return prompt
 
 
 class BoxPlot(Plot[Dataset, BoxPlotConfig]):

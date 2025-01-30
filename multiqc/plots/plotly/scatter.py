@@ -234,7 +234,17 @@ class Dataset(BaseDataset):
         xsuffix = self.layout.get("xaxis", {}).get("ticksuffix", "")
         ysuffix = self.layout.get("yaxis", {}).get("ticksuffix", "")
 
-        return "\n".join(f"{point['name']} ({point['x']}{xsuffix}, {point['y']}{ysuffix})" for point in self.points)
+        prompt = ""
+        prompt += "| Sample | X | Y |\n"
+        prompt += "| --- | --- | --- |\n"
+
+        for point in self.points:
+            # Use pseudonym if available, otherwise use original sample name
+            sname = SampleName(point["name"])
+            pseudonym = report.ai_pseudonym_map.get(sname, sname)
+            prompt += f"| {pseudonym} | {point['x']}{xsuffix} | {point['y']}{ysuffix} |\n"
+
+        return prompt
 
 
 class ScatterPlot(Plot[Dataset, ScatterConfig]):

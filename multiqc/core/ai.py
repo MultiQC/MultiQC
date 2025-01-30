@@ -679,9 +679,17 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
             sec_context += f"Section help text: {_strip_html(section.helptext)}\n"
 
         if section.content_before_plot:
-            sec_context += section.content_before_plot + "\n\n"
+            content = section.content_before_plot
+            if config.ai_anonymize_samples:
+                for name, pseudonym in report.ai_pseudonym_map.items():
+                    content = content.replace(name, pseudonym)
+            sec_context += content + "\n\n"
         if section.content:
-            sec_context += section.content + "\n\n"
+            content = section.content
+            if config.ai_anonymize_samples:
+                for name, pseudonym in report.ai_pseudonym_map.items():
+                    content = content.replace(name, pseudonym)
+            sec_context += content + "\n\n"
 
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
@@ -731,8 +739,7 @@ def add_ai_summary_to_report():
 
     prompt, exceeded_context_window = build_prompt(client, metadata)
 
-    if config.development or config.verbose:
-        _save_prompt_to_file(prompt)
+    _save_prompt_to_file(prompt)
 
     if exceeded_context_window:
         return

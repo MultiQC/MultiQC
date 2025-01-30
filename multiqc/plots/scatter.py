@@ -37,7 +37,7 @@ def plot(
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
-        data = [data]  # typSampleName
+        data = [data]  # type: ignore
 
     sample_names = []
 
@@ -118,7 +118,7 @@ def plot(
     if "scatter" in mod.__dict__ and callable(mod.__dict__["scatter"]):
         # noinspection PyBroadException
         try:
-            return mod.__dict__["scatter"](plotdata, pconf)
+            return mod.__dict__["scatter"](plotdata, sample_names, pconf)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
