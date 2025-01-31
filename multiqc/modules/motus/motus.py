@@ -1,8 +1,8 @@
 import logging
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc import config
 
 log = logging.getLogger(__name__)
 

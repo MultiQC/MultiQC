@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import bargraph, linegraph
 from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
