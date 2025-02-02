@@ -900,7 +900,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["mean_quality"] = {
-            "title": "Mean quality sscore",
+            "title": "Mean quality score",
             "description": "Mean quality score of bases",
             "min": 0,
             "max": 40,

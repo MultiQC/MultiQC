@@ -2,17 +2,16 @@ import copy
 import logging
 import math
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.base_module import Section
-from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType
+from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType, PConfig
 from multiqc.plots.plotly.table import make_table
 from multiqc.plots.table_object import ColumnAnchor, ColumnMeta, DataTable, ValueT, TableConfig
-from multiqc.types import SampleName
+from multiqc.types import Anchor, SampleName, Section
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +63,8 @@ class Dataset(BaseDataset):
     all_samples: List[SampleName]  # unique list of all samples in this dataset
     scatter_trace_params: Dict[str, Any]
     dt: DataTable
+    show_table_by_default: bool
+    is_downsampled: bool
 
     @staticmethod
     def values_and_headers_from_dt(
@@ -103,6 +104,7 @@ class Dataset(BaseDataset):
     def create(
         dataset: BaseDataset,
         dt: DataTable,
+        show_table_by_default: bool,
     ) -> "Dataset":
         value_by_sample_by_metric, dt_column_by_metric = Dataset.values_and_headers_from_dt(dt)
 
@@ -214,6 +216,10 @@ class Dataset(BaseDataset):
             all_samples.update(set(list(violin_value_by_sample.keys())))
             metrics.append(col_anchor)
 
+        is_downsampled = (
+            config.violin_downsample_after is not None and len(all_samples) > config.violin_downsample_after
+        )
+
         ds = Dataset(
             **dataset.model_dump(),
             metrics=metrics,
@@ -223,6 +229,8 @@ class Dataset(BaseDataset):
             all_samples=sorted(all_samples),
             scatter_trace_params=dict(),
             dt=dt,
+            show_table_by_default=show_table_by_default,
+            is_downsampled=is_downsampled,
         )
 
         ds.trace_params.update(
@@ -376,6 +384,47 @@ class Dataset(BaseDataset):
 
         report.write_data_file(data, self.uid)
 
+    def format_dataset_for_ai_prompt(self, pconfig: TableConfig, keep_hidden: bool = True) -> str:
+        """Format as a markdown table"""
+        headers = self.dt.get_headers_in_order(keep_hidden=keep_hidden)
+        samples = self.all_samples
+
+        result = "Number of samples: " + str(len(samples)) + "\n"
+        if self.is_downsampled:
+            result += (
+                f"Note: sample number {len(samples)} is greater than the threshold {config.violin_downsample_after}, "
+                "so data points were downsampled to fit the context window. However, outliers for each metric were "
+                "identified and kept in the datasets.\n"
+            )
+        result += "\n"
+
+        # List metrics: metric name to description
+        result += "Metrics:\n" + "\n".join(f"{col.title} - {col.description}" for _, _, col in headers)
+        result += "\n\n"
+
+        # Table view - rows are samples, columns are metrics
+        result += "| " + pconfig.col1_header + " | " + " | ".join(col.title for (_, _, col) in headers) + " |\n"
+        result += "| --- | " + " | ".join("---" for _ in headers) + " |\n"
+        for sample in samples:
+            if all(
+                sample not in self.violin_value_by_sample_by_metric[col.rid]
+                and sample not in self.scatter_value_by_sample_by_metric[col.rid]
+                for _, _, col in headers
+            ):
+                continue
+            row = []
+            for _, _, col in headers:
+                value = self.violin_value_by_sample_by_metric[col.rid].get(
+                    sample, self.scatter_value_by_sample_by_metric[col.rid].get(sample, "")
+                )
+                if value != "":
+                    if col.suffix:
+                        value = f"{value}{col.suffix}"
+                row.append(str(value))
+            result += f"| {sample} | " + " | ".join(row) + " |\n"
+
+        return result
+
 
 class ViolinPlot(Plot[Dataset, TableConfig]):
     datasets: List[Dataset]
@@ -385,6 +434,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     show_table: bool
     show_table_by_default: bool
     n_samples: int
+    table_anchor: Anchor
 
     @staticmethod
     def create(
@@ -415,7 +465,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         show_table_by_default = show_table_by_default or no_violin
 
         model.datasets = [
-            Dataset.create(ds, dt)
+            Dataset.create(ds, dt, show_table_by_default)
             for ds, dt in zip(
                 model.datasets,
                 dts,
@@ -469,9 +519,10 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             show_table=show_table,
             show_table_by_default=show_table_by_default,
             n_samples=max_n_samples,
+            table_anchor=model.datasets[0].dt.anchor,
         )
 
-    def buttons(self, flat: bool) -> List[str]:
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """Add a control panel to the plot"""
         buttons: List[str] = []
         if not flat and any(len(ds.metrics) > 1 for ds in self.datasets):
@@ -487,11 +538,12 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 self._btn(
                     cls="mqc-violin-to-table",
                     label="<span class='glyphicon glyphicon-th-list'></span> Table",
-                    data_attrs={"table-anchor": self.datasets[0].dt.anchor, "violin-anchor": self.anchor},
+                    attrs={"title": "Show as a table"},
+                    data_attrs={"table-anchor": self.table_anchor, "violin-anchor": self.anchor, "toggle": "tooltip"},
                 )
             )
 
-        return buttons + super().buttons(flat=flat)
+        return buttons + super().buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor)
 
     def show(
         self,
@@ -587,7 +639,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         else:
             super().save(filename, **kwargs)
 
-    def add_to_report(self, plots_dir_name: Optional[str] = None, section: Optional[Section] = None) -> str:
+    def add_to_report(self, module_anchor: Anchor, section_anchor: Anchor, plots_dir_name: Optional[str] = None) -> str:
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (
@@ -608,21 +660,28 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
             )
 
+        assert self.datasets[0].dt is not None
+        # Render both, add a switch between table and violin
+        table_html, configuration_modal = make_table(
+            self.datasets[0].dt,
+            violin_anchor=self.anchor,
+            module_anchor=module_anchor,
+            section_anchor=section_anchor,
+        )
+
         if not self.show_table:
             # Show violin alone.
-            # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
-            # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
-            html = warning + super().add_to_report(plots_dir_name=plots_dir_name)
-        elif self.no_violin:
-            assert self.datasets[0].dt is not None
-            # Show table alone
-            table_html, configuration_modal = make_table(self.datasets[0].dt)
-            html = warning + table_html + configuration_modal
+            html = warning + super().add_to_report(
+                plots_dir_name=plots_dir_name,
+                module_anchor=module_anchor,
+                section_anchor=section_anchor,
+            )
         else:
-            assert self.datasets[0].dt is not None
-            # Render both, add a switch between table and violin
-            table_html, configuration_modal = make_table(self.datasets[0].dt, violin_anchor=self.anchor)
-            violin_html = super().add_to_report(plots_dir_name=plots_dir_name)
+            violin_html = super().add_to_report(
+                plots_dir_name=plots_dir_name,
+                module_anchor=module_anchor,
+                section_anchor=section_anchor,
+            )
 
             violin_visibility = "style='display: none;'" if self.show_table_by_default else ""
             html = f"<div id='mqc_violintable_wrapper_{self.anchor}' {violin_visibility}>{warning}{violin_html}</div>"
@@ -632,9 +691,14 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 f"<div id='mqc_violintable_wrapper_{self.datasets[0].dt.anchor}' {table_visibility}>{table_html}</div>"
             )
 
-            html += configuration_modal
+        html += configuration_modal
 
         return html
+
+    def _plot_ai_header(self) -> str:
+        if self.show_table_by_default:
+            return "Plot type: table\n"
+        return "Plot type: violin plot\n"
 
 
 def find_outliers(

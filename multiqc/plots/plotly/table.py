@@ -6,6 +6,7 @@ from natsort import natsorted
 
 from multiqc import config, report
 from multiqc.plots.table_object import ColumnAnchor, DataTable, SampleGroup, SampleName, ValueT
+from multiqc.types import Anchor
 from multiqc.utils import mqc_colour
 
 if TYPE_CHECKING:  # to avoid circular import
@@ -22,7 +23,9 @@ def plot(dt: List[DataTable]) -> "ViolinPlot":
 
 def make_table(
     dt: DataTable,
-    violin_anchor: Optional[str] = None,
+    violin_anchor: Anchor,
+    module_anchor: Anchor,
+    section_anchor: Anchor,
     add_control_panel: bool = True,
 ) -> Tuple[str, str]:
     """
@@ -294,7 +297,7 @@ def make_table(
 
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.anchor}">
+        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.anchor}" data-toggle="tooltip" title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
         """
@@ -313,7 +316,7 @@ def make_table(
             buttons.append(
                 f"""
             <button type="button" class="mqc_table_config_modal_btn btn btn-default btn-sm {disabled_class}" data-toggle="modal"
-                data-target="#{dt.anchor}_config_modal" {disabled_attrs}>
+                data-target="#{dt.anchor}_config_modal" {disabled_attrs} title="Configure visibility and ordering of columns">
                 <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
             """
@@ -323,7 +326,7 @@ def make_table(
         buttons.append(
             f"""
         <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm"
-            data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;">
+            data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;" data-toggle="tooltip" title="Place highlighted samples on top">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
         """
@@ -334,7 +337,7 @@ def make_table(
             buttons.append(
                 f"""
             <button type="button" class="mqc_table_make_scatter btn btn-default btn-sm"
-                data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.anchor}">
+                data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.anchor}" title="Visualize pairs of values on a scatter plot">
                 <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
             </button>
             """
@@ -344,7 +347,7 @@ def make_table(
             buttons.append(
                 f"""
             <button type="button" class="mqc-table-to-violin btn btn-default btn-sm"
-                data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}">
+                data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle="tooltip" title="View as a violin plot">
                 <span class="glyphicon glyphicon-align-left"></span> Violin plot
             </button>
             """
@@ -353,8 +356,8 @@ def make_table(
         buttons.append(
             f"""
         <button type="button" class="export-plot btn btn-default btn-sm"
-            data-plot-anchor="{violin_anchor or dt.anchor}" data-type="table"
-        >Export as CSV</button>
+            data-plot-anchor="{violin_anchor or dt.anchor}" data-type="table" data-toggle="tooltip" title="Show export options"
+        >Export as CSV...</button>
         """
         )
 
@@ -379,6 +382,58 @@ def make_table(
         <small id="{dt.anchor}_numrows_text" class="mqc_table_numrows_text">{t_showing_rows_txt}{t_showing_cols_txt}.</small>
         """
         )
+
+        if not config.no_ai:
+            buttons.append(
+                f"""
+            <div class="ai-plot-buttons-container" style="float: right">
+                <button
+                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-table ai-copy-button-wrapper"
+                    data-section-anchor="{section_anchor}"
+                    data-plot-anchor="{violin_anchor}"
+                    data-module-anchor="{module_anchor}"
+                    data-plot-view="table"
+                    type="button"
+                    data-toggle="tooltip" 
+                    title="Copy table data for use with AI tools like ChatGPT"
+                >
+                    <span style="vertical-align: baseline">
+                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
+                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span class="button-text">Copy prompt</span>
+                </button>
+                <button
+                    class="btn btn-default btn-sm ai-generate-button ai-generate-button-table ai-generate-button-wrapper"
+                    data-response-div="{section_anchor}_ai_summary_response"
+                    data-error-div="{section_anchor}_ai_summary_error"
+                    data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
+                    data-continue-in-chat-button="{section_anchor}_ai_summary_continue_in_chat"
+                    data-wrapper-div="{section_anchor}_ai_summary_wrapper"
+                    data-section-anchor="{section_anchor}"
+                    data-plot-anchor="{violin_anchor}"
+                    data-module-anchor="{module_anchor}"
+                    data-plot-view="table"
+                    data-action="generate"
+                    data-clear-text="Clear summary"
+                    type="button"
+                    data-toggle="tooltip" 
+                    aria-controls="{dt.anchor}_ai_summary_wrapper"
+                    title="Dynamically generate AI summary for this table"
+                >
+                    <span style="vertical-align: baseline">
+                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
+                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
+                        </svg>
+                    </span>
+                    <span class="button-text">Summarize table</span>
+                </button>
+            </div>
+            """
+            )
 
         panel = "\n".join(buttons)
         html += f"""

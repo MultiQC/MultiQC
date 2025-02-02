@@ -2,14 +2,13 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional, Union, Dict, Set
+from typing import List, Literal, Optional, Union, Dict, cast
 
 from pydantic import BaseModel
 
 from multiqc import report, config
 from multiqc.core.exceptions import RunError
 from multiqc.core import log_and_rich, plugin_hooks
-from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +59,14 @@ class ClConfig(BaseModel):
     cl_config: List[str] = []
     custom_css_files: List[str] = []
     module_order: List[Union[str, Dict]] = []
-    preserve_module_raw_data: Optional[bool] = None
-    data_dump_file_write_raw: Optional[bool] = None
     extra_fn_clean_exts: List = []
     extra_fn_clean_trim: List = []
+    preserve_module_raw_data: Optional[bool] = None
+    data_dump_file_write_raw: Optional[bool] = None
+    ai_summary: Optional[bool] = None
+    ai_summary_full: Optional[bool] = None
+    ai_provider: Optional[Literal["seqera", "openai", "anthropic"]] = None
+    no_ai: Optional[bool] = None
     unknown_options: Optional[Dict] = None
 
 
@@ -202,6 +205,15 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.preserve_module_raw_data = cfg.preserve_module_raw_data
     if cfg.data_dump_file_write_raw is not None:
         config.data_dump_file_write_raw = cfg.data_dump_file_write_raw
+    if cfg.ai_summary is not None:
+        config.ai_summary = cfg.ai_summary
+    if cfg.ai_summary_full is not None:
+        config.ai_summary = cfg.ai_summary_full
+        config.ai_summary_full = cfg.ai_summary_full
+    if cfg.ai_provider is not None:
+        config.ai_provider = cfg.ai_provider
+    if cfg.no_ai is not None:
+        config.no_ai = cfg.no_ai
 
     if config.development and "png" not in config.export_plot_formats:
         config.export_plot_formats.append("png")

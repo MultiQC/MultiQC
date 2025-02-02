@@ -42,35 +42,55 @@ the output from each module and print it in sections.
           {% if m['comment'] %}<blockquote class="mqc-section-comment">{{ m['comment'] }}</blockquote>{% endif %}
         {% endif %}
           {% if s['print_section'] %}
-            {% if (s['name'] is none or s['name'] | length == 0) and s['helptext'] is not none and s['helptext'] | length > 0 %}
-              <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
-                <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
-                Help
-              </button>
-            {% endif %}
-            <div class="mqc-section mqc-section-{{ m.anchor }}">
-              {% if s['name'] is not none and s['name'] | length > 0 %}
-                <h3 id="{{ s['anchor'] }}">
-                    {{ s['name'] }}
-                    {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
-                      <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
-                        <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
-                        Help
-                      </button>
-                    {% endif %}
-                </h3>
-              {% endif %}
+            <div class="mqc-section mqc-section-{{ m.anchor }}" id="mqc-section-wrapper-{{ s['anchor'] }}">
+              <h3 id="{{ s['anchor'] }}">
+                {% if s['name'] is not none and s['name'] | length > 0 %}
+                  {{ s['name'] }}
+                {% endif %}
+                {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
+                  <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+                    <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+                    Help
+                  </button>
+                {% endif %}
+              </h3>
               {% if s['description'] is not none and s['description'] | length > 0 %}<div class="mqc-section-description">{{ s['description'] }}</div>{% endif %}
               {% if s['comment'] is not none and s['comment'] | length > 0 %}<blockquote class="mqc-section-comment">{{ s['comment'] }}</blockquote>{% endif %}
               {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
                 <div class="collapse mqc-section-helptext " id="{{ s['anchor'] }}_helptext">
                   <div class="well">{{ s['helptext'] }}</div>
-                </div>
+                </div>  
               {% endif %}
+              <div 
+                class="ai-summary ai-local-content" 
+                id="{{ s['anchor'] }}_ai_summary_wrapper" 
+                style="display: none; margin-bottom: 7px; padding-bottom: 4px">
+                <div style="display: flex; justify-content: space-between; align-items: center">
+                  <b>AI Summary</b>
+                </div>
+                <div class="ai-summary-response" id="{{ s['anchor'] }}_ai_summary_response" style="margin-bottom: -5px;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                  <div class="ai-summary-disclaimer" id="{{ s['anchor'] }}_ai_summary_disclaimer" style="display: none;">
+                    Provider: <span class="ai-summary-disclaimer-provider">{{ report.ai_provider_title }}</span>, 
+                    model: <span class="ai-summary-disclaimer-model">{{ report.ai_model_resolved or report.ai_model }}</span>
+                  </div>
+                  <a 
+                    class='btn btn-default btn-sm ai-continue-in-chat'
+                    id="{{ s['anchor'] }}_ai_summary_continue_in_chat"
+                    data-seqera-website="{{ config.seqera_website }}"
+                    target="_blank"
+                    data-toggle="tooltip"
+                    style="display: none;"
+                  >
+                    Chat with Seqera AI
+                  </a>
+                </div>
+              <div class="ai-summary-error" id="{{ s['anchor'] }}_ai_summary_error" style="display: none;"></div>
+              </div>
               {{ s['content_before_plot'] if s['content_before_plot'] }}
               {% if s['plot'] is not none %}<div class="mqc-section-plot">{{ s['plot'] }}</div>{% endif %}
               {{ s['content'] if s['content'] }}
-  
+
               {{ '<hr>' if not loop.last }}
             </div>
           {% endif %}

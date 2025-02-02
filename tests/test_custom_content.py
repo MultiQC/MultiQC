@@ -53,7 +53,7 @@ def test_linegraph_single_sample_txt(data_dir):
     assert len(report.plot_by_id) == 1
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == "dupradar"
-    assert report.plot_by_id[anchor].plot_type == "xy_line"
+    assert report.plot_by_id[anchor].plot_type == "x/y line"
 
 
 def test_deprecated_fields(tmp_path, capsys):
@@ -90,7 +90,7 @@ def test_deprecated_fields(tmp_path, capsys):
     anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == id
-    assert report.plot_by_id[anchor].plot_type == "xy_line"
+    assert report.plot_by_id[anchor].plot_type == "x/y line"
 
     err = str(capsys.readouterr().err)
     assert "Line plot's x_lines or y_lines 'label' field is expected to be a string" in err
@@ -147,7 +147,7 @@ def test_wrong_fields(tmp_path, caplog, strict, monkeypatch):
         anchor = Anchor(f"{id}-section-plot")
         assert anchor in report.plot_by_id
         assert report.plot_by_id[anchor].id == id
-        assert report.plot_by_id[anchor].plot_type == "xy_line"
+        assert report.plot_by_id[anchor].plot_type == "x/y line"
         assert report.plot_by_id[anchor].pconfig.title == "DupRadar General Linear Model"
         assert (
             report.plot_by_id[anchor].pconfig.xlab == "True"  # cast to string
@@ -182,7 +182,7 @@ def test_missing_id_and_title(tmp_path):
     anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == id
-    assert report.plot_by_id[anchor].plot_type == "xy_line"
+    assert report.plot_by_id[anchor].plot_type == "x/y line"
     assert report.plot_by_id[anchor].pconfig.xlab == "expression"
 
 
@@ -244,7 +244,7 @@ def test_full_run_with_config(data_dir, capsys):
 
     out = capsys.readouterr().out
     assert '<h2 class="mqc-module-title" id="concordance">Concordance Rates</h2>' in out
-    assert '<div class="mqc-section mqc-section-concordance">' in out
+    assert '<div class="mqc-section mqc-section-concordance"' in out
 
     assert len(report.plot_by_id) == 1
     anchor = Anchor("concordance_heatmap")
@@ -301,7 +301,7 @@ target___test2	2
     anchor = Anchor("last_o2o-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == "last_o2o"
-    assert report.plot_by_id[anchor].plot_type == "violin"
+    assert report.plot_by_id[anchor].plot_type == "violin plot"
 
 
 @pytest.mark.parametrize(
@@ -372,7 +372,7 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
     assert len(report.plot_by_id) == 1
     anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].plot_type == "violin"
+    assert report.plot_by_id[anchor].plot_type == "violin plot"
     assert len(report.plot_by_id[anchor].datasets) == 1
     assert report.plot_by_id[anchor].datasets[0].header_by_metric.keys() == {
         "SEQUENCE",
@@ -468,7 +468,7 @@ def test_boxplot_json(tmp_path):
     anchor = Anchor("boxplot-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == "boxplot"
-    assert report.plot_by_id[anchor].plot_type == "box"
+    assert report.plot_by_id[anchor].plot_type == "box plot"
     assert len(report.plot_by_id[anchor].datasets) == 1
     assert report.plot_by_id[anchor].datasets[0].data[
         report.plot_by_id[anchor].datasets[0].samples.index("sample 1")
@@ -497,7 +497,7 @@ Sample1	Sample2	Sample3
     assert len(report.plot_by_id) == 1
     anchor = Anchor("mysample-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].plot_type == "box"
+    assert report.plot_by_id[anchor].plot_type == "box plot"
     assert len(report.plot_by_id[anchor].datasets[0].data) == 3  # 3 groups
     assert report.plot_by_id[anchor].datasets[0].data == [[3.4, 4.3, 3.5], [2.3, 3.2, 2.5], [1.2, 2.1, 1.5]]
 
@@ -521,7 +521,7 @@ C	1.5	2.5
     assert len(report.plot_by_id) == 1
     anchor = Anchor("scatter-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].plot_type == "scatter"
+    assert report.plot_by_id[anchor].plot_type == "scatter plot"
     assert len(report.plot_by_id[anchor].datasets[0].points) == 3  # 3 samples
     assert report.plot_by_id[anchor].datasets[0].points[0] == {"x": 1.2, "y": 2.3, "name": "A"}
 
@@ -545,7 +545,7 @@ sample2	0.8	1.4	1.6	1.2
     assert len(report.plot_by_id) == 1
     anchor = Anchor("line-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].plot_type == "xy_line"
+    assert report.plot_by_id[anchor].plot_type == "x/y line"
     assert len(report.plot_by_id[anchor].datasets[0].lines) == 2  # 2 samples
     assert report.plot_by_id[anchor].datasets[0].lines[0].name == "sample1"
     assert report.plot_by_id[anchor].datasets[0].lines[0].pairs == [("t0", 1.0), ("t1", 1.2), ("t2", 1.1), ("t3", 0.9)]
@@ -609,7 +609,7 @@ Sample 3	Group C	'4_5'
     anchor = Anchor("quoted-section-plot")
     assert anchor in report.plot_by_id
     plot = report.plot_by_id[anchor]
-    assert plot.plot_type == "violin"
+    assert plot.plot_type == "violin plot"
 
     # Check that quotes were properly stripped
     assert plot.datasets[0].all_samples == ["Sample 1", "Sample 2", "Sample 3"]

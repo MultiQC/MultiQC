@@ -16,9 +16,9 @@ class HeatmapPlot extends Plot {
     return rows[0].length; // no columns in a row
   }
 
-  prepData() {
+  prepData(dataset) {
     // Prepare data to either build Plotly traces or export as a file
-    let dataset = this.datasets[this.activeDatasetIdx];
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
     let rows =
       this.clusterSwitchClusteredActive && dataset["rows_clustered"] ? dataset["rows_clustered"] : dataset["rows"];
     let xcats =
@@ -44,6 +44,50 @@ class HeatmapPlot extends Plot {
       ycats = this.filtYCatsSettings.map((s) => s.name);
     }
     return [rows, xcats, ycats];
+  }
+
+  plotAiHeader() {
+    let result = super.plotAiHeader();
+    if (this.pconfig.xlab) result += `X axis: ${this.pconfig.xlab}\n`;
+    if (this.pconfig.ylab) result += `Y axis: ${this.pconfig.ylab}\n`;
+    if (this.pconfig.zlab) result += `Z axis: ${this.pconfig.zlab}\n`;
+    return result;
+  }
+
+  formatDatasetForAiPrompt(dataset) {
+    let prompt = "";
+    let [rows, xcats, ycats] = this.prepData(dataset);
+
+    // Check if all samples are hidden
+    if (xcats.length === 0 || ycats.length === 0) {
+      prompt +=
+        "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
+      return prompt;
+    }
+
+    if (xcats) {
+      if (ycats) {
+        prompt = "|";
+        if (this.yCatsAreSamples) prompt += " Sample ";
+      }
+      prompt += "| " + xcats.join(" | ") + " |\n";
+      if (ycats) {
+        prompt += "| --- ";
+      }
+      prompt += "| " + xcats.map(() => "---").join(" | ") + " |\n";
+    }
+    for (let i = 0; i < rows.length; i++) {
+      if (ycats) {
+        prompt += "| " + ycats[i] + " ";
+      }
+      prompt +=
+        "| " +
+        rows[i]
+          .map((x) => (!Number.isFinite(x) ? "" : Number.isInteger(x) ? x : parseFloat(x.toFixed(2))))
+          .join(" | ") +
+        " |\n";
+    }
+    return prompt;
   }
 
   buildTraces() {

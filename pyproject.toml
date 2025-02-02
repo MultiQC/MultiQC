@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.27dev"
+version = "1.27.1dev"
 dependencies = [
     "click",
     "humanize",
@@ -25,7 +25,9 @@ dependencies = [
     "pydantic>=2.7.0",
     "typeguard",
     "tqdm",               # progress bar in notebooks
+    "python-dotenv",
     "natsort",
+    "tiktoken",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -78,6 +80,7 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+    "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
 ]
 
@@ -296,6 +299,7 @@ exclude = "multiqc/modules/*"
 
 [tool.pyright]
 include = ["multiqc", "scripts", "tests"]
+ignore = ["**/build", "**/dist", "**/venv*"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

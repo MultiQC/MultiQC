@@ -1,6 +1,9 @@
+import dataclasses
 import io
 from enum import Enum
-from typing import Generic, NewType, Optional, TypeVar, Union
+from typing import Generic, List, NewType, Optional, TypeVar, Union
+
+# Do not export typing.TypedDict: it doesn't support generics and will break Python 3.9
 from typing_extensions import TypedDict
 
 Anchor = NewType("Anchor", str)
@@ -34,11 +37,11 @@ class PlotType(Enum):
     Plot labels used in custom content, as well as in JS to load plot into Plotly-js
     """
 
-    BAR = "bar_graph"
-    LINE = "xy_line"
-    BOX = "box"
-    SCATTER = "scatter"
-    VIOLIN = "violin"
+    BAR = "bar plot"
+    LINE = "x/y line"
+    BOX = "box plot"
+    SCATTER = "scatter plot"
+    VIOLIN = "violin plot"
     TABLE = "table"
     HEATMAP = "heatmap"
     HTML = "html"
@@ -51,15 +54,25 @@ class PlotType(Enum):
             return None
         if isinstance(val, PlotType):
             return val
-        if val in ["bar", "bargraph", "bar_graph"]:
+        if val in ["bar", "bargraph", "bar_graph", "bar graph", "barplot", "bar plot", "bar_plot"]:
             return PlotType.BAR
-        elif val in ["line", "linegraph", "xy_line"]:
+        elif val in [
+            "line",
+            "linegraph",
+            "line_graph",
+            "line graph",
+            "lineplot",
+            "line_plot",
+            "line plot",
+            "xy_line",
+            "x/y line",
+        ]:
             return PlotType.LINE
-        elif val in ["box", "boxplot", "box_plot"]:
+        elif val in ["box", "boxplot", "box_plot", "box plot"]:
             return PlotType.BOX
-        elif val in ["scatter", "scatterplot"]:
+        elif val in ["scatter", "scatterplot", "scatter_plot", "scatter plot"]:
             return PlotType.SCATTER
-        elif val in ["violin", "beeswarm", "violin_plot"]:
+        elif val in ["violin", "beeswarm", "violinplot", "violin_plot", "violin plot"]:
             return PlotType.VIOLIN
         elif val in ["heatmap"]:
             return PlotType.HEATMAP
@@ -69,6 +82,34 @@ class PlotType(Enum):
             return PlotType.HTML
         elif val in ["image"]:
             return PlotType.IMAGE
-        elif val in ["generalstats"]:
+        elif val in ["generalstats", "general_stats", "general stats"]:
             return PlotType.GENERALSTATS
         return None
+
+
+@dataclasses.dataclass
+class SampleNameMeta:
+    original_name: SampleName
+    trimmed_name: Optional[SampleName] = None
+    trimmed_suffixes: List[str] = dataclasses.field(default_factory=list)
+    group: Optional[SampleGroup] = None
+    labels: List[str] = dataclasses.field(default_factory=list)
+
+
+@dataclasses.dataclass
+class Section:
+    name: str
+    anchor: Anchor
+    id: SectionId  # unlike anchor, doesn't have to be different from the module or plot ids
+    description: str
+    module: str
+    module_anchor: Anchor
+    module_info: str = ""
+    comment: str = ""
+    helptext: str = ""
+    content_before_plot: str = ""
+    content: str = ""
+    plot: str = ""
+    print_section: bool = True
+    plot_anchor: Optional[Anchor] = None
+    ai_summary: str = ""

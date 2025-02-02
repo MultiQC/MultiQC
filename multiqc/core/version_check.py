@@ -31,6 +31,10 @@ def check_version(interactive_function_name: Optional[str] = None):
             "is_ci": strtobool(os.getenv("CI", False)),
             "is_notebook": is_running_in_notebook(),
             "interactive_function_name": interactive_function_name,
+            "ai_summary": config.ai_summary,
+            "ai_summary_full": config.ai_summary_full,
+            "ai_provider": config.ai_provider,
+            "ai_model": config.ai_model,
         }
         wait_seconds = 2
         try:

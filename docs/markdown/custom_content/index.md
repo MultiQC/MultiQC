@@ -39,12 +39,13 @@ general release.
 
 ## Images
 
-As of MultiQC v1.7, you can import custom images into your MultiQC reports.
-Simply add `_mqc` to the end of the filename for `.png`, `.jpg` or `.jpeg` files, for example:
+It is possible to import custom images into your MultiQC reports.
+Simply add `_mqc` to the end of the filename for `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` or `.tiff` files, for example:
 `my_image_file_mqc.png` or `summmary_diagram.jpeg`.
 
 Images will be embedded within the HTML file, so will be self contained.
 Note that this means that it's very possible to make the HTML file very very large if abused!
+Images are base64 encoded in the HTML and the report will often be larger than the binary source images.
 
 The report section name and description will be automatically based on the filename.
 

@@ -4,9 +4,9 @@ class LinePlot extends Plot {
     return this.datasets[this.activeDatasetIdx].lines.length; // no samples in a dataset
   }
 
-  prepData() {
+  prepData(dataset) {
     // Prepare data to either build Plotly traces or export as a file
-    let dataset = this.datasets[this.activeDatasetIdx];
+    dataset = dataset ?? this.datasets[this.activeDatasetIdx];
 
     let lines = dataset.lines;
 
@@ -20,6 +20,50 @@ class LinePlot extends Plot {
     });
 
     return [samples, lines];
+  }
+
+  plotAiHeader() {
+    let result = super.plotAiHeader();
+    if (this.pconfig.xlab) result += `X axis: ${this.pconfig.xlab}\n`;
+    if (this.pconfig.ylab) result += `Y axis: ${this.pconfig.ylab}\n`;
+    return result;
+  }
+
+  formatDatasetForAiPrompt(dataset) {
+    let [samples, lines] = this.prepData(dataset);
+
+    // Check if all samples are hidden
+    if (samples.length === 0) {
+      return "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
+    }
+
+    const xsuffix = this.layout.xaxis.ticksuffix;
+    const ysuffix = this.layout.yaxis.ticksuffix;
+
+    const formattedLines = lines.map((line) => {
+      return {
+        name: line.name,
+        pairs: line.pairs.map((p) =>
+          p.map((x, i) => {
+            let val = !Number.isFinite(x) ? "" : Number.isInteger(x) ? x : parseFloat(x.toFixed(2));
+            if (val !== "" && i === 0 && xsuffix) val += xsuffix;
+            if (val !== "" && i === 1 && ysuffix) val += ysuffix;
+            return val;
+          }),
+        ),
+      };
+    });
+
+    return (
+      "Samples: " +
+      formattedLines.map((line) => line.name).join(", ") +
+      "\n\n" +
+      formattedLines
+        .map((line) => {
+          return line.name + " " + line.pairs.map((p) => "(" + p.join(": ") + ")").join(", ");
+        })
+        .join("\n\n")
+    );
   }
 
   buildTraces() {

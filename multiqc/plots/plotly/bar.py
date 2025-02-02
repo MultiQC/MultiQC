@@ -168,6 +168,35 @@ class Dataset(BaseDataset):
                 val_by_cat_by_sample[s_name][cat.name] = str(d_val)
         report.write_data_file(val_by_cat_by_sample, self.uid)
 
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
+        """Format dataset as a markdown table"""
+        prompt = ""
+        prompt += "| Sample | " + " | ".join(cat.name for cat in self.cats) + " |\n"
+        prompt += "| --- | " + " | ".join("---" for _ in self.cats) + " |\n"
+
+        suffix = ""
+        if not pconfig.cpswitch_c_active:
+            suffix += "%"
+            if self.layout["xaxis"]["ticksuffix"] and self.layout["xaxis"]["ticksuffix"] != "%":
+                suffix += " " + self.layout["xaxis"]["ticksuffix"]
+        else:
+            if self.layout["xaxis"]["ticksuffix"]:
+                suffix += " " + self.layout["xaxis"]["ticksuffix"]
+
+        for sidx, sample in enumerate(self.samples):
+            prompt += (
+                f"| {sample} | "
+                + " | ".join(
+                    self.fmt_value_for_llm(
+                        (cat.data if not pconfig.cpswitch or pconfig.cpswitch_c_active else cat.data_pct)[sidx]
+                    )
+                    + suffix
+                    for cat in self.cats
+                )
+                + " |\n"
+            )
+        return prompt
+
 
 class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
@@ -366,3 +395,9 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 model.layout.legend.traceorder = "reversed"
 
         return BarPlot(**model.__dict__)
+
+    def _plot_ai_header(self) -> str:
+        result = super()._plot_ai_header()
+        if self.pconfig.ylab:
+            result += f"Values: {self.pconfig.ylab}\n"
+        return result
