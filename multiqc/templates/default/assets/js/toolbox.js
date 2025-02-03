@@ -1550,6 +1550,26 @@ $(function () {
     const modelName = $(this).data("model");
     $("#ai-model").val(modelName).trigger("change");
   });
+
+  // Initialize anonymize samples switch
+  const anonymizeSamplesEnabled = getStoredSampleAnonymizationEnabled() ?? aiAnonymizeSamples === "true";
+  if (anonymizeSamplesEnabled) {
+    $(".mqc_switch.anonymize_samples").removeClass("off").addClass("on").text("on");
+  }
+
+  // Handle anonymize samples switch clicks
+  $(".mqc_switch_wrapper.mqc_anonymize_samples").click(function (e) {
+    e.preventDefault();
+    const switchElem = $(this).find(".mqc_switch");
+    const isEnabled = switchElem.hasClass("on");
+    if (isEnabled) {
+      switchElem.removeClass("on").addClass("off").text("off");
+      storeSampleAnonymizationEnabled(false);
+    } else {
+      switchElem.removeClass("off").addClass("on").text("on");
+      storeSampleAnonymizationEnabled(true);
+    }
+  });
 });
 
 // Read the JWT local cookie in in the seqera.io domain - that's our API key:
@@ -1581,6 +1601,13 @@ function getStoredModelName(providerId) {
 }
 function storeModelName(providerId, modelName) {
   saveToLocalStorage(`mqc_ai_model_${providerId}`, modelName);
+}
+function getStoredSampleAnonymizationEnabled() {
+  const stored = getFromLocalStorage("mqc_ai_anonymize_samples");
+  return stored === null ? null : stored === "true";
+}
+function storeSampleAnonymizationEnabled(value) {
+  saveToLocalStorage("mqc_ai_anonymize_samples", value.toString());
 }
 
 function addLogo(imageDataUrl, callback) {

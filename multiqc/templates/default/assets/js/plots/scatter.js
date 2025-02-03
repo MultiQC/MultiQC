@@ -4,7 +4,7 @@ class ScatterPlot extends Plot {
     return this.datasets[this.activeDatasetIdx].points; // no data points in a dataset
   }
 
-  prepData(dataset) {
+  prepData(dataset, anonymize = false) {
     // Prepare data to either build Plotly traces or export as a file
     dataset = dataset ?? this.datasets[this.activeDatasetIdx];
 
@@ -14,7 +14,11 @@ class ScatterPlot extends Plot {
     let sampleSettings = applyToolboxSettings(samples);
 
     points = points.map((point, idx) => {
-      point.name = sampleSettings[idx].name ?? point.name;
+      if (anonymize) {
+        point.name = sampleSettings[idx].pseudonym ?? sampleSettings[idx].name ?? point.name;
+      } else {
+        point.name = sampleSettings[idx].name ?? point.name;
+      }
       point.highlight = sampleSettings[idx].highlight;
       if (!sampleSettings[idx].hidden) return point;
     });
@@ -31,7 +35,7 @@ class ScatterPlot extends Plot {
   }
 
   formatDatasetForAiPrompt(dataset) {
-    let [samples, points] = this.prepData(dataset);
+    let [samples, points] = this.prepData(dataset, true);
 
     // Check if all samples are hidden
     if (samples.length === 0) {

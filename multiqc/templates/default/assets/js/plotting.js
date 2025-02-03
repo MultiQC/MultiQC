@@ -310,11 +310,47 @@ callAfterDecompressed.push(function (mqc_plotdata) {
   });
 });
 
+function getPseudonym(sampleName) {
+  // If anonymization is enabled for AI prompts, use the aiPseudonymMap built in Python runtime,
+  // which defines pseudonyms for original sample names (before renaming)
+
+  // See if toolbox switch is on
+  const anonymizationEnabled = getStoredSampleAnonymizationEnabled();
+  if (!anonymizationEnabled) return undefined;
+
+  // aiPseudonymMap is built in Python runtime and defined in head.html
+  if (!aiPseudonymMap) return undefined;
+
+  // Check the map. Exact match?
+  if (aiPseudonymMap[sampleName]) return aiPseudonymMap[sampleName];
+
+  // Try replacing partial matches for cases like sample="SAMPLE1-SAMPLE2"
+  // Start with the longest original name to avoid situations when one sample is a prefix of another
+  let sortedOriginals = Object.keys(aiPseudonymMap).sort((a, b) => b.length - a.length);
+  let result = sampleName;
+  for (let original of sortedOriginals) {
+    if (result.includes(original)) {
+      result = result.replace(original, aiPseudonymMap[original]);
+    }
+  }
+  return result;
+}
+
+class Sample {
+  constructor(name) {
+    this.originalName = name;
+    this.name = name;
+    this.highlight = null;
+    this.hidden = false;
+    this.pseudonym = getPseudonym(name);
+  }
+}
+
 // Highlighting, hiding and renaming samples. Takes a list of samples, returns
 // a list of objects: {"name": "new_name", "highlight": "#cccccc", "hidden": false}
 function applyToolboxSettings(samples, plotAnchor) {
   // init object with default values
-  let objects = samples.map((name) => ({ name: name, highlight: null, hidden: false }));
+  let objects = samples.map((name) => new Sample(name));
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {

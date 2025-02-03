@@ -4,7 +4,7 @@ class LinePlot extends Plot {
     return this.datasets[this.activeDatasetIdx].lines.length; // no samples in a dataset
   }
 
-  prepData(dataset) {
+  prepData(dataset, anonymize = false) {
     // Prepare data to either build Plotly traces or export as a file
     dataset = dataset ?? this.datasets[this.activeDatasetIdx];
 
@@ -12,9 +12,12 @@ class LinePlot extends Plot {
 
     let samples = lines.map((line) => line.name);
     let sampleSettings = applyToolboxSettings(samples);
+    this.filtSampleSettings = sampleSettings.filter((s) => !s.hidden);
 
     lines = lines.filter((line, idx) => {
-      line.name = sampleSettings[idx].name ?? line.name;
+      if (sampleSettings[idx].name !== undefined) {
+        line.name = anonymize ? sampleSettings[idx].pseudonym : sampleSettings[idx].name;
+      }
       line.highlight = sampleSettings[idx].highlight;
       return !sampleSettings[idx].hidden;
     });
@@ -30,7 +33,7 @@ class LinePlot extends Plot {
   }
 
   formatDatasetForAiPrompt(dataset) {
-    let [samples, lines] = this.prepData(dataset);
+    let [samples, lines] = this.prepData(dataset, true);
 
     // Check if all samples are hidden
     if (samples.length === 0) {

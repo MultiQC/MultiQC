@@ -129,24 +129,25 @@ class ViolinPlot extends Plot {
     results +=
       `| ${this.pconfig.col1_header} | ` + metrics.map((metric) => headerByMetric[metric].title).join(" | ") + " |\n";
     results += "| --- | " + metrics.map(() => "---").join(" | ") + " |\n";
-    results += allSamples
+    results += sampleSettings
       .map((sample) => {
-        if (sampleSettings[allSamples.indexOf(sample)].hidden) return "";
+        if (sample.hidden) return "";
         if (
           metrics.every(
             (metric) =>
-              violinValuesBySampleByMetric[metric][sample] === undefined &&
-              scatterValuesBySampleByMetric[metric][sample] === undefined,
+              violinValuesBySampleByMetric[metric][sample.originalName] === undefined &&
+              scatterValuesBySampleByMetric[metric][sample.originalName] === undefined,
           )
         )
           return "";
 
         return (
-          `| ${sample} | ` +
+          `| ${sample.pseudonym ?? sample.name} | ` +
           metrics
             .map((metric) => {
               const value =
-                violinValuesBySampleByMetric[metric][sample] ?? scatterValuesBySampleByMetric[metric][sample];
+                violinValuesBySampleByMetric[metric][sample.originalName] ??
+                scatterValuesBySampleByMetric[metric][sample.originalName];
               const suffix = headerByMetric[metric].suffix;
               return !Number.isFinite(value)
                 ? ""

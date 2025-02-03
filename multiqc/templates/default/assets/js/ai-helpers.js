@@ -254,8 +254,42 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
   }
 }
 
+function deanonymizeSampleNames(text) {
+  // Convert pseudonyms back to original sample names in the text.
+  // Only applies when anonymization is enabled and pseudonym map exists
+  if (!aiPseudonymMap) return text;
+  if (!getStoredSampleAnonymizationEnabled()) return text;
+
+  // Create reverse mapping from pseudonym to original name
+  const reverseMap = Object.fromEntries(
+    Object.entries(aiPseudonymMap).map(([original, pseudonym]) => [pseudonym, original]),
+  );
+
+  // Replace pseudonyms with original names, being careful to only replace whole words
+  // and preserve the directive syntax
+  for (const [pseudonym, original] of Object.entries(reverseMap)) {
+    // Look for pseudonym in :sample[SAMPLE_1]{.text-*} directives
+    text = text.replace(
+      new RegExp(`:sample\\[${escapeRegExp(pseudonym)}\\](\\{[^}]+\\})`, "g"),
+      `:sample[${original}]$1`,
+    );
+
+    // Look for standalone pseudonyms (not in directives)
+    text = text.replace(new RegExp(`\\b${escapeRegExp(pseudonym)}\\b`, "g"), original);
+  }
+
+  return text;
+}
+
+// Helper function to escape special characters in string for use in RegExp
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function markdownToHtml(text) {
   if (!text) return "";
+
+  text = deanonymizeSampleNames(text);
 
   // Convert directives :span[text]{.text-color} -> <span class="text-color">... (preserving underscores)
   text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
