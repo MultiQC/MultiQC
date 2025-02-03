@@ -562,14 +562,14 @@ def ai_section_metadata() -> AiReportMetadata:
     )
 
 
-def create_pseudonym_map(sample_names: List[SampleName]) -> Dict[SampleName, str]:
+def create_pseudonym_map(sample_names: List[SampleName]) -> Dict[str, str]:
     """
     Find all sample names in the report and replace them with anonymised names
     """
     # Create anonymised names map and reverse map
     ai_pseudonym_map = {}
     for i, name in enumerate(sample_names):
-        ai_pseudonym_map[name] = f"SAMPLE_{i + 1}"
+        ai_pseudonym_map[str(name)] = f"SAMPLE_{i + 1}"
     return ai_pseudonym_map
 
 
