@@ -183,8 +183,7 @@ class Dataset(BaseDataset):
                 suffix += " " + self.layout["xaxis"]["ticksuffix"]
 
         for sidx, sample in enumerate(self.samples):
-            # Use pseudonym if available, otherwise use original sample name
-            presudonym = report.ai_pseudonym_map.get(SampleName(sample), sample)
+            presudonym = report.anonymize_sample_name(sample)
             prompt += (
                 f"| {presudonym} | "
                 + " | ".join(

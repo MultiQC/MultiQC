@@ -15,7 +15,7 @@ from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
 from multiqc.plots.plotly.line import LinePlot
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.types import Anchor
+from multiqc.types import Anchor, SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -134,34 +134,12 @@ class InterpretationOutput(BaseModel):
     summary: str = Field(description="A very short and concise overall summary")
     detailed_analysis: Optional[str] = Field(description="Detailed analysis", default=None)
 
-    def _deanonymize_sample_names(self, text: str) -> str:
-        """
-        Convert pseudonyms back to original sample names in the text.
-        Only applies when config.ai_anonymize_samples is True.
-        """
-        if not config.ai_anonymize_samples:
-            return text
-
-        # Create reverse mapping from pseudonym to original name
-        reverse_map = {v: k for k, v in report.ai_pseudonym_map.items()}
-
-        # Replace pseudonyms with original names, being careful to only replace whole words
-        # and preserve the directive syntax
-        for pseudonym, original in reverse_map.items():
-            # Look for pseudonym in :sample[SAMPLE_1]{.text-*} directives
-            text = re.sub(f":sample\\[{re.escape(pseudonym)}\\](\\{{[^}}]+\\}})", f":sample[{original}]\\1", text)
-
-            # Look for standalone pseudonyms (not in directives)
-            text = re.sub(f"\\b{re.escape(pseudonym)}\\b", str(original), text)
-
-        return text
-
     def markdown_to_html(self, text: str) -> str:
         """
         Convert markdown to HTML
         """
         # First convert pseudonyms back to original names if needed
-        text = self._deanonymize_sample_names(text)
+        text = deanonymize_sample_names(text)
 
         html = markdown(text)
         # Find and replace directives :span[1.23%]{.text-red} -> <span..., handle multiple matches in one string
@@ -178,13 +156,13 @@ class InterpretationOutput(BaseModel):
         )
         return html
 
-    def format_text(self) -> str:
-        """
-        Format to markdown to display in Seqera AI
-        """
-        summary = self._deanonymize_sample_names(self.summary)
-        detailed = self._deanonymize_sample_names(self.detailed_analysis) if self.detailed_analysis else None
-        return f"## Analysis\n{summary}" + (f"\n\n{detailed}" if detailed else "")
+    # def format_text(self) -> str:
+    #     """
+    #     Format to markdown to display in Seqera AI
+    #     """
+    #     summary = deanonymize_sample_names(self.summary)
+    #     detailed = deanonymize_sample_names(self.detailed_analysis) if self.detailed_analysis else None
+    #     return f"## Analysis\n{summary}" + (f"\n\n{detailed}" if detailed else "")
 
 
 class InterpretationResponse(BaseModel):
@@ -584,28 +562,38 @@ def ai_section_metadata() -> AiReportMetadata:
     )
 
 
-def anonymize_sample_names(metadata: AiReportMetadata):
-    """Find all sample names in the report and replace them with anonymised names"""
-    # First, find all sample names in the report
-    all_sample_names = []
-
-    if report.general_stats_plot:
-        all_sample_names.extend(report.general_stats_plot.samples_names())
-
-    for section in metadata.sections.values():
-        if section.plot_anchor:
-            plot = report.plot_by_id[section.plot_anchor]
-            if isinstance(plot, ViolinPlot):
-                all_sample_names.extend(plot.samples_names())
-            elif isinstance(plot, LinePlot):
-                all_sample_names.extend(plot.samples_names())
-
-    # Remove duplicates, keep order
-    all_sample_names = list(dict.fromkeys(all_sample_names))
-
+def create_pseudonym_map(sample_names: List[SampleName]) -> Dict[SampleName, str]:
+    """
+    Find all sample names in the report and replace them with anonymised names
+    """
     # Create anonymised names map and reverse map
-    for i, name in enumerate(all_sample_names):
-        report.ai_pseudonym_map[name] = f"SAMPLE_{i + 1}"
+    ai_pseudonym_map = {}
+    for i, name in enumerate(sample_names):
+        ai_pseudonym_map[name] = f"SAMPLE_{i + 1}"
+    return ai_pseudonym_map
+
+
+def deanonymize_sample_names(text: str) -> str:
+    """
+    Convert pseudonyms back to original sample names in the text.
+    Only applies when config.ai_anonymize_samples is True.
+    """
+    if not config.ai_anonymize_samples or not report.ai_pseudonym_map:
+        return text
+
+    # Create reverse mapping from pseudonym to original name
+    reverse_map = {v: k for k, v in report.ai_pseudonym_map.items()}
+
+    # Replace pseudonyms with original names, being careful to only replace whole words
+    # and preserve the directive syntax
+    for pseudonym, original in reverse_map.items():
+        # Look for pseudonym in :sample[SAMPLE_1]{.text-*} directives
+        text = re.sub(f":sample\\[{re.escape(pseudonym)}\\](\\{{[^}}]+\\}})", f":sample[{original}]\\1", text)
+
+        # Look for standalone pseudonyms (not in directives)
+        text = re.sub(f"\\b{re.escape(pseudonym)}\\b", str(original), text)
+
+    return text
 
 
 def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]:
@@ -631,9 +619,6 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
         tools_context += "\n\n"
         tools_context += "\n----------------------\n\n"
     user_prompt += tools_context
-
-    if config.ai_anonymize_samples:
-        anonymize_sample_names(metadata)
 
     # General stats - also always include, otherwise we don't have anything to summarize
     if report.general_stats_plot:
@@ -679,17 +664,9 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
             sec_context += f"Section help text: {_strip_html(section.helptext)}\n"
 
         if section.content_before_plot:
-            content = section.content_before_plot
-            if config.ai_anonymize_samples:
-                for name, pseudonym in report.ai_pseudonym_map.items():
-                    content = content.replace(name, pseudonym)
-            sec_context += content + "\n\n"
+            sec_context += report.anonymize_sample_name(section.content_before_plot) + "\n\n"
         if section.content:
-            content = section.content
-            if config.ai_anonymize_samples:
-                for name, pseudonym in report.ai_pseudonym_map.items():
-                    content = content.replace(name, pseudonym)
-            sec_context += content + "\n\n"
+            sec_context += report.anonymize_sample_name(section.content) + "\n\n"
 
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
@@ -726,6 +703,13 @@ def add_ai_summary_to_report():
     # Set data for JS runtime
     report.ai_report_metadata_base64 = base64.b64encode(metadata.model_dump_json().encode()).decode()
 
+    # Create and save the map for format_dataset_for_ai_prompt or JS runtime
+    report.ai_pseudonym_map = create_pseudonym_map(report.sample_names)
+    # Save for the JS runtime. We want to do it regardless of config.ai_anonymize_samples,
+    # because JS runtime might need it even if Python runtime doesn't
+    report.ai_pseudonym_map_base64 = base64.b64encode(json.dumps(report.ai_pseudonym_map).encode()).decode()
+
+    # Now that everything for JS runtime is set, we only continue if static summaries are requested
     if not config.ai_summary:
         # Not generating report in Python, leaving for JS runtime
         return

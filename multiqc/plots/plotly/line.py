@@ -280,12 +280,10 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         ysuffix = self.layout.get("yaxis", {}).get("ticksuffix")
 
         # Use pseudonyms for sample names if available
-        pseudonyms = [report.ai_pseudonym_map.get(SampleName(series.name), series.name) for series in self.lines]
+        pseudonyms = [report.anonymize_sample_name(series.name) for series in self.lines]
         result = "Samples: " + ", ".join(pseudonyms) + "\n\n"
 
-        for series in self.lines:
-            # Use pseudonym if available, otherwise use original sample name
-            pseudonym = report.ai_pseudonym_map.get(SampleName(series.name), series.name)
+        for pseudonym, series in zip(pseudonyms, self.lines):
             pairs = [
                 f"({self.fmt_value_for_llm(x[0])}{xsuffix}: {self.fmt_value_for_llm(x[1])}{ysuffix})"
                 for x in series.pairs

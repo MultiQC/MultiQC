@@ -412,8 +412,7 @@ class Dataset(BaseDataset):
                 for _, _, col in headers
             ):
                 continue
-            # Use pseudonym if available, otherwise use original sample name
-            pseudonym = report.ai_pseudonym_map.get(SampleName(sample), sample)
+            pseudonym = report.anonymize_sample_name(sample)
             row = []
             for _, _, col in headers:
                 value = self.violin_value_by_sample_by_metric[col.rid].get(

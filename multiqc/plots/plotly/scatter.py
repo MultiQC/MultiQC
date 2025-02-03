@@ -239,9 +239,7 @@ class Dataset(BaseDataset):
         prompt += "| --- | --- | --- |\n"
 
         for point in self.points:
-            # Use pseudonym if available, otherwise use original sample name
-            sname = SampleName(cast(str, point["name"]))
-            pseudonym = report.ai_pseudonym_map.get(sname, sname)
+            pseudonym = report.anonymize_sample_name(cast(str, point["name"]))
             prompt += f"| {pseudonym} | {point['x']}{xsuffix} | {point['y']}{ysuffix} |\n"
 
         return prompt

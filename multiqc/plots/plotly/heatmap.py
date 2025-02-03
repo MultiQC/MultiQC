@@ -217,17 +217,16 @@ class Dataset(BaseDataset):
                     prompt += " Sample "
             xcats = self.xcats
             if pconfig.xcats_samples:
-                xcats = [report.ai_pseudonym_map.get(SampleName(cat), cat) for cat in xcats]
+                xcats = [report.anonymize_sample_name(cat) for cat in xcats]
             prompt += "| " + " | ".join(xcats) + " |\n"
             if self.ycats:
                 prompt += "| --- "
             prompt += "| " + " | ".join("---" for _ in self.xcats) + " |\n"
         for i, row in enumerate(self.rows):
             if self.ycats:
-                # Use pseudonym if available, otherwise use original sample name
                 ycat = self.ycats[i]
                 if pconfig.ycats_samples:
-                    ycat = report.ai_pseudonym_map.get(SampleName(ycat), ycat)
+                    ycat = report.anonymize_sample_name(ycat)
                     prompt += "| " + ycat + " "
             prompt += "| " + " | ".join(str(x) for x in row) + " |\n"
         return prompt

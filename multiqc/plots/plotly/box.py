@@ -116,7 +116,7 @@ class Dataset(BaseDataset):
                 continue
 
             # Use pseudonym if available, otherwise use original sample name
-            pseudonym = report.ai_pseudonym_map.get(SampleName(sample), sample)
+            pseudonym = report.anonymize_sample_name(sample)
 
             # Calculate statistics
             sorted_vals = sorted(values)
