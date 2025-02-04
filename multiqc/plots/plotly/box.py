@@ -4,9 +4,10 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import plotly.graph_objects as go  # type: ignore
 
-from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import report
+from multiqc.plots.plotly import determine_barplot_height
+from multiqc.plots.plotly.plot import BaseDataset, PConfig, Plot, PlotType
+from multiqc.types import SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,9 @@ class Dataset(BaseDataset):
             if len(values) == 0:
                 continue
 
+            # Use pseudonym if available, otherwise use original sample name
+            pseudonym = report.anonymize_sample_name(sample)
+
             # Calculate statistics
             sorted_vals = sorted(values)
             n = len(sorted_vals)
@@ -126,7 +130,7 @@ class Dataset(BaseDataset):
             mean = sum(values) / len(values)
 
             prompt += (
-                f"| {sample} | "
+                f"| {pseudonym} | "
                 f"{self.fmt_value_for_llm(min_val)}{suffix} | "
                 f"{self.fmt_value_for_llm(q1)}{suffix} | "
                 f"{self.fmt_value_for_llm(median)}{suffix} | "
@@ -139,6 +143,12 @@ class Dataset(BaseDataset):
 
 class BoxPlot(Plot[Dataset, BoxPlotConfig]):
     datasets: List[Dataset]
+
+    def samples_names(self) -> List[SampleName]:
+        names: List[SampleName] = []
+        for ds in self.datasets:
+            names.extend(SampleName(sample) for sample in ds.samples)
+        return names
 
     @staticmethod
     def create(

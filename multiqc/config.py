@@ -119,6 +119,7 @@ ai_summary_full: bool
 ai_provider: str
 ai_model: str
 no_ai: bool
+ai_anonymize_samples: bool
 
 seqera_api_url: str
 seqera_website: str

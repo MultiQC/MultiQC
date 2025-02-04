@@ -7,7 +7,7 @@ from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.plots.plotly import box
-from multiqc.plots.plotly.box import BoxPlotConfig, BoxT
+from multiqc.plots.plotly.box import BoxPlotConfig, BoxT, BoxPlot
 
 logger = logging.getLogger(__name__)
 

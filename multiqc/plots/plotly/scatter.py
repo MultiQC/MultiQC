@@ -1,13 +1,14 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
 from multiqc.plots.plotly.plot import BaseDataset, PConfig, Plot, PlotType
+from multiqc.types import SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -29,14 +30,14 @@ ValueT = Union[str, float, int]
 PointT = Dict[str, ValueT]
 
 
-def plot(points_lists: List[List[PointT]], pconfig: ScatterConfig) -> "ScatterPlot":
+def plot(points_lists: List[List[PointT]], sample_names: List[SampleName], pconfig: ScatterConfig) -> "ScatterPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param points_lists: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    return ScatterPlot.create(pconfig, points_lists)
+    return ScatterPlot.create(pconfig, points_lists, sample_names)
 
 
 class Dataset(BaseDataset):
@@ -233,14 +234,28 @@ class Dataset(BaseDataset):
         xsuffix = self.layout.get("xaxis", {}).get("ticksuffix", "")
         ysuffix = self.layout.get("yaxis", {}).get("ticksuffix", "")
 
-        return "\n".join(f"{point['name']} ({point['x']}{xsuffix}, {point['y']}{ysuffix})" for point in self.points)
+        prompt = ""
+        prompt += "| Sample | X | Y |\n"
+        prompt += "| --- | --- | --- |\n"
+
+        for point in self.points:
+            pseudonym = report.anonymize_sample_name(cast(str, point["name"]))
+            prompt += f"| {pseudonym} | {point['x']}{xsuffix} | {point['y']}{ysuffix} |\n"
+
+        return prompt
 
 
 class ScatterPlot(Plot[Dataset, ScatterConfig]):
     datasets: List[Dataset]
+    sample_names: List[SampleName]
+
+    def samples_names(self) -> List[SampleName]:
+        return self.sample_names
 
     @staticmethod
-    def create(pconfig: ScatterConfig, points_lists: List[List[PointT]]) -> "ScatterPlot":
+    def create(
+        pconfig: ScatterConfig, points_lists: List[List[PointT]], sample_names: List[SampleName]
+    ) -> "ScatterPlot":
         model: Plot[Dataset, ScatterConfig] = Plot.initialize(
             plot_type=PlotType.SCATTER,
             pconfig=pconfig,
@@ -256,7 +271,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
         # Make a tooltip always show on hover over nearest point on plot
         model.layout.hoverdistance = -1
 
-        return ScatterPlot(**model.__dict__)
+        return ScatterPlot(**model.__dict__, sample_names=sample_names)
 
     def _plot_ai_header(self) -> str:
         result = super()._plot_ai_header()

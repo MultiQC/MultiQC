@@ -5,7 +5,6 @@ modules. Contains helper functions to generate markup for report.
 
 import base64
 import dataclasses
-from datetime import datetime
 import fnmatch
 import gzip
 import inspect
@@ -18,6 +17,7 @@ import re
 import sys
 import time
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path, PosixPath
 from typing import (
     Any,
@@ -33,8 +33,8 @@ from typing import (
     Union,
 )
 
-from dotenv import load_dotenv
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from multiqc import config
@@ -42,7 +42,7 @@ from multiqc import config
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core import log_and_rich, tmp_dir
+from multiqc.core import ai, log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
@@ -56,7 +56,6 @@ from multiqc.utils.util_functions import (
     replace_defaultdicts,
     rmtree_with_retries,
 )
-from multiqc.core import ai
 
 load_dotenv()
 
@@ -107,6 +106,9 @@ ai_provider_title: str = ""
 ai_model: str = ""
 ai_model_resolved: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
+sample_names: List[SampleName] = []  # all sample names in the report to construct ai_pseudonym_map
+ai_pseudonym_map: Dict[str, str] = {}
+ai_pseudonym_map_base64: str = ""
 
 # Following fields are preserved between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
@@ -164,6 +166,8 @@ def reset():
     global ai_model
     global ai_model_resolved
     global ai_report_metadata_base64
+    global sample_names
+    global ai_pseudonym_map
 
     # Create new temporary directory for module data exports
     initialized = True
@@ -194,7 +198,8 @@ def reset():
     ai_model = ""
     ai_model_resolved = ""
     ai_report_metadata_base64 = ""
-
+    sample_names = []
+    ai_pseudonym_map = {}
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
     html_ids_by_scope = defaultdict(set)
     plot_data = dict()
@@ -1176,3 +1181,24 @@ def reset_tmp_dir():
 
 def add_ai_summary():
     ai.add_ai_summary_to_report()
+
+
+def anonymize_sample_name(sample: str) -> str:
+    """
+    Anonymise sample name - sample can be any key in a plot, like SAMPLE1, SAMPLE1-SAMPLE2, etc.
+    Method will attempt to replace SAMPLE1 exactly, and more complex cases with text-replace
+    which can be inacurate.
+    """
+    if not config.ai_anonymize_samples or not ai_pseudonym_map:
+        return sample
+
+    # Exact match
+    if SampleName(sample) in ai_pseudonym_map:
+        return ai_pseudonym_map[SampleName(sample)]
+
+    # Try replacing partial matches for cases like sample="SAMPLE1-SAMPLE2"
+    # Start with the longest original name ro avoid situations when one sample is a prefix of another
+    for original, pseudonym in sorted(ai_pseudonym_map.items(), key=lambda x: len(x[1]), reverse=True):
+        if original in sample:
+            sample = sample.replace(original, pseudonym)
+    return sample
