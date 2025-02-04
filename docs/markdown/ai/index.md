@@ -301,6 +301,31 @@ Seqera AI does not use inputs for subsequent fine-tuning or direct model improve
 You can find our more information about Seqera's pledge for privacy at
 [https://seqera.io/ai-trust/](https://seqera.io/ai-trust/)
 
+### Sample anonymization
+
+MultiQC provides an option to anonymize sample names when generating AI summaries, both during report generation and in the browser. This helps protect sensitive information when sharing summaries with AI providers.
+
+When enabled, sample names are replaced with generic pseudonyms (e.g., "SAMPLE_1", "SAMPLE_2") before being sent to the AI provider. The mapping between original names and pseudonyms is:
+
+- Stored only in your browser's local storage for in-browser summaries
+- Not saved in the report HTML
+- Used to convert pseudonyms back to real sample names in the AI response
+
+To enable sample anonymization:
+
+- For in-browser summaries: Toggle "Anonymize samples" in the AI toolbox
+- For report generation: Set `anonymize_samples: true` in your MultiQC config
+
+The anonymization is applied consistently across the entire report - each sample name gets the same pseudonym wherever it appears. When the AI response references samples, the pseudonyms are automatically converted back to the original sample names before displaying.
+
+:::tip
+Sample anonymization is particularly useful when:
+
+- Working with clinical samples
+- Sample names contain sensitive metadata
+- Institutional policies require data anonymization
+  :::
+
 [^seqera-ai-usage-limits]:
     Seqera Cloud Basic is free for small teams.
     It includes access to Seqera AI, with a usage cap of 100 messages per calendar month.
