@@ -1189,8 +1189,7 @@ def anonymize_sample_name(sample: str) -> str:
     Method will attempt to replace SAMPLE1 exactly, and more complex cases with text-replace
     which can be inacurate.
     """
-    # Use pseudonym if available, otherwise use original sample name
-    if not ai_pseudonym_map:
+    if not config.ai_anonymize_samples or not ai_pseudonym_map:
         return sample
 
     # Exact match
