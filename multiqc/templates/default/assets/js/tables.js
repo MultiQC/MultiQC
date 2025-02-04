@@ -330,32 +330,74 @@ $(function () {
         plotTitle = tableAnchor.replace(/_/g, " ");
       }
       let plotDataset = [];
+
+      // Get all sample names first
+      let samples = $("#" + tableAnchor + " tbody tr")
+        .map(function () {
+          return $(this).children("th.rowheader").find(".th-sample-name").text();
+        })
+        .get();
+
+      // Apply toolbox settings to get highlighting info
+      let sampleSettings = applyToolboxSettings(samples);
+
       $("#" + tableAnchor + " tbody tr").each(function (e) {
-        let sName = $(this).children("th.rowheader").text();
+        let tr = $(this);
+        let sName = $(this).children("th.rowheader").find(".th-sample-name").text();
         let val_1 = $(this)
           .children("td." + col1)
           .data("sorting-val");
         let val_2 = $(this)
           .children("td." + col2)
           .data("sorting-val");
+
+        // Get settings for this sample
+        let settings = sampleSettings[samples.indexOf(sName)];
+
+        // Skip hidden samples
+        if (settings.hidden) {
+          return true;
+        }
+
         if (!isNaN(parseFloat(val_1)) && isFinite(val_1) && !isNaN(parseFloat(val_2)) && isFinite(val_2)) {
-          plotDataset.push({
-            name: sName,
+          let point = {
+            name: settings.name ?? sName,
             x: parseFloat(val_1),
             y: parseFloat(val_2),
-          });
+          };
+
+          // Add highlighting color if any samples are highlighted
+          if (sampleSettings.some((s) => s.highlight)) {
+            point.marker = {
+              color: settings.highlight ?? "#cccccc",
+            };
+          }
+
+          plotDataset.push(point);
         }
       });
+
+      // Reorder points if we have highlights
+      if (sampleSettings.some((s) => s.highlight)) {
+        let highlighted = plotDataset.filter((p) => p.marker?.color !== "#cccccc");
+        let nonHighlighted = plotDataset.filter((p) => !p.marker || p.marker.color === "#cccccc");
+        plotDataset = nonHighlighted.concat(highlighted);
+      }
+
       if (Object.keys(plotDataset).length > 0) {
         let target = "table_scatter_plot";
         let traces = plotDataset.map(function (point) {
-          return {
+          let trace = {
             type: "scatter",
             x: [point.x],
             y: [point.y],
             name: point.name,
             text: [point.name],
           };
+          if (point.marker) {
+            trace.marker = point.marker;
+          }
+          return trace;
         });
         let layout = {
           title: plotTitle,
@@ -400,6 +442,17 @@ $(function () {
     } else {
       plotDiv.html("<small>Please select two table columns.</small>");
       plotDiv.addClass("not_rendered");
+    }
+  });
+
+  // Update scatter plot when samples are hidden, renamed, or highlighted
+  $(document).on("mqc_hidesamples mqc_renamesamples mqc_highlights", function (e, f_texts, regex_mode) {
+    if ($("#table_scatter_plot").length && !$("#table_scatter_plot").hasClass("not_rendered")) {
+      let col1 = $("#table_scatter_col1").val().replace("header_", "");
+      let col2 = $("#table_scatter_col2").val().replace("header_", "");
+      if (col1 !== "" && col2 !== "") {
+        $("#table_scatter_form select").trigger("change");
+      }
     }
   });
 });
