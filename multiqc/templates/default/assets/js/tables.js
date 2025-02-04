@@ -331,6 +331,11 @@ $(function () {
       }
       let plotDataset = [];
       $("#" + tableAnchor + " tbody tr").each(function (e) {
+        let tr = $(this);
+        // Skip hidden rows
+        if (tr.hasClass("sample-hidden")) {
+          return true;
+        }
         let sName = $(this).children("th.rowheader").text();
         let val_1 = $(this)
           .children("td." + col1)
