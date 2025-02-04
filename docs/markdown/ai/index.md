@@ -305,26 +305,29 @@ You can find our more information about Seqera's pledge for privacy at
 
 MultiQC provides an option to anonymize sample names when generating AI summaries, both during report generation and in the browser. This helps protect sensitive information when sharing summaries with AI providers.
 
-When enabled, sample names are replaced with generic pseudonyms (e.g., "SAMPLE_1", "SAMPLE_2") before being sent to the AI provider. The mapping between original names and pseudonyms is:
-
-- Stored only in your browser's local storage for in-browser summaries
-- Not saved in the report HTML
-- Used to convert pseudonyms back to real sample names in the AI response
-
 To enable sample anonymization:
 
-- For in-browser summaries: Toggle "Anonymize samples" in the AI toolbox
+- For in-browser summaries: Toggle "Anonymize samples" in the AI toolbox section
 - For report generation: Set `anonymize_samples: true` in your MultiQC config
 
-The anonymization is applied consistently across the entire report - each sample name gets the same pseudonym wherever it appears. When the AI response references samples, the pseudonyms are automatically converted back to the original sample names before displaying.
+When enabled, sample names are replaced with generic pseudonyms (e.g., "SAMPLE_1", "SAMPLE_2") before being sent to the AI provider. The anonymization is applied consistently across the entire report - each sample name gets the same pseudonym wherever it appears. When the AI response references samples, the pseudonyms are automatically converted back to the original sample names before displaying.
 
-:::tip
-Sample anonymization is particularly useful when:
+MulitQC replaces sample names that appear as typical keys in plots and tables, specifically:
 
-- Working with clinical samples
-- Sample names contain sensitive metadata
-- Institutional policies require data anonymization
-  :::
+- First column of a table table (e.g. the General statistics table)
+- Labels of bars in bar plots
+- Line names in line plots
+- Data point labels in scatter plots
+- Heatmap axis labels
+- Violin plot data point names
+
+But note that if a module creates some custom plot configuration where sample names are used elsewhere, anonymization would not be guaranteed.
+
+:::info
+
+Note that with the "Continue chat" button you would see the anonymized samples, which makes it less useful.
+
+:::
 
 [^seqera-ai-usage-limits]:
     Seqera Cloud Basic is free for small teams.
