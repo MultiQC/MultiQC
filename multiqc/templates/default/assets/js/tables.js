@@ -367,6 +367,7 @@ $(function () {
             title: col2_name,
             range: [col2_min, col2_max],
           },
+          showlegend: false,
         };
         let config = {
           responsive: true,
