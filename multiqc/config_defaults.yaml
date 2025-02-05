@@ -68,6 +68,7 @@ ai_summary_full: false
 ai_provider: "seqera"
 ai_model: null
 ai_custom_endpoint: null
+ai_extra_query_options: null
 ai_custom_context_window: null
 no_ai: false
 ai_anonymize_samples: false

@@ -171,11 +171,17 @@ of the report.
             See <a href="https://docs.seqera.io/multiqc/ai#configuring-the-ai-provider" style='text-decoration: underline;' target="_blank">the docs</a>.
           </p>
         </div>  
+
+        <div class="form-group" id="ai_query_options_group" style="display: none;">
+          <label for="ai-query-options">Additional payload</label>
+          <textarea class="form-control input-sm" id="ai-query-options" placeholder="{}"></textarea>
+          <p id="ai_query_options_info">Any additional options passed in API request payload. Enter as a JSON object.</p>
+        </div>
       </form>
 
       <hr>
 
-      <p class="mqc_anonymize_samples_p">
+      <p class="mqc_anonymize_samples_p" id="mqc_anonymize_samples_switch">
         <span class="mqc_switch_wrapper mqc_anonymize_samples" data-target="mqc_cols">Anonymize samples <span class="mqc_switch anonymize_samples off">off</span></span>
       </p>
 

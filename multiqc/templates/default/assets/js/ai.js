@@ -134,9 +134,15 @@ function formatSectionForAi(sectionAnchor, moduleAnchor, plotView) {
 }
 
 function getMaxTokens(model) {
-  if (model.startsWith("gpt")) return 128000;
+  if (aiConfigCustomContextWindow && aiConfigCustomContextWindow != "None") {
+    try {
+      return parseInt(aiConfigCustomContextWindow);
+    } catch (e) {
+      console.error("Error parsing custom context window", e);
+    }
+  }
   if (model.startsWith("claude")) return 200000;
-  return 128000;
+  return 128000; // default for gpt models
 }
 
 async function summarizeWithAi(button) {
@@ -177,79 +183,86 @@ async function summarizeWithAi(button) {
   const totalTokens = countTokens(systemPrompt + content);
   const providerId = $("#ai-provider").val();
   const provider = AI_PROVIDERS[providerId];
+
   let modelName = $("#ai-model").val();
-  if (!modelName) {
+  let aiApiKey = $("#ai-api-key").val();
+  let endpoint = getStoredEndpoint();
+
+  if (!modelName && provider.defaultModel) {
     modelName = provider.defaultModel;
-    if (modelName) {
-      $("#ai-model").val(modelName);
-      storeModelName(providerId, modelName);
-    } else {
-      // Open the AI toolbox section, focus on the model select
-      mqc_toolbox_openclose("#mqc_ai", true);
-      const group = $("#ai_model_group");
-      const label = group.find("label");
-      group.addClass("has-error");
-      const modelSelect = group.find("select");
+    $("#ai-model").val(modelName);
+    storeModelName(providerId, modelName);
+  }
+
+  if ((providerId === "custom" && !endpoint) || !modelName || !aiApiKey) {
+    // Open the AI toolbox section, focus on missing fields
+
+    const endpointGroup = $("#ai_endpoint_group");
+    const endpointInput = endpointGroup.find("input");
+    const modelGroup = $("#ai_model_group");
+    const modelInput = modelGroup.find("input");
+    const apiKeyGroup = $("#ai_api_key_group");
+    const apiKeyInput = apiKeyGroup.find("input");
+
+    if (providerId === "custom" && !endpoint) {
+      const endpointGroup = $("#ai_endpoint_group");
+      const endpointInput = endpointGroup.find("input");
+      const label = endpointGroup.find("label");
       const originalLabelColor = label.css("color");
       label.css("color", "#a94442");
-      modelSelect.focus();
+      endpointGroup.addClass("has-error");
       // Remove has-error class when user makes a selection
-      modelSelect.one("change", function () {
-        group.removeClass("has-error");
+      endpointInput.one("change", function () {
+        endpointGroup.removeClass("has-error");
         label.css("color", originalLabelColor);
       });
-      return;
     }
+
+    if (!modelName) {
+      const label = modelGroup.find("label");
+      modelGroup.addClass("has-error");
+      const originalLabelColor = label.css("color");
+      label.css("color", "#a94442");
+      modelInput.focus();
+      // Remove has-error class when user makes a selection
+      modelInput.one("change", function () {
+        modelGroup.removeClass("has-error");
+        label.css("color", originalLabelColor);
+      });
+    }
+
+    if (!aiApiKey) {
+      const label = apiKeyGroup.find("label");
+      apiKeyGroup.addClass("has-error");
+      const required = apiKeyGroup.find("#ai_api_key_info_required");
+      const originalRequiredColor = required.css("color");
+      const originalLabelColor = label.css("color");
+      required.css("color", "#a94442");
+      label.css("color", "#a94442");
+      apiKeyInput.focus();
+      // Remove has-error class when user starts typing
+      apiKeyInput.one("input", function () {
+        apiKeyGroup.removeClass("has-error");
+        required.css("color", originalRequiredColor);
+        label.css("color", originalLabelColor);
+      });
+    }
+
+    mqc_toolbox_openclose("#mqc_ai", true);
+    if (providerId === "custom" && !endpoint) {
+      endpointInput.focus();
+    } else if (!modelName) {
+      modelInput.focus();
+    } else if (!aiApiKey) {
+      apiKeyInput.focus();
+    }
+    return;
   }
 
   const maxTokens = getMaxTokens(modelName);
-
   if (totalTokens > maxTokens) {
     errorDiv.html(`Content exceeds the token limit of ${provider.name} (${totalTokens} > ${maxTokens})`).show();
     if (wrapperDiv) wrapperDiv.show();
-    return;
-  }
-
-  // Check for stored API key
-  let aiApiKey = $("#ai-api-key").val();
-  if (!aiApiKey || aiApiKey === undefined) {
-    // Open the AI toolbox section, focus on the API key input
-    mqc_toolbox_openclose("#mqc_ai", true);
-    const group = $("#ai_api_key_group");
-    const label = group.find("label");
-    group.addClass("has-error");
-    const required = group.find("#ai_api_key_info_required");
-    const originalRequiredColor = required.css("color");
-    const originalLabelColor = label.css("color");
-    required.css("color", "#a94442");
-    label.css("color", "#a94442");
-    const apiKeyInput = group.find("input");
-    apiKeyInput.focus();
-    // Remove has-error class when user starts typing
-    apiKeyInput.one("input", function () {
-      group.removeClass("has-error");
-      required.css("color", originalRequiredColor);
-      label.css("color", originalLabelColor);
-    });
-    return;
-  }
-
-  const endpoint = getStoredEndpoint();
-  if (providerId === "custom" && !endpoint) {
-    // Open the AI toolbox section, focus on the endpoint input
-    mqc_toolbox_openclose("#mqc_ai", true);
-    const group = $("#ai_endpoint_group");
-    const label = group.find("label");
-    const originalLabelColor = label.css("color");
-    label.css("color", "#a94442");
-    group.addClass("has-error");
-    const endpointInput = group.find("input");
-    endpointInput.focus();
-    // Remove has-error class when user makes a selection
-    endpointInput.one("change", function () {
-      group.removeClass("has-error");
-      label.css("color", originalLabelColor);
-    });
     return;
   }
 

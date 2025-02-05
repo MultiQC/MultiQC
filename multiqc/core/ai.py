@@ -301,20 +301,28 @@ class OpenAiClient(Client):
         model: str
 
     def _query(self, prompt: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
+        body: Dict[str, Any] = {
+            "temperature": 0.0,
+        }
+        if config.ai_extra_query_options:
+            body.update(config.ai_extra_query_options)
+        if extra_options:
+            body.update(extra_options)
+        body.update(
+            {
+                "model": self.model,
+                "messages": [
+                    {"role": "user", "content": prompt},
+                ],
+            }
+        )
         response = self._request_with_error_handling_and_retries(
             self.endpoint,
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",
             },
-            body={
-                "model": self.model,
-                "messages": [
-                    {"role": "user", "content": prompt},
-                ],
-                "temperature": 0.0,
-                **(extra_options or {}),
-            },
+            body=body,
         )
         return OpenAiClient.ApiResponse(
             content=response["choices"][0]["message"]["content"],
@@ -722,7 +730,9 @@ def add_ai_summary_to_report():
     metadata: AiReportMetadata = ai_section_metadata()
     # Set data for JS runtime
     report.ai_report_metadata_base64 = base64.b64encode(metadata.model_dump_json().encode()).decode()
-
+    report.ai_extra_query_options_base64 = base64.b64encode(
+        json.dumps(config.ai_extra_query_options or {}).encode()
+    ).decode()
     # Create and save the map for format_dataset_for_ai_prompt or JS runtime
     report.ai_pseudonym_map = create_pseudonym_map(report.sample_names)
     # Save for the JS runtime. We want to do it regardless of config.ai_anonymize_samples,

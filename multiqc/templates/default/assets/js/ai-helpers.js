@@ -59,12 +59,22 @@ function runStreamGeneration({
         onStreamError(handleStreamError(error));
       });
   } else if (provider.name === "OpenAI" || provider.name === "Custom") {
-    fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
-    fetchOptions.body = JSON.stringify({
+    let body = {};
+    if (provider.name === "Custom") {
+      try {
+        body = JSON.parse($("#ai-query-options").val());
+      } catch (e) {
+        console.error("Error parsing extra query options", e);
+      }
+    }
+    body = {
+      ...body,
       model: modelName,
       messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
       stream: true,
-    });
+    };
+    fetchOptions.body = JSON.stringify(body);
+    fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
 
     const endpoint = provider.name === "Custom" ? customEndpoint : "https://api.openai.com/v1/chat/completions";
     fetch(endpoint, fetchOptions)
