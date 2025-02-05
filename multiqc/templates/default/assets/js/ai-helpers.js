@@ -19,6 +19,7 @@ function runStreamGeneration({
   const provider = AI_PROVIDERS[providerId];
   const modelName = $("#ai-model").val();
   const apiKey = $("#ai-api-key").val();
+  const customEndpoint = $("#ai-endpoint").val();
 
   const fetchOptions = {
     method: "POST",
@@ -57,18 +58,16 @@ function runStreamGeneration({
       .catch((error) => {
         onStreamError(handleStreamError(error));
       });
-  } else if (provider.name === "OpenAI") {
+  } else if (provider.name === "OpenAI" || provider.name === "Custom") {
     fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
     fetchOptions.body = JSON.stringify({
       model: modelName,
-      messages: [
-        { role: "user", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
+      messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
       stream: true,
     });
 
-    fetch("https://api.openai.com/v1/chat/completions", fetchOptions)
+    const endpoint = provider.name === "Custom" ? customEndpoint : "https://api.openai.com/v1/chat/completions";
+    fetch(endpoint, fetchOptions)
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json();
@@ -95,10 +94,7 @@ function runStreamGeneration({
     fetchOptions.body = JSON.stringify({
       model: modelName,
       max_tokens: 4096,
-      messages: [
-        { role: "user", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
+      messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
       stream: true,
     });
 
@@ -169,7 +165,7 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
           } catch (e) {
             // Unexpected JSON format. Ignore the line, but if somethings is really wrong,
             // we should anyway call onStreamComplete in the end
-            onStreamError(`Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`);
+            // onStreamError(`Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`);
             return acc;
           }
 
@@ -177,6 +173,7 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
           let content = undefined;
           let role = undefined;
           let finishReason = undefined;
+          let started = false;
 
           // Detect provider
           if (providerId === "seqera") {
@@ -189,18 +186,18 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
               type = "error";
               error = `Streaming unexpectedly stopped. Reason: ${finishReason}`;
             }
-          } else if (providerId === "openai") {
+          } else if (providerId === "openai" || providerId === "custom") {
             content = data.choices[0].delta.content;
             model = data.model;
             role = data.choices[0].delta.role;
             finishReason = data.choices[0].finish_reason;
             // OpenAI doesn't define type, so we need to infer it from the other fields
-            if (role === "assistant") {
-              type = "on_chat_model_start";
+            if (content) {
+              type = "on_chat_model_stream";
             } else if (finishReason === "stop") {
               type = "on_chat_model_end";
-            } else if (content) {
-              type = "on_chat_model_stream";
+            } else if (role === "assistant") {
+              type = "on_chat_model_start";
             } else if (finishReason && finishReason !== "stop") {
               type = "error";
               error = `Streaming unexpectedly stopped. Reason: ${finishReason}`;
@@ -233,9 +230,14 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
           // Handle different event types
           switch (type) {
             case "on_chat_model_start":
+              started = true;
               onStreamStart(model);
               break;
             case "on_chat_model_stream":
+              if (!started) {
+                started = true;
+                onStreamStart(model);
+              }
               if (content) onStreamNewToken(content);
               break;
             case "on_chat_model_end":

@@ -180,9 +180,28 @@ async function summarizeWithAi(button) {
   let modelName = $("#ai-model").val();
   if (!modelName) {
     modelName = provider.defaultModel;
-    $("#ai-model").val(modelName);
-    storeModelName(providerId, modelName);
+    if (modelName) {
+      $("#ai-model").val(modelName);
+      storeModelName(providerId, modelName);
+    } else {
+      // Open the AI toolbox section, focus on the model select
+      mqc_toolbox_openclose("#mqc_ai", true);
+      const group = $("#ai_model_group");
+      const label = group.find("label");
+      group.addClass("has-error");
+      const modelSelect = group.find("select");
+      const originalLabelColor = label.css("color");
+      label.css("color", "#a94442");
+      modelSelect.focus();
+      // Remove has-error class when user makes a selection
+      modelSelect.one("change", function () {
+        group.removeClass("has-error");
+        label.css("color", originalLabelColor);
+      });
+      return;
+    }
   }
+
   const maxTokens = getMaxTokens(modelName);
 
   if (totalTokens > maxTokens) {
@@ -215,11 +234,33 @@ async function summarizeWithAi(button) {
     return;
   }
 
+  const endpoint = getStoredEndpoint();
+  if (providerId === "custom" && !endpoint) {
+    // Open the AI toolbox section, focus on the endpoint input
+    mqc_toolbox_openclose("#mqc_ai", true);
+    const group = $("#ai_endpoint_group");
+    const label = group.find("label");
+    const originalLabelColor = label.css("color");
+    label.css("color", "#a94442");
+    group.addClass("has-error");
+    const endpointInput = group.find("input");
+    endpointInput.focus();
+    // Remove has-error class when user makes a selection
+    endpointInput.one("change", function () {
+      group.removeClass("has-error");
+      label.css("color", originalLabelColor);
+    });
+    return;
+  }
+
   // Disable button and show loading state
-  button.prop("disabled", true).html(`Requesting ${provider.name}...`);
+  const buttonTitle = providerId === "custom" ? "custom endpoint" : provider.name;
+  button.prop("disabled", true).html(`Requesting ${buttonTitle}...`);
 
   function wrapUpResponse() {
-    disclaimerDiv.find(".ai-summary-disclaimer-provider").text(provider.name);
+    const endpoint = $("#ai-endpoint").val();
+    const disclaimerProvider = providerId === "custom" ? endpoint : provider.name;
+    disclaimerDiv.find(".ai-summary-disclaimer-provider").text(disclaimerProvider);
     disclaimerDiv.find(".ai-summary-disclaimer-model").text(modelName);
     disclaimerDiv.show();
     button.data("action", "clear").prop("disabled", false).html(clearText).addClass("ai-local-content");
@@ -272,6 +313,7 @@ async function summarizeWithAi(button) {
             model: modelName,
             timestamp: Date.now(),
             threadId: threadId,
+            endpoint: endpoint,
           }),
         );
         const endTime = performance.now();
@@ -384,7 +426,9 @@ $(function () {
         responseDiv.show().html(markdownToHtml(cachedSummary.text));
         if (wrapperDiv) wrapperDiv.show();
         const provider = AI_PROVIDERS[cachedSummary.provider];
-        disclaimerDiv.find(".ai-summary-disclaimer-provider").text(provider.name);
+        disclaimerDiv
+          .find(".ai-summary-disclaimer-provider")
+          .text(provider.name == "Custom" ? cachedSummary.endpoint : provider.name);
         disclaimerDiv.find(".ai-summary-disclaimer-model").text(cachedSummary.model);
         disclaimerDiv.show();
         button.html(clearText).data("action", "clear").prop("disabled", false).addClass("ai-local-content");
