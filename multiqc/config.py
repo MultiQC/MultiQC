@@ -117,8 +117,9 @@ AVAILABLE_AI_PROVIDERS = ["seqera", "openai", "anthropic", "custom"]
 ai_summary: bool
 ai_summary_full: bool
 ai_provider: str
-ai_custom_endpoint: Optional[str]
 ai_model: str
+ai_custom_endpoint: Optional[str]
+ai_custom_context_window: Optional[int]
 no_ai: bool
 ai_anonymize_samples: bool
 

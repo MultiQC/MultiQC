@@ -179,11 +179,11 @@ class Client:
         self.model: str
         self.api_key: str = api_key
 
-    def _query(self, system_prompt: str, report_content: str):
+    def _query(self, prompt: str):
         raise NotImplementedError
 
     def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_SHORT, report_content)
+        response = self._query(PROMPT_SHORT + "\n\n" + report_content)
 
         return InterpretationResponse(
             interpretation=InterpretationOutput(summary=response.content),
@@ -191,7 +191,7 @@ class Client:
         )
 
     def interpret_report_full(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_FULL, report_content)
+        response = self._query(PROMPT_FULL + "\n\n" + report_content)
 
         try:
             output = yaml.safe_load(response.content)
@@ -286,7 +286,7 @@ class OpenAiClient(Client):
                 raise ValueError("Custom OpenAI endpoint is set, but no model is provided. Please set config.ai_model")
             self.model = config.ai_model
             self.name = "custom"
-            self.title = "a custom AI provider"
+            self.title = endpoint
         else:
             self.endpoint = "https://api.openai.com/v1/chat/completions"
             self.model = config.ai_model or "gpt-4o"
@@ -294,15 +294,13 @@ class OpenAiClient(Client):
             self.title = "OpenAI"
 
     def max_tokens(self) -> int:
-        return 128000
+        return config.ai_custom_context_window or 128000
 
     class ApiResponse(NamedTuple):
         content: str
         model: str
 
-    def _query(
-        self, system_prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
-    ) -> ApiResponse:
+    def _query(self, prompt: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
             self.endpoint,
             headers={
@@ -312,8 +310,7 @@ class OpenAiClient(Client):
             body={
                 "model": self.model,
                 "messages": [
-                    {"role": "user", "content": system_prompt},
-                    {"role": "user", "content": report_content},
+                    {"role": "user", "content": prompt},
                 ],
                 "temperature": 0.0,
                 **(extra_options or {}),
@@ -341,7 +338,7 @@ class AnthropicClient(Client):
         content: str
         model: str
 
-    def _query(self, system_prompt: str, report_content: str) -> ApiResponse:
+    def _query(self, prompt: str) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -353,8 +350,7 @@ class AnthropicClient(Client):
                 "model": self.model,
                 "max_tokens": 4096,
                 "messages": [
-                    {"role": "user", "content": system_prompt},
-                    {"role": "user", "content": report_content},
+                    {"role": "user", "content": prompt},
                 ],
                 "temperature": 0.0,
             },
@@ -458,7 +454,7 @@ def get_llm_client() -> Optional[Client]:
         if api_key := os.environ.get("SEQERA_ACCESS_TOKEN"):
             logger.debug("Using Seqera access token from $SEQERA_ACCESS_TOKEN environment variable")
         elif api_key := os.environ.get("TOWER_ACCESS_TOKEN"):
-            logger.debug("Using Seqera access token from $TOWER_ACCESS_TOKEN environment variable")
+            logger.debug("Using Seqera access token from TOWER_ACCESS_TOKEN environment variable")
         else:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', "
@@ -477,7 +473,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        logger.debug("Using Anthropic API key from $ANTHROPIC_API_KEY environment variable")
+        logger.debug("Using Anthropic API key from ANTHROPIC_API_KEY environment variable")
         try:
             return AnthropicClient(api_key)
         except ModuleNotFoundError:
@@ -493,7 +489,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        logger.debug("Using OpenAI API key from $OPENAI_API_KEY environment variable")
+        logger.debug("Using OpenAI API key from OPENAI_API_KEY environment variable")
         try:
             return OpenAiClient(api_key)
         except ModuleNotFoundError:
@@ -518,7 +514,7 @@ def get_llm_client() -> Optional[Client]:
                 "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_custom_endpoint is provided. Please set config.ai_custom_endpoint"
             )
         logger.debug(
-            f"Using OpenAI API key from $OPENAI_API_KEY environment variable with custom endpoint {config.ai_custom_endpoint}"
+            f"Using API key from the OPENAI_API_KEY environment variable to use with a custom endpoint {config.ai_custom_endpoint}"
         )
         return OpenAiClient(api_key=api_key, endpoint=config.ai_custom_endpoint)
     else:

@@ -66,8 +66,9 @@ make_pdf: false
 ai_summary: false
 ai_summary_full: false
 ai_provider: "seqera"
-ai_custom_endpoint: null
 ai_model: null
+ai_custom_endpoint: null
+ai_custom_context_window: null
 no_ai: false
 ai_anonymize_samples: false
 

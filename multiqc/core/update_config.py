@@ -68,6 +68,7 @@ class ClConfig(BaseModel):
     ai_provider: Optional[Literal["seqera", "openai", "anthropic", "custom"]] = None
     ai_model: Optional[str] = None
     ai_custom_endpoint: Optional[str] = None
+    ai_custom_context_window: Optional[int] = None
     no_ai: Optional[bool] = None
     unknown_options: Optional[Dict] = None
 
@@ -218,6 +219,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.ai_model = cfg.ai_model
     if cfg.ai_custom_endpoint is not None:
         config.ai_custom_endpoint = cfg.ai_custom_endpoint
+    if cfg.ai_custom_context_window is not None:
+        config.ai_custom_context_window = cfg.ai_custom_context_window
     if cfg.no_ai is not None:
         config.no_ai = cfg.no_ai
 
