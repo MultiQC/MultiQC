@@ -1056,7 +1056,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     type="button"
                     data-toggle="tooltip" 
                     aria-controls="{section_anchor}_ai_summary_wrapper"
-                    title="Dynamically generate AI summary for this plot"
                 >
                     <span style="vertical-align: baseline">
                         <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">

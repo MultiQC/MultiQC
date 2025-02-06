@@ -1392,7 +1392,7 @@ tr.row-empty {
 }
 
 #global_ai_summary_detailed_analysis_response {
-  margin: 0px -4px 0px -10px;
+  margin: 0px -4px 4px -10px;
   padding: 10px 10px 0 10px;
 }
 

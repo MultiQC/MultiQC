@@ -39,6 +39,11 @@ aiConfigEnabled = "{{ config.ai_summary }}";
 aiConfigProviderId = "{{ report.ai_provider_id or config.ai_provider }}";
 aiConfigModel = "{{ report.ai_model or config.ai_model }}";
 
+aiConfigCustomEndpoint = "{{ config.ai_custom_endpoint }}";
+aiConfigExtraQueryOptions = JSON.parse(atob("{{ report.ai_extra_query_options_base64 }}"));
+
+aiConfigCustomContextWindow = "{{ config.ai_custom_context_window }}";
+
 aiReportMetadataBase64 = "{{ report.ai_report_metadata_base64 }}";
 aiReportMetadata = JSON.parse(atob(aiReportMetadataBase64));
 

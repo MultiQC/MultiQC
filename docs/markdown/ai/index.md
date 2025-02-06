@@ -235,6 +235,44 @@ If you're unable to generate an AI summary, you can try the following:
   - Filter shown samples dynamically with the toolbox
 - Copy the prompt from `multiqc_data/multiqc_ai_prompt.txt` into clipboard with the **Copy prompt** button in the toolbox, and use it with external services with a larger context window.
 
+## Using custom OpenAI-compatible endpoints
+
+In addition to the built-in providers (Seqera AI, OpenAI, and Anthropic), MultiQC supports using custom OpenAI-compatible endpoints. This allows you to use self-hosted models or alternative providers that implement the OpenAI API specification.
+
+To use a custom endpoint:
+
+1. Select "Custom" as the AI provider in the toolbox
+2. Enter the endpoint URL (e.g., `http://localhost:8000/v1/chat/completions`)
+3. Specify the model name to use with this endpoint
+4. Provide an API key (if required by the endpoint)
+5. Optionally specify a custom context window size if different from the default 128k tokens
+
+You can configure this in the MultiQC config:
+
+```yaml
+ai_provider: custom
+ai_model: your-model-name
+ai_custom_endpoint: http://localhost:8000/v1/chat/completions
+ai_custom_context_window: 32000 # Optional
+```
+
+Make sure to set the `OPENAI_API_KEY` environment variable to use with the custom endpoint:
+
+```bash
+export OPENAI_API_KEY=your-api-key
+```
+
+You can also customize the query payload sent to the endpoint by setting `ai_extra_query_options` in your config:
+
+```yaml
+ai_extra_query_options:
+  temperature: 0.7
+  top_p: 0.9
+  # Any other parameters supported by your endpoint
+```
+
+In browser, you can also select "Custom" provider from the toolbox, and enter the endpoint URL, model name, API key, and optional extra query options manually.
+
 ## Configuring within Nextflow
 
 If you're running MultiQC within a Nextflow pipeline, you probably don't want to edit the workflow code to configure AI summaries.

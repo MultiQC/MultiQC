@@ -150,6 +150,12 @@ of the report.
           <p id="ai_provider_info"></p>
         </div>
 
+        <div class="form-group" id="ai_endpoint_group" style="display: none;">
+          <label for="ai-endpoint">Endpoint</label>
+          <input type="text" class="form-control input-sm" id="ai-endpoint" placeholder="e.g. https://api.perplexity.ai/chat/completions">
+          <p id="ai_endpoint_info">Use the OpenAI API-style requests with a custom endpoint.</p>
+        </div>
+
         <div class="form-group" id="ai_model_group">
           <label for="ai-model">Model</label>
           <input type="text" class="form-control input-sm" id="ai-model" placeholder="Enter model name">
@@ -165,11 +171,24 @@ of the report.
             See <a href="https://docs.seqera.io/multiqc/ai#configuring-the-ai-provider" style='text-decoration: underline;' target="_blank">the docs</a>.
           </p>
         </div>  
+
+        <div class="form-group" id="ai_query_options_group" style="display: none;">
+          <label for="ai-query-options">Additional Payload</label>
+          <textarea class="form-control input-sm" id="ai-query-options" placeholder="{}"></textarea>
+          <p id="ai_query_options_info">Any additional options passed in API request payload. Enter as a JSON object.</p>
+        </div>
+
+        <div class="form-group" id="ai_context_window_group" style="display: none;">
+          <label for="ai-context-window">Context Window</label>
+          <input type="number" class="form-control input-sm" id="ai-context-window" placeholder="Enter context window size">
+          <p id="ai_context_window_info">The maximum number of tokens that can be processed in a single request</p>
+        </div>
+
       </form>
 
       <hr>
 
-      <p class="mqc_anonymize_samples_p">
+      <p class="mqc_anonymize_samples_p" id="mqc_anonymize_samples_switch">
         <span class="mqc_switch_wrapper mqc_anonymize_samples" data-target="mqc_cols">Anonymize samples <span class="mqc_switch anonymize_samples off">off</span></span>
       </p>
 

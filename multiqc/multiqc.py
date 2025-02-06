@@ -466,6 +466,21 @@ click.rich_click.OPTION_GROUPS = {
     help=f"Select AI provider for report summarization. [dim yellow](Default: {config.ai_provider})",
 )
 @click.option(
+    "--ai-model",
+    type=str,
+    help="Select AI model to use for report summarization",
+)
+@click.option(
+    "--ai-custom-endpoint",
+    type=str,
+    help="Custom AI endpoint to use with OpenAI API",
+)
+@click.option(
+    "--ai-custom-context-window",
+    type=int,
+    help="Custom context window to use with OpenAI API (default: 128000)",
+)
+@click.option(
     "--no-ai",
     "no_ai",
     is_flag=True,

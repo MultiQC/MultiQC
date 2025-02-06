@@ -13,8 +13,6 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
-from multiqc.plots.plotly.line import LinePlot
-from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.types import Anchor, SampleName
 
 logger = logging.getLogger(__name__)
@@ -175,17 +173,17 @@ ResponseT = TypeVar("ResponseT")
 
 
 class Client:
-    def __init__(self, model: str, api_key: str):
+    def __init__(self, api_key: str):
         self.name: str
         self.title: str
-        self.model: str = model
+        self.model: str
         self.api_key: str = api_key
 
-    def _query(self, system_prompt: str, report_content: str):
+    def _query(self, prompt: str):
         raise NotImplementedError
 
     def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_SHORT, report_content)
+        response = self._query(PROMPT_SHORT + "\n\n" + report_content)
 
         return InterpretationResponse(
             interpretation=InterpretationOutput(summary=response.content),
@@ -193,7 +191,7 @@ class Client:
         )
 
     def interpret_report_full(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_FULL, report_content)
+        response = self._query(PROMPT_FULL + "\n\n" + report_content)
 
         try:
             output = yaml.safe_load(response.content)
@@ -279,41 +277,52 @@ class Client:
 
 
 class OpenAiClient(Client):
-    def __init__(self, api_key: str):
-        model = (
-            config.ai_model
-            if config.ai_model and (config.ai_model.startswith("gpt") or config.ai_model.startswith("o"))
-            else "gpt-4o"
-        )
-        super().__init__(model, api_key)
-        self.name = "openai"
-        self.title = "OpenAI"
+    def __init__(self, api_key: str, endpoint: Optional[str] = None):
+        super().__init__(api_key)
+
+        if endpoint:
+            self.endpoint = endpoint
+            if not config.ai_model:
+                raise ValueError("Custom OpenAI endpoint is set, but no model is provided. Please set config.ai_model")
+            self.model = config.ai_model
+            self.name = "custom"
+            self.title = endpoint
+        else:
+            self.endpoint = "https://api.openai.com/v1/chat/completions"
+            self.model = config.ai_model or "gpt-4o"
+            self.name = "openai"
+            self.title = "OpenAI"
 
     def max_tokens(self) -> int:
-        return 128000
+        return config.ai_custom_context_window or 128000
 
     class ApiResponse(NamedTuple):
         content: str
         model: str
 
-    def _query(
-        self, system_prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
-    ) -> ApiResponse:
+    def _query(self, prompt: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
+        body: Dict[str, Any] = {
+            "temperature": 0.0,
+        }
+        if config.ai_extra_query_options:
+            body.update(config.ai_extra_query_options)
+        if extra_options:
+            body.update(extra_options)
+        body.update(
+            {
+                "model": self.model,
+                "messages": [
+                    {"role": "user", "content": prompt},
+                ],
+            }
+        )
         response = self._request_with_error_handling_and_retries(
-            "https://api.openai.com/v1/chat/completions",
+            self.endpoint,
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",
             },
-            body={
-                "model": self.model,
-                "messages": [
-                    {"role": "user", "content": system_prompt},
-                    {"role": "user", "content": report_content},
-                ],
-                "temperature": 0.0,
-                **(extra_options or {}),
-            },
+            body=body,
         )
         return OpenAiClient.ApiResponse(
             content=response["choices"][0]["message"]["content"],
@@ -323,10 +332,10 @@ class OpenAiClient(Client):
 
 class AnthropicClient(Client):
     def __init__(self, api_key: str):
-        model = (
+        super().__init__(api_key)
+        self.model = (
             config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-3-5-sonnet-latest"
         )
-        super().__init__(model, api_key)
         self.name = "anthropic"
         self.title = "Anthropic"
 
@@ -337,7 +346,7 @@ class AnthropicClient(Client):
         content: str
         model: str
 
-    def _query(self, system_prompt: str, report_content: str) -> ApiResponse:
+    def _query(self, prompt: str) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -349,8 +358,7 @@ class AnthropicClient(Client):
                 "model": self.model,
                 "max_tokens": 4096,
                 "messages": [
-                    {"role": "user", "content": system_prompt},
-                    {"role": "user", "content": report_content},
+                    {"role": "user", "content": prompt},
                 ],
                 "temperature": 0.0,
             },
@@ -362,14 +370,14 @@ class AnthropicClient(Client):
 
 
 class SeqeraClient(Client):
-    def __init__(self, model: str, api_key: str):
-        super().__init__(model, api_key)
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
         self.name = "seqera"
         self.title = "Seqera AI"
         creation_date = report.creation_date.strftime("%d %b %Y, %H:%M %Z")
         self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, created on {creation_date}"
         self.tags = ["multiqc", f"multiqc_version:{config.version}"]
-        self.model = model or "claude-3-5-sonnet-latest"
+        self.model = config.ai_model or "claude-3-5-sonnet-latest"
 
     def max_tokens(self) -> int:
         return 200000
@@ -454,7 +462,7 @@ def get_llm_client() -> Optional[Client]:
         if api_key := os.environ.get("SEQERA_ACCESS_TOKEN"):
             logger.debug("Using Seqera access token from $SEQERA_ACCESS_TOKEN environment variable")
         elif api_key := os.environ.get("TOWER_ACCESS_TOKEN"):
-            logger.debug("Using Seqera access token from $TOWER_ACCESS_TOKEN environment variable")
+            logger.debug("Using Seqera access token from TOWER_ACCESS_TOKEN environment variable")
         else:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', "
@@ -463,7 +471,7 @@ def get_llm_client() -> Optional[Client]:
                 "or change config.ai_provider"
             )
             return None
-        return SeqeraClient(config.ai_model, api_key)
+        return SeqeraClient(api_key)
 
     elif config.ai_provider == "anthropic":
         api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -473,7 +481,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        logger.debug("Using Anthropic API key from $ANTHROPIC_API_KEY environment variable")
+        logger.debug("Using Anthropic API key from ANTHROPIC_API_KEY environment variable")
         try:
             return AnthropicClient(api_key)
         except ModuleNotFoundError:
@@ -489,7 +497,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        logger.debug("Using OpenAI API key from $OPENAI_API_KEY environment variable")
+        logger.debug("Using OpenAI API key from OPENAI_API_KEY environment variable")
         try:
             return OpenAiClient(api_key)
         except ModuleNotFoundError:
@@ -497,6 +505,26 @@ def get_llm_client() -> Optional[Client]:
                 'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"`'
             )
 
+    elif config.ai_provider == "custom":
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            logger.error(
+                "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but OpenAI API "
+                "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
+            )
+            return None
+        if not config.ai_model:
+            raise ValueError(
+                "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_model is provided. Please set config.ai_model"
+            )
+        if not config.ai_custom_endpoint:
+            raise ValueError(
+                "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_custom_endpoint is provided. Please set config.ai_custom_endpoint"
+            )
+        logger.debug(
+            f"Using API key from the OPENAI_API_KEY environment variable to use with a custom endpoint {config.ai_custom_endpoint}"
+        )
+        return OpenAiClient(api_key=api_key, endpoint=config.ai_custom_endpoint)
     else:
         msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(config.AVAILABLE_AI_PROVIDERS)}]'
         if config.strict:
@@ -702,7 +730,9 @@ def add_ai_summary_to_report():
     metadata: AiReportMetadata = ai_section_metadata()
     # Set data for JS runtime
     report.ai_report_metadata_base64 = base64.b64encode(metadata.model_dump_json().encode()).decode()
-
+    report.ai_extra_query_options_base64 = base64.b64encode(
+        json.dumps(config.ai_extra_query_options or {}).encode()
+    ).decode()
     # Create and save the map for format_dataset_for_ai_prompt or JS runtime
     report.ai_pseudonym_map = create_pseudonym_map(report.sample_names)
     # Save for the JS runtime. We want to do it regardless of config.ai_anonymize_samples,
