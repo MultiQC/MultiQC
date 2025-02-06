@@ -1496,6 +1496,10 @@ function updatePanel(providerId) {
       $("#ai_model_info").html(aiModelInfo).show();
       $("#ai_api_key_info").html(aiApiKeyInfo).show();
     }
+    // Doing it here again because model depends on provider
+    const storedModel = getStoredModelName(providerId);
+    const defaultModel = provider.defaultModel;
+    $("#ai-model").val(storedModel || defaultModel);
 
     if (providerId === "openai") {
       $("#ai_provider_logo").html(
