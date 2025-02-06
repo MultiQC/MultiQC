@@ -329,8 +329,14 @@ function getPseudonym(sampleName) {
   let sortedOriginals = Object.keys(aiPseudonymMap).sort((a, b) => b.length - a.length);
   let result = sampleName;
   for (let original of sortedOriginals) {
+    console.log("result is", result);
+    if (result === undefined) {
+      console.log("result is undefined");
+    }
     if (result.includes(original)) {
+      console.log("result includes original", result, original);
       result = result.replace(original, aiPseudonymMap[original]);
+      console.log("after replacement: result is", result);
     }
   }
   return result;
@@ -349,7 +355,7 @@ class Sample {
 // Highlighting, hiding and renaming samples. Takes a list of samples, returns
 // a list of objects: {"name": "new_name", "highlight": "#cccccc", "hidden": false}
 function applyToolboxSettings(samples, plotAnchor) {
-  // init object with default values
+  // init object with default values, apply pseudonymization
   let objects = samples.map((name) => new Sample(name));
 
   // Rename samples
