@@ -1,14 +1,14 @@
 """Core MultiQC module to parse output from custom script output"""
 
 import base64
-from io import BufferedReader
 import json
 import logging
 import os
 import re
 from collections import defaultdict
+from io import BufferedReader
 from token import OP
-from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
 import yaml
 from pydantic import BaseModel
@@ -650,6 +650,11 @@ def _guess_file_format(f):
             spaces.append(len(line.split()))
         if j == 10:
             break
+
+    # Handle empty files
+    if not tabs:
+        return "spaces"  # default format for empty files
+
     tab_mode = max(set(tabs), key=tabs.count)
     commas_mode = max(set(commas), key=commas.count)
     spaces_mode = max(set(spaces), key=spaces.count)
@@ -763,6 +768,10 @@ def _parse_txt(
                 first_row_all_strings = False
             if i != 0 and j != 0 and isinstance(v, str):
                 inner_cells_all_numeric = False
+
+    # Return None for empty files
+    if len(matrix) == 0:
+        return None, conf, plot_type
 
     # General stat info files - expected to have at least 2 rows (first row always being the header)
     # and have at least 2 columns (first column always being sample name)
