@@ -1491,9 +1491,9 @@ function updatePanel(providerId) {
       $("#ai_model_info").html(aiModelInfo).show();
       $("#ai_api_key_info").html(aiApiKeyInfo).show();
     }
-    const storedModel = getStoredModelName(providerId);
-    const defaultModel = provider.defaultModel;
-    $("#ai-model").val(storedModel || defaultModel);
+    // const storedModel = getStoredModelName(providerId);
+    // const defaultModel = provider.defaultModel;
+    // $("#ai-model").val(storedModel || defaultModel);
 
     if (providerId === "openai") {
       $("#ai_provider_logo").html(
@@ -1533,8 +1533,11 @@ $(function () {
   const providerId = getStoredProvider() || aiConfigProviderId || "seqera";
   aiProviderSelect.val(providerId);
   const provider = AI_PROVIDERS[providerId];
-  $("#ai-model").val(getStoredModelName(providerId) || aiConfigModel || provider.defaultModel);
   $("#ai-api-key").val(getStoredApiKey(providerId) || "");
+  let model = getStoredModelName(providerId);
+  if (model === null && aiConfigModel !== "None") model = aiConfigModel;
+  if (model === null && provider.defaultModel) model = provider.defaultModel;
+  $("#ai-model").val(model);
   let endpoint = getStoredEndpoint();
   if (endpoint === null) endpoint = aiConfigCustomEndpoint;
   $("#ai-endpoint").val(endpoint);

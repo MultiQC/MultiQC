@@ -186,7 +186,7 @@ async function summarizeWithAi(button) {
 
   let modelName = $("#ai-model").val();
   let aiApiKey = $("#ai-api-key").val();
-  let endpoint = getStoredEndpoint();
+  let endpoint = $("#ai-endpoint").val();
 
   if (!modelName && provider.defaultModel) {
     modelName = provider.defaultModel;
