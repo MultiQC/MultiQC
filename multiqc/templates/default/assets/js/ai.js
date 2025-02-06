@@ -134,9 +134,10 @@ function formatSectionForAi(sectionAnchor, moduleAnchor, plotView) {
 }
 
 function getMaxTokens(model) {
-  if (aiConfigCustomContextWindow && aiConfigCustomContextWindow != "None") {
+  let contextWindow = $("#ai-context-window").val();
+  if (contextWindow) {
     try {
-      return parseInt(aiConfigCustomContextWindow);
+      return parseInt(contextWindow);
     } catch (e) {
       console.error("Error parsing custom context window", e);
     }

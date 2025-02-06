@@ -173,10 +173,17 @@ of the report.
         </div>  
 
         <div class="form-group" id="ai_query_options_group" style="display: none;">
-          <label for="ai-query-options">Additional payload</label>
+          <label for="ai-query-options">Additional Payload</label>
           <textarea class="form-control input-sm" id="ai-query-options" placeholder="{}"></textarea>
           <p id="ai_query_options_info">Any additional options passed in API request payload. Enter as a JSON object.</p>
         </div>
+
+        <div class="form-group" id="ai_context_window_group" style="display: none;">
+          <label for="ai-context-window">Context Window</label>
+          <input type="number" class="form-control input-sm" id="ai-context-window" placeholder="Enter context window size">
+          <p id="ai_context_window_info">The maximum number of tokens that can be processed in a single request</p>
+        </div>
+
       </form>
 
       <hr>
