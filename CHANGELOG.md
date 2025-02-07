@@ -2,6 +2,12 @@
 
 ## [MultiQC v1.27.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.27.1) - 2025-02-07
 
+Few fixes and improvements in AI summaries:
+
+- AI summaries should now work with `bioconda install multiqc` without additional dependencies.
+- Supporting other LLM providers with a custom endpoint passed through the command line ([docs](https://docs.seqera.io/multiqc/ai#choosing-a-provider))
+- Option to anonymize sample names.
+
 ### Feature updates and improvements
 
 - AI summaries:
@@ -10,7 +16,7 @@
   - Add options to configure custom OpenAI endpoint ([#3083](https://github.com/MultiQC/MultiQC/pull/3083))
   - Support anonymizing sample names ([#3074](https://github.com/MultiQC/MultiQC/pull/3074))
   - Use `tiktoken` to estimate token counts for all providers ([#3064](https://github.com/MultiQC/MultiQC/pull/3064))
-  - Remove the `langchain` dependency ([#3066](https://github.com/MultiQC/MultiQC/pull/3066))
+  - Remove the dependency on `langchain`, `openai`, and `anthropic` packages ([#3066](https://github.com/MultiQC/MultiQC/pull/3066))
   - Always save prompt to file ([#3078](https://github.com/MultiQC/MultiQC/pull/3078))
   - Box plot: use statistics instead of raw values ([#3077](https://github.com/MultiQC/MultiQC/pull/3077))
   - Fix for in-browser summaries: when "Clear summary" clicked on global, clear also the generated extended summary ([#3068](https://github.com/MultiQC/MultiQC/pull/3068))
