@@ -41,7 +41,9 @@ Remember: Treat your API keys like passwords and do not share them.
   - Sign up at [https://console.anthropic.com](https://console.anthropic.com)
   - Add a payment method to enable API access
   - Create a new key on on the _API Keys_ section in your [account settings](https://console.anthropic.com/settings/keys)
-- Any other provider, via your clipboard
+- Other providers, via custom endpoint
+  - Works for providers supporting OpenAI-compatible API, specify a custom endpoint URL. See [Using custom OpenAI-compatible endpoints](#using-custom-openai-compatible-endpoints) for details
+- Other providers, via your clipboard
   - You can use buttons in MultiQC reports to copy a prompt to your clipboard,
     in order to manually summarise report data.
     See [Copying prompts](#copying-prompts) for instructions.
