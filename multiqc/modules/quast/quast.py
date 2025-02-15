@@ -269,7 +269,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "ANI (%)": {
                 "title": "ANI",
-                "description": "The average nucleotide identity",
+                "description": "The average gap-compressed nucleotide identity",
                 "scale": "YlGn",
                 "format": "{:,.2f}",
                 "max": 100,
