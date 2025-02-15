@@ -170,8 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
             # These fields are only present if a reference genome was provided to QUAST
             if "# mismatches per 100 kbp" in data and "# indels per 100 kbp" in data:
                 self.quast_data[s_name]["ANI (%)"] = 100 - (
-                    data["# mismatches per 100 kbp"] / 1000
-                    + data["# indels per 100 kbp"] / 1000
+                    data["# mismatches per 100 kbp"] / 1000 + data["# indels per 100 kbp"] / 1000
                 )
 
     def quast_general_stats_table(self):
