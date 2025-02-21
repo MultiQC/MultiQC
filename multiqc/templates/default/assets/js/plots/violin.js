@@ -149,9 +149,13 @@ class ViolinPlot extends Plot {
                 violinValuesBySampleByMetric[metric][sample.originalName] ??
                 scatterValuesBySampleByMetric[metric][sample.originalName];
               const suffix = headerByMetric[metric].suffix;
-              return !Number.isFinite(value)
-                ? ""
-                : (Number.isInteger(value) ? value : value.toFixed(2)) + (suffix ?? "");
+              if (value === undefined || value === null) return "";
+              if (typeof value === "string") return value + (suffix ?? "");
+              if (Number.isFinite(value)) {
+                if (Number.isInteger(value)) return value;
+                return value.toFixed(2);
+              }
+              return "";
             })
             .join(" | ") +
           " |\n"

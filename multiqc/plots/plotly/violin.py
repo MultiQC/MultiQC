@@ -415,8 +415,8 @@ class Dataset(BaseDataset):
             pseudonym = report.anonymize_sample_name(sample)
             row = []
             for _, _, col in headers:
-                value = self.violin_value_by_sample_by_metric[col.rid].get(
-                    sample, self.scatter_value_by_sample_by_metric[col.rid].get(sample, "")
+                value = self.violin_value_by_sample_by_metric.get(col.rid, {}).get(
+                    sample, self.scatter_value_by_sample_by_metric.get(col.rid, {}).get(sample, "")
                 )
                 if value != "":
                     if col.suffix:
