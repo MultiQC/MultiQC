@@ -1098,8 +1098,6 @@ This idea goes way back to [issue #290](https://github.com/MultiQC/MultiQC/issue
 
 ### New Modules
 
-- [**ElemBio Bases2Fastq**](ttps://docs.elembio.io/docs/bases2fastq)
-  - Bases2Fastq converts raw data from Element AVITI system to FastQ and outputs sequencing run statistics.
 - [**Bakta**](https://github.com/oschwengers/bakta)
   - Rapid and standardized annotation of bacterial genomes, MAGs & plasmids.
 - [**mapDamage**](https://github.com/ginolhac/mapDamage)
