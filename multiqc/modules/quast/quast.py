@@ -165,8 +165,10 @@ class MultiqcModule(BaseMultiqcModule):
                     except ValueError:
                         self.quast_data[s_name][k] = v
 
-        # Calculate ANI
+        # Calculate ANI if not present
         for s_name, data in self.quast_data.items():
+            if "ANI (%)" in data:
+                continue
             # These fields are only present if a reference genome was provided to QUAST
             if "# mismatches per 100 kbp" in data and "# indels per 100 kbp" in data:
                 self.quast_data[s_name]["ANI (%)"] = 100 - (
