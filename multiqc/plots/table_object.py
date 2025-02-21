@@ -571,12 +571,18 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bo
                 # noinspection PyCallingNonCallable
                 valstr = fmt(val)
             except Exception as e:
-                logger.error(f"Error applying format to table value '{column.rid}': '{val}'. {e}")
+                logger.debug(f"Error applying format to table value '{column.rid}': '{val}'. {e}")
         elif isinstance(val, (int, float)):
             try:
+                # If format is decimal and value is float, try rounding to int first
+                if isinstance(val, float) and "d" in fmt:
+                    try:
+                        val = int(round(val))
+                    except (ValueError, OverflowError):
+                        pass
                 valstr = fmt.format(val)
             except Exception as e:
-                logger.error(
+                logger.debug(
                     f"Error applying format string '{fmt}' to table value '{column.rid}': '{val}'. {e}. "
                     f"Check if your format string is correct."
                 )
