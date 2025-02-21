@@ -1,30 +1,28 @@
-""" MultiQC module to parse output from gopeaks """
-
 import json
 import logging
-from collections import OrderedDict
 from pathlib import Path
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """gopeaks module"""
+    """
+    The module recognizes files with the `*_gopeaks.json` suffix (which is the default behavior), and will report
+    the number of peaks called per sample via the general table and the bar plot.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="GoPeaks",
             anchor="gopeaks",
             href="https://github.com/maxsonBraunLab/gopeaks",
-            info="is designed to call peaks from aligned CUT&TAG sequencing reads.\
-                  Gopeaks uses a binomial distribution to model the read counts \
-                  in sliding windows across the genome and calculate peak regions \
-                  that are enriched over the background.",
+            info="Calls peaks in CUT&TAG/CUT&RUN datasets.",
+            extra="""
+            Gopeaks uses a binomial distribution to model the read counts in sliding windows across 
+            the genome and calculate peak regions that are enriched over the background.""",
             doi="10.1186/s13059-022-02707-w",
         )
 
@@ -37,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             if parsed is not None:
                 if f["s_name"] in self.gopeaks_data:
-                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {f['s_name']}")
 
                 if "gopeaks_version" in parsed:
                     self.add_software_version(parsed["gopeaks_version"], f["s_name"])
@@ -51,9 +49,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.gopeaks_data = self.ignore_samples(self.gopeaks_data)
 
         if len(self.gopeaks_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} samples".format(len(self.gopeaks_data)))
+        log.info(f"Found {len(self.gopeaks_data)} samples")
 
         self.write_data_file(self.gopeaks_data, "multiqc_gopeaks")
 
@@ -79,13 +77,14 @@ class MultiqcModule(BaseMultiqcModule):
         Put peak counts to the general table.
         """
 
-        headers = OrderedDict()
-        headers["peak_counts"] = {
-            "title": "Peak Counts",
-            "description": "Number of peaks per sample",
-            "min": 0,
-            "scale": "YlGnBu",
-            "format": "{:,.0f}",
+        headers = {
+            "peak_counts": {
+                "title": "Peak Counts",
+                "description": "Number of peaks per sample",
+                "min": 0,
+                "scale": "YlGnBu",
+                "format": "{:,.0f}",
+            }
         }
         self.general_stats_addcols(self.gopeaks_data, headers)
 

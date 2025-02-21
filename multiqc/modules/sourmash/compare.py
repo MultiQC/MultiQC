@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse similarity matrix output by sourmash compare """
+"""MultiQC module to parse similarity matrix output by sourmash compare"""
 
 import logging
 import os
@@ -39,6 +37,10 @@ class CompareMixin:
                 matrices[f["s_name"]] = (labels, matrix.tolist())
                 self.add_data_source(f, section="compare")
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, f["s_name"])
+
         matrices = self.ignore_samples(matrices)
         if len(matrices) == 0:
             return 0
@@ -70,7 +72,7 @@ class CompareMixin:
                         "id": f"sourmash-compare-heatmap-{id}",
                         "title": "Sourmash: Compare",
                         "square": True,
-                        "decimalPlaces": 7,
+                        "tt_decimals": 7,
                     },
                 ),
             )

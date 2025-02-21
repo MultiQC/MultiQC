@@ -35,6 +35,7 @@ def plot_covhist(samples, file_type, **plot_args):
         "xmax": xmax,
         "xlab": "Coverage (depth)",
         "ylab": "Number of occurences",
+        "xsuffix": "X",
     }
     plot_params.update(plot_args["plot_params"])
     plot = linegraph.plot(data, plot_params)

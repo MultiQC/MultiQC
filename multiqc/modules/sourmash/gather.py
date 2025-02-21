@@ -1,13 +1,10 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse similarity matrix output by sourmash gather """
+"""MultiQC module to parse similarity matrix output by sourmash gather"""
 
 import csv
 import logging
-from collections import OrderedDict
 
 from multiqc.plots import bargraph
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -42,6 +39,10 @@ class GatherMixin:
 
         if len(self.gather_raw_data) == 0:
             return 0
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         self.write_data_file(self.gather_raw_data, "multiqc_sourmash_gather")
 
@@ -119,21 +120,21 @@ class GatherMixin:
         add columns to the general statistics table for % top matches and % unclassified
         """
         # Column headers
-        headers = OrderedDict()
-        headers[f"% Top {self.top_n}"] = {
-            "title": f"% Top {self.top_n} Genomes",
-            "description": f"Percentage of sample that was classified as one of the top {self.top_n} genomes ({', '.join(self.gather_top_five_matches)})",
-            "suffix": "%",
-            "max": 100,
-            "scale": "PuBu",
-        }
-
-        headers["% Unclassified"] = {
-            "title": "% Unclassified",
-            "description": "Percentage of sample that was unclassified",
-            "suffix": "%",
-            "max": 100,
-            "scale": "OrRd",
+        headers = {
+            f"% Top {self.top_n}": {
+                "title": f"% Top {self.top_n} Genomes",
+                "description": f"Percentage of sample that was classified as one of the top {self.top_n} genomes ({', '.join(self.gather_top_five_matches)})",
+                "suffix": "%",
+                "max": 100,
+                "scale": "PuBu",
+            },
+            "% Unclassified": {
+                "title": "% Unclassified",
+                "description": "Percentage of sample that was unclassified",
+                "suffix": "%",
+                "max": 100,
+                "scale": "OrRd",
+            },
         }
 
         # set table data
@@ -157,7 +158,7 @@ class GatherMixin:
         cats = list()
         pconfig = {
             "id": "sourmash-gather-top-plot",
-            "title": "Sourmash gather: top genomes",
+            "title": "Sourmash: gather: top genomes",
             "ylab": f"% of sample covered by top {self.top_n} genomes",
             # do not show the 'Counts / Percentages' switch, since gather only reports
             # percentages
@@ -167,8 +168,8 @@ class GatherMixin:
         }
 
         # create dictionaries for plot fill names and data (match percentages)
-        match_cats = OrderedDict()
-        match_data = dict()
+        match_cats = {}
+        match_data = {}
 
         pct_shown = {}
         for match_name in self.gather_top_five_matches:

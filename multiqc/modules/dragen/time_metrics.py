@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
@@ -15,9 +15,13 @@ class DragenTimeMetrics(BaseMultiqcModule):
             data = parse_time_metrics_file(f)
             s_name = f["s_name"]
             if s_name in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-            self.add_data_source(f, section="stats")
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            self.add_data_source(f, section="time_metrics")
             data_by_sample[s_name] = data
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -86,15 +90,14 @@ def parse_time_metrics_file(f):
     RUN TIME,,Time sorting and marking duplicates,00:00:07.368,7.37
     RUN TIME,,Time DRAGStr calibration,00:00:07.069,7.07
     """
-    data = defaultdict(dict)
+    data = {}
     for line in f["f"].splitlines():
         tokens = line.split(",")
         analysis, _, metric, timestr, seconds = tokens
-
         try:
             seconds = float(seconds)
         except ValueError:
-            pass
+            seconds = 0
         data[metric] = seconds
 
     return data

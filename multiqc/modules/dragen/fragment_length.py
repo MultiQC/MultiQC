@@ -2,7 +2,7 @@
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -21,12 +21,16 @@ class DragenFragmentLength(BaseMultiqcModule):
             s_name = f["s_name"]
             if s_name in data_by_rg_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="fragment_length_hist")
 
             for rg, data in data_by_rg.items():
                 if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
                     log.debug(f"Duplicate read group name {rg} found for {s_name}! Overwriting")
             data_by_rg_by_sample[s_name].update(data_by_rg)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # Filter to strip out ignored sample names:
         data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)
@@ -56,9 +60,7 @@ class DragenFragmentLength(BaseMultiqcModule):
             Distribution of estimated fragment lengths of mapped reads per read group.
             Only points supported by at least {} reads are shown to prevent long flat tail.
             The plot is also smoothed down to showing 300 points on the X axis to reduce noise.
-            """.format(
-                MIN_CNT_TO_SHOW_ON_PLOT
-            ),
+            """.format(MIN_CNT_TO_SHOW_ON_PLOT),
             plot=linegraph.plot(
                 data_by_rg,
                 {

@@ -1,37 +1,48 @@
 import copy
 import csv
+import json
 import logging
 import os
 import random
 import uuid
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.utils import mqc_colour
 
-from .plot_runs import *
-from .plot_samples import *
+from multiqc.modules.bases2fastq.plot_runs import (
+    plot_run_stats,
+    tabulate_run_stats,
+    plot_base_quality_hist,
+    plot_base_quality_by_cycle,
+)
+from multiqc.modules.bases2fastq.plot_samples import (
+    tabulate_sample_stats,
+    sequence_content_plot,
+    plot_per_cycle_N_content,
+    plot_adapter_content,
+    plot_per_read_gc_hist,
+)
 
 log = logging.getLogger(__name__)
 
 
-### Change documentations after development
+MIN_POLONIES = 10000
+
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="bases2fastq",
             anchor="bases2fastq",
-            href="https://docs.elembio.io/docs/bases2fastq/introduction",
-            info="software demultiplexes AVITI sequencing data and converts base calls into FASTQ files.",
+            href="https://docs.elembio.io/docs/bases2fastq",
+            info="Demultiplexes and converts Element AVITI base calls into FASTQ files",
             doi="10.1038/s41587-023-01750-7",
         )
-
-        self.minimum_polonies = 10000
 
         self.b2f_data = dict()
         self.b2f_run_data = dict()
         self.missing_runs = set()
-
         self.sample_id_to_run = dict()
 
         # Read overall stats json as dictionaries
@@ -49,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             run_analysis_name = "__".join([run_name, analysis_id])
-            run_analysis_name = self.clean_s_name(run_analysis_name)
+            run_analysis_name = self.clean_s_name(run_analysis_name, f)
 
             # map sample UUIDs to run_analysis_name
             for sample in data_dict["SampleStats"]:
@@ -79,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
             + str(len(self.b2f_run_data[s]["Reads"][1]["Cycles"]))
             for s in self.b2f_run_data.keys()
         ]
-        run_r1r2_lens_set = set(self.run_r1r2_lens)
+
         run_r1r2_lens_dict = {}
         for nn, rl in enumerate(self.run_r1r2_lens):
             if not run_r1r2_lens_dict.get(rl):
@@ -103,15 +114,15 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             run_analysis_name = "__".join([run_name, analysis_id])
-            run_analysis_name = self.clean_s_name(run_analysis_name)
+            run_analysis_name = self.clean_s_name(run_analysis_name, f)
 
-            project = self.clean_s_name(data_dict.get("Project", "DefaultProject"))
+            project = self.clean_s_name(data_dict.get("Project", "DefaultProject"), f)
 
             # run stats no longer needed - save on memory
             del data_dict
 
             for sample_name in samples:
-                run_analysis_sample_name = self.clean_s_name("__".join([run_analysis_name, sample_name]))
+                run_analysis_sample_name = self.clean_s_name("__".join([run_analysis_name, sample_name]), f)
                 project_lookup_dict[run_analysis_sample_name] = project
 
             # skip project if in user provider ignore list
@@ -137,16 +148,16 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             run_analysis_name = self.sample_id_to_run[sample_id]
-            run_analysis_name = self.clean_s_name(run_analysis_name)
+            run_analysis_name = self.clean_s_name(run_analysis_name, f)
 
             sample_name = data_dict["SampleName"]
             run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
-            run_analysis_name = self.clean_s_name(run_analysis_name)
+            run_analysis_name = self.clean_s_name(run_analysis_name, f)
 
             num_polonies = data_dict["NumPolonies"]
-            if num_polonies < self.minimum_polonies:
+            if num_polonies < MIN_POLONIES:
                 log.warning(
-                    f"Skipping {run_analysis_sample_name} because it has <{self.minimum_polonies} assigned reads [n={num_polonies}]."
+                    f"Skipping {run_analysis_sample_name} because it has <{MIN_POLONIES} assigned reads [n={num_polonies}]."
                 )
                 continue
 
@@ -170,7 +181,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {num_samples} samples and {num_projects} projects within the bases2fastq results")
 
         # Group by run name
-        self.group_dict = OrderedDict()
+        self.group_dict = dict()
         self.group_lookup_dict = dict()
         for s_name in self.b2f_data.keys():
             s_group = self.b2f_data[s_name]["RunName"]
@@ -191,13 +202,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.group_lookup_dict.update({s_name: s_group})
 
         # Assign color for each group
-        n_colors = len(self.group_dict.keys())
-        """
-        palette = [
-            "rgba({r},{g},{b},0.5)".format(r=rgb[0] * 255, g=rgb[1] * 255, b=rgb[2] * 255)
-            for rgb in sns.color_palette("bright", n_colors)
-        ]
-        """
         self.color_getter = mqc_colour.mqc_colour_scale()
         self.palette = sum(
             [

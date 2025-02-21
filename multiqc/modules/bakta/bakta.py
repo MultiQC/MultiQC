@@ -1,25 +1,24 @@
-""" MultiQC module to parse output from Bakta """
-
-
 import logging
-from collections import OrderedDict
 
-from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, table
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module analyses summary results from the Bakta annotation pipeline for bacterial genomes. The
+    summary text file used is included in the Bakta output since v1.3.0. The MultiQC module was written for
+    the output of v1.7.0.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bakta",
             anchor="bakta",
             href="https://github.com/oschwengers/bakta",
-            info="is a tool for the rapid & standardized annotation of bacterial genomes, MAGs & plasmids",
+            info="Rapid & standardized annotation of bacterial genomes, MAGs & plasmids",
             doi="10.1099/mgen.0.000685",
         )
 
@@ -33,36 +32,37 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise error if dict is empty
         if len(self.bakta) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.bakta)))
+        log.info(f"Found {len(self.bakta)} logs")
 
         # Write parsed report data to a file
         self.write_data_file(self.bakta, "multiqc_bakta")
 
         # Add most important Bakta annotation stats to general table
-        headers = OrderedDict()
-        headers["Count"] = {
-            "title": "# contigs",
-            "description": "Number of contigs",
-            "min": 0,
-            "scale": "Blues",
-            "format": "{:,d}",
-        }
-        headers["Length"] = {
-            "title": "# bases",
-            "description": "Total number of bases in the contigs",
-            "min": 0,
-            "scale": "YlGn",
-            "format": "{:,d}",
-        }
-        headers["CDSs"] = {
-            "title": "# CDS",
-            "description": "Number of found CDS",
-            "min": 0,
-            "scale": "YlGnBu",
-            "format": "{:,d}",
-            "shared_key": "gene_count",
+        headers = {
+            "Count": {
+                "title": "# contigs",
+                "description": "Number of contigs",
+                "min": 0,
+                "scale": "Blues",
+                "format": "{:,d}",
+            },
+            "Length": {
+                "title": "# bases",
+                "description": "Total number of bases in the contigs",
+                "min": 0,
+                "scale": "YlGn",
+                "format": "{:,d}",
+            },
+            "CDSs": {
+                "title": "# CDS",
+                "description": "Number of found CDS",
+                "min": 0,
+                "scale": "YlGnBu",
+                "format": "{:,d}",
+                "shared_key": "gene_count",
+            },
         }
         self.general_stats_addcols(self.bakta, headers)
 
@@ -117,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         data = {}
-        for line in f["contents_lines"]:
+        for line in f["f"].splitlines():
             s = line.strip().split(": ")
             if s[0] in metrics:
                 data[s[0].replace(" ", "_")] = int(s[1])

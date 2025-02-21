@@ -1,64 +1,127 @@
-""" MultiQC module to parse output from Samtools """
-
-
 import logging
-from collections import OrderedDict
+from typing import Dict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from .flagstat import FlagstatReportMixin
-from .idxstats import IdxstatsReportMixin
-from .rmdup import RmdupReportMixin
+from .coverage import parse_samtools_coverage
+from .flagstat import parse_samtools_flagstat
+from .idxstats import parse_samtools_idxstats
+from .markdup import parse_samtools_markdup
+from .rmdup import parse_samtools_rmdup
+from .stats import parse_samtools_stats
 
-# Import the Samtools submodules
-from .stats import StatsReportMixin
-
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, IdxstatsReportMixin, RmdupReportMixin):
-    """Samtools has a number of different commands and outputs.
-    This MultiQC module supports some but not all. The code for
-    each script is split into its own file and adds a section to
-    the module output if logs are found."""
+class MultiqcModule(BaseMultiqcModule):
+    """
+    Supported commands:
+
+    - `stats`
+    - `flagstats`
+    - `idxstats`
+    - `rmdup`
+    - `coverage`
+    - `markdup`
+
+    #### idxstats
+
+    The `samtools idxstats` prints its results to standard out (no consistent file name) and has no header lines
+    (no way to recognise from content of file). As such, `idxstats` result files must have the string `idxstat`
+    somewhere in the filename.
+
+    There are a few MultiQC config options that you can add to customise how the idxstats module works. A typical
+    configuration could look as follows:
+
+    ```yaml
+    # Always include these chromosomes in the plot
+    samtools_idxstats_always:
+      - X
+      - Y
+
+    # Never include these chromosomes in the plot
+    samtools_idxstats_ignore:
+      - MT
+
+    # Threshold where chromosomes are ignored in the plot.
+    # Should be a fraction, default is 0.001 (0.1% of total)
+    samtools_idxstats_fraction_cutoff: 0.001
+
+    # Name of the X and Y chromosomes.
+    # If not specified, MultiQC will search for any chromosome
+    # names that look like x, y, chrx or chry (case-insensitive search)
+    samtools_idxstats_xchr: myXchr
+    samtools_idxstats_ychr: myYchr
+    ```
+
+    ### coverage
+
+    You can include and exclude contigs based on name or pattern.
+
+    For example, you could add the following to your MultiQC config file:
+
+
+    ```yaml
+    samtools_coverage:
+      include_contigs:
+        - "chr*"
+      exclude_contigs:
+        - "*_alt"
+        - "*_decoy"
+        - "*_random"
+        - "chrUn*"
+        - "HLA*"
+        - "chrM"
+        - "chrEBV"
+    ```
+
+    Note that exclusion supersedes inclusion for the contig filters.
+
+    If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
+
+    ```yaml
+    samtools_coverage:
+      show_excluded_debug_logs: True
+    ```
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Samtools",
-            anchor="Samtools",
-            target="Samtools",
+            anchor="samtools",
+            target="samtools",
             href="http://www.htslib.org",
-            info=" is a suite of programs for interacting with high-throughput sequencing data.",
+            info="Toolkit for interacting with BAM/CRAM files.",
             doi="10.1093/bioinformatics/btp352",
         )
 
-        # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
-        self.general_stats_data = dict()
         n = dict()
 
         # Call submodule functions
-        n["stats"] = self.parse_samtools_stats()
+        n["stats"] = parse_samtools_stats(self)
         if n["stats"] > 0:
-            log.info("Found {} stats reports".format(n["stats"]))
+            log.info(f"Found {n['stats']} stats reports")
 
-        n["flagstat"] = self.parse_samtools_flagstats()
+        n["flagstat"] = parse_samtools_flagstat(self)
         if n["flagstat"] > 0:
-            log.info("Found {} flagstat reports".format(n["flagstat"]))
+            log.info(f"Found {n['flagstat']} flagstat reports")
 
-        n["idxstats"] = self.parse_samtools_idxstats()
+        n["idxstats"] = parse_samtools_idxstats(self)
         if n["idxstats"] > 0:
-            log.info("Found {} idxstats reports".format(n["idxstats"]))
+            log.info(f"Found {n['idxstats']} idxstats reports")
 
-        n["rmdup"] = self.parse_samtools_rmdup()
+        n["rmdup"] = parse_samtools_rmdup(self)
         if n["rmdup"] > 0:
-            log.info("Found {} rmdup reports".format(n["rmdup"]))
+            log.info(f"Found {n['rmdup']} rmdup reports")
+
+        n["coverage"] = parse_samtools_coverage(self)
+        if n["coverage"] > 0:
+            log.info(f"Found {n['coverage']} coverage reports")
+
+        n["markdup"] = parse_samtools_markdup(self)
+        if n["markdup"] > 0:
+            log.info(f"Found {n['markdup']} markdup reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
-
-        # Add to the General Stats table (has to be called once per MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
+            raise ModuleNoSamplesFound

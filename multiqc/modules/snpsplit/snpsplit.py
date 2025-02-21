@@ -1,26 +1,32 @@
-"""MultiQC module to parse the output from SNPsplit"""
 import logging
 import re
-from collections import OrderedDict
 
 import yaml
 
-from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    Currently only the "Allele-tagging" and "Allele-sorting" reports are supported.
+
+    The log files from the genome creation steps are not parsed and there are no plots/tables produced from the "SNP coverage" report.
+
+    Differences between the numbers in the tagging and sorting reports are due to paired-end reads.
+    For these, if only a single mate in a pair is assigned to a genome then it will "rescue" its mate and both will be "sorted" into that genome (even though only one of them was tagged).
+    Conversely, if the mates in a pair are tagged as arising from different genomes, then the pair as a whole is unassignable.
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="SNPsplit",
             anchor="SNPsplit",
             target="SNPsplit",
             href="https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/",
-            info="A tool to determine allele-specific alignments from high-throughput sequencing experiments that have been aligned to N-masked genomes",
+            info="Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions",
             doi="10.12688/f1000research.9037.2",
         )
 
@@ -40,8 +46,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.snpsplit_data = self.ignore_samples(self.snpsplit_data)
 
         if len(self.snpsplit_data) == 0:
-            raise UserWarning
-        log.info("Found {} reports".format(len(self.snpsplit_data)))
+            raise ModuleNoSamplesFound
+        log.info(f"Found {len(self.snpsplit_data)} reports")
 
         self.write_data_file(self.snpsplit_data, "multiqc_snpsplit")
 
@@ -52,11 +58,13 @@ class MultiqcModule(BaseMultiqcModule):
     def _save_parsed(self, parsed, f):
         s_name = self.clean_s_name(parsed[0], f)
         if s_name in self.snpsplit_data:
-            log.debug("Replacing duplicate sample {}".format(s_name))
+            log.debug(f"Replacing duplicate sample {s_name}")
         self.snpsplit_data[s_name] = parsed[1]
         self.add_data_source(f, s_name=s_name)
+        self.add_software_version(parsed[1].get("version"), s_name)
 
-    def parse_new_snpsplit_log(self, f):
+    @staticmethod
+    def parse_new_snpsplit_log(f):
         data = next(yaml.load_all(f["f"], Loader=yaml.SafeLoader))
         flat_data = {}
         for k in data:
@@ -65,9 +73,10 @@ class MultiqcModule(BaseMultiqcModule):
                 for prefix in ["PE_", "SE_", "HiC_"]:
                     if sk.startswith(prefix):
                         key = sk[len(prefix) :]
-                flat_key = "{}_{}".format(k.lower(), key)
+                flat_key = f"{k.lower()}_{key}"
                 flat_data[flat_key] = data[k][sk]
         input_fn = data["Meta"]["infile"]
+        flat_data["version"] = data["Meta"]["version"]
         return [input_fn, flat_data]
 
     def parse_old_snpsplit_log(self, f):
@@ -139,41 +148,43 @@ class MultiqcModule(BaseMultiqcModule):
 
     def add_general_stats(self):
         """Add some columns to the General Statistics table at the top of the report"""
-        headers = OrderedDict()
-        headers["tagging_SNP_annotation"] = {
-            "title": "SNP annotation",
-            "description": "Annotation file used for differentiating genomes",
-            "scale": False,
-            "modify": lambda x: "<code>{}</code>".format(x),
-            "hidden": True,
-        }
-        headers["tagging_percent_N_was_known_SNP"] = {
-            "title": "% Ns known SNP",
-            "description": "Percentage of detected SNPs in the sample that were also present in the annotation",
-            "scale": "RdYlGn",
-            "format": "{:,.2f}",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-        }
-        headers["tagging_SNPs_stored"] = {
-            "title": "SNPs stored",
-            "description": "Total number of SNPs used for the analysis",
-            "scale": "PrGn",
-            "format": "{:,.0f}",
-            "hidden": True,
+        headers = {
+            "tagging_SNP_annotation": {
+                "title": "SNP annotation",
+                "description": "Annotation file used for differentiating genomes",
+                "scale": False,
+                "modify": lambda x: f"<code>{x}</code>",
+                "hidden": True,
+            },
+            "tagging_percent_N_was_known_SNP": {
+                "title": "% Ns known SNP",
+                "description": "Percentage of detected SNPs in the sample that were also present in the annotation",
+                "scale": "RdYlGn",
+                "format": "{:,.2f}",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+            },
+            "tagging_SNPs_stored": {
+                "title": "SNPs stored",
+                "description": "Total number of SNPs used for the analysis",
+                "scale": "PRGn",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
         }
         self.general_stats_addcols(self.snpsplit_data, headers)
 
     def allele_tagging_section(self):
         """Allele-tagging report"""
-        cats = OrderedDict()
-        cats["tagging_g1"] = {"name": "Genome 1"}
-        cats["tagging_g2"] = {"name": "Genome 2"}
-        cats["tagging_unassignable"] = {"name": "Not assigned"}
-        cats["tagging_bizarre"] = {"name": "Conflicting SNPs"}
-        cats["tagging_unaligned"] = {"name": "Unaligned reads"}
-        cats["tagging_CT_positions_skipped"] = {"name": "C->T SNP"}
+        cats = {
+            "tagging_g1": {"name": "Genome 1"},
+            "tagging_g2": {"name": "Genome 2"},
+            "tagging_unassignable": {"name": "Not assigned"},
+            "tagging_bizarre": {"name": "Conflicting SNPs"},
+            "tagging_unaligned": {"name": "Unaligned reads"},
+            "tagging_CT_positions_skipped": {"name": "C->T SNP"},
+        }
 
         # Subtract C->T from unassignable
         plot_data = {}
@@ -217,18 +228,19 @@ class MultiqcModule(BaseMultiqcModule):
 
     def allele_sorting_section(self):
         """Allele-specific sorting report"""
-        cats = OrderedDict()
-        cats["sorting_genome1"] = {"name": "Genome 1"}
-        cats["sorting_genome2"] = {"name": "Genome 2"}
-        cats["sorting_unassignable"] = {"name": "Not assigned"}
-        cats["sorting_conflicting"] = {"name": "Conflicting SNPs"}
+        cats = {
+            "sorting_genome1": {"name": "Genome 1"},
+            "sorting_genome2": {"name": "Genome 2"},
+            "sorting_unassignable": {"name": "Not assigned"},
+            "sorting_conflicting": {"name": "Conflicting SNPs"},
+            "sorting_genome1_G1_G1": {"name": "Genome 1 / Genome 1"},
+            "sorting_genome2_G2_G2": {"name": "Genome 2 / Genome 2"},
+            "sorting_unassignable_UA_UA": {"name": "Unassignable / Unassignable"},
+            "sorting_G1_UA_total": {"name": "Genome 1 / unassignable"},
+            "sorting_G2_UA_total": {"name": "Genome 2 / unassignable"},
+            "sorting_G1_G2_total": {"name": "Different genomes"},
+        }
         # HiC only
-        cats["sorting_genome1_G1_G1"] = {"name": "Genome 1 / Genome 1"}
-        cats["sorting_genome2_G2_G2"] = {"name": "Genome 2 / Genome 2"}
-        cats["sorting_unassignable_UA_UA"] = {"name": "Unassignable / Unassignable"}
-        cats["sorting_G1_UA_total"] = {"name": "Genome 1 / unassignable"}
-        cats["sorting_G2_UA_total"] = {"name": "Genome 2 / unassignable"}
-        cats["sorting_G1_G2_total"] = {"name": "Different genomes"}
 
         pconfig = {
             "id": "snpsplit-sorting-plot",

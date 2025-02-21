@@ -9,7 +9,7 @@ import logging
 import re
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 
 from .utils import make_log_report
 
@@ -22,45 +22,40 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
     other dragen modules. Defines 2 public functions and a private data holder.
     """
 
-    @property
-    def overall_mean_cov_data_reference(self):
-        """Getter for data from _overall_mean_cov.csv files.
-        Contains only coverage_metrics.csv-associated data."""
-        if self.__overall_mean_cov_data:
-            return self.__overall_mean_cov_data
-        else:
-            return None
-
     def collect_overall_mean_cov_data(self):
         """Collects raw data for coverage_metrics.py from overall_mean_cov.csv files."""
-        self.__overall_mean_cov_data = defaultdict(lambda: defaultdict(dict))
-
         for file in self.find_log_files("dragen/overall_mean_cov_metrics"):
             out = parse_overall_mean_cov(file)
 
             if out["success"]:
-                # No need to call add_data_source, because the collected data is used
-                # only by the coverage_metrics.py module and will not be included in html.
-                # self.add_data_source(file, section="stats")
+                self.add_data_source(file, section="overall_mean_cov_metrics")
 
                 # Data for the coverage_metrics.py module.
                 if out["phenotype"]:
                     sample, phenotype, data = out["sample"], out["phenotype"], out["data"]
-                    self.__overall_mean_cov_data[file["root"]][sample][phenotype] = data
+                    self.overall_mean_cov_data[file["root"]][sample][phenotype] = data
                 # Currently there is no need to support other files. Pass for now.
                 else:
                     pass
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, file["s_name"])
 
         # Report found info/warnings/errors, which were collected while
         # calling the coverage_parser and constructing cov_headers.
         # You can disable it anytime, if it is not wanted.
         make_log_report(log_data, log, "overall_mean_cov_metrics")
 
+        self.overall_mean_cov_data = self.ignore_samples(self.overall_mean_cov_data)
+
         # No need to write the data.
-        # self.write_data_file(self.__overall_mean_cov_data)
+        self.write_data_file(self.overall_mean_cov_data, "dragen_overall_mean_cov_data")
 
         # Just to pass the pre-commit
         # doi=
+
+        return self.overall_mean_cov_data.keys()
 
 
 '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -84,15 +79,15 @@ log_data = {
 
 # Official structure of files:   _overall_mean_cov.csv
 # Accepted structure of files: .+_overall_mean_cov.*.csv
-GEN_FILE_RGX = re.compile("(.+)_overall_mean_cov(.*)\.csv$")
+GEN_FILE_RGX = re.compile(r"(.+)_overall_mean_cov(.*)\.csv$")
 
 # Special case. Coverage metrics files have the following structure:
 # <output-prefix>.<coverage-region-prefix>_overall_mean_cov<arbitrary-suffix>.csv
-COV_FILE_RGX = re.compile("(.+)\.(.+)_overall_mean_cov(.*)\.csv$")
+COV_FILE_RGX = re.compile(r"(.+)\.(.+)_overall_mean_cov(.*)\.csv$")
 
 # General structure of lines is not defined.
 # Currently only 1 metric is present in the standard. It substitutes the line's regex.
-AVG_RGX = re.compile("Average alignment coverage over ([^,]+),([^,]+)$", re.IGNORECASE)
+AVG_RGX = re.compile(r"Average alignment coverage over ([^,]+),([^,]+)$", re.IGNORECASE)
 
 
 def parse_overall_mean_cov(file_handler):
@@ -131,7 +126,7 @@ def parse_overall_mean_cov(file_handler):
 
         # Otherwise check if line is empty. If not then report it and go to the next line.
         else:
-            if not re.search("^\s*$", line):
+            if not re.search(r"^\s*$", line):
                 log_data["unknown_metrics"].append(line)
             continue
 

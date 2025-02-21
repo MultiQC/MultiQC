@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard QualityScoreDistribution """
+"""MultiQC submodule to parse output from Picard QualityScoreDistribution"""
 
 import logging
 from collections import OrderedDict
@@ -16,21 +16,32 @@ def parse_reports(self):
 
     headers = ["QUALITY", "COUNT_OF_Q"]
     formats = [int, int]
-    all_data = read_histogram(self, "picard/quality_score_distribution", "QualityScoreDistribution", headers, formats)
+    all_data = read_histogram(
+        self,
+        "picard/quality_score_distribution",
+        headers,
+        formats,
+        picard_tool="QualityScoreDistribution",
+        sentieon_algo="QualDistribution",
+    )
 
     if not all_data:
-        return 0
+        return set()
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
     # Write parsed data to a file
-    self.write_data_file(all_data, "multiqc_picard_quality_score_distribution")
+    self.write_data_file(all_data, f"multiqc_{self.anchor}_quality_score_distribution")
 
     # Plot the data and add section
     pconfig = {
-        "id": "picard_quality_score_distribution",
-        "title": "Picard: Base Quality Distribution",
+        "id": f"{self.anchor}_quality_score_distribution",
+        "title": f"{self.name}: Base Quality Distribution",
         "ylab": "Number of Bases",
         "xlab": "Base Quality Score",
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>base quality{point.x}</b>: {point.y}",
         "ymin": 0,
     }
@@ -41,10 +52,10 @@ def parse_reports(self):
 
     self.add_section(
         name="Base Quality Distribution",
-        anchor="picard-quality-score-distribution",
+        anchor=f"{self.anchor}-quality-score-distribution",
         description="Plot shows the count of each base quality score.",
         plot=linegraph.plot([lg], pconfig),
     )
 
     # Return the number of detected samples to the parent module
-    return len(all_data)
+    return all_data.keys()

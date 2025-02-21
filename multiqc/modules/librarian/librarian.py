@@ -1,24 +1,46 @@
-""" MultiQC module to parse output from Librarian """
-
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This module generates the _Prediction Plot_ showing the likelihood that samples are a given library type.
+
+    #### General Stats
+
+    The module can also show the most likely library type in the General Statistics table, however this is disabled by default.
+    This is because several library types are very similar to each other and can come out as a mix.
+    It's often misleading to show only the top one (even if it has a low score), but very clear when looking at the full heatmap.
+
+    If you really want to show the most likely library type, you can enable this in your MultiQC config file:
+
+    ```yaml
+    librarian:
+      show_general_stats: true
+    ```
+    """
+
     def __init__(self):
         # Initialse the parent object
         super(MultiqcModule, self).__init__(
             name="Librarian",
             anchor="librarian",
             href="https://github.com/DesmondWillowbrook/Librarian",
-            info=" - a tool to predict the sequencing library type from the base composition of a FastQ file.",
+            info="Predicts the sequencing library type from the base composition of a FastQ file.",
+            extra="""
+            Librarian reads from high throughput sequencing experiments show base compositions that are 
+            characteristic for their library type. For example, data from RNA-seq and WGBS-seq libraries show markedly 
+            different distributions of G, A, C and T across the reads.
+            
+            Librarian makes use of different composition signatures for library quality control: Test library 
+            compositions are extracted and compared against previously published data sets from mouse and human.
+            """,
             doi="10.12688/f1000research.125325.1",
         )
 
@@ -33,8 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write the data files to disk
         if not self.librarian_data:
-            raise UserWarning
-        log.info("Found {} samples".format(len(self.librarian_data)))
+            raise ModuleNoSamplesFound
+        log.info(f"Found {len(self.librarian_data)} samples")
 
         if self.librarian_data:
             self.write_data_file(self.librarian_data, "multiqc_librarian_data")
@@ -48,20 +70,24 @@ class MultiqcModule(BaseMultiqcModule):
         """Loop through Librarian files and parse their data"""
         for f in self.find_log_files("librarian", filehandles=True):
             headers = f["f"].readline().strip().split("\t")
-            for l in f["f"]:
-                data = dict(zip(headers, l.strip().split("\t")))
+            for line in f["f"]:
+                data = dict(zip(headers, line.strip().split("\t")))
                 s_name = self.clean_s_name(data["sample_name"], f)
                 del data["sample_name"]
                 data_float = {}
                 for k, v in data.items():
                     try:
                         data_float[k] = float(v)
-                    except:
+                    except Exception:
                         data_float[k] = v
                 if s_name in self.librarian_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.librarian_data[s_name] = data_float
                 self.add_data_source(f, s_name=s_name)
+
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
 
     def plot_librarian_heatmap(self):
         """Make the heatmap plot"""
@@ -83,16 +109,17 @@ class MultiqcModule(BaseMultiqcModule):
             hm_data.append(sample_data)
 
         pconfig = {
+            "id": "librarian-library-type-plot",
             "title": "Librarian: Library Predictions",
-            "xTitle": "Library type",
-            "yTitle": "Sample name",
+            "xlab": "Library type",
+            "ylab": "Sample name",
             "min": 0,
             "max": 100,
             "square": False,
             "xcats_samples": False,
             "ycats_samples": True,
             "colstops": [[0, "#FFFFFF"], [1, "#FF0000"]],
-            "decimalPlaces": 0,
+            "tt_decimals": 0,
         }
 
         self.add_section(

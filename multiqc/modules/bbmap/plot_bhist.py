@@ -29,9 +29,7 @@ def plot_bhist(samples, file_type, **plot_args):
     for column_type in columns_to_plot:
         nucleotide_data.append(
             {
-                sample
-                + "."
-                + column_name: {
+                sample + "." + column_name: {
                     x: samples[sample]["data"][x][column] * 100 if x in samples[sample]["data"] else 0 for x in all_x
                 }
                 for sample in samples
@@ -43,6 +41,7 @@ def plot_bhist(samples, file_type, **plot_args):
         "id": "bbmap-" + file_type + "_plot",
         "title": "BBTools: " + plot_args["plot_title"],
         "xlab": "Read position",
+        "xsuffix": " bp",
         "ylab": "Percentage of G+C bases",
         "ymin": 0,
         "ymax": 100,

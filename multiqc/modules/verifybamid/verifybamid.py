@@ -1,29 +1,49 @@
-""" MultiQC module to parse output from VerifyBAMID """
-
-
 import logging
-from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    module class, parses stderr logs.
+    This module currently only imports data from the `.selfSM` output.
+    The chipmix and freemix columns are imported into the general statistics table.
+    A verifyBAMID section is then added, with a table containing the entire selfSM file.
+
+    If no chip data was parsed, these columns will not be added to the MultiQC report.
+
+    Should you wish to remove one of these columns from the general statistics table add the below lines to the table_columns_visible section of your config file
+
+        table_columns_visible:
+            verifyBAMID:
+                CHIPMIX: False
+                FREEMIX: False
+
+    This was designed to work with verifyBamID 1.1.3 January 2018
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="VerifyBAMID",
             anchor="verifybamid",
             href="https://genome.sph.umich.edu/wiki/VerifyBamID",
-            info="detects sample contamination and/or sample swaps.",
+            info="Detects sample contamination and/or sample swaps.",
+            extra="""
+            VerifyBamID checks whether reads match known genotypes or are contaminated as a mixture of two samples.
+        
+            A key step in any genetic analysis is to verify whether data being generated matches expectations. 
+            verifyBamID checks whether reads in a BAM file match previous genotypes for a specific sample. 
+            In addition, it detects possible sample mixture from population allele frequency only, which can be 
+            particularly useful when the genotype data is not available.
+        
+            Using a mathematical model that relates observed sequence reads to an hypothetical true genotype, 
+            verifyBamID tries to decide whether sequence reads match a particular individual or are more likely 
+            to be contaminated (including a small proportion of foreign DNA), derived from a closely related 
+            individual, or derived from a completely different individual.
+            """,
             doi="10.1016/j.ajhg.2012.09.004",
         )
 
@@ -54,20 +74,25 @@ class MultiqcModule(BaseMultiqcModule):
                     # if there are duplicate sample names
                     if s_name in self.verifybamid_data:
                         # write this to log
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     # add the sample as a key to the verifybamid_data dictionary and the dictionary of values as the value
                     self.verifybamid_data[s_name] = parsed_data[s_name]
-                # add data source to multiqc_sources.txt
-                self.add_data_source(f, s_name)
+
+                    # add data source to multiqc_sources.txt
+                    self.add_data_source(f, s_name)
 
         # Filter to strip out ignored sample names as per config.yaml
         self.verifybamid_data = self.ignore_samples(self.verifybamid_data)
 
         if len(self.verifybamid_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # print number of verifyBAMID reports found and parsed
-        log.info("Found {} reports".format(len(self.verifybamid_data)))
+        log.info(f"Found {len(self.verifybamid_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.verifybamid_data, "multiqc_verifybamid")
@@ -85,9 +110,9 @@ class MultiqcModule(BaseMultiqcModule):
         # set a empty variable which denotes if the headers have been read
         headers = None
         # for each line in the file
-        for l in f["f"].splitlines():
+        for line in f["f"].splitlines():
             # split the line on tab
-            s = l.split("\t")
+            s = line.split("\t")
             # if we haven't already read the header line
             if headers is None:
                 # assign this list to headers variable
@@ -126,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the percentage of contamination from all the parsed *.SELFSM files and add it to the basic stats table at the top of the report"""
 
         # create a dictionary to hold the columns to add to the general stats table
-        headers = OrderedDict()
+        headers = dict()
         # available columns are:
         # SEQ_ID RG  CHIP_ID #SNPS   #READS  AVG_DP  FREEMIX FREELK1 FREELK0 FREE_RH FREE_RA CHIPMIX CHIPLK1 CHIPLK0 CHIP_RH CHIP_RA DPREF   RDPHET  RDPALT
         # see https://genome.sph.umich.edu/wiki/VerifyBamID#Interpreting_output_files
@@ -159,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # create an ordered dictionary to preserve the order of columns
-        headers = OrderedDict()
+        headers = dict()
         # add each column and the title and description (taken from verifyBAMID website)
         headers["RG"] = {
             "title": "Read Group",
@@ -176,8 +201,8 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "BuPu",
         }
         headers["#READS"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads loaded from the BAM file ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Reads",
+            "description": f"Number of reads loaded from the BAM file ({config.read_count_desc})",
             "format": "{:,.1f}",
             "modify": lambda x: x * config.read_count_multiplier if x != "NA" else x,
             "shared_key": "read_count",
@@ -269,6 +294,7 @@ class MultiqcModule(BaseMultiqcModule):
         tconfig = {
             "namespace": "VerifyBAMID",
             "id": "verifybamid-results",
+            "title": "VerifyBAMID: Results",
         }
 
         # send the plot to add section function with data dict and headers

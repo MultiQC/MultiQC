@@ -1,235 +1,237 @@
-""" MultiQC submodule to parse output from Picard WgsMetrics """
+"""MultiQC submodule to parse output from Picard WgsMetrics"""
 
 import logging
-import os
-import re
-from collections import OrderedDict
+from typing import Dict
 
 from multiqc import config
+from multiqc.modules.picard import util
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(module):
     """Find Picard WgsMetrics reports and parse their data"""
 
     # Set up vars
-    self.picard_wgsmetrics_data = dict()
-    self.picard_wgsmetrics_histogram = dict()
-    self.picard_wgsmetrics_samplestats = dict()
+    data_by_sample: Dict = dict()
+    histogram_by_sample: Dict = dict()
+
     picard_config = getattr(config, "picard_config", {})
     skip_histo = picard_config.get("wgsmetrics_skip_histogram", False)
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/wgs_metrics", filehandles=True):
-        s_name = None
+    for f in module.find_log_files("picard/wgs_metrics", filehandles=True):
+        # Sample name from input file name by default
+        s_name = f["s_name"]
         in_hist = False
-        for l in f["f"]:
+
+        for line in f["f"]:
+            maybe_s_name = util.extract_sample_name(
+                module,
+                line,
+                f,
+                picard_tool="CollectWgsMetrics",
+            )
+            if maybe_s_name:
+                s_name = maybe_s_name
+
             # Catch the histogram values
-            if s_name is not None and in_hist is True and not skip_histo:
+            if in_hist and not skip_histo:
                 try:
-                    sections = l.split("\t")
+                    sections = line.split("\t")
                     cov = int(sections[0])
                     count = int(sections[1])
-                    self.picard_wgsmetrics_histogram[s_name][cov] = count
+                    histogram_by_sample[s_name][cov] = count
                 except ValueError:
                     # Reset in case we have more in this log file
                     s_name = None
                     in_hist = False
 
-            # New log starting
-            if "WgsMetrics" in l and "INPUT" in l:
-                s_name = None
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f)
+            if s_name is None:
+                continue
 
-            if s_name is not None:
-                metric_names = ["CollectWgsMetrics$WgsMetrics", "picard.analysis.WgsMetrics"]
-                if any(n in l for n in metric_names) and "## METRICS CLASS" in l:
-                    if s_name in self.picard_wgsmetrics_data:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
-                    self.add_data_source(f, s_name, section="WgsMetrics")
-                    self.picard_wgsmetrics_data[s_name] = dict()
-                    keys = f["f"].readline().strip("\n").split("\t")
-                    vals = f["f"].readline().strip("\n").split("\t")
-                    if len(vals) == len(keys):
-                        for i, k in enumerate(keys):
-                            try:
-                                self.picard_wgsmetrics_data[s_name][k] = float(vals[i])
-                            except ValueError:
-                                self.picard_wgsmetrics_data[s_name][k] = vals[i]
+            if util.is_line_right_before_table(line, picard_class="WgsMetrics"):
+                keys = f["f"].readline().strip("\n").split("\t")
+                vals = f["f"].readline().strip("\n").split("\t")
+                if len(vals) != len(keys):
+                    continue
 
-                    # Skip lines on to histogram
-                    next(f["f"])
-                    next(f["f"])
-                    next(f["f"])
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
-                    self.picard_wgsmetrics_histogram[s_name] = OrderedDict()
-                    in_hist = True
+                module.add_data_source(f, s_name, section="WgsMetrics")
+                data_by_sample[s_name] = dict()
 
-        for key in list(self.picard_wgsmetrics_data.keys()):
-            if len(self.picard_wgsmetrics_data[key]) == 0:
-                self.picard_wgsmetrics_data.pop(key, None)
-        for s_name in list(self.picard_wgsmetrics_histogram.keys()):
-            if len(self.picard_wgsmetrics_histogram[s_name]) == 0:
-                self.picard_wgsmetrics_histogram.pop(s_name, None)
-                log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
+                for k, v in zip(keys, vals):
+                    try:
+                        v = float(v)
+                    except ValueError:
+                        pass
+                    data_by_sample[s_name][k] = v
+
+            elif line.startswith("## HISTOGRAM"):
+                keys = f["f"].readline().strip("\n").split("\t")
+                assert len(keys) >= 2, (keys, f)
+                in_hist = True
+                histogram_by_sample[s_name] = dict()
 
     # Filter to strip out ignored sample names
-    self.picard_wgsmetrics_data = self.ignore_samples(self.picard_wgsmetrics_data)
+    data_by_sample = module.ignore_samples(data_by_sample)
+    if len(data_by_sample) == 0:
+        return set()
 
-    if len(self.picard_wgsmetrics_data) > 0:
-        # Write parsed data to a file
-        self.write_data_file(self.picard_wgsmetrics_data, "multiqc_picard_wgsmetrics")
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    module.add_software_version(None)
 
-        # Add to general stats table
-        self.general_stats_headers["MEDIAN_COVERAGE"] = {
-            "title": "Median Coverage",
-            "description": "The median coverage in bases of the genome territory, after all filters are applied.",
+    # Write parsed data to a file
+    module.write_data_file(data_by_sample, "multiqc_picard_wgsmetrics")
+
+    # Add to general stats table
+    headers = dict()
+    headers["MEDIAN_COVERAGE"] = {
+        "title": "Median Coverage",
+        "description": "The median coverage in bases of the genome territory, after all filters are applied.",
+        "min": 0,
+        "suffix": "X",
+        "scale": "GnBu",
+    }
+    headers["MEAN_COVERAGE"] = {
+        "title": "Mean Coverage",
+        "description": "The mean coverage in bases of the genome territory, after all filters are applied.",
+        "min": 0,
+        "suffix": "X",
+        "scale": "GnBu",
+        "hidden": True,
+    }
+    headers["SD_COVERAGE"] = {
+        "title": "SD Coverage",
+        "description": "The standard deviation coverage in bases of the genome territory, after all filters are applied.",
+        "min": 0,
+        "suffix": "X",
+        "scale": "GnBu",
+        "hidden": True,
+    }
+    # user configurable coverage level
+    picard_config = getattr(config, "picard_config", {})
+    covs = picard_config.get("general_stats_target_coverage", [])
+    if isinstance(covs, list) and len(covs) > 0:
+        covs = [str(i) for i in covs]
+        log.debug(f"Custom Picard coverage thresholds: {', '.join([i for i in covs])}")
+    else:
+        covs = ["30"]
+    for c in covs:
+        headers[f"PCT_{c}X"] = {
+            "rid": f"picard_target_bases_{c}X",
+            "title": f"Bases ≥ {c}X",
+            "description": f"Percent of target bases with coverage ≥ {c}X",
+            "max": 100,
             "min": 0,
-            "suffix": "X",
-            "scale": "GnBu",
+            "suffix": "%",
+            "format": "{:,.0f}",
+            "scale": "RdYlGn",
+            "modify": lambda x: util.multiply_hundred(x),
         }
-        self.general_stats_headers["MEAN_COVERAGE"] = {
-            "title": "Mean Coverage",
-            "description": "The mean coverage in bases of the genome territory, after all filters are applied.",
-            "min": 0,
-            "suffix": "X",
-            "scale": "GnBu",
-            "hidden": True,
-        }
-        self.general_stats_headers["SD_COVERAGE"] = {
-            "title": "SD Coverage",
-            "description": "The standard deviation coverage in bases of the genome territory, after all filters are applied.",
-            "min": 0,
-            "suffix": "X",
-            "scale": "GnBu",
-            "hidden": True,
-        }
-        # user configurable coverage level
-        try:
-            covs = config.picard_config["general_stats_target_coverage"]
-            assert type(covs) == list
-            assert len(covs) > 0
-            covs = [str(i) for i in covs]
-            log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
-        except (AttributeError, TypeError, AssertionError, KeyError):
-            covs = ["30"]
-        for c in covs:
-            self.general_stats_headers["PCT_{}X".format(c)] = {
-                "id": "picard_target_bases_{}X".format(c),
-                "title": "Bases &ge; {}X".format(c),
-                "description": "Percent of target bases with coverage &ge; {}X".format(c),
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "format": "{:,.0f}",
-                "scale": "RdYlGn",
-                "modify": lambda x: self.multiply_hundred(x),
-            }
+    module.general_stats_addcols(data_by_sample, headers, namespace="WgsMetrics")
 
-        for s_name in self.picard_wgsmetrics_data:
-            if s_name not in self.general_stats_data:
-                self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update(self.picard_wgsmetrics_data[s_name])
-
-        # Section with histogram plot
-        if len(self.picard_wgsmetrics_histogram) > 0 and not skip_histo:
-            # Figure out where to cut histogram tail
-            max_cov = picard_config.get("wgsmetrics_histogram_max_cov")
-            if max_cov is None:
-                max_cov = 10
-                for s_name, samp in self.picard_wgsmetrics_histogram.items():
-                    total = float(sum(samp.values()))
-                    running_total = 0
-                    for k, v in samp.items():
-                        running_total += v
-                        if running_total > total * 0.99:
-                            max_cov = max(k, max_cov)
-                            break
-
-            # Cut histogram tail and make a normalised percentage version of the data plus dropoff
-            data = {}
-            data_percent = {}
-            maxval = 0
-            for s_name, samp in self.picard_wgsmetrics_histogram.items():
-                data[s_name] = OrderedDict()
-                data_percent[s_name] = OrderedDict()
-                total = float(sum(samp.values()))
-                cumulative = 0
-                for k, v in samp.items():
-                    if k <= max_cov:
-                        cumulative += v
-                        data[s_name][k] = v
-                        maxval = max(maxval, v)
-                        data_percent[s_name][k] = 100 - (cumulative / total) * 100
-                    else:
+    # Section with histogram plot
+    if histogram_by_sample and not skip_histo:
+        # Figure out where to cut histogram tail
+        max_cov = picard_config.get("wgsmetrics_histogram_max_cov")
+        if max_cov is None:
+            max_cov = 10
+            for s_name, hist in histogram_by_sample.items():
+                total = float(sum(hist.values()))
+                running_total = 0
+                for k, v in hist.items():
+                    running_total += v
+                    if running_total > total * 0.99:
+                        max_cov = max(k, max_cov)
                         break
 
-            # Plot the histogram data and add section
-            pconfig = {
-                "id": "picard_wgs_metrics_histogram",
-                "title": "Picard: WGS Coverage",
-                "ylab": "Percentage of Bases",
-                "xlab": "Fold Coverage",
-                "xDecimals": False,
-                "tt_label": "<b>{point.x} X</b>: {point.y:.1f}",
-                "ymin": 0,
-                "ymax": 100,
-                "smooth_points": picard_config.get("wgsmetrics_histogram_smooth", 1000),
-                "data_labels": [
-                    {"name": "Percentage Drop-Off", "ylab": "Percentage of Bases", "ymax": 100},
-                    {"name": "Counts Histogram", "ylab": "Coverage", "ymax": maxval},
-                ],
-            }
-            self.add_section(
-                name="WGS Coverage",
-                anchor="picard-wgsmetrics-cov",
-                description="The number of bases in the genome territory for each fold coverage. "
-                + "Note that final 1% of data is hidden to prevent very long tails.",
-                plot=linegraph.plot([data_percent, data], pconfig),
-            )
+        # Cut histogram tail and make a normalised percentage version of the data plus dropoff
+        data: Dict = {}
+        data_percent: Dict = {}
+        maxval = 0
+        for s_name, hist in histogram_by_sample.items():
+            data[s_name] = dict()
+            data_percent[s_name] = dict()
+            total = float(sum(hist.values()))
+            cumulative = 0
+            for k, v in hist.items():
+                if k <= max_cov:
+                    cumulative += v
+                    data[s_name][k] = v
+                    maxval = max(maxval, v)
+                    pct_bases_cumulative = (cumulative / total) * 100
+                    pct_bases_with_greater_cov = 100 - pct_bases_cumulative
+                    pct_bases_current = (v / total) * 100
+                    pct_bases_with_greater_or_equal_cov = pct_bases_with_greater_cov + pct_bases_current
+                    data_percent[s_name][k] = pct_bases_with_greater_or_equal_cov
+                else:
+                    break
 
-        # Bar plot of ignored bases
-        pdata = dict()
-        for s_name, data in self.picard_wgsmetrics_data.items():
-            pdata[s_name] = dict()
-            pdata[s_name]["PCT_EXC_MAPQ"] = data["PCT_EXC_MAPQ"] * 100.0
-            pdata[s_name]["PCT_EXC_DUPE"] = data["PCT_EXC_DUPE"] * 100.0
-            pdata[s_name]["PCT_EXC_UNPAIRED"] = data["PCT_EXC_UNPAIRED"] * 100.0
-            pdata[s_name]["PCT_EXC_BASEQ"] = data["PCT_EXC_BASEQ"] * 100.0
-            pdata[s_name]["PCT_EXC_OVERLAP"] = data["PCT_EXC_OVERLAP"] * 100.0
-            pdata[s_name]["PCT_EXC_CAPPED"] = data["PCT_EXC_CAPPED"] * 100.0
-
-        keys = OrderedDict()
-        keys["PCT_EXC_MAPQ"] = {"name": "Low mapping quality"}
-        keys["PCT_EXC_DUPE"] = {"name": "Duplicates reads"}
-        keys["PCT_EXC_UNPAIRED"] = {"name": "No mapped mate pair"}
-        keys["PCT_EXC_BASEQ"] = {"name": "Low base quality"}
-        keys["PCT_EXC_OVERLAP"] = {"name": "Overlapping insert"}
-        keys["PCT_EXC_CAPPED"] = {"name": "Over capped coverage"}
-
-        # Config for the plot
+        # Plot the histogram data and add section
         pconfig = {
-            "id": "picard_wgs_metrics_bases",
-            "title": "Picard: WGS Filtered Bases",
-            "cpswitch": False,
-            "ylab": "% Bases",
+            "id": "picard_wgs_metrics_histogram",
+            "title": "Picard: WGS Coverage",
+            "ylab": "Percentage of Bases",
+            "xlab": "Fold Coverage",
+            "x_decimals": False,
+            "tt_label": "<b>{point.x} X</b>: {point.y:.1f}",
+            "ymin": 0,
             "ymax": 100,
+            "smooth_points": picard_config.get("wgsmetrics_histogram_smooth", 1000),
+            "data_labels": [
+                {"name": "Percentage Drop-Off", "ylab": "Percentage of Bases", "ymax": 100},
+                {"name": "Counts Histogram", "ylab": "Coverage", "ymax": maxval},
+            ],
         }
-
-        self.add_section(
-            name="WGS Filtered Bases",
-            anchor="picard-wgsmetrics-bases",
-            description="For more information about the filtered categories, see the "
-            + '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics" target="_blank">Picard documentation</a>.',
-            plot=bargraph.plot(pdata, keys, pconfig),
+        module.add_section(
+            name="WGS Coverage",
+            anchor="picard-wgsmetrics-cov",
+            description="The number of bases in the genome territory for each fold coverage. "
+            + "Note that final 1% of data is hidden to prevent very long tails.",
+            plot=linegraph.plot([data_percent, data], pconfig),
         )
 
+    # Bar plot of ignored bases
+    pdata: Dict = dict()
+    for s_name, data in data_by_sample.items():
+        pdata[s_name] = dict()
+        pdata[s_name]["PCT_EXC_MAPQ"] = data["PCT_EXC_MAPQ"] * 100.0
+        pdata[s_name]["PCT_EXC_DUPE"] = data["PCT_EXC_DUPE"] * 100.0
+        pdata[s_name]["PCT_EXC_UNPAIRED"] = data["PCT_EXC_UNPAIRED"] * 100.0
+        pdata[s_name]["PCT_EXC_BASEQ"] = data["PCT_EXC_BASEQ"] * 100.0
+        pdata[s_name]["PCT_EXC_OVERLAP"] = data["PCT_EXC_OVERLAP"] * 100.0
+        pdata[s_name]["PCT_EXC_CAPPED"] = data["PCT_EXC_CAPPED"] * 100.0
+
+    keys = dict()
+    keys["PCT_EXC_MAPQ"] = {"name": "Low mapping quality"}
+    keys["PCT_EXC_DUPE"] = {"name": "Duplicates reads"}
+    keys["PCT_EXC_UNPAIRED"] = {"name": "No mapped mate pair"}
+    keys["PCT_EXC_BASEQ"] = {"name": "Low base quality"}
+    keys["PCT_EXC_OVERLAP"] = {"name": "Overlapping insert"}
+    keys["PCT_EXC_CAPPED"] = {"name": "Over capped coverage"}
+
+    # Config for the plot
+    pconfig = {
+        "id": "picard_wgs_metrics_bases",
+        "title": "Picard: WGS Filtered Bases",
+        "cpswitch": False,
+        "ylab": "% Bases",
+        "ymax": 100,
+    }
+
+    module.add_section(
+        name="WGS Filtered Bases",
+        anchor="picard-wgsmetrics-bases",
+        description="For more information about the filtered categories, see the "
+        + '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html#CollectWgsMetrics.WgsMetrics" target="_blank">Picard documentation</a>.',
+        plot=bargraph.plot(pdata, keys, pconfig),
+    )
+
     # Return the number of detected samples to the parent module
-    return len(self.picard_wgsmetrics_data)
+    return data_by_sample.keys()
