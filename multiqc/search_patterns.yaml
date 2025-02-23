@@ -24,15 +24,16 @@ bamtools/stats:
   num_lines: 10
 bases2fastq/persample:
   fn: "*_stats.json"
-  contents_re: ".*NumPolonies.*"
+  contents: "NumPolonies"
   num_lines: 100
+  max_filesize: 1024
 bases2fastq/run:
   fn: "RunStats.json"
-  contents_re: ".*NumPolonies.*"
+  contents: "NumPolonies"
   num_lines: 100
 bases2fastq/project:
   fn: "*_RunStats.json"
-  contents_re: ".*NumPolonies.*"
+  contents: "NumPolonies"
   num_lines: 100
 bases2fastq/group:
   fn: "*_b2fgroup.csv"
