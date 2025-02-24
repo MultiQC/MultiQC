@@ -20,9 +20,12 @@ from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 import importlib_metadata
 import yaml
 from importlib_metadata import EntryPoint
+from jsonschema import validate as validate_json_schema
+from yaml import YAMLError
 
 from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.utils import pyaml_env
+from multiqc.utils.config_schema import config_to_schema
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
@@ -111,8 +114,6 @@ megaqc_timeout: float
 export_plots: bool
 make_report: bool
 make_pdf: bool
-
-AVAILABLE_AI_PROVIDERS = ["seqera", "openai", "anthropic", "custom"]
 
 ai_summary: bool
 ai_summary_full: bool
@@ -360,12 +361,17 @@ def find_user_files():
     _load_found_file("multiqc_config.yaml")
 
 
-def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_config=True) -> Optional[Path]:
+def load_config_file(
+    yaml_config_path: Union[str, Path, None], is_explicit_config=True, validate_schema=True
+) -> Optional[Path]:
     """
     Load and parse a config file if we find it.
 
-    `is_explicit_config` config means the function was called directly or through multiqc.load_config(),
-    which means we need to keep track of to restore the config update update_defaults.
+    Args:
+        yaml_config_path: path to config file
+        is_explicit_config: means the function was called directly or through multiqc.load_config(),
+    which means we need to keep track of to restore the config update update_defaults
+        validate_schema: whether to validate the config against the JSON schema
     """
     if not yaml_config_path:
         return None
@@ -388,12 +394,20 @@ def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_confi
         # new_config can be None if the file is empty
         new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
         if new_config:
+            if validate_schema:
+                try:
+                    # Validate against JSON schema
+                    schema = config_to_schema()
+                    validate_json_schema(instance=new_config, schema=schema)
+                except Exception as e:
+                    logger.warning(f"Config validation warning for {path}: {str(e)}")
+
             logger.info(f"Loading config settings from: {path}")
             _add_config(new_config, str(path))
     except (IOError, AttributeError) as e:
         logger.warning(f"Error loading config {path}: {e}")
         return None
-    except yaml.scanner.ScannerError as e:
+    except YAMLError as e:
         logger.error(f"Error parsing config YAML: {e}")
         raise
 
@@ -410,7 +424,7 @@ def load_cl_config(cl_config: List[str]):
                 clc_str = ": ".join(clc_str.split(":"))
                 parsed_clc = yaml.safe_load(clc_str)
             assert isinstance(parsed_clc, dict)
-        except yaml.scanner.ScannerError as e:
+        except YAMLError as e:
             logger.error(f"Could not parse command line config: {clc_str}\n{e}")
         except AssertionError:
             logger.error(f"Could not parse command line config: {clc_str}")
