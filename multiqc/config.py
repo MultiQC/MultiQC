@@ -21,7 +21,6 @@ import importlib_metadata
 import yaml
 from importlib_metadata import EntryPoint
 from jsonschema import validate as validate_json_schema
-from yaml import YAMLError
 
 from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.utils import pyaml_env
@@ -407,7 +406,7 @@ def load_config_file(
     except (IOError, AttributeError) as e:
         logger.warning(f"Error loading config {path}: {e}")
         return None
-    except YAMLError as e:
+    except yaml.YAMLError as e:
         logger.error(f"Error parsing config YAML: {e}")
         raise
 
@@ -424,7 +423,7 @@ def load_cl_config(cl_config: List[str]):
                 clc_str = ": ".join(clc_str.split(":"))
                 parsed_clc = yaml.safe_load(clc_str)
             assert isinstance(parsed_clc, dict)
-        except YAMLError as e:
+        except yaml.YAMLError as e:
             logger.error(f"Could not parse command line config: {clc_str}\n{e}")
         except AssertionError:
             logger.error(f"Could not parse command line config: {clc_str}")
