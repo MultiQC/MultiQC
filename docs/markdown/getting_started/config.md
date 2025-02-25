@@ -646,3 +646,62 @@ custom_css_files:
 
 Or pass `--custom-css-file` (can be specified multiple times) and MultiQC will include
 them in the final report HTML.
+
+## JSON Schema validation
+
+MultiQC provides a JSON Schema for validating configuration files. This allows editors like VSCode to provide autocompletion and validation while editing MultiQC config files.
+
+### Using with VSCode
+
+1. Install the YAML extension for VSCode
+2. Add the following to your VSCode settings.json:
+
+```json
+{
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/MultiQC/MultiQC/main/multiqc/utils/config_schema.json": [
+      "**/multiqc_config.y*ml"
+    ]
+  }
+}
+```
+
+This will enable:
+
+- Autocompletion of config options
+- Validation of config values
+- Hover documentation for each option
+- Warning highlights for invalid values
+
+### Using with other editors
+
+Most modern editors support JSON Schema validation for YAML files. You can point them to the schema URL:
+
+```
+https://raw.githubusercontent.com/MultiQC/MultiQC/main/multiqc/utils/config_schema.json
+```
+
+Alternatively, you can download the schema file locally and reference it in your editor configuration.
+
+### Adding schema reference to config files
+
+You can also add a reference to the schema directly in your YAML config files:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/MultiQC/MultiQC/main/multiqc/utils/config_schema.json
+
+title: "My MultiQC Report"
+subtitle: "Quality Control Results"
+```
+
+This will enable validation in editors that support it, without requiring editor-specific configuration.
+
+### Schema validation in Python
+
+The schema is also used internally by MultiQC when loading config files. If validation fails, a warning will be printed but execution will continue (to maintain backwards compatibility). To enable strict validation that fails on invalid configs, set the `strict` config option to `true`:
+
+```yaml
+strict: true
+```
+
+Or use the `--strict` command line flag.
