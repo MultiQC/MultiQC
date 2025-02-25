@@ -4,9 +4,9 @@ from typing import Callable, List, Union
 
 import pytest
 
-from multiqc import BaseMultiqcModule, config, report, reset, parse_logs
+from multiqc import BaseMultiqcModule, config, parse_logs, report, reset
 from multiqc.base_module import ModuleNoSamplesFound
-from multiqc.core.update_config import update_config, ClConfig
+from multiqc.core.update_config import ClConfig, update_config
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
 
@@ -169,6 +169,7 @@ def test_path_filters(multiqc_reset, tmp_path, data_dir):
             },
         ],
         preserve_module_raw_data=True,
+        strict=True,
     )
 
     assert len(report.modules) == 2
