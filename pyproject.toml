@@ -28,6 +28,7 @@ dependencies = [
     "python-dotenv",
     "natsort",
     "tiktoken",
+    "jsonschema",
 ]
 requires-python = ">=3.8"
 authors = [
