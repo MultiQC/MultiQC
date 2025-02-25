@@ -7,13 +7,10 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 import itertools
-
-# Default logger will be replaced by caller
 import logging
 import os
 import subprocess
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
@@ -27,6 +24,7 @@ from multiqc.utils import pyaml_env
 from multiqc.utils.config_schema import config_to_schema
 from multiqc.utils.util_functions import strtobool, update_dict
 
+# Default logger will be replaced by caller
 logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
