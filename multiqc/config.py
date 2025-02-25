@@ -171,6 +171,9 @@ show_hide_buttons: List
 show_hide_patterns: List
 show_hide_regex: List
 show_hide_mode: List
+highlight_patterns: List
+highlight_colors: List
+highlight_regex: bool
 no_version_check: bool
 log_filesize_limit: int
 filesearch_lines_limit: int
@@ -608,6 +611,12 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
                         show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether regex is turned on
         except AttributeError as e:
             logger.error(f"Error loading show patterns file: {e}")
+
+    # Lists are not of the same length, pad or trim to the length of show_hide_patterns
+    for i in range(len(show_hide_buttons), len(show_hide_patterns)):
+        show_hide_buttons.append(show_hide_patterns[i] if i < len(show_hide_patterns) and show_hide_patterns[i] else "")
+        show_hide_mode.append("hide")
+        show_hide_regex.append(False)
 
     # Prepend a "Show all" button if we have anything
     # Do this outside of the file load block in case it was set in the config

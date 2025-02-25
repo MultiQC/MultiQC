@@ -244,6 +244,51 @@ sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
 You can turn off sample name cleaning permanently by setting
 `fn_clean_sample_names` to `false` in your config file.
 
+## Toolbox Settings
+
+MultiQC includes a toolbox with features to highlight, rename, and hide samples. These settings can be configured through the UI, but you can also pre-configure them in your config file.
+
+### Highlighting Samples
+
+You can pre-configure sample highlighting patterns in your config file:
+
+```yaml
+highlight_patterns:
+  - "sample_1"
+  - "control_"
+highlight_colors:
+  - "#e41a1c" # red
+  - "#377eb8" # blue
+highlight_regex: false # set to true to use regex patterns
+```
+
+Each pattern in `highlight_patterns` will be paired with the corresponding color in `highlight_colors`. If there are more patterns than colors, the colors will be reused in sequence.
+
+### Hiding Samples
+
+You can pre-configure which samples to show or hide:
+
+```yaml
+show_hide_buttons: ["Hide controls"]
+show_hide_patterns: ["control_"]]
+show_hide_regex: [false]
+show_hide_mode: ["hide"] # can be "show" or "hide"
+```
+
+Each entry in these lists corresponds to a button that will appear in the toolbox. An extra "Show all" button with empty patterns is prepended by default.
+
+### Renaming Samples
+
+You can pre-configure sample renaming patterns:
+
+```yaml
+sample_names_rename:
+  - ["_R1", ""]
+  - ["sample_", "SAMPLE_"]
+```
+
+Each entry is a pair of [from, to] values that will be applied to sample names.
+
 ## Module search patterns
 
 Many bioinformatics tools have standard output formats, filenames and other

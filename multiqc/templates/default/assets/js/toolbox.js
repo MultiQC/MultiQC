@@ -718,6 +718,105 @@ $(function () {
   } catch (e) {
     console.log("Could not load auto-saved config:", e);
   }
+
+  // Check if we have highlight patterns from local storage
+  let has_highlight_filters = $("#mqc_col_filters").children().length > 0;
+  let has_hide_filters = $("#mqc_hidesamples_filters").children().length > 0;
+  let has_rename_filters = $("#mqc_renamesamples_filters").children().length > 0;
+
+  // Apply pre-configured highlight patterns from config only if no local storage values
+  if (!has_highlight_filters && mqc_config.highlight_patterns && mqc_config.highlight_patterns.length > 0) {
+    // Set regex mode if specified
+    if (mqc_config.highlight_regex) {
+      $("#mqc_cols .mqc_regex_mode .re_mode").removeClass("off").addClass("on").text("on");
+    }
+
+    // Add each pattern with its color
+    for (let i = 0; i < mqc_config.highlight_patterns.length; i++) {
+      const pattern = mqc_config.highlight_patterns[i];
+      let color =
+        mqc_config.highlight_colors && mqc_config.highlight_colors[i] ? mqc_config.highlight_colors[i] : "#e41a1c";
+
+      // Add to the filters list
+      $("#mqc_col_filters").append(
+        '<li style="color:' +
+          color +
+          '"><span class="hc_handle"><span></span><span></span><span></span></span><input class="f_text" value="' +
+          pattern +
+          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
+      );
+    }
+
+    // Apply the highlights
+    apply_mqc_highlights();
+  }
+
+  // Apply pre-configured hide samples from config only if no local storage values
+  if (!has_hide_filters && mqc_config.show_hide_patterns && mqc_config.show_hide_patterns.length > 0) {
+    // Add each pattern
+    for (let i = 1; i < mqc_config.show_hide_patterns.length; i++) {
+      // Skip first (Show all)
+      const pattern = mqc_config.show_hide_patterns[i];
+      $("#mqc_hidesamples_filters").append(
+        '<li><input class="f_text" value="' +
+          pattern +
+          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
+      );
+    }
+
+    // Set regex mode if specified for the first non-empty pattern
+    for (let i = 1; i < mqc_config.show_hide_regex.length; i++) {
+      if (mqc_config.show_hide_regex[i]) {
+        $("#mqc_hidesamples .mqc_regex_mode .re_mode").removeClass("off").addClass("on").text("on");
+        break;
+      }
+    }
+
+    // Set show/hide mode based on the first non-empty pattern
+    for (let i = 1; i < mqc_config.show_hide_mode.length; i++) {
+      if (mqc_config.show_hide_mode[i] === "show") {
+        $(".mqc_hidesamples_showhide[value=show]").prop("checked", true);
+        break;
+      }
+    }
+
+    // Apply the hide/show
+    apply_mqc_hidesamples();
+  }
+
+  // Apply pre-configured sample renaming patterns from config only if no local storage values
+  if (!has_rename_filters && mqc_config.sample_names_rename && mqc_config.sample_names_rename.length > 0) {
+    let mqc_renamesamples_idx = 300;
+
+    // Add each pattern
+    for (let i = 0; i < mqc_config.sample_names_rename.length; i++) {
+      const pattern = mqc_config.sample_names_rename[i];
+      if (!Array.isArray(pattern) || pattern.length < 2) continue;
+
+      const from_text = pattern[0];
+      const to_text = pattern[1];
+
+      // Add to the filters list
+      $("#mqc_renamesamples_filters").append(
+        '<li><input class="f_text from_text" value="' +
+          from_text +
+          '" tabindex="' +
+          mqc_renamesamples_idx +
+          '" />' +
+          '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
+          to_text +
+          '" tabindex="' +
+          (mqc_renamesamples_idx + 1) +
+          '" />' +
+          '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
+      );
+
+      mqc_renamesamples_idx += 2;
+    }
+
+    // Apply the renames
+    apply_mqc_renamesamples();
+  }
 });
 
 //////////////////////////////////////////////////////
