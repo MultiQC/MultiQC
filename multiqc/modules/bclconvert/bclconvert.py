@@ -690,7 +690,7 @@ class MultiqcModule(BaseMultiqcModule):
                         f"{chunk.sample_project} != {sample.sample_project}, overriding"
                     )
                     sample.sample_project = chunk.sample_project
-                if sample.index is not None and chunk.index != sample.index:
+                if chunk.index != sample.index:
                     log.warning(
                         f"Sample {sname} has different indices on different lanes: "
                         f"{chunk.index} != {sample.index}, overriding"
