@@ -3,17 +3,18 @@ import json
 import logging
 import os
 import re
-import yaml
 from textwrap import indent
-from typing import Any, Dict, NamedTuple, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypeVar, Union
 
 import requests
+import yaml
 from markdown import markdown
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
-from multiqc.types import Anchor
+from multiqc.types import Anchor, SampleName
+from multiqc.utils import config_schema
 
 logger = logging.getLogger(__name__)
 
@@ -136,6 +137,9 @@ class InterpretationOutput(BaseModel):
         """
         Convert markdown to HTML
         """
+        # First convert pseudonyms back to original names if needed
+        text = deanonymize_sample_names(text)
+
         html = markdown(text)
         # Find and replace directives :span[1.23%]{.text-red} -> <span..., handle multiple matches in one string
         html = re.sub(
@@ -151,11 +155,13 @@ class InterpretationOutput(BaseModel):
         )
         return html
 
-    def format_text(self) -> str:
-        """
-        Format to markdown to display in Seqera AI
-        """
-        return f"## Analysis\n{self.summary}" + (f"\n\n{self.detailed_analysis}" if self.detailed_analysis else "")
+    # def format_text(self) -> str:
+    #     """
+    #     Format to markdown to display in Seqera AI
+    #     """
+    #     summary = deanonymize_sample_names(self.summary)
+    #     detailed = deanonymize_sample_names(self.detailed_analysis) if self.detailed_analysis else None
+    #     return f"## Analysis\n{summary}" + (f"\n\n{detailed}" if detailed else "")
 
 
 class InterpretationResponse(BaseModel):
@@ -168,17 +174,17 @@ ResponseT = TypeVar("ResponseT")
 
 
 class Client:
-    def __init__(self, model: str, api_key: str):
+    def __init__(self, api_key: str):
         self.name: str
         self.title: str
-        self.model: str = model
+        self.model: str
         self.api_key: str = api_key
 
-    def _query(self, system_prompt: str, report_content: str):
+    def _query(self, prompt: str):
         raise NotImplementedError
 
     def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_SHORT, report_content)
+        response = self._query(PROMPT_SHORT + "\n\n" + report_content)
 
         return InterpretationResponse(
             interpretation=InterpretationOutput(summary=response.content),
@@ -186,7 +192,7 @@ class Client:
         )
 
     def interpret_report_full(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_FULL, report_content)
+        response = self._query(PROMPT_FULL + "\n\n" + report_content)
 
         try:
             output = yaml.safe_load(response.content)
@@ -272,41 +278,52 @@ class Client:
 
 
 class OpenAiClient(Client):
-    def __init__(self, api_key: str):
-        model = (
-            config.ai_model
-            if config.ai_model and (config.ai_model.startswith("gpt") or config.ai_model.startswith("o"))
-            else "gpt-4o"
-        )
-        super().__init__(model, api_key)
-        self.name = "openai"
-        self.title = "OpenAI"
+    def __init__(self, api_key: str, endpoint: Optional[str] = None):
+        super().__init__(api_key)
+
+        if endpoint:
+            self.endpoint = endpoint
+            if not config.ai_model:
+                raise ValueError("Custom OpenAI endpoint is set, but no model is provided. Please set config.ai_model")
+            self.model = config.ai_model
+            self.name = "custom"
+            self.title = endpoint
+        else:
+            self.endpoint = "https://api.openai.com/v1/chat/completions"
+            self.model = config.ai_model or "gpt-4o"
+            self.name = "openai"
+            self.title = "OpenAI"
 
     def max_tokens(self) -> int:
-        return 128000
+        return config.ai_custom_context_window or 128000
 
     class ApiResponse(NamedTuple):
         content: str
         model: str
 
-    def _query(
-        self, system_prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
-    ) -> ApiResponse:
+    def _query(self, prompt: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
+        body: Dict[str, Any] = {
+            "temperature": 0.0,
+        }
+        if config.ai_extra_query_options:
+            body.update(config.ai_extra_query_options)
+        if extra_options:
+            body.update(extra_options)
+        body.update(
+            {
+                "model": self.model,
+                "messages": [
+                    {"role": "user", "content": prompt},
+                ],
+            }
+        )
         response = self._request_with_error_handling_and_retries(
-            "https://api.openai.com/v1/chat/completions",
+            self.endpoint,
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",
             },
-            body={
-                "model": self.model,
-                "messages": [
-                    {"role": "user", "content": system_prompt},
-                    {"role": "user", "content": report_content},
-                ],
-                "temperature": 0.0,
-                **(extra_options or {}),
-            },
+            body=body,
         )
         return OpenAiClient.ApiResponse(
             content=response["choices"][0]["message"]["content"],
@@ -316,10 +333,10 @@ class OpenAiClient(Client):
 
 class AnthropicClient(Client):
     def __init__(self, api_key: str):
-        model = (
+        super().__init__(api_key)
+        self.model = (
             config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-3-5-sonnet-latest"
         )
-        super().__init__(model, api_key)
         self.name = "anthropic"
         self.title = "Anthropic"
 
@@ -330,7 +347,7 @@ class AnthropicClient(Client):
         content: str
         model: str
 
-    def _query(self, system_prompt: str, report_content: str) -> ApiResponse:
+    def _query(self, prompt: str) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -342,8 +359,7 @@ class AnthropicClient(Client):
                 "model": self.model,
                 "max_tokens": 4096,
                 "messages": [
-                    {"role": "user", "content": system_prompt},
-                    {"role": "user", "content": report_content},
+                    {"role": "user", "content": prompt},
                 ],
                 "temperature": 0.0,
             },
@@ -355,14 +371,14 @@ class AnthropicClient(Client):
 
 
 class SeqeraClient(Client):
-    def __init__(self, model: str, api_key: str):
-        super().__init__(model, api_key)
+    def __init__(self, api_key: str):
+        super().__init__(api_key)
         self.name = "seqera"
         self.title = "Seqera AI"
         creation_date = report.creation_date.strftime("%d %b %Y, %H:%M %Z")
         self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, created on {creation_date}"
         self.tags = ["multiqc", f"multiqc_version:{config.version}"]
-        self.model = model or "claude-3-5-sonnet-latest"
+        self.model = config.ai_model or "claude-3-5-sonnet-latest"
 
     def max_tokens(self) -> int:
         return 200000
@@ -447,7 +463,7 @@ def get_llm_client() -> Optional[Client]:
         if api_key := os.environ.get("SEQERA_ACCESS_TOKEN"):
             logger.debug("Using Seqera access token from $SEQERA_ACCESS_TOKEN environment variable")
         elif api_key := os.environ.get("TOWER_ACCESS_TOKEN"):
-            logger.debug("Using Seqera access token from $TOWER_ACCESS_TOKEN environment variable")
+            logger.debug("Using Seqera access token from TOWER_ACCESS_TOKEN environment variable")
         else:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', "
@@ -456,7 +472,7 @@ def get_llm_client() -> Optional[Client]:
                 "or change config.ai_provider"
             )
             return None
-        return SeqeraClient(config.ai_model, api_key)
+        return SeqeraClient(api_key)
 
     elif config.ai_provider == "anthropic":
         api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -466,7 +482,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        logger.debug("Using Anthropic API key from $ANTHROPIC_API_KEY environment variable")
+        logger.debug("Using Anthropic API key from ANTHROPIC_API_KEY environment variable")
         try:
             return AnthropicClient(api_key)
         except ModuleNotFoundError:
@@ -482,7 +498,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        logger.debug("Using OpenAI API key from $OPENAI_API_KEY environment variable")
+        logger.debug("Using OpenAI API key from OPENAI_API_KEY environment variable")
         try:
             return OpenAiClient(api_key)
         except ModuleNotFoundError:
@@ -490,8 +506,29 @@ def get_llm_client() -> Optional[Client]:
                 'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"`'
             )
 
+    elif config.ai_provider == "custom":
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            logger.error(
+                "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but OpenAI API "
+                "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
+            )
+            return None
+        if not config.ai_model:
+            raise ValueError(
+                "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_model is provided. Please set config.ai_model"
+            )
+        if not config.ai_custom_endpoint:
+            raise ValueError(
+                "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_custom_endpoint is provided. Please set config.ai_custom_endpoint"
+            )
+        logger.debug(
+            f"Using API key from the OPENAI_API_KEY environment variable to use with a custom endpoint {config.ai_custom_endpoint}"
+        )
+        return OpenAiClient(api_key=api_key, endpoint=config.ai_custom_endpoint)
     else:
-        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(config.AVAILABLE_AI_PROVIDERS)}]'
+        avail_providers = config_schema.AiProviderLiteral.__args__  # type: ignore
+        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(avail_providers)}]'
         if config.strict:
             raise RuntimeError(msg)
         logger.error(msg + ". Skipping AI summary")
@@ -555,6 +592,40 @@ def ai_section_metadata() -> AiReportMetadata:
     )
 
 
+def create_pseudonym_map(sample_names: List[SampleName]) -> Dict[str, str]:
+    """
+    Find all sample names in the report and replace them with anonymised names
+    """
+    # Create anonymised names map and reverse map
+    ai_pseudonym_map = {}
+    for i, name in enumerate(sample_names):
+        ai_pseudonym_map[str(name)] = f"SAMPLE_{i + 1}"
+    return ai_pseudonym_map
+
+
+def deanonymize_sample_names(text: str) -> str:
+    """
+    Convert pseudonyms back to original sample names in the text.
+    Only applies when config.ai_anonymize_samples is True.
+    """
+    if not config.ai_anonymize_samples or not report.ai_pseudonym_map:
+        return text
+
+    # Create reverse mapping from pseudonym to original name
+    reverse_map = {v: k for k, v in report.ai_pseudonym_map.items()}
+
+    # Replace pseudonyms with original names, being careful to only replace whole words
+    # and preserve the directive syntax
+    for pseudonym, original in reverse_map.items():
+        # Look for pseudonym in :sample[SAMPLE_1]{.text-*} directives
+        text = re.sub(f":sample\\[{re.escape(pseudonym)}\\](\\{{[^}}]+\\}})", f":sample[{original}]\\1", text)
+
+        # Look for standalone pseudonyms (not in directives)
+        text = re.sub(f"\\b{re.escape(pseudonym)}\\b", str(original), text)
+
+    return text
+
+
 def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]:
     system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
 
@@ -594,7 +665,7 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
 """
             genstats_n_tokens = client.n_tokens(genstats_context)
             if current_n_tokens + genstats_n_tokens > max_tokens:
-                logger.warning(
+                logger.debug(
                     f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
                     f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
                     "AI summary will not be generated. Try hiding some columns in the general stats table "
@@ -623,9 +694,9 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
             sec_context += f"Section help text: {_strip_html(section.helptext)}\n"
 
         if section.content_before_plot:
-            sec_context += section.content_before_plot + "\n\n"
+            sec_context += report.anonymize_sample_name(section.content_before_plot) + "\n\n"
         if section.content:
-            sec_context += section.content + "\n\n"
+            sec_context += report.anonymize_sample_name(section.content) + "\n\n"
 
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
@@ -638,7 +709,7 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
         # Using rough estimate of 4 chars per token
         sec_n_tokens = client.n_tokens(sec_context)
         if current_n_tokens + sec_n_tokens > max_tokens:
-            logger.warning(
+            logger.debug(
                 f"Including only General Statistics table to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
                 f"Tokens estimate: {current_n_tokens}, with sections: {current_n_tokens + sec_n_tokens}"
             )
@@ -661,7 +732,16 @@ def add_ai_summary_to_report():
     metadata: AiReportMetadata = ai_section_metadata()
     # Set data for JS runtime
     report.ai_report_metadata_base64 = base64.b64encode(metadata.model_dump_json().encode()).decode()
+    report.ai_extra_query_options_base64 = base64.b64encode(
+        json.dumps(config.ai_extra_query_options or {}).encode()
+    ).decode()
+    # Create and save the map for format_dataset_for_ai_prompt or JS runtime
+    report.ai_pseudonym_map = create_pseudonym_map(report.sample_names)
+    # Save for the JS runtime. We want to do it regardless of config.ai_anonymize_samples,
+    # because JS runtime might need it even if Python runtime doesn't
+    report.ai_pseudonym_map_base64 = base64.b64encode(json.dumps(report.ai_pseudonym_map).encode()).decode()
 
+    # Now that everything for JS runtime is set, we only continue if static summaries are requested
     if not config.ai_summary:
         # Not generating report in Python, leaving for JS runtime
         return
@@ -675,8 +755,7 @@ def add_ai_summary_to_report():
 
     prompt, exceeded_context_window = build_prompt(client, metadata)
 
-    if config.development or config.verbose:
-        _save_prompt_to_file(prompt)
+    _save_prompt_to_file(prompt)
 
     if exceeded_context_window:
         return

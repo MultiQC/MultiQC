@@ -23,7 +23,7 @@ from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.utils import util_functions
+from multiqc.utils import config_schema, util_functions
 from multiqc.validation import ModuleConfigValidationError
 
 logger = logging.getLogger(__name__)
@@ -462,8 +462,23 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     "--ai-provider",
-    type=click.Choice(config.AVAILABLE_AI_PROVIDERS),
+    type=click.Choice(config_schema.AiProviderLiteral.__args__),  # type: ignore
     help=f"Select AI provider for report summarization. [dim yellow](Default: {config.ai_provider})",
+)
+@click.option(
+    "--ai-model",
+    type=str,
+    help="Select AI model to use for report summarization",
+)
+@click.option(
+    "--ai-custom-endpoint",
+    type=str,
+    help="Custom AI endpoint to use with OpenAI API",
+)
+@click.option(
+    "--ai-custom-context-window",
+    type=int,
+    help="Custom context window to use with OpenAI API (default: 128000)",
 )
 @click.option(
     "--no-ai",

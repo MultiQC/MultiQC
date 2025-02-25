@@ -690,7 +690,7 @@ class MultiqcModule(BaseMultiqcModule):
                         f"{chunk.sample_project} != {sample.sample_project}, overriding"
                     )
                     sample.sample_project = chunk.sample_project
-                if sample.index is not None and chunk.index != sample.index:
+                if chunk.index != sample.index:
                     log.warning(
                         f"Sample {sname} has different indices on different lanes: "
                         f"{chunk.index} != {sample.index}, overriding"
@@ -900,7 +900,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["mean_quality"] = {
-            "title": "Mean quality sscore",
+            "title": "Mean quality score",
             "description": "Mean quality score of bases",
             "min": 0,
             "max": 40,

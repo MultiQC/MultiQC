@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.27.1dev"
+version = "1.27.1"
 dependencies = [
     "click",
     "humanize",
@@ -28,6 +28,7 @@ dependencies = [
     "python-dotenv",
     "natsort",
     "tiktoken",
+    "jsonschema",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -80,6 +81,7 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+    "types-jsonschema",
     "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
 ]

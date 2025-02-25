@@ -10,7 +10,7 @@ from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
 from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, plot_anchor
-from multiqc.types import Anchor
+from multiqc.types import Anchor, SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,8 @@ PointT = Dict[str, ValueT]
 
 def plot(
     data: Union[Mapping[str, Any], Sequence[Mapping[str, Any]]],
-    pconfig: Union[Mapping[str, Any], ScatterConfig, None] = None,
+    pconfig: Union[Mapping[str, Any], ScatterConfig, None],
+    sample_names: List[SampleName],
 ) -> "ScatterPlot":
     """
     Plot a scatter plot with X,Y data.
@@ -50,10 +51,13 @@ def plot(
     if not isinstance(data, list):
         data = [data]  # type: ignore
 
+    sample_names = []
+
     plotdata: List[List[Dict[str, Any]]] = list()
     for data_index, ds in enumerate(data):
         d: List[Dict[str, Any]] = list()
         for s_name in ds:
+            sample_names.append(SampleName(s_name))
             # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config: ScatterConfig = pconf.model_copy()
             if pconf.data_labels:
@@ -322,7 +326,15 @@ class Dataset(BaseDataset):
         xsuffix = self.layout.get("xaxis", {}).get("ticksuffix", "")
         ysuffix = self.layout.get("yaxis", {}).get("ticksuffix", "")
 
-        return "\n".join(f"{point['name']} ({point['x']}{xsuffix}, {point['y']}{ysuffix})" for point in self.points)
+        prompt = ""
+        prompt += "| Sample | X | Y |\n"
+        prompt += "| --- | --- | --- |\n"
+
+        for point in self.points:
+            pseudonym = report.anonymize_sample_name(cast(str, point["name"]))
+            prompt += f"| {pseudonym} | {point['x']}{xsuffix} | {point['y']}{ysuffix} |\n"
+
+        return prompt
 
 
 class ScatterPlot(Plot[Dataset, ScatterConfig]):

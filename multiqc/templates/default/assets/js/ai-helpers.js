@@ -19,6 +19,7 @@ function runStreamGeneration({
   const provider = AI_PROVIDERS[providerId];
   const modelName = $("#ai-model").val();
   const apiKey = $("#ai-api-key").val();
+  const customEndpoint = $("#ai-endpoint").val();
 
   const fetchOptions = {
     method: "POST",
@@ -57,18 +58,26 @@ function runStreamGeneration({
       .catch((error) => {
         onStreamError(handleStreamError(error));
       });
-  } else if (provider.name === "OpenAI") {
-    fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
-    fetchOptions.body = JSON.stringify({
+  } else if (provider.name === "OpenAI" || provider.name === "Custom") {
+    let body = {};
+    if (provider.name === "Custom") {
+      try {
+        body = JSON.parse($("#ai-query-options").val());
+      } catch (e) {
+        console.error("Error parsing extra query options", e);
+      }
+    }
+    body = {
+      ...body,
       model: modelName,
-      messages: [
-        { role: "user", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
+      messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
       stream: true,
-    });
+    };
+    fetchOptions.body = JSON.stringify(body);
+    fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
 
-    fetch("https://api.openai.com/v1/chat/completions", fetchOptions)
+    const endpoint = provider.name === "Custom" ? customEndpoint : "https://api.openai.com/v1/chat/completions";
+    fetch(endpoint, fetchOptions)
       .then(async (response) => {
         if (!response.ok) {
           const errorData = await response.json();
@@ -95,10 +104,7 @@ function runStreamGeneration({
     fetchOptions.body = JSON.stringify({
       model: modelName,
       max_tokens: 4096,
-      messages: [
-        { role: "user", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
+      messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
       stream: true,
     });
 
@@ -169,7 +175,7 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
           } catch (e) {
             // Unexpected JSON format. Ignore the line, but if somethings is really wrong,
             // we should anyway call onStreamComplete in the end
-            onStreamError(`Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`);
+            // onStreamError(`Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`);
             return acc;
           }
 
@@ -177,6 +183,7 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
           let content = undefined;
           let role = undefined;
           let finishReason = undefined;
+          let started = false;
 
           // Detect provider
           if (providerId === "seqera") {
@@ -189,18 +196,18 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
               type = "error";
               error = `Streaming unexpectedly stopped. Reason: ${finishReason}`;
             }
-          } else if (providerId === "openai") {
+          } else if (providerId === "openai" || providerId === "custom") {
             content = data.choices[0].delta.content;
             model = data.model;
             role = data.choices[0].delta.role;
             finishReason = data.choices[0].finish_reason;
             // OpenAI doesn't define type, so we need to infer it from the other fields
-            if (role === "assistant") {
-              type = "on_chat_model_start";
+            if (content) {
+              type = "on_chat_model_stream";
             } else if (finishReason === "stop") {
               type = "on_chat_model_end";
-            } else if (content) {
-              type = "on_chat_model_stream";
+            } else if (role === "assistant") {
+              type = "on_chat_model_start";
             } else if (finishReason && finishReason !== "stop") {
               type = "error";
               error = `Streaming unexpectedly stopped. Reason: ${finishReason}`;
@@ -233,9 +240,14 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
           // Handle different event types
           switch (type) {
             case "on_chat_model_start":
+              started = true;
               onStreamStart(model);
               break;
             case "on_chat_model_stream":
+              if (!started) {
+                started = true;
+                onStreamStart(model);
+              }
               if (content) onStreamNewToken(content);
               break;
             case "on_chat_model_end":
@@ -254,8 +266,42 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
   }
 }
 
+function deanonymizeSampleNames(text) {
+  // Convert pseudonyms back to original sample names in the text.
+  // Only applies when anonymization is enabled and pseudonym map exists
+  if (!aiPseudonymMap) return text;
+  if (!getStoredSampleAnonymizationEnabled()) return text;
+
+  // Create reverse mapping from pseudonym to original name
+  const reverseMap = Object.fromEntries(
+    Object.entries(aiPseudonymMap).map(([original, pseudonym]) => [pseudonym, original]),
+  );
+
+  // Replace pseudonyms with original names, being careful to only replace whole words
+  // and preserve the directive syntax
+  for (const [pseudonym, original] of Object.entries(reverseMap)) {
+    // Look for pseudonym in :sample[SAMPLE_1]{.text-*} directives
+    text = text.replace(
+      new RegExp(`:sample\\[${escapeRegExp(pseudonym)}\\](\\{[^}]+\\})`, "g"),
+      `:sample[${original}]$1`,
+    );
+
+    // Look for standalone pseudonyms (not in directives)
+    text = text.replace(new RegExp(`\\b${escapeRegExp(pseudonym)}\\b`, "g"), original);
+  }
+
+  return text;
+}
+
+// Helper function to escape special characters in string for use in RegExp
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function markdownToHtml(text) {
   if (!text) return "";
+
+  text = deanonymizeSampleNames(text);
 
   // Convert directives :span[text]{.text-color} -> <span class="text-color">... (preserving underscores)
   text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {

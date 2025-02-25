@@ -12,11 +12,16 @@ class LinePlot extends Plot {
 
     let samples = lines.map((line) => line.name);
     let sampleSettings = applyToolboxSettings(samples);
+    this.filtSampleSettings = sampleSettings.filter((s) => !s.hidden);
 
     lines = lines.filter((line, idx) => {
-      line.name = sampleSettings[idx].name ?? line.name;
-      line.highlight = sampleSettings[idx].highlight;
       return !sampleSettings[idx].hidden;
+    });
+
+    lines = lines.map((line, idx) => {
+      line.highlight = sampleSettings[idx].highlight;
+      line.pseudonym = sampleSettings[idx].pseudonym;
+      return line;
     });
 
     return [samples, lines];
@@ -41,8 +46,9 @@ class LinePlot extends Plot {
     const ysuffix = this.layout.yaxis.ticksuffix;
 
     const formattedLines = lines.map((line) => {
+      let name = line.pseudonym ?? line.name;
       return {
-        name: line.name,
+        name: name,
         pairs: line.pairs.map((p) =>
           p.map((x, i) => {
             let val = !Number.isFinite(x) ? "" : Number.isInteger(x) ? x : parseFloat(x.toFixed(2));
@@ -123,8 +129,6 @@ class LinePlot extends Plot {
   }
 
   exportData(format) {
-    let dataset = this.datasets[this.activeDatasetIdx];
-
     let [_, lines] = this.prepData();
 
     // check if all lines have the same x values

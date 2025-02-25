@@ -264,18 +264,25 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         xsuffix = self.layout.get("xaxis", {}).get("ticksuffix")
         ysuffix = self.layout.get("yaxis", {}).get("ticksuffix")
 
-        result = "Samples: " + ", ".join(series.name for series in self.lines) + "\n\n"
-        for series in self.lines:
+        # Use pseudonyms for sample names if available
+        pseudonyms = [report.anonymize_sample_name(series.name) for series in self.lines]
+        result = "Samples: " + ", ".join(pseudonyms) + "\n\n"
+
+        for pseudonym, series in zip(pseudonyms, self.lines):
             pairs = [
                 f"({self.fmt_value_for_llm(x[0])}{xsuffix}: {self.fmt_value_for_llm(x[1])}{ysuffix})"
                 for x in series.pairs
             ]
-            result += f"{series.name} {', '.join(pairs)}\n\n"
+            result += f"{pseudonym} {', '.join(pairs)}\n\n"
         return result
 
 
 class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
     datasets: List[Dataset[KeyT, ValT]]
+    sample_names: List[SampleName]
+
+    def samples_names(self) -> List[SampleName]:
+        return self.sample_names
 
     def _plot_ai_header(self) -> str:
         result = super()._plot_ai_header()
@@ -290,6 +297,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
         lists_of_lines: List[List[Series[KeyT, ValT]]],
         pconfig: LinePlotConfig,
         anchor: Anchor,
+        sample_names: List[SampleName],
     ) -> "LinePlot[KeyT, ValT]":
         n_samples_per_dataset = [len(x) for x in lists_of_lines]
 
@@ -312,12 +320,13 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
         # Make a tooltip always show on hover over any point on plot
         model.layout.hoverdistance = -1
 
-        return LinePlot(**model.__dict__)
+        return LinePlot(**model.__dict__, sample_names=sample_names)
 
 
 class LinePlotInputData(BaseModel, Generic[KeyT, ValT]):
     data: List[List[Series[KeyT, ValT]]]
     pconfig: LinePlotConfig
+    sample_names: List[SampleName]
 
 
 def normalize_inputs(
@@ -352,11 +361,13 @@ def normalize_inputs(
     else:
         pconf.data_labels = []
 
-    # Convert lists to Series objects
+    sample_names = []
+
     datasets: List[List[Series[KeyT, ValT]]] = []
     for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
         list_of_series: List[Series[Any, Any]] = []
         for s in sorted(raw_data_by_sample.keys()):
+            sample_names.append(SampleName(s))
             x_to_y = raw_data_by_sample[s]
             if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
                 if isinstance(x_to_y[0], tuple):
@@ -371,7 +382,7 @@ def normalize_inputs(
         datasets.append(list_of_series)
 
     # Return normalized data and config
-    return LinePlotInputData(data=datasets, pconfig=pconf)
+    return LinePlotInputData(data=datasets, pconfig=pconf, sample_names=sample_names)
 
 
 def save_normalized_data(pid: Anchor, input_data: LinePlotInputData):
@@ -399,12 +410,15 @@ def merge_normalized_data(
     """
     # Merge datasets
     merged_datasets: List[List[Series[KeyT, ValT]]] = []
+    merged_sample_names: List[SampleName] = []
     for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
         if old_ds is None:
             merged_datasets.append(new_ds)
+            merged_sample_names.extend(new_data.sample_names)
             continue
         if new_ds is None:
             merged_datasets.append(old_ds)
+            merged_sample_names.extend(old_data.sample_names)
             continue
 
         series_by_sample: Dict[SampleName, Series[KeyT, ValT]] = {}
@@ -415,7 +429,7 @@ def merge_normalized_data(
             series_by_sample[SampleName(new_series.name)] = new_series
         merged_datasets.append(list(series_by_sample.values()))
 
-    return LinePlotInputData(data=merged_datasets, pconfig=old_data.pconfig)
+    return LinePlotInputData(data=merged_datasets, pconfig=old_data.pconfig, sample_names=merged_sample_names)
 
 
 def plot(
@@ -442,6 +456,7 @@ def plot(
 
     pconf = plot_input.pconfig
     datasets = plot_input.data
+    sample_names = plot_input.sample_names
 
     # Add extra annotation data series
     if pconf.extra_series:
@@ -490,6 +505,7 @@ def plot(
         lists_of_lines=plot_input.data,
         pconfig=plot_input.pconfig,
         anchor=anchor,
+        sample_names=sample_names,
     )
 
 

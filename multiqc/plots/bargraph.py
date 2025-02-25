@@ -459,8 +459,9 @@ class Dataset(BaseDataset):
                 suffix += " " + self.layout["xaxis"]["ticksuffix"]
 
         for sidx, sample in enumerate(self.samples):
+            presudonym = report.anonymize_sample_name(sample)
             prompt += (
-                f"| {sample} | "
+                f"| {presudonym} | "
                 + " | ".join(
                     self.fmt_value_for_llm(
                         (cat.data if not pconfig.cpswitch or pconfig.cpswitch_c_active else cat.data_pct)[sidx]
@@ -475,6 +476,12 @@ class Dataset(BaseDataset):
 
 class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
+
+    def samples_names(self) -> List[SampleName]:
+        names: List[SampleName] = []
+        for ds in self.datasets:
+            names.extend(SampleName(sample) for sample in ds.samples)
+        return names
 
     @staticmethod
     def create(

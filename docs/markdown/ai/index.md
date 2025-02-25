@@ -41,7 +41,9 @@ Remember: Treat your API keys like passwords and do not share them.
   - Sign up at [https://console.anthropic.com](https://console.anthropic.com)
   - Add a payment method to enable API access
   - Create a new key on on the _API Keys_ section in your [account settings](https://console.anthropic.com/settings/keys)
-- Any other provider, via your clipboard
+- Other providers, via custom endpoint
+  - Works for providers supporting OpenAI-compatible API, specify a custom endpoint URL. See [Using custom OpenAI-compatible endpoints](#using-custom-openai-compatible-endpoints) for details
+- Other providers, via your clipboard
   - You can use buttons in MultiQC reports to copy a prompt to your clipboard,
     in order to manually summarise report data.
     See [Copying prompts](#copying-prompts) for instructions.
@@ -235,6 +237,44 @@ If you're unable to generate an AI summary, you can try the following:
   - Filter shown samples dynamically with the toolbox
 - Copy the prompt from `multiqc_data/multiqc_ai_prompt.txt` into clipboard with the **Copy prompt** button in the toolbox, and use it with external services with a larger context window.
 
+## Using custom OpenAI-compatible endpoints
+
+In addition to the built-in providers (Seqera AI, OpenAI, and Anthropic), MultiQC supports using custom OpenAI-compatible endpoints. This allows you to use self-hosted models or alternative providers that implement the OpenAI API specification.
+
+To use a custom endpoint:
+
+1. Select "Custom" as the AI provider in the toolbox
+2. Enter the endpoint URL (e.g., `http://localhost:8000/v1/chat/completions`)
+3. Specify the model name to use with this endpoint
+4. Provide an API key (if required by the endpoint)
+5. Optionally specify a custom context window size if different from the default 128k tokens
+
+You can configure this in the MultiQC config:
+
+```yaml
+ai_provider: custom
+ai_model: your-model-name
+ai_custom_endpoint: http://localhost:8000/v1/chat/completions
+ai_custom_context_window: 32000 # Optional
+```
+
+Make sure to set the `OPENAI_API_KEY` environment variable to use with the custom endpoint:
+
+```bash
+export OPENAI_API_KEY=your-api-key
+```
+
+You can also customize the query payload sent to the endpoint by setting `ai_extra_query_options` in your config:
+
+```yaml
+ai_extra_query_options:
+  temperature: 0.7
+  top_p: 0.9
+  # Any other parameters supported by your endpoint
+```
+
+In browser, you can also select "Custom" provider from the toolbox, and enter the endpoint URL, model name, API key, and optional extra query options manually.
+
 ## Configuring within Nextflow
 
 If you're running MultiQC within a Nextflow pipeline, you probably don't want to edit the workflow code to configure AI summaries.
@@ -300,6 +340,34 @@ Treat results with appropriate mistrust and consider what data you are sending t
 Seqera AI does not use inputs for subsequent fine-tuning or direct model improvement.
 You can find our more information about Seqera's pledge for privacy at
 [https://seqera.io/ai-trust/](https://seqera.io/ai-trust/)
+
+### Sample anonymization
+
+MultiQC provides an option to anonymize sample names when generating AI summaries, both during report generation and in the browser. This helps protect sensitive information when sharing summaries with AI providers.
+
+To enable sample anonymization:
+
+- For in-browser summaries: Toggle "Anonymize samples" in the AI toolbox section
+- For report generation: Set `anonymize_samples: true` in your MultiQC config
+
+When enabled, sample names are replaced with generic pseudonyms (e.g., "SAMPLE_1", "SAMPLE_2") before being sent to the AI provider. The anonymization is applied consistently across the entire report - each sample name gets the same pseudonym wherever it appears. When the AI response references samples, the pseudonyms are automatically converted back to the original sample names before displaying.
+
+MulitQC replaces sample names that appear as typical keys in plots and tables, specifically:
+
+- First column of a table table (e.g. the General statistics table)
+- Labels of bars in bar plots
+- Line names in line plots
+- Data point labels in scatter plots
+- Heatmap axis labels
+- Violin plot data point names
+
+But note that if a module creates some custom plot configuration where sample names are used elsewhere, anonymization would not be guaranteed.
+
+:::info
+
+Note that with the "Continue chat" button you would see the anonymized samples, which makes it less useful.
+
+:::
 
 [^seqera-ai-usage-limits]:
     Seqera Cloud Basic is free for small teams.

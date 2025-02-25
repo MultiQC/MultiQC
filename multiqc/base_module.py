@@ -693,13 +693,16 @@ class BaseMultiqcModule:
 
         search_pattern_key: the search pattern key that this file matched
         """
-        return self._clean_s_name(
+        cleaned_name = self._clean_s_name(
             s_name=s_name,
             f=f,
             root=root or f["root"],
             filename=filename or f["fn"],
             search_pattern_key=f["sp_key"],
         )
+        # Add to the list of all used sample names in the report, to support anonymization for AI requests
+        report.sample_names.append(SampleName(cleaned_name))
+        return cleaned_name
 
     def _clean_s_name(
         self,

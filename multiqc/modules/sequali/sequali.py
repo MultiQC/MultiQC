@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
             Features adapter search, overrepresented sequence  analysis and duplication analysis and supports
             FASTQ and uBAM inputs.
             """,
-            doi="10.5281/zenodo.10822485",
+            doi="10.1093/bioadv/vbaf010",
         )
 
         versions = set()

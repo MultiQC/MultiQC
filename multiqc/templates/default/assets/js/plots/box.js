@@ -25,9 +25,9 @@ class BoxPlot extends Plot {
   }
 
   formatDatasetForAiPrompt(dataset) {
-    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
-    const suffix = this.layout.yaxis.ticksuffix;
+    let prompt = "";
 
+    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
     let [data, samples] = this.prepData(dataset);
 
     // Check if all samples are hidden
@@ -35,25 +35,38 @@ class BoxPlot extends Plot {
       return "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
     }
 
-    data = data.map((d) =>
-      d.map((x) => {
-        let val = !Number.isFinite(x) ? "" : Number.isInteger(x) ? x : parseFloat(x.toFixed(2));
-        if (val !== "" && suffix) val += suffix;
-        return val;
-      }),
-    );
+    prompt += "| Sample | Min | Q1 | Median | Q3 | Max | Mean |\n";
+    prompt += "| --- | --- | --- | --- | --- | --- | --- |\n";
 
-    return (
-      "Plot type: boxplot\n\n" +
-      "Samples: " +
-      samples.join(", ") +
-      "\n\n" +
-      data
-        .map((values, idx) => {
-          return samples[idx] + " " + values.join(", ");
-        })
-        .join("\n\n")
-    );
+    const suffix = this.layout.xaxis.ticksuffix ? " " + this.layout.xaxis.ticksuffix : "";
+
+    // Calculate statistics for each sample
+    samples.forEach((sample, idx) => {
+      const values = data[idx].filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+      if (values.length === 0) return;
+
+      let n = values.length;
+
+      let min = values[0];
+      let max = values[n - 1];
+      let median = n % 2 === 1 ? values[Math.floor(n / 2)] : (values[n / 2 - 1] + values[n / 2]) / 2;
+      let q1 = n >= 4 ? values[Math.floor(n / 4)] : values[0];
+      let q3 = n >= 4 ? values[Math.floor((3 * n) / 4)] : values[n - 1];
+      let mean = values.reduce((a, b) => a + b, 0) / n;
+
+      // Format each value and add suffix
+      let fmt = (val) => {
+        if (!Number.isFinite(val)) return "";
+        const isInt = Number.isInteger(val);
+        return (isInt ? val : parseFloat(val.toFixed(2))) + suffix;
+      };
+
+      prompt += `| ${anonymizeSampleName(sample)} | ${fmt(min)} | ${fmt(q1)} | ${fmt(median)} | ${fmt(q3)} | ${fmt(
+        max,
+      )} | ${fmt(mean)} |\n`;
+    });
+
+    return prompt;
   }
 
   resize(newHeight) {

@@ -4,6 +4,7 @@ import pytest
 
 import multiqc
 from multiqc import config, report
+from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.file_search import file_search
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.modules.custom_content import custom_module_classes
@@ -636,3 +637,17 @@ Sample 3	Group C	'4_5'
         "Group Name": "Group C",
         "Value": "4_5",
     }
+
+
+def test_empty_file(tmp_path):
+    """Test handling of empty custom content files"""
+    file = tmp_path / "empty_mqc.txt"
+    file.write_text("")
+
+    report.analysis_files = [file]
+    report.search_files(["custom_content"])
+    with pytest.raises(ModuleNoSamplesFound):
+        custom_module_classes()
+
+    # Should not create any plots from empty file
+    assert len(report.plot_by_id) == 0

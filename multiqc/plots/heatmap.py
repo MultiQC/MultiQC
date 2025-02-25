@@ -16,8 +16,8 @@ from multiqc.plots.plot import (
     plot_anchor,
     split_long_string,
 )
-from multiqc.types import Anchor
-from multiqc.utils.util_functions import scipy_pdist, scipy_hierarchy_linkage, scipy_hierarchy_leaves_list
+from multiqc.types import Anchor, SampleName
+from multiqc.utils.util_functions import scipy_hierarchy_leaves_list, scipy_hierarchy_linkage, scipy_pdist
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +115,8 @@ class Dataset(BaseDataset):
     ycats: Optional[Sequence[str]]
     xcats_clustered: Optional[Sequence[str]] = None
     ycats_clustered: Optional[Sequence[str]] = None
+    xcats_samples: bool = True
+    ycats_samples: bool = True
 
     @staticmethod
     def create(
@@ -125,6 +127,8 @@ class Dataset(BaseDataset):
         cluster_rows: bool = True,
         cluster_cols: bool = True,
         cluster_method: str = "complete",
+        xcats_samples: bool = True,
+        ycats_samples: bool = True,
     ) -> "Dataset":
         data: List[List[ElemT]]
         if isinstance(rows, dict):
@@ -169,6 +173,8 @@ class Dataset(BaseDataset):
             ycats=[str(y) for y in ycats] if ycats else None,
             xcats_clustered=[str(x) for x in xcats_clustered] if xcats_clustered else None,
             ycats_clustered=[str(y) for y in ycats_clustered] if ycats_clustered else None,
+            xcats_samples=xcats_samples,
+            ycats_samples=ycats_samples,
         )
         return dataset
 
@@ -218,13 +224,19 @@ class Dataset(BaseDataset):
                 prompt = "|"
                 if pconfig.ycats_samples:
                     prompt += " Sample "
-            prompt += "| " + " | ".join(self.xcats) + " |\n"
+            xcats = self.xcats
+            if pconfig.xcats_samples:
+                xcats = [report.anonymize_sample_name(cat) for cat in xcats]
+            prompt += "| " + " | ".join(xcats) + " |\n"
             if self.ycats:
                 prompt += "| --- "
             prompt += "| " + " | ".join("---" for _ in self.xcats) + " |\n"
         for i, row in enumerate(self.rows):
             if self.ycats:
-                prompt += "| " + self.ycats[i] + " "
+                ycat = self.ycats[i]
+                if pconfig.ycats_samples:
+                    ycat = report.anonymize_sample_name(ycat)
+                    prompt += "| " + ycat + " "
             prompt += "| " + " | ".join(str(x) for x in row) + " |\n"
         return prompt
 
@@ -236,6 +248,18 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     min: Optional[float] = None
     max: Optional[float] = None
     cluster_switch_clustered_active: bool = False
+
+    def samples_names(self) -> List[SampleName]:
+        names: List[SampleName] = []
+        if self.xcats_samples:
+            for ds in self.datasets:
+                if ds.xcats:
+                    names.extend(SampleName(cat) for cat in ds.xcats)
+        if self.ycats_samples:
+            for ds in self.datasets:
+                if ds.ycats:
+                    names.extend(SampleName(cat) for cat in ds.ycats)
+        return names
 
     @staticmethod
     def create(
@@ -300,6 +324,8 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                 cluster_rows=pconfig.cluster_rows,
                 cluster_cols=pconfig.cluster_cols,
                 cluster_method=pconfig.cluster_method,
+                xcats_samples=xcats_samples,
+                ycats_samples=ycats_samples,
             )
         ]
 
