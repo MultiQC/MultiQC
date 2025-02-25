@@ -1689,6 +1689,51 @@
       "description": "Show/hide mode",
       "title": "Show Hide Mode"
     },
+    "highlight_patterns": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Patterns for highlighting samples",
+      "title": "Highlight Patterns"
+    },
+    "highlight_colors": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Colors to use for highlighting patterns",
+      "title": "Highlight Colors"
+    },
+    "highlight_regex": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Whether to use regex mode for highlighting",
+      "title": "Highlight Regex"
+    },
     "no_version_check": {
       "anyOf": [
         {
