@@ -205,12 +205,6 @@ class MultiQCConfig(BaseModel):
     # Search patterns
     sp: Optional[Dict[str, SearchPattern]] = Field(None, description="Search patterns for finding tool outputs")
 
-    # Plot options
-    plots_force_flat: Optional[bool] = Field(None, description="Force static plot images")
-    plots_force_interactive: Optional[bool] = Field(None, description="Force interactive plots")
-
-    # And so on for all other config options...
-
     class Config:
         extra = "allow"  # Allow additional fields that aren't in the schema
 

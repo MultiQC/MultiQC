@@ -80,6 +80,7 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+    "types-jsonschema",
     "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
 ]

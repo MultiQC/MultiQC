@@ -527,7 +527,8 @@ def get_llm_client() -> Optional[Client]:
         )
         return OpenAiClient(api_key=api_key, endpoint=config.ai_custom_endpoint)
     else:
-        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(config_schema.AiProviderLiteral.__args__)}]'
+        avail_providers = config_schema.AiProviderLiteral.__args__  # type: ignore
+        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(avail_providers)}]'
         if config.strict:
             raise RuntimeError(msg)
         logger.error(msg + ". Skipping AI summary")
