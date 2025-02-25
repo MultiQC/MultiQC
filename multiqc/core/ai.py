@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
 from multiqc.types import Anchor, SampleName
+from multiqc.utils import config_schema
 
 logger = logging.getLogger(__name__)
 
@@ -526,7 +527,7 @@ def get_llm_client() -> Optional[Client]:
         )
         return OpenAiClient(api_key=api_key, endpoint=config.ai_custom_endpoint)
     else:
-        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(config.AVAILABLE_AI_PROVIDERS)}]'
+        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(config_schema.AiProviderLiteral.__args__)}]'
         if config.strict:
             raise RuntimeError(msg)
         logger.error(msg + ". Skipping AI summary")
