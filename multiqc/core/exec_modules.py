@@ -86,17 +86,18 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
 
             # Clean up non-base attribute to save memory.
             trace_memory("before cleaning up attributes")
-            for mod in these_modules:
-                mod.clean_child_attributes()
+            for m in these_modules:
+                m.clean_child_attributes()
             trace_memory("after cleaning up attributes")
 
-            # Merged duplicated outputs
+            # Override duplicated outputs
             for prev_mod in report.modules:
-                for new_mod in these_modules:
-                    if prev_mod.anchor == new_mod.anchor:
-                        new_mod.merge(prev_mod)
-                        logger.info(f'Updating module "{prev_mod.name}"')
-                        report.modules.remove(prev_mod)
+                if prev_mod.name in set(m.name for m in these_modules):
+                    logger.info(
+                        f'Previous "{prev_mod.name}" run will be overridden. It\'s not yet supported to add new '
+                        f"samples to a module with multiqc.parse_logs()"
+                    )
+                    report.modules.remove(prev_mod)
             report.modules.extend(these_modules)
 
         except ModuleNoSamplesFound:
