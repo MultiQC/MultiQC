@@ -3,9 +3,9 @@
 import logging
 from typing import Dict
 
+from multiqc import config
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
-from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
