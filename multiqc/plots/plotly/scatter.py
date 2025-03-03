@@ -235,12 +235,12 @@ class Dataset(BaseDataset):
         ysuffix = self.layout.get("yaxis", {}).get("ticksuffix", "")
 
         prompt = ""
-        prompt += "| Sample | X | Y |\n"
-        prompt += "| --- | --- | --- |\n"
+        prompt += "|Sample|X|Y|\n"
+        prompt += "|---|---|---|\n"
 
         for point in self.points:
             pseudonym = report.anonymize_sample_name(cast(str, point["name"]))
-            prompt += f"| {pseudonym} | {point['x']}{xsuffix} | {point['y']}{ysuffix} |\n"
+            prompt += f"|{pseudonym}|{point['x']}{xsuffix}|{point['y']}{ysuffix}|\n"
 
         return prompt
 

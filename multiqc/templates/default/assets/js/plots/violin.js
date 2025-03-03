@@ -127,8 +127,8 @@ class ViolinPlot extends Plot {
     results += "\n\n";
 
     results +=
-      `| ${this.pconfig.col1_header} | ` + metrics.map((metric) => headerByMetric[metric].title).join(" | ") + " |\n";
-    results += "| --- | " + metrics.map(() => "---").join(" | ") + " |\n";
+      `|${this.pconfig.col1_header}|` + metrics.map((metric) => headerByMetric[metric].title).join("|") + "|\n";
+    results += "|---|" + metrics.map(() => "---").join("|") + "|\n";
     results += sampleSettings
       .map((sample) => {
         if (sample.hidden) return "";
@@ -142,7 +142,7 @@ class ViolinPlot extends Plot {
           return "";
 
         return (
-          `| ${sample.pseudonym ?? sample.name} | ` +
+          `|${sample.pseudonym ?? sample.name}|` +
           metrics
             .map((metric) => {
               const value =
@@ -157,8 +157,8 @@ class ViolinPlot extends Plot {
               }
               return "";
             })
-            .join(" | ") +
-          " |\n"
+            .join("|") +
+          "|\n"
         );
       })
       .join("");
