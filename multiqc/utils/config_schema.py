@@ -172,7 +172,7 @@ class MultiQCConfig(BaseModel):
     sample_names_replace_regex: Optional[bool] = Field(None, description="Sample names to replace (regex)")
     sample_names_replace_exact: Optional[bool] = Field(None, description="Sample names to replace (exact)")
     sample_names_replace_complete: Optional[bool] = Field(None, description="Sample names to replace (complete)")
-    sample_names_rename: Optional[List[str]] = Field(None, description="Sample names to rename")
+    sample_names_rename: Optional[List[List[str]]] = Field(None, description="Sample names to rename")
     show_hide_buttons: Optional[List[str]] = Field(None, description="Show/hide buttons")
     show_hide_patterns: Optional[List[str]] = Field(None, description="Show/hide patterns")
     show_hide_regex: Optional[List[str]] = Field(None, description="Show/hide regex")
