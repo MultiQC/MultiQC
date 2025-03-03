@@ -15,14 +15,15 @@ log = logging.getLogger(__name__)
 
 #### TO DO
 #
-# - ESMFold - DONE - just produces a .pdb so parse_pdb_file() suffices
-# - AlphaFold2 -
-# - AlphaFold3 - could be just an mmCIF
+#  * - ESMFold - DONE - just produces a .pdb so parse_pdb_file() suffices
+#  * - AlphaFold2 - PARTIAL -
+# - AlphaFold3 - SKIP - not a priority as we're not publicly releasing to useds  
+# - ColabFold - SKIP - alread does its own reporting 
+# - RosettaFold-All-Atom - TO DO - It's already on KOD
+# - HelixFold3 - SKIP -  (will it ever be used?) 
+# * - Boltz-1 - PRIORITY - add processing of all_results.json and final_features.pkl 
+# - Chai - WAITING - BioCommons backlog   
 #
-#
-#
-#
-
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -33,6 +34,8 @@ class MultiqcModule(BaseMultiqcModule):
         - [ESMFold](https://github.com/facebookresearch/esm)
         - [RoseTTaFold-All-Atom](https://github.com/baker-laboratory/RoseTTAFold-All-Atom)
         - [HelixFold3](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_folding/helixfold3)
+        - [Boltz-1](https://github.com/jwohlwend/boltz)
+        - [Chai](https://github.com/chaidiscovery/chai-lab)
 
     This is intended to provide a summary of useful metrics for mass 'folding' a large set of proteins, either in terms of finishing for mulitmer interactions or comparing methods across whole proteomes. It provides a visual 'at-a-glance' report of relevant metrics (average pLDDT, ipTM, *etc*) and does not replace the per-protein interactive plot generated from nfcore/proteinfold
 
@@ -97,6 +100,8 @@ class MultiqcModule(BaseMultiqcModule):
                 npz_data = np.load(filepath) 
                 if f["fn"].startswith("pLDDT_"):
                     pLDDT_per_res = npz_data['pLDDT']  #numpy ndarray, I think this is also true for pkl etc
+                if f["fn"].startswith("plddt_"): #this is from Boltz
+                    pLDDT_per_res = npz_data['plddt']  
                 if f["fn"].startswith("pae_"):
                     pae_per_res = npz_data['pae'] 
                 if f["fn"].startswith("pae_"):
@@ -238,15 +243,22 @@ class MultiqcModule(BaseMultiqcModule):
         samplename = f["s_name"]
 
         method_type = None
-        if samplename == "all_results.json":
+        if f["fn"].startswith("confidence_model"):
+            method_type = "AlphaFold2"  #Ignoring PDE for now 
+        elif f["fn"] == "all_results.json":
             method_type = "HelixFold3"
-        else:
-            method_type = "Boltz-1" #there will be others, add them later. Ignoring PDE for now
- 
+        elif f["fn"].startswith("confidence_"):
+            method_type = "Boltz-1"
+            
+            # There's 3 options for Boltz
+            # [prot]_model_0.cif   
+            # confidence_[prot]_model_0.json
+            # plddt_[prot]_model_0.npz   
+
         with open(filepath, "rb") as f:
             json_obj = json.load(f)
-            pTM = round(json_obj["ptm"], 2)
-            ipTM = round(json_obj["iptm"], 2)
+            #pTM = round(json_obj["ptm"], 2)
+            #ipTM = round(json_obj["iptm"], 2)
             if method_type == "HelixFold3":
                 mean_pLDDT = round(json_obj["mean_plddt"], 2)
                 ranking_confidence = float(round(json_obj["ranking_confidence"], 2))
@@ -254,7 +266,8 @@ class MultiqcModule(BaseMultiqcModule):
                 mean_pLDDT = round(json_obj["complex_plddt"]*100, 2)
                 ranking_confidence = float(round(json_obj["confidence_score"], 2))
 
-        return (pTM, ipTM, mean_pLDDT, ranking_confidence)
+        #return (pTM, ipTM, mean_pLDDT, ranking_confidence)  # TO DO - extract other values from Boltz JSON
+        return (mean_pLDDT, ranking_confidence)
 
 
 # Use this if there's no metric summary file available (.pkl, .json)
@@ -295,7 +308,8 @@ def extract_pLDDT_pdb(f) -> float:
 
     if (
         pLDDT_mean < 1
-    ):  # Should really check each program, but <1 pLDDTs are highlt improbable, so let's just convert to percentage
+    ):  # Should really check each program, but <1 pLDDTs are highly improbable, so let's just convert to percentage
         pLDDT_mean *= 100
+        # BUG - Boltz-1 seems to report .cif confidence < 1 
 
     return round(pLDDT_mean, 2)
