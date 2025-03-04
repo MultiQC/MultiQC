@@ -35,7 +35,6 @@ PointT = Dict[str, ValueT]
 def plot(
     data: Union[Mapping[str, Any], Sequence[Mapping[str, Any]]],
     pconfig: Union[Mapping[str, Any], ScatterConfig, None],
-    sample_names: List[SampleName],
 ) -> "ScatterPlot":
     """
     Plot a scatter plot with X,Y data.
