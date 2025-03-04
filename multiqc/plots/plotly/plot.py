@@ -1,13 +1,13 @@
 import base64
-from functools import lru_cache
 import io
 import logging
 import math
 import platform
 import random
 import re
-from pathlib import Path
 import subprocess
+from functools import lru_cache
+from pathlib import Path
 from typing import (
     Any,
     Dict,
@@ -1079,26 +1079,53 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         return html
 
 
-def _export_plot(fig, file_ext, plot_path, write_kwargs) -> Optional[str]:
-    if is_running_under_rosetta():
-        return None
+def _export_plot(fig, file_ext, plot_path, write_kwargs):
+    """Export a plotly figure to a file."""
+    import logging
+    import signal
+    import threading
+    from functools import partial
 
-    try:
-        if file_ext == "svg":
-            # Cannot add logo to SVGs
-            fig.write_image(plot_path, **write_kwargs)
-        else:
-            img_buffer = io.BytesIO()
-            fig.write_image(img_buffer, **write_kwargs)
-            img_buffer = add_logo(img_buffer, format=file_ext)
-            with open(plot_path, "wb") as f:
-                f.write(img_buffer.getvalue())
-            img_buffer.close()
-    except Exception as e:
-        logger.error(f"Unable to export plot to {file_ext.upper()} image: {e}")
-        return None
-    else:
-        return plot_path
+    # Default timeout of 30 seconds for image export
+    timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 30
+
+    def timeout_handler(*args):
+        raise TimeoutError(f"Plot export timed out after {timeout} seconds")
+
+    class ExportThread(threading.Thread):
+        def __init__(self, fig, plot_path, write_kwargs):
+            threading.Thread.__init__(self)
+            self.fig = fig
+            self.plot_path = plot_path
+            self.write_kwargs = write_kwargs
+            self.exception = None
+
+        def run(self):
+            try:
+                self.fig.write_image(self.plot_path, **self.write_kwargs)
+            except Exception as e:
+                self.exception = e
+
+    # Start the export in a separate thread
+    export_thread = ExportThread(fig, plot_path, write_kwargs)
+    export_thread.start()
+    export_thread.join(timeout)
+
+    if export_thread.is_alive():
+        # If thread is still running after timeout, log warning and continue
+        logging.warning(
+            f"Plot export timed out after {timeout}s: {plot_path}. "
+            "This is likely due to a known issue in Kaleido. "
+            "The plot will be skipped but the report will continue to generate."
+        )
+        # We don't kill the thread as it might be unsafe, but we continue execution
+        return False
+    if export_thread.exception:
+        # If there was an exception in the thread, log it
+        logging.error(f"Error exporting plot to {plot_path}: {export_thread.exception}")
+        return False
+
+    return True
 
 
 def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
@@ -1152,7 +1179,6 @@ def fig_to_static_html(
         # for the flat plots we explicitly set width
         height=fig.layout.height / config.plots_export_font_scale,
         scale=scale,  # higher detail (retina display)
-        # engine="orca",  # kaleido gets frozen in docker environments
     )
 
     formats = set(config.export_plot_formats) if export_plots else set()
@@ -1175,7 +1201,10 @@ def fig_to_static_html(
             try:
                 if not plot_export_has_failed:
                     # Running for the first time, so doing a safe run in a subprocess to find out if it freezes the process or now
-                    _export_plot(fig, file_ext, plot_path, write_kwargs)
+                    export_success = _export_plot(fig, file_ext, plot_path, write_kwargs)
+                    if not export_success:
+                        plot_export_has_failed = True
+                        raise ValueError(f"Failed to export plot to {file_ext.upper()} image")
             except Exception as e:
                 msg = f"{file_name}: Unable to export plot to {file_ext.upper()} image"
                 logger.error(f"{msg}. {e}")

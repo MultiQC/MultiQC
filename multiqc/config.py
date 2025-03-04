@@ -109,6 +109,7 @@ megaqc_url: str
 megaqc_access_token: Optional[str]
 megaqc_timeout: float
 export_plots: bool
+export_plots_timeout: int
 make_report: bool
 make_pdf: bool
 

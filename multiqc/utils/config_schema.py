@@ -92,6 +92,7 @@ class MultiQCConfig(BaseModel):
     megaqc_access_token: Optional[str] = Field(None, description="MegaQC access token")
     megaqc_timeout: Optional[int] = Field(None, description="MegaQC timeout")
     export_plots: Optional[bool] = Field(None, description="Export plots")
+    export_plots_timeout: Optional[int] = Field(None, description="Export plots timeout")
     make_report: Optional[bool] = Field(None, description="Make report")
     make_pdf: Optional[bool] = Field(None, description="Make PDF")
 

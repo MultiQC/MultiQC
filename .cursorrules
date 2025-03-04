@@ -29,7 +29,7 @@ When writing modules, you must follow the following rules:
 - Do not add separate markdown files or module-level docstrings. Instead add a docstring to the module class.
 - Module's `info` MUST start with a capital letter.
 
-THIS IS VERY IMPORTANT. YOU MUST FOLLOW THESE GUIDELINES. 
+THIS IS VERY IMPORTANT. YOU MUST FOLLOW THESE GUIDELINES.
 
 ## MultiQC codebase structure
 
@@ -40,6 +40,7 @@ THIS IS VERY IMPORTANT. YOU MUST FOLLOW THESE GUIDELINES.
 - `multiqc/base_module.py` - a base module class for all modules to inherit. Povides a lot of sample name cleaning and grouping logic.
 - `multiqc/utils` - common Python utility functions.
 - `multiqc/config.py` - a configuration class that contains all the configuration variables for MultiQC, as well as all the configuration discovery logic.
+- `multiqc/utils/config_schema.py` - a Pydantic model to generate config schema. Should match globals in `multiqc/config.py` and `multiqc/config_defaults.yaml`
 - `multiqc/interactive.py` - function helpers to construct a MultiQC report in interactive mode, e.g. in a Jupyter notebook.
 - `multiqc/report.py` - a singleton class with globale variables that are passed to Jinja2 to render a report. Holds the "state" of the report, i.e. modules, sections, discovered files, list of HTML anchor to keep them unique, etc., as well as multiple helper functions.
 - `multiqc/multiqc.py` - main entry point of MultiQC. Includes command line interface logic.
@@ -102,8 +103,8 @@ Some parameters are passed down to the browser runtime. It is done through setti
 
 ```html
 <script type="text/javascript">
-...
-aiConfigEnabled = "{{ config.ai_summary }}";
-...
+  ...
+  aiConfigEnabled = "{{ config.ai_summary }}";
+  ...
 </script>
 ```
