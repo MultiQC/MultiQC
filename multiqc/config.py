@@ -168,8 +168,8 @@ sample_names_replace_exact: bool
 sample_names_replace_complete: bool
 sample_names_rename: List[List[str]]
 show_hide_buttons: List[str]
-show_hide_patterns: List[str]
-show_hide_regex: List[str]
+show_hide_patterns: List[List[str]]
+show_hide_regex: List[bool]
 show_hide_mode: List[str]
 highlight_patterns: List[str]
 highlight_colors: List[str]
@@ -614,7 +614,11 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
 
     # Lists are not of the same length, pad or trim to the length of show_hide_patterns
     for i in range(len(show_hide_buttons), len(show_hide_patterns)):
-        show_hide_buttons.append(show_hide_patterns[i] if i < len(show_hide_patterns) and show_hide_patterns[i] else "")
+        show_hide_buttons.append(
+            show_hide_patterns[i][0]
+            if i < len(show_hide_patterns) and show_hide_patterns[i] and show_hide_patterns[i][0]
+            else ""
+        )
         show_hide_mode.append("hide")
         show_hide_regex.append(False)
 

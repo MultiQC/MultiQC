@@ -198,7 +198,8 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         """
         if layout.showlegend is True:
             # Extra space for legend
-            layout.height += len(self.lines) * 5
+            if hasattr(layout, "height") and isinstance(layout.height, int):
+                layout.height += len(self.lines) * 5
 
         fig = go.Figure(layout=layout)
         for series in self.lines:
@@ -276,19 +277,26 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
             report.write_data_file(y_by_x_by_sample, self.uid)
 
     def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
-        xsuffix = self.layout.get("xaxis", {}).get("ticksuffix")
-        ysuffix = self.layout.get("yaxis", {}).get("ticksuffix")
+        xsuffix = self.layout.get("xaxis", {}).get("ticksuffix", "")
+        ysuffix = self.layout.get("yaxis", {}).get("ticksuffix", "")
 
         # Use pseudonyms for sample names if available
         pseudonyms = [report.anonymize_sample_name(series.name) for series in self.lines]
+
+        # Create header with axis information and common suffixes
         result = "Samples: " + ", ".join(pseudonyms) + "\n\n"
 
+        # If all y-values have the same suffix (like %), mention it in the header
+        if ysuffix:
+            result += f"Y values are in {ysuffix}\n\n"
+        if xsuffix:
+            result += f"X values are in {xsuffix}\n\n"
+
         for pseudonym, series in zip(pseudonyms, self.lines):
-            pairs = [
-                f"({self.fmt_value_for_llm(x[0])}{xsuffix}: {self.fmt_value_for_llm(x[1])}{ysuffix})"
-                for x in series.pairs
-            ]
+            # For other plots or fewer points, use the original format but without redundant suffixes
+            pairs = [f"{self.fmt_value_for_llm(x[0])}: {self.fmt_value_for_llm(x[1])}" for x in series.pairs]
             result += f"{pseudonym} {', '.join(pairs)}\n\n"
+
         return result
 
 
