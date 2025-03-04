@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from typing import List, Dict
+from typing import Dict, List
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
