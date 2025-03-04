@@ -1,8 +1,8 @@
-from collections import defaultdict
-
 import logging
-import spectra  # type: ignore
+from collections import defaultdict
 from typing import Dict, Union
+
+import spectra  # type: ignore
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table

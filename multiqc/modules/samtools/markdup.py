@@ -1,12 +1,9 @@
 import json
 import logging
 import re
+from typing import Dict, Union
 
-from typing import Dict
-from typing import Union
-
-from multiqc.plots import bargraph
-from multiqc.plots import table
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 

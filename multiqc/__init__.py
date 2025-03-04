@@ -43,7 +43,7 @@ from multiqc.interactive import (  # noqa: E402
     write_report,
 )
 from multiqc.multiqc import run  # noqa: E402
-from multiqc.plots.plotly.plot import PConfig, Plot  # noqa: E402
+from multiqc.plots.plot import PConfig, Plot  # noqa: E402
 
 __version__ = config.version
 

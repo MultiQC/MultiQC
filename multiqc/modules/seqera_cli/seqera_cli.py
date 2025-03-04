@@ -5,7 +5,7 @@ import os
 import re
 import tarfile
 from collections import defaultdict
-from typing import Dict, Any
+from typing import Any, Dict
 
 import humanize
 

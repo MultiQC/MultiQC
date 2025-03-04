@@ -3,10 +3,11 @@ from unittest.mock import patch
 
 import pytest
 
-from multiqc import Plot, config, report
+from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
-from multiqc.plots.plotly.line import LinePlotConfig, Series
+from multiqc.plots.linegraph import LinePlotConfig, Series
+from multiqc.plots.plot import Plot
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
 
