@@ -41,8 +41,8 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
 
     # Handle repeated modules: check anchors for possible duplicates. Modules with same anchor
     # will be merged into one module, so need to make sure they are different for repeated modules.
-    for m in mod_dicts_in_order:
-        mod_id, mod_cust_config = list(m.items())[0]
+    for mod_dict in mod_dicts_in_order:
+        mod_id, mod_cust_config = list(mod_dict.items())[0]
         anchor = mod_cust_config.get("anchor") or mod_id
         anchor = Anchor(report.save_htmlid(str(anchor)))
         if anchor != mod_id:
@@ -66,7 +66,7 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
 
         this_module: str = list(mod_dict.keys())[0]
         logger.debug(f"Running module: {this_module}")
-        mod_cust_config: Dict = list(mod_dict.values())[0] or {}
+        mod_cust_config = list(mod_dict.values())[0] or {}
         # noinspection PyBroadException
         try:
             entry_point: EntryPoint = config.avail_modules[this_module]
@@ -86,8 +86,8 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
 
             # Clean up non-base attribute to save memory.
             trace_memory("before cleaning up attributes")
-            for m in these_modules:
-                m.clean_child_attributes()
+            for module in these_modules:
+                module.clean_child_attributes()
             trace_memory("after cleaning up attributes")
 
             # Override duplicated outputs

@@ -166,7 +166,7 @@ def normalize_inputs(
     # Filter data to keep only numerals, remove unknown categories and fill missing with NaNs
     filtered_datasets: List[DatasetT] = []
     for ds_idx, raw_ds in enumerate(raw_datasets):
-        filtered_ds = {}
+        filtered_ds: DatasetT = {}
         filtered_datasets.append(filtered_ds)
         for sample_name in list(raw_ds.keys()):
             raw_val_by_cat = raw_ds[sample_name]
