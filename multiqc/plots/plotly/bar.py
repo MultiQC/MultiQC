@@ -170,8 +170,8 @@ class Dataset(BaseDataset):
     def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
         """Format dataset as a markdown table"""
         prompt = ""
-        prompt += "| Sample | " + " | ".join(cat.name for cat in self.cats) + " |\n"
-        prompt += "| --- | " + " | ".join("---" for _ in self.cats) + " |\n"
+        prompt += "|Sample|" + "|".join(cat.name for cat in self.cats) + "|\n"
+        prompt += "|---|" + "|".join("---" for _ in self.cats) + "|\n"
 
         suffix = ""
         if not pconfig.cpswitch_c_active:
@@ -185,15 +185,15 @@ class Dataset(BaseDataset):
         for sidx, sample in enumerate(self.samples):
             presudonym = report.anonymize_sample_name(sample)
             prompt += (
-                f"| {presudonym} | "
-                + " | ".join(
+                f"|{presudonym}|"
+                + "|".join(
                     self.fmt_value_for_llm(
                         (cat.data if not pconfig.cpswitch or pconfig.cpswitch_c_active else cat.data_pct)[sidx]
                     )
                     + suffix
                     for cat in self.cats
                 )
-                + " |\n"
+                + "|\n"
             )
         return prompt
 

@@ -403,8 +403,8 @@ class Dataset(BaseDataset):
         result += "\n\n"
 
         # Table view - rows are samples, columns are metrics
-        result += "| " + pconfig.col1_header + " | " + " | ".join(col.title for (_, _, col) in headers) + " |\n"
-        result += "| --- | " + " | ".join("---" for _ in headers) + " |\n"
+        result += "|" + pconfig.col1_header + "|" + "|".join(col.title for (_, _, col) in headers) + "|\n"
+        result += "|---|" + "|".join("---" for _ in headers) + "|\n"
         for sample in samples:
             if all(
                 sample not in self.violin_value_by_sample_by_metric[col.rid]
@@ -422,7 +422,7 @@ class Dataset(BaseDataset):
                     if col.suffix:
                         value = f"{value}{col.suffix}"
                 row.append(str(value))
-            result += f"| {pseudonym} | " + " | ".join(row) + " |\n"
+            result += f"|{pseudonym}|" + "|".join(row) + "|\n"
 
         return result
 

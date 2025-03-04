@@ -103,8 +103,8 @@ class Dataset(BaseDataset):
 
     def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
         """Format dataset as a markdown table with basic statistics"""
-        prompt = "| Sample | Min | Q1 | Median | Q3 | Max | Mean |\n"
-        prompt += "| --- | --- | --- | --- | --- | --- | --- |\n"
+        prompt = "|Sample|Min|Q1|Median|Q3|Max|Mean|\n"
+        prompt += "|---|---|---|---|---|---|---|\n"
 
         suffix = ""
         if self.layout["xaxis"]["ticksuffix"]:
@@ -130,13 +130,13 @@ class Dataset(BaseDataset):
             mean = sum(values) / len(values)
 
             prompt += (
-                f"| {pseudonym} | "
-                f"{self.fmt_value_for_llm(min_val)}{suffix} | "
-                f"{self.fmt_value_for_llm(q1)}{suffix} | "
-                f"{self.fmt_value_for_llm(median)}{suffix} | "
-                f"{self.fmt_value_for_llm(q3)}{suffix} | "
-                f"{self.fmt_value_for_llm(max_val)}{suffix} | "
-                f"{self.fmt_value_for_llm(mean)}{suffix} |\n"
+                f"|{pseudonym}|"
+                f"{self.fmt_value_for_llm(min_val)}{suffix}|"
+                f"{self.fmt_value_for_llm(q1)}{suffix}|"
+                f"{self.fmt_value_for_llm(median)}{suffix}|"
+                f"{self.fmt_value_for_llm(q3)}{suffix}|"
+                f"{self.fmt_value_for_llm(max_val)}{suffix}|"
+                f"{self.fmt_value_for_llm(mean)}{suffix}|\n"
             )
         return prompt
 

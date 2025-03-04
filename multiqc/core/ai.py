@@ -639,7 +639,7 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
     tools_context: str = ""
     tools_context += "Tools used in the report:\n\n"
     for i, tool in enumerate(metadata.tools.values()):
-        tools_context += f"{i + 1}. {tool.name} ({tool.info})\n"
+        tools_context += f"{i + 1}. {tool.name}\n"
         if tool.info:
             tools_context += f"Description: {tool.info}\n"
         if tool.href:
