@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from multiqc import report, config
 from multiqc.core.exceptions import RunError
 from multiqc.core import log_and_rich, plugin_hooks
+from multiqc.utils.config_schema import AiProviderLiteral
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ class ClConfig(BaseModel):
     data_dump_file_write_raw: Optional[bool] = None
     ai_summary: Optional[bool] = None
     ai_summary_full: Optional[bool] = None
-    ai_provider: Optional[Literal["seqera", "openai", "anthropic", "custom"]] = None
+    ai_provider: Optional[AiProviderLiteral] = None
     ai_model: Optional[str] = None
     ai_custom_endpoint: Optional[str] = None
     ai_custom_context_window: Optional[int] = None

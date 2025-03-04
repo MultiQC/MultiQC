@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
-AiProviderLiteral = Literal["seqera", "openai", "anthropic", "custom"]
+AiProviderLiteral = Literal["seqera", "openai", "anthropic", "aws_bedrock", "custom"]
 
 
 class SearchPattern(BaseModel):
