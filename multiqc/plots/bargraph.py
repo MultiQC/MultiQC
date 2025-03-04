@@ -52,7 +52,7 @@ class BarPlotConfig(PConfig):
     hide_empty: Optional[bool] = Field(None, deprecated="hide_zero_cats")
     hide_zero_cats: bool = True
     sort_samples: bool = True
-    use_legend: bool = True
+    use_legend: Optional[bool] = None
     suffix: Optional[str] = None
     lab_format: Optional[str] = None
 
@@ -574,7 +574,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 bgcolor="rgba(255, 255, 255, 0.8)",
                 font=dict(color="black"),
             ),
-            showlegend=pconfig.use_legend,
+            showlegend=pconfig.use_legend if pconfig.use_legend is not None else True,
         )
 
         if getattr(config, "barplot_legend_on_bottom", False):
@@ -624,7 +624,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                         maxallowed=maxallowed,
                     ),
                 ),
-                showlegend=len(dataset.cats) > 1,
+                showlegend=len(dataset.cats) > 1 if pconfig.use_legend is None else pconfig.use_legend,
             )
             dataset.trace_params.update(
                 orientation="h",
