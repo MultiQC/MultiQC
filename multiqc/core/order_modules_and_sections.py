@@ -13,8 +13,8 @@ def order_modules_and_sections():
     Finalise modules and sections: place in the write order, add special-case modules.
     """
     # Importing here to avoid circular imports
-    from multiqc.modules.profile_runtime import MultiqcModule as ProfileRuntimeModule
-    from multiqc.modules.software_versions import MultiqcModule as SoftwareVersionsModule
+    from multiqc.core.special_case_modules.profile_runtime import MultiqcModule as ProfileRuntimeModule
+    from multiqc.core.special_case_modules.software_versions import MultiqcModule as SoftwareVersionsModule
 
     # First, remove the special-case modules that we want to re-add at the end, in case if they were
     # already added by a previous call of multiqc.write_report in an interactive session.
