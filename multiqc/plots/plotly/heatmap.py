@@ -214,21 +214,21 @@ class Dataset(BaseDataset):
             if self.ycats:
                 prompt = "|"
                 if pconfig.ycats_samples:
-                    prompt += " Sample "
+                    prompt += "Sample"
             xcats = self.xcats
             if pconfig.xcats_samples:
                 xcats = [report.anonymize_sample_name(cat) for cat in xcats]
-            prompt += "| " + " | ".join(xcats) + " |\n"
+            prompt += "|" + "|".join(xcats) + "|\n"
             if self.ycats:
-                prompt += "| --- "
-            prompt += "| " + " | ".join("---" for _ in self.xcats) + " |\n"
+                prompt += "|---"
+            prompt += "|" + "|".join("---" for _ in self.xcats) + "|\n"
         for i, row in enumerate(self.rows):
             if self.ycats:
                 ycat = self.ycats[i]
                 if pconfig.ycats_samples:
                     ycat = report.anonymize_sample_name(ycat)
-                    prompt += "| " + ycat + " "
-            prompt += "| " + " | ".join(str(x) for x in row) + " |\n"
+                    prompt += "|" + ycat
+            prompt += "|" + "|".join(str(x) for x in row) + "|\n"
         return prompt
 
 
