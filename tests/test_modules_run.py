@@ -133,7 +133,20 @@ TrimmomaticSE: Completed successfully""")
     assert expected_sample_name in m.saved_raw_data[f"multiqc_{MODULE_NAME}"]
 
 
-def test_path_filters(multiqc_reset, tmp_path, data_dir):
+@pytest.mark.parametrize(
+    # Custom anchors are used to suffix the write_data_file fn (= saved_raw_data key)
+    # If custom anchor is not provided for a repeated module, it is added for the second occurent
+    # by sanitising the module id (e.g. adapterremoval -> adapterremoval-1
+    "anchors,expected_raw_data_keys",
+    [
+        (
+            ["my_anchor_se", "my_anchor_pe"],
+            ["multiqc_adapter_removal_my_anchor_se", "multiqc_adapter_removal_my_anchor_pe"],
+        ),
+        ([None, None], ["multiqc_adapter_removal", "multiqc_adapter_removal_adapterremoval-1"]),
+    ],
+)
+def test_path_filters(multiqc_reset, tmp_path, data_dir, anchors, expected_raw_data_keys):
     search_path = data_dir / "modules" / "adapterremoval"
     assert search_path.exists() and search_path.is_dir()
 
@@ -156,14 +169,14 @@ def test_path_filters(multiqc_reset, tmp_path, data_dir):
             {
                 "adapterremoval": {
                     "name": "adapterremoval (single end)",
-                    "anchor": "my_anchor_se",
+                    "anchor": anchors[0],
                     "path_filters": ["*/se.*"],
                 },
             },
             {
                 "adapterremoval": {
                     "name": "adapterremoval (paired end)",
-                    "anchor": "my_anchor_pe",
+                    "anchor": anchors[1],
                     "path_filters": ["*/pec?.*", "*/penc?.*"],
                 },
             },
@@ -178,10 +191,10 @@ def test_path_filters(multiqc_reset, tmp_path, data_dir):
     assert report.modules[1].name == "adapterremoval (paired end)"
     assert report.modules[0].saved_raw_data is not None
     assert report.modules[1].saved_raw_data is not None
-    assert report.modules[0].saved_raw_data["multiqc_adapter_removal_my_anchor_se"].keys() == {
+    assert report.modules[0].saved_raw_data[expected_raw_data_keys[0]].keys() == {
         Path(fn).name for fn in expected_se_files
     }
-    assert report.modules[1].saved_raw_data["multiqc_adapter_removal_my_anchor_pe"].keys() == {
+    assert report.modules[1].saved_raw_data[expected_raw_data_keys[1]].keys() == {
         Path(fn).name for fn in expected_pe_files
     }
     assert report.general_stats_data[0].keys() == {Path(fn).name for fn in expected_se_files}

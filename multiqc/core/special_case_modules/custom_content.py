@@ -15,7 +15,6 @@ from pydantic import BaseModel
 from multiqc import Plot, config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
-from multiqc.plots.table import TableConfig
 from multiqc.types import Anchor, LoadedFileDict, ModuleId, PlotType, SectionId
 from multiqc.validation import ModuleConfigValidationError
 
