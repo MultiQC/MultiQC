@@ -651,17 +651,17 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
     user_prompt += tools_context
 
     # General stats - also always include, otherwise we don't have anything to summarize
-    if report.general_stats_plot:
+    if general_stats_plot := report.plot_by_id.get(Anchor("general_stats")):
         genstats_context = f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-{report.general_stats_plot.format_for_ai_prompt()}
+{general_stats_plot.format_for_ai_prompt()}
 """
         genstats_n_tokens = client.n_tokens(genstats_context)
         if current_n_tokens + genstats_n_tokens > max_tokens:
             # If it's too long already, try without hidden columns
             genstats_context = f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-{report.general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
+{general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
 """
             genstats_n_tokens = client.n_tokens(genstats_context)
             if current_n_tokens + genstats_n_tokens > max_tokens:
