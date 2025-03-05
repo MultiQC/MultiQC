@@ -88,8 +88,8 @@ def test_software_versions_from_config(tmp_path, data_dir, capsys):
         yaml.dump(
             {
                 "software_versions": {
-                    "example_module": {
-                        "example_tool": ["1.4.2"],
+                    "bismark": {
+                        "bismark": ["1.4.2"],
                     }
                 }
             },
@@ -100,7 +100,37 @@ def test_software_versions_from_config(tmp_path, data_dir, capsys):
     multiqc.parse_logs(data_dir / "software_versions", config_files=[conf_path])
     multiqc.write_report(filename="stdout")
     captured = capsys.readouterr()
-    assert "<td>example_tool</td><td><samp>1.4.2</samp></td>" in captured.out
+    assert "<td>bismark</td><td><samp>1.4.2</samp></td>" in captured.out
+
+
+def test_software_versions_from_config_and_module(tmp_path, data_dir, capsys):
+    """
+    Verify finding versions from the config section and the module.
+    """
+    mod_dir = data_dir / "modules" / "bismark"
+    assert mod_dir.exists() and mod_dir.is_dir()
+
+    multiqc.run(mod_dir, cfg=ClConfig(filename="stdout"))
+    captured = capsys.readouterr()
+
+    conf_path = tmp_path / "multiqc_config.yaml"
+    with open(conf_path, "w") as f:
+        yaml.dump(
+            {
+                "software_versions": {
+                    "bismark": {
+                        "bismark": ["1.4.2"],
+                    }
+                }
+            },
+            f,
+        )
+
+    # Need some data to be passed besides the bare config
+    multiqc.parse_logs(data_dir / "software_versions", config_files=[conf_path])
+    multiqc.write_report(filename="stdout")
+    captured = capsys.readouterr()
+    assert "<td>Bismark</td><td><samp>0.14.0, 0.14.4, 1.4.2</samp></td>" in captured.out
 
 
 def test_software_versions_from_mqc_files(tmp_path, data_dir, capsys):
