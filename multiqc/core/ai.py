@@ -183,7 +183,7 @@ class Client:
         raise NotImplementedError
 
     def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_SHORT + "\n\n" + report_content)
+        response = self._query(PROMPT_SHORT, report_content)
 
         return InterpretationResponse(
             interpretation=InterpretationOutput(summary=response.content),
@@ -191,7 +191,7 @@ class Client:
         )
 
     def interpret_report_full(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_FULL + "\n\n" + report_content)
+        response = self._query(PROMPT_FULL, report_content)
 
         try:
             output = yaml.safe_load(response.content)
@@ -300,7 +300,7 @@ class OpenAiClient(Client):
         content: str
         model: str
 
-    def _query(self, prompt: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
+    def _query(self, prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
         body: Dict[str, Any] = {
             "temperature": 0.0,
         }
@@ -312,16 +312,24 @@ class OpenAiClient(Client):
             {
                 "model": self.model,
                 "messages": [
-                    {"role": "user", "content": prompt},
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": report_content}
                 ],
             }
         )
-        response = self._request_with_error_handling_and_retries(
-            self.endpoint,
-            headers={
+        if config.ai_auth_type == 'api-key':
+            headers = {
+                'Content-Type': 'application/json',
+                'api-key': self.api_key
+            }
+        else:
+            headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",
-            },
+            }
+        response = self._request_with_error_handling_and_retries(
+            self.endpoint,
+            headers=headers,
             body=body,
         )
         return OpenAiClient.ApiResponse(
