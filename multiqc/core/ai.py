@@ -331,6 +331,7 @@ class OpenAiClient(Client):
             self.endpoint,
             headers=headers,
             body=body,
+            retries=config.ai_retries or 1,
         )
         return OpenAiClient.ApiResponse(
             content=response["choices"][0]["message"]["content"],

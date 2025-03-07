@@ -73,6 +73,7 @@ ai_custom_context_window: null
 ai_auth_type: null
 no_ai: false
 ai_anonymize_samples: false
+ai_retries: 1
 
 # Development settings:
 seqera_api_url: "https://intern.seqera.io"
