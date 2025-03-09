@@ -174,11 +174,11 @@ ResponseT = TypeVar("ResponseT")
 
 
 class Client:
-    def __init__(self, api_key: str | None = None):
+    def __init__(self, api_key: Optional[str] = None):
         self.name: str
         self.title: str
         self.model: str
-        self.api_key: str | None = api_key
+        self.api_key: Optional[str] = api_key
 
     def _query(self, prompt: str):
         raise NotImplementedError
