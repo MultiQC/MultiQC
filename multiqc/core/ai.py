@@ -376,14 +376,11 @@ class AWSBedrockClient(Client):
 
         import boto3
 
-        self.model = (
-            config.ai_model
-        )
+        self.model = config.ai_model
         self.name = "aws_bedrock"
         self.title = "AWS Bedrock"
 
-        self.client = boto3.client(service_name='bedrock-runtime')
-
+        self.client = boto3.client(service_name="bedrock-runtime")
 
     def max_tokens(self) -> int:
         return 200000
@@ -394,35 +391,26 @@ class AWSBedrockClient(Client):
 
     def _query(self, prompt: str) -> ApiResponse:
         # TODO consider error-handling/backoff
-        body = json.dumps({
-            # this is the only allowable value as of 2025/03/04
-            # if they ever add more, we can make it configurable
-            # or add smart logic to figure it out.
-            "anthropic_version": "bedrock-2023-05-31",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [{"type": "text", "text": prompt}]
-                }
-            ],
-            "max_tokens": 4096,
-            "temperature": 0.0,
-            "top_p": 1.0,
-        })
+        body = json.dumps(
+            {
+                # this is the only allowable value as of 2025/03/04
+                # if they ever add more, we can make it configurable
+                # or add smart logic to figure it out.
+                "anthropic_version": "bedrock-2023-05-31",
+                "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+                "max_tokens": 4096,
+                "temperature": 0.0,
+                "top_p": 1.0,
+            }
+        )
 
         response = self.client.invoke_model(
-            body=body,
-            modelId=self.model,
-            accept='application/json',
-            contentType='application/json'
+            body=body, modelId=self.model, accept="application/json", contentType="application/json"
         )
 
-        response_body = json.loads(response['body'].read())
+        response_body = json.loads(response["body"].read())
         content = response_body["content"][0]["text"]  # Extract the assistant's response
-        return AWSBedrockClient.ApiResponse(
-            content=content,
-            model=self.model
-        )
+        return AWSBedrockClient.ApiResponse(content=content, model=self.model)
 
 
 class SeqeraClient(Client):
