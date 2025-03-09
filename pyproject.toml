@@ -83,6 +83,7 @@ dev = [
     "types-beautifulsoup4",
     "types-Pillow",
     "types-jsonschema",
+    "types-boto3",
     "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
 ]
