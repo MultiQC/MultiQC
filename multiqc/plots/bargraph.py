@@ -16,6 +16,7 @@ from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.plots.plot import (
     BaseDataset,
+    NormalizedPlotInputData,
     PConfig,
     Plot,
     PlotType,
@@ -81,191 +82,178 @@ class CatDataDict(TypedDict):
 DatasetT = Dict[SampleName, Dict[CatName, Union[int, float]]]
 
 
-class BarPlotInputData(BaseModel):
+class BarPlotInputData(NormalizedPlotInputData):
     data: List[DatasetT]
     cats: List[Dict[CatName, CatConf]]
     pconfig: BarPlotConfig
 
+    @staticmethod
+    def create(
+        data: Union[InputDatasetT, Sequence[InputDatasetT]],
+        cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
+        pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
+    ) -> "BarPlotInputData":
+        """
+        We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
+        allow optional categories, categories as strings or as dicts or as objects. We want
+        to normalize the input data before we save it to intermediate format and plot.
+        """
+        pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
 
-def normalize_inputs(
-    data: Union[InputDatasetT, Sequence[InputDatasetT]],
-    cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
-    pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
-) -> BarPlotInputData:
-    """
-    We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
-    allow optional categories, categories as strings or as dicts or as objects. We want
-    to normalize the input data before we save it to intermediate format and plot.
-    """
-    pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
-
-    # Given one dataset - turn it into a list
-    raw_datasets: List[DatasetT]
-    if isinstance(data, Sequence):
-        raw_datasets = cast(List[DatasetT], data)
-    else:
-        raw_datasets = [cast(DatasetT, data)]
-    del data
-
-    # Make list of cats from different inputs
-    raw_cats_per_ds: List[InputCategoriesT]
-    if not cats:
-        # Not supplied, generate default categories
-        raw_cats_per_ds = []
-        for val_by_cat_by_sample in raw_datasets:
-            ds_cats: List[CatName] = []
-            for sample_name, val_by_cat in val_by_cat_by_sample.items():
-                for cat_name in val_by_cat.keys():
-                    if cat_name not in raw_cats_per_ds:
-                        ds_cats.append(CatName(cat_name))
-            raw_cats_per_ds.append(ds_cats)
-    elif isinstance(cats, List) and isinstance(cats[0], str):
-        # ["Cat1", "Cat2"] - list of strings for one dataset
-        raw_cats_per_ds = [[CatName(cat_name) for cat_name in cast(List[str], cats)]]
-    elif isinstance(cats, Sequence):
-        # [["Cat1", "Cat2"], {"Cat3": {}, "Cat4": {}}] - list of lists or dicts for multiple datasets
-        raw_cats_per_ds = [ds_cats for ds_cats in cast(List[Dict], cats)]
-    else:
-        raw_cats_per_ds = [cats]
-
-    if len(raw_datasets) > 1 and len(raw_cats_per_ds) == 1:
-        raw_cats_per_ds = raw_cats_per_ds * len(raw_datasets)
-    elif len(raw_datasets) != len(raw_cats_per_ds):
-        raise RunError(
-            f"Bar graph: number of dataset and category lists must match, got {len(raw_datasets)} "
-            f"datasets and {len(raw_cats_per_ds)} category lists: {raw_cats_per_ds}"
-        )
-
-    # Parse the categories into pydantic objects
-    categories_per_ds: List[Dict[CatName, CatConf]] = []
-    for raw_ds_cats in raw_cats_per_ds:
-        ds_categories: Dict[CatName, CatConf] = dict()
-        if isinstance(raw_ds_cats, list):
-            for cat_name in raw_ds_cats:
-                ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), name=cat_name)
-        elif isinstance(raw_ds_cats, dict):
-            for cat_name, cat_props in raw_ds_cats.items():
-                if isinstance(cat_props, CatConf):
-                    ds_categories[CatName(cat_name)] = cat_props
-                else:
-                    if "name" not in cat_props:
-                        cat_props = {"name": cat_name, **cat_props}
-                    ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), **cat_props)
+        # Given one dataset - turn it into a list
+        raw_datasets: List[DatasetT]
+        if isinstance(data, Sequence):
+            raw_datasets = cast(List[DatasetT], data)
         else:
-            raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
-        categories_per_ds.append(ds_categories)
+            raw_datasets = [cast(DatasetT, data)]
+        del data
 
-    # Allow user to overwrite a given category config for this plot
-    if pconf.id and pconf.id in config.custom_plot_config:
-        for cat_name, user_cat_props in config.custom_plot_config[pconf.id].items():
-            for ds_idx in range(len(categories_per_ds)):
-                if cat_name in categories_per_ds[ds_idx].keys():
-                    for prop_name, prop_val in user_cat_props.items():
-                        setattr(categories_per_ds[ds_idx][CatName(cat_name)], prop_name, prop_val)
+        # Make list of cats from different inputs
+        raw_cats_per_ds: List[InputCategoriesT]
+        if not cats:
+            # Not supplied, generate default categories
+            raw_cats_per_ds = []
+            for val_by_cat_by_sample in raw_datasets:
+                ds_cats: List[CatName] = []
+                for sample_name, val_by_cat in val_by_cat_by_sample.items():
+                    for cat_name in val_by_cat.keys():
+                        if cat_name not in raw_cats_per_ds:
+                            ds_cats.append(CatName(cat_name))
+                raw_cats_per_ds.append(ds_cats)
+        elif isinstance(cats, List) and isinstance(cats[0], str):
+            # ["Cat1", "Cat2"] - list of strings for one dataset
+            raw_cats_per_ds = [[CatName(cat_name) for cat_name in cast(List[str], cats)]]
+        elif isinstance(cats, Sequence):
+            # [["Cat1", "Cat2"], {"Cat3": {}, "Cat4": {}}] - list of lists or dicts for multiple datasets
+            raw_cats_per_ds = [ds_cats for ds_cats in cast(List[Dict], cats)]
+        else:
+            raw_cats_per_ds = [cats]
 
-    # Filter data to keep only numerals, remove unknown categories and fill missing with NaNs
-    filtered_datasets: List[DatasetT] = []
-    for ds_idx, raw_ds in enumerate(raw_datasets):
-        filtered_ds: DatasetT = {}
-        filtered_datasets.append(filtered_ds)
-        for sample_name in list(raw_ds.keys()):
-            raw_val_by_cat = raw_ds[sample_name]
-            filtered_val_by_cat = {}
-            for cat_id, _ in categories_per_ds[ds_idx].items():
-                # Remove categories that are not in the categories_per_ds, and fill missing with NaNs
-                val = raw_val_by_cat.get(cat_id, None)
-                if val is not None and not isinstance(val, (float, int)):
-                    # Try to parse
-                    try:
-                        val = int(val)
-                    except ValueError:
-                        try:
-                            val = float(val)
-                        except ValueError:
-                            val = None
-                if val is None:
-                    val = float("nan")
-                elif isinstance(val, float):
-                    if math.floor(val) == val:
-                        val = int(val)
-                filtered_val_by_cat[cat_id] = val
-            filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
+        if len(raw_datasets) > 1 and len(raw_cats_per_ds) == 1:
+            raw_cats_per_ds = raw_cats_per_ds * len(raw_datasets)
+        elif len(raw_datasets) != len(raw_cats_per_ds):
+            raise RunError(
+                f"Bar graph: number of dataset and category lists must match, got {len(raw_datasets)} "
+                f"datasets and {len(raw_cats_per_ds)} category lists: {raw_cats_per_ds}"
+            )
 
-    return BarPlotInputData(data=filtered_datasets, cats=categories_per_ds, pconfig=pconf)
-
-
-def save_normalized_data(pid: Anchor, input_data: BarPlotInputData):
-    """
-    Save data to report.plot_input_data for future runs to merge with
-    """
-    report.plot_input_data[pid] = input_data.model_dump()
-
-
-def load_previous_data(pid: Anchor) -> Optional[BarPlotInputData]:
-    """
-    Load previous normalized data
-    """
-    if pid not in report.plot_input_data:
-        return None
-
-    return BarPlotInputData(**report.plot_input_data[pid])
-
-
-def merge_normalized_data(old_data: BarPlotInputData, new_data: BarPlotInputData) -> BarPlotInputData:
-    """
-    Merge normalized data from old run and new run
-    """
-    # Merge datasets
-    merged_datasets: List[DatasetT] = []
-    for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
-        if old_ds is None:
-            merged_datasets.append(new_ds)
-            continue
-        if new_ds is None:
-            merged_datasets.append(old_ds)
-            continue
-
-        # Merge samples within dataset
-        merged_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = defaultdict(dict)
-        for sample, cat_vals in old_ds.items():
-            for cat, val in cat_vals.items():
-                merged_ds[sample][cat] = val
-        for sample, cat_vals in new_ds.items():
-            for cat, val in cat_vals.items():
-                merged_ds[sample][cat] = val
-        merged_datasets.append(merged_ds)
-
-    # Merge categories
-    merged_cats: List[Dict[CatName, CatConf]] = []
-    for old_cats, new_cats in zip_longest(old_data.cats, new_data.cats):
-        if old_cats is None:
-            merged_cats.append(new_cats)
-            continue
-        if new_cats is None:
-            merged_cats.append(old_cats)
-            continue
-
-        # Merge category configs
-        merged_ds_cats = {}
-        for cat, conf in old_cats.items():
-            merged_ds_cats[cat] = conf
-        for cat, conf in new_cats.items():
-            if cat in merged_ds_cats:
-                # Keep old category config but update with new values
-                for field, value in conf.model_dump().items():
-                    if value is not None:
-                        setattr(merged_ds_cats[cat], field, value)
+        # Parse the categories into pydantic objects
+        categories_per_ds: List[Dict[CatName, CatConf]] = []
+        for raw_ds_cats in raw_cats_per_ds:
+            ds_categories: Dict[CatName, CatConf] = dict()
+            if isinstance(raw_ds_cats, list):
+                for cat_name in raw_ds_cats:
+                    ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), name=cat_name)
+            elif isinstance(raw_ds_cats, dict):
+                for cat_name, cat_props in raw_ds_cats.items():
+                    if isinstance(cat_props, CatConf):
+                        ds_categories[CatName(cat_name)] = cat_props
+                    else:
+                        if "name" not in cat_props:
+                            cat_props = {"name": cat_name, **cat_props}
+                        ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), **cat_props)
             else:
+                raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
+            categories_per_ds.append(ds_categories)
+
+        # Allow user to overwrite a given category config for this plot
+        if pconf.id and pconf.id in config.custom_plot_config:
+            for cat_name, user_cat_props in config.custom_plot_config[pconf.id].items():
+                for ds_idx in range(len(categories_per_ds)):
+                    if cat_name in categories_per_ds[ds_idx].keys():
+                        for prop_name, prop_val in user_cat_props.items():
+                            setattr(categories_per_ds[ds_idx][CatName(cat_name)], prop_name, prop_val)
+
+        # Filter data to keep only numerals, remove unknown categories and fill missing with NaNs
+        filtered_datasets: List[DatasetT] = []
+        for ds_idx, raw_ds in enumerate(raw_datasets):
+            filtered_ds: DatasetT = {}
+            filtered_datasets.append(filtered_ds)
+            for sample_name in list(raw_ds.keys()):
+                raw_val_by_cat = raw_ds[sample_name]
+                filtered_val_by_cat = {}
+                for cat_id, _ in categories_per_ds[ds_idx].items():
+                    # Remove categories that are not in the categories_per_ds, and fill missing with NaNs
+                    val = raw_val_by_cat.get(cat_id, None)
+                    if val is not None and not isinstance(val, (float, int)):
+                        # Try to parse
+                        try:
+                            val = int(val)
+                        except ValueError:
+                            try:
+                                val = float(val)
+                            except ValueError:
+                                val = None
+                    if val is None:
+                        val = float("nan")
+                    elif isinstance(val, float):
+                        if math.floor(val) == val:
+                            val = int(val)
+                    filtered_val_by_cat[cat_id] = val
+                filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
+
+        return BarPlotInputData(data=filtered_datasets, cats=categories_per_ds, pconfig=pconf)
+
+    @classmethod
+    def merge(
+        cls,
+        old_data: "BarPlotInputData",
+        new_data: "BarPlotInputData",
+    ) -> "BarPlotInputData":
+        """
+        Merge normalized data from old run and new run
+        """
+        # Merge datasets
+        merged_datasets: List[DatasetT] = []
+        for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
+            if old_ds is None:
+                merged_datasets.append(new_ds)
+                continue
+            if new_ds is None:
+                merged_datasets.append(old_ds)
+                continue
+
+            # Merge samples within dataset
+            merged_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = defaultdict(dict)
+            for sample, cat_vals in old_ds.items():
+                for cat, val in cat_vals.items():
+                    merged_ds[sample][cat] = val
+            for sample, cat_vals in new_ds.items():
+                for cat, val in cat_vals.items():
+                    merged_ds[sample][cat] = val
+            merged_datasets.append(merged_ds)
+
+        # Merge categories
+        merged_cats: List[Dict[CatName, CatConf]] = []
+        for old_cats, new_cats in zip_longest(old_data.cats, new_data.cats):
+            if old_cats is None:
+                merged_cats.append(new_cats)
+                continue
+            if new_cats is None:
+                merged_cats.append(old_cats)
+                continue
+
+            # Merge category configs
+            merged_ds_cats = {}
+            for cat, conf in old_cats.items():
                 merged_ds_cats[cat] = conf
-        merged_cats.append(merged_ds_cats)
+            for cat, conf in new_cats.items():
+                if cat in merged_ds_cats:
+                    # Keep old category config but update with new values
+                    for field, value in conf.model_dump().items():
+                        if value is not None:
+                            setattr(merged_ds_cats[cat], field, value)
+                else:
+                    merged_ds_cats[cat] = conf
+            merged_cats.append(merged_ds_cats)
 
-    # Use new config but preserve old values if not overridden
-    merged_pconf = new_data.pconfig
-    for field, value in old_data.pconfig.model_dump().items():
-        if new_data.pconfig.model_fields.get(field) is None:
-            setattr(merged_pconf, field, value)
+        # Use new config but preserve old values if not overridden
+        merged_pconf = new_data.pconfig
+        for field, value in old_data.pconfig.model_dump().items():
+            if new_data.pconfig.model_fields.get(field) is None:
+                setattr(merged_pconf, field, value)
 
-    return BarPlotInputData(data=merged_datasets, cats=merged_cats, pconfig=merged_pconf)
+        return BarPlotInputData(data=merged_datasets, cats=merged_cats, pconfig=merged_pconf)
 
 
 def plot(
@@ -285,15 +273,16 @@ def plot(
     :return: HTML and JS, ready to be inserted into the page
     """
     # We want to be permissive to user inputs - but normalizing them now to simplify further processing
-    plot_input: BarPlotInputData = normalize_inputs(data, cats, pconfig)
+    plot_input: BarPlotInputData = BarPlotInputData.create(data, cats, pconfig)
 
     # Try load and merge with any found previous data for this plot
     anchor = plot_anchor(plot_input.pconfig)
-    if prev_data := load_previous_data(anchor):
-        plot_input = merge_normalized_data(prev_data, plot_input)
+    prev_plot_input = BarPlotInputData.load(anchor)
+    if prev_plot_input is not None:
+        plot_input = BarPlotInputData.merge(cast(BarPlotInputData, prev_plot_input), plot_input)
 
     # Save normalized data for future runs
-    save_normalized_data(anchor, plot_input)
+    plot_input.save(anchor)
 
     # Parse the data into a chart friendly format
     scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set

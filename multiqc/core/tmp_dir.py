@@ -47,6 +47,16 @@ def plots_tmp_dir(create=True) -> Path:
     return path
 
 
+def parquet_dir() -> Path:
+    """
+    Temporary directory to collect parquet files from running modules before copying to the final
+    destination in multiqc.core.write_results
+    """
+    path = get_tmp_dir() / "multiqc_parquet"
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
 def new_tmp_dir():
     global _tmp_dir
     _tmp_dir = None

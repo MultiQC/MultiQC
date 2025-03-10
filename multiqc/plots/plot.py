@@ -1,5 +1,6 @@
 import base64
 import io
+import json
 import logging
 import math
 import platform
@@ -8,7 +9,6 @@ import re
 import subprocess
 from functools import lru_cache
 from pathlib import Path
-from token import OP
 from typing import (
     Any,
     Dict,
@@ -21,6 +21,7 @@ from typing import (
     Union,
 )
 
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
@@ -270,6 +271,75 @@ def plot_anchor(pconfig: PConfig) -> Anchor:
     anchor = Anchor(pconfig.anchor or pconfig.id)
     anchor = Anchor(report.save_htmlid(anchor))  # make sure it's unique
     return anchor
+
+
+class NormalizedPlotInputData(BaseModel):
+    """
+    Represents normalized input data for a plot.
+
+    Plot input data is normalized, but enough data is preseverd to merge plots across
+    multiple samples. Plot objects might post-process and re-summarize the data
+    before creating plot datasets.
+    """
+
+    def save(self, pid: Anchor):
+        """
+        Save plot data to a parquet file instead of keeping it in memory.
+
+        Args:
+            anchor: The unique anchor for the plot
+            data: The data to save (must be serializable)
+        """
+        data_dump = self.model_dump()
+
+        # Convert the data to a pandas DataFrame
+        if isinstance(data_dump, list):
+            # For list data (like in violin plots)
+            df = pd.DataFrame({"data": [json.dumps(item) for item in data_dump]})
+        else:
+            # For dictionary data
+            df = pd.DataFrame({"data": [json.dumps(data_dump)]})
+
+        file_path = tmp_dir.parquet_dir() / f"{pid}.parquet"
+        df.to_parquet(file_path, compression="gzip")
+        logger.debug(f"Saved plot data to {file_path}")
+
+    @classmethod
+    def load(cls, pid: Anchor) -> Optional["NormalizedPlotInputData"]:
+        """
+        Load plot data from a parquet file.
+
+        Args:
+            anchor: The unique anchor for the plot
+
+        Returns:
+            The loaded data or None if not found
+        """
+        file_path = tmp_dir.parquet_dir() / f"{pid}.parquet"
+        if not file_path.exists():
+            return None
+
+        # Load from parquet
+        df = pd.read_parquet(file_path)
+
+        # Convert back to original format
+        data: Any
+        if len(df) == 1:
+            # Single row means it was a dictionary
+            data = json.loads(df["data"].iloc[0])
+        else:
+            # Multiple rows means it was a list
+            data = [json.loads(item) for item in df["data"]]
+
+        # Return an instance of the class that called this method (cls),
+        # which could be a subclass of PlotInputData
+        return cls(**data)
+
+    @classmethod
+    def merge(
+        cls, old_data: "NormalizedPlotInputData", new_data: "NormalizedPlotInputData"
+    ) -> "NormalizedPlotInputData":
+        raise NotImplementedError
 
 
 class Plot(BaseModel, Generic[DatasetT, PConfigT]):

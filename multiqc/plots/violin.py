@@ -7,11 +7,10 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
-from pydantic import BaseModel
 
 from multiqc import config, report
 from multiqc.plots import table_object
-from multiqc.plots.plot import BaseDataset, Plot, PlotType, plot_anchor
+from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
 from multiqc.plots.table import render_html
 from multiqc.plots.table_object import (
     ColumnAnchor,
@@ -28,80 +27,65 @@ from multiqc.types import Anchor, SampleName
 logger = logging.getLogger(__name__)
 
 
-class ViolinPlotInputData(BaseModel):
+class ViolinPlotInputData(NormalizedPlotInputData):
     dts: List[DataTable]
     pconfig: TableConfig
     anchor: Anchor
 
+    @staticmethod
+    def create(
+        data: Union[List[SectionT], SectionT],
+        headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
+        pconfig: Union[Dict[str, Any], TableConfig, None] = None,
+    ) -> "ViolinPlotInputData":
+        """
+        Make datatable objects - they encapsulate data, headers, and configs
+        """
+        pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
 
-def normalize_inputs(
-    data: Union[List[SectionT], SectionT],
-    headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
-    pconfig: Union[Dict[str, Any], TableConfig, None] = None,
-) -> ViolinPlotInputData:
-    """
-    Make datatable objects - they encapsulate data, headers, and configs
-    """
-    pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
+        anchor = plot_anchor(pconf)
 
-    anchor = plot_anchor(pconf)
+        if not isinstance(data, list):
+            data = [data]
+        if headers is not None and not isinstance(headers, list):
+            headers = [headers]
 
-    if not isinstance(data, list):
-        data = [data]
-    if headers is not None and not isinstance(headers, list):
-        headers = [headers]
+        dts = []
+        for i, d in enumerate(data):
+            h = headers[i] if headers and len(headers) > i else None
+            table_anchor = Anchor(f"{anchor}_table")
+            if len(data) > 1:
+                table_anchor = Anchor(f"{table_anchor}-{i + 1}")
+            table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
+            dt = table_object.DataTable.create(
+                data=d,
+                table_id=pconf.id,
+                table_anchor=table_anchor,
+                pconfig=pconf.model_copy(),
+                headers=h,
+            )
+            dts.append(dt)
+        return ViolinPlotInputData(dts=dts, pconfig=pconf, anchor=anchor)
 
-    dts = []
-    for i, d in enumerate(data):
-        h = headers[i] if headers and len(headers) > i else None
-        table_anchor = Anchor(f"{anchor}_table")
-        if len(data) > 1:
-            table_anchor = Anchor(f"{table_anchor}-{i + 1}")
-        table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
-        dt = table_object.DataTable.create(
-            data=d,
-            table_id=pconf.id,
-            table_anchor=table_anchor,
-            pconfig=pconf.model_copy(),
-            headers=h,
-        )
-        dts.append(dt)
-    return ViolinPlotInputData(dts=dts, pconfig=pconf, anchor=anchor)
+    @classmethod
+    def merge(cls, prev_data: "ViolinPlotInputData", new_data: "ViolinPlotInputData") -> "ViolinPlotInputData":
+        """
+        Merge normalized data from old run and new run
+        """
+        # Merge datasets
+        merged_dts: List[DataTable] = []
+        for prev_dt, new_dt in zip_longest(prev_data.dts, new_data.dts):
+            if prev_dt is None:
+                merged_dts.append(new_dt)
+                continue
+            if new_dt is None:
+                merged_dts.append(prev_dt)
+                continue
 
-
-def save_normalized_data(anchor: Anchor, inputs: ViolinPlotInputData):
-    """
-    Save data to report.plot_input_data for future runs to merge with
-    """
-    report.plot_input_data[anchor] = [dt.model_dump() for dt in inputs.dts]
-
-
-def load_previous_data(anchor: Anchor) -> Optional[ViolinPlotInputData]:
-    if anchor not in report.plot_input_data:
-        return None
-
-    dts = [table_object.DataTable(**dt) for dt in report.plot_input_data[anchor]]
-    return ViolinPlotInputData(dts=dts, pconfig=dts[0].pconfig, anchor=anchor)
-
-
-def merge_normalized_data(prev_data: ViolinPlotInputData, new_data: ViolinPlotInputData) -> ViolinPlotInputData:
-    """
-    Merge normalized data from old run and new run
-    """
-    # Merge datasets
-    merged_dts: List[DataTable] = []
-    for prev_dt, new_dt in zip_longest(prev_data.dts, new_data.dts):
-        if prev_dt is None:
-            merged_dts.append(new_dt)
-            continue
-        if new_dt is None:
+            prev_dt.merge(new_dt)
             merged_dts.append(prev_dt)
-            continue
 
-        prev_dt.merge(new_dt)
-        merged_dts.append(prev_dt)
-
-    return ViolinPlotInputData(dts=merged_dts, pconfig=prev_data.pconfig, anchor=prev_data.anchor)
+        return ViolinPlotInputData(dts=merged_dts, pconfig=prev_data.pconfig, anchor=prev_data.anchor)
 
 
 def plot(
@@ -123,14 +107,14 @@ def plot(
         logger.warning(f"Tried to make table/violin plot, but had no data. pconfig: {pconfig}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
-    inputs = normalize_inputs(data, headers, pconfig)
+    inputs = ViolinPlotInputData.create(data, headers, pconfig)
 
     # Try load and merge with any found previous data for this plot
-    if prev_dts := load_previous_data(inputs.anchor):
-        inputs = merge_normalized_data(prev_dts, inputs)
+    if prev_dts := ViolinPlotInputData.load(inputs.anchor):
+        inputs = ViolinPlotInputData.merge(cast(ViolinPlotInputData, prev_dts), inputs)
 
     # Save normalized data for future runs
-    save_normalized_data(inputs.anchor, inputs)
+    inputs.save(inputs.anchor)
 
     return ViolinPlot.create(
         inputs.dts,
@@ -558,49 +542,6 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         for ds in self.datasets:
             names.extend(SampleName(s) for s in ds.all_samples)
         return names
-
-    # @staticmethod
-    # def create(
-    #     # data: Union[List[SectionT], SectionT],
-    #     # headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
-    #     # pconfig: Union[Dict[str, Any], TableConfig, None] = None,
-    #     dts: List[DataTable],
-    #     show_table_by_default: bool = False,
-    # ) -> "ViolinPlot":
-    #     """
-    #     Helper HTML for a violin plot.
-    #     :param data: A list of data dicts
-    #     :param headers: A list of dicts with information
-    #                     for the series, such as colour scales, min and
-    #                     max values etc.
-    #     :param pconfig: plot config dict
-    #     :return: plot object
-    #     """
-    #     dts = ViolinPlot.data_to_dts(data, headers, pconfig)
-    #     return ViolinPlot.create_from_dts(dts, show_table_by_default)
-
-    # @staticmethod
-    # def update(
-    #     plot: "ViolinPlot",
-    #     data: Union[List[SectionT], SectionT],
-    #     headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
-    #     pconfig: Union[Dict[str, Any], TableConfig, None] = None,
-    # ) -> "ViolinPlot":
-    #     """
-    #     Create plot from existing instance and new data. Returns a new instance.
-
-    #     :param data: A list of data dicts to add
-    #     :param headers: A list of dicts with information for the series
-    #     :param pconfig: plot config dict
-    #     """
-    #     existing_dts = [ds.dt for ds in plot.datasets]
-    #     new_dts = ViolinPlot.data_to_dts(data, headers, pconfig)
-
-    #     # Extend each existing dataset's DataTable with the new data
-    #     for existing_dt, new_dt in zip(existing_dts, new_dts):
-    #         existing_dt.extend(new_dt)
-
-    #     return ViolinPlot.create_from_dts(existing_dts, plot.show_table_by_default)
 
     @staticmethod
     def create(

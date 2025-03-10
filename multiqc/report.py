@@ -13,6 +13,7 @@ import json
 import logging
 import mimetypes
 import os
+import pandas as pd
 import re
 import sys
 import time
@@ -47,8 +48,8 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plot import Plot
-from multiqc.plots.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
 from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
@@ -116,7 +117,7 @@ data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
 plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html and load with js
 plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
-plot_input_data: Dict[Anchor, Any] = dict()  # to combine data from previous runs
+# plot_input_data: Dict[Anchor, Any] = dict()  # to combine data from previous runs
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
@@ -212,6 +213,7 @@ def reset():
     plot_data = dict()
     plot_by_id = dict()
     plot_input_data = dict()
+
     general_stats_data = []
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
