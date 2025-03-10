@@ -470,9 +470,6 @@ def plot(
     datasets = plot_input.data
     sample_names = plot_input.sample_names
 
-    # Get anchor from pconfig
-    anchor = plot_anchor(plot_input.pconfig)
-
     # Add extra annotation data series
     if pconf.extra_series:
         ess: Union[Series[Any, Any], List[Series[Any, Any]], List[List[Series[Any, Any]]]] = pconf.extra_series
