@@ -153,7 +153,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
         list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
         pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
     ) -> "BoxPlotInputData":
-        pconf: BoxPlotConfig = cast(BoxPlotConfig, pconfig)
+        pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
 
         # Given one dataset - turn it into a list
         if not isinstance(list_of_data_by_sample, list):
