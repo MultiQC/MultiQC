@@ -34,19 +34,13 @@ def plot(
     - a dict mapping sample names to data point lists or dicts,
     - a dict mapping sample names to a dict of statistics (e.g. {min, max, median, mean, std, q1, q3 etc.})
     """
-    plot_input: BoxPlotInputData = BoxPlotInputData.create(list_of_data_by_sample, pconfig)
-
-    anchor = plot_anchor(plot_input.pconfig)
-    prev_plot_input = BoxPlotInputData.load(anchor)
-    if prev_plot_input is not None:
-        plot_input = BoxPlotInputData.merge(old_data=cast(BoxPlotInputData, prev_plot_input), new_data=plot_input)
-
-    plot_input.save(anchor)
+    inputs: BoxPlotInputData = BoxPlotInputData.create(list_of_data_by_sample, pconfig)
+    inputs = BoxPlotInputData.merge_with_previous(inputs)
 
     return BoxPlot.create(
-        list_of_data_by_sample=plot_input.list_of_data_by_sample,
-        pconfig=plot_input.pconfig,
-        anchor=anchor,
+        list_of_data_by_sample=inputs.list_of_data_by_sample,
+        pconfig=inputs.pconfig,
+        anchor=inputs.anchor,
     )
 
 
@@ -174,12 +168,18 @@ class BoxPlotInputData(NormalizedPlotInputData):
                 samples = sorted(list(list_of_data_by_sample[0].keys()))
                 list_of_data_by_sample[i] = {s: list_of_data_by_sample[i][s] for s in samples}
 
-        return BoxPlotInputData(list_of_data_by_sample=list_of_data_by_sample, pconfig=pconf)
-
-    def merge(self, other: "BoxPlotInputData") -> "BoxPlotInputData":
         return BoxPlotInputData(
-            list_of_data_by_sample=self.list_of_data_by_sample + other.list_of_data_by_sample,
-            pconfig=self.pconfig,
+            anchor=plot_anchor(pconf),
+            list_of_data_by_sample=list_of_data_by_sample,
+            pconfig=pconf,
+        )
+
+    @classmethod
+    def merge(cls, old_data: "BoxPlotInputData", new_data: "BoxPlotInputData") -> "BoxPlotInputData":
+        return BoxPlotInputData(
+            anchor=new_data.anchor,
+            list_of_data_by_sample=old_data.list_of_data_by_sample + new_data.list_of_data_by_sample,
+            pconfig=old_data.pconfig,
         )
 
 

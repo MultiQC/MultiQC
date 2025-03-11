@@ -117,7 +117,6 @@ data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
 plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html and load with js
 plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
-# plot_input_data: Dict[Anchor, Any] = dict()  # to combine data from previous runs
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
@@ -154,7 +153,6 @@ def reset():
     global html_ids_by_scope
     global plot_data
     global plot_by_id
-    global plot_input_data
     global general_stats_data
     global general_stats_headers
     global software_versions
@@ -212,7 +210,6 @@ def reset():
     html_ids_by_scope = defaultdict(set)
     plot_data = dict()
     plot_by_id = dict()
-    plot_input_data = dict()
 
     general_stats_data = []
     general_stats_headers = []

@@ -83,9 +83,9 @@ DatasetT = Dict[SampleName, Dict[CatName, Union[int, float]]]
 
 
 class BarPlotInputData(NormalizedPlotInputData):
+    pconfig: BarPlotConfig
     data: List[DatasetT]
     cats: List[Dict[CatName, CatConf]]
-    pconfig: BarPlotConfig
 
     @staticmethod
     def create(
@@ -192,7 +192,12 @@ class BarPlotInputData(NormalizedPlotInputData):
                     filtered_val_by_cat[cat_id] = val
                 filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
 
-        return BarPlotInputData(data=filtered_datasets, cats=categories_per_ds, pconfig=pconf)
+        return BarPlotInputData(
+            anchor=plot_anchor(pconf),
+            pconfig=pconf,
+            data=filtered_datasets,
+            cats=categories_per_ds,
+        )
 
     @classmethod
     def merge(
@@ -253,7 +258,7 @@ class BarPlotInputData(NormalizedPlotInputData):
             if new_data.pconfig.model_fields.get(field) is None:
                 setattr(merged_pconf, field, value)
 
-        return BarPlotInputData(data=merged_datasets, cats=merged_cats, pconfig=merged_pconf)
+        return BarPlotInputData(anchor=new_data.anchor, data=merged_datasets, cats=merged_cats, pconfig=merged_pconf)
 
 
 def plot(
@@ -273,32 +278,24 @@ def plot(
     :return: HTML and JS, ready to be inserted into the page
     """
     # We want to be permissive to user inputs - but normalizing them now to simplify further processing
-    plot_input: BarPlotInputData = BarPlotInputData.create(data, cats, pconfig)
-
-    # Try load and merge with any found previous data for this plot
-    anchor = plot_anchor(plot_input.pconfig)
-    prev_plot_input = BarPlotInputData.load(anchor)
-    if prev_plot_input is not None:
-        plot_input = BarPlotInputData.merge(cast(BarPlotInputData, prev_plot_input), plot_input)
-
-    # Save normalized data for future runs
-    plot_input.save(anchor)
+    inputs = BarPlotInputData.create(data, cats, pconfig)
+    inputs = BarPlotInputData.merge_with_previous(inputs)
 
     # Parse the data into a chart friendly format
     scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set
     plot_samples: List[List[SampleName]] = list()
     plot_data: List[List[CatDataDict]] = list()
-    for ds_idx, d in enumerate(plot_input.data):
+    for ds_idx, d in enumerate(inputs.data):
         ordered_samples_names: List[SampleName] = [SampleName(s) for s in d.keys()]
         if isinstance(d, OrderedDict):
             # Legacy: users assumed that passing an OrderedDict indicates that we
             # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
             pass
-        elif plot_input.pconfig.sort_samples:
+        elif inputs.pconfig.sort_samples:
             ordered_samples_names = natsorted([SampleName(s) for s in d.keys()])
         cat_data_dicts: List[CatDataDict] = list()
         sample_d_count: Dict[SampleName, int] = dict()
-        for cat_idx, cat_name in enumerate(plot_input.cats[ds_idx].keys()):
+        for cat_idx, cat_name in enumerate(inputs.cats[ds_idx].keys()):
             cat_data: List[Union[int, float]] = list()
             cat_count = 0
             for s in ordered_samples_names:
@@ -308,10 +305,10 @@ def plot(
                 cat_count += 1
                 sample_d_count[s] += 1
             if cat_count > 0:
-                if plot_input.pconfig.hide_zero_cats is False or not all(x == 0 for x in cat_data if not math.isnan(x)):
-                    color: str = plot_input.cats[ds_idx][cat_name].color or scale.get_colour(cat_idx, lighten=1)
+                if inputs.pconfig.hide_zero_cats is False or not all(x == 0 for x in cat_data if not math.isnan(x)):
+                    color: str = inputs.cats[ds_idx][cat_name].color or scale.get_colour(cat_idx, lighten=1)
                     this_dict: CatDataDict = {
-                        "name": plot_input.cats[ds_idx][cat_name].name,
+                        "name": inputs.cats[ds_idx][cat_name].name,
                         "color": color,
                         "data": cat_data,
                         "data_pct": [],
@@ -330,14 +327,14 @@ def plot(
             plot_data.append(cat_data_dicts)
 
     if len(plot_data) == 0:
-        logger.warning(f"Tried to make bar plot, but had no data: {plot_input.pconfig.id}")
+        logger.warning(f"Tried to make bar plot, but had no data: {inputs.pconfig.id}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     return BarPlot.create(
         cats_lists=plot_data,
         samples_lists=plot_samples,
-        pconfig=plot_input.pconfig,
-        anchor=anchor,
+        pconfig=inputs.pconfig,
+        anchor=inputs.anchor,
     )
 
 

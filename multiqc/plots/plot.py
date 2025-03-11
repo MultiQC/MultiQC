@@ -17,8 +17,10 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
+    Type,
     TypeVar,
     Union,
+    cast,
 )
 
 import pandas as pd
@@ -265,6 +267,7 @@ class BaseDataset(BaseModel):
 
 DatasetT = TypeVar("DatasetT", bound="BaseDataset")
 PConfigT = TypeVar("PConfigT", bound="PConfig")
+NormalizedPlotInputDataT = TypeVar("NormalizedPlotInputDataT", bound="NormalizedPlotInputData")
 
 
 def plot_anchor(pconfig: PConfig) -> Anchor:
@@ -282,16 +285,29 @@ class NormalizedPlotInputData(BaseModel):
     before creating plot datasets.
     """
 
-    def save(self, pid: Anchor):
+    anchor: Anchor
+
+    @classmethod
+    def merge_with_previous(cls, inputs: NormalizedPlotInputDataT) -> NormalizedPlotInputDataT:
+        prev_inputs = cls.load(inputs.anchor)
+        if prev_inputs is not None:
+            inputs = cls.merge(old_data=cast(cls, prev_inputs), new_data=cast(cls, inputs))  # type: ignore
+        return inputs
+
+    @classmethod
+    def save(cls: Type[NormalizedPlotInputDataT], inputs: NormalizedPlotInputDataT) -> NormalizedPlotInputDataT:
         """
         Save plot data to a parquet file instead of keeping it in memory.
 
         Args:
-            anchor: The unique anchor for the plot
-            data: The data to save (must be serializable)
-        """
-        data_dump = self.model_dump()
+            inputs: The input data to save
+            pid: The unique anchor for the plot
 
+        Returns:
+            The merged data, as an instance of the same class that called this method
+        """
+        # Save
+        data_dump = inputs.model_dump()
         # Convert the data to a pandas DataFrame
         if isinstance(data_dump, list):
             # For list data (like in violin plots)
@@ -299,23 +315,23 @@ class NormalizedPlotInputData(BaseModel):
         else:
             # For dictionary data
             df = pd.DataFrame({"data": [json.dumps(data_dump)]})
-
-        file_path = tmp_dir.parquet_dir() / f"{pid}.parquet"
+        file_path = tmp_dir.parquet_dir() / f"{inputs.anchor}.parquet"
         df.to_parquet(file_path, compression="gzip")
         logger.debug(f"Saved plot data to {file_path}")
+        return cast(NormalizedPlotInputDataT, inputs)
 
     @classmethod
-    def load(cls, pid: Anchor) -> Optional["NormalizedPlotInputData"]:
+    def load(cls: Type[NormalizedPlotInputDataT], anchor: Anchor) -> Optional[NormalizedPlotInputDataT]:
         """
         Load plot data from a parquet file.
 
         Args:
-            anchor: The unique anchor for the plot
+            pid: The unique anchor for the plot
 
         Returns:
-            The loaded data or None if not found
+            The loaded data or None if not found, as an instance of the same class that called this method
         """
-        file_path = tmp_dir.parquet_dir() / f"{pid}.parquet"
+        file_path = tmp_dir.parquet_dir() / f"{anchor}.parquet"
         if not file_path.exists():
             return None
 
@@ -337,9 +353,15 @@ class NormalizedPlotInputData(BaseModel):
 
     @classmethod
     def merge(
-        cls, old_data: "NormalizedPlotInputData", new_data: "NormalizedPlotInputData"
-    ) -> "NormalizedPlotInputData":
-        return new_data
+        cls: Type[NormalizedPlotInputDataT], old_data: NormalizedPlotInputDataT, new_data: NormalizedPlotInputDataT
+    ) -> NormalizedPlotInputDataT:
+        """
+        To be overridden by subclasses. By default, just return the new data.
+
+        Returns:
+            The merged data, as an instance of the same class that called this method
+        """
+        return cast(NormalizedPlotInputDataT, new_data)
 
 
 class Plot(BaseModel, Generic[DatasetT, PConfigT]):

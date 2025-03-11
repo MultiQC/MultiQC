@@ -402,7 +402,9 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
             datasets.append(list_of_series)
 
         # Return normalized data and config
-        return LinePlotNormalizedInputData(data=datasets, pconfig=pconf, sample_names=sample_names)
+        return LinePlotNormalizedInputData(
+            anchor=plot_anchor(pconf), data=datasets, pconfig=pconf, sample_names=sample_names
+        )
 
     @classmethod
     def merge(
@@ -435,7 +437,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
             merged_datasets.append(list(series_by_sample.values()))
 
         return LinePlotNormalizedInputData(
-            data=merged_datasets, pconfig=old_data.pconfig, sample_names=merged_sample_names
+            anchor=new_data.anchor, data=merged_datasets, pconfig=new_data.pconfig, sample_names=merged_sample_names
         )
 
 
@@ -451,24 +453,12 @@ def plot(
 
     Function effectively only returns a wrapper around parquet file path.
     """
+    inputs: LinePlotNormalizedInputData[KeyT, ValT] = LinePlotNormalizedInputData.create(data, pconfig)
+    inputs = LinePlotNormalizedInputData.merge_with_previous(inputs)
 
-    # We want to be permissive to user inputs - but normalizing them now to simplify further processing
-    plot_input: LinePlotNormalizedInputData[KeyT, ValT] = LinePlotNormalizedInputData.create(data, pconfig)
-
-    # Try load and merge with any found previous data for this plot
-    anchor = plot_anchor(plot_input.pconfig)
-    prev_plot_input = LinePlotNormalizedInputData.load(anchor)
-    if prev_plot_input is not None:
-        plot_input = LinePlotNormalizedInputData.merge(
-            old_data=cast(LinePlotNormalizedInputData[KeyT, ValT], prev_plot_input), new_data=plot_input
-        )
-
-    # Save normalized data for future runs
-    plot_input.save(anchor)
-
-    pconf = plot_input.pconfig
-    datasets = plot_input.data
-    sample_names = plot_input.sample_names
+    pconf = inputs.pconfig
+    datasets = inputs.data
+    sample_names = inputs.sample_names
 
     # Add extra annotation data series
     if pconf.extra_series:
@@ -514,9 +504,9 @@ def plot(
                 series.color = scale.get_colour(si, lighten=1)
 
     return LinePlot.create(
-        lists_of_lines=plot_input.data,
-        pconfig=plot_input.pconfig,
-        anchor=anchor,
+        lists_of_lines=inputs.data,
+        pconfig=inputs.pconfig,
+        anchor=inputs.anchor,
         sample_names=sample_names,
     )
 

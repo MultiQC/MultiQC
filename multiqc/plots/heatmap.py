@@ -3,9 +3,9 @@
 import logging
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
 
+import numpy as np
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
-import numpy as np
 
 from multiqc import report
 from multiqc.plots.plot import (
@@ -111,7 +111,13 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
                     "The order of that list should match the order of the columns in the input data."
                 )
 
-        return HeatmapNormalizedInputData(rows=rows, xcats=list(xcats), ycats=list(ycats), pconfig=pconf)
+        return HeatmapNormalizedInputData(
+            anchor=plot_anchor(pconf),
+            rows=rows,
+            xcats=list(xcats),
+            ycats=list(ycats),
+            pconfig=pconf,
+        )
 
     @classmethod
     def merge(
@@ -120,7 +126,11 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         if old_data.xcats != new_data.xcats or old_data.ycats != new_data.ycats:
             raise ValueError("Cannot merge heatmap plots with different xcats or ycats")
         return HeatmapNormalizedInputData(
-            rows=old_data.rows + new_data.rows, xcats=old_data.xcats, ycats=old_data.ycats, pconfig=old_data.pconfig
+            anchor=old_data.anchor,
+            rows=old_data.rows + new_data.rows,
+            xcats=old_data.xcats,
+            ycats=old_data.ycats,
+            pconfig=old_data.pconfig,
         )
 
 
@@ -138,23 +148,15 @@ def plot(
     :param pconfig: optional dict with config key:value pairs.
     :return: HTML and JS, ready to be inserted into the page
     """
-    plot_input: HeatmapNormalizedInputData = HeatmapNormalizedInputData.create(data, xcats, ycats, pconfig)
-
-    anchor = plot_anchor(plot_input.pconfig)
-    prev_plot_input = HeatmapNormalizedInputData.load(anchor)
-    if prev_plot_input is not None:
-        plot_input = HeatmapNormalizedInputData.merge(
-            old_data=cast(HeatmapNormalizedInputData, prev_plot_input), new_data=plot_input
-        )
-
-    plot_input.save(anchor)
+    inputs: HeatmapNormalizedInputData = HeatmapNormalizedInputData.create(data, xcats, ycats, pconfig)
+    inputs = HeatmapNormalizedInputData.merge_with_previous(inputs)
 
     return HeatmapPlot.create(
-        rows=plot_input.rows,
-        pconfig=plot_input.pconfig,
-        anchor=anchor,
-        xcats=list(plot_input.xcats),
-        ycats=list(plot_input.ycats),
+        rows=inputs.rows,
+        pconfig=inputs.pconfig,
+        anchor=inputs.anchor,
+        xcats=list(inputs.xcats),
+        ycats=list(inputs.ycats),
     )
 
 

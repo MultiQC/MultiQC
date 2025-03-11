@@ -108,13 +108,7 @@ def plot(
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     inputs = ViolinPlotInputData.create(data, headers, pconfig)
-
-    # Try load and merge with any found previous data for this plot
-    if prev_dts := ViolinPlotInputData.load(inputs.anchor):
-        inputs = ViolinPlotInputData.merge(cast(ViolinPlotInputData, prev_dts), inputs)
-
-    # Save normalized data for future runs
-    inputs.save(inputs.anchor)
+    inputs = ViolinPlotInputData.merge_with_previous(inputs)
 
     return ViolinPlot.create(
         inputs.dts,
