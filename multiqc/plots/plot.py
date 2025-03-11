@@ -292,10 +292,10 @@ class NormalizedPlotInputData(BaseModel):
         prev_inputs = cls.load(inputs.anchor)
         if prev_inputs is not None:
             inputs = cls.merge(old_data=cast(cls, prev_inputs), new_data=cast(cls, inputs))  # type: ignore
+        inputs.save()
         return inputs
 
-    @classmethod
-    def save(cls: Type[NormalizedPlotInputDataT], inputs: NormalizedPlotInputDataT) -> NormalizedPlotInputDataT:
+    def save(self):
         """
         Save plot data to a parquet file instead of keeping it in memory.
 
@@ -307,7 +307,7 @@ class NormalizedPlotInputData(BaseModel):
             The merged data, as an instance of the same class that called this method
         """
         # Save
-        data_dump = inputs.model_dump()
+        data_dump = self.model_dump()
         # Convert the data to a pandas DataFrame
         if isinstance(data_dump, list):
             # For list data (like in violin plots)
@@ -315,10 +315,10 @@ class NormalizedPlotInputData(BaseModel):
         else:
             # For dictionary data
             df = pd.DataFrame({"data": [json.dumps(data_dump)]})
-        file_path = tmp_dir.parquet_dir() / f"{inputs.anchor}.parquet"
+        file_path = tmp_dir.parquet_dir() / f"{self.anchor}.parquet"
         df.to_parquet(file_path, compression="gzip")
         logger.debug(f"Saved plot data to {file_path}")
-        return cast(NormalizedPlotInputDataT, inputs)
+        report.plot_input_data[self.anchor] = file_path
 
     @classmethod
     def load(cls: Type[NormalizedPlotInputDataT], anchor: Anchor) -> Optional[NormalizedPlotInputDataT]:
