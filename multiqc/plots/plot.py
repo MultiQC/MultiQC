@@ -339,7 +339,7 @@ class NormalizedPlotInputData(BaseModel):
     def merge(
         cls, old_data: "NormalizedPlotInputData", new_data: "NormalizedPlotInputData"
     ) -> "NormalizedPlotInputData":
-        raise NotImplementedError
+        return new_data
 
 
 class Plot(BaseModel, Generic[DatasetT, PConfigT]):

@@ -52,7 +52,7 @@ def parquet_dir() -> Path:
     Temporary directory to collect parquet files from running modules before copying to the final
     destination in multiqc.core.write_results
     """
-    path = get_tmp_dir() / "multiqc_parquet"
+    path = data_tmp_dir() / "parquet"
     os.makedirs(path, exist_ok=True)
     return path
 
