@@ -318,7 +318,7 @@ class NormalizedPlotInputData(BaseModel):
         file_path = tmp_dir.parquet_dir() / f"{self.anchor}.parquet"
         df.to_parquet(file_path, compression="gzip")
         logger.debug(f"Saved plot data to {file_path}")
-        report.plot_input_data[self.anchor] = file_path
+        report.plot_input_data[self.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
 
     @classmethod
     def load(cls: Type[NormalizedPlotInputDataT], anchor: Anchor) -> Optional[NormalizedPlotInputDataT]:
