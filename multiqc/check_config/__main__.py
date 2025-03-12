@@ -4,7 +4,6 @@
 CLI helper tool to validate a MultiQC config file using the JSON schema.
 
 $ multiqc-check multiqc_config.yml
-$ python -m multiqc-check multiqc_config.yml
 """
 
 import yaml
