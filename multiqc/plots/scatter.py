@@ -3,13 +3,13 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
-from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, plot_anchor
+from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.types import Anchor, SampleName
 
 logger = logging.getLogger(__name__)
@@ -32,8 +32,36 @@ ValueT = Union[str, float, int]
 PointT = Dict[str, ValueT]
 
 
+class ScatterNormalizedInputData(NormalizedPlotInputData):
+    datasets: List[Dict[str, Any]]
+    pconfig: ScatterConfig
+
+    @staticmethod
+    def create(
+        data: Union[Dict[str, Any], List[Dict[str, Any]]],
+        pconfig: Union[Mapping[str, Any], ScatterConfig, None] = None,
+    ) -> "ScatterNormalizedInputData":
+        pconf: ScatterConfig = cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
+
+        # Given one dataset - turn it into a list
+        if not isinstance(data, list):
+            data = [data]  # type: ignore
+
+        return ScatterNormalizedInputData(
+            anchor=plot_anchor(pconf),
+            datasets=data,
+            pconfig=pconf,
+        )
+
+    @classmethod
+    def merge(
+        cls, old_data: "ScatterNormalizedInputData", new_data: "ScatterNormalizedInputData"
+    ) -> "ScatterNormalizedInputData":
+        return new_data
+
+
 def plot(
-    data: Union[Mapping[str, Any], Sequence[Mapping[str, Any]]],
+    data: Union[Dict[str, Any], List[Dict[str, Any]]],
     pconfig: Union[Mapping[str, Any], ScatterConfig, None],
 ) -> "ScatterPlot":
     """
@@ -42,18 +70,13 @@ def plot(
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
+    inputs: ScatterNormalizedInputData = ScatterNormalizedInputData.create(data, pconfig)
+    inputs = ScatterNormalizedInputData.merge_with_previous(inputs)
 
-    anchor = plot_anchor(pconf)
-
-    # Given one dataset - turn it into a list
-    if not isinstance(data, list):
-        data = [data]  # type: ignore
-
+    pconf = inputs.pconfig
     sample_names = []
-
     plotdata: List[List[Dict[str, Any]]] = list()
-    for data_index, ds in enumerate(data):
+    for data_index, ds in enumerate(inputs.datasets):
         d: List[Dict[str, Any]] = list()
         for s_name in ds:
             sample_names.append(SampleName(s_name))
@@ -107,7 +130,7 @@ def plot(
             pconf.xmax = pconf.xmax if pconf.xmax is not None else max_val
             pconf.ymax = pconf.ymax if pconf.ymax is not None else max_val
 
-    # Add on annotation data series
+    # Add extra annotation data series
     # noinspection PyBroadException
     try:
         if pconf.extra_series:
@@ -127,7 +150,7 @@ def plot(
     return ScatterPlot.create(
         points_lists=plotdata,
         pconfig=pconf,
-        anchor=anchor,
+        anchor=inputs.anchor,
     )
 
 

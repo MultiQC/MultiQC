@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import report
-from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, plot_anchor
+from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
 
@@ -27,34 +27,20 @@ BoxT = List[Union[int, float]]
 
 def plot(
     list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
-    pconfig: Union[Dict[str, Any], BoxPlotConfig, None],
+    pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
 ) -> "BoxPlot":
     """
     Plot a box plot. Expects either:
     - a dict mapping sample names to data point lists or dicts,
     - a dict mapping sample names to a dict of statistics (e.g. {min, max, median, mean, std, q1, q3 etc.})
     """
-    pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
-
-    anchor = plot_anchor(pconf)
-
-    # Given one dataset - turn it into a list
-    if not isinstance(list_of_data_by_sample, list):
-        list_of_data_by_sample = [list_of_data_by_sample]
-
-    for i in range(len(list_of_data_by_sample)):
-        if isinstance(list_of_data_by_sample[0], OrderedDict):
-            # Legacy: users assumed that passing an OrderedDict indicates that we
-            # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
-            pass
-        elif pconf.sort_samples:
-            samples = sorted(list(list_of_data_by_sample[0].keys()))
-            list_of_data_by_sample[i] = {s: list_of_data_by_sample[i][s] for s in samples}
+    inputs: BoxPlotInputData = BoxPlotInputData.create(list_of_data_by_sample, pconfig)
+    inputs = BoxPlotInputData.merge_with_previous(inputs)
 
     return BoxPlot.create(
-        list_of_data_by_sample=list_of_data_by_sample,
-        pconfig=pconf,
-        anchor=anchor,
+        list_of_data_by_sample=inputs.list_of_data_by_sample,
+        pconfig=inputs.pconfig,
+        anchor=inputs.anchor,
     )
 
 
@@ -156,6 +142,45 @@ class Dataset(BaseDataset):
                 f"{self.fmt_value_for_llm(mean)}{suffix}|\n"
             )
         return prompt
+
+
+class BoxPlotInputData(NormalizedPlotInputData):
+    list_of_data_by_sample: List[Dict[str, BoxT]]
+    pconfig: BoxPlotConfig
+
+    @staticmethod
+    def create(
+        list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
+        pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
+    ) -> "BoxPlotInputData":
+        pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
+
+        # Given one dataset - turn it into a list
+        if not isinstance(list_of_data_by_sample, list):
+            list_of_data_by_sample = [list_of_data_by_sample]
+
+        for i in range(len(list_of_data_by_sample)):
+            if isinstance(list_of_data_by_sample[0], OrderedDict):
+                # Legacy: users assumed that passing an OrderedDict indicates that we
+                # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
+                pass
+            elif pconf.sort_samples:
+                samples = sorted(list(list_of_data_by_sample[0].keys()))
+                list_of_data_by_sample[i] = {s: list_of_data_by_sample[i][s] for s in samples}
+
+        return BoxPlotInputData(
+            anchor=plot_anchor(pconf),
+            list_of_data_by_sample=list_of_data_by_sample,
+            pconfig=pconf,
+        )
+
+    @classmethod
+    def merge(cls, old_data: "BoxPlotInputData", new_data: "BoxPlotInputData") -> "BoxPlotInputData":
+        return BoxPlotInputData(
+            anchor=new_data.anchor,
+            list_of_data_by_sample=old_data.list_of_data_by_sample + new_data.list_of_data_by_sample,
+            pconfig=old_data.pconfig,
+        )
 
 
 class BoxPlot(Plot[Dataset, BoxPlotConfig]):
