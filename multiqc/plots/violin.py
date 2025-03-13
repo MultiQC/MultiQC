@@ -68,13 +68,13 @@ class ViolinPlotInputData(NormalizedPlotInputData):
         return ViolinPlotInputData(dts=dts, pconfig=pconf, anchor=anchor)
 
     @classmethod
-    def merge(cls, prev_data: "ViolinPlotInputData", new_data: "ViolinPlotInputData") -> "ViolinPlotInputData":
+    def merge(cls, old_data: "ViolinPlotInputData", new_data: "ViolinPlotInputData") -> "ViolinPlotInputData":
         """
         Merge normalized data from old run and new run
         """
         # Merge datasets
         merged_dts: List[DataTable] = []
-        for prev_dt, new_dt in zip_longest(prev_data.dts, new_data.dts):
+        for prev_dt, new_dt in zip_longest(old_data.dts, new_data.dts):
             if prev_dt is None:
                 merged_dts.append(new_dt)
                 continue
@@ -85,7 +85,7 @@ class ViolinPlotInputData(NormalizedPlotInputData):
             prev_dt.merge(new_dt)
             merged_dts.append(prev_dt)
 
-        return ViolinPlotInputData(dts=merged_dts, pconfig=prev_data.pconfig, anchor=prev_data.anchor)
+        return ViolinPlotInputData(dts=merged_dts, pconfig=old_data.pconfig, anchor=old_data.anchor)
 
 
 def plot(

@@ -331,8 +331,9 @@ class NormalizedPlotInputData(BaseModel):
         Returns:
             The loaded data or None if not found, as an instance of the same class that called this method
         """
-        file_path = tmp_dir.parquet_dir() / f"{anchor}.parquet"
-        if not file_path.exists():
+        if not (file_path := report.plot_input_data.get(anchor)):
+            return None
+        if not Path(file_path).exists():
             return None
 
         # Load from parquet

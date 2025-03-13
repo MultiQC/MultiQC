@@ -257,7 +257,7 @@ def render_and_export_plots(plots_dir_name: str):
     """
 
     def update_fn(_, s: Section):
-        if s.plot_anchor:
+        if s.plot_anchor and s.plot_anchor in report.plot_by_id:
             _plot = report.plot_by_id[s.plot_anchor]
             if isinstance(_plot, Plot):
                 s.plot = _plot.add_to_report(
@@ -269,8 +269,6 @@ def render_and_export_plots(plots_dir_name: str):
                 s.plot = _plot
             else:
                 logger.error(f"Unknown plot type for {s.module}/{s.name}")
-        else:
-            s.plot = ""
 
     sections = report.get_all_sections()
 
@@ -292,7 +290,7 @@ def render_and_export_plots(plots_dir_name: str):
         )
     else:
         for s in sections:
-            if s.plot_anchor:
+            if s.plot_anchor and s.plot_anchor in report.plot_by_id:
                 plot = report.plot_by_id[s.plot_anchor]
                 if isinstance(plot, Plot) and plot.flat:
                     show_progress = True
@@ -320,7 +318,7 @@ def render_and_export_plots(plots_dir_name: str):
     report.some_plots_are_deferred = any(
         isinstance(report.plot_by_id[s.plot_anchor], Plot) and report.plot_by_id[s.plot_anchor].defer_render
         for s in sections
-        if s.plot_anchor
+        if s.plot_anchor and s.plot_anchor in report.plot_by_id
     )
 
 
