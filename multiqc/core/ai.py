@@ -179,7 +179,7 @@ class Client:
         self.model: str
         self.api_key: str = api_key
 
-    def _query(self, prompt: str):
+    def _query(self, prompt: str, report_content:str):
         raise NotImplementedError
 
     def interpret_report_short(self, report_content: str) -> InterpretationResponse:
@@ -355,7 +355,7 @@ class AnthropicClient(Client):
         content: str
         model: str
 
-    def _query(self, prompt: str) -> ApiResponse:
+    def _query(self, prompt: str, report_content: str) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -367,7 +367,7 @@ class AnthropicClient(Client):
                 "model": self.model,
                 "max_tokens": 4096,
                 "messages": [
-                    {"role": "user", "content": prompt},
+                    {"role": "user", "content": prompt + "\n\n" + report_content},
                 ],
                 "temperature": 0.0,
             },
