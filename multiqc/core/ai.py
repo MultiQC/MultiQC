@@ -179,7 +179,7 @@ class Client:
         self.model: str
         self.api_key: str = api_key
 
-    def _query(self, prompt: str, report_content:str):
+    def _query(self, prompt: str, report_content: str):
         raise NotImplementedError
 
     def interpret_report_short(self, report_content: str) -> InterpretationResponse:
@@ -311,17 +311,11 @@ class OpenAiClient(Client):
         body.update(
             {
                 "model": self.model,
-                "messages": [
-                    {"role": "system", "content": prompt},
-                    {"role": "user", "content": report_content}
-                ],
+                "messages": [{"role": "system", "content": prompt}, {"role": "user", "content": report_content}],
             }
         )
-        if config.ai_auth_type == 'api-key':
-            headers = {
-                'Content-Type': 'application/json',
-                'api-key': self.api_key
-            }
+        if config.ai_auth_type == "api-key":
+            headers = {"Content-Type": "application/json", "api-key": self.api_key}
         else:
             headers = {
                 "Content-Type": "application/json",
