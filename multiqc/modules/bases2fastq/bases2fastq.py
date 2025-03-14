@@ -45,29 +45,50 @@ class MultiqcModule(BaseMultiqcModule):
         self.missing_runs = set()
         self.sample_id_to_run = dict()
 
-        # Read overall stats json as dictionaries
+        # bases2fastq/run
         num_runs = 0
+        num_samples = 0
         for f in self.find_log_files("bases2fastq/run"):
-            data_dict = json.loads(f["f"])
+            data = json.loads(f["f"])
 
             # get run + analysis
-            run_name = data_dict.get("RunName", None)
-            analysis_id = data_dict.get("AnalysisID", None)[0:4]
+            run_name = data.get("RunName", None)
+            analysis_id = data.get("AnalysisID", None)[0:4]
 
             if not run_name or not analysis_id:
                 log.error("Error with RunStats.json. Either RunName or AnalysisID is absent.")
                 log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
                 continue
 
-            run_analysis_name = "__".join([run_name, analysis_id])
+            run_analysis_name = "-".join([run_name, analysis_id])
             run_analysis_name = self.clean_s_name(run_analysis_name, f)
 
             # map sample UUIDs to run_analysis_name
-            for sample in data_dict["SampleStats"]:
-                self.sample_id_to_run[sample["SampleID"]] = run_analysis_name
+            for sample_data in data["SampleStats"]:
+                sample_id = sample_data["SampleID"]
+                sample_name = sample_data["SampleName"]
+                sample_data["RunName"] = run_name
 
-            # sample stats not needed at run level - save on memory
-            del data_dict["SampleStats"]
+                self.sample_id_to_run[sample_id] = run_analysis_name
+
+                run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
+
+                num_polonies = sample_data["NumPolonies"]
+                if num_polonies < MIN_POLONIES:
+                    log.warning(
+                        f"Skipping {run_analysis_sample_name} because it has <{MIN_POLONIES} assigned reads [n={num_polonies}]."
+                    )
+                    continue
+
+                # skip run if in user provider ignore list
+                if self.is_ignore_sample(run_analysis_sample_name):
+                    log.warning(f"skipping sample:{run_analysis_sample_name} due to --ignore-sample selection")
+                    continue
+
+                num_samples += 1
+
+                self.b2f_data[run_analysis_sample_name] = sample_data
+                
 
             # skip run if in user provider ignore list
             if self.is_ignore_sample(run_analysis_name):
@@ -76,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             num_runs += 1
 
-            self.b2f_run_data[run_analysis_name] = data_dict
+            self.b2f_run_data[run_analysis_name] = data
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
 
         # if all RunStats.json too large, none will be found.  Guide customer and Exit at this point.
@@ -97,16 +118,18 @@ class MultiqcModule(BaseMultiqcModule):
                 run_r1r2_lens_dict[rl] = []
             run_r1r2_lens_dict[rl].append(list(self.b2f_run_data.keys())[nn])
 
-        # Read project info and make it into a lookup dictionary of {sample:project}:
+        #
+        # bases2fastq/project
+        #
         project_lookup_dict = {}
         num_projects = 0
         for f in self.find_log_files("bases2fastq/project"):
-            data_dict = json.loads(f["f"])
-            samples = data_dict["Samples"]
+            data = json.loads(f["f"])
+            samples = data["Samples"]
 
             # get run + analysis
-            run_name = data_dict.get("RunName", None)
-            analysis_id = data_dict.get("AnalysisID", None)[0:4]
+            run_name = data.get("RunName", None)
+            analysis_id = data.get("AnalysisID", None)[0:4]
 
             if not run_name or not analysis_id:
                 log.error(f"Error with {f['root']}.  Either RunName or AnalysisID is absent.")
@@ -116,10 +139,10 @@ class MultiqcModule(BaseMultiqcModule):
             run_analysis_name = "__".join([run_name, analysis_id])
             run_analysis_name = self.clean_s_name(run_analysis_name, f)
 
-            project = self.clean_s_name(data_dict.get("Project", "DefaultProject"), f)
+            project = self.clean_s_name(data.get("Project", "DefaultProject"), f)
 
             # run stats no longer needed - save on memory
-            del data_dict
+            del data
 
             for sample_name in samples:
                 run_analysis_sample_name = self.clean_s_name("__".join([run_analysis_name, sample_name]), f)
@@ -134,45 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_data_source(f=f, s_name=project, module="bases2fastq")
 
-        #
-        # Read per sample stats json as dictionaries
-        #
-        num_samples = 0
-        for f in self.find_log_files("bases2fastq/persample"):
-            data_dict = json.loads(f["f"])
-
-            # ensure sample UUID is known to list of runs
-            sample_id = data_dict["SampleID"]
-            if sample_id not in self.sample_id_to_run:
-                log.warning(f"{data_dict['RunName']} RunStats.json is missing for sample, {f['root']}")
-                continue
-
-            run_analysis_name = self.sample_id_to_run[sample_id]
-            run_analysis_name = self.clean_s_name(run_analysis_name, f)
-
-            sample_name = data_dict["SampleName"]
-            run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
-            run_analysis_name = self.clean_s_name(run_analysis_name, f)
-
-            num_polonies = data_dict["NumPolonies"]
-            if num_polonies < MIN_POLONIES:
-                log.warning(
-                    f"Skipping {run_analysis_sample_name} because it has <{MIN_POLONIES} assigned reads [n={num_polonies}]."
-                )
-                continue
-
-            # skip run if in user provider ignore list
-            if self.is_ignore_sample(run_analysis_sample_name):
-                log.warning(f"skipping sample:{run_analysis_sample_name} due to --ignore-sample selection")
-                continue
-
-            num_samples += 1
-
-            self.b2f_data[run_analysis_sample_name] = data_dict
-            self.b2f_data[run_analysis_sample_name]["RunName"] = run_analysis_name
-
-            self.add_data_source(f=f, s_name=run_analysis_sample_name, module="bases2fastq")
-
+      
         # ensure run/sample data found
         if num_projects == 0 and num_samples == 0:
             log.error("No samples or projects are found. Either file-size above limit or RunStats.json does not exist.")

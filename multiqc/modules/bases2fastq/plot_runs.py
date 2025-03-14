@@ -56,7 +56,6 @@ def plot_run_stats(run_data, color_dict):
         ],
         "cpswitch": True,
         "stacking": "normal",
-        "description": "Bar plots to compare yields of all found sequencing runs.",
         "id": "run_metrics_bar",
         "title": "bases2fastq: General Sequencing Run QC metrics plot",
         "ylab": "QC",
@@ -143,7 +142,6 @@ def tabulate_run_stats(run_data, color_dict):
 
     pconfig = {
         "title": "bases2fastq: General Sequencing Run QC metrics",
-        "descriptions": "Comparison of run metrics across runs",
         "col1_header": "Run Name",
         "id": "run_metrics_table",
         "ylab": "QC",
@@ -197,7 +195,7 @@ def plot_base_quality_hist(run_data, color_dict):
         "data_labels": [
             {
                 "name": "Quality Per Base",
-                "descriptions": "Histogram of bases quality",
+                "description": "Histogram of bases quality",
                 "ymin": 0,
                 "ylabel": "Percentage of base quality",
                 "xlabel": "base quality",
@@ -205,7 +203,7 @@ def plot_base_quality_hist(run_data, color_dict):
             },
             {
                 "name": "Qualiter Per Read",
-                "descriptions": "Histogram of average read base quality",
+                "description": "Histogram of average read base quality",
                 "ymin": 0,
                 "ylabel": "Percentage of read quality",
                 "xlabel": "base quality",
@@ -305,7 +303,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
             {"name": "%Q30", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
             {"name": "%Q40", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
         ],
-        "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
+        "x_lines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "dash"}],
         "colors": color_dict,
         "ymin": 0,
         "id": "per_run_quality_by_cycle",

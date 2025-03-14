@@ -22,11 +22,6 @@ bamdst/coverage:
 bamtools/stats:
   contents: "Stats for BAM file(s):"
   num_lines: 10
-bases2fastq/persample:
-  fn: "*_stats.json"
-  contents: "NumPolonies"
-  num_lines: 100
-  max_filesize: 1024
 bases2fastq/run:
   fn: "RunStats.json"
   contents: "NumPolonies"

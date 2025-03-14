@@ -67,7 +67,11 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
         "suffix": "%",
     }
 
-    pconfig = {"description": "Table of per sample key information", "no_beeswarm": True}
+    pconfig = {
+            "id": "sample_qc_metric_table",
+            "title": "Sample QC Metrics Table",
+            "no_violin": True
+        }
 
     plot_name = "Sample QC metrics table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
@@ -229,7 +233,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
         "xlab": "cycle",
         "ylab": "Percentage",
         "ymax": 100,
-        "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
+        "x_lines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "dash"}],
         "colors": color_dict,
         "ymin": 0,
         "id": "per_cycle_n_content",
@@ -336,7 +340,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, sample_color):
         "title": "bases2fastq: Per Cycle Adapter Content",
         "xlab": "Cycle",
         "ylab": "% of Sequences",
-        "xPlotLines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "Dash"}],
+        "x_lines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "dash"}],
         "ymax": 100,
     }
     plot_name = "Per Sample Adapter Content"
