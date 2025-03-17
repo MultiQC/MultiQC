@@ -535,6 +535,12 @@ class Dataset(BaseDataset):
                     sample, self.scatter_value_by_sample_by_metric[col.rid].get(sample, "")
                 )
                 if value != "":
+                    # Format numbers with appropriate decimal places
+                    if isinstance(value, float):
+                        value = f"{value:.2f}"
+                    elif isinstance(value, int):
+                        value = f"{value:d}"
+
                     if col.suffix:
                         value = f"{value}{col.suffix}"
                 row.append(str(value))
