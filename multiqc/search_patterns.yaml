@@ -24,14 +24,12 @@ bamtools/stats:
   num_lines: 10
 bases2fastq/run:
   fn: "RunStats.json"
-  contents: "NumPolonies"
+  contents: "FlowCellID"
   num_lines: 100
 bases2fastq/project:
   fn: "*_RunStats.json"
-  contents: "NumPolonies"
+  contents: "FlowCellID"
   num_lines: 100
-bases2fastq/group:
-  fn: "*_b2fgroup.csv"
 bbduk:
   contents: "Executing jgi.BBDuk"
   num_lines: 2

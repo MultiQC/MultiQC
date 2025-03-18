@@ -113,7 +113,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, color_dict):
             data[s_name][base_no]["base"] = base_no
             tot = sum([data[s_name][base_no][base] for base in ["a", "c", "t", "g"]])
             for base in ["a", "c", "t", "g"]:
-                data[s_name][base_no][base] = (float(data[s_name][base_no][base]) / float(tot)) * 100.0
+                data[s_name][base_no][base] = (float(data[s_name][base_no][base]) / float(tot)) * 100.0 if tot > 0 else None
 
         R2 = sample_data[s_name]["Reads"][1]["Cycles"]
         for cycle in range(len(R2)):
@@ -122,7 +122,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, color_dict):
             data[s_name][base_no]["base"] = base_no
             tot = sum([data[s_name][base_no][base] for base in ["a", "c", "t", "g"]])
             for base in ["a", "c", "t", "g"]:
-                data[s_name][base_no][base] = (float(data[s_name][base_no][base]) / float(tot)) * 100.0
+                data[s_name][base_no][base] = (float(data[s_name][base_no][base]) / float(tot)) * 100.0 if tot > 0 else None
     html = """<div id="fastqc_per_base_sequence_content_plot_div">
         <div class="alert alert-info">
             <span class="glyphicon glyphicon-hand-up"></span>
