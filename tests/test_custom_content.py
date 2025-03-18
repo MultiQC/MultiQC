@@ -677,6 +677,7 @@ def test_ai_export_rounding(tmp_path):
 
     os.chdir(tmp_path)
     os.environ["MQC_STUB_AI_RESPONSE"] = "TEST_RESPONSE"
+    os.environ["SEQERA_ACCESS_TOKEN"] = "TEST_TOKEN"
     multiqc.run(
         file,
         cfg=ClConfig(run_modules=["custom_content"], ai_summary=True),
