@@ -629,6 +629,8 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bo
             except Exception as e:
                 logger.debug(f"Error applying format to table value '{column.rid}': '{val}'. {e}")
         elif isinstance(val, (int, float)):
+            if fmt == r"{:,d}":
+                val = round(val)
             try:
                 # If format is decimal and value is float, try rounding to int first
                 if isinstance(val, float) and "d" in fmt:
