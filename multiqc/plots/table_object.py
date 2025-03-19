@@ -452,7 +452,7 @@ class DataTable(BaseModel):
         for section in sections:
             for column in section.column_by_key.values():
                 del column.modify
-                if isinstance(column.format, Callable):
+                if not isinstance(column.format, str):
                     del column.format
 
         # Assign to class
