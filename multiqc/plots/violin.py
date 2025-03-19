@@ -51,22 +51,18 @@ def normalize_inputs(
     if headers is not None and not isinstance(headers, list):
         headers = [headers]
 
-    dts = []
-    for i, d in enumerate(data):
-        h = headers[i] if headers and len(headers) > i else None
-        table_anchor = Anchor(f"{anchor}_table")
-        if len(data) > 1:
-            table_anchor = Anchor(f"{table_anchor}-{i + 1}")
-        table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
-        dt = table_object.DataTable.create(
-            data=d,
-            table_id=pconf.id,
-            table_anchor=table_anchor,
-            pconfig=pconf.model_copy(),
-            headers=h,
-        )
-        dts.append(dt)
-    return ViolinPlotInputData(dts=dts, pconfig=pconf, anchor=anchor)
+    table_anchor = Anchor(f"{anchor}_table")
+    if len(data) > 1:
+        table_anchor = Anchor(f"{table_anchor}")
+    table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
+    dt = table_object.DataTable.create(
+        data=data,
+        table_id=pconf.id,
+        table_anchor=table_anchor,
+        pconfig=pconf.model_copy(),
+        headers=headers,
+    )
+    return ViolinPlotInputData(dts=[dt], pconfig=pconf, anchor=anchor)
 
 
 def save_normalized_data(anchor: Anchor, inputs: ViolinPlotInputData):

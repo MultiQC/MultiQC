@@ -364,6 +364,8 @@ class DataTable(BaseModel):
         unified_sections__with_nulls: List[Dict[SampleGroup, List[InputRow]]] = []
         for input_section in data if isinstance(data, list) else [data]:
             rows_by_group: Dict[SampleGroup, List[InputRow]] = {}
+            if isinstance(input_section, list):
+                print(input_section)
             for g_name, input_group in input_section.items():
                 g_name = SampleGroup(str(g_name))  # Make sure sample names are strings
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
