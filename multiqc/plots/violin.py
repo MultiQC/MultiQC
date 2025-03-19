@@ -542,8 +542,8 @@ class Dataset(BaseDataset):
                             value = f"{value:.2f}"
                         elif isinstance(value, int):
                             value = f"{value:d}"
-                    else:
-                        value = fmt(value)
+                    elif isinstance(fmt, str):
+                        value = fmt.format(value)
                 row.append(str(value))
             result += f"|{pseudonym}|" + "|".join(row) + "|\n"
 
