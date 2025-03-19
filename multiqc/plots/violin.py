@@ -534,9 +534,16 @@ class Dataset(BaseDataset):
                 value = self.violin_value_by_sample_by_metric[col.rid].get(
                     sample, self.scatter_value_by_sample_by_metric[col.rid].get(sample, "")
                 )
-                if value != "":
-                    if col.suffix:
-                        value = f"{value}{col.suffix}"
+                if value:
+                    fmt = getattr(col, "format", None)
+                    if fmt is None:
+                        # Format numbers with appropriate decimal places
+                        if isinstance(value, float):
+                            value = f"{value:.2f}"
+                        elif isinstance(value, int):
+                            value = f"{value:d}"
+                    elif isinstance(fmt, str):
+                        value = fmt.format(value)
                 row.append(str(value))
             result += f"|{pseudonym}|" + "|".join(row) + "|\n"
 
