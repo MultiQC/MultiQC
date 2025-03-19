@@ -448,6 +448,13 @@ class DataTable(BaseModel):
         #         if not any(h in data[d_idx][s_name].keys() for h in headers[d_idx]):
         #             del raw_data[d_idx][s_name]
 
+        # Remove callable headers that are not compatible with JSON
+        for section in sections:
+            for column in section.column_by_key.values():
+                del column.modify
+                if isinstance(column.format, Callable):
+                    del column.format
+
         # Assign to class
         return DataTable(
             id=table_id,
