@@ -668,6 +668,7 @@ def test_ai_export_rounding(tmp_path):
                 "min": 0,
                 "suffix": "%",
                 "scale": "Blues",
+                "format": "{:,.4f}",
                 "description": "Reads assigned to the row's taxon / total read count X 100. This column only factors in reads directly classified to the listed taxon and does not include reads classified to the children of this taxon. The sum of this column is 100.",
             }
         },
