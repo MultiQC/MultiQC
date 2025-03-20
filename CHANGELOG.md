@@ -1,5 +1,40 @@
 # MultiQC Version History
 
+## [MultiQC v1.28](https://github.com/MultiQC/MultiQC/releases/tag/v1.28) - 2025-03-20
+
+Mostly trivial release with fixes and small improvements. Bumping minor release because of total accumulated small improvements since 1.27.
+
+### Feature updates and improvements
+
+- Add JSON schema for config ([#3100](https://github.com/MultiQC/MultiQC/pull/3100))
+- Allow configure dynamic toolbox settings in YAML config ([#3102](https://github.com/MultiQC/MultiQC/pull/3102))
+- AI prompt optimizations ([#3109](https://github.com/MultiQC/MultiQC/pull/3109))
+- Round table values for AI prompt ([#3124](https://github.com/MultiQC/MultiQC/pull/3124))
+- Custom content: support `.gif`, `.webp` and `.tiff` ([#3058](https://github.com/MultiQC/MultiQC/pull/3058))
+- Ignore `*.jar` files for file search ([#3097](https://github.com/MultiQC/MultiQC/pull/3097))
+
+### Module updates
+
+- QUAST: add ANI column ([#3091](https://github.com/MultiQC/MultiQC/pull/3091))
+- Trimmomatic: use more specific search pattern ([#3098](https://github.com/MultiQC/MultiQC/pull/3098))
+
+### Fixes
+
+- AI in-browser summary: fix prompt for string-type cells in tables ([#3096](https://github.com/MultiQC/MultiQC/pull/3096))
+- Fix generating AI summaries from custom content table with empty cells ([#3095](https://github.com/MultiQC/MultiQC/pull/3095))
+- Bargraph: respect `pconfig.use_legend` if defined ([#3112](https://github.com/MultiQC/MultiQC/pull/3112))
+- Fix warnings when `read_count_multiplier: 1` ([#3094](https://github.com/MultiQC/MultiQC/pull/3094))
+
+### Module fixes
+
+- VEP: small fix when data in category is missing ([#3116](https://github.com/MultiQC/MultiQC/pull/3116))
+- BCLConvert: fix index parsing ([#3101](https://github.com/MultiQC/MultiQC/pull/3101))
+
+### Optimization, refactoring and typing
+
+- Move special case modules into core ([#3114](https://github.com/MultiQC/MultiQC/pull/3114))
+- Refactor plotting code to save and load input data ([#3069](https://github.com/MultiQC/MultiQC/pull/3069))
+
 ## [MultiQC v1.27.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.27.1) - 2025-02-07
 
 Few fixes and improvements in AI summaries:
