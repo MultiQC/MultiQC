@@ -518,7 +518,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Scatter plot
             elif plot_type == PlotType.SCATTER:
-                scatter_data = cast(Mapping[str, Any], ccdict.data)
+                scatter_data = ccdict.data
+                assert not isinstance(scatter_data, str)
                 plot = scatter.plot(scatter_data, pconfig=scatter.ScatterConfig(**pconfig))
 
             # Box plot

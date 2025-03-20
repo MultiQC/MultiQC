@@ -33,6 +33,7 @@ from typing import (
     Union,
 )
 
+import pandas as pd
 import yaml
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -47,8 +48,8 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plot import Plot
-from multiqc.plots.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
 from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
@@ -114,9 +115,14 @@ ai_pseudonym_map_base64: str = ""
 # Following fields are preserved between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
-plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html and load with js
-plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
-plot_input_data: Dict[Anchor, Any] = dict()  # to combine data from previous runs
+
+# relative paths to parquet files to combine data from previous runs
+plot_input_data: Dict[Anchor, str] = dict()
+# plot objects to retried when plots are rendered, for ai, and for interactive use
+plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()
+# plot dumps to embed in html and load with js
+plot_data: Dict[Anchor, Dict[str, Any]] = dict()
+
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
@@ -1041,11 +1047,13 @@ def multiqc_dump_json(data_dir: Path):
     export_vars = {
         "report": [
             "multiqc_command",
+            "modules",
             "data_sources",
             "general_stats_data",
             "general_stats_headers",
-            "plot_data",
             "creation_date",
+            "plot_input_data",
+            "plot_data",
         ],
         "config": [
             "analysis_dir",
