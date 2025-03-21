@@ -482,46 +482,65 @@ class DataTable(BaseModel):
 
     def merge(self, new_dt: "DataTable"):
         """
-        Extend the existing DataTable with new data. If multiple DataTables are provided,
-        they are zipped with the sections in this table (first new dt extends first section, etc).
+        Extend the existing DataTable with new data.
+
+        Sections are matched by their column keys rather than their position in the list.
+        This allows for merging sections even if they appear in different order.
 
         New samples and columns are added at the end, while existing sample/column combinations
         are overwritten with new data.
         """
-        # Zip sections together, using shorter list length
-        for section, new_section in zip(self.sections, new_dt.sections):
-            # Update column metadata
-            for col_key, new_col_meta in new_section.column_by_key.items():
-                if col_key in section.column_by_key:
-                    # Update existing column metadata fields
-                    existing_col = section.column_by_key[col_key]
-                    for field_name, field_value in new_col_meta.model_dump().items():
-                        setattr(existing_col, field_name, field_value)
-                else:
-                    # Add new column
-                    section.column_by_key[col_key] = new_col_meta
 
-            # Update row data
-            for group_name, new_rows in new_section.rows_by_sgroup.items():
-                existing_rows = section.rows_by_sgroup.get(group_name, [])
-                existing_samples = {row.sample for row in existing_rows}
+        # Convert sections to dictionaries keyed by their column keys for easier matching
+        def get_section_signature(section: TableSection) -> frozenset:
+            """Get a hashable signature of column keys for a section"""
+            return frozenset(section.column_by_key.keys())
 
-                for new_row in new_rows:
-                    if new_row.sample in existing_samples:
-                        # Update existing sample data
-                        for i, row in enumerate(existing_rows):
-                            if row.sample == new_row.sample:
-                                # Update raw data
-                                row.raw_data.update(new_row.raw_data)
-                                # Update formatted data
-                                row.formatted_data.update(new_row.formatted_data)
-                                existing_rows[i] = row
-                                break
+        # Create dictionaries of sections by their column key signatures
+        existing_sections_by_sig = {get_section_signature(section): section for section in self.sections}
+        new_sections_by_sig = {get_section_signature(section): section for section in new_dt.sections}
+
+        # Find matching sections and merge them
+        for sig, new_section in new_sections_by_sig.items():
+            if sig in existing_sections_by_sig:
+                # Merge matching sections
+                section = existing_sections_by_sig[sig]
+
+                # Update column metadata
+                for col_key, new_col_meta in new_section.column_by_key.items():
+                    if col_key in section.column_by_key:
+                        # Update existing column metadata fields
+                        existing_col = section.column_by_key[col_key]
+                        for field_name, field_value in new_col_meta.model_dump().items():
+                            setattr(existing_col, field_name, field_value)
                     else:
-                        # Add new sample
-                        existing_rows.append(new_row)
+                        # Add new column
+                        section.column_by_key[col_key] = new_col_meta
 
-                section.rows_by_sgroup[group_name] = existing_rows
+                # Update row data
+                for group_name, new_rows in new_section.rows_by_sgroup.items():
+                    existing_rows = section.rows_by_sgroup.get(group_name, [])
+                    existing_samples = {row.sample for row in existing_rows}
+
+                    for new_row in new_rows:
+                        if new_row.sample in existing_samples:
+                            # Update existing sample data
+                            for i, row in enumerate(existing_rows):
+                                if row.sample == new_row.sample:
+                                    # Update raw data
+                                    row.raw_data.update(new_row.raw_data)
+                                    # Update formatted data
+                                    row.formatted_data.update(new_row.formatted_data)
+                                    existing_rows[i] = row
+                                    break
+                        else:
+                            # Add new sample
+                            existing_rows.append(new_row)
+
+                    section.rows_by_sgroup[group_name] = existing_rows
+            else:
+                # Add new section if no match found
+                self.sections.append(new_section)
 
         # Rebuild headers_in_order based on updated columns
         self._rebuild_headers_in_order()
