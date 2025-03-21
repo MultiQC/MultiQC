@@ -1,8 +1,8 @@
 # MultiQC Version History
 
-## [MultiQC v1.28](https://github.com/MultiQC/MultiQC/releases/tag/v1.28) - 2025-03-20
+## [MultiQC v1.28](https://github.com/MultiQC/MultiQC/releases/tag/v1.28) - 2025-03-21
 
-Mostly trivial release with fixes and small improvements. Bumping minor release because of total accumulated small improvements since 1.27.
+JSON schema for MultiQC config & AI summaries fixes and optimizations.
 
 ### Feature updates and improvements
 
