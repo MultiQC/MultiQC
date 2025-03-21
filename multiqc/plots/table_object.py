@@ -364,6 +364,8 @@ class DataTable(BaseModel):
         unified_sections__with_nulls: List[Dict[SampleGroup, List[InputRow]]] = []
         for input_section in data if isinstance(data, list) else [data]:
             rows_by_group: Dict[SampleGroup, List[InputRow]] = {}
+            if isinstance(input_section, list):
+                print(input_section)
             for g_name, input_group in input_section.items():
                 g_name = SampleGroup(str(g_name))  # Make sure sample names are strings
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
@@ -452,7 +454,8 @@ class DataTable(BaseModel):
         for section in sections:
             for column in section.column_by_key.values():
                 del column.modify
-                del column.format
+                if not isinstance(column.format, str):
+                    del column.format
 
         # Assign to class
         return DataTable(
@@ -628,6 +631,8 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bo
             except Exception as e:
                 logger.debug(f"Error applying format to table value '{column.rid}': '{val}'. {e}")
         elif isinstance(val, (int, float)):
+            if fmt == r"{:,d}":
+                val = round(val)
             try:
                 # If format is decimal and value is float, try rounding to int first
                 if isinstance(val, float) and "d" in fmt:

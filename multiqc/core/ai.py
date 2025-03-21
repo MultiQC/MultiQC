@@ -651,7 +651,7 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
     user_prompt += tools_context
 
     # General stats - also always include, otherwise we don't have anything to summarize
-    if general_stats_plot := report.plot_by_id.get(Anchor("general_stats")):
+    if general_stats_plot := report.plot_by_id.get(Anchor("general_stats_table")):
         genstats_context = f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
 {general_stats_plot.format_for_ai_prompt()}

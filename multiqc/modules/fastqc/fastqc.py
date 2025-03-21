@@ -527,11 +527,10 @@ class MultiqcModule(BaseMultiqcModule):
                 },
                 ColumnKey("total_sequences"): {
                     "title": "Seqs",
+                    "shared_key": "read_count",
                     "description": f"Total sequences ({config.read_count_desc})",
                     "min": 0,
                     "scale": "Blues",
-                    "suffix": "M",
-                    "modify": lambda x: x * config.read_count_multiplier,
                 },
             },
             group_samples_config=SampleGroupingConfig(
