@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
 
 from natsort import natsorted
 
@@ -456,7 +456,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
                         <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
                         </svg>
                     </span>
-                    <span class="button-text">Summarize</span>
+                    <span class="button-text">Summarize table</span>
                 </button>
             </div>
             """

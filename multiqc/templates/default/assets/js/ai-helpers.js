@@ -136,6 +136,7 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
 
   let model = undefined;
   let threadId = undefined;
+  let started = false;
 
   return recursivelyProcessStream();
   function recursivelyProcessStream() {
@@ -183,7 +184,6 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
           let content = undefined;
           let role = undefined;
           let finishReason = undefined;
-          let started = false;
 
           // Detect provider
           if (providerId === "seqera") {

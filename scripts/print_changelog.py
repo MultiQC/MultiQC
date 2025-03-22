@@ -100,6 +100,7 @@ def main():
         "Module fixes": [],
         "Refactoring and typing": [],
         "Infrastructure and packaging": [],
+        "Optimization, refactoring and typing": [],
         "Chores": [],
     }
     for pr in prs:
