@@ -102,6 +102,8 @@ class MultiQCConfig(BaseModel):
     ai_custom_endpoint: Optional[str] = Field(None, description="AI custom endpoint")
     ai_extra_query_options: Optional[str] = Field(None, description="AI extra query options")
     ai_custom_context_window: Optional[str] = Field(None, description="AI custom context window")
+    ai_prompt_short: Optional[str] = Field(None, description="Prompt for short AI summary, put before the report details when sent to the provider")
+    ai_prompt_full: Optional[str] = Field(None, description="Prompt for full AI summary, put before the report details when sent to the provider")
     no_ai: Optional[bool] = Field(None, description="Disable AI")
     ai_anonymize_samples: Optional[bool] = Field(None, description="Anonymize samples")
 
