@@ -10,9 +10,13 @@ MultiQC v1.27 and newer can generate AI-powered summaries of your reports. These
 - When creating the report, baked into the report HTML.
 - Dynamically in the browser, while viewing an existing HTML report.
 
-The AI summaries are generated using LLMs (large-language models) AI, using
-[Seqera AI](https://seqera.io/ask-ai/), [OpenAI](https://openai.com/) or [Anthropic](https://www.anthropic.com/).
-MultiQC reports also have an option to copy a prompt to your clipboard, to paste into any provider you have access to.
+The AI summaries are generated using LLMs (large-language models) AI, with the following supported providers:
+
+- [Seqera AI](https://seqera.io/ask-ai/)
+- [OpenAI](https://openai.com/)
+- [Anthropic](https://www.anthropic.com/)
+- [AWS Bedrock](https://aws.amazon.com/bedrock/)
+- MultiQC reports also have an option to copy a prompt to your clipboard, to paste into any provider you have access to
 
 :::warning
 
@@ -41,6 +45,9 @@ Remember: Treat your API keys like passwords and do not share them.
   - Sign up at [https://console.anthropic.com](https://console.anthropic.com)
   - Add a payment method to enable API access
   - Create a new key on on the _API Keys_ section in your [account settings](https://console.anthropic.com/settings/keys)
+- [AWS Bedrock](https://aws.amazon.com/bedrock/)
+  - Bedrock supports a plethora of models across many providers
+  - Sign up, access credentials and payment are handled via an AWS account
 - Other providers, via custom endpoint
   - Works for providers supporting OpenAI-compatible API, specify a custom endpoint URL. See [Using custom OpenAI-compatible endpoints](#using-custom-openai-compatible-endpoints) for details
 - Other providers, via your clipboard
@@ -49,12 +56,12 @@ Remember: Treat your API keys like passwords and do not share them.
     See [Copying prompts](#copying-prompts) for instructions.
 
 Seqera AI is free to use.[^seqera-ai-usage-limits]
-Use of OpenAI and Anthropic APIs are billed by their respective providers based on consumption.
+Use of other third-party APIs are billed by their respective providers based on consumption.
 Seqera AI uses the latest AI provider models under the hood, at the time of writing that is Anthropic Claude sonnet 3.5.
 
 ### Choosing a model
 
-If you're using OpenAI or Anthropic you can choose the exact model used for report summaries.
+If you're using OpenAI, Anthropic or AWS Bedrock you can choose the exact model used for report summaries.
 This is done by setting `ai_model` in the MultiQC config.
 
 - Anthropic model names must begin with `claude`
@@ -63,6 +70,7 @@ This is done by setting `ai_model` in the MultiQC config.
 - OpenAI model names must being with `gpt`
   - Default: `gpt-4o`.
   - Tested with GPT-4o and GPT-4o-mini. See the [OpenAI docs](https://platform.openai.com/docs/models).
+- Bedrock model names must be valid inputs to the `modelId` parameter of the `InvokeModel` API ([docs](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html#API_runtime_InvokeModel_RequestSyntax)).
 
 This model is used during report generation and also set as the default toolbox panel setting for browser report summaries.
 
@@ -81,14 +89,14 @@ To generate them, you must enable them either on the command line or via a Multi
 
   - `--ai` / `--ai-summary`: Generate a short report summary and put it on top of the report (fast)
   - `--ai-summary-full`: Generate a detailed version of the summary with analysis and recommendations (slower)
-  - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai` or `anthropic`. Default `seqera`
+  - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai`, `anthropic` or `aws_bedrock`. Default `seqera`
   - `--no-ai`: Disable AI toolbox and buttons in the report
 
 - Alternatively, MultiQC configuration file:
   ```yaml
   ai_summary: false # Set to true for short summaries
   ai_summary_full: false # Set to true for  long summaries
-  ai_provider: "seqera" # 'seqera', 'openai' or 'anthropic'. Default: 'seqera'
+  ai_provider: "seqera" # 'seqera', 'openai', 'anthropic' or 'aws_bedrock'. Default: 'seqera'
   no_ai: false # Set to true to disable AI toolbox and buttons in the report
   ```
 
@@ -107,6 +115,8 @@ export ANTHROPIC_API_KEY="..."
 It's possible to save these in an `.env` file instead of exporting to your shell's environment.
 This `.env` file can either be in the current working directory or the MultiQC source code directory.
 MultiQC uses the [python-dotenv](https://saurabh-kumar.com/python-dotenv/) package.
+
+For AWS Bedrock, the client uses the [default `boto3` credential chain](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html).
 
 If you run MultiQC without the appropriate key you will get a warning printed to the console,
 but report generation will otherwise proceed without the summary. MultiQC will not return an error exit code.
@@ -239,7 +249,7 @@ If you're unable to generate an AI summary, you can try the following:
 
 ## Using custom OpenAI-compatible endpoints
 
-In addition to the built-in providers (Seqera AI, OpenAI, and Anthropic), MultiQC supports using custom OpenAI-compatible endpoints. This allows you to use self-hosted models or alternative providers that implement the OpenAI API specification.
+In addition to the built-in providers, MultiQC supports using custom OpenAI-compatible endpoints. This allows you to use self-hosted models or alternative providers that implement the OpenAI API specification.
 
 To use a custom endpoint:
 

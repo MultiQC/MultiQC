@@ -903,7 +903,7 @@
     "ai_provider": {
       "anyOf": [
         {
-          "enum": ["seqera", "openai", "anthropic", "custom"],
+          "enum": ["seqera", "openai", "anthropic", "aws_bedrock", "custom"],
           "type": "string"
         },
         {
