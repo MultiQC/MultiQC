@@ -247,7 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse filtering_result
         try:
             for k in parsed_json["filtering_result"]:
-                self.fastp_data[s_name][f"filtering_result_{k}"] = parsed_json["filtering_result"][k]
+                self.fastp_data[s_name][f"filtering_result_{k}"] = float(parsed_json["filtering_result"][k])
         except KeyError:
             log.debug(f"fastp JSON did not have 'filtering_result' key: '{s_name}'")
 
@@ -260,13 +260,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse after_filtering
         try:
             for k in parsed_json["summary"]["after_filtering"]:
-                self.fastp_data[s_name][f"after_filtering_{k}"] = parsed_json["summary"]["after_filtering"][k]
+                self.fastp_data[s_name][f"after_filtering_{k}"] = float(parsed_json["summary"]["after_filtering"][k])
         except KeyError:
             log.debug(f"fastp JSON did not have a 'summary'-'after_filtering' keys: '{s_name}'")
 
         # Parse data required to calculate Pct reads surviving
         try:
-            self.fastp_data[s_name]["before_filtering_total_reads"] = (
+            self.fastp_data[s_name]["before_filtering_total_reads"] = float(
                 parsed_json["summary"]["before_filtering"]["total_reads"]
             )
         except KeyError:
