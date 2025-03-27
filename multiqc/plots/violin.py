@@ -539,7 +539,10 @@ class Dataset(BaseDataset):
                         elif isinstance(value, int):
                             value = f"{value:d}"
                     elif isinstance(fmt, str):
-                        value = fmt.format(value)
+                        try:
+                            value = fmt.format(value)
+                        except ValueError:
+                            logger.info(f"Value {value} failed to format with {fmt=}")
                 row.append(str(value))
             result += f"|{pseudonym}|" + "|".join(row) + "|\n"
 
