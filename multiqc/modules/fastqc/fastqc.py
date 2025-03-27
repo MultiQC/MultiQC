@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypedDict, Un
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, heatmap, linegraph, table
-from multiqc.plots.plotly.line import LinePlotConfig, Series
+from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.table_object import ColumnKey, InputRow, SampleName
 from multiqc.types import Anchor, LoadedFileDict
 
@@ -527,11 +527,10 @@ class MultiqcModule(BaseMultiqcModule):
                 },
                 ColumnKey("total_sequences"): {
                     "title": "Seqs",
+                    "shared_key": "read_count",
                     "description": f"Total sequences ({config.read_count_desc})",
                     "min": 0,
                     "scale": "Blues",
-                    "suffix": "M",
-                    "modify": lambda x: x * config.read_count_multiplier,
                 },
             },
             group_samples_config=SampleGroupingConfig(

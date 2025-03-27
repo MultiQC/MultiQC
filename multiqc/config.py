@@ -7,24 +7,24 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 import itertools
-
-# Default logger will be replaced by caller
 import logging
 import os
 import subprocess
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import importlib_metadata
 import yaml
 from importlib_metadata import EntryPoint
+from jsonschema import validate as validate_json_schema
 
 from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.utils import pyaml_env
+from multiqc.utils.config_schema import config_to_schema
 from multiqc.utils.util_functions import strtobool, update_dict
 
+# Default logger will be replaced by caller
 logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
@@ -112,8 +112,6 @@ export_plots: bool
 make_report: bool
 make_pdf: bool
 
-AVAILABLE_AI_PROVIDERS = ["seqera", "openai", "anthropic", "custom"]
-
 ai_summary: bool
 ai_summary_full: bool
 ai_provider: str
@@ -158,7 +156,7 @@ strict: bool
 development: bool
 custom_plot_config: Dict
 custom_table_header_config: Dict
-software_versions: Dict
+software_versions: Dict[str, Dict[str, List[str]]]
 ignore_symlinks: bool
 ignore_images: bool
 fn_ignore_dirs: List[str]
@@ -170,11 +168,14 @@ sample_names_replace: Dict[str, str]
 sample_names_replace_regex: bool
 sample_names_replace_exact: bool
 sample_names_replace_complete: bool
-sample_names_rename: List
-show_hide_buttons: List
-show_hide_patterns: List
-show_hide_regex: List
-show_hide_mode: List
+sample_names_rename: List[List[str]]
+show_hide_buttons: List[str]
+show_hide_patterns: List[List[str]]
+show_hide_regex: List[bool]
+show_hide_mode: List[str]
+highlight_patterns: List[str]
+highlight_colors: List[str]
+highlight_regex: bool
 no_version_check: bool
 log_filesize_limit: int
 filesearch_lines_limit: int
@@ -362,12 +363,17 @@ def find_user_files():
     _load_found_file("multiqc_config.yaml")
 
 
-def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_config=True) -> Optional[Path]:
+def load_config_file(
+    yaml_config_path: Union[str, Path, None], is_explicit_config=True, validate_schema=True
+) -> Optional[Path]:
     """
     Load and parse a config file if we find it.
 
-    `is_explicit_config` config means the function was called directly or through multiqc.load_config(),
-    which means we need to keep track of to restore the config update update_defaults.
+    Args:
+        yaml_config_path: path to config file
+        is_explicit_config: means the function was called directly or through multiqc.load_config(),
+    which means we need to keep track of to restore the config update update_defaults
+        validate_schema: whether to validate the config against the JSON schema
     """
     if not yaml_config_path:
         return None
@@ -390,12 +396,20 @@ def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_confi
         # new_config can be None if the file is empty
         new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
         if new_config:
+            if validate_schema:
+                try:
+                    # Validate against JSON schema
+                    schema = config_to_schema()
+                    validate_json_schema(instance=new_config, schema=schema)
+                except Exception as e:
+                    logger.warning(f"Config validation warning for {path}: {str(e)}")
+
             logger.info(f"Loading config settings from: {path}")
             _add_config(new_config, str(path))
     except (IOError, AttributeError) as e:
         logger.warning(f"Error loading config {path}: {e}")
         return None
-    except yaml.scanner.ScannerError as e:
+    except yaml.YAMLError as e:
         logger.error(f"Error parsing config YAML: {e}")
         raise
 
@@ -412,7 +426,7 @@ def load_cl_config(cl_config: List[str]):
                 clc_str = ": ".join(clc_str.split(":"))
                 parsed_clc = yaml.safe_load(clc_str)
             assert isinstance(parsed_clc, dict)
-        except yaml.scanner.ScannerError as e:
+        except yaml.YAMLError as e:
             logger.error(f"Could not parse command line config: {clc_str}\n{e}")
         except AssertionError:
             logger.error(f"Could not parse command line config: {clc_str}")
@@ -599,6 +613,16 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
                         show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether regex is turned on
         except AttributeError as e:
             logger.error(f"Error loading show patterns file: {e}")
+
+    # Lists are not of the same length, pad or trim to the length of show_hide_patterns
+    for i in range(len(show_hide_buttons), len(show_hide_patterns)):
+        show_hide_buttons.append(
+            show_hide_patterns[i][0]
+            if i < len(show_hide_patterns) and show_hide_patterns[i] and show_hide_patterns[i][0]
+            else ""
+        )
+        show_hide_mode.append("hide")
+        show_hide_regex.append(False)
 
     # Prepend a "Show all" button if we have anything
     # Do this outside of the file load block in case it was set in the config

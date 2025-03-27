@@ -2,7 +2,7 @@ import logging
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, violin, heatmap, linegraph
+from multiqc.plots import bargraph, heatmap, linegraph, violin
 
 log = logging.getLogger(__name__)
 

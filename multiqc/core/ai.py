@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
 from multiqc.types import Anchor, SampleName
+from multiqc.utils import config_schema
 
 logger = logging.getLogger(__name__)
 
@@ -529,7 +530,8 @@ def get_llm_client() -> Optional[Client]:
         )
         return OpenAiClient(api_key=api_key, endpoint=config.ai_custom_endpoint)
     else:
-        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(config.AVAILABLE_AI_PROVIDERS)}]'
+        avail_providers = config_schema.AiProviderLiteral.__args__  # type: ignore
+        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(avail_providers)}]'
         if config.strict:
             raise RuntimeError(msg)
         logger.error(msg + ". Skipping AI summary")
@@ -640,7 +642,7 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
     tools_context: str = ""
     tools_context += "Tools used in the report:\n\n"
     for i, tool in enumerate(metadata.tools.values()):
-        tools_context += f"{i + 1}. {tool.name} ({tool.info})\n"
+        tools_context += f"{i + 1}. {tool.name}\n"
         if tool.info:
             tools_context += f"Description: {tool.info}\n"
         if tool.href:
@@ -652,17 +654,17 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
     user_prompt += tools_context
 
     # General stats - also always include, otherwise we don't have anything to summarize
-    if report.general_stats_plot:
+    if general_stats_plot := report.plot_by_id.get(Anchor("general_stats_table")):
         genstats_context = f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-{report.general_stats_plot.format_for_ai_prompt()}
+{general_stats_plot.format_for_ai_prompt()}
 """
         genstats_n_tokens = client.n_tokens(genstats_context)
         if current_n_tokens + genstats_n_tokens > max_tokens:
             # If it's too long already, try without hidden columns
             genstats_context = f"""
 MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-{report.general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
+{general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
 """
             genstats_n_tokens = client.n_tokens(genstats_context)
             if current_n_tokens + genstats_n_tokens > max_tokens:

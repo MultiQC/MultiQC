@@ -976,7 +976,7 @@ tophat:
   fn: "*align_summary.txt"
   shared: true
 trimmomatic:
-  contents: "Trimmomatic"
+  contents_re: "^Trimmomatic"
 truvari/bench:
   contents_re: ".*truvari.* bench.*"
   fn: "log.txt"

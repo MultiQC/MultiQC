@@ -4,7 +4,7 @@ from typing import Dict
 
 from multiqc import config
 from multiqc.plots import bargraph, linegraph
-from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.bargraph import BarPlotConfig
 
 # Initialise the logger
 log = logging.getLogger(__name__)
