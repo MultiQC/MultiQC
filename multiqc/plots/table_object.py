@@ -120,10 +120,13 @@ class ColumnMeta(ValidatedConfig):
         table_anchor: Anchor,
     ) -> "ColumnMeta":
         # Overwrite any header config if set in config
-        if header_config := config.custom_table_header_config.get(pconfig.id, {}):
-            if col_config := header_config.get(col_key, {}):
-                for custom_k, custom_v in col_config.items():
-                    col_dict[custom_k] = custom_v  # type: ignore
+        header_config = None
+        for _id in [table_anchor, pconfig.id]:  # Back-compatibility using pconfig.id instead of table_anchor
+            if _header_config := config.custom_table_header_config.get(_id, {}):
+                header_config = _header_config
+                if col_config := header_config.get(col_key, {}):
+                    for custom_k, custom_v in col_config.items():
+                        col_dict[custom_k] = custom_v  # type: ignore
 
         namespace = col_dict.get("namespace", pconfig.namespace) or ""
         assert isinstance(namespace, str)
@@ -174,10 +177,11 @@ class ColumnMeta(ValidatedConfig):
 
         # Overwrite (2nd time) any given config with table-level user config
         # This is to override column-specific values set by modules
-        if pconfig.id in config.custom_plot_config:
-            for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
-                if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
-                    col_dict[cpc_k] = cpc_v  # type: ignore
+        for _id in [table_anchor, pconfig.id]:  # Back-compatibility using pconfig.id instead of table_anchor
+            if config_dict := config.custom_plot_config.get(_id, {}):
+                for cpc_k, cpc_v in config_dict.items():
+                    if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
+                        col_dict[cpc_k] = cpc_v  # type: ignore
 
         col: ColumnMeta = ColumnMeta(**col_dict)
 
@@ -191,6 +195,7 @@ class ColumnMeta(ValidatedConfig):
             return item_id.lower() in [
                 str(s).lower()
                 for s in [
+                    table_anchor,
                     pconfig.id,
                     pconfig.anchor,
                     col.namespace,
