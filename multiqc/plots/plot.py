@@ -1,5 +1,6 @@
 import base64
 import io
+import json
 import logging
 import math
 import platform
@@ -8,7 +9,6 @@ import re
 import subprocess
 from functools import lru_cache
 from pathlib import Path
-from token import OP
 from typing import (
     Any,
     Dict,
@@ -17,10 +17,13 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
+    Type,
     TypeVar,
     Union,
+    cast,
 )
 
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
@@ -264,12 +267,106 @@ class BaseDataset(BaseModel):
 
 DatasetT = TypeVar("DatasetT", bound="BaseDataset")
 PConfigT = TypeVar("PConfigT", bound="PConfig")
+NormalizedPlotInputDataT = TypeVar("NormalizedPlotInputDataT", bound="NormalizedPlotInputData")
 
 
 def plot_anchor(pconfig: PConfig) -> Anchor:
     anchor = Anchor(pconfig.anchor or pconfig.id)
     anchor = Anchor(report.save_htmlid(anchor))  # make sure it's unique
     return anchor
+
+
+class NormalizedPlotInputData(BaseModel):
+    """
+    Represents normalized input data for a plot.
+
+    Plot input data is normalized, but enough data is preseverd to merge plots across
+    multiple samples. Plot objects might post-process and re-summarize the data
+    before creating plot datasets.
+    """
+
+    anchor: Anchor
+
+    def is_empty(self):
+        return False
+
+    @classmethod
+    def merge_with_previous(cls, inputs: NormalizedPlotInputDataT) -> NormalizedPlotInputDataT:
+        prev_inputs = cls.load(inputs.anchor)
+        if prev_inputs is not None:
+            inputs = cls.merge(old_data=cast(cls, prev_inputs), new_data=cast(cls, inputs))  # type: ignore
+        if not inputs.is_empty():
+            inputs.save()
+        return inputs
+
+    def save(self):
+        """
+        Save plot data to a parquet file instead of keeping it in memory.
+
+        Args:
+            inputs: The input data to save
+            pid: The unique anchor for the plot
+
+        Returns:
+            The merged data, as an instance of the same class that called this method
+        """
+        # Save
+        data_dump = self.model_dump()
+        # Convert the data to a pandas DataFrame
+        if isinstance(data_dump, list):
+            # For list data (like in violin plots)
+            df = pd.DataFrame({"data": [json.dumps(item) for item in data_dump]})
+        else:
+            # For dictionary data
+            df = pd.DataFrame({"data": [json.dumps(data_dump)]})
+        file_path = tmp_dir.parquet_dir() / f"{self.anchor}.parquet"
+        df.to_parquet(file_path, compression="gzip")
+        logger.debug(f"Saved plot data to {file_path}")
+        report.plot_input_data[self.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
+
+    @classmethod
+    def load(cls: Type[NormalizedPlotInputDataT], anchor: Anchor) -> Optional[NormalizedPlotInputDataT]:
+        """
+        Load plot data from a parquet file.
+
+        Args:
+            pid: The unique anchor for the plot
+
+        Returns:
+            The loaded data or None if not found, as an instance of the same class that called this method
+        """
+        if not (file_path := report.plot_input_data.get(anchor)):
+            return None
+        if not Path(file_path).exists():
+            return None
+
+        # Load from parquet
+        df = pd.read_parquet(file_path)
+
+        # Convert back to original format
+        data: Any
+        if len(df) == 1:
+            # Single row means it was a dictionary
+            data = json.loads(df["data"].iloc[0])
+        else:
+            # Multiple rows means it was a list
+            data = [json.loads(item) for item in df["data"]]
+
+        # Return an instance of the class that called this method (cls),
+        # which could be a subclass of PlotInputData
+        return cls(**data)
+
+    @classmethod
+    def merge(
+        cls: Type[NormalizedPlotInputDataT], old_data: NormalizedPlotInputDataT, new_data: NormalizedPlotInputDataT
+    ) -> NormalizedPlotInputDataT:
+        """
+        To be overridden by subclasses. By default, just return the new data.
+
+        Returns:
+            The merged data, as an instance of the same class that called this method
+        """
+        return cast(NormalizedPlotInputDataT, new_data)
 
 
 class Plot(BaseModel, Generic[DatasetT, PConfigT]):

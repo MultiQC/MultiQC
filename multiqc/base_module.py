@@ -44,7 +44,7 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId, SampleNameMeta, Section
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId, SampleNameMeta, Section, SectionKey
 
 logger = logging.getLogger(__name__)
 
@@ -993,8 +993,8 @@ class BaseMultiqcModule:
                 _headers[col_id]["description"] = desc
 
         # Append to report.general_stats for later assembly into table
-        report.general_stats_data.append(rows_by_group)
-        report.general_stats_headers.append(_headers)  # type: ignore
+        report.general_stats_data[SectionKey(self.anchor)] = rows_by_group
+        report.general_stats_headers[SectionKey(self.anchor)] = _headers  # type: ignore
 
     def add_data_source(
         self,

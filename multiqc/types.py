@@ -11,6 +11,7 @@ ModuleId = NewType("ModuleId", str)
 SectionId = NewType("SectionId", str)
 
 ColumnKey = NewType("ColumnKey", str)
+SectionKey = NewType("SectionKey", str)
 SampleName = NewType("SampleName", str)
 SampleGroup = NewType("SampleGroup", str)
 
