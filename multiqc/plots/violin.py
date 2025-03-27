@@ -519,16 +519,16 @@ class Dataset(BaseDataset):
         result += "|---|" + "|".join("---" for _ in headers) + "|\n"
         for sample in samples:
             if all(
-                sample not in self.violin_value_by_sample_by_metric[col.rid]
-                and sample not in self.scatter_value_by_sample_by_metric[col.rid]
+                sample not in self.violin_value_by_sample_by_metric.get(col.rid, {})
+                and sample not in self.scatter_value_by_sample_by_metric.get(col.rid, {})
                 for _, _, col in headers
             ):
                 continue
             pseudonym = report.anonymize_sample_name(sample)
             row = []
             for _, _, col in headers:
-                value = self.violin_value_by_sample_by_metric[col.rid].get(
-                    sample, self.scatter_value_by_sample_by_metric[col.rid].get(sample, "")
+                value = self.violin_value_by_sample_by_metric.get(col.rid, {}).get(
+                    sample, self.scatter_value_by_sample_by_metric.get(col.rid, {}).get(sample, "")
                 )
                 if value:
                     fmt = getattr(col, "format", None)
