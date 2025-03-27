@@ -127,6 +127,7 @@ class ColumnMeta(ValidatedConfig):
                 if col_config := header_config.get(col_key, {}):
                     for custom_k, custom_v in col_config.items():
                         col_dict[custom_k] = custom_v  # type: ignore
+                break
 
         namespace = col_dict.get("namespace", pconfig.namespace) or ""
         assert isinstance(namespace, str)
@@ -182,6 +183,7 @@ class ColumnMeta(ValidatedConfig):
                 for cpc_k, cpc_v in config_dict.items():
                     if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
                         col_dict[cpc_k] = cpc_v  # type: ignore
+                break
 
         col: ColumnMeta = ColumnMeta(**col_dict)
 
