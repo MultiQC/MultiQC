@@ -9,7 +9,7 @@ Functions for plotting per sample information of bases2fastq
 """
 
 
-def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
+def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, sample_color):
     """
     Tabulate general information and statistics per sample
     """
@@ -17,6 +17,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     for s_name in sample_data.keys():
         general_stats = dict()
         general_stats.update({"group": group_lookup_dict[s_name]})
+        general_stats.update({"project": project_lookup_dict.get(s_name,"")})
         general_stats.update({"num_polonies_sample": sample_data[s_name]["NumPolonies"]})
         general_stats.update({"yield_sample": sample_data[s_name]["Yield"]})
         general_stats.update({"mean_base_quality_sample": sample_data[s_name]["QualityScoreMean"]})
@@ -29,6 +30,12 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     headers["group"] = {
         "title": "Group",
         "description": "Run/Sample group label.",
+        "bgcols": sample_color,
+        "scale": False,
+    }
+    headers["project"] = {
+        "title": "Project",
+        "description": "(optional) Run/Sample project label.",
         "bgcols": sample_color,
         "scale": False,
     }
@@ -92,7 +99,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, sample_color):
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
-def sequence_content_plot(sample_data, group_lookup_dict, color_dict):
+def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
     """Create the epic HTML for the FastQC sequence content heatmap"""
 
     # Prep the data
@@ -100,103 +107,65 @@ def sequence_content_plot(sample_data, group_lookup_dict, color_dict):
 
     r1r2_split = 0
     for s_name in sorted(sample_data.keys()):
-        data[s_name] = {}
-        R1 = sample_data[s_name]["Reads"][0]["Cycles"]
-        r1r2_split = max(r1r2_split, len(R1))
+        for base in "ACTG":
+            base_s_name = "__".join([s_name,base])
+            data[base_s_name] = {}
+            R1 = sample_data[s_name]["Reads"][0]["Cycles"]
+            r1r2_split = max(r1r2_split, len(R1))
 
     for s_name in sorted(sample_data.keys()):
-        data[s_name] = {}
+        
         R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         for cycle in range(len(R1)):
-            base_no = str(cycle + 1)
-            data[s_name].update({base_no: {base.lower(): R1[cycle]["BaseComposition"][base] for base in "ACTG"}})
-            data[s_name][base_no]["base"] = base_no
-            tot = sum([data[s_name][base_no][base] for base in ["a", "c", "t", "g"]])
-            for base in ["a", "c", "t", "g"]:
-                data[s_name][base_no][base] = (float(data[s_name][base_no][base]) / float(tot)) * 100.0 if tot > 0 else None
+            base_no = cycle + 1
+
+            tot = sum([R1[cycle]["BaseComposition"][base] for base in ["A", "C", "T", "T"]])
+
+            for base in "ACTG":
+                base_s_name = "__".join([s_name,base])
+                data[base_s_name].update({base_no: float(R1[cycle]["BaseComposition"][base] / float(tot)) * 100.0 if tot > 0 else None})
 
         R2 = sample_data[s_name]["Reads"][1]["Cycles"]
         for cycle in range(len(R2)):
-            base_no = str(cycle + 1 + r1r2_split)
-            data[s_name].update({base_no: {base.lower(): R2[cycle]["BaseComposition"][base] for base in "ACTG"}})
-            data[s_name][base_no]["base"] = base_no
-            tot = sum([data[s_name][base_no][base] for base in ["a", "c", "t", "g"]])
-            for base in ["a", "c", "t", "g"]:
-                data[s_name][base_no][base] = (float(data[s_name][base_no][base]) / float(tot)) * 100.0 if tot > 0 else None
-    html = """<div id="fastqc_per_base_sequence_content_plot_div">
-        <div class="alert alert-info">
-            <span class="glyphicon glyphicon-hand-up"></span>
-            Click a sample row to see a line plot for that dataset.
-        </div>
-        <h5><span class="s_name text-primary"><span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name</span></h5>
-        <button id="fastqc_per_base_sequence_content_export_btn"><span class="glyphicon glyphicon-download-alt"></span> Export Plot</button>
-        <div class="fastqc_seq_heatmap_key">
-            Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
-            <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>
-            <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>
-            <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>
-            <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
-        </div>
-        <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
-            <div id="{id}" class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
-                <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
-            </div>
-        </div>
-        <div class="clearfix"></div>
-    </div>
-    <script type="application/json" class="fastqc_seq_content">{d}</script>
-    <script type="application/json" class="bases2fastq_group_color">{c}</script>
-    <script> R1cyclenum = {r}</script>
-    """.format(
-        # Generate unique plot ID, needed in mqc_export_selectplots
-        id=report.save_htmlid("per_base_composition_plot"),
-        d=json.dumps(["bases2fastq", data]),
-        c=json.dumps(["bases2fastq", color_dict]),
-        r=r1r2_split,
-    )
-    plot_name = "Per Cycle Sequence Composition"
-    anchor = "per_cycle_sequence_content"
-    description = "The proportion of each base position for which each of the four normal DNA bases has been called."
-    helptext = """
-    The heatmap is formatted in a similar way as FastQC per base sequence content. The differences are:
-    1) The pass/fail flag in the original FastQC module are replaced with a color reflecting the group tag of the samples
-    2) Read1 and Read2 is co-plotted and separate by a white band in the heatmap and a red dashed in each individual sample plot.
+            base_no = cycle + 1 + r1r2_split
+            tot = sum([R2[cycle]["BaseComposition"][base] for base in ["A", "C", "T", "G"]])
 
-    The following is a copy of helptext of the FastQC module:
-    
-    To enable multiple samples to be shown in a single plot, the base composition data
-    is shown as a heatmap. The colours represent the balance between the four bases:
-    an even distribution should give an even muddy brown colour. Hover over the plot
-    to see the percentage of the four bases under the cursor.
+            for base in "ACTG":
+                base_s_name = "__".join([s_name,base])
+                data[base_s_name].update({base_no: float(R2[cycle]["BaseComposition"][base] / float(tot)) * 100.0 if tot > 0 else None})
 
-    **To see the data as a line plot, as in the original FastQC graph, click on a sample track.**
-
-    From the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/4%20Per%20Base%20Sequence%20Content.html):
-
-    _Per Base Sequence Content plots out the proportion of each base position in a
-    file for which each of the four normal DNA bases has been called._
-
-    _In a random library you would expect that there would be little to no difference
-    between the different bases of a sequence run, so the lines in this plot should
-    run parallel with each other. The relative amount of each base should reflect
-    the overall amount of these bases in your genome, but in any case they should
-    not be hugely imbalanced from each other._
-
-    _It's worth noting that some types of library will always produce biased sequence
-    composition, normally at the start of the read. Libraries produced by priming
-    using random hexamers (including nearly all RNA-Seq libraries) and those which
-    were fragmented using transposases inherit an intrinsic bias in the positions
-    at which reads start. This bias does not concern an absolute sequence, but instead
-    provides enrichement of a number of different K-mers at the 5' end of the reads.
-    Whilst this is a true technical bias, it isn't something which can be corrected
-    by trimming and in most cases doesn't seem to adversely affect the downstream
-    analysis._
-    """
     plot_content = data
-    return html, plot_name, anchor, description, helptext, plot_content
+
+    pconfig = {
+        "xlab": "cycle",
+        "ylab": "Percentage",
+        "x_lines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "dash"}],
+        "colors": color_dict,
+        "ymin": 0,
+        "id": "per_cycle_base_content",
+        "title": "bases2fastq: Per Cycle Base Content Percentage",
+    }
+    plot_html = linegraph.plot(plot_content, pconfig=pconfig)
+    plot_name = "Per Cycle Base Content"
+    anchor = "base_content"
+    description = """
+    Percentage of unidentified bases ("N" bases) by each sequencing cycle.
+    Read 1 and Read 2 are separated by a red dashed line
+    """
+    helptext = """
+    If a sequencer is unable to make a base call with sufficient confidence then it will
+    normally substitute an `N` rather than a conventional base call. This graph shows the
+    percentage of base calls at each position for which an `N` was called.
+
+    It's not unusual to see a very low proportion of Ns appearing in a sequence, especially
+    nearer the end of a sequence. However, if this proportion rises above a few percent
+    it suggests that the analysis pipeline was unable to interpret the data well enough to
+    make valid base calls.
+    """
+    return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
-def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
+def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
     data = dict()
     r1r2_split = 0
     for s_name in sorted(sample_data.keys()):
@@ -206,11 +175,11 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
         r1r2_split = max(r1r2_split, R1_cycle_num)
 
     for s_name in sorted(sample_data.keys()):
-        data[s_name] = {}
+
         R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         R1_cycle_num = len(R1)
         for cycle in range(len(R1)):
-            base_no = str(cycle + 1)
+            base_no = cycle + 1
             if sum(R1[cycle]["BaseComposition"].values()) == 0:
                 data[s_name].update({base_no: 0})
             else:
@@ -220,7 +189,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
 
         R2 = sample_data[s_name]["Reads"][1]["Cycles"]
         for cycle in range(len(R2)):
-            base_no = str(cycle + 1 + r1r2_split)
+            base_no = cycle + 1 + r1r2_split
             if sum(R2[cycle]["BaseComposition"].values()) == 0:
                 data[s_name].update({base_no: 0})
             else:
@@ -232,10 +201,10 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
     pconfig = {
         "xlab": "cycle",
         "ylab": "Percentage",
-        "ymax": 100,
         "x_lines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "dash"}],
         "colors": color_dict,
         "ymin": 0,
+        "ymax": 100,
         "id": "per_cycle_n_content",
         "title": "bases2fastq: Per Cycle N Content Percentage",
     }
@@ -259,7 +228,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, color_dict):
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
-def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
+def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, sample_color):
     """
     Plot GC Histogram per Sample
     """
@@ -307,7 +276,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, sample_color):
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
-def plot_adapter_content(sample_data, group_lookup_dict, sample_color):
+def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sample_color):
     """
     Plot Adapter Content per Sample
     """

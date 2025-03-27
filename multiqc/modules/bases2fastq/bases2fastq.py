@@ -15,6 +15,9 @@ from multiqc.modules.bases2fastq.plot_runs import (
     plot_base_quality_hist,
     plot_base_quality_by_cycle,
 )
+from multiqc.modules.bases2fastq.plot_project_runs import (
+    tabulate_project_run_stats
+)
 from multiqc.modules.bases2fastq.plot_samples import (
     tabulate_sample_stats,
     sequence_content_plot,
@@ -27,8 +30,6 @@ log = logging.getLogger(__name__)
 
 
 MIN_POLONIES = 10000
-
-
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
@@ -40,10 +41,18 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1038/s41587-023-01750-7",
         )
 
-        self.b2f_data = dict()
+        self.b2f_sample_data = dict()
         self.b2f_run_data = dict()
+        self.b2f_run_project_data = dict()
         self.missing_runs = set()
         self.sample_id_to_run = dict()
+
+        # Group by run name
+        self.group_dict = dict()
+        self.group_lookup_dict = dict()
+        self.project_lookup_dict = dict()
+
+        projects_found = False
 
         # bases2fastq/run
         num_runs = 0
@@ -87,9 +96,8 @@ class MultiqcModule(BaseMultiqcModule):
 
                 num_samples += 1
 
-                self.b2f_data[run_analysis_sample_name] = sample_data
+                self.b2f_sample_data[run_analysis_sample_name] = sample_data
                 
-
             # skip run if in user provider ignore list
             if self.is_ignore_sample(run_analysis_name):
                 log.warning(f"skipping run:{run_analysis_name} due to --ignore-sample selection")
@@ -98,6 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
             num_runs += 1
 
             self.b2f_run_data[run_analysis_name] = data
+
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
 
         # if all RunStats.json too large, none will be found.  Guide customer and Exit at this point.
@@ -121,7 +130,6 @@ class MultiqcModule(BaseMultiqcModule):
         #
         # bases2fastq/project
         #
-        project_lookup_dict = {}
         num_projects = 0
         for f in self.find_log_files("bases2fastq/project"):
             data = json.loads(f["f"])
@@ -131,30 +139,36 @@ class MultiqcModule(BaseMultiqcModule):
             run_name = data.get("RunName", None)
             analysis_id = data.get("AnalysisID", None)[0:4]
 
+            run_analysis_name = "-".join([run_name, analysis_id])
+            run_analysis_name = self.clean_s_name(run_analysis_name, f)
+
             if not run_name or not analysis_id:
                 log.error(f"Error with {f['root']}.  Either RunName or AnalysisID is absent.")
                 log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
                 continue
 
-            run_analysis_name = "__".join([run_name, analysis_id])
-            run_analysis_name = self.clean_s_name(run_analysis_name, f)
-
             project = self.clean_s_name(data.get("Project", "DefaultProject"), f)
 
-            # run stats no longer needed - save on memory
-            del data
+            run_analysis_project_name = "__".join([run_name, project, analysis_id])
+            run_analysis_project_name = self.clean_s_name(run_analysis_project_name, f)
 
             for sample_name in samples:
                 run_analysis_sample_name = self.clean_s_name("__".join([run_analysis_name, sample_name]), f)
-                project_lookup_dict[run_analysis_sample_name] = project
+                run_analysis_project_sample_name = self.clean_s_name("__".join([run_analysis_project_name, sample_name]), f)
+                
+                self.project_lookup_dict[run_analysis_sample_name] = project
 
             # skip project if in user provider ignore list
-            if self.is_ignore_sample(run_analysis_name):
-                log.warning(f"skipping project:{run_analysis_name} due to --ignore-sample selection")
+            if self.is_ignore_sample(run_analysis_project_name):
+                log.warning(f"skipping project:{run_analysis_project_name} due to --ignore-sample selection")
                 continue
 
             num_projects += 1
+            
+            # remove samples 
+            del data["Samples"]
 
+            self.b2f_run_project_data[run_analysis_project_name] = data
             self.add_data_source(f=f, s_name=project, module="bases2fastq")
 
       
@@ -165,11 +179,10 @@ class MultiqcModule(BaseMultiqcModule):
             raise UserWarning
         log.info(f"Found {num_samples} samples and {num_projects} projects within the bases2fastq results")
 
-        # Group by run name
-        self.group_dict = dict()
-        self.group_lookup_dict = dict()
-        for s_name in self.b2f_data.keys():
-            s_group = self.b2f_data[s_name]["RunName"]
+
+        # process groups / projects
+        for s_name in self.b2f_sample_data.keys():
+            s_group = self.b2f_sample_data[s_name]["RunName"]
 
             if not self.group_dict.get(s_group):
                 self.group_dict.update({s_group: []})
@@ -178,9 +191,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.group_lookup_dict.update({s_name: s_group})
 
         # Assign project
-        for s_name in self.b2f_data.keys():
-            if project_lookup_dict.get(s_name):
-                s_group = project_lookup_dict[s_name]
+        for s_name in self.b2f_sample_data.keys():
+            if self.project_lookup_dict.get(s_name):
+                s_group = self.project_lookup_dict[s_name]
                 if not self.group_dict.get(s_group):
                     self.group_dict.update({s_group: []})
                 self.group_dict[s_group].append(s_name)
@@ -201,7 +214,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.palette = self.palette + extra_colors
         self.group_color = {g: c for g, c in zip(self.group_dict.keys(), self.palette[: len(self.group_dict)])}
         self.sample_color = dict()
-        for s_name in self.b2f_data.keys():
+        for s_name in self.b2f_sample_data.keys():
             self.sample_color.update({s_name: self.group_color[self.group_lookup_dict[s_name]]})
         self.run_color = copy.deepcopy(self.group_color)  # Make sure that run colors and group colors match
         self.palette = self.palette[len(self.group_dict) :]
@@ -231,26 +244,34 @@ class MultiqcModule(BaseMultiqcModule):
                     extra_color = hex(random.randrange(0, hex_range))
                     self.group_color[group] = extra_color
         self.sample_color = dict()
-        for s_name in self.b2f_data.keys():
+        for s_name in self.b2f_sample_data.keys():
             self.sample_color.update({s_name: self.group_color[self.group_lookup_dict[s_name]]})
 
-        # Sort samples alphabetically
+        # sort run
         data_keys = list(self.b2f_run_data.keys())
         data_keys.sort()
         sorted_data = {s_name: self.b2f_run_data[s_name] for s_name in data_keys}
         self.b2f_run_data = sorted_data
-        data_keys = list(self.b2f_data.keys())
+        # sort projects
+        data_keys = list(self.b2f_run_project_data.keys())
+        data_keys.sort()
+        sorted_data = {s_name: self.b2f_run_project_data[s_name] for s_name in data_keys}
+        self.b2f_run_project_data = sorted_data
+        # sort samples
+        data_keys = list(self.b2f_sample_data.keys())
         sorted_keys = sorted(data_keys, key=lambda x: (self.group_lookup_dict[x], x))
-        sorted_data = {s_name: self.b2f_data[s_name] for s_name in sorted_keys}
-        self.b2f_data = sorted_data
-
+        sorted_data = {s_name: self.b2f_sample_data[s_name] for s_name in sorted_keys}
+        self.b2f_sample_data = sorted_data
+        
         if len(self.b2f_run_data) == 0:
             log.warning("No run stats file found!")
-        if len(self.b2f_data) == 0:
+        if len(self.b2f_sample_data) == 0:
             log.warning("No sample stats file found!")
 
         # Add sections
         self.add_run_plots()
+        if num_projects > 0:
+            self.add_project_run_plots()
         self.add_sample_plots()
 
         # Add css and js
@@ -276,6 +297,13 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext)
             self.write_data_file(plot_data, f"base2fastq:{plot_name}")
 
+    def add_project_run_plots(self):
+        plot_functions = [tabulate_project_run_stats]
+        for func in plot_functions:
+            plot_html, plot_name, anchor, description, helptext, plot_data = func(self.b2f_run_project_data, self.run_color)
+            self.add_section(name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext)
+            self.write_data_file(plot_data, f"base2fastq_projects:{plot_name}")
+
     def add_sample_plots(self):
         plot_functions = [
             tabulate_sample_stats,
@@ -286,7 +314,7 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         for func in plot_functions:
             plot_html, plot_name, anchor, description, helptext, plot_data = func(
-                self.b2f_data, self.group_lookup_dict, self.sample_color
+                self.b2f_sample_data, self.group_lookup_dict, self.project_lookup_dict, self.sample_color
             )
             self.add_section(name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext)
             self.write_data_file(plot_data, f"base2fastq:{plot_name}")
