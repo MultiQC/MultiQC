@@ -2,7 +2,6 @@ import copy
 import logging
 import math
 from dataclasses import dataclass
-from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
@@ -11,7 +10,6 @@ import plotly.graph_objects as go  # type: ignore
 from multiqc import config, report
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
-from multiqc.plots.table import render_html
 from multiqc.plots.table_object import (
     ColumnAnchor,
     ColumnDict,
@@ -21,8 +19,9 @@ from multiqc.plots.table_object import (
     SectionT,
     TableConfig,
     ValueT,
+    render_html,
 )
-from multiqc.types import Anchor, SampleName
+from multiqc.types import Anchor, ColumnKey, SampleName, SectionKey
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +31,37 @@ class ViolinPlotInputData(NormalizedPlotInputData):
     pconfig: TableConfig
     anchor: Anchor
 
+    def is_empty(self) -> bool:
+        return len(self.dts) == 0 or all(dt.is_empty() for dt in self.dts)
+
+    @classmethod
+    def create_from_sections(
+        cls,
+        data: Dict[SectionKey, SectionT],
+        headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]],
+        pconfig: Union[Dict[str, Any], TableConfig, None] = None,
+    ) -> "ViolinPlotInputData":
+        """
+        Create a ViolinPlotInputData object from a dictionary of sections and headers.
+        """
+        pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
+
+        anchor = plot_anchor(pconf)
+        table_anchor = Anchor(report.save_htmlid(f"{anchor}_table"))  # make sure it's unique
+
+        dt = table_object.DataTable.create(
+            data=data,
+            table_id=pconf.id,
+            table_anchor=table_anchor,
+            pconfig=pconf.model_copy(),
+            headers=headers,
+        )
+        return cls(dts=[dt], pconfig=pconf, anchor=anchor)
+
     @staticmethod
-    def create(
-        data: Union[List[SectionT], SectionT],
-        headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
+    def create_from_datasets(
+        data: List[SectionT],
+        headers: List[Dict[Union[ColumnKeyT, str], ColumnDict]],
         pconfig: Union[Dict[str, Any], TableConfig, None] = None,
     ) -> "ViolinPlotInputData":
         """
@@ -45,23 +71,21 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
         anchor = plot_anchor(pconf)
 
-        if not isinstance(data, list):
-            data = [data]
-        if headers is not None and not isinstance(headers, list):
-            headers = [headers]
-
         table_anchor = Anchor(f"{anchor}_table")
         if len(data) > 1:
             table_anchor = Anchor(f"{table_anchor}")
         table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
-        dt = table_object.DataTable.create(
-            data=data,
-            table_id=pconf.id,
-            table_anchor=table_anchor,
-            pconfig=pconf.model_copy(),
-            headers=headers,
-        )
-        return ViolinPlotInputData(dts=[dt], pconfig=pconf, anchor=anchor)
+        dts = [
+            table_object.DataTable.create(
+                data={SectionKey(table_anchor): d},
+                table_id=pconf.id,
+                table_anchor=table_anchor,
+                pconfig=pconf.model_copy(),
+                headers={SectionKey(table_anchor): {ColumnKey(k): v for k, v in h.items()}},
+            )
+            for d, h in zip(data, headers)
+        ]
+        return ViolinPlotInputData(dts=dts, pconfig=pconf, anchor=anchor)
 
     @classmethod
     def merge(cls, old_data: "ViolinPlotInputData", new_data: "ViolinPlotInputData") -> "ViolinPlotInputData":
@@ -70,23 +94,36 @@ class ViolinPlotInputData(NormalizedPlotInputData):
         """
         # Merge datasets
         merged_dts: List[DataTable] = []
-        for prev_dt, new_dt in zip_longest(old_data.dts, new_data.dts):
-            if prev_dt is None:
-                merged_dts.append(new_dt)
-                continue
-            if new_dt is None:
-                merged_dts.append(prev_dt)
-                continue
 
-            prev_dt.merge(new_dt)
-            merged_dts.append(prev_dt)
+        # Create a dictionary of existing DataTables by their anchor
+        existing_dts_by_anchor = {dt.anchor: dt for dt in old_data.dts}
+
+        # Track which DataTables from old_data have been merged
+        merged_anchors = set()
+
+        # First, go through new data and match with existing data by anchor
+        for new_dt in new_data.dts:
+            if new_dt.anchor in existing_dts_by_anchor:
+                # Found a match by anchor, merge them
+                prev_dt = existing_dts_by_anchor[new_dt.anchor]
+                prev_dt.merge(new_dt)
+                merged_dts.append(prev_dt)
+                merged_anchors.add(new_dt.anchor)
+            else:
+                # No match found, add the new DataTable
+                merged_dts.append(new_dt)
+
+        # Add any DataTables from old_data that weren't merged
+        for prev_dt in old_data.dts:
+            if prev_dt.anchor not in merged_anchors:
+                merged_dts.append(prev_dt)
 
         return ViolinPlotInputData(dts=merged_dts, pconfig=old_data.pconfig, anchor=old_data.anchor)
 
 
 def plot(
     data: Union[List[SectionT], SectionT],
-    headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
+    headers: Optional[Union[Dict[ColumnKeyT, ColumnDict], List[Dict[ColumnKeyT, ColumnDict]]]] = None,
     pconfig: Union[Dict[str, Any], TableConfig, None] = None,
     show_table_by_default: bool = False,
 ) -> Union["ViolinPlot", str]:
@@ -99,12 +136,25 @@ def plot(
     :param pconfig: plot config dict
     :return: plot object
     """
-    if len(data) == 0:
+
+    if not isinstance(data, list):
+        data_list = [data]
+    else:
+        data_list = data
+
+    if headers is None:
+        headers_list = [{}]
+    elif not isinstance(headers, list):
+        headers_list = [headers]
+    else:
+        headers_list = headers
+
+    inputs = ViolinPlotInputData.create_from_datasets(data_list, headers_list, pconfig)
+    inputs = ViolinPlotInputData.merge_with_previous(inputs)
+
+    if inputs.is_empty():
         logger.warning(f"Tried to make table/violin plot, but had no data. pconfig: {pconfig}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
-
-    inputs = ViolinPlotInputData.create(data, headers, pconfig)
-    inputs = ViolinPlotInputData.merge_with_previous(inputs)
 
     return ViolinPlot.create(
         inputs.dts,
@@ -168,7 +218,7 @@ class Dataset(BaseDataset):
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
             value_by_sample: Dict[SampleName, ValueT] = {}
-            for _, group_rows in dt.sections[idx].rows_by_sgroup.items():
+            for _, group_rows in list(dt.section_by_id.values())[idx].rows_by_sgroup.items():
                 for row in group_rows:
                     try:
                         v = row.raw_data[metric_name]
@@ -551,7 +601,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         samples_per_dataset: List[Set[str]] = []
         for _, dt in enumerate(dts):
             ds_samples: Set[str] = set()
-            for section in dt.sections:
+            for section in dt.section_by_id.values():
                 ds_samples.update(section.rows_by_sgroup.keys())
             samples_per_dataset.append(ds_samples)
 
@@ -669,7 +719,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, col_key, header in self.datasets[0].dt.get_headers_in_order():
                 rid = header.rid
-                for _, group_rows in self.datasets[0].dt.sections[idx].rows_by_sgroup.items():
+                for _, group_rows in list(self.datasets[0].dt.section_by_id.values())[idx].rows_by_sgroup.items():
                     for row in group_rows:
                         if col_key in row.raw_data:
                             val = row.raw_data[col_key]
@@ -703,7 +753,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.datasets[0].dt.get_headers_in_order():
                 rid = header.rid
-                for _, group_rows in self.datasets[0].dt.sections[idx].rows_by_sgroup.items():
+                for _, group_rows in list(self.datasets[0].dt.section_by_id.values())[idx].rows_by_sgroup.items():
                     for row in group_rows:
                         if metric in row.raw_data:
                             val = row.raw_data[metric]

@@ -328,46 +328,46 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
     """
 
     # Remove empty data sections from the General Stats table
-    empty_keys = [i for i, d in enumerate(report.general_stats_data[:]) if len(d) == 0]
+    empty_keys = [i for i, d in report.general_stats_data.items() if len(d) == 0]
     empty_keys.sort(reverse=True)
     for i in empty_keys:
         del report.general_stats_data[i]
         del report.general_stats_headers[i]
 
-    all_hidden = True
-    for headers in report.general_stats_headers:
+    # all_hidden = True
+    for headers in report.general_stats_headers.values():
         for h in headers.values():
             if not h.get("hidden", False):
-                all_hidden = False
+                # all_hidden = False
                 break
 
     # Generate the General Statistics HTML & write to file
-    if len(report.general_stats_data) > 0 and not all_hidden:
-        # Clean previous general stats table if running write_report interactively second time
-        if Anchor("general_stats_table") in report.html_ids_by_scope[None]:
-            report.html_ids_by_scope[None].remove(Anchor("general_stats_table"))  # Violin plot anchor
-            if Anchor("general_stats_table_table") in report.html_ids_by_scope[None]:
-                report.html_ids_by_scope[None].remove(Anchor("general_stats_table_table"))  # Table anchor
-            del report.general_stats_html
-        pconfig = {
+    # Clean previous general stats table if running write_report interactively second time:
+    if Anchor("general_stats_table") in report.html_ids_by_scope[None]:
+        report.html_ids_by_scope[None].remove(Anchor("general_stats_table"))  # Violin plot anchor
+        if Anchor("general_stats_table_table") in report.html_ids_by_scope[None]:
+            report.html_ids_by_scope[None].remove(Anchor("general_stats_table_table"))  # Table anchor
+        del report.general_stats_html
+    p = table.plot_with_sections(
+        data=report.general_stats_data,  # type: ignore
+        headers=report.general_stats_headers,  # type: ignore
+        pconfig={
             "id": "general_stats_table",
             "title": "General Statistics",
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
-        }
-        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
+        },
+    )
+    if p is not None:
         if isinstance(p, str):
             report.general_stats_html = p
         else:
             report.plot_by_id[p.anchor] = p
-
-    if genstats_plot := report.plot_by_id.get(Anchor("general_stats_table")):
-        report.general_stats_html = genstats_plot.add_to_report(
-            plots_dir_name=plots_dir_name,
-            module_anchor=Anchor("general_stats_table"),
-            section_anchor=Anchor("general_stats_table"),
-        )
-
+            report.general_stats_html = p.add_to_report(
+                plots_dir_name=plots_dir_name,
+                module_anchor=Anchor("general_stats_table"),
+                section_anchor=Anchor("general_stats_table"),
+            )
     else:
         config.skip_generalstats = True
     return None

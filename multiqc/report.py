@@ -50,7 +50,7 @@ from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plot import Plot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
 from multiqc.plots.violin import ViolinPlot
-from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
+from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section, SectionKey
 from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
     dump_json,
@@ -123,8 +123,8 @@ plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()
 # plot dumps to embed in html and load with js
 plot_data: Dict[Anchor, Dict[str, Any]] = dict()
 
-general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
-general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
+general_stats_data: Dict[SectionKey, Dict[SampleGroup, List[InputRow]]]
+general_stats_headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
 saved_raw_data_keys: List[str]  # to make sure write_data_file don't overwrite for repeated modules
@@ -218,8 +218,8 @@ def reset():
     plot_data = dict()
     plot_by_id = dict()
     plot_input_data = dict()
-    general_stats_data = []
-    general_stats_headers = []
+    general_stats_data = dict()
+    general_stats_headers = dict()
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
     saved_raw_data_keys = []
@@ -1083,9 +1083,8 @@ def multiqc_dump_json(data_dir: Path):
                     val = getattr(sys.modules[__name__], name)
                     if name == "general_stats_data":
                         # Flattening sample groups for export
-                        flattened_sections: List[Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = []
-                        section: Dict[SampleGroup, List[InputRow]]
-                        for section in general_stats_data:
+                        flattened_sections: Dict[SectionKey, Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = {}
+                        for section_key, section in general_stats_data.items():
                             fl_sec: Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]] = dict()
                             for _, rows in section.items():
                                 if isinstance(rows, list):
@@ -1093,7 +1092,7 @@ def multiqc_dump_json(data_dir: Path):
                                         fl_sec[row.sample] = row.data
                                 else:
                                     fl_sec = rows  # old format without grouping, in case if user plugins override it
-                            flattened_sections.append(fl_sec)
+                            flattened_sections[section_key] = fl_sec
                         val = flattened_sections
                     elif name == "modules":
                         val = [

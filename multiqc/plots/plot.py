@@ -287,12 +287,16 @@ class NormalizedPlotInputData(BaseModel):
 
     anchor: Anchor
 
+    def is_empty(self):
+        return False
+
     @classmethod
     def merge_with_previous(cls, inputs: NormalizedPlotInputDataT) -> NormalizedPlotInputDataT:
         prev_inputs = cls.load(inputs.anchor)
         if prev_inputs is not None:
             inputs = cls.merge(old_data=cast(cls, prev_inputs), new_data=cast(cls, inputs))  # type: ignore
-        inputs.save()
+        if not inputs.is_empty():
+            inputs.save()
         return inputs
 
     def save(self):

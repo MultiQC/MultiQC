@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from multiqc import Plot, config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
-from multiqc.types import Anchor, LoadedFileDict, ModuleId, PlotType, SectionId
+from multiqc.types import Anchor, LoadedFileDict, ModuleId, PlotType, SectionId, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
 # Initialise the logger
@@ -528,7 +528,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
-                violin_data = cast(List[Mapping[str, Any]], plot_datasets)
+                violin_data = cast(List[Tuple[SectionKey, Mapping[str, Any]]], plot_datasets)
                 plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))
 
             # Raw HTML

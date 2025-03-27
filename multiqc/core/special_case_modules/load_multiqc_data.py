@@ -22,6 +22,7 @@ from multiqc.plots.heatmap import HeatmapPlot
 from multiqc.plots.linegraph import LinePlot
 from multiqc.plots.plot import NormalizedPlotInputData, Plot
 from multiqc.plots.scatter import ScatterPlot
+from multiqc.plots.table_object import ColumnKey, InputRow, SampleGroup, SampleName
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, PlotType
 
