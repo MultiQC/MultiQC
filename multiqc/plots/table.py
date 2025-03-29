@@ -641,7 +641,8 @@ def _get_sortlist(dt: DataTable) -> str:
         direction = 0 if d.get("direction", "").startswith("asc") else 1
         sortlist.append((idx, direction))
 
-    return str(sortlist)
+    sortlist_formatted = [list(t) for t in sortlist]
+    return str(sortlist_formatted)
 
 
 def _is_configure_columns_disabled(num_columns: int) -> bool:
