@@ -1,4 +1,5 @@
 import tempfile
+from typing import Dict
 from unittest.mock import patch
 
 import pytest
@@ -9,7 +10,7 @@ from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, vio
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.plot import Plot
 from multiqc.plots.table import _get_sortlist
-from multiqc.plots.table_object import DataTable
+from multiqc.plots.table_object import ColumnDict, DataTable
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
 
@@ -494,14 +495,15 @@ def test_dash_styles():
 
 
 def test_table_default_sort():
+    headers: Dict[str, ColumnDict] = {"x": {"title": "Metric X"}, "y": {"title": "Metric Y"}}
     dt = DataTable.create(
         table_id="foo",
-        table_anchor="foo",
+        table_anchor=Anchor("foo"),
         data={
             "sample1": {"x": 1, "y": 2},
             "sample2": {"x": 3, "y": 4},
         },
-        headers={"x": {"title": "Metric X"}, "y": {"title": "Metric Y"}},
+        headers=headers,
         pconfig=table.TableConfig(
             id="table",
             title="Table",
