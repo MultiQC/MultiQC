@@ -120,10 +120,14 @@ class ColumnMeta(ValidatedConfig):
         table_anchor: Anchor,
     ) -> "ColumnMeta":
         # Overwrite any header config if set in config
-        if header_config := config.custom_table_header_config.get(pconfig.id, {}):
-            if col_config := header_config.get(col_key, {}):
-                for custom_k, custom_v in col_config.items():
-                    col_dict[custom_k] = custom_v  # type: ignore
+        header_config = None
+        for _id in [table_anchor, pconfig.id]:  # Back-compatibility using pconfig.id instead of table_anchor
+            if _header_config := config.custom_table_header_config.get(_id, {}):
+                header_config = _header_config
+                if col_config := header_config.get(col_key, {}):
+                    for custom_k, custom_v in col_config.items():
+                        col_dict[custom_k] = custom_v  # type: ignore
+                break
 
         namespace = col_dict.get("namespace", pconfig.namespace) or ""
         assert isinstance(namespace, str)
@@ -174,10 +178,12 @@ class ColumnMeta(ValidatedConfig):
 
         # Overwrite (2nd time) any given config with table-level user config
         # This is to override column-specific values set by modules
-        if pconfig.id in config.custom_plot_config:
-            for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
-                if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
-                    col_dict[cpc_k] = cpc_v  # type: ignore
+        for _id in [table_anchor, pconfig.id]:  # Back-compatibility using pconfig.id instead of table_anchor
+            if config_dict := config.custom_plot_config.get(_id, {}):
+                for cpc_k, cpc_v in config_dict.items():
+                    if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
+                        col_dict[cpc_k] = cpc_v  # type: ignore
+                break
 
         col: ColumnMeta = ColumnMeta(**col_dict)
 
@@ -191,6 +197,7 @@ class ColumnMeta(ValidatedConfig):
             return item_id.lower() in [
                 str(s).lower()
                 for s in [
+                    table_anchor,
                     pconfig.id,
                     pconfig.anchor,
                     col.namespace,
@@ -364,6 +371,8 @@ class DataTable(BaseModel):
         unified_sections__with_nulls: List[Dict[SampleGroup, List[InputRow]]] = []
         for input_section in data if isinstance(data, list) else [data]:
             rows_by_group: Dict[SampleGroup, List[InputRow]] = {}
+            if isinstance(input_section, list):
+                print(input_section)
             for g_name, input_group in input_section.items():
                 g_name = SampleGroup(str(g_name))  # Make sure sample names are strings
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
@@ -452,7 +461,8 @@ class DataTable(BaseModel):
         for section in sections:
             for column in section.column_by_key.values():
                 del column.modify
-                del column.format
+                if not isinstance(column.format, str):
+                    del column.format
 
         # Assign to class
         return DataTable(
@@ -628,6 +638,8 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bo
             except Exception as e:
                 logger.debug(f"Error applying format to table value '{column.rid}': '{val}'. {e}")
         elif isinstance(val, (int, float)):
+            if fmt == r"{:,d}":
+                val = round(val)
             try:
                 # If format is decimal and value is float, try rounding to int first
                 if isinstance(val, float) and "d" in fmt:

@@ -51,22 +51,18 @@ def normalize_inputs(
     if headers is not None and not isinstance(headers, list):
         headers = [headers]
 
-    dts = []
-    for i, d in enumerate(data):
-        h = headers[i] if headers and len(headers) > i else None
-        table_anchor = Anchor(f"{anchor}_table")
-        if len(data) > 1:
-            table_anchor = Anchor(f"{table_anchor}-{i + 1}")
-        table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
-        dt = table_object.DataTable.create(
-            data=d,
-            table_id=pconf.id,
-            table_anchor=table_anchor,
-            pconfig=pconf.model_copy(),
-            headers=h,
-        )
-        dts.append(dt)
-    return ViolinPlotInputData(dts=dts, pconfig=pconf, anchor=anchor)
+    table_anchor = Anchor(f"{anchor}_table")
+    if len(data) > 1:
+        table_anchor = Anchor(f"{table_anchor}")
+    table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
+    dt = table_object.DataTable.create(
+        data=data,
+        table_id=pconf.id,
+        table_anchor=table_anchor,
+        pconfig=pconf.model_copy(),
+        headers=headers,
+    )
+    return ViolinPlotInputData(dts=[dt], pconfig=pconf, anchor=anchor)
 
 
 def save_normalized_data(anchor: Anchor, inputs: ViolinPlotInputData):
@@ -523,20 +519,30 @@ class Dataset(BaseDataset):
         result += "|---|" + "|".join("---" for _ in headers) + "|\n"
         for sample in samples:
             if all(
-                sample not in self.violin_value_by_sample_by_metric[col.rid]
-                and sample not in self.scatter_value_by_sample_by_metric[col.rid]
+                sample not in self.violin_value_by_sample_by_metric.get(col.rid, {})
+                and sample not in self.scatter_value_by_sample_by_metric.get(col.rid, {})
                 for _, _, col in headers
             ):
                 continue
             pseudonym = report.anonymize_sample_name(sample)
             row = []
             for _, _, col in headers:
-                value = self.violin_value_by_sample_by_metric[col.rid].get(
-                    sample, self.scatter_value_by_sample_by_metric[col.rid].get(sample, "")
+                value = self.violin_value_by_sample_by_metric.get(col.rid, {}).get(
+                    sample, self.scatter_value_by_sample_by_metric.get(col.rid, {}).get(sample, "")
                 )
-                if value != "":
-                    if col.suffix:
-                        value = f"{value}{col.suffix}"
+                if value:
+                    fmt = getattr(col, "format", None)
+                    if fmt is None:
+                        # Format numbers with appropriate decimal places
+                        if isinstance(value, float):
+                            value = f"{value:.2f}"
+                        elif isinstance(value, int):
+                            value = f"{value:d}"
+                    elif isinstance(fmt, str):
+                        try:
+                            value = fmt.format(value)
+                        except ValueError:
+                            logger.info(f"Value {value} failed to format with {fmt=}")
                 row.append(str(value))
             result += f"|{pseudonym}|" + "|".join(row) + "|\n"
 
