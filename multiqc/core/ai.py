@@ -180,11 +180,18 @@ class Client:
         self.model: str
         self.api_key: str = api_key
 
+        self.prompt_short = PROMPT_SHORT
+        if config.ai_prompt_short is not None:
+            self.prompt_short = config.ai_prompt_short
+        self.prompt_full = PROMPT_FULL
+        if config.ai_prompt_full is not None:
+            self.prompt_full = config.ai_prompt_full
+
     def _query(self, prompt: str):
         raise NotImplementedError
 
     def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_SHORT + "\n\n" + report_content)
+        response = self._query(self.prompt_short + "\n\n" + report_content)
 
         return InterpretationResponse(
             interpretation=InterpretationOutput(summary=response.content),
@@ -192,7 +199,7 @@ class Client:
         )
 
     def interpret_report_full(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_FULL + "\n\n" + report_content)
+        response = self._query(self.prompt_full + "\n\n" + report_content)
 
         try:
             output = yaml.safe_load(response.content)
@@ -411,7 +418,7 @@ class SeqeraClient(Client):
         )
 
     def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._send_request(PROMPT_SHORT, report_content, extra_options=None)
+        response = self._send_request(self.prompt_short, report_content, extra_options=None)
 
         return InterpretationResponse(
             interpretation=InterpretationOutput(summary=str(response.content)),
@@ -421,7 +428,7 @@ class SeqeraClient(Client):
 
     def interpret_report_full(self, report_content: str) -> InterpretationResponse:
         response = self._send_request(
-            PROMPT_FULL,
+            self.prompt_full,
             report_content,
             extra_options={
                 "response_schema": {
@@ -627,7 +634,7 @@ def deanonymize_sample_names(text: str) -> str:
 
 
 def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]:
-    system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
+    system_prompt = client.prompt_full if config.ai_summary_full else client.prompt_short
 
     # Account for system message, plus leave 10% buffer
     max_tokens = client.max_tokens()
@@ -720,10 +727,10 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
     return user_prompt, False
 
 
-def _save_prompt_to_file(prompt: str):
+def _save_prompt_to_file(client: Client, prompt: str):
     """Save content to file for debugging"""
     path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
-    system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
+    system_prompt = client.prompt_full if config.ai_summary_full else client.prompt_short
     path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}")
     logger.debug(f"Saved AI prompt to {path.parent.name}/{path.name}")
 
@@ -755,7 +762,7 @@ def add_ai_summary_to_report():
 
     prompt, exceeded_context_window = build_prompt(client, metadata)
 
-    _save_prompt_to_file(prompt)
+    _save_prompt_to_file(client, prompt)
 
     if exceeded_context_window:
         return

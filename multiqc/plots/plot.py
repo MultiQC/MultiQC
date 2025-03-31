@@ -636,10 +636,16 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
                 maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 dminval, dmaxval = dataset.get_x_range()
+
                 if dminval is not None:
+                    if isinstance(minval, int) or isinstance(minval, float):
+                        dminval = float(dminval)
                     minval = min(minval, dminval) if minval is not None else dminval
                 if dmaxval is not None:
+                    if isinstance(maxval, int) or isinstance(maxval, float):
+                        dmaxval = float(dmaxval)
                     maxval = max(maxval, dmaxval) if maxval is not None else dmaxval
+
                 clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
                 clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
                 if clipmin is not None and minval is not None and clipmin > minval:

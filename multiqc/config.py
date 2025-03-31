@@ -119,6 +119,8 @@ ai_model: str
 ai_custom_endpoint: Optional[str]
 ai_extra_query_options: Optional[Dict[str, Any]]
 ai_custom_context_window: Optional[int]
+ai_prompt_short: Optional[str]
+ai_prompt_full: Optional[str]
 no_ai: bool
 ai_anonymize_samples: bool
 
