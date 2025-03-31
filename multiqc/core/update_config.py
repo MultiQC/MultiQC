@@ -258,8 +258,5 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     if cfg.unknown_options:
         config.kwargs = cfg.unknown_options  # plug in command line options
 
-    if cfg.check_config is not None:
-        config.check_config = cfg.check_config
-
     plugin_hooks.mqc_trigger("config_loaded")
     plugin_hooks.mqc_trigger("execution_start")
