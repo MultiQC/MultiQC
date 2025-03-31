@@ -225,9 +225,6 @@ megaqc_upload: bool
 avail_modules: Dict[str, EntryPoint]
 avail_templates: Dict[str, EntryPoint]
 
-# Config check mode
-check_config: bool = False
-
 
 def load_defaults():
     """
