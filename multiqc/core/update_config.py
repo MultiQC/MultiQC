@@ -2,13 +2,13 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import List, Literal, Optional, Union, Dict, cast
+from typing import Dict, List, Literal, Optional, Union, cast
 
 from pydantic import BaseModel
 
-from multiqc import report, config
-from multiqc.core.exceptions import RunError
+from multiqc import config, report
 from multiqc.core import log_and_rich, plugin_hooks
+from multiqc.core.exceptions import RunError
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +73,7 @@ class ClConfig(BaseModel):
     ai_prompt_full: Optional[str] = None
     no_ai: Optional[bool] = None
     unknown_options: Optional[Dict] = None
+    check_config: Optional[bool] = None
 
 
 def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
@@ -256,6 +257,9 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
 
     if cfg.unknown_options:
         config.kwargs = cfg.unknown_options  # plug in command line options
+
+    if cfg.check_config is not None:
+        config.check_config = cfg.check_config
 
     plugin_hooks.mqc_trigger("config_loaded")
     plugin_hooks.mqc_trigger("execution_start")

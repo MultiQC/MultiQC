@@ -95,7 +95,6 @@ Changelog = "https://github.com/MultiQC/MultiQC/blob/main/CHANGELOG.md"
 
 [project.entry-points.console_scripts]
 multiqc = "multiqc.__main__:run_multiqc"
-multiqc-check = "multiqc.check_config.__main__:run_multiqc_check"
 
 [project.entry-points."multiqc.modules.v1"]
 custom_content = "multiqc.core.special_case_modules.custom_content:custom_module_classes"  # special case
