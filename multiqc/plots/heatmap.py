@@ -65,6 +65,9 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
     ycats: List[Union[str, int]]
     pconfig: HeatmapConfig
 
+    def is_empty(self) -> bool:
+        return len(self.rows) == 0 or all(len(row) == 0 for row in self.rows)
+
     @staticmethod
     def create(
         data: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
@@ -139,7 +142,7 @@ def plot(
     xcats: Optional[Sequence[Union[str, int]]] = None,
     ycats: Optional[Sequence[Union[str, int]]] = None,
     pconfig: Union[Dict[str, Any], HeatmapConfig, None] = None,
-) -> "HeatmapPlot":
+) -> Union["HeatmapPlot", str, None]:
     """
     Plot a 2D heatmap.
     :param data: List of lists, each a representing a row of values; or a dict of dicts
@@ -150,6 +153,8 @@ def plot(
     """
     inputs: HeatmapNormalizedInputData = HeatmapNormalizedInputData.create(data, xcats, ycats, pconfig)
     inputs = HeatmapNormalizedInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
     return HeatmapPlot.create(
         rows=inputs.rows,

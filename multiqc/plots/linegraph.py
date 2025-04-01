@@ -353,6 +353,9 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
     pconfig: LinePlotConfig
     sample_names: List[SampleName]
 
+    def is_empty(self) -> bool:
+        return len(self.data) == 0 or all(len(ds) == 0 for ds in self.data)
+
     @staticmethod
     def create(
         data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
@@ -444,7 +447,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
 def plot(
     data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
     pconfig: Union[Dict[str, Any], LinePlotConfig, None] = None,
-) -> Union["LinePlot", str]:
+) -> Union["LinePlot", str, None]:
     """
     Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
@@ -455,6 +458,8 @@ def plot(
     """
     inputs: LinePlotNormalizedInputData[KeyT, ValT] = LinePlotNormalizedInputData.create(data, pconfig)
     inputs = LinePlotNormalizedInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
     pconf = inputs.pconfig
     datasets = inputs.data

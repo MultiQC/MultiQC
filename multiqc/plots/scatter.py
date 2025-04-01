@@ -36,6 +36,9 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
     datasets: List[Dict[str, Any]]
     pconfig: ScatterConfig
 
+    def is_empty(self) -> bool:
+        return len(self.datasets) == 0 or all(len(ds) == 0 for ds in self.datasets)
+
     @staticmethod
     def create(
         data: Union[Dict[str, Any], List[Dict[str, Any]]],
@@ -63,7 +66,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 def plot(
     data: Union[Dict[str, Any], List[Dict[str, Any]]],
     pconfig: Union[Mapping[str, Any], ScatterConfig, None],
-) -> "ScatterPlot":
+) -> Union["ScatterPlot", str, None]:
     """
     Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
@@ -72,6 +75,8 @@ def plot(
     """
     inputs: ScatterNormalizedInputData = ScatterNormalizedInputData.create(data, pconfig)
     inputs = ScatterNormalizedInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
     pconf = inputs.pconfig
     sample_names = []

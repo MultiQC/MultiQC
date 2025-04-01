@@ -87,6 +87,9 @@ class BarPlotInputData(NormalizedPlotInputData):
     data: List[DatasetT]
     cats: List[Dict[CatName, CatConf]]
 
+    def is_empty(self) -> bool:
+        return len(self.data) == 0 or all(len(ds) == 0 for ds in self.data)
+
     @staticmethod
     def create(
         data: Union[InputDatasetT, Sequence[InputDatasetT]],
@@ -131,6 +134,8 @@ class BarPlotInputData(NormalizedPlotInputData):
 
         if len(raw_datasets) > 1 and len(raw_cats_per_ds) == 1:
             raw_cats_per_ds = raw_cats_per_ds * len(raw_datasets)
+        elif len(raw_datasets) == 0 and len(raw_cats_per_ds) == 1:
+            raw_cats_per_ds = []
         elif len(raw_datasets) != len(raw_cats_per_ds):
             raise RunError(
                 f"Bar graph: number of dataset and category lists must match, got {len(raw_datasets)} "
@@ -265,7 +270,7 @@ def plot(
     data: Union[InputDatasetT, Sequence[InputDatasetT]],
     cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
     pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
-) -> Union["BarPlot", str]:
+) -> Union["BarPlot", str, None]:
     """
     Create a horizontal bar graph. Also save data to intermediate format.
 
@@ -280,6 +285,8 @@ def plot(
     # We want to be permissive to user inputs - but normalizing them now to simplify further processing
     inputs = BarPlotInputData.create(data, cats, pconfig)
     inputs = BarPlotInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
     # Parse the data into a chart friendly format
     scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set
@@ -325,10 +332,6 @@ def plot(
         if len(cat_data_dicts) > 0:
             plot_samples.append(ordered_samples_names)
             plot_data.append(cat_data_dicts)
-
-    if len(plot_data) == 0:
-        logger.warning(f"Tried to make bar plot, but had no data: {inputs.pconfig.id}")
-        return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     return BarPlot.create(
         cats_lists=plot_data,

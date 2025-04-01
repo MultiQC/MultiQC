@@ -28,7 +28,7 @@ BoxT = List[Union[int, float]]
 def plot(
     list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
     pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
-) -> "BoxPlot":
+) -> Union["BoxPlot", str, None]:
     """
     Plot a box plot. Expects either:
     - a dict mapping sample names to data point lists or dicts,
@@ -36,6 +36,8 @@ def plot(
     """
     inputs: BoxPlotInputData = BoxPlotInputData.create(list_of_data_by_sample, pconfig)
     inputs = BoxPlotInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
     return BoxPlot.create(
         list_of_data_by_sample=inputs.list_of_data_by_sample,
@@ -147,6 +149,9 @@ class Dataset(BaseDataset):
 class BoxPlotInputData(NormalizedPlotInputData):
     list_of_data_by_sample: List[Dict[str, BoxT]]
     pconfig: BoxPlotConfig
+
+    def is_empty(self) -> bool:
+        return len(self.list_of_data_by_sample) == 0 or all(len(ds) == 0 for ds in self.list_of_data_by_sample)
 
     @staticmethod
     def create(

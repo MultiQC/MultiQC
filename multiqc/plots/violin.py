@@ -126,7 +126,7 @@ def plot(
     headers: Optional[Union[Dict[ColumnKeyT, ColumnDict], List[Dict[ColumnKeyT, ColumnDict]]]] = None,
     pconfig: Union[Dict[str, Any], TableConfig, None] = None,
     show_table_by_default: bool = False,
-) -> Union["ViolinPlot", str]:
+) -> Union["ViolinPlot", str, None]:
     """
     Helper HTML for a violin plot.
     :param data: A list of data dicts
@@ -151,10 +151,8 @@ def plot(
 
     inputs = ViolinPlotInputData.create_from_datasets(data_list, headers_list, pconfig)
     inputs = ViolinPlotInputData.merge_with_previous(inputs)
-
     if inputs.is_empty():
-        logger.warning(f"Tried to make table/violin plot, but had no data. pconfig: {pconfig}")
-        return '<p class="text-danger">Error - was not able to plot data.</p>'
+        return None
 
     return ViolinPlot.create(
         inputs.dts,
