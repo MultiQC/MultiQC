@@ -11,7 +11,7 @@ from multiqc.core.file_search import file_search
 from multiqc.core.special_case_modules.custom_content import custom_module_classes
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.write_results import write_results
-from multiqc.types import Anchor, ColumnKey, SampleGroup
+from multiqc.types import Anchor, ColumnKey, SampleGroup, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
 
@@ -585,11 +585,16 @@ C	95	45
 
     # General stats are added directly to the report
     assert len(report.general_stats_data) > 0
-    assert "A" in report.general_stats_data[-1]
-    assert report.general_stats_data[-1][SampleGroup("A")][0].data[ColumnKey("value1")] == 85
-    assert report.general_stats_data[-1][SampleGroup("A")][0].data[ColumnKey("value2")] == 42
-    assert report.general_stats_headers[-1][ColumnKey("value1")]["title"] == "Value 1"
-    assert report.general_stats_headers[-1][ColumnKey("value2")]["title"] == "Value 2"
+    assert "custom_content" in report.general_stats_data
+    section = report.general_stats_data[SectionKey("custom_content")]
+    assert "A" in section
+    assert section[SampleGroup("A")][0].data[ColumnKey("value1")] == 85
+    assert section[SampleGroup("A")][0].data[ColumnKey("value2")] == 42
+    header = report.general_stats_headers[SectionKey("custom_content")]
+    assert "title" in header[ColumnKey("value1")]
+    assert "title" in header[ColumnKey("value2")]
+    assert header[ColumnKey("value1")]["title"] == "Value 1"
+    assert header[ColumnKey("value2")]["title"] == "Value 2"
 
 
 def test_quoted_strings_handling(tmp_path):
