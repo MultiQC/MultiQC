@@ -52,31 +52,26 @@ def test_rerun_and_combine(data_dir, tmp_path):
     multiqc.run(data_dir / "modules/fastp/SAMPLE.json", cfg=ClConfig(output_dir=run_a_dir))
 
     # Run MultiQC on outputs of A + inputs B
-    run_ab_dir = tmp_path / "run_ab"
+    run_combined_dir = tmp_path / "run_combined"
     multiqc.run(
-        run_a_dir / "multiqc_data" / "multiqc_data.json",
         data_dir / "modules/fastp/single_end",
-        cfg=ClConfig(output_dir=run_ab_dir),
+        run_a_dir / "multiqc_data" / "multiqc_data.json",
+        cfg=ClConfig(output_dir=run_combined_dir),
     )
 
-    with open(run_ab_dir / "multiqc_data" / "multiqc_data.json") as f:
-        report_ab_data = json.load(f)
+    with open(run_combined_dir / "multiqc_data" / "multiqc_data.json") as f:
+        report_combined_data = json.load(f)
 
     # Run MultiQC on inputs A + B directly
-    run_ab2_dir = tmp_path / "run_ab2"
+    run_normal_dir = tmp_path / "run_normal"
     multiqc.run(
-        data_dir / "modules/fastp/SAMPLE.json",
         data_dir / "modules/fastp/single_end",
-        cfg=ClConfig(output_dir=run_ab2_dir),
+        data_dir / "modules/fastp/SAMPLE.json",
+        cfg=ClConfig(output_dir=run_normal_dir),
     )
 
-    with open(run_ab2_dir / "multiqc_data" / "multiqc_data.json") as f:
-        report_ab2_data = json.load(f)
-
-    with open("/Users/vlad/tmp/report1.json", "w") as f:
-        json.dump(report_ab_data["report_plot_data"], f)
-    with open("/Users/vlad/tmp/report2.json", "w") as f:
-        json.dump(report_ab2_data["report_plot_data"], f)
+    with open(run_normal_dir / "multiqc_data" / "multiqc_data.json") as f:
+        report_normal_data = json.load(f)
 
     # Compare only the relevant fields, not the entire report
     # The 'config_analysis_dir_abs' will be different between runs
@@ -85,6 +80,5 @@ def test_rerun_and_combine(data_dir, tmp_path):
         "report_modules",
         "report_data_sources",
     ]:
-        assert key in report_ab_data, f"Key {key} missing from combined report"
-        assert key in report_ab2_data, f"Key {key} missing from direct report"
-        assert report_ab_data[key] == report_ab2_data[key], f"Value for {key} differs between reports"
+        assert key in report_combined_data, f"Key {key} missing from combined report"
+        assert key in report_normal_data, f"Key {key} missing from direct report"

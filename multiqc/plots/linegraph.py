@@ -421,26 +421,141 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         # Merge datasets
         merged_datasets: List[List[Series[KeyT, ValT]]] = []
         merged_sample_names: List[SampleName] = []
-        for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
-            if old_ds is None:
-                merged_datasets.append(new_ds)
-                merged_sample_names.extend(new_data.sample_names)
-                continue
-            if new_ds is None:
-                merged_datasets.append(old_ds)
-                merged_sample_names.extend(old_data.sample_names)
-                continue
 
-            series_by_sample: Dict[SampleName, Series[KeyT, ValT]] = {}
-            for old_series in old_ds:
-                series_by_sample[SampleName(old_series.name)] = old_series
-            # Override series for the same sample name
-            for new_series in new_ds:
-                series_by_sample[SampleName(new_series.name)] = new_series
-            merged_datasets.append(list(series_by_sample.values()))
+        # Create dictionaries to map data_labels to datasets
+        old_datasets_by_label = {}
+        new_datasets_by_label = {}
+
+        # Create a dictionary to store merged data_labels
+        merged_data_labels = []
+        data_labels_by_id = {}
+
+        # If data_labels exist, use them as keys
+        if old_data.pconfig.data_labels and new_data.pconfig.data_labels:
+            # First build mappings from label IDs to datasets and labels
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.data):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    old_datasets_by_label[label_id] = old_data.data[i]
+                    data_labels_by_id[label_id] = dl
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.data):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    new_datasets_by_label[label_id] = new_data.data[i]
+                    # New data labels override old ones with the same ID
+                    data_labels_by_id[label_id] = dl
+
+            # First add datasets that exist in both (merged)
+            for label_id, old_ds in old_datasets_by_label.items():
+                if label_id in new_datasets_by_label:
+                    new_ds = new_datasets_by_label[label_id]
+                    # Merge datasets with the same label
+                    series_by_sample: Dict[SampleName, Series[KeyT, ValT]] = {}
+                    for old_series in old_ds:
+                        series_by_sample[SampleName(old_series.name)] = old_series
+                    # Override series for the same sample name
+                    for new_series in new_ds:
+                        series_by_sample[SampleName(new_series.name)] = new_series
+
+                    # Sort by sample name using natsort
+                    from natsort import natsorted
+
+                    sorted_names = natsorted(series_by_sample.keys())
+                    sorted_series = [series_by_sample[name] for name in sorted_names]
+
+                    merged_datasets.append(sorted_series)
+                    merged_data_labels.append(data_labels_by_id[label_id])
+                    # Mark as processed
+                    new_datasets_by_label.pop(label_id)
+                else:
+                    # Only in old data - also sort by sample name
+                    from natsort import natsorted
+
+                    series_by_sample = {SampleName(series.name): series for series in old_ds}
+                    sorted_names = natsorted(series_by_sample.keys())
+                    sorted_series = [series_by_sample[name] for name in sorted_names]
+
+                    merged_datasets.append(sorted_series)
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Then add datasets that only exist in new data
+            for label_id, new_ds in new_datasets_by_label.items():
+                # Sort by sample name
+                from natsort import natsorted
+
+                series_by_sample = {SampleName(series.name): series for series in new_ds}
+                sorted_names = natsorted(series_by_sample.keys())
+                sorted_series = [series_by_sample[name] for name in sorted_names]
+
+                merged_datasets.append(sorted_series)
+                merged_data_labels.append(data_labels_by_id[label_id])
+        else:
+            # Fallback to old behavior if no data_labels
+            for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
+                if old_ds is None:
+                    # Sort by sample name
+                    from natsort import natsorted
+
+                    series_by_sample = {SampleName(series.name): series for series in new_ds}
+                    sorted_names = natsorted(series_by_sample.keys())
+                    sorted_series = [series_by_sample[name] for name in sorted_names]
+
+                    merged_datasets.append(sorted_series)
+                    # Use corresponding data label from new_data if available
+                    if new_data.pconfig.data_labels and len(merged_datasets) <= len(new_data.pconfig.data_labels):
+                        merged_data_labels.append(new_data.pconfig.data_labels[len(merged_datasets) - 1])
+                elif new_ds is None:
+                    # Sort by sample name
+                    from natsort import natsorted
+
+                    series_by_sample = {SampleName(series.name): series for series in old_ds}
+                    sorted_names = natsorted(series_by_sample.keys())
+                    sorted_series = [series_by_sample[name] for name in sorted_names]
+
+                    merged_datasets.append(sorted_series)
+                    # Use corresponding data label from old_data if available
+                    if old_data.pconfig.data_labels and len(merged_datasets) <= len(old_data.pconfig.data_labels):
+                        merged_data_labels.append(old_data.pconfig.data_labels[len(merged_datasets) - 1])
+                else:
+                    series_by_sample: Dict[SampleName, Series[KeyT, ValT]] = {}
+                    for old_series in old_ds:
+                        series_by_sample[SampleName(old_series.name)] = old_series
+                    # Override series for the same sample name
+                    for new_series in new_ds:
+                        series_by_sample[SampleName(new_series.name)] = new_series
+
+                    # Sort by sample name using natsort
+                    from natsort import natsorted
+
+                    sorted_names = natsorted(series_by_sample.keys())
+                    sorted_series = [series_by_sample[name] for name in sorted_names]
+
+                    merged_datasets.append(sorted_series)
+                    # Prefer new data label if available
+                    idx = len(merged_datasets) - 1
+                    if new_data.pconfig.data_labels and idx < len(new_data.pconfig.data_labels):
+                        merged_data_labels.append(new_data.pconfig.data_labels[idx])
+                    elif old_data.pconfig.data_labels and idx < len(old_data.pconfig.data_labels):
+                        merged_data_labels.append(old_data.pconfig.data_labels[idx])
+
+        # Collect all sample names from all datasets
+        for dataset in merged_datasets:
+            for series in dataset:
+                if series.name not in merged_sample_names:
+                    merged_sample_names.append(SampleName(series.name))
+
+        # Sort merged sample names too
+        from natsort import natsorted
+
+        merged_sample_names = [SampleName(name) for name in natsorted([str(name) for name in merged_sample_names])]
+
+        # Create a new pconfig with merged data_labels
+        merged_pconfig = LinePlotConfig(**new_data.pconfig.model_dump())
+        merged_pconfig.data_labels = merged_data_labels if merged_data_labels else new_data.pconfig.data_labels
 
         return LinePlotNormalizedInputData(
-            anchor=new_data.anchor, data=merged_datasets, pconfig=new_data.pconfig, sample_names=merged_sample_names
+            anchor=new_data.anchor, data=merged_datasets, pconfig=merged_pconfig, sample_names=merged_sample_names
         )
 
 

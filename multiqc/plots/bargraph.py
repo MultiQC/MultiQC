@@ -215,53 +215,190 @@ class BarPlotInputData(NormalizedPlotInputData):
         """
         # Merge datasets
         merged_datasets: List[DatasetT] = []
-        for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
-            if old_ds is None:
-                merged_datasets.append(new_ds)
-                continue
-            if new_ds is None:
-                merged_datasets.append(old_ds)
-                continue
-
-            # Merge samples within dataset
-            merged_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = defaultdict(dict)
-            for sample, cat_vals in old_ds.items():
-                for cat, val in cat_vals.items():
-                    merged_ds[sample][cat] = val
-            for sample, cat_vals in new_ds.items():
-                for cat, val in cat_vals.items():
-                    merged_ds[sample][cat] = val
-            merged_datasets.append(merged_ds)
-
-        # Merge categories
         merged_cats: List[Dict[CatName, CatConf]] = []
-        for old_cats, new_cats in zip_longest(old_data.cats, new_data.cats):
-            if old_cats is None:
-                merged_cats.append(new_cats)
-                continue
-            if new_cats is None:
-                merged_cats.append(old_cats)
-                continue
 
-            # Merge category configs
-            merged_ds_cats = {}
-            for cat, conf in old_cats.items():
-                merged_ds_cats[cat] = conf
-            for cat, conf in new_cats.items():
-                if cat in merged_ds_cats:
-                    # Keep old category config but update with new values
-                    for field, value in conf.model_dump().items():
-                        if value is not None:
-                            setattr(merged_ds_cats[cat], field, value)
+        # Create dictionaries to map data_labels to datasets
+        old_datasets_by_label = {}
+        new_datasets_by_label = {}
+        old_cats_by_label = {}
+        new_cats_by_label = {}
+
+        # If data_labels exist, use them as keys for matching datasets
+        if old_data.pconfig.data_labels or new_data.pconfig.data_labels:
+            # First build mappings from label IDs to datasets and categories
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.data):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    old_datasets_by_label[label_id] = old_data.data[i]
+                    old_cats_by_label[label_id] = old_data.cats[i]
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.data):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    new_datasets_by_label[label_id] = new_data.data[i]
+                    new_cats_by_label[label_id] = new_data.cats[i]
+
+            # Create a dictionary to store merged data_labels
+            merged_data_labels = []
+            data_labels_by_id = {}
+
+            # Store all data labels by their ID
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.data):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    data_labels_by_id[label_id] = dl
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.data):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    # New data labels override old ones with the same ID
+                    data_labels_by_id[label_id] = dl
+
+            # First merge datasets that exist in both old and new data
+            for label_id, old_ds in old_datasets_by_label.items():
+                if label_id in new_datasets_by_label:
+                    new_ds = new_datasets_by_label[label_id]
+                    # Merge samples within dataset
+                    merged_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = defaultdict(dict)
+                    for sample, cat_vals in old_ds.items():
+                        for cat, val in cat_vals.items():
+                            merged_ds[sample][cat] = val
+                    for sample, cat_vals in new_ds.items():
+                        for cat, val in cat_vals.items():
+                            merged_ds[sample][cat] = val
+
+                    # Sort samples by name using natsort
+                    if new_data.pconfig.sort_samples:
+                        sorted_samples = natsorted(merged_ds.keys())
+                        sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
+                        for sample in sorted_samples:
+                            sorted_ds[sample] = merged_ds[sample]
+                        merged_ds = sorted_ds
+
+                    merged_datasets.append(merged_ds)
+
+                    # Merge category configs
+                    old_cat_configs = old_cats_by_label[label_id]
+                    new_cat_configs = new_cats_by_label[label_id]
+                    merged_cat_configs = {}
+                    for cat, conf in old_cat_configs.items():
+                        merged_cat_configs[cat] = conf
+                    for cat, conf in new_cat_configs.items():
+                        if cat in merged_cat_configs:
+                            # Keep old category config but update with new values
+                            for field, value in conf.model_dump().items():
+                                if value is not None:
+                                    setattr(merged_cat_configs[cat], field, value)
+                        else:
+                            merged_cat_configs[cat] = conf
+                    merged_cats.append(merged_cat_configs)
+
+                    # Add to merged data labels
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+                    # Mark as processed
+                    new_datasets_by_label.pop(label_id)
                 else:
-                    merged_ds_cats[cat] = conf
-            merged_cats.append(merged_ds_cats)
+                    # Only in old data
+                    # Sort samples by name if needed
+                    if new_data.pconfig.sort_samples:
+                        sorted_samples = natsorted(old_ds.keys())
+                        sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
+                        for sample in sorted_samples:
+                            sorted_ds[sample] = old_ds[sample]
+                        old_ds = sorted_ds
 
-        # Use new config but preserve old values if not overridden
-        merged_pconf = new_data.pconfig
-        for field, value in old_data.pconfig.model_dump().items():
-            if new_data.pconfig.model_fields.get(field) is None:
-                setattr(merged_pconf, field, value)
+                    merged_datasets.append(old_ds)
+                    merged_cats.append(old_cats_by_label[label_id])
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Then add datasets that only exist in new data
+            for label_id, new_ds in new_datasets_by_label.items():
+                # Sort samples by name if needed
+                if new_data.pconfig.sort_samples:
+                    sorted_samples = natsorted(new_ds.keys())
+                    sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
+                    for sample in sorted_samples:
+                        sorted_ds[sample] = new_ds[sample]
+                    new_ds = sorted_ds
+
+                merged_datasets.append(new_ds)
+                merged_cats.append(new_cats_by_label[label_id])
+                merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Create a new pconfig with merged data_labels
+            merged_pconf = BarPlotConfig(**new_data.pconfig.model_dump())
+            merged_pconf.data_labels = merged_data_labels
+
+        else:
+            # Fallback to old behavior if no data_labels
+            merged_pconf = new_data.pconfig
+            for old_ds, new_ds, old_cat, new_cat in zip_longest(
+                old_data.data, new_data.data, old_data.cats, new_data.cats
+            ):
+                if old_ds is None:
+                    # Sort samples by name if needed
+                    if new_data.pconfig.sort_samples:
+                        sorted_samples = natsorted(new_ds.keys())
+                        sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
+                        for sample in sorted_samples:
+                            sorted_ds[sample] = new_ds[sample]
+                        new_ds = sorted_ds
+
+                    merged_datasets.append(new_ds)
+                    merged_cats.append(new_cat)
+                    continue
+
+                if new_ds is None:
+                    # Sort samples by name if needed
+                    if new_data.pconfig.sort_samples:
+                        sorted_samples = natsorted(old_ds.keys())
+                        sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
+                        for sample in sorted_samples:
+                            sorted_ds[sample] = old_ds[sample]
+                        old_ds = sorted_ds
+
+                    merged_datasets.append(old_ds)
+                    merged_cats.append(old_cat)
+                    continue
+
+                # Merge samples within dataset
+                merged_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = defaultdict(dict)
+                for sample, cat_vals in old_ds.items():
+                    for cat, val in cat_vals.items():
+                        merged_ds[sample][cat] = val
+                for sample, cat_vals in new_ds.items():
+                    for cat, val in cat_vals.items():
+                        merged_ds[sample][cat] = val
+
+                # Sort samples by name if needed
+                if new_data.pconfig.sort_samples:
+                    sorted_samples = natsorted(merged_ds.keys())
+                    sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
+                    for sample in sorted_samples:
+                        sorted_ds[sample] = merged_ds[sample]
+                    merged_ds = sorted_ds
+
+                merged_datasets.append(merged_ds)
+
+                # Merge category configs
+                merged_cat_configs = {}
+                for cat, conf in old_cat.items():
+                    merged_cat_configs[cat] = conf
+                for cat, conf in new_cat.items():
+                    if cat in merged_cat_configs:
+                        # Keep old category config but update with new values
+                        for field, value in conf.model_dump().items():
+                            if value is not None:
+                                setattr(merged_cat_configs[cat], field, value)
+                    else:
+                        merged_cat_configs[cat] = conf
+                merged_cats.append(merged_cat_configs)
+
+            # Use new config but preserve old values if not overridden
+            for field, value in old_data.pconfig.model_dump().items():
+                if getattr(new_data.pconfig, field, None) is None:
+                    setattr(merged_pconf, field, value)
 
         return BarPlotInputData(anchor=new_data.anchor, data=merged_datasets, cats=merged_cats, pconfig=merged_pconf)
 

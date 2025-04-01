@@ -181,10 +181,88 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
     @classmethod
     def merge(cls, old_data: "BoxPlotInputData", new_data: "BoxPlotInputData") -> "BoxPlotInputData":
+        """
+        Merge normalized data from old run and new run, matching by data labels when available
+        """
+        # Create dictionaries to map data_labels to datasets
+        old_datasets_by_label = {}
+        new_datasets_by_label = {}
+
+        # Create a list for merged datasets
+        merged_datasets = []
+
+        # If data_labels exist, use them as keys for matching datasets
+        if old_data.pconfig.data_labels and new_data.pconfig.data_labels:
+            # First build mappings from label IDs to datasets
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.list_of_data_by_sample):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    old_datasets_by_label[label_id] = old_data.list_of_data_by_sample[i]
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.list_of_data_by_sample):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    new_datasets_by_label[label_id] = new_data.list_of_data_by_sample[i]
+
+            # Create a dictionary to store merged data_labels
+            merged_data_labels = []
+            data_labels_by_id = {}
+
+            # Store all data labels by their ID
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.list_of_data_by_sample):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    data_labels_by_id[label_id] = dl
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.list_of_data_by_sample):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    # New data labels override old ones with the same ID
+                    data_labels_by_id[label_id] = dl
+
+            # First process datasets that exist in both old and new data
+            for label_id, old_ds in old_datasets_by_label.items():
+                if label_id in new_datasets_by_label:
+                    new_ds = new_datasets_by_label[label_id]
+                    # Merge samples within dataset
+                    merged_ds = {**old_ds}  # Create a copy of old dataset
+                    # Add or update samples from new dataset
+                    for sample, values in new_ds.items():
+                        merged_ds[sample] = values
+
+                    merged_datasets.append(merged_ds)
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+                    # Mark as processed
+                    new_datasets_by_label.pop(label_id)
+                else:
+                    # Only in old data
+                    merged_datasets.append(old_ds)
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Then add datasets that only exist in new data
+            for label_id, new_ds in new_datasets_by_label.items():
+                merged_datasets.append(new_ds)
+                merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Create a new pconfig with merged data_labels
+            merged_pconf = BoxPlotConfig(**new_data.pconfig.model_dump())
+            merged_pconf.data_labels = merged_data_labels
+
+        else:
+            # Fallback to old behavior if no data_labels - just append datasets
+            merged_datasets = old_data.list_of_data_by_sample + new_data.list_of_data_by_sample
+            merged_pconf = new_data.pconfig
+
+            # Preserve settings from old config if not in new config
+            for field, value in old_data.pconfig.model_dump().items():
+                if getattr(new_data.pconfig, field, None) is None:
+                    setattr(merged_pconf, field, value)
+
         return BoxPlotInputData(
             anchor=new_data.anchor,
-            list_of_data_by_sample=old_data.list_of_data_by_sample + new_data.list_of_data_by_sample,
-            pconfig=old_data.pconfig,
+            list_of_data_by_sample=merged_datasets,
+            pconfig=merged_pconf,
         )
 
 

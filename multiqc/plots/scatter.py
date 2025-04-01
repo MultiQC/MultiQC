@@ -60,7 +60,103 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
     def merge(
         cls, old_data: "ScatterNormalizedInputData", new_data: "ScatterNormalizedInputData"
     ) -> "ScatterNormalizedInputData":
-        return new_data
+        """
+        Merge normalized data from old run and new run, matching by data labels when available
+        """
+        # Create dictionaries to map data_labels to datasets
+        old_datasets_by_label = {}
+        new_datasets_by_label = {}
+
+        # Create a list for merged datasets
+        merged_datasets = []
+
+        # If data_labels exist, use them as keys for matching datasets
+        if old_data.pconfig.data_labels and new_data.pconfig.data_labels:
+            # First build mappings from label IDs to datasets
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.datasets):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    old_datasets_by_label[label_id] = old_data.datasets[i]
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.datasets):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    new_datasets_by_label[label_id] = new_data.datasets[i]
+
+            # Create a dictionary to store merged data_labels
+            merged_data_labels = []
+            data_labels_by_id = {}
+
+            # Store all data labels by their ID
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.datasets):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    data_labels_by_id[label_id] = dl
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.datasets):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    # New data labels override old ones with the same ID
+                    data_labels_by_id[label_id] = dl
+
+            # First process datasets that exist in both old and new data
+            for label_id, old_ds in old_datasets_by_label.items():
+                if label_id in new_datasets_by_label:
+                    new_ds = new_datasets_by_label[label_id]
+                    # Merge datasets - for scatter plots, combine all points
+                    # Create a sample-to-points mapping from old dataset
+                    sample_to_points = defaultdict(list)
+                    for sample_name, points in old_ds.items():
+                        if isinstance(points, list):
+                            sample_to_points[sample_name].extend(points)
+                        else:
+                            sample_to_points[sample_name].append(points)
+
+                    # Add points from new dataset
+                    for sample_name, points in new_ds.items():
+                        if isinstance(points, list):
+                            sample_to_points[sample_name].extend(points)
+                        else:
+                            sample_to_points[sample_name].append(points)
+
+                    # Convert back to a regular dict
+                    merged_ds = dict(sample_to_points)
+                    merged_datasets.append(merged_ds)
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+                    # Mark as processed
+                    new_datasets_by_label.pop(label_id)
+                else:
+                    # Only in old data
+                    merged_datasets.append(old_ds)
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Then add datasets that only exist in new data
+            for label_id, new_ds in new_datasets_by_label.items():
+                merged_datasets.append(new_ds)
+                merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Create a new pconfig with merged data_labels
+            merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
+            merged_pconf.data_labels = merged_data_labels
+
+            return ScatterNormalizedInputData(
+                anchor=new_data.anchor,
+                datasets=merged_datasets,
+                pconfig=merged_pconf,
+            )
+        else:
+            # If no data labels, preserve old behavior (return new data)
+            # But combine extra_series if present
+            if old_data.pconfig.extra_series and new_data.pconfig.extra_series is None:
+                merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
+                merged_pconf.extra_series = old_data.pconfig.extra_series
+                return ScatterNormalizedInputData(
+                    anchor=new_data.anchor,
+                    datasets=new_data.datasets,
+                    pconfig=merged_pconf,
+                )
+            return new_data
 
 
 def plot(

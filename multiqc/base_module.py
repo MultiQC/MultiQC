@@ -30,6 +30,7 @@ from typing import (
 
 import markdown
 import packaging.version
+from natsort import natsorted
 
 from multiqc import config, report, validation
 from multiqc.config import CleanPatternT
@@ -273,7 +274,14 @@ class BaseMultiqcModule:
         path_filters: List[str] = get_path_filters("path_filters")
         path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
 
-        for f in report.files.get(ModuleId(sp_key), []):
+        # Get files and sort them by their clean sample names
+        module_files = list(report.files.get(ModuleId(sp_key), []))
+
+        # Sort files naturally by their clean sample names
+        module_files = natsorted(module_files, key=lambda f: self.clean_s_name(f["fn"], f))
+
+        # Process the sorted files
+        for f in module_files:
             # Make a note of the filename so that we can report it if something crashes
             last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file

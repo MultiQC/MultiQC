@@ -9,7 +9,6 @@ from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.plot import Plot
-from multiqc.plots.table import _get_sortlist
 from multiqc.plots.table_object import ColumnDict, DataTable
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
@@ -495,6 +494,8 @@ def test_dash_styles():
 
 
 def test_table_default_sort():
+    from multiqc.plots.table_object import _get_sortlist
+
     headers: Dict[str, ColumnDict] = {"x": {"title": "Metric X"}, "y": {"title": "Metric Y"}}
     dt = DataTable.create(
         table_id="foo",
