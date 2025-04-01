@@ -627,21 +627,22 @@ Sample 3	Group C	'4_5'
         "Group_Name": {"Sample 1": "Group A", "Sample 2": "Group B", "Sample 3": "Group C"},
         "Value": {"Sample 1": 42.0, "Sample 2": "3_8", "Sample 3": "4_5"},
     }
-    assert plot.datasets[0].dt.sections[0].column_by_key.keys() == {"Group Name", "Value"}
-    assert plot.datasets[0].dt.sections[0].column_by_key["Group Name"].title == "Group Name"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup.keys() == {"Sample 1", "Sample 2", "Sample 3"}
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 1"][0].sample == "Sample 1"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 1"][0].raw_data == {
+    section = plot.datasets[0].dt.section_by_id["quoted-section-plot_table"]
+    assert section.column_by_key.keys() == {"Group Name", "Value"}
+    assert section.column_by_key["Group Name"].title == "Group Name"
+    assert section.rows_by_sgroup.keys() == {"Sample 1", "Sample 2", "Sample 3"}
+    assert section.rows_by_sgroup["Sample 1"][0].sample == "Sample 1"
+    assert section.rows_by_sgroup["Sample 1"][0].raw_data == {
         "Group Name": "Group A",
         "Value": 42.0,
     }
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 2"][0].sample == "Sample 2"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 2"][0].raw_data == {
+    assert section.rows_by_sgroup["Sample 2"][0].sample == "Sample 2"
+    assert section.rows_by_sgroup["Sample 2"][0].raw_data == {
         "Group Name": "Group B",
         "Value": "3_8",
     }
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 3"][0].sample == "Sample 3"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 3"][0].raw_data == {
+    assert section.rows_by_sgroup["Sample 3"][0].sample == "Sample 3"
+    assert section.rows_by_sgroup["Sample 3"][0].raw_data == {
         "Group Name": "Group C",
         "Value": "4_5",
     }

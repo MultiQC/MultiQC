@@ -126,7 +126,7 @@ def test_bar_plot_no_matching_cats():
         {"id": plot_id, "title": "Test: Bar Graph"},
     )
     # Will return a warning message html instead of a plot:
-    assert isinstance(plot, str)
+    assert plot is None
 
 
 def test_bar_plot_cats_dicts():
@@ -497,9 +497,7 @@ def test_table_default_sort():
     from multiqc.plots.table_object import _get_sortlist
 
     headers: Dict[str, ColumnDict] = {"x": {"title": "Metric X"}, "y": {"title": "Metric Y"}}
-    dt = DataTable.create(
-        table_id="foo",
-        table_anchor=Anchor("foo"),
+    p = table.plot(
         data={
             "sample1": {"x": 1, "y": 2},
             "sample2": {"x": 3, "y": 4},
@@ -511,5 +509,5 @@ def test_table_default_sort():
             defaultsort=[{"column": "y", "direction": "desc"}, {"column": "x", "direction": "asc"}],
         ),
     )
-    sortlist = _get_sortlist(dt)
+    sortlist = _get_sortlist(p.datasets[0].dt)
     assert sortlist == "[[2, 1], [1, 0]]"
