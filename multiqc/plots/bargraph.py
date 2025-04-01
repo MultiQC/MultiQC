@@ -195,6 +195,9 @@ class BarPlotInputData(NormalizedPlotInputData):
                         if math.floor(val) == val:
                             val = int(val)
                     filtered_val_by_cat[cat_id] = val
+                # Remove samples with no data
+                if all(math.isnan(v) for v in filtered_val_by_cat.values()):
+                    continue
                 filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
 
         return BarPlotInputData(
