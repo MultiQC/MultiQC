@@ -5,7 +5,7 @@ import logging
 import os
 import random
 from itertools import zip_longest
-from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, TypeVar, Union, cast
+from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
@@ -356,6 +356,178 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
     def is_empty(self) -> bool:
         return len(self.data) == 0 or all(len(ds) == 0 for ds in self.data)
 
+    def save(self):
+        """
+        Save plot data to a parquet file using a tabular representation that's
+        optimized for cross-run analysis.
+
+        Instead of serializing complex nested structures, we create a structured
+        table with explicit columns for series data.
+        """
+        records = []
+
+        # Create a record for each data point in each series
+        for ds_idx, dataset in enumerate(self.data):
+            # Get dataset label if available
+            dataset_label = None
+            if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
+                label = self.pconfig.data_labels[ds_idx]
+                if isinstance(label, dict) and "name" in label:
+                    dataset_label = label["name"]
+                elif isinstance(label, str):
+                    dataset_label = label
+                else:
+                    dataset_label = f"Dataset {ds_idx + 1}"
+            else:
+                dataset_label = f"Dataset {ds_idx + 1}"
+
+            for series in dataset:
+                for x, y in series.pairs:
+                    record = {
+                        "anchor": self.anchor,
+                        "dataset_idx": ds_idx,
+                        "dataset_label": dataset_label,
+                        "sample_name": series.name,
+                        "x_value": x,
+                        "y_value": y,
+                        "series_color": series.color,
+                        "series_width": series.width,
+                        "series_dash": series.dash,
+                    }
+
+                    # Add dataset metadata if available
+                    if hasattr(self.pconfig, "xlab") and self.pconfig.xlab:
+                        record["x_label"] = self.pconfig.xlab
+                    if hasattr(self.pconfig, "ylab") and self.pconfig.ylab:
+                        record["y_label"] = self.pconfig.ylab
+                    if hasattr(self.pconfig, "title") and self.pconfig.title:
+                        record["plot_title"] = self.pconfig.title
+
+                    records.append(record)
+
+        # Create DataFrame from records
+        import pandas as pd
+
+        df = pd.DataFrame(records)
+
+        # Add run_id column if available in config
+        from multiqc import config
+
+        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
+            df["run_id"] = config.kwargs["run_id"]
+
+        # Add timestamp
+        from datetime import datetime
+
+        df["timestamp"] = datetime.now().isoformat()
+
+        # Save to parquet
+        from pathlib import Path
+
+        from multiqc import report
+        from multiqc.core import tmp_dir
+
+        file_path = tmp_dir.parquet_dir() / f"{self.anchor}.parquet"
+        df.to_parquet(file_path, compression="gzip")
+
+        report.plot_input_data[self.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
+
+    @classmethod
+    def load(
+        cls: Type["LinePlotNormalizedInputData[KeyT, ValT]"], anchor: Anchor
+    ) -> Optional["LinePlotNormalizedInputData[KeyT, ValT]"]:
+        """
+        Load plot data from a parquet file.
+
+        Reconstructs the normalized LinePlot data from the tabular representation
+        stored in the parquet file.
+        """
+        from pathlib import Path
+
+        import pandas as pd
+
+        from multiqc import report
+
+        if not (file_path := report.plot_input_data.get(anchor)):
+            return None
+        if not Path(file_path).exists():
+            return None
+
+        # Load from parquet
+        df = pd.read_parquet(file_path)
+
+        # Reconstruct data structure
+        datasets = []
+        sample_names = []
+
+        # Group by dataset_idx
+        for ds_idx, ds_group in df.groupby("dataset_idx"):
+            dataset = []
+
+            # Group by sample_name within each dataset
+            for sample_name, sample_group in ds_group.groupby("sample_name"):
+                # Extract series properties
+                if len(sample_group) > 0:
+                    first_row = sample_group.iloc[0]
+                    color = str(first_row.get("series_color")) if pd.notna(first_row.get("series_color")) else None
+                    width = int(first_row.get("series_width", 2))
+                    dash = str(first_row.get("series_dash")) if pd.notna(first_row.get("series_dash")) else None
+
+                    # Extract x,y pairs
+                    pairs = []
+                    for _, row in sample_group.iterrows():
+                        x_val = row["x_value"]
+                        y_val = row["y_value"]
+                        pairs.append((x_val, y_val))
+
+                    # Create Series object
+                    series = Series(name=str(sample_name), pairs=pairs, color=color, width=width, dash=dash)
+                    dataset.append(series)
+
+                    # Add sample name if not already in the list
+                    if sample_name not in sample_names:
+                        sample_names.append(SampleName(str(sample_name)))
+
+            datasets.append(dataset)
+
+        # Extract pconfig
+        pconfig_dict: Dict[str, Any] = {"id": str(anchor)}
+
+        # Get basic config from first row
+        if len(df) > 0:
+            first_row = df.iloc[0]
+            if "x_label" in df.columns and pd.notna(first_row.get("x_label")):
+                pconfig_dict["xlab"] = str(first_row.get("x_label"))
+            if "y_label" in df.columns and pd.notna(first_row.get("y_label")):
+                pconfig_dict["ylab"] = str(first_row.get("y_label"))
+            if "plot_title" in df.columns and pd.notna(first_row.get("plot_title")):
+                pconfig_dict["title"] = str(first_row.get("plot_title"))
+
+        # Extract dataset labels - use a simpler approach to avoid type issues
+        data_labels: List[str] = []
+
+        # Count the number of unique datasets
+        if "dataset_idx" in df.columns and not df.empty:
+            num_datasets = len(datasets)
+
+            # Extract labels from sorted dataframe if available
+            df_sorted = df.sort_values("dataset_idx").drop_duplicates("dataset_idx")
+
+            for i in range(num_datasets):
+                if i < len(df_sorted) and "dataset_label" in df_sorted.columns:
+                    label_val = df_sorted["dataset_label"].iloc[i]
+                    if pd.notna(label_val):
+                        data_labels.append(str(label_val))
+                    else:
+                        data_labels.append(f"Dataset {i + 1}")
+                else:
+                    data_labels.append(f"Dataset {i + 1}")
+
+        pconfig_dict["data_labels"] = data_labels
+        pconfig = LinePlotConfig(**pconfig_dict)
+
+        return LinePlotNormalizedInputData(anchor=anchor, data=datasets, pconfig=pconfig, sample_names=sample_names)
+
     @staticmethod
     def create(
         data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
@@ -416,147 +588,107 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         new_data: "LinePlotNormalizedInputData[KeyT, ValT]",
     ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
         """
-        Merge normalized data from old run and new run
+        Merge normalized data from old run and new run, leveraging our tabular representation
+        for more efficient and reliable merging.
         """
-        # Merge datasets
-        merged_datasets: List[List[Series[KeyT, ValT]]] = []
-        merged_sample_names: List[SampleName] = []
+        from pathlib import Path
 
-        # Create dictionaries to map data_labels to datasets
-        old_datasets_by_label = {}
-        new_datasets_by_label = {}
+        import pandas as pd
 
-        # Create a dictionary to store merged data_labels
-        merged_data_labels = []
-        data_labels_by_id = {}
+        from multiqc import report
+        from multiqc.core import tmp_dir
 
-        # If data_labels exist, use them as keys
-        if old_data.pconfig.data_labels and new_data.pconfig.data_labels:
-            # First build mappings from label IDs to datasets and labels
-            for i, dl in enumerate(old_data.pconfig.data_labels):
-                if i < len(old_data.data):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    old_datasets_by_label[label_id] = old_data.data[i]
-                    data_labels_by_id[label_id] = dl
+        # Load dataframes from parquet files instead of using the in-memory data structures
+        old_df = None
+        if old_data.anchor in report.plot_input_data:
+            old_path = report.plot_input_data[old_data.anchor]
+            if Path(old_path).exists():
+                old_df = pd.read_parquet(old_path)
 
-            for i, dl in enumerate(new_data.pconfig.data_labels):
-                if i < len(new_data.data):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    new_datasets_by_label[label_id] = new_data.data[i]
-                    # New data labels override old ones with the same ID
-                    data_labels_by_id[label_id] = dl
-
-            # First add datasets that exist in both (merged)
-            for label_id, old_ds in old_datasets_by_label.items():
-                if label_id in new_datasets_by_label:
-                    new_ds = new_datasets_by_label[label_id]
-                    # Merge datasets with the same label
-                    series_by_sample: Dict[SampleName, Series[KeyT, ValT]] = {}
-                    for old_series in old_ds:
-                        series_by_sample[SampleName(old_series.name)] = old_series
-                    # Override series for the same sample name
-                    for new_series in new_ds:
-                        series_by_sample[SampleName(new_series.name)] = new_series
-
-                    # Sort by sample name using natsort
-                    from natsort import natsorted
-
-                    sorted_names = natsorted(series_by_sample.keys())
-                    sorted_series = [series_by_sample[name] for name in sorted_names]
-
-                    merged_datasets.append(sorted_series)
-                    merged_data_labels.append(data_labels_by_id[label_id])
-                    # Mark as processed
-                    new_datasets_by_label.pop(label_id)
+        # Create dataframe for new data
+        new_records = []
+        for ds_idx, dataset in enumerate(new_data.data):
+            # Get dataset label
+            dataset_label = None
+            if new_data.pconfig.data_labels and ds_idx < len(new_data.pconfig.data_labels):
+                label = new_data.pconfig.data_labels[ds_idx]
+                if isinstance(label, dict) and "name" in label:
+                    dataset_label = label["name"]
+                elif isinstance(label, str):
+                    dataset_label = label
                 else:
-                    # Only in old data - also sort by sample name
-                    from natsort import natsorted
+                    dataset_label = f"Dataset {ds_idx + 1}"
+            else:
+                dataset_label = f"Dataset {ds_idx + 1}"
 
-                    series_by_sample = {SampleName(series.name): series for series in old_ds}
-                    sorted_names = natsorted(series_by_sample.keys())
-                    sorted_series = [series_by_sample[name] for name in sorted_names]
-
-                    merged_datasets.append(sorted_series)
-                    merged_data_labels.append(data_labels_by_id[label_id])
-
-            # Then add datasets that only exist in new data
-            for label_id, new_ds in new_datasets_by_label.items():
-                # Sort by sample name
-                from natsort import natsorted
-
-                series_by_sample = {SampleName(series.name): series for series in new_ds}
-                sorted_names = natsorted(series_by_sample.keys())
-                sorted_series = [series_by_sample[name] for name in sorted_names]
-
-                merged_datasets.append(sorted_series)
-                merged_data_labels.append(data_labels_by_id[label_id])
-        else:
-            # Fallback to old behavior if no data_labels
-            for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
-                if old_ds is None:
-                    # Sort by sample name
-                    from natsort import natsorted
-
-                    series_by_sample = {SampleName(series.name): series for series in new_ds}
-                    sorted_names = natsorted(series_by_sample.keys())
-                    sorted_series = [series_by_sample[name] for name in sorted_names]
-
-                    merged_datasets.append(sorted_series)
-                    # Use corresponding data label from new_data if available
-                    if new_data.pconfig.data_labels and len(merged_datasets) <= len(new_data.pconfig.data_labels):
-                        merged_data_labels.append(new_data.pconfig.data_labels[len(merged_datasets) - 1])
-                elif new_ds is None:
-                    # Sort by sample name
-                    from natsort import natsorted
-
-                    series_by_sample = {SampleName(series.name): series for series in old_ds}
-                    sorted_names = natsorted(series_by_sample.keys())
-                    sorted_series = [series_by_sample[name] for name in sorted_names]
-
-                    merged_datasets.append(sorted_series)
-                    # Use corresponding data label from old_data if available
-                    if old_data.pconfig.data_labels and len(merged_datasets) <= len(old_data.pconfig.data_labels):
-                        merged_data_labels.append(old_data.pconfig.data_labels[len(merged_datasets) - 1])
-                else:
-                    series_by_sample: Dict[SampleName, Series[KeyT, ValT]] = {}
-                    for old_series in old_ds:
-                        series_by_sample[SampleName(old_series.name)] = old_series
-                    # Override series for the same sample name
-                    for new_series in new_ds:
-                        series_by_sample[SampleName(new_series.name)] = new_series
-
-                    # Sort by sample name using natsort
-                    from natsort import natsorted
-
-                    sorted_names = natsorted(series_by_sample.keys())
-                    sorted_series = [series_by_sample[name] for name in sorted_names]
-
-                    merged_datasets.append(sorted_series)
-                    # Prefer new data label if available
-                    idx = len(merged_datasets) - 1
-                    if new_data.pconfig.data_labels and idx < len(new_data.pconfig.data_labels):
-                        merged_data_labels.append(new_data.pconfig.data_labels[idx])
-                    elif old_data.pconfig.data_labels and idx < len(old_data.pconfig.data_labels):
-                        merged_data_labels.append(old_data.pconfig.data_labels[idx])
-
-        # Collect all sample names from all datasets
-        for dataset in merged_datasets:
             for series in dataset:
-                if series.name not in merged_sample_names:
-                    merged_sample_names.append(SampleName(series.name))
+                for x, y in series.pairs:
+                    record = {
+                        "anchor": new_data.anchor,
+                        "dataset_idx": ds_idx,
+                        "dataset_label": dataset_label,
+                        "sample_name": series.name,
+                        "x_value": x,
+                        "y_value": y,
+                        "series_color": series.color,
+                        "series_width": series.width,
+                        "series_dash": series.dash,
+                    }
 
-        # Sort merged sample names too
-        from natsort import natsorted
+                    # Add plot metadata
+                    if hasattr(new_data.pconfig, "xlab") and new_data.pconfig.xlab:
+                        record["x_label"] = new_data.pconfig.xlab
+                    if hasattr(new_data.pconfig, "ylab") and new_data.pconfig.ylab:
+                        record["y_label"] = new_data.pconfig.ylab
+                    if hasattr(new_data.pconfig, "title") and new_data.pconfig.title:
+                        record["plot_title"] = new_data.pconfig.title
 
-        merged_sample_names = [SampleName(name) for name in natsorted([str(name) for name in merged_sample_names])]
+                    new_records.append(record)
 
-        # Create a new pconfig with merged data_labels
-        merged_pconfig = LinePlotConfig(**new_data.pconfig.model_dump())
-        merged_pconfig.data_labels = merged_data_labels if merged_data_labels else new_data.pconfig.data_labels
+        new_df = pd.DataFrame(new_records)
 
-        return LinePlotNormalizedInputData(
-            anchor=new_data.anchor, data=merged_datasets, pconfig=merged_pconfig, sample_names=merged_sample_names
-        )
+        # If we have both old and new data, merge them
+        merged_df = None
+        if old_df is not None and not old_df.empty:
+            # Add run identifiers if not present
+            from multiqc import config
+
+            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
+                old_df["run_id"] = config.kwargs["run_id"]
+            if "run_id" not in new_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
+                new_df["run_id"] = config.kwargs["run_id"]
+
+            # Add timestamps if not present
+            from datetime import datetime
+
+            if "timestamp" not in old_df.columns:
+                old_df["timestamp"] = datetime.now().isoformat()
+            if "timestamp" not in new_df.columns:
+                new_df["timestamp"] = datetime.now().isoformat()
+
+            # Concatenate dataframes
+            merged_df = pd.concat([old_df, new_df], ignore_index=True)
+
+            # Handle duplicates: prefer newer data for the same sample and x_value
+            if "run_id" in merged_df.columns and "timestamp" in merged_df.columns:
+                # Sort by timestamp (ascending) so newer data comes last
+                merged_df = merged_df.sort_values(["timestamp", "run_id"])
+
+                # Drop duplicates, keeping the last occurrence (newer data)
+                merged_df = merged_df.drop_duplicates(subset=["dataset_label", "sample_name", "x_value"], keep="last")
+            else:
+                # If we don't have run_id or timestamp, just use the new data for duplicates
+                merged_df = merged_df.drop_duplicates(subset=["dataset_label", "sample_name", "x_value"], keep="last")
+        else:
+            merged_df = new_df
+
+        # Save the merged dataframe to parquet
+        file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"
+        merged_df.to_parquet(file_path, compression="gzip")
+        report.plot_input_data[new_data.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
+
+        # Now load the merged data back using our load method
+        return cls.load(new_data.anchor) or new_data  # Fall back to new_data if load fails
 
 
 def plot(
