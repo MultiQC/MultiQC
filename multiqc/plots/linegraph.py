@@ -4,13 +4,16 @@ import io
 import logging
 import os
 import random
-from itertools import zip_longest
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
 
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
 from multiqc import config, report
+from multiqc.core import tmp_dir
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,
@@ -406,26 +409,12 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
                     records.append(record)
 
         # Create DataFrame from records
-        import pandas as pd
-
         df = pd.DataFrame(records)
-
-        # Add run_id column if available in config
-        from multiqc import config
 
         if hasattr(config, "kwargs") and "run_id" in config.kwargs:
             df["run_id"] = config.kwargs["run_id"]
 
-        # Add timestamp
-        from datetime import datetime
-
         df["timestamp"] = datetime.now().isoformat()
-
-        # Save to parquet
-        from pathlib import Path
-
-        from multiqc import report
-        from multiqc.core import tmp_dir
 
         file_path = tmp_dir.parquet_dir() / f"{self.anchor}.parquet"
         df.to_parquet(file_path, compression="gzip")
@@ -442,12 +431,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         Reconstructs the normalized LinePlot data from the tabular representation
         stored in the parquet file.
         """
-        from pathlib import Path
-
-        import pandas as pd
-
-        from multiqc import report
-
         if not (file_path := report.plot_input_data.get(anchor)):
             return None
         if not Path(file_path).exists():
@@ -461,11 +444,17 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         sample_names = []
 
         # Group by dataset_idx
-        for ds_idx, ds_group in df.groupby("dataset_idx"):
+        for ds_idx, ds_group in df.groupby("dataset_idx", sort=True):
             dataset = []
 
+            # Get list of unique sample names in this dataset to preserve order
+            unique_samples = ds_group["sample_name"].unique()
+
             # Group by sample_name within each dataset
-            for sample_name, sample_group in ds_group.groupby("sample_name"):
+            for sample_name in unique_samples:
+                # Get data for this sample
+                sample_group = ds_group[ds_group["sample_name"] == sample_name]
+
                 # Extract series properties
                 if len(sample_group) > 0:
                     first_row = sample_group.iloc[0]
@@ -473,7 +462,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
                     width = int(first_row.get("series_width", 2))
                     dash = str(first_row.get("series_dash")) if pd.notna(first_row.get("series_dash")) else None
 
-                    # Extract x,y pairs
+                    # Extract x,y pairs and sort by x value for proper display
+                    sample_group = sample_group.sort_values("x_value")
                     pairs = []
                     for _, row in sample_group.iterrows():
                         x_val = row["x_value"]
@@ -481,7 +471,14 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
                         pairs.append((x_val, y_val))
 
                     # Create Series object
-                    series = Series(name=str(sample_name), pairs=pairs, color=color, width=width, dash=dash)
+                    series = Series(
+                        name=str(sample_name),
+                        pairs=pairs,
+                        color=color,
+                        width=width,
+                        dash=dash,
+                        path_in_cfg=("lineplot", "data"),
+                    )
                     dataset.append(series)
 
                     # Add sample name if not already in the list
@@ -591,13 +588,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         Merge normalized data from old run and new run, leveraging our tabular representation
         for more efficient and reliable merging.
         """
-        from pathlib import Path
-
-        import pandas as pd
-
-        from multiqc import report
-        from multiqc.core import tmp_dir
-
         # Load dataframes from parquet files instead of using the in-memory data structures
         old_df = None
         if old_data.anchor in report.plot_input_data:
@@ -650,16 +640,10 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         # If we have both old and new data, merge them
         merged_df = None
         if old_df is not None and not old_df.empty:
-            # Add run identifiers if not present
-            from multiqc import config
-
             if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
                 old_df["run_id"] = config.kwargs["run_id"]
             if "run_id" not in new_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
                 new_df["run_id"] = config.kwargs["run_id"]
-
-            # Add timestamps if not present
-            from datetime import datetime
 
             if "timestamp" not in old_df.columns:
                 old_df["timestamp"] = datetime.now().isoformat()
@@ -685,10 +669,12 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         # Save the merged dataframe to parquet
         file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"
         merged_df.to_parquet(file_path, compression="gzip")
-        report.plot_input_data[new_data.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
+        report.plot_input_data[new_data.anchor] = str(file_path)
 
         # Now load the merged data back using our load method
-        return cls.load(new_data.anchor) or new_data  # Fall back to new_data if load fails
+        merged_data = cls.load(new_data.anchor)
+        assert merged_data is not None
+        return merged_data
 
 
 def plot(
