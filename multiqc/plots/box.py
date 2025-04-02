@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import report
-from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, plot_anchor
+from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
 
@@ -27,34 +27,22 @@ BoxT = List[Union[int, float]]
 
 def plot(
     list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
-    pconfig: Union[Dict[str, Any], BoxPlotConfig, None],
-) -> "BoxPlot":
+    pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
+) -> Union["BoxPlot", str, None]:
     """
     Plot a box plot. Expects either:
     - a dict mapping sample names to data point lists or dicts,
     - a dict mapping sample names to a dict of statistics (e.g. {min, max, median, mean, std, q1, q3 etc.})
     """
-    pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
-
-    anchor = plot_anchor(pconf)
-
-    # Given one dataset - turn it into a list
-    if not isinstance(list_of_data_by_sample, list):
-        list_of_data_by_sample = [list_of_data_by_sample]
-
-    for i in range(len(list_of_data_by_sample)):
-        if isinstance(list_of_data_by_sample[0], OrderedDict):
-            # Legacy: users assumed that passing an OrderedDict indicates that we
-            # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
-            pass
-        elif pconf.sort_samples:
-            samples = sorted(list(list_of_data_by_sample[0].keys()))
-            list_of_data_by_sample[i] = {s: list_of_data_by_sample[i][s] for s in samples}
+    inputs: BoxPlotInputData = BoxPlotInputData.create(list_of_data_by_sample, pconfig)
+    inputs = BoxPlotInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
     return BoxPlot.create(
-        list_of_data_by_sample=list_of_data_by_sample,
-        pconfig=pconf,
-        anchor=anchor,
+        list_of_data_by_sample=inputs.list_of_data_by_sample,
+        pconfig=inputs.pconfig,
+        anchor=inputs.anchor,
     )
 
 
@@ -156,6 +144,126 @@ class Dataset(BaseDataset):
                 f"{self.fmt_value_for_llm(mean)}{suffix}|\n"
             )
         return prompt
+
+
+class BoxPlotInputData(NormalizedPlotInputData):
+    list_of_data_by_sample: List[Dict[str, BoxT]]
+    pconfig: BoxPlotConfig
+
+    def is_empty(self) -> bool:
+        return len(self.list_of_data_by_sample) == 0 or all(len(ds) == 0 for ds in self.list_of_data_by_sample)
+
+    @staticmethod
+    def create(
+        list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
+        pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
+    ) -> "BoxPlotInputData":
+        pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
+
+        # Given one dataset - turn it into a list
+        if not isinstance(list_of_data_by_sample, list):
+            list_of_data_by_sample = [list_of_data_by_sample]
+
+        for i in range(len(list_of_data_by_sample)):
+            if isinstance(list_of_data_by_sample[0], OrderedDict):
+                # Legacy: users assumed that passing an OrderedDict indicates that we
+                # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
+                pass
+            elif pconf.sort_samples:
+                samples = sorted(list(list_of_data_by_sample[0].keys()))
+                list_of_data_by_sample[i] = {s: list_of_data_by_sample[i][s] for s in samples}
+
+        return BoxPlotInputData(
+            anchor=plot_anchor(pconf),
+            list_of_data_by_sample=list_of_data_by_sample,
+            pconfig=pconf,
+        )
+
+    @classmethod
+    def merge(cls, old_data: "BoxPlotInputData", new_data: "BoxPlotInputData") -> "BoxPlotInputData":
+        """
+        Merge normalized data from old run and new run, matching by data labels when available
+        """
+        # Create dictionaries to map data_labels to datasets
+        old_datasets_by_label = {}
+        new_datasets_by_label = {}
+
+        # Create a list for merged datasets
+        merged_datasets = []
+
+        # If data_labels exist, use them as keys for matching datasets
+        if old_data.pconfig.data_labels and new_data.pconfig.data_labels:
+            # First build mappings from label IDs to datasets
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.list_of_data_by_sample):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    old_datasets_by_label[label_id] = old_data.list_of_data_by_sample[i]
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.list_of_data_by_sample):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    new_datasets_by_label[label_id] = new_data.list_of_data_by_sample[i]
+
+            # Create a dictionary to store merged data_labels
+            merged_data_labels = []
+            data_labels_by_id = {}
+
+            # Store all data labels by their ID
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.list_of_data_by_sample):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    data_labels_by_id[label_id] = dl
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.list_of_data_by_sample):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    # New data labels override old ones with the same ID
+                    data_labels_by_id[label_id] = dl
+
+            # First process datasets that exist in both old and new data
+            for label_id, old_ds in old_datasets_by_label.items():
+                if label_id in new_datasets_by_label:
+                    new_ds = new_datasets_by_label[label_id]
+                    # Merge samples within dataset
+                    merged_ds = {**old_ds}  # Create a copy of old dataset
+                    # Add or update samples from new dataset
+                    for sample, values in new_ds.items():
+                        merged_ds[sample] = values
+
+                    merged_datasets.append(merged_ds)
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+                    # Mark as processed
+                    new_datasets_by_label.pop(label_id)
+                else:
+                    # Only in old data
+                    merged_datasets.append(old_ds)
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Then add datasets that only exist in new data
+            for label_id, new_ds in new_datasets_by_label.items():
+                merged_datasets.append(new_ds)
+                merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Create a new pconfig with merged data_labels
+            merged_pconf = BoxPlotConfig(**new_data.pconfig.model_dump())
+            merged_pconf.data_labels = merged_data_labels
+
+        else:
+            # Fallback to old behavior if no data_labels - just append datasets
+            merged_datasets = old_data.list_of_data_by_sample + new_data.list_of_data_by_sample
+            merged_pconf = new_data.pconfig
+
+            # Preserve settings from old config if not in new config
+            for field, value in old_data.pconfig.model_dump().items():
+                if getattr(new_data.pconfig, field, None) is None:
+                    setattr(merged_pconf, field, value)
+
+        return BoxPlotInputData(
+            anchor=new_data.anchor,
+            list_of_data_by_sample=merged_datasets,
+            pconfig=merged_pconf,
+        )
 
 
 class BoxPlot(Plot[Dataset, BoxPlotConfig]):
