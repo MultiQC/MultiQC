@@ -338,7 +338,7 @@ class MultiqcModule(BaseMultiqcModule):
             except KeyError:
                 log.debug(f"Content curve data {k} not found: {s_name}")
 
-            # epresented sequences
+            # Overrepresented sequences
             try:
                 self.fastp_overrepresented_sequences[k][s_name] = parsed_json[k]["overrepresented_sequences"]
             except KeyError:
