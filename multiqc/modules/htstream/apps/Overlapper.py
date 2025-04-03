@@ -123,9 +123,8 @@ class Overlapper:
 
             # try to parse overlap hist
             try:
-                parsed_hist_stats = self.parse_histogram_stats(json[key]["Fragment"]["overlap_histogram"])
-                ov_hist = json[key]["Fragment"]["overlap_histogram"]
-
+                ov_hist = json[key]["Fragment"].get("overlap_histogram", [[0, 0]])
+                parsed_hist_stats = self.parse_histogram_stats(ov_hist)
             except:
                 parsed_hist_stats = -1
                 ov_hist = -1
