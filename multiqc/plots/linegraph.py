@@ -588,6 +588,9 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         Merge normalized data from old run and new run, leveraging our tabular representation
         for more efficient and reliable merging.
         """
+        import os
+        from datetime import datetime
+
         # Load dataframes from parquet files instead of using the in-memory data structures
         old_df = None
         if old_data.anchor in report.plot_input_data:
@@ -637,32 +640,40 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
 
         new_df = pd.DataFrame(new_records)
 
+        # Add timestamp and run_id to new data
+        if "timestamp" not in new_df.columns:
+            new_df["timestamp"] = datetime.now().isoformat()
+
+        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
+            if "run_id" not in new_df.columns:
+                new_df["run_id"] = config.kwargs["run_id"]
+
         # If we have both old and new data, merge them
         merged_df = None
         if old_df is not None and not old_df.empty:
+            # Add run_id to old data if missing
             if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
-                old_df["run_id"] = config.kwargs["run_id"]
-            if "run_id" not in new_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
-                new_df["run_id"] = config.kwargs["run_id"]
+                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
 
+            # Make sure old data has timestamp
             if "timestamp" not in old_df.columns:
                 old_df["timestamp"] = datetime.now().isoformat()
-            if "timestamp" not in new_df.columns:
-                new_df["timestamp"] = datetime.now().isoformat()
 
             # Concatenate dataframes
             merged_df = pd.concat([old_df, new_df], ignore_index=True)
 
             # Handle duplicates: prefer newer data for the same sample and x_value
-            if "run_id" in merged_df.columns and "timestamp" in merged_df.columns:
+            if "timestamp" in merged_df.columns:
                 # Sort by timestamp (ascending) so newer data comes last
-                merged_df = merged_df.sort_values(["timestamp", "run_id"])
+                merged_df.sort_values("timestamp", inplace=True)
+
+                # Create deduplication key - include run_id if available
+                dedupe_columns = ["dataset_label", "sample_name", "x_value"]
+                if "run_id" in merged_df.columns:
+                    dedupe_columns.append("run_id")
 
                 # Drop duplicates, keeping the last occurrence (newer data)
-                merged_df = merged_df.drop_duplicates(subset=["dataset_label", "sample_name", "x_value"], keep="last")
-            else:
-                # If we don't have run_id or timestamp, just use the new data for duplicates
-                merged_df = merged_df.drop_duplicates(subset=["dataset_label", "sample_name", "x_value"], keep="last")
+                merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
         else:
             merged_df = new_df
 
@@ -673,7 +684,9 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
 
         # Now load the merged data back using our load method
         merged_data = cls.load(new_data.anchor)
-        assert merged_data is not None
+        if merged_data is None:
+            logger.error(f"Failed to load merged data for {new_data.anchor}")
+            return new_data
         return merged_data
 
 

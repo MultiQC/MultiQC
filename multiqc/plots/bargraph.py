@@ -1,18 +1,21 @@
 """MultiQC functions to plot a bargraph"""
 
 import copy
+from datetime import datetime
 import logging
 import math
 from collections import OrderedDict, defaultdict
-from itertools import zip_longest
+from pathlib import Path
 from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union, cast
 
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 import spectra  # type: ignore
 from natsort import natsorted
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
+from multiqc.core import tmp_dir
 from multiqc.core.exceptions import RunError
 from multiqc.plots.plot import (
     BaseDataset,
@@ -33,7 +36,7 @@ logger = logging.getLogger(__name__)
 SampleNameT = Union[SampleName, str]
 CatName = NewType("CatName", str)
 CatNameT = Union[CatName, str]
-InputDatasetT = Mapping[SampleNameT, Mapping[CatNameT, Union[int, float]]]
+InputDatasetT = Dict[SampleName, Dict[CatName, Any]]
 
 
 class CatConf(ValidatedConfig):
@@ -45,7 +48,7 @@ class CatConf(ValidatedConfig):
 
 
 # Either a list of strings, or a cat conf - a mapping from category names to their properties dicts or objects
-InputCategoriesT = Union[Sequence[CatNameT], Mapping[CatNameT, Union[Mapping[str, str], CatConf]]]
+InputCategoriesT = Union[List[str], Dict[CatName, Dict[str, Any]], List[CatName]]
 
 
 class BarPlotConfig(PConfig):
@@ -207,6 +210,196 @@ class BarPlotInputData(NormalizedPlotInputData):
             cats=categories_per_ds,
         )
 
+    def save(self):
+        """
+        Save plot data to a parquet file using a tabular representation that's
+        optimized for cross-run analysis.
+
+        Instead of serializing complex nested structures, we create a structured
+        table with explicit columns for sample/category/value relationships.
+        """
+        import os
+        from datetime import datetime
+        from pathlib import Path
+
+        import pandas as pd
+
+        # Create directory for temporary files if it doesn't exist
+        from multiqc import report
+
+        tmp_dir = report.tmp_dir
+        os.makedirs(tmp_dir.data_tmp_dir(), exist_ok=True)
+
+        # Create a list of records for tabular representation
+        records = []
+
+        # Get plot metadata
+        timestamp = datetime.now().isoformat()
+        run_id = config.kwargs.get("run_id") if hasattr(config, "kwargs") else None
+
+        # Extract y-axis and x-axis labels and formatting
+        ylab = self.pconfig.ylab
+        y_format = {}
+        if hasattr(self.pconfig, "ylab_format") and self.pconfig.ylab_format:
+            if isinstance(self.pconfig.ylab_format, dict):
+                y_format = self.pconfig.ylab_format
+
+        xlab = self.pconfig.xlab
+        x_format = {}
+        if hasattr(self.pconfig, "xlab_format") and self.pconfig.xlab_format:
+            if isinstance(self.pconfig.xlab_format, dict):
+                x_format = self.pconfig.xlab_format
+
+        # Iterate through each dataset
+        for ds_idx, (dataset, cats_dict) in enumerate(zip(self.data, self.cats)):
+            # Get dataset label if available
+            dataset_label = None
+            if hasattr(self.pconfig, "data_labels") and self.pconfig.data_labels:
+                if ds_idx < len(self.pconfig.data_labels):
+                    dataset_label = self.pconfig.data_labels[ds_idx]
+
+            # Iterate through each sample in the dataset
+            for sample_name, cat_values in dataset.items():
+                # Iterate through each category for this sample
+                for cat_name, value in cat_values.items():
+                    cat_conf = cats_dict.get(cat_name)
+
+                    # Create a record for this sample/category combination
+                    record = {
+                        "anchor": self.anchor,
+                        "title": self.pconfig.title if hasattr(self.pconfig, "title") else None,
+                        "dataset_idx": ds_idx,
+                        "dataset_label": dataset_label,
+                        "sample_name": sample_name,
+                        "category_name": cat_name,
+                        "value": value,
+                        "ylab": ylab,
+                        "xlab": xlab,
+                        "timestamp": timestamp,
+                    }
+
+                    # Add run_id if available
+                    if run_id:
+                        record["run_id"] = run_id
+
+                    # Add category display name and color if available
+                    if cat_conf:
+                        record["category_display_name"] = cat_conf.name
+                        if hasattr(cat_conf, "color") and cat_conf.color:
+                            record["category_color"] = cat_conf.color
+
+                    # Add Y-axis formatting if available
+                    if y_format:
+                        if "hoverformat" in y_format:
+                            record["y_hoverformat"] = y_format.get("hoverformat")
+                        if "ticksuffix" in y_format:
+                            record["y_ticksuffix"] = y_format.get("ticksuffix")
+
+                    # Add X-axis formatting if available
+                    if x_format:
+                        if "title" in x_format and isinstance(x_format.get("title"), dict):
+                            title_dict = x_format.get("title", {})
+                            if "text" in title_dict:
+                                record["x_title_text"] = title_dict.get("text")
+                        if "hoverformat" in x_format:
+                            record["x_hoverformat"] = x_format.get("hoverformat")
+
+                    records.append(record)
+
+        # Create DataFrame and save to parquet
+        if records:
+            df = pd.DataFrame(records)
+
+            # Create a unique filename
+            file_path = os.path.join(tmp_dir.data_tmp_dir(), f"{self.anchor}.parquet")
+            df.to_parquet(file_path, index=False)
+
+            # Save the path for retrieval
+            report.plot_input_data[self.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
+
+    @classmethod
+    def load(cls, anchor: Anchor) -> Optional["BarPlotInputData"]:
+        """
+        Load plot data from a parquet file.
+
+        Reconstructs the normalized BarPlot data from the tabular representation
+        stored in the parquet file.
+        """
+        # Get file path from report
+        if not (file_path := report.plot_input_data.get(anchor)):
+            logger.debug(f"No data file found for anchor {anchor}")
+            return None
+
+        if not Path(file_path).exists():
+            logger.debug(f"File does not exist: {file_path}")
+            return None
+
+        try:
+            # Read the parquet file
+            df = pd.read_parquet(file_path)
+
+            # Reconstruct data structure
+            datasets = []
+            cats_configs = []
+
+            # Group by dataset_idx
+            for ds_idx, ds_group in df.groupby("dataset_idx", sort=True):
+                dataset = {}
+                cat_configs = {}
+
+                # Process each sample
+                for sample_name, sample_group in ds_group.groupby("sample_name"):
+                    sample_values = {}
+
+                    # Process each category
+                    for _, row in sample_group.iterrows():
+                        cat_name = CatName(row["category_name"])
+                        value = row["value"]
+
+                        # Add to sample values
+                        sample_values[cat_name] = value
+
+                        # Add category config if not already added
+                        if cat_name not in cat_configs:
+                            # Create basic category config
+                            cat_configs[cat_name] = CatConf(
+                                name=row.get("category_display_name", cat_name),
+                                path_in_cfg=("cats",),
+                                color=row.get("category_color"),
+                            )
+
+                    # Add sample to dataset if it has values
+                    if sample_values:
+                        dataset[sample_name] = sample_values
+
+                datasets.append(dataset)
+                cats_configs.append(cat_configs)
+
+            # Create pconfig from metadata
+            pconfig_dict = {"id": str(anchor)}
+
+            # Extract basic config from first row if available
+            if len(df) > 0:
+                first_row = df.iloc[0]
+                if "xlab" in df.columns and pd.notna(first_row.get("xlab")):
+                    pconfig_dict["xlab"] = str(first_row["xlab"])
+                if "ylab" in df.columns and pd.notna(first_row["ylab"]):
+                    pconfig_dict["ylab"] = str(first_row["ylab"])
+                if "title" in df.columns and pd.notna(first_row["title"]):
+                    pconfig_dict["title"] = str(first_row["title"])
+
+            # Create the config
+            pconfig = BarPlotConfig.from_pconfig_dict(pconfig_dict)
+
+            # Create and return the BarPlotInputData
+            return BarPlotInputData(
+                anchor=anchor, pconfig=cast(BarPlotConfig, pconfig), data=datasets, cats=cats_configs
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to load bar plot data for {anchor}: {str(e)}")
+            return None
+
     @classmethod
     def merge(
         cls,
@@ -214,196 +407,101 @@ class BarPlotInputData(NormalizedPlotInputData):
         new_data: "BarPlotInputData",
     ) -> "BarPlotInputData":
         """
-        Merge normalized data from old run and new run
+        Merge data from a previous run with the current run.
+
+        This allows for comparing bar plot data across multiple runs.
         """
-        # Merge datasets
-        merged_datasets: List[DatasetT] = []
-        merged_cats: List[Dict[CatName, CatConf]] = []
+        # Load dataframes from parquet files instead of using in-memory structures
+        old_df = None
+        if old_data.anchor in report.plot_input_data:
+            old_path = report.plot_input_data[old_data.anchor]
+            if Path(old_path).exists():
+                old_df = pd.read_parquet(old_path)
 
-        # Create dictionaries to map data_labels to datasets
-        old_datasets_by_label = {}
-        new_datasets_by_label = {}
-        old_cats_by_label = {}
-        new_cats_by_label = {}
+        # Create dataframe for new data
+        new_records = []
+        for ds_idx, (dataset, cats_dict) in enumerate(zip(new_data.data, new_data.cats)):
+            # Get dataset label if available
+            dataset_label = None
+            if hasattr(new_data.pconfig, "data_labels") and new_data.pconfig.data_labels:
+                if ds_idx < len(new_data.pconfig.data_labels):
+                    dataset_label = new_data.pconfig.data_labels[ds_idx]
 
-        # If data_labels exist, use them as keys for matching datasets
-        if old_data.pconfig.data_labels or new_data.pconfig.data_labels:
-            # First build mappings from label IDs to datasets and categories
-            for i, dl in enumerate(old_data.pconfig.data_labels):
-                if i < len(old_data.data):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    old_datasets_by_label[label_id] = old_data.data[i]
-                    old_cats_by_label[label_id] = old_data.cats[i]
+            # Iterate through each sample in the dataset
+            for sample_name, cat_values in dataset.items():
+                # Iterate through each category for this sample
+                for cat_name, value in cat_values.items():
+                    cat_conf = cats_dict.get(cat_name)
 
-            for i, dl in enumerate(new_data.pconfig.data_labels):
-                if i < len(new_data.data):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    new_datasets_by_label[label_id] = new_data.data[i]
-                    new_cats_by_label[label_id] = new_data.cats[i]
+                    # Create a record for this sample/category combination
+                    record = {
+                        "anchor": new_data.anchor,
+                        "title": new_data.pconfig.title if hasattr(new_data.pconfig, "title") else None,
+                        "dataset_idx": ds_idx,
+                        "dataset_label": dataset_label,
+                        "sample_name": sample_name,
+                        "category_name": cat_name,
+                        "value": value,
+                        "ylab": new_data.pconfig.ylab,
+                        "xlab": new_data.pconfig.xlab,
+                    }
 
-            # Create a dictionary to store merged data_labels
-            merged_data_labels = []
-            data_labels_by_id = {}
+                    # Add category display name and color if available
+                    if cat_conf:
+                        record["category_display_name"] = cat_conf.name
+                        if hasattr(cat_conf, "color") and cat_conf.color:
+                            record["category_color"] = cat_conf.color
 
-            # Store all data labels by their ID
-            for i, dl in enumerate(old_data.pconfig.data_labels):
-                if i < len(old_data.data):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    data_labels_by_id[label_id] = dl
+                    new_records.append(record)
 
-            for i, dl in enumerate(new_data.pconfig.data_labels):
-                if i < len(new_data.data):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    # New data labels override old ones with the same ID
-                    data_labels_by_id[label_id] = dl
+        # Create new DataFrame
+        new_df = pd.DataFrame(new_records)
 
-            # First merge datasets that exist in both old and new data
-            for label_id, old_ds in old_datasets_by_label.items():
-                if label_id in new_datasets_by_label:
-                    new_ds = new_datasets_by_label[label_id]
-                    # Merge samples within dataset
-                    merged_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = defaultdict(dict)
-                    for sample, cat_vals in old_ds.items():
-                        for cat, val in cat_vals.items():
-                            merged_ds[sample][cat] = val
-                    for sample, cat_vals in new_ds.items():
-                        for cat, val in cat_vals.items():
-                            merged_ds[sample][cat] = val
+        # Add timestamp and run_id to new data
+        new_df["timestamp"] = datetime.now().isoformat()
 
-                    # Sort samples by name using natsort
-                    if new_data.pconfig.sort_samples:
-                        sorted_samples = natsorted(merged_ds.keys())
-                        sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
-                        for sample in sorted_samples:
-                            sorted_ds[sample] = merged_ds[sample]
-                        merged_ds = sorted_ds
+        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
+            new_df["run_id"] = config.kwargs["run_id"]
 
-                    merged_datasets.append(merged_ds)
+        # If we have both old and new data, merge them
+        merged_df = None
+        if old_df is not None and not old_df.empty:
+            # Make sure old data has run_id
+            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
+                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
 
-                    # Merge category configs
-                    old_cat_configs = old_cats_by_label[label_id]
-                    new_cat_configs = new_cats_by_label[label_id]
-                    merged_cat_configs = {}
-                    for cat, conf in old_cat_configs.items():
-                        merged_cat_configs[cat] = conf
-                    for cat, conf in new_cat_configs.items():
-                        if cat in merged_cat_configs:
-                            # Keep old category config but update with new values
-                            for field, value in conf.model_dump().items():
-                                if value is not None:
-                                    setattr(merged_cat_configs[cat], field, value)
-                        else:
-                            merged_cat_configs[cat] = conf
-                    merged_cats.append(merged_cat_configs)
+            # Make sure old data has timestamp
+            if "timestamp" not in old_df.columns:
+                old_df["timestamp"] = datetime.now().isoformat()
 
-                    # Add to merged data labels
-                    merged_data_labels.append(data_labels_by_id[label_id])
+            # Combine the dataframes, keeping all rows
+            merged_df = pd.concat([old_df, new_df], ignore_index=True)
 
-                    # Mark as processed
-                    new_datasets_by_label.pop(label_id)
-                else:
-                    # Only in old data
-                    # Sort samples by name if needed
-                    if new_data.pconfig.sort_samples:
-                        sorted_samples = natsorted(old_ds.keys())
-                        sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
-                        for sample in sorted_samples:
-                            sorted_ds[sample] = old_ds[sample]
-                        old_ds = sorted_ds
+            # For duplicates (same sample, category, dataset), keep the latest version
+            if "timestamp" in merged_df.columns:
+                # Sort by timestamp (newest last)
+                merged_df.sort_values("timestamp", inplace=True)
 
-                    merged_datasets.append(old_ds)
-                    merged_cats.append(old_cats_by_label[label_id])
-                    merged_data_labels.append(data_labels_by_id[label_id])
+                # Group by the key identifiers and keep the last entry (newest)
+                dedupe_columns = ["dataset_idx", "sample_name", "category_name"]
+                if "run_id" in merged_df.columns:
+                    dedupe_columns.append("run_id")
 
-            # Then add datasets that only exist in new data
-            for label_id, new_ds in new_datasets_by_label.items():
-                # Sort samples by name if needed
-                if new_data.pconfig.sort_samples:
-                    sorted_samples = natsorted(new_ds.keys())
-                    sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
-                    for sample in sorted_samples:
-                        sorted_ds[sample] = new_ds[sample]
-                    new_ds = sorted_ds
-
-                merged_datasets.append(new_ds)
-                merged_cats.append(new_cats_by_label[label_id])
-                merged_data_labels.append(data_labels_by_id[label_id])
-
-            # Create a new pconfig with merged data_labels
-            merged_pconf = BarPlotConfig(**new_data.pconfig.model_dump())
-            merged_pconf.data_labels = merged_data_labels
-
+                merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
         else:
-            # Fallback to old behavior if no data_labels
-            merged_pconf = new_data.pconfig
-            for old_ds, new_ds, old_cat, new_cat in zip_longest(
-                old_data.data, new_data.data, old_data.cats, new_data.cats
-            ):
-                if old_ds is None:
-                    # Sort samples by name if needed
-                    if new_data.pconfig.sort_samples:
-                        sorted_samples = natsorted(new_ds.keys())
-                        sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
-                        for sample in sorted_samples:
-                            sorted_ds[sample] = new_ds[sample]
-                        new_ds = sorted_ds
+            merged_df = new_df
 
-                    merged_datasets.append(new_ds)
-                    merged_cats.append(new_cat)
-                    continue
+        # Save the merged data to parquet
+        file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"
+        merged_df.to_parquet(file_path, compression="gzip")
+        report.plot_input_data[new_data.anchor] = str(file_path)
 
-                if new_ds is None:
-                    # Sort samples by name if needed
-                    if new_data.pconfig.sort_samples:
-                        sorted_samples = natsorted(old_ds.keys())
-                        sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
-                        for sample in sorted_samples:
-                            sorted_ds[sample] = old_ds[sample]
-                        old_ds = sorted_ds
-
-                    merged_datasets.append(old_ds)
-                    merged_cats.append(old_cat)
-                    continue
-
-                # Merge samples within dataset
-                merged_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = defaultdict(dict)
-                for sample, cat_vals in old_ds.items():
-                    for cat, val in cat_vals.items():
-                        merged_ds[sample][cat] = val
-                for sample, cat_vals in new_ds.items():
-                    for cat, val in cat_vals.items():
-                        merged_ds[sample][cat] = val
-
-                # Sort samples by name if needed
-                if new_data.pconfig.sort_samples:
-                    sorted_samples = natsorted(merged_ds.keys())
-                    sorted_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
-                    for sample in sorted_samples:
-                        sorted_ds[sample] = merged_ds[sample]
-                    merged_ds = sorted_ds
-
-                merged_datasets.append(merged_ds)
-
-                # Merge category configs
-                merged_cat_configs = {}
-                for cat, conf in old_cat.items():
-                    merged_cat_configs[cat] = conf
-                for cat, conf in new_cat.items():
-                    if cat in merged_cat_configs:
-                        # Keep old category config but update with new values
-                        for field, value in conf.model_dump().items():
-                            if value is not None:
-                                setattr(merged_cat_configs[cat], field, value)
-                    else:
-                        merged_cat_configs[cat] = conf
-                merged_cats.append(merged_cat_configs)
-
-            # Use new config but preserve old values if not overridden
-            for field, value in old_data.pconfig.model_dump().items():
-                if getattr(new_data.pconfig, field, None) is None:
-                    setattr(merged_pconf, field, value)
-
-        return BarPlotInputData(anchor=new_data.anchor, data=merged_datasets, cats=merged_cats, pconfig=merged_pconf)
+        # Now load the merged data back using our load method
+        merged_data = cls.load(new_data.anchor)
+        if merged_data is None:
+            logger.error(f"Failed to load merged data for {new_data.anchor}")
+            return new_data
+        return merged_data
 
 
 def plot(
