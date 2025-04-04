@@ -7,6 +7,7 @@ import platform
 import random
 import re
 import subprocess
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import (
@@ -20,7 +21,6 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    cast,
 )
 
 import pandas as pd
@@ -288,52 +288,21 @@ class NormalizedPlotInputData(BaseModel):
     anchor: Anchor
 
     def is_empty(self):
-        return False
+        """Return True if this plot has no data"""
+        raise NotImplementedError("Subclasses must implement is_empty()")
 
     @classmethod
-    def merge_with_previous(cls, inputs: NormalizedPlotInputDataT) -> NormalizedPlotInputDataT:
-        prev_inputs = cls.load(inputs.anchor)
-        if prev_inputs is not None:
-            inputs = cls.merge(old_data=cast(cls, prev_inputs), new_data=cast(cls, inputs))  # type: ignore
-        if not inputs.is_empty():
-            inputs.save()
-        return inputs
-
-    def save(self):
+    def from_df(cls, df: pd.DataFrame, pconfig_dict: Dict, anchor: Anchor):
         """
-        Save plot data to a parquet file instead of keeping it in memory.
-
-        Args:
-            inputs: The input data to save
-            pid: The unique anchor for the plot
-
-        Returns:
-            The merged data, as an instance of the same class that called this method
+        Abstract method to parse a dataframe (i.e. stored in parquet files)
+        along with a pconfig dict into a NormalizedPlotInputData object.
         """
-        # Save
-        data_dump = self.model_dump()
-        # Convert the data to a pandas DataFrame
-        if isinstance(data_dump, list):
-            # For list data (like in violin plots)
-            df = pd.DataFrame({"data": [json.dumps(item) for item in data_dump]})
-        else:
-            # For dictionary data
-            df = pd.DataFrame({"data": [json.dumps(data_dump)]})
-        file_path = tmp_dir.parquet_dir() / f"{self.anchor}.parquet"
-        df.to_parquet(file_path, compression="gzip")
-        logger.debug(f"Saved plot data to {file_path}")
-        report.plot_input_data[self.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
+        raise NotImplementedError("Subclasses must implement from_df()")
 
     @classmethod
-    def load(cls: Type[NormalizedPlotInputDataT], anchor: Anchor) -> Optional[NormalizedPlotInputDataT]:
+    def load(cls, anchor: Anchor) -> Optional["NormalizedPlotInputData"]:
         """
-        Load plot data from a parquet file.
-
-        Args:
-            pid: The unique anchor for the plot
-
-        Returns:
-            The loaded data or None if not found, as an instance of the same class that called this method
+        Locate parquet file and load into NormalizedPlotInputDataT.
         """
         if not (file_path := report.plot_input_data.get(anchor)):
             return None
@@ -343,30 +312,78 @@ class NormalizedPlotInputData(BaseModel):
         # Load from parquet
         df = pd.read_parquet(file_path)
 
-        # Convert back to original format
-        data: Any
-        if len(df) == 1:
-            # Single row means it was a dictionary
-            data = json.loads(df["data"].iloc[0])
-        else:
-            # Multiple rows means it was a list
-            data = [json.loads(item) for item in df["data"]]
+        # Try to load pconfig from JSON file first
+        pconfig_path = Path(file_path).with_suffix(".json")
+        if not pconfig_path.exists():
+            logger.error(f"Pconfig file {pconfig_path} does not exist")
+            return None
 
-        # Return an instance of the class that called this method (cls),
-        # which could be a subclass of PlotInputData
-        return cls(**data)
+        with open(pconfig_path, "r") as f:
+            pconfig_dict = json.load(f)
+
+        return cls.from_df(df, pconfig_dict, anchor)
+
+    @classmethod
+    def merge_with_previous(cls, new_data: NormalizedPlotInputDataT) -> NormalizedPlotInputDataT:
+        """
+        If data from a previous run is available, merge it with the current data.
+
+        This is useful for merging plots across multiple runs of MultiQC.
+        Returns inputs if there's no previous data for the same anchor or
+        if the previous data cannot be reused. Otherwise returns a new instance
+        with merged data.
+        """
+        # Try to load previous data (empty or unloadable means no data from previous run)
+        old_data = cls.load(new_data.anchor)
+        if old_data is None or old_data.is_empty():
+            merged_data = new_data
+        else:
+            # Merge using class-specific implementation
+            merged_data = cls.merge(old_data, new_data)
+
+        merged_data.save()
+        return merged_data
+
+    def to_df(self) -> pd.DataFrame:
+        raise
+
+    def save(self):
+        """
+        Save plot input data to a file.
+
+        Should be implemented by subclasses, apart from the pconfig
+        """
+        # Save the tabular data to parquet
+        df = self.to_df()
+        if df.empty:
+            return
+
+        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
+            df["run_id"] = config.kwargs["run_id"]
+        df["timestamp"] = datetime.now().isoformat()
+        file_path = tmp_dir.parquet_dir() / f"{self.anchor}.parquet"
+        df.to_parquet(file_path, compression="gzip")
+        report.plot_input_data[self.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
+
+        # Also save pconfig to JSON
+        pconfig = getattr(self, "pconfig", None)
+        if pconfig is not None:
+            pconfig_path = Path(file_path).with_suffix(".json")
+            with open(pconfig_path, "w") as f:
+                # Convert pconfig to a serializable format
+                pconfig_dict = pconfig.model_dump()
+                json.dump(pconfig_dict, f, indent=2)
 
     @classmethod
     def merge(
         cls: Type[NormalizedPlotInputDataT], old_data: NormalizedPlotInputDataT, new_data: NormalizedPlotInputDataT
     ) -> NormalizedPlotInputDataT:
         """
-        To be overridden by subclasses. By default, just return the new data.
+        Merge old and new data.
 
-        Returns:
-            The merged data, as an instance of the same class that called this method
+        Should be implemented by subclasses.
         """
-        return cast(NormalizedPlotInputDataT, new_data)
+        raise NotImplementedError("Subclasses must implement merge()")
 
 
 class Plot(BaseModel, Generic[DatasetT, PConfigT]):

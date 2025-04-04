@@ -1,10 +1,10 @@
 """MultiQC functions to plot a bargraph"""
 
 import copy
-from datetime import datetime
 import logging
 import math
 from collections import OrderedDict, defaultdict
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union, cast
 
@@ -210,195 +210,174 @@ class BarPlotInputData(NormalizedPlotInputData):
             cats=categories_per_ds,
         )
 
-    def save(self):
+    def to_df(self):
         """
         Save plot data to a parquet file using a tabular representation that's
         optimized for cross-run analysis.
-
-        Instead of serializing complex nested structures, we create a structured
-        table with explicit columns for sample/category/value relationships.
         """
-        import os
-        from datetime import datetime
-        from pathlib import Path
-
-        import pandas as pd
-
-        # Create directory for temporary files if it doesn't exist
-        from multiqc import report
-
-        tmp_dir = report.tmp_dir
-        os.makedirs(tmp_dir.data_tmp_dir(), exist_ok=True)
-
-        # Create a list of records for tabular representation
+        # Create a list of records for each sample/category pair
         records = []
-
-        # Get plot metadata
-        timestamp = datetime.now().isoformat()
-        run_id = config.kwargs.get("run_id") if hasattr(config, "kwargs") else None
-
-        # Extract y-axis and x-axis labels and formatting
-        ylab = self.pconfig.ylab
-        y_format = {}
-        if hasattr(self.pconfig, "ylab_format") and self.pconfig.ylab_format:
-            if isinstance(self.pconfig.ylab_format, dict):
-                y_format = self.pconfig.ylab_format
-
-        xlab = self.pconfig.xlab
-        x_format = {}
-        if hasattr(self.pconfig, "xlab_format") and self.pconfig.xlab_format:
-            if isinstance(self.pconfig.xlab_format, dict):
-                x_format = self.pconfig.xlab_format
-
-        # Iterate through each dataset
-        for ds_idx, (dataset, cats_dict) in enumerate(zip(self.data, self.cats)):
+        for ds_idx, dataset in enumerate(self.data):
             # Get dataset label if available
             dataset_label = None
-            if hasattr(self.pconfig, "data_labels") and self.pconfig.data_labels:
-                if ds_idx < len(self.pconfig.data_labels):
-                    dataset_label = self.pconfig.data_labels[ds_idx]
+            if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
+                label = self.pconfig.data_labels[ds_idx]
+                if isinstance(label, dict) and "name" in label:
+                    dataset_label = label["name"]
+                elif isinstance(label, str):
+                    dataset_label = label
+                else:
+                    dataset_label = f"Dataset {ds_idx + 1}"
+            else:
+                dataset_label = f"Dataset {ds_idx + 1}"
 
-            # Iterate through each sample in the dataset
-            for sample_name, cat_values in dataset.items():
-                # Iterate through each category for this sample
-                for cat_name, value in cat_values.items():
-                    cat_conf = cats_dict.get(cat_name)
+            for sample_name, sample_data in dataset.items():
+                for category_name, value in sample_data.items():
+                    # Get category configuration if available
+                    cat_conf = None
+                    if ds_idx < len(self.cats):
+                        cat_conf = self.cats[ds_idx].get(category_name)
 
-                    # Create a record for this sample/category combination
                     record = {
                         "anchor": self.anchor,
-                        "title": self.pconfig.title if hasattr(self.pconfig, "title") else None,
                         "dataset_idx": ds_idx,
                         "dataset_label": dataset_label,
-                        "sample_name": sample_name,
-                        "category_name": cat_name,
+                        "sample_name": str(sample_name),
+                        "category_name": str(category_name),
                         "value": value,
-                        "ylab": ylab,
-                        "xlab": xlab,
-                        "timestamp": timestamp,
                     }
 
-                    # Add run_id if available
-                    if run_id:
-                        record["run_id"] = run_id
-
-                    # Add category display name and color if available
+                    # Store category configuration as JSON if available
                     if cat_conf:
-                        record["category_display_name"] = cat_conf.name
-                        if hasattr(cat_conf, "color") and cat_conf.color:
-                            record["category_color"] = cat_conf.color
+                        record["cat_meta"] = cat_conf.model_dump_json()
 
-                    # Add Y-axis formatting if available
-                    if y_format:
-                        if "hoverformat" in y_format:
-                            record["y_hoverformat"] = y_format.get("hoverformat")
-                        if "ticksuffix" in y_format:
-                            record["y_ticksuffix"] = y_format.get("ticksuffix")
-
-                    # Add X-axis formatting if available
-                    if x_format:
-                        if "title" in x_format and isinstance(x_format.get("title"), dict):
-                            title_dict = x_format.get("title", {})
-                            if "text" in title_dict:
-                                record["x_title_text"] = title_dict.get("text")
-                        if "hoverformat" in x_format:
-                            record["x_hoverformat"] = x_format.get("hoverformat")
+                    # Add plot configuration metadata
+                    if hasattr(self.pconfig, "title") and self.pconfig.title:
+                        record["plot_title"] = self.pconfig.title
+                    if hasattr(self.pconfig, "xlab") and self.pconfig.xlab:
+                        record["x_label"] = self.pconfig.xlab
+                    if hasattr(self.pconfig, "ylab") and self.pconfig.ylab:
+                        record["y_label"] = self.pconfig.ylab
 
                     records.append(record)
 
-        # Create DataFrame and save to parquet
-        if records:
-            df = pd.DataFrame(records)
-
-            # Create a unique filename
-            file_path = os.path.join(tmp_dir.data_tmp_dir(), f"{self.anchor}.parquet")
-            df.to_parquet(file_path, index=False)
-
-            # Save the path for retrieval
-            report.plot_input_data[self.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
+        return pd.DataFrame(records)
 
     @classmethod
-    def load(cls, anchor: Anchor) -> Optional["BarPlotInputData"]:
+    def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, BarPlotConfig], anchor: Anchor) -> "BarPlotInputData":
         """
         Load plot data from a parquet file.
-
-        Reconstructs the normalized BarPlot data from the tabular representation
-        stored in the parquet file.
         """
-        # Get file path from report
-        if not (file_path := report.plot_input_data.get(anchor)):
-            logger.debug(f"No data file found for anchor {anchor}")
-            return None
+        import json
 
-        if not Path(file_path).exists():
-            logger.debug(f"File does not exist: {file_path}")
-            return None
+        # Handle None case
+        if df is None or df.empty:
+            pconf: BarPlotConfig
+            if isinstance(pconfig, dict):
+                pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
+            else:
+                pconf = cast(BarPlotConfig, pconfig)
+            return cls(anchor=anchor, pconfig=pconf, data=[], cats=[])
 
-        try:
-            # Read the parquet file
-            df = pd.read_parquet(file_path)
+        pconf: BarPlotConfig
+        if isinstance(pconfig, dict):
+            pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
+        else:
+            pconf = cast(BarPlotConfig, pconfig)
 
-            # Reconstruct data structure
-            datasets = []
-            cats_configs = []
+        # Extract or update pconfig from DataFrame metadata
+        if any(col in df.columns for col in ["plot_title", "x_label", "y_label"]):
+            extracted_pconfig = cls._extract_pconfig_from_dataframe(df, anchor, df["category_name"].unique().tolist())
+            pconf_dict = pconf.model_dump(exclude_unset=True)
+            extracted_dict = extracted_pconfig.model_dump(exclude_unset=True)
+            # Update pconfig with values from df
+            for k, v in extracted_dict.items():
+                if k not in pconf_dict or pconf_dict[k] is None:
+                    setattr(pconf, k, v)
 
-            # Group by dataset_idx
-            for ds_idx, ds_group in df.groupby("dataset_idx", sort=True):
-                dataset = {}
-                cat_configs = {}
+        # Group by dataset_idx to rebuild data structure
+        datasets = []
+        cats_per_dataset = []
 
-                # Process each sample
-                for sample_name, sample_group in ds_group.groupby("sample_name"):
-                    sample_values = {}
+        max_dataset_idx = df["dataset_idx"].max() if not df.empty else 0
 
-                    # Process each category
-                    for _, row in sample_group.iterrows():
-                        cat_name = CatName(row["category_name"])
-                        value = row["value"]
+        for ds_idx in range(int(max_dataset_idx) + 1):
+            ds_group = df[df["dataset_idx"] == ds_idx] if not df.empty else pd.DataFrame()
 
-                        # Add to sample values
-                        sample_values[cat_name] = value
+            # Skip empty datasets
+            if ds_group.empty:
+                datasets.append({})
+                cats_per_dataset.append({})
+                continue
 
-                        # Add category config if not already added
-                        if cat_name not in cat_configs:
-                            # Create basic category config
-                            cat_configs[cat_name] = CatConf(
-                                name=row.get("category_display_name", cat_name),
-                                path_in_cfg=("cats",),
-                                color=row.get("category_color"),
-                            )
+            dataset = {}
+            cats_dict = {}
 
-                    # Add sample to dataset if it has values
-                    if sample_values:
-                        dataset[sample_name] = sample_values
+            # Process each sample in this dataset
+            for sample_name, sample_group in ds_group.groupby("sample_name"):
+                sample_data = {}
 
-                datasets.append(dataset)
-                cats_configs.append(cat_configs)
+                # Process each category for this sample
+                for _, row in sample_group.iterrows():
+                    category_name = row["category_name"]
+                    value = row["value"]
+                    sample_data[category_name] = value
 
-            # Create pconfig from metadata
-            pconfig_dict = {"id": str(anchor)}
+                    # Process category metadata if available
+                    if "cat_meta" in row and pd.notna(row["cat_meta"]):
+                        try:
+                            cat_meta = json.loads(row["cat_meta"])
+                            # Use CatConf to ensure proper validation
+                            if category_name not in cats_dict:
+                                cats_dict[category_name] = CatConf(
+                                    name=cat_meta.get("name", category_name),
+                                    color=cat_meta.get("color"),
+                                    path_in_cfg=("cats",),
+                                )
+                        except (json.JSONDecodeError, TypeError):
+                            # Fallback if JSON parsing fails
+                            if category_name not in cats_dict:
+                                cats_dict[category_name] = CatConf(name=category_name, path_in_cfg=("cats",))
 
-            # Extract basic config from first row if available
-            if len(df) > 0:
-                first_row = df.iloc[0]
-                if "xlab" in df.columns and pd.notna(first_row.get("xlab")):
-                    pconfig_dict["xlab"] = str(first_row["xlab"])
-                if "ylab" in df.columns and pd.notna(first_row["ylab"]):
-                    pconfig_dict["ylab"] = str(first_row["ylab"])
-                if "title" in df.columns and pd.notna(first_row["title"]):
-                    pconfig_dict["title"] = str(first_row["title"])
+                # Add sample data if not empty
+                if sample_data:
+                    dataset[sample_name] = sample_data
 
-            # Create the config
-            pconfig = BarPlotConfig.from_pconfig_dict(pconfig_dict)
+            datasets.append(dataset)
+            cats_per_dataset.append(cats_dict)
 
-            # Create and return the BarPlotInputData
-            return BarPlotInputData(
-                anchor=anchor, pconfig=cast(BarPlotConfig, pconfig), data=datasets, cats=cats_configs
-            )
+        return cls(
+            anchor=anchor,
+            pconfig=pconf,
+            data=datasets,
+            cats=cats_per_dataset,
+        )
 
-        except Exception as e:
-            logger.error(f"Failed to load bar plot data for {anchor}: {str(e)}")
-            return None
+    @staticmethod
+    def _extract_pconfig_from_dataframe(df: pd.DataFrame, anchor: Anchor, all_categories: List[str]) -> BarPlotConfig:
+        """Extract pconfig from DataFrame metadata columns."""
+        pconfig_dict: Dict[str, Any] = {"id": str(anchor)}
+
+        # Get basic config from first row if available
+        if len(df) > 0:
+            first_row = df.iloc[0]
+            if "x_label" in df.columns and pd.notna(first_row.get("x_label")):
+                pconfig_dict["xlab"] = str(first_row.get("x_label"))
+            if "y_label" in df.columns and pd.notna(first_row.get("y_label")):
+                pconfig_dict["ylab"] = str(first_row.get("y_label"))
+            if "plot_title" in df.columns and pd.notna(first_row.get("plot_title")):
+                pconfig_dict["title"] = str(first_row.get("plot_title"))
+
+        # Extract dataset labels
+        dataset_labels = []
+        if not df.empty and "dataset_label" in df.columns:
+            unique_labels = df["dataset_label"].unique()
+            dataset_labels = [str(label) for label in unique_labels]
+
+        if dataset_labels:
+            pconfig_dict["data_labels"] = dataset_labels
+
+        return BarPlotConfig(**pconfig_dict)
 
     @classmethod
     def merge(
@@ -416,46 +395,17 @@ class BarPlotInputData(NormalizedPlotInputData):
         if old_data.anchor in report.plot_input_data:
             old_path = report.plot_input_data[old_data.anchor]
             if Path(old_path).exists():
-                old_df = pd.read_parquet(old_path)
+                try:
+                    old_df = pd.read_parquet(old_path)
+                except Exception as e:
+                    logger.debug(f"Failed to load parquet for {old_data.anchor}: {str(e)}")
 
         # Create dataframe for new data
-        new_records = []
-        for ds_idx, (dataset, cats_dict) in enumerate(zip(new_data.data, new_data.cats)):
-            # Get dataset label if available
-            dataset_label = None
-            if hasattr(new_data.pconfig, "data_labels") and new_data.pconfig.data_labels:
-                if ds_idx < len(new_data.pconfig.data_labels):
-                    dataset_label = new_data.pconfig.data_labels[ds_idx]
+        new_df = new_data.to_df()
 
-            # Iterate through each sample in the dataset
-            for sample_name, cat_values in dataset.items():
-                # Iterate through each category for this sample
-                for cat_name, value in cat_values.items():
-                    cat_conf = cats_dict.get(cat_name)
-
-                    # Create a record for this sample/category combination
-                    record = {
-                        "anchor": new_data.anchor,
-                        "title": new_data.pconfig.title if hasattr(new_data.pconfig, "title") else None,
-                        "dataset_idx": ds_idx,
-                        "dataset_label": dataset_label,
-                        "sample_name": sample_name,
-                        "category_name": cat_name,
-                        "value": value,
-                        "ylab": new_data.pconfig.ylab,
-                        "xlab": new_data.pconfig.xlab,
-                    }
-
-                    # Add category display name and color if available
-                    if cat_conf:
-                        record["category_display_name"] = cat_conf.name
-                        if hasattr(cat_conf, "color") and cat_conf.color:
-                            record["category_color"] = cat_conf.color
-
-                    new_records.append(record)
-
-        # Create new DataFrame
-        new_df = pd.DataFrame(new_records)
+        # If new_df is empty, return early
+        if new_df.empty:
+            return old_data
 
         # Add timestamp and run_id to new data
         new_df["timestamp"] = datetime.now().isoformat()
@@ -491,17 +441,16 @@ class BarPlotInputData(NormalizedPlotInputData):
         else:
             merged_df = new_df
 
-        # Save the merged data to parquet
+        # Save the merged dataframe
         file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"
-        merged_df.to_parquet(file_path, compression="gzip")
         report.plot_input_data[new_data.anchor] = str(file_path)
+        merged_df.to_parquet(file_path, compression="gzip")
 
-        # Now load the merged data back using our load method
-        merged_data = cls.load(new_data.anchor)
-        if merged_data is None:
-            logger.error(f"Failed to load merged data for {new_data.anchor}")
-            return new_data
-        return merged_data
+        return cls.from_df(
+            merged_df,
+            new_data.pconfig,
+            new_data.anchor,
+        )
 
 
 def plot(

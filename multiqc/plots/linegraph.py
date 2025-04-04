@@ -1,6 +1,7 @@
 """MultiQC functions to plot a linegraph"""
 
 import io
+import json
 import logging
 import os
 import random
@@ -359,7 +360,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
     def is_empty(self) -> bool:
         return len(self.data) == 0 or all(len(ds) == 0 for ds in self.data)
 
-    def save(self):
+    def to_df(self) -> pd.DataFrame:
         """
         Save plot data to a parquet file using a tabular representation that's
         optimized for cross-run analysis.
@@ -396,48 +397,23 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
                         "series_color": series.color,
                         "series_width": series.width,
                         "series_dash": series.dash,
+                        "series_marker": series.marker,
+                        "series_showlegend": series.showlegend,
                     }
-
-                    # Add dataset metadata if available
-                    if hasattr(self.pconfig, "xlab") and self.pconfig.xlab:
-                        record["x_label"] = self.pconfig.xlab
-                    if hasattr(self.pconfig, "ylab") and self.pconfig.ylab:
-                        record["y_label"] = self.pconfig.ylab
-                    if hasattr(self.pconfig, "title") and self.pconfig.title:
-                        record["plot_title"] = self.pconfig.title
-
                     records.append(record)
 
         # Create DataFrame from records
-        df = pd.DataFrame(records)
-
-        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
-            df["run_id"] = config.kwargs["run_id"]
-
-        df["timestamp"] = datetime.now().isoformat()
-
-        file_path = tmp_dir.parquet_dir() / f"{self.anchor}.parquet"
-        df.to_parquet(file_path, compression="gzip")
-
-        report.plot_input_data[self.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
+        return pd.DataFrame(records)
 
     @classmethod
-    def load(
-        cls: Type["LinePlotNormalizedInputData[KeyT, ValT]"], anchor: Anchor
-    ) -> Optional["LinePlotNormalizedInputData[KeyT, ValT]"]:
-        """
-        Load plot data from a parquet file.
-
-        Reconstructs the normalized LinePlot data from the tabular representation
-        stored in the parquet file.
-        """
-        if not (file_path := report.plot_input_data.get(anchor)):
-            return None
-        if not Path(file_path).exists():
-            return None
-
-        # Load from parquet
-        df = pd.read_parquet(file_path)
+    def from_df(
+        cls, df: pd.DataFrame, pconfig: Union[Dict, LinePlotConfig], anchor: Anchor
+    ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
+        pconf: LinePlotConfig
+        if isinstance(pconfig, dict):
+            pconf = cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
+        else:
+            pconf = pconfig
 
         # Reconstruct data structure
         datasets = []
@@ -461,6 +437,12 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
                     color = str(first_row.get("series_color")) if pd.notna(first_row.get("series_color")) else None
                     width = int(first_row.get("series_width", 2))
                     dash = str(first_row.get("series_dash")) if pd.notna(first_row.get("series_dash")) else None
+                    marker = str(first_row.get("series_marker")) if pd.notna(first_row.get("series_marker")) else None
+                    showlegend = (
+                        bool(first_row.get("series_showlegend"))
+                        if pd.notna(first_row.get("series_showlegend"))
+                        else False
+                    )
 
                     # Extract x,y pairs and sort by x value for proper display
                     sample_group = sample_group.sort_values("x_value")
@@ -477,6 +459,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
                         color=color,
                         width=width,
                         dash=dash,
+                        showlegend=showlegend,
+                        marker=marker,
                         path_in_cfg=("lineplot", "data"),
                     )
                     dataset.append(series)
@@ -487,43 +471,12 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
 
             datasets.append(dataset)
 
-        # Extract pconfig
-        pconfig_dict: Dict[str, Any] = {"id": str(anchor)}
-
-        # Get basic config from first row
-        if len(df) > 0:
-            first_row = df.iloc[0]
-            if "x_label" in df.columns and pd.notna(first_row.get("x_label")):
-                pconfig_dict["xlab"] = str(first_row.get("x_label"))
-            if "y_label" in df.columns and pd.notna(first_row.get("y_label")):
-                pconfig_dict["ylab"] = str(first_row.get("y_label"))
-            if "plot_title" in df.columns and pd.notna(first_row.get("plot_title")):
-                pconfig_dict["title"] = str(first_row.get("plot_title"))
-
-        # Extract dataset labels - use a simpler approach to avoid type issues
-        data_labels: List[str] = []
-
-        # Count the number of unique datasets
-        if "dataset_idx" in df.columns and not df.empty:
-            num_datasets = len(datasets)
-
-            # Extract labels from sorted dataframe if available
-            df_sorted = df.sort_values("dataset_idx").drop_duplicates("dataset_idx")
-
-            for i in range(num_datasets):
-                if i < len(df_sorted) and "dataset_label" in df_sorted.columns:
-                    label_val = df_sorted["dataset_label"].iloc[i]
-                    if pd.notna(label_val):
-                        data_labels.append(str(label_val))
-                    else:
-                        data_labels.append(f"Dataset {i + 1}")
-                else:
-                    data_labels.append(f"Dataset {i + 1}")
-
-        pconfig_dict["data_labels"] = data_labels
-        pconfig = LinePlotConfig(**pconfig_dict)
-
-        return LinePlotNormalizedInputData(anchor=anchor, data=datasets, pconfig=pconfig, sample_names=sample_names)
+        return LinePlotNormalizedInputData(
+            anchor=anchor,
+            data=datasets,
+            pconfig=pconf,
+            sample_names=sample_names,
+        )
 
     @staticmethod
     def create(
@@ -555,7 +508,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
 
         sample_names = []
 
-        datasets: List[List[Series[KeyT, ValT]]] = []
+        datasets: List[List[Series[Any, Any]]] = []
         for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
             list_of_series: List[Series[Any, Any]] = []
             for s in sorted(raw_data_by_sample.keys()):
@@ -575,7 +528,10 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
 
         # Return normalized data and config
         return LinePlotNormalizedInputData(
-            anchor=plot_anchor(pconf), data=datasets, pconfig=pconf, sample_names=sample_names
+            anchor=plot_anchor(pconf),
+            data=datasets,
+            pconfig=pconf,
+            sample_names=sample_names,
         )
 
     @classmethod
@@ -588,9 +544,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         Merge normalized data from old run and new run, leveraging our tabular representation
         for more efficient and reliable merging.
         """
-        import os
-        from datetime import datetime
-
         # Load dataframes from parquet files instead of using the in-memory data structures
         old_df = None
         if old_data.anchor in report.plot_input_data:
@@ -627,26 +580,11 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
                         "series_width": series.width,
                         "series_dash": series.dash,
                     }
-
-                    # Add plot metadata
-                    if hasattr(new_data.pconfig, "xlab") and new_data.pconfig.xlab:
-                        record["x_label"] = new_data.pconfig.xlab
-                    if hasattr(new_data.pconfig, "ylab") and new_data.pconfig.ylab:
-                        record["y_label"] = new_data.pconfig.ylab
-                    if hasattr(new_data.pconfig, "title") and new_data.pconfig.title:
-                        record["plot_title"] = new_data.pconfig.title
-
                     new_records.append(record)
 
         new_df = pd.DataFrame(new_records)
-
-        # Add timestamp and run_id to new data
-        if "timestamp" not in new_df.columns:
-            new_df["timestamp"] = datetime.now().isoformat()
-
-        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
-            if "run_id" not in new_df.columns:
-                new_df["run_id"] = config.kwargs["run_id"]
+        if new_df.empty:
+            return old_data
 
         # If we have both old and new data, merge them
         merged_df = None
@@ -677,17 +615,11 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         else:
             merged_df = new_df
 
-        # Save the merged dataframe to parquet
-        file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"
-        merged_df.to_parquet(file_path, compression="gzip")
-        report.plot_input_data[new_data.anchor] = str(file_path)
-
-        # Now load the merged data back using our load method
-        merged_data = cls.load(new_data.anchor)
-        if merged_data is None:
-            logger.error(f"Failed to load merged data for {new_data.anchor}")
-            return new_data
-        return merged_data
+        return LinePlotNormalizedInputData.from_df(
+            merged_df,
+            new_data.pconfig,
+            new_data.anchor,
+        )
 
 
 def plot(

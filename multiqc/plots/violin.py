@@ -1,13 +1,18 @@
 import copy
+import json
 import logging
 import math
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
+from multiqc.core import tmp_dir
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
 from multiqc.plots.table_object import (
@@ -33,6 +38,118 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
     def is_empty(self) -> bool:
         return len(self.dts) == 0 or all(dt.is_empty() for dt in self.dts)
+
+    def to_df(self) -> pd.DataFrame:
+        """
+        Save plot data to a parquet file using a tabular representation that's
+        optimized for cross-run analysis.
+        """
+        records = []
+        for dt in self.dts:
+            # Process each section and its rows
+            for section_idx, section in enumerate(dt.section_by_id.values()):
+                section_key = list(dt.section_by_id.keys())[section_idx]
+
+                # Process each sample in this section
+                for sample_name, group_rows in section.rows_by_sgroup.items():
+                    for row in group_rows:
+                        # Process each metric/column for this sample
+                        for col_key, col_value in row.raw_data.items():
+                            # Skip empty values
+                            if col_value is None or str(col_value).strip() == "":
+                                continue
+
+                            # Get column metadata
+                            col_meta = None
+                            for idx, metric_name, dt_column in dt.get_headers_in_order():
+                                if metric_name == col_key:
+                                    col_meta = dt_column
+                                    break
+
+                            if col_meta is None:
+                                continue
+
+                            # Create record with all necessary metadata
+                            record = {
+                                "anchor": self.anchor,
+                                "dt_anchor": dt.anchor,
+                                "section_key": str(section_key),
+                                "sample_name": str(sample_name),
+                                "metric_name": str(col_key),
+                                "value": col_value,
+                                # Store column metadata as JSON
+                                "column_meta": col_meta.model_dump_json(),
+                            }
+
+                            records.append(record)
+
+        return pd.DataFrame(records)
+
+    @classmethod
+    def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, TableConfig], anchor: Anchor) -> "ViolinPlotInputData":
+        """
+        Load plot data from a DataFrame.
+        """
+        # Convert pconfig to TableConfig if needed
+        pconf: TableConfig
+        if isinstance(pconfig, dict):
+            pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
+        else:
+            pconf = cast(TableConfig, pconfig)
+
+        # Handle None or empty DataFrame case
+        if df is None or df.empty:
+            return cls(dts=[], pconfig=pconf, anchor=anchor)
+
+        # Group data by dt_anchor to recreate DataTables
+        dts = []
+
+        for dt_anchor, dt_group in df.groupby("dt_anchor", sort=True):
+            # Prepare data structure for DataTable creation
+            data_dict = {}
+            headers_dict = {}
+
+            # Group by section
+            for section_key, section_group in dt_group.groupby("section_key", sort=True):
+                section_data = {}
+                section_headers = {}
+
+                # Process samples
+                for sample_name, sample_group in section_group.groupby("sample_name", sort=True):
+                    sample_data = {}
+
+                    # Process metrics/columns
+                    for _, row in sample_group.iterrows():
+                        metric_name = row["metric_name"]
+                        value = row["value"]
+                        sample_data[metric_name] = value
+
+                        # Create header if it doesn't exist
+                        if metric_name not in section_headers:
+                            # Parse column metadata from JSON
+                            section_headers[metric_name] = json.loads(row["column_meta"])
+
+                    # Add sample data to section
+                    if sample_data:
+                        section_data[sample_name] = sample_data
+
+                # Add section data and headers to dictionary
+                if section_data:
+                    data_dict[section_key] = section_data
+                    headers_dict[section_key] = section_headers
+
+            # Create DataTable if we have data
+            if data_dict:
+                dt = table_object.DataTable.create(
+                    data=data_dict,
+                    table_id=pconf.id,
+                    table_anchor=Anchor(str(dt_anchor)),
+                    pconfig=pconf.model_copy(),
+                    headers=headers_dict,
+                )
+                dts.append(dt)
+
+        return cls(dts=dts, pconfig=pconf, anchor=anchor)
 
     @classmethod
     def create_from_sections(
@@ -90,35 +207,66 @@ class ViolinPlotInputData(NormalizedPlotInputData):
     @classmethod
     def merge(cls, old_data: "ViolinPlotInputData", new_data: "ViolinPlotInputData") -> "ViolinPlotInputData":
         """
-        Merge normalized data from old run and new run
+        Merge normalized data from old run and new run, leveraging similar
+        tabular representation approach as used for bar and line graphs.
         """
-        # Merge datasets
-        merged_dts: List[DataTable] = []
+        # Load dataframes from parquet files instead of using in-memory structures
+        old_df = None
+        if old_data.anchor in report.plot_input_data:
+            old_path = report.plot_input_data[old_data.anchor]
+            if Path(old_path).exists():
+                try:
+                    old_df = pd.read_parquet(old_path)
+                except Exception as e:
+                    logger.debug(f"Failed to load parquet for {old_data.anchor}: {str(e)}")
 
-        # Create a dictionary of existing DataTables by their anchor
-        existing_dts_by_anchor = {dt.anchor: dt for dt in old_data.dts}
+        # Create dataframe for new data
+        new_df = new_data.to_df()
 
-        # Track which DataTables from old_data have been merged
-        merged_anchors = set()
+        # If new_df is empty, return early
+        if new_df.empty:
+            return old_data
 
-        # First, go through new data and match with existing data by anchor
-        for new_dt in new_data.dts:
-            if new_dt.anchor in existing_dts_by_anchor:
-                # Found a match by anchor, merge them
-                prev_dt = existing_dts_by_anchor[new_dt.anchor]
-                prev_dt.merge(new_dt)
-                merged_dts.append(prev_dt)
-                merged_anchors.add(new_dt.anchor)
-            else:
-                # No match found, add the new DataTable
-                merged_dts.append(new_dt)
+        # Add timestamp and run_id to new data
+        new_df["timestamp"] = datetime.now().isoformat()
+        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
+            new_df["run_id"] = config.kwargs["run_id"]
 
-        # Add any DataTables from old_data that weren't merged
-        for prev_dt in old_data.dts:
-            if prev_dt.anchor not in merged_anchors:
-                merged_dts.append(prev_dt)
+        # If we have both old and new data, merge them
+        merged_df = None
+        if old_df is not None and not old_df.empty:
+            # Make sure old data has run_id
+            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
+                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
 
-        return ViolinPlotInputData(dts=merged_dts, pconfig=old_data.pconfig, anchor=old_data.anchor)
+            # Make sure old data has timestamp
+            if "timestamp" not in old_df.columns:
+                old_df["timestamp"] = datetime.now().isoformat()
+
+            # Combine the dataframes, keeping all rows
+            merged_df = pd.concat([old_df, new_df], ignore_index=True)
+
+            # For duplicates (same sample, metric, dataset, section), keep the latest version
+            if "timestamp" in merged_df.columns:
+                # Sort by timestamp (newest last)
+                merged_df.sort_values("timestamp", inplace=True)
+
+                # Group by the key identifiers and keep the last entry (newest)
+                dedupe_columns = ["dt_anchor", "section_key", "sample_name", "metric_name"]
+                if "run_id" in merged_df.columns:
+                    dedupe_columns.append("run_id")
+
+                merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
+        else:
+            merged_df = new_df
+
+        # Save the merged data for future reference
+        file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"
+        report.plot_input_data[new_data.anchor] = str(file_path)
+        merged_df.to_parquet(file_path, compression="gzip")
+
+        # Create a new ViolinPlotInputData from the merged DataFrame
+        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
 
 def plot(
