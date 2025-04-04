@@ -4,14 +4,14 @@ MultiQC configuration file validator script.
 
 import logging
 import sys
-import traceback
 from pathlib import Path
 
 import yaml
 from pydantic import ValidationError
-from rich.console import Console
-from rich.panel import Panel
+from rich.console import Console, group
 from rich.highlighter import ReprHighlighter
+from rich.panel import Panel
+from rich.text import Text
 
 from multiqc.utils.config_schema import MultiQCConfig
 
@@ -44,34 +44,47 @@ def check_config_file(config_file: str) -> None:
             if yaml_conf is None:
                 yaml_conf = {}  # Empty file
     except Exception as e:
-        console.print(f"[bold red]YAML parsing error in config file:[/bold red] {str(e)}")
-        console.print(traceback.format_exc())
+        if hasattr(e, "problem") and hasattr(e, "problem_mark"):
+            parsing_err = highlighter(f"{str(e.problem).strip()} {str(e.problem_mark).strip()}")
+        else:
+            parsing_err = Text("Could not parse YAML")
+        console.print(
+            Panel(
+                parsing_err,
+                title=f":x: Error - Could not parse configuration file YAML: [bold]{config_file}",
+                title_align="left",
+                border_style="red",
+            )
+        )
         sys.exit(1)
 
     # Print parsed config for user to confirm
-    console.print(f"[bold green]Successfully parsed YAML in {config_file}[/bold green]")
-
-    # Validate against the Pydantic model
-    has_validation_errors = False
-    validation_errors = []
+    logger.debug(f"Successfully parsed YAML in {config_file}")
 
     try:
         # Validate using the MultiQCConfig model
         MultiQCConfig(**yaml_conf)
-        console.print("[bold green]Config validation passed[/bold green]")
+        console.print(f"[green]✅ Config validation passed: [bold]{config_file}")
+        sys.exit(0)
 
     except ValidationError as e:
-        has_validation_errors = True
-        validation_errors = e.errors()
 
-        console.print("[bold red]Config validation failed:[/bold red]")
-        for error in validation_errors:
-            loc = ".".join(str(line) for line in error["loc"])
-            console.print(f"[red]Error in [bold]{loc}[/bold]: {error['msg']}[/red]")
+        @group()
+        def get_error_msgs(e):
+            validation_errors = e.errors()
+            for error in validation_errors:
+                loc = ".".join(str(line) for line in error["loc"])
+                yield Text.from_markup(
+                    f"[bold]Error in [blue]'{loc}'[/blue]:[/] {error['msg']} "
+                    f"[dim](got: [green italic]{error['input'][:50]}[/green italic])[/]"
+                )
 
-    if has_validation_errors:
-        console.print("\n[bold red]Validation failed with errors.[/bold red]")
+        console.print(
+            Panel(
+                get_error_msgs(e),
+                title=f":x: Error - MultiQC configuration file is invalid: [bold]{config_file}",
+                title_align="left",
+                border_style="red",
+            )
+        )
         sys.exit(1)
-    else:
-        console.print("\n[bold green]Config file passed all checks ✓[/bold green]")
-        sys.exit(0)
