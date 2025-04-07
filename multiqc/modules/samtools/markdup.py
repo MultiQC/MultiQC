@@ -67,7 +67,7 @@ def parse_samtools_markdup(module) -> int:
         for name, val in raw_d.items():
             if name in rename_map:
                 d[rename_map[name]] = int(raw_d[name])
-            elif name.strip('"') == "COMMAND":
+            elif name == "COMMAND":
                 m = re.search(r".*-d\s(\d+)", val)
                 if m:
                     d["optical_duplicate_distance"] = int(m.group(1))
