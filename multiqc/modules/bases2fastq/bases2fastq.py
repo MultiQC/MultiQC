@@ -171,8 +171,12 @@ class MultiqcModule(BaseMultiqcModule):
         if num_projects == 0 and num_samples == 0:
             log.error("No samples or projects are found. Either file-size above limit or RunStats.json does not exist.")
             log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
-            raise UserWarning
+            raise ModuleNotFoundError
+
         log.info(f"Found {num_samples} samples and {num_projects} projects within the bases2fastq results")
+
+        # Superfluous function call to confirm that it is used in this module
+        self.add_software_version(None)
 
         # process groups / projects
         for s_name in self.b2f_sample_data.keys():
