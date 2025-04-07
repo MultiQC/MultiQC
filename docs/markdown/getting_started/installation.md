@@ -225,7 +225,7 @@ with required dependencies. To build MultiQC, run `nix build`.
 
 ### Docker
 
-A Docker container is provided on Docker Hub called [`multiqc/multiqc`](https://hub.docker.com/r/ewels/multiqc/).
+A Docker container is provided on Docker Hub called [`multiqc/multiqc`](https://hub.docker.com/r/multiqc/multiqc/).
 It's based on an `python-slim` base image to give the smallest image size possible.
 
 To use, call the `docker run` with your current working directory mounted as a volume and working directory. Then just specify the MultiQC command at the end as usual:

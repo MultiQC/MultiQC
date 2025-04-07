@@ -1,13 +1,14 @@
 import base64
-from functools import lru_cache
 import io
 import logging
 import math
 import platform
 import random
 import re
-from pathlib import Path
 import subprocess
+from functools import lru_cache
+from pathlib import Path
+from token import OP
 from typing import (
     Any,
     Dict,
@@ -16,7 +17,6 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
-    Type,
     TypeVar,
     Union,
 )
@@ -27,7 +27,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
-from multiqc.plots.plotly import check_plotly_version
+from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, PlotType, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig, add_validation_warning
@@ -266,6 +266,12 @@ DatasetT = TypeVar("DatasetT", bound="BaseDataset")
 PConfigT = TypeVar("PConfigT", bound="PConfig")
 
 
+def plot_anchor(pconfig: PConfig) -> Anchor:
+    anchor = Anchor(pconfig.anchor or pconfig.id)
+    anchor = Anchor(report.save_htmlid(anchor))  # make sure it's unique
+    return anchor
+
+
 class Plot(BaseModel, Generic[DatasetT, PConfigT]):
     """
     Plot model for serialisation to JSON. Contains enough data to recreate the plot (e.g. in Plotly-JS)
@@ -317,8 +323,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         plot_type: PlotType,
         pconfig: PConfigT,
         n_samples_per_dataset: List[int],
+        anchor: Anchor,
         id: Optional[str] = None,
-        anchor: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
@@ -329,7 +335,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         :param plot_type: plot type
         :param pconfig: plot configuration model
         :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
-        :param id: plot ID
         :param anchor: plot HTML anchor. Unlike ID, must be globally unique
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
@@ -339,10 +344,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         """
         if len(n_samples_per_dataset) == 0:
             raise ValueError("No datasets to plot")
-
-        id = id or pconfig.id
-        _anchor: Anchor = Anchor(anchor or pconfig.anchor or id)
-        _anchor = Anchor(report.save_htmlid(_anchor))  # make sure it's unique
 
         # Counts / Percentages / Log10 switch
         add_log_tab: bool = pconfig.logswitch is True and plot_type in [
@@ -357,6 +358,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         width = pconfig.width
         if pconfig.square:
             width = height
+
+        id = id or pconfig.id
 
         # Render static image if the number of samples is above the threshold
         flat = False
@@ -511,7 +514,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             plot_type=plot_type,
             pconfig=pconfig,
             id=id,
-            anchor=_anchor,
+            anchor=anchor,
             datasets=datasets,
             layout=layout,
             add_log_tab=add_log_tab,
@@ -536,10 +539,16 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
                 maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 dminval, dmaxval = dataset.get_x_range()
+
                 if dminval is not None:
+                    if isinstance(minval, int) or isinstance(minval, float):
+                        dminval = float(dminval)
                     minval = min(minval, dminval) if minval is not None else dminval
                 if dmaxval is not None:
+                    if isinstance(maxval, int) or isinstance(maxval, float):
+                        dmaxval = float(dmaxval)
                     maxval = max(maxval, dmaxval) if maxval is not None else dmaxval
+
                 clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
                 clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
                 if clipmin is not None and minval is not None and clipmin > minval:

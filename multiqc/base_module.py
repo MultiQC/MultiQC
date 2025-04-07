@@ -35,7 +35,7 @@ from multiqc import config, report, validation
 from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
 from multiqc.core.strict_helpers import lint_error
-from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.plot import Plot
 from multiqc.plots.table_object import (
     ColumnDict,
     ColumnKey,
@@ -140,9 +140,6 @@ class BaseMultiqcModule:
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})
 
-        # Sanitise anchor ID and check for duplicates
-        self.anchor = Anchor(report.save_htmlid(str(self.anchor)))
-
         # See if we have a user comment in the config
         if _config_section_comment := config.section_comments.get(str(self.anchor)):
             self.comment = _config_section_comment
@@ -180,8 +177,6 @@ class BaseMultiqcModule:
 
         # Get list of all base attributes, so we clean up any added by child modules
         self._base_attributes = [k for k in dir(self)]
-
-        self.sample_names: List[SampleNameMeta] = []
 
     def _get_intro(self):
         doi_html = ""
@@ -1098,3 +1093,16 @@ class BaseMultiqcModule:
                 self.__saved_raw_data = dict()
             self.__saved_raw_data[fn] = data
             report.saved_raw_data[fn] = data
+
+    def merge(self, m: "BaseMultiqcModule"):
+        """
+        Running module on a new set of input.
+        Merging versions.
+        Plots in sections will be merged in the plotting code.
+        TODO: handle saved_raw_data if it makes sence at all. Maybe should be a breaking change.
+        """
+        if m.versions is not None:
+            if self.versions is not None:
+                self.versions.update(m.versions)
+            else:
+                self.versions = m.versions

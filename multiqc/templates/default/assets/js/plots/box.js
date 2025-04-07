@@ -35,8 +35,8 @@ class BoxPlot extends Plot {
       return "All samples are hidden by user, so no data to analyse. Please inform user to use the toolbox to unhide samples.\n";
     }
 
-    prompt += "| Sample | Min | Q1 | Median | Q3 | Max | Mean |\n";
-    prompt += "| --- | --- | --- | --- | --- | --- | --- |\n";
+    prompt += "|Sample|Min|Q1|Median|Q3|Max|Mean|\n";
+    prompt += "|---|---|---|---|---|---|---|\n";
 
     const suffix = this.layout.xaxis.ticksuffix ? " " + this.layout.xaxis.ticksuffix : "";
 
@@ -61,9 +61,9 @@ class BoxPlot extends Plot {
         return (isInt ? val : parseFloat(val.toFixed(2))) + suffix;
       };
 
-      prompt += `| ${anonymizeSampleName(sample)} | ${fmt(min)} | ${fmt(q1)} | ${fmt(median)} | ${fmt(q3)} | ${fmt(
-        max,
-      )} | ${fmt(mean)} |\n`;
+      prompt += `|${anonymizeSampleName(sample)}|${fmt(min)}|${fmt(q1)}|${fmt(median)}|${fmt(q3)}|${fmt(max)}|${fmt(
+        mean,
+      )}|\n`;
     });
 
     return prompt;

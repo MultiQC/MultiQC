@@ -70,6 +70,8 @@ ai_model: null
 ai_custom_endpoint: null
 ai_extra_query_options: null
 ai_custom_context_window: null
+ai_prompt_short: null
+ai_prompt_full: null
 no_ai: false
 ai_anonymize_samples: false
 
@@ -81,7 +83,7 @@ plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false
 plots_flat_numseries: 2000
-plots_defer_loading_numseries: 100 # lot will require user to press button to render plot
+plots_defer_loading_numseries: 100 # plot will require user to press button to render plot
 num_datasets_plot_limit: 100 # DEPRECATED in favour of plots_defer_loading_numseries
 lineplot_number_of_points_to_hide_markers: 50 # sum of data points in all samples
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
@@ -159,14 +161,17 @@ sample_names_ignore: []
 sample_names_ignore_re: []
 sample_names_rename_buttons: []
 sample_names_replace: {}
-sample_names_replace_regex: False
-sample_names_replace_exact: False
-sample_names_replace_complete: False
+sample_names_replace_regex: false
+sample_names_replace_exact: false
+sample_names_replace_complete: false
 sample_names_rename: []
 show_hide_buttons: []
 show_hide_patterns: []
 show_hide_regex: []
 show_hide_mode: []
+highlight_patterns: []
+highlight_colors: []
+highlight_regex: false
 no_version_check: false
 log_filesize_limit: 50000000
 filesearch_lines_limit: 1000

@@ -5,8 +5,8 @@ import os
 import re
 from typing import Dict
 
-from multiqc import config, BaseMultiqcModule
-from multiqc.modules.qualimap import parse_numerals, get_s_name
+from multiqc import BaseMultiqcModule, config
+from multiqc.modules.qualimap import get_s_name, parse_numerals
 from multiqc.plots import bargraph, linegraph
 
 log = logging.getLogger(__name__)
