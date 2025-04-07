@@ -47,8 +47,8 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plot import Plot
-from multiqc.plots.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
 from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
@@ -1104,7 +1104,11 @@ def multiqc_dump_json(data_dir: Path):
                             for mod in modules
                         ]
                     elif name == "creation_date":
-                        val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+                        try:
+                            val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+                        except UnicodeEncodeError:
+                            # Fall back to a format without timezone if we encounter encoding issues
+                            val = creation_date.strftime("%Y-%m-%d, %H:%M")
                     d = {f"{pymod}_{name}": val}
                 if d:
                     with open(os.devnull, "wt") as f:
