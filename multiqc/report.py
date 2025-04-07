@@ -1111,7 +1111,11 @@ def multiqc_dump_json(data_dir: Path):
                             for mod in modules
                         ]
                     elif name == "creation_date":
-                        val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+                        try:
+                            val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+                        except UnicodeEncodeError:
+                            # Fall back to a format without timezone if we encounter encoding issues
+                            val = creation_date.strftime("%Y-%m-%d, %H:%M")
                     d = {f"{pymod}_{name}": val}
                 if d:
                     with open(os.devnull, "wt") as f:
