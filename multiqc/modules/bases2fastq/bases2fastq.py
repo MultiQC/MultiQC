@@ -272,19 +272,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_project_run_plots()
         self.add_sample_plots()
 
-        # Add css and js
-        self.css = {
-            "assets/css/multiqc_fastqc.css": os.path.join(
-                os.path.dirname(__file__), "..", "fastqc", "assets", "css", "multiqc_fastqc.css"
-            )
-        }
-        self.js = {
-            "assets/js/multiqc_dragen_fastqc.js": os.path.join(
-                os.path.dirname(__file__), "assets", "js", "multiqc_bases2fastq.js"
-            )
-        }
-        self.intro += '<script type="application/json" class="fastqc_passfails">["fastqc", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
-
     def get_uuid(self):
         return str(uuid.uuid4()).replace("-", "").lower()
 
