@@ -6,6 +6,7 @@ import logging
 import math
 import re
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
 
 from natsort import natsorted
@@ -41,15 +42,26 @@ class TableConfig(PConfig):
 
 ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
 
+
 ValueT = Union[int, float, str, bool]
 
 
-def is_valid_value(val: Union[ValueT, None]) -> bool:
+@dataclass
+class Cell:
+    raw: ValueT
+    mod: ValueT
+    fmt: str
+
+
+ExtValueT = Union[int, float, str, bool, Cell]
+
+
+def is_valid_value(val: Union[ExtValueT, None]) -> bool:
     """
     Run time check if the value is valid for a table cell. Duplicates the type hint, but
     used in case if a module ignores type checking.
     """
-    return isinstance(val, (int, float, str, bool)) or val is None  # type: ignore
+    return isinstance(val, (int, float, str, bool, Cell)) or val is None  # type: ignore
 
 
 class ColumnDict(TypedDict, total=False):
@@ -276,7 +288,7 @@ class InputRow(BaseModel):
     """
 
     sample: SampleName
-    data: Dict[ColumnKey, Optional[ValueT]] = Field(default_factory=dict)
+    data: Dict[ColumnKey, Optional[ExtValueT]] = Field(default_factory=dict)
 
     def __init__(self, sample: SampleName, data: Mapping[Union[str, ColumnKey], Any]):
         super().__init__(
@@ -287,7 +299,7 @@ class InputRow(BaseModel):
 
 ColumnKeyT = Union[str, ColumnKey]
 GroupKeyT = Union[str, SampleGroup]
-GroupT = Union[Mapping[ColumnKeyT, Optional[ValueT]], InputRow, Sequence[InputRow]]
+GroupT = Union[Mapping[ColumnKeyT, Optional[ExtValueT]], InputRow, Sequence[InputRow]]
 SectionT = Mapping[GroupKeyT, GroupT]
 
 
@@ -298,10 +310,7 @@ class Row(BaseModel):
     """
 
     sample: SampleName
-    # rows with original, unformatted values coming from modules:
-    raw_data: Dict[ColumnKey, ValueT] = dict()
-    # formatted rows (i.e. values are HTML strings to display in the table):
-    formatted_data: Dict[ColumnKey, str] = dict()
+    data: Dict[ColumnKey, Cell] = dict()
 
 
 class TableSection(BaseModel):
@@ -407,12 +416,11 @@ class DataTable(BaseModel):
                             continue
                         if optional_val is None or str(optional_val).strip() == "":  # empty
                             continue
-                        val, valstr = _process_and_format_value(
+                        val_obj = _process_and_format_value(
                             optional_val, column_by_key[col_key], parse_numeric=pconfig.parse_numeric
                         )
-                        row.raw_data[col_key] = val
-                        row.formatted_data[col_key] = valstr
-                    if row.raw_data:
+                        row.data[col_key] = val_obj
+                    if row.data:
                         section.rows_by_sgroup[g_name].append(row)
 
             # Remove empty groups:
@@ -518,10 +526,7 @@ class DataTable(BaseModel):
                             # Update existing sample data
                             for i, row in enumerate(existing_rows):
                                 if row.sample == new_row.sample:
-                                    # Update raw data
-                                    row.raw_data.update(new_row.raw_data)
-                                    # Update formatted data
-                                    row.formatted_data.update(new_row.formatted_data)
+                                    row.data.update(new_row.data)
                                     existing_rows[i] = row
                                     break
                         else:
@@ -599,13 +604,16 @@ def _get_or_create_headers(
     return header_by_key_copy
 
 
-def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bool = True) -> Tuple[ValueT, str]:
+def _process_and_format_value(val: ExtValueT, column: ColumnMeta, parse_numeric: bool = True) -> Cell:
     """
     Takes row value, applies "modify" functions and "format" string, and returns a tuple:
     the modified value and its formatted string.
 
     "parse_numeric=False" assumes that the numeric values are already pre-parsed
     """
+    if isinstance(val, Cell):  # aready formatted
+        return val
+
     # Try parse as a number
     if parse_numeric:
         if str(val).isdigit():
@@ -616,6 +624,7 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bo
             except ValueError:
                 pass
 
+    val_unmodified = val
     # Apply modify
     if column.modify:
         # noinspection PyBroadException
@@ -661,8 +670,7 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bo
                     f"Error applying format string '{fmt}' to table value '{column.rid}': '{val}'. {e}. "
                     f"Check if your format string is correct."
                 )
-    # section.formatted_data[s_name][col_key] = valstr
-    return val, valstr
+    return Cell(raw=val_unmodified, mod=val, fmt=valstr)
 
 
 def _determine_dmin_and_dmax(
@@ -691,9 +699,9 @@ def _determine_dmin_and_dmax(
     # Figure out the min / max if not supplied
     if set_dmax or set_dmin:
         for _, rows in rows_by_sample.items():
-            v_by_col = rows[0].raw_data
+            v_by_col = rows[0].data
             try:
-                val = v_by_col[col_key]
+                val = v_by_col[col_key].raw
                 if isinstance(val, float) or isinstance(val, int) and math.isfinite(val) and not math.isnan(val):
                     if set_dmax:
                         column.dmax = max(column.dmax, val)
@@ -847,11 +855,11 @@ def render_html(
         section = list(dt.section_by_id.values())[idx]
         for group_name, group_rows in section.rows_by_sgroup.items():
             for row_idx, row in enumerate(group_rows):
-                if col_key not in row.raw_data:
+                if col_key not in row.data:
                     continue
 
-                val: ValueT = row.raw_data[col_key]
-                valstr: str = row.formatted_data[col_key]
+                val: ValueT = row.data[col_key].raw
+                valstr: str = row.data[col_key].fmt
 
                 group_to_sample_to_anchor_to_val[group_name][row.sample][col_anchor] = val
                 group_to_sample_to_nice_name_to_val[group_name][row.sample][col_key] = val

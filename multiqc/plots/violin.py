@@ -46,6 +46,9 @@ class ViolinPlotInputData(NormalizedPlotInputData):
         """
         records = []
         for dt in self.dts:
+            # Get ordered headers first
+            ordered_headers = list(dt.get_headers_in_order())
+
             # Process each section and its rows
             for section_idx, section in enumerate(dt.section_by_id.values()):
                 section_key = list(dt.section_by_id.keys())[section_idx]
@@ -53,20 +56,15 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                 # Process each sample in this section
                 for sample_name, group_rows in section.rows_by_sgroup.items():
                     for row in group_rows:
-                        # Process each metric/column for this sample
-                        for col_key, col_value in row.raw_data.items():
-                            # Skip empty values
-                            if col_value is None or str(col_value).strip() == "":
+                        # Process each metric/column in the order from get_headers_in_order()
+                        for idx, metric_name, dt_column in ordered_headers:
+                            if metric_name not in row.data:
                                 continue
 
-                            # Get column metadata
-                            col_meta = None
-                            for idx, metric_name, dt_column in dt.get_headers_in_order():
-                                if metric_name == col_key:
-                                    col_meta = dt_column
-                                    break
+                            val = row.data[metric_name]
 
-                            if col_meta is None:
+                            # Skip empty values
+                            if val is None or val.raw is None or val.fmt == "":
                                 continue
 
                             # Create record with all necessary metadata
@@ -75,10 +73,14 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                                 "dt_anchor": dt.anchor,
                                 "section_key": str(section_key),
                                 "sample_name": str(sample_name),
-                                "metric_name": str(col_key),
-                                "value": col_value,
-                                # Store column metadata as JSON
-                                "column_meta": col_meta.model_dump_json(),
+                                "metric_name": str(metric_name),
+                                "metric_idx": idx,  # Store original index for ordering
+                                "val_raw": val.raw,
+                                "val_mod": val.mod,
+                                "val_fmt": val.fmt,
+                                # Store column metadata as JSON. Note thaet "format" and "modify" lambda won't be stored,
+                                # that's why we are saving val_mod and val_fmt separately.
+                                "column_meta": dt_column.model_dump_json(),
                             }
 
                             records.append(record)
@@ -109,20 +111,37 @@ class ViolinPlotInputData(NormalizedPlotInputData):
             data_dict = {}
             headers_dict = {}
 
+            # Track metrics and their order
+            ordered_metrics = {}
+
             # Group by section
             for section_key, section_group in dt_group.groupby("section_key", sort=True):
-                section_data = {}
+                val_by_sample_by_metric = {}
                 section_headers = {}
+
+                # Sort metrics by their original index if available
+                if "metric_idx" in section_group.columns:
+                    # Create ordered dict of metrics for this section
+                    metrics_info = section_group[["metric_name", "metric_idx"]].drop_duplicates()
+                    for _, row in metrics_info.iterrows():
+                        ordered_metrics[row["metric_name"]] = row["metric_idx"]
 
                 # Process samples
                 for sample_name, sample_group in section_group.groupby("sample_name", sort=True):
-                    sample_data = {}
+                    val_by_metric = {}
+
+                    # If we have metric_idx, sort by that first
+                    if "metric_idx" in sample_group.columns:
+                        sample_group = sample_group.sort_values("metric_idx")
 
                     # Process metrics/columns
                     for _, row in sample_group.iterrows():
                         metric_name = row["metric_name"]
-                        value = row["value"]
-                        sample_data[metric_name] = value
+                        val_by_metric[metric_name] = {
+                            "raw": row["val_raw"],
+                            "mod": row["val_mod"],
+                            "fmt": row["val_fmt"],
+                        }
 
                         # Create header if it doesn't exist
                         if metric_name not in section_headers:
@@ -130,12 +149,12 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                             section_headers[metric_name] = json.loads(row["column_meta"])
 
                     # Add sample data to section
-                    if sample_data:
-                        section_data[sample_name] = sample_data
+                    if val_by_metric:
+                        val_by_sample_by_metric[sample_name] = val_by_metric
 
                 # Add section data and headers to dictionary
-                if section_data:
-                    data_dict[section_key] = section_data
+                if val_by_sample_by_metric:
+                    data_dict[section_key] = val_by_sample_by_metric
                     headers_dict[section_key] = section_headers
 
             # Create DataTable if we have data
@@ -211,12 +230,12 @@ class ViolinPlotInputData(NormalizedPlotInputData):
         tabular representation approach as used for bar and line graphs.
         """
         # Load dataframes from parquet files instead of using in-memory structures
-        old_df = None
+        loaded_df = None
         if old_data.anchor in report.plot_input_data:
             old_path = report.plot_input_data[old_data.anchor]
             if Path(old_path).exists():
                 try:
-                    old_df = pd.read_parquet(old_path)
+                    loaded_df = pd.read_parquet(old_path)
                 except Exception as e:
                     logger.debug(f"Failed to load parquet for {old_data.anchor}: {str(e)}")
 
@@ -234,17 +253,17 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
         # If we have both old and new data, merge them
         merged_df = None
-        if old_df is not None and not old_df.empty:
+        if loaded_df is not None and not loaded_df.empty:
             # Make sure old data has run_id
-            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
-                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
+            if "run_id" not in loaded_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
+                loaded_df["run_id"] = "previous_run"  # Default value for old data without run_id
 
             # Make sure old data has timestamp
-            if "timestamp" not in old_df.columns:
-                old_df["timestamp"] = datetime.now().isoformat()
+            if "timestamp" not in loaded_df.columns:
+                loaded_df["timestamp"] = datetime.now().isoformat()
 
             # Combine the dataframes, keeping all rows
-            merged_df = pd.concat([old_df, new_df], ignore_index=True)
+            merged_df = pd.concat([loaded_df, new_df], ignore_index=True)
 
             # For duplicates (same sample, metric, dataset, section), keep the latest version
             if "timestamp" in merged_df.columns:
@@ -367,12 +386,12 @@ class Dataset(BaseDataset):
             for _, group_rows in list(dt.section_by_id.values())[idx].rows_by_sgroup.items():
                 for row in group_rows:
                     try:
-                        v = row.raw_data[metric_name]
+                        v = row.data[metric_name]
                     except KeyError:
                         pass
                     else:
                         assert v is not None and str(v).strip != "", v
-                        value_by_sample[row.sample] = v
+                        value_by_sample[row.sample] = v.raw
 
             value_by_sample_by_metric[dt_column.rid] = value_by_sample
 
@@ -870,8 +889,8 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 rid = header.rid
                 for _, group_rows in list(self.datasets[0].dt.section_by_id.values())[idx].rows_by_sgroup.items():
                     for row in group_rows:
-                        if col_key in row.raw_data:
-                            val = row.raw_data[col_key]
+                        if col_key in row.data:
+                            val = row.data[col_key]
                             data.setdefault(row.sample, {})[rid] = val
 
             import pandas as pd  # type: ignore
@@ -904,8 +923,8 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 rid = header.rid
                 for _, group_rows in list(self.datasets[0].dt.section_by_id.values())[idx].rows_by_sgroup.items():
                     for row in group_rows:
-                        if metric in row.raw_data:
-                            val = row.raw_data[metric]
+                        if metric in row.data:
+                            val = row.data[metric]
                             data.setdefault(row.sample, {})[rid] = val
 
             values: List[List[Any]] = [list(data.keys())]
