@@ -65,10 +65,13 @@ def parse_samtools_markdup(module) -> int:
             "ESTIMATED_LIBRARY_SIZE": "estimated_library_size",
         }
         for name, val in raw_d.items():
-            if name in rename_map:
-                d[rename_map[name]] = int(raw_d[name])
-            elif name == "COMMAND":
-                m = re.search(r".*-d\s(\d+)", val)
+            if name.strip('"') in rename_map:
+                val = raw_d[name]
+                if isinstance(val, str):
+                    val = val.strip(",")
+                d[rename_map[name.strip('"')]] = int(val)
+            elif name.strip('"') == "COMMAND":
+                m = re.search(r".*-d\s(\d+)", val.strip(","))
                 if m:
                     d["optical_duplicate_distance"] = int(m.group(1))
 
