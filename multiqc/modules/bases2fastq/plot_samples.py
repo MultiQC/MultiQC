@@ -17,7 +17,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     for s_name in sample_data.keys():
         general_stats = dict()
         general_stats.update({"group": group_lookup_dict[s_name]})
-        general_stats.update({"project": project_lookup_dict.get(s_name,"")})
+        general_stats.update({"project": project_lookup_dict.get(s_name, "")})
         general_stats.update({"num_polonies_sample": sample_data[s_name]["NumPolonies"]})
         general_stats.update({"yield_sample": sample_data[s_name]["Yield"]})
         general_stats.update({"mean_base_quality_sample": sample_data[s_name]["QualityScoreMean"]})
@@ -74,11 +74,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         "suffix": "%",
     }
 
-    pconfig = {
-            "id": "sample_qc_metric_table",
-            "title": "Sample QC Metrics Table",
-            "no_violin": True
-        }
+    pconfig = {"id": "sample_qc_metric_table", "title": "Sample QC Metrics Table", "no_violin": True}
 
     plot_name = "Sample QC metrics table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
@@ -108,13 +104,12 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
     r1r2_split = 0
     for s_name in sorted(sample_data.keys()):
         for base in "ACTG":
-            base_s_name = "__".join([s_name,base])
+            base_s_name = "__".join([s_name, base])
             data[base_s_name] = {}
             R1 = sample_data[s_name]["Reads"][0]["Cycles"]
             r1r2_split = max(r1r2_split, len(R1))
 
     for s_name in sorted(sample_data.keys()):
-        
         R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         for cycle in range(len(R1)):
             base_no = cycle + 1
@@ -122,8 +117,10 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
             tot = sum([R1[cycle]["BaseComposition"][base] for base in ["A", "C", "T", "T"]])
 
             for base in "ACTG":
-                base_s_name = "__".join([s_name,base])
-                data[base_s_name].update({base_no: float(R1[cycle]["BaseComposition"][base] / float(tot)) * 100.0 if tot > 0 else None})
+                base_s_name = "__".join([s_name, base])
+                data[base_s_name].update(
+                    {base_no: float(R1[cycle]["BaseComposition"][base] / float(tot)) * 100.0 if tot > 0 else None}
+                )
 
         R2 = sample_data[s_name]["Reads"][1]["Cycles"]
         for cycle in range(len(R2)):
@@ -131,8 +128,10 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
             tot = sum([R2[cycle]["BaseComposition"][base] for base in ["A", "C", "T", "G"]])
 
             for base in "ACTG":
-                base_s_name = "__".join([s_name,base])
-                data[base_s_name].update({base_no: float(R2[cycle]["BaseComposition"][base] / float(tot)) * 100.0 if tot > 0 else None})
+                base_s_name = "__".join([s_name, base])
+                data[base_s_name].update(
+                    {base_no: float(R2[cycle]["BaseComposition"][base] / float(tot)) * 100.0 if tot > 0 else None}
+                )
 
     plot_content = data
 
@@ -175,7 +174,6 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
         r1r2_split = max(r1r2_split, R1_cycle_num)
 
     for s_name in sorted(sample_data.keys()):
-
         R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         R1_cycle_num = len(R1)
         for cycle in range(len(R1)):

@@ -19,9 +19,8 @@ def plot_run_stats(run_data, color_dict):
     num_polonies = dict()
     yields = dict()
     for run in run_names:
-
         # Index Assignment Polonies and Yields ###
-        #percent_assigned = run_data[run].get("PercentAssignedReads",100.0)
+        # percent_assigned = run_data[run].get("PercentAssignedReads",100.0)
         percent_assigned = run_data[run]["PercentAssignedReads"]
 
         percent_perfect_assigned = (
@@ -44,7 +43,7 @@ def plot_run_stats(run_data, color_dict):
         num_polonies[run] = num_polonies_run
 
         total_yield_run = OrderedDict()
-        total_yield = run_data[run].get("TotalYield",300.0)
+        total_yield = run_data[run].get("TotalYield", 300.0)
         total_yield_run["Perfect Index"] = total_yield * percent_perfect_total * 0.01
         total_yield_run["Mismatched Index"] = total_yield * percent_imperfect_total * 0.01
         total_yield_run["Unassigned"] = (
@@ -92,7 +91,7 @@ def tabulate_run_stats(run_data, color_dict):
     for s_name in run_data.keys():
         run_stats = dict()
         run_stats.update({"num_polonies_run": int(run_data[s_name]["NumPolonies"])})
-        run_stats.update({"percent_assigned_run": run_data[s_name].get("PercentAssignedReads",100.0)})
+        run_stats.update({"percent_assigned_run": run_data[s_name].get("PercentAssignedReads", 100.0)})
         run_stats.update({"yield_run": run_data[s_name]["AssignedYield"]})
         run_stats.update({"mean_base_quality_run": run_data[s_name]["QualityScoreMean"]})
         run_stats.update({"percent_q30_run": run_data[s_name]["PercentQ30"]})
@@ -251,7 +250,6 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     for s_name in run_data.keys():
         cycle_dict = dict()
         R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
-        R2CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["QualityScore50thPercentile"]})

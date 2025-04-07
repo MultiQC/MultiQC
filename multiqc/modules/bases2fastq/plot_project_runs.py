@@ -8,6 +8,7 @@ from multiqc.utils import config
 Functions for plotting per run information of bases2fastq
 """
 
+
 def tabulate_project_run_stats(run_data, color_dict):
     """
     Tabulate general information and statistics of each run
