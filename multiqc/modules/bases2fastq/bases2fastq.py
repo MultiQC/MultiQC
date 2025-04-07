@@ -15,9 +15,7 @@ from multiqc.modules.bases2fastq.plot_runs import (
     plot_base_quality_hist,
     plot_base_quality_by_cycle,
 )
-from multiqc.modules.bases2fastq.plot_project_runs import (
-    tabulate_project_run_stats
-)
+from multiqc.modules.bases2fastq.plot_project_runs import tabulate_project_run_stats
 from multiqc.modules.bases2fastq.plot_samples import (
     tabulate_sample_stats,
     sequence_content_plot,
@@ -30,6 +28,8 @@ log = logging.getLogger(__name__)
 
 
 MIN_POLONIES = 10000
+
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
@@ -51,8 +51,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.group_dict = dict()
         self.group_lookup_dict = dict()
         self.project_lookup_dict = dict()
-
-        projects_found = False
 
         # bases2fastq/run
         num_runs = 0
@@ -97,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
                 num_samples += 1
 
                 self.b2f_sample_data[run_analysis_sample_name] = sample_data
-                
+
             # skip run if in user provider ignore list
             if self.is_ignore_sample(run_analysis_name):
                 log.warning(f"skipping run:{run_analysis_name} due to --ignore-sample selection")
@@ -154,8 +152,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             for sample_name in samples:
                 run_analysis_sample_name = self.clean_s_name("__".join([run_analysis_name, sample_name]), f)
-                run_analysis_project_sample_name = self.clean_s_name("__".join([run_analysis_project_name, sample_name]), f)
-                
                 self.project_lookup_dict[run_analysis_sample_name] = project
 
             # skip project if in user provider ignore list
@@ -164,21 +160,19 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             num_projects += 1
-            
-            # remove samples 
+
+            # remove samples
             del data["Samples"]
 
             self.b2f_run_project_data[run_analysis_project_name] = data
             self.add_data_source(f=f, s_name=project, module="bases2fastq")
 
-      
         # ensure run/sample data found
         if num_projects == 0 and num_samples == 0:
             log.error("No samples or projects are found. Either file-size above limit or RunStats.json does not exist.")
             log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
             raise UserWarning
         log.info(f"Found {num_samples} samples and {num_projects} projects within the bases2fastq results")
-
 
         # process groups / projects
         for s_name in self.b2f_sample_data.keys():
@@ -262,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
         sorted_keys = sorted(data_keys, key=lambda x: (self.group_lookup_dict[x], x))
         sorted_data = {s_name: self.b2f_sample_data[s_name] for s_name in sorted_keys}
         self.b2f_sample_data = sorted_data
-        
+
         if len(self.b2f_run_data) == 0:
             log.warning("No run stats file found!")
         if len(self.b2f_sample_data) == 0:
@@ -300,7 +294,9 @@ class MultiqcModule(BaseMultiqcModule):
     def add_project_run_plots(self):
         plot_functions = [tabulate_project_run_stats]
         for func in plot_functions:
-            plot_html, plot_name, anchor, description, helptext, plot_data = func(self.b2f_run_project_data, self.run_color)
+            plot_html, plot_name, anchor, description, helptext, plot_data = func(
+                self.b2f_run_project_data, self.run_color
+            )
             self.add_section(name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext)
             self.write_data_file(plot_data, f"base2fastq_projects:{plot_name}")
 
