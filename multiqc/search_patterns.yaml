@@ -884,7 +884,7 @@ samtools/coverage:
   num_lines: 10
 samtools/markdup_txt:
   contents:
-    - '"COMMAND":'
+    - "^COMMAND:"
     - "samtools markdup"
   num_lines: 2
 samtools/markdup_json:
