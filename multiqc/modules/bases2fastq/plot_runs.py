@@ -1,5 +1,4 @@
 import math
-from collections import OrderedDict
 
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.utils import config
@@ -33,7 +32,7 @@ def plot_run_stats(run_data, color_dict):
             percent_assigned - percent_perfect_total
         )  # percentage of total polonies that is assigned but has index mismatch
 
-        num_polonies_run = OrderedDict()
+        num_polonies_run = {}
         polonies = run_data[run]["NumPolonies"]
         num_polonies_run["Perfect Index"] = math.ceil(polonies * percent_perfect_total * 0.01)
         num_polonies_run["Mismatched Index"] = math.ceil(polonies * percent_imperfect_total * 0.01)
@@ -42,7 +41,7 @@ def plot_run_stats(run_data, color_dict):
         )
         num_polonies[run] = num_polonies_run
 
-        total_yield_run = OrderedDict()
+        total_yield_run = {}
         total_yield = run_data[run].get("TotalYield", 300.0)
         total_yield_run["Perfect Index"] = total_yield * percent_perfect_total * 0.01
         total_yield_run["Mismatched Index"] = total_yield * percent_imperfect_total * 0.01
@@ -98,8 +97,7 @@ def tabulate_run_stats(run_data, color_dict):
         run_stats.update({"percent_q40_run": run_data[s_name]["PercentQ40"]})
         plot_content.update({s_name: run_stats})
 
-    headers = OrderedDict()
-
+    headers = {}
     headers["num_polonies_run"] = {
         "title": f"# Polonies ({config.base_count_prefix})",
         "description": f"The (total) number of polonies calculated for the run ({config.base_count_desc})",

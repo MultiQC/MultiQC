@@ -1,7 +1,4 @@
-import math
-from collections import OrderedDict
-
-from multiqc.plots import bargraph, linegraph, table
+from multiqc.plots import table
 from multiqc.utils import config
 
 """
@@ -23,8 +20,7 @@ def tabulate_project_run_stats(run_data, color_dict):
         run_stats.update({"percent_q40_run": run_data[s_name]["PercentQ40"]})
         plot_content.update({s_name: run_stats})
 
-    headers = OrderedDict()
-
+    headers = {}
     headers["num_polonies_run"] = {
         "title": f"# Polonies ({config.base_count_prefix})",
         "description": f"The (total) number of polonies calculated for the run ({config.base_count_desc})",

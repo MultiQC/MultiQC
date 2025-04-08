@@ -1,8 +1,5 @@
-import json
-from collections import OrderedDict
-
 from multiqc.plots import linegraph, table
-from multiqc.utils import config, report
+from multiqc import config
 
 """
 Functions for plotting per sample information of bases2fastq
@@ -25,7 +22,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         general_stats.update({"percent_q40_sample": sample_data[s_name]["PercentQ40"]})
         plot_content.update({s_name: general_stats})
 
-    headers = OrderedDict()
+    headers = {}
 
     headers["group"] = {
         "title": "Group",
