@@ -33,7 +33,6 @@ from typing import (
     Union,
 )
 
-import pandas as pd
 import yaml
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -1085,7 +1084,7 @@ def multiqc_dump_json(data_dir: Path):
                         # Flattening sample groups for export
                         flattened_sections: Dict[SectionKey, Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = {}
                         for section_key, section in general_stats_data.items():
-                            fl_sec: Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]] = dict()
+                            fl_sec = dict()
                             for _, rows in section.items():
                                 if isinstance(rows, list):
                                     for row in rows:

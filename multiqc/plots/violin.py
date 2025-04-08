@@ -16,6 +16,7 @@ from multiqc.core import tmp_dir
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
 from multiqc.plots.table_object import (
+    Cell,
     ColumnAnchor,
     ColumnDict,
     ColumnKeyT,
@@ -137,11 +138,11 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                     # Process metrics/columns
                     for _, row in sample_group.iterrows():
                         metric_name = row["metric_name"]
-                        val_by_metric[metric_name] = {
-                            "raw": row["val_raw"],
-                            "mod": row["val_mod"],
-                            "fmt": row["val_fmt"],
-                        }
+                        val_by_metric[metric_name] = Cell(
+                            raw=row["val_raw"],
+                            mod=row["val_mod"],
+                            fmt=row["val_fmt"],
+                        )
 
                         # Create header if it doesn't exist
                         if metric_name not in section_headers:
