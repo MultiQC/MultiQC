@@ -339,10 +339,10 @@ class NormalizedPlotInputData(BaseModel):
             merged_data = new_data
         else:
             # Merge using class-specific implementation
-            merged_data = cls.merge(old_data, new_data)
+            merged_data = cls.merge(old_data, new_data)  # type: ignore
 
         merged_data.save()
-        return merged_data
+        return merged_data  # type: ignore
 
     def to_df(self) -> pd.DataFrame:
         raise

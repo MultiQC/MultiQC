@@ -109,16 +109,16 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
         for dt_anchor, dt_group in df.groupby("dt_anchor", sort=True):
             # Prepare data structure for DataTable creation
-            data_dict = {}
-            headers_dict = {}
+            data_dict: Dict[SectionKey, SectionT] = {}
+            headers_dict: Dict[SectionKey, Dict[ColumnKey, ColumnMeta]] = {}
 
             # Track metrics and their order
             ordered_metrics = {}
 
             # Group by section
             for section_key, section_group in dt_group.groupby("section_key", sort=True):
-                val_by_sample_by_metric = {}
-                section_headers = {}
+                val_by_sample_by_metric: Dict[SampleName, Dict[ColumnKey, Cell]] = {}
+                section_headers: Dict[ColumnKey, ColumnMeta] = {}
 
                 # Sort metrics by their original index if available
                 if "metric_idx" in section_group.columns:
@@ -129,7 +129,7 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
                 # Process samples
                 for sample_name, sample_group in section_group.groupby("sample_name", sort=True):
-                    val_by_metric = {}
+                    val_by_metric: Dict[ColumnKey, Cell] = {}
 
                     # If we have metric_idx, sort by that first
                     if "metric_idx" in sample_group.columns:
@@ -138,7 +138,7 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                     # Process metrics/columns
                     for _, row in sample_group.iterrows():
                         metric_name = row["metric_name"]
-                        val_by_metric[metric_name] = Cell(
+                        val_by_metric[ColumnKey(str(metric_name))] = Cell(
                             raw=row["val_raw"],
                             mod=row["val_mod"],
                             fmt=row["val_fmt"],
@@ -151,12 +151,12 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
                     # Add sample data to section
                     if val_by_metric:
-                        val_by_sample_by_metric[sample_name] = val_by_metric
+                        val_by_sample_by_metric[SampleName(str(sample_name))] = val_by_metric
 
                 # Add section data and headers to dictionary
                 if val_by_sample_by_metric:
-                    data_dict[section_key] = val_by_sample_by_metric
-                    headers_dict[section_key] = section_headers
+                    data_dict[SectionKey(str(section_key))] = val_by_sample_by_metric
+                    headers_dict[SectionKey(str(section_key))] = section_headers
 
             # Create DataTable if we have data
             if data_dict:
@@ -310,6 +310,7 @@ def plot(
     else:
         data_list = data
 
+    headers_list: List[Dict[SectionKey, Dict[ColumnKey, ColumnDict]]]
     if headers is None:
         headers_list = [{}]
     elif not isinstance(headers, list):
