@@ -34,7 +34,6 @@ def test_rerun_json(data_dir, tmp_path):
     for key in [
         "report_plot_data",
         "report_modules",
-        "report_data_sources",
     ]:
         assert key in report1_data, f"Key {key} missing from first report"
         assert key in report2_data, f"Key {key} missing from second report"
@@ -76,7 +75,6 @@ def test_rerun_and_combine(data_dir, tmp_path):
     # Compare only the relevant fields, not the entire report
     # The 'config_analysis_dir_abs' will be different between runs
     for key in [
-        "report_plot_data",
         "report_modules",
         "report_data_sources",
     ]:

@@ -394,10 +394,10 @@ class Dataset(BaseDataset):
                         assert v is not None and str(v).strip != "", v
                         value_by_sample[row.sample] = v.raw
 
-            value_by_sample_by_metric[dt_column.rid] = value_by_sample
+            value_by_sample_by_metric[dt_column.clean_rid] = value_by_sample
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
-            dt_column_by_metric[dt_column.rid] = dt_column
+            dt_column_by_metric[dt_column.clean_rid] = dt_column
 
         # If all colors are the same, remove them
         if len(set([t_col.color for t_col in dt_column_by_metric.values()])) == 1:
@@ -713,16 +713,16 @@ class Dataset(BaseDataset):
         result += "|---|" + "|".join("---" for _ in headers) + "|\n"
         for sample in samples:
             if all(
-                sample not in self.violin_value_by_sample_by_metric.get(col.rid, {})
-                and sample not in self.scatter_value_by_sample_by_metric.get(col.rid, {})
+                sample not in self.violin_value_by_sample_by_metric.get(col.clean_rid, {})
+                and sample not in self.scatter_value_by_sample_by_metric.get(col.clean_rid, {})
                 for _, _, col in headers
             ):
                 continue
             pseudonym = report.anonymize_sample_name(sample)
             row = []
             for _, _, col in headers:
-                value = self.violin_value_by_sample_by_metric.get(col.rid, {}).get(
-                    sample, self.scatter_value_by_sample_by_metric.get(col.rid, {}).get(sample, "")
+                value = self.violin_value_by_sample_by_metric.get(col.clean_rid, {}).get(
+                    sample, self.scatter_value_by_sample_by_metric.get(col.clean_rid, {}).get(sample, "")
                 )
                 if value:
                     fmt = getattr(col, "format", None)
@@ -887,12 +887,12 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, col_key, header in self.datasets[0].dt.get_headers_in_order():
-                rid = header.rid
+                rid = header.clean_rid
                 for _, group_rows in list(self.datasets[0].dt.section_by_id.values())[idx].rows_by_sgroup.items():
                     for row in group_rows:
                         if col_key in row.data:
                             val = row.data[col_key]
-                            data.setdefault(row.sample, {})[rid] = val
+                            data.setdefault(row.sample, {})[rid] = val.raw
 
             import pandas as pd  # type: ignore
 
@@ -921,16 +921,16 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             # Make Plotly go.Table object and save it
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.datasets[0].dt.get_headers_in_order():
-                rid = header.rid
+                rid = header.clean_rid
                 for _, group_rows in list(self.datasets[0].dt.section_by_id.values())[idx].rows_by_sgroup.items():
                     for row in group_rows:
                         if metric in row.data:
                             val = row.data[metric]
-                            data.setdefault(row.sample, {})[rid] = val
+                            data.setdefault(row.sample, {})[rid] = val.raw
 
             values: List[List[Any]] = [list(data.keys())]
             for idx, metric, header in self.datasets[0].dt.get_headers_in_order():
-                rid = header.rid
+                rid = header.clean_rid
                 values.append([data[s].get(rid, "") for s in data.keys()])
 
             keys = list(data.keys())

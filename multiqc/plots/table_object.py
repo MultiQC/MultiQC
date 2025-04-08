@@ -66,6 +66,7 @@ def is_valid_value(val: Union[ExtValueT, None]) -> bool:
 
 class ColumnDict(TypedDict, total=False):
     rid: ColumnAnchor  # namespace + short_rid = ID unique within a table
+    clean_rid: ColumnAnchor  # can differ when rid is provided by user
     title: str
     description: str
     scale: Union[str, bool]
@@ -99,6 +100,7 @@ class ColumnMeta(ValidatedConfig):
     """
 
     rid: ColumnAnchor  # namespace + short_rid = ID unique within a table
+    clean_rid: ColumnAnchor  # can differ when rid is provided by user
     title: str
     description: str
     scale: Union[str, bool]
@@ -148,16 +150,19 @@ class ColumnMeta(ValidatedConfig):
 
         unclean_rid = col_dict.get("rid") or col_key
         legacy_short_rid = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")  # User configs can still use it
-        _rid = legacy_short_rid
-        # Prefixing with namepsace to get a unique column ID within a table across all sections
-        if namespace:
-            ns_slugified = re.sub(r"\W+", "_", str(namespace)).strip().strip("_").lower()
-            _rid = f"{ns_slugified}-{_rid}"
-        col_dict["rid"] = ColumnAnchor(report.save_htmlid(_rid, scope=table_anchor))
+        if "clean_rid" not in col_dict:
+            _rid = legacy_short_rid
+            # Prefixing with namepsace to get a unique column ID within a table across all sections
+            if namespace:
+                ns_slugified = re.sub(r"\W+", "_", str(namespace)).strip().strip("_").lower()
+                _rid = f"{ns_slugified}-{_rid}"
+            col_dict["clean_rid"] = ColumnAnchor(report.save_htmlid(_rid, scope=table_anchor))
+        if "rid" not in col_dict:
+            col_dict["rid"] = col_dict["clean_rid"]
 
         # Additionally override the header config assuming rid is used (for legacy docs)
         if header_config:
-            if col_config := header_config.get(col_dict["rid"], {}):
+            if col_config := header_config.get(col_dict["clean_rid"], {}):
                 for custom_k, custom_v in col_config.items():
                     col_dict[custom_k] = custom_v  # type: ignore
 
@@ -223,6 +228,7 @@ class ColumnMeta(ValidatedConfig):
             return item_id.lower() in [
                 str(s).lower()
                 for s in [
+                    col.clean_rid,
                     col.rid,
                     legacy_short_rid,
                     col_key,
@@ -631,7 +637,7 @@ def _process_and_format_value(val: ExtValueT, column: ColumnMeta, parse_numeric:
         try:
             val = column.modify(val)
         except Exception as e:  # User-provided modify function can raise any exception
-            logger.error(f"Error modifying table value '{column.rid}': '{val}'. {e}")
+            logger.error(f"Error modifying table value '{column.clean_rid}': '{val}'. {e}")
 
     # Values can be quoted to avoid parsing as a number, so need to remove those quotes
     if isinstance(val, str) and (
@@ -653,7 +659,7 @@ def _process_and_format_value(val: ExtValueT, column: ColumnMeta, parse_numeric:
                 # noinspection PyCallingNonCallable
                 valstr = fmt(val)
             except Exception as e:
-                logger.debug(f"Error applying format to table value '{column.rid}': '{val}'. {e}")
+                logger.debug(f"Error applying format to table value '{column.clean_rid}': '{val}'. {e}")
         elif isinstance(val, (int, float)):
             if fmt == r"{:,d}":
                 val = round(val)
@@ -667,7 +673,7 @@ def _process_and_format_value(val: ExtValueT, column: ColumnMeta, parse_numeric:
                 valstr = fmt.format(val)
             except Exception as e:
                 logger.debug(
-                    f"Error applying format string '{fmt}' to table value '{column.rid}': '{val}'. {e}. "
+                    f"Error applying format string '{fmt}' to table value '{column.clean_rid}': '{val}'. {e}. "
                     f"Check if your format string is correct."
                 )
     return Cell(raw=val_unmodified, mod=val, fmt=valstr)
@@ -785,7 +791,7 @@ def render_html(
         return s.replace('"', "&quot;").replace("'", "&#39;").replace("<", "&lt;").replace(">", "&gt;")
 
     for idx, col_key, header in dt.get_headers_in_order():
-        col_anchor: ColumnAnchor = header.rid
+        col_anchor: ColumnAnchor = header.clean_rid
 
         # Build the table header cell
         shared_key = ""
