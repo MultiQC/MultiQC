@@ -370,6 +370,19 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         """
         records = []
 
+        # Check if any of the x_values or y_values are strings
+        has_string_values = False
+        for dataset in self.data:
+            for series in dataset:
+                for x, y in series.pairs:
+                    if isinstance(x, str) or isinstance(y, str):
+                        has_string_values = True
+                        break
+                if has_string_values:
+                    break
+            if has_string_values:
+                break
+
         # Create a record for each data point in each series
         for ds_idx, dataset in enumerate(self.data):
             # Get dataset label if available
@@ -387,13 +400,21 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
 
             for series in dataset:
                 for x, y in series.pairs:
+                    # Convert values to string if any value in the dataset is a string
+                    if has_string_values:
+                        x_value = str(x) if x is not None else None
+                        y_value = str(y) if y is not None else None
+                    else:
+                        x_value = x
+                        y_value = y
+
                     record = {
                         "anchor": self.anchor,
                         "dataset_idx": ds_idx,
                         "dataset_label": dataset_label,
                         "sample_name": series.name,
-                        "x_value": x,
-                        "y_value": y,
+                        "x_value": x_value,
+                        "y_value": y_value,
                         "series_color": series.color,
                         "series_width": series.width,
                         "series_dash": series.dash,

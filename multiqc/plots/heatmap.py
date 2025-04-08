@@ -4,6 +4,7 @@ import logging
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
@@ -68,6 +69,126 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
     def is_empty(self) -> bool:
         return len(self.rows) == 0 or all(len(row) == 0 for row in self.rows)
 
+    def to_df(self) -> pd.DataFrame:
+        """
+        Convert the heatmap data to a pandas DataFrame for storage and reloading.
+        """
+        # Create a DataFrame with row indices, column indices, and values
+        data = []
+        for i, row in enumerate(self.rows):
+            y_cat = str(self.ycats[i]) if i < len(self.ycats) else str(i)
+            for j, val in enumerate(row):
+                x_cat = str(self.xcats[j]) if j < len(self.xcats) else str(j)
+                data.append({"row_idx": i, "col_idx": j, "row_cat": y_cat, "col_cat": x_cat, "value": val})
+
+        df = pd.DataFrame(data)
+
+        # Add config data as additional columns
+        config_dict = self.pconfig.model_dump()
+        for key, value in config_dict.items():
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                df[f"config_{key}"] = value
+
+        # Add anchor information
+        df["anchor"] = str(self.anchor)
+
+        return df
+
+    @classmethod
+    def from_df(
+        cls, df: pd.DataFrame, pconfig: Union[Dict, HeatmapConfig], anchor: Anchor
+    ) -> "HeatmapNormalizedInputData":
+        """
+        Create a HeatmapNormalizedInputData object from a pandas DataFrame.
+        """
+        # Filter out rows related to this anchor if there are multiple
+        if "anchor" in df.columns:
+            df = df[df["anchor"] == str(anchor)]
+
+        if df.empty:
+            # Return empty data if no valid rows found
+            pconf: HeatmapConfig = (
+                pconfig
+                if isinstance(pconfig, HeatmapConfig)
+                else cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
+            )
+            return HeatmapNormalizedInputData(
+                anchor=anchor,
+                rows=[],
+                xcats=[],
+                ycats=[],
+                pconfig=pconf,
+            )
+
+        # Extract config information that might have been serialized
+        config_cols = [col for col in df.columns if col.startswith("config_")]
+        config_data = {}
+        for col in config_cols:
+            key = col[7:]  # Remove "config_" prefix
+            if df[col].nunique() == 1:
+                config_data[key] = df[col].iloc[0]
+
+        # Create pconfig with merged data from the DataFrame and provided config
+        pconf: HeatmapConfig
+        if not isinstance(pconfig, HeatmapConfig):
+            pconf = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict({**config_data, **(pconfig or {})}))
+        else:
+            pconf = pconfig
+
+        # Extract and rebuild the 2D matrix
+        max_row_idx = df["row_idx"].max()
+        max_col_idx = df["col_idx"].max()
+
+        # Reconstruct xcats and ycats
+        xcats = []
+        ycats = []
+
+        # Get unique row and column categories in the order of indices
+        row_cats_df = df[["row_idx", "row_cat"]].drop_duplicates().sort_values("row_idx")
+        col_cats_df = df[["col_idx", "col_cat"]].drop_duplicates().sort_values("col_idx")
+
+        ycats = row_cats_df["row_cat"].tolist()
+        xcats = col_cats_df["col_cat"].tolist()
+
+        # Create empty matrix
+        rows = [[None for _ in range(max_col_idx + 1)] for _ in range(max_row_idx + 1)]
+
+        # Fill matrix with values
+        for _, row in df.iterrows():
+            rows[int(row["row_idx"])][int(row["col_idx"])] = row["value"]
+
+        return HeatmapNormalizedInputData(
+            anchor=anchor,
+            rows=rows,  # type: ignore
+            xcats=xcats,
+            ycats=ycats,
+            pconfig=pconf,
+        )
+
+    @classmethod
+    def merge(
+        cls, old_data: "HeatmapNormalizedInputData", new_data: "HeatmapNormalizedInputData"
+    ) -> "HeatmapNormalizedInputData":
+        """
+        Merge two HeatmapNormalizedInputData objects.
+        This method is called when merging data from multiple runs.
+        """
+        if old_data.xcats != new_data.xcats or old_data.ycats != new_data.ycats:
+            logger.warning("Cannot merge heatmaps with different dimensions or categories")
+            return new_data
+
+        # Merge the data by combining rows
+        combined_rows = old_data.rows + new_data.rows
+
+        # Use the newer config (from new_data)
+        return HeatmapNormalizedInputData(
+            anchor=new_data.anchor,
+            rows=combined_rows,
+            xcats=new_data.xcats,
+            ycats=new_data.ycats,
+            pconfig=new_data.pconfig,
+        )
+
     @staticmethod
     def create(
         data: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
@@ -120,20 +241,6 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
             xcats=list(xcats),
             ycats=list(ycats),
             pconfig=pconf,
-        )
-
-    @classmethod
-    def merge(
-        cls, old_data: "HeatmapNormalizedInputData", new_data: "HeatmapNormalizedInputData"
-    ) -> "HeatmapNormalizedInputData":
-        if old_data.xcats != new_data.xcats or old_data.ycats != new_data.ycats:
-            raise ValueError("Cannot merge heatmap plots with different xcats or ycats")
-        return HeatmapNormalizedInputData(
-            anchor=old_data.anchor,
-            rows=old_data.rows + new_data.rows,
-            xcats=old_data.xcats,
-            ycats=old_data.ycats,
-            pconfig=old_data.pconfig,
         )
 
 

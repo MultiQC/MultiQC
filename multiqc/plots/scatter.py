@@ -6,6 +6,7 @@ from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import numpy as np
+import pandas as pd
 from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
@@ -38,6 +39,57 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
     def is_empty(self) -> bool:
         return len(self.datasets) == 0 or all(len(ds) == 0 for ds in self.datasets)
+
+    def to_df(self) -> pd.DataFrame:
+        """
+        Convert the scatter plot data to a pandas DataFrame for storage and reloading.
+        """
+        data = []
+
+        # Serialize datasets, samplenames, and points
+        for dataset_idx, dataset in enumerate(self.datasets):
+            for sample_name, points in dataset.items():
+                if not isinstance(points, list):
+                    points = [points]
+
+                for point_idx, point in enumerate(points):
+                    row = {
+                        "dataset_idx": dataset_idx,
+                        "sample_name": sample_name,
+                        "point_idx": point_idx,
+                    }
+
+                    # Add all point data
+                    for key, val in point.items():
+                        row[f"point_{key}"] = val
+
+                    data.append(row)
+
+        df = pd.DataFrame(data)
+
+        # Add config data as additional columns
+        config_dict = self.pconfig.model_dump()
+        for key, value in config_dict.items():
+            # Only serialize primitive types directly
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                df[f"config_{key}"] = value
+
+        # Special handling for data_labels
+        if self.pconfig.data_labels:
+            for i, label in enumerate(self.pconfig.data_labels):
+                if isinstance(label, dict):
+                    df[f"data_label_{i}_type"] = "dict"
+                    for k, v in label.items():
+                        if isinstance(v, (str, int, float, bool)) or v is None:
+                            df[f"data_label_{i}_{k}"] = v
+                else:
+                    df[f"data_label_{i}_type"] = "str"
+                    df[f"data_label_{i}_value"] = label
+
+        # Add anchor information
+        df["anchor"] = str(self.anchor)
+
+        return df
 
     @staticmethod
     def create(
@@ -157,6 +209,118 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                     pconfig=merged_pconf,
                 )
             return new_data
+
+    @classmethod
+    def from_df(
+        cls, df: pd.DataFrame, pconfig: Union[Dict, ScatterConfig], anchor: Anchor
+    ) -> "ScatterNormalizedInputData":
+        """
+        Create a ScatterNormalizedInputData object from a pandas DataFrame.
+        """
+        # Filter out rows related to this anchor if there are multiple
+        if "anchor" in df.columns:
+            df = df[df["anchor"] == str(anchor)]
+
+        if df.empty:
+            # Return empty data if no valid rows found
+            pconf: ScatterConfig = (
+                pconfig
+                if isinstance(pconfig, ScatterConfig)
+                else cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
+            )
+            return ScatterNormalizedInputData(
+                anchor=anchor,
+                datasets=[],
+                pconfig=pconf,
+            )
+
+        # Extract config information that might have been serialized
+        config_cols = [col for col in df.columns if col.startswith("config_")]
+        config_data = {}
+        for col in config_cols:
+            key = col[7:]  # Remove "config_" prefix
+            if df[col].nunique() == 1:
+                config_data[key] = df[col].iloc[0]
+
+        # Extract data labels if any
+        data_labels = []
+        data_label_cols = set([col for col in df.columns if col.startswith("data_label_")])
+        if data_label_cols:
+            # Get the indices of all data labels
+            label_indices = set()
+            for col in data_label_cols:
+                parts = col.split("_")
+                if len(parts) >= 3:
+                    try:
+                        idx = int(parts[2])
+                        label_indices.add(idx)
+                    except ValueError:
+                        continue
+
+            # Reconstruct each data label
+            for idx in sorted(label_indices):
+                label_type_col = f"data_label_{idx}_type"
+                if label_type_col in df.columns and df[label_type_col].nunique() == 1:
+                    label_type = df[label_type_col].iloc[0]
+
+                    if label_type == "str":
+                        value_col = f"data_label_{idx}_value"
+                        if value_col in df.columns and df[value_col].nunique() == 1:
+                            data_labels.append(df[value_col].iloc[0])
+                    elif label_type == "dict":
+                        label_dict = {}
+                        label_dict_cols = [
+                            col
+                            for col in data_label_cols
+                            if col.startswith(f"data_label_{idx}_") and col != label_type_col
+                        ]
+                        for col in label_dict_cols:
+                            key = "_".join(col.split("_")[3:])  # Get key after data_label_{idx}_
+                            if df[col].nunique() == 1:
+                                label_dict[key] = df[col].iloc[0]
+                        data_labels.append(label_dict)
+
+        # Create pconfig with merged data
+        if data_labels:
+            config_data["data_labels"] = data_labels
+
+        pconf: ScatterConfig
+        if not isinstance(pconfig, ScatterConfig):
+            pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict({**config_data, **(pconfig or {})}))
+        else:
+            pconf = pconfig
+
+        # Reconstruct datasets
+        dataset_indices = sorted(df["dataset_idx"].unique())
+        datasets = []
+
+        for dataset_idx in dataset_indices:
+            dataset_df = df[df["dataset_idx"] == dataset_idx]
+            dataset = {}
+
+            # Group by sample name
+            for sample_name in dataset_df["sample_name"].unique():
+                sample_df = dataset_df[dataset_df["sample_name"] == sample_name]
+
+                # Extract points
+                points = []
+                for _, row in sample_df.iterrows():
+                    point = {}
+                    for col in row.index:
+                        if col.startswith("point_"):
+                            key = col[6:]  # Remove "point_" prefix
+                            point[key] = row[col]
+                    points.append(point)
+
+                dataset[sample_name] = points
+
+            datasets.append(dataset)
+
+        return ScatterNormalizedInputData(
+            anchor=anchor,
+            datasets=datasets,
+            pconfig=pconf,
+        )
 
 
 def plot(
