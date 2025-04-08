@@ -1,5 +1,5 @@
 from multiqc.plots import table
-from multiqc.utils import config
+from multiqc import config
 
 """
 Functions for plotting per run information of bases2fastq

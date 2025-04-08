@@ -1,7 +1,7 @@
 import math
 
 from multiqc.plots import bargraph, linegraph, table
-from multiqc.utils import config
+from multiqc import config
 
 
 """
