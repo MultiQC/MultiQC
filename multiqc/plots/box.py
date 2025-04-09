@@ -242,7 +242,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
                     setattr(pconf, k, v)
 
         # Group by dataset_idx to rebuild data structure
-        list_of_data_by_sample = []
+        list_of_data_by_sample: List[Dict[str, BoxT]] = []
 
         max_dataset_idx = df["dataset_idx"].max() if not df.empty else 0
 

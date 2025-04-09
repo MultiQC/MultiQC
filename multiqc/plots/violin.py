@@ -52,7 +52,7 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
         records = []
         # Track column types for proper DataFrame initialization
-        column_types = {
+        column_types: Dict[str, type] = {
             "anchor": str,
             "dt_anchor": str,
             "section_key": str,
@@ -62,7 +62,7 @@ class ViolinPlotInputData(NormalizedPlotInputData):
             "column_meta": str,
         }
         # Track if we've seen non-numeric values that would require string type
-        value_types = {
+        value_types: Dict[str, Union[type, None]] = {
             "val_raw": None,
             "val_mod": None,
             "val_fmt": str,
@@ -125,12 +125,10 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                             records.append(record)
 
         # Set default types for value columns if not determined
-        for col, current_type in value_types.items():
-            if current_type is None:
-                value_types[col] = object  # Use object as fallback for mixed or unknown types
-
-        # Update column_types with determined value types
-        column_types.update(value_types)
+        for col, t in value_types.items():
+            if t is None:
+                t = object  # Use object as fallback for mixed or unknown types
+            column_types[col] = t
 
         # Create DataFrame with appropriate dtypes
         return pd.DataFrame(records, dtype=object).astype(column_types)
