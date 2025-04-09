@@ -1120,7 +1120,8 @@ def _export_plot(fig, plot_path, write_kwargs):
             "This is likely due to a known issue in Kaleido. "
             "The plot will be skipped but the report will continue to generate."
         )
-        # We don't kill the thread as it might be unsafe, but we continue execution
+        # Kill the thread
+        export_thread.join()
         return False
     if export_thread.exception:
         # If there was an exception in the thread, log it
