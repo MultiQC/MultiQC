@@ -283,16 +283,6 @@ class BarPlotInputData(NormalizedPlotInputData):
         else:
             pconf = cast(BarPlotConfig, pconfig)
 
-        # Extract or update pconfig from DataFrame metadata
-        if any(col in df.columns for col in ["plot_title", "x_label", "y_label"]):
-            extracted_pconfig = cls._extract_pconfig_from_dataframe(df, anchor, df["category_name"].unique().tolist())
-            pconf_dict = pconf.model_dump(exclude_unset=True)
-            extracted_dict = extracted_pconfig.model_dump(exclude_unset=True)
-            # Update pconfig with values from df
-            for k, v in extracted_dict.items():
-                if k not in pconf_dict or pconf_dict[k] is None:
-                    setattr(pconf, k, v)
-
         # Group by dataset_idx to rebuild data structure
         datasets: List[DatasetT] = []
         cats_per_dataset: List[Dict[CatName, CatConf]] = []
@@ -350,32 +340,6 @@ class BarPlotInputData(NormalizedPlotInputData):
             data=datasets,
             cats=cats_per_dataset,
         )
-
-    @staticmethod
-    def _extract_pconfig_from_dataframe(df: pd.DataFrame, anchor: Anchor, all_categories: List[str]) -> BarPlotConfig:
-        """Extract pconfig from DataFrame metadata columns."""
-        pconfig_dict: Dict[str, Any] = {"id": str(anchor)}
-
-        # Get basic config from first row if available
-        if len(df) > 0:
-            first_row = df.iloc[0]
-            if "x_label" in df.columns and pd.notna(first_row.get("x_label")):
-                pconfig_dict["xlab"] = str(first_row.get("x_label"))
-            if "y_label" in df.columns and pd.notna(first_row.get("y_label")):
-                pconfig_dict["ylab"] = str(first_row.get("y_label"))
-            if "plot_title" in df.columns and pd.notna(first_row.get("plot_title")):
-                pconfig_dict["title"] = str(first_row.get("plot_title"))
-
-        # Extract dataset labels
-        dataset_labels = []
-        if not df.empty and "dataset_label" in df.columns:
-            unique_labels = df["dataset_label"].unique()
-            dataset_labels = [str(label) for label in unique_labels]
-
-        if dataset_labels:
-            pconfig_dict["data_labels"] = dataset_labels
-
-        return BarPlotConfig(**pconfig_dict)
 
     @classmethod
     def merge(
