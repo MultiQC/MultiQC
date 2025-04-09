@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 SampleNameT = Union[SampleName, str]
 CatName = NewType("CatName", str)
 CatNameT = Union[CatName, str]
-InputDatasetT = Dict[SampleName, Dict[CatName, Any]]
+InputDatasetT = Union[Mapping[SampleName, Mapping[CatName, Any]], Mapping[str, Mapping[str, Any]]]
 
 
 class CatConf(ValidatedConfig):
@@ -48,7 +48,13 @@ class CatConf(ValidatedConfig):
 
 
 # Either a list of strings, or a cat conf - a mapping from category names to their properties dicts or objects
-InputCategoriesT = Union[List[str], Dict[CatName, Dict[str, Any]], List[CatName]]
+InputCategoriesT = Union[
+    Sequence[str],
+    Mapping[CatName, Mapping[str, Any]],
+    Sequence[CatName],
+    Mapping[str, Mapping[str, Any]],
+    Sequence[str],
+]
 
 
 class BarPlotConfig(PConfig):

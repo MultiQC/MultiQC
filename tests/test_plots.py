@@ -509,5 +509,6 @@ def test_table_default_sort():
             defaultsort=[{"column": "y", "direction": "desc"}, {"column": "x", "direction": "asc"}],
         ),
     )
+    assert isinstance(p, Plot)
     sortlist = _get_sortlist(p.datasets[0].dt)
     assert sortlist == "[[2, 1], [1, 0]]"
