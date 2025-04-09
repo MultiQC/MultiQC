@@ -22,6 +22,8 @@ from multiqc.plots.table_object import (
     ColumnKeyT,
     ColumnMeta,
     DataTable,
+    ExtValueT,
+    GroupT,
     SectionT,
     TableConfig,
     ValueT,
@@ -109,16 +111,16 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
         for dt_anchor, dt_group in df.groupby("dt_anchor", sort=True):
             # Prepare data structure for DataTable creation
-            data_dict: Dict[SectionKey, SectionT] = {}
-            headers_dict: Dict[SectionKey, Dict[ColumnKey, ColumnMeta]] = {}
+            data_dict: Dict[SectionKey, Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]]] = {}
+            headers_dict: Dict[SectionKey, Dict[ColumnKey, ColumnDict]] = {}
 
             # Track metrics and their order
             ordered_metrics = {}
 
             # Group by section
             for section_key, section_group in dt_group.groupby("section_key", sort=True):
-                val_by_sample_by_metric: Dict[SampleName, Dict[ColumnKey, Cell]] = {}
-                section_headers: Dict[ColumnKey, ColumnMeta] = {}
+                val_by_sample_by_metric: Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]] = {}
+                section_headers: Dict[ColumnKey, ColumnDict] = {}
 
                 # Sort metrics by their original index if available
                 if "metric_idx" in section_group.columns:
@@ -129,7 +131,7 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
                 # Process samples
                 for sample_name, sample_group in section_group.groupby("sample_name", sort=True):
-                    val_by_metric: Dict[ColumnKey, Cell] = {}
+                    val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
 
                     # If we have metric_idx, sort by that first
                     if "metric_idx" in sample_group.columns:
@@ -161,7 +163,7 @@ class ViolinPlotInputData(NormalizedPlotInputData):
             # Create DataTable if we have data
             if data_dict:
                 dt = table_object.DataTable.create(
-                    data=data_dict,
+                    data=cast(Dict[SectionKey, SectionT], data_dict),
                     table_id=pconf.id,
                     table_anchor=Anchor(str(dt_anchor)),
                     pconfig=pconf.model_copy(),
@@ -310,7 +312,7 @@ def plot(
     else:
         data_list = data
 
-    headers_list: List[Dict[SectionKey, Dict[ColumnKey, ColumnDict]]]
+    headers_list: List[Dict[ColumnKeyT, ColumnDict]]
     if headers is None:
         headers_list = [{}]
     elif not isinstance(headers, list):

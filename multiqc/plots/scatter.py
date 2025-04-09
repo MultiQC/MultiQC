@@ -223,7 +223,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
         if df.empty:
             # Return empty data if no valid rows found
-            pconf: ScatterConfig = (
+            pconf = (
                 pconfig
                 if isinstance(pconfig, ScatterConfig)
                 else cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
@@ -284,7 +284,6 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
         if data_labels:
             config_data["data_labels"] = data_labels
 
-        pconf: ScatterConfig
         if not isinstance(pconfig, ScatterConfig):
             pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict({**config_data, **(pconfig or {})}))
         else:

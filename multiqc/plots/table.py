@@ -39,7 +39,7 @@ def plot(
     data: SectionT,
     headers: Optional[Dict[ColumnKeyT, ColumnDict]] = None,
     pconfig: Union[Dict[str, Any], TableConfig, None] = None,
-) -> Union["ViolinPlot", str]:
+) -> Union["ViolinPlot", str, None]:
     """Return HTML for a MultiQC table.
     :param data: A list of data dicts
     :param headers: A list of dicts with information

@@ -107,7 +107,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
 
         if df.empty:
             # Return empty data if no valid rows found
-            pconf: HeatmapConfig = (
+            pconf = (
                 pconfig
                 if isinstance(pconfig, HeatmapConfig)
                 else cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
@@ -129,7 +129,6 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
                 config_data[key] = df[col].iloc[0]
 
         # Create pconfig with merged data from the DataFrame and provided config
-        pconf: HeatmapConfig
         if not isinstance(pconfig, HeatmapConfig):
             pconf = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict({**config_data, **(pconfig or {})}))
         else:
@@ -196,7 +195,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         ycats: Optional[Sequence[Union[str, int]]] = None,
         pconfig: Union[Dict[str, Any], HeatmapConfig, None] = None,
     ) -> "HeatmapNormalizedInputData":
-        pconf: HeatmapConfig = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
+        pconf = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
 
         rows: List[List[ElemT]]
         if isinstance(data, dict):

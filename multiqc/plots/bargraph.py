@@ -122,9 +122,9 @@ class BarPlotInputData(NormalizedPlotInputData):
             for val_by_cat_by_sample in raw_datasets:
                 ds_cats: List[CatName] = []
                 for sample_name, val_by_cat in val_by_cat_by_sample.items():
-                    for cat_name in val_by_cat.keys():
-                        if cat_name not in raw_cats_per_ds:
-                            ds_cats.append(CatName(cat_name))
+                    for _cat_name in val_by_cat.keys():
+                        if _cat_name not in raw_cats_per_ds:
+                            ds_cats.append(CatName(_cat_name))
                 raw_cats_per_ds.append(ds_cats)
         elif isinstance(cats, List) and isinstance(cats[0], str):
             # ["Cat1", "Cat2"] - list of strings for one dataset
@@ -272,14 +272,12 @@ class BarPlotInputData(NormalizedPlotInputData):
 
         # Handle None case
         if df is None or df.empty:
-            pconf: BarPlotConfig
             if isinstance(pconfig, dict):
                 pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
             else:
                 pconf = cast(BarPlotConfig, pconfig)
             return cls(anchor=anchor, pconfig=pconf, data=[], cats=[])
 
-        pconf: BarPlotConfig
         if isinstance(pconfig, dict):
             pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
         else:
@@ -296,8 +294,8 @@ class BarPlotInputData(NormalizedPlotInputData):
                     setattr(pconf, k, v)
 
         # Group by dataset_idx to rebuild data structure
-        datasets = []
-        cats_per_dataset = []
+        datasets: List[DatasetT] = []
+        cats_per_dataset: List[Dict[CatName, CatConf]] = []
 
         max_dataset_idx = df["dataset_idx"].max() if not df.empty else 0
 
@@ -321,7 +319,7 @@ class BarPlotInputData(NormalizedPlotInputData):
                 for _, row in sample_group.iterrows():
                     category_name = row["category_name"]
                     value = row["value"]
-                    sample_data[category_name] = value
+                    sample_data[CatName(str(category_name))] = value
 
                     # Process category metadata if available
                     if "cat_meta" in row and pd.notna(row["cat_meta"]):
@@ -341,7 +339,7 @@ class BarPlotInputData(NormalizedPlotInputData):
 
                 # Add sample data if not empty
                 if sample_data:
-                    dataset[sample_name] = sample_data
+                    dataset[SampleName(str(sample_name))] = sample_data
 
             datasets.append(dataset)
             cats_per_dataset.append(cats_dict)
@@ -414,7 +412,7 @@ class BarPlotInputData(NormalizedPlotInputData):
             new_df["run_id"] = config.kwargs["run_id"]
 
         # If we have both old and new data, merge them
-        merged_df = None
+        merged_df = new_df
         if old_df is not None and not old_df.empty:
             # Make sure old data has run_id
             if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
@@ -438,8 +436,6 @@ class BarPlotInputData(NormalizedPlotInputData):
                     dedupe_columns.append("run_id")
 
                 merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
-        else:
-            merged_df = new_df
 
         # Save the merged dataframe
         file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"

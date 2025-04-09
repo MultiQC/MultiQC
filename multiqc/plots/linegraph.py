@@ -401,6 +401,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
             for series in dataset:
                 for x, y in series.pairs:
                     # Convert values to string if any value in the dataset is a string
+                    x_value: Union[KeyT, str, None]
+                    y_value: Union[ValT, str, None]
                     if has_string_values:
                         x_value = str(x) if x is not None else None
                         y_value = str(y) if y is not None else None

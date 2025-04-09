@@ -47,7 +47,7 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plot import Plot
-from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
+from multiqc.plots.table_object import Cell, ColumnDict, InputRow, SampleName, ValueT
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section, SectionKey
 from multiqc.utils import megaqc
@@ -1088,7 +1088,8 @@ def multiqc_dump_json(data_dir: Path):
                             for _, rows in section.items():
                                 if isinstance(rows, list):
                                     for row in rows:
-                                        fl_sec[row.sample] = row.data
+                                        vals = {k: v.raw if isinstance(v, Cell) else v for k, v in row.data.items()}
+                                        fl_sec[row.sample] = vals
                                 else:
                                     fl_sec = rows  # old format without grouping, in case if user plugins override it
                             flattened_sections[section_key] = fl_sec

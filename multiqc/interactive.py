@@ -266,7 +266,8 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     """
 
     data: Dict[str, Dict] = defaultdict(dict)
-    for rows_by_group, header in zip(report.general_stats_data, report.general_stats_headers):
+    for section_key, rows_by_group in report.general_stats_data.items():
+        header = report.general_stats_headers[section_key]
         for s, rows in rows_by_group.items():
             if sample and s != sample:
                 continue

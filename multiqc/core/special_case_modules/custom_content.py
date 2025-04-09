@@ -502,14 +502,18 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig["parse_numeric"] = False
 
                 plot = (table if plot_type == PlotType.TABLE else violin).plot(
-                    plot_datasets, headers=headers, pconfig=pconfig
+                    plot_datasets,  # type: ignore
+                    headers=headers,
+                    pconfig=pconfig,  # type: ignore
                 )
 
             # Bar plot
             elif plot_type == PlotType.BAR:
                 ccdict.data = [{str(k): v for k, v in ds.items()} for ds in plot_datasets]
                 plot = bargraph.plot(
-                    plot_datasets, ccdict.config.get("categories"), pconfig=bargraph.BarPlotConfig(**pconfig)
+                    plot_datasets,  # type: ignore
+                    ccdict.config.get("categories"),
+                    pconfig=bargraph.BarPlotConfig(**pconfig),  # type: ignore
                 )
 
             # Line plot
@@ -529,7 +533,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
                 violin_data = cast(List[Tuple[SectionKey, Mapping[str, Any]]], plot_datasets)
-                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))
+                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))  # type: ignore
 
             # Raw HTML
             elif plot_type == PlotType.HTML:
