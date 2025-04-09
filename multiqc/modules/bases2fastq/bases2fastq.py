@@ -5,7 +5,7 @@ import logging
 import random
 import uuid
 
-from multiqc.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.utils import mqc_colour
 
 from multiqc.modules.bases2fastq.plot_runs import (
@@ -75,8 +75,6 @@ class MultiqcModule(BaseMultiqcModule):
                 sample_name = sample_data["SampleName"]
                 sample_data["RunName"] = run_name
 
-                self.sample_id_to_run[sample_id] = run_analysis_name
-
                 run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
 
                 num_polonies = sample_data["NumPolonies"]
@@ -87,28 +85,22 @@ class MultiqcModule(BaseMultiqcModule):
                     continue
 
                 # skip run if in user provider ignore list
+                if self.is_ignore_sample(sample_id):
+                    continue
                 if self.is_ignore_sample(run_analysis_sample_name):
-                    log.warning(f"skipping sample:{run_analysis_sample_name} due to --ignore-sample selection")
                     continue
 
-                num_samples += 1
-
+                self.sample_id_to_run[sample_id] = run_analysis_name
                 self.b2f_sample_data[run_analysis_sample_name] = sample_data
+                num_samples += 1
 
             # skip run if in user provider ignore list
             if self.is_ignore_sample(run_analysis_name):
-                log.warning(f"skipping run:{run_analysis_name} due to --ignore-sample selection")
                 continue
 
             num_runs += 1
-
             self.b2f_run_data[run_analysis_name] = data
-
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
-
-        # if all RunStats.json too large, none will be found.  Guide customer and Exit at this point.
-        if len(self.sample_id_to_run) != 0:
-            log.info(f"Found {num_runs} total RunStats.json")
 
         # Checking if run lengths configurations are the same for all samples.
         self.run_r1r2_lens = [
@@ -149,15 +141,13 @@ class MultiqcModule(BaseMultiqcModule):
             run_analysis_project_name = "__".join([run_name, project, analysis_id])
             run_analysis_project_name = self.clean_s_name(run_analysis_project_name, f)
 
+            # skip project if in user provider ignore list
+            if self.is_ignore_sample(run_analysis_project_name):
+                continue
+
             for sample_name in samples:
                 run_analysis_sample_name = self.clean_s_name("__".join([run_analysis_name, sample_name]), f)
                 self.project_lookup_dict[run_analysis_sample_name] = project
-
-            # skip project if in user provider ignore list
-            if self.is_ignore_sample(run_analysis_project_name):
-                log.warning(f"skipping project:{run_analysis_project_name} due to --ignore-sample selection")
-                continue
-
             num_projects += 1
 
             # remove samples
@@ -166,12 +156,13 @@ class MultiqcModule(BaseMultiqcModule):
             self.b2f_run_project_data[run_analysis_project_name] = data
             self.add_data_source(f=f, s_name=project, module="bases2fastq")
 
+        # if all RunStats.json too large, none will be found.  Guide customer and Exit at this point.
+        if len(self.sample_id_to_run) != 0:
+            log.info(f"Found {num_runs} total RunStats.json")
+
         # ensure run/sample data found
         if num_projects == 0 and num_samples == 0:
-            log.error("No samples or projects are found. Either file-size above limit or RunStats.json does not exist.")
-            log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
-            raise ModuleNotFoundError
-
+            raise ModuleNoSamplesFound
         log.info(f"Found {num_samples} samples and {num_projects} projects within the bases2fastq results")
 
         # Superfluous function call to confirm that it is used in this module
