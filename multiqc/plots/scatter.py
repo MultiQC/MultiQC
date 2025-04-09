@@ -3,13 +3,14 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import numpy as np
+import pandas as pd
 from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
-from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, plot_anchor
+from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.types import Anchor, SampleName
 
 logger = logging.getLogger(__name__)
@@ -32,28 +33,314 @@ ValueT = Union[str, float, int]
 PointT = Dict[str, ValueT]
 
 
+class ScatterNormalizedInputData(NormalizedPlotInputData):
+    datasets: List[Dict[str, Any]]
+    pconfig: ScatterConfig
+
+    def is_empty(self) -> bool:
+        return len(self.datasets) == 0 or all(len(ds) == 0 for ds in self.datasets)
+
+    def to_df(self) -> pd.DataFrame:
+        """
+        Convert the scatter plot data to a pandas DataFrame for storage and reloading.
+        """
+        data = []
+
+        # Serialize datasets, samplenames, and points
+        for dataset_idx, dataset in enumerate(self.datasets):
+            for sample_name, points in dataset.items():
+                if not isinstance(points, list):
+                    points = [points]
+
+                for point_idx, point in enumerate(points):
+                    row = {
+                        "dataset_idx": dataset_idx,
+                        "sample_name": sample_name,
+                        "point_idx": point_idx,
+                    }
+
+                    # Add all point data
+                    for key, val in point.items():
+                        row[f"point_{key}"] = val
+
+                    data.append(row)
+
+        df = pd.DataFrame(data)
+
+        # Add config data as additional columns
+        config_dict = self.pconfig.model_dump()
+        for key, value in config_dict.items():
+            # Only serialize primitive types directly
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                df[f"config_{key}"] = value
+
+        # Special handling for data_labels
+        if self.pconfig.data_labels:
+            for i, label in enumerate(self.pconfig.data_labels):
+                if isinstance(label, dict):
+                    df[f"data_label_{i}_type"] = "dict"
+                    for k, v in label.items():
+                        if isinstance(v, (str, int, float, bool)) or v is None:
+                            df[f"data_label_{i}_{k}"] = v
+                else:
+                    df[f"data_label_{i}_type"] = "str"
+                    df[f"data_label_{i}_value"] = label
+
+        # Add anchor information
+        df["anchor"] = str(self.anchor)
+
+        return df
+
+    @staticmethod
+    def create(
+        data: Union[Dict[str, Any], List[Dict[str, Any]]],
+        pconfig: Union[Mapping[str, Any], ScatterConfig, None] = None,
+    ) -> "ScatterNormalizedInputData":
+        pconf: ScatterConfig = cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
+
+        # Given one dataset - turn it into a list
+        if not isinstance(data, list):
+            data = [data]  # type: ignore
+
+        return ScatterNormalizedInputData(
+            anchor=plot_anchor(pconf),
+            datasets=data,
+            pconfig=pconf,
+        )
+
+    @classmethod
+    def merge(
+        cls, old_data: "ScatterNormalizedInputData", new_data: "ScatterNormalizedInputData"
+    ) -> "ScatterNormalizedInputData":
+        """
+        Merge normalized data from old run and new run, matching by data labels when available
+        """
+        # Create dictionaries to map data_labels to datasets
+        old_datasets_by_label = {}
+        new_datasets_by_label = {}
+
+        # Create a list for merged datasets
+        merged_datasets = []
+
+        # If data_labels exist, use them as keys for matching datasets
+        if old_data.pconfig.data_labels and new_data.pconfig.data_labels:
+            # First build mappings from label IDs to datasets
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.datasets):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    old_datasets_by_label[label_id] = old_data.datasets[i]
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.datasets):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    new_datasets_by_label[label_id] = new_data.datasets[i]
+
+            # Create a dictionary to store merged data_labels
+            merged_data_labels = []
+            data_labels_by_id = {}
+
+            # Store all data labels by their ID
+            for i, dl in enumerate(old_data.pconfig.data_labels):
+                if i < len(old_data.datasets):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    data_labels_by_id[label_id] = dl
+
+            for i, dl in enumerate(new_data.pconfig.data_labels):
+                if i < len(new_data.datasets):
+                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
+                    # New data labels override old ones with the same ID
+                    data_labels_by_id[label_id] = dl
+
+            # First process datasets that exist in both old and new data
+            for label_id, old_ds in old_datasets_by_label.items():
+                if label_id in new_datasets_by_label:
+                    new_ds = new_datasets_by_label[label_id]
+                    # Merge datasets - for scatter plots, combine all points
+                    # Create a sample-to-points mapping from old dataset
+                    sample_to_points = defaultdict(list)
+                    for sample_name, points in old_ds.items():
+                        if isinstance(points, list):
+                            sample_to_points[sample_name].extend(points)
+                        else:
+                            sample_to_points[sample_name].append(points)
+
+                    # Add points from new dataset
+                    for sample_name, points in new_ds.items():
+                        if isinstance(points, list):
+                            sample_to_points[sample_name].extend(points)
+                        else:
+                            sample_to_points[sample_name].append(points)
+
+                    # Convert back to a regular dict
+                    merged_ds = dict(sample_to_points)
+                    merged_datasets.append(merged_ds)
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+                    # Mark as processed
+                    new_datasets_by_label.pop(label_id)
+                else:
+                    # Only in old data
+                    merged_datasets.append(old_ds)
+                    merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Then add datasets that only exist in new data
+            for label_id, new_ds in new_datasets_by_label.items():
+                merged_datasets.append(new_ds)
+                merged_data_labels.append(data_labels_by_id[label_id])
+
+            # Create a new pconfig with merged data_labels
+            merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
+            merged_pconf.data_labels = merged_data_labels
+
+            return ScatterNormalizedInputData(
+                anchor=new_data.anchor,
+                datasets=merged_datasets,
+                pconfig=merged_pconf,
+            )
+        else:
+            # If no data labels, preserve old behavior (return new data)
+            # But combine extra_series if present
+            if old_data.pconfig.extra_series and new_data.pconfig.extra_series is None:
+                merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
+                merged_pconf.extra_series = old_data.pconfig.extra_series
+                return ScatterNormalizedInputData(
+                    anchor=new_data.anchor,
+                    datasets=new_data.datasets,
+                    pconfig=merged_pconf,
+                )
+            return new_data
+
+    @classmethod
+    def from_df(
+        cls, df: pd.DataFrame, pconfig: Union[Dict, ScatterConfig], anchor: Anchor
+    ) -> "ScatterNormalizedInputData":
+        """
+        Create a ScatterNormalizedInputData object from a pandas DataFrame.
+        """
+        # Filter out rows related to this anchor if there are multiple
+        if "anchor" in df.columns:
+            df = df[df["anchor"] == str(anchor)]
+
+        if df.empty:
+            # Return empty data if no valid rows found
+            pconf = (
+                pconfig
+                if isinstance(pconfig, ScatterConfig)
+                else cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
+            )
+            return ScatterNormalizedInputData(
+                anchor=anchor,
+                datasets=[],
+                pconfig=pconf,
+            )
+
+        # Extract config information that might have been serialized
+        config_cols = [col for col in df.columns if col.startswith("config_")]
+        config_data = {}
+        for col in config_cols:
+            key = col[7:]  # Remove "config_" prefix
+            if df[col].nunique() == 1:
+                config_data[key] = df[col].iloc[0]
+
+        # Extract data labels if any
+        data_labels = []
+        data_label_cols = set([col for col in df.columns if col.startswith("data_label_")])
+        if data_label_cols:
+            # Get the indices of all data labels
+            label_indices = set()
+            for col in data_label_cols:
+                parts = col.split("_")
+                if len(parts) >= 3:
+                    try:
+                        idx = int(parts[2])
+                        label_indices.add(idx)
+                    except ValueError:
+                        continue
+
+            # Reconstruct each data label
+            for idx in sorted(label_indices):
+                label_type_col = f"data_label_{idx}_type"
+                if label_type_col in df.columns and df[label_type_col].nunique() == 1:
+                    label_type = df[label_type_col].iloc[0]
+
+                    if label_type == "str":
+                        value_col = f"data_label_{idx}_value"
+                        if value_col in df.columns and df[value_col].nunique() == 1:
+                            data_labels.append(df[value_col].iloc[0])
+                    elif label_type == "dict":
+                        label_dict = {}
+                        label_dict_cols = [
+                            col
+                            for col in data_label_cols
+                            if col.startswith(f"data_label_{idx}_") and col != label_type_col
+                        ]
+                        for col in label_dict_cols:
+                            key = "_".join(col.split("_")[3:])  # Get key after data_label_{idx}_
+                            if df[col].nunique() == 1:
+                                label_dict[key] = df[col].iloc[0]
+                        data_labels.append(label_dict)
+
+        # Create pconfig with merged data
+        if data_labels:
+            config_data["data_labels"] = data_labels
+
+        if not isinstance(pconfig, ScatterConfig):
+            pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict({**config_data, **(pconfig or {})}))
+        else:
+            pconf = pconfig
+
+        # Reconstruct datasets
+        dataset_indices = sorted(df["dataset_idx"].unique())
+        datasets = []
+
+        for dataset_idx in dataset_indices:
+            dataset_df = df[df["dataset_idx"] == dataset_idx]
+            dataset = {}
+
+            # Group by sample name
+            for sample_name in dataset_df["sample_name"].unique():
+                sample_df = dataset_df[dataset_df["sample_name"] == sample_name]
+
+                # Extract points
+                points = []
+                for _, row in sample_df.iterrows():
+                    point = {}
+                    for col in row.index:
+                        if col.startswith("point_"):
+                            key = col[6:]  # Remove "point_" prefix
+                            point[key] = row[col]
+                    points.append(point)
+
+                dataset[sample_name] = points
+
+            datasets.append(dataset)
+
+        return ScatterNormalizedInputData(
+            anchor=anchor,
+            datasets=datasets,
+            pconfig=pconf,
+        )
+
+
 def plot(
-    data: Union[Mapping[str, Any], Sequence[Mapping[str, Any]]],
+    data: Union[Dict[str, Any], List[Dict[str, Any]]],
     pconfig: Union[Mapping[str, Any], ScatterConfig, None],
-) -> "ScatterPlot":
+) -> Union["ScatterPlot", str, None]:
     """
     Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
+    inputs: ScatterNormalizedInputData = ScatterNormalizedInputData.create(data, pconfig)
+    inputs = ScatterNormalizedInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
-    anchor = plot_anchor(pconf)
-
-    # Given one dataset - turn it into a list
-    if not isinstance(data, list):
-        data = [data]  # type: ignore
-
+    pconf = inputs.pconfig
     sample_names = []
-
     plotdata: List[List[Dict[str, Any]]] = list()
-    for data_index, ds in enumerate(data):
+    for data_index, ds in enumerate(inputs.datasets):
         d: List[Dict[str, Any]] = list()
         for s_name in ds:
             sample_names.append(SampleName(s_name))
@@ -107,7 +394,7 @@ def plot(
             pconf.xmax = pconf.xmax if pconf.xmax is not None else max_val
             pconf.ymax = pconf.ymax if pconf.ymax is not None else max_val
 
-    # Add on annotation data series
+    # Add extra annotation data series
     # noinspection PyBroadException
     try:
         if pconf.extra_series:
@@ -127,7 +414,7 @@ def plot(
     return ScatterPlot.create(
         points_lists=plotdata,
         pconfig=pconf,
-        anchor=anchor,
+        anchor=inputs.anchor,
     )
 
 

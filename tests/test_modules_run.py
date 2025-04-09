@@ -7,6 +7,7 @@ import pytest
 from multiqc import BaseMultiqcModule, config, parse_logs, report, reset
 from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.update_config import ClConfig, update_config
+from multiqc.types import SectionKey
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
 
@@ -197,5 +198,9 @@ def test_path_filters(multiqc_reset, tmp_path, data_dir, anchors, expected_raw_d
     assert report.modules[1].saved_raw_data[expected_raw_data_keys[1]].keys() == {
         Path(fn).name for fn in expected_pe_files
     }
-    assert report.general_stats_data[0].keys() == {Path(fn).name for fn in expected_se_files}
-    assert report.general_stats_data[1].keys() == {Path(fn).name for fn in expected_pe_files}
+    assert set(report.general_stats_data[SectionKey(anchors[0] or "adapterremoval")].keys()) == {
+        Path(fn).name for fn in expected_se_files
+    }
+    assert set(report.general_stats_data[SectionKey(anchors[1] or "adapterremoval-1")].keys()) == {
+        Path(fn).name for fn in expected_pe_files
+    }

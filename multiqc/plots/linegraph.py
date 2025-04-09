@@ -1,17 +1,29 @@
 """MultiQC functions to plot a linegraph"""
 
 import io
+import json
 import logging
 import os
 import random
-from itertools import zip_longest
-from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, TypeVar, Union, cast
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
 
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from multiqc import config, report
-from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, convert_dash_style, plot_anchor
+from multiqc.core import tmp_dir
+from multiqc.plots.plot import (
+    BaseDataset,
+    NormalizedPlotInputData,
+    PConfig,
+    Plot,
+    PlotType,
+    convert_dash_style,
+    plot_anchor,
+)
 from multiqc.types import Anchor, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.utils.util_functions import update_dict
@@ -332,140 +344,327 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
         return LinePlot(**model.__dict__, sample_names=sample_names)
 
 
-class LinePlotInputData(BaseModel, Generic[KeyT, ValT]):
+class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
+    """
+    Represents normalized input data for a line plot.
+
+    We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
+    allow optional categories, categories as strings or as dicts or as objects. We want
+    to normalize the input data to dump it to parequet, before we use it to plot.
+    """
+
     data: List[List[Series[KeyT, ValT]]]
     pconfig: LinePlotConfig
     sample_names: List[SampleName]
 
+    def is_empty(self) -> bool:
+        return len(self.data) == 0 or all(len(ds) == 0 for ds in self.data)
 
-def normalize_inputs(
-    data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
-    pconfig: Union[Dict[str, Any], LinePlotConfig, None] = None,
-) -> LinePlotInputData:
-    """
-    We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
-    allow optional categories, categories as strings or as dicts or as objects. We want
-    to normalize the input data before we save it to intermediate format and plot.
-    """
-    pconf: LinePlotConfig = cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
+    def to_df(self) -> pd.DataFrame:
+        """
+        Save plot data to a parquet file using a tabular representation that's
+        optimized for cross-run analysis.
 
-    # Given one dataset - turn it into a list
-    raw_dataset_list: List[DatasetT]
-    if isinstance(data, Sequence):
-        raw_dataset_list = list(data)
-    else:
-        raw_dataset_list = [data]
-    del data
+        Instead of serializing complex nested structures, we create a structured
+        table with explicit columns for series data.
+        """
+        records = []
 
-    # Normalise data labels
-    if pconf.data_labels:
-        if len(pconf.data_labels) != len(raw_dataset_list):
-            raise ValueError(
-                f"Length of data_labels does not match the number of datasets. "
-                f"Please check your module code and ensure that the data_labels "
-                f"list is the same length as the data list: "
-                f"{len(pconf.data_labels)} != {len(raw_dataset_list)}. pconfig={pconf}"
-            )
-        pconf.data_labels = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconf.data_labels]
-    else:
-        pconf.data_labels = []
+        # Check if any of the x_values or y_values are strings
+        has_string_values = False
+        for dataset in self.data:
+            for series in dataset:
+                for x, y in series.pairs:
+                    if isinstance(x, str) or isinstance(y, str):
+                        has_string_values = True
+                        break
+                if has_string_values:
+                    break
+            if has_string_values:
+                break
 
-    sample_names = []
-
-    datasets: List[List[Series[KeyT, ValT]]] = []
-    for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
-        list_of_series: List[Series[Any, Any]] = []
-        for s in sorted(raw_data_by_sample.keys()):
-            sample_names.append(SampleName(s))
-            x_to_y = raw_data_by_sample[s]
-            if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
-                if isinstance(x_to_y[0], tuple):
-                    x_to_y = dict(x_to_y)
+        # Create a record for each data point in each series
+        for ds_idx, dataset in enumerate(self.data):
+            # Get dataset label if available
+            dataset_label = None
+            if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
+                label = self.pconfig.data_labels[ds_idx]
+                if isinstance(label, dict) and "name" in label:
+                    dataset_label = label["name"]
+                elif isinstance(label, str):
+                    dataset_label = label
                 else:
-                    x_to_y = {i: y for i, y in enumerate(x_to_y)}
-            dl = pconf.data_labels[ds_idx] if pconf.data_labels else None
-            series: Series[Any, Any] = _make_series_dict(pconf, dl, s, x_to_y)
-            if pconf.hide_empty and not series.pairs:
-                continue
-            list_of_series.append(series)
-        datasets.append(list_of_series)
+                    dataset_label = f"Dataset {ds_idx + 1}"
+            else:
+                dataset_label = f"Dataset {ds_idx + 1}"
 
-    # Return normalized data and config
-    return LinePlotInputData(data=datasets, pconfig=pconf, sample_names=sample_names)
+            for series in dataset:
+                for x, y in series.pairs:
+                    # Convert values to string if any value in the dataset is a string
+                    x_value: Union[KeyT, str, None]
+                    y_value: Union[ValT, str, None]
+                    if has_string_values:
+                        x_value = str(x) if x is not None else None
+                        y_value = str(y) if y is not None else None
+                    else:
+                        x_value = x
+                        y_value = y
 
+                    record = {
+                        "anchor": self.anchor,
+                        "dataset_idx": ds_idx,
+                        "dataset_label": dataset_label,
+                        "sample_name": series.name,
+                        "x_value": x_value,
+                        "y_value": y_value,
+                        "series_color": series.color,
+                        "series_width": series.width,
+                        "series_dash": series.dash,
+                        "series_marker": series.marker,
+                        "series_showlegend": series.showlegend,
+                    }
+                    records.append(record)
 
-def save_normalized_data(pid: Anchor, input_data: LinePlotInputData):
-    """
-    Save data to report.plot_input_data for future runs to merge with
-    """
-    report.plot_input_data[pid] = input_data.model_dump()
+        # Create DataFrame from records
+        return pd.DataFrame(records)
 
+    @classmethod
+    def from_df(
+        cls, df: pd.DataFrame, pconfig: Union[Dict, LinePlotConfig], anchor: Anchor
+    ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
+        pconf: LinePlotConfig
+        if isinstance(pconfig, dict):
+            pconf = cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
+        else:
+            pconf = pconfig
 
-def load_previous_data(pid: Anchor) -> Optional[LinePlotInputData]:
-    """
-    Load previous normalized data
-    """
-    if pid not in report.plot_input_data:
-        return None
+        # Reconstruct data structure
+        datasets = []
+        sample_names = []
 
-    return LinePlotInputData(**report.plot_input_data[pid])
+        # Group by dataset_idx
+        for ds_idx, ds_group in df.groupby("dataset_idx", sort=True):
+            dataset = []
 
+            # Get list of unique sample names in this dataset to preserve order
+            unique_samples = ds_group["sample_name"].unique()
 
-def merge_normalized_data(
-    old_data: LinePlotInputData[KeyT, ValT], new_data: LinePlotInputData[KeyT, ValT]
-) -> LinePlotInputData[KeyT, ValT]:
-    """
-    Merge normalized data from old run and new run
-    """
-    # Merge datasets
-    merged_datasets: List[List[Series[KeyT, ValT]]] = []
-    merged_sample_names: List[SampleName] = []
-    for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
-        if old_ds is None:
-            merged_datasets.append(new_ds)
-            merged_sample_names.extend(new_data.sample_names)
-            continue
-        if new_ds is None:
-            merged_datasets.append(old_ds)
-            merged_sample_names.extend(old_data.sample_names)
-            continue
+            # Group by sample_name within each dataset
+            for sample_name in unique_samples:
+                # Get data for this sample
+                sample_group = ds_group[ds_group["sample_name"] == sample_name]
 
-        series_by_sample: Dict[SampleName, Series[KeyT, ValT]] = {}
-        for old_series in old_ds:
-            series_by_sample[SampleName(old_series.name)] = old_series
-        # Override series for the same sample name
-        for new_series in new_ds:
-            series_by_sample[SampleName(new_series.name)] = new_series
-        merged_datasets.append(list(series_by_sample.values()))
+                # Extract series properties
+                if len(sample_group) > 0:
+                    first_row = sample_group.iloc[0]
+                    color = str(first_row.get("series_color")) if pd.notna(first_row.get("series_color")) else None
+                    width = int(first_row.get("series_width", 2))
+                    dash = str(first_row.get("series_dash")) if pd.notna(first_row.get("series_dash")) else None
+                    marker = str(first_row.get("series_marker")) if pd.notna(first_row.get("series_marker")) else None
+                    showlegend = (
+                        bool(first_row.get("series_showlegend"))
+                        if pd.notna(first_row.get("series_showlegend"))
+                        else False
+                    )
 
-    return LinePlotInputData(data=merged_datasets, pconfig=old_data.pconfig, sample_names=merged_sample_names)
+                    # Extract x,y pairs and sort by x value for proper display
+                    sample_group = sample_group.sort_values("x_value")
+                    pairs = []
+                    for _, row in sample_group.iterrows():
+                        x_val = row["x_value"]
+                        y_val = row["y_value"]
+                        pairs.append((x_val, y_val))
+
+                    # Create Series object
+                    series = Series(
+                        name=str(sample_name),
+                        pairs=pairs,
+                        color=color,
+                        width=width,
+                        dash=dash,
+                        showlegend=showlegend,
+                        marker=marker,
+                        path_in_cfg=("lineplot", "data"),
+                    )
+                    dataset.append(series)
+
+                    # Add sample name if not already in the list
+                    if sample_name not in sample_names:
+                        sample_names.append(SampleName(str(sample_name)))
+
+            datasets.append(dataset)
+
+        return LinePlotNormalizedInputData(
+            anchor=anchor,
+            data=datasets,
+            pconfig=pconf,
+            sample_names=sample_names,
+        )
+
+    @staticmethod
+    def create(
+        data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
+        pconfig: Union[Dict[str, Any], LinePlotConfig, None] = None,
+    ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
+        pconf: LinePlotConfig = cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
+
+        # Given one dataset - turn it into a list
+        raw_dataset_list: List[DatasetT]
+        if isinstance(data, Sequence):
+            raw_dataset_list = list(data)
+        else:
+            raw_dataset_list = [data]
+        del data
+
+        # Normalise data labels
+        if pconf.data_labels:
+            if len(pconf.data_labels) != len(raw_dataset_list):
+                raise ValueError(
+                    f"Length of data_labels does not match the number of datasets. "
+                    f"Please check your module code and ensure that the data_labels "
+                    f"list is the same length as the data list: "
+                    f"{len(pconf.data_labels)} != {len(raw_dataset_list)}. pconfig={pconf}"
+                )
+            pconf.data_labels = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconf.data_labels]
+        else:
+            pconf.data_labels = []
+
+        sample_names = []
+
+        datasets: List[List[Series[Any, Any]]] = []
+        for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
+            list_of_series: List[Series[Any, Any]] = []
+            for s in sorted(raw_data_by_sample.keys()):
+                sample_names.append(SampleName(s))
+                x_to_y = raw_data_by_sample[s]
+                if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
+                    if isinstance(x_to_y[0], tuple):
+                        x_to_y = dict(x_to_y)
+                    else:
+                        x_to_y = {i: y for i, y in enumerate(x_to_y)}
+                dl = pconf.data_labels[ds_idx] if pconf.data_labels else None
+                series: Series[Any, Any] = _make_series_dict(pconf, dl, s, x_to_y)
+                if pconf.hide_empty and not series.pairs:
+                    continue
+                list_of_series.append(series)
+            datasets.append(list_of_series)
+
+        # Return normalized data and config
+        return LinePlotNormalizedInputData(
+            anchor=plot_anchor(pconf),
+            data=datasets,
+            pconfig=pconf,
+            sample_names=sample_names,
+        )
+
+    @classmethod
+    def merge(
+        cls,
+        old_data: "LinePlotNormalizedInputData[KeyT, ValT]",
+        new_data: "LinePlotNormalizedInputData[KeyT, ValT]",
+    ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
+        """
+        Merge normalized data from old run and new run, leveraging our tabular representation
+        for more efficient and reliable merging.
+        """
+        # Load dataframes from parquet files instead of using the in-memory data structures
+        old_df = None
+        if old_data.anchor in report.plot_input_data:
+            old_path = report.plot_input_data[old_data.anchor]
+            if Path(old_path).exists():
+                old_df = pd.read_parquet(old_path)
+
+        # Create dataframe for new data
+        new_records = []
+        for ds_idx, dataset in enumerate(new_data.data):
+            # Get dataset label
+            dataset_label = None
+            if new_data.pconfig.data_labels and ds_idx < len(new_data.pconfig.data_labels):
+                label = new_data.pconfig.data_labels[ds_idx]
+                if isinstance(label, dict) and "name" in label:
+                    dataset_label = label["name"]
+                elif isinstance(label, str):
+                    dataset_label = label
+                else:
+                    dataset_label = f"Dataset {ds_idx + 1}"
+            else:
+                dataset_label = f"Dataset {ds_idx + 1}"
+
+            for series in dataset:
+                for x, y in series.pairs:
+                    record = {
+                        "anchor": new_data.anchor,
+                        "dataset_idx": ds_idx,
+                        "dataset_label": dataset_label,
+                        "sample_name": series.name,
+                        "x_value": x,
+                        "y_value": y,
+                        "series_color": series.color,
+                        "series_width": series.width,
+                        "series_dash": series.dash,
+                    }
+                    new_records.append(record)
+
+        new_df = pd.DataFrame(new_records)
+        if new_df.empty:
+            return old_data
+
+        # If we have both old and new data, merge them
+        merged_df = None
+        if old_df is not None and not old_df.empty:
+            # Add run_id to old data if missing
+            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
+                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
+
+            # Make sure old data has timestamp
+            if "timestamp" not in old_df.columns:
+                old_df["timestamp"] = datetime.now().isoformat()
+
+            # Concatenate dataframes
+            merged_df = pd.concat([old_df, new_df], ignore_index=True)
+
+            # Handle duplicates: prefer newer data for the same sample and x_value
+            if "timestamp" in merged_df.columns:
+                # Sort by timestamp (ascending) so newer data comes last
+                merged_df.sort_values("timestamp", inplace=True)
+
+                # Create deduplication key - include run_id if available
+                dedupe_columns = ["dataset_label", "sample_name", "x_value"]
+                if "run_id" in merged_df.columns:
+                    dedupe_columns.append("run_id")
+
+                # Drop duplicates, keeping the last occurrence (newer data)
+                merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
+        else:
+            merged_df = new_df
+
+        return LinePlotNormalizedInputData.from_df(
+            merged_df,
+            new_data.pconfig,
+            new_data.anchor,
+        )
 
 
 def plot(
     data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
     pconfig: Union[Dict[str, Any], LinePlotConfig, None] = None,
-) -> Union[LinePlot[KeyT, ValT], str]:
+) -> Union["LinePlot", str, None]:
     """
     Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
+
+    Function effectively only returns a wrapper around parquet file path.
     """
+    inputs: LinePlotNormalizedInputData[KeyT, ValT] = LinePlotNormalizedInputData.create(data, pconfig)
+    inputs = LinePlotNormalizedInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
-    # We want to be permissive to user inputs - but normalizing them now to simplify further processing
-    plot_input: LinePlotInputData = normalize_inputs(data, pconfig)
-
-    # Try load and merge with any found previous data for this plot
-    anchor = plot_anchor(plot_input.pconfig)
-    if prev_data := load_previous_data(anchor):
-        plot_input = merge_normalized_data(prev_data, plot_input)
-
-    # Save normalized data for future runs
-    save_normalized_data(anchor, plot_input)
-
-    pconf = plot_input.pconfig
-    datasets = plot_input.data
-    sample_names = plot_input.sample_names
+    pconf = inputs.pconfig
+    datasets = inputs.data
+    sample_names = inputs.sample_names
 
     # Add extra annotation data series
     if pconf.extra_series:
@@ -511,9 +710,9 @@ def plot(
                 series.color = scale.get_colour(si, lighten=1)
 
     return LinePlot.create(
-        lists_of_lines=plot_input.data,
-        pconfig=plot_input.pconfig,
-        anchor=anchor,
+        lists_of_lines=inputs.data,
+        pconfig=inputs.pconfig,
+        anchor=inputs.anchor,
         sample_names=sample_names,
     )
 

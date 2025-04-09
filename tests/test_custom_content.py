@@ -10,8 +10,8 @@ from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.file_search import file_search
 from multiqc.core.special_case_modules.custom_content import custom_module_classes
 from multiqc.core.update_config import ClConfig, update_config
-from multiqc.core.write_results import write_results
-from multiqc.types import Anchor, ColumnKey, SampleGroup
+from multiqc.plots.table_object import Cell
+from multiqc.types import Anchor, ColumnKey, SampleGroup, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
 
@@ -585,11 +585,16 @@ C	95	45
 
     # General stats are added directly to the report
     assert len(report.general_stats_data) > 0
-    assert "A" in report.general_stats_data[-1]
-    assert report.general_stats_data[-1][SampleGroup("A")][0].data[ColumnKey("value1")] == 85
-    assert report.general_stats_data[-1][SampleGroup("A")][0].data[ColumnKey("value2")] == 42
-    assert report.general_stats_headers[-1][ColumnKey("value1")]["title"] == "Value 1"
-    assert report.general_stats_headers[-1][ColumnKey("value2")]["title"] == "Value 2"
+    assert "custom_content" in report.general_stats_data
+    section = report.general_stats_data[SectionKey("custom_content")]
+    assert "A" in section
+    assert section[SampleGroup("A")][0].data[ColumnKey("value1")] == 85
+    assert section[SampleGroup("A")][0].data[ColumnKey("value2")] == 42
+    header = report.general_stats_headers[SectionKey("custom_content")]
+    assert "title" in header[ColumnKey("value1")]
+    assert "title" in header[ColumnKey("value2")]
+    assert header[ColumnKey("value1")]["title"] == "Value 1"
+    assert header[ColumnKey("value2")]["title"] == "Value 2"
 
 
 def test_quoted_strings_handling(tmp_path):
@@ -622,24 +627,19 @@ Sample 3	Group C	'4_5'
         "Group_Name": {"Sample 1": "Group A", "Sample 2": "Group B", "Sample 3": "Group C"},
         "Value": {"Sample 1": 42.0, "Sample 2": "3_8", "Sample 3": "4_5"},
     }
-    assert plot.datasets[0].dt.sections[0].column_by_key.keys() == {"Group Name", "Value"}
-    assert plot.datasets[0].dt.sections[0].column_by_key["Group Name"].title == "Group Name"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup.keys() == {"Sample 1", "Sample 2", "Sample 3"}
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 1"][0].sample == "Sample 1"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 1"][0].raw_data == {
-        "Group Name": "Group A",
-        "Value": 42.0,
-    }
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 2"][0].sample == "Sample 2"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 2"][0].raw_data == {
-        "Group Name": "Group B",
-        "Value": "3_8",
-    }
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 3"][0].sample == "Sample 3"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 3"][0].raw_data == {
-        "Group Name": "Group C",
-        "Value": "4_5",
-    }
+    section = plot.datasets[0].dt.section_by_id["quoted-section-plot_table"]
+    assert section.column_by_key.keys() == {"Group Name", "Value"}
+    assert section.column_by_key["Group Name"].title == "Group Name"
+    assert section.rows_by_sgroup.keys() == {"Sample 1", "Sample 2", "Sample 3"}
+    assert section.rows_by_sgroup["Sample 1"][0].sample == "Sample 1"
+    assert section.rows_by_sgroup["Sample 1"][0].data["Group Name"].raw == "Group A"
+    assert section.rows_by_sgroup["Sample 1"][0].data["Value"].raw == 42.0
+    assert section.rows_by_sgroup["Sample 2"][0].sample == "Sample 2"
+    assert section.rows_by_sgroup["Sample 2"][0].data["Group Name"].raw == "Group B"
+    assert section.rows_by_sgroup["Sample 2"][0].data["Value"].raw == "3_8"
+    assert section.rows_by_sgroup["Sample 3"][0].sample == "Sample 3"
+    assert section.rows_by_sgroup["Sample 3"][0].data["Group Name"].raw == "Group C"
+    assert section.rows_by_sgroup["Sample 3"][0].data["Value"].raw == "4_5"
 
 
 def test_empty_file(tmp_path):

@@ -142,7 +142,18 @@ def dump_json(data, filehandle=None, **kwargs):
             return super().default(o)
 
     if filehandle:
-        json.dump(replace_nan(data), filehandle, cls=JsonEncoderWithArraySupport, **kwargs)
+        try:
+            json.dump(replace_nan(data), filehandle, cls=JsonEncoderWithArraySupport, **kwargs)
+        except UnicodeEncodeError:
+            # If we get an error, try to write the JSON string directly
+            # First convert to a string with proper encoding
+            json_str = json.dumps(replace_nan(data), cls=JsonEncoderWithArraySupport, ensure_ascii=False, **kwargs)
+            # Write the string directly to avoid encoding issues
+            if hasattr(filehandle, "write"):
+                filehandle.write(json_str)
+            else:
+                with open(filehandle, "w", encoding="utf-8") as f:
+                    f.write(json_str)
     else:
         return json.dumps(replace_nan(data), cls=JsonEncoderWithArraySupport, **kwargs)
 

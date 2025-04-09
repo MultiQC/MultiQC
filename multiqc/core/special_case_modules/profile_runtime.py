@@ -8,9 +8,9 @@ from typing import Dict, Union
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
-from multiqc.plots.bargraph import BarPlotConfig
+from multiqc.plots.bargraph import BarPlotConfig, CatName
 from multiqc.plots.table import TableConfig
-from multiqc.types import Anchor, ColumnKey
+from multiqc.types import Anchor, ColumnKey, SampleName
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -106,8 +106,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         file_search_counts: Dict[str, int] = {k: len(paths) for k, paths in report.file_search_stats.items()}
 
-        pdata: Dict[str, Dict[str, Union[int, float]]] = dict()
-        pcats: Dict[str, Dict[str, str]] = dict()
+        pdata: Dict[SampleName, Dict[CatName, Union[int, float]]] = dict()
+        pcats: Dict[CatName, Dict[str, str]] = dict()
         for key in sorted(
             file_search_counts.keys(),
             key=lambda k: file_search_counts[k],
@@ -115,11 +115,11 @@ class MultiqcModule(BaseMultiqcModule):
         ):
             if "skipped_" in key:
                 s_name = f"Skipped: {key.replace('skipped_', '').replace('_', ' ').capitalize()}"
-                pcats[key] = {"name": key, "color": "#999999"}
+                pcats[CatName(key)] = {"name": key, "color": "#999999"}
             else:
                 s_name = key
-                pcats[key] = {"name": key, "color": "#7cb5ec"}
-            pdata[s_name] = {key: file_search_counts[key]}
+                pcats[CatName(key)] = {"name": key, "color": "#7cb5ec"}
+            pdata[SampleName(s_name)] = {CatName(key): file_search_counts[key]}
 
         self.add_section(
             name="Files searched counts",
@@ -156,9 +156,9 @@ class MultiqcModule(BaseMultiqcModule):
     def search_pattern_times_section(self):
         """Section with a bar plot showing the time spent on each search pattern"""
 
-        pdata: Dict[str, Dict[str, Union[int, float]]] = dict()
+        pdata: Dict[SampleName, Dict[CatName, Union[int, float]]] = dict()
         for key in sorted(report.runtimes.sp.keys(), key=lambda k: report.runtimes.sp[k], reverse=True):
-            pdata[key] = {"Run time": report.runtimes.sp[key]}
+            pdata[SampleName(key)] = {CatName(key): report.runtimes.sp[key]}
 
         pconfig = {
             "id": "multiqc_runtime_search_patterns_plot",
@@ -198,9 +198,9 @@ class MultiqcModule(BaseMultiqcModule):
     def module_times_section(self):
         """Section with a bar plot showing the time spent on each search pattern"""
 
-        pdata: Dict[str, Dict[str, Union[int, float]]] = dict()
+        pdata: Dict[SampleName, Dict[CatName, Union[int, float]]] = dict()
         for key in report.runtimes.mods:
-            pdata[key] = {"Time": report.runtimes.mods[key]}
+            pdata[SampleName(key)] = {CatName(key): report.runtimes.mods[key]}
 
         pconfig = {
             "id": "multiqc_runtime_modules_plot",
@@ -228,11 +228,11 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Section with a bar plot showing the memory usage of each module
         """
-        pdata: Dict[str, Dict[str, Union[int, float]]] = {}
+        pdata: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
         for key in report.peak_memory_bytes_per_module:
-            pdata[key] = {"Peak memory": report.peak_memory_bytes_per_module[key] / 1024 / 1024}
+            pdata[SampleName(key)] = {CatName(key): report.peak_memory_bytes_per_module[key] / 1024 / 1024}
         for key in report.diff_memory_bytes_per_module:
-            pdata[key]["Memory change"] = report.diff_memory_bytes_per_module[key] / 1024 / 1024
+            pdata[SampleName(key)][CatName("Memory change")] = report.diff_memory_bytes_per_module[key] / 1024 / 1024
 
         pconfig = {
             "id": "multiqc_runtime_memory_plot",
@@ -253,8 +253,8 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot(
                 pdata,
                 {
-                    "Peak memory": {"name": "Peak memory", "color": "#999999"},
-                    "Memory change": {"name": "Memory change", "color": "#7cb5ec"},
+                    CatName("Peak memory"): {"name": "Peak memory", "color": "#999999"},
+                    CatName("Memory change"): {"name": "Memory change", "color": "#7cb5ec"},
                 },
                 pconfig=pconfig,
             ),
