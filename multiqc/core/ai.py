@@ -383,7 +383,7 @@ class AWSBedrockClient(Client):
         self.client = boto3.client(service_name="bedrock-runtime")
 
     def max_tokens(self) -> int:
-        return 200000
+        return config.ai_custom_context_window or 200000
 
     class ApiResponse(NamedTuple):
         content: str
