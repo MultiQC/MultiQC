@@ -47,7 +47,27 @@ class ViolinPlotInputData(NormalizedPlotInputData):
         Save plot data to a parquet file using a tabular representation that's
         optimized for cross-run analysis.
         """
+        if self.is_empty():
+            return pd.DataFrame()
+
         records = []
+        # Track column types for proper DataFrame initialization
+        column_types = {
+            "anchor": str,
+            "dt_anchor": str,
+            "section_key": str,
+            "sample_name": str,
+            "metric_name": str,
+            "metric_idx": int,
+            "column_meta": str,
+        }
+        # Track if we've seen non-numeric values that would require string type
+        value_types = {
+            "val_raw": None,
+            "val_mod": None,
+            "val_fmt": str,
+        }
+
         for dt in self.dts:
             # Get ordered headers first
             ordered_headers = list(dt.get_headers_in_order())
@@ -64,11 +84,27 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                             if metric_name not in row.data:
                                 continue
 
-                            val = row.data[metric_name]
-
+                            cell = row.data[metric_name]
                             # Skip empty values
-                            if val is None or val.raw is None or val.fmt == "":
+                            if cell is None or cell.raw is None or cell.fmt == "":
                                 continue
+
+                            # Track value types to determine best column type
+                            if value_types["val_raw"] != str and cell.raw is not None:  # noqa
+                                if isinstance(cell.raw, str):
+                                    value_types["val_raw"] = str
+                                elif isinstance(cell.raw, float) and value_types["val_raw"] != float:  # noqa
+                                    value_types["val_raw"] = float
+                                elif isinstance(cell.raw, int) and value_types["val_raw"] is None:
+                                    value_types["val_raw"] = int
+
+                            if value_types["val_mod"] != str and cell.mod is not None:  # noqa
+                                if isinstance(cell.mod, str):
+                                    value_types["val_mod"] = str
+                                elif isinstance(cell.mod, float) and value_types["val_mod"] != float:  # noqa
+                                    value_types["val_mod"] = float
+                                elif isinstance(cell.mod, int) and value_types["val_mod"] is None:
+                                    value_types["val_mod"] = int
 
                             # Create record with all necessary metadata
                             record = {
@@ -78,9 +114,9 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                                 "sample_name": str(sample_name),
                                 "metric_name": str(metric_name),
                                 "metric_idx": idx,  # Store original index for ordering
-                                "val_raw": val.raw,
-                                "val_mod": val.mod,
-                                "val_fmt": val.fmt,
+                                "val_raw": cell.raw,
+                                "val_mod": cell.mod,
+                                "val_fmt": cell.fmt,
                                 # Store column metadata as JSON. Note thaet "format" and "modify" lambda won't be stored,
                                 # that's why we are saving val_mod and val_fmt separately.
                                 "column_meta": dt_column.model_dump_json(),
@@ -88,7 +124,16 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
                             records.append(record)
 
-        return pd.DataFrame(records)
+        # Set default types for value columns if not determined
+        for col, current_type in value_types.items():
+            if current_type is None:
+                value_types[col] = object  # Use object as fallback for mixed or unknown types
+
+        # Update column_types with determined value types
+        column_types.update(value_types)
+
+        # Create DataFrame with appropriate dtypes
+        return pd.DataFrame(records, dtype=object).astype(column_types)
 
     @classmethod
     def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, TableConfig], anchor: Anchor) -> "ViolinPlotInputData":
@@ -243,12 +288,10 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                     logger.debug(f"Failed to load parquet for {old_data.anchor}: {str(e)}")
 
         # Create dataframe for new data
-        new_df = new_data.to_df()
-
-        # If new_df is empty, return early
-        if new_df.empty:
+        if new_data.is_empty():
             return old_data
 
+        new_df = new_data.to_df()
         # Add timestamp and run_id to new data
         new_df["timestamp"] = datetime.now().isoformat()
         if hasattr(config, "kwargs") and "run_id" in config.kwargs:

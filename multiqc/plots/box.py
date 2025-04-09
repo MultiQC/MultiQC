@@ -2,11 +2,15 @@
 
 import copy
 import logging
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 
-from multiqc import report
+from multiqc import config, report
+from multiqc.core import tmp_dir
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
@@ -153,6 +157,191 @@ class BoxPlotInputData(NormalizedPlotInputData):
     def is_empty(self) -> bool:
         return len(self.list_of_data_by_sample) == 0 or all(len(ds) == 0 for ds in self.list_of_data_by_sample)
 
+    def to_df(self) -> pd.DataFrame:
+        """
+        Save plot data to a parquet file using a tabular representation that's
+        optimized for cross-run analysis.
+        """
+        if self.is_empty():
+            return pd.DataFrame()
+
+        records = []
+
+        for ds_idx, dataset in enumerate(self.list_of_data_by_sample):
+            # Get dataset label if available
+            dataset_label = None
+            if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
+                label = self.pconfig.data_labels[ds_idx]
+                if isinstance(label, dict) and "name" in label:
+                    dataset_label = label["name"]
+                elif isinstance(label, str):
+                    dataset_label = label
+                else:
+                    dataset_label = f"Dataset {ds_idx + 1}"
+            else:
+                dataset_label = f"Dataset {ds_idx + 1}"
+
+            # Process each sample in the dataset
+            for sample_name, values in dataset.items():
+                # Store each value point as a separate record
+                for value_idx, value in enumerate(values):
+                    record = {
+                        "anchor": self.anchor,
+                        "dataset_idx": ds_idx,
+                        "dataset_label": dataset_label,
+                        "sample_name": str(sample_name),
+                        "value_idx": value_idx,
+                        "value": value,
+                    }
+
+                    # Add plot configuration metadata
+                    if hasattr(self.pconfig, "title") and self.pconfig.title:
+                        record["plot_title"] = self.pconfig.title
+                    if hasattr(self.pconfig, "xlab") and self.pconfig.xlab:
+                        record["x_label"] = self.pconfig.xlab
+                    if hasattr(self.pconfig, "ylab") and self.pconfig.ylab:
+                        record["y_label"] = self.pconfig.ylab
+
+                    records.append(record)
+
+        return pd.DataFrame(records)
+
+    @classmethod
+    def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, BoxPlotConfig], anchor: Anchor) -> "BoxPlotInputData":
+        """
+        Load plot data from a DataFrame.
+        """
+        # Convert pconfig to BoxPlotConfig if needed
+        pconf: BoxPlotConfig
+        if isinstance(pconfig, dict):
+            pconf = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
+        else:
+            pconf = cast(BoxPlotConfig, pconfig)
+
+        # Handle None or empty DataFrame case
+        if df is None or df.empty:
+            return cls(anchor=anchor, pconfig=pconf, list_of_data_by_sample=[])
+
+        # Extract or update pconfig from DataFrame metadata
+        if any(col in df.columns for col in ["plot_title", "x_label", "y_label"]):
+            # Extract basic config from first row if available
+            pconfig_dict: Dict[str, Any] = {"id": str(anchor)}
+
+            if len(df) > 0:
+                first_row = df.iloc[0]
+                if "x_label" in df.columns and pd.notna(first_row.get("x_label")):
+                    pconfig_dict["xlab"] = str(first_row.get("x_label"))
+                if "y_label" in df.columns and pd.notna(first_row.get("y_label")):
+                    pconfig_dict["ylab"] = str(first_row.get("y_label"))
+                if "plot_title" in df.columns and pd.notna(first_row.get("plot_title")):
+                    pconfig_dict["title"] = str(first_row.get("plot_title"))
+
+            # Update pconfig with values from df
+            for k, v in pconfig_dict.items():
+                if getattr(pconf, k, None) is None:
+                    setattr(pconf, k, v)
+
+        # Group by dataset_idx to rebuild data structure
+        list_of_data_by_sample = []
+
+        max_dataset_idx = df["dataset_idx"].max() if not df.empty else 0
+
+        for ds_idx in range(int(max_dataset_idx) + 1):
+            ds_group = df[df["dataset_idx"] == ds_idx] if not df.empty else pd.DataFrame()
+
+            # Skip empty datasets
+            if ds_group.empty:
+                list_of_data_by_sample.append({})
+                continue
+
+            # Process each sample in this dataset
+            dataset = {}
+
+            for sample_name, sample_group in ds_group.groupby("sample_name"):
+                # Collect all values for this sample
+                sample_values = []
+
+                # Sort by value_idx if available
+                if "value_idx" in sample_group.columns:
+                    sample_group = sample_group.sort_values("value_idx")
+
+                for _, row in sample_group.iterrows():
+                    value = row["value"]
+                    sample_values.append(value)
+
+                # Add sample data if not empty
+                if sample_values:
+                    dataset[str(sample_name)] = sample_values
+
+            list_of_data_by_sample.append(dataset)
+
+        return cls(
+            anchor=anchor,
+            pconfig=pconf,
+            list_of_data_by_sample=list_of_data_by_sample,
+        )
+
+    @classmethod
+    def merge(cls, old_data: "BoxPlotInputData", new_data: "BoxPlotInputData") -> "BoxPlotInputData":
+        """
+        Merge normalized data from old run and new run, matching by data labels when available
+        """
+        # Load dataframes from parquet files instead of using in-memory structures
+        old_df = None
+        if old_data.anchor in report.plot_input_data:
+            old_path = report.plot_input_data[old_data.anchor]
+            if Path(old_path).exists():
+                try:
+                    old_df = pd.read_parquet(old_path)
+                except Exception as e:
+                    logger.debug(f"Failed to load parquet for {old_data.anchor}: {str(e)}")
+
+        # Create dataframe for new data
+        new_df = new_data.to_df()
+
+        # If new_df is empty, return the old data
+        if new_df.empty:
+            return old_data
+
+        # Add timestamp and run_id to new data
+        new_df["timestamp"] = datetime.now().isoformat()
+        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
+            new_df["run_id"] = config.kwargs["run_id"]
+
+        # If we have both old and new data, merge them
+        merged_df = new_df
+        if old_df is not None and not old_df.empty:
+            # Make sure old data has run_id
+            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
+                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
+
+            # Make sure old data has timestamp
+            if "timestamp" not in old_df.columns:
+                old_df["timestamp"] = datetime.now().isoformat()
+
+            # Combine the dataframes, keeping all rows
+            merged_df = pd.concat([old_df, new_df], ignore_index=True)
+
+            # For duplicates (same sample, dataset, value_idx), keep the latest version
+            if "timestamp" in merged_df.columns:
+                # Sort by timestamp (newest last)
+                merged_df.sort_values("timestamp", inplace=True)
+
+                # Group by the key identifiers and keep the last entry (newest)
+                dedupe_columns = ["dataset_idx", "sample_name", "value_idx"]
+                if "run_id" in merged_df.columns:
+                    dedupe_columns.append("run_id")
+
+                merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
+
+        # Save the merged dataframe
+        file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"
+        report.plot_input_data[new_data.anchor] = str(file_path)
+        merged_df.to_parquet(file_path, compression="gzip")
+
+        # Create a new BoxPlotInputData from the merged DataFrame
+        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
+
     @staticmethod
     def create(
         list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
@@ -177,92 +366,6 @@ class BoxPlotInputData(NormalizedPlotInputData):
             anchor=plot_anchor(pconf),
             list_of_data_by_sample=list_of_data_by_sample,
             pconfig=pconf,
-        )
-
-    @classmethod
-    def merge(cls, old_data: "BoxPlotInputData", new_data: "BoxPlotInputData") -> "BoxPlotInputData":
-        """
-        Merge normalized data from old run and new run, matching by data labels when available
-        """
-        # Create dictionaries to map data_labels to datasets
-        old_datasets_by_label = {}
-        new_datasets_by_label = {}
-
-        # Create a list for merged datasets
-        merged_datasets = []
-
-        # If data_labels exist, use them as keys for matching datasets
-        if old_data.pconfig.data_labels and new_data.pconfig.data_labels:
-            # First build mappings from label IDs to datasets
-            for i, dl in enumerate(old_data.pconfig.data_labels):
-                if i < len(old_data.list_of_data_by_sample):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    old_datasets_by_label[label_id] = old_data.list_of_data_by_sample[i]
-
-            for i, dl in enumerate(new_data.pconfig.data_labels):
-                if i < len(new_data.list_of_data_by_sample):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    new_datasets_by_label[label_id] = new_data.list_of_data_by_sample[i]
-
-            # Create a dictionary to store merged data_labels
-            merged_data_labels = []
-            data_labels_by_id = {}
-
-            # Store all data labels by their ID
-            for i, dl in enumerate(old_data.pconfig.data_labels):
-                if i < len(old_data.list_of_data_by_sample):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    data_labels_by_id[label_id] = dl
-
-            for i, dl in enumerate(new_data.pconfig.data_labels):
-                if i < len(new_data.list_of_data_by_sample):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    # New data labels override old ones with the same ID
-                    data_labels_by_id[label_id] = dl
-
-            # First process datasets that exist in both old and new data
-            for label_id, old_ds in old_datasets_by_label.items():
-                if label_id in new_datasets_by_label:
-                    new_ds = new_datasets_by_label[label_id]
-                    # Merge samples within dataset
-                    merged_ds = {**old_ds}  # Create a copy of old dataset
-                    # Add or update samples from new dataset
-                    for sample, values in new_ds.items():
-                        merged_ds[sample] = values
-
-                    merged_datasets.append(merged_ds)
-                    merged_data_labels.append(data_labels_by_id[label_id])
-
-                    # Mark as processed
-                    new_datasets_by_label.pop(label_id)
-                else:
-                    # Only in old data
-                    merged_datasets.append(old_ds)
-                    merged_data_labels.append(data_labels_by_id[label_id])
-
-            # Then add datasets that only exist in new data
-            for label_id, new_ds in new_datasets_by_label.items():
-                merged_datasets.append(new_ds)
-                merged_data_labels.append(data_labels_by_id[label_id])
-
-            # Create a new pconfig with merged data_labels
-            merged_pconf = BoxPlotConfig(**new_data.pconfig.model_dump())
-            merged_pconf.data_labels = merged_data_labels
-
-        else:
-            # Fallback to old behavior if no data_labels - just append datasets
-            merged_datasets = old_data.list_of_data_by_sample + new_data.list_of_data_by_sample
-            merged_pconf = new_data.pconfig
-
-            # Preserve settings from old config if not in new config
-            for field, value in old_data.pconfig.model_dump().items():
-                if getattr(new_data.pconfig, field, None) is None:
-                    setattr(merged_pconf, field, value)
-
-        return BoxPlotInputData(
-            anchor=new_data.anchor,
-            list_of_data_by_sample=merged_datasets,
-            pconfig=merged_pconf,
         )
 
 

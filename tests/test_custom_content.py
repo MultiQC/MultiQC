@@ -10,7 +10,7 @@ from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.file_search import file_search
 from multiqc.core.special_case_modules.custom_content import custom_module_classes
 from multiqc.core.update_config import ClConfig, update_config
-from multiqc.core.write_results import write_results
+from multiqc.plots.table_object import Cell
 from multiqc.types import Anchor, ColumnKey, SampleGroup, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
@@ -632,20 +632,14 @@ Sample 3	Group C	'4_5'
     assert section.column_by_key["Group Name"].title == "Group Name"
     assert section.rows_by_sgroup.keys() == {"Sample 1", "Sample 2", "Sample 3"}
     assert section.rows_by_sgroup["Sample 1"][0].sample == "Sample 1"
-    assert section.rows_by_sgroup["Sample 1"][0].raw_data == {
-        "Group Name": "Group A",
-        "Value": 42.0,
-    }
+    assert section.rows_by_sgroup["Sample 1"][0].data["Group Name"].raw == "Group A"
+    assert section.rows_by_sgroup["Sample 1"][0].data["Value"].raw == 42.0
     assert section.rows_by_sgroup["Sample 2"][0].sample == "Sample 2"
-    assert section.rows_by_sgroup["Sample 2"][0].raw_data == {
-        "Group Name": "Group B",
-        "Value": "3_8",
-    }
+    assert section.rows_by_sgroup["Sample 2"][0].data["Group Name"].raw == "Group B"
+    assert section.rows_by_sgroup["Sample 2"][0].data["Value"].raw == "3_8"
     assert section.rows_by_sgroup["Sample 3"][0].sample == "Sample 3"
-    assert section.rows_by_sgroup["Sample 3"][0].raw_data == {
-        "Group Name": "Group C",
-        "Value": "4_5",
-    }
+    assert section.rows_by_sgroup["Sample 3"][0].data["Group Name"].raw == "Group C"
+    assert section.rows_by_sgroup["Sample 3"][0].data["Value"].raw == "4_5"
 
 
 def test_empty_file(tmp_path):

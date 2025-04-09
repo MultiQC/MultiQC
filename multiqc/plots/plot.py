@@ -345,7 +345,7 @@ class NormalizedPlotInputData(BaseModel):
         return merged_data  # type: ignore
 
     def to_df(self) -> pd.DataFrame:
-        raise
+        raise NotImplementedError("Subclasses must implement to_df()")
 
     def save(self):
         """
