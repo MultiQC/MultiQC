@@ -1,40 +1,351 @@
 """MultiQC functions to plot a linegraph"""
 
+import io
 import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple, TypeVar, Union, cast
+import os
+import random
+from itertools import zip_longest
+from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, TypeVar, Union, cast
 
-from importlib_metadata import EntryPoint
+import plotly.graph_objects as go  # type: ignore
+from pydantic import BaseModel, Field
 
-from multiqc import config
-from multiqc.plots.plotly import line
-from multiqc.plots.plotly.line import DatasetT, KeyT, LinePlotConfig, Series, ValT, XToYDictT
-from multiqc.types import SampleName
+from multiqc import config, report
+from multiqc.plots.plot import BaseDataset, PConfig, Plot, PlotType, convert_dash_style, plot_anchor
+from multiqc.types import Anchor, SampleName
 from multiqc.utils import mqc_colour
+from multiqc.utils.util_functions import update_dict
+from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
 
-# Load the template so that we can access its configuration
-# Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod: Optional[EntryPoint] = None
+
+KeyT = TypeVar("KeyT", int, str, float)
+ValT = TypeVar("ValT", int, str, float, None)
+XToYDictT = Mapping[KeyT, ValT]
+DatasetT = Mapping[Union[str, SampleName], XToYDictT[KeyT, ValT]]
 
 
-def get_template_mod() -> EntryPoint:
-    global _template_mod
-    if not _template_mod:
-        _template_mod = config.avail_templates[config.template].load()
-    assert _template_mod is not None
-    return _template_mod
+class Marker(ValidatedConfig):
+    symbol: Optional[str] = None
+    color: Optional[str] = None
+    line_color: Optional[str] = None
+    fill_color: Optional[str] = None
+    width: int = 1
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("Marker",), **data)
 
 
-def plot(
+class Series(ValidatedConfig, Generic[KeyT, ValT]):
+    name: str = Field(default_factory=lambda: f"series-{random.randint(1000000, 9999999)}")
+    pairs: List[Tuple[KeyT, ValT]]
+    color: Optional[str] = None
+    width: int = 2
+    dash: Optional[str] = None
+    showlegend: bool = True
+    marker: Optional[Marker] = None
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        path_in_cfg = path_in_cfg or ("Series",)
+
+        if "dashStyle" in data:
+            add_validation_warning(path_in_cfg, "'dashStyle' field is deprecated. Please use 'dash' instead")
+            data["dash"] = data.pop("dashStyle")
+
+        tuples: List[Tuple[KeyT, ValT]] = []
+        if "data" in data:
+            add_validation_warning(path_in_cfg + ("data",), "'data' field is deprecated. Please use 'pairs' instead")
+        for p in data.pop("data") if "data" in data else data.get("pairs", []):
+            if isinstance(p, list):
+                tuples.append(tuple(p))
+            else:
+                tuples.append(p)
+        data["pairs"] = tuples
+
+        super().__init__(**data, path_in_cfg=path_in_cfg)
+
+        if self.dash is not None:
+            self.dash = convert_dash_style(self.dash, path_in_cfg=path_in_cfg + ("dash",))
+
+    def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+        xs = [x[0] for x in self.pairs]
+        if len(xs) > 0:
+            return min(xs), max(xs)  # type: ignore
+        return None, None
+
+    def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+        ys = [x[1] for x in self.pairs if x[1] is not None]
+        if len(ys) > 0:
+            return min(ys), max(ys)  # type: ignore
+        return None, None
+
+
+SeriesT = Union[Series, Dict[str, Any]]
+
+
+class LinePlotConfig(PConfig):
+    xlab: Optional[str] = None
+    ylab: Optional[str] = None
+    categories: bool = False
+    smooth_points: Optional[int] = 500
+    smooth_points_sumcounts: Union[bool, List[bool], None] = None
+    extra_series: Optional[Union[Series, List[Series], List[List[Series]]]] = None
+    style: Optional[Literal["lines", "lines+markers"]] = None
+    hide_zero_cats: Optional[bool] = Field(False, deprecated="hide_empty")
+    hide_empty: bool = False
+    colors: Dict[str, str] = {}
+
+    @classmethod
+    def parse_extra_series(
+        cls,
+        data: Union[SeriesT, List[SeriesT], List[List[SeriesT]]],
+        path_in_cfg: Tuple[str, ...],
+    ) -> Union[Series, List[Series], List[List[Series]]]:
+        if isinstance(data, list):
+            if isinstance(data[0], list):
+                return [[Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in ds] for ds in data]  # type: ignore
+            return [Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in data]  # type: ignore
+        return Series(path_in_cfg=path_in_cfg, **data) if isinstance(data, dict) else data  # type: ignore
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("lineplot",), **data)
+
+
+class Dataset(BaseDataset, Generic[KeyT, ValT]):
+    lines: List[Series[KeyT, ValT]]
+
+    def get_x_range(self) -> Tuple[Optional[KeyT], Optional[KeyT]]:
+        if not self.lines:
+            return None, None
+        xmax, xmin = None, None
+        for line in self.lines:
+            _xmin, _xmax = line.get_x_range()
+            if _xmin is not None:
+                xmin = min(xmin, _xmin) if xmin is not None else _xmin  # type: ignore
+            if _xmax is not None:
+                xmax = max(xmax, _xmax) if xmax is not None else _xmax  # type: ignore
+        return xmin, xmax
+
+    def get_y_range(self) -> Tuple[Optional[ValT], Optional[ValT]]:
+        if not self.lines:
+            return None, None
+        ymax, ymin = None, None
+        for line in self.lines:
+            _ymin, _ymax = line.get_y_range()
+            if _ymin is not None:
+                ymin = min(ymin, _ymin) if ymin is not None else _ymin  # type: ignore
+            if _ymax is not None:
+                ymax = max(ymax, _ymax) if ymax is not None else _ymax  # type: ignore
+        return ymin, ymax
+
+    @staticmethod
+    def create(
+        base_dataset: BaseDataset,
+        lines: List[Series[KeyT, ValT]],
+        pconfig: LinePlotConfig,
+    ) -> "Dataset[KeyT, ValT]":
+        dataset: Dataset[KeyT, ValT] = Dataset(**base_dataset.model_dump(), lines=lines)
+
+        # Prevent Plotly-JS from parsing strings as numbers
+        if pconfig.categories or dataset.dconfig.get("categories"):
+            dataset.layout["xaxis"]["type"] = "category"
+
+        if pconfig.style is not None:
+            mode = pconfig.style
+        else:
+            num_data_points = sum(len(x.pairs) for x in lines)
+            if num_data_points < config.lineplot_number_of_points_to_hide_markers:
+                mode = "lines+markers"
+            else:
+                mode = "lines"
+
+        dataset.trace_params.update(
+            mode=mode,
+            line={"width": 2},
+        )
+        if mode == "lines+markers":
+            dataset.trace_params.update(
+                line={"width": 0.6},
+                marker={"size": 5},
+            )
+        return dataset
+
+    def create_figure(
+        self,
+        layout: go.Layout,
+        is_log: bool = False,
+        is_pct: bool = False,
+        **kwargs,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        if layout.showlegend is True:
+            # Extra space for legend
+            if hasattr(layout, "height") and isinstance(layout.height, int):
+                layout.height += len(self.lines) * 5
+
+        fig = go.Figure(layout=layout)
+        for series in self.lines:
+            xs = [x[0] for x in series.pairs]
+            ys = [x[1] for x in series.pairs]
+            params: Dict[str, Any] = {
+                "showlegend": series.showlegend,
+                "line": {
+                    "color": series.color,
+                    "dash": series.dash,
+                    "width": series.width,
+                },
+            }
+            if series.marker:
+                params["mode"] = "lines+markers"
+                params["marker"] = {
+                    "symbol": series.marker.symbol,
+                    "color": series.marker.fill_color or series.marker.color or series.color,
+                    "line": {
+                        "width": series.marker.width,
+                        "color": series.marker.line_color or series.marker.color or "black",
+                    },
+                }
+            params = update_dict(params, self.trace_params, none_only=True)
+            if len(series.pairs) == 1:
+                params["mode"] = "lines+markers"  # otherwise it's invisible
+
+            fig.add_trace(
+                go.Scatter(
+                    x=xs,
+                    y=ys,
+                    name=series.name,
+                    text=[series.name] * len(xs),
+                    **params,
+                )
+            )
+        return fig
+
+    def save_data_file(self) -> None:
+        y_by_x_by_sample: Dict[str, Dict[Union[float, str], Any]] = dict()
+        last_cats = None
+        shared_cats = True
+        for series in self.lines:
+            y_by_x_by_sample[series.name] = dict()
+
+            # Check to see if all categories are the same
+            if len(series.pairs) > 0 and isinstance(series.pairs[0], list):
+                if last_cats is None:
+                    last_cats = [x[0] for x in series.pairs]
+                elif last_cats != [x[0] for x in series.pairs]:
+                    shared_cats = False
+
+            for i, x in enumerate(series.pairs):
+                if isinstance(x, list):
+                    y_by_x_by_sample[series.name][x[0]] = x[1]
+                else:
+                    try:
+                        y_by_x_by_sample[series.name][self.dconfig["categories"][i]] = x
+                    except (ValueError, KeyError, IndexError):
+                        y_by_x_by_sample[series.name][str(i)] = x
+
+        # Custom tsv output if the x-axis varies
+        if not shared_cats and config.data_format in ["tsv", "csv"]:
+            sep = "\t" if config.data_format == "tsv" else ","
+            fout = ""
+            for series in self.lines:
+                fout += series.name + sep + "X" + sep + sep.join([str(x[0]) for x in series.pairs]) + "\n"
+                fout += series.name + sep + "Y" + sep + sep.join([str(x[1]) for x in series.pairs]) + "\n"
+
+            fn = f"{self.uid}.{config.data_format_extensions[config.data_format]}"
+            fpath = os.path.join(report.data_tmp_dir(), fn)
+            with io.open(fpath, "w", encoding="utf-8") as f:
+                f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
+        else:
+            report.write_data_file(y_by_x_by_sample, self.uid)
+
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
+        xsuffix = self.layout.get("xaxis", {}).get("ticksuffix", "")
+        ysuffix = self.layout.get("yaxis", {}).get("ticksuffix", "")
+
+        # Use pseudonyms for sample names if available
+        pseudonyms = [report.anonymize_sample_name(series.name) for series in self.lines]
+
+        # Create header with axis information and common suffixes
+        result = "Samples: " + ", ".join(pseudonyms) + "\n\n"
+
+        # If all y-values have the same suffix (like %), mention it in the header
+        if ysuffix:
+            result += f"Y values are in {ysuffix}\n\n"
+        if xsuffix:
+            result += f"X values are in {xsuffix}\n\n"
+
+        for pseudonym, series in zip(pseudonyms, self.lines):
+            # For other plots or fewer points, use the original format but without redundant suffixes
+            pairs = [f"{self.fmt_value_for_llm(x[0])}: {self.fmt_value_for_llm(x[1])}" for x in series.pairs]
+
+            result += f"{pseudonym} {', '.join(pairs)}\n\n"
+
+        return result
+
+
+class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
+    datasets: List[Dataset[KeyT, ValT]]
+    sample_names: List[SampleName]
+
+    def samples_names(self) -> List[SampleName]:
+        return self.sample_names
+
+    def _plot_ai_header(self) -> str:
+        result = super()._plot_ai_header()
+        if self.pconfig.xlab:
+            result += f"X axis: {self.pconfig.xlab}\n"
+        if self.pconfig.ylab:
+            result += f"Y axis: {self.pconfig.ylab}\n"
+        return result
+
+    @staticmethod
+    def create(
+        lists_of_lines: List[List[Series[KeyT, ValT]]],
+        pconfig: LinePlotConfig,
+        anchor: Anchor,
+        sample_names: List[SampleName],
+    ) -> "LinePlot[KeyT, ValT]":
+        n_samples_per_dataset = [len(x) for x in lists_of_lines]
+
+        model: Plot[Dataset[KeyT, ValT], LinePlotConfig] = Plot.initialize(
+            plot_type=PlotType.LINE,
+            pconfig=pconfig,
+            anchor=anchor,
+            n_samples_per_dataset=n_samples_per_dataset,
+            axis_controlled_by_switches=["yaxis"],
+            default_tt_label="<br>%{x}: %{y}",
+        )
+
+        # Very large legend for automatically enabled flat plot mode is not very helpful
+        max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
+        if pconfig.showlegend is None and max_n_samples > 250:
+            model.layout.showlegend = False
+
+        model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
+
+        # Make a tooltip always show on hover over any point on plot
+        model.layout.hoverdistance = -1
+
+        return LinePlot(**model.__dict__, sample_names=sample_names)
+
+
+class LinePlotInputData(BaseModel, Generic[KeyT, ValT]):
+    data: List[List[Series[KeyT, ValT]]]
+    pconfig: LinePlotConfig
+    sample_names: List[SampleName]
+
+
+def normalize_inputs(
     data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
     pconfig: Union[Dict[str, Any], LinePlotConfig, None] = None,
-) -> Union[line.LinePlot[KeyT, ValT], str]:
+) -> LinePlotInputData:
     """
-    Plot a line graph with X,Y data.
-    :param data: 2D dict, first keys as sample names, then x:y data pairs
-    :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
-    :return: HTML and JS, ready to be inserted into the page
+    We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
+    allow optional categories, categories as strings or as dicts or as objects. We want
+    to normalize the input data before we save it to intermediate format and plot.
     """
     pconf: LinePlotConfig = cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
 
@@ -46,6 +357,7 @@ def plot(
         raw_dataset_list = [data]
     del data
 
+    # Normalise data labels
     if pconf.data_labels:
         if len(pconf.data_labels) != len(raw_dataset_list):
             raise ValueError(
@@ -58,10 +370,13 @@ def plot(
     else:
         pconf.data_labels = []
 
+    sample_names = []
+
     datasets: List[List[Series[KeyT, ValT]]] = []
     for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
         list_of_series: List[Series[Any, Any]] = []
         for s in sorted(raw_data_by_sample.keys()):
+            sample_names.append(SampleName(s))
             x_to_y = raw_data_by_sample[s]
             if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
                 if isinstance(x_to_y[0], tuple):
@@ -75,7 +390,84 @@ def plot(
             list_of_series.append(series)
         datasets.append(list_of_series)
 
-    # Add on annotation data series
+    # Return normalized data and config
+    return LinePlotInputData(data=datasets, pconfig=pconf, sample_names=sample_names)
+
+
+def save_normalized_data(pid: Anchor, input_data: LinePlotInputData):
+    """
+    Save data to report.plot_input_data for future runs to merge with
+    """
+    report.plot_input_data[pid] = input_data.model_dump()
+
+
+def load_previous_data(pid: Anchor) -> Optional[LinePlotInputData]:
+    """
+    Load previous normalized data
+    """
+    if pid not in report.plot_input_data:
+        return None
+
+    return LinePlotInputData(**report.plot_input_data[pid])
+
+
+def merge_normalized_data(
+    old_data: LinePlotInputData[KeyT, ValT], new_data: LinePlotInputData[KeyT, ValT]
+) -> LinePlotInputData[KeyT, ValT]:
+    """
+    Merge normalized data from old run and new run
+    """
+    # Merge datasets
+    merged_datasets: List[List[Series[KeyT, ValT]]] = []
+    merged_sample_names: List[SampleName] = []
+    for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
+        if old_ds is None:
+            merged_datasets.append(new_ds)
+            merged_sample_names.extend(new_data.sample_names)
+            continue
+        if new_ds is None:
+            merged_datasets.append(old_ds)
+            merged_sample_names.extend(old_data.sample_names)
+            continue
+
+        series_by_sample: Dict[SampleName, Series[KeyT, ValT]] = {}
+        for old_series in old_ds:
+            series_by_sample[SampleName(old_series.name)] = old_series
+        # Override series for the same sample name
+        for new_series in new_ds:
+            series_by_sample[SampleName(new_series.name)] = new_series
+        merged_datasets.append(list(series_by_sample.values()))
+
+    return LinePlotInputData(data=merged_datasets, pconfig=old_data.pconfig, sample_names=merged_sample_names)
+
+
+def plot(
+    data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
+    pconfig: Union[Dict[str, Any], LinePlotConfig, None] = None,
+) -> Union[LinePlot[KeyT, ValT], str]:
+    """
+    Plot a line graph with X,Y data.
+    :param data: 2D dict, first keys as sample names, then x:y data pairs
+    :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
+    :return: HTML and JS, ready to be inserted into the page
+    """
+
+    # We want to be permissive to user inputs - but normalizing them now to simplify further processing
+    plot_input: LinePlotInputData = normalize_inputs(data, pconfig)
+
+    # Try load and merge with any found previous data for this plot
+    anchor = plot_anchor(plot_input.pconfig)
+    if prev_data := load_previous_data(anchor):
+        plot_input = merge_normalized_data(prev_data, plot_input)
+
+    # Save normalized data for future runs
+    save_normalized_data(anchor, plot_input)
+
+    pconf = plot_input.pconfig
+    datasets = plot_input.data
+    sample_names = plot_input.sample_names
+
+    # Add extra annotation data series
     if pconf.extra_series:
         ess: Union[Series[Any, Any], List[Series[Any, Any]], List[List[Series[Any, Any]]]] = pconf.extra_series
         list_of_list_of_series: List[List[Series[Any, Any]]]
@@ -93,6 +485,7 @@ def plot(
                 if i < len(datasets):
                     datasets[i].append(series)
 
+    # Process categories
     for ds_idx, series_by_sample in enumerate(datasets):
         if pconf.categories and series_by_sample:
             if isinstance(pconf.categories, list):
@@ -117,19 +510,17 @@ def plot(
             if not series.color:
                 series.color = scale.get_colour(si, lighten=1)
 
-    # Make a plot - template custom, or interactive or flat
-    mod = get_template_mod()
-    if "linegraph" in mod.__dict__ and callable(mod.__dict__["linegraph"]):
-        # noinspection PyBroadException
-        try:
-            return mod.__dict__["linegraph"](datasets, pconf)
-        except:  # noqa: E722
-            if config.strict:
-                # Crash quickly in the strict mode. This can be helpful for interactive
-                # debugging of modules
-                raise
+    return LinePlot.create(
+        lists_of_lines=plot_input.data,
+        pconfig=plot_input.pconfig,
+        anchor=anchor,
+        sample_names=sample_names,
+    )
 
-    return line.plot(datasets, pconf)
+
+def remove_nones_and_empty_dicts(d: Mapping[Any, Any]) -> Dict[Any, Any]:
+    """Remove None and empty dicts from a dict recursively."""
+    return {k: remove_nones_and_empty_dicts(v) for k, v in d.items() if v is not None and v != {}}
 
 
 def _make_series_dict(

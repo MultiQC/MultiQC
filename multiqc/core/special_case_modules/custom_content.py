@@ -1,14 +1,13 @@
 """Core MultiQC module to parse output from custom script output"""
 
 import base64
-from io import BufferedReader
 import json
 import logging
 import os
 import re
 from collections import defaultdict
-from token import OP
-from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
+from io import BufferedReader
 
 import yaml
 from pydantic import BaseModel
@@ -16,14 +15,7 @@ from pydantic import BaseModel
 from multiqc import Plot, config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
-from multiqc.plots.plotly.bar import BarPlotConfig
-from multiqc.plots.plotly.box import BoxPlotConfig
-from multiqc.plots.plotly.heatmap import HeatmapConfig
-from multiqc.plots.plotly.line import LinePlotConfig
-from multiqc.plots.plotly.plot import PlotType
-from multiqc.plots.plotly.scatter import ScatterConfig
-from multiqc.plots.table_object import TableConfig
-from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
+from multiqc.types import Anchor, LoadedFileDict, ModuleId, PlotType, SectionId
 from multiqc.validation import ModuleConfigValidationError
 
 # Initialise the logger
@@ -483,7 +475,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ccdict.data,  # type: ignore
                 ccdict.config.get("xcats"),
                 ccdict.config.get("ycats"),
-                pconfig=HeatmapConfig(**pconfig),
+                pconfig=heatmap.HeatmapConfig(**pconfig),
             )
             plot_datasets = [ccdict.data]  # to save after rendering
         else:
@@ -516,23 +508,27 @@ class MultiqcModule(BaseMultiqcModule):
             # Bar plot
             elif plot_type == PlotType.BAR:
                 ccdict.data = [{str(k): v for k, v in ds.items()} for ds in plot_datasets]
-                plot = bargraph.plot(plot_datasets, ccdict.config.get("categories"), pconfig=BarPlotConfig(**pconfig))
+                plot = bargraph.plot(
+                    plot_datasets, ccdict.config.get("categories"), pconfig=bargraph.BarPlotConfig(**pconfig)
+                )
 
             # Line plot
             elif plot_type == PlotType.LINE:
-                plot = linegraph.plot(plot_datasets, pconfig=LinePlotConfig(**pconfig))  # type: ignore
+                plot = linegraph.plot(plot_datasets, pconfig=linegraph.LinePlotConfig(**pconfig))
 
             # Scatter plot
             elif plot_type == PlotType.SCATTER:
-                plot = scatter.plot(ccdict.data, pconfig=ScatterConfig(**pconfig))  # type: ignore
+                scatter_data = cast(Mapping[str, Any], ccdict.data)
+                plot = scatter.plot(scatter_data, pconfig=scatter.ScatterConfig(**pconfig))
 
             # Box plot
             elif plot_type == PlotType.BOX:
-                plot = box.plot(plot_datasets, pconfig=BoxPlotConfig(**pconfig))  # type: ignore
+                plot = box.plot(plot_datasets, pconfig=box.BoxPlotConfig(**pconfig))
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
-                plot = violin.plot(plot_datasets, pconfig=TableConfig(**pconfig))  # type: ignore
+                violin_data = cast(List[Mapping[str, Any]], plot_datasets)
+                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))
 
             # Raw HTML
             elif plot_type == PlotType.HTML:
@@ -650,6 +646,11 @@ def _guess_file_format(f):
             spaces.append(len(line.split()))
         if j == 10:
             break
+
+    # Handle empty files
+    if not tabs:
+        return "spaces"  # default format for empty files
+
     tab_mode = max(set(tabs), key=tabs.count)
     commas_mode = max(set(commas), key=commas.count)
     spaces_mode = max(set(spaces), key=spaces.count)
@@ -763,6 +764,10 @@ def _parse_txt(
                 first_row_all_strings = False
             if i != 0 and j != 0 and isinstance(v, str):
                 inner_cells_all_numeric = False
+
+    # Return None for empty files
+    if len(matrix) == 0:
+        return None, conf, plot_type
 
     # General stat info files - expected to have at least 2 rows (first row always being the header)
     # and have at least 2 columns (first column always being sample name)

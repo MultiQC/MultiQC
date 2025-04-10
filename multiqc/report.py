@@ -5,7 +5,6 @@ modules. Contains helper functions to generate markup for report.
 
 import base64
 import dataclasses
-from datetime import datetime
 import fnmatch
 import gzip
 import inspect
@@ -18,6 +17,7 @@ import re
 import sys
 import time
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path, PosixPath
 from typing import (
     Any,
@@ -33,8 +33,8 @@ from typing import (
     Union,
 )
 
-from dotenv import load_dotenv
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from multiqc import config
@@ -42,13 +42,13 @@ from multiqc import config
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core import log_and_rich, tmp_dir
+from multiqc.core import ai, log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
-from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.plotly.violin import ViolinPlot
+from multiqc.plots.plot import Plot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
 from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
@@ -56,7 +56,6 @@ from multiqc.utils.util_functions import (
     replace_defaultdicts,
     rmtree_with_retries,
 )
-from multiqc.core import ai
 
 load_dotenv()
 
@@ -107,12 +106,17 @@ ai_provider_title: str = ""
 ai_model: str = ""
 ai_model_resolved: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
+ai_extra_query_options_base64: str = ""
+sample_names: List[SampleName] = []  # all sample names in the report to construct ai_pseudonym_map
+ai_pseudonym_map: Dict[str, str] = {}
+ai_pseudonym_map_base64: str = ""
 
 # Following fields are preserved between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
-plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
+plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html and load with js
 plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
+plot_input_data: Dict[Anchor, Any] = dict()  # to combine data from previous runs
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
@@ -149,6 +153,7 @@ def reset():
     global html_ids_by_scope
     global plot_data
     global plot_by_id
+    global plot_input_data
     global general_stats_data
     global general_stats_headers
     global software_versions
@@ -164,6 +169,10 @@ def reset():
     global ai_model
     global ai_model_resolved
     global ai_report_metadata_base64
+    global ai_extra_query_options_base64
+    global sample_names
+    global ai_pseudonym_map
+    global ai_pseudonym_map_base64
 
     # Create new temporary directory for module data exports
     initialized = True
@@ -194,11 +203,15 @@ def reset():
     ai_model = ""
     ai_model_resolved = ""
     ai_report_metadata_base64 = ""
-
+    ai_extra_query_options_base64 = ""
+    sample_names = []
+    ai_pseudonym_map = {}
+    ai_pseudonym_map_base64 = ""
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
     html_ids_by_scope = defaultdict(set)
     plot_data = dict()
     plot_by_id = dict()
+    plot_input_data = dict()
     general_stats_data = []
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
@@ -1027,10 +1040,10 @@ def multiqc_dump_json(data_dir: Path):
     exported_data: Dict[str, Any] = dict()
     export_vars = {
         "report": [
+            "multiqc_command",
             "data_sources",
             "general_stats_data",
             "general_stats_headers",
-            "multiqc_command",
             "plot_data",
             "creation_date",
         ],
@@ -1061,9 +1074,9 @@ def multiqc_dump_json(data_dir: Path):
                 elif pymod == "report":
                     val = getattr(sys.modules[__name__], name)
                     if name == "general_stats_data":
-                        # List[Dict[SampleGroup, List[InputRow]]]
-                        # flattening sample groups for export
+                        # Flattening sample groups for export
                         flattened_sections: List[Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = []
+                        section: Dict[SampleGroup, List[InputRow]]
                         for section in general_stats_data:
                             fl_sec: Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]] = dict()
                             for _, rows in section.items():
@@ -1071,11 +1084,31 @@ def multiqc_dump_json(data_dir: Path):
                                     for row in rows:
                                         fl_sec[row.sample] = row.data
                                 else:
-                                    fl_sec = rows  # old format without grouping, in case if use plugins override it
+                                    fl_sec = rows  # old format without grouping, in case if user plugins override it
                             flattened_sections.append(fl_sec)
                         val = flattened_sections
+                    elif name == "modules":
+                        val = [
+                            {
+                                "name": mod.name,
+                                "anchor": mod.anchor,
+                                "versions": {
+                                    software_name: [version for _, version in versions_tuples]
+                                    for software_name, versions_tuples in mod.versions.items()
+                                },
+                                "info": mod.info,
+                                "intro": mod.intro,
+                                "comment": mod.comment,
+                                "sections": [s.__dict__ for s in mod.sections],
+                            }
+                            for mod in modules
+                        ]
                     elif name == "creation_date":
-                        val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+                        try:
+                            val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+                        except UnicodeEncodeError:
+                            # Fall back to a format without timezone if we encounter encoding issues
+                            val = creation_date.strftime("%Y-%m-%d, %H:%M")
                     d = {f"{pymod}_{name}": val}
                 if d:
                     with open(os.devnull, "wt") as f:
@@ -1176,3 +1209,24 @@ def reset_tmp_dir():
 
 def add_ai_summary():
     ai.add_ai_summary_to_report()
+
+
+def anonymize_sample_name(sample: str) -> str:
+    """
+    Anonymise sample name - sample can be any key in a plot, like SAMPLE1, SAMPLE1-SAMPLE2, etc.
+    Method will attempt to replace SAMPLE1 exactly, and more complex cases with text-replace
+    which can be inacurate.
+    """
+    if not config.ai_anonymize_samples or not ai_pseudonym_map:
+        return sample
+
+    # Exact match
+    if SampleName(sample) in ai_pseudonym_map:
+        return ai_pseudonym_map[SampleName(sample)]
+
+    # Try replacing partial matches for cases like sample="SAMPLE1-SAMPLE2"
+    # Start with the longest original name ro avoid situations when one sample is a prefix of another
+    for original, pseudonym in sorted(ai_pseudonym_map.items(), key=lambda x: len(x[1]), reverse=True):
+        if original in sample:
+            sample = sample.replace(original, pseudonym)
+    return sample

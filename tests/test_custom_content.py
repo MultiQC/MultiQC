@@ -1,12 +1,16 @@
+import json
+import os
 import tempfile
 
 import pytest
 
 import multiqc
 from multiqc import config, report
+from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.file_search import file_search
+from multiqc.core.special_case_modules.custom_content import custom_module_classes
 from multiqc.core.update_config import ClConfig, update_config
-from multiqc.modules.custom_content import custom_module_classes
+from multiqc.core.write_results import write_results
 from multiqc.types import Anchor, ColumnKey, SampleGroup
 from multiqc.validation import ModuleConfigValidationError
 
@@ -636,3 +640,53 @@ Sample 3	Group C	'4_5'
         "Group Name": "Group C",
         "Value": "4_5",
     }
+
+
+def test_empty_file(tmp_path):
+    """Test handling of empty custom content files"""
+    file = tmp_path / "empty_mqc.txt"
+    file.write_text("")
+
+    report.analysis_files = [file]
+    report.search_files(["custom_content"])
+    with pytest.raises(ModuleNoSamplesFound):
+        custom_module_classes()
+
+    # Should not create any plots from empty file
+    assert len(report.plot_by_id) == 0
+
+
+def test_ai_export_rounding(tmp_path):
+    """Test that AI export rounding is correct"""
+    file = tmp_path / "ai_export_rounding_mqc.json"
+    data = {
+        "plot_type": "generalstats",
+        "id": "Genome Info",
+        "pconfig": {
+            "Abundance": {
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "Blues",
+                "format": "{:,.4f}",
+                "description": "Reads assigned to the row's taxon / total read count X 100. This column only factors in reads directly classified to the listed taxon and does not include reads classified to the children of this taxon. The sum of this column is 100.",
+            }
+        },
+        "data": {"Root": {"Abundance": 0.3802136069332063}},
+    }
+    file.write_text(json.dumps(data))
+
+    os.chdir(tmp_path)
+    os.environ["MQC_STUB_AI_RESPONSE"] = "TEST_RESPONSE"
+    os.environ["SEQERA_ACCESS_TOKEN"] = "TEST_TOKEN"
+    multiqc.run(
+        file,
+        cfg=ClConfig(run_modules=["custom_content"], ai_summary=True, development=True),
+    )
+
+    summary_path = tmp_path / "multiqc_data" / "multiqc_ai_prompt.txt"
+    assert summary_path.exists()
+    print(summary_path)
+    # assert that file contains |0.3802|
+    with summary_path.open() as f:
+        assert "|0.3802|" in f.read()

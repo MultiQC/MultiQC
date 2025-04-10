@@ -1271,7 +1271,7 @@ from typing import Callable, Dict, List, Any, Tuple, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table, bargraph
-from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table_object import TableConfig, ColumnMeta
 from multiqc.utils import mqc_colour
 from multiqc import config

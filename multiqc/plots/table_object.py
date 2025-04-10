@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequen
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
-from multiqc.plots.plotly.plot import PConfig
+from multiqc.plots.plot import PConfig
 from multiqc.types import Anchor, ColumnKey, SampleGroup, SampleName
 from multiqc.validation import ValidatedConfig
 
@@ -120,10 +120,14 @@ class ColumnMeta(ValidatedConfig):
         table_anchor: Anchor,
     ) -> "ColumnMeta":
         # Overwrite any header config if set in config
-        if header_config := config.custom_table_header_config.get(pconfig.id, {}):
-            if col_config := header_config.get(col_key, {}):
-                for custom_k, custom_v in col_config.items():
-                    col_dict[custom_k] = custom_v  # type: ignore
+        header_config = None
+        for _id in [table_anchor, pconfig.id]:  # Back-compatibility using pconfig.id instead of table_anchor
+            if _header_config := config.custom_table_header_config.get(_id, {}):
+                header_config = _header_config
+                if col_config := header_config.get(col_key, {}):
+                    for custom_k, custom_v in col_config.items():
+                        col_dict[custom_k] = custom_v  # type: ignore
+                break
 
         namespace = col_dict.get("namespace", pconfig.namespace) or ""
         assert isinstance(namespace, str)
@@ -174,10 +178,12 @@ class ColumnMeta(ValidatedConfig):
 
         # Overwrite (2nd time) any given config with table-level user config
         # This is to override column-specific values set by modules
-        if pconfig.id in config.custom_plot_config:
-            for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
-                if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
-                    col_dict[cpc_k] = cpc_v  # type: ignore
+        for _id in [table_anchor, pconfig.id]:  # Back-compatibility using pconfig.id instead of table_anchor
+            if config_dict := config.custom_plot_config.get(_id, {}):
+                for cpc_k, cpc_v in config_dict.items():
+                    if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
+                        col_dict[cpc_k] = cpc_v  # type: ignore
+                break
 
         col: ColumnMeta = ColumnMeta(**col_dict)
 
@@ -191,6 +197,7 @@ class ColumnMeta(ValidatedConfig):
             return item_id.lower() in [
                 str(s).lower()
                 for s in [
+                    table_anchor,
                     pconfig.id,
                     pconfig.anchor,
                     col.namespace,
@@ -364,6 +371,8 @@ class DataTable(BaseModel):
         unified_sections__with_nulls: List[Dict[SampleGroup, List[InputRow]]] = []
         for input_section in data if isinstance(data, list) else [data]:
             rows_by_group: Dict[SampleGroup, List[InputRow]] = {}
+            if isinstance(input_section, list):
+                print(input_section)
             for g_name, input_group in input_section.items():
                 g_name = SampleGroup(str(g_name))  # Make sure sample names are strings
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
@@ -452,7 +461,8 @@ class DataTable(BaseModel):
         for section in sections:
             for column in section.column_by_key.values():
                 del column.modify
-                del column.format
+                if not isinstance(column.format, str):
+                    del column.format
 
         # Assign to class
         return DataTable(
@@ -476,6 +486,61 @@ class DataTable(BaseModel):
                 if keep_hidden or not self.sections[section_idx].column_by_key[col_key].hidden:
                     res.append((section_idx, col_key, self.sections[section_idx].column_by_key[col_key]))
         return res
+
+    def merge(self, new_dt: "DataTable"):
+        """
+        Extend the existing DataTable with new data. If multiple DataTables are provided,
+        they are zipped with the sections in this table (first new dt extends first section, etc).
+
+        New samples and columns are added at the end, while existing sample/column combinations
+        are overwritten with new data.
+        """
+        # Zip sections together, using shorter list length
+        for section, new_section in zip(self.sections, new_dt.sections):
+            # Update column metadata
+            for col_key, new_col_meta in new_section.column_by_key.items():
+                if col_key in section.column_by_key:
+                    # Update existing column metadata fields
+                    existing_col = section.column_by_key[col_key]
+                    for field_name, field_value in new_col_meta.model_dump().items():
+                        setattr(existing_col, field_name, field_value)
+                else:
+                    # Add new column
+                    section.column_by_key[col_key] = new_col_meta
+
+            # Update row data
+            for group_name, new_rows in new_section.rows_by_sgroup.items():
+                existing_rows = section.rows_by_sgroup.get(group_name, [])
+                existing_samples = {row.sample for row in existing_rows}
+
+                for new_row in new_rows:
+                    if new_row.sample in existing_samples:
+                        # Update existing sample data
+                        for i, row in enumerate(existing_rows):
+                            if row.sample == new_row.sample:
+                                # Update raw data
+                                row.raw_data.update(new_row.raw_data)
+                                # Update formatted data
+                                row.formatted_data.update(new_row.formatted_data)
+                                existing_rows[i] = row
+                                break
+                    else:
+                        # Add new sample
+                        existing_rows.append(new_row)
+
+                section.rows_by_sgroup[group_name] = existing_rows
+
+        # Rebuild headers_in_order based on updated columns
+        self._rebuild_headers_in_order()
+
+    def _rebuild_headers_in_order(self) -> None:
+        """
+        Rebuild the headers_in_order dictionary based on current sections and columns.
+        """
+        self.headers_in_order = defaultdict(list)
+        for sec_idx, section in enumerate(self.sections):
+            for col_key, column in section.column_by_key.items():
+                self.headers_in_order[column.placement].append((sec_idx, col_key))
 
 
 def _get_or_create_headers(
@@ -528,7 +593,7 @@ def _get_or_create_headers(
 
 def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bool = True) -> Tuple[ValueT, str]:
     """
-    Takes row value, applies "modify" and "format" functions, and returns a tuple:
+    Takes row value, applies "modify" functions and "format" string, and returns a tuple:
     the modified value and its formatted string.
 
     "parse_numeric=False" assumes that the numeric values are already pre-parsed
@@ -571,12 +636,20 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta, parse_numeric: bo
                 # noinspection PyCallingNonCallable
                 valstr = fmt(val)
             except Exception as e:
-                logger.error(f"Error applying format to table value '{column.rid}': '{val}'. {e}")
+                logger.debug(f"Error applying format to table value '{column.rid}': '{val}'. {e}")
         elif isinstance(val, (int, float)):
+            if fmt == r"{:,d}":
+                val = round(val)
             try:
+                # If format is decimal and value is float, try rounding to int first
+                if isinstance(val, float) and "d" in fmt:
+                    try:
+                        val = int(round(val))
+                    except (ValueError, OverflowError):
+                        pass
                 valstr = fmt.format(val)
             except Exception as e:
-                logger.error(
+                logger.debug(
                     f"Error applying format string '{fmt}' to table value '{column.rid}': '{val}'. {e}. "
                     f"Check if your format string is correct."
                 )

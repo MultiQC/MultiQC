@@ -68,24 +68,30 @@ class HeatmapPlot extends Plot {
     if (xcats) {
       if (ycats) {
         prompt = "|";
-        if (this.yCatsAreSamples) prompt += " Sample ";
+        if (this.yCatsAreSamples) prompt += "Sample";
       }
-      prompt += "| " + xcats.join(" | ") + " |\n";
-      if (ycats) {
-        prompt += "| --- ";
+      if (this.xCatsAreSamples) {
+        const xPseudonyms = this.filtXCatsSettings.map((s) => s.pseudonym ?? s.name);
+        prompt += "|" + xPseudonyms.join("|") + "|\n";
+      } else {
+        prompt += "|" + xcats.join("|") + "|\n";
       }
-      prompt += "| " + xcats.map(() => "---").join(" | ") + " |\n";
+      if (ycats) prompt += "|---";
+      prompt += "|" + xcats.map(() => "---").join("|") + "|\n";
     }
     for (let i = 0; i < rows.length; i++) {
       if (ycats) {
-        prompt += "| " + ycats[i] + " ";
+        if (this.yCatsAreSamples) {
+          const yPseudonyms = this.filtYCatsSettings.map((s) => s.pseudonym ?? s.name);
+          prompt += "|" + yPseudonyms[i];
+        } else {
+          prompt += "|" + ycats[i];
+        }
       }
       prompt +=
-        "| " +
-        rows[i]
-          .map((x) => (!Number.isFinite(x) ? "" : Number.isInteger(x) ? x : parseFloat(x.toFixed(2))))
-          .join(" | ") +
-        " |\n";
+        "|" +
+        rows[i].map((x) => (!Number.isFinite(x) ? "" : Number.isInteger(x) ? x : parseFloat(x.toFixed(2)))).join("|") +
+        "|\n";
     }
     return prompt;
   }

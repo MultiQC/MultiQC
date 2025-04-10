@@ -2,13 +2,13 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import List, Literal, Optional, Union, Dict, cast
+from typing import Dict, List, Literal, Optional, Union, cast
 
 from pydantic import BaseModel
 
-from multiqc import report, config
-from multiqc.core.exceptions import RunError
+from multiqc import config, report
 from multiqc.core import log_and_rich, plugin_hooks
+from multiqc.core.exceptions import RunError
 
 logger = logging.getLogger(__name__)
 
@@ -65,9 +65,15 @@ class ClConfig(BaseModel):
     data_dump_file_write_raw: Optional[bool] = None
     ai_summary: Optional[bool] = None
     ai_summary_full: Optional[bool] = None
-    ai_provider: Optional[Literal["seqera", "openai", "anthropic"]] = None
+    ai_provider: Optional[Literal["seqera", "openai", "anthropic", "custom"]] = None
+    ai_model: Optional[str] = None
+    ai_custom_endpoint: Optional[str] = None
+    ai_custom_context_window: Optional[int] = None
+    ai_prompt_short: Optional[str] = None
+    ai_prompt_full: Optional[str] = None
     no_ai: Optional[bool] = None
     unknown_options: Optional[Dict] = None
+    check_config: Optional[bool] = None
 
 
 def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
@@ -212,6 +218,16 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.ai_summary_full = cfg.ai_summary_full
     if cfg.ai_provider is not None:
         config.ai_provider = cfg.ai_provider
+    if cfg.ai_model is not None:
+        config.ai_model = cfg.ai_model
+    if cfg.ai_custom_endpoint is not None:
+        config.ai_custom_endpoint = cfg.ai_custom_endpoint
+    if cfg.ai_custom_context_window is not None:
+        config.ai_custom_context_window = cfg.ai_custom_context_window
+    if cfg.ai_prompt_short is not None:
+        config.ai_prompt_short = cfg.ai_prompt_short
+    if cfg.ai_prompt_full is not None:
+        config.ai_prompt_full = cfg.ai_prompt_full
     if cfg.no_ai is not None:
         config.no_ai = cfg.no_ai
 

@@ -127,33 +127,38 @@ class ViolinPlot extends Plot {
     results += "\n\n";
 
     results +=
-      `| ${this.pconfig.col1_header} | ` + metrics.map((metric) => headerByMetric[metric].title).join(" | ") + " |\n";
-    results += "| --- | " + metrics.map(() => "---").join(" | ") + " |\n";
-    results += allSamples
+      `|${this.pconfig.col1_header}|` + metrics.map((metric) => headerByMetric[metric].title).join("|") + "|\n";
+    results += "|---|" + metrics.map(() => "---").join("|") + "|\n";
+    results += sampleSettings
       .map((sample) => {
-        if (sampleSettings[allSamples.indexOf(sample)].hidden) return "";
+        if (sample.hidden) return "";
         if (
           metrics.every(
             (metric) =>
-              violinValuesBySampleByMetric[metric][sample] === undefined &&
-              scatterValuesBySampleByMetric[metric][sample] === undefined,
+              violinValuesBySampleByMetric[metric][sample.originalName] === undefined &&
+              scatterValuesBySampleByMetric[metric][sample.originalName] === undefined,
           )
         )
           return "";
 
         return (
-          `| ${sample} | ` +
+          `|${sample.pseudonym ?? sample.name}|` +
           metrics
             .map((metric) => {
               const value =
-                violinValuesBySampleByMetric[metric][sample] ?? scatterValuesBySampleByMetric[metric][sample];
+                violinValuesBySampleByMetric[metric][sample.originalName] ??
+                scatterValuesBySampleByMetric[metric][sample.originalName];
               const suffix = headerByMetric[metric].suffix;
-              return !Number.isFinite(value)
-                ? ""
-                : (Number.isInteger(value) ? value : value.toFixed(2)) + (suffix ?? "");
+              if (value === undefined || value === null) return "";
+              if (typeof value === "string") return value + (suffix ?? "");
+              if (Number.isFinite(value)) {
+                if (Number.isInteger(value)) return value;
+                return value.toFixed(2);
+              }
+              return "";
             })
-            .join(" | ") +
-          " |\n"
+            .join("|") +
+          "|\n"
         );
       })
       .join("");

@@ -1,13 +1,14 @@
 import base64
-from functools import lru_cache
 import io
 import logging
 import math
 import platform
 import random
 import re
-from pathlib import Path
+import threading
 import subprocess
+from functools import lru_cache
+from pathlib import Path
 from typing import (
     Any,
     Dict,
@@ -16,7 +17,6 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
-    Type,
     TypeVar,
     Union,
 )
@@ -27,8 +27,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
-from multiqc.plots.plotly import check_plotly_version
-from multiqc.types import Anchor, PlotType
+from multiqc.plots.utils import check_plotly_version
+from multiqc.types import Anchor, PlotType, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
@@ -216,6 +216,9 @@ class BaseDataset(BaseModel):
     pct_range: Dict[str, Any]
     n_samples: int
 
+    def samples_names(self) -> List[SampleName]:
+        raise NotImplementedError
+
     def create_figure(
         self,
         layout: go.Layout,
@@ -261,6 +264,12 @@ class BaseDataset(BaseModel):
 
 DatasetT = TypeVar("DatasetT", bound="BaseDataset")
 PConfigT = TypeVar("PConfigT", bound="PConfig")
+
+
+def plot_anchor(pconfig: PConfig) -> Anchor:
+    anchor = Anchor(pconfig.anchor or pconfig.id)
+    anchor = Anchor(report.save_htmlid(anchor))  # make sure it's unique
+    return anchor
 
 
 class Plot(BaseModel, Generic[DatasetT, PConfigT]):
@@ -314,8 +323,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         plot_type: PlotType,
         pconfig: PConfigT,
         n_samples_per_dataset: List[int],
+        anchor: Anchor,
         id: Optional[str] = None,
-        anchor: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
@@ -326,7 +335,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         :param plot_type: plot type
         :param pconfig: plot configuration model
         :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
-        :param id: plot ID
         :param anchor: plot HTML anchor. Unlike ID, must be globally unique
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
@@ -336,10 +344,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         """
         if len(n_samples_per_dataset) == 0:
             raise ValueError("No datasets to plot")
-
-        id = id or pconfig.id
-        _anchor: Anchor = Anchor(anchor or pconfig.anchor or id)
-        _anchor = Anchor(report.save_htmlid(_anchor))  # make sure it's unique
 
         # Counts / Percentages / Log10 switch
         add_log_tab: bool = pconfig.logswitch is True and plot_type in [
@@ -354,6 +358,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         width = pconfig.width
         if pconfig.square:
             width = height
+
+        id = id or pconfig.id
 
         # Render static image if the number of samples is above the threshold
         flat = False
@@ -508,7 +514,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             plot_type=plot_type,
             pconfig=pconfig,
             id=id,
-            anchor=_anchor,
+            anchor=anchor,
             datasets=datasets,
             layout=layout,
             add_log_tab=add_log_tab,
@@ -533,10 +539,16 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
                 maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 dminval, dmaxval = dataset.get_x_range()
+
                 if dminval is not None:
+                    if isinstance(minval, int) or isinstance(minval, float):
+                        dminval = float(dminval)
                     minval = min(minval, dminval) if minval is not None else dminval
                 if dmaxval is not None:
+                    if isinstance(maxval, int) or isinstance(maxval, float):
+                        dmaxval = float(dmaxval)
                     maxval = max(maxval, dmaxval) if maxval is not None else dmaxval
+
                 clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
                 clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
                 if clipmin is not None and minval is not None and clipmin > minval:
@@ -1053,7 +1065,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     type="button"
                     data-toggle="tooltip" 
                     aria-controls="{section_anchor}_ai_summary_wrapper"
-                    title="Dynamically generate AI summary for this plot"
                 >
                     <span style="vertical-align: baseline">
                         <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
@@ -1077,26 +1088,47 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         return html
 
 
-def _export_plot(fig, file_ext, plot_path, write_kwargs) -> Optional[str]:
-    if is_running_under_rosetta():
-        return None
+def _export_plot(fig, plot_path, write_kwargs):
+    """Export a plotly figure to a file."""
 
-    try:
-        if file_ext == "svg":
-            # Cannot add logo to SVGs
-            fig.write_image(plot_path, **write_kwargs)
-        else:
-            img_buffer = io.BytesIO()
-            fig.write_image(img_buffer, **write_kwargs)
-            img_buffer = add_logo(img_buffer, format=file_ext)
-            with open(plot_path, "wb") as f:
-                f.write(img_buffer.getvalue())
-            img_buffer.close()
-    except Exception as e:
-        logger.error(f"Unable to export plot to {file_ext.upper()} image: {e}")
-        return None
-    else:
-        return plot_path
+    # Default timeout of 30 seconds for image export
+    timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 30
+
+    class ExportThread(threading.Thread):
+        def __init__(self, fig, plot_path, write_kwargs):
+            threading.Thread.__init__(self)
+            self.fig = fig
+            self.plot_path = plot_path
+            self.write_kwargs = write_kwargs
+            self.exception = None
+
+        def run(self):
+            try:
+                self.fig.write_image(self.plot_path, **self.write_kwargs)
+            except Exception as e:
+                self.exception = e
+
+    # Start the export in a separate thread
+    export_thread = ExportThread(fig, plot_path, write_kwargs)
+    export_thread.start()
+    export_thread.join(timeout)
+
+    if export_thread.is_alive():
+        # If thread is still running after timeout, log warning and continue
+        logging.warning(
+            f"Plot export timed out after {timeout}s: {plot_path}. "
+            "This is likely due to a known issue in Kaleido. "
+            "The plot will be skipped but the report will continue to generate."
+        )
+        # Kill the thread
+        export_thread.join()
+        return False
+    if export_thread.exception:
+        # If there was an exception in the thread, log it
+        logging.error(f"Error exporting plot to {plot_path}: {export_thread.exception}")
+        return False
+
+    return True
 
 
 def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
@@ -1150,7 +1182,6 @@ def fig_to_static_html(
         # for the flat plots we explicitly set width
         height=fig.layout.height / config.plots_export_font_scale,
         scale=scale,  # higher detail (retina display)
-        # engine="orca",  # kaleido gets frozen in docker environments
     )
 
     formats = set(config.export_plot_formats) if export_plots else set()
@@ -1173,7 +1204,10 @@ def fig_to_static_html(
             try:
                 if not plot_export_has_failed:
                     # Running for the first time, so doing a safe run in a subprocess to find out if it freezes the process or now
-                    _export_plot(fig, file_ext, plot_path, write_kwargs)
+                    export_success = _export_plot(fig, plot_path, write_kwargs)
+                    if not export_success:
+                        plot_export_has_failed = True
+                        raise ValueError(f"Failed to export plot to {file_ext.upper()} image")
             except Exception as e:
                 msg = f"{file_name}: Unable to export plot to {file_ext.upper()} image"
                 logger.error(f"{msg}. {e}")

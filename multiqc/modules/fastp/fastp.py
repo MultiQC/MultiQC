@@ -1,7 +1,7 @@
-from collections import Counter, defaultdict
 import json
 import logging
 import re
+from collections import Counter, defaultdict
 from typing import Any, Dict, Optional, Tuple
 
 from multiqc import config
@@ -450,6 +450,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
             "hide_zero_cats": False,
+            "tt_decimals": 0,
         }
         return bargraph.plot(self.fastp_data, keys, pconfig)
 

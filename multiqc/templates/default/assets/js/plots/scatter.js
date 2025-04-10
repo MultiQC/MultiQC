@@ -14,6 +14,7 @@ class ScatterPlot extends Plot {
     let sampleSettings = applyToolboxSettings(samples);
 
     points = points.map((point, idx) => {
+      point.pseudonym = sampleSettings[idx].pseudonym;
       point.name = sampleSettings[idx].name ?? point.name;
       point.highlight = sampleSettings[idx].highlight;
       if (!sampleSettings[idx].hidden) return point;
@@ -31,7 +32,7 @@ class ScatterPlot extends Plot {
   }
 
   formatDatasetForAiPrompt(dataset) {
-    let [samples, points] = this.prepData(dataset);
+    let [samples, points] = this.prepData(dataset, true);
 
     // Check if all samples are hidden
     if (samples.length === 0) {

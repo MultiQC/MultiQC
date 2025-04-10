@@ -244,6 +244,51 @@ sample_1.fastq.gz.subsampled.fastq.gz.aligned.log
 You can turn off sample name cleaning permanently by setting
 `fn_clean_sample_names` to `false` in your config file.
 
+## Toolbox Settings
+
+MultiQC includes a toolbox with features to highlight, rename, and hide samples. These settings can be configured through the UI, but you can also pre-configure them in your config file.
+
+### Highlighting Samples
+
+You can pre-configure sample highlighting patterns in your config file:
+
+```yaml
+highlight_patterns:
+  - "sample_1"
+  - "control_"
+highlight_colors:
+  - "#e41a1c" # red
+  - "#377eb8" # blue
+highlight_regex: false # set to true to use regex patterns
+```
+
+Each pattern in `highlight_patterns` will be paired with the corresponding color in `highlight_colors`. If there are more patterns than colors, the colors will be reused in sequence.
+
+### Hiding Samples
+
+You can pre-configure which samples to show or hide:
+
+```yaml
+show_hide_buttons: ["Hide controls"]
+show_hide_patterns: ["control_"]]
+show_hide_regex: [false]
+show_hide_mode: ["hide"] # can be "show" or "hide"
+```
+
+Each entry in these lists corresponds to a button that will appear in the toolbox. An extra "Show all" button with empty patterns is prepended by default.
+
+### Renaming Samples
+
+You can pre-configure sample renaming patterns:
+
+```yaml
+sample_names_rename:
+  - ["_R1", ""]
+  - ["sample_", "SAMPLE_"]
+```
+
+Each entry is a pair of [from, to] values that will be applied to sample names.
+
 ## Module search patterns
 
 Many bioinformatics tools have standard output formats, filenames and other
@@ -646,3 +691,77 @@ custom_css_files:
 
 Or pass `--custom-css-file` (can be specified multiple times) and MultiQC will include
 them in the final report HTML.
+
+## JSON Schema validation
+
+MultiQC provides a JSON Schema for validating configuration files. This allows editors like VSCode to provide autocompletion and validation while editing MultiQC config files.
+
+### JSON Schema Store
+
+The MultiQC config JSON schema is available via [https://www.schemastore.org/](https://www.schemastore.org/),
+so [most code editors](https://www.schemastore.org/json/#editors) should automatically
+provide autocompletion and validation if your config files file are named as any of the following:
+
+- `multiqc_config.yaml`
+- `multiqc_config.yml`
+- `.multiqc_config.yaml`
+- `.multiqc_config.yml`
+
+In many situations this should just work, without any additional action needed.
+If not (custom filenames for your config, or variations in IDE settings), see below to
+do this in a more explicit manner.
+
+### Using with VSCode
+
+1. Install the YAML extension for VSCode
+2. Add the following to your VSCode settings.json:
+
+```json
+{
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/MultiQC/MultiQC/main/multiqc/utils/config_schema.json": [
+      "**/multiqc_config.y*ml"
+    ]
+  }
+}
+```
+
+This will enable:
+
+- Autocompletion of config options
+- Validation of config values
+- Hover documentation for each option
+- Warning highlights for invalid values
+
+### Using with other editors
+
+Most modern editors support JSON Schema validation for YAML files. You can point them to the schema URL:
+
+```
+https://raw.githubusercontent.com/MultiQC/MultiQC/main/multiqc/utils/config_schema.json
+```
+
+Alternatively, you can download the schema file locally and reference it in your editor configuration.
+
+### Adding schema reference to config files
+
+You can also add a reference to the schema directly in your YAML config files:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/MultiQC/MultiQC/main/multiqc/utils/config_schema.json
+
+title: "My MultiQC Report"
+subtitle: "Quality Control Results"
+```
+
+This will enable validation in editors that support it, without requiring editor-specific configuration.
+
+### Schema validation in Python
+
+The schema is also used internally by MultiQC when loading config files. If validation fails, a warning will be printed but execution will continue (to maintain backwards compatibility). To enable strict validation that fails on invalid configs, set the `strict` config option to `true`:
+
+```yaml
+strict: true
+```
+
+Or use the `--strict` command line flag.

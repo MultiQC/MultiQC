@@ -20,7 +20,6 @@ class BarPlot extends Plot {
 
     // Rename and filter samples:
     this.filteredSettings = samplesSettings.filter((s) => !s.hidden);
-    samples = this.filteredSettings.map((s) => s.name);
 
     cats = cats.map((cat) => {
       let data = this.pActive ? cat["data_pct"] : cat.data;
@@ -31,7 +30,7 @@ class BarPlot extends Plot {
       };
     });
 
-    return [cats, samples];
+    return [cats];
   }
 
   plotAiHeader() {
@@ -54,8 +53,8 @@ class BarPlot extends Plot {
       return prompt;
     }
 
-    prompt += "| Sample | " + cats.map((cat) => cat.name).join(" | ") + " |\n";
-    prompt += "| --- | " + cats.map(() => "---").join(" | ") + " |\n";
+    prompt += "|Sample|" + cats.map((cat) => cat.name).join("|") + "|\n";
+    prompt += "|---|" + cats.map(() => "---").join("|") + "|\n";
 
     let suffix = "";
     if (this.pActive) {
@@ -68,10 +67,11 @@ class BarPlot extends Plot {
     }
 
     // Create data rows
-    samples.forEach((sample, idx) => {
-      if (samplesSettings[idx].hidden) return;
+
+    samplesSettings.forEach((sample, idx) => {
+      if (sample.hidden) return;
       prompt +=
-        `| ${sample} | ` +
+        `|${sample.pseudonym ?? sample.name}|` +
         cats
           .map((cat) => {
             let val = this.pActive ? cat.data_pct[idx] : cat.data[idx];
@@ -79,8 +79,8 @@ class BarPlot extends Plot {
             if (val !== "" && suffix) val += suffix;
             return val;
           })
-          .join(" | ") +
-        " |\n";
+          .join("|") +
+        "|\n";
     });
 
     return prompt;
@@ -97,8 +97,8 @@ class BarPlot extends Plot {
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    let [cats, samples] = this.prepData();
-    if (cats.length === 0 || samples.length === 0) return [];
+    let [cats] = this.prepData();
+    if (cats.length === 0 || this.filteredSettings.length === 0) return [];
 
     const maxTicks = (this.layout.height - 140) / 12;
     this.recalculateTicks(this.filteredSettings, this.layout.yaxis, maxTicks);
@@ -134,7 +134,7 @@ class BarPlot extends Plot {
         // Plotly adds giant gaps between bars in the group mode when adding each sample as a
         // separate trace. Sacrificing dimming the de-highlighted bars to get rid of this gap.
         let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
-        samples = this.filteredSettings.map((s) => s.name);
+        let samples = this.filteredSettings.map((s) => s.name);
         params.marker.color = "rgb(" + cat.color + ")";
 
         return {
@@ -150,13 +150,13 @@ class BarPlot extends Plot {
   }
 
   exportData(format) {
-    let [cats, filteredSettings] = this.prepData();
+    let [cats] = this.prepData();
 
     let delim = format === "tsv" ? "\t" : ",";
 
     let csv = "Sample" + delim + cats.map((cat) => cat.name).join(delim) + "\n";
-    for (let i = 0; i < filteredSettings.length; i++) {
-      csv += filteredSettings[i] + delim + cats.map((cat) => cat.data[i]).join(delim) + "\n";
+    for (let i = 0; i < this.filteredSettings.length; i++) {
+      csv += this.filteredSettings[i].name + delim + cats.map((cat) => cat.data[i]).join(delim) + "\n";
     }
     return csv;
   }

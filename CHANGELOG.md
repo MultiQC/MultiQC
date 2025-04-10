@@ -1,5 +1,81 @@
 # MultiQC Version History
 
+## [MultiQC v1.28](https://github.com/MultiQC/MultiQC/releases/tag/v1.28) - 2025-03-21
+
+JSON schema for MultiQC config & AI summaries fixes and optimizations.
+
+### Feature updates and improvements
+
+- Add JSON schema for config ([#3100](https://github.com/MultiQC/MultiQC/pull/3100))
+- Allow configure dynamic toolbox settings in YAML config ([#3102](https://github.com/MultiQC/MultiQC/pull/3102))
+- AI prompt optimizations ([#3109](https://github.com/MultiQC/MultiQC/pull/3109))
+- Round table values for AI prompt ([#3124](https://github.com/MultiQC/MultiQC/pull/3124))
+- Custom content: support `.gif`, `.webp` and `.tiff` ([#3058](https://github.com/MultiQC/MultiQC/pull/3058))
+- Ignore `*.jar` files for file search ([#3097](https://github.com/MultiQC/MultiQC/pull/3097))
+
+### Module updates
+
+- QUAST: add ANI column ([#3091](https://github.com/MultiQC/MultiQC/pull/3091))
+- Trimmomatic: use more specific search pattern ([#3098](https://github.com/MultiQC/MultiQC/pull/3098))
+
+### Fixes
+
+- AI in-browser summary: fix prompt for string-type cells in tables ([#3096](https://github.com/MultiQC/MultiQC/pull/3096))
+- Fix generating AI summaries from custom content table with empty cells ([#3095](https://github.com/MultiQC/MultiQC/pull/3095))
+- Bargraph: respect `pconfig.use_legend` if defined ([#3112](https://github.com/MultiQC/MultiQC/pull/3112))
+- Fix warnings when `read_count_multiplier: 1` ([#3094](https://github.com/MultiQC/MultiQC/pull/3094))
+
+### Module fixes
+
+- VEP: small fix when data in category is missing ([#3116](https://github.com/MultiQC/MultiQC/pull/3116))
+- BCLConvert: fix index parsing ([#3101](https://github.com/MultiQC/MultiQC/pull/3101))
+
+### Optimization, refactoring and typing
+
+- Move special case modules into core ([#3114](https://github.com/MultiQC/MultiQC/pull/3114))
+- Refactor plotting code to save and load input data ([#3069](https://github.com/MultiQC/MultiQC/pull/3069))
+
+## [MultiQC v1.27.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.27.1) - 2025-02-07
+
+Few fixes and improvements in AI summaries:
+
+- AI summaries should now work with `bioconda install multiqc` without additional dependencies.
+- Supporting other LLM providers with a custom endpoint passed through the command line ([docs](https://docs.seqera.io/multiqc/ai#choosing-a-provider))
+- Option to anonymize sample names.
+
+### Feature updates and improvements
+
+- AI summaries:
+
+  - Add "Chat with Seqera AI" buttons to all summaries ([#3067](https://github.com/MultiQC/MultiQC/pull/3067))
+  - Add options to configure custom OpenAI endpoint ([#3083](https://github.com/MultiQC/MultiQC/pull/3083))
+  - Support anonymizing sample names ([#3074](https://github.com/MultiQC/MultiQC/pull/3074))
+  - Use `tiktoken` to estimate token counts for all providers ([#3064](https://github.com/MultiQC/MultiQC/pull/3064))
+  - Remove the dependency on `langchain`, `openai`, and `anthropic` packages ([#3066](https://github.com/MultiQC/MultiQC/pull/3066))
+  - Always save prompt to file ([#3078](https://github.com/MultiQC/MultiQC/pull/3078))
+  - Box plot: use statistics instead of raw values ([#3077](https://github.com/MultiQC/MultiQC/pull/3077))
+  - Fix for in-browser summaries: when "Clear summary" clicked on global, clear also the generated extended summary ([#3068](https://github.com/MultiQC/MultiQC/pull/3068))
+  - Make token count warning a debug ([#3071](https://github.com/MultiQC/MultiQC/pull/3071))
+
+- Improving table small scatter plots:
+
+  - Support hide, rename, highlight ([#3082](https://github.com/MultiQC/MultiQC/pull/3082))
+  - Remove legend to make more space ([#3081](https://github.com/MultiQC/MultiQC/pull/3081))
+
+- Configuring from `env`: resolve empty to `None` ([#3072](https://github.com/MultiQC/MultiQC/pull/3072))
+- Do not print stack trace on KeyboardInterrupt unless verbose ([#3063](https://github.com/MultiQC/MultiQC/pull/3063))
+- Custom content:
+  - Allow leading empty columns when parsing TSV ([#3059](https://github.com/MultiQC/MultiQC/pull/3059))
+  - Handle empty input files ([#3086](https://github.com/MultiQC/MultiQC/pull/3086))
+
+### Module updates
+
+- Sequali: change DOI to article link ([#3084](https://github.com/MultiQC/MultiQC/pull/3084))
+
+### Module fixes
+
+- FastQC: fix "Per Base Sequence Content" heatmap ([#3075](https://github.com/MultiQC/MultiQC/pull/3075))
+
 ## [MultiQC v1.27](https://github.com/MultiQC/MultiQC/releases/tag/v1.27) - 2025-01-22
 
 ### Highlights

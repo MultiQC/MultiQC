@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.27.1dev"
+version = "1.28"
 dependencies = [
     "click",
     "humanize",
@@ -28,6 +28,7 @@ dependencies = [
     "python-dotenv",
     "natsort",
     "tiktoken",
+    "jsonschema",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -80,6 +81,7 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+    "types-jsonschema",
     "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
 ]
@@ -95,6 +97,7 @@ Changelog = "https://github.com/MultiQC/MultiQC/blob/main/CHANGELOG.md"
 multiqc = "multiqc.__main__:run_multiqc"
 
 [project.entry-points."multiqc.modules.v1"]
+custom_content = "multiqc.core.special_case_modules.custom_content:custom_module_classes"  # special case
 adapterremoval = "multiqc.modules.adapterremoval:MultiqcModule"
 afterqc = "multiqc.modules.afterqc:MultiqcModule"
 anglerfish = "multiqc.modules.anglerfish:MultiqcModule"
@@ -123,7 +126,6 @@ checkqc = "multiqc.modules.checkqc:MultiqcModule"
 clipandmerge = "multiqc.modules.clipandmerge:MultiqcModule"
 clusterflow = "multiqc.modules.clusterflow:MultiqcModule"
 conpair = "multiqc.modules.conpair:MultiqcModule"
-custom_content = "multiqc.modules.custom_content:custom_module_classes"           # special case
 cutadapt = "multiqc.modules.cutadapt:MultiqcModule"
 damageprofiler = "multiqc.modules.damageprofiler:MultiqcModule"
 dedup = "multiqc.modules.dedup:MultiqcModule"

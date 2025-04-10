@@ -165,6 +165,16 @@ class MultiqcModule(BaseMultiqcModule):
                     except ValueError:
                         self.quast_data[s_name][k] = v
 
+        # Calculate ANI if not present
+        for s_name, data in self.quast_data.items():
+            if "ANI (%)" in data:
+                continue
+            # These fields are only present if a reference genome was provided to QUAST
+            if "# mismatches per 100 kbp" in data and "# indels per 100 kbp" in data:
+                self.quast_data[s_name]["ANI (%)"] = 100 - (
+                    data["# mismatches per 100 kbp"] / 1000 + data["# indels per 100 kbp"] / 1000
+                )
+
     def quast_general_stats_table(self):
         """Take the parsed stats from the QUAST report and add some to the
         General Statistics table at the top of the report"""
@@ -257,6 +267,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "The number of indels per 100 kbp",
                 "scale": "YlOrRd",
                 "format": "{:,.2f}",
+            },
+            "ANI (%)": {
+                "title": "ANI",
+                "description": "The average gap-compressed nucleotide identity",
+                "scale": "YlGn",
+                "format": "{:,.2f}",
+                "max": 100,
+                "suffix": "%",
             },
             "# genes": {
                 "title": "Genes",

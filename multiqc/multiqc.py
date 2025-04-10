@@ -23,7 +23,7 @@ from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.utils import util_functions
+from multiqc.utils import config_schema, util_functions
 from multiqc.validation import ModuleConfigValidationError
 
 logger = logging.getLogger(__name__)
@@ -133,6 +133,12 @@ click.rich_click.OPTION_GROUPS = {
                 "--ai-summary-full",
                 "--ai-provider",
                 "--no-ai",
+            ],
+        },
+        {
+            "name": "Check Config",
+            "options": [
+                "--check-config",
             ],
         },
     ],
@@ -462,8 +468,23 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     "--ai-provider",
-    type=click.Choice(config.AVAILABLE_AI_PROVIDERS),
+    type=click.Choice(config_schema.AiProviderLiteral.__args__),  # type: ignore
     help=f"Select AI provider for report summarization. [dim yellow](Default: {config.ai_provider})",
+)
+@click.option(
+    "--ai-model",
+    type=str,
+    help="Select AI model to use for report summarization",
+)
+@click.option(
+    "--ai-custom-endpoint",
+    type=str,
+    help="Custom AI endpoint to use with OpenAI API",
+)
+@click.option(
+    "--ai-custom-context-window",
+    type=int,
+    help="Custom context window to use with OpenAI API (default: 128000)",
 )
 @click.option(
     "--no-ai",
@@ -472,8 +493,14 @@ click.rich_click.OPTION_GROUPS = {
     default=None,
     help="Disable AI toolbox and buttons in the report",
 )
+@click.option(
+    "--check-config",
+    is_flag=True,
+    default=False,
+    help="Check a MultiQC configuration file for errors and exit.",
+)
 @click.version_option(config.version, prog_name="multiqc")
-def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
+def run_cli(analysis_dir: Tuple[str], clean_up: bool, check_config: bool, **kwargs):
     # Main MultiQC run command for use with the click command line, complete with all click function decorators.
     # To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
     # parsed variables on to a vanilla python function.
@@ -487,6 +514,18 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     To run, supply with one or more directory to scan for analysis results.
     For example, to run in the current working directory, use '[blue bold]multiqc .[/]'
     """
+
+    # New: Check if this is a config check run
+    if check_config:
+        if len(analysis_dir) == 1:
+            config_file = analysis_dir[0]
+            from multiqc.core.config_check import check_config_file
+
+            check_config_file(config_file)
+            sys.exit(0)
+        else:
+            logger.error("Please specify a single config file with --check-config")
+            sys.exit(1)
 
     cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.model_fields}
     other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.model_fields}

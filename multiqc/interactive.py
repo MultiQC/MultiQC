@@ -18,13 +18,13 @@ from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.plots.plotly.bar import BarPlot
-from multiqc.plots.plotly.box import BoxPlot
-from multiqc.plots.plotly.heatmap import HeatmapPlot
-from multiqc.plots.plotly.line import LinePlot
-from multiqc.plots.plotly.plot import Plot, PlotType
-from multiqc.plots.plotly.scatter import ScatterPlot
-from multiqc.plots.plotly.violin import ViolinPlot
+from multiqc.plots.bargraph import BarPlot
+from multiqc.plots.box import BoxPlot
+from multiqc.plots.heatmap import HeatmapPlot
+from multiqc.plots.linegraph import LinePlot
+from multiqc.plots.plot import Plot, PlotType
+from multiqc.plots.scatter import ScatterPlot
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ModuleId
 
 logger = logging.getLogger("multiqc")
