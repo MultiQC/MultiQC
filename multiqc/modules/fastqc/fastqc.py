@@ -294,18 +294,18 @@ class MultiqcModule(BaseMultiqcModule):
             self.intro += '<script type="text/javascript">load_fastqc_passfails();</script>'
 
         # Now add each section in order
-        # self.read_count_plot()
-        # self.sequence_quality_plot(status_checks)
-        # self.per_seq_quality_plot(status_checks)
-        # self.sequence_content_plot()
-        # self.gc_content_plot(status_checks)
-        # self.n_content_plot(status_checks)
-        # self.seq_length_dist_plot(status_checks)
+        self.read_count_plot()
+        self.sequence_quality_plot(status_checks)
+        self.per_seq_quality_plot(status_checks)
+        self.sequence_content_plot()
+        self.gc_content_plot(status_checks)
+        self.n_content_plot(status_checks)
+        self.seq_length_dist_plot(status_checks)
         self.seq_dup_levels_plot(status_checks)
-        # self.overrepresented_sequences()
-        # self.adapter_content_plot(status_checks)
-        # if status_checks:
-        #     self.status_heatmap()
+        self.overrepresented_sequences()
+        self.adapter_content_plot(status_checks)
+        if status_checks:
+            self.status_heatmap()
 
         # Write the summary stats to a file
         dump_data: Dict[SampleName, Dict[str, Any]] = dict()

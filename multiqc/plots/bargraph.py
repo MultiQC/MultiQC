@@ -251,7 +251,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                         "dataset_label": dataset_label,
                         "sample_name": str(sample_name),
                         "category_name": str(category_name),
-                        "value": value,
+                        "bar_value": value,
                     }
 
                     # Store category configuration as JSON if available
@@ -315,7 +315,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                 # Process each category for this sample
                 for _, row in sample_group.iterrows():
                     category_name = row["category_name"]
-                    value = row["value"]
+                    value = row["bar_value"]
                     sample_data[CatName(str(category_name))] = value
 
                     # Process category metadata if available
@@ -360,20 +360,8 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
         This allows for comparing bar plot data across multiple runs.
         """
-        # Load dataframes from parquet files instead of using in-memory structures
-        old_df = None
-        if old_data.anchor in report.plot_input_data:
-            old_path = report.plot_input_data[old_data.anchor]
-            if Path(old_path).exists():
-                try:
-                    old_df = pd.read_parquet(old_path)
-                except Exception as e:
-                    logger.debug(f"Failed to load parquet for {old_data.anchor}: {str(e)}")
-
         # Create dataframe for new data
         new_df = new_data.to_df()
-
-        # If new_df is empty, return early
         if new_df.empty:
             return old_data
 
@@ -382,6 +370,8 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
         if hasattr(config, "kwargs") and "run_id" in config.kwargs:
             new_df["run_id"] = config.kwargs["run_id"]
+
+        old_df = old_data.to_df()
 
         # If we have both old and new data, merge them
         merged_df = new_df

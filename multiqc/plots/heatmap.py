@@ -74,14 +74,24 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         Convert the heatmap data to a pandas DataFrame for storage and reloading.
         """
         # Create a DataFrame with row indices, column indices, and values
-        data = []
+        records = []
         for i, row in enumerate(self.rows):
             y_cat = str(self.ycats[i]) if i < len(self.ycats) else str(i)
             for j, val in enumerate(row):
                 x_cat = str(self.xcats[j]) if j < len(self.xcats) else str(j)
-                data.append({"row_idx": i, "col_idx": j, "row_cat": y_cat, "col_cat": x_cat, "value": val})
+                records.append(
+                    {
+                        "row_idx": i,
+                        "col_idx": j,
+                        "row_cat": y_cat,
+                        "col_cat": x_cat,
+                        # values can be be different types (int, float, str...), especially across
+                        # plots. parquet requires values of the same type. so we cast them to str
+                        "z_val": str(val),
+                    }
+                )
 
-        df = pd.DataFrame(data)
+        df = pd.DataFrame(records)
 
         # Add config data as additional columns
         config_dict = self.pconfig.model_dump()
@@ -136,8 +146,8 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
             pconf = pconfig
 
         # Extract and rebuild the 2D matrix
-        max_row_idx = df["row_idx"].max()
-        max_col_idx = df["col_idx"].max()
+        max_row_idx = int(df["row_idx"].max())
+        max_col_idx = int(df["col_idx"].max())
 
         # Reconstruct xcats and ycats
         xcats = []
@@ -155,7 +165,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
 
         # Fill matrix with values
         for _, row in df.iterrows():
-            rows[int(row["row_idx"])][int(row["col_idx"])] = row["value"]
+            rows[int(row["row_idx"])][int(row["col_idx"])] = row["z_val"]
 
         return HeatmapNormalizedInputData(
             anchor=anchor,
@@ -163,6 +173,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
             xcats=xcats,
             ycats=ycats,
             pconfig=pconf,
+            plot_type=PlotType.HEATMAP,
         )
 
     @classmethod
@@ -265,17 +276,7 @@ def plot(
     if inputs.is_empty():
         return None
 
-    return _plot_from_inputs(inputs)
-
-
-def _plot_from_inputs(inputs: HeatmapNormalizedInputData) -> Union["HeatmapPlot", str, None]:
-    return HeatmapPlot.create(
-        rows=inputs.rows,
-        pconfig=inputs.pconfig,
-        anchor=inputs.anchor,
-        xcats=list(inputs.xcats),
-        ycats=list(inputs.ycats),
-    )
+    return HeatmapPlot.from_inputs(inputs)
 
 
 def _cluster_data(
@@ -438,6 +439,16 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                 if ds.ycats:
                     names.extend(SampleName(cat) for cat in ds.ycats)
         return names
+
+    @staticmethod
+    def from_inputs(inputs: HeatmapNormalizedInputData) -> Union["HeatmapPlot", str, None]:
+        return HeatmapPlot.create(
+            rows=inputs.rows,
+            pconfig=inputs.pconfig,
+            anchor=inputs.anchor,
+            xcats=list(inputs.xcats),
+            ycats=list(inputs.ycats),
+        )
 
     @staticmethod
     def create(

@@ -62,7 +62,9 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
                     # Add all point data
                     for key, val in point.items():
-                        row[f"point_{key}"] = val
+                        # values can be be different types (int, float, str...), especially across
+                        # plots. parquet requires values of the same type. so we cast them to str
+                        row[f"point_{key}"] = str(val)
 
                     data.append(row)
 

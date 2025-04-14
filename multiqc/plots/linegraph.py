@@ -321,22 +321,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         table with explicit columns for series data.
         """
         records = []
-
-        # Check if any of the x_values or y_values are strings
-        x_has_string_values = False
-        y_has_string_values = False
-        for dataset in self.data:
-            for series in dataset:
-                for x, y in series.pairs:
-                    if isinstance(x, str):
-                        x_has_string_values = True
-                    if isinstance(y, str):
-                        y_has_string_values = True
-                if x_has_string_values or y_has_string_values:
-                    break
-            if x_has_string_values or y_has_string_values:
-                break
-
         # Create a record for each data point in each series
         for ds_idx, dataset in enumerate(self.data):
             # Get dataset label if available
@@ -354,25 +338,15 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
             for series in dataset:
                 for x, y in series.pairs:
-                    # Convert values to string if any value in the dataset is a string
-                    x_value: Union[KeyT, str, None]
-                    y_value: Union[ValT, str, None]
-                    if x_has_string_values:
-                        x_value = str(x) if x is not None else None
-                    else:
-                        x_value = x
-                    if y_has_string_values:
-                        y_value = str(y) if y is not None else None
-                    else:
-                        y_value = y
-
                     record = {
                         "anchor": self.anchor,
                         "dataset_idx": ds_idx,
                         "dataset_label": dataset_label,
                         "sample_name": series.name,
-                        "x_value": x_value,
-                        "y_value": y_value,
+                        # values can be be different types (int, float, str...), especially across
+                        # plots. parquet requires values of the same type. so we cast them to str
+                        "x_value": str(x),
+                        "y_value": str(y),
                         "series_color": series.color,
                         "series_width": series.width,
                         "series_dash": series.dash,
@@ -428,6 +402,22 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     for _, row in sample_group.iterrows():
                         x_val = row["x_value"]
                         y_val = row["y_value"]
+                        try:
+                            x_val = float(x_val)
+                        except ValueError:
+                            pass
+                        try:
+                            x_val = int(x_val)
+                        except ValueError:
+                            pass
+                        try:
+                            y_val = float(y_val)
+                        except ValueError:
+                            pass
+                        try:
+                            y_val = int(y_val)
+                        except ValueError:
+                            pass
                         pairs.append((x_val, y_val))
 
                     # Create Series object
