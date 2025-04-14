@@ -11,6 +11,7 @@ import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
 from multiqc.core import tmp_dir
+from multiqc.core.plot_data_store import save_plot_data
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
@@ -27,27 +28,6 @@ class BoxPlotConfig(PConfig):
 
 # Type of single box (matching one sample)
 BoxT = List[Union[int, float]]
-
-
-def plot(
-    list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
-    pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
-) -> Union["BoxPlot", str, None]:
-    """
-    Plot a box plot. Expects either:
-    - a dict mapping sample names to data point lists or dicts,
-    - a dict mapping sample names to a dict of statistics (e.g. {min, max, median, mean, std, q1, q3 etc.})
-    """
-    inputs: BoxPlotInputData = BoxPlotInputData.create(list_of_data_by_sample, pconfig)
-    inputs = BoxPlotInputData.merge_with_previous(inputs)
-    if inputs.is_empty():
-        return None
-
-    return BoxPlot.create(
-        list_of_data_by_sample=inputs.list_of_data_by_sample,
-        pconfig=inputs.pconfig,
-        anchor=inputs.anchor,
-    )
 
 
 class Dataset(BaseDataset):
@@ -334,10 +314,8 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
                 merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
 
-        # Save the merged dataframe
-        file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"
-        report.plot_input_data[new_data.anchor] = str(file_path)
-        merged_df.to_parquet(file_path, compression="gzip")
+        # Save the merged data for future reference
+        save_plot_data(new_data.anchor, merged_df)
 
         # Create a new BoxPlotInputData from the merged DataFrame
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
@@ -424,3 +402,28 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             ),
         )
         return BoxPlot(**model.__dict__)
+
+
+def plot(
+    list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
+    pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
+) -> Union["BoxPlot", str, None]:
+    """
+    Plot a box plot. Expects either:
+    - a dict mapping sample names to data point lists or dicts,
+    - a dict mapping sample names to a dict of statistics (e.g. {min, max, median, mean, std, q1, q3 etc.})
+    """
+    inputs: BoxPlotInputData = BoxPlotInputData.create(list_of_data_by_sample, pconfig)
+    inputs = BoxPlotInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
+
+    return _plot_from_inputs(inputs)
+
+
+def _plot_from_inputs(inputs: BoxPlotInputData) -> Union["BoxPlot", str, None]:
+    return BoxPlot.create(
+        list_of_data_by_sample=inputs.list_of_data_by_sample,
+        pconfig=inputs.pconfig,
+        anchor=inputs.anchor,
+    )

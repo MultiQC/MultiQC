@@ -14,6 +14,7 @@ import logging
 import mimetypes
 import os
 import re
+import shutil
 import sys
 import time
 from collections import defaultdict
@@ -46,7 +47,8 @@ from multiqc.core import ai, log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
-from multiqc.plots.plot import Plot
+from multiqc.core import plot_data_store
+from multiqc.plots.plot import NormalizedPlotInputData, Plot
 from multiqc.plots.table_object import Cell, ColumnDict, InputRow, SampleName, ValueT
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section, SectionKey
@@ -116,9 +118,9 @@ data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
 
 # relative paths to parquet files to combine data from previous runs
-plot_input_data: Dict[Anchor, str] = dict()
+plot_input_data: Dict[Anchor, NormalizedPlotInputData] = dict()
 # plot objects to retried when plots are rendered, for ai, and for interactive use
-plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()
+plot_by_id: Dict[Anchor, Union[Plot[Any, Any], str]] = dict()
 # plot dumps to embed in html and load with js
 plot_data: Dict[Anchor, Dict[str, Any]] = dict()
 
@@ -223,6 +225,8 @@ def reset():
     plot_compressed_json = ""
     saved_raw_data_keys = []
     saved_raw_data = dict()
+
+    plot_data_store.reset()
 
     tmp_dir.new_tmp_dir()
 
@@ -1038,7 +1042,7 @@ def write_data_file(
 
 def multiqc_dump_json(data_dir: Path):
     """
-    Export the parsed data in memory to a JSON file.
+    Export the parsed data in memory to a JSON file and parquet file.
     Upload to MegaQC if requested.
     WARNING: May be depreciated and removed in future versions.
     """
@@ -1051,7 +1055,6 @@ def multiqc_dump_json(data_dir: Path):
             "general_stats_data",
             "general_stats_headers",
             "creation_date",
-            "plot_input_data",
             "plot_data",
         ],
         "config": [

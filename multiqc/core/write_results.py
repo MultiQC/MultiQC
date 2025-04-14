@@ -18,7 +18,7 @@ import jinja2
 
 from multiqc import config, report
 from multiqc.base_module import Section
-from multiqc.core import log_and_rich, plugin_hooks, tmp_dir
+from multiqc.core import log_and_rich, plot_data_store, plugin_hooks, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
@@ -358,6 +358,9 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
             "raw_data_fn": "multiqc_general_stats",
         },
     )
+    if p is None:
+        p = report.plot_by_id[Anchor("general_stats_table")]  # loaded from previous run?
+
     if p is not None:
         if isinstance(p, str):
             report.general_stats_html = p
@@ -391,6 +394,9 @@ def _write_data_files(data_dir: Path) -> None:
     # that goes beyond this write_results run.
     if log_and_rich.log_tmp_fn:
         shutil.copy2(log_and_rich.log_tmp_fn, report.data_tmp_dir())
+
+    # Save metadata to parquet file
+    plot_data_store.save_report_metadata()
 
     shutil.copytree(
         report.data_tmp_dir(),

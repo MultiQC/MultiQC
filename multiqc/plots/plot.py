@@ -6,9 +6,8 @@ import math
 import platform
 import random
 import re
-import threading
 import subprocess
-from datetime import datetime
+import threading
 from functools import lru_cache
 from pathlib import Path
 from typing import (
@@ -18,10 +17,12 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Set,
     Tuple,
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 import pandas as pd
@@ -29,7 +30,7 @@ import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from multiqc import config, report
-from multiqc.core import tmp_dir
+from multiqc.core import plot_data_store, tmp_dir
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, PlotType, SampleName
@@ -277,7 +278,7 @@ def plot_anchor(pconfig: PConfig) -> Anchor:
     return anchor
 
 
-class NormalizedPlotInputData(BaseModel):
+class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
     """
     Represents normalized input data for a plot.
 
@@ -287,13 +288,17 @@ class NormalizedPlotInputData(BaseModel):
     """
 
     anchor: Anchor
+    plot_type: PlotType
+    pconfig: PConfigT
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """Return True if this plot has no data"""
         raise NotImplementedError("Subclasses must implement is_empty()")
 
     @classmethod
-    def from_df(cls, df: pd.DataFrame, pconfig_dict: Dict, anchor: Anchor):
+    def from_df(
+        cls: Type[NormalizedPlotInputDataT], df: pd.DataFrame, pconfig_dict: Optional[Dict[str, Any]], anchor: Anchor
+    ) -> NormalizedPlotInputDataT:
         """
         Abstract method to parse a dataframe (i.e. stored in parquet files)
         along with a pconfig dict into a NormalizedPlotInputData object.
@@ -303,29 +308,18 @@ class NormalizedPlotInputData(BaseModel):
     @classmethod
     def load(cls, anchor: Anchor) -> Optional["NormalizedPlotInputData"]:
         """
-        Locate parquet file and load into NormalizedPlotInputDataT.
+        Load plot data from a previous analysis, as defined in the input anchor.
         """
-        if not (file_path := report.plot_input_data.get(anchor)):
-            return None
-        if not Path(file_path).exists():
-            return None
-
-        # Load from parquet
-        df = pd.read_parquet(file_path)
-
-        # Try to load pconfig from JSON file first
-        pconfig_path = Path(file_path).with_suffix(".json")
-        if not pconfig_path.exists():
-            logger.error(f"Pconfig file {pconfig_path} does not exist")
+        # Check if we have an input file for this anchor
+        if anchor not in report.plot_input_data:
             return None
 
-        with open(pconfig_path, "r") as f:
-            pconfig_dict = json.load(f)
-
-        return cls.from_df(df, pconfig_dict, anchor)
+        return report.plot_input_data[anchor]
 
     @classmethod
-    def merge_with_previous(cls, new_data: NormalizedPlotInputDataT) -> NormalizedPlotInputDataT:
+    def merge_with_previous(
+        cls: Type[NormalizedPlotInputDataT], new_data: NormalizedPlotInputDataT
+    ) -> NormalizedPlotInputDataT:
         """
         If data from a previous run is available, merge it with the current data.
 
@@ -335,45 +329,44 @@ class NormalizedPlotInputData(BaseModel):
         with merged data.
         """
         # Try to load previous data (empty or unloadable means no data from previous run)
-        old_data = cls.load(new_data.anchor)
+        old_data = report.plot_input_data.get(new_data.anchor)
         if old_data is None or old_data.is_empty():
             merged_data = new_data
         else:
             # Merge using class-specific implementation
-            merged_data = cls.merge(old_data, new_data)  # type: ignore
+            merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
 
         merged_data.save()
-        return merged_data  # type: ignore
+        return merged_data
 
     def to_df(self) -> pd.DataFrame:
         raise NotImplementedError("Subclasses must implement to_df()")
 
-    def save(self):
+    def save(self) -> None:
         """
-        Save plot input data to a file.
+        Save the plot data to a parquet file.
 
-        Should be implemented by subclasses, apart from the pconfig
+        This function handles writing both the data and the plot config.
         """
-        # Save the tabular data to parquet
-        df = self.to_df()
-        if df.empty:
-            return
+        # Create a copy of the DataFrame to avoid modifying the original
+        df_to_save = self.to_df().copy()
 
-        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
-            df["run_id"] = config.kwargs["run_id"]
-        df["timestamp"] = datetime.now().isoformat()
-        file_path = tmp_dir.parquet_dir() / f"{self.anchor}.parquet"
-        df.to_parquet(file_path, compression="gzip")
-        report.plot_input_data[self.anchor] = str(Path(file_path).relative_to(tmp_dir.data_tmp_dir()))
+        # Ensure the DataFrame has the anchor column
+        if "anchor" not in df_to_save.columns:
+            df_to_save["anchor"] = str(self.anchor)
 
-        # Also save pconfig to JSON
-        pconfig = getattr(self, "pconfig", None)
-        if pconfig is not None:
-            pconfig_path = Path(file_path).with_suffix(".json")
-            with open(pconfig_path, "w") as f:
-                # Convert pconfig to a serializable format
-                pconfig_dict = pconfig.model_dump()
-                json.dump(pconfig_dict, f, indent=2)
+        # Add type for easier filtering
+        if "plot_type" not in df_to_save.columns:
+            df_to_save["plot_type"] = str(self.plot_type.value)
+
+        # Store pconfig as a column in the DataFrame
+        if self.pconfig:
+            # Filter out any None/null values from pconfig before storing
+            filtered_pconfig = {k: v for k, v in self.pconfig.model_dump().items() if v is not None}
+            df_to_save["_pconfig"] = json.dumps(filtered_pconfig)
+
+        # Save the data
+        plot_data_store.save_plot_data(self.anchor, df_to_save)
 
     @classmethod
     def merge(

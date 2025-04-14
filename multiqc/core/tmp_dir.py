@@ -47,14 +47,11 @@ def plots_tmp_dir(create=True) -> Path:
     return path
 
 
-def parquet_dir() -> Path:
+def parquet_file() -> Path:
     """
-    Temporary directory to collect parquet files from running modules before copying to the final
-    destination in multiqc.core.write_results
+    Returns the path to the combined parquet file that contains all plot data
     """
-    path = data_tmp_dir() / "parquet"
-    os.makedirs(path, exist_ok=True)
-    return path
+    return data_tmp_dir() / "multiqc.parquet"
 
 
 def new_tmp_dir():

@@ -3,6 +3,7 @@
 import copy
 import logging
 from collections import defaultdict
+import stat
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import numpy as np
@@ -104,6 +105,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
         return ScatterNormalizedInputData(
             anchor=plot_anchor(pconf),
+            plot_type=PlotType.SCATTER,
             datasets=data,
             pconfig=pconf,
         )
@@ -193,6 +195,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             merged_pconf.data_labels = merged_data_labels
 
             return ScatterNormalizedInputData(
+                plot_type=PlotType.SCATTER,
                 anchor=new_data.anchor,
                 datasets=merged_datasets,
                 pconfig=merged_pconf,
@@ -204,6 +207,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                 merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
                 merged_pconf.extra_series = old_data.pconfig.extra_series
                 return ScatterNormalizedInputData(
+                    plot_type=PlotType.SCATTER,
                     anchor=new_data.anchor,
                     datasets=new_data.datasets,
                     pconfig=merged_pconf,
@@ -229,6 +233,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                 else cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
             )
             return ScatterNormalizedInputData(
+                plot_type=PlotType.SCATTER,
                 anchor=anchor,
                 datasets=[],
                 pconfig=pconf,
@@ -317,6 +322,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
         return ScatterNormalizedInputData(
             anchor=anchor,
+            plot_type=PlotType.SCATTER,
             datasets=datasets,
             pconfig=pconf,
         )
@@ -337,85 +343,7 @@ def plot(
     if inputs.is_empty():
         return None
 
-    pconf = inputs.pconfig
-    sample_names = []
-    plotdata: List[List[Dict[str, Any]]] = list()
-    for data_index, ds in enumerate(inputs.datasets):
-        d: List[Dict[str, Any]] = list()
-        for s_name in ds:
-            sample_names.append(SampleName(s_name))
-            # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
-            series_config: ScatterConfig = pconf.model_copy()
-            if pconf.data_labels:
-                dl = pconf.data_labels[data_index]
-                if isinstance(dl, dict):
-                    # if not a dict: only dataset name is provided
-                    for k, v in dl.items():
-                        if k in series_config.model_fields:
-                            setattr(series_config, k, v)
-
-            if not isinstance(ds[s_name], list):
-                ds[s_name] = [ds[s_name]]
-            for point in ds[s_name]:
-                if point["x"] is not None:
-                    if series_config.xmax is not None and float(point["x"]) > float(series_config.xmax):
-                        continue
-                    if series_config.xmin is not None and float(point["x"]) < float(series_config.xmin):
-                        continue
-                if point["y"] is not None:
-                    if series_config.ymax is not None and float(point["y"]) > float(series_config.ymax):
-                        continue
-                    if series_config.ymin is not None and float(point["y"]) < float(series_config.ymin):
-                        continue
-                if "name" in point:
-                    point["name"] = f"{s_name}: {point['name']}"
-                else:
-                    point["name"] = s_name
-
-                for k in ["color", "opacity", "marker_size", "marker_line_width"]:
-                    if k not in point:
-                        v = getattr(series_config, k)
-                        if v is not None:
-                            if isinstance(v, dict) and s_name in v:
-                                point[k] = v[s_name]
-                            else:
-                                point[k] = v
-                d.append(point)
-        plotdata.append(d)
-
-    if pconf.square:
-        if pconf.ymax is None and pconf.xmax is None:
-            # Find the max value
-            max_val = 0.0
-            for d in plotdata:
-                for s in d:
-                    max_val = max(max_val, s["x"], s["y"])
-            max_val = 1.02 * float(max_val)  # add 2% padding
-            pconf.xmax = pconf.xmax if pconf.xmax is not None else max_val
-            pconf.ymax = pconf.ymax if pconf.ymax is not None else max_val
-
-    # Add extra annotation data series
-    # noinspection PyBroadException
-    try:
-        if pconf.extra_series:
-            extra_series: List[List[Dict[str, Any]]] = []
-            if isinstance(pconf.extra_series, dict):
-                extra_series = [[pconf.extra_series]]
-            elif isinstance(pconf.extra_series[0], dict):
-                extra_series = [cast(List[Dict[str, Any]], [pconf.extra_series])]
-            else:
-                extra_series = cast(List[List[Dict[str, Any]]], pconf.extra_series)
-            for i, es in enumerate(extra_series):
-                for s in es:
-                    plotdata[i].append(s)
-    except Exception:
-        pass
-
-    return ScatterPlot.create(
-        points_lists=plotdata,
-        pconfig=pconf,
-        anchor=inputs.anchor,
-    )
+    return ScatterPlot.from_inputs(inputs)
 
 
 class Dataset(BaseDataset):
@@ -659,3 +587,85 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
         if self.pconfig.categories:
             result += f"X categories: {', '.join(self.pconfig.categories)}\n"
         return result
+
+    @staticmethod
+    def from_inputs(inputs: ScatterNormalizedInputData) -> Union["ScatterPlot", str, None]:
+        pconf = inputs.pconfig
+        sample_names = []
+        plotdata: List[List[Dict[str, Any]]] = list()
+        for data_index, ds in enumerate(inputs.datasets):
+            d: List[Dict[str, Any]] = list()
+            for s_name in ds:
+                sample_names.append(SampleName(s_name))
+                # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
+                series_config: ScatterConfig = pconf.model_copy()
+                if pconf.data_labels:
+                    dl = pconf.data_labels[data_index]
+                    if isinstance(dl, dict):
+                        # if not a dict: only dataset name is provided
+                        for k, v in dl.items():
+                            if k in series_config.model_fields:
+                                setattr(series_config, k, v)
+
+                if not isinstance(ds[s_name], list):
+                    ds[s_name] = [ds[s_name]]
+                for point in ds[s_name]:
+                    if point["x"] is not None:
+                        if series_config.xmax is not None and float(point["x"]) > float(series_config.xmax):
+                            continue
+                        if series_config.xmin is not None and float(point["x"]) < float(series_config.xmin):
+                            continue
+                    if point["y"] is not None:
+                        if series_config.ymax is not None and float(point["y"]) > float(series_config.ymax):
+                            continue
+                        if series_config.ymin is not None and float(point["y"]) < float(series_config.ymin):
+                            continue
+                    if "name" in point:
+                        point["name"] = f"{s_name}: {point['name']}"
+                    else:
+                        point["name"] = s_name
+
+                    for k in ["color", "opacity", "marker_size", "marker_line_width"]:
+                        if k not in point:
+                            v = getattr(series_config, k)
+                            if v is not None:
+                                if isinstance(v, dict) and s_name in v:
+                                    point[k] = v[s_name]
+                                else:
+                                    point[k] = v
+                    d.append(point)
+            plotdata.append(d)
+
+        if pconf.square:
+            if pconf.ymax is None and pconf.xmax is None:
+                # Find the max value
+                max_val = 0.0
+                for d in plotdata:
+                    for s in d:
+                        max_val = max(max_val, s["x"], s["y"])
+                max_val = 1.02 * float(max_val)  # add 2% padding
+                pconf.xmax = pconf.xmax if pconf.xmax is not None else max_val
+                pconf.ymax = pconf.ymax if pconf.ymax is not None else max_val
+
+        # Add extra annotation data series
+        # noinspection PyBroadException
+        try:
+            if pconf.extra_series:
+                extra_series: List[List[Dict[str, Any]]] = []
+                if isinstance(pconf.extra_series, dict):
+                    extra_series = [[pconf.extra_series]]
+                elif isinstance(pconf.extra_series[0], dict):
+                    extra_series = [cast(List[Dict[str, Any]], [pconf.extra_series])]
+                else:
+                    extra_series = cast(List[List[Dict[str, Any]]], pconf.extra_series)
+                for i, es in enumerate(extra_series):
+                    for s in es:
+                        plotdata[i].append(s)
+        except Exception:
+            pass
+
+        return ScatterPlot.create(
+            points_lists=plotdata,
+            pconfig=pconf,
+            anchor=inputs.anchor,
+        )

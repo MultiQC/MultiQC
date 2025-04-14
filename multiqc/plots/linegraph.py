@@ -1,7 +1,6 @@
 """MultiQC functions to plot a linegraph"""
 
 import io
-import json
 import logging
 import os
 import random
@@ -14,7 +13,7 @@ import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
 from multiqc import config, report
-from multiqc.core import tmp_dir
+from multiqc.core.plot_data_store import save_plot_data
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,
@@ -298,53 +297,7 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         return result
 
 
-class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
-    datasets: List[Dataset[KeyT, ValT]]
-    sample_names: List[SampleName]
-
-    def samples_names(self) -> List[SampleName]:
-        return self.sample_names
-
-    def _plot_ai_header(self) -> str:
-        result = super()._plot_ai_header()
-        if self.pconfig.xlab:
-            result += f"X axis: {self.pconfig.xlab}\n"
-        if self.pconfig.ylab:
-            result += f"Y axis: {self.pconfig.ylab}\n"
-        return result
-
-    @staticmethod
-    def create(
-        lists_of_lines: List[List[Series[KeyT, ValT]]],
-        pconfig: LinePlotConfig,
-        anchor: Anchor,
-        sample_names: List[SampleName],
-    ) -> "LinePlot[KeyT, ValT]":
-        n_samples_per_dataset = [len(x) for x in lists_of_lines]
-
-        model: Plot[Dataset[KeyT, ValT], LinePlotConfig] = Plot.initialize(
-            plot_type=PlotType.LINE,
-            pconfig=pconfig,
-            anchor=anchor,
-            n_samples_per_dataset=n_samples_per_dataset,
-            axis_controlled_by_switches=["yaxis"],
-            default_tt_label="<br>%{x}: %{y}",
-        )
-
-        # Very large legend for automatically enabled flat plot mode is not very helpful
-        max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
-        if pconfig.showlegend is None and max_n_samples > 250:
-            model.layout.showlegend = False
-
-        model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
-
-        # Make a tooltip always show on hover over any point on plot
-        model.layout.hoverdistance = -1
-
-        return LinePlot(**model.__dict__, sample_names=sample_names)
-
-
-class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
+class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Generic[KeyT, ValT]):
     """
     Represents normalized input data for a line plot.
 
@@ -354,7 +307,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
     """
 
     data: List[List[Series[KeyT, ValT]]]
-    pconfig: LinePlotConfig
     sample_names: List[SampleName]
 
     def is_empty(self) -> bool:
@@ -371,16 +323,18 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         records = []
 
         # Check if any of the x_values or y_values are strings
-        has_string_values = False
+        x_has_string_values = False
+        y_has_string_values = False
         for dataset in self.data:
             for series in dataset:
                 for x, y in series.pairs:
-                    if isinstance(x, str) or isinstance(y, str):
-                        has_string_values = True
-                        break
-                if has_string_values:
+                    if isinstance(x, str):
+                        x_has_string_values = True
+                    if isinstance(y, str):
+                        y_has_string_values = True
+                if x_has_string_values or y_has_string_values:
                     break
-            if has_string_values:
+            if x_has_string_values or y_has_string_values:
                 break
 
         # Create a record for each data point in each series
@@ -403,11 +357,13 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
                     # Convert values to string if any value in the dataset is a string
                     x_value: Union[KeyT, str, None]
                     y_value: Union[ValT, str, None]
-                    if has_string_values:
+                    if x_has_string_values:
                         x_value = str(x) if x is not None else None
-                        y_value = str(y) if y is not None else None
                     else:
                         x_value = x
+                    if y_has_string_values:
+                        y_value = str(y) if y is not None else None
+                    else:
                         y_value = y
 
                     record = {
@@ -468,7 +424,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
                     )
 
                     # Extract x,y pairs and sort by x value for proper display
-                    sample_group = sample_group.sort_values("x_value")
                     pairs = []
                     for _, row in sample_group.iterrows():
                         x_val = row["x_value"]
@@ -496,6 +451,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
 
         return LinePlotNormalizedInputData(
             anchor=anchor,
+            plot_type=PlotType.LINE,
             data=datasets,
             pconfig=pconf,
             sample_names=sample_names,
@@ -552,6 +508,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         # Return normalized data and config
         return LinePlotNormalizedInputData(
             anchor=plot_anchor(pconf),
+            plot_type=PlotType.LINE,
             data=datasets,
             pconfig=pconf,
             sample_names=sample_names,
@@ -567,13 +524,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         Merge normalized data from old run and new run, leveraging our tabular representation
         for more efficient and reliable merging.
         """
-        # Load dataframes from parquet files instead of using the in-memory data structures
-        old_df = None
-        if old_data.anchor in report.plot_input_data:
-            old_path = report.plot_input_data[old_data.anchor]
-            if Path(old_path).exists():
-                old_df = pd.read_parquet(old_path)
-
         # Create dataframe for new data
         new_records = []
         for ds_idx, dataset in enumerate(new_data.data):
@@ -609,6 +559,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         if new_df.empty:
             return old_data
 
+        old_df = old_data.to_df()
+
         # If we have both old and new data, merge them
         merged_df = None
         if old_df is not None and not old_df.empty:
@@ -638,10 +590,114 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData, Generic[KeyT, ValT]):
         else:
             merged_df = new_df
 
+        save_plot_data(new_data.anchor, merged_df)
+
         return LinePlotNormalizedInputData.from_df(
             merged_df,
             new_data.pconfig,
             new_data.anchor,
+        )
+
+
+class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
+    datasets: List[Dataset[KeyT, ValT]]
+    sample_names: List[SampleName]
+
+    def samples_names(self) -> List[SampleName]:
+        return self.sample_names
+
+    def _plot_ai_header(self) -> str:
+        result = super()._plot_ai_header()
+        if self.pconfig.xlab:
+            result += f"X axis: {self.pconfig.xlab}\n"
+        if self.pconfig.ylab:
+            result += f"Y axis: {self.pconfig.ylab}\n"
+        return result
+
+    @staticmethod
+    def create(
+        lists_of_lines: List[List[Series[KeyT, ValT]]],
+        pconfig: LinePlotConfig,
+        anchor: Anchor,
+        sample_names: List[SampleName],
+    ) -> "LinePlot[KeyT, ValT]":
+        n_samples_per_dataset = [len(x) for x in lists_of_lines]
+
+        model: Plot[Dataset[KeyT, ValT], LinePlotConfig] = Plot.initialize(
+            plot_type=PlotType.LINE,
+            pconfig=pconfig,
+            anchor=anchor,
+            n_samples_per_dataset=n_samples_per_dataset,
+            axis_controlled_by_switches=["yaxis"],
+            default_tt_label="<br>%{x}: %{y}",
+        )
+
+        # Very large legend for automatically enabled flat plot mode is not very helpful
+        max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
+        if pconfig.showlegend is None and max_n_samples > 250:
+            model.layout.showlegend = False
+
+        model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
+
+        # Make a tooltip always show on hover over any point on plot
+        model.layout.hoverdistance = -1
+
+        return LinePlot(**model.__dict__, sample_names=sample_names)
+
+    @staticmethod
+    def from_inputs(inputs: LinePlotNormalizedInputData[KeyT, ValT]) -> Union["LinePlot", str, None]:
+        pconf = inputs.pconfig
+        datasets = inputs.data
+        sample_names = inputs.sample_names
+
+        # Add extra annotation data series
+        if pconf.extra_series:
+            ess: Union[Series[Any, Any], List[Series[Any, Any]], List[List[Series[Any, Any]]]] = pconf.extra_series
+            list_of_list_of_series: List[List[Series[Any, Any]]]
+            if isinstance(ess, list):
+                if isinstance(ess[0], list):
+                    list_of_list_of_series = cast(List[List[Series[Any, Any]]], ess)
+                else:
+                    list_of_list_of_series = [cast(List[Series[Any, Any]], ess) for _ in datasets]
+            else:
+                list_of_list_of_series = [[ess] for _ in datasets]
+
+            for i, list_of_raw_series in enumerate(list_of_list_of_series):
+                assert isinstance(list_of_raw_series, list)
+                for series in list_of_raw_series:
+                    if i < len(datasets):
+                        datasets[i].append(series)
+
+        # Process categories
+        for ds_idx, series_by_sample in enumerate(datasets):
+            if pconf.categories and series_by_sample:
+                if isinstance(pconf.categories, list):
+                    categories = pconf.categories
+                else:
+                    categories = [pair[0] for pair in series_by_sample[0].pairs]
+                for si, series in enumerate(series_by_sample):
+                    if si != 0:
+                        # If categories come in different order in different samples, reorder them
+                        xs = [p[0] for p in series.pairs]
+                        xs_set = set(xs)
+                        xs_in_categories = [c for c in categories if c in xs_set]
+                        categories_set = set(categories)
+                        xs_not_in_categories = [x for x in xs if x not in categories_set]
+                        xs = xs_in_categories + xs_not_in_categories
+                        pairs = dict(series.pairs)
+                        series.pairs = [(x, pairs[x]) for x in xs]
+
+        scale = mqc_colour.mqc_colour_scale("plot_defaults")
+        for _, series_by_sample in enumerate(datasets):
+            for si, series in enumerate(series_by_sample):
+                if not series.color:
+                    series.color = scale.get_colour(si, lighten=1)
+
+        return LinePlot.create(
+            lists_of_lines=inputs.data,
+            pconfig=inputs.pconfig,
+            anchor=inputs.anchor,
+            sample_names=sample_names,
         )
 
 
@@ -661,60 +717,7 @@ def plot(
     inputs = LinePlotNormalizedInputData.merge_with_previous(inputs)
     if inputs.is_empty():
         return None
-
-    pconf = inputs.pconfig
-    datasets = inputs.data
-    sample_names = inputs.sample_names
-
-    # Add extra annotation data series
-    if pconf.extra_series:
-        ess: Union[Series[Any, Any], List[Series[Any, Any]], List[List[Series[Any, Any]]]] = pconf.extra_series
-        list_of_list_of_series: List[List[Series[Any, Any]]]
-        if isinstance(ess, list):
-            if isinstance(ess[0], list):
-                list_of_list_of_series = cast(List[List[Series[Any, Any]]], ess)
-            else:
-                list_of_list_of_series = [cast(List[Series[Any, Any]], ess) for _ in datasets]
-        else:
-            list_of_list_of_series = [[ess] for _ in datasets]
-
-        for i, list_of_raw_series in enumerate(list_of_list_of_series):
-            assert isinstance(list_of_raw_series, list)
-            for series in list_of_raw_series:
-                if i < len(datasets):
-                    datasets[i].append(series)
-
-    # Process categories
-    for ds_idx, series_by_sample in enumerate(datasets):
-        if pconf.categories and series_by_sample:
-            if isinstance(pconf.categories, list):
-                categories = pconf.categories
-            else:
-                categories = [pair[0] for pair in series_by_sample[0].pairs]
-            for si, series in enumerate(series_by_sample):
-                if si != 0:
-                    # If categories come in different order in different samples, reorder them
-                    xs = [p[0] for p in series.pairs]
-                    xs_set = set(xs)
-                    xs_in_categories = [c for c in categories if c in xs_set]
-                    categories_set = set(categories)
-                    xs_not_in_categories = [x for x in xs if x not in categories_set]
-                    xs = xs_in_categories + xs_not_in_categories
-                    pairs = dict(series.pairs)
-                    series.pairs = [(x, pairs[x]) for x in xs]
-
-    scale = mqc_colour.mqc_colour_scale("plot_defaults")
-    for _, series_by_sample in enumerate(datasets):
-        for si, series in enumerate(series_by_sample):
-            if not series.color:
-                series.color = scale.get_colour(si, lighten=1)
-
-    return LinePlot.create(
-        lists_of_lines=inputs.data,
-        pconfig=inputs.pconfig,
-        anchor=inputs.anchor,
-        sample_names=sample_names,
-    )
+    return LinePlot.from_inputs(inputs)
 
 
 def remove_nones_and_empty_dicts(d: Mapping[Any, Any]) -> Dict[Any, Any]:

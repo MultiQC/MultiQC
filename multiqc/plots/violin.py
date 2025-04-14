@@ -4,6 +4,7 @@ import logging
 import math
 from dataclasses import dataclass
 from datetime import datetime
+from hmac import new
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
@@ -13,6 +14,7 @@ import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
 from multiqc.core import tmp_dir
+from multiqc.core.plot_data_store import save_plot_data
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
 from multiqc.plots.table_object import (
@@ -23,7 +25,6 @@ from multiqc.plots.table_object import (
     ColumnMeta,
     DataTable,
     ExtValueT,
-    GroupT,
     SectionT,
     TableConfig,
     ValueT,
@@ -34,10 +35,9 @@ from multiqc.types import Anchor, ColumnKey, SampleName, SectionKey
 logger = logging.getLogger(__name__)
 
 
-class ViolinPlotInputData(NormalizedPlotInputData):
+class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
     dts: List[DataTable]
-    pconfig: TableConfig
-    anchor: Anchor
+    show_table_by_default: bool
 
     def is_empty(self) -> bool:
         return len(self.dts) == 0 or all(dt.is_empty() for dt in self.dts)
@@ -134,7 +134,13 @@ class ViolinPlotInputData(NormalizedPlotInputData):
         return pd.DataFrame(records, dtype=object).astype(column_types)
 
     @classmethod
-    def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, TableConfig], anchor: Anchor) -> "ViolinPlotInputData":
+    def from_df(
+        cls,
+        df: pd.DataFrame,
+        pconfig: Union[Dict, TableConfig],
+        anchor: Anchor,
+        show_table_by_default: bool,
+    ) -> "ViolinPlotInputData":
         """
         Load plot data from a DataFrame.
         """
@@ -147,7 +153,13 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
         # Handle None or empty DataFrame case
         if df is None or df.empty:
-            return cls(dts=[], pconfig=pconf, anchor=anchor)
+            return cls(
+                dts=[],
+                plot_type=PlotType.VIOLIN,
+                pconfig=pconf,
+                anchor=anchor,
+                show_table_by_default=show_table_by_default,
+            )
 
         # Group data by dt_anchor to recreate DataTables
         dts = []
@@ -214,7 +226,13 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                 )
                 dts.append(dt)
 
-        return cls(dts=dts, pconfig=pconf, anchor=anchor)
+        return cls(
+            dts=dts,
+            plot_type=PlotType.VIOLIN,
+            pconfig=pconf,
+            anchor=anchor,
+            show_table_by_default=show_table_by_default,
+        )
 
     @classmethod
     def create_from_sections(
@@ -238,19 +256,38 @@ class ViolinPlotInputData(NormalizedPlotInputData):
             pconfig=pconf.model_copy(),
             headers=headers,
         )
-        return cls(dts=[dt], pconfig=pconf, anchor=anchor)
+        return cls(
+            dts=[dt],
+            plot_type=PlotType.VIOLIN,
+            pconfig=pconf,
+            anchor=anchor,
+            show_table_by_default=True,
+        )
 
     @staticmethod
     def create_from_datasets(
-        data: List[SectionT],
-        headers: List[Dict[Union[ColumnKeyT, str], ColumnDict]],
+        data: Union[List[SectionT], SectionT],
+        headers: Union[List[Dict[Union[ColumnKeyT, str], ColumnDict]], Dict[Union[ColumnKeyT, str], ColumnDict], None],
         pconfig: Union[Dict[str, Any], TableConfig, None] = None,
+        show_table_by_default: bool = False,
     ) -> "ViolinPlotInputData":
         """
         Make datatable objects - they encapsulate data, headers, and configs
         """
-        pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
+        if not isinstance(data, list):
+            data_list = [data]
+        else:
+            data_list = data
 
+        headers_list: List[Dict[ColumnKeyT, ColumnDict]]
+        if headers is None:
+            headers_list = [{}]
+        elif not isinstance(headers, list):
+            headers_list = [headers]
+        else:
+            headers_list = headers
+
+        pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
         anchor = plot_anchor(pconf)
 
         table_anchor = Anchor(f"{anchor}_table")
@@ -265,9 +302,15 @@ class ViolinPlotInputData(NormalizedPlotInputData):
                 pconfig=pconf.model_copy(),
                 headers={SectionKey(table_anchor): {ColumnKey(k): v for k, v in h.items()}},
             )
-            for d, h in zip(data, headers)
+            for d, h in zip(data_list, headers_list)
         ]
-        return ViolinPlotInputData(dts=dts, pconfig=pconf, anchor=anchor)
+        return ViolinPlotInputData(
+            dts=dts,
+            plot_type=PlotType.VIOLIN,
+            pconfig=pconf,
+            anchor=anchor,
+            show_table_by_default=show_table_by_default,
+        )
 
     @classmethod
     def merge(cls, old_data: "ViolinPlotInputData", new_data: "ViolinPlotInputData") -> "ViolinPlotInputData":
@@ -275,20 +318,11 @@ class ViolinPlotInputData(NormalizedPlotInputData):
         Merge normalized data from old run and new run, leveraging similar
         tabular representation approach as used for bar and line graphs.
         """
-        # Load dataframes from parquet files instead of using in-memory structures
-        loaded_df = None
-        if old_data.anchor in report.plot_input_data:
-            old_path = report.plot_input_data[old_data.anchor]
-            if Path(old_path).exists():
-                try:
-                    loaded_df = pd.read_parquet(old_path)
-                except Exception as e:
-                    logger.debug(f"Failed to load parquet for {old_data.anchor}: {str(e)}")
-
         # Create dataframe for new data
         if new_data.is_empty():
             return old_data
 
+        old_df = old_data.to_df()
         new_df = new_data.to_df()
         # Add timestamp and run_id to new data
         new_df["timestamp"] = datetime.now().isoformat()
@@ -297,17 +331,17 @@ class ViolinPlotInputData(NormalizedPlotInputData):
 
         # If we have both old and new data, merge them
         merged_df = None
-        if loaded_df is not None and not loaded_df.empty:
+        if old_df is not None and not old_df.empty:
             # Make sure old data has run_id
-            if "run_id" not in loaded_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
-                loaded_df["run_id"] = "previous_run"  # Default value for old data without run_id
+            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
+                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
 
             # Make sure old data has timestamp
-            if "timestamp" not in loaded_df.columns:
-                loaded_df["timestamp"] = datetime.now().isoformat()
+            if "timestamp" not in old_df.columns:
+                old_df["timestamp"] = datetime.now().isoformat()
 
             # Combine the dataframes, keeping all rows
-            merged_df = pd.concat([loaded_df, new_df], ignore_index=True)
+            merged_df = pd.concat([old_df, new_df], ignore_index=True)
 
             # For duplicates (same sample, metric, dataset, section), keep the latest version
             if "timestamp" in merged_df.columns:
@@ -324,12 +358,10 @@ class ViolinPlotInputData(NormalizedPlotInputData):
             merged_df = new_df
 
         # Save the merged data for future reference
-        file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"
-        report.plot_input_data[new_data.anchor] = str(file_path)
-        merged_df.to_parquet(file_path, compression="gzip")
+        save_plot_data(new_data.anchor, merged_df)
 
         # Create a new ViolinPlotInputData from the merged DataFrame
-        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
+        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor, new_data.show_table_by_default)
 
 
 def plot(
@@ -347,30 +379,14 @@ def plot(
     :param pconfig: plot config dict
     :return: plot object
     """
-
-    if not isinstance(data, list):
-        data_list = [data]
-    else:
-        data_list = data
-
-    headers_list: List[Dict[ColumnKeyT, ColumnDict]]
-    if headers is None:
-        headers_list = [{}]
-    elif not isinstance(headers, list):
-        headers_list = [headers]
-    else:
-        headers_list = headers
-
-    inputs = ViolinPlotInputData.create_from_datasets(data_list, headers_list, pconfig)
+    inputs = ViolinPlotInputData.create_from_datasets(
+        data, headers, pconfig, show_table_by_default=show_table_by_default
+    )
     inputs = ViolinPlotInputData.merge_with_previous(inputs)
     if inputs.is_empty():
         return None
 
-    return ViolinPlot.create(
-        inputs.dts,
-        show_table_by_default=show_table_by_default,
-        anchor=inputs.anchor,
-    )
+    return ViolinPlot.from_inputs(inputs)
 
 
 @dataclass
@@ -819,7 +835,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             samples_per_dataset.append(ds_samples)
 
         model: Plot[Dataset, TableConfig] = Plot.initialize(
-            plot_type=PlotType.VIOLIN,
+            plot_type=PlotType.TABLE if show_table_by_default else PlotType.VIOLIN,
             pconfig=dts[0].pconfig,
             n_samples_per_dataset=[len(x) for x in samples_per_dataset],
             id=dts[0].id,
@@ -1064,11 +1080,13 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
         return html
 
-
-def _plot_ai_header(self) -> str:
-    if self.show_table_by_default:
-        return "Plot type: table\n"
-    return "Plot type: violin plot\n"
+    @staticmethod
+    def from_inputs(inputs: ViolinPlotInputData) -> Union["ViolinPlot", str, None]:
+        return ViolinPlot.create(
+            inputs.dts,
+            show_table_by_default=inputs.show_table_by_default,
+            anchor=inputs.anchor,
+        )
 
 
 def find_outliers(

@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Generic, List, NewType, Optional, TypeVar, Union
 
 # Do not export typing.TypedDict: it doesn't support generics and will break Python 3.9
+from pydantic import BaseModel
 from typing_extensions import TypedDict
 
 Anchor = NewType("Anchor", str)
@@ -97,8 +98,7 @@ class SampleNameMeta:
     labels: List[str] = dataclasses.field(default_factory=list)
 
 
-@dataclasses.dataclass
-class Section:
+class Section(BaseModel):
     name: str
     anchor: Anchor
     id: SectionId  # unlike anchor, doesn't have to be different from the module or plot ids

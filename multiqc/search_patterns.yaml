@@ -3,7 +3,7 @@
 # Loaded by the config module so that these patterns can be overwritten in user config files.
 
 multiqc_data:
-  fn: "multiqc_data.json"
+  fn: "multiqc.parquet"
 adapterremoval:
   fn: "*.settings"
   contents: "AdapterRemoval"

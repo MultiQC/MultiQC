@@ -118,6 +118,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
                 xcats=[],
                 ycats=[],
                 pconfig=pconf,
+                plot_type=PlotType.HEATMAP,
             )
 
         # Extract config information that might have been serialized
@@ -186,6 +187,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
             xcats=new_data.xcats,
             ycats=new_data.ycats,
             pconfig=new_data.pconfig,
+            plot_type=PlotType.HEATMAP,
         )
 
     @staticmethod
@@ -236,6 +238,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
 
         return HeatmapNormalizedInputData(
             anchor=plot_anchor(pconf),
+            plot_type=PlotType.HEATMAP,
             rows=rows,
             xcats=list(xcats),
             ycats=list(ycats),
@@ -262,6 +265,10 @@ def plot(
     if inputs.is_empty():
         return None
 
+    return _plot_from_inputs(inputs)
+
+
+def _plot_from_inputs(inputs: HeatmapNormalizedInputData) -> Union["HeatmapPlot", str, None]:
     return HeatmapPlot.create(
         rows=inputs.rows,
         pconfig=inputs.pconfig,

@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.exceptions import RunError
+from multiqc.core.plot_data_store import save_plot_data
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,
@@ -91,8 +92,7 @@ class CatDataDict(TypedDict):
 DatasetT = Dict[SampleName, Dict[CatName, Union[int, float]]]
 
 
-class BarPlotInputData(NormalizedPlotInputData):
-    pconfig: BarPlotConfig
+class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
     data: List[DatasetT]
     cats: List[Dict[CatName, CatConf]]
 
@@ -211,6 +211,7 @@ class BarPlotInputData(NormalizedPlotInputData):
 
         return BarPlotInputData(
             anchor=plot_anchor(pconf),
+            plot_type=PlotType.BAR,
             pconfig=pconf,
             data=filtered_datasets,
             cats=categories_per_ds,
@@ -282,7 +283,7 @@ class BarPlotInputData(NormalizedPlotInputData):
                 pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
             else:
                 pconf = cast(BarPlotConfig, pconfig)
-            return cls(anchor=anchor, pconfig=pconf, data=[], cats=[])
+            return cls(anchor=anchor, plot_type=PlotType.BAR, pconfig=pconf, data=[], cats=[])
 
         if isinstance(pconfig, dict):
             pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
@@ -342,6 +343,7 @@ class BarPlotInputData(NormalizedPlotInputData):
 
         return cls(
             anchor=anchor,
+            plot_type=PlotType.BAR,
             pconfig=pconf,
             data=datasets,
             cats=cats_per_dataset,
@@ -407,10 +409,7 @@ class BarPlotInputData(NormalizedPlotInputData):
 
                 merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
 
-        # Save the merged dataframe
-        file_path = tmp_dir.parquet_dir() / f"{new_data.anchor}.parquet"
-        report.plot_input_data[new_data.anchor] = str(file_path)
-        merged_df.to_parquet(file_path, compression="gzip")
+        save_plot_data(new_data.anchor, merged_df)
 
         return cls.from_df(
             merged_df,
@@ -441,57 +440,7 @@ def plot(
     if inputs.is_empty():
         return None
 
-    # Parse the data into a chart friendly format
-    scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set
-    plot_samples: List[List[SampleName]] = list()
-    plot_data: List[List[CatDataDict]] = list()
-    for ds_idx, d in enumerate(inputs.data):
-        ordered_samples_names: List[SampleName] = [SampleName(s) for s in d.keys()]
-        if isinstance(d, OrderedDict):
-            # Legacy: users assumed that passing an OrderedDict indicates that we
-            # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
-            pass
-        elif inputs.pconfig.sort_samples:
-            ordered_samples_names = natsorted([SampleName(s) for s in d.keys()])
-        cat_data_dicts: List[CatDataDict] = list()
-        sample_d_count: Dict[SampleName, int] = dict()
-        for cat_idx, cat_name in enumerate(inputs.cats[ds_idx].keys()):
-            cat_data: List[Union[int, float]] = list()
-            cat_count = 0
-            for s in ordered_samples_names:
-                cat_data.append(d[SampleName(s)][cat_name])
-                if s not in sample_d_count:
-                    sample_d_count[s] = 0
-                cat_count += 1
-                sample_d_count[s] += 1
-            if cat_count > 0:
-                if inputs.pconfig.hide_zero_cats is False or not all(x == 0 for x in cat_data if not math.isnan(x)):
-                    color: str = inputs.cats[ds_idx][cat_name].color or scale.get_colour(cat_idx, lighten=1)
-                    this_dict: CatDataDict = {
-                        "name": inputs.cats[ds_idx][cat_name].name,
-                        "color": color,
-                        "data": cat_data,
-                        "data_pct": [],
-                    }
-                    cat_data_dicts.append(this_dict)
-
-        # Remove empty samples
-        for sample_name, cnt in sample_d_count.items():
-            if cnt == 0:
-                sample_idx = ordered_samples_names.index(sample_name)
-                del ordered_samples_names[sample_idx]
-                for cat_data_idx, _ in enumerate(cat_data_dicts):
-                    del cat_data_dicts[cat_data_idx]["data"][sample_idx]
-        if len(cat_data_dicts) > 0:
-            plot_samples.append(ordered_samples_names)
-            plot_data.append(cat_data_dicts)
-
-    return BarPlot.create(
-        cats_lists=plot_data,
-        samples_lists=plot_samples,
-        pconfig=inputs.pconfig,
-        anchor=inputs.anchor,
-    )
+    return BarPlot.from_inputs(inputs)
 
 
 class Category(BaseModel):
@@ -624,6 +573,60 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
         for ds in self.datasets:
             names.extend(SampleName(sample) for sample in ds.samples)
         return names
+
+    @staticmethod
+    def from_inputs(inputs: BarPlotInputData) -> Union["BarPlot", str, None]:
+        # Parse the data into a chart friendly format
+        scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set
+        plot_samples: List[List[SampleName]] = list()
+        plot_data: List[List[CatDataDict]] = list()
+        for ds_idx, d in enumerate(inputs.data):
+            ordered_samples_names: List[SampleName] = [SampleName(s) for s in d.keys()]
+            if isinstance(d, OrderedDict):
+                # Legacy: users assumed that passing an OrderedDict indicates that we
+                # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
+                pass
+            elif inputs.pconfig.sort_samples:
+                ordered_samples_names = natsorted([SampleName(s) for s in d.keys()])
+            cat_data_dicts: List[CatDataDict] = list()
+            sample_d_count: Dict[SampleName, int] = dict()
+            for cat_idx, cat_name in enumerate(inputs.cats[ds_idx].keys()):
+                cat_data: List[Union[int, float]] = list()
+                cat_count = 0
+                for s in ordered_samples_names:
+                    cat_data.append(d[SampleName(s)][cat_name])
+                    if s not in sample_d_count:
+                        sample_d_count[s] = 0
+                    cat_count += 1
+                    sample_d_count[s] += 1
+                if cat_count > 0:
+                    if inputs.pconfig.hide_zero_cats is False or not all(x == 0 for x in cat_data if not math.isnan(x)):
+                        color: str = inputs.cats[ds_idx][cat_name].color or scale.get_colour(cat_idx, lighten=1)
+                        this_dict: CatDataDict = {
+                            "name": inputs.cats[ds_idx][cat_name].name,
+                            "color": color,
+                            "data": cat_data,
+                            "data_pct": [],
+                        }
+                        cat_data_dicts.append(this_dict)
+
+            # Remove empty samples
+            for sample_name, cnt in sample_d_count.items():
+                if cnt == 0:
+                    sample_idx = ordered_samples_names.index(sample_name)
+                    del ordered_samples_names[sample_idx]
+                    for cat_data_idx, _ in enumerate(cat_data_dicts):
+                        del cat_data_dicts[cat_data_idx]["data"][sample_idx]
+            if len(cat_data_dicts) > 0:
+                plot_samples.append(ordered_samples_names)
+                plot_data.append(cat_data_dicts)
+
+        return BarPlot.create(
+            cats_lists=plot_data,
+            samples_lists=plot_samples,
+            pconfig=inputs.pconfig,
+            anchor=inputs.anchor,
+        )
 
     @staticmethod
     def create(
