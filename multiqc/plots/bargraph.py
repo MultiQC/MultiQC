@@ -367,7 +367,6 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
         # Add timestamp and run_id to new data
         new_df["timestamp"] = datetime.now().isoformat()
-
         if hasattr(config, "kwargs") and "run_id" in config.kwargs:
             new_df["run_id"] = config.kwargs["run_id"]
 

@@ -298,7 +298,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
 
     @classmethod
     def from_df(
-        cls: Type[NormalizedPlotInputDataT], df: pd.DataFrame, pconfig_dict: Optional[Dict[str, Any]], anchor: Anchor
+        cls: Type[NormalizedPlotInputDataT], df: pd.DataFrame, pconfig: Union[Dict, PConfigT], anchor: Anchor
     ) -> NormalizedPlotInputDataT:
         """
         Abstract method to parse a dataframe (i.e. stored in parquet files)

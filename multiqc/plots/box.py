@@ -10,7 +10,6 @@ import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.core import tmp_dir
 from multiqc.core.plot_data_store import save_plot_data
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
@@ -200,7 +199,12 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
         # Handle None or empty DataFrame case
         if df is None or df.empty:
-            return cls(anchor=anchor, pconfig=pconf, list_of_data_by_sample=[])
+            return cls(
+                anchor=anchor,
+                pconfig=pconf,
+                list_of_data_by_sample=[],
+                plot_type=PlotType.BOX,
+            )
 
         # Extract or update pconfig from DataFrame metadata
         if any(col in df.columns for col in ["plot_title", "x_label", "y_label"]):
@@ -259,6 +263,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
             anchor=anchor,
             pconfig=pconf,
             list_of_data_by_sample=list_of_data_by_sample,
+            plot_type=PlotType.BOX,
         )
 
     @classmethod
@@ -266,20 +271,8 @@ class BoxPlotInputData(NormalizedPlotInputData):
         """
         Merge normalized data from old run and new run, matching by data labels when available
         """
-        # Load dataframes from parquet files instead of using in-memory structures
-        old_df = None
-        if old_data.anchor in report.plot_input_data:
-            old_path = report.plot_input_data[old_data.anchor]
-            if Path(old_path).exists():
-                try:
-                    old_df = pd.read_parquet(old_path)
-                except Exception as e:
-                    logger.debug(f"Failed to load parquet for {old_data.anchor}: {str(e)}")
-
         # Create dataframe for new data
         new_df = new_data.to_df()
-
-        # If new_df is empty, return the old data
         if new_df.empty:
             return old_data
 
@@ -287,6 +280,8 @@ class BoxPlotInputData(NormalizedPlotInputData):
         new_df["timestamp"] = datetime.now().isoformat()
         if hasattr(config, "kwargs") and "run_id" in config.kwargs:
             new_df["run_id"] = config.kwargs["run_id"]
+
+        old_df = old_data.to_df()
 
         # If we have both old and new data, merge them
         merged_df = new_df

@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
+import packaging
 import pandas as pd
 
 from multiqc import config, report
@@ -35,6 +36,9 @@ def load_plot_input(plot_df: pd.DataFrame) -> Tuple[NormalizedPlotInputData, Uni
     if isinstance(pconfig_str, str):
         pconfig = json.loads(pconfig_str)
     anchor = Anchor(str(plot_df.anchor.iloc[0]))
+
+    plot_input: NormalizedPlotInputData
+    plot: Union[Plot, str, None]
 
     if plot_type == PlotType.LINE:
         plot_input = LinePlotNormalizedInputData.from_df(plot_df, pconfig, anchor)
@@ -95,7 +99,7 @@ class LoadMultiqcData(BaseMultiqcModule):
                     sections = [Section(**section) for section in mod_dict.pop("sections")]
 
                     # Convert versions to expected format
-                    versions = {}
+                    versions: Dict[str, List[Tuple[Optional[packaging.version.Version], str]]] = {}
                     if "versions" in mod_dict:
                         versions_data = mod_dict.pop("versions")
                         versions = {

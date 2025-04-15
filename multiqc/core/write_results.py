@@ -12,7 +12,7 @@ import time
 import traceback
 import uuid
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 import jinja2
 
@@ -24,6 +24,7 @@ from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plot import Plot
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor
 from multiqc.utils import util_functions
 
@@ -316,7 +317,7 @@ def render_and_export_plots(plots_dir_name: str):
     )
 
     report.some_plots_are_deferred = any(
-        isinstance(report.plot_by_id[s.plot_anchor], Plot) and report.plot_by_id[s.plot_anchor].defer_render
+        isinstance(plot := report.plot_by_id[s.plot_anchor], Plot) and plot.defer_render
         for s in sections
         if s.plot_anchor and s.plot_anchor in report.plot_by_id
     )
@@ -359,7 +360,13 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
         },
     )
     if p is None and Anchor("general_stats_table") in report.plot_by_id:
-        p = report.plot_by_id[Anchor("general_stats_table")]  # loaded from previous run?
+        loaded_plot = report.plot_by_id[Anchor("general_stats_table")]  # loaded from previous run?
+        if isinstance(loaded_plot, Plot):
+            p = cast(ViolinPlot, loaded_plot)
+        elif isinstance(loaded_plot, str):
+            p = loaded_plot
+        else:
+            logger.error("General stats plot is not a Plot object")
 
     if p is not None:
         if isinstance(p, str):
@@ -384,8 +391,8 @@ def _write_data_files(data_dir: Path) -> None:
     # Exporting plots to files if requested
     logger.debug("Exporting plot data to files")
     for s in report.get_all_sections():
-        if s.plot_anchor and isinstance(report.plot_by_id.get(s.plot_anchor), Plot):
-            report.plot_by_id[s.plot_anchor].save_data_files()
+        if s.plot_anchor and isinstance(plot := report.plot_by_id.get(s.plot_anchor), Plot):
+            plot.save_data_files()
 
     # Modules have run, so data directory should be complete by now. Move its contents.
     logger.debug(f"Moving data file from '{report.data_tmp_dir()}' to '{data_dir}'")

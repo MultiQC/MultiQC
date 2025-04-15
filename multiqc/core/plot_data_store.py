@@ -7,13 +7,11 @@ It also stores all report metadata (modules, data sources, configs) to make repo
 import json
 import logging
 import os
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Dict, Optional, Set, Union
 
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
+import pyarrow.parquet as pq  # type: ignore
 
 from multiqc import config, report
 from multiqc.core import tmp_dir
@@ -32,58 +30,6 @@ META_DATA_SOURCES = "data_sources"
 META_CREATION_DATE = "creation_date"
 META_CONFIG = "config"
 META_MULTIQC_VERSION = "multiqc_version"
-
-
-# def load_plot_data(anchor: Anchor) -> Optional[pd.DataFrame]:
-#     """
-#     Load plot data for a specific anchor from the parquet file.
-#     Returns None if the data doesn't exist.
-#     """
-#     # Check cache first
-#     if anchor in _plot_dataframes:
-#         return _plot_dataframes[anchor]
-
-#     parquet_file = tmp_dir.parquet_file()
-#     if not parquet_file.exists():
-#         return None
-
-#     try:
-#         # Load the parquet file
-#         df = pd.read_parquet(parquet_file)
-
-#         # Filter for the requested anchor
-#         if "anchor" not in df.columns:
-#             return None
-
-#         anchor_df = df[df["anchor"] == str(anchor)]
-#         if anchor_df.empty:
-#             return None
-
-#         # Cache the result
-#         _plot_dataframes[anchor] = anchor_df
-#         return anchor_df
-#     except Exception as e:
-#         logger.error(f"Error loading plot data for anchor {anchor} from parquet: {e}")
-#         return None
-
-
-# def get_pconfig(anchor: Anchor) -> Optional[Dict[str, Any]]:
-#     """
-#     Extract the pconfig for a specific anchor from the parquet file.
-#     This is a legacy function kept for backward compatibility.
-#     """
-#     df = load_plot_data(anchor)
-#     if df is None or "_pconfig" not in df.columns or df["_pconfig"].empty:
-#         return None
-
-#     try:
-#         pconfig_str = df["_pconfig"].iloc[0]
-#         if pconfig_str:
-#             return json.loads(pconfig_str)
-#     except Exception as e:
-#         logger.error(f"Error extracting pconfig for {anchor} from parquet: {e}")
-
-#     return None
 
 
 def save_plot_data(anchor: Anchor, df: pd.DataFrame) -> None:
@@ -215,7 +161,7 @@ def save_report_metadata() -> None:
         modules_data.append(module_dict)
 
     # Prepare data sources
-    data_sources_dict = {}
+    data_sources_dict: Dict[str, Dict[str, Dict[str, str]]] = {}
     for mod_id, source_dict in report.data_sources.items():
         data_sources_dict[mod_id] = {}
         for section, sources in source_dict.items():
