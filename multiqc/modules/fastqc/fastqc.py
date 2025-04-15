@@ -1324,7 +1324,7 @@ class MultiqcModule(BaseMultiqcModule):
             ]
 
         plot = None
-        content = None
+        content = ""
         if len(pct_by_pos_by_sample) > 0:
             plot = linegraph.plot(pct_by_pos_by_sample, pconfig)
         else:
