@@ -2,6 +2,7 @@ import base64
 import io
 import logging
 import math
+import multiprocessing
 import platform
 import random
 import re
@@ -1094,9 +1095,9 @@ def _export_plot(fig, plot_path, write_kwargs):
     # Default timeout of 30 seconds for image export
     timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 30
 
-    class ExportThread(threading.Thread):
+    class ExportProcess(multiprocessing.Process):
         def __init__(self, fig, plot_path, write_kwargs):
-            threading.Thread.__init__(self)
+            super().__init__()
             self.fig = fig
             self.plot_path = plot_path
             self.write_kwargs = write_kwargs
@@ -1109,11 +1110,11 @@ def _export_plot(fig, plot_path, write_kwargs):
                 self.exception = e
 
     # Start the export in a separate thread
-    export_thread = ExportThread(fig, plot_path, write_kwargs)
-    export_thread.start()
-    export_thread.join(timeout)
+    export_process = ExportProcess(fig, plot_path, write_kwargs)
+    export_process.start()
+    export_process.join(timeout)
 
-    if export_thread.is_alive():
+    if export_process.is_alive():
         # If thread is still running after timeout, log warning and continue
         logging.warning(
             f"Plot export timed out after {timeout}s: {plot_path}. "
@@ -1121,11 +1122,11 @@ def _export_plot(fig, plot_path, write_kwargs):
             "The plot will be skipped but the report will continue to generate."
         )
         # Kill the thread
-        export_thread.join()
+        export_process.terminate()
         return False
-    if export_thread.exception:
+    if export_process.exception:
         # If there was an exception in the thread, log it
-        logging.error(f"Error exporting plot to {plot_path}: {export_thread.exception}")
+        logging.error(f"Error exporting plot to {plot_path}: {export_process.exception}")
         return False
 
     return True
