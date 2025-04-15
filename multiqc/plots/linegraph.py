@@ -13,7 +13,7 @@ import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
 from multiqc import config, report
-from multiqc.core.plot_data_store import save_plot_data
+from multiqc.core.plot_data_store import parse_value, save_plot_data
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,
@@ -350,7 +350,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                         "series_color": series.color,
                         "series_width": series.width,
                         "series_dash": series.dash,
-                        "series_marker": series.marker,
+                        "series_marker": series.marker.model_dump() if series.marker else None,
                         "series_showlegend": series.showlegend,
                     }
                     records.append(record)
@@ -390,7 +390,11 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     color = str(first_row.get("series_color")) if pd.notna(first_row.get("series_color")) else None
                     width = int(first_row.get("series_width", 2))
                     dash = str(first_row.get("series_dash")) if pd.notna(first_row.get("series_dash")) else None
-                    marker = str(first_row.get("series_marker")) if pd.notna(first_row.get("series_marker")) else None
+                    marker = (
+                        Marker(**first_row.get("series_marker", {}))
+                        if pd.notna(first_row.get("series_marker"))
+                        else None
+                    )
                     showlegend = (
                         bool(first_row.get("series_showlegend"))
                         if pd.notna(first_row.get("series_showlegend"))
@@ -400,24 +404,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     # Extract x,y pairs and sort by x value for proper display
                     pairs = []
                     for _, row in sample_group.iterrows():
-                        x_val = row["x_value"]
-                        y_val = row["y_value"]
-                        try:
-                            x_val = float(x_val)
-                        except ValueError:
-                            pass
-                        try:
-                            x_val = int(x_val)
-                        except ValueError:
-                            pass
-                        try:
-                            y_val = float(y_val)
-                        except ValueError:
-                            pass
-                        try:
-                            y_val = int(y_val)
-                        except ValueError:
-                            pass
+                        x_val = parse_value(row["x_value"])
+                        y_val = parse_value(row["y_value"])
                         pairs.append((x_val, y_val))
 
                     # Create Series object
@@ -481,7 +469,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
             list_of_series: List[Series[Any, Any]] = []
             for s in sorted(raw_data_by_sample.keys()):
-                sample_names.append(SampleName(s))
+                if s not in report.sample_names:
+                    report.sample_names.append(SampleName(s))
                 x_to_y = raw_data_by_sample[s]
                 if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
                     if isinstance(x_to_y[0], tuple):

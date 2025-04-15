@@ -14,7 +14,7 @@ import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
 from multiqc.core import tmp_dir
-from multiqc.core.plot_data_store import save_plot_data
+from multiqc.core.plot_data_store import parse_value, save_plot_data
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
 from multiqc.plots.table_object import (
@@ -61,11 +61,8 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             "metric_idx": int,
             "column_meta": str,
             "show_table_by_default": bool,
-        }
-        # Track if we've seen non-numeric values that would require string type
-        value_types: Dict[str, Union[type, None]] = {
-            "val_raw": None,
-            "val_mod": None,
+            "val_raw": str,
+            "val_mod": str,
             "val_fmt": str,
         }
 
@@ -90,23 +87,6 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             if cell is None or cell.raw is None or cell.fmt == "":
                                 continue
 
-                            # Track value types to determine best column type
-                            if value_types["val_raw"] != str and cell.raw is not None:  # noqa
-                                if isinstance(cell.raw, str):
-                                    value_types["val_raw"] = str
-                                elif isinstance(cell.raw, float) and value_types["val_raw"] != float:  # noqa
-                                    value_types["val_raw"] = float
-                                elif isinstance(cell.raw, int) and value_types["val_raw"] is None:
-                                    value_types["val_raw"] = int
-
-                            if value_types["val_mod"] != str and cell.mod is not None:  # noqa
-                                if isinstance(cell.mod, str):
-                                    value_types["val_mod"] = str
-                                elif isinstance(cell.mod, float) and value_types["val_mod"] != float:  # noqa
-                                    value_types["val_mod"] = float
-                                elif isinstance(cell.mod, int) and value_types["val_mod"] is None:
-                                    value_types["val_mod"] = int
-
                             # Create record with all necessary metadata
                             record = {
                                 "anchor": self.anchor,
@@ -115,9 +95,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                                 "sample_name": str(sample_name),
                                 "metric_name": str(metric_name),
                                 "metric_idx": idx,  # Store original index for ordering
-                                "val_raw": cell.raw,
-                                "val_mod": cell.mod,
-                                "val_fmt": cell.fmt,
+                                "val_raw": str(cell.raw),
+                                "val_mod": str(cell.mod),
+                                "val_fmt": str(cell.fmt),
                                 # Store column metadata as JSON. Note thaet "format" and "modify" lambda won't be stored,
                                 # that's why we are saving val_mod and val_fmt separately.
                                 "column_meta": dt_column.model_dump_json(),
@@ -125,12 +105,6 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             }
 
                             records.append(record)
-
-        # Set default types for value columns if not determined
-        for col, t in value_types.items():
-            if t is None:
-                t = object  # Use object as fallback for mixed or unknown types
-            column_types[col] = t
 
         # Create DataFrame with appropriate dtypes
         return pd.DataFrame(records, dtype=object).astype(column_types)
@@ -198,9 +172,12 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     # Process metrics/columns
                     for _, row in sample_group.iterrows():
                         metric_name = row["metric_name"]
+
+                        val_raw = parse_value(row["val_raw"])
+                        val_mod = parse_value(row["val_mod"])
                         val_by_metric[ColumnKey(str(metric_name))] = Cell(
-                            raw=row["val_raw"],
-                            mod=row["val_mod"],
+                            raw=val_raw,
+                            mod=val_mod,
                             fmt=row["val_fmt"],
                         )
 

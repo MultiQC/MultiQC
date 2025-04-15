@@ -83,76 +83,76 @@ class MultiqcModule(BaseMultiqcModule):
         # General Stats Table
         self.fastp_general_stats_table(self.fastp_data)
 
-        # Filtering statistics bar plot
-        self.add_section(
-            name="Filtered Reads",
-            anchor="fastp-filtered-reads-chart",
-            description="Filtering statistics of sampled reads.",
-            plot=self.fastp_filtered_reads_chart(),
-        )
+        # # Filtering statistics bar plot
+        # self.add_section(
+        #     name="Filtered Reads",
+        #     anchor="fastp-filtered-reads-chart",
+        #     description="Filtering statistics of sampled reads.",
+        #     plot=self.fastp_filtered_reads_chart(),
+        # )
 
-        # Duplication rate plot
-        self.add_section(
-            name="Duplication Rates",
-            anchor="fastp-duprates",
-            description="Duplication rates of sampled reads.",
-            plot=linegraph.plot(
-                self.fastp_duplication_plotdata,
-                {
-                    "id": "fastp-duprates-plot",
-                    "title": "Fastp: Duplication Rate",
-                    "xlab": "Duplication level",
-                    "ylab": "Read percent",
-                    "y_clipmax": 100,
-                    "ymin": 0,
-                    "tt_label": "{point.x}: {point.y:.2f}%",
-                },
-            ),
-        )
+        # # Duplication rate plot
+        # self.add_section(
+        #     name="Duplication Rates",
+        #     anchor="fastp-duprates",
+        #     description="Duplication rates of sampled reads.",
+        #     plot=linegraph.plot(
+        #         self.fastp_duplication_plotdata,
+        #         {
+        #             "id": "fastp-duprates-plot",
+        #             "title": "Fastp: Duplication Rate",
+        #             "xlab": "Duplication level",
+        #             "ylab": "Read percent",
+        #             "y_clipmax": 100,
+        #             "ymin": 0,
+        #             "tt_label": "{point.x}: {point.y:.2f}%",
+        #         },
+        #     ),
+        # )
 
-        self.add_section(
-            name="Insert Sizes",
-            anchor="fastp-insert-size",
-            description="Insert size estimation of sampled reads.",
-            plot=linegraph.plot(
-                self.fastp_insert_size_data,
-                {
-                    "id": "fastp-insert-size-plot",
-                    "title": "Fastp: Insert Size Distribution",
-                    "xlab": "Insert size",
-                    "ylab": "Read percent",
-                    "y_clipmax": 100,
-                    "ymin": 0,
-                    "tt_label": "{point.x}: {point.y:.2f}%",
-                    "smooth_points": 300,
-                    "smooth_points_sumcounts": False,
-                },
-            ),
-        )
+        # self.add_section(
+        #     name="Insert Sizes",
+        #     anchor="fastp-insert-size",
+        #     description="Insert size estimation of sampled reads.",
+        #     plot=linegraph.plot(
+        #         self.fastp_insert_size_data,
+        #         {
+        #             "id": "fastp-insert-size-plot",
+        #             "title": "Fastp: Insert Size Distribution",
+        #             "xlab": "Insert size",
+        #             "ylab": "Read percent",
+        #             "y_clipmax": 100,
+        #             "ymin": 0,
+        #             "tt_label": "{point.x}: {point.y:.2f}%",
+        #             "smooth_points": 300,
+        #             "smooth_points_sumcounts": False,
+        #         },
+        #     ),
+        # )
 
-        # Base quality plot
-        self.add_section(
-            name="Sequence Quality",
-            anchor="fastp-seq-quality",
-            description="Average sequencing quality over each base of all reads.",
-            plot=self.fastp_read_qual_plot(),
-        )
+        # # Base quality plot
+        # self.add_section(
+        #     name="Sequence Quality",
+        #     anchor="fastp-seq-quality",
+        #     description="Average sequencing quality over each base of all reads.",
+        #     plot=self.fastp_read_qual_plot(),
+        # )
 
-        # GC content plot
-        self.add_section(
-            name="GC Content",
-            anchor="fastp-seq-content-gc",
-            description="Average GC content over each base of all reads.",
-            plot=self.fastp_read_gc_plot(),
-        )
+        # # GC content plot
+        # self.add_section(
+        #     name="GC Content",
+        #     anchor="fastp-seq-content-gc",
+        #     description="Average GC content over each base of all reads.",
+        #     plot=self.fastp_read_gc_plot(),
+        # )
 
-        # N content plot
-        self.add_section(
-            name="N content",
-            anchor="fastp-seq-content-n",
-            description="Average N content over each base of all reads.",
-            plot=self.fastp_read_n_plot(),
-        )
+        # # N content plot
+        # self.add_section(
+        #     name="N content",
+        #     anchor="fastp-seq-content-n",
+        #     description="Average N content over each base of all reads.",
+        #     plot=self.fastp_read_n_plot(),
+        # )
 
         # Overrepresented sequences plot
         self.add_section(
@@ -500,28 +500,28 @@ class MultiqcModule(BaseMultiqcModule):
         data_labels, cnt_by_sample_pdata = self.filter_pconfig_pdata_subplots(
             cnt_by_sample, "Overrepresented Sequences"
         )
-        self.add_section(
-            name="Overrepresented sequences by sample",
-            anchor="fastp_overrepresented_sequences",
-            description="The total amount of overrepresented sequences found in each library.",
-            plot=bargraph.plot(
-                [
-                    {sn: {"overrepresented_sequences": cnt} for sn, cnt in cnt_by_sample.items()}
-                    for cnt_by_sample in cnt_by_sample_pdata
-                ],
-                {
-                    "overrepresented_sequences": {"name": "Overrepresented sequences"},
-                },
-                {
-                    "id": "fastp_overrepresented_sequences_plot",
-                    "title": "Fastp: Overrepresented sequences",
-                    "cpswitch": False,
-                    "ylab": "Number of overrepresented sequences",
-                    "data_labels": data_labels,
-                    "tt_decimals": 0,
-                },
-            ),
-        )
+        # self.add_section(
+        #     name="Overrepresented sequences by sample",
+        #     anchor="fastp_overrepresented_sequences",
+        #     description="The total amount of overrepresented sequences found in each library.",
+        #     plot=bargraph.plot(
+        #         [
+        #             {sn: {"overrepresented_sequences": cnt} for sn, cnt in cnt_by_sample.items()}
+        #             for cnt_by_sample in cnt_by_sample_pdata
+        #         ],
+        #         {
+        #             "overrepresented_sequences": {"name": "Overrepresented sequences"},
+        #         },
+        #         {
+        #             "id": "fastp_overrepresented_sequences_plot",
+        #             "title": "Fastp: Overrepresented sequences",
+        #             "cpswitch": False,
+        #             "ylab": "Number of overrepresented sequences",
+        #             "data_labels": data_labels,
+        #             "tt_decimals": 0,
+        #         },
+        #     ),
+        # )
 
         # Top overrepresented sequences across all samples
         top_n = getattr(config, "fastp_config", {}).get("top_overrepresented_sequences", 20)

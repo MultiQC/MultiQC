@@ -349,3 +349,30 @@ def reset():
     global _plot_dataframes, _saved_anchors
     _plot_dataframes = {}
     _saved_anchors = set()
+
+
+def parse_value(value: Any) -> Any:
+    """
+    If value can be parsed as an integer, return an integer.
+    If there are decimal digits, return a float.
+    Else return the value as is.
+    >>> parse_value("1")
+    1
+    >>> parse_value("1.0")
+    1
+    >>> parse_value("1.01")
+    1.01
+    >>> parse_value("1.01a")
+    "1.01a"
+    """
+    try:
+        return int(value)
+    except ValueError:
+        pass
+    try:
+        f_val = float(value)
+        if f_val.is_integer():
+            return int(f_val)
+        return f_val
+    except ValueError:
+        return value

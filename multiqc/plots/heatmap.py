@@ -9,6 +9,7 @@ import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
 from multiqc import report
+from multiqc.core.plot_data_store import parse_value
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,
@@ -165,7 +166,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
 
         # Fill matrix with values
         for _, row in df.iterrows():
-            rows[int(row["row_idx"])][int(row["col_idx"])] = row["z_val"]
+            rows[int(row["row_idx"])][int(row["col_idx"])] = parse_value(row["z_val"])
 
         return HeatmapNormalizedInputData(
             anchor=anchor,

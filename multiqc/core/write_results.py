@@ -358,7 +358,7 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
             "raw_data_fn": "multiqc_general_stats",
         },
     )
-    if p is None:
+    if p is None and Anchor("general_stats_table") in report.plot_by_id:
         p = report.plot_by_id[Anchor("general_stats_table")]  # loaded from previous run?
 
     if p is not None:
