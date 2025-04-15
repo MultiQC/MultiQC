@@ -89,6 +89,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
                         # values can be be different types (int, float, str...), especially across
                         # plots. parquet requires values of the same type. so we cast them to str
                         "z_val": str(val),
+                        "z_val_type": type(val).__name__,
                     }
                 )
 
@@ -166,7 +167,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
 
         # Fill matrix with values
         for _, row in df.iterrows():
-            rows[int(row["row_idx"])][int(row["col_idx"])] = parse_value(row["z_val"])
+            rows[int(row["row_idx"])][int(row["col_idx"])] = parse_value(row["z_val"], row["z_val_type"])
 
         return HeatmapNormalizedInputData(
             anchor=anchor,

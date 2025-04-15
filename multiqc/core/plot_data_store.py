@@ -351,28 +351,12 @@ def reset():
     _saved_anchors = set()
 
 
-def parse_value(value: Any) -> Any:
-    """
-    If value can be parsed as an integer, return an integer.
-    If there are decimal digits, return a float.
-    Else return the value as is.
-    >>> parse_value("1")
-    1
-    >>> parse_value("1.0")
-    1
-    >>> parse_value("1.01")
-    1.01
-    >>> parse_value("1.01a")
-    "1.01a"
-    """
-    try:
+def parse_value(value: Any, value_type: str) -> Any:
+    if value_type == "int":
         return int(value)
-    except ValueError:
-        pass
-    try:
-        f_val = float(value)
-        if f_val.is_integer():
-            return int(f_val)
-        return f_val
-    except ValueError:
+    elif value_type == "float":
+        return float(value)
+    elif value_type == "bool":
+        return value.lower() == "true"
+    else:
         return value

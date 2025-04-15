@@ -345,8 +345,10 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                         "sample_name": series.name,
                         # values can be be different types (int, float, str...), especially across
                         # plots. parquet requires values of the same type. so we cast them to str
-                        "x_value": str(x),
-                        "y_value": str(y),
+                        "x_val": str(x),
+                        "y_val": str(y),
+                        "x_val_type": type(x).__name__,
+                        "y_val_type": type(y).__name__,
                         "series_color": series.color,
                         "series_width": series.width,
                         "series_dash": series.dash,
@@ -404,8 +406,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     # Extract x,y pairs and sort by x value for proper display
                     pairs = []
                     for _, row in sample_group.iterrows():
-                        x_val = parse_value(row["x_value"])
-                        y_val = parse_value(row["y_value"])
+                        x_val = parse_value(row["x_val"], row["x_val_type"])
+                        y_val = parse_value(row["y_val"], row["y_val_type"])
                         pairs.append((x_val, y_val))
 
                     # Create Series object
@@ -469,8 +471,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
             list_of_series: List[Series[Any, Any]] = []
             for s in sorted(raw_data_by_sample.keys()):
-                if s not in report.sample_names:
-                    report.sample_names.append(SampleName(s))
+                if s not in sample_names:
+                    sample_names.append(SampleName(s))
                 x_to_y = raw_data_by_sample[s]
                 if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
                     if isinstance(x_to_y[0], tuple):

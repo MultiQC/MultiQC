@@ -91,24 +91,24 @@ class MultiqcModule(BaseMultiqcModule):
         #     plot=self.fastp_filtered_reads_chart(),
         # )
 
-        # # Duplication rate plot
-        # self.add_section(
-        #     name="Duplication Rates",
-        #     anchor="fastp-duprates",
-        #     description="Duplication rates of sampled reads.",
-        #     plot=linegraph.plot(
-        #         self.fastp_duplication_plotdata,
-        #         {
-        #             "id": "fastp-duprates-plot",
-        #             "title": "Fastp: Duplication Rate",
-        #             "xlab": "Duplication level",
-        #             "ylab": "Read percent",
-        #             "y_clipmax": 100,
-        #             "ymin": 0,
-        #             "tt_label": "{point.x}: {point.y:.2f}%",
-        #         },
-        #     ),
-        # )
+        # Duplication rate plot
+        self.add_section(
+            name="Duplication Rates",
+            anchor="fastp-duprates",
+            description="Duplication rates of sampled reads.",
+            plot=linegraph.plot(
+                self.fastp_duplication_plotdata,
+                {
+                    "id": "fastp-duprates-plot",
+                    "title": "Fastp: Duplication Rate",
+                    "xlab": "Duplication level",
+                    "ylab": "Read percent",
+                    "y_clipmax": 100,
+                    "ymin": 0,
+                    "tt_label": "{point.x}: {point.y:.2f}%",
+                },
+            ),
+        )
 
         # self.add_section(
         #     name="Insert Sizes",
@@ -154,13 +154,13 @@ class MultiqcModule(BaseMultiqcModule):
         #     plot=self.fastp_read_n_plot(),
         # )
 
-        # Overrepresented sequences plot
-        self.add_section(
-            name="Overrepresented Sequences",
-            anchor="fastp-overrepresented-sequences",
-            description="Overrepresented sequences in the reads.",
-            plot=self.fastp_overrepresented_sequences_plot(),
-        )
+        # # Overrepresented sequences plot
+        # self.add_section(
+        #     name="Overrepresented Sequences",
+        #     anchor="fastp-overrepresented-sequences",
+        #     description="Overrepresented sequences in the reads.",
+        #     plot=self.fastp_overrepresented_sequences_plot(),
+        # )
 
     def parse_fastp_log(self, f) -> Tuple[Optional[str], Dict]:
         """Parse the JSON output from fastp and save the summary statistics"""
@@ -500,28 +500,28 @@ class MultiqcModule(BaseMultiqcModule):
         data_labels, cnt_by_sample_pdata = self.filter_pconfig_pdata_subplots(
             cnt_by_sample, "Overrepresented Sequences"
         )
-        # self.add_section(
-        #     name="Overrepresented sequences by sample",
-        #     anchor="fastp_overrepresented_sequences",
-        #     description="The total amount of overrepresented sequences found in each library.",
-        #     plot=bargraph.plot(
-        #         [
-        #             {sn: {"overrepresented_sequences": cnt} for sn, cnt in cnt_by_sample.items()}
-        #             for cnt_by_sample in cnt_by_sample_pdata
-        #         ],
-        #         {
-        #             "overrepresented_sequences": {"name": "Overrepresented sequences"},
-        #         },
-        #         {
-        #             "id": "fastp_overrepresented_sequences_plot",
-        #             "title": "Fastp: Overrepresented sequences",
-        #             "cpswitch": False,
-        #             "ylab": "Number of overrepresented sequences",
-        #             "data_labels": data_labels,
-        #             "tt_decimals": 0,
-        #         },
-        #     ),
-        # )
+        self.add_section(
+            name="Overrepresented sequences by sample",
+            anchor="fastp_overrepresented_sequences",
+            description="The total amount of overrepresented sequences found in each library.",
+            plot=bargraph.plot(
+                [
+                    {sn: {"overrepresented_sequences": cnt} for sn, cnt in cnt_by_sample.items()}
+                    for cnt_by_sample in cnt_by_sample_pdata
+                ],
+                {
+                    "overrepresented_sequences": {"name": "Overrepresented sequences"},
+                },
+                {
+                    "id": "fastp_overrepresented_sequences_plot",
+                    "title": "Fastp: Overrepresented sequences",
+                    "cpswitch": False,
+                    "ylab": "Number of overrepresented sequences",
+                    "data_labels": data_labels,
+                    "tt_decimals": 0,
+                },
+            ),
+        )
 
         # Top overrepresented sequences across all samples
         top_n = getattr(config, "fastp_config", {}).get("top_overrepresented_sequences", 20)

@@ -4,8 +4,6 @@ import logging
 import math
 from dataclasses import dataclass
 from datetime import datetime
-from hmac import new
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
@@ -13,7 +11,6 @@ import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.core import tmp_dir
 from multiqc.core.plot_data_store import parse_value, save_plot_data
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
@@ -62,7 +59,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             "column_meta": str,
             "show_table_by_default": bool,
             "val_raw": str,
+            "val_raw_type": str,  # Store the type information
             "val_mod": str,
+            "val_mod_type": str,  # Store the type information
             "val_fmt": str,
         }
 
@@ -96,7 +95,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                                 "metric_name": str(metric_name),
                                 "metric_idx": idx,  # Store original index for ordering
                                 "val_raw": str(cell.raw),
+                                "val_raw_type": type(cell.raw).__name__,  # Store type name
                                 "val_mod": str(cell.mod),
+                                "val_mod_type": type(cell.mod).__name__,  # Store type name
                                 "val_fmt": str(cell.fmt),
                                 # Store column metadata as JSON. Note thaet "format" and "modify" lambda won't be stored,
                                 # that's why we are saving val_mod and val_fmt separately.
@@ -173,8 +174,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     for _, row in sample_group.iterrows():
                         metric_name = row["metric_name"]
 
-                        val_raw = parse_value(row["val_raw"])
-                        val_mod = parse_value(row["val_mod"])
+                        # Convert string values back to their original types
+                        val_raw = parse_value(row["val_raw"], row["val_raw_type"])
+                        val_mod = parse_value(row["val_mod"], row["val_mod_type"])
                         val_by_metric[ColumnKey(str(metric_name))] = Cell(
                             raw=val_raw,
                             mod=val_mod,
