@@ -528,11 +528,15 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                         "dataset_idx": ds_idx,
                         "dataset_label": dataset_label,
                         "sample_name": series.name,
-                        "x_value": x,
-                        "y_value": y,
+                        "x_val": str(x),
+                        "y_val": str(y),
+                        "x_val_type": type(x).__name__,
+                        "y_val_type": type(y).__name__,
                         "series_color": series.color,
                         "series_width": series.width,
                         "series_dash": series.dash,
+                        "series_marker": series.marker.model_dump() if series.marker else None,
+                        "series_showlegend": series.showlegend,
                     }
                     new_records.append(record)
 
@@ -553,21 +557,28 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             if "timestamp" not in old_df.columns:
                 old_df["timestamp"] = datetime.now().isoformat()
 
-            # Concatenate dataframes
-            merged_df = pd.concat([old_df, new_df], ignore_index=True)
+            # Add timestamp and run_id to new data
+            new_df["timestamp"] = datetime.now().isoformat()
+            if hasattr(config, "kwargs") and "run_id" in config.kwargs:
+                new_df["run_id"] = config.kwargs["run_id"]
 
-            # Handle duplicates: prefer newer data for the same sample and x_value
-            if "timestamp" in merged_df.columns:
-                # Sort by timestamp (ascending) so newer data comes last
-                merged_df.sort_values("timestamp", inplace=True)
+            # Get the list of samples that exist in both old and new data, for each dataset
+            new_sample_keys = set()
+            for _, row in new_df.iterrows():
+                new_sample_keys.add((row["dataset_label"], row["sample_name"]))
 
-                # Create deduplication key - include run_id if available
-                dedupe_columns = ["dataset_label", "sample_name", "x_value"]
-                if "run_id" in merged_df.columns:
-                    dedupe_columns.append("run_id")
+            # Filter out old data for samples that exist in new data
+            old_df_filtered = old_df.copy()
+            drop_indices = []
+            for idx, row in old_df.iterrows():
+                if (row["dataset_label"], row["sample_name"]) in new_sample_keys:
+                    drop_indices.append(idx)
 
-                # Drop duplicates, keeping the last occurrence (newer data)
-                merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
+            if drop_indices:
+                old_df_filtered = old_df.drop(drop_indices)
+
+            # Combine the filtered old data with new data
+            merged_df = pd.concat([old_df_filtered, new_df], ignore_index=True)
         else:
             merged_df = new_df
 

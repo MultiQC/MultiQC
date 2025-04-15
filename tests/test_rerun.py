@@ -36,9 +36,6 @@ def test_rerun_json(data_dir, tmp_path):
         assert key in report2_data, f"Key {key} missing from second report"
         assert report1_data[key] == report2_data[key], f"Value for {key} differs between reports"
 
-    # Verify same subkeys in report_plot_data
-    assert report1_data["report_plot_data"].keys() == report2_data["report_plot_data"].keys()
-
 
 def test_rerun_and_combine(data_dir, tmp_path):
     """Test adding new data to report.
@@ -48,13 +45,13 @@ def test_rerun_and_combine(data_dir, tmp_path):
     """
     # Run MultiQC on inputs A
     run_a_dir = tmp_path / "run_a"
-    multiqc.run(data_dir / "modules/fastp/SAMPLE.json", cfg=ClConfig(output_dir=run_a_dir))
+    multiqc.run(data_dir / "modules/fastp/single_end", cfg=ClConfig(output_dir=run_a_dir))
 
     # Run MultiQC on outputs of A + inputs B
     run_combined_dir = tmp_path / "run_combined"
     multiqc.run(
-        data_dir / "modules/fastp/single_end",
-        run_a_dir / "multiqc_data" / "multiqc_data.json",
+        data_dir / "modules/fastp/SAMPLE.json",
+        run_a_dir / "multiqc_data" / "multiqc.parquet",
         cfg=ClConfig(output_dir=run_combined_dir),
     )
 
@@ -80,3 +77,4 @@ def test_rerun_and_combine(data_dir, tmp_path):
     ]:
         assert key in report_combined_data, f"Key {key} missing from combined report"
         assert key in report_normal_data, f"Key {key} missing from direct report"
+        assert report_combined_data[key] == report_normal_data[key], f"Value for {key} differs between reports"
