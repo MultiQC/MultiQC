@@ -54,8 +54,8 @@ def test_linegraph():
         )
     )
 
-    for in_series, out_series in zip(dataset.values(), report.plot_data[plot.anchor]["datasets"][0]["lines"]):
-        assert len(in_series) == len(out_series["pairs"])
+    assert len(report.plot_data[plot.anchor]["datasets"][0]["lines"][0]["pairs"]) == 2
+    assert len(report.plot_data[plot.anchor]["datasets"][0]["lines"][1]["pairs"]) == 3
 
 
 def test_table():
