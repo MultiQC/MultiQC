@@ -1050,7 +1050,6 @@ def multiqc_dump_json(data_dir: Path):
     export_vars = {
         "report": [
             "multiqc_command",
-            "modules",
             "data_sources",
             "general_stats_data",
             "general_stats_headers",
