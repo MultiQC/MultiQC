@@ -26,11 +26,7 @@ def plot_with_sections(
     if inputs.is_empty():
         return None
 
-    return ViolinPlot.create(
-        inputs.dts,
-        anchor=inputs.anchor,
-        show_table_by_default=True,
-    )
+    return ViolinPlot.from_inputs(inputs)
 
 
 def plot(

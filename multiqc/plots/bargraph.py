@@ -430,7 +430,9 @@ def plot(
     if inputs.is_empty():
         return None
 
-    return BarPlot.from_inputs(inputs)
+    plot = BarPlot.from_inputs(inputs)
+    inputs.save()
+    return plot
 
 
 class Category(BaseModel):

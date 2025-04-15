@@ -683,12 +683,14 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
                 if not series.color:
                     series.color = scale.get_colour(si, lighten=1)
 
-        return LinePlot.create(
+        plot = LinePlot.create(
             lists_of_lines=inputs.data,
             pconfig=inputs.pconfig,
             anchor=inputs.anchor,
             sample_names=sample_names,
         )
+        inputs.save()
+        return plot
 
 
 def plot(

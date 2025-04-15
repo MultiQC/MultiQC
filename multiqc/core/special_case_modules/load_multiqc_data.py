@@ -145,7 +145,7 @@ class LoadMultiqcData(BaseMultiqcModule):
 
             df = pd.read_parquet(path)
             for anchor, plot_df in df.groupby("anchor"):
-                if plot_df.plot_type.iloc[0]:
+                if "plot_type" in plot_df.columns and plot_df.plot_type.iloc[0]:
                     anchor = Anchor(str(anchor))
                     plot_input, plot = load_plot_input(plot_df)
                     report.plot_input_data[anchor] = plot_input

@@ -335,8 +335,6 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         else:
             # Merge using class-specific implementation
             merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
-
-        merged_data.save()
         return merged_data
 
     def to_df(self) -> pd.DataFrame:

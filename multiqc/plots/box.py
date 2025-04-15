@@ -406,11 +406,13 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
 
     @staticmethod
     def from_inputs(inputs: BoxPlotInputData) -> Union["BoxPlot", str, None]:
-        return BoxPlot.create(
+        plot = BoxPlot.create(
             list_of_data_by_sample=inputs.list_of_data_by_sample,
             pconfig=inputs.pconfig,
             anchor=inputs.anchor,
         )
+        inputs.save()
+        return plot
 
 
 def plot(

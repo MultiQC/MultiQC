@@ -442,13 +442,15 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
 
     @staticmethod
     def from_inputs(inputs: HeatmapNormalizedInputData) -> Union["HeatmapPlot", str, None]:
-        return HeatmapPlot.create(
+        plot = HeatmapPlot.create(
             rows=inputs.rows,
             pconfig=inputs.pconfig,
             anchor=inputs.anchor,
             xcats=list(inputs.xcats),
             ycats=list(inputs.ycats),
         )
+        inputs.save()
+        return plot
 
     @staticmethod
     def create(

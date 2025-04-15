@@ -666,8 +666,10 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
         except Exception:
             pass
 
-        return ScatterPlot.create(
+        plot = ScatterPlot.create(
             points_lists=plotdata,
             pconfig=pconf,
             anchor=inputs.anchor,
         )
+        inputs.save()
+        return plot

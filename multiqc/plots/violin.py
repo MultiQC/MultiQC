@@ -364,7 +364,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         save_plot_data(new_data.anchor, merged_df)
 
         # Create a new ViolinPlotInputData from the merged DataFrame
-        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor, new_data.show_table_by_default)
+        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
 
 def plot(
@@ -1085,11 +1085,13 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
     @staticmethod
     def from_inputs(inputs: ViolinPlotInputData) -> Union["ViolinPlot", str, None]:
-        return ViolinPlot.create(
+        plot = ViolinPlot.create(
             inputs.dts,
             show_table_by_default=inputs.show_table_by_default,
             anchor=inputs.anchor,
         )
+        inputs.save()
+        return plot
 
 
 def find_outliers(
