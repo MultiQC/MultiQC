@@ -103,8 +103,7 @@ class LinePlotConfig(PConfig):
     smooth_points_sumcounts: Union[bool, List[bool], None] = None
     extra_series: Optional[Union[Series, List[Series], List[List[Series]]]] = None
     style: Optional[Literal["lines", "lines+markers"]] = None
-    hide_zero_cats: Optional[bool] = Field(False, deprecated="hide_empty")
-    hide_empty: bool = False
+    hide_empty: bool = Field(True, deprecated="hide_empty")
     colors: Dict[str, str] = {}
 
     @classmethod
@@ -481,10 +480,11 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                         x_to_y = {i: y for i, y in enumerate(x_to_y)}
                 dl = pconf.data_labels[ds_idx] if pconf.data_labels else None
                 series: Series[Any, Any] = _make_series_dict(pconf, dl, s, x_to_y)
-                if pconf.hide_empty and not series.pairs:
+                if not series.pairs:
                     continue
                 list_of_series.append(series)
-            datasets.append(list_of_series)
+            if list_of_series:
+                datasets.append(list_of_series)
 
         # Return normalized data and config
         return LinePlotNormalizedInputData(
@@ -613,6 +613,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
         anchor: Anchor,
         sample_names: List[SampleName],
     ) -> "LinePlot[KeyT, ValT]":
+        lists_of_lines = [x for x in lists_of_lines if x]
         n_samples_per_dataset = [len(x) for x in lists_of_lines]
 
         model: Plot[Dataset[KeyT, ValT], LinePlotConfig] = Plot.initialize(

@@ -603,14 +603,13 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             if "title" not in dconfig:
                 dconfig["title"] = pconfig.title
 
-            if not dconfig.get("subtitle"):
-                subtitles = []
-                if len(n_samples_per_dataset) > 1:
-                    subtitles += [dataset.label]
-                if n_samples > 1:
-                    subtitles += [f"{n_samples} samples"]
-                if subtitles:
-                    dconfig["subtitle"] = ", ".join(subtitles)
+            subtitles = []
+            if len(n_samples_per_dataset) > 1:
+                subtitles += [dataset.label]
+            if n_samples > 1:
+                subtitles += [f"{n_samples} samples"]
+            if subtitles:
+                dconfig["subtitle"] = ", ".join(subtitles)
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig

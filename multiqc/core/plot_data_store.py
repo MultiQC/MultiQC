@@ -92,10 +92,6 @@ def save_plot_data(anchor: Anchor, df: pd.DataFrame) -> None:
 
     This function adds/updates data for a specific plot in the file.
     """
-    if anchor in _saved_anchors:
-        # Already saved this anchor in this run
-        return
-
     # Ensure "anchor" column exists in the dataframe
     if "anchor" not in df.columns:
         df["anchor"] = str(anchor)
