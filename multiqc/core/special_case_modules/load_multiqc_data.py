@@ -48,11 +48,8 @@ def load_plot_input(plot_df: pd.DataFrame) -> Tuple[NormalizedPlotInputData, Uni
     elif plot_type == PlotType.HEATMAP:
         plot_input = HeatmapNormalizedInputData.from_df(plot_df, pconfig, anchor)
         plot = HeatmapPlot.from_inputs(plot_input)
-    elif plot_type == PlotType.VIOLIN:
-        plot_input = ViolinPlotInputData.from_df(plot_df, pconfig, anchor, show_table_by_default=False)
-        plot = ViolinPlot.from_inputs(plot_input)
-    elif plot_type == PlotType.TABLE:
-        plot_input = ViolinPlotInputData.from_df(plot_df, pconfig, anchor, show_table_by_default=True)
+    elif plot_type == PlotType.VIOLIN or plot_type == PlotType.TABLE:
+        plot_input = ViolinPlotInputData.from_df(plot_df, pconfig, anchor)
         plot = ViolinPlot.from_inputs(plot_input)
     elif plot_type == PlotType.SCATTER:
         plot_input = ScatterNormalizedInputData.from_df(plot_df, pconfig, anchor)

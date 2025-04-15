@@ -344,6 +344,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
             anchor=plot_anchor(pconf),
             list_of_data_by_sample=list_of_data_by_sample,
             pconfig=pconf,
+            plot_type=PlotType.BOX,
         )
 
 
@@ -403,6 +404,14 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
         )
         return BoxPlot(**model.__dict__)
 
+    @staticmethod
+    def from_inputs(inputs: BoxPlotInputData) -> Union["BoxPlot", str, None]:
+        return BoxPlot.create(
+            list_of_data_by_sample=inputs.list_of_data_by_sample,
+            pconfig=inputs.pconfig,
+            anchor=inputs.anchor,
+        )
+
 
 def plot(
     list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
@@ -418,12 +427,4 @@ def plot(
     if inputs.is_empty():
         return None
 
-    return _plot_from_inputs(inputs)
-
-
-def _plot_from_inputs(inputs: BoxPlotInputData) -> Union["BoxPlot", str, None]:
-    return BoxPlot.create(
-        list_of_data_by_sample=inputs.list_of_data_by_sample,
-        pconfig=inputs.pconfig,
-        anchor=inputs.anchor,
-    )
+    return BoxPlot.from_inputs(inputs)

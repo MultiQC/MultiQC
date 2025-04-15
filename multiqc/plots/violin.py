@@ -60,6 +60,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             "metric_name": str,
             "metric_idx": int,
             "column_meta": str,
+            "show_table_by_default": bool,
         }
         # Track if we've seen non-numeric values that would require string type
         value_types: Dict[str, Union[type, None]] = {
@@ -120,6 +121,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                                 # Store column metadata as JSON. Note thaet "format" and "modify" lambda won't be stored,
                                 # that's why we are saving val_mod and val_fmt separately.
                                 "column_meta": dt_column.model_dump_json(),
+                                "show_table_by_default": self.show_table_by_default,
                             }
 
                             records.append(record)
@@ -139,7 +141,6 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         df: pd.DataFrame,
         pconfig: Union[Dict, TableConfig],
         anchor: Anchor,
-        show_table_by_default: bool,
     ) -> "ViolinPlotInputData":
         """
         Load plot data from a DataFrame.
@@ -158,13 +159,15 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                 plot_type=PlotType.VIOLIN,
                 pconfig=pconf,
                 anchor=anchor,
-                show_table_by_default=show_table_by_default,
+                show_table_by_default=True,
             )
+
+        show_table_by_default = df.iloc[0]["show_table_by_default"]
 
         # Group data by dt_anchor to recreate DataTables
         dts = []
 
-        for dt_anchor, dt_group in df.groupby("dt_anchor", sort=True):
+        for dt_anchor, dt_group in df.groupby("dt_anchor", sort=False):
             # Prepare data structure for DataTable creation
             data_dict: Dict[SectionKey, Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]]] = {}
             headers_dict: Dict[SectionKey, Dict[ColumnKey, ColumnDict]] = {}
@@ -173,7 +176,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             ordered_metrics = {}
 
             # Group by section
-            for section_key, section_group in dt_group.groupby("section_key", sort=True):
+            for section_key, section_group in dt_group.groupby("section_key", sort=False):
                 val_by_sample_by_metric: Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]] = {}
                 section_headers: Dict[ColumnKey, ColumnDict] = {}
 
@@ -185,7 +188,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                         ordered_metrics[row["metric_name"]] = row["metric_idx"]
 
                 # Process samples
-                for sample_name, sample_group in section_group.groupby("sample_name", sort=True):
+                for sample_name, sample_group in section_group.groupby("sample_name", sort=False):
                     val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
 
                     # If we have metric_idx, sort by that first
@@ -835,7 +838,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             samples_per_dataset.append(ds_samples)
 
         model: Plot[Dataset, TableConfig] = Plot.initialize(
-            plot_type=PlotType.TABLE if show_table_by_default else PlotType.VIOLIN,
+            plot_type=PlotType.VIOLIN,
             pconfig=dts[0].pconfig,
             n_samples_per_dataset=[len(x) for x in samples_per_dataset],
             id=dts[0].id,

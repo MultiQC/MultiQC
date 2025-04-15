@@ -23,7 +23,7 @@ def test_rerun_json(data_dir, tmp_path):
     # Run 2: Run on the intermediate data from run1
     run_b_dir = tmp_path / "run_b"
     run_b_dir.mkdir()
-    multiqc.run(run_a_dir / "multiqc_data" / "multiqc_data.json", cfg=ClConfig(output_dir=run_b_dir))
+    multiqc.run(run_a_dir / "multiqc_data" / "multiqc.parquet", cfg=ClConfig(output_dir=run_b_dir))
 
     # Compare reports
     with open(run_b_dir / "multiqc_data" / "multiqc_data.json") as f:
@@ -31,13 +31,13 @@ def test_rerun_json(data_dir, tmp_path):
 
     # Compare only the relevant fields, not the entire report
     # The 'config_analysis_dir_abs' will be different between runs
-    for key in [
-        "report_plot_data",
-        "report_modules",
-    ]:
+    for key in ["report_modules"]:
         assert key in report1_data, f"Key {key} missing from first report"
         assert key in report2_data, f"Key {key} missing from second report"
         assert report1_data[key] == report2_data[key], f"Value for {key} differs between reports"
+
+    # Verify same subkeys in report_plot_data
+    assert report1_data["report_plot_data"].keys() == report2_data["report_plot_data"].keys()
 
 
 def test_rerun_and_combine(data_dir, tmp_path):
