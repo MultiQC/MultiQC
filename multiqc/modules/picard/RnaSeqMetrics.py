@@ -180,7 +180,7 @@ def parse_reports(module):
                     "id": "picard_rnaseqmetrics_strand_plot",
                     "title": "Picard: RnaSeqMetrics Strand Mapping",
                     "ylab": "Number of reads",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                 },
             ),
         )

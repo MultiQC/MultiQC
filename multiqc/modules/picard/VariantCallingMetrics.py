@@ -375,7 +375,7 @@ def compare_variant_type_plot(data):
         "id": "picard_variantCallingMetrics_variant_type",
         "title": "Picard: Variants Called",
         "ylab": "Counts of Variants",
-        "hide_empty": False,
+        "hide_zero_cats": False,
         "data_labels": [{"name": "Total"}, {"name": "Known"}, {"name": "Novel"}],
     }
     return bargraph.plot(
