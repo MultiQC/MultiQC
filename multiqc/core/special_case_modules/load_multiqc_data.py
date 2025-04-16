@@ -6,11 +6,9 @@ existing reports with new data.
 
 import json
 import logging
-import os
-import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Dict, List, Optional, Tuple, Union
 
 import packaging
 import pandas as pd
