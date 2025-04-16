@@ -1021,7 +1021,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="Sequence Length Distribution",
                 anchor="fastqc_sequence_length_distribution",
-                description=f'<div class="alert alert-info">{desc}</div>',
+                content=f'<div class="alert alert-info">{desc}</div>',
             )
         else:
             pconfig = LinePlotConfig(

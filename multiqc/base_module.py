@@ -467,7 +467,7 @@ class BaseMultiqcModule:
             helptext=helptext,
             content_before_plot=content_before_plot,
             content=content,
-            print_section=any([content_before_plot, description, plot, content]),
+            print_section=any([content_before_plot, plot, content]),
         )
 
         if plot is not None:
