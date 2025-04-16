@@ -707,7 +707,7 @@ def _determine_dmin_and_dmax(
         for _, rows in rows_by_sample.items():
             v_by_col = rows[0].data
             try:
-                val = v_by_col[col_key].raw
+                val = v_by_col[col_key].mod if v_by_col[col_key].mod is not None else v_by_col[col_key].raw
                 if isinstance(val, float) or isinstance(val, int) and math.isfinite(val) and not math.isnan(val):
                     if set_dmax:
                         column.dmax = max(column.dmax, val)
@@ -864,7 +864,7 @@ def render_html(
                 if col_key not in row.data:
                     continue
 
-                val: ValueT = row.data[col_key].raw
+                val: ValueT = row.data[col_key].mod if row.data[col_key].mod is not None else row.data[col_key].raw
                 valstr: str = row.data[col_key].fmt
 
                 group_to_sample_to_anchor_to_val[group_name][row.sample][col_anchor] = val
