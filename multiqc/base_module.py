@@ -1000,9 +1000,16 @@ class BaseMultiqcModule:
                     desc += " (summed for grouped samples)"
                 _headers[col_id]["description"] = desc
 
+        # Add incremental suffix to SectionKey(self.anchor) until it's unique
+        anchor = SectionKey(self.anchor)
+        suffix = 2
+        while anchor in report.general_stats_data:
+            suffix += 1
+            anchor = SectionKey(f"{self.anchor}_{suffix}")
+
         # Append to report.general_stats for later assembly into table
-        report.general_stats_data[SectionKey(self.anchor)] = rows_by_group
-        report.general_stats_headers[SectionKey(self.anchor)] = _headers  # type: ignore
+        report.general_stats_data[anchor] = rows_by_group
+        report.general_stats_headers[anchor] = _headers  # type: ignore
 
     def add_data_source(
         self,
