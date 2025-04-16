@@ -94,16 +94,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
                 )
 
         df = pd.DataFrame(records)
-
-        # Add config data as additional columns
-        config_dict = self.pconfig.model_dump()
-        for key, value in config_dict.items():
-            if isinstance(value, (str, int, float, bool)) or value is None:
-                df[f"config_{key}"] = value
-
-        # Add anchor information
-        df["anchor"] = str(self.anchor)
-
+        self.finalize_df(df)
         return df
 
     @classmethod
@@ -133,19 +124,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
                 plot_type=PlotType.HEATMAP,
             )
 
-        # Extract config information that might have been serialized
-        config_cols = [col for col in df.columns if col.startswith("config_")]
-        config_data = {}
-        for col in config_cols:
-            key = col[7:]  # Remove "config_" prefix
-            if df[col].nunique() == 1:
-                config_data[key] = df[col].iloc[0]
-
-        # Create pconfig with merged data from the DataFrame and provided config
-        if not isinstance(pconfig, HeatmapConfig):
-            pconf = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict({**config_data, **(pconfig or {})}))
-        else:
-            pconf = pconfig
+        pconf = cast(HeatmapConfig, HeatmapConfig.from_df(df))
 
         # Extract and rebuild the 2D matrix
         max_row_idx = int(df["row_idx"].max())
@@ -168,6 +147,8 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         # Fill matrix with values
         for _, row in df.iterrows():
             rows[int(row["row_idx"])][int(row["col_idx"])] = parse_value(row["z_val"], row["z_val_type"])
+
+        cls.data_labels_from_df(df, pconf)
 
         return HeatmapNormalizedInputData(
             anchor=anchor,

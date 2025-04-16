@@ -5,11 +5,11 @@ import multiqc
 from multiqc.core.update_config import ClConfig
 
 
-def test_rerun_json(data_dir, tmp_path):
-    """Test running MultiQC on intermediate output multiqc_data.json.
+def test_rerun_parquet(data_dir, tmp_path):
+    """Test running MultiQC on intermediate output multiqc_data.parquet.
     Run MultiQC on a set of inputs.
-    Then run MultiQC on the multiqc_data.json from the first run. The reports should be identical.
-    It should only work with multiqc_data.json is passed explicitly. Otherwise MultiQC output folder should be ignored.
+    Then run MultiQC on the multiqc_data.parquet from the first run. The reports should be identical.
+    It should only work with multiqc_data.parquet is passed explicitly. Otherwise MultiQC output folder should be ignored.
     """
     # Run 1: Normal run on test data
     run_a_dir = tmp_path / "run_a"

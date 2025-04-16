@@ -2,8 +2,8 @@
 
 import copy
 import logging
-from collections import defaultdict
 import stat
+from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import numpy as np
@@ -50,7 +50,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
         # Serialize datasets, samplenames, and points
         for ds_idx, dataset in enumerate(self.datasets):
-            dataset_label = self.extract_dataset_label(ds_idx)
+            dataset_label = self.extract_data_label(ds_idx)
 
             for sample_name, points in dataset.items():
                 if not isinstance(points, list):
@@ -78,17 +78,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                     records.append(record)
 
         df = pd.DataFrame(records)
-
-        # Add config data as additional columns
-        config_dict = self.pconfig.model_dump()
-        for key, value in config_dict.items():
-            # Only serialize primitive types directly
-            if isinstance(value, (str, int, float, bool)) or value is None:
-                df[f"config_{key}"] = value
-
-        # Add anchor information
-        df["anchor"] = str(self.anchor)
-
+        self.finalize_df(df)
         return df
 
     @staticmethod
@@ -220,34 +210,20 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
         """
         Create a ScatterNormalizedInputData object from a pandas DataFrame.
         """
-        # Filter out rows related to this anchor if there are multiple
-        if "anchor" in df.columns:
-            df = df[df["anchor"] == str(anchor)]
-
-        pconf = (
-            pconfig
-            if isinstance(pconfig, ScatterConfig)
-            else cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
-        )
-
         if df.empty:
-            # Return empty data if no valid rows found
-            return ScatterNormalizedInputData(
-                plot_type=PlotType.SCATTER,
+            pconf = (
+                pconfig
+                if isinstance(pconfig, ScatterConfig)
+                else cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
+            )
+            return cls(
                 anchor=anchor,
                 datasets=[],
                 pconfig=pconf,
+                plot_type=PlotType.SCATTER,
             )
 
-        # Extract config information that might have been serialized
-        config_cols = [col for col in df.columns if col.startswith("config_")]
-        config_data = {}
-        for col in config_cols:
-            key = col[7:]  # Remove "config_" prefix
-            if df[col].nunique() == 1:
-                config_data[key] = df[col].iloc[0]
-
-        pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict({**config_data, **pconf.model_dump()}))
+        pconf = cast(ScatterConfig, ScatterConfig.from_df(df))
 
         # Reconstruct datasets
         dataset_indices = sorted(df["dataset_idx"].unique())
@@ -277,7 +253,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
             datasets.append(dataset)
 
-        cls.dataset_labels_from_df(df, pconf)
+        cls.data_labels_from_df(df, pconf)
 
         return cls(
             anchor=anchor,

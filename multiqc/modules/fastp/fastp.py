@@ -80,63 +80,63 @@ class MultiqcModule(BaseMultiqcModule):
         # Save entire original parsed JSON
         self.write_data_file(self.fastp_all_data, "multiqc_fastp")
 
-        # General Stats Table
-        self.fastp_general_stats_table(self.fastp_data)
+        # # General Stats Table
+        # self.fastp_general_stats_table(self.fastp_data)
 
-        # Filtering statistics bar plot
-        self.add_section(
-            name="Filtered Reads",
-            anchor="fastp-filtered-reads-chart",
-            description="Filtering statistics of sampled reads.",
-            plot=self.fastp_filtered_reads_chart(),
-        )
+        # # Filtering statistics bar plot
+        # self.add_section(
+        #     name="Filtered Reads",
+        #     anchor="fastp-filtered-reads-chart",
+        #     description="Filtering statistics of sampled reads.",
+        #     plot=self.fastp_filtered_reads_chart(),
+        # )
 
-        # Duplication rate plot
-        self.add_section(
-            name="Duplication Rates",
-            anchor="fastp-duprates",
-            description="Duplication rates of sampled reads.",
-            plot=linegraph.plot(
-                self.fastp_duplication_plotdata,
-                {
-                    "id": "fastp-duprates-plot",
-                    "title": "Fastp: Duplication Rate",
-                    "xlab": "Duplication level",
-                    "ylab": "Read percent",
-                    "y_clipmax": 100,
-                    "ymin": 0,
-                    "tt_label": "{point.x}: {point.y:.2f}%",
-                },
-            ),
-        )
+        # # Duplication rate plot
+        # self.add_section(
+        #     name="Duplication Rates",
+        #     anchor="fastp-duprates",
+        #     description="Duplication rates of sampled reads.",
+        #     plot=linegraph.plot(
+        #         self.fastp_duplication_plotdata,
+        #         {
+        #             "id": "fastp-duprates-plot",
+        #             "title": "Fastp: Duplication Rate",
+        #             "xlab": "Duplication level",
+        #             "ylab": "Read percent",
+        #             "y_clipmax": 100,
+        #             "ymin": 0,
+        #             "tt_label": "{point.x}: {point.y:.2f}%",
+        #         },
+        #     ),
+        # )
 
-        self.add_section(
-            name="Insert Sizes",
-            anchor="fastp-insert-size",
-            description="Insert size estimation of sampled reads.",
-            plot=linegraph.plot(
-                self.fastp_insert_size_data,
-                {
-                    "id": "fastp-insert-size-plot",
-                    "title": "Fastp: Insert Size Distribution",
-                    "xlab": "Insert size",
-                    "ylab": "Read percent",
-                    "y_clipmax": 100,
-                    "ymin": 0,
-                    "tt_label": "{point.x}: {point.y:.2f}%",
-                    "smooth_points": 300,
-                    "smooth_points_sumcounts": False,
-                },
-            ),
-        )
+        # self.add_section(
+        #     name="Insert Sizes",
+        #     anchor="fastp-insert-size",
+        #     description="Insert size estimation of sampled reads.",
+        #     plot=linegraph.plot(
+        #         self.fastp_insert_size_data,
+        #         {
+        #             "id": "fastp-insert-size-plot",
+        #             "title": "Fastp: Insert Size Distribution",
+        #             "xlab": "Insert size",
+        #             "ylab": "Read percent",
+        #             "y_clipmax": 100,
+        #             "ymin": 0,
+        #             "tt_label": "{point.x}: {point.y:.2f}%",
+        #             "smooth_points": 300,
+        #             "smooth_points_sumcounts": False,
+        #         },
+        #     ),
+        # )
 
-        # Base quality plot
-        self.add_section(
-            name="Sequence Quality",
-            anchor="fastp-seq-quality",
-            description="Average sequencing quality over each base of all reads.",
-            plot=self.fastp_read_qual_plot(),
-        )
+        # # Base quality plot
+        # self.add_section(
+        #     name="Sequence Quality",
+        #     anchor="fastp-seq-quality",
+        #     description="Average sequencing quality over each base of all reads.",
+        #     plot=self.fastp_read_qual_plot(),
+        # )
 
         # GC content plot
         self.add_section(

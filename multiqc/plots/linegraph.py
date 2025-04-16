@@ -322,9 +322,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         records = []
         # Create a record for each data point in each series
         for ds_idx, dataset in enumerate(self.data):
-            # Get dataset label if available
-            dataset_label = self.extract_dataset_label(ds_idx)
-
+            dataset_label = self.extract_data_label(ds_idx)
             for series in dataset:
                 for x, y in series.pairs:
                     record = {
@@ -347,17 +345,29 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     records.append(record)
 
         # Create DataFrame from records
-        return pd.DataFrame(records)
+        df = pd.DataFrame(records)
+        self.finalize_df(df)
+        return df
 
     @classmethod
     def from_df(
         cls, df: pd.DataFrame, pconfig: Union[Dict, LinePlotConfig], anchor: Anchor
     ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
         pconf: LinePlotConfig
-        if isinstance(pconfig, dict):
-            pconf = cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
-        else:
-            pconf = pconfig
+        if df.empty:
+            pconf = (
+                pconfig
+                if isinstance(pconfig, LinePlotConfig)
+                else cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
+            )
+            return cls(
+                anchor=anchor,
+                plot_type=PlotType.LINE,
+                data=[],
+                pconfig=pconf,
+                sample_names=[],
+            )
+        pconf = cast(LinePlotConfig, LinePlotConfig.from_df(df))
 
         # Reconstruct data structure
         datasets = []
@@ -418,9 +428,9 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
             datasets.append(dataset)
 
-        cls.dataset_labels_from_df(df, pconf)
+        cls.data_labels_from_df(df, pconf)
 
-        return LinePlotNormalizedInputData(
+        return cls(
             anchor=anchor,
             plot_type=PlotType.LINE,
             data=datasets,
@@ -452,9 +462,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     f"list is the same length as the data list: "
                     f"{len(pconf.data_labels)} != {len(raw_dataset_list)}. pconfig={pconf}"
                 )
-            pconf.data_labels = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconf.data_labels]
-        else:
-            pconf.data_labels = []
 
         sample_names = []
 
@@ -497,63 +504,15 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         Merge normalized data from old run and new run, leveraging our tabular representation
         for more efficient and reliable merging.
         """
-        # Create dataframe for new data
-        new_records = []
-        for ds_idx, dataset in enumerate(new_data.data):
-            # Get dataset label
-            dataset_label = None
-            if new_data.pconfig.data_labels and ds_idx < len(new_data.pconfig.data_labels):
-                label = new_data.pconfig.data_labels[ds_idx]
-                if isinstance(label, dict) and "name" in label:
-                    dataset_label = label["name"]
-                elif isinstance(label, str):
-                    dataset_label = label
-                else:
-                    dataset_label = f"Dataset {ds_idx + 1}"
-            else:
-                dataset_label = f"Dataset {ds_idx + 1}"
-
-            for series in dataset:
-                for x, y in series.pairs:
-                    record = {
-                        "anchor": new_data.anchor,
-                        "dataset_idx": ds_idx,
-                        "dataset_label": dataset_label,
-                        "sample_name": series.name,
-                        "x_val": str(x),
-                        "y_val": str(y),
-                        "x_val_type": type(x).__name__,
-                        "y_val_type": type(y).__name__,
-                        "series_color": series.color,
-                        "series_width": series.width,
-                        "series_dash": series.dash,
-                        "series_marker": series.marker.model_dump() if series.marker else None,
-                        "series_showlegend": series.showlegend,
-                    }
-                    new_records.append(record)
-
-        new_df = pd.DataFrame(new_records)
+        new_df = new_data.to_df()
         if new_df.empty:
             return old_data
 
         old_df = old_data.to_df()
 
         # If we have both old and new data, merge them
-        merged_df = None
+        merged_df = new_df
         if old_df is not None and not old_df.empty:
-            # Add run_id to old data if missing
-            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
-                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
-
-            # Make sure old data has timestamp
-            if "timestamp" not in old_df.columns:
-                old_df["timestamp"] = datetime.now().isoformat()
-
-            # Add timestamp and run_id to new data
-            new_df["timestamp"] = datetime.now().isoformat()
-            if hasattr(config, "kwargs") and "run_id" in config.kwargs:
-                new_df["run_id"] = config.kwargs["run_id"]
-
             # Get the list of samples that exist in both old and new data, for each dataset
             new_sample_keys = set()
             for _, row in new_df.iterrows():
@@ -571,16 +530,10 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
             # Combine the filtered old data with new data
             merged_df = pd.concat([old_df_filtered, new_df], ignore_index=True)
-        else:
-            merged_df = new_df
 
         save_plot_data(new_data.anchor, merged_df)
 
-        return LinePlotNormalizedInputData.from_df(
-            merged_df,
-            new_data.pconfig,
-            new_data.anchor,
-        )
+        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
 
 class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):

@@ -170,6 +170,17 @@ class PConfig(ValidatedConfig):
         else:
             return cls(path_in_cfg=(), **pconfig)
 
+    @classmethod
+    def from_df(cls, df: pd.DataFrame):
+        """
+        Extract pconfig from dataframe and populate pconfig.data_labels
+        """
+        if "_pconfig" in df.columns:
+            d = json.loads(df["_pconfig"].iloc[0])
+            return cls(path_in_cfg=(), **d)
+        else:
+            return cls()
+
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
         path_in_cfg = path_in_cfg or ()
         _path_component = "pconfig"
@@ -188,6 +199,22 @@ class PConfig(ValidatedConfig):
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
                 setattr(self, k, v)
+
+        # Normalize data labels to ensure they are unique and consistent.
+        if self.data_labels and len(self.data_labels) > 1:
+            data_labels = []
+            for idx, _ in enumerate(self.data_labels):
+                data_label: Union[str, Dict[str, Union[str, Dict[str, str]]]] = (
+                    self.data_labels[idx] if idx < len(self.data_labels) else {}
+                )
+                dconfig: Dict[str, Union[str, Dict[str, str]]] = (
+                    data_label if isinstance(data_label, dict) else {"name": data_label}
+                )
+                label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
+                data_labels.append({"name": label})
+            self.data_labels = data_labels
+        else:
+            self.data_labels = []
 
     @classmethod
     def parse_x_bands(cls, data, path_in_cfg: Tuple[str, ...]):
@@ -299,7 +326,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
     def to_df(self) -> pd.DataFrame:
         raise NotImplementedError("Subclasses must implement to_df()")
 
-    def extract_dataset_label(self, ds_idx: int) -> Optional[str]:
+    def extract_data_label(self, ds_idx: int) -> Optional[str]:
         # Get dataset label if available
         if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
             label = self.pconfig.data_labels[ds_idx]
@@ -308,9 +335,9 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             elif isinstance(label, str):
                 return label
             else:
-                return f"Dataset {ds_idx + 1}"
+                return None
         else:
-            return f"Dataset {ds_idx + 1}"
+            return None
 
     @classmethod
     def from_df(
@@ -323,24 +350,22 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         raise NotImplementedError("Subclasses must implement from_df()")
 
     @classmethod
-    def dataset_labels_from_df(cls, df: pd.DataFrame, pconfig: PConfigT) -> None:
+    def data_labels_from_df(cls, df: pd.DataFrame, pconfig: PConfigT) -> None:
         """
         Extract dataset labels from dataframe and populate pconfig.data_labels
         """
         if "dataset_label" in df.columns:
-            dataset_labels = []
+            data_labels = []
             for ds_idx in sorted(df["dataset_idx"].unique()):
                 ds_rows = df[df["dataset_idx"] == ds_idx]
                 if not ds_rows.empty:
                     # Get the first dataset_label for this dataset index
                     label = ds_rows["dataset_label"].iloc[0]
-                    if label and not label.startswith("Dataset "):  # Skip default generated labels
-                        dataset_labels.append({"name": label})
-                    else:
-                        dataset_labels.append({"name": f"Dataset {ds_idx + 1}"})
+                    if label:
+                        data_labels.append({"name": label})
 
             # Only set data_labels if we have valid labels
-            pconfig.data_labels = dataset_labels
+            pconfig.data_labels = data_labels
 
     @classmethod
     def load(cls, anchor: Anchor) -> Optional["NormalizedPlotInputData"]:
@@ -374,31 +399,40 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
         return merged_data
 
+    def finalize_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Finalize the dataframe before saving. Add common plot metadata:
+        anchor, plot_type, pconfig, run_id, timestamp.
+        """
+        # Ensure the DataFrame has the anchor column
+        if "anchor" not in df.columns:
+            df["anchor"] = str(self.anchor)
+
+        # Add type for easier filtering
+        if "plot_type" not in df.columns:
+            df["plot_type"] = str(self.plot_type.value)
+
+        # Store pconfig as a column in the DataFrame
+        if self.pconfig:
+            # Filter out any None/null values from pconfig before storing
+            filtered_pconfig = {k: v for k, v in self.pconfig.model_dump().items() if v is not None}
+            df["_pconfig"] = json.dumps(filtered_pconfig)
+
+        # Add run metadata
+        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
+            df["run_id"] = config.kwargs["run_id"]
+
+        df["timestamp"] = report.creation_date.isoformat()
+        return df
+
     def save(self) -> None:
         """
         Save the plot data to a parquet file.
 
         This function handles writing both the data and the plot config.
         """
-        # Create a copy of the DataFrame to avoid modifying the original
-        df_to_save = self.to_df().copy()
-
-        # Ensure the DataFrame has the anchor column
-        if "anchor" not in df_to_save.columns:
-            df_to_save["anchor"] = str(self.anchor)
-
-        # Add type for easier filtering
-        if "plot_type" not in df_to_save.columns:
-            df_to_save["plot_type"] = str(self.plot_type.value)
-
-        # Store pconfig as a column in the DataFrame
-        if self.pconfig:
-            # Filter out any None/null values from pconfig before storing
-            filtered_pconfig = {k: v for k, v in self.pconfig.model_dump().items() if v is not None}
-            df_to_save["_pconfig"] = json.dumps(filtered_pconfig)
-
-        # Save the data
-        plot_data_store.save_plot_data(self.anchor, df_to_save)
+        df = self.to_df()
+        plot_data_store.save_plot_data(self.anchor, df)
 
     @classmethod
     def merge(

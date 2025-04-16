@@ -1,6 +1,7 @@
 """MultiQC functions to plot a bargraph"""
 
 import copy
+import json
 import logging
 import math
 from collections import OrderedDict, defaultdict
@@ -217,7 +218,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             cats=categories_per_ds,
         )
 
-    def to_df(self):
+    def to_df(self) -> pd.DataFrame:
         """
         Save plot data to a parquet file using a tabular representation that's
         optimized for cross-run analysis.
@@ -225,7 +226,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         # Create a list of records for each sample/category pair
         records = []
         for ds_idx, dataset in enumerate(self.data):
-            dataset_label = self.extract_dataset_label(ds_idx)
+            dataset_label = self.extract_data_label(ds_idx)
 
             for sample_name, sample_data in dataset.items():
                 for category_name, value in sample_data.items():
@@ -257,27 +258,31 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
                     records.append(record)
 
-        return pd.DataFrame(records)
+        df = pd.DataFrame(records)
+        self.finalize_df(df)
+        return df
 
     @classmethod
     def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, BarPlotConfig], anchor: Anchor) -> "BarPlotInputData":
         """
         Load plot data from a parquet file.
         """
-        import json
-
         # Handle None case
-        if df is None or df.empty:
-            if isinstance(pconfig, dict):
-                pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
-            else:
-                pconf = cast(BarPlotConfig, pconfig)
-            return cls(anchor=anchor, plot_type=PlotType.BAR, pconfig=pconf, data=[], cats=[])
+        if df.empty:
+            pconf = (
+                pconfig
+                if isinstance(pconfig, BarPlotConfig)
+                else cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
+            )
+            return cls(
+                anchor=anchor,
+                plot_type=PlotType.BAR,
+                pconfig=pconf,
+                data=[],
+                cats=[],
+            )
 
-        if isinstance(pconfig, dict):
-            pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
-        else:
-            pconf = cast(BarPlotConfig, pconfig)
+        pconf = cast(BarPlotConfig, BarPlotConfig.from_df(df))
 
         # Group by dataset_idx to rebuild data structure
         datasets: List[DatasetT] = []
@@ -330,7 +335,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             datasets.append(dataset)
             cats_per_dataset.append(cats_dict)
 
-        cls.dataset_labels_from_df(df, pconf)
+        cls.data_labels_from_df(df, pconf)
 
         return cls(
             anchor=anchor,
@@ -356,46 +361,36 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         if new_df.empty:
             return old_data
 
-        # Add timestamp and run_id to new data
-        new_df["timestamp"] = datetime.now().isoformat()
-        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
-            new_df["run_id"] = config.kwargs["run_id"]
-
         old_df = old_data.to_df()
 
         # If we have both old and new data, merge them
         merged_df = new_df
         if old_df is not None and not old_df.empty:
-            # Make sure old data has run_id
-            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
-                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
+            # Get the list of samples that exist in both old and new data, for each dataset
+            new_sample_keys = set()
+            for _, row in new_df.iterrows():
+                new_sample_keys.add((row["dataset_label"], row["sample_name"]))
 
-            # Make sure old data has timestamp
-            if "timestamp" not in old_df.columns:
-                old_df["timestamp"] = datetime.now().isoformat()
+            # Filter out old data for samples that exist in new data
+            old_df_filtered = old_df.copy()
+            drop_indices = []
+            for idx, row in old_df.iterrows():
+                if (row["dataset_label"], row["sample_name"]) in new_sample_keys:
+                    drop_indices.append(idx)
+
+            if drop_indices:
+                old_df_filtered = old_df.drop(drop_indices)
 
             # Combine the dataframes, keeping all rows
-            merged_df = pd.concat([old_df, new_df], ignore_index=True)
+            merged_df = pd.concat([old_df_filtered, new_df], ignore_index=True)
 
             # For duplicates (same sample, category, dataset), keep the latest version
-            if "timestamp" in merged_df.columns:
-                # Sort by timestamp (newest last)
-                merged_df.sort_values("timestamp", inplace=True)
-
-                # Group by the key identifiers and keep the last entry (newest)
-                dedupe_columns = ["dataset_idx", "sample_name", "category_name"]
-                if "run_id" in merged_df.columns:
-                    dedupe_columns.append("run_id")
-
-                merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
+            # Sort by timestamp (newest last)
+            merged_df.sort_values("timestamp", inplace=True)
 
         save_plot_data(new_data.anchor, merged_df)
 
-        return cls.from_df(
-            merged_df,
-            new_data.pconfig,
-            new_data.anchor,
-        )
+        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
 
 def plot(

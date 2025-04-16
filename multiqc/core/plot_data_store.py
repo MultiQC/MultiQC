@@ -38,22 +38,9 @@ def save_plot_data(anchor: Anchor, df: pd.DataFrame) -> None:
 
     This function adds/updates data for a specific plot in the file.
     """
-    # Ensure "anchor" column exists in the dataframe
-    if "anchor" not in df.columns:
-        df["anchor"] = str(anchor)
-
-    # Add run metadata
-    if hasattr(config, "kwargs") and "run_id" in config.kwargs:
-        df["run_id"] = config.kwargs["run_id"]
-    df["timestamp"] = report.creation_date.isoformat()
-
     # Update the global cache
     _plot_dataframes[anchor] = df
     _saved_anchors.add(anchor)
-
-    # Record the file path in report data for loading later
-    # parquet_file = tmp_dir.parquet_file()
-    # report.plot_input_data[anchor] = str(parquet_file.relative_to(tmp_dir.data_tmp_dir()))
 
     # Write to the file
     _update_parquet(df, anchor)

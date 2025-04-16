@@ -108,7 +108,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             records.append(record)
 
         # Create DataFrame with appropriate dtypes
-        return pd.DataFrame(records, dtype=object).astype(column_types)
+        df = pd.DataFrame(records, dtype=object).astype(column_types)
+        self.finalize_df(df)
+        return df
 
     @classmethod
     def from_df(
@@ -120,15 +122,12 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         """
         Load plot data from a DataFrame.
         """
-        # Convert pconfig to TableConfig if needed
-        pconf: TableConfig
-        if isinstance(pconfig, dict):
-            pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
-        else:
-            pconf = cast(TableConfig, pconfig)
-
-        # Handle None or empty DataFrame case
-        if df is None or df.empty:
+        if df.empty:
+            pconf = (
+                pconfig
+                if isinstance(pconfig, TableConfig)
+                else cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
+            )
             return cls(
                 dts=[],
                 plot_type=PlotType.VIOLIN,
@@ -136,6 +135,8 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                 anchor=anchor,
                 show_table_by_default=True,
             )
+
+        pconf = cast(TableConfig, TableConfig.from_df(df))
 
         show_table_by_default = df.iloc[0]["show_table_by_default"]
 

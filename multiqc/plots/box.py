@@ -147,7 +147,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
         records = []
 
         for ds_idx, dataset in enumerate(self.list_of_data_by_sample):
-            dataset_label = self.extract_dataset_label(ds_idx)
+            dataset_label = self.extract_data_label(ds_idx)
 
             # Process each sample in the dataset
             for sample_name, values in dataset.items():
@@ -172,47 +172,28 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
                     records.append(record)
 
-        return pd.DataFrame(records)
+        df = pd.DataFrame(records)
+        self.finalize_df(df)
+        return df
 
     @classmethod
     def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, BoxPlotConfig], anchor: Anchor) -> "BoxPlotInputData":
         """
         Load plot data from a DataFrame.
         """
-        # Convert pconfig to BoxPlotConfig if needed
-        pconf: BoxPlotConfig
-        if isinstance(pconfig, dict):
-            pconf = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
-        else:
-            pconf = cast(BoxPlotConfig, pconfig)
-
-        # Handle None or empty DataFrame case
-        if df is None or df.empty:
+        if df.empty:
+            pconf = (
+                pconfig
+                if isinstance(pconfig, BoxPlotConfig)
+                else cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
+            )
             return cls(
                 anchor=anchor,
                 pconfig=pconf,
                 list_of_data_by_sample=[],
                 plot_type=PlotType.BOX,
             )
-
-        # Extract or update pconfig from DataFrame metadata
-        if any(col in df.columns for col in ["plot_title", "x_label", "y_label"]):
-            # Extract basic config from first row if available
-            pconfig_dict: Dict[str, Any] = {"id": str(anchor)}
-
-            if len(df) > 0:
-                first_row = df.iloc[0]
-                if "x_label" in df.columns and pd.notna(first_row.get("x_label")):
-                    pconfig_dict["xlab"] = str(first_row.get("x_label"))
-                if "y_label" in df.columns and pd.notna(first_row.get("y_label")):
-                    pconfig_dict["ylab"] = str(first_row.get("y_label"))
-                if "plot_title" in df.columns and pd.notna(first_row.get("plot_title")):
-                    pconfig_dict["title"] = str(first_row.get("plot_title"))
-
-            # Update pconfig with values from df
-            for k, v in pconfig_dict.items():
-                if getattr(pconf, k, None) is None:
-                    setattr(pconf, k, v)
+        pconf = cast(BoxPlotConfig, BoxPlotConfig.from_df(df))
 
         # Group by dataset_idx to rebuild data structure
         list_of_data_by_sample: List[Dict[str, BoxT]] = []
@@ -248,7 +229,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
             list_of_data_by_sample.append(dataset)
 
-        cls.dataset_labels_from_df(df, pconf)
+        cls.data_labels_from_df(df, pconf)
 
         return cls(
             anchor=anchor,
