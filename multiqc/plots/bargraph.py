@@ -225,18 +225,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         # Create a list of records for each sample/category pair
         records = []
         for ds_idx, dataset in enumerate(self.data):
-            # Get dataset label if available
-            dataset_label = None
-            if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
-                label = self.pconfig.data_labels[ds_idx]
-                if isinstance(label, dict) and "name" in label:
-                    dataset_label = label["name"]
-                elif isinstance(label, str):
-                    dataset_label = label
-                else:
-                    dataset_label = f"Dataset {ds_idx + 1}"
-            else:
-                dataset_label = f"Dataset {ds_idx + 1}"
+            dataset_label = self.extract_dataset_label(ds_idx)
 
             for sample_name, sample_data in dataset.items():
                 for category_name, value in sample_data.items():
@@ -340,6 +329,8 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
             datasets.append(dataset)
             cats_per_dataset.append(cats_dict)
+
+        cls.dataset_labels_from_df(df, pconf)
 
         return cls(
             anchor=anchor,

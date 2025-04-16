@@ -296,6 +296,22 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """Return True if this plot has no data"""
         raise NotImplementedError("Subclasses must implement is_empty()")
 
+    def to_df(self) -> pd.DataFrame:
+        raise NotImplementedError("Subclasses must implement to_df()")
+
+    def extract_dataset_label(self, ds_idx: int) -> Optional[str]:
+        # Get dataset label if available
+        if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
+            label = self.pconfig.data_labels[ds_idx]
+            if isinstance(label, dict) and "name" in label:
+                return label["name"]
+            elif isinstance(label, str):
+                return label
+            else:
+                return f"Dataset {ds_idx + 1}"
+        else:
+            return f"Dataset {ds_idx + 1}"
+
     @classmethod
     def from_df(
         cls: Type[NormalizedPlotInputDataT], df: pd.DataFrame, pconfig: Union[Dict, PConfigT], anchor: Anchor
@@ -305,6 +321,26 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         along with a pconfig dict into a NormalizedPlotInputData object.
         """
         raise NotImplementedError("Subclasses must implement from_df()")
+
+    @classmethod
+    def dataset_labels_from_df(cls, df: pd.DataFrame, pconfig: PConfigT) -> None:
+        """
+        Extract dataset labels from dataframe and populate pconfig.data_labels
+        """
+        if "dataset_label" in df.columns:
+            dataset_labels = []
+            for ds_idx in sorted(df["dataset_idx"].unique()):
+                ds_rows = df[df["dataset_idx"] == ds_idx]
+                if not ds_rows.empty:
+                    # Get the first dataset_label for this dataset index
+                    label = ds_rows["dataset_label"].iloc[0]
+                    if label and not label.startswith("Dataset "):  # Skip default generated labels
+                        dataset_labels.append({"name": label})
+                    else:
+                        dataset_labels.append({"name": f"Dataset {ds_idx + 1}"})
+
+            # Only set data_labels if we have valid labels
+            pconfig.data_labels = dataset_labels
 
     @classmethod
     def load(cls, anchor: Anchor) -> Optional["NormalizedPlotInputData"]:
@@ -337,9 +373,6 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             # Merge using class-specific implementation
             merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
         return merged_data
-
-    def to_df(self) -> pd.DataFrame:
-        raise NotImplementedError("Subclasses must implement to_df()")
 
     def save(self) -> None:
         """

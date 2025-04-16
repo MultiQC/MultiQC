@@ -11,6 +11,7 @@ import pandas as pd
 from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
+from multiqc.core.plot_data_store import parse_value
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.types import Anchor, SampleName
 
@@ -45,30 +46,38 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
         """
         Convert the scatter plot data to a pandas DataFrame for storage and reloading.
         """
-        data = []
+        records = []
 
         # Serialize datasets, samplenames, and points
-        for dataset_idx, dataset in enumerate(self.datasets):
+        for ds_idx, dataset in enumerate(self.datasets):
+            dataset_label = self.extract_dataset_label(ds_idx)
+
             for sample_name, points in dataset.items():
                 if not isinstance(points, list):
                     points = [points]
 
                 for point_idx, point in enumerate(points):
-                    row = {
-                        "dataset_idx": dataset_idx,
+                    record = {
+                        "anchor": self.anchor,
+                        "dataset_idx": ds_idx,
+                        "dataset_label": dataset_label,
                         "sample_name": sample_name,
                         "point_idx": point_idx,
                     }
 
                     # Add all point data
                     for key, val in point.items():
-                        # values can be be different types (int, float, str...), especially across
-                        # plots. parquet requires values of the same type. so we cast them to str
-                        row[f"point_{key}"] = str(val)
+                        if key == "x":
+                            record["x"] = str(val)
+                            record["x_type"] = type(val).__name__
+                        if key == "y":
+                            record["y"] = str(val)
+                            record["y_type"] = type(val).__name__
+                        else:
+                            record[f"point_{key}"] = str(val)
+                    records.append(record)
 
-                    data.append(row)
-
-        df = pd.DataFrame(data)
+        df = pd.DataFrame(records)
 
         # Add config data as additional columns
         config_dict = self.pconfig.model_dump()
@@ -76,18 +85,6 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             # Only serialize primitive types directly
             if isinstance(value, (str, int, float, bool)) or value is None:
                 df[f"config_{key}"] = value
-
-        # Special handling for data_labels
-        if self.pconfig.data_labels:
-            for i, label in enumerate(self.pconfig.data_labels):
-                if isinstance(label, dict):
-                    df[f"data_label_{i}_type"] = "dict"
-                    for k, v in label.items():
-                        if isinstance(v, (str, int, float, bool)) or v is None:
-                            df[f"data_label_{i}_{k}"] = v
-                else:
-                    df[f"data_label_{i}_type"] = "str"
-                    df[f"data_label_{i}_value"] = label
 
         # Add anchor information
         df["anchor"] = str(self.anchor)
@@ -227,13 +224,14 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
         if "anchor" in df.columns:
             df = df[df["anchor"] == str(anchor)]
 
+        pconf = (
+            pconfig
+            if isinstance(pconfig, ScatterConfig)
+            else cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
+        )
+
         if df.empty:
             # Return empty data if no valid rows found
-            pconf = (
-                pconfig
-                if isinstance(pconfig, ScatterConfig)
-                else cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
-            )
             return ScatterNormalizedInputData(
                 plot_type=PlotType.SCATTER,
                 anchor=anchor,
@@ -249,52 +247,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             if df[col].nunique() == 1:
                 config_data[key] = df[col].iloc[0]
 
-        # Extract data labels if any
-        data_labels = []
-        data_label_cols = set([col for col in df.columns if col.startswith("data_label_")])
-        if data_label_cols:
-            # Get the indices of all data labels
-            label_indices = set()
-            for col in data_label_cols:
-                parts = col.split("_")
-                if len(parts) >= 3:
-                    try:
-                        idx = int(parts[2])
-                        label_indices.add(idx)
-                    except ValueError:
-                        continue
-
-            # Reconstruct each data label
-            for idx in sorted(label_indices):
-                label_type_col = f"data_label_{idx}_type"
-                if label_type_col in df.columns and df[label_type_col].nunique() == 1:
-                    label_type = df[label_type_col].iloc[0]
-
-                    if label_type == "str":
-                        value_col = f"data_label_{idx}_value"
-                        if value_col in df.columns and df[value_col].nunique() == 1:
-                            data_labels.append(df[value_col].iloc[0])
-                    elif label_type == "dict":
-                        label_dict = {}
-                        label_dict_cols = [
-                            col
-                            for col in data_label_cols
-                            if col.startswith(f"data_label_{idx}_") and col != label_type_col
-                        ]
-                        for col in label_dict_cols:
-                            key = "_".join(col.split("_")[3:])  # Get key after data_label_{idx}_
-                            if df[col].nunique() == 1:
-                                label_dict[key] = df[col].iloc[0]
-                        data_labels.append(label_dict)
-
-        # Create pconfig with merged data
-        if data_labels:
-            config_data["data_labels"] = data_labels
-
-        if not isinstance(pconfig, ScatterConfig):
-            pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict({**config_data, **(pconfig or {})}))
-        else:
-            pconf = pconfig
+        pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict({**config_data, **pconf.model_dump()}))
 
         # Reconstruct datasets
         dataset_indices = sorted(df["dataset_idx"].unique())
@@ -313,6 +266,8 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                 for _, row in sample_df.iterrows():
                     point = {}
                     for col in row.index:
+                        point["x"] = parse_value(row["x"], row["x_type"])
+                        point["y"] = parse_value(row["y"], row["y_type"])
                         if col.startswith("point_"):
                             key = col[6:]  # Remove "point_" prefix
                             point[key] = row[col]
@@ -322,7 +277,9 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
             datasets.append(dataset)
 
-        return ScatterNormalizedInputData(
+        cls.dataset_labels_from_df(df, pconf)
+
+        return cls(
             anchor=anchor,
             plot_type=PlotType.SCATTER,
             datasets=datasets,

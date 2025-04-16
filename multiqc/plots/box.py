@@ -147,18 +147,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
         records = []
 
         for ds_idx, dataset in enumerate(self.list_of_data_by_sample):
-            # Get dataset label if available
-            dataset_label = None
-            if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
-                label = self.pconfig.data_labels[ds_idx]
-                if isinstance(label, dict) and "name" in label:
-                    dataset_label = label["name"]
-                elif isinstance(label, str):
-                    dataset_label = label
-                else:
-                    dataset_label = f"Dataset {ds_idx + 1}"
-            else:
-                dataset_label = f"Dataset {ds_idx + 1}"
+            dataset_label = self.extract_dataset_label(ds_idx)
 
             # Process each sample in the dataset
             for sample_name, values in dataset.items():
@@ -258,6 +247,8 @@ class BoxPlotInputData(NormalizedPlotInputData):
                     dataset[str(sample_name)] = sample_values
 
             list_of_data_by_sample.append(dataset)
+
+        cls.dataset_labels_from_df(df, pconf)
 
         return cls(
             anchor=anchor,

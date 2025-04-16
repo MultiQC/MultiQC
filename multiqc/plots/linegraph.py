@@ -323,17 +323,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         # Create a record for each data point in each series
         for ds_idx, dataset in enumerate(self.data):
             # Get dataset label if available
-            dataset_label = None
-            if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
-                label = self.pconfig.data_labels[ds_idx]
-                if isinstance(label, dict) and "name" in label:
-                    dataset_label = label["name"]
-                elif isinstance(label, str):
-                    dataset_label = label
-                else:
-                    dataset_label = f"Dataset {ds_idx + 1}"
-            else:
-                dataset_label = f"Dataset {ds_idx + 1}"
+            dataset_label = self.extract_dataset_label(ds_idx)
 
             for series in dataset:
                 for x, y in series.pairs:
@@ -427,6 +417,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                         sample_names.append(SampleName(str(sample_name)))
 
             datasets.append(dataset)
+
+        cls.dataset_labels_from_df(df, pconf)
 
         return LinePlotNormalizedInputData(
             anchor=anchor,
