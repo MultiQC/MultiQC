@@ -3,6 +3,9 @@ import json
 
 import multiqc
 from multiqc.core.update_config import ClConfig
+from multiqc.plots.linegraph import LinePlotConfig, LinePlotNormalizedInputData, Series
+from multiqc.plots.plot import PlotType, plot_anchor
+from multiqc.types import Anchor, SampleName
 
 
 def test_rerun_parquet(data_dir, tmp_path):
@@ -78,3 +81,74 @@ def test_rerun_and_combine(data_dir, tmp_path):
         assert key in report_combined_data, f"Key {key} missing from combined report"
         assert key in report_normal_data, f"Key {key} missing from direct report"
         assert report_combined_data[key] == report_normal_data[key], f"Value for {key} differs between reports"
+
+
+def test_linegraph_merge():
+    """Test merging two linegraph inputs.
+    Create two different datasets with some overlapping samples.
+    Merge them and verify that the overlapping sample from the first dataset is replaced
+    by the one from the second dataset, and non-overlapping samples are preserved.
+    """
+    # Create plot config
+    plot_id = "test_merge_plot"
+    pconfig = LinePlotConfig(id=plot_id, title="Test Merge Plot")
+    anchor = plot_anchor(pconfig)
+
+    # Create first input data - two samples: "Sample1" and "Sample2"
+    dataset1 = [
+        Series(name="Sample1", pairs=[(0, 1), (1, 2), (2, 3)]),
+        Series(name="Sample2", pairs=[(0, 2), (1, 3), (2, 4)]),
+    ]
+    input_data1 = LinePlotNormalizedInputData(
+        anchor=anchor,
+        plot_type=PlotType.LINE,
+        data=[dataset1],
+        pconfig=pconfig,
+        sample_names=[SampleName("Sample1"), SampleName("Sample2")],
+    )
+
+    # Create second input data - two samples: "Sample1" (overlapping) and "Sample3" (new)
+    dataset2 = [
+        Series(name="Sample1", pairs=[(0, 5), (1, 6), (2, 7)]),  # Different data for Sample1
+        Series(name="Sample3", pairs=[(0, 3), (1, 4), (2, 5)]),  # New sample
+    ]
+    input_data2 = LinePlotNormalizedInputData(
+        anchor=anchor,
+        plot_type=PlotType.LINE,
+        data=[dataset2],
+        pconfig=pconfig,
+        sample_names=[SampleName("Sample1"), SampleName("Sample3")],
+    )
+
+    # Merge the two inputs
+    merged_data = LinePlotNormalizedInputData.merge(input_data1, input_data2)
+
+    # Convert to dataframe for verification - this helps validate the core merging logic
+    merged_df = merged_data.to_df()
+
+    # Verify the merged data has three unique samples: Sample1 (from dataset2), Sample2, and Sample3
+    unique_samples = merged_df["sample_name"].unique()
+    assert len(unique_samples) == 3
+    assert "Sample1" in unique_samples
+    assert "Sample2" in unique_samples
+    assert "Sample3" in unique_samples
+
+    # Group by sample and verify data points
+    sample1_data = merged_df[merged_df["sample_name"] == "Sample1"]
+    sample2_data = merged_df[merged_df["sample_name"] == "Sample2"]
+    sample3_data = merged_df[merged_df["sample_name"] == "Sample3"]
+
+    # Sample1 should have the values from dataset2
+    assert len(sample1_data) == 3  # 3 data points
+    sample1_y_vals = sorted([row["y_val"] for _, row in sample1_data.iterrows()])
+    assert sample1_y_vals == ["5", "6", "7"]  # Values come from dataset2
+
+    # Sample2 should have values from dataset1 (unchanged)
+    assert len(sample2_data) == 3
+    sample2_y_vals = sorted([row["y_val"] for _, row in sample2_data.iterrows()])
+    assert sample2_y_vals == ["2", "3", "4"]
+
+    # Sample3 should have values from dataset2
+    assert len(sample3_data) == 3
+    sample3_y_vals = sorted([row["y_val"] for _, row in sample3_data.iterrows()])
+    assert sample3_y_vals == ["3", "4", "5"]
