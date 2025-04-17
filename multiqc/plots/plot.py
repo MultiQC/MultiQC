@@ -202,7 +202,7 @@ class PConfig(ValidatedConfig):
 
         # Normalize data labels to ensure they are unique and consistent.
         if self.data_labels and len(self.data_labels) > 1:
-            data_labels = []
+            data_labels: List[Union[str, Dict[str, Any]]] = []
             for idx, _ in enumerate(self.data_labels):
                 data_label: Union[str, Dict[str, Union[str, Dict[str, str]]]] = (
                     self.data_labels[idx] if idx < len(self.data_labels) else {}
@@ -211,7 +211,7 @@ class PConfig(ValidatedConfig):
                     data_label if isinstance(data_label, dict) else {"name": data_label}
                 )
                 label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
-                data_labels.append({"name": label})
+                data_labels.append({"name": str(label)})
             self.data_labels = data_labels
         else:
             self.data_labels = []
@@ -355,7 +355,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         Extract dataset labels from dataframe and populate pconfig.data_labels
         """
         if "dataset_label" in df.columns:
-            data_labels = []
+            data_labels: List[Union[str, Dict[str, Any]]] = []
             for ds_idx in sorted(df["dataset_idx"].unique()):
                 ds_rows = df[df["dataset_idx"] == ds_idx]
                 if not ds_rows.empty:
