@@ -1109,23 +1109,23 @@ def _export_plot(fig, plot_path, write_kwargs):
             except Exception as e:
                 self.exception = e
 
-    # Start the export in a separate thread
+    # Start the export in a separate process
     export_process = ExportProcess(fig, plot_path, write_kwargs)
     export_process.start()
     export_process.join(timeout)
 
     if export_process.is_alive():
-        # If thread is still running after timeout, log warning and continue
+        # If process is still running after timeout, log warning and continue
         logging.warning(
             f"Plot export timed out after {timeout}s: {plot_path}. "
             "This is likely due to a known issue in Kaleido. "
             "The plot will be skipped but the report will continue to generate."
         )
-        # Kill the thread
+        # Kill the process
         export_process.terminate()
         return False
     if export_process.exception:
-        # If there was an exception in the thread, log it
+        # If there was an exception in the process, log it
         logging.error(f"Error exporting plot to {plot_path}: {export_process.exception}")
         return False
 
