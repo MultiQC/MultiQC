@@ -33,9 +33,9 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="bases2fastq",
+            name="Bases2Fastq",
             anchor="bases2fastq",
-            href="https://docs.elembio.io/docs/bases2fastq",
+            href="https://docs.elembio.io/docs/bases2fastq/introduction/introduction/",
             info="Demultiplexes and converts Element AVITI base calls into FASTQ files",
             doi="10.1038/s41587-023-01750-7",
         )
@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             if not run_name or not analysis_id:
                 log.error("Error with RunStats.json. Either RunName or AnalysisID is absent.")
-                log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
+                log.error("Please visit Elembio online documentation for more information - https://docs.elembio.io/docs/bases2fastq/introduction/")
                 continue
 
             run_analysis_name = "-".join([run_name, analysis_id])
@@ -133,7 +133,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             if not run_name or not analysis_id:
                 log.error(f"Error with {f['root']}.  Either RunName or AnalysisID is absent.")
-                log.error("Please visit Elembio docs for more information - https://docs.elembio.io/docs/bases2fastq/")
+                log.error("Please visit Elembio online documentation for more information -")
                 continue
 
             project = self.clean_s_name(data.get("Project", "DefaultProject"), f)
@@ -213,7 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
             if self.group_info_exist:
                 log.warning(
                     "More than one group assignment files are found. Please only keep "
-                    "one assignment file in the analysis folder. Bases2fastq stats will "
+                    "one assignment file in the analysis folder. Bases2Fastq stats will "
                     "not be plotted"
                 )
             for row in csv.DictReader(f["f"]):

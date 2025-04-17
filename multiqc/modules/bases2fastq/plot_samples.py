@@ -38,7 +38,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     }
     headers["num_polonies_sample"] = {
         "title": f"# Polonies ({config.base_count_prefix})",
-        "description": f"The (total) number of polonies calculated for the sample ({config.base_count_desc})",
+        "description": f"The total number of polonies that are calculated for the run. ({config.base_count_desc})",
         "min": 0,
         "scale": "Blues",
         "shared_key": "base_count",
@@ -56,7 +56,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     }
     headers["percent_q30_sample"] = {
         "title": "Percent Q30",
-        "description": "The percentage of ≥ Q30 (base) Q-scores for the run, including assigned and unassigned reads",
+        "description": "The percentage of ≥ Q30 Q scores for the sample. This excludes filtered reads and no calls",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
@@ -64,7 +64,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     }
     headers["percent_q40_sample"] = {
         "title": "Percent Q40",
-        "description": "The percentage of ≥ Q40 (base) Q-scores for the run, including assigned and unassigned reads",
+        "description": "The percentage of ≥ Q40 Q scores for the sample. This excludes filtered reads and no calls",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
@@ -73,21 +73,21 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
 
     pconfig = {"id": "sample_qc_metric_table", "title": "Sample QC Metrics Table", "no_violin": True}
 
-    plot_name = "Sample QC metrics table"
+    plot_name = "Sample QC Metrics Table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
     anchor = "sample_qc_metrics_table"
-    description = "table of general QC metrics by sample"
+    description = "QC metrics per unique sample"
     helptext = """
-    This section shows numbers of some metrics that indicate the quality of each sequencing run: \n
-       - Sample Name: Name showing the (RunName)__(UUID)__(SampleName).  (RunName) maps to the AVITI run name.  (UUID) maps to the unique bases2fastq analysis result.  (SampleName) maps to the sample name as specified in the RunManifest.csv.
-       - Group: Run/Sample group label for assigning colors in the plot.  To customize group tags, you can:\n
-           - 1) Set the project name when running bases2fastq. In this case the group tags will be project name.\n
+     This section displays metrics that indicate the quality of each sample: \n
+       - Sample Name: Unique identifier composed of (RunName)__(UUID)__(SampleName), where (RunName) maps to the AVITI run name, (UUID) maps to the unique Bases2Fastq analysis result, and (SampleName) maps to the sample name as specified in the RunManifest.csv.
+       - Group: Run/Sample group label that assigns colors in the plot.  To customize group tags:\n
+           - 1) Set the project name when running Bases2Fastq. In this case the group tags will be project name.\n
            - 2) Generate a csv file with the suffix "_b2fgroup.csv", containing the columns "Sample Name" and "Group".\n
-       - Number of Polonies: The (total) number of polonies calculated for the run\n
-       - Assigned Yield (Gb): The run yield based on assigned reads in gigabases\n
-       - Quality Score Mean: The average Q-score of base calls for a sample\n
-       - Percent Q30: The percentage of ≥ Q30 (base) Q-scores for the run, including assigned and unassigned reads\n
-       - Percent Q40: The percentage of ≥ Q40 (base) Q-scores for the run, including assigned and unassigned reads
+       - Number of Polonies: The total number of polonies that are assigned to the sample.\n
+       - Assigned Yield (Gb): The sample yield that is based on assigned reads in gigabases.\n
+       - Quality Score Mean: The average  Q score of base calls for the sample.\n
+       - Percent Q30: The percentage of ≥ Q30 Q scores for the sample, including assigned and unassigned reads.\n
+       - Percent Q40: The percentage of ≥ Q40 Q scores for the sample, including assigned and unassigned reads.\n
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
