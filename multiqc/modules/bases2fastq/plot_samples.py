@@ -56,7 +56,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     }
     headers["percent_q30_sample"] = {
         "title": "Percent Q30",
-        "description": "The percentage of ≥ Q30 Q scores for the sample. This excludes filtered reads and no calls",
+        "description": "The percentage of ≥ Q30 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
@@ -64,7 +64,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     }
     headers["percent_q40_sample"] = {
         "title": "Percent Q40",
-        "description": "The percentage of ≥ Q40 Q scores for the sample. This excludes filtered reads and no calls",
+        "description": "The percentage of ≥ Q40 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
@@ -86,8 +86,8 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
        - Number of Polonies: The total number of polonies that are assigned to the sample.\n
        - Assigned Yield (Gb): The sample yield that is based on assigned reads in gigabases.\n
        - Quality Score Mean: The average  Q score of base calls for the sample.\n
-       - Percent Q30: The percentage of ≥ Q30 Q scores for the sample, including assigned and unassigned reads.\n
-       - Percent Q40: The percentage of ≥ Q40 Q scores for the sample, including assigned and unassigned reads.\n
+       - Percent Q30: The percentage of ≥ Q30 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls.\n
+       - Percent Q40: The percentage of ≥ Q40 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls\n
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
