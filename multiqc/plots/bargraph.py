@@ -239,8 +239,8 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                         "anchor": self.anchor,
                         "dataset_idx": ds_idx,
                         "dataset_label": dataset_label,
-                        "sample_name": str(sample_name),
-                        "category_name": str(category_name),
+                        "sample": str(sample_name),
+                        "category": str(category_name),
                         "bar_value": value,
                     }
 
@@ -303,12 +303,12 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             cats_dict = {}
 
             # Process each sample in this dataset
-            for sample_name, sample_group in ds_group.groupby("sample_name"):
+            for sample_name, sample_group in ds_group.groupby("sample"):
                 sample_data = {}
 
                 # Process each category for this sample
                 for _, row in sample_group.iterrows():
-                    category_name = row["category_name"]
+                    category_name = row["category"]
                     value = row["bar_value"]
                     sample_data[CatName(str(category_name))] = value
 
@@ -369,13 +369,13 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             # Get the list of samples that exist in both old and new data, for each dataset
             new_sample_keys = set()
             for _, row in new_df.iterrows():
-                new_sample_keys.add((row["dataset_label"], row["sample_name"]))
+                new_sample_keys.add((row["dataset_label"], row["sample"]))
 
             # Filter out old data for samples that exist in new data
             old_df_filtered = old_df.copy()
             drop_indices = []
             for idx, row in old_df.iterrows():
-                if (row["dataset_label"], row["sample_name"]) in new_sample_keys:
+                if (row["dataset_label"], row["sample"]) in new_sample_keys:
                     drop_indices.append(idx)
 
             if drop_indices:

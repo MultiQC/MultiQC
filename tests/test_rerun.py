@@ -3,6 +3,8 @@ import json
 
 import multiqc
 from multiqc.core.update_config import ClConfig
+from multiqc.plots.bargraph import BarPlotConfig, BarPlotInputData, CatConf
+from multiqc.plots.box import BoxPlotConfig, BoxPlotInputData
 from multiqc.plots.linegraph import LinePlotConfig, LinePlotNormalizedInputData, Series
 from multiqc.plots.plot import PlotType, plot_anchor
 from multiqc.types import Anchor, SampleName
@@ -83,7 +85,7 @@ def test_rerun_and_combine(data_dir, tmp_path):
         assert report_combined_data[key] == report_normal_data[key], f"Value for {key} differs between reports"
 
 
-def test_linegraph_merge():
+def test_merge_linegraph():
     """Test merging two linegraph inputs.
     Create two different datasets with some overlapping samples.
     Merge them and verify that the overlapping sample from the first dataset is replaced
@@ -152,3 +154,99 @@ def test_linegraph_merge():
     assert len(sample3_data) == 3
     sample3_y_vals = sorted([row["y_val"] for _, row in sample3_data.iterrows()])
     assert sample3_y_vals == ["3", "4", "5"]
+
+
+def test_merge_bargraph():
+    """Test merging two bar graph inputs.
+    Create two different datasets with some overlapping samples and categories.
+    Merge them and verify that the overlapping sample/category data from the first dataset
+    is replaced by data from the second dataset, and non-overlapping samples are preserved.
+    """
+    # Create plot config
+    plot_id = "test_bargraph_merge"
+    pconfig = BarPlotConfig(id=plot_id, title="Test Bar Graph Merge")
+    anchor = plot_anchor(pconfig)
+
+    # Create first input data - two samples with two categories each
+    dataset1 = {
+        "Sample1": {"Cat1": 10, "Cat2": 15},
+        "Sample2": {"Cat1": 20, "Cat2": 25},
+    }
+
+    cats1 = {
+        "Cat1": CatConf(name="Category 1", color="#ff0000"),
+        "Cat2": CatConf(name="Category 2", color="#00ff00"),
+    }
+
+    input_data1 = BarPlotInputData(
+        anchor=anchor,
+        plot_type=PlotType.BAR,
+        data=[dataset1],
+        cats=[cats1],
+        pconfig=pconfig,
+    )
+
+    # Create second input data - two samples: "Sample1" (overlapping) and "Sample3" (new)
+    # with two categories: "Cat1" (overlapping) and "Cat3" (new)
+    dataset2 = {
+        "Sample1": {"Cat1": 30, "Cat3": 35},  # Different data for Sample1/Cat1 and new category
+        "Sample3": {"Cat1": 40, "Cat3": 45},  # New sample
+    }
+
+    cats2 = {
+        "Cat1": CatConf(name="Category 1", color="#ff0000"),
+        "Cat3": CatConf(name="Category 3", color="#0000ff"),
+    }
+
+    input_data2 = BarPlotInputData(
+        anchor=anchor,
+        plot_type=PlotType.BAR,
+        data=[dataset2],
+        cats=[cats2],
+        pconfig=pconfig,
+    )
+
+    # Merge the two inputs
+    merged_data = BarPlotInputData.merge(input_data1, input_data2)
+
+    # Convert to dataframe for verification
+    merged_df = merged_data.to_df()
+
+    # Verify the merged data has all samples and categories preserved correctly
+    unique_samples = merged_df["sample"].unique()
+    unique_cats = merged_df["category"].unique()
+
+    assert len(unique_samples) == 3
+    assert "Sample1" in unique_samples
+    assert "Sample2" in unique_samples
+    assert "Sample3" in unique_samples
+
+    assert len(unique_cats) == 3
+    assert "Cat1" in unique_cats
+    assert "Cat2" in unique_cats
+    assert "Cat3" in unique_cats
+
+    # Group by sample/category and verify data points
+    # Sample1/Cat1 should have the value from dataset2
+    sample1_cat1 = merged_df[(merged_df["sample"] == "Sample1") & (merged_df["category"] == "Cat1")]
+    assert len(sample1_cat1) == 1
+    assert float(sample1_cat1.iloc[0]["bar_value"]) == 30.0  # Updated value from dataset2
+
+    # Sample1/Cat2 should be overridden
+    sample1_cat2 = merged_df[(merged_df["sample"] == "Sample1") & (merged_df["category"] == "Cat2")]
+    assert len(sample1_cat2) == 0
+
+    # Sample1/Cat3 should be from dataset2
+    sample1_cat3 = merged_df[(merged_df["sample"] == "Sample1") & (merged_df["category"] == "Cat3")]
+    assert len(sample1_cat3) == 1
+    assert float(sample1_cat3.iloc[0]["bar_value"]) == 35.0
+
+    # Sample3/Cat1 should be from dataset2
+    sample3_cat1 = merged_df[(merged_df["sample"] == "Sample3") & (merged_df["category"] == "Cat1")]
+    assert len(sample3_cat1) == 1
+    assert float(sample3_cat1.iloc[0]["bar_value"]) == 40.0
+
+    # Sample3/Cat1 should be from dataset2
+    sample3_cat1 = merged_df[(merged_df["sample"] == "Sample3") & (merged_df["category"] == "Cat3")]
+    assert len(sample3_cat1) == 1
+    assert float(sample3_cat1.iloc[0]["bar_value"]) == 45.0
