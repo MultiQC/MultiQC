@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
+from multiqc.plots.plot import Plot
 from multiqc.types import Anchor, SampleName
 from multiqc.utils import config_schema
 
@@ -659,30 +660,31 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
 
     # General stats - also always include, otherwise we don't have anything to summarize
     if general_stats_plot := report.plot_by_id.get(Anchor("general_stats_table")):
-        genstats_context = f"""
-MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-{general_stats_plot.format_for_ai_prompt()}
-"""
-        genstats_n_tokens = client.n_tokens(genstats_context)
-        if current_n_tokens + genstats_n_tokens > max_tokens:
-            # If it's too long already, try without hidden columns
+        if isinstance(general_stats_plot, Plot):
             genstats_context = f"""
-MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-{general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
-"""
+    MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
+    {general_stats_plot.format_for_ai_prompt()}
+    """
             genstats_n_tokens = client.n_tokens(genstats_context)
             if current_n_tokens + genstats_n_tokens > max_tokens:
-                logger.debug(
-                    f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
-                    f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
-                    "AI summary will not be generated. Try hiding some columns in the general stats table "
-                    "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context. "
-                    "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
-                    "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
-                )
-                return user_prompt + genstats_context, True
-        user_prompt += genstats_context
-        current_n_tokens += genstats_n_tokens
+                # If it's too long already, try without hidden columns
+                genstats_context = f"""
+    MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
+    {general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
+    """
+                genstats_n_tokens = client.n_tokens(genstats_context)
+                if current_n_tokens + genstats_n_tokens > max_tokens:
+                    logger.debug(
+                        f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
+                        f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
+                        "AI summary will not be generated. Try hiding some columns in the general stats table "
+                        "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context. "
+                        "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
+                        "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
+                    )
+                    return user_prompt + genstats_context, True
+            user_prompt += genstats_context
+            current_n_tokens += genstats_n_tokens
 
     user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
 
@@ -707,10 +709,11 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
 
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
-            if plot_content := plot.format_for_ai_prompt(keep_hidden=True):
-                if plot.pconfig.title:
-                    sec_context += f"Title: {plot.pconfig.title}\n"
-                sec_context += "\n" + plot_content
+            if isinstance(plot, Plot):
+                if plot_content := plot.format_for_ai_prompt(keep_hidden=True):
+                    if plot.pconfig.title:
+                        sec_context += f"Title: {plot.pconfig.title}\n"
+                    sec_context += "\n" + plot_content
 
         # Check if adding this section would exceed the limit
         # Using rough estimate of 4 chars per token

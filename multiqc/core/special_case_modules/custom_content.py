@@ -6,16 +6,17 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
 from io import BufferedReader
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
 import yaml
+from natsort import natsorted
 from pydantic import BaseModel
 
 from multiqc import Plot, config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
-from multiqc.types import Anchor, LoadedFileDict, ModuleId, PlotType, SectionId
+from multiqc.types import Anchor, LoadedFileDict, ModuleId, PlotType, SectionId, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
 # Initialise the logger
@@ -362,6 +363,11 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     ]
     sorted_modules = modules_in_order + modules__not_in_order
 
+    # sort the sections in each module by name by default
+    # this can always be overridden via config
+    for module in sorted_modules:
+        module.sections = natsorted(module.sections, key=lambda s: s.name)
+
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
         cfgs: List[Dict] = []
@@ -502,14 +508,18 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig["parse_numeric"] = False
 
                 plot = (table if plot_type == PlotType.TABLE else violin).plot(
-                    plot_datasets, headers=headers, pconfig=pconfig
+                    plot_datasets[0],  # type: ignore
+                    headers=headers,
+                    pconfig=pconfig,  # type: ignore
                 )
 
             # Bar plot
             elif plot_type == PlotType.BAR:
                 ccdict.data = [{str(k): v for k, v in ds.items()} for ds in plot_datasets]
                 plot = bargraph.plot(
-                    plot_datasets, ccdict.config.get("categories"), pconfig=bargraph.BarPlotConfig(**pconfig)
+                    plot_datasets,  # type: ignore
+                    ccdict.config.get("categories"),
+                    pconfig=bargraph.BarPlotConfig(**pconfig),  # type: ignore
                 )
 
             # Line plot
@@ -518,7 +528,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Scatter plot
             elif plot_type == PlotType.SCATTER:
-                scatter_data = cast(Mapping[str, Any], ccdict.data)
+                scatter_data = ccdict.data
+                assert not isinstance(scatter_data, str)
                 plot = scatter.plot(scatter_data, pconfig=scatter.ScatterConfig(**pconfig))
 
             # Box plot
@@ -527,8 +538,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
-                violin_data = cast(List[Mapping[str, Any]], plot_datasets)
-                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))
+                violin_data = cast(List[Tuple[SectionKey, Mapping[str, Any]]], plot_datasets)
+                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))  # type: ignore
 
             # Raw HTML
             elif plot_type == PlotType.HTML:

@@ -1,13 +1,14 @@
 import base64
 import io
+import json
 import logging
 import math
 import multiprocessing
 import platform
 import random
 import re
-import threading
 import subprocess
+import threading
 from functools import lru_cache
 from pathlib import Path
 from typing import (
@@ -17,16 +18,20 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Set,
     Tuple,
+    Type,
     TypeVar,
     Union,
+    cast,
 )
 
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from multiqc import config, report
-from multiqc.core import tmp_dir
+from multiqc.core import plot_data_store, tmp_dir
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, PlotType, SampleName
@@ -88,6 +93,7 @@ class LineBand(ValidatedConfig):
 class PConfig(ValidatedConfig):
     id: str
     title: str
+    subtitle: Optional[str] = None
     anchor: Optional[Anchor] = None  # unlike id, has to be globally unique
     table_title: Optional[str] = Field(None, deprecated="title")
     height: Optional[int] = None
@@ -165,6 +171,17 @@ class PConfig(ValidatedConfig):
         else:
             return cls(path_in_cfg=(), **pconfig)
 
+    @classmethod
+    def from_df(cls, df: pd.DataFrame):
+        """
+        Extract pconfig from dataframe and populate pconfig.data_labels
+        """
+        if "_pconfig" in df.columns:
+            d = json.loads(df["_pconfig"].iloc[0])
+            return cls(path_in_cfg=(), **d)
+        else:
+            return cls()
+
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
         path_in_cfg = path_in_cfg or ()
         _path_component = "pconfig"
@@ -183,6 +200,22 @@ class PConfig(ValidatedConfig):
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
                 setattr(self, k, v)
+
+        # Normalize data labels to ensure they are unique and consistent.
+        if self.data_labels and len(self.data_labels) > 1:
+            data_labels: List[Union[str, Dict[str, Any]]] = []
+            for idx, _ in enumerate(self.data_labels):
+                data_label: Union[str, Dict[str, Union[str, Dict[str, str]]]] = (
+                    self.data_labels[idx] if idx < len(self.data_labels) else {}
+                )
+                dconfig: Dict[str, Union[str, Dict[str, str]]] = (
+                    data_label if isinstance(data_label, dict) else {"name": data_label}
+                )
+                label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
+                data_labels.append({"name": str(label)})
+            self.data_labels = data_labels
+        else:
+            self.data_labels = []
 
     @classmethod
     def parse_x_bands(cls, data, path_in_cfg: Tuple[str, ...]):
@@ -265,12 +298,153 @@ class BaseDataset(BaseModel):
 
 DatasetT = TypeVar("DatasetT", bound="BaseDataset")
 PConfigT = TypeVar("PConfigT", bound="PConfig")
+NormalizedPlotInputDataT = TypeVar("NormalizedPlotInputDataT", bound="NormalizedPlotInputData")
 
 
 def plot_anchor(pconfig: PConfig) -> Anchor:
     anchor = Anchor(pconfig.anchor or pconfig.id)
     anchor = Anchor(report.save_htmlid(anchor))  # make sure it's unique
     return anchor
+
+
+class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
+    """
+    Represents normalized input data for a plot.
+
+    Plot input data is normalized, but enough data is preseverd to merge plots across
+    multiple samples. Plot objects might post-process and re-summarize the data
+    before creating plot datasets.
+    """
+
+    anchor: Anchor
+    plot_type: PlotType
+    pconfig: PConfigT
+
+    def is_empty(self) -> bool:
+        """Return True if this plot has no data"""
+        raise NotImplementedError("Subclasses must implement is_empty()")
+
+    def to_df(self) -> pd.DataFrame:
+        raise NotImplementedError("Subclasses must implement to_df()")
+
+    def extract_data_label(self, ds_idx: int) -> Optional[str]:
+        # Get dataset label if available
+        if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
+            label = self.pconfig.data_labels[ds_idx]
+            if isinstance(label, dict) and "name" in label:
+                return label["name"]
+            elif isinstance(label, str):
+                return label
+            else:
+                return None
+        else:
+            return None
+
+    @classmethod
+    def from_df(
+        cls: Type[NormalizedPlotInputDataT], df: pd.DataFrame, pconfig: Union[Dict, PConfigT], anchor: Anchor
+    ) -> NormalizedPlotInputDataT:
+        """
+        Abstract method to parse a dataframe (i.e. stored in parquet files)
+        along with a pconfig dict into a NormalizedPlotInputData object.
+        """
+        raise NotImplementedError("Subclasses must implement from_df()")
+
+    @classmethod
+    def data_labels_from_df(cls, df: pd.DataFrame, pconfig: PConfigT) -> None:
+        """
+        Extract dataset labels from dataframe and populate pconfig.data_labels
+        """
+        if "dataset_label" in df.columns:
+            data_labels: List[Union[str, Dict[str, Any]]] = []
+            for ds_idx in sorted(df["dataset_idx"].unique()):
+                ds_rows = df[df["dataset_idx"] == ds_idx]
+                if not ds_rows.empty:
+                    # Get the first dataset_label for this dataset index
+                    label = ds_rows["dataset_label"].iloc[0]
+                    if label:
+                        data_labels.append({"name": label})
+
+            # Only set data_labels if we have valid labels
+            pconfig.data_labels = data_labels
+
+    @classmethod
+    def load(cls, anchor: Anchor) -> Optional["NormalizedPlotInputData"]:
+        """
+        Load plot data from a previous analysis, as defined in the input anchor.
+        """
+        # Check if we have an input file for this anchor
+        if anchor not in report.plot_input_data:
+            return None
+
+        return report.plot_input_data[anchor]
+
+    @classmethod
+    def merge_with_previous(
+        cls: Type[NormalizedPlotInputDataT], new_data: NormalizedPlotInputDataT
+    ) -> NormalizedPlotInputDataT:
+        """
+        If data from a previous run is available, merge it with the current data.
+
+        This is useful for merging plots across multiple runs of MultiQC.
+        Returns inputs if there's no previous data for the same anchor or
+        if the previous data cannot be reused. Otherwise returns a new instance
+        with merged data.
+        """
+        # Try to load previous data (empty or unloadable means no data from previous run)
+        old_data = report.plot_input_data.get(new_data.anchor)
+        if old_data is None or old_data.is_empty():
+            merged_data = new_data
+        else:
+            # Merge using class-specific implementation
+            merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
+        return merged_data
+
+    def finalize_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Finalize the dataframe before saving. Add common plot metadata:
+        anchor, plot_type, pconfig, run_id, timestamp.
+        """
+        # Ensure the DataFrame has the anchor column
+        if "anchor" not in df.columns:
+            df["anchor"] = str(self.anchor)
+
+        # Add type for easier filtering
+        if "plot_type" not in df.columns:
+            df["plot_type"] = str(self.plot_type.value)
+
+        # Store pconfig as a column in the DataFrame
+        if self.pconfig:
+            # Filter out any None/null values from pconfig before storing
+            filtered_pconfig = {k: v for k, v in self.pconfig.model_dump().items() if v is not None}
+            df["_pconfig"] = json.dumps(filtered_pconfig)
+
+        # Add run metadata
+        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
+            df["run_id"] = config.kwargs["run_id"]
+
+        df["timestamp"] = report.creation_date.isoformat()
+        return df
+
+    def save(self) -> None:
+        """
+        Save the plot data to a parquet file.
+
+        This function handles writing both the data and the plot config.
+        """
+        df = self.to_df()
+        plot_data_store.save_plot_data(self.anchor, df)
+
+    @classmethod
+    def merge(
+        cls: Type[NormalizedPlotInputDataT], old_data: NormalizedPlotInputDataT, new_data: NormalizedPlotInputDataT
+    ) -> NormalizedPlotInputDataT:
+        """
+        Merge old and new data.
+
+        Should be implemented by subclasses.
+        """
+        raise NotImplementedError("Subclasses must implement merge()")
 
 
 class Plot(BaseModel, Generic[DatasetT, PConfigT]):
@@ -496,16 +670,14 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
             if "title" not in dconfig:
                 dconfig["title"] = pconfig.title
+
             subtitles = []
             if len(n_samples_per_dataset) > 1:
                 subtitles += [dataset.label]
             if n_samples > 1:
                 subtitles += [f"{n_samples} samples"]
             if subtitles:
-                title = dconfig.get("title", "")
-                assert isinstance(title, str)
-                title += f"<br><sup>{', '.join(subtitles)}</sup>"
-                dconfig["title"] = title
+                dconfig["subtitle"] = ", ".join(subtitles)
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig
@@ -1413,7 +1585,7 @@ def _dataset_layout(
     x_hoverformat = f",.{x_decimals}f" if x_decimals is not None else None
 
     layout = dict(
-        title=dict(text=pconfig.title),
+        title=dict(text=pconfig.title + (f"<br><sup>{pconfig.subtitle}</sup>" if pconfig.subtitle else "")),
         xaxis=dict(
             hoverformat=x_hoverformat,
             ticksuffix=xsuffix or "",

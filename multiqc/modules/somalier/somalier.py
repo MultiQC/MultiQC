@@ -616,7 +616,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "id": "somalier_ancestry_barplot",
                 "title": "Somalier: Sample Predicted Ancestry Proportions",
                 "cpswitch": False,
-                "hide_empty": False,
+                "hide_zero_cats": False,
                 "ylab": "Predicted Ancestry",
                 "tt_suffix": "%",
             }

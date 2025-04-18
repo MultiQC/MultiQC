@@ -202,10 +202,11 @@ def list_plots() -> Dict:
             if plot_anchor not in report.plot_by_id:
                 raise ValueError(f'CRITICAL: Plot "{plot_anchor}" not found in report.plot_by_id')
             plot = report.plot_by_id[plot_anchor]
-            if len(plot.datasets) == 1:
-                result[module.id].append(section_id)
-            if len(plot.datasets) > 1:
-                result[module.id].append({section_id: [d.label for d in plot.datasets]})
+            if isinstance(plot, Plot):
+                if len(plot.datasets) == 1:
+                    result[module.id].append(section_id)
+                if len(plot.datasets) > 1:
+                    result[module.id].append({section_id: [d.label for d in plot.datasets]})
 
     return result
 
@@ -213,7 +214,7 @@ def list_plots() -> Dict:
 def get_plot(
     module: str,
     section: str,
-) -> Plot:
+) -> Union[Plot, str, None]:
     """
     Get plot Object by module name and section ID.
 
@@ -266,7 +267,8 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     """
 
     data: Dict[str, Dict] = defaultdict(dict)
-    for rows_by_group, header in zip(report.general_stats_data, report.general_stats_headers):
+    for section_key, rows_by_group in report.general_stats_data.items():
+        header = report.general_stats_headers[section_key]
         for s, rows in rows_by_group.items():
             if sample and s != sample:
                 continue
