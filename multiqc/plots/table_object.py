@@ -1016,10 +1016,7 @@ def render_html(
             col_to_modal_headers.pop(col_anchor, None)
             logger.debug(f"Removing header {col_key} from table, as no data")
 
-    #
     # Put everything together
-    #
-
     html = ""
 
     # Buttons above the table

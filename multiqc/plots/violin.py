@@ -248,28 +248,15 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         )
 
     @staticmethod
-    def create_from_datasets(
-        data: Union[List[SectionT], SectionT],
-        headers: Union[List[Dict[Union[ColumnKeyT, str], ColumnDict]], Dict[Union[ColumnKeyT, str], ColumnDict], None],
+    def create_from_dataset(
+        data: SectionT,
+        headers: Dict[ColumnKey, ColumnDict],
         pconfig: Union[Dict[str, Any], TableConfig, None] = None,
         show_table_by_default: bool = False,
     ) -> "ViolinPlotInputData":
         """
         Make datatable objects - they encapsulate data, headers, and configs
         """
-        if not isinstance(data, list):
-            data_list = [data]
-        else:
-            data_list = data
-
-        headers_list: List[Dict[ColumnKeyT, ColumnDict]]
-        if headers is None:
-            headers_list = [{}]
-        elif not isinstance(headers, list):
-            headers_list = [headers]
-        else:
-            headers_list = headers
-
         pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
         anchor = plot_anchor(pconf)
 
@@ -277,18 +264,15 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         if len(data) > 1:
             table_anchor = Anchor(f"{table_anchor}")
         table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
-        dts = [
-            table_object.DataTable.create(
-                data={SectionKey(table_anchor): d},
-                table_id=pconf.id,
-                table_anchor=table_anchor,
-                pconfig=pconf.model_copy(),
-                headers={SectionKey(table_anchor): {ColumnKey(k): v for k, v in h.items()}},
-            )
-            for d, h in zip(data_list, headers_list)
-        ]
+        dt = table_object.DataTable.create(
+            data={SectionKey(table_anchor): data},
+            table_id=pconf.id,
+            table_anchor=table_anchor,
+            pconfig=pconf.model_copy(),
+            headers={SectionKey(table_anchor): headers},
+        )
         return ViolinPlotInputData(
-            dts=dts,
+            dts=[dt],
             plot_type=PlotType.VIOLIN,
             pconfig=pconf,
             anchor=anchor,
@@ -348,8 +332,8 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
 
 def plot(
-    data: Union[List[SectionT], SectionT],
-    headers: Optional[Union[Dict[ColumnKeyT, ColumnDict], List[Dict[ColumnKeyT, ColumnDict]]]] = None,
+    data: SectionT,
+    headers: Dict[ColumnKey, ColumnDict],
     pconfig: Union[Dict[str, Any], TableConfig, None] = None,
     show_table_by_default: bool = False,
 ) -> Union["ViolinPlot", str, None]:
@@ -362,9 +346,10 @@ def plot(
     :param pconfig: plot config dict
     :return: plot object
     """
-    inputs = ViolinPlotInputData.create_from_datasets(
+    inputs = ViolinPlotInputData.create_from_dataset(
         data, headers, pconfig, show_table_by_default=show_table_by_default
     )
+
     inputs = ViolinPlotInputData.merge_with_previous(inputs)
     if inputs.is_empty():
         return None
@@ -893,15 +878,6 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """Add a control panel to the plot"""
         buttons: List[str] = []
-        if not flat and any(len(ds.metrics) > 1 for ds in self.datasets):
-            buttons.append(
-                self._btn(
-                    cls="mqc_table_config_modal_btn",
-                    label="<span class='glyphicon glyphicon-th'></span> Configure columns",
-                    attrs={"title": "Show as a table"},
-                    data_attrs={"table-anchor": self.table_anchor, "violin-anchor": self.anchor, "toggle": "tooltip"},
-                )
-            )
         if self.show_table:
             buttons.append(
                 self._btn(

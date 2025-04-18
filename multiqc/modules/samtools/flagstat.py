@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Dict
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import BaseMultiqcModule, config
 from multiqc.plots import violin
 
 # Initialise the logger
@@ -111,15 +111,25 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
         anchor="samtools-flagstat",
         description="This module parses the output from <code>samtools flagstat</code>",
         plot=violin.plot(
-            [samtools_flagstat, data_pct],
-            headers=[keys_counts, keys_pct],
+            samtools_flagstat,
+            headers=keys_counts,
             pconfig={
                 "id": "samtools-flagstat-dp",
                 "title": "Samtools: flagstat: read count",
-                "data_labels": [
-                    {"name": "Read counts", "title": "Samtools flagstat: read count"},
-                    {"name": "Percentage of total", "title": "Samtools flagstat: percentage of total"},
-                ],
+            },
+        ),
+    )
+
+    module.add_section(
+        name="Flagstat: Percentage of total",
+        anchor="samtools-flagstat-pct",
+        description="This module parses the output from <code>samtools flagstat</code>",
+        plot=violin.plot(
+            data_pct,
+            headers=keys_pct,
+            pconfig={
+                "id": "samtools-flagstat-pct",
+                "title": "Samtools: flagstat: percentage of total",
             },
         ),
     )
