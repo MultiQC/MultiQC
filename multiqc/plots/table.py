@@ -44,4 +44,7 @@ def plot(
     """
     from multiqc.plots.violin import plot as violin_plot
 
+    assert isinstance(data, dict)
+    if headers is not None:
+        assert isinstance(headers, dict)
     return violin_plot(data, headers, pconfig, show_table_by_default=True)

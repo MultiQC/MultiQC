@@ -6,8 +6,8 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
 from io import BufferedReader
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
 import yaml
 from pydantic import BaseModel
@@ -502,7 +502,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig["parse_numeric"] = False
 
                 plot = (table if plot_type == PlotType.TABLE else violin).plot(
-                    plot_datasets,  # type: ignore
+                    plot_datasets[0],  # type: ignore
                     headers=headers,
                     pconfig=pconfig,  # type: ignore
                 )
