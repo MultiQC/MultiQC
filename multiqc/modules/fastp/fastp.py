@@ -92,90 +92,75 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Duplication rate plot
-        if len(self.fastp_duplication_plotdata) > 0:
-            self.add_section(
-                name="Duplication Rates",
-                anchor="fastp-duprates",
-                description="Duplication rates of sampled reads.",
-                plot=linegraph.plot(
-                    self.fastp_duplication_plotdata,
-                    {
-                        "id": "fastp-duprates-plot",
-                        "title": "Fastp: Duplication Rate",
-                        "xlab": "Duplication level",
-                        "ylab": "Read percent",
-                        "y_clipmax": 100,
-                        "ymin": 0,
-                        "tt_label": "{point.x}: {point.y:.2f}%",
-                    },
-                ),
-            )
+        self.add_section(
+            name="Duplication Rates",
+            anchor="fastp-duprates",
+            description="Duplication rates of sampled reads.",
+            plot=linegraph.plot(
+                self.fastp_duplication_plotdata,
+                {
+                    "id": "fastp-duprates-plot",
+                    "title": "Fastp: Duplication Rate",
+                    "xlab": "Duplication level",
+                    "ylab": "Read percent",
+                    "y_clipmax": 100,
+                    "ymin": 0,
+                    "tt_label": "{point.x}: {point.y:.2f}%",
+                },
+            ),
+        )
 
-        # Insert size plot
-        if len(self.fastp_insert_size_data) > 0:
-            self.add_section(
-                name="Insert Sizes",
-                anchor="fastp-insert-size",
-                description="Insert size estimation of sampled reads.",
-                plot=linegraph.plot(
-                    self.fastp_insert_size_data,
-                    {
-                        "id": "fastp-insert-size-plot",
-                        "title": "Fastp: Insert Size Distribution",
-                        "xlab": "Insert size",
-                        "ylab": "Read percent",
-                        "y_clipmax": 100,
-                        "ymin": 0,
-                        "tt_label": "{point.x}: {point.y:.2f}%",
-                        "smooth_points": 300,
-                        "smooth_points_sumcounts": False,
-                    },
-                ),
-            )
+        self.add_section(
+            name="Insert Sizes",
+            anchor="fastp-insert-size",
+            description="Insert size estimation of sampled reads.",
+            plot=linegraph.plot(
+                self.fastp_insert_size_data,
+                {
+                    "id": "fastp-insert-size-plot",
+                    "title": "Fastp: Insert Size Distribution",
+                    "xlab": "Insert size",
+                    "ylab": "Read percent",
+                    "y_clipmax": 100,
+                    "ymin": 0,
+                    "tt_label": "{point.x}: {point.y:.2f}%",
+                    "smooth_points": 300,
+                    "smooth_points_sumcounts": False,
+                },
+            ),
+        )
 
         # Base quality plot
-        try:
-            self.add_section(
-                name="Sequence Quality",
-                anchor="fastp-seq-quality",
-                description="Average sequencing quality over each base of all reads.",
-                plot=self.fastp_read_qual_plot(),
-            )
-        except RuntimeError:
-            log.debug("No data found for 'Sequence Quality' plot")
+        self.add_section(
+            name="Sequence Quality",
+            anchor="fastp-seq-quality",
+            description="Average sequencing quality over each base of all reads.",
+            plot=self.fastp_read_qual_plot(),
+        )
 
         # GC content plot
-        try:
-            self.add_section(
-                name="GC Content",
-                anchor="fastp-seq-content-gc",
-                description="Average GC content over each base of all reads.",
-                plot=self.fastp_read_gc_plot(),
-            )
-        except RuntimeError:
-            log.debug("No data found for 'GC Content' plot")
+        self.add_section(
+            name="GC Content",
+            anchor="fastp-seq-content-gc",
+            description="Average GC content over each base of all reads.",
+            plot=self.fastp_read_gc_plot(),
+        )
 
         # N content plot
-        try:
-            self.add_section(
-                name="N content",
-                anchor="fastp-seq-content-n",
-                description="Average N content over each base of all reads.",
-                plot=self.fastp_read_n_plot(),
-            )
-        except RuntimeError:
-            log.debug("No data found for 'N content' plot")
+        self.add_section(
+            name="N content",
+            anchor="fastp-seq-content-n",
+            description="Average N content over each base of all reads.",
+            plot=self.fastp_read_n_plot(),
+        )
 
         # Overrepresented sequences plot
-        try:
-            self.add_section(
-                name="Overrepresented Sequences",
-                anchor="fastp-overrepresented-sequences",
-                description="Overrepresented sequences in the reads.",
-                plot=self.fastp_overrepresented_sequences_plot(),
-            )
-        except RuntimeError:
-            log.debug("No data found for 'Overrepresented Sequences' plot")
+        self.add_section(
+            name="Overrepresented Sequences",
+            anchor="fastp-overrepresented-sequences",
+            description="Overrepresented sequences in the reads.",
+            plot=self.fastp_overrepresented_sequences_plot(),
+        )
 
     def parse_fastp_log(self, f) -> Tuple[Optional[str], Dict]:
         """Parse the JSON output from fastp and save the summary statistics"""
@@ -624,9 +609,5 @@ class MultiqcModule(BaseMultiqcModule):
             if any(data[k][x] for x in data[k]):
                 data_labels.append(dl)
                 pdata.append(data[k])
-
-        # Abort sample if no data
-        if len(pdata) == 0:
-            raise RuntimeError
 
         return data_labels, pdata

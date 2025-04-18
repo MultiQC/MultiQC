@@ -29,6 +29,8 @@ dependencies = [
     "natsort",
     "tiktoken",
     "jsonschema",
+    "pandas",             # for parquet support
+    "pyarrow",            # for parquet support
 ]
 requires-python = ">=3.8"
 authors = [
@@ -82,6 +84,7 @@ dev = [
     "types-beautifulsoup4",
     "types-Pillow",
     "types-jsonschema",
+    "pandas-stubs",
     "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
 ]
