@@ -10,6 +10,7 @@ from io import BufferedReader
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
 import yaml
+from natsort import natsorted
 from pydantic import BaseModel
 
 from multiqc import Plot, config, report
@@ -361,6 +362,11 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         parsed_mod for mod_id in mod_order for parsed_mod in parsed_modules.values() if parsed_mod.anchor == mod_id
     ]
     sorted_modules = modules_in_order + modules__not_in_order
+
+    # sort the sections in each module by name by default
+    # this can always be overridden via config
+    for module in sorted_modules:
+        module.sections = natsorted(module.sections, key=lambda s: s.name)
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
