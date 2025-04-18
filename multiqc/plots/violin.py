@@ -33,11 +33,11 @@ logger = logging.getLogger(__name__)
 
 
 class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
-    dts: List[DataTable]
+    dt: DataTable
     show_table_by_default: bool
 
     def is_empty(self) -> bool:
-        return len(self.dts) == 0 or all(dt.is_empty() for dt in self.dts)
+        return self.dt.is_empty()
 
     def to_df(self) -> pd.DataFrame:
         """
@@ -65,47 +65,46 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             "val_fmt": str,
         }
 
-        for dt in self.dts:
-            # Get ordered headers first
-            ordered_headers = list(dt.get_headers_in_order())
+        # Get ordered headers first
+        ordered_headers = list(self.dt.get_headers_in_order())
 
-            # Process each section and its rows
-            for section_idx, section in enumerate(dt.section_by_id.values()):
-                section_key = list(dt.section_by_id.keys())[section_idx]
+        # Process each section and its rows
+        for section_idx, section in enumerate(self.dt.section_by_id.values()):
+            section_key = list(self.dt.section_by_id.keys())[section_idx]
 
-                # Process each sample in this section
-                for sample_name, group_rows in section.rows_by_sgroup.items():
-                    for row in group_rows:
-                        # Process each metric/column in the order from get_headers_in_order()
-                        for idx, metric_name, dt_column in ordered_headers:
-                            if metric_name not in row.data:
-                                continue
+            # Process each sample in this section
+            for sample_name, group_rows in section.rows_by_sgroup.items():
+                for row in group_rows:
+                    # Process each metric/column in the order from get_headers_in_order()
+                    for idx, metric_name, dt_column in ordered_headers:
+                        if metric_name not in row.data:
+                            continue
 
-                            cell = row.data[metric_name]
-                            # Skip empty values
-                            if cell is None or cell.raw is None or cell.fmt == "":
-                                continue
+                        cell = row.data[metric_name]
+                        # Skip empty values
+                        if cell is None or cell.raw is None or cell.fmt == "":
+                            continue
 
-                            # Create record with all necessary metadata
-                            record = {
-                                "anchor": self.anchor,
-                                "dt_anchor": dt.anchor,
-                                "section_key": str(section_key),
-                                "sample_name": str(sample_name),
-                                "metric_name": str(metric_name),
-                                "metric_idx": idx,  # Store original index for ordering
-                                "val_raw": str(cell.raw),
-                                "val_raw_type": type(cell.raw).__name__,  # Store type name
-                                "val_mod": str(cell.mod),
-                                "val_mod_type": type(cell.mod).__name__,  # Store type name
-                                "val_fmt": str(cell.fmt),
-                                # Store column metadata as JSON. Note thaet "format" and "modify" lambda won't be stored,
-                                # that's why we are saving val_mod and val_fmt separately.
-                                "column_meta": dt_column.model_dump_json(),
-                                "show_table_by_default": self.show_table_by_default,
-                            }
+                        # Create record with all necessary metadata
+                        record = {
+                            "anchor": self.anchor,
+                            "dt_anchor": self.dt.anchor,
+                            "section_key": str(section_key),
+                            "sample_name": str(sample_name),
+                            "metric_name": str(metric_name),
+                            "metric_idx": idx,  # Store original index for ordering
+                            "val_raw": str(cell.raw),
+                            "val_raw_type": type(cell.raw).__name__,  # Store type name
+                            "val_mod": str(cell.mod),
+                            "val_mod_type": type(cell.mod).__name__,  # Store type name
+                            "val_fmt": str(cell.fmt),
+                            # Store column metadata as JSON. Note thaet "format" and "modify" lambda won't be stored,
+                            # that's why we are saving val_mod and val_fmt separately.
+                            "column_meta": dt_column.model_dump_json(),
+                            "show_table_by_default": self.show_table_by_default,
+                        }
 
-                            records.append(record)
+                        records.append(record)
 
         # Create DataFrame with appropriate dtypes
         df = pd.DataFrame(records, dtype=object).astype(column_types)
@@ -122,6 +121,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         """
         Load plot data from a DataFrame.
         """
+        table_anchor = Anchor(f"{anchor}_table")  # make sure it's unique
         if df.empty:
             pconf = (
                 pconfig
@@ -129,7 +129,13 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                 else cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
             )
             return cls(
-                dts=[],
+                dt=DataTable.create(
+                    data={},
+                    table_id=pconf.id,
+                    table_anchor=table_anchor,
+                    pconfig=pconf.model_copy(),
+                    headers={},
+                ),
                 plot_type=PlotType.VIOLIN,
                 pconfig=pconf,
                 anchor=anchor,
@@ -140,77 +146,71 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
         show_table_by_default = df.iloc[0]["show_table_by_default"]
 
-        # Group data by dt_anchor to recreate DataTables
-        dts = []
+        # Prepare data structure for DataTable creation
+        data_dict: Dict[SectionKey, Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]]] = {}
+        headers_dict: Dict[SectionKey, Dict[ColumnKey, ColumnDict]] = {}
 
-        for dt_anchor, dt_group in df.groupby("dt_anchor", sort=False):
-            # Prepare data structure for DataTable creation
-            data_dict: Dict[SectionKey, Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]]] = {}
-            headers_dict: Dict[SectionKey, Dict[ColumnKey, ColumnDict]] = {}
+        # Track metrics and their order
+        ordered_metrics = {}
 
-            # Track metrics and their order
-            ordered_metrics = {}
+        # Group by section
+        for section_key, section_group in df.groupby("section_key", sort=False):
+            val_by_sample_by_metric: Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]] = {}
+            section_headers: Dict[ColumnKey, ColumnDict] = {}
 
-            # Group by section
-            for section_key, section_group in dt_group.groupby("section_key", sort=False):
-                val_by_sample_by_metric: Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]] = {}
-                section_headers: Dict[ColumnKey, ColumnDict] = {}
+            # Sort metrics by their original index if available
+            if "metric_idx" in section_group.columns:
+                # Create ordered dict of metrics for this section
+                metrics_info = section_group[["metric_name", "metric_idx"]].drop_duplicates()
+                for _, row in metrics_info.iterrows():
+                    ordered_metrics[row["metric_name"]] = row["metric_idx"]
 
-                # Sort metrics by their original index if available
-                if "metric_idx" in section_group.columns:
-                    # Create ordered dict of metrics for this section
-                    metrics_info = section_group[["metric_name", "metric_idx"]].drop_duplicates()
-                    for _, row in metrics_info.iterrows():
-                        ordered_metrics[row["metric_name"]] = row["metric_idx"]
+            # Process samples
+            for sample_name, sample_group in section_group.groupby("sample_name", sort=False):
+                val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
 
-                # Process samples
-                for sample_name, sample_group in section_group.groupby("sample_name", sort=False):
-                    val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
+                # If we have metric_idx, sort by that first
+                if "metric_idx" in sample_group.columns:
+                    sample_group = sample_group.sort_values("metric_idx")
 
-                    # If we have metric_idx, sort by that first
-                    if "metric_idx" in sample_group.columns:
-                        sample_group = sample_group.sort_values("metric_idx")
+                # Process metrics/columns
+                for _, row in sample_group.iterrows():
+                    metric_name = row["metric_name"]
 
-                    # Process metrics/columns
-                    for _, row in sample_group.iterrows():
-                        metric_name = row["metric_name"]
+                    # Convert string values back to their original types
+                    val_raw = parse_value(row["val_raw"], row["val_raw_type"])
+                    val_mod = parse_value(row["val_mod"], row["val_mod_type"])
+                    val_by_metric[ColumnKey(str(metric_name))] = Cell(
+                        raw=val_raw,
+                        mod=val_mod,
+                        fmt=row["val_fmt"],
+                    )
 
-                        # Convert string values back to their original types
-                        val_raw = parse_value(row["val_raw"], row["val_raw_type"])
-                        val_mod = parse_value(row["val_mod"], row["val_mod_type"])
-                        val_by_metric[ColumnKey(str(metric_name))] = Cell(
-                            raw=val_raw,
-                            mod=val_mod,
-                            fmt=row["val_fmt"],
-                        )
+                    # Create header if it doesn't exist
+                    if metric_name not in section_headers:
+                        # Parse column metadata from JSON
+                        section_headers[metric_name] = json.loads(row["column_meta"])
 
-                        # Create header if it doesn't exist
-                        if metric_name not in section_headers:
-                            # Parse column metadata from JSON
-                            section_headers[metric_name] = json.loads(row["column_meta"])
+                # Add sample data to section
+                if val_by_metric:
+                    val_by_sample_by_metric[SampleName(str(sample_name))] = val_by_metric
 
-                    # Add sample data to section
-                    if val_by_metric:
-                        val_by_sample_by_metric[SampleName(str(sample_name))] = val_by_metric
+            # Add section data and headers to dictionary
+            if val_by_sample_by_metric:
+                data_dict[SectionKey(str(section_key))] = val_by_sample_by_metric
+                headers_dict[SectionKey(str(section_key))] = section_headers
 
-                # Add section data and headers to dictionary
-                if val_by_sample_by_metric:
-                    data_dict[SectionKey(str(section_key))] = val_by_sample_by_metric
-                    headers_dict[SectionKey(str(section_key))] = section_headers
-
-            # Create DataTable if we have data
-            if data_dict:
-                dt = table_object.DataTable.create(
-                    data=cast(Dict[SectionKey, SectionT], data_dict),
-                    table_id=pconf.id,
-                    table_anchor=Anchor(str(dt_anchor)),
-                    pconfig=pconf.model_copy(),
-                    headers=headers_dict,
-                )
-                dts.append(dt)
+        # Create DataTable if we have data
+        dt = table_object.DataTable.create(
+            data=cast(Dict[SectionKey, SectionT], data_dict),
+            table_id=pconf.id,
+            table_anchor=table_anchor,
+            pconfig=pconf.model_copy(),
+            headers=headers_dict,
+        )
 
         return cls(
-            dts=dts,
+            dt=dt,
             plot_type=PlotType.VIOLIN,
             pconfig=pconf,
             anchor=anchor,
@@ -240,7 +240,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             headers=headers,
         )
         return cls(
-            dts=[dt],
+            dt=dt,
             plot_type=PlotType.VIOLIN,
             pconfig=pconf,
             anchor=anchor,
@@ -250,7 +250,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
     @staticmethod
     def create_from_dataset(
         data: SectionT,
-        headers: Dict[ColumnKey, ColumnDict],
+        headers: Optional[Dict[ColumnKeyT, ColumnDict]] = None,
         pconfig: Union[Dict[str, Any], TableConfig, None] = None,
         show_table_by_default: bool = False,
     ) -> "ViolinPlotInputData":
@@ -269,10 +269,10 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             table_id=pconf.id,
             table_anchor=table_anchor,
             pconfig=pconf.model_copy(),
-            headers={SectionKey(table_anchor): headers},
+            headers={SectionKey(table_anchor): {ColumnKey(k): v for k, v in headers.items()}} if headers else {},
         )
         return ViolinPlotInputData(
-            dts=[dt],
+            dt=dt,
             plot_type=PlotType.VIOLIN,
             pconfig=pconf,
             anchor=anchor,
@@ -333,7 +333,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
 def plot(
     data: SectionT,
-    headers: Dict[ColumnKey, ColumnDict],
+    headers: Optional[Dict[ColumnKeyT, ColumnDict]] = None,
     pconfig: Union[Dict[str, Any], TableConfig, None] = None,
     show_table_by_default: bool = False,
 ) -> Union["ViolinPlot", str, None]:
@@ -789,24 +789,19 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
     @staticmethod
     def create(
-        dts: List[DataTable],
+        dt: DataTable,
         anchor: Anchor,
         show_table_by_default: bool = False,
     ) -> "ViolinPlot":
-        assert len(dts) > 0, "No datasets to plot"
-
-        samples_per_dataset: List[Set[str]] = []
-        for _, dt in enumerate(dts):
-            ds_samples: Set[str] = set()
-            for section in dt.section_by_id.values():
-                ds_samples.update(section.rows_by_sgroup.keys())
-            samples_per_dataset.append(ds_samples)
+        ds_samples: Set[str] = set()
+        for section in dt.section_by_id.values():
+            ds_samples.update(section.rows_by_sgroup.keys())
 
         model: Plot[Dataset, TableConfig] = Plot.initialize(
             plot_type=PlotType.VIOLIN,
-            pconfig=dts[0].pconfig,
-            n_samples_per_dataset=[len(x) for x in samples_per_dataset],
-            id=dts[0].id,
+            pconfig=dt.pconfig,
+            n_samples_per_dataset=[len(ds_samples)],
+            id=dt.id,
             anchor=anchor,
             default_tt_label=": %{x}",
             # Violins scale well, so can always keep them interactive and visible:
@@ -817,13 +812,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         no_violin: bool = model.pconfig.no_violin
         show_table_by_default = show_table_by_default or no_violin
 
-        model.datasets = [
-            Dataset.create(ds, dt, show_table_by_default)
-            for ds, dt in zip(
-                model.datasets,
-                dts,
-            )
-        ]
+        model.datasets = [Dataset.create(model.datasets[0], dt, show_table_by_default)]
 
         # Violin-specific layout parameters
         model.layout.update(
@@ -857,7 +846,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         # - do not add a table
         # - plot a Violin in Python, and serialise the figure instead of the datasets
         show_table = True
-        max_n_samples = max(len(x) for x in samples_per_dataset)
+        max_n_samples = len(ds_samples)
         if max_n_samples > config.max_table_rows and not no_violin:
             show_table = False
             if show_table_by_default:
@@ -1042,7 +1031,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     @staticmethod
     def from_inputs(inputs: ViolinPlotInputData) -> Union["ViolinPlot", str, None]:
         plot = ViolinPlot.create(
-            inputs.dts,
+            inputs.dt,
             show_table_by_default=inputs.show_table_by_default,
             anchor=inputs.anchor,
         )
