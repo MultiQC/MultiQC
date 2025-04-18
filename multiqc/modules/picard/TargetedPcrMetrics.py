@@ -125,7 +125,7 @@ def parse_reports(module):
         "title": "Picard: PCR Amplicon Bases",
         "ylab": "# Bases",
         "cpswitch_counts_label": "# Bases",
-        "hide_empty": False,
+        "hide_zero_cats": False,
     }
 
     module.add_section(

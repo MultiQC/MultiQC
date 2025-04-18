@@ -9,8 +9,7 @@ from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.plot import Plot
-from multiqc.plots.table import _get_sortlist
-from multiqc.plots.table_object import ColumnDict, DataTable
+from multiqc.plots.table_object import ColumnDict
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
 
@@ -55,8 +54,8 @@ def test_linegraph():
         )
     )
 
-    for in_series, out_series in zip(dataset.values(), report.plot_data[plot.anchor]["datasets"][0]["lines"]):
-        assert len(in_series) == len(out_series["pairs"])
+    assert len(report.plot_data[plot.anchor]["datasets"][0]["lines"][0]["pairs"]) == 2
+    assert len(report.plot_data[plot.anchor]["datasets"][0]["lines"][1]["pairs"]) == 3
 
 
 def test_table():
@@ -127,7 +126,7 @@ def test_bar_plot_no_matching_cats():
         {"id": plot_id, "title": "Test: Bar Graph"},
     )
     # Will return a warning message html instead of a plot:
-    assert isinstance(plot, str)
+    assert plot is None
 
 
 def test_bar_plot_cats_dicts():
@@ -495,10 +494,10 @@ def test_dash_styles():
 
 
 def test_table_default_sort():
+    from multiqc.plots.table_object import _get_sortlist
+
     headers: Dict[str, ColumnDict] = {"x": {"title": "Metric X"}, "y": {"title": "Metric Y"}}
-    dt = DataTable.create(
-        table_id="foo",
-        table_anchor=Anchor("foo"),
+    p = table.plot(
         data={
             "sample1": {"x": 1, "y": 2},
             "sample2": {"x": 3, "y": 4},
@@ -510,5 +509,6 @@ def test_table_default_sort():
             defaultsort=[{"column": "y", "direction": "desc"}, {"column": "x", "direction": "asc"}],
         ),
     )
-    sortlist = _get_sortlist(dt)
+    assert isinstance(p, Plot)
+    sortlist = _get_sortlist(p.datasets[0].dt)
     assert sortlist == "[[2, 1], [1, 0]]"
