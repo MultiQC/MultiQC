@@ -63,7 +63,9 @@ class MultiqcModule(BaseMultiqcModule):
 
             if not run_name or not analysis_id:
                 log.error("Error with RunStats.json. Either RunName or AnalysisID is absent.")
-                log.error("Please visit Elembio online documentation for more information - https://docs.elembio.io/docs/bases2fastq/introduction/")
+                log.error(
+                    "Please visit Elembio online documentation for more information - https://docs.elembio.io/docs/bases2fastq/introduction/"
+                )
                 continue
 
             run_analysis_name = "-".join([run_name, analysis_id])
