@@ -435,7 +435,7 @@ class Dataset(BaseDataset):
                         pass
                     else:
                         assert v is not None and str(v).strip != "", v
-                        value_by_sample[row.sample] = v.raw
+                        value_by_sample[row.sample] = v.mod
 
             value_by_sample_by_metric[dt_column.clean_rid] = value_by_sample
 

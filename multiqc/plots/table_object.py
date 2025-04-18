@@ -864,7 +864,7 @@ def render_html(
                 if col_key not in row.data:
                     continue
 
-                val: ValueT = row.data[col_key].mod if row.data[col_key].mod is not None else row.data[col_key].raw
+                val: ValueT = row.data[col_key].mod
                 valstr: str = row.data[col_key].fmt
 
                 group_to_sample_to_anchor_to_val[group_name][row.sample][col_anchor] = val
