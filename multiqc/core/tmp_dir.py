@@ -3,8 +3,6 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from multiqc.utils.util_functions import rmtree_with_retries
-
 logger = logging.getLogger(__name__)
 
 _tmp_dir: Optional[Path] = None
