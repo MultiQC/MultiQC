@@ -1204,7 +1204,10 @@ def remove_tmp_dir():
     Completely remove tmp dir
     """
     log_and_rich.remove_file_handler()
-    rmtree_with_retries(tmp_dir.get_tmp_dir())
+    try:
+        rmtree_with_retries(tmp_dir.get_tmp_dir())
+    except Exception as e:
+        logger.warning(f"Couldn't remove tmp dir: {e}")
     tmp_dir.new_tmp_dir()
 
 

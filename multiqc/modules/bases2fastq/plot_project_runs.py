@@ -23,7 +23,7 @@ def tabulate_project_run_stats(run_data, color_dict):
     headers = {}
     headers["num_polonies_run"] = {
         "title": f"# Polonies ({config.base_count_prefix})",
-        "description": f"The (total) number of polonies calculated for the run ({config.base_count_desc})",
+        "description": f"The total number of polonies that are calculated for the run ({config.base_count_desc})",
         "min": 0,
         "scale": "RdYlGn",
         "shared_key": "base_count",
@@ -49,7 +49,7 @@ def tabulate_project_run_stats(run_data, color_dict):
     }
     headers["percent_q30_run"] = {
         "title": "Percent Q30",
-        "description": "The percentage of ≥ Q30 (base) Q-scores for the run, including assigned and unassigned reads",
+        "description": "The percentage of ≥ Q30 Q scores for the project. This includes assigned and unassigned reads and excludes filtered reads and no calls.",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
@@ -57,7 +57,7 @@ def tabulate_project_run_stats(run_data, color_dict):
     }
     headers["percent_q40_run"] = {
         "title": "Percent Q40",
-        "description": "The percentage of ≥ Q40 (base) Q-scores for the run, including assigned and unassigned reads",
+        "description": "The percentage of ≥ Q40 Q scores for the project. This includes assigned and unassigned reads and excludes filtered reads and no calls.",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
@@ -74,15 +74,15 @@ def tabulate_project_run_stats(run_data, color_dict):
     plot_name = "(Project) Sequencing QC metrics table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
     anchor = "project_run_qc_metrics_table"
-    description = "Table of general QC metrics"
+    description = "QC metrics per run, per project"
     helptext = """
-    This section shows numbers of some metrics that indicate the quality of each sequencing run: \n
-       - Run Name: Name showing the (RunName)__(UUID).  (RunName) maps to the AVITI run name.  (UUID) maps to the unique bases2fastq analysis result.\n
-       - Number of Polonies: The (total) number of polonies calculated for the run\n
-       - Percentage Assigned Reads: percentage of reads that has been assigned to any sample
-       - Assigned Yield (Gb): The run yield based on assigned reads in gigabases\n
-       - Quality Score Mean: The average Q-score of base calls for a sample\n
-       - Percent Q30: The percentage of ≥ Q30 (base) Q-scores for the run, including assigned and unassigned reads\n
-       - Percent Q40: The percentage of ≥ Q40 (base) Q-scores for the run, including assigned and unassigned reads
+    This section displays metrics that indicate the quality of each sequencing run: \n
+       - Run Name: Unique identifier composed of (RunName)__(UUID), where (RunName) maps to the AVITI run name and (UUID) maps to the unique Bases2Fastq analysis result.\n
+       - Number of Polonies: The total number of polonies that are calculated for the run.\n
+       - Percentage Assigned Reads: The percentage of reads that are assigned to a sample.\n
+       - Assigned Yield (Gb): The run yield that is based on assigned reads in gigabases.\n
+       - Quality Score Mean: The mean Q score of base calls for the samples. This excludes filtered reads and no calls.\n
+       - Percent Q30: The percentage of ≥ Q30 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
+       - Percent Q40: The percentage of ≥ Q40 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
