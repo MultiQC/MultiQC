@@ -6,8 +6,8 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
 from io import BufferedReader
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
 import yaml
 from natsort import natsorted
@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from multiqc import Plot, config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
-from multiqc.types import Anchor, LoadedFileDict, ModuleId, PlotType, SectionId
+from multiqc.types import Anchor, LoadedFileDict, ModuleId, PlotType, SectionId, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
 # Initialise the logger
@@ -508,14 +508,18 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig["parse_numeric"] = False
 
                 plot = (table if plot_type == PlotType.TABLE else violin).plot(
-                    plot_datasets, headers=headers, pconfig=pconfig
+                    plot_datasets[0],  # type: ignore
+                    headers=headers,
+                    pconfig=pconfig,  # type: ignore
                 )
 
             # Bar plot
             elif plot_type == PlotType.BAR:
                 ccdict.data = [{str(k): v for k, v in ds.items()} for ds in plot_datasets]
                 plot = bargraph.plot(
-                    plot_datasets, ccdict.config.get("categories"), pconfig=bargraph.BarPlotConfig(**pconfig)
+                    plot_datasets,  # type: ignore
+                    ccdict.config.get("categories"),
+                    pconfig=bargraph.BarPlotConfig(**pconfig),  # type: ignore
                 )
 
             # Line plot
@@ -524,7 +528,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Scatter plot
             elif plot_type == PlotType.SCATTER:
-                scatter_data = cast(Mapping[str, Any], ccdict.data)
+                scatter_data = ccdict.data
+                assert not isinstance(scatter_data, str)
                 plot = scatter.plot(scatter_data, pconfig=scatter.ScatterConfig(**pconfig))
 
             # Box plot
@@ -533,8 +538,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
-                violin_data = cast(List[Mapping[str, Any]], plot_datasets)
-                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))
+                violin_data = cast(List[Tuple[SectionKey, Mapping[str, Any]]], plot_datasets)
+                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))  # type: ignore
 
             # Raw HTML
             elif plot_type == PlotType.HTML:

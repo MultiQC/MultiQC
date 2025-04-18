@@ -2,6 +2,8 @@
 # Default configurations for how modules can find their log files.
 # Loaded by the config module so that these patterns can be overwritten in user config files.
 
+multiqc_data:
+  fn: "multiqc.parquet"
 adapterremoval:
   fn: "*.settings"
   contents: "AdapterRemoval"
@@ -22,6 +24,14 @@ bamdst/coverage:
 bamtools/stats:
   contents: "Stats for BAM file(s):"
   num_lines: 10
+bases2fastq/run:
+  fn: "RunStats.json"
+  contents: "FlowCellID"
+  num_lines: 100
+bases2fastq/project:
+  fn: "*_RunStats.json"
+  contents: "FlowCellID"
+  num_lines: 100
 bbduk:
   contents: "Executing jgi.BBDuk"
   num_lines: 2
@@ -875,10 +885,14 @@ samtools/coverage:
   contents: "#rname	startpos	endpos	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq"
   num_lines: 10
 samtools/markdup_txt:
-  contents: "COMMAND: samtools markdup"
+  contents:
+    - "^COMMAND:"
+    - "samtools markdup"
   num_lines: 2
 samtools/markdup_json:
-  contents: '"COMMAND": "samtools markdup'
+  contents:
+    - '"COMMAND":'
+    - "samtools markdup"
   num_lines: 10
 sargasso:
   fn: "overall_filtering_summary.txt"

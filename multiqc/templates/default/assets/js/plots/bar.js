@@ -156,7 +156,7 @@ class BarPlot extends Plot {
 
     let csv = "Sample" + delim + cats.map((cat) => cat.name).join(delim) + "\n";
     for (let i = 0; i < this.filteredSettings.length; i++) {
-      csv += this.filteredSettings[i] + delim + cats.map((cat) => cat.data[i]).join(delim) + "\n";
+      csv += this.filteredSettings[i].name + delim + cats.map((cat) => cat.data[i]).join(delim) + "\n";
     }
     return csv;
   }

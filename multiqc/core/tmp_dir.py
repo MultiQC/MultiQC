@@ -47,6 +47,13 @@ def plots_tmp_dir(create=True) -> Path:
     return path
 
 
+def parquet_file() -> Path:
+    """
+    Returns the path to the combined parquet file that contains all plot data
+    """
+    return data_tmp_dir() / "multiqc.parquet"
+
+
 def new_tmp_dir():
     global _tmp_dir
     _tmp_dir = None

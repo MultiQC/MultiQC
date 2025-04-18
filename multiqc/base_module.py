@@ -30,6 +30,7 @@ from typing import (
 
 import markdown
 import packaging.version
+from natsort import natsorted
 
 from multiqc import config, report, validation
 from multiqc.config import CleanPatternT
@@ -44,7 +45,7 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId, SampleNameMeta, Section
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SampleNameMeta, Section, SectionId, SectionKey
 
 logger = logging.getLogger(__name__)
 
@@ -273,7 +274,14 @@ class BaseMultiqcModule:
         path_filters: List[str] = get_path_filters("path_filters")
         path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
 
-        for f in report.files.get(ModuleId(sp_key), []):
+        # Get files and sort them by their clean sample names
+        module_files = list(report.files.get(ModuleId(sp_key), []))
+
+        # Sort files naturally by their clean sample names
+        module_files = natsorted(module_files, key=lambda f: self.clean_s_name(f["fn"], f))
+
+        # Process the sorted files
+        for f in module_files:
             # Make a note of the filename so that we can report it if something crashes
             last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file
@@ -459,7 +467,7 @@ class BaseMultiqcModule:
             helptext=helptext,
             content_before_plot=content_before_plot,
             content=content,
-            print_section=any([description, comment, helptext, content_before_plot, plot, content]),
+            print_section=any([content_before_plot, plot, content]),
         )
 
         if plot is not None:
@@ -992,9 +1000,16 @@ class BaseMultiqcModule:
                     desc += " (summed for grouped samples)"
                 _headers[col_id]["description"] = desc
 
+        # Add incremental suffix to SectionKey(self.anchor) until it's unique
+        anchor = SectionKey(self.anchor)
+        suffix = 2
+        while anchor in report.general_stats_data:
+            suffix += 1
+            anchor = SectionKey(f"{self.anchor}_{suffix}")
+
         # Append to report.general_stats for later assembly into table
-        report.general_stats_data.append(rows_by_group)
-        report.general_stats_headers.append(_headers)  # type: ignore
+        report.general_stats_data[anchor] = rows_by_group
+        report.general_stats_headers[anchor] = _headers  # type: ignore
 
     def add_data_source(
         self,

@@ -696,6 +696,21 @@ them in the final report HTML.
 
 MultiQC provides a JSON Schema for validating configuration files. This allows editors like VSCode to provide autocompletion and validation while editing MultiQC config files.
 
+### JSON Schema Store
+
+The MultiQC config JSON schema is available via [https://www.schemastore.org/](https://www.schemastore.org/),
+so [most code editors](https://www.schemastore.org/json/#editors) should automatically
+provide autocompletion and validation if your config files file are named as any of the following:
+
+- `multiqc_config.yaml`
+- `multiqc_config.yml`
+- `.multiqc_config.yaml`
+- `.multiqc_config.yml`
+
+In many situations this should just work, without any additional action needed.
+If not (custom filenames for your config, or variations in IDE settings), see below to
+do this in a more explicit manner.
+
 ### Using with VSCode
 
 1. Install the YAML extension for VSCode
