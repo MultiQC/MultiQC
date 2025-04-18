@@ -114,7 +114,7 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
             samtools_flagstat,
             headers=keys_counts,
             pconfig={
-                "id": "samtools-flagstat-dp",
+                "id": "samtools-flagstat-table",
                 "title": "Samtools: flagstat: read count",
             },
         ),
@@ -128,7 +128,7 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
             data_pct,
             headers=keys_pct,
             pconfig={
-                "id": "samtools-flagstat-pct",
+                "id": "samtools-flagstat-pct-table",
                 "title": "Samtools: flagstat: percentage of total",
             },
         ),
