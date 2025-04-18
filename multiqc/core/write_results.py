@@ -21,7 +21,7 @@ from multiqc.base_module import Section
 from multiqc.core import log_and_rich, plot_data_store, plugin_hooks, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
-from multiqc.core.tmp_dir import rmtree_with_retries
+from multiqc.utils.util_functions import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plot import Plot
 from multiqc.plots.violin import ViolinPlot
@@ -121,7 +121,10 @@ def write_results() -> None:
     # Zip the data directory if requested
     if config.zip_data_dir and paths.data_dir is not None:
         shutil.make_archive(str(paths.data_dir), format="zip", root_dir=str(paths.data_dir))
-        tmp_dir.rmtree_with_retries(paths.data_dir)
+        try:
+            util_functions.rmtree_with_retries(paths.data_dir)
+        except Exception as e:
+            logger.warning(f"Couldn't remove data dir: {e}")
 
     if paths.report_path:
         logger.debug(f"Report HTML written to {paths.report_path}")
@@ -414,7 +417,10 @@ def _write_data_files(data_dir: Path) -> None:
         # shutil.copyfile only copies the file without any metadata.
         copy_function=shutil.copyfile,
     )
-    rmtree_with_retries(report.data_tmp_dir())
+    try:
+        rmtree_with_retries(report.data_tmp_dir())
+    except Exception as e:
+        logger.warning(f"Couldn't remove data tmp dir: {e}")
 
     # Write the report sources to disk
     report.data_sources_tofile(data_dir)
@@ -448,7 +454,10 @@ def _move_exported_plots(plots_dir: Path):
         # shutil.copyfile only copies the file without any metadata.
         copy_function=shutil.copyfile,
     )
-    rmtree_with_retries(tmp_dir.plots_tmp_dir())
+    try:
+        rmtree_with_retries(tmp_dir.plots_tmp_dir())
+    except Exception as e:
+        logger.warning(f"Couldn't remove plots tmp dir: {e}")
 
 
 def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
