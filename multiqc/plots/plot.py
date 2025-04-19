@@ -1434,8 +1434,8 @@ plot_export_has_failed: bool = False
 
 
 # Collect plot exports for batch processing
-_plot_export_batch = []
-_plot_export_batch_results = {}  # Mapping of plot_path to success status
+_plot_export_batch: List[Tuple[go.Figure, Path, Dict]] = []
+_plot_export_batch_results: Dict[int, bool] = {}  # Mapping of plot_path to success status
 
 
 def fig_to_static_html(
