@@ -158,6 +158,7 @@ class PConfig(ValidatedConfig):
     y_bands: Optional[List[LineBand]] = None
     x_lines: Optional[List[FlatLine]] = None
     y_lines: Optional[List[FlatLine]] = None
+    series_label: str = "samples"
 
     @classmethod
     def from_pconfig_dict(cls, pconfig: Union[Mapping[str, Any], "PConfig", None]):
@@ -676,7 +677,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             if len(n_samples_per_dataset) > 1:
                 subtitles += [dataset.label]
             if n_samples > 1:
-                subtitles += [f"{n_samples} samples"]
+                subtitles += [f"{n_samples} {pconfig.series_label}"]
             if subtitles:
                 dconfig["subtitle"] = ", ".join(subtitles)
 
