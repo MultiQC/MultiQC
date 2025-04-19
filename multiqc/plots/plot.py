@@ -1261,25 +1261,26 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         return html
 
 
+class ExportProcess(multiprocessing.Process):
+    def __init__(self, fig, plot_path, write_kwargs):
+        super().__init__()
+        self.fig = fig
+        self.plot_path = plot_path
+        self.write_kwargs = write_kwargs
+        self.exception = None
+
+    def run(self):
+        try:
+            self.fig.write_image(self.plot_path, **self.write_kwargs)
+        except Exception as e:
+            self.exception = e
+
+
 def _export_plot(fig, plot_path, write_kwargs):
     """Export a plotly figure to a file."""
 
     # Default timeout of 30 seconds for image export
     timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 30
-
-    class ExportProcess(multiprocessing.Process):
-        def __init__(self, fig, plot_path, write_kwargs):
-            super().__init__()
-            self.fig = fig
-            self.plot_path = plot_path
-            self.write_kwargs = write_kwargs
-            self.exception = None
-
-        def run(self):
-            try:
-                self.fig.write_image(self.plot_path, **self.write_kwargs)
-            except Exception as e:
-                self.exception = e
 
     # Start the export in a separate process
     export_process = ExportProcess(fig, plot_path, write_kwargs)
