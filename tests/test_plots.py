@@ -8,7 +8,7 @@ from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.linegraph import LinePlotConfig, Series
-from multiqc.plots.plot import Plot
+from multiqc.plots.plot import Plot, process_batch_exports
 from multiqc.plots.table_object import ColumnDict
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
@@ -265,6 +265,8 @@ def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, expo
     html = plot.add_to_report(
         module_anchor=Anchor("test"), section_anchor=Anchor("test"), plots_dir_name=config.plots_dir_name
     )
+    # Process any batched exports
+    process_batch_exports()
 
     assert len(report.plot_data) == 0
     assert html is not None

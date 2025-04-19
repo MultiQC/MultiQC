@@ -32,6 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 
 from multiqc import config, report
 from multiqc.core import plot_data_store, tmp_dir
+from multiqc.core.log_and_rich import init_log, iterate_using_progress_bar
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, PlotType, SampleName
@@ -1143,9 +1144,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 batch_processing=True,
             )
 
-        # Process all batched exports in a single process
-        process_batch_exports()
-
         html += "</div>"
         return html
 
@@ -1313,16 +1311,27 @@ class BatchExportProcess(multiprocessing.Process):
         """
         super().__init__()
         self.export_tasks = export_tasks
-        self.exceptions = {}
-        self.completed = set()
 
     def run(self):
-        for idx, (fig, plot_path, write_kwargs) in enumerate(self.export_tasks):
+        def update_fn(_, item):
+            fig, plot_path, write_kwargs = item
             try:
                 fig.write_image(plot_path, **write_kwargs)
-                self.completed.add(idx)
             except Exception as e:
-                self.exceptions[idx] = e
+                logger.error(f"Error exporting plot to {plot_path}: {e}")
+
+        def item_to_str_fn(item) -> str:
+            _, plot_path, _ = item
+            return str(plot_path)
+
+        init_log()
+
+        iterate_using_progress_bar(
+            items=self.export_tasks,
+            update_fn=update_fn,
+            item_to_str_fn=item_to_str_fn,
+            desc="Exporting plots",
+        )
 
 
 def _batch_export_plots(export_tasks, timeout=None):
@@ -1347,36 +1356,28 @@ def _batch_export_plots(export_tasks, timeout=None):
     completed_tasks = set()
 
     if export_process.is_alive():
+        # Check which files were actually written
+        for idx, (_, plot_path, _) in enumerate(export_tasks):
+            if plot_path.exists() and plot_path.stat().st_size > 0:
+                completed_tasks.add(idx)
+
         # If process is still running after timeout, log warning and continue
-        logging.warning(
+        logger.warning(
             f"Batch plot export timed out after {timeout}s. "
-            f"Only {len(export_process.completed)} of {len(export_tasks)} plots were exported. "
+            f"Only {len(completed_tasks)} of {len(export_tasks)} plots were exported. "
             "This is likely due to a known issue in Kaleido. "
             "The remaining plots will be skipped but the report will continue to generate."
         )
         # Kill the process
         export_process.terminate()
-        # Check which files were actually written
-        for idx, (_, plot_path, _) in enumerate(export_tasks):
-            if plot_path.exists() and plot_path.stat().st_size > 0:
-                completed_tasks.add(idx)
         return completed_tasks
-
-    # Log any exceptions
-    for idx, exception in export_process.exceptions.items():
-        fig, plot_path, _ = export_tasks[idx]
-        logging.error(f"Error exporting plot to {plot_path}: {exception}")
 
     # Verify which files were actually written
     for idx, (_, plot_path, _) in enumerate(export_tasks):
         if plot_path.exists() and plot_path.stat().st_size > 0:
             completed_tasks.add(idx)
-        elif idx not in export_process.exceptions:
-            # File doesn't exist but no exception was recorded
-            logging.error(f"Plot file not found or empty: {plot_path}")
-
     if len(completed_tasks) < len(export_tasks):
-        logging.warning(
+        logger.warning(
             f"Some plot exports failed or produced empty files: {len(completed_tasks)}/{len(export_tasks)} completed"
         )
 
@@ -1396,7 +1397,7 @@ def _export_plot(fig, plot_path, write_kwargs):
 
     if export_process.is_alive():
         # If process is still running after timeout, log warning and continue
-        logging.warning(
+        logger.warning(
             f"Plot export timed out after {timeout}s: {plot_path}. "
             "This is likely due to a known issue in Kaleido. "
             "The plot will be skipped but the report will continue to generate."
@@ -1406,7 +1407,7 @@ def _export_plot(fig, plot_path, write_kwargs):
         return False
     if export_process.exception:
         # If there was an exception in the process, log it
-        logging.error(f"Error exporting plot to {plot_path}: {export_process.exception}")
+        logger.error(f"Error exporting plot to {plot_path}: {export_process.exception}")
         return False
 
     return True
