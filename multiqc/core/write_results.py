@@ -21,12 +21,12 @@ from multiqc.base_module import Section
 from multiqc.core import log_and_rich, plot_data_store, plugin_hooks, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
-from multiqc.utils.util_functions import rmtree_with_retries
 from multiqc.plots import table
-from multiqc.plots.plot import Plot
+from multiqc.plots.plot import Plot, process_batch_exports
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor
 from multiqc.utils import util_functions
+from multiqc.utils.util_functions import rmtree_with_retries
 
 logger = logging.getLogger(__name__)
 
@@ -257,7 +257,8 @@ def _create_or_override_dirs(output_names: OutputNames) -> OutputPaths:
 
 def render_and_export_plots(plots_dir_name: str):
     """
-    Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir(). Populates report.plot_data
+    Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir().
+    Populates report.plot_data
     """
 
     def update_fn(_, s: Section):
@@ -316,8 +317,11 @@ def render_and_export_plots(plots_dir_name: str):
         update_fn=update_fn,
         item_to_str_fn=lambda s: f"{s.module}/{s.name}" if s.name else s.module,
         desc="rendering plots",
-        disable_progress=not show_progress,
+        disable_progress=True,
     )
+
+    # Process all batched exports in a single process after all plots are rendered
+    process_batch_exports()
 
     report.some_plots_are_deferred = any(
         isinstance(plot := report.plot_by_id[s.plot_anchor], Plot) and plot.defer_render
