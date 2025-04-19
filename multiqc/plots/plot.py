@@ -1014,6 +1014,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 )
             except ValueError:
                 logger.error(f"Unable to export plot to flat images: {self.id}, falling back to interactive plot")
+                if config.strict:
+                    raise
                 html = self.interactive_plot(module_anchor, section_anchor)
         else:
             html = self.interactive_plot(module_anchor, section_anchor)
@@ -1027,6 +1029,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     )
                 except ValueError:
                     logger.error(f"Unable to export plot to flat images: {self.id}")
+                    if config.strict:
+                        raise
 
         return html
 
@@ -1085,39 +1089,62 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if not config.simple_output:
             html += self.__control_panel(flat=True, module_anchor=module_anchor, section_anchor=section_anchor)
 
-        # Go through datasets creating plots
+        # Collect all figures that need to be exported
+        figures_to_export = []
         for ds_idx, dataset in enumerate(self.datasets):
-            html += fig_to_static_html(
-                self.get_figure(ds_idx, flat=True),
-                active=ds_idx == 0 and not self.p_active and not self.l_active,
-                file_name=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
-                plots_dir_name=plots_dir_name,
-                embed_in_html=embed_in_html,
+            figures_to_export.append(
+                (
+                    self.get_figure(ds_idx, flat=True),
+                    ds_idx == 0 and not self.p_active and not self.l_active,
+                    dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
+                    embed_in_html,
+                    plots_dir_name,
+                )
             )
             if self.add_pct_tab:
-                html += fig_to_static_html(
-                    self.get_figure(ds_idx, is_pct=True, flat=True),
-                    active=ds_idx == 0 and self.p_active,
-                    file_name=f"{dataset.uid}-pct",
-                    plots_dir_name=plots_dir_name,
-                    embed_in_html=embed_in_html,
+                figures_to_export.append(
+                    (
+                        self.get_figure(ds_idx, is_pct=True, flat=True),
+                        ds_idx == 0 and self.p_active,
+                        f"{dataset.uid}-pct",
+                        embed_in_html,
+                        plots_dir_name,
+                    )
                 )
             if self.add_log_tab:
-                html += fig_to_static_html(
-                    self.get_figure(ds_idx, is_log=True, flat=True),
-                    active=ds_idx == 0 and self.l_active,
-                    file_name=f"{dataset.uid}-log",
-                    plots_dir_name=plots_dir_name,
-                    embed_in_html=embed_in_html,
+                figures_to_export.append(
+                    (
+                        self.get_figure(ds_idx, is_log=True, flat=True),
+                        ds_idx == 0 and self.l_active,
+                        f"{dataset.uid}-log",
+                        embed_in_html,
+                        plots_dir_name,
+                    )
                 )
             if self.add_pct_tab and self.add_log_tab:
-                html += fig_to_static_html(
-                    self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
-                    active=ds_idx == 0 and self.p_active and self.l_active,
-                    file_name=f"{dataset.uid}-pct-log",
-                    plots_dir_name=plots_dir_name,
-                    embed_in_html=embed_in_html,
+                figures_to_export.append(
+                    (
+                        self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
+                        ds_idx == 0 and self.p_active and self.l_active,
+                        f"{dataset.uid}-pct-log",
+                        embed_in_html,
+                        plots_dir_name,
+                    )
                 )
+
+        # Add all figures to HTML
+        for fig, active, file_name, embed_in_html, plots_dir_name in figures_to_export:
+            html += fig_to_static_html(
+                fig,
+                active=active,
+                file_name=file_name,
+                plots_dir_name=plots_dir_name,
+                embed_in_html=embed_in_html,
+                batch_processing=True,
+            )
+
+        # Process all batched exports in a single process
+        process_batch_exports()
 
         html += "</div>"
         return html
@@ -1276,6 +1303,86 @@ class ExportProcess(multiprocessing.Process):
             self.exception = e
 
 
+class BatchExportProcess(multiprocessing.Process):
+    def __init__(self, export_tasks):
+        """
+        Initialize a batch export process with multiple tasks
+
+        Args:
+            export_tasks: List of tuples (fig, plot_path, write_kwargs)
+        """
+        super().__init__()
+        self.export_tasks = export_tasks
+        self.exceptions = {}
+        self.completed = set()
+
+    def run(self):
+        for idx, (fig, plot_path, write_kwargs) in enumerate(self.export_tasks):
+            try:
+                fig.write_image(plot_path, **write_kwargs)
+                self.completed.add(idx)
+            except Exception as e:
+                self.exceptions[idx] = e
+
+
+def _batch_export_plots(export_tasks, timeout=None):
+    """Export multiple plotly figures to files in a single process.
+
+    Args:
+        export_tasks: List of tuples (fig, plot_path, write_kwargs)
+        timeout: Timeout in seconds, default from config
+
+    Returns:
+        Set of indexes for successfully exported plots
+    """
+    # Default timeout from config
+    if timeout is None:
+        timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 30
+
+    # Start the export in a separate process
+    export_process = BatchExportProcess(export_tasks)
+    export_process.start()
+    export_process.join(timeout)
+
+    completed_tasks = set()
+
+    if export_process.is_alive():
+        # If process is still running after timeout, log warning and continue
+        logging.warning(
+            f"Batch plot export timed out after {timeout}s. "
+            f"Only {len(export_process.completed)} of {len(export_tasks)} plots were exported. "
+            "This is likely due to a known issue in Kaleido. "
+            "The remaining plots will be skipped but the report will continue to generate."
+        )
+        # Kill the process
+        export_process.terminate()
+        # Check which files were actually written
+        for idx, (_, plot_path, _) in enumerate(export_tasks):
+            if plot_path.exists() and plot_path.stat().st_size > 0:
+                completed_tasks.add(idx)
+        return completed_tasks
+
+    # Log any exceptions
+    for idx, exception in export_process.exceptions.items():
+        fig, plot_path, _ = export_tasks[idx]
+        logging.error(f"Error exporting plot to {plot_path}: {exception}")
+
+    # Verify which files were actually written
+    for idx, (_, plot_path, _) in enumerate(export_tasks):
+        if plot_path.exists() and plot_path.stat().st_size > 0:
+            completed_tasks.add(idx)
+        elif idx not in export_process.exceptions:
+            # File doesn't exist but no exception was recorded
+            logging.error(f"Plot file not found or empty: {plot_path}")
+
+    if len(completed_tasks) < len(export_tasks):
+        logging.warning(
+            f"Some plot exports failed or produced empty files: {len(completed_tasks)}/{len(export_tasks)} completed"
+        )
+
+    return completed_tasks
+
+
 def _export_plot(fig, plot_path, write_kwargs):
     """Export a plotly figure to a file."""
 
@@ -1324,6 +1431,11 @@ def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
 plot_export_has_failed: bool = False
 
 
+# Collect plot exports for batch processing
+_plot_export_batch = []
+_plot_export_batch_results = {}  # Mapping of plot_path to success status
+
+
 def fig_to_static_html(
     fig: go.Figure,
     active: bool = True,
@@ -1331,17 +1443,28 @@ def fig_to_static_html(
     embed_in_html: Optional[bool] = None,
     plots_dir_name: Optional[str] = None,
     file_name: Optional[str] = None,
+    batch_processing: bool = True,
 ) -> str:
     """
     Build one static image, return an HTML wrapper.
+
+    Args:
+        fig: Plotly figure
+        active: Whether the plot should be visible initially
+        export_plots: Whether to export plots (default from config)
+        embed_in_html: Whether to embed plots in HTML (default not in development)
+        plots_dir_name: Directory for exported plots
+        file_name: File name for the plot
+        batch_processing: Whether to use batch processing for exports
     """
+    global _plot_export_batch, _plot_export_batch_results, plot_export_has_failed
+
     if is_running_under_rosetta():
         raise ValueError(
             "Detected Rosetta process, meaning running in an x86_64 container hosted by Apple Silicon. "
             "Plot export is unstable and will be skipped"
         )
 
-    global plot_export_has_failed
     if plot_export_has_failed:
         raise ValueError("Could not previously export a plots, so won't try again")
 
@@ -1367,6 +1490,7 @@ def fig_to_static_html(
 
     # Save the plot to the data directory if export is requested
     png_is_written = False
+    tasks_added = []  # Track tasks added for this figure
 
     if formats:
         if file_name is None:
@@ -1375,21 +1499,32 @@ def fig_to_static_html(
             plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
             plot_path.parent.mkdir(parents=True, exist_ok=True)
 
-            try:
-                if not plot_export_has_failed:
-                    # Running for the first time, so doing a safe run in a subprocess to find out if it freezes the process or now
-                    export_success = _export_plot(fig, plot_path, write_kwargs)
-                    if not export_success:
-                        plot_export_has_failed = True
-                        raise ValueError(f"Failed to export plot to {file_ext.upper()} image")
-            except Exception as e:
-                msg = f"{file_name}: Unable to export plot to {file_ext.upper()} image"
-                logger.error(f"{msg}. {e}")
-                plot_export_has_failed = True
-                raise ValueError(msg)  # Raising to the caller to fall back to interactive plots
-            else:
-                if file_ext == "png":
+            # Add to batch if using batch processing
+            if batch_processing:
+                task_idx = len(_plot_export_batch)
+                _plot_export_batch.append((fig, plot_path, write_kwargs))
+                tasks_added.append((task_idx, plot_path, file_ext))
+
+                # If we're using batch processing, we'll assume the PNG will be written by the batch process
+                # Since we check that png_is_written below, we need to make it True for batch processing
+                if file_ext == "png" and not embed_in_html:
                     png_is_written = True
+            else:
+                try:
+                    if not plot_export_has_failed:
+                        # Running for the first time, so doing a safe run in a subprocess to find out if it freezes the process or not
+                        export_success = _export_plot(fig, plot_path, write_kwargs)
+                        if not export_success:
+                            plot_export_has_failed = True
+                            raise ValueError(f"Failed to export plot to {file_ext.upper()} image")
+                except Exception as e:
+                    msg = f"{file_name}: Unable to export plot to {file_ext.upper()} image"
+                    logger.error(f"{msg}. {e}")
+                    plot_export_has_failed = True
+                    raise ValueError(msg)  # Raising to the caller to fall back to interactive plots
+                else:
+                    if file_ext == "png":
+                        png_is_written = True
 
     # Now writing the PNGs for the HTML
     if not embed_in_html:
@@ -1397,6 +1532,7 @@ def fig_to_static_html(
             raise ValueError("file_name is required for non-embedded plots")
         if plots_dir_name is None:
             raise ValueError("plots_dir_name is required for non-embedded plots")
+
         # Using file written in the config.export_plots block above
         img_path = Path(plots_dir_name) / "png" / f"{file_name}.png"
         if not png_is_written:  # Could not write in the block above
@@ -1417,6 +1553,44 @@ def fig_to_static_html(
             "</div>",
         ]
     )
+
+
+def process_batch_exports():
+    """Process all batched exports in a single process"""
+    global _plot_export_batch, _plot_export_batch_results, plot_export_has_failed
+
+    if not _plot_export_batch:
+        return
+
+    try:
+        # Process all exports in a single process
+        completed_indexes = _batch_export_plots(_plot_export_batch)
+
+        # Record results
+        for idx in range(len(_plot_export_batch)):
+            _plot_export_batch_results[idx] = idx in completed_indexes
+
+        # Check if any exports failed
+        if len(completed_indexes) < len(_plot_export_batch):
+            logger.warning(f"Some plot exports failed: {len(completed_indexes)}/{len(_plot_export_batch)} completed")
+
+            # Check specifically for PNG failures
+            png_failures = []
+            for idx in range(len(_plot_export_batch)):
+                if idx not in completed_indexes:
+                    _, plot_path, _ = _plot_export_batch[idx]
+                    if plot_path.suffix.lower() == ".png":
+                        png_failures.append(str(plot_path))
+
+            if png_failures:
+                logger.error(f"Failed to export the following PNG images: {', '.join(png_failures)}")
+    except Exception as e:
+        logger.error(f"Error during batch export: {e}")
+        plot_export_has_failed = True
+
+    # Clear the batch
+    _plot_export_batch = []
+    _plot_export_batch_results = {}
 
 
 def add_logo(
