@@ -14,15 +14,12 @@ import coloredlogs  # type: ignore
 import rich
 import rich.jupyter
 import rich.progress
-import rich_click
 from rich.logging import RichHandler
 from rich.theme import Theme
 from tqdm import tqdm
-from traitlets import Any
 
 from multiqc import config
 from multiqc.core import tmp_dir
-from multiqc.utils import util_functions
 from multiqc.utils.util_functions import is_running_in_notebook
 
 log_tmp_fn: Optional[Path] = None
