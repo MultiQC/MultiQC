@@ -95,6 +95,7 @@ violin_min_threshold_no_points: 1000 # for more than this number of samples, sho
 collapse_tables: true
 max_table_rows: 500
 max_configurable_table_columns: 200
+general_stats_columns: {}
 table_columns_visible: {}
 table_columns_placement: {}
 table_columns_name: {}
