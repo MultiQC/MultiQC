@@ -932,7 +932,14 @@ class BaseMultiqcModule:
     def general_stats_addcols(
         self,
         data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
-        headers: Optional[Union[Mapping[ColumnKey, ColumnDict], Mapping[str, ColumnDict]]] = None,
+        headers: Optional[
+            Union[
+                Mapping[ColumnKey, ColumnDict],
+                Mapping[ColumnKey, dict[str, Any]],
+                Mapping[str, ColumnDict],
+                Mapping[str, dict[str, Any]],
+            ]
+        ] = None,
         namespace: Optional[str] = None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
     ):
@@ -977,7 +984,7 @@ class BaseMultiqcModule:
                 _headers[col_id] = {}
         else:
             # Make a copy
-            _headers = {ColumnKey(col_id): col_dict.copy() for col_id, col_dict in headers.items()}
+            _headers = {ColumnKey(col_id): cast(ColumnDict, col_dict.copy()) for col_id, col_dict in headers.items()}
 
         # Add the module name to the description if not already done
         for col_id in _headers.keys():
