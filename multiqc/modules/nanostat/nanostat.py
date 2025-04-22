@@ -11,6 +11,61 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    NanoStat module for parsing statistics from Oxford Nanopore sequencing data.
+
+    By default, only the Read N50 metric is shown in the General Statistics table, with all other metrics hidden.
+    You can customize which metrics appear in the General Statistics table using the `general_stats_columns`
+    configuration option in your MultiQC config file.
+
+    For example, to show number of reads, mean read length and median quality for FASTQ data:
+
+    ```yaml
+    general_stats_columns:
+        nanostat:
+            columns:
+                Number of reads_fastq:
+                    title: "# Reads"
+                    description: "Number of reads"
+                    hidden: false
+                Mean read length_fastq:
+                    title: "Mean Length"
+                    description: "Mean read length"
+                    hidden: false
+                Median read quality_fastq:
+                    title: "Median Quality"
+                    description: "Median read quality"
+                    hidden: false
+    ```
+
+    Available metrics that can be added to General Statistics (append `_fastq`, `_aligned`, `_fasta` or `_seq summary`
+    depending on the data type):
+
+    * `Active channels` - Number of active channels
+    * `Median read length` - Median read length (bp)
+    * `Mean read length` - Mean read length (bp)
+    * `Read length N50` - Read length N50
+    * `Median read quality` - Median read quality (Phred scale)
+    * `Mean read quality` - Mean read quality (Phred scale)
+    * `Median percent identity` - Median percent identity
+    * `Average percent identity` - Average percent identity
+    * `Number of reads` - Number of reads
+    * `Total bases` - Total number of bases
+    * `Total bases aligned` - Total number of aligned bases
+
+    Each metric can be customized with the following options:
+
+    * `title` - Column title
+    * `description` - Column description
+    * `hidden` - Whether to hide the column by default
+    * `scale` - Color scale for the column
+    * `format` - Number format
+    * `min` - Minimum value for the color scale
+    * `max` - Maximum value for the color scale
+    * `suffix` - Suffix to add to values
+    * `shared_key` - Share color scale with other columns
+    """
+
     _KEYS_MAPPING = {
         "number_of_reads": "Number of reads",
         "number_of_bases": "Total bases",
@@ -308,18 +363,34 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         if not self.general_stats_added:
-            # Remove the hidden metrics, hide the rest apart from Read N50
-            general_stats_headers = {}
-            for k in headers:
-                if headers[k].get("hidden"):
-                    continue
-                general_stats_headers[k] = headers[k]
-                general_stats_headers[k]["description"] = headers[k]["description"] + f" ({stat_title})"
-                if k != f"Read length N50_{stat_type}":
-                    general_stats_headers[k]["hidden"] = True
+            # Get general stats config for this module
+            module_config = config.general_stats_columns.get("nanostat", {})
+            if isinstance(module_config, dict) and "columns" in module_config:
+                # Use configured columns
+                general_stats_headers = {}
+                for k in headers:
+                    # Only add columns that are configured
+                    if k in module_config["columns"]:
+                        general_stats_headers[k] = headers[k].copy()
+                        # Update with any configured overrides
+                        general_stats_headers[k].update(module_config["columns"][k])
+                        general_stats_headers[k]["description"] = (
+                            general_stats_headers[k].get("description", headers[k]["description"]) + f" ({stat_title})"
+                        )
+            else:
+                # Default behavior - show only Read N50, hide the rest
+                general_stats_headers = {}
+                for k in headers:
+                    if headers[k].get("hidden"):
+                        continue
+                    general_stats_headers[k] = headers[k]
+                    general_stats_headers[k]["description"] = headers[k]["description"] + f" ({stat_title})"
+                    if k != f"Read length N50_{stat_type}":
+                        general_stats_headers[k]["hidden"] = True
 
-            self.general_stats_addcols(self.nanostat_data, general_stats_headers)
-            self.general_stats_added = True
+            if general_stats_headers:
+                self.general_stats_addcols(self.nanostat_data, general_stats_headers)
+                self.general_stats_added = True
 
     def reads_by_quality_plot(self):
         def _get_total_reads(_data_dict):

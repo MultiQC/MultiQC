@@ -41,6 +41,31 @@ class CleanPattern(BaseModel):
     module: Optional[Union[str, List[str]]] = Field(None, description="Module(s) to apply this pattern to")
 
 
+class GeneralStatsColumnConfig(BaseModel):
+    """Configuration for a general stats column"""
+
+    title: Optional[str] = Field(None, description="Column title")
+    description: Optional[str] = Field(None, description="Column description")
+    namespace: Optional[str] = Field(None, description="Column namespace")
+    scale: Optional[str] = Field(None, description="Color scale")
+    format: Optional[str] = Field(None, description="Number format")
+    min: Optional[float] = Field(None, description="Minimum value")
+    max: Optional[float] = Field(None, description="Maximum value")
+    ceiling: Optional[float] = Field(None, description="Ceiling value")
+    floor: Optional[float] = Field(None, description="Floor value")
+    shared_key: Optional[str] = Field(None, description="Shared key name")
+    hidden: Optional[bool] = Field(None, description="Whether column is hidden by default")
+    placement: Optional[float] = Field(None, description="Column placement order")
+
+
+class GeneralStatsModuleConfig(BaseModel):
+    """Configuration for a module's general stats columns"""
+
+    columns: Dict[str, GeneralStatsColumnConfig] = Field(
+        default_factory=dict, description="Columns to show in general stats table. Keys are column IDs."
+    )
+
+
 class MultiQCConfig(BaseModel):
     """Schema for MultiQC config validation"""
 
@@ -142,6 +167,9 @@ class MultiQCConfig(BaseModel):
     max_table_rows: Optional[int] = Field(None, description="Maximum number of rows to show in tables")
     max_configurable_table_columns: Optional[int] = Field(
         None, description="Maximum number of columns to show in tables"
+    )
+    general_stats_columns: Dict[str, GeneralStatsModuleConfig] = Field(
+        default_factory=dict, description="Configuration for general stats columns per module. Keys are module IDs."
     )
     table_columns_visible: Optional[Dict[str, Union[bool, Dict[str, bool]]]] = Field(
         None, description="Which columns to show in tables"
