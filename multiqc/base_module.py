@@ -27,6 +27,7 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
+    cast,
     overload,
 )
 
@@ -1126,9 +1127,9 @@ class BaseMultiqcModule:
 
     def get_general_stats_headers(
         self,
-        all_headers: Mapping[str, ColumnDict],
-        default_shown: Optional[Sequence[str]] = None,
-        default_hidden: Optional[Sequence[str]] = None,
+        all_headers: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
+        default_shown: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+        default_hidden: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
     ) -> Dict[ColumnKey, ColumnDict]:
         """
         Get general stats columns for a module based on user configuration.
@@ -1148,17 +1149,22 @@ class BaseMultiqcModule:
             Dictionary of headers to add to general stats
         """
         # Get general stats config for this module
-        module_config = config.general_stats_columns.get(self.id, config.general_stats_columns.get(self.name, {}))
-        general_stats_headers = {}
+        module_config = cast(
+            Dict[ColumnKey, ColumnDict],
+            config.general_stats_columns.get(self.id, config.general_stats_columns.get(self.name, {})).get(
+                "columns", {}
+            ),
+        )
+        general_stats_headers: Dict[ColumnKey, ColumnDict] = {}
 
         # Check if we have a valid config for this module
-        if isinstance(module_config, dict) and "columns" in module_config:
+        if module_config:
             # Use configured columns
             for k in all_headers:
-                if k in module_config["columns"]:
-                    h = all_headers[k].copy()
-                    h.update(module_config["columns"][k] or {})
-                    general_stats_headers[k] = h
+                if k in module_config:
+                    h = all_headers[ColumnKey(k)].copy()
+                    h.update(module_config[ColumnKey(k)] or {})
+                    general_stats_headers[ColumnKey(k)] = h
 
         elif all_headers:
             # Default behavior - use all headers
@@ -1166,8 +1172,8 @@ class BaseMultiqcModule:
             default_hidden = default_hidden or list(set(all_headers.keys()) - set(default_shown))
             for k in all_headers:
                 if k in default_hidden or k in default_shown:
-                    general_stats_headers[k] = all_headers[k].copy()
-                    general_stats_headers[k]["hidden"] = k in default_hidden
+                    general_stats_headers[ColumnKey(k)] = all_headers[ColumnKey(k)].copy()
+                    general_stats_headers[ColumnKey(k)]["hidden"] = k in default_hidden
 
         # Cast to satisfy mypy - this is safe as the structure is identical
         return general_stats_headers
