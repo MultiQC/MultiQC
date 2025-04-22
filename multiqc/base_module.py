@@ -20,7 +20,9 @@ from typing import (
     Iterable,
     List,
     Literal,
+    Mapping,
     Optional,
+    Sequence,
     Set,
     Tuple,
     TypeVar,
@@ -929,7 +931,7 @@ class BaseMultiqcModule:
     def general_stats_addcols(
         self,
         data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
-        headers: Optional[Dict[Union[ColumnKey, str], ColumnDict]] = None,
+        headers: Optional[Union[Mapping[ColumnKey, ColumnDict], Mapping[str, ColumnDict]]] = None,
         namespace: Optional[str] = None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
     ):
@@ -1121,3 +1123,54 @@ class BaseMultiqcModule:
                 self.versions.update(m.versions)
             else:
                 self.versions = m.versions
+
+    def get_general_stats_headers(
+        self,
+        all_headers: Optional[Mapping[str, ColumnDict]] = None,
+        default_shown: Optional[Sequence[str]] = None,
+        default_hidden: Optional[Sequence[str]] = None,
+    ) -> Dict[ColumnKey, ColumnDict]:
+        """
+        Get general stats columns for a module based on user configuration.
+
+        This function checks if the module has configuration in config.general_stats_columns
+        and returns the columns accordingly. It supports custom column settings
+        and an exclusion list.
+
+        Args:
+            default_headers: Default dictionary of headers the module can add
+            all_headers: Dictionary of other possible headers the module can add
+            default_hidden_keys: Dictionary with keys and boolean values for default
+                            visibility settings. If not provided, all columns
+                            are shown by default.
+
+        Returns:
+            Dictionary of headers to add to general stats
+        """
+        # Get general stats config for this module
+        module_config = config.general_stats_columns.get(self.id, config.general_stats_columns.get(self.name, {}))
+        general_stats_headers = {}
+
+        # Check if we have a valid config for this module
+        if isinstance(module_config, dict) and "columns" in module_config:
+            # Use configured columns
+            general_stats_headers = module_config["columns"].copy()
+            for k in general_stats_headers:
+                if all_headers and k in all_headers:
+                    h = all_headers[k].copy()
+                    h.update(module_config["columns"][k])
+                    general_stats_headers[k] = h
+                else:
+                    general_stats_headers[k] = module_config["columns"][k]
+
+        elif all_headers:
+            # Default behavior - use all headers
+            default_shown = default_shown or all_headers.keys()
+            default_hidden = default_hidden or set(all_headers.keys()) - set(default_shown)
+            for k in all_headers:
+                if k in default_hidden or k in default_shown:
+                    general_stats_headers[k] = all_headers[k].copy()
+                    general_stats_headers[k]["hidden"] = k in default_hidden
+
+        # Cast to satisfy mypy - this is safe as the structure is identical
+        return general_stats_headers
