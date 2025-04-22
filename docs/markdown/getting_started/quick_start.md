@@ -18,7 +18,7 @@ Arguably, the easiest way to do this is with Conda
 1. [Download miniconda](https://conda.io/miniconda.html) for your operating system.
 2. Run the bash script and follow the prompts.
 3. Restart your terminal shell.
-4. [Configure your conda channels](https://bioconda.github.io/#usage) to work with BioConda:
+4. [Configure your conda channels](https://bioconda.github.io/#usage) to work with Bioconda:
    ```bash
    conda config --add channels bioconda
    conda config --add channels conda-forge
