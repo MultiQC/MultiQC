@@ -27,7 +27,7 @@ of a subset of the original data (collapsed quality scores).
 
 This module parses the output from the InterOp Summary executable and creates a table view. The aim is to
 replicate the `Run & Lane Metrics` table from the [Illumina Basespace](https://basespace.illumina.com) interface.
-The executable used can easily be installed from the BioConda channel using
+The executable used can easily be installed from the Bioconda channel using
 `conda install -c bioconda illumina-interop`.
 
 The MultiQC interop module can parse the outputs of the `interop_summary` and `interop_index-summary` executables.
