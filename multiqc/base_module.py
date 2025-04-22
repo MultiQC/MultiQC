@@ -935,9 +935,9 @@ class BaseMultiqcModule:
         headers: Optional[
             Union[
                 Mapping[ColumnKey, ColumnDict],
-                Mapping[ColumnKey, dict[str, Any]],
+                Mapping[ColumnKey, Dict[str, Any]],
                 Mapping[str, ColumnDict],
-                Mapping[str, dict[str, Any]],
+                Mapping[str, Dict[str, Any]],
             ]
         ] = None,
         namespace: Optional[str] = None,
