@@ -54,7 +54,13 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
             "hidden": True,
         },
     }
-    module.general_stats_addcols(samtools_flagstat, flagstat_headers, namespace="flagstat")
+
+    # Get general stats headers using the utility function, will read config.general_stats_columns
+    general_stats_headers = module.get_general_stats_headers(all_headers=flagstat_headers)
+
+    # Add headers to general stats table
+    if general_stats_headers:
+        module.general_stats_addcols(samtools_flagstat, general_stats_headers, namespace="flagstat")
 
     # Make a violin plot
     reads = {

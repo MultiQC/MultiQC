@@ -119,10 +119,15 @@ def summary_table(module, data_by_sample):
         ),
     )
 
-    for h in headers:
-        headers[h]["hidden"] = True
-    headers["meandepth"]["hidden"] = False
-    module.general_stats_addcols(table_data, headers, namespace="coverage")
+    # Get general stats headers using the utility function, will read config.general_stats_columns
+    general_stats_headers = module.get_general_stats_headers(
+        all_headers=headers,
+        default_shown=["meandepth"],
+    )
+
+    # Add headers to general stats table
+    if general_stats_headers:
+        module.general_stats_addcols(table_data, general_stats_headers, namespace="coverage")
 
 
 def lineplot_per_region(module, data_by_sample: Dict):
