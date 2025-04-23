@@ -142,7 +142,7 @@ violin_min_threshold_no_points: int
 collapse_tables: bool
 max_table_rows: int
 max_configurable_table_columns: int
-general_stats_columns: Dict[str, List[str]]
+general_stats_columns: Dict[str, Dict]
 table_columns_visible: Dict[str, Union[bool, Dict[str, bool]]]
 table_columns_placement: Dict[str, Dict[str, float]]
 table_columns_name: Dict[str, Union[str, Dict[str, str]]]

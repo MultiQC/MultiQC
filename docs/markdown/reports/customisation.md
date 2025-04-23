@@ -467,29 +467,27 @@ The General Statistics table is one of the most important features in MultiQC re
 
 By default, each module decides which columns to show in this table. However, some modules support customizing this using the `general_stats_columns` configuration option.
 
-For example, to customize which columns from the NanoStat module appear in the General Statistics table:
+For example, to customize which columns from the NanoStat and samtools modules appear in the General Statistics table:
 
 ```yaml
 general_stats_columns:
   nanostat:
     columns:
       Number of reads_fastq:
-        title: "# Reads"
-        description: "Number of reads"
-        hidden: false
       Mean read length_fastq:
-        title: "Mean Length"
-        description: "Mean read length"
-        hidden: false
       Median read quality_fastq:
-        title: "Median Quality"
-        description: "Median read quality"
+  samtools:
+    columns:
+      reads_mapped_percent:
+      reads_properly_paired_percent:
+      flagstat_total:
         hidden: false
+      pct_dups:
 ```
 
-Each module has its own set of available metrics that can be added to the General Statistics table. You can find these in the module's documentation.
+Each module has its own set of available metrics that can be added to the General Statistics table. You can find these in the module's documentation or the code base.
 
-For each column, you can customize:
+Note that for each column, you can also customize specific fields, like `hidden` above. Other fields you can customize are:
 
 - `title` - Column title
 - `description` - Column description

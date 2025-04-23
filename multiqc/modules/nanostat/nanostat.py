@@ -1,10 +1,11 @@
 import logging
 from collections import defaultdict
-from typing import List
+from typing import Any, Dict, List
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
+from multiqc.plots.table_object import ColumnDict
 from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
@@ -343,7 +344,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Add the stat_type suffix
-        headers = {}
+        headers: Dict[str, ColumnDict] = {}
         for k in headers_base:
             key = f"{k}_{stat_type}"
             headers[key] = headers_base.get(k, dict()).copy()
@@ -363,30 +364,17 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         if not self.general_stats_added:
-            # Get general stats config for this module
-            module_config = config.general_stats_columns.get("nanostat", {})
-            if isinstance(module_config, dict) and "columns" in module_config:
-                # Use configured columns
-                general_stats_headers = {}
-                for k in headers:
-                    # Only add columns that are configured
-                    if k in module_config["columns"]:
-                        general_stats_headers[k] = headers[k].copy()
-                        # Update with any configured overrides
-                        general_stats_headers[k].update(module_config["columns"][k])
-                        general_stats_headers[k]["description"] = (
-                            general_stats_headers[k].get("description", headers[k]["description"]) + f" ({stat_title})"
-                        )
-            else:
-                # Default behavior - show only Read N50, hide the rest
-                general_stats_headers = {}
-                for k in headers:
-                    if headers[k].get("hidden"):
-                        continue
-                    general_stats_headers[k] = headers[k]
-                    general_stats_headers[k]["description"] = headers[k]["description"] + f" ({stat_title})"
-                    if k != f"Read length N50_{stat_type}":
-                        general_stats_headers[k]["hidden"] = True
+            # Get general stats headers using utility function - reads the config.general_stats_columns
+            general_stats_headers = self.get_general_stats_headers(
+                all_headers=headers,
+                default_shown=[f"Read length N50_{stat_type}"],
+            )
+
+            # Add stat title to descriptions
+            for k, header in general_stats_headers.items():
+                header["description"] = (
+                    header.get("description", headers.get(k, {}).get("description", "")) + f" ({stat_title})"
+                )
 
             if general_stats_headers:
                 self.general_stats_addcols(self.nanostat_data, general_stats_headers)
