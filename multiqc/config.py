@@ -90,6 +90,7 @@ output_fn_name: str
 data_dir_name: str
 plots_dir_name: str
 data_format: str
+parquet_file_location: Optional[Union[str, Path]] = None
 force: bool
 verbose: bool
 no_ansi: bool

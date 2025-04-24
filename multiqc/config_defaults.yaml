@@ -39,6 +39,7 @@ output_fn_name: "multiqc_report.html"
 data_dir_name: "multiqc_data"
 plots_dir_name: "multiqc_plots"
 data_format: "tsv"
+parquet_file_location: null
 force: false
 verbose: false
 no_ansi: false

@@ -1,7 +1,8 @@
 import logging
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
+from cloudpathlib import CloudPath, AnyPath
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +46,17 @@ def plots_tmp_dir(create=True) -> Path:
     return path
 
 
-def parquet_file() -> Path:
+def parquet_file() -> Union[CloudPath, Path]:
     """
-    Returns the path to the combined parquet file that contains all plot data
+    Returns the path to the combined parquet file that contains all plot data.
+    If config.parquet_file_location is set, it will use that location instead of the default.
     """
-    return data_tmp_dir() / "multiqc.parquet"
+    from multiqc import config
+
+    if config.parquet_file_location:
+        return AnyPath(config.parquet_file_location)
+
+    return AnyPath(data_tmp_dir()) / "multiqc.parquet"
 
 
 def new_tmp_dir():

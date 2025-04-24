@@ -104,6 +104,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--data-dir",
                 "--no-data-dir",
                 "--data-format",
+                "--parquet-location",
                 "--zip-data-dir",
                 "--no-report",
                 "--clean-up",
@@ -310,6 +311,12 @@ click.rich_click.OPTION_GROUPS = {
     "data_format",
     type=click.Choice(list(config.data_format_extensions.keys())),
     help="Output parsed data in a different format.",
+)
+@click.option(
+    "--parquet-location",
+    "parquet_file_location",
+    type=str,
+    help="Specify the location to write the parquet file (can be a path or S3 bucket URI).",
 )
 @click.option(
     "-z",

@@ -98,6 +98,7 @@ class MultiQCConfig(BaseModel):
     data_dir_name: Optional[str] = Field(None, description="Data directory name")
     plots_dir_name: Optional[str] = Field(None, description="Plots directory name")
     data_format: Optional[str] = Field(None, description="Data format for output files")
+    parquet_file_location: Optional[str] = Field(None, description="Parquet file location")
     force: Optional[bool] = Field(None, description="Overwrite existing reports")
     verbose: Optional[bool] = Field(None, description="Verbose output")
     no_ansi: Optional[bool] = Field(None, description="Disable ANSI output")

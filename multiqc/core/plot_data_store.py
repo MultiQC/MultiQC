@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional, Set, Union
 
 import pandas as pd
 import pyarrow.parquet as pq  # type: ignore
+from cloudpathlib import CloudPath
 
 from multiqc import config, report
 from multiqc.core import tmp_dir
@@ -55,6 +56,7 @@ def get_report_metadata(file_path: Optional[Union[str, Path]] = None) -> Optiona
 
     Returns a dictionary with modules, data_sources, creation_date, and config.
     """
+    parquet_file: Union[CloudPath, Path]
     if file_path is None:
         parquet_file = tmp_dir.parquet_file()
     else:
@@ -265,7 +267,7 @@ def _update_parquet(df: pd.DataFrame, anchor: Anchor) -> None:
 
     # Write to file
     try:
-        merged_df.to_parquet(parquet_file, compression="gzip")
+        merged_df.to_parquet(str(parquet_file), compression="gzip")
     except Exception as e:
         logger.error(f"Error writing parquet file: {e}")
         raise

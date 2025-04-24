@@ -34,6 +34,7 @@ class ClConfig(BaseModel):
     filename: Optional[str] = None
     make_data_dir: Optional[bool] = None
     data_format: Optional[str] = None
+    parquet_file_location: Optional[Union[str, Path]] = None
     zip_data_dir: Optional[bool] = None
     force: Optional[bool] = None
     ignore_symlinks: Optional[bool] = None
@@ -156,6 +157,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.zip_data_dir = cfg.zip_data_dir
     if cfg.data_format is not None:
         config.data_format = cfg.data_format
+    if cfg.parquet_file_location is not None:
+        config.parquet_file_location = cfg.parquet_file_location
     if cfg.export_plots is not None:
         config.export_plots = cfg.export_plots
     if cfg.make_report is not None:
