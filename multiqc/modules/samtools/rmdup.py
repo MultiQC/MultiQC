@@ -4,6 +4,7 @@ from typing import Dict
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import bargraph
+from multiqc.plots.table_object import ColumnDict
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ def parse_samtools_rmdup(module: BaseMultiqcModule):
 
     # Add a column to the General Stats table
     # General Stats Table
-    stats_headers = {
+    stats_headers: Dict[str, ColumnDict] = {
         "pct_dups": {
             "title": "Duplicates",
             "description": "Percent of duplicate alignments",
@@ -72,7 +73,12 @@ def parse_samtools_rmdup(module: BaseMultiqcModule):
             "scale": "OrRd",
         }
     }
-    module.general_stats_addcols(samtools_rmdup, stats_headers, namespace="rmdup")
+    # Get general stats headers using the utility function, will read config.general_stats_columns
+    general_stats_headers = module.get_general_stats_headers(all_headers=stats_headers)
+
+    # Add headers to general stats table
+    if general_stats_headers:
+        module.general_stats_addcols(samtools_rmdup, general_stats_headers, namespace="rmdup")
 
     # Write parsed report data to a file
     module.write_data_file(samtools_rmdup, "multiqc_samtools_rmdup")

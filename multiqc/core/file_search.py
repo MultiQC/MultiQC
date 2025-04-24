@@ -131,6 +131,8 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     # Always add software_versions
     if "software_versions" not in sp_keys:
         sp_keys.append("software_versions")
+    if "multiqc_data" not in sp_keys:
+        sp_keys.append("multiqc_data")
 
     logger.debug(f"Analysing modules: {', '.join(mod_ids)}")
     if sp_keys != mod_ids:

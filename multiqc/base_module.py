@@ -20,16 +20,20 @@ from typing import (
     Iterable,
     List,
     Literal,
+    Mapping,
     Optional,
+    Sequence,
     Set,
     Tuple,
     TypeVar,
     Union,
+    cast,
     overload,
 )
 
 import markdown
 import packaging.version
+from natsort import natsorted
 
 from multiqc import config, report, validation
 from multiqc.config import CleanPatternT
@@ -44,7 +48,7 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId, SampleNameMeta, Section
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SampleNameMeta, Section, SectionId, SectionKey
 
 logger = logging.getLogger(__name__)
 
@@ -273,7 +277,14 @@ class BaseMultiqcModule:
         path_filters: List[str] = get_path_filters("path_filters")
         path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
 
-        for f in report.files.get(ModuleId(sp_key), []):
+        # Get files and sort them by their clean sample names
+        module_files = list(report.files.get(ModuleId(sp_key), []))
+
+        # Sort files naturally by their clean sample names
+        module_files = natsorted(module_files, key=lambda f: self.clean_s_name(f["fn"], f))
+
+        # Process the sorted files
+        for f in module_files:
             # Make a note of the filename so that we can report it if something crashes
             last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file
@@ -459,7 +470,7 @@ class BaseMultiqcModule:
             helptext=helptext,
             content_before_plot=content_before_plot,
             content=content,
-            print_section=any([description, comment, helptext, content_before_plot, plot, content]),
+            print_section=any([content_before_plot, plot, content]),
         )
 
         if plot is not None:
@@ -921,7 +932,14 @@ class BaseMultiqcModule:
     def general_stats_addcols(
         self,
         data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
-        headers: Optional[Dict[Union[ColumnKey, str], ColumnDict]] = None,
+        headers: Optional[
+            Union[
+                Mapping[ColumnKey, ColumnDict],
+                Mapping[ColumnKey, Dict[str, Any]],
+                Mapping[str, ColumnDict],
+                Mapping[str, Dict[str, Any]],
+            ]
+        ] = None,
         namespace: Optional[str] = None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
     ):
@@ -966,7 +984,7 @@ class BaseMultiqcModule:
                 _headers[col_id] = {}
         else:
             # Make a copy
-            _headers = {ColumnKey(col_id): col_dict.copy() for col_id, col_dict in headers.items()}
+            _headers = {ColumnKey(col_id): cast(ColumnDict, col_dict.copy()) for col_id, col_dict in headers.items()}
 
         # Add the module name to the description if not already done
         for col_id in _headers.keys():
@@ -992,9 +1010,16 @@ class BaseMultiqcModule:
                     desc += " (summed for grouped samples)"
                 _headers[col_id]["description"] = desc
 
+        # Add incremental suffix to SectionKey(self.anchor) until it's unique
+        anchor = SectionKey(self.anchor)
+        suffix = 2
+        while anchor in report.general_stats_data:
+            suffix += 1
+            anchor = SectionKey(f"{self.anchor}_{suffix}")
+
         # Append to report.general_stats for later assembly into table
-        report.general_stats_data.append(rows_by_group)
-        report.general_stats_headers.append(_headers)  # type: ignore
+        report.general_stats_data[anchor] = rows_by_group
+        report.general_stats_headers[anchor] = _headers  # type: ignore
 
     def add_data_source(
         self,
@@ -1106,3 +1131,56 @@ class BaseMultiqcModule:
                 self.versions.update(m.versions)
             else:
                 self.versions = m.versions
+
+    def get_general_stats_headers(
+        self,
+        all_headers: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
+        default_shown: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+        default_hidden: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+    ) -> Dict[ColumnKey, ColumnDict]:
+        """
+        Get general stats columns for a module based on user configuration.
+
+        This function checks if the module has configuration in config.general_stats_columns
+        and returns the columns accordingly. It supports custom column settings
+        and an exclusion list.
+
+        Args:
+            default_headers: Default dictionary of headers the module can add
+            all_headers: Dictionary of other possible headers the module can add
+            default_hidden_keys: Dictionary with keys and boolean values for default
+                            visibility settings. If not provided, all columns
+                            are shown by default.
+
+        Returns:
+            Dictionary of headers to add to general stats
+        """
+        # Get general stats config for this module
+        module_config = cast(
+            Dict[ColumnKey, ColumnDict],
+            config.general_stats_columns.get(self.id, config.general_stats_columns.get(self.name, {})).get(
+                "columns", {}
+            ),
+        )
+        general_stats_headers: Dict[ColumnKey, ColumnDict] = {}
+
+        # Check if we have a valid config for this module
+        if module_config:
+            # Use configured columns
+            for k in all_headers:
+                if k in module_config:
+                    h = all_headers[ColumnKey(k)].copy()
+                    h.update(module_config[ColumnKey(k)] or {})
+                    general_stats_headers[ColumnKey(k)] = h
+
+        elif all_headers:
+            # Default behavior - use all headers
+            default_shown = default_shown or [k for k, v in all_headers.items() if not v.get("hidden", False)]
+            default_hidden = default_hidden or list(set(all_headers.keys()) - set(default_shown))
+            for k in all_headers:
+                if k in default_hidden or k in default_shown:
+                    general_stats_headers[ColumnKey(k)] = all_headers[ColumnKey(k)].copy()
+                    general_stats_headers[ColumnKey(k)]["hidden"] = k in default_hidden
+
+        # Cast to satisfy mypy - this is safe as the structure is identical
+        return general_stats_headers

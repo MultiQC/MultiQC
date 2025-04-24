@@ -1021,7 +1021,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="Sequence Length Distribution",
                 anchor="fastqc_sequence_length_distribution",
-                description=f'<div class="alert alert-info">{desc}</div>',
+                content=f'<div class="alert alert-info">{desc}</div>',
             )
         else:
             pconfig = LinePlotConfig(
@@ -1315,6 +1315,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
+            "series_label": "samples x adapters",
         }
         if status_checks:
             pconfig["y_bands"] = [
@@ -1324,7 +1325,7 @@ class MultiqcModule(BaseMultiqcModule):
             ]
 
         plot = None
-        content = None
+        content = ""
         if len(pct_by_pos_by_sample) > 0:
             plot = linegraph.plot(pct_by_pos_by_sample, pconfig)
         else:

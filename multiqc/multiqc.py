@@ -717,4 +717,4 @@ def _print_intro_with_coloredlogs():
 
 def _print_intro_with_rich():
     if log_and_rich.rich_console is not None:
-        log_and_rich.rich_console.print(f"\n{log_and_rich.rich_click.rich_click.HEADER_TEXT}\n")
+        log_and_rich.rich_console.print(f"\n{click.rich_click.HEADER_TEXT}\n")

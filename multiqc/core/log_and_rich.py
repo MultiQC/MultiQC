@@ -14,14 +14,12 @@ import coloredlogs  # type: ignore
 import rich
 import rich.jupyter
 import rich.progress
-import rich_click
 from rich.logging import RichHandler
 from rich.theme import Theme
 from tqdm import tqdm
 
 from multiqc import config
 from multiqc.core import tmp_dir
-from multiqc.utils import util_functions
 from multiqc.utils.util_functions import is_running_in_notebook
 
 log_tmp_fn: Optional[Path] = None
@@ -306,7 +304,16 @@ def _no_unicode() -> bool:
     )
 
 
-def iterate_using_progress_bar(items: List, desc: str, update_fn, item_to_str_fn=str, disable_progress=False):
+T = TypeVar("T")
+
+
+def iterate_using_progress_bar(
+    items: List[T],
+    desc: str,
+    update_fn: Callable[[int, T], None],
+    item_to_str_fn: Callable[[T], str] = str,
+    disable_progress=False,
+) -> None:
     # GitHub actions doesn't understand ansi control codes to move the cursor,
     # so it prints each update ona a new line. Better disable it for CI.
     disable_progress = disable_progress or config.no_ansi or config.quiet or os.getenv("CI") is not None
