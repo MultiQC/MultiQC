@@ -31,7 +31,7 @@ import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from multiqc import config, report
-from multiqc.core import plot_data_store, tmp_dir
+from multiqc.core import tmp_dir, warehouse
 from multiqc.core.log_and_rich import init_log, iterate_using_progress_bar
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.utils import check_plotly_version
@@ -435,7 +435,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         This function handles writing both the data and the plot config.
         """
         df = self.to_df()
-        plot_data_store.save_plot_data(self.anchor, df)
+        warehouse.save_plot_data(self.anchor, df)
 
     @classmethod
     def merge(

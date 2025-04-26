@@ -90,7 +90,13 @@ output_fn_name: str
 data_dir_name: str
 plots_dir_name: str
 data_format: str
-parquet_file_location: Optional[Union[str, Path]] = None
+parquet_path: Optional[str]
+iceberg_warehouse_location: Optional[str]
+iceberg_catalog_type: Optional[str]
+iceberg_catalog_name: str
+iceberg_table_name: str
+iceberg_catalog_location: Optional[str]
+iceberg_aws_region: Optional[str]
 force: bool
 verbose: bool
 no_ansi: bool

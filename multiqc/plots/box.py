@@ -10,7 +10,7 @@ import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.core.plot_data_store import save_plot_data
+from multiqc.core.warehouse import save_plot_data
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName

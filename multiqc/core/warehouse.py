@@ -4,6 +4,7 @@ This replaces the individual plot parquet files with a single file that contains
 It also stores all report metadata (modules, data sources, configs) to make reports fully reproducible.
 """
 
+import importlib
 import json
 import logging
 import os
@@ -12,7 +13,7 @@ from typing import Any, Dict, Optional, Set, Union
 
 import pandas as pd
 import pyarrow.parquet as pq  # type: ignore
-from cloudpathlib import CloudPath
+from cloudpathlib import AnyPath, CloudPath
 
 from multiqc import config, report
 from multiqc.core import tmp_dir
@@ -120,13 +121,110 @@ def get_report_metadata(file_path: Optional[Union[str, Path]] = None) -> Optiona
         return None
 
 
-def save_report_metadata() -> None:
+def finalize_parquet() -> pd.DataFrame:
+    parquet_file = tmp_dir.parquet_file()
+    assert parquet_file.exists(), f"Parquet file {parquet_file} does not exist"
+    df = pd.read_parquet(parquet_file)
+
+    df = _add_metadata_row(df)
+    # Write to file
+    os.makedirs(parquet_file.parent, exist_ok=True)
+    df.to_parquet(parquet_file, compression="gzip")
+    logger.debug(f"Saved report metadata to parquet file: {parquet_file}")
+
+    # Create an Iceberg table from the parquet file if requested
+    if config.iceberg_warehouse_location:
+        _create_iceberg_table(df)
+
+
+def get_catalog():
+    from pyiceberg.catalog import load_catalog
+
+    cat_location = AnyPath(config.iceberg_catalog_location)
+    if cat_location and isinstance(cat_location, CloudPath):
+        cat_uri = cat_location.as_uri()
+        cat_type = config.iceberg_catalog_type or "rest"
+
+        if cat_type == "hadoop":
+            return load_catalog(
+                config.iceberg_catalog_name,
+                type=cat_type,
+                warehouse=config.iceberg_warehouse_location,
+            )
+
+        elif cat_type == "glue":
+            return load_catalog(
+                config.iceberg_catalog_name,
+                type=cat_type,
+                warehouse=config.iceberg_warehouse_location,
+                region=config.iceberg_aws_region,
+            )
+
+        elif cat_type == "rest":
+            return load_catalog(
+                config.iceberg_catalog_name,
+                type=cat_type,
+                uri=cat_uri,
+                warehouse=config.iceberg_warehouse_location,
+            )
+
+        else:
+            raise ValueError(f"Unknown catalog type {cat_type!r}")
+
+    else:
+        uri = str(cat_location) if cat_location else f"sqlite:///{Path.home()}/.multiqc_iceberg.db"
+        return load_catalog(
+            config.iceberg_catalog_name,
+            type="sql",
+            uri=uri,
+            warehouse=config.iceberg_warehouse_location,
+        )
+
+
+def _create_iceberg_table(df: pd.DataFrame):
+    """
+    Create an Iceberg table from the parquet file if requested
+    """
+    if importlib.util.find_spec("pyiceberg") is None:
+        logger.warning(
+            "PyIceberg package not found. Install the optional dependency with: "
+            "pip install 'multiqc[iceberg]' to create Iceberg tables."
+        )
+        if config.strict:
+            raise ImportError(
+                "PyIceberg package not found. Install the optional dependency with: "
+                "pip install 'multiqc[iceberg]' to create Iceberg tables."
+            )
+        return
+
+    # To Arrow (fast no-copy for Pandas >= 2.0)
+    arrow_tbl = pa.Table.from_pandas(df, preserve_index=False)
+
+    cat = get_catalog()
+    table_identifier = config.iceberg_table_name
+
+    # Create namespace/table the first time we are called
+    if not cat.table_exists(table_identifier):
+        namespace, _ = table_identifier.split(".", 1)
+        cat.create_namespace(namespace)
+        cat.create_table(
+            identifier=table_identifier,
+            schema=arrow_tbl.schema,
+        )
+
+    # Load the table and append the new snapshot
+    table = cat.load_table(table_identifier)
+    table.append(arrow_tbl)  # fast-append commit
+
+    return table
+
+
+def _add_metadata_row(df: pd.DataFrame) -> pd.DataFrame:
     """
     Save all report metadata to the parquet file.
 
     This includes modules, data sources, creation date, config, and plot data.
     """
-    parquet_file = tmp_dir.parquet_file()
 
     # Prepare metadata row
     modules_data = []
@@ -207,31 +305,12 @@ def save_report_metadata() -> None:
         }
     )
 
-    # Update existing file or create new one
-    if parquet_file.exists():
-        try:
-            existing_df = pd.read_parquet(parquet_file)
+    # Remove any existing metadata
+    existing_df = df[df["anchor"] != "metadata"]
 
-            # Remove any existing metadata
-            existing_df = existing_df[existing_df["anchor"] != "metadata"]
-
-            # Append new metadata
-            merged_df = pd.concat([existing_df, metadata_df], ignore_index=True)
-
-            # Write to file
-            merged_df.to_parquet(parquet_file, compression="gzip")
-        except Exception as e:
-            logger.error(f"Error updating parquet file with metadata: {e}")
-            # If error, just write the metadata
-            metadata_df.to_parquet(parquet_file, compression="gzip")
-    else:
-        # Create directory if needed
-        os.makedirs(parquet_file.parent, exist_ok=True)
-
-        # Write to file
-        metadata_df.to_parquet(parquet_file, compression="gzip")
-
-    logger.debug("Saved report metadata to parquet file")
+    # Append new metadata
+    merged_df = pd.concat([existing_df, metadata_df], ignore_index=True)
+    return merged_df
 
 
 def _update_parquet(df: pd.DataFrame, anchor: Anchor) -> None:

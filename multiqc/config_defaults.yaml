@@ -39,7 +39,14 @@ output_fn_name: "multiqc_report.html"
 data_dir_name: "multiqc_data"
 plots_dir_name: "multiqc_plots"
 data_format: "tsv"
-parquet_file_location: null
+parquet_path: null
+iceberg_warehouse_location: null
+iceberg_create_table: false
+iceberg_catalog_type: null
+iceberg_catalog_name: "multiqc"
+iceberg_table_name: "multiqc"
+iceberg_catalog_location: null
+iceberg_aws_region: null
 force: false
 verbose: false
 no_ansi: false

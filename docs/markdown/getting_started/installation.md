@@ -152,6 +152,31 @@ your home directory with the `--user` parameter:
 pip install --user multiqc
 ```
 
+#### Optional dependencies
+
+MultiQC has a few optional dependencies for additional features:
+
+```bash
+# For S3 cloud storage support to write Parquet and Iceberg files
+pip install "multiqc[s3]"
+
+# For GCP cloud storage support to write Parquet and Iceberg files
+pip install "multiqc[gcp]"
+
+# For Azure cloud storage support to write Parquet and Iceberg files
+pip install "multiqc[azure]"
+
+# For Iceberg table support (for data lake integration)
+pip install "multiqc[iceberg]"
+```
+
+You can combine multiple optional dependencies:
+
+```bash
+# For both Iceberg and S3 support
+pip install "multiqc[iceberg,s3]"
+```
+
 #### Development version
 
 If you would like the development version, the command is:

@@ -10,27 +10,27 @@ dependencies = [
     "humanize",
     "importlib_metadata",
     "jinja2>=3.0.0",
-    "kaleido==0.2.1",     # for flat plot export
+    "kaleido==0.2.1", # for flat plot export
     "markdown",
     "numpy",
     "packaging",
     "requests",
-    "Pillow>=10",         # to add a logo into flat plots
+    "Pillow>=10", # to add a logo into flat plots
     "plotly>=5.18",
     "pyyaml>=4",
     "rich>=10",
     "rich-click",
-    "coloredlogs",        # logging in notebooks
+    "coloredlogs", # logging in notebooks
     "spectra>=0.0.10",
     "pydantic>=2.7.0",
     "typeguard",
-    "tqdm",               # progress bar in notebooks
+    "tqdm", # progress bar in notebooks
     "python-dotenv",
     "natsort",
     "tiktoken",
     "jsonschema",
-    "pandas",             # for parquet support
-    "pyarrow",            # for parquet support
+    "pandas", # for parquet support
+    "pyarrow", # for parquet support
     "cloudpathlib",
 ]
 requires-python = ">=3.8"
@@ -97,6 +97,9 @@ gcp = [
 ]
 azure = [
     "cloudpathlib[azure]",
+]
+iceberg = [
+    "pyiceberg[pandas]>=0.7.1",
 ]
 
 [project.urls]

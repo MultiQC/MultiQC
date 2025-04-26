@@ -11,7 +11,7 @@ import pandas as pd
 from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
-from multiqc.core.plot_data_store import parse_value
+from multiqc.core.warehouse import parse_value
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.types import Anchor, SampleName
 

@@ -53,10 +53,12 @@ def parquet_file():
     """
     from multiqc import config
 
-    if config.parquet_file_location:
-        return AnyPath(config.parquet_file_location)
+    if config.warehouse_location:
+        wh_path = AnyPath(config.warehouse_location)
+    else:
+        wh_path = AnyPath(data_tmp_dir())
 
-    return AnyPath(data_tmp_dir() / "multiqc.parquet")
+    return wh_path / "multiqc.parquet"
 
 
 def new_tmp_dir():

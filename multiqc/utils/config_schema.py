@@ -98,7 +98,14 @@ class MultiQCConfig(BaseModel):
     data_dir_name: Optional[str] = Field(None, description="Data directory name")
     plots_dir_name: Optional[str] = Field(None, description="Plots directory name")
     data_format: Optional[str] = Field(None, description="Data format for output files")
-    parquet_file_location: Optional[str] = Field(None, description="Parquet file location")
+    warehouse_location: Optional[str] = Field(
+        None, description="Warehouse location for parquet files. Default is the output directory."
+    )
+    create_iceberg_table: Optional[bool] = Field(None, description="Create an Iceberg table")
+    iceberg_table_name: Optional[str] = Field(None, description="Iceberg table name")
+    iceberg_catalog_location: Optional[str] = Field(
+        None, description="Iceberg catalog location. Default is ~/.multiqc_iceberg.db"
+    )
     force: Optional[bool] = Field(None, description="Overwrite existing reports")
     verbose: Optional[bool] = Field(None, description="Verbose output")
     no_ansi: Optional[bool] = Field(None, description="Disable ANSI output")

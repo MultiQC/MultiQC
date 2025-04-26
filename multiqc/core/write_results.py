@@ -1,6 +1,7 @@
 import base64
 import dataclasses
 import errno
+import importlib.util
 import io
 import logging
 import os
@@ -12,13 +13,17 @@ import time
 import traceback
 import uuid
 from pathlib import Path
-from typing import Optional, cast
+from typing import Optional, Union, cast
 
 import jinja2
+import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
+from cloudpathlib import AnyPath, CloudPath
 
 from multiqc import config, report
 from multiqc.base_module import Section
-from multiqc.core import log_and_rich, plot_data_store, plugin_hooks, tmp_dir
+from multiqc.core import log_and_rich, plugin_hooks, tmp_dir, warehouse
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.plots import table
@@ -410,7 +415,7 @@ def _write_data_files(data_dir: Path) -> None:
         shutil.copy2(log_and_rich.log_tmp_fn, report.data_tmp_dir())
 
     # Save metadata to parquet file
-    plot_data_store.save_report_metadata()
+    df = warehouse.finalize_parquet()
 
     shutil.copytree(
         report.data_tmp_dir(),

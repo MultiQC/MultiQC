@@ -47,7 +47,7 @@ from multiqc.core import ai, log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
-from multiqc.core import plot_data_store
+from multiqc.core import warehouse
 from multiqc.plots.plot import NormalizedPlotInputData, Plot
 from multiqc.plots.table_object import Cell, ColumnDict, InputRow, SampleName, ValueT
 from multiqc.plots.violin import ViolinPlot
@@ -226,7 +226,7 @@ def reset():
     saved_raw_data_keys = []
     saved_raw_data = dict()
 
-    plot_data_store.reset()
+    warehouse.reset()
 
     tmp_dir.new_tmp_dir()
 

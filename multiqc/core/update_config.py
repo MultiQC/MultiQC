@@ -34,7 +34,10 @@ class ClConfig(BaseModel):
     filename: Optional[str] = None
     make_data_dir: Optional[bool] = None
     data_format: Optional[str] = None
-    parquet_file_location: Optional[Union[str, Path]] = None
+    warehouse_location: Optional[Union[str, Path]] = None
+    create_iceberg_table: Optional[bool] = None
+    iceberg_table_name: Optional[str] = None
+    iceberg_catalog_location: Optional[Union[str, Path]] = None
     zip_data_dir: Optional[bool] = None
     force: Optional[bool] = None
     ignore_symlinks: Optional[bool] = None
@@ -157,8 +160,14 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.zip_data_dir = cfg.zip_data_dir
     if cfg.data_format is not None:
         config.data_format = cfg.data_format
-    if cfg.parquet_file_location is not None:
-        config.parquet_file_location = cfg.parquet_file_location
+    if cfg.warehouse_location is not None:
+        config.warehouse_location = cfg.warehouse_location
+    if cfg.create_iceberg_table is not None:
+        config.create_iceberg_table = cfg.create_iceberg_table
+    if cfg.iceberg_table_name is not None:
+        config.iceberg_table_name = cfg.iceberg_table_name
+    if cfg.iceberg_catalog_location is not None:
+        config.iceberg_catalog_location = cfg.iceberg_catalog_location
     if cfg.export_plots is not None:
         config.export_plots = cfg.export_plots
     if cfg.make_report is not None:

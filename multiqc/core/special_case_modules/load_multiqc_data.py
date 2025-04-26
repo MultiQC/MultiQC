@@ -15,7 +15,7 @@ import pandas as pd
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, Section
-from multiqc.core import plot_data_store
+from multiqc.core import warehouse
 from multiqc.plots.bargraph import BarPlot, BarPlotInputData
 from multiqc.plots.box import BoxPlot, BoxPlotInputData
 from multiqc.plots.heatmap import HeatmapNormalizedInputData, HeatmapPlot
@@ -86,7 +86,7 @@ class LoadMultiqcData(BaseMultiqcModule):
 
         try:
             # Extract metadata from parquet
-            metadata = plot_data_store.get_report_metadata(path)
+            metadata = warehouse.get_report_metadata(path)
             if metadata is None:
                 log.error(f"Failed to extract metadata from parquet file: {path}")
                 return

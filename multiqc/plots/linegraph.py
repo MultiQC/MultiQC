@@ -13,7 +13,7 @@ import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
 from multiqc import config, report
-from multiqc.core.plot_data_store import parse_value, save_plot_data
+from multiqc.core.warehouse import parse_value, save_plot_data
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,

@@ -105,6 +105,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--no-data-dir",
                 "--data-format",
                 "--parquet-location",
+                "--iceberg",
                 "--zip-data-dir",
                 "--no-report",
                 "--clean-up",
@@ -313,10 +314,30 @@ click.rich_click.OPTION_GROUPS = {
     help="Output parsed data in a different format.",
 )
 @click.option(
-    "--parquet-location",
-    "parquet_file_location",
+    "--warehouse",
+    "warehouse_location",
     type=str,
-    help="Specify the location to write the parquet file (can be a path or S3 bucket URI).",
+    help="Specify the location to write the parquet file and metadata (can be a path or S3 bucket URI). Default is the output directory.",
+)
+@click.option(
+    "--iceberg",
+    "--create-iceberg-table",
+    "create_iceberg_table",
+    is_flag=True,
+    default=None,
+    help="Create an Iceberg table from the data.",
+)
+@click.option(
+    "--iceberg-table-name",
+    "iceberg_table_name",
+    type=str,
+    help="Specify the name of the Iceberg table.",
+)
+@click.option(
+    "--iceberg-catalog",
+    "iceberg_catalog_location",
+    type=str,
+    help="Specify the catalog location. Default is ~/.multiqc_iceberg.db",
 )
 @click.option(
     "-z",

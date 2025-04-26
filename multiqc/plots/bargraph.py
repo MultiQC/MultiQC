@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.exceptions import RunError
-from multiqc.core.plot_data_store import save_plot_data
+from multiqc.core.warehouse import save_plot_data
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,
