@@ -46,7 +46,7 @@ def plots_tmp_dir(create=True) -> Path:
     return path
 
 
-def parquet_file() -> Union[CloudPath, Path]:
+def parquet_file():
     """
     Returns the path to the combined parquet file that contains all plot data.
     If config.parquet_file_location is set, it will use that location instead of the default.
@@ -56,7 +56,7 @@ def parquet_file() -> Union[CloudPath, Path]:
     if config.parquet_file_location:
         return AnyPath(config.parquet_file_location)
 
-    return AnyPath(data_tmp_dir()) / "multiqc.parquet"
+    return AnyPath(data_tmp_dir() / "multiqc.parquet")
 
 
 def new_tmp_dir():
