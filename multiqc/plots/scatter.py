@@ -2,6 +2,7 @@
 
 import copy
 import logging
+import math
 import stat
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
@@ -68,13 +69,19 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                     # Add all point data
                     for key, val in point.items():
                         if key == "x":
-                            record["x"] = str(val)
+                            # Convert NaN values to string marker for safe serialization
+                            x_val = "__NAN__MARKER__" if isinstance(val, float) and math.isnan(val) else str(val)
+                            record["x"] = x_val
                             record["x_type"] = type(val).__name__
-                        if key == "y":
-                            record["y"] = str(val)
+                        elif key == "y":
+                            # Convert NaN values to string marker for safe serialization
+                            y_val = "__NAN__MARKER__" if isinstance(val, float) and math.isnan(val) else str(val)
+                            record["y"] = y_val
                             record["y_type"] = type(val).__name__
                         else:
-                            record[f"point_{key}"] = str(val)
+                            # For other values, also handle NaN
+                            point_val = "__NAN__MARKER__" if isinstance(val, float) and math.isnan(val) else str(val)
+                            record[f"point_{key}"] = point_val
                     records.append(record)
 
         df = pd.DataFrame(records)

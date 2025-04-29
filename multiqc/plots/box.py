@@ -250,8 +250,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
         # Add timestamp and run_id to new data
         new_df["timestamp"] = datetime.now().isoformat()
-        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
-            new_df["run_id"] = config.kwargs["run_id"]
+        new_df["run_id"] = config.title
 
         old_df = old_data.to_df()
 
@@ -262,24 +261,16 @@ class BoxPlotInputData(NormalizedPlotInputData):
             if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
                 old_df["run_id"] = "previous_run"  # Default value for old data without run_id
 
-            # Make sure old data has timestamp
-            if "timestamp" not in old_df.columns:
-                old_df["timestamp"] = datetime.now().isoformat()
-
             # Combine the dataframes, keeping all rows
             merged_df = pd.concat([old_df, new_df], ignore_index=True)
 
             # For duplicates (same sample, dataset, value_idx), keep the latest version
-            if "timestamp" in merged_df.columns:
-                # Sort by timestamp (newest last)
-                merged_df.sort_values("timestamp", inplace=True)
+            # Sort by timestamp (newest last)
+            merged_df.sort_values("timestamp", inplace=True)
 
-                # Group by the key identifiers and keep the last entry (newest)
-                dedupe_columns = ["dataset_idx", "sample_name", "value_idx"]
-                if "run_id" in merged_df.columns:
-                    dedupe_columns.append("run_id")
-
-                merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
+            # Group by the key identifiers and keep the last entry (newest)
+            dedupe_columns = ["dataset_idx", "sample_name", "value_idx", "run_id"]
+            merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
 
         # Save the merged data for future reference
         save_plot_data(new_data.anchor, merged_df)

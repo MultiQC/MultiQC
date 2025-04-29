@@ -1,10 +1,14 @@
+"""
+Violin plot module. Also handles scatter plots and tables.
+"""
+
 import copy
 import json
 import logging
 import math
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, ClassVar, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -108,6 +112,56 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
         # Create DataFrame with appropriate dtypes
         df = pd.DataFrame(records, dtype=object).astype(column_types)
+        self.finalize_df(df)
+        return df
+
+    def to_wide_df(self) -> pd.DataFrame:
+        """
+        Save plot data to a parquet file using a tabular representation where metrics are columns
+        and samples are rows, optimized for cross-run analysis. Used for parquet data dump.
+        """
+        if self.is_empty() or not self.pconfig.rows_are_samples:
+            return pd.DataFrame()
+
+        # Get ordered headers first
+        ordered_headers = list(self.dt.get_headers_in_order())
+
+        # Now transform directly to wide format with metrics as columns
+        wide_records = []
+
+        # Process each section and its rows
+        for section_idx, section in enumerate(self.dt.section_by_id.values()):
+            section_key = list(self.dt.section_by_id.keys())[section_idx]
+
+            # Process each sample in this section
+            for sample_name, group_rows in section.rows_by_sgroup.items():
+                for row in group_rows:
+                    # Create base record with sample information
+                    wide_record: Dict[str, Any] = {
+                        "type": "table_row",
+                        "section_key": str(section_key),
+                        "sample_name": str(sample_name),
+                    }
+
+                    # Process each metric/column in the order from get_headers_in_order()
+                    for _, metric_name, _ in ordered_headers:
+                        if metric_name not in row.data:
+                            continue
+
+                        cell = row.data[metric_name]
+                        # Skip empty values
+                        if cell is None or cell.raw is None or cell.fmt == "":
+                            continue
+
+                        # Store both the value and its type for proper reconstruction
+                        wide_record[f"col_{metric_name}"] = cell.mod
+
+                    # Only add records that have at least one metric
+                    if any(k.startswith("col_") for k in wide_record.keys()):
+                        wide_records.append(wide_record)
+
+        # Create the wide format DataFrame
+        df = pd.DataFrame(wide_records)
         self.finalize_df(df)
         return df
 
@@ -282,8 +336,8 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
     @classmethod
     def merge(cls, old_data: "ViolinPlotInputData", new_data: "ViolinPlotInputData") -> "ViolinPlotInputData":
         """
-        Merge normalized data from old run and new run, leveraging similar
-        tabular representation approach as used for bar and line graphs.
+        Merge normalized data from old run and new run, using the wide format representation
+        with metrics as columns.
         """
         # Create dataframe for new data
         if new_data.is_empty():
@@ -291,36 +345,21 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
         old_df = old_data.to_df()
         new_df = new_data.to_df()
-        # Add timestamp and run_id to new data
-        new_df["timestamp"] = datetime.now().isoformat()
-        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
-            new_df["run_id"] = config.kwargs["run_id"]
 
         # If we have both old and new data, merge them
         merged_df = None
         if old_df is not None and not old_df.empty:
-            # Make sure old data has run_id
-            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
-                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
-
-            # Make sure old data has timestamp
-            if "timestamp" not in old_df.columns:
-                old_df["timestamp"] = datetime.now().isoformat()
-
             # Combine the dataframes, keeping all rows
             merged_df = pd.concat([old_df, new_df], ignore_index=True)
 
             # For duplicates (same sample, metric, dataset, section), keep the latest version
-            if "timestamp" in merged_df.columns:
-                # Sort by timestamp (newest last)
-                merged_df.sort_values("timestamp", inplace=True)
+            # Sort by timestamp (newest last)
+            merged_df.sort_values("timestamp", inplace=True)
 
-                # Group by the key identifiers and keep the last entry (newest)
-                dedupe_columns = ["dt_anchor", "section_key", "sample_name", "metric_name"]
-                if "run_id" in merged_df.columns:
-                    dedupe_columns.append("run_id")
+            # Group by the key identifiers and keep the last entry (newest)
+            dedupe_columns = ["dt_anchor", "section_key", "sample_name", "run_id"]
 
-                merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
+            merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
         else:
             merged_df = new_df
 

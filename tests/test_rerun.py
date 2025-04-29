@@ -4,10 +4,9 @@ import json
 import multiqc
 from multiqc.core.update_config import ClConfig
 from multiqc.plots.bargraph import BarPlotConfig, BarPlotInputData, CatConf
-from multiqc.plots.box import BoxPlotConfig, BoxPlotInputData
 from multiqc.plots.linegraph import LinePlotConfig, LinePlotNormalizedInputData, Series
 from multiqc.plots.plot import PlotType, plot_anchor
-from multiqc.types import Anchor, SampleName
+from multiqc.types import SampleName
 
 
 def test_rerun_parquet(data_dir, tmp_path):

@@ -2,6 +2,7 @@
 
 import io
 import logging
+import math
 import os
 import random
 from datetime import datetime
@@ -325,6 +326,10 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             dataset_label = self.extract_data_label(ds_idx)
             for series in dataset:
                 for x, y in series.pairs:
+                    # Convert NaN values to string marker for safe serialization
+                    x_val = "__NAN__MARKER__" if isinstance(x, float) and math.isnan(x) else str(x)
+                    y_val = "__NAN__MARKER__" if isinstance(y, float) and math.isnan(y) else str(y)
+
                     record = {
                         "anchor": self.anchor,
                         "dataset_idx": ds_idx,
@@ -332,8 +337,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                         "sample_name": series.name,
                         # values can be be different types (int, float, str...), especially across
                         # plots. parquet requires values of the same type. so we cast them to str
-                        "x_val": str(x),
-                        "y_val": str(y),
+                        "x_val": x_val,
+                        "y_val": y_val,
                         "x_val_type": type(x).__name__,
                         "y_val_type": type(y).__name__,
                         "series_color": series.color,
