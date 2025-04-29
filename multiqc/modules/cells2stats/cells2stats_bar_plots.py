@@ -149,7 +149,7 @@ def plot_controls(c2s_run_data):
                 batch_name = batch_data.get("BatchName", "")
                 if batch_name != "" and not batch_name.startswith("CP"):
                     for control_target in batch_data.get("ControlTargets", []):
-                        control_name = control_target.get("TargetName", "")
+                        control_name = control_target.get("ControlType", "")
                         if control_name != "":
                             controls.add(control_name)
     controls = sorted(controls)[:8]
@@ -164,7 +164,7 @@ def plot_controls(c2s_run_data):
                 if well_location != "":
                     for batch_name in batch_names:
                         batch_data = find_entry(well_data.get("Batches", []), "BatchName", batch_name, {})
-                        control_data = find_entry(batch_data.get("ControlTargets", []), "TargetName", control, {})
+                        control_data = find_entry(batch_data.get("ControlTargets", []), "ControlType", control, {})
                         val = json_decode_float(control_data.get("AssignedCountPerMM2", float("nan")))
                         if not is_nan(val):
                             control_content.setdefault(f"{run_name} {well_location}",{})[batch_name] = val
