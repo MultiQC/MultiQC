@@ -41,7 +41,6 @@ from multiqc.interactive import (  # noqa: E402
     parse_logs,
     reset,
     write_report,
-    parse_data_json,
 )
 from multiqc.multiqc import run  # noqa: E402
 from multiqc.plots.plot import PConfig, Plot  # noqa: E402
@@ -70,5 +69,4 @@ __all__ = [
     "BaseMultiqcModule",
     "load_config",
     "ClConfig",
-    "parse_data_json",
 ]
