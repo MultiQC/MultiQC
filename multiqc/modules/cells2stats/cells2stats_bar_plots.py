@@ -53,7 +53,7 @@ def plot_cell_assignment(c2s_run_data):
     plot_content = [get_total_density(c2s_run_data), get_batch_density(c2s_run_data), get_total_counts(c2s_run_data), get_batch_counts(c2s_run_data),]
     pconfig = {
         "data_labels": [
-            {"name": "Total Density", "ylab": "Assigned Counts K /  mm2"},
+            {"name": "Total Density", "ylab": "Assigned Counts K / mm2"},
             {"name": "Batch Density", "ylab": "Assigned Counts K / mm2"},
             {"name": "Total Counts", "ylab": "Average Assigned Counts / Cell"},
             {"name": "Batch Counts", "ylab": "Average Assigned Counts / Cell"},

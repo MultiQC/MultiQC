@@ -75,13 +75,13 @@ def tabulate_wells(c2s_run_data):
     }
     headers["total_density"] = {
         "title": "Assigned Counts K / mm2",
-        "description": "Median cell diameter for cells in the well",
+        "description": "Total density of assigned counts per mm2 of cell area across all batches",
         "min": 0,
         "scale": "GnBu"
     }
     headers["total_count"] = {
         "title": "Assigned Counts / Cell",
-        "description": "Median cell diameter for cells in the well",
+        "description": "Total average counts per cell across all batches",
         "min": 0,
         "scale": "GnBu"
     }
