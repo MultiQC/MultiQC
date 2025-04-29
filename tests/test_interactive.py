@@ -89,7 +89,7 @@ def test_custom_module(tmp_path):
     multiqc.write_report(force=True, output_dir=str(tmp_path), make_data_dir=False, make_report=False)
 
 
-def test_parse_data_json(tmp_path):
+def test_parse_parquet(tmp_path):
     """
     Verify parse_data_json correctly loads data and list functions work
     """
@@ -119,19 +119,19 @@ def test_parse_data_json(tmp_path):
     assert multiqc.list_samples() == []
 
     # Load data from the JSON file
-    multiqc.parse_data_json(tmp_path / "multiqc_data")
+    multiqc.parse_logs(tmp_path / "multiqc_data" / "multiqc.parquet")
 
     # Verify data was loaded correctly
     assert "sample1" in multiqc.list_samples()
     assert "sample2" in multiqc.list_samples()
-    # assert "test_module" in multiqc.list_modules()
+    assert "test_module" in multiqc.list_modules()
 
-    # # Verify plots were loaded
-    # plots = multiqc.list_plots()
-    # assert "test_module" in plots
-    # assert "Test Plot Section" in plots["test_module"] or any(
-    #     isinstance(item, dict) and "Test Plot Section" in item for item in plots["test_module"]
-    # )
+    # Verify plots were loaded
+    plots = multiqc.list_plots()
+    assert "test_module" in plots
+    assert "Test Plot Section" in plots["test_module"] or any(
+        isinstance(item, dict) and "Test Plot Section" in item for item in plots["test_module"]
+    )
 
 
 def test_software_versions_section(data_dir, tmp_path, capsys):
