@@ -400,6 +400,9 @@ class Dataset(BaseDataset):
     show_table_by_default: bool
     is_downsampled: bool
 
+    def samples_names(self) -> List[SampleName]:
+        return self.all_samples
+
     @staticmethod
     def values_and_headers_from_dt(
         dt: DataTable,
@@ -784,7 +787,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     def samples_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         for ds in self.datasets:
-            names.extend(SampleName(s) for s in ds.all_samples)
+            names.extend(ds.samples_names())
         return names
 
     @staticmethod

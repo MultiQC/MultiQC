@@ -3,11 +3,12 @@ This module provides functions useful to interact with MultiQC in an interactive
 Python environment, such as Jupyter notebooks.
 """
 
-import json
 import logging
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
+
+from numpy import isin
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
@@ -106,45 +107,6 @@ def parse_logs(
         logger.warning(e)
 
 
-def parse_data_json(path: Union[str, Path]):
-    """
-    Try find multiqc_data.json in the given directory, and load it into the report.
-
-    @param path: Path to the directory containing multiqc_data.json or the path to the file itself.
-    """
-    check_version(parse_data_json.__name__)
-
-    json_path_found = False
-    json_path: Path
-    if str(path).endswith(".json"):
-        json_path = Path(path)
-        json_path_found = True
-    else:
-        json_path = Path(path) / "multiqc_data.json"
-        if json_path.exists():
-            json_path_found = True
-
-    if not json_path_found:
-        logger.error(f"multiqc_data.json not found in {path}")
-        return
-
-    logger.info(f"Loading data from {json_path}")
-    try:
-        with json_path.open("r") as f:
-            data = json.load(f)
-
-        for mod, sections in data["report_data_sources"].items():
-            logger.info(f"Loaded module {mod}")
-            for section, sources in sections.items():
-                for sname, source in sources.items():
-                    report.data_sources[mod][section][sname] = source
-        for id, plot_dump in data["report_plot_data"].items():
-            logger.info(f"Loaded plot {id}")
-            report.plot_data[id] = plot_dump
-    except (json.JSONDecodeError, KeyError) as e:
-        logger.error(f"Error loading data from multiqc_data.json: {e}")
-
-
 def list_data_sources() -> List[str]:
     """
     Return a list of the data sources that have been loaded.
@@ -176,10 +138,22 @@ def list_samples() -> List[str]:
     """
     samples = set()
 
-    for mod, sections in report.data_sources.items():
-        for section, sources in sections.items():
-            for sname, source in sources.items():
-                samples.add(sname)
+    for _, plot in report.plot_by_id.items():
+        if isinstance(plot, Plot):
+            for ds in plot.datasets:
+                samples |= set(ds.samples_names())
+
+    # Also add samples from report.plot_data
+    for plot_id, plot_dump in report.plot_data.items():
+        if isinstance(plot_dump, dict):
+            for ds in plot_dump.get("datasets", []):
+                samples |= set(ds.get("all_samples", []))
+
+    # And from general_stats_data
+    for section_key, rows_by_group in report.general_stats_data.items():
+        for s, rows in rows_by_group.items():
+            for row in rows:
+                samples.add(row.sample)
 
     return sorted(samples)
 
