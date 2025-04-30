@@ -11,6 +11,7 @@ from re import Pattern
 from typing import Any, Dict, List, Optional, Set
 
 import pandas as pd
+import pyarrow as pa
 from pydantic import ValidationError  # type: ignore
 
 from multiqc import config, report
@@ -172,6 +173,8 @@ def save_report_metadata() -> None:
         }
     )
 
+    df = metadata_df
+
     # Update existing file or create new one
     if parquet_file.exists():
         try:
@@ -182,22 +185,27 @@ def save_report_metadata() -> None:
 
             # Append new metadata
             merged_df = pd.concat([existing_df, metadata_df], ignore_index=True)
-
-            # Write to file
-            merged_df.to_parquet(parquet_file, compression="gzip")
         except Exception as e:
             logger.error(f"Error updating parquet file with metadata: {e}")
             if config.strict:
                 raise e
-            # If error, just write the metadata
-            metadata_df.to_parquet(parquet_file, compression="gzip")
+        else:
+            df = merged_df
     else:
         # Create directory if needed
         os.makedirs(parquet_file.parent, exist_ok=True)
 
-        # Write to file
-        metadata_df.to_parquet(parquet_file, compression="gzip")
+    # Fix for Iceberg. Iceberg never keeps an arbitrary zone offset in the data –
+    # a value that has a zone is normalised to UTC, and the zone itself is discarded.
+    df["creation_date"] = (
+        pd.to_datetime(df["creation_date"], utc=True)
+        .dt.floor("us")  # tz-aware (+02:00)
+        .dt.tz_localize(None)  # …but drop the zone
+        .astype("datetime64[us]")  # make it explicit
+    )
 
+    # Write to file
+    df.to_parquet(parquet_file, compression="gzip")
     logger.debug(f"Saved parquet file {parquet_file}")
 
 
