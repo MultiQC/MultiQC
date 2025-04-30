@@ -1,13 +1,13 @@
 import difflib
 import json
+from datetime import datetime, timedelta
 
 import multiqc
 from multiqc.core.update_config import ClConfig
 from multiqc.plots.bargraph import BarPlotConfig, BarPlotInputData, CatConf
-from multiqc.plots.box import BoxPlotConfig, BoxPlotInputData
 from multiqc.plots.linegraph import LinePlotConfig, LinePlotNormalizedInputData, Series
 from multiqc.plots.plot import PlotType, plot_anchor
-from multiqc.types import Anchor, SampleName
+from multiqc.types import SampleName
 
 
 def test_rerun_parquet(data_dir, tmp_path):
@@ -50,14 +50,20 @@ def test_rerun_and_combine(data_dir, tmp_path):
     """
     # Run MultiQC on inputs A
     run_a_dir = tmp_path / "run_a"
-    multiqc.run(data_dir / "modules/fastp/single_end", cfg=ClConfig(output_dir=run_a_dir))
+    multiqc.run(
+        data_dir / "modules/fastp/single_end",
+        cfg=ClConfig(
+            output_dir=run_a_dir,
+            strict=True,
+        ),
+    )
 
     # Run MultiQC on outputs of A + inputs B
     run_combined_dir = tmp_path / "run_combined"
     multiqc.run(
         data_dir / "modules/fastp/SAMPLE.json",
         run_a_dir / "multiqc_data" / "multiqc.parquet",
-        cfg=ClConfig(output_dir=run_combined_dir),
+        cfg=ClConfig(output_dir=run_combined_dir, strict=True),
     )
 
     with open(run_combined_dir / "multiqc_data" / "multiqc_data.json") as f:
@@ -68,11 +74,21 @@ def test_rerun_and_combine(data_dir, tmp_path):
     multiqc.run(
         data_dir / "modules/fastp/single_end",
         data_dir / "modules/fastp/SAMPLE.json",
-        cfg=ClConfig(output_dir=run_normal_dir),
+        cfg=ClConfig(output_dir=run_normal_dir, strict=True),
     )
 
     with open(run_normal_dir / "multiqc_data" / "multiqc_data.json") as f:
         report_normal_data = json.load(f)
+
+    # # Write report plot data to separate files for inspection
+    # combined_plot_data_file = tmp_path / "combined_plot_data.json"
+    # normal_plot_data_file = tmp_path / "normal_plot_data.json"
+    # with open(combined_plot_data_file, "w") as f:
+    #     json.dump(report_combined_data["report_plot_data"], f, indent=4)
+    # with open(normal_plot_data_file, "w") as f:
+    #     json.dump(report_normal_data["report_plot_data"], f, indent=4)
+    # print(f"\nCombined plot data written to: {combined_plot_data_file}")
+    # print(f"Normal plot data written to: {normal_plot_data_file}")
 
     # Compare only the relevant fields, not the entire report
     # The 'config_analysis_dir_abs' will be different between runs
@@ -107,6 +123,7 @@ def test_merge_linegraph():
         data=[dataset1],
         pconfig=pconfig,
         sample_names=[SampleName("Sample1"), SampleName("Sample2")],
+        creation_date=datetime.now() - timedelta(days=1),
     )
 
     # Create second input data - two samples: "Sample1" (overlapping) and "Sample3" (new)
@@ -120,6 +137,7 @@ def test_merge_linegraph():
         data=[dataset2],
         pconfig=pconfig,
         sample_names=[SampleName("Sample1"), SampleName("Sample3")],
+        creation_date=datetime.now(),
     )
 
     # Merge the two inputs
@@ -184,6 +202,7 @@ def test_merge_bargraph():
         data=[dataset1],
         cats=[cats1],
         pconfig=pconfig,
+        creation_date=datetime.now() - timedelta(days=1),
     )
 
     # Create second input data - two samples: "Sample1" (overlapping) and "Sample3" (new)
@@ -204,6 +223,7 @@ def test_merge_bargraph():
         data=[dataset2],
         cats=[cats2],
         pconfig=pconfig,
+        creation_date=datetime.now(),
     )
 
     # Merge the two inputs
