@@ -8,7 +8,7 @@ description: Importing MultiQC as a library in scripts and notebooks
 Even though the primary way to run MultiQC is as a command line, it can also be imported
 like a Python module in order to build the report interactively,
 such as in custom Python scripts or in a Jupyter notebook environment
-(See an [example notebook](https://multiqc.info/example-reports/jupyter/)).
+(See an [example notebook](https://seqera.io/examples/jupyter/notebook.html)).
 
 MultiQC provides a set of commands to iteratively parse logs and add sections to a report.
 All of them are available via importing MultiQC as a module:
