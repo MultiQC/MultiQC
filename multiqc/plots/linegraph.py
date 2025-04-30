@@ -2,10 +2,9 @@
 
 import io
 import logging
+import math
 import os
 import random
-from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
 
 import pandas as pd
@@ -124,6 +123,9 @@ class LinePlotConfig(PConfig):
 
 class Dataset(BaseDataset, Generic[KeyT, ValT]):
     lines: List[Series[KeyT, ValT]]
+
+    def sample_names(self) -> List[SampleName]:
+        return [SampleName(line.name) for line in self.lines]
 
     def get_x_range(self) -> Tuple[Optional[KeyT], Optional[KeyT]]:
         if not self.lines:
@@ -325,15 +327,18 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             dataset_label = self.extract_data_label(ds_idx)
             for series in dataset:
                 for x, y in series.pairs:
+                    # Convert NaN values to string marker for safe serialization
+                    x_val = "__NAN__MARKER__" if isinstance(x, float) and math.isnan(x) else str(x)
+                    y_val = "__NAN__MARKER__" if isinstance(y, float) and math.isnan(y) else str(y)
+
                     record = {
-                        "anchor": self.anchor,
                         "dataset_idx": ds_idx,
                         "dataset_label": dataset_label,
                         "sample_name": series.name,
                         # values can be be different types (int, float, str...), especially across
                         # plots. parquet requires values of the same type. so we cast them to str
-                        "x_val": str(x),
-                        "y_val": str(y),
+                        "x_val": x_val,
+                        "y_val": y_val,
                         "x_val_type": type(x).__name__,
                         "y_val_type": type(y).__name__,
                         "series_color": series.color,
@@ -346,15 +351,14 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
         # Create DataFrame from records
         df = pd.DataFrame(records)
-        self.finalize_df(df)
-        return df
+        return self.finalize_df(df)
 
     @classmethod
     def from_df(
         cls, df: pd.DataFrame, pconfig: Union[Dict, LinePlotConfig], anchor: Anchor
     ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
         pconf: LinePlotConfig
-        if df.empty:
+        if cls.df_is_empty(df):
             pconf = (
                 pconfig
                 if isinstance(pconfig, LinePlotConfig)
@@ -366,6 +370,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                 data=[],
                 pconfig=pconf,
                 sample_names=[],
+                creation_date=cls.creation_date_from_df(df),
             )
         pconf = cast(LinePlotConfig, LinePlotConfig.from_df(df))
 
@@ -436,6 +441,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             data=datasets,
             pconfig=pconf,
             sample_names=sample_names,
+            creation_date=cls.creation_date_from_df(df),
         )
 
     @staticmethod
@@ -492,6 +498,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             data=datasets,
             pconfig=pconf,
             sample_names=sample_names,
+            creation_date=report.creation_date,
         )
 
     @classmethod
@@ -540,7 +547,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
     datasets: List[Dataset[KeyT, ValT]]
     sample_names: List[SampleName]
 
-    def samples_names(self) -> List[SampleName]:
+    def all_sample_names(self) -> List[SampleName]:
         return self.sample_names
 
     def _plot_ai_header(self) -> str:

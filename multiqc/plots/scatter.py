@@ -2,6 +2,7 @@
 
 import copy
 import logging
+import math
 import stat
 from collections import defaultdict
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
@@ -58,7 +59,6 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
                 for point_idx, point in enumerate(points):
                     record = {
-                        "anchor": self.anchor,
                         "dataset_idx": ds_idx,
                         "dataset_label": dataset_label,
                         "sample_name": sample_name,
@@ -68,18 +68,23 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                     # Add all point data
                     for key, val in point.items():
                         if key == "x":
-                            record["x"] = str(val)
+                            # Convert NaN values to string marker for safe serialization
+                            x_val = "__NAN__MARKER__" if isinstance(val, float) and math.isnan(val) else str(val)
+                            record["x"] = x_val
                             record["x_type"] = type(val).__name__
-                        if key == "y":
-                            record["y"] = str(val)
+                        elif key == "y":
+                            # Convert NaN values to string marker for safe serialization
+                            y_val = "__NAN__MARKER__" if isinstance(val, float) and math.isnan(val) else str(val)
+                            record["y"] = y_val
                             record["y_type"] = type(val).__name__
                         else:
-                            record[f"point_{key}"] = str(val)
+                            # For other values, also handle NaN
+                            point_val = "__NAN__MARKER__" if isinstance(val, float) and math.isnan(val) else str(val)
+                            record[f"point_{key}"] = point_val
                     records.append(record)
 
         df = pd.DataFrame(records)
-        self.finalize_df(df)
-        return df
+        return self.finalize_df(df)
 
     @staticmethod
     def create(
@@ -97,6 +102,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             plot_type=PlotType.SCATTER,
             datasets=data,
             pconfig=pconf,
+            creation_date=report.creation_date,
         )
 
     @classmethod
@@ -183,11 +189,12 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
             merged_pconf.data_labels = merged_data_labels
 
-            return ScatterNormalizedInputData(
+            return cls(
                 plot_type=PlotType.SCATTER,
                 anchor=new_data.anchor,
                 datasets=merged_datasets,
                 pconfig=merged_pconf,
+                creation_date=report.creation_date,
             )
         else:
             # If no data labels, preserve old behavior (return new data)
@@ -195,11 +202,12 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             if old_data.pconfig.extra_series and new_data.pconfig.extra_series is None:
                 merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
                 merged_pconf.extra_series = old_data.pconfig.extra_series
-                return ScatterNormalizedInputData(
+                return cls(
                     plot_type=PlotType.SCATTER,
                     anchor=new_data.anchor,
                     datasets=new_data.datasets,
                     pconfig=merged_pconf,
+                    creation_date=report.creation_date,
                 )
             return new_data
 
@@ -221,6 +229,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                 datasets=[],
                 pconfig=pconf,
                 plot_type=PlotType.SCATTER,
+                creation_date=cls.creation_date_from_df(df),
             )
 
         pconf = cast(ScatterConfig, ScatterConfig.from_df(df))
@@ -260,6 +269,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             plot_type=PlotType.SCATTER,
             datasets=datasets,
             pconfig=pconf,
+            creation_date=cls.creation_date_from_df(df),
         )
 
 
@@ -283,6 +293,11 @@ def plot(
 
 class Dataset(BaseDataset):
     points: List[PointT]
+
+    def sample_names(self) -> List[SampleName]:
+        return [
+            SampleName(point["name"]) for point in self.points if "name" in point and isinstance(point["name"], str)
+        ]
 
     @staticmethod
     def create(
