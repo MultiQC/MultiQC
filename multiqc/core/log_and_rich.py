@@ -45,11 +45,13 @@ def init_log(log_to_file: bool = False):
     # Remove log handlers left from previous calls to multiqc.run. Makes the function idempotent
     logger.handlers.clear()
 
+    # Global level should be the most verbose across all handlers (in our case, file handler is always DEBUG)
+    logger.setLevel(logging.DEBUG)
+
     # Console log level
     log_level = "DEBUG" if config.verbose else "INFO"
     if config.quiet:
         log_level = "WARNING"
-    logger.setLevel(log_level)
 
     # Remove DEBUG level for the PIL.PngImagePlugin and other third-party dependency loggers
     logging.getLogger("PIL").setLevel(logging.INFO)

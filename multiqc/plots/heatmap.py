@@ -115,13 +115,14 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
                 if isinstance(pconfig, HeatmapConfig)
                 else cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
             )
-            return HeatmapNormalizedInputData(
+            return cls(
                 anchor=anchor,
                 rows=[],
                 xcats=[],
                 ycats=[],
                 pconfig=pconf,
                 plot_type=PlotType.HEATMAP,
+                creation_date=cls.creation_date_from_df(df),
             )
 
         pconf = cast(HeatmapConfig, HeatmapConfig.from_df(df))
@@ -150,13 +151,14 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
 
         cls.data_labels_from_df(df, pconf)
 
-        return HeatmapNormalizedInputData(
+        return cls(
             anchor=anchor,
             rows=rows,  # type: ignore
             xcats=xcats,
             ycats=ycats,
             pconfig=pconf,
             plot_type=PlotType.HEATMAP,
+            creation_date=cls.creation_date_from_df(df),
         )
 
     @classmethod
@@ -182,6 +184,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
             ycats=new_data.ycats,
             pconfig=new_data.pconfig,
             plot_type=PlotType.HEATMAP,
+            creation_date=report.creation_date,
         )
 
     @staticmethod
@@ -237,6 +240,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
             xcats=list(xcats),
             ycats=list(ycats),
             pconfig=pconf,
+            creation_date=report.creation_date,
         )
 
 
@@ -301,6 +305,14 @@ class Dataset(BaseDataset):
     ycats_clustered: Optional[Sequence[str]] = None
     xcats_samples: bool = True
     ycats_samples: bool = True
+
+    def sample_names(self) -> List[SampleName]:
+        snames: List[SampleName] = []
+        if self.xcats_samples:
+            snames.extend(SampleName(cat) for cat in self.xcats)
+        if self.ycats_samples:
+            snames.extend(SampleName(cat) for cat in self.ycats)
+        return snames
 
     @staticmethod
     def create(
@@ -411,7 +423,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     max: Optional[float] = None
     cluster_switch_clustered_active: bool = False
 
-    def samples_names(self) -> List[SampleName]:
+    def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         if self.xcats_samples:
             for ds in self.datasets:

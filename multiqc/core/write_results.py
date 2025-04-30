@@ -129,6 +129,11 @@ def write_results() -> None:
     if paths.report_path:
         logger.debug(f"Report HTML written to {paths.report_path}")
 
+    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
+    # that goes beyond this write_results run.
+    if log_and_rich.log_tmp_fn and paths.data_dir:
+        shutil.copy2(log_and_rich.log_tmp_fn, str(paths.data_dir))
+
 
 def _maybe_relative_path(path: Path) -> Path:
     """
@@ -403,11 +408,6 @@ def _write_data_files(data_dir: Path) -> None:
 
     # Modules have run, so data directory should be complete by now. Move its contents.
     logger.debug(f"Moving data file from '{report.data_tmp_dir()}' to '{data_dir}'")
-
-    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
-    # that goes beyond this write_results run.
-    if log_and_rich.log_tmp_fn:
-        shutil.copy2(log_and_rich.log_tmp_fn, report.data_tmp_dir())
 
     # Save metadata to parquet file
     plot_data_store.save_report_metadata()

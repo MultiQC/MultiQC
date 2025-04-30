@@ -1276,6 +1276,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "FastQC: Top overrepresented sequences",
                     "col1_header": "Overrepresented sequence",
                     "sort_rows": False,
+                    "rows_are_samples": False,
                 },
             ),
         )

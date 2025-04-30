@@ -8,7 +8,7 @@ import platform
 import random
 import re
 import subprocess
-import threading
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import (
@@ -18,7 +18,6 @@ from typing import (
     List,
     Mapping,
     Optional,
-    Set,
     Tuple,
     Type,
     TypeVar,
@@ -178,11 +177,8 @@ class PConfig(ValidatedConfig):
         """
         Extract pconfig from dataframe and populate pconfig.data_labels
         """
-        if "_pconfig" in df.columns:
-            d = json.loads(df["_pconfig"].iloc[0])
-            return cls(path_in_cfg=(), **d)
-        else:
-            return cls()
+        d = json.loads(df["pconfig"].iloc[0])
+        return cls(path_in_cfg=(), **d)
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
         path_in_cfg = path_in_cfg or ()
@@ -252,7 +248,7 @@ class BaseDataset(BaseModel):
     pct_range: Dict[str, Any]
     n_samples: int
 
-    def samples_names(self) -> List[SampleName]:
+    def sample_names(self) -> List[SampleName]:
         raise NotImplementedError
 
     def create_figure(
@@ -321,13 +317,23 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
     anchor: Anchor
     plot_type: PlotType
     pconfig: PConfigT
+    creation_date: datetime
 
     def is_empty(self) -> bool:
         """Return True if this plot has no data"""
         raise NotImplementedError("Subclasses must implement is_empty()")
 
     def to_df(self) -> pd.DataFrame:
+        """
+        Used to merge plots across runs.
+        """
         raise NotImplementedError("Subclasses must implement to_df()")
+
+    def to_wide_df(self) -> pd.DataFrame:
+        """
+        Used to save data to parquet files.
+        """
+        return pd.DataFrame()
 
     def extract_data_label(self, ds_idx: int) -> Optional[str]:
         # Get dataset label if available
@@ -371,6 +377,21 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             pconfig.data_labels = data_labels
 
     @classmethod
+    def creation_date_from_df(cls, df: pd.DataFrame) -> datetime:
+        """
+        Extract creation date from dataframe.
+        """
+        assert not df.empty
+        return df["creation_date"].iloc[0]
+
+    @classmethod
+    def df_is_empty(cls, df: pd.DataFrame) -> bool:
+        """
+        Check if dataframe only contains metadata.
+        """
+        return df.empty
+
+    @classmethod
     def load(cls, anchor: Anchor) -> Optional["NormalizedPlotInputData"]:
         """
         Load plot data from a previous analysis, as defined in the input anchor.
@@ -404,28 +425,14 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
 
     def finalize_df(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Finalize the dataframe before saving. Add common plot metadata:
-        anchor, plot_type, pconfig, run_id, timestamp.
+        Finalize the dataframe before saving. Add common plot metadata.
         """
-        # Ensure the DataFrame has the anchor column
-        if "anchor" not in df.columns:
-            df["anchor"] = str(self.anchor)
-
-        # Add type for easier filtering
-        if "plot_type" not in df.columns:
-            df["plot_type"] = str(self.plot_type.value)
-
-        # Store pconfig as a column in the DataFrame
-        if self.pconfig:
-            # Filter out any None/null values from pconfig before storing
-            filtered_pconfig = {k: v for k, v in self.pconfig.model_dump().items() if v is not None}
-            df["_pconfig"] = json.dumps(filtered_pconfig)
-
-        # Add run metadata
-        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
-            df["run_id"] = config.kwargs["run_id"]
-
-        df["timestamp"] = report.creation_date.isoformat()
+        # There facilitate merging with other dataframes
+        df["anchor"] = str(self.anchor)
+        df["creation_date"] = self.creation_date
+        df["type"] = "plot_input_row" if "type" not in df.columns else df["type"]
+        df["plot_type"] = str(self.plot_type.value)
+        df["pconfig"] = self.pconfig.model_dump_json(exclude_none=True)
         return df
 
     def save(self) -> None:
@@ -434,7 +441,36 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
 
         This function handles writing both the data and the plot config.
         """
-        df = self.to_df()
+
+        # Custom JSON serialization to handle NaN values
+        def nan_safe_dumps(obj):
+            import json
+            import math
+
+            # Replace NaN values with special marker string
+            def replace_nan_with_marker(o):
+                if isinstance(o, float) and math.isnan(o):
+                    return "__NAN__MARKER__"
+                elif isinstance(o, dict):
+                    return {k: replace_nan_with_marker(v) for k, v in o.items()}
+                elif isinstance(o, list):
+                    return [replace_nan_with_marker(i) for i in o]
+                return o
+
+            return json.dumps(replace_nan_with_marker(obj))
+
+        df = pd.DataFrame(
+            {
+                "anchor": [str(self.anchor)],
+                "type": ["plot_input"],
+                "creation_date": [self.creation_date],
+                "plot_type": [str(self.plot_type.value)],
+                "plot_input_data": [nan_safe_dumps(self.model_dump(mode="json", exclude_none=True))],
+            }
+        )
+        wide_df = self.to_wide_df()
+        if not wide_df.empty:
+            df = pd.concat([df, wide_df])
         plot_data_store.save_plot_data(self.anchor, df)
 
     @classmethod
