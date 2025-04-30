@@ -1,5 +1,6 @@
 import difflib
 import json
+from datetime import datetime, timedelta
 
 import multiqc
 from multiqc.core.update_config import ClConfig
@@ -122,6 +123,7 @@ def test_merge_linegraph():
         data=[dataset1],
         pconfig=pconfig,
         sample_names=[SampleName("Sample1"), SampleName("Sample2")],
+        creation_date=datetime.now() - timedelta(days=1),
     )
 
     # Create second input data - two samples: "Sample1" (overlapping) and "Sample3" (new)
@@ -135,6 +137,7 @@ def test_merge_linegraph():
         data=[dataset2],
         pconfig=pconfig,
         sample_names=[SampleName("Sample1"), SampleName("Sample3")],
+        creation_date=datetime.now(),
     )
 
     # Merge the two inputs
@@ -199,6 +202,7 @@ def test_merge_bargraph():
         data=[dataset1],
         cats=[cats1],
         pconfig=pconfig,
+        creation_date=datetime.now() - timedelta(days=1),
     )
 
     # Create second input data - two samples: "Sample1" (overlapping) and "Sample3" (new)
@@ -219,6 +223,7 @@ def test_merge_bargraph():
         data=[dataset2],
         cats=[cats2],
         pconfig=pconfig,
+        creation_date=datetime.now(),
     )
 
     # Merge the two inputs

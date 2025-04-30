@@ -115,13 +115,14 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
                 if isinstance(pconfig, HeatmapConfig)
                 else cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
             )
-            return HeatmapNormalizedInputData(
+            return cls(
                 anchor=anchor,
                 rows=[],
                 xcats=[],
                 ycats=[],
                 pconfig=pconf,
                 plot_type=PlotType.HEATMAP,
+                creation_date=cls.creation_date_from_df(df),
             )
 
         pconf = cast(HeatmapConfig, HeatmapConfig.from_df(df))
@@ -150,13 +151,14 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
 
         cls.data_labels_from_df(df, pconf)
 
-        return HeatmapNormalizedInputData(
+        return cls(
             anchor=anchor,
             rows=rows,  # type: ignore
             xcats=xcats,
             ycats=ycats,
             pconfig=pconf,
             plot_type=PlotType.HEATMAP,
+            creation_date=cls.creation_date_from_df(df),
         )
 
     @classmethod
@@ -182,6 +184,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
             ycats=new_data.ycats,
             pconfig=new_data.pconfig,
             plot_type=PlotType.HEATMAP,
+            creation_date=report.creation_date,
         )
 
     @staticmethod
@@ -237,6 +240,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
             xcats=list(xcats),
             ycats=list(ycats),
             pconfig=pconf,
+            creation_date=report.creation_date,
         )
 
 

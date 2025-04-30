@@ -192,6 +192,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
                 pconfig=pconf,
                 list_of_data_by_sample=[],
                 plot_type=PlotType.BOX,
+                creation_date=cls.creation_date_from_df(df),
             )
         pconf = cast(BoxPlotConfig, BoxPlotConfig.from_df(df))
 
@@ -236,6 +237,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
             pconfig=pconf,
             list_of_data_by_sample=list_of_data_by_sample,
             plot_type=PlotType.BOX,
+            creation_date=cls.creation_date_from_df(df),
         )
 
     @classmethod
@@ -248,28 +250,20 @@ class BoxPlotInputData(NormalizedPlotInputData):
         if new_df.empty:
             return old_data
 
-        # Add timestamp and run_id to new data
-        new_df["timestamp"] = datetime.now().isoformat()
-        new_df["run_id"] = config.title
-
         old_df = old_data.to_df()
 
         # If we have both old and new data, merge them
         merged_df = new_df
         if old_df is not None and not old_df.empty:
-            # Make sure old data has run_id
-            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
-                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
-
             # Combine the dataframes, keeping all rows
             merged_df = pd.concat([old_df, new_df], ignore_index=True)
 
             # For duplicates (same sample, dataset, value_idx), keep the latest version
             # Sort by timestamp (newest last)
-            merged_df.sort_values("timestamp", inplace=True)
+            merged_df.sort_values("creation_date", inplace=True)
 
             # Group by the key identifiers and keep the last entry (newest)
-            dedupe_columns = ["dataset_idx", "sample_name", "value_idx", "run_id"]
+            dedupe_columns = ["dataset_idx", "sample_name", "value_idx"]
             merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
 
         # Save the merged data for future reference
@@ -303,6 +297,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
             list_of_data_by_sample=list_of_data_by_sample,
             pconfig=pconf,
             plot_type=PlotType.BOX,
+            creation_date=report.creation_date,
         )
 
 

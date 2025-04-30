@@ -8,7 +8,6 @@ import platform
 import random
 import re
 import subprocess
-import threading
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -19,7 +18,6 @@ from typing import (
     List,
     Mapping,
     Optional,
-    Set,
     Tuple,
     Type,
     TypeVar,

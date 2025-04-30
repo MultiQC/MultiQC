@@ -59,7 +59,6 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
                 for point_idx, point in enumerate(points):
                     record = {
-                        "anchor": self.anchor,
                         "dataset_idx": ds_idx,
                         "dataset_label": dataset_label,
                         "sample_name": sample_name,
@@ -85,8 +84,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                     records.append(record)
 
         df = pd.DataFrame(records)
-        self.finalize_df(df)
-        return df
+        return self.finalize_df(df)
 
     @staticmethod
     def create(
@@ -104,6 +102,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             plot_type=PlotType.SCATTER,
             datasets=data,
             pconfig=pconf,
+            creation_date=report.creation_date,
         )
 
     @classmethod
@@ -190,11 +189,12 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
             merged_pconf.data_labels = merged_data_labels
 
-            return ScatterNormalizedInputData(
+            return cls(
                 plot_type=PlotType.SCATTER,
                 anchor=new_data.anchor,
                 datasets=merged_datasets,
                 pconfig=merged_pconf,
+                creation_date=report.creation_date,
             )
         else:
             # If no data labels, preserve old behavior (return new data)
@@ -202,11 +202,12 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             if old_data.pconfig.extra_series and new_data.pconfig.extra_series is None:
                 merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
                 merged_pconf.extra_series = old_data.pconfig.extra_series
-                return ScatterNormalizedInputData(
+                return cls(
                     plot_type=PlotType.SCATTER,
                     anchor=new_data.anchor,
                     datasets=new_data.datasets,
                     pconfig=merged_pconf,
+                    creation_date=report.creation_date,
                 )
             return new_data
 
@@ -228,6 +229,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                 datasets=[],
                 pconfig=pconf,
                 plot_type=PlotType.SCATTER,
+                creation_date=cls.creation_date_from_df(df),
             )
 
         pconf = cast(ScatterConfig, ScatterConfig.from_df(df))
@@ -267,6 +269,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             plot_type=PlotType.SCATTER,
             datasets=datasets,
             pconfig=pconf,
+            creation_date=cls.creation_date_from_df(df),
         )
 
 

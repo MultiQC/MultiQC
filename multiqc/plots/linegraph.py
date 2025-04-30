@@ -355,7 +355,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         cls, df: pd.DataFrame, pconfig: Union[Dict, LinePlotConfig], anchor: Anchor
     ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
         pconf: LinePlotConfig
-        creation_date = cls.creation_date_from_df(df)
         if cls.df_is_empty(df):
             pconf = (
                 pconfig
@@ -368,7 +367,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                 data=[],
                 pconfig=pconf,
                 sample_names=[],
-                creation_date=creation_date,
+                creation_date=cls.creation_date_from_df(df),
             )
         pconf = cast(LinePlotConfig, LinePlotConfig.from_df(df))
 
@@ -439,7 +438,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             data=datasets,
             pconfig=pconf,
             sample_names=sample_names,
-            creation_date=creation_date,
+            creation_date=cls.creation_date_from_df(df),
         )
 
     @staticmethod

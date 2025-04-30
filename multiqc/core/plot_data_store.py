@@ -7,12 +7,10 @@ It also stores all report metadata (modules, data sources, configs) to make repo
 import json
 import logging
 import os
-from pathlib import Path
 from re import Pattern
-from typing import Any, Dict, Optional, Sequence, Set, Union
+from typing import Any, Dict, List, Optional, Set
 
 import pandas as pd
-import pyarrow.parquet as pq
 from pydantic import ValidationError  # type: ignore
 
 from multiqc import config, report
@@ -99,7 +97,7 @@ def save_report_metadata() -> None:
     parquet_file = tmp_dir.parquet_file()
 
     # Prepare metadata row
-    modules_data = []
+    modules_data: List[Dict[str, Any]] = []
     for mod in report.modules:
         module_dict: Dict[str, Any] = {
             "name": mod.name,
