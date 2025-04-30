@@ -295,7 +295,9 @@ class Dataset(BaseDataset):
     points: List[PointT]
 
     def sample_names(self) -> List[SampleName]:
-        return [SampleName(point["name"]) for point in self.points if point.get("name") is not None]
+        return [
+            SampleName(point["name"]) for point in self.points if "name" in point and isinstance(point["name"], str)
+        ]
 
     @staticmethod
     def create(

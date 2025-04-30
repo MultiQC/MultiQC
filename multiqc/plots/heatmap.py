@@ -307,12 +307,12 @@ class Dataset(BaseDataset):
     ycats_samples: bool = True
 
     def sample_names(self) -> List[SampleName]:
-        sns = []
+        snames: List[SampleName] = []
         if self.xcats_samples:
-            sns.extend(SampleName(cat) for cat in self.xcats)
+            snames.extend(SampleName(cat) for cat in self.xcats)
         if self.ycats_samples:
-            sns.extend(SampleName(cat) for cat in self.ycats)
-        return sns
+            snames.extend(SampleName(cat) for cat in self.ycats)
+        return snames
 
     @staticmethod
     def create(
