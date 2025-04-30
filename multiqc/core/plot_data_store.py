@@ -198,7 +198,7 @@ def save_report_metadata() -> None:
         # Write to file
         metadata_df.to_parquet(parquet_file, compression="gzip")
 
-    logger.debug("Saved report metadata to parquet file")
+    logger.debug(f"Saved parquet file {parquet_file}")
 
 
 def _update_parquet(df: pd.DataFrame, anchor: Anchor) -> None:
