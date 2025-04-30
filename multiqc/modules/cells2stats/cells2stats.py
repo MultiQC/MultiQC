@@ -31,6 +31,9 @@ class MultiqcModule(BaseMultiqcModule):
                 unique_run_name = data["RunName"]
                 observed_run_names.add(data["RunName"])
             self.c2s_run_data[unique_run_name] = data
+            analysis_version = data.get("AnalysisVersion", None)
+            if analysis_version is not None:
+                self.add_software_version(analysis_version, sample=f["s_name"])
             self.add_data_source(f=f, s_name=data["RunName"], module="cells2stats")
 
         for plotting_function in [
