@@ -164,6 +164,8 @@ fn_ignore_dirs: List[str]
 fn_ignore_paths: List[str]
 sample_names_ignore: List[str]
 sample_names_ignore_re: List[str]
+sample_names_only_include: List[str]
+sample_names_only_include_re: List[str]
 sample_names_rename_buttons: List[str]
 sample_names_replace: Dict[str, str]
 sample_names_replace_regex: bool
