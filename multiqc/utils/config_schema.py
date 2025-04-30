@@ -113,7 +113,7 @@ class MultiQCConfig(BaseModel):
     zip_data_dir: Optional[bool] = Field(None, description="Zip data directory")
     data_dump_file: Optional[bool] = Field(None, description="Write data to a file")
     data_dump_file_write_raw: Optional[bool] = Field(None, description="Write raw data to a file")
-    megaqc_url: Optional[bool] = Field(None, description="Upload to MegaQC")
+    megaqc_url: Optional[str] = Field(None, description="MegaQC URL to upload to")
     megaqc_access_token: Optional[str] = Field(None, description="MegaQC access token")
     megaqc_timeout: Optional[int] = Field(None, description="MegaQC timeout")
     export_plots: Optional[bool] = Field(None, description="Export plots")
