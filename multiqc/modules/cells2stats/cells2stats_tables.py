@@ -1,6 +1,17 @@
 from multiqc.plots import table
 
-from .queries import *
+from .queries import (
+    get_batch_counts,
+    get_batch_density,
+    get_cell_count,
+    get_median_cell_diameter,
+    get_percent_assigned,
+    get_percent_confluency,
+    get_percent_mismatch,
+    get_percent_nucleated_cells,
+    get_total_counts,
+    get_total_density,
+)
 
 
 def merge_well_dictionaries(dict_list):
@@ -49,8 +60,8 @@ def tabulate_wells(c2s_run_data):
     )
     headers = {}
     headers["cell_count"] = {
-        "title": f"# Cells",
-        "description": f"The number of cells in the well",
+        "title": "# Cells",
+        "description": "The number of cells in the well",
         "min": 0,
         "scale": "GnBu",
         "format": "{d}",
@@ -153,8 +164,8 @@ def tabulate_batches(c2s_run_data):
 
     headers = {}
     headers["batch_density"] = {
-        "title": f"Assigned Counts K / mm2",
-        "description": f"Assigned counts per mm2 for each batch in the well",
+        "title": "Assigned Counts K / mm2",
+        "description": "Assigned counts per mm2 for each batch in the well",
         "min": 0,
         "scale": "GnBu",
     }
