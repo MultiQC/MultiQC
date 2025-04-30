@@ -294,6 +294,9 @@ def plot(
 class Dataset(BaseDataset):
     points: List[PointT]
 
+    def sample_names(self) -> List[SampleName]:
+        return [SampleName(sample) for sample in self.points.keys()]
+
     @staticmethod
     def create(
         dataset: BaseDataset,

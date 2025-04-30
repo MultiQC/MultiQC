@@ -432,6 +432,9 @@ class Dataset(BaseDataset):
     cats: List[Category]
     samples: List[str]
 
+    def sample_names(self) -> List[SampleName]:
+        return [SampleName(sample) for sample in self.samples]
+
     @staticmethod
     def create(
         dataset: BaseDataset,
@@ -546,7 +549,7 @@ class Dataset(BaseDataset):
 class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
 
-    def samples_names(self) -> List[SampleName]:
+    def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         for ds in self.datasets:
             names.extend(SampleName(sample) for sample in ds.samples)

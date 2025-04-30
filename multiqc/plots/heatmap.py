@@ -306,6 +306,14 @@ class Dataset(BaseDataset):
     xcats_samples: bool = True
     ycats_samples: bool = True
 
+    def sample_names(self) -> List[SampleName]:
+        sns = []
+        if self.xcats_samples:
+            sns.extend(SampleName(cat) for cat in self.xcats)
+        if self.ycats_samples:
+            sns.extend(SampleName(cat) for cat in self.ycats)
+        return sns
+
     @staticmethod
     def create(
         dataset: BaseDataset,
@@ -415,7 +423,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     max: Optional[float] = None
     cluster_switch_clustered_active: bool = False
 
-    def samples_names(self) -> List[SampleName]:
+    def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         if self.xcats_samples:
             for ds in self.datasets:

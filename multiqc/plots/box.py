@@ -33,6 +33,9 @@ class Dataset(BaseDataset):
     data: List[BoxT]
     samples: List[str]
 
+    def sample_names(self) -> List[SampleName]:
+        return [SampleName(sample) for sample in self.samples]
+
     @staticmethod
     def create(
         dataset: BaseDataset,
@@ -304,10 +307,10 @@ class BoxPlotInputData(NormalizedPlotInputData):
 class BoxPlot(Plot[Dataset, BoxPlotConfig]):
     datasets: List[Dataset]
 
-    def samples_names(self) -> List[SampleName]:
+    def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         for ds in self.datasets:
-            names.extend(SampleName(sample) for sample in ds.samples)
+            names.extend(ds.sample_names())
         return names
 
     @staticmethod

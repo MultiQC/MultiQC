@@ -150,7 +150,12 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             continue
 
                         # Store both the value and its type for proper reconstruction
-                        wide_record[f"col_{metric_name}"] = cell.mod
+                        try:
+                            float_val = float(cell.mod)
+                        except ValueError:
+                            float_val = float("nan")
+                        wide_record[f"col_{metric_name}_val"] = float_val
+                        wide_record[f"col_{metric_name}_str"] = cell.fmt
 
                     # Only add records that have at least one metric
                     if any(k.startswith("col_") for k in wide_record.keys()):
@@ -440,8 +445,8 @@ class Dataset(BaseDataset):
     show_table_by_default: bool
     is_downsampled: bool
 
-    def samples_names(self) -> List[SampleName]:
-        return self.all_samples
+    def sample_names(self) -> List[SampleName]:
+        return self.all_samples if self.dt.pconfig.rows_are_samples else []
 
     @staticmethod
     def values_and_headers_from_dt(
@@ -824,10 +829,10 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     n_samples: int
     table_anchor: Anchor
 
-    def samples_names(self) -> List[SampleName]:
+    def all_sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         for ds in self.datasets:
-            names.extend(ds.samples_names())
+            names.extend(ds.sample_names())
         return names
 
     @staticmethod

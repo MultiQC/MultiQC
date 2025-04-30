@@ -124,6 +124,9 @@ class LinePlotConfig(PConfig):
 class Dataset(BaseDataset, Generic[KeyT, ValT]):
     lines: List[Series[KeyT, ValT]]
 
+    def sample_names(self) -> List[SampleName]:
+        return [SampleName(line.name) for line in self.lines]
+
     def get_x_range(self) -> Tuple[Optional[KeyT], Optional[KeyT]]:
         if not self.lines:
             return None, None
@@ -544,7 +547,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
     datasets: List[Dataset[KeyT, ValT]]
     sample_names: List[SampleName]
 
-    def samples_names(self) -> List[SampleName]:
+    def all_sample_names(self) -> List[SampleName]:
         return self.sample_names
 
     def _plot_ai_header(self) -> str:

@@ -248,7 +248,7 @@ class BaseDataset(BaseModel):
     pct_range: Dict[str, Any]
     n_samples: int
 
-    def samples_names(self) -> List[SampleName]:
+    def sample_names(self) -> List[SampleName]:
         raise NotImplementedError
 
     def create_figure(
