@@ -118,9 +118,6 @@ def write_results() -> None:
             )
         )
 
-    if paths.report_path:
-        logger.debug(f"Report HTML written to {paths.report_path}")
-
     # Zip the data directory if requested
     if config.zip_data_dir and paths.data_dir is not None:
         shutil.make_archive(str(paths.data_dir), format="zip", root_dir=str(paths.data_dir))
@@ -128,6 +125,9 @@ def write_results() -> None:
             util_functions.rmtree_with_retries(paths.data_dir)
         except Exception as e:
             logger.warning(f"Couldn't remove data dir: {e}")
+
+    if paths.report_path:
+        logger.debug(f"Report HTML written to {paths.report_path}")
 
     # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
     # that goes beyond this write_results run.
