@@ -7,15 +7,16 @@ It also stores all report metadata (modules, data sources, configs) to make repo
 import json
 import logging
 import os
-from pathlib import Path
-from typing import Any, Dict, Optional, Set, Union
+from re import Pattern
+from typing import Any, Dict, List, Optional, Set
 
 import pandas as pd
-import pyarrow.parquet as pq  # type: ignore
+from pydantic import ValidationError  # type: ignore
 
 from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.types import Anchor
+from multiqc.utils.config_schema import MultiQCConfig
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ def save_plot_data(anchor: Anchor, df: pd.DataFrame) -> None:
     _update_parquet(df, anchor)
 
 
-def get_report_metadata(file_path: Optional[Union[str, Path]] = None) -> Optional[Dict[str, Any]]:
+def get_report_metadata(df: pd.DataFrame) -> Optional[Dict[str, Any]]:
     """
     Extract all report metadata from the parquet file.
 
@@ -55,43 +56,12 @@ def get_report_metadata(file_path: Optional[Union[str, Path]] = None) -> Optiona
 
     Returns a dictionary with modules, data_sources, creation_date, and config.
     """
-    if file_path is None:
-        parquet_file = tmp_dir.parquet_file()
-    else:
-        parquet_file = Path(file_path)
-
-    if not parquet_file.exists():
+    if df.empty:
         return None
 
     try:
         # Read the metadata table from the parquet file
-        df = pd.read_parquet(parquet_file)
-        metadata_df = df[df["anchor"] == "metadata"]
-
-        if metadata_df.empty:
-            # Try to read from metadata (legacy)
-            table = pq.read_table(parquet_file, columns=[])
-            if not table.schema.metadata:
-                return None
-
-            metadata = {k.decode("utf-8"): v.decode("utf-8") for k, v in table.schema.metadata.items()}
-
-            result = {}
-
-            # Extract metadata
-            if META_MODULES in metadata:
-                result["modules"] = json.loads(metadata[META_MODULES])
-
-            if META_DATA_SOURCES in metadata:
-                result["data_sources"] = json.loads(metadata[META_DATA_SOURCES])
-
-            if META_CREATION_DATE in metadata:
-                result["creation_date"] = metadata[META_CREATION_DATE]
-
-            if META_CONFIG in metadata:
-                result["config"] = json.loads(metadata[META_CONFIG])
-
-            return result
+        metadata_df = df[df["anchor"] == "run_metadata"]
 
         # New method: get metadata from DataFrame
         result = {}
@@ -105,8 +75,8 @@ def get_report_metadata(file_path: Optional[Union[str, Path]] = None) -> Optiona
             result["data_sources"] = json.loads(metadata_df["data_sources"].iloc[0])
 
         # Read creation date
-        if "creation_date" in metadata_df.columns and not metadata_df["creation_date"].empty:
-            result["creation_date"] = metadata_df["creation_date"].iloc[0]
+        if "timestamp" in metadata_df.columns and not metadata_df["timestamp"].empty:
+            result["timestamp"] = metadata_df["timestamp"].iloc[0]
 
         # Read config
         if "config" in metadata_df.columns and not metadata_df["config"].empty:
@@ -127,7 +97,7 @@ def save_report_metadata() -> None:
     parquet_file = tmp_dir.parquet_file()
 
     # Prepare metadata row
-    modules_data = []
+    modules_data: List[Dict[str, Any]] = []
     for mod in report.modules:
         module_dict: Dict[str, Any] = {
             "name": mod.name,
@@ -135,14 +105,10 @@ def save_report_metadata() -> None:
             "info": mod.info,
             "intro": mod.intro,
             "comment": mod.comment,
-        }
-
-        # Add sections
-        module_dict["sections"] = [section.model_dump() for section in mod.sections]
-
-        # Add software versions
-        module_dict["versions"] = {
-            name: [version for _, version in versions_tuples] for name, versions_tuples in mod.versions.items()
+            "sections": [section.model_dump(mode="json", exclude_none=True) for section in mod.sections],
+            "versions": {
+                name: [version for _, version in versions_tuples] for name, versions_tuples in mod.versions.items()
+            },
         }
 
         modules_data.append(module_dict)
@@ -157,51 +123,52 @@ def save_report_metadata() -> None:
                 data_sources_dict[mod_id][section][sname] = source
 
     # Creation date
-    try:
-        creation_date_str = report.creation_date.strftime("%Y-%m-%d, %H:%M %Z")
-    except UnicodeEncodeError:
-        # Fall back to a format without timezone if we encounter encoding issues
-        creation_date_str = report.creation_date.strftime("%Y-%m-%d, %H:%M")
+    # try:
+    #     creation_date_str = report.creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+    # except UnicodeEncodeError:
+    #     # Fall back to a format without timezone if we encounter encoding issues
+    #     creation_date_str = report.creation_date.strftime("%Y-%m-%d, %H:%M")
 
-    # Config data
+    def _clean_config_values(value: Any) -> Any:
+        """
+        Convert any patterns to strings, recursively.
+        """
+        if isinstance(value, set):
+            value = list(value)
+
+        if isinstance(value, Pattern):
+            return str(value)
+        elif isinstance(value, dict):
+            return {k: _clean_config_values(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            return [_clean_config_values(item) for item in value]
+
+        return value
+
+    # Create MultiqcConfig object from config and dump it to dict
     config_dict = {}
-    for key in [
-        "title",
-        "subtitle",
-        "intro_text",
-        "report_comment",
-        "report_header_info",
-        "short_version",
-        "version",
-        "git_hash",
-        "analysis_dir",
-        "output_dir",
-    ]:
-        if hasattr(config, key):
-            value = getattr(config, key)
-            # Convert Path objects to strings
-            if isinstance(value, Path):
-                value = str(value)
-            elif isinstance(value, list) and all(isinstance(x, Path) for x in value):
-                value = [str(x) for x in value]
-            config_dict[key] = value
-
-    # Plot data
-    plot_data_dict = {}
-    for anchor, plot_data in report.plot_data.items():
-        plot_data_dict[anchor] = plot_data
+    try:
+        # Extract fields from config that match the schema
+        config_fields = {key: getattr(config, key) for key in MultiQCConfig.model_fields if hasattr(config, key)}
+        # Convert any patterns to strings, recursively
+        config_fields = _clean_config_values(config_fields)
+        # Create and validate config object
+        config_obj = MultiQCConfig(**config_fields)
+        # Dump to dict
+        config_dict = config_obj.model_dump(mode="json", exclude_none=True)
+    except ValidationError as e:
+        logger.error(f"Error validating config: {e}")
 
     # Create metadata DataFrame
     metadata_df = pd.DataFrame(
         {
-            "anchor": ["metadata"],
-            "type": ["metadata"],
-            "modules": [json.dumps(modules_data)],
-            "data_sources": [json.dumps(data_sources_dict)],
-            "creation_date": [creation_date_str],
+            "type": ["run_metadata"],
+            "anchor": ["run_metadata"],
+            "creation_date": [report.creation_date],
             "config": [json.dumps(config_dict)],
-            "plot_data": [json.dumps(plot_data_dict)],
+            "data_sources": [json.dumps(data_sources_dict)],
             "multiqc_version": [config.version if hasattr(config, "version") else ""],
+            "modules": [json.dumps(modules_data)],
         }
     )
 
@@ -211,7 +178,7 @@ def save_report_metadata() -> None:
             existing_df = pd.read_parquet(parquet_file)
 
             # Remove any existing metadata
-            existing_df = existing_df[existing_df["anchor"] != "metadata"]
+            existing_df = existing_df[existing_df["anchor"] != "run_metadata"]
 
             # Append new metadata
             merged_df = pd.concat([existing_df, metadata_df], ignore_index=True)
@@ -220,6 +187,8 @@ def save_report_metadata() -> None:
             merged_df.to_parquet(parquet_file, compression="gzip")
         except Exception as e:
             logger.error(f"Error updating parquet file with metadata: {e}")
+            if config.strict:
+                raise e
             # If error, just write the metadata
             metadata_df.to_parquet(parquet_file, compression="gzip")
     else:
@@ -229,7 +198,7 @@ def save_report_metadata() -> None:
         # Write to file
         metadata_df.to_parquet(parquet_file, compression="gzip")
 
-    logger.debug("Saved report metadata to parquet file")
+    logger.debug(f"Saved parquet file {parquet_file}")
 
 
 def _update_parquet(df: pd.DataFrame, anchor: Anchor) -> None:
@@ -281,8 +250,18 @@ def reset():
 
 
 def parse_value(value: Any, value_type: str) -> Any:
+    """
+    Parse a string value back to its original type, handling special markers.
+    """
+    import math
+
+    # Handle special NaN marker
+    if isinstance(value, str) and value == "__NAN__MARKER__":
+        return math.nan
+
+    # Handle regular type conversion
     if value_type == "int":
-        return int(value)
+        return int(float(value))  # Handle float strings that represent integers
     elif value_type == "float":
         return float(value)
     elif value_type == "bool":

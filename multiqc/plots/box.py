@@ -33,6 +33,9 @@ class Dataset(BaseDataset):
     data: List[BoxT]
     samples: List[str]
 
+    def sample_names(self) -> List[SampleName]:
+        return [SampleName(sample) for sample in self.samples]
+
     @staticmethod
     def create(
         dataset: BaseDataset,
@@ -192,6 +195,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
                 pconfig=pconf,
                 list_of_data_by_sample=[],
                 plot_type=PlotType.BOX,
+                creation_date=cls.creation_date_from_df(df),
             )
         pconf = cast(BoxPlotConfig, BoxPlotConfig.from_df(df))
 
@@ -236,6 +240,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
             pconfig=pconf,
             list_of_data_by_sample=list_of_data_by_sample,
             plot_type=PlotType.BOX,
+            creation_date=cls.creation_date_from_df(df),
         )
 
     @classmethod
@@ -248,38 +253,21 @@ class BoxPlotInputData(NormalizedPlotInputData):
         if new_df.empty:
             return old_data
 
-        # Add timestamp and run_id to new data
-        new_df["timestamp"] = datetime.now().isoformat()
-        if hasattr(config, "kwargs") and "run_id" in config.kwargs:
-            new_df["run_id"] = config.kwargs["run_id"]
-
         old_df = old_data.to_df()
 
         # If we have both old and new data, merge them
         merged_df = new_df
         if old_df is not None and not old_df.empty:
-            # Make sure old data has run_id
-            if "run_id" not in old_df.columns and hasattr(config, "kwargs") and "run_id" in config.kwargs:
-                old_df["run_id"] = "previous_run"  # Default value for old data without run_id
-
-            # Make sure old data has timestamp
-            if "timestamp" not in old_df.columns:
-                old_df["timestamp"] = datetime.now().isoformat()
-
             # Combine the dataframes, keeping all rows
             merged_df = pd.concat([old_df, new_df], ignore_index=True)
 
             # For duplicates (same sample, dataset, value_idx), keep the latest version
-            if "timestamp" in merged_df.columns:
-                # Sort by timestamp (newest last)
-                merged_df.sort_values("timestamp", inplace=True)
+            # Sort by timestamp (newest last)
+            merged_df.sort_values("creation_date", inplace=True)
 
-                # Group by the key identifiers and keep the last entry (newest)
-                dedupe_columns = ["dataset_idx", "sample_name", "value_idx"]
-                if "run_id" in merged_df.columns:
-                    dedupe_columns.append("run_id")
-
-                merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
+            # Group by the key identifiers and keep the last entry (newest)
+            dedupe_columns = ["dataset_idx", "sample_name", "value_idx"]
+            merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
 
         # Save the merged data for future reference
         save_plot_data(new_data.anchor, merged_df)
@@ -312,16 +300,17 @@ class BoxPlotInputData(NormalizedPlotInputData):
             list_of_data_by_sample=list_of_data_by_sample,
             pconfig=pconf,
             plot_type=PlotType.BOX,
+            creation_date=report.creation_date,
         )
 
 
 class BoxPlot(Plot[Dataset, BoxPlotConfig]):
     datasets: List[Dataset]
 
-    def samples_names(self) -> List[SampleName]:
+    def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         for ds in self.datasets:
-            names.extend(SampleName(sample) for sample in ds.samples)
+            names.extend(ds.sample_names())
         return names
 
     @staticmethod

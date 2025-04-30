@@ -16,7 +16,6 @@ from natsort import natsorted
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
-from multiqc.core import tmp_dir
 from multiqc.core.exceptions import RunError
 from multiqc.core.plot_data_store import save_plot_data
 from multiqc.plots.plot import (
@@ -216,6 +215,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             pconfig=pconf,
             data=filtered_datasets,
             cats=categories_per_ds,
+            creation_date=report.creation_date,
         )
 
     def to_df(self) -> pd.DataFrame:
@@ -236,7 +236,6 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                         cat_conf = self.cats[ds_idx].get(category_name)
 
                     record = {
-                        "anchor": self.anchor,
                         "dataset_idx": ds_idx,
                         "dataset_label": dataset_label,
                         "sample": str(sample_name),
@@ -259,8 +258,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                     records.append(record)
 
         df = pd.DataFrame(records)
-        self.finalize_df(df)
-        return df
+        return self.finalize_df(df)
 
     @classmethod
     def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, BarPlotConfig], anchor: Anchor) -> "BarPlotInputData":
@@ -268,7 +266,8 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         Load plot data from a parquet file.
         """
         # Handle None case
-        if df.empty:
+        creation_date = cls.creation_date_from_df(df)
+        if cls.df_is_empty(df):
             pconf = (
                 pconfig
                 if isinstance(pconfig, BarPlotConfig)
@@ -280,6 +279,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                 pconfig=pconf,
                 data=[],
                 cats=[],
+                creation_date=creation_date,
             )
 
         pconf = cast(BarPlotConfig, BarPlotConfig.from_df(df))
@@ -343,6 +343,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             pconfig=pconf,
             data=datasets,
             cats=cats_per_dataset,
+            creation_date=creation_date,
         )
 
     @classmethod
@@ -386,7 +387,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
             # For duplicates (same sample, category, dataset), keep the latest version
             # Sort by timestamp (newest last)
-            merged_df.sort_values("timestamp", inplace=True)
+            merged_df.sort_values("creation_date", inplace=True)
 
         save_plot_data(new_data.anchor, merged_df)
 
@@ -430,6 +431,9 @@ class Category(BaseModel):
 class Dataset(BaseDataset):
     cats: List[Category]
     samples: List[str]
+
+    def sample_names(self) -> List[SampleName]:
+        return [SampleName(sample) for sample in self.samples]
 
     @staticmethod
     def create(
@@ -545,7 +549,7 @@ class Dataset(BaseDataset):
 class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
 
-    def samples_names(self) -> List[SampleName]:
+    def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         for ds in self.datasets:
             names.extend(SampleName(sample) for sample in ds.samples)

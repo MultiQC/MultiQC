@@ -141,7 +141,7 @@ def list_samples() -> List[str]:
     for _, plot in report.plot_by_id.items():
         if isinstance(plot, Plot):
             for ds in plot.datasets:
-                samples |= set(ds.samples_names())
+                samples |= set(ds.sample_names())
 
     # Also add samples from report.plot_data
     for plot_id, plot_dump in report.plot_data.items():

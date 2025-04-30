@@ -8,9 +8,9 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-import packaging
+import packaging.version
 import pandas as pd
 
 from multiqc import config, report
@@ -28,33 +28,46 @@ from multiqc.types import Anchor, PlotType
 log = logging.getLogger(__name__)
 
 
-def load_plot_input(plot_df: pd.DataFrame) -> Tuple[NormalizedPlotInputData, Union[Plot, str, None]]:
-    plot_type = PlotType.from_str(plot_df.plot_type.iloc[0])
-    pconfig_str = plot_df._pconfig.iloc[0]
-    if isinstance(pconfig_str, str):
-        pconfig = json.loads(pconfig_str)
-    anchor = Anchor(str(plot_df.anchor.iloc[0]))
+def load_plot_input(plot_input_data_dict: Dict) -> Tuple[NormalizedPlotInputData, Union[Plot, str, None]]:
+    # Process the JSON data to replace NaN markers with proper NaN values
+    def replace_nan_markers(obj: Any) -> Any:
+        import math
+
+        if isinstance(obj, str) and obj == "__NAN__MARKER__":
+            return math.nan
+        elif isinstance(obj, dict):
+            return {k: replace_nan_markers(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [replace_nan_markers(i) for i in obj]
+        return obj
+
+    # Ensure we're working with a dictionary and apply the replacement to each value
+    if not isinstance(plot_input_data_dict, dict):
+        raise TypeError(f"Expected a dictionary, got {type(plot_input_data_dict)}")
+
+    processed_dict = {k: replace_nan_markers(v) for k, v in plot_input_data_dict.items()}
+    plot_type = PlotType.from_str(processed_dict["plot_type"])
 
     plot_input: NormalizedPlotInputData
     plot: Union[Plot, str, None]
 
     if plot_type == PlotType.LINE:
-        plot_input = LinePlotNormalizedInputData.from_df(plot_df, pconfig, anchor)
+        plot_input = LinePlotNormalizedInputData(**processed_dict)
         plot = LinePlot.from_inputs(plot_input)
     elif plot_type == PlotType.BAR:
-        plot_input = BarPlotInputData.from_df(plot_df, pconfig, anchor)
+        plot_input = BarPlotInputData(**processed_dict)
         plot = BarPlot.from_inputs(plot_input)
     elif plot_type == PlotType.BOX:
-        plot_input = BoxPlotInputData.from_df(plot_df, pconfig, anchor)
+        plot_input = BoxPlotInputData(**processed_dict)
         plot = BoxPlot.from_inputs(plot_input)
     elif plot_type == PlotType.HEATMAP:
-        plot_input = HeatmapNormalizedInputData.from_df(plot_df, pconfig, anchor)
+        plot_input = HeatmapNormalizedInputData(**processed_dict)
         plot = HeatmapPlot.from_inputs(plot_input)
     elif plot_type == PlotType.VIOLIN or plot_type == PlotType.TABLE:
-        plot_input = ViolinPlotInputData.from_df(plot_df, pconfig, anchor)
+        plot_input = ViolinPlotInputData(**processed_dict)
         plot = ViolinPlot.from_inputs(plot_input)
     elif plot_type == PlotType.SCATTER:
-        plot_input = ScatterNormalizedInputData.from_df(plot_df, pconfig, anchor)
+        plot_input = ScatterNormalizedInputData(**processed_dict)
         plot = ScatterPlot.from_inputs(plot_input)
     else:
         raise ValueError(f"Unknown plot type: {plot_type}")
@@ -85,8 +98,11 @@ class LoadMultiqcData(BaseMultiqcModule):
         log.info(f"Loading report data from parquet file: {path}")
 
         try:
+            # Read the entire parquet file
+            df = pd.read_parquet(path)
+
             # Extract metadata from parquet
-            metadata = plot_data_store.get_report_metadata(path)
+            metadata = plot_data_store.get_report_metadata(df)
             if metadata is None:
                 log.error(f"Failed to extract metadata from parquet file: {path}")
                 return
@@ -108,8 +124,6 @@ class LoadMultiqcData(BaseMultiqcModule):
                     anchor = mod_dict.pop("anchor")
                     name = mod_dict.pop("name")
                     info = mod_dict.pop("info", "")
-
-                    # Get intro and comment
                     intro = mod_dict.pop("intro", "")
                     comment = mod_dict.pop("comment", "")
 
@@ -140,19 +154,25 @@ class LoadMultiqcData(BaseMultiqcModule):
                     except ValueError:
                         log.error(f"Could not parse creation date: {metadata['creation_date']}")
 
-            # Load config values
             if "config" in metadata:
-                log.debug("Loading config values from parquet")
-                # TOOD: Update loaded configs
+                pass  # We do not load config, but keep the current one
 
-            df = pd.read_parquet(path)
-            for anchor, plot_df in df.groupby("anchor"):
-                if "plot_type" in plot_df.columns and plot_df.plot_type.iloc[0]:
-                    anchor = Anchor(str(anchor))
-                    plot_input, plot = load_plot_input(plot_df)
-                    report.plot_input_data[anchor] = plot_input
-                    if plot is not None:
-                        report.plot_by_id[anchor] = plot
+            # Load plot input data from plot_input rows in the dataframe
+            if "type" in df.columns and "plot_input_data" in df.columns:
+                plot_input_rows = df[df["type"] == "plot_input"]
+                for _, row in plot_input_rows.iterrows():
+                    anchor = Anchor(str(row["anchor"]))
+                    plot_input_data = row["plot_input_data"]
+                    plot_input_data_dict = json.loads(plot_input_data)
+                    try:
+                        plot_input, plot = load_plot_input(plot_input_data_dict)
+                        report.plot_input_data[anchor] = plot_input
+                        if plot is not None:
+                            report.plot_by_id[anchor] = plot
+                    except Exception as e:
+                        log.error(f"Error loading plot input data {anchor}: {e}")
+                        if config.strict:
+                            raise e
 
         except Exception as e:
             log.error(f"Error loading data from parquet file: {e}")

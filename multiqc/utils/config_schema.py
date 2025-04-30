@@ -241,7 +241,9 @@ class MultiQCConfig(BaseModel):
     )
 
     # Search patterns
-    sp: Optional[Dict[str, SearchPattern]] = Field(None, description="Search patterns for finding tool outputs")
+    sp: Optional[Dict[str, Union[SearchPattern, List[SearchPattern]]]] = Field(
+        None, description="Search patterns for finding tool outputs"
+    )
 
     class Config:
         extra = "allow"  # Allow additional fields that aren't in the schema
