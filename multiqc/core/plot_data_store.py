@@ -125,11 +125,11 @@ def save_report_metadata() -> None:
                 data_sources_dict[mod_id][section][sname] = source
 
     # Creation date
-    try:
-        creation_date_str = report.creation_date.strftime("%Y-%m-%d, %H:%M %Z")
-    except UnicodeEncodeError:
-        # Fall back to a format without timezone if we encounter encoding issues
-        creation_date_str = report.creation_date.strftime("%Y-%m-%d, %H:%M")
+    # try:
+    #     creation_date_str = report.creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+    # except UnicodeEncodeError:
+    #     # Fall back to a format without timezone if we encounter encoding issues
+    #     creation_date_str = report.creation_date.strftime("%Y-%m-%d, %H:%M")
 
     def _clean_config_values(value: Any) -> Any:
         """
@@ -166,8 +166,7 @@ def save_report_metadata() -> None:
         {
             "type": ["run_metadata"],
             "anchor": ["run_metadata"],
-            "timestamp": [creation_date_str],
-            "run_id": [config.title],
+            "creation_date": [report.creation_date],
             "config": [json.dumps(config_dict)],
             "data_sources": [json.dumps(data_sources_dict)],
             "multiqc_version": [config.version if hasattr(config, "version") else ""],
@@ -181,7 +180,7 @@ def save_report_metadata() -> None:
             existing_df = pd.read_parquet(parquet_file)
 
             # Remove any existing metadata
-            existing_df = existing_df[existing_df["anchor"] != "metadata"]
+            existing_df = existing_df[existing_df["anchor"] != "run_metadata"]
 
             # Append new metadata
             merged_df = pd.concat([existing_df, metadata_df], ignore_index=True)
@@ -190,6 +189,8 @@ def save_report_metadata() -> None:
             merged_df.to_parquet(parquet_file, compression="gzip")
         except Exception as e:
             logger.error(f"Error updating parquet file with metadata: {e}")
+            if config.strict:
+                raise e
             # If error, just write the metadata
             metadata_df.to_parquet(parquet_file, compression="gzip")
     else:

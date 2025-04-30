@@ -54,7 +54,6 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         records = []
         # Track column types for proper DataFrame initialization
         column_types: Dict[str, type] = {
-            "anchor": str,
             "dt_anchor": str,
             "section_key": str,
             "sample_name": str,
@@ -91,7 +90,6 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                         # Create record with all necessary metadata
                         record = {
-                            "anchor": self.anchor,
                             "dt_anchor": self.dt.anchor,
                             "section_key": str(section_key),
                             "sample_name": str(sample_name),
@@ -112,8 +110,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
         # Create DataFrame with appropriate dtypes
         df = pd.DataFrame(records, dtype=object).astype(column_types)
-        self.finalize_df(df)
-        return df
+        return self.finalize_df(df)
 
     def to_wide_df(self) -> pd.DataFrame:
         """
@@ -176,7 +173,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         Load plot data from a DataFrame.
         """
         table_anchor = Anchor(f"{anchor}_table")  # make sure it's unique
-        if df.empty:
+        creation_date = cls.creation_date_from_df(df)
+
+        if cls.df_is_empty(df):
             pconf = (
                 pconfig
                 if isinstance(pconfig, TableConfig)
@@ -194,6 +193,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                 pconfig=pconf,
                 anchor=anchor,
                 show_table_by_default=True,
+                creation_date=creation_date,
             )
 
         pconf = cast(TableConfig, TableConfig.from_df(df))
@@ -269,6 +269,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             pconfig=pconf,
             anchor=anchor,
             show_table_by_default=show_table_by_default,
+            creation_date=creation_date,
         )
 
     @classmethod
@@ -299,6 +300,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             pconfig=pconf,
             anchor=anchor,
             show_table_by_default=True,
+            creation_date=report.creation_date,
         )
 
     @staticmethod
@@ -331,6 +333,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             pconfig=pconf,
             anchor=anchor,
             show_table_by_default=show_table_by_default,
+            creation_date=report.creation_date,
         )
 
     @classmethod
@@ -354,11 +357,10 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
             # For duplicates (same sample, metric, dataset, section), keep the latest version
             # Sort by timestamp (newest last)
-            merged_df.sort_values("timestamp", inplace=True)
+            merged_df.sort_values("creation_date", inplace=True)
 
             # Group by the key identifiers and keep the last entry (newest)
-            dedupe_columns = ["dt_anchor", "section_key", "sample_name", "run_id"]
-
+            dedupe_columns = ["dt_anchor", "section_key", "sample_name", "metric_name"]
             merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
         else:
             merged_df = new_df

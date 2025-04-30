@@ -9,6 +9,7 @@ import random
 import re
 import subprocess
 import threading
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import (
@@ -318,6 +319,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
     anchor: Anchor
     plot_type: PlotType
     pconfig: PConfigT
+    creation_date: datetime
 
     def is_empty(self) -> bool:
         """Return True if this plot has no data"""
@@ -377,6 +379,21 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             pconfig.data_labels = data_labels
 
     @classmethod
+    def creation_date_from_df(cls, df: pd.DataFrame) -> datetime:
+        """
+        Extract creation date from dataframe.
+        """
+        assert not df.empty
+        return df["creation_date"].iloc[0]
+
+    @classmethod
+    def df_is_empty(cls, df: pd.DataFrame) -> bool:
+        """
+        Check if dataframe only contains metadata.
+        """
+        return df.empty
+
+    @classmethod
     def load(cls, anchor: Anchor) -> Optional["NormalizedPlotInputData"]:
         """
         Load plot data from a previous analysis, as defined in the input anchor.
@@ -412,9 +429,10 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         Finalize the dataframe before saving. Add common plot metadata.
         """
+        # There facilitate merging with other dataframes
         df["anchor"] = str(self.anchor)
-        df["timestamp"] = report.creation_date.isoformat()
-        df["run_id"] = config.title
+        df["creation_date"] = self.creation_date
+        df["type"] = "plot_input_row" if "type" not in df.columns else df["type"]
         df["plot_type"] = str(self.plot_type.value)
         df["pconfig"] = self.pconfig.model_dump_json(exclude_none=True)
         return df
@@ -447,8 +465,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             {
                 "anchor": [str(self.anchor)],
                 "type": ["plot_input"],
-                "timestamp": [report.creation_date.isoformat()],
-                "run_id": [config.title],
+                "creation_date": [self.creation_date],
                 "plot_type": [str(self.plot_type.value)],
                 "plot_input_data": [nan_safe_dumps(self.model_dump(mode="json", exclude_none=True))],
             }

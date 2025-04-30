@@ -5,8 +5,6 @@ import logging
 import math
 import os
 import random
-from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
 
 import pandas as pd
@@ -331,7 +329,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     y_val = "__NAN__MARKER__" if isinstance(y, float) and math.isnan(y) else str(y)
 
                     record = {
-                        "anchor": self.anchor,
                         "dataset_idx": ds_idx,
                         "dataset_label": dataset_label,
                         "sample_name": series.name,
@@ -351,15 +348,15 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
         # Create DataFrame from records
         df = pd.DataFrame(records)
-        self.finalize_df(df)
-        return df
+        return self.finalize_df(df)
 
     @classmethod
     def from_df(
         cls, df: pd.DataFrame, pconfig: Union[Dict, LinePlotConfig], anchor: Anchor
     ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
         pconf: LinePlotConfig
-        if df.empty:
+        creation_date = cls.creation_date_from_df(df)
+        if cls.df_is_empty(df):
             pconf = (
                 pconfig
                 if isinstance(pconfig, LinePlotConfig)
@@ -371,6 +368,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                 data=[],
                 pconfig=pconf,
                 sample_names=[],
+                creation_date=creation_date,
             )
         pconf = cast(LinePlotConfig, LinePlotConfig.from_df(df))
 
@@ -441,6 +439,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             data=datasets,
             pconfig=pconf,
             sample_names=sample_names,
+            creation_date=creation_date,
         )
 
     @staticmethod
@@ -497,6 +496,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             data=datasets,
             pconfig=pconf,
             sample_names=sample_names,
+            creation_date=report.creation_date,
         )
 
     @classmethod
