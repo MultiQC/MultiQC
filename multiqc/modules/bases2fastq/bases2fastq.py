@@ -2,6 +2,7 @@ import copy
 import csv
 import json
 import logging
+import os
 import random
 import uuid
 
@@ -105,13 +106,12 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
 
         # Checking if run lengths configurations are the same for all samples.
-        self.run_r1r2_lens = [
-            str(len(self.b2f_run_data[s]["Reads"][0]["Cycles"]))
-            + "+"
-            + str(len(self.b2f_run_data[s]["Reads"][1]["Cycles"]))
-            for s in self.b2f_run_data.keys()
-        ]
-
+        self.run_r1r2_lens = []
+        for s in self.b2f_run_data.keys():
+            read_lens = str(len(self.b2f_run_data[s]["Reads"][0]["Cycles"]))
+            if len(self.b2f_run_data[s]["Reads"]) > 1:
+                read_lens += "+" + str(len(self.b2f_run_data[s]["Reads"][1]["Cycles"]))
+            self.run_r1r2_lens.append(read_lens)
         run_r1r2_lens_dict = {}
         for nn, rl in enumerate(self.run_r1r2_lens):
             if not run_r1r2_lens_dict.get(rl):
