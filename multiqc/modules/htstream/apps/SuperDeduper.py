@@ -75,7 +75,7 @@ class SuperDeduper:
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
-                raise
+                continue
 
             # Overview stats
             overview_dict[key] = {

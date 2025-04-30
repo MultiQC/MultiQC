@@ -279,10 +279,16 @@ class MultiqcModule(BaseMultiqcModule):
                 last_app = list(self.overview_stats.keys())[-1]
                 self.gen_report_stats = {}
                 for k, v in self.overview_stats["Pipeline Input"].items():
-                    self.gen_report_stats[k] = {
-                        "Input Reads": self.overview_stats["Pipeline Input"][k]["Input_Reads"] / 1000000,
-                        "Output Reads": self.overview_stats[last_app][k]["Output_Reads"] / 1000000,
-                    }
+                    try:
+                        self.gen_report_stats[k] = {
+                            "Input Reads": self.overview_stats["Pipeline Input"][k]["Input_Reads"] / 1000000,
+                            "Output Reads": self.overview_stats[last_app][k]["Output_Reads"] / 1000000,
+                        }
+                    except KeyError:
+                        log = logging.getLogger(__name__)
+                        report = "HTStream: Excluding " + k + " from General Table."
+                        log.error(report)
+                        continue
 
                 # create header dict for table
                 headers = OrderedDict()
@@ -321,6 +327,7 @@ class MultiqcModule(BaseMultiqcModule):
                 )
 
             except:
+                log = logging.getLogger(__name__)
                 msg = "Report Section for " + section + " Failed."
                 log.warning(msg)
                 raise

@@ -38,11 +38,18 @@ class OverviewStats:
                 else:
                     io = "Output"
 
-                total_reads = json[app][samp][io + "_Reads"]
-                data[0][samp][app] = total_reads
+                try:
+                    total_reads = json[app][samp][io + "_Reads"]
+                    data[0][samp][app] = total_reads
 
-                total_bps = json[app][samp][io + "_Bps"]
-                data[1][samp][app] = total_bps
+                    total_bps = json[app][samp][io + "_Bps"]
+                    data[1][samp][app] = total_bps
+
+                except KeyError:
+                    total_reads = 0
+                    data[0][samp][app] = 0
+                    total_bps = 0
+                    data[1][samp][app] = 0
 
         return linegraph.plot(data, line_config)
 

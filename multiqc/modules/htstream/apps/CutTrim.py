@@ -79,11 +79,11 @@ class CutTrim:
                 perc_left_bp_lost = 0
                 perc_right_bp_lost = 0
                 fraction_bp_lost = 0
-                raise
 
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
+                continue
 
             # Overview stats
             overview_dict[key] = {

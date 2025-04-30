@@ -145,7 +145,7 @@ class Overlapper:
                 perc_min = mins / json[key]["Fragment"]["in"]
                 perc_lin = lins / json[key]["Fragment"]["in"]
 
-            except:
+            except ZeroDivisionError:
                 perc_sin = 0
                 perc_min = 0
                 perc_lin = 0
@@ -153,7 +153,7 @@ class Overlapper:
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
-                raise
+                continue
 
             # Overview stats
             overview_dict[key] = {

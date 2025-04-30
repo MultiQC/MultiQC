@@ -81,6 +81,7 @@ class LengthFilter:
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
+                continue
 
             reads_lost += json[key]["Fragment"]["in"] - json[key]["Fragment"]["out"]
 

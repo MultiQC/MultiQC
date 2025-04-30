@@ -98,6 +98,9 @@ class SeqScreener:
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
+                continue
+
+            # print(key, se_hits, perc_se_hits)
 
             reads_screened += pe_hits + se_hits
 

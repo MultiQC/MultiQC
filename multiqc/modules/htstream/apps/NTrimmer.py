@@ -98,7 +98,7 @@ class NTrimmer:
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
-                raise
+                continue
 
             # overview stats
             overview_dict[key] = {

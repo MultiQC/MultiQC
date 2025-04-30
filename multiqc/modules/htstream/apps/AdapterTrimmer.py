@@ -104,6 +104,7 @@ class AdapterTrimmer:
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
+                continue
 
             # calculations for reads with adapters and bps trimmed
             adapter_reads = (
