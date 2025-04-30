@@ -4,53 +4,60 @@ from multiqc.plots import bargraph
 from .utils import summarize_batch_names
 from .queries import *
 
+
 def plot_barcoding(c2s_run_data):
-    """"
+    """ "
     Generate plots related to barcoding performance metrics from the cells2stats report
     """
 
-    batch_names = summarize_batch_names(c2s_run_data)    
-    plot_content = [get_percent_assigned(c2s_run_data), get_percent_mismatch(c2s_run_data),]
+    batch_names = summarize_batch_names(c2s_run_data)
+    plot_content = [
+        get_percent_assigned(c2s_run_data),
+        get_percent_mismatch(c2s_run_data),
+    ]
     pconfig = {
         "data_labels": [
             {"name": "Assigned Reads", "ylab": "Percent of Assigned Reads"},
-            {"name" : "Mismatches", "ylab" : "Percent Mismatch"}
-
+            {"name": "Mismatches", "ylab": "Percent Mismatch"},
         ],
         "cpswitch": False,
         "id": "barcoding_bar",
-        "stacking": "group",  
+        "stacking": "group",
         "title": "cells2stats: Barcoding QC metrics plot",
-        "ylab": "QC"
+        "ylab": "QC",
     }
 
     scale = mqc_colour.mqc_colour_scale("GnBu", 0, len(batch_names))
-    
+
     cat = {}
     for i, batch_name in enumerate(batch_names):
         cat[batch_name] = {"name": batch_name, "color": scale.get_colour(i, lighten=1)}
-    
-    cats = [
-        cat,
-        cat
-    ]   
+
+    cats = [cat, cat]
 
     plot_name = "Barcoding Metrics"
     plot_html = bargraph.plot(plot_content, cats, pconfig=pconfig)
     anchor = "well_barcoding_plot"
     description = "Bar plots of barcoding metrics"
-    helptext = """PLot percent of assigned reads and percent of reads assigned with mismatch for each well in the run."""
-    
+    helptext = (
+        """PLot percent of assigned reads and percent of reads assigned with mismatch for each well in the run."""
+    )
+
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
 def plot_cell_assignment(c2s_run_data):
-    """"
+    """ "
     Generate plots related to cell assignment performance metrics from the cells2stats report
     """
-        
+
     batch_names = summarize_batch_names(c2s_run_data)
-    plot_content = [get_total_density(c2s_run_data), get_batch_density(c2s_run_data), get_total_counts(c2s_run_data), get_batch_counts(c2s_run_data),]
+    plot_content = [
+        get_total_density(c2s_run_data),
+        get_batch_density(c2s_run_data),
+        get_total_counts(c2s_run_data),
+        get_batch_counts(c2s_run_data),
+    ]
     pconfig = {
         "data_labels": [
             {"name": "Total Density", "ylab": "Assigned Counts K / mm2"},
@@ -60,35 +67,30 @@ def plot_cell_assignment(c2s_run_data):
         ],
         "cpswitch": False,
         "id": "cell_assignment_bar",
-        "stacking": "group",  
+        "stacking": "group",
         "title": "cells2stats: Barcoding QC metrics plot",
-        "ylab": "QC"
+        "ylab": "QC",
     }
 
     scale = mqc_colour.mqc_colour_scale("GnBu", 0, len(batch_names))
-    
+
     cat = {}
     for i, batch_name in enumerate(batch_names):
         cat[batch_name] = {"name": batch_name, "color": scale.get_colour(i, lighten=1)}
-    
-    cats = [
-        {"total_density" : {"name": "Total Density"} },
-        cat,
-        {"total_count" : {"name": "Total Counts"} },
-        cat
-    ]   
+
+    cats = [{"total_density": {"name": "Total Density"}}, cat, {"total_count": {"name": "Total Counts"}}, cat]
 
     plot_name = "Cell Assignment Metrics"
     plot_html = bargraph.plot(plot_content, cats, pconfig=pconfig)
     anchor = "well_assignment_plot"
     description = "Bar plots of cell assignment metrics"
     helptext = """Plot density and absolute of assigned counts per batch and across all batches."""
-    
+
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
 def plot_cell_segmentation(c2s_run_data):
-    """"
+    """ "
     Generate plots related to cell segmentation metrics from the cells2stats report
     """
     plot_content = []
@@ -103,7 +105,6 @@ def plot_cell_segmentation(c2s_run_data):
             {"name": "Confluency", "ylab": "Percent Confluency"},
             {"name": "Nucleated Cells", "ylab": "Percent Nucleated Cells"},
             {"name": "Cell Diameter", "ylab": "Median Cell Diameter (um)"},
-
         ],
         "cpswitch": False,
         "id": "cell_segmentation_bar",
@@ -112,39 +113,32 @@ def plot_cell_segmentation(c2s_run_data):
     }
 
     cats = [
-        {
-            "cell_count": {"name": "Cell Count"}
-        },
-        {
-            "percent_confluency": {"name": "Confluency"}
-        },
-        {
-            "percent_nucleated_cells": {"name": "Nucleated Cells"}
-        },
-        {
-            "median_cell_diameter": {"name": "Median Cell Diameter (um)"}
-        }
-    ]   
+        {"cell_count": {"name": "Cell Count"}},
+        {"percent_confluency": {"name": "Confluency"}},
+        {"percent_nucleated_cells": {"name": "Nucleated Cells"}},
+        {"median_cell_diameter": {"name": "Median Cell Diameter (um)"}},
+    ]
 
     plot_name = "Cell Segmentation Metrics"
     plot_html = bargraph.plot(plot_content, cats, pconfig=pconfig)
     anchor = "well_segmentation_plot"
     description = "Bar plots of cell segmentation metrics"
     helptext = """Plot cell counts, confluency, nucleated cells, and median cell diameter for each well in the run."""
-    
+
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
+
 def plot_controls(c2s_run_data):
-    """"
+    """ "
     Generate plots related to control metrics from the cells2stats report
     """
-    
+
     batch_names = summarize_batch_names(c2s_run_data)
-    
+
     controls = set()
     for run_name in c2s_run_data:
         run_data = c2s_run_data[run_name]
-        for well_data in run_data.get("CytoStats", {}).get("Wells",[]):
+        for well_data in run_data.get("CytoStats", {}).get("Wells", []):
             for batch_data in well_data.get("Batches", []):
                 batch_name = batch_data.get("BatchName", "")
                 if batch_name != "" and not batch_name.startswith("CP"):
@@ -167,31 +161,32 @@ def plot_controls(c2s_run_data):
                         control_data = find_entry(batch_data.get("ControlTargets", []), "ControlType", control, {})
                         val = json_decode_float(control_data.get("AssignedCountPerMM2", float("nan")))
                         if not is_nan(val):
-                            control_content.setdefault(f"{run_name} {well_location}",{})[batch_name] = val
+                            control_content.setdefault(f"{run_name} {well_location}", {})[batch_name] = val
         plot_content.append(control_content)
 
     pconfig = {
-        "data_labels": [
-            {"name" : control, "ylab" : "Assigned Counts K / mm2"} for control in controls],
+        "data_labels": [{"name": control, "ylab": "Assigned Counts K / mm2"} for control in controls],
         "cpswitch": False,
         "id": "controls_bar",
-        "stacking": "group",  
+        "stacking": "group",
         "title": "cells2stats: Control targets plot",
-        "ylab": "QC"
+        "ylab": "QC",
     }
 
     scale = mqc_colour.mqc_colour_scale("GnBu", 0, len(batch_names))
-    
+
     cat = {}
     for i, batch_name in enumerate(batch_names):
         cat[batch_name] = {"name": batch_name, "color": scale.get_colour(i, lighten=1)}
-    
-    cats = [cat,] * len(plot_content)
+
+    cats = [
+        cat,
+    ] * len(plot_content)
 
     plot_name = "Control Targets"
     plot_html = bargraph.plot(plot_content, cats, pconfig=pconfig)
     anchor = "well_control_plot"
     description = "Bar plots of control targets"
     helptext = """Plot density of assigned counts per batch for controls."""
-    
+
     return plot_html, plot_name, anchor, description, helptext, plot_content

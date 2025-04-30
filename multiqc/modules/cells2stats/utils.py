@@ -7,6 +7,7 @@ def find_entry(json_list, key, value, default_value):
             return entry
     return default_value
 
+
 def json_decode_float(value):
     """
     Decode a JSON float value, converting it to NaN if it is -999
@@ -15,6 +16,7 @@ def json_decode_float(value):
     if abs(value + 999) < 0.00001:
         return float("nan")
     return value
+
 
 def json_decode_int(value):
     """
@@ -25,11 +27,13 @@ def json_decode_int(value):
         return 0
     return value
 
+
 def is_nan(value):
     """
     Check if a value is NaN
     """
     return value != value
+
 
 def summarize_batch_names(c2s_run_data):
     """
@@ -38,10 +42,10 @@ def summarize_batch_names(c2s_run_data):
     batch_names = set()
     for run_name in c2s_run_data:
         run_data = c2s_run_data[run_name]
-        for well_data in run_data.get("CytoStats", {}).get("Wells",[]):
+        for well_data in run_data.get("CytoStats", {}).get("Wells", []):
             for batch_data in well_data.get("Batches", []):
                 batch_name = batch_data.get("BatchName", "")
                 if batch_name != "" and not batch_name.startswith("CP"):
                     batch_names.add(batch_data["BatchName"])
-    
+
     return sorted(batch_names)

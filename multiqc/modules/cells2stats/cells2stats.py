@@ -7,6 +7,8 @@ from .cells2stats_bar_plots import plot_cell_segmentation, plot_barcoding, plot_
 from .cells2stats_tables import tabulate_wells, tabulate_batches
 
 log = logging.getLogger(__name__)
+
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
@@ -30,8 +32,15 @@ class MultiqcModule(BaseMultiqcModule):
                 observed_run_names.add(data["RunName"])
             self.c2s_run_data[unique_run_name] = data
             self.add_data_source(f=f, s_name=data["RunName"], module="cells2stats")
-        
-        for plotting_function in [tabulate_wells, tabulate_batches, plot_cell_segmentation, plot_barcoding, plot_cell_assignment, plot_controls]:
+
+        for plotting_function in [
+            tabulate_wells,
+            tabulate_batches,
+            plot_cell_segmentation,
+            plot_barcoding,
+            plot_cell_assignment,
+            plot_controls,
+        ]:
             plot_html, plot_name, anchor, description, helptext, plot_content = plotting_function(self.c2s_run_data)
             self.add_section(
                 anchor=anchor,
