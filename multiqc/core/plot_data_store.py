@@ -75,8 +75,8 @@ def get_report_metadata(df: pd.DataFrame) -> Optional[Dict[str, Any]]:
             result["data_sources"] = json.loads(metadata_df["data_sources"].iloc[0])
 
         # Read creation date
-        if "timestamp" in metadata_df.columns and not metadata_df["timestamp"].empty:
-            result["timestamp"] = metadata_df["timestamp"].iloc[0]
+        if "creation_date" in metadata_df.columns and not metadata_df["creation_date"].empty:
+            result["creation_date"] = metadata_df["creation_date"].iloc[0]
 
         # Read config
         if "config" in metadata_df.columns and not metadata_df["config"].empty:
