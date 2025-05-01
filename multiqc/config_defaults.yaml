@@ -161,6 +161,8 @@ fn_ignore_paths:
   - "*/site-packages/multiqc" # MultiQC installation directory
 sample_names_ignore: []
 sample_names_ignore_re: []
+sample_names_only_include: []
+sample_names_only_include_re: []
 sample_names_rename_buttons: []
 sample_names_replace: {}
 sample_names_replace_regex: false

@@ -233,6 +233,14 @@ click.rich_click.OPTION_GROUPS = {
     help="Ignore sample names",
 )
 @click.option(
+    "--only-samples",
+    "only_samples",
+    type=str,
+    multiple=True,
+    metavar="GLOB EXPRESSION",
+    help="Only include sample names matching the given glob expression",
+)
+@click.option(
     "--ignore-symlinks",
     "ignore_symlinks",
     is_flag=True,
