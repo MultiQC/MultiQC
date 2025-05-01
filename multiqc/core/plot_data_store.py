@@ -11,7 +11,6 @@ from re import Pattern
 from typing import Any, Dict, List, Optional, Set
 
 import pandas as pd
-import pyarrow as pa
 from pydantic import ValidationError  # type: ignore
 
 from multiqc import config, report
