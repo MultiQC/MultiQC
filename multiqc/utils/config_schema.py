@@ -202,6 +202,8 @@ class MultiQCConfig(BaseModel):
     fn_ignore_paths: Optional[List[str]] = Field(None, description="Paths to ignore")
     sample_names_ignore: Optional[List[str]] = Field(None, description="Sample names to ignore")
     sample_names_ignore_re: Optional[List[str]] = Field(None, description="Sample names to ignore (regex)")
+    sample_names_only_include: Optional[List[str]] = Field(None, description="Sample names to include")
+    sample_names_only_include_re: Optional[List[str]] = Field(None, description="Sample names to include (regex)")
     sample_names_rename_buttons: Optional[List[str]] = Field(None, description="Sample names to rename")
     sample_names_replace: Optional[Dict[str, str]] = Field(None, description="Sample names to replace")
     sample_names_replace_regex: Optional[bool] = Field(None, description="Sample names to replace (regex)")
