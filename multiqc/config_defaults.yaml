@@ -55,7 +55,7 @@ zip_data_dir: false
 data_dump_file: true
 data_dump_file_write_raw: true # Write the `saved_raw_data` section in multiqc_data.json - useful to set to
 # false for large datasets as the raw data can be prohibitively large
-megaqc_url: false
+megaqc_url: null
 megaqc_access_token: null
 megaqc_timeout: 30
 export_plots: false
