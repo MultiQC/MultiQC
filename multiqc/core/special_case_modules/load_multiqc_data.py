@@ -147,12 +147,9 @@ class LoadMultiqcData(BaseMultiqcModule):
             # Set creation date
             if "creation_date" in metadata:
                 try:
-                    report.creation_date = datetime.strptime(metadata["creation_date"], "%Y-%m-%d, %H:%M %Z")
+                    report.creation_date = pd.Timestamp(metadata["creation_date"]).tz_localize("UTC").to_pydatetime()
                 except ValueError:
-                    try:
-                        report.creation_date = datetime.strptime(metadata["creation_date"], "%Y-%m-%d, %H:%M")
-                    except ValueError:
-                        log.error(f"Could not parse creation date: {metadata['creation_date']}")
+                    log.error(f"Could not parse creation date: {metadata['creation_date']}")
 
             if "config" in metadata:
                 pass  # We do not load config, but keep the current one
