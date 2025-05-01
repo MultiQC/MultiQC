@@ -192,7 +192,11 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
                     data[s_name].update({base_no: 0})
                 else:
                     data[s_name].update(
-                        {base_no: R2[cycle]["BaseComposition"]["N"] / sum(R2[cycle]["BaseComposition"].values()) * 100.0}
+                        {
+                            base_no: R2[cycle]["BaseComposition"]["N"]
+                            / sum(R2[cycle]["BaseComposition"].values())
+                            * 100.0
+                        }
                     )
 
     plot_content = data

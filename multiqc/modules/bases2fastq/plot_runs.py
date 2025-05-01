@@ -274,7 +274,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["QualityScoreMean"]})
-        if paired_end:    
+        if paired_end:
             for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
                 cycle_no = int(cycle["Cycle"]) + r1r2_split
                 cycle_dict.update({cycle_no: cycle["QualityScoreMean"]})
