@@ -191,7 +191,7 @@ def tabulate_batches(c2s_run_data):
 
     pconfig = {
         "title": "cells2stats: Batch QC metrics",
-        "col1_header": "Batch",
+        "col1_header": "Run / Well / Batch",
         "id": "batch_metrics_table",
         "ylab": "QC",
     }

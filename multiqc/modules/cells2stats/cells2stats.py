@@ -1,7 +1,7 @@
 import json
 import logging
 
-from multiqc.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .cells2stats_bar_plots import plot_cell_segmentation, plot_barcoding, plot_cell_assignment, plot_controls
 from .cells2stats_tables import tabulate_wells, tabulate_batches
@@ -35,6 +35,9 @@ class MultiqcModule(BaseMultiqcModule):
             if analysis_version is not None:
                 self.add_software_version(analysis_version, sample=unique_run_name)
             self.add_data_source(f=f, s_name=unique_run_name, module="cells2stats")
+
+        if len(self.c2s_run_data) == 0:
+            raise ModuleNoSamplesFound
 
         for plotting_function in [
             tabulate_wells,
