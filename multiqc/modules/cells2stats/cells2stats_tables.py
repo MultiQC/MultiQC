@@ -110,7 +110,7 @@ def tabulate_wells(c2s_run_data):
 
     plot_name = "Well QC metrics table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
-    anchor = "well_metrics_table"
+    anchor = "well_metrics"
     description = "Table of general well QC metrics"
     helptext = """Provides overall metrics summarizing the performance of each well"""
     return plot_html, plot_name, anchor, description, helptext, plot_content
@@ -198,7 +198,7 @@ def tabulate_batches(c2s_run_data):
 
     plot_name = "Batch QC metrics table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
-    anchor = "batch_metrics_table"
+    anchor = "batch_metrics"
     description = "Table of general batch QC metrics"
     helptext = """Provides overall metrics summarizing the performance of each batch per well"""
     return plot_html, plot_name, anchor, description, helptext, plot_content
