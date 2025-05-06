@@ -3,8 +3,13 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from .cells2stats_bar_plots import plot_cell_segmentation, plot_barcoding, plot_cell_assignment, plot_controls
-from .cells2stats_tables import tabulate_wells, tabulate_batches
+from multiqc.modules.cells2stats.cells2stats_bar_plots import (
+    plot_cell_segmentation,
+    plot_barcoding,
+    plot_cell_assignment,
+    plot_controls,
+)
+from multiqc.modules.cells2stats.cells2stats_tables import tabulate_wells, tabulate_batches
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="cells2stats",
             href="https://docs.elembio.io/docs/cells2stats/introduction/",
             info="Generate output files and statistics from Element Biosciences Teton Assay",
-            doi="",
+            # doi="",
         )
 
         self.c2s_run_data = dict()
@@ -30,7 +35,13 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 unique_run_name = data["RunName"]
                 observed_run_names.add(data["RunName"])
+
+            # skip run if in user provider ignore list
+            if self.is_ignore_sample(unique_run_name):
+                continue
+
             self.c2s_run_data[unique_run_name] = data
+
             analysis_version = data.get("AnalysisVersion", None)
             if analysis_version is not None:
                 self.add_software_version(analysis_version, sample=unique_run_name)
@@ -38,6 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.c2s_run_data) == 0:
             raise ModuleNoSamplesFound
+        log.info(f"Found {len(self.c2s_run_data)} samples within the cells2stats results")
 
         for plotting_function in [
             tabulate_wells,
