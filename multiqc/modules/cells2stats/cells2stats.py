@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="cells2stats",
             href="https://docs.elembio.io/docs/cells2stats/introduction/",
             info="Generate output files and statistics from Element Biosciences Teton Assay",
-            # doi = "",
+            doi="",
         )
 
         self.c2s_run_data = dict()
