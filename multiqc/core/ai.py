@@ -237,7 +237,7 @@ class Client:
             return int(len(text) / 1.5)
 
     def _request_with_error_handling_and_retries(
-        self, url: str, headers: Dict[str, Any], body: Dict[str, Any], retries: int = 1
+        self, url: str, headers: Dict[str, Any], body: Dict[str, Any], retries: Optional[int] = None
     ) -> Dict[str, Any]:
         """Make a request with retries and exponential backoff.
 
@@ -247,6 +247,7 @@ class Client:
         """
         import time
 
+        retries = retries or config.ai_retries or 3
         attempt = 0
         while True:
             try:
@@ -320,17 +321,22 @@ class OpenAiClient(Client):
         body.update(
             {
                 "model": self.model,
-                "messages": [
-                    {"role": "user", "content": prompt},
-                ],
+                "messages": [{"role": "user", "content": prompt}],
             }
         )
-        response = self._request_with_error_handling_and_retries(
-            self.endpoint,
-            headers={
+        if config.ai_auth_type == "api-key":
+            headers = {
+                "Content-Type": "application/json",
+                "api-key": self.api_key,
+            }
+        else:
+            headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",
-            },
+            }
+        response = self._request_with_error_handling_and_retries(
+            self.endpoint,
+            headers=headers,
             body=body,
         )
         return OpenAiClient.ApiResponse(

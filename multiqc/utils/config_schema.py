@@ -126,6 +126,8 @@ class MultiQCConfig(BaseModel):
     ai_provider: Optional[AiProviderLiteral] = Field(None, description="AI provider")
     ai_model: Optional[str] = Field(None, description="AI model")
     ai_custom_endpoint: Optional[str] = Field(None, description="AI custom endpoint")
+    ai_auth_type: Optional[str] = Field(None, description="AI auth type")
+    ai_retries: int = Field(None, description="AI retries")
     ai_extra_query_options: Optional[str] = Field(None, description="AI extra query options")
     ai_custom_context_window: Optional[str] = Field(None, description="AI custom context window")
     ai_prompt_short: Optional[str] = Field(
