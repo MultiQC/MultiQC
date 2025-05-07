@@ -125,7 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Flexbar: Processed Reads",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
 
         self.add_section(plot=bargraph.plot(self.flexbar_data, keys, pconfig))

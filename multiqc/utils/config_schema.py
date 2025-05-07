@@ -41,6 +41,31 @@ class CleanPattern(BaseModel):
     module: Optional[Union[str, List[str]]] = Field(None, description="Module(s) to apply this pattern to")
 
 
+class GeneralStatsColumnConfig(BaseModel):
+    """Configuration for a general stats column"""
+
+    title: Optional[str] = Field(None, description="Column title")
+    description: Optional[str] = Field(None, description="Column description")
+    namespace: Optional[str] = Field(None, description="Column namespace")
+    scale: Optional[str] = Field(None, description="Color scale")
+    format: Optional[str] = Field(None, description="Number format")
+    min: Optional[float] = Field(None, description="Minimum value")
+    max: Optional[float] = Field(None, description="Maximum value")
+    ceiling: Optional[float] = Field(None, description="Ceiling value")
+    floor: Optional[float] = Field(None, description="Floor value")
+    shared_key: Optional[str] = Field(None, description="Shared key name")
+    hidden: Optional[bool] = Field(None, description="Whether column is hidden by default")
+    placement: Optional[float] = Field(None, description="Column placement order")
+
+
+class GeneralStatsModuleConfig(BaseModel):
+    """Configuration for a module's general stats columns"""
+
+    columns: Dict[str, GeneralStatsColumnConfig] = Field(
+        default_factory=dict, description="Columns to show in general stats table. Keys are column IDs."
+    )
+
+
 class MultiQCConfig(BaseModel):
     """Schema for MultiQC config validation"""
 
@@ -88,10 +113,11 @@ class MultiQCConfig(BaseModel):
     zip_data_dir: Optional[bool] = Field(None, description="Zip data directory")
     data_dump_file: Optional[bool] = Field(None, description="Write data to a file")
     data_dump_file_write_raw: Optional[bool] = Field(None, description="Write raw data to a file")
-    megaqc_url: Optional[bool] = Field(None, description="Upload to MegaQC")
+    megaqc_url: Optional[str] = Field(None, description="MegaQC URL to upload to")
     megaqc_access_token: Optional[str] = Field(None, description="MegaQC access token")
     megaqc_timeout: Optional[int] = Field(None, description="MegaQC timeout")
     export_plots: Optional[bool] = Field(None, description="Export plots")
+    export_plots_timeout: Optional[int] = Field(None, description="Export plots timeout")
     make_report: Optional[bool] = Field(None, description="Make report")
     make_pdf: Optional[bool] = Field(None, description="Make PDF")
 
@@ -100,8 +126,16 @@ class MultiQCConfig(BaseModel):
     ai_provider: Optional[AiProviderLiteral] = Field(None, description="AI provider")
     ai_model: Optional[str] = Field(None, description="AI model")
     ai_custom_endpoint: Optional[str] = Field(None, description="AI custom endpoint")
+    ai_auth_type: Optional[str] = Field(None, description="AI auth type")
+    ai_retries: Optional[int] = Field(None, description="AI retries")
     ai_extra_query_options: Optional[str] = Field(None, description="AI extra query options")
     ai_custom_context_window: Optional[str] = Field(None, description="AI custom context window")
+    ai_prompt_short: Optional[str] = Field(
+        None, description="Prompt for short AI summary, put before the report details when sent to the provider"
+    )
+    ai_prompt_full: Optional[str] = Field(
+        None, description="Prompt for full AI summary, put before the report details when sent to the provider"
+    )
     no_ai: Optional[bool] = Field(None, description="Disable AI")
     ai_anonymize_samples: Optional[bool] = Field(None, description="Anonymize samples")
 
@@ -136,6 +170,9 @@ class MultiQCConfig(BaseModel):
     max_configurable_table_columns: Optional[int] = Field(
         None, description="Maximum number of columns to show in tables"
     )
+    general_stats_columns: Dict[str, GeneralStatsModuleConfig] = Field(
+        default_factory=dict, description="Configuration for general stats columns per module. Keys are module IDs."
+    )
     table_columns_visible: Optional[Dict[str, Union[bool, Dict[str, bool]]]] = Field(
         None, description="Which columns to show in tables"
     )
@@ -167,6 +204,8 @@ class MultiQCConfig(BaseModel):
     fn_ignore_paths: Optional[List[str]] = Field(None, description="Paths to ignore")
     sample_names_ignore: Optional[List[str]] = Field(None, description="Sample names to ignore")
     sample_names_ignore_re: Optional[List[str]] = Field(None, description="Sample names to ignore (regex)")
+    sample_names_only_include: Optional[List[str]] = Field(None, description="Sample names to include")
+    sample_names_only_include_re: Optional[List[str]] = Field(None, description="Sample names to include (regex)")
     sample_names_rename_buttons: Optional[List[str]] = Field(None, description="Sample names to rename")
     sample_names_replace: Optional[Dict[str, str]] = Field(None, description="Sample names to replace")
     sample_names_replace_regex: Optional[bool] = Field(None, description="Sample names to replace (regex)")
@@ -206,7 +245,9 @@ class MultiQCConfig(BaseModel):
     )
 
     # Search patterns
-    sp: Optional[Dict[str, SearchPattern]] = Field(None, description="Search patterns for finding tool outputs")
+    sp: Optional[Dict[str, Union[SearchPattern, List[SearchPattern]]]] = Field(
+        None, description="Search patterns for finding tool outputs"
+    )
 
     class Config:
         extra = "allow"  # Allow additional fields that aren't in the schema

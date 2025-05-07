@@ -292,6 +292,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": f"{self.name}: Top taxa",
             "ylab": "Number of fragments",
             "data_labels": [v for k, v in MultiqcModule.T_RANKS.items() if k in found_rank_codes],
+            "tt_decimals": 0,
         }
 
         self.add_section(

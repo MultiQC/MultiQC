@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -83,6 +82,40 @@ class MultiqcModule(BaseMultiqcModule):
     samtools_coverage:
       show_excluded_debug_logs: True
     ```
+
+    ### General Statistics Columns
+
+    You can customize which metrics from samtools modules appear in the General Statistics table.
+    For example, to show reads mapped percentage and error rate from stats module, and
+    add reads mapped from flagstat module:
+
+    ```yaml
+    general_stats_columns:
+      samtools/stats:
+        columns:
+          reads_mapped_percent:
+            title: "% Mapped"
+            description: "% Mapped reads from samtools stats"
+            hidden: false
+          error_rate:
+            title: "Error rate"
+            description: "Error rate from samtools stats"
+            hidden: false
+      samtools/flagstat:
+        columns:
+          mapped_passed:
+            title: "Flagstat Mapped"
+            description: "Reads mapped from samtools flagstat"
+            hidden: false
+    ```
+
+    Each samtools submodule has its own namespace in the configuration:
+    - `samtools/stats`
+    - `samtools/flagstat`
+    - `samtools/rmdup`
+    - `samtools/markdup`
+    - `samtools/coverage`
+
     """
 
     def __init__(self):

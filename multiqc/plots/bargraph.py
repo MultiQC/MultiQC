@@ -1,12 +1,15 @@
 """MultiQC functions to plot a bargraph"""
 
 import copy
+import json
 import logging
 import math
 from collections import OrderedDict, defaultdict
-from itertools import zip_longest
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union, cast
 
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 import spectra  # type: ignore
 from natsort import natsorted
@@ -14,8 +17,10 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.core.exceptions import RunError
+from multiqc.core.plot_data_store import save_plot_data
 from multiqc.plots.plot import (
     BaseDataset,
+    NormalizedPlotInputData,
     PConfig,
     Plot,
     PlotType,
@@ -32,7 +37,7 @@ logger = logging.getLogger(__name__)
 SampleNameT = Union[SampleName, str]
 CatName = NewType("CatName", str)
 CatNameT = Union[CatName, str]
-InputDatasetT = Mapping[SampleNameT, Mapping[CatNameT, Union[int, float]]]
+InputDatasetT = Union[Mapping[SampleName, Mapping[CatName, Any]], Mapping[str, Mapping[str, Any]]]
 
 
 class CatConf(ValidatedConfig):
@@ -44,7 +49,13 @@ class CatConf(ValidatedConfig):
 
 
 # Either a list of strings, or a cat conf - a mapping from category names to their properties dicts or objects
-InputCategoriesT = Union[Sequence[CatNameT], Mapping[CatNameT, Union[Mapping[str, str], CatConf]]]
+InputCategoriesT = Union[
+    Sequence[str],
+    Mapping[CatName, Mapping[str, Any]],
+    Sequence[CatName],
+    Mapping[str, Mapping[str, Any]],
+    Sequence[str],
+]
 
 
 class BarPlotConfig(PConfig):
@@ -81,198 +92,313 @@ class CatDataDict(TypedDict):
 DatasetT = Dict[SampleName, Dict[CatName, Union[int, float]]]
 
 
-class BarPlotInputData(BaseModel):
+class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
     data: List[DatasetT]
     cats: List[Dict[CatName, CatConf]]
-    pconfig: BarPlotConfig
 
+    def is_empty(self) -> bool:
+        return len(self.data) == 0 or all(len(ds) == 0 for ds in self.data)
 
-def normalize_inputs(
-    data: Union[InputDatasetT, Sequence[InputDatasetT]],
-    cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
-    pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
-) -> BarPlotInputData:
-    """
-    We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
-    allow optional categories, categories as strings or as dicts or as objects. We want
-    to normalize the input data before we save it to intermediate format and plot.
-    """
-    pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
+    @staticmethod
+    def create(
+        data: Union[InputDatasetT, Sequence[InputDatasetT]],
+        cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
+        pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
+    ) -> "BarPlotInputData":
+        """
+        We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
+        allow optional categories, categories as strings or as dicts or as objects. We want
+        to normalize the input data before we save it to intermediate format and plot.
+        """
+        pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
 
-    # Given one dataset - turn it into a list
-    raw_datasets: List[DatasetT]
-    if isinstance(data, Sequence):
-        raw_datasets = cast(List[DatasetT], data)
-    else:
-        raw_datasets = [cast(DatasetT, data)]
-    del data
+        # Given one dataset - turn it into a list
+        raw_datasets: List[DatasetT]
+        if isinstance(data, Sequence):
+            raw_datasets = cast(List[DatasetT], data)
+        else:
+            raw_datasets = [cast(DatasetT, data)]
+        del data
 
-    # Make list of cats from different inputs
-    raw_cats_per_ds: List[InputCategoriesT]
-    if not cats:
-        # Not supplied, generate default categories
-        raw_cats_per_ds = []
-        for val_by_cat_by_sample in raw_datasets:
-            ds_cats: List[CatName] = []
-            for sample_name, val_by_cat in val_by_cat_by_sample.items():
-                for cat_name in val_by_cat.keys():
-                    if cat_name not in raw_cats_per_ds:
-                        ds_cats.append(CatName(cat_name))
-            raw_cats_per_ds.append(ds_cats)
-    elif isinstance(cats, List) and isinstance(cats[0], str):
-        # ["Cat1", "Cat2"] - list of strings for one dataset
-        raw_cats_per_ds = [[CatName(cat_name) for cat_name in cast(List[str], cats)]]
-    elif isinstance(cats, Sequence):
-        # [["Cat1", "Cat2"], {"Cat3": {}, "Cat4": {}}] - list of lists or dicts for multiple datasets
-        raw_cats_per_ds = [ds_cats for ds_cats in cast(List[Dict], cats)]
-    else:
-        raw_cats_per_ds = [cats]
+        # Make list of cats from different inputs
+        raw_cats_per_ds: List[InputCategoriesT]
+        if not cats:
+            # Not supplied, generate default categories
+            raw_cats_per_ds = []
+            for val_by_cat_by_sample in raw_datasets:
+                ds_cats: List[CatName] = []
+                for sample_name, val_by_cat in val_by_cat_by_sample.items():
+                    for _cat_name in val_by_cat.keys():
+                        if _cat_name not in raw_cats_per_ds:
+                            ds_cats.append(CatName(_cat_name))
+                raw_cats_per_ds.append(ds_cats)
+        elif isinstance(cats, List) and isinstance(cats[0], str):
+            # ["Cat1", "Cat2"] - list of strings for one dataset
+            raw_cats_per_ds = [[CatName(cat_name) for cat_name in cast(List[str], cats)]]
+        elif isinstance(cats, Sequence):
+            # [["Cat1", "Cat2"], {"Cat3": {}, "Cat4": {}}] - list of lists or dicts for multiple datasets
+            raw_cats_per_ds = [ds_cats for ds_cats in cast(List[Dict], cats)]
+        else:
+            raw_cats_per_ds = [cats]
 
-    if len(raw_datasets) > 1 and len(raw_cats_per_ds) == 1:
-        raw_cats_per_ds = raw_cats_per_ds * len(raw_datasets)
-    elif len(raw_datasets) != len(raw_cats_per_ds):
-        raise RunError(
-            f"Bar graph: number of dataset and category lists must match, got {len(raw_datasets)} "
-            f"datasets and {len(raw_cats_per_ds)} category lists: {raw_cats_per_ds}"
+        if len(raw_datasets) > 1 and len(raw_cats_per_ds) == 1:
+            raw_cats_per_ds = raw_cats_per_ds * len(raw_datasets)
+        elif len(raw_datasets) == 0 and len(raw_cats_per_ds) == 1:
+            raw_cats_per_ds = []
+        elif len(raw_datasets) != len(raw_cats_per_ds):
+            raise RunError(
+                f"Bar graph: number of dataset and category lists must match, got {len(raw_datasets)} "
+                f"datasets and {len(raw_cats_per_ds)} category lists: {raw_cats_per_ds}"
+            )
+
+        # Parse the categories into pydantic objects
+        categories_per_ds: List[Dict[CatName, CatConf]] = []
+        for raw_ds_cats in raw_cats_per_ds:
+            ds_categories: Dict[CatName, CatConf] = dict()
+            if isinstance(raw_ds_cats, list):
+                for cat_name in raw_ds_cats:
+                    ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), name=cat_name)
+            elif isinstance(raw_ds_cats, dict):
+                for cat_name, cat_props in raw_ds_cats.items():
+                    if isinstance(cat_props, CatConf):
+                        ds_categories[CatName(cat_name)] = cat_props
+                    else:
+                        if "name" not in cat_props:
+                            cat_props = {"name": cat_name, **cat_props}
+                        ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), **cat_props)
+            else:
+                raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
+            categories_per_ds.append(ds_categories)
+
+        # Allow user to overwrite a given category config for this plot
+        if pconf.id and pconf.id in config.custom_plot_config:
+            for cat_name, user_cat_props in config.custom_plot_config[pconf.id].items():
+                for ds_idx in range(len(categories_per_ds)):
+                    if cat_name in categories_per_ds[ds_idx].keys():
+                        for prop_name, prop_val in user_cat_props.items():
+                            setattr(categories_per_ds[ds_idx][CatName(cat_name)], prop_name, prop_val)
+
+        # Filter data to keep only numerals, remove unknown categories and fill missing with NaNs
+        filtered_datasets: List[DatasetT] = []
+        for ds_idx, raw_ds in enumerate(raw_datasets):
+            filtered_ds: DatasetT = {}
+            filtered_datasets.append(filtered_ds)
+            for sample_name in list(raw_ds.keys()):
+                raw_val_by_cat = raw_ds[sample_name]
+                filtered_val_by_cat = {}
+                for cat_id, _ in categories_per_ds[ds_idx].items():
+                    # Remove categories that are not in the categories_per_ds, and fill missing with NaNs
+                    val = raw_val_by_cat.get(cat_id, None)
+                    if val is not None and not isinstance(val, (float, int)):
+                        # Try to parse
+                        try:
+                            val = int(val)
+                        except ValueError:
+                            try:
+                                val = float(val)
+                            except ValueError:
+                                val = None
+                    if val is None:
+                        val = float("nan")
+                    elif isinstance(val, float):
+                        if math.floor(val) == val:
+                            val = int(val)
+                    filtered_val_by_cat[cat_id] = val
+                # Remove samples with no data
+                if all(math.isnan(v) for v in filtered_val_by_cat.values()):
+                    continue
+                filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
+
+        return BarPlotInputData(
+            anchor=plot_anchor(pconf),
+            plot_type=PlotType.BAR,
+            pconfig=pconf,
+            data=filtered_datasets,
+            cats=categories_per_ds,
+            creation_date=report.creation_date,
         )
 
-    # Parse the categories into pydantic objects
-    categories_per_ds: List[Dict[CatName, CatConf]] = []
-    for raw_ds_cats in raw_cats_per_ds:
-        ds_categories: Dict[CatName, CatConf] = dict()
-        if isinstance(raw_ds_cats, list):
-            for cat_name in raw_ds_cats:
-                ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), name=cat_name)
-        elif isinstance(raw_ds_cats, dict):
-            for cat_name, cat_props in raw_ds_cats.items():
-                if isinstance(cat_props, CatConf):
-                    ds_categories[CatName(cat_name)] = cat_props
-                else:
-                    if "name" not in cat_props:
-                        cat_props = {"name": cat_name, **cat_props}
-                    ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), **cat_props)
-        else:
-            raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
-        categories_per_ds.append(ds_categories)
+    def to_df(self) -> pd.DataFrame:
+        """
+        Save plot data to a parquet file using a tabular representation that's
+        optimized for cross-run analysis.
+        """
+        # Create a list of records for each sample/category pair
+        records = []
+        for ds_idx, dataset in enumerate(self.data):
+            dataset_label = self.extract_data_label(ds_idx)
 
-    # Allow user to overwrite a given category config for this plot
-    if pconf.id and pconf.id in config.custom_plot_config:
-        for cat_name, user_cat_props in config.custom_plot_config[pconf.id].items():
-            for ds_idx in range(len(categories_per_ds)):
-                if cat_name in categories_per_ds[ds_idx].keys():
-                    for prop_name, prop_val in user_cat_props.items():
-                        setattr(categories_per_ds[ds_idx][CatName(cat_name)], prop_name, prop_val)
+            for sample_name, sample_data in dataset.items():
+                for category_name, value in sample_data.items():
+                    # Get category configuration if available
+                    cat_conf = None
+                    if ds_idx < len(self.cats):
+                        cat_conf = self.cats[ds_idx].get(category_name)
 
-    # Filter data to keep only numerals, remove unknown categories and fill missing with NaNs
-    filtered_datasets: List[DatasetT] = []
-    for ds_idx, raw_ds in enumerate(raw_datasets):
-        filtered_ds: DatasetT = {}
-        filtered_datasets.append(filtered_ds)
-        for sample_name in list(raw_ds.keys()):
-            raw_val_by_cat = raw_ds[sample_name]
-            filtered_val_by_cat = {}
-            for cat_id, _ in categories_per_ds[ds_idx].items():
-                # Remove categories that are not in the categories_per_ds, and fill missing with NaNs
-                val = raw_val_by_cat.get(cat_id, None)
-                if val is not None and not isinstance(val, (float, int)):
-                    # Try to parse
-                    try:
-                        val = int(val)
-                    except ValueError:
+                    record = {
+                        "dataset_idx": ds_idx,
+                        "dataset_label": dataset_label,
+                        "sample": str(sample_name),
+                        "category": str(category_name),
+                        "bar_value": value,
+                    }
+
+                    # Store category configuration as JSON if available
+                    if cat_conf:
+                        record["cat_meta"] = cat_conf.model_dump_json()
+
+                    # Add plot configuration metadata
+                    if hasattr(self.pconfig, "title") and self.pconfig.title:
+                        record["plot_title"] = self.pconfig.title
+                    if hasattr(self.pconfig, "xlab") and self.pconfig.xlab:
+                        record["x_label"] = self.pconfig.xlab
+                    if hasattr(self.pconfig, "ylab") and self.pconfig.ylab:
+                        record["y_label"] = self.pconfig.ylab
+
+                    records.append(record)
+
+        df = pd.DataFrame(records)
+        return self.finalize_df(df)
+
+    @classmethod
+    def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, BarPlotConfig], anchor: Anchor) -> "BarPlotInputData":
+        """
+        Load plot data from a parquet file.
+        """
+        # Handle None case
+        creation_date = cls.creation_date_from_df(df)
+        if cls.df_is_empty(df):
+            pconf = (
+                pconfig
+                if isinstance(pconfig, BarPlotConfig)
+                else cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
+            )
+            return cls(
+                anchor=anchor,
+                plot_type=PlotType.BAR,
+                pconfig=pconf,
+                data=[],
+                cats=[],
+                creation_date=creation_date,
+            )
+
+        pconf = cast(BarPlotConfig, BarPlotConfig.from_df(df))
+
+        # Group by dataset_idx to rebuild data structure
+        datasets: List[DatasetT] = []
+        cats_per_dataset: List[Dict[CatName, CatConf]] = []
+
+        max_dataset_idx = df["dataset_idx"].max() if not df.empty else 0
+
+        for ds_idx in range(int(max_dataset_idx) + 1):
+            ds_group = df[df["dataset_idx"] == ds_idx] if not df.empty else pd.DataFrame()
+
+            # Skip empty datasets
+            if ds_group.empty:
+                datasets.append({})
+                cats_per_dataset.append({})
+                continue
+
+            dataset = {}
+            cats_dict = {}
+
+            # Process each sample in this dataset
+            for sample_name, sample_group in ds_group.groupby("sample"):
+                sample_data = {}
+
+                # Process each category for this sample
+                for _, row in sample_group.iterrows():
+                    category_name = row["category"]
+                    value = row["bar_value"]
+                    sample_data[CatName(str(category_name))] = value
+
+                    # Process category metadata if available
+                    if "cat_meta" in row and pd.notna(row["cat_meta"]):
                         try:
-                            val = float(val)
-                        except ValueError:
-                            val = None
-                if val is None:
-                    val = float("nan")
-                elif isinstance(val, float):
-                    if math.floor(val) == val:
-                        val = int(val)
-                filtered_val_by_cat[cat_id] = val
-            filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
+                            cat_meta = json.loads(row["cat_meta"])
+                            # Use CatConf to ensure proper validation
+                            if category_name not in cats_dict:
+                                cats_dict[category_name] = CatConf(
+                                    name=cat_meta.get("name", category_name),
+                                    color=cat_meta.get("color"),
+                                    path_in_cfg=("cats",),
+                                )
+                        except (json.JSONDecodeError, TypeError):
+                            # Fallback if JSON parsing fails
+                            if category_name not in cats_dict:
+                                cats_dict[category_name] = CatConf(name=category_name, path_in_cfg=("cats",))
 
-    return BarPlotInputData(data=filtered_datasets, cats=categories_per_ds, pconfig=pconf)
+                # Add sample data if not empty
+                if sample_data:
+                    dataset[SampleName(str(sample_name))] = sample_data
 
+            datasets.append(dataset)
+            cats_per_dataset.append(cats_dict)
 
-def save_normalized_data(pid: Anchor, input_data: BarPlotInputData):
-    """
-    Save data to report.plot_input_data for future runs to merge with
-    """
-    report.plot_input_data[pid] = input_data.model_dump()
+        cls.data_labels_from_df(df, pconf)
 
+        return cls(
+            anchor=anchor,
+            plot_type=PlotType.BAR,
+            pconfig=pconf,
+            data=datasets,
+            cats=cats_per_dataset,
+            creation_date=creation_date,
+        )
 
-def load_previous_data(pid: Anchor) -> Optional[BarPlotInputData]:
-    """
-    Load previous normalized data
-    """
-    if pid not in report.plot_input_data:
-        return None
+    @classmethod
+    def merge(
+        cls,
+        old_data: "BarPlotInputData",
+        new_data: "BarPlotInputData",
+    ) -> "BarPlotInputData":
+        """
+        Merge data from a previous run with the current run.
 
-    return BarPlotInputData(**report.plot_input_data[pid])
+        This allows for comparing bar plot data across multiple runs.
+        """
+        # Create dataframe for new data
+        new_df = new_data.to_df()
+        if new_df.empty:
+            return old_data
 
+        old_df = old_data.to_df()
 
-def merge_normalized_data(old_data: BarPlotInputData, new_data: BarPlotInputData) -> BarPlotInputData:
-    """
-    Merge normalized data from old run and new run
-    """
-    # Merge datasets
-    merged_datasets: List[DatasetT] = []
-    for old_ds, new_ds in zip_longest(old_data.data, new_data.data):
-        if old_ds is None:
-            merged_datasets.append(new_ds)
-            continue
-        if new_ds is None:
-            merged_datasets.append(old_ds)
-            continue
+        # If we have both old and new data, merge them
+        merged_df = new_df
+        if old_df is not None and not old_df.empty:
+            # Get the list of samples that exist in both old and new data, for each dataset
+            new_sample_keys = set()
+            for _, row in new_df.iterrows():
+                new_sample_keys.add((row["dataset_label"], row["sample"]))
 
-        # Merge samples within dataset
-        merged_ds: Dict[SampleName, Dict[CatName, Union[int, float]]] = defaultdict(dict)
-        for sample, cat_vals in old_ds.items():
-            for cat, val in cat_vals.items():
-                merged_ds[sample][cat] = val
-        for sample, cat_vals in new_ds.items():
-            for cat, val in cat_vals.items():
-                merged_ds[sample][cat] = val
-        merged_datasets.append(merged_ds)
+            # Filter out old data for samples that exist in new data
+            old_df_filtered = old_df.copy()
+            drop_indices = []
+            for idx, row in old_df.iterrows():
+                if (row["dataset_label"], row["sample"]) in new_sample_keys:
+                    drop_indices.append(idx)
 
-    # Merge categories
-    merged_cats: List[Dict[CatName, CatConf]] = []
-    for old_cats, new_cats in zip_longest(old_data.cats, new_data.cats):
-        if old_cats is None:
-            merged_cats.append(new_cats)
-            continue
-        if new_cats is None:
-            merged_cats.append(old_cats)
-            continue
+            if drop_indices:
+                old_df_filtered = old_df.drop(drop_indices)
 
-        # Merge category configs
-        merged_ds_cats = {}
-        for cat, conf in old_cats.items():
-            merged_ds_cats[cat] = conf
-        for cat, conf in new_cats.items():
-            if cat in merged_ds_cats:
-                # Keep old category config but update with new values
-                for field, value in conf.model_dump().items():
-                    if value is not None:
-                        setattr(merged_ds_cats[cat], field, value)
-            else:
-                merged_ds_cats[cat] = conf
-        merged_cats.append(merged_ds_cats)
+            # Combine the dataframes, keeping all rows
+            merged_df = pd.concat([old_df_filtered, new_df], ignore_index=True)
 
-    # Use new config but preserve old values if not overridden
-    merged_pconf = new_data.pconfig
-    for field, value in old_data.pconfig.model_dump().items():
-        if new_data.pconfig.model_fields.get(field) is None:
-            setattr(merged_pconf, field, value)
+            # For duplicates (same sample, category, dataset), keep the latest version
+            # Sort by timestamp (newest last)
+            merged_df.sort_values("creation_date", inplace=True)
 
-    return BarPlotInputData(data=merged_datasets, cats=merged_cats, pconfig=merged_pconf)
+        save_plot_data(new_data.anchor, merged_df)
+
+        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
 
 def plot(
     data: Union[InputDatasetT, Sequence[InputDatasetT]],
     cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
     pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
-) -> Union["BarPlot", str]:
+) -> Union["BarPlot", str, None]:
     """
     Create a horizontal bar graph. Also save data to intermediate format.
 
@@ -285,71 +411,14 @@ def plot(
     :return: HTML and JS, ready to be inserted into the page
     """
     # We want to be permissive to user inputs - but normalizing them now to simplify further processing
-    plot_input: BarPlotInputData = normalize_inputs(data, cats, pconfig)
+    inputs = BarPlotInputData.create(data, cats, pconfig)
+    inputs = BarPlotInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
-    # Try load and merge with any found previous data for this plot
-    anchor = plot_anchor(plot_input.pconfig)
-    if prev_data := load_previous_data(anchor):
-        plot_input = merge_normalized_data(prev_data, plot_input)
-
-    # Save normalized data for future runs
-    save_normalized_data(anchor, plot_input)
-
-    # Parse the data into a chart friendly format
-    scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set
-    plot_samples: List[List[SampleName]] = list()
-    plot_data: List[List[CatDataDict]] = list()
-    for ds_idx, d in enumerate(plot_input.data):
-        ordered_samples_names: List[SampleName] = [SampleName(s) for s in d.keys()]
-        if isinstance(d, OrderedDict):
-            # Legacy: users assumed that passing an OrderedDict indicates that we
-            # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
-            pass
-        elif plot_input.pconfig.sort_samples:
-            ordered_samples_names = natsorted([SampleName(s) for s in d.keys()])
-        cat_data_dicts: List[CatDataDict] = list()
-        sample_d_count: Dict[SampleName, int] = dict()
-        for cat_idx, cat_name in enumerate(plot_input.cats[ds_idx].keys()):
-            cat_data: List[Union[int, float]] = list()
-            cat_count = 0
-            for s in ordered_samples_names:
-                cat_data.append(d[SampleName(s)][cat_name])
-                if s not in sample_d_count:
-                    sample_d_count[s] = 0
-                cat_count += 1
-                sample_d_count[s] += 1
-            if cat_count > 0:
-                if plot_input.pconfig.hide_zero_cats is False or not all(x == 0 for x in cat_data if not math.isnan(x)):
-                    color: str = plot_input.cats[ds_idx][cat_name].color or scale.get_colour(cat_idx, lighten=1)
-                    this_dict: CatDataDict = {
-                        "name": plot_input.cats[ds_idx][cat_name].name,
-                        "color": color,
-                        "data": cat_data,
-                        "data_pct": [],
-                    }
-                    cat_data_dicts.append(this_dict)
-
-        # Remove empty samples
-        for sample_name, cnt in sample_d_count.items():
-            if cnt == 0:
-                sample_idx = ordered_samples_names.index(sample_name)
-                del ordered_samples_names[sample_idx]
-                for cat_data_idx, _ in enumerate(cat_data_dicts):
-                    del cat_data_dicts[cat_data_idx]["data"][sample_idx]
-        if len(cat_data_dicts) > 0:
-            plot_samples.append(ordered_samples_names)
-            plot_data.append(cat_data_dicts)
-
-    if len(plot_data) == 0:
-        logger.warning(f"Tried to make bar plot, but had no data: {plot_input.pconfig.id}")
-        return '<p class="text-danger">Error - was not able to plot data.</p>'
-
-    return BarPlot.create(
-        cats_lists=plot_data,
-        samples_lists=plot_samples,
-        pconfig=plot_input.pconfig,
-        anchor=anchor,
-    )
+    plot = BarPlot.from_inputs(inputs)
+    inputs.save()
+    return plot
 
 
 class Category(BaseModel):
@@ -362,6 +431,9 @@ class Category(BaseModel):
 class Dataset(BaseDataset):
     cats: List[Category]
     samples: List[str]
+
+    def sample_names(self) -> List[SampleName]:
+        return [SampleName(sample) for sample in self.samples]
 
     @staticmethod
     def create(
@@ -477,11 +549,65 @@ class Dataset(BaseDataset):
 class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
 
-    def samples_names(self) -> List[SampleName]:
+    def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         for ds in self.datasets:
             names.extend(SampleName(sample) for sample in ds.samples)
         return names
+
+    @staticmethod
+    def from_inputs(inputs: BarPlotInputData) -> Union["BarPlot", str, None]:
+        # Parse the data into a chart friendly format
+        scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set
+        plot_samples: List[List[SampleName]] = list()
+        plot_data: List[List[CatDataDict]] = list()
+        for ds_idx, d in enumerate(inputs.data):
+            ordered_samples_names: List[SampleName] = [SampleName(s) for s in d.keys()]
+            if isinstance(d, OrderedDict):
+                # Legacy: users assumed that passing an OrderedDict indicates that we
+                # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
+                pass
+            elif inputs.pconfig.sort_samples:
+                ordered_samples_names = natsorted([SampleName(s) for s in d.keys()])
+            cat_data_dicts: List[CatDataDict] = list()
+            sample_d_count: Dict[SampleName, int] = dict()
+            for cat_idx, cat_name in enumerate(inputs.cats[ds_idx].keys()):
+                cat_data: List[Union[int, float]] = list()
+                cat_count = 0
+                for s in ordered_samples_names:
+                    cat_data.append(d[SampleName(s)][cat_name])
+                    if s not in sample_d_count:
+                        sample_d_count[s] = 0
+                    cat_count += 1
+                    sample_d_count[s] += 1
+                if cat_count > 0:
+                    if inputs.pconfig.hide_zero_cats is False or not all(x == 0 for x in cat_data if not math.isnan(x)):
+                        color: str = inputs.cats[ds_idx][cat_name].color or scale.get_colour(cat_idx, lighten=1)
+                        this_dict: CatDataDict = {
+                            "name": inputs.cats[ds_idx][cat_name].name,
+                            "color": color,
+                            "data": cat_data,
+                            "data_pct": [],
+                        }
+                        cat_data_dicts.append(this_dict)
+
+            # Remove empty samples
+            for sample_name, cnt in sample_d_count.items():
+                if cnt == 0:
+                    sample_idx = ordered_samples_names.index(sample_name)
+                    del ordered_samples_names[sample_idx]
+                    for cat_data_idx, _ in enumerate(cat_data_dicts):
+                        del cat_data_dicts[cat_data_idx]["data"][sample_idx]
+            if len(cat_data_dicts) > 0:
+                plot_samples.append(ordered_samples_names)
+                plot_data.append(cat_data_dicts)
+
+        return BarPlot.create(
+            cats_lists=plot_data,
+            samples_lists=plot_samples,
+            pconfig=inputs.pconfig,
+            anchor=inputs.anchor,
+        )
 
     @staticmethod
     def create(

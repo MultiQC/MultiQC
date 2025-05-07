@@ -3,13 +3,16 @@
 import logging
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
 
+import numpy as np
+import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
-import numpy as np
 
 from multiqc import report
+from multiqc.core.plot_data_store import parse_value
 from multiqc.plots.plot import (
     BaseDataset,
+    NormalizedPlotInputData,
     PConfig,
     Plot,
     PlotType,
@@ -54,12 +57,199 @@ class HeatmapConfig(PConfig):
         super().__init__(path_in_cfg=path_in_cfg or ("heatmap",), **data)
 
 
+class HeatmapNormalizedInputData(NormalizedPlotInputData):
+    """
+    Represents normalized input data for a heatmap plot.
+    """
+
+    rows: List[List[ElemT]]
+    xcats: List[Union[str, int]]
+    ycats: List[Union[str, int]]
+    pconfig: HeatmapConfig
+
+    def is_empty(self) -> bool:
+        return len(self.rows) == 0 or all(len(row) == 0 for row in self.rows)
+
+    def to_df(self) -> pd.DataFrame:
+        """
+        Convert the heatmap data to a pandas DataFrame for storage and reloading.
+        """
+        # Create a DataFrame with row indices, column indices, and values
+        records = []
+        for i, row in enumerate(self.rows):
+            y_cat = str(self.ycats[i]) if i < len(self.ycats) else str(i)
+            for j, val in enumerate(row):
+                x_cat = str(self.xcats[j]) if j < len(self.xcats) else str(j)
+                records.append(
+                    {
+                        "row_idx": i,
+                        "col_idx": j,
+                        "row_cat": y_cat,
+                        "col_cat": x_cat,
+                        # values can be be different types (int, float, str...), especially across
+                        # plots. parquet requires values of the same type. so we cast them to str
+                        "z_val": str(val),
+                        "z_val_type": type(val).__name__,
+                    }
+                )
+
+        df = pd.DataFrame(records)
+        self.finalize_df(df)
+        return df
+
+    @classmethod
+    def from_df(
+        cls, df: pd.DataFrame, pconfig: Union[Dict, HeatmapConfig], anchor: Anchor
+    ) -> "HeatmapNormalizedInputData":
+        """
+        Create a HeatmapNormalizedInputData object from a pandas DataFrame.
+        """
+        # Filter out rows related to this anchor if there are multiple
+        if "anchor" in df.columns:
+            df = df[df["anchor"] == str(anchor)]
+
+        if df.empty:
+            # Return empty data if no valid rows found
+            pconf = (
+                pconfig
+                if isinstance(pconfig, HeatmapConfig)
+                else cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
+            )
+            return cls(
+                anchor=anchor,
+                rows=[],
+                xcats=[],
+                ycats=[],
+                pconfig=pconf,
+                plot_type=PlotType.HEATMAP,
+                creation_date=cls.creation_date_from_df(df),
+            )
+
+        pconf = cast(HeatmapConfig, HeatmapConfig.from_df(df))
+
+        # Extract and rebuild the 2D matrix
+        max_row_idx = int(df["row_idx"].max())
+        max_col_idx = int(df["col_idx"].max())
+
+        # Reconstruct xcats and ycats
+        xcats = []
+        ycats = []
+
+        # Get unique row and column categories in the order of indices
+        row_cats_df = df[["row_idx", "row_cat"]].drop_duplicates().sort_values("row_idx")
+        col_cats_df = df[["col_idx", "col_cat"]].drop_duplicates().sort_values("col_idx")
+
+        ycats = row_cats_df["row_cat"].tolist()
+        xcats = col_cats_df["col_cat"].tolist()
+
+        # Create empty matrix
+        rows = [[None for _ in range(max_col_idx + 1)] for _ in range(max_row_idx + 1)]
+
+        # Fill matrix with values
+        for _, row in df.iterrows():
+            rows[int(row["row_idx"])][int(row["col_idx"])] = parse_value(row["z_val"], row["z_val_type"])
+
+        cls.data_labels_from_df(df, pconf)
+
+        return cls(
+            anchor=anchor,
+            rows=rows,  # type: ignore
+            xcats=xcats,
+            ycats=ycats,
+            pconfig=pconf,
+            plot_type=PlotType.HEATMAP,
+            creation_date=cls.creation_date_from_df(df),
+        )
+
+    @classmethod
+    def merge(
+        cls, old_data: "HeatmapNormalizedInputData", new_data: "HeatmapNormalizedInputData"
+    ) -> "HeatmapNormalizedInputData":
+        """
+        Merge two HeatmapNormalizedInputData objects.
+        This method is called when merging data from multiple runs.
+        """
+        if old_data.xcats != new_data.xcats or old_data.ycats != new_data.ycats:
+            logger.warning("Cannot merge heatmaps with different dimensions or categories")
+            return new_data
+
+        # Merge the data by combining rows
+        combined_rows = old_data.rows + new_data.rows
+
+        # Use the newer config (from new_data)
+        return HeatmapNormalizedInputData(
+            anchor=new_data.anchor,
+            rows=combined_rows,
+            xcats=new_data.xcats,
+            ycats=new_data.ycats,
+            pconfig=new_data.pconfig,
+            plot_type=PlotType.HEATMAP,
+            creation_date=report.creation_date,
+        )
+
+    @staticmethod
+    def create(
+        data: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
+        xcats: Optional[Sequence[Union[str, int]]] = None,
+        ycats: Optional[Sequence[Union[str, int]]] = None,
+        pconfig: Union[Dict[str, Any], HeatmapConfig, None] = None,
+    ) -> "HeatmapNormalizedInputData":
+        pconf = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
+
+        rows: List[List[ElemT]]
+        if isinstance(data, dict):
+            # Re-key the dict to be strings
+            rows_str: Dict[str, Dict[str, ElemT]] = {
+                str(y): {str(x): value for x, value in value_by_x.items()} for y, value_by_x in data.items()
+            }
+
+            # Convert dict to a list of lists
+            if not ycats:
+                ycats = list(rows_str.keys())
+            if not xcats:
+                xcats = []
+                for _, value_by_x in rows_str.items():
+                    for x, _ in value_by_x.items():
+                        if x not in xcats:
+                            xcats.append(x)
+            rows = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
+        else:
+            rows = cast(List[List[ElemT]], data)
+            if ycats is None:
+                ycats = xcats
+            if xcats is None:
+                xcats = list(range(len(rows[0])))
+            if ycats is None:
+                ycats = list(range(len(rows)))
+
+            if ycats and not isinstance(ycats, list):
+                raise ValueError(
+                    "Heatmap plot: ycats must be passed as a list when the input data is a 2d list. "
+                    "The order of that list should match the order of the rows in the input data."
+                )
+            if xcats and not isinstance(xcats, list):
+                raise ValueError(
+                    "Heatmap plot: xcats must be passed as a list when the input data is a 2d list. "
+                    "The order of that list should match the order of the columns in the input data."
+                )
+
+        return HeatmapNormalizedInputData(
+            anchor=plot_anchor(pconf),
+            plot_type=PlotType.HEATMAP,
+            rows=rows,
+            xcats=list(xcats),
+            ycats=list(ycats),
+            pconfig=pconf,
+            creation_date=report.creation_date,
+        )
+
+
 def plot(
     data: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
     xcats: Optional[Sequence[Union[str, int]]] = None,
     ycats: Optional[Sequence[Union[str, int]]] = None,
     pconfig: Union[Dict[str, Any], HeatmapConfig, None] = None,
-) -> "HeatmapPlot":
+) -> Union["HeatmapPlot", str, None]:
     """
     Plot a 2D heatmap.
     :param data: List of lists, each a representing a row of values; or a dict of dicts
@@ -68,26 +258,24 @@ def plot(
     :param pconfig: optional dict with config key:value pairs.
     :return: HTML and JS, ready to be inserted into the page
     """
-    pconf: HeatmapConfig = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
+    inputs: HeatmapNormalizedInputData = HeatmapNormalizedInputData.create(data, xcats, ycats, pconfig)
+    inputs = HeatmapNormalizedInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
-    anchor = plot_anchor(pconf)
-
-    if ycats is None:
-        ycats = xcats
-
-    return HeatmapPlot.create(data, pconf, anchor, xcats, ycats)
+    return HeatmapPlot.from_inputs(inputs)
 
 
 def _cluster_data(
-    data: List[List[ElemT]], cluster_rows: bool = True, cluster_cols: bool = True, method: str = "complete"
+    rows: List[List[ElemT]], cluster_rows: bool = True, cluster_cols: bool = True, method: str = "complete"
 ) -> Tuple[List[List[ElemT]], List[int], List[int]]:
     """Cluster the heatmap data and return clustered data with new indices"""
-    row_idx = list(range(len(data)))
-    col_idx = list(range(len(data[0])))
+    row_idx = list(range(len(rows)))
+    col_idx = list(range(len(rows[0])))
 
-    data_array = np.array([[0.0 if x is None else float(x) for x in row] for row in data])
+    data_array = np.array([[0.0 if x is None else float(x) for x in row] for row in rows])
 
-    if cluster_rows and len(data) > 1:
+    if cluster_rows and len(rows) > 1:
         try:
             row_dist = scipy_pdist(data_array)
             row_linkage = scipy_hierarchy_linkage(row_dist, method=method)
@@ -96,7 +284,7 @@ def _cluster_data(
         except Exception as e:
             logger.warning(f"Row clustering failed: {str(e)}")
 
-    if cluster_cols and len(data[0]) > 1:
+    if cluster_cols and len(rows[0]) > 1:
         try:
             col_dist = scipy_pdist(data_array.T)
             col_linkage = scipy_hierarchy_linkage(col_dist, method=method)
@@ -111,66 +299,52 @@ def _cluster_data(
 class Dataset(BaseDataset):
     rows: List[List[ElemT]]
     rows_clustered: Optional[List[List[ElemT]]] = None
-    xcats: Optional[Sequence[str]]
-    ycats: Optional[Sequence[str]]
+    xcats: Sequence[str]
+    ycats: Sequence[str]
     xcats_clustered: Optional[Sequence[str]] = None
     ycats_clustered: Optional[Sequence[str]] = None
     xcats_samples: bool = True
     ycats_samples: bool = True
 
+    def sample_names(self) -> List[SampleName]:
+        snames: List[SampleName] = []
+        if self.xcats_samples:
+            snames.extend(SampleName(cat) for cat in self.xcats)
+        if self.ycats_samples:
+            snames.extend(SampleName(cat) for cat in self.ycats)
+        return snames
+
     @staticmethod
     def create(
         dataset: BaseDataset,
-        rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
-        xcats: Optional[Sequence[Union[str, int]]] = None,
-        ycats: Optional[Sequence[Union[str, int]]] = None,
+        rows: List[List[ElemT]],
+        xcats: Sequence[Union[str, int]],
+        ycats: Sequence[Union[str, int]],
         cluster_rows: bool = True,
         cluster_cols: bool = True,
         cluster_method: str = "complete",
         xcats_samples: bool = True,
         ycats_samples: bool = True,
     ) -> "Dataset":
-        data: List[List[ElemT]]
-        if isinstance(rows, dict):
-            # Re-key the dict to be strings
-            rows_str: Dict[str, Dict[str, ElemT]] = {
-                str(y): {str(x): value for x, value in value_by_x.items()} for y, value_by_x in rows.items()
-            }
-
-            # Convert dict to a list of lists
-            if not ycats:
-                ycats = list(rows_str.keys())
-            if not xcats:
-                xcats = []
-                for _, value_by_x in rows_str.items():
-                    for x, _ in value_by_x.items():
-                        if x not in xcats:
-                            xcats.append(x)
-            data = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
-        else:
-            data = cast(List[List[ElemT]], rows)
-
         rows_clustered = None
         xcats_clustered = None
         ycats_clustered = None
 
         if cluster_rows or cluster_cols:
             try:
-                clustered_rows, row_idx, col_idx = _cluster_data(data, cluster_rows, cluster_cols, cluster_method)
+                clustered_rows, row_idx, col_idx = _cluster_data(rows, cluster_rows, cluster_cols, cluster_method)
                 rows_clustered = clustered_rows
-                if xcats:
-                    xcats_clustered = [xcats[i] for i in col_idx] if cluster_cols else xcats
-                if ycats:
-                    ycats_clustered = [ycats[i] for i in row_idx] if cluster_rows else ycats
+                xcats_clustered = [xcats[i] for i in col_idx] if cluster_cols else xcats
+                ycats_clustered = [ycats[i] for i in row_idx] if cluster_rows else ycats
             except Exception as e:
                 logger.warning(f"Clustering failed: {str(e)}")
 
         dataset = Dataset(
             **dataset.__dict__,
-            rows=data,
+            rows=rows,
             rows_clustered=rows_clustered,
-            xcats=[str(x) for x in xcats] if xcats else None,
-            ycats=[str(y) for y in ycats] if ycats else None,
+            xcats=[str(x) for x in xcats],
+            ycats=[str(y) for y in ycats],
             xcats_clustered=[str(x) for x in xcats_clustered] if xcats_clustered else None,
             ycats_clustered=[str(y) for y in ycats_clustered] if ycats_clustered else None,
             xcats_samples=xcats_samples,
@@ -249,7 +423,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     max: Optional[float] = None
     cluster_switch_clustered_active: bool = False
 
-    def samples_names(self) -> List[SampleName]:
+    def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         if self.xcats_samples:
             for ds in self.datasets:
@@ -262,20 +436,30 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
         return names
 
     @staticmethod
+    def from_inputs(inputs: HeatmapNormalizedInputData) -> Union["HeatmapPlot", str, None]:
+        plot = HeatmapPlot.create(
+            rows=inputs.rows,
+            pconfig=inputs.pconfig,
+            anchor=inputs.anchor,
+            xcats=list(inputs.xcats),
+            ycats=list(inputs.ycats),
+        )
+        inputs.save()
+        return plot
+
+    @staticmethod
     def create(
-        rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
+        rows: List[List[ElemT]],
         pconfig: HeatmapConfig,
         anchor: Anchor,
-        xcats: Optional[Sequence[Union[str, int]]],
-        ycats: Optional[Sequence[Union[str, int]]],
+        xcats: List[Union[str, int]],
+        ycats: List[Union[str, int]],
     ) -> "HeatmapPlot":
         max_n_samples = 0
         if rows:
             max_n_samples = len(rows)
-            if isinstance(rows, list):
+            if len(rows[0]) > 0:
                 max_n_samples = max(max_n_samples, len(rows[0]))
-            elif isinstance(rows, dict) and len(rows) > 0:
-                max_n_samples = max(max_n_samples, len(list(rows.values())[0]))
 
         model: Plot[Dataset, HeatmapConfig] = Plot.initialize(
             plot_type=PlotType.HEATMAP,
@@ -285,18 +469,6 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             defer_render_if_large=False,  # We hide samples on large heatmaps, so no need to defer render
             flat_if_very_large=True,  # However, the data is still embedded into the HTML, and we don't want the report size to inflate
         )
-
-        if isinstance(rows, list):
-            if ycats and not isinstance(ycats, list):
-                raise ValueError(
-                    f"Heatmap plot {model.id}: ycats must be passed as a list when the input data is a 2d list. "
-                    f"The order of that list should match the order of the rows in the input data."
-                )
-            if xcats and not isinstance(xcats, list):
-                raise ValueError(
-                    f"Heatmap plot {model.id}: xcats must be passed as a list when the input data is a 2d list. "
-                    f"The order of that list should match the order of the columns in the input data."
-                )
 
         model.layout.update(
             yaxis=dict(

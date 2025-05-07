@@ -2,13 +2,13 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import List, Literal, Optional, Union, Dict, cast
+from typing import Dict, List, Literal, Optional, Union, cast
 
 from pydantic import BaseModel
 
-from multiqc import report, config
-from multiqc.core.exceptions import RunError
+from multiqc import config, report
 from multiqc.core import log_and_rich, plugin_hooks
+from multiqc.core.exceptions import RunError
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +53,7 @@ class ClConfig(BaseModel):
     no_version_check: Optional[bool] = None
     ignore: List[str] = []
     ignore_samples: List[str] = []
+    only_samples: List[str] = []
     run_modules: List[str] = []
     exclude_modules: List[str] = []
     config_files: List[Union[str, Path]] = []
@@ -69,8 +70,11 @@ class ClConfig(BaseModel):
     ai_model: Optional[str] = None
     ai_custom_endpoint: Optional[str] = None
     ai_custom_context_window: Optional[int] = None
+    ai_prompt_short: Optional[str] = None
+    ai_prompt_full: Optional[str] = None
     no_ai: Optional[bool] = None
     unknown_options: Optional[Dict] = None
+    check_config: Optional[bool] = None
 
 
 def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
@@ -221,6 +225,10 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.ai_custom_endpoint = cfg.ai_custom_endpoint
     if cfg.ai_custom_context_window is not None:
         config.ai_custom_context_window = cfg.ai_custom_context_window
+    if cfg.ai_prompt_short is not None:
+        config.ai_prompt_short = cfg.ai_prompt_short
+    if cfg.ai_prompt_full is not None:
+        config.ai_prompt_full = cfg.ai_prompt_full
     if cfg.no_ai is not None:
         config.no_ai = cfg.no_ai
 
@@ -243,7 +251,9 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     if len(cfg.ignore_samples) > 0:
         logger.debug(f"Ignoring sample names that match: {', '.join(cfg.ignore_samples)}")
         config.sample_names_ignore.extend(cfg.ignore_samples)
-
+    if len(cfg.only_samples) > 0:
+        logger.debug(f"Only including sample names that match: {', '.join(cfg.only_samples)}")
+        config.sample_names_only_include.extend(cfg.only_samples)
     # Prep module configs
     report.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
     report.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]
