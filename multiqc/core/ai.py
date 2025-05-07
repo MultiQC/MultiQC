@@ -325,7 +325,10 @@ class OpenAiClient(Client):
             }
         )
         if config.ai_auth_type == "api-key":
-            headers = {"Content-Type": "application/json", "api-key": self.api_key}
+            headers = {
+                "Content-Type": "application/json",
+                "api-key": self.api_key,
+            }
         else:
             headers = {
                 "Content-Type": "application/json",
