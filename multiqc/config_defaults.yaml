@@ -70,7 +70,7 @@ ai_provider: "seqera"
 ai_model: null
 ai_custom_endpoint: null
 ai_auth_type: null
-ai_retries: 1
+ai_retries: 3
 ai_extra_query_options: null
 ai_custom_context_window: null
 ai_prompt_short: null
