@@ -309,7 +309,7 @@ class OpenAiClient(Client):
         content: str
         model: str
 
-    def _query(self, prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
+    def _query(self, prompt: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
         body: Dict[str, Any] = {
             "temperature": 0.0,
         }
@@ -320,7 +320,7 @@ class OpenAiClient(Client):
         body.update(
             {
                 "model": self.model,
-                "messages": [{"role": "system", "content": prompt}, {"role": "user", "content": report_content}],
+                "messages": [{"role": "user", "content": prompt}],
             }
         )
         if config.ai_auth_type == "api-key":
@@ -358,7 +358,7 @@ class AnthropicClient(Client):
         content: str
         model: str
 
-    def _query(self, prompt: str, report_content: str) -> ApiResponse:
+    def _query(self, prompt: str) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -370,7 +370,7 @@ class AnthropicClient(Client):
                 "model": self.model,
                 "max_tokens": 4096,
                 "messages": [
-                    {"role": "user", "content": prompt + "\n\n" + report_content},
+                    {"role": "user", "content": prompt},
                 ],
                 "temperature": 0.0,
             },
