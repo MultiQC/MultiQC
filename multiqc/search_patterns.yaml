@@ -26,11 +26,11 @@ bamtools/stats:
   num_lines: 10
 bases2fastq/run:
   fn: "RunStats.json"
-  contents: "FlowCellID"
+  contents: "SampleStats"
   num_lines: 100
 bases2fastq/project:
   fn: "*_RunStats.json"
-  contents: "FlowCellID"
+  contents: "SampleStats"
   num_lines: 100
 bbduk:
   contents: "Executing jgi.BBDuk"
@@ -229,6 +229,10 @@ cellranger_arc:
   - fn: "*.html"
     contents: "Cell Ranger ARC"
     num_lines: 250
+cells2stats/run:
+  fn: "RunStats.json"
+  contents: "DemuxStats"
+  num_lines: 100
 checkm:
   - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})# markers(?:\t| {3,})# marker sets.*"
     num_lines: 10
