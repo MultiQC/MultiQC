@@ -210,7 +210,8 @@ class PConfig(ValidatedConfig):
                     data_label if isinstance(data_label, dict) else {"name": data_label}
                 )
                 label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
-                data_labels.append({"name": str(label)})
+                dconfig["name"] = str(label)
+                data_labels.append(dconfig)
             self.data_labels = data_labels
         else:
             self.data_labels = []
