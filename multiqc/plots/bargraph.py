@@ -226,8 +226,6 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         # Create a list of records for each sample/category pair
         records = []
         for ds_idx, dataset in enumerate(self.data):
-            dataset_label = self.extract_data_label(ds_idx)
-
             for sample_name, sample_data in dataset.items():
                 for category_name, value in sample_data.items():
                     # Get category configuration if available
@@ -237,7 +235,9 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
                     record = {
                         "dataset_idx": ds_idx,
-                        "dataset_label": dataset_label,
+                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx])
+                        if self.pconfig.data_labels
+                        else None,
                         "sample": str(sample_name),
                         "category": str(category_name),
                         "bar_value": value,
@@ -284,59 +284,61 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
         pconf = cast(BarPlotConfig, BarPlotConfig.from_df(df))
 
-        # Group by dataset_idx to rebuild data structure
+        # Reconstruct data structure
         datasets: List[DatasetT] = []
+        data_labels = []
         cats_per_dataset: List[Dict[CatName, CatConf]] = []
 
+        # Group by dataset_idx
         max_dataset_idx = df["dataset_idx"].max() if not df.empty else 0
-
         for ds_idx in range(int(max_dataset_idx) + 1):
             ds_group = df[df["dataset_idx"] == ds_idx] if not df.empty else pd.DataFrame()
 
-            # Skip empty datasets
-            if ds_group.empty:
-                datasets.append({})
-                cats_per_dataset.append({})
-                continue
+            data_label = ds_group["data_label"].iloc[0]
+            data_labels.append(json.loads(data_label) if data_label else {})
 
             dataset = {}
-            cats_dict = {}
+            cats_meta = {}
 
-            # Process each sample in this dataset
-            for sample_name, sample_group in ds_group.groupby("sample"):
-                sample_data = {}
+            # Get list of unique sample names in this dataset to preserve order
+            unique_samples = ds_group["sample"].unique()
+            # Group by sample_name within each dataset
+            for sample_name in unique_samples:
+                # Get data for this sample
+                sample_group = ds_group[ds_group["sample"] == sample_name]
+                data_by_cat = {}
 
                 # Process each category for this sample
                 for _, row in sample_group.iterrows():
                     category_name = row["category"]
                     value = row["bar_value"]
-                    sample_data[CatName(str(category_name))] = value
+                    data_by_cat[CatName(str(category_name))] = value
 
                     # Process category metadata if available
                     if "cat_meta" in row and pd.notna(row["cat_meta"]):
                         try:
                             cat_meta = json.loads(row["cat_meta"])
                             # Use CatConf to ensure proper validation
-                            if category_name not in cats_dict:
-                                cats_dict[category_name] = CatConf(
+                            if category_name not in cats_meta:
+                                cats_meta[category_name] = CatConf(
                                     name=cat_meta.get("name", category_name),
                                     color=cat_meta.get("color"),
                                     path_in_cfg=("cats",),
                                 )
                         except (json.JSONDecodeError, TypeError):
                             # Fallback if JSON parsing fails
-                            if category_name not in cats_dict:
-                                cats_dict[category_name] = CatConf(name=category_name, path_in_cfg=("cats",))
+                            if category_name not in cats_meta:
+                                cats_meta[category_name] = CatConf(name=category_name, path_in_cfg=("cats",))
 
                 # Add sample data if not empty
-                if sample_data:
-                    dataset[SampleName(str(sample_name))] = sample_data
+                if data_by_cat:
+                    dataset[SampleName(str(sample_name))] = data_by_cat
 
             datasets.append(dataset)
-            cats_per_dataset.append(cats_dict)
+            cats_per_dataset.append(cats_meta)
 
-        cls.data_labels_from_df(df, pconf)
-
+        if any(d for d in data_labels if d):
+            pconf.data_labels = data_labels
         return cls(
             anchor=anchor,
             plot_type=PlotType.BAR,
@@ -370,13 +372,13 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             # Get the list of samples that exist in both old and new data, for each dataset
             new_sample_keys = set()
             for _, row in new_df.iterrows():
-                new_sample_keys.add((row["dataset_label"], row["sample"]))
+                new_sample_keys.add((row["data_label"], row["sample"]))
 
             # Filter out old data for samples that exist in new data
             old_df_filtered = old_df.copy()
             drop_indices = []
             for idx, row in old_df.iterrows():
-                if (row["dataset_label"], row["sample"]) in new_sample_keys:
+                if (row["data_label"], row["sample"]) in new_sample_keys:
                     drop_indices.append(idx)
 
             if drop_indices:

@@ -1,6 +1,7 @@
 """MultiQC functions to plot a box plot"""
 
 import copy
+import json
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -150,8 +151,6 @@ class BoxPlotInputData(NormalizedPlotInputData):
         records = []
 
         for ds_idx, dataset in enumerate(self.list_of_data_by_sample):
-            dataset_label = self.extract_data_label(ds_idx)
-
             # Process each sample in the dataset
             for sample_name, values in dataset.items():
                 # Store each value point as a separate record
@@ -159,7 +158,9 @@ class BoxPlotInputData(NormalizedPlotInputData):
                     record = {
                         "anchor": self.anchor,
                         "dataset_idx": ds_idx,
-                        "dataset_label": dataset_label,
+                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx])
+                        if self.pconfig.data_labels
+                        else None,
                         "sample_name": str(sample_name),
                         "value_idx": value_idx,
                         "value": value,
@@ -201,21 +202,23 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
         # Group by dataset_idx to rebuild data structure
         list_of_data_by_sample: List[Dict[str, BoxT]] = []
+        data_labels = []
 
         max_dataset_idx = df["dataset_idx"].max() if not df.empty else 0
-
         for ds_idx in range(int(max_dataset_idx) + 1):
             ds_group = df[df["dataset_idx"] == ds_idx] if not df.empty else pd.DataFrame()
-
-            # Skip empty datasets
-            if ds_group.empty:
-                list_of_data_by_sample.append({})
-                continue
+            data_label = ds_group["data_label"].iloc[0]
+            data_labels.append(json.loads(data_label) if data_label else {})
 
             # Process each sample in this dataset
             dataset = {}
 
-            for sample_name, sample_group in ds_group.groupby("sample_name"):
+            unique_samples = ds_group["sample_name"].unique()
+            # Group by sample_name within each dataset
+            for sample_name in unique_samples:
+                # Get data for this sample
+                sample_group = ds_group[ds_group["sample_name"] == sample_name]
+
                 # Collect all values for this sample
                 sample_values = []
 
@@ -233,8 +236,8 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
             list_of_data_by_sample.append(dataset)
 
-        cls.data_labels_from_df(df, pconf)
-
+        if any(d for d in data_labels if d):
+            pconf.data_labels = data_labels
         return cls(
             anchor=anchor,
             pconfig=pconf,
