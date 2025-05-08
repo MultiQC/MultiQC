@@ -131,12 +131,12 @@ def plot_cell_segmentation(c2s_run_data):
     ]
 
     plot_name = "Cell Segmentation Metrics"
-    plot_html = bargraph.plot(plot_content, cats, pconfig=pconfig)
+    plot = bargraph.plot(plot_content, cats, pconfig=pconfig)
     anchor = "well_segmentation_plot"
     description = "Bar plots of cell segmentation metrics"
     helptext = """Plot cell counts, confluency, nucleated cells, and median cell diameter for each well in the run."""
 
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot, plot_name, anchor, description, helptext, plot_content
 
 
 def plot_controls(c2s_run_data):

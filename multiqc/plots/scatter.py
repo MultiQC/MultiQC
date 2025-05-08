@@ -1,6 +1,7 @@
 """MultiQC functions to plot a scatter plot"""
 
 import copy
+import json
 import logging
 import math
 import stat
@@ -51,8 +52,6 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
         # Serialize datasets, samplenames, and points
         for ds_idx, dataset in enumerate(self.datasets):
-            dataset_label = self.extract_data_label(ds_idx)
-
             for sample_name, points in dataset.items():
                 if not isinstance(points, list):
                     points = [points]
@@ -60,7 +59,9 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                 for point_idx, point in enumerate(points):
                     record = {
                         "dataset_idx": ds_idx,
-                        "dataset_label": dataset_label,
+                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx])
+                        if self.pconfig.data_labels
+                        else None,
                         "sample_name": sample_name,
                         "point_idx": point_idx,
                     }
@@ -235,12 +236,16 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
         pconf = cast(ScatterConfig, ScatterConfig.from_df(df))
 
         # Reconstruct datasets
-        dataset_indices = sorted(df["dataset_idx"].unique())
+        data_labels = []
         datasets = []
+        dataset_indices = sorted(df["dataset_idx"].unique())
 
         for dataset_idx in dataset_indices:
             dataset_df = df[df["dataset_idx"] == dataset_idx]
             dataset = {}
+
+            data_label = dataset_df["data_label"].iloc[0]
+            data_labels.append(json.loads(data_label) if data_label else {})
 
             # Group by sample name
             for sample_name in dataset_df["sample_name"].unique():
@@ -262,8 +267,8 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
             datasets.append(dataset)
 
-        cls.data_labels_from_df(df, pconf)
-
+        if any(d for d in data_labels if d):
+            pconf.data_labels = data_labels
         return cls(
             anchor=anchor,
             plot_type=PlotType.SCATTER,

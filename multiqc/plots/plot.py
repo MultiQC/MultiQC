@@ -210,7 +210,8 @@ class PConfig(ValidatedConfig):
                     data_label if isinstance(data_label, dict) else {"name": data_label}
                 )
                 label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
-                data_labels.append({"name": str(label)})
+                dconfig["name"] = str(label)
+                data_labels.append(dconfig)
             self.data_labels = data_labels
         else:
             self.data_labels = []
@@ -335,18 +336,12 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         return pd.DataFrame()
 
-    def extract_data_label(self, ds_idx: int) -> Optional[str]:
-        # Get dataset label if available
-        if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
-            label = self.pconfig.data_labels[ds_idx]
-            if isinstance(label, dict) and "name" in label:
-                return label["name"]
-            elif isinstance(label, str):
-                return label
-            else:
-                return None
-        else:
-            return None
+    # def extract_data_label(self, ds_idx: int) -> Optional[Union[str, Dict[str, Any]]]:
+    #     # Get dataset label if available - used only to merge plots across runs
+    #     if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
+    #         return self.datasets[ds_idx].dconfig
+    #     else:
+    #         return None
 
     @classmethod
     def from_df(
@@ -358,23 +353,23 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         raise NotImplementedError("Subclasses must implement from_df()")
 
-    @classmethod
-    def data_labels_from_df(cls, df: pd.DataFrame, pconfig: PConfigT) -> None:
-        """
-        Extract dataset labels from dataframe and populate pconfig.data_labels
-        """
-        if "dataset_label" in df.columns:
-            data_labels: List[Union[str, Dict[str, Any]]] = []
-            for ds_idx in sorted(df["dataset_idx"].unique()):
-                ds_rows = df[df["dataset_idx"] == ds_idx]
-                if not ds_rows.empty:
-                    # Get the first dataset_label for this dataset index
-                    label = ds_rows["dataset_label"].iloc[0]
-                    if label:
-                        data_labels.append({"name": label})
+    # @classmethod
+    # def data_labels_from_df(cls, df: pd.DataFrame, pconfig: PConfigT) -> None:
+    #     """
+    #     Extract dataset labels from dataframe and populate pconfig.data_labels
+    #     """
+    #     if "dataset_label" in df.columns:
+    #         data_labels: List[Union[str, Dict[str, Any]]] = []
+    #         for ds_idx in sorted(df["dataset_idx"].unique()):
+    #             ds_rows = df[df["dataset_idx"] == ds_idx]
+    #             if not ds_rows.empty:
+    #                 # Get the first dataset_label for this dataset index
+    #                 label = ds_rows["dataset_label"].iloc[0]
+    #                 if label:
+    #                     data_labels.append({"name": label})
 
-            # Only set data_labels if we have valid labels
-            pconfig.data_labels = data_labels
+    #         # Only set data_labels if we have valid labels
+    #         pconfig.data_labels = data_labels
 
     @classmethod
     def creation_date_from_df(cls, df: pd.DataFrame) -> datetime:
@@ -535,8 +530,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
     def initialize(
         plot_type: PlotType,
         pconfig: PConfigT,
-        n_samples_per_dataset: List[int],
         anchor: Anchor,
+        n_samples_per_dataset: List[int],
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
