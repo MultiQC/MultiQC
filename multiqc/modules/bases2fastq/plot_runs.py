@@ -169,8 +169,11 @@ def plot_base_quality_hist(run_data, color_dict):
     # Prepare plot data for per base BQ histogram
     bq_hist_dict = dict()
     for s_name in run_data.keys():
+        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         R1_base_quality_counts = run_data[s_name]["Reads"][0]["QualityScoreHistogram"]
-        R2_base_quality_counts = run_data[s_name]["Reads"][1]["QualityScoreHistogram"]
+        R2_base_quality_counts = [0] * len(R1_base_quality_counts)
+        if paired_end:
+            R2_base_quality_counts = run_data[s_name]["Reads"][1]["QualityScoreHistogram"]
         R1R2_base_quality_counts = [r1 + r2 for r1, r2 in zip(R1_base_quality_counts, R2_base_quality_counts)]
         total_bases = sum(R1R2_base_quality_counts)
         bq_hist_dict.update({s_name: {}})
@@ -180,9 +183,13 @@ def plot_base_quality_hist(run_data, color_dict):
     # Prepare plot data for per read average BQ histogram
     per_read_quality_hist_dict = dict()
     for s_name in run_data.keys():
+        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         R1_quality_counts = run_data[s_name]["Reads"][0]["PerReadMeanQualityScoreHistogram"]
-        R2_quality_counts = run_data[s_name]["Reads"][1]["PerReadMeanQualityScoreHistogram"]
-        total_reads = run_data[s_name]["NumPolonies"] * 2
+        R2_quality_counts = [0] * len(R1_quality_counts)
+        if paired_end:
+            R2_quality_counts = run_data[s_name]["Reads"][1]["PerReadMeanQualityScoreHistogram"]
+        multiplier = 2 if paired_end else 1
+        total_reads = run_data[s_name]["NumPolonies"] * multiplier
         R1R2_quality_counts = [r1 + r2 for r1, r2 in zip(R1_quality_counts, R2_quality_counts)]
         per_read_quality_hist_dict.update({s_name: {}})
         for meanQuality in range(0, len(R1R2_quality_counts)):
@@ -246,52 +253,60 @@ def plot_base_quality_by_cycle(run_data, color_dict):
 
     median_dict = {}
     for s_name in run_data.keys():
+        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         cycle_dict = dict()
         R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["QualityScore50thPercentile"]})
-        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
-            cycle_no = int(cycle["Cycle"]) + r1r2_split
-            cycle_dict.update({cycle_no: cycle["QualityScore50thPercentile"]})
+        if paired_end:
+            for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
+                cycle_no = int(cycle["Cycle"]) + r1r2_split
+                cycle_dict.update({cycle_no: cycle["QualityScore50thPercentile"]})
         median_dict.update({s_name: cycle_dict})
 
     # Prepare plot data for mean BQ of each cycle
     mean_dict = {}
     for s_name in run_data.keys():
+        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         # Update each sample cycle info
         cycle_dict = dict()
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["QualityScoreMean"]})
-        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
-            cycle_no = int(cycle["Cycle"]) + r1r2_split
-            cycle_dict.update({cycle_no: cycle["QualityScoreMean"]})
+        if paired_end:
+            for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
+                cycle_no = int(cycle["Cycle"]) + r1r2_split
+                cycle_dict.update({cycle_no: cycle["QualityScoreMean"]})
         mean_dict.update({s_name: cycle_dict})
 
     # Prepare plot data for %Q30 of each cycle
     Q30_dict = {}
     for s_name in run_data.keys():
+        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         # Update each sample cycle info
         cycle_dict = dict()
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["PercentQ30"]})
-        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
-            cycle_no = int(cycle["Cycle"]) + r1r2_split
-            cycle_dict.update({cycle_no: cycle["PercentQ30"]})
+        if paired_end:
+            for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
+                cycle_no = int(cycle["Cycle"]) + r1r2_split
+                cycle_dict.update({cycle_no: cycle["PercentQ30"]})
         Q30_dict.update({s_name: cycle_dict})
 
     # Prepare plot data for %Q40 of each cycle
     Q40_dict = {}
     for s_name in run_data.keys():
+        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         cycle_dict = dict()
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["PercentQ40"]})
-        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
-            cycle_no = int(cycle["Cycle"]) + r1r2_split
-            cycle_dict.update({cycle_no: cycle["PercentQ40"]})
+        if paired_end:
+            for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
+                cycle_no = int(cycle["Cycle"]) + r1r2_split
+                cycle_dict.update({cycle_no: cycle["PercentQ40"]})
         Q40_dict.update({s_name: cycle_dict})
 
     # aggregate plot data
