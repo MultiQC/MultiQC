@@ -448,13 +448,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = ccdict.config.get("pconfig", {})
         if pconfig.get("anchor") is None:
-            if pconfig.get("id") is not None:
-                pconfig["anchor"] = pconfig["id"]
-                if pconfig["anchor"] == self.anchor or pconfig["anchor"] == section_anchor:
-                    # making sure plot anchor is globally unique
-                    pconfig["anchor"] += "-plot"
-            else:
-                pconfig["anchor"] = section_anchor + "-plot"  # making sure anchor is globally unique
+            pconfig["anchor"] = pconfig["id"] if pconfig.get("id") is not None else section_anchor
+
+        # Making sure plot anchor is globally unique
+        if pconfig["anchor"] == self.anchor or pconfig["anchor"] == section_anchor:
+            pconfig["anchor"] += "-plot"
+
         if pconfig.get("id") is None:
             pconfig["id"] = section_id
         if pconfig.get("title") is None:
