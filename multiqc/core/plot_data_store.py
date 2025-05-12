@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 _plot_dataframes: Dict[Anchor, pd.DataFrame] = {}
 # Set to keep track of which anchors have been saved
 _saved_anchors: Set[Anchor] = set()
+# Cache of merged wide-format table data (sample-based tables)
+_merged_wide_df: Optional[pd.DataFrame] = None
 
 # Metadata keys
 META_MODULES = "modules"
@@ -31,6 +33,117 @@ META_DATA_SOURCES = "data_sources"
 META_CREATION_DATE = "creation_date"
 META_CONFIG = "config"
 META_MULTIQC_VERSION = "multiqc_version"
+
+
+def merge_wide_tables(df: pd.DataFrame) -> None:
+    """
+    Merge wide-format table data with existing sample-based tables.
+
+    This function extracts table rows from the dataframe and merges them with
+    the existing global cache of wide-format table data. This ensures all tables
+    that have the same samples get combined into a single row per sample.
+    """
+    global _merged_wide_df
+
+    # Extract table rows
+    if "type" not in df.columns:
+        return
+
+    wide_df = df[df["type"] == "table_row"].copy()
+    if wide_df.empty:
+        return
+
+    # Check if we have necessary columns
+    if "sample_name" not in wide_df.columns:
+        return
+
+    # Add table ID to column names to avoid collisions between tables
+    table_id = str(df["anchor"].iloc[0])
+
+    # If the dataframe already has a table_id column, use that instead
+    if "table_id" in wide_df.columns and not wide_df["table_id"].isna().all():
+        # Get the first non-null table_id
+        table_ids = wide_df["table_id"].dropna().unique()
+        if len(table_ids) > 0:
+            table_id = str(table_ids[0])
+            # Log a warning if there are multiple different table_ids
+            if len(table_ids) > 1:
+                logger.warning(f"Multiple table IDs found in dataframe: {table_ids}. Using {table_id}")
+
+    col_prefix = f"tbl_{table_id}_"
+
+    # Rename metric columns to include table ID
+    for col in wide_df.columns:
+        if col.startswith("col_"):
+            wide_df.rename(columns={col: f"{col_prefix}{col}"}, inplace=True)
+
+    # Merge with existing data if available
+    if _merged_wide_df is None:
+        _merged_wide_df = wide_df
+    else:
+        # Merge on sample_name, preserving all columns from both dataframes
+        _merged_wide_df = pd.merge(_merged_wide_df, wide_df, on=["sample_name", "creation_date"], how="outer")
+
+    # Remove the wide format rows from the original dataframe
+    df.drop(df[df["type"] == "table_row"].index, inplace=True)
+
+
+def save_merged_tables() -> None:
+    """
+    Save the merged wide-format table data to the parquet file.
+    """
+    global _merged_wide_df
+
+    if _merged_wide_df is None or _merged_wide_df.empty:
+        return
+
+    parquet_file = tmp_dir.parquet_file()
+
+    # Update existing file or create new one
+    if parquet_file.exists():
+        try:
+            # Read existing data
+            existing_df = pd.read_parquet(parquet_file)
+
+            # Remove any existing merged table rows
+            if "type" in existing_df.columns:
+                existing_df = existing_df[existing_df["type"] != "merged_table_row"]
+
+            # Update the type field in our merged table
+            _merged_wide_df["type"] = "merged_table_row"
+
+            # Append merged data
+            merged_df = pd.concat([existing_df, _merged_wide_df], ignore_index=True)
+        except Exception as e:
+            logger.error(f"Error updating parquet file with merged tables: {e}")
+            if config.strict:
+                raise e
+            return
+    else:
+        # Create directory if needed
+        os.makedirs(parquet_file.parent, exist_ok=True)
+
+        # Update the type field and prepare for writing
+        _merged_wide_df["type"] = "merged_table_row"
+        merged_df = _merged_wide_df
+
+    # Fix for Iceberg. Iceberg never keeps an arbitrary zone offset in the data –
+    # a value that has a zone is normalised to UTC, and the zone itself is discarded.
+    merged_df["creation_date"] = (
+        pd.to_datetime(merged_df["creation_date"], utc=True)
+        .dt.floor("us")  # tz-aware (+02:00)
+        .dt.tz_localize(None)  # …but drop the zone
+        .astype("datetime64[us]")  # make it explicit
+    )
+
+    # Write to file
+    try:
+        merged_df.to_parquet(parquet_file, compression="gzip")
+        logger.debug(f"Saved merged table data to parquet file {parquet_file}")
+    except Exception as e:
+        logger.error(f"Error writing merged table data to parquet file: {e}")
+        if config.strict:
+            raise e
 
 
 def save_plot_data(anchor: Anchor, df: pd.DataFrame) -> None:
@@ -42,6 +155,9 @@ def save_plot_data(anchor: Anchor, df: pd.DataFrame) -> None:
     # Update the global cache
     _plot_dataframes[anchor] = df
     _saved_anchors.add(anchor)
+
+    # Merge wide-format table data if present
+    merge_wide_tables(df)
 
     # Write to the file
     _update_parquet(df, anchor)
@@ -207,6 +323,9 @@ def save_report_metadata() -> None:
     df.to_parquet(parquet_file, compression="gzip")
     logger.debug(f"Saved parquet file {parquet_file}")
 
+    # Save the merged table data
+    save_merged_tables()
+
 
 def _update_parquet(df: pd.DataFrame, anchor: Anchor) -> None:
     """
@@ -251,9 +370,10 @@ def reset():
     """
     Reset the module state.
     """
-    global _plot_dataframes, _saved_anchors
+    global _plot_dataframes, _saved_anchors, _merged_wide_df
     _plot_dataframes = {}
     _saved_anchors = set()
+    _merged_wide_df = None
 
 
 def parse_value(value: Any, value_type: str) -> Any:
