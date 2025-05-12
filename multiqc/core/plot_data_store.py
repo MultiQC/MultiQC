@@ -53,36 +53,17 @@ def merge_wide_tables(df: pd.DataFrame) -> None:
     if wide_df.empty:
         return
 
-    # Check if we have necessary columns
-    if "sample_name" not in wide_df.columns:
-        return
-
-    # Add table ID to column names to avoid collisions between tables
-    table_id = str(df["anchor"].iloc[0])
-
-    # If the dataframe already has a table_id column, use that instead
-    if "table_id" in wide_df.columns and not wide_df["table_id"].isna().all():
-        # Get the first non-null table_id
-        table_ids = wide_df["table_id"].dropna().unique()
-        if len(table_ids) > 0:
-            table_id = str(table_ids[0])
-            # Log a warning if there are multiple different table_ids
-            if len(table_ids) > 1:
-                logger.warning(f"Multiple table IDs found in dataframe: {table_ids}. Using {table_id}")
-
-    col_prefix = f"tbl_{table_id}_"
-
-    # Rename metric columns to include table ID
-    for col in wide_df.columns:
-        if col.startswith("col_"):
-            wide_df.rename(columns={col: f"{col_prefix}{col}"}, inplace=True)
-
     # Merge with existing data if available
     if _merged_wide_df is None:
         _merged_wide_df = wide_df
     else:
         # Merge on sample_name, preserving all columns from both dataframes
-        _merged_wide_df = pd.merge(_merged_wide_df, wide_df, on=["sample_name", "creation_date"], how="outer")
+        _merged_wide_df = pd.merge(
+            _merged_wide_df,
+            wide_df,
+            on=["anchor", "type", "creation_date", "plot_type", "plot_input_data", "sample_name"],
+            how="outer",
+        )
 
     # Remove the wide format rows from the original dataframe
     df.drop(df[df["type"] == "table_row"].index, inplace=True)

@@ -3,11 +3,11 @@ Violin plot module. Also handles scatter plots and tables.
 """
 
 import copy
-from datetime import datetime
 import json
 import logging
 import math
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
@@ -127,20 +127,15 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         wide_records = []
 
         # Process each section and its rows
-        for section_idx, section in enumerate(self.dt.section_by_id.values()):
-            section_key = list(self.dt.section_by_id.keys())[section_idx]
-
+        for section_key, section in self.dt.section_by_id.items():
             # Process each sample in this section
             for sample_name, group_rows in section.rows_by_sgroup.items():
                 for row in group_rows:
                     # Create base record with sample information
                     wide_record: Dict[str, Any] = {
-                        "anchor": str(self.anchor),
                         "creation_date": self.creation_date,
                         "type": "table_row",
-                        "section_key": str(section_key),
                         "sample_name": str(sample_name),
-                        "table_id": str(self.dt.id),  # Add table ID to help with merging
                     }
 
                     # Process each metric/column in the order from get_headers_in_order()
@@ -164,12 +159,13 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                         metric_col_name = metric_name
                         if dt_column.namespace:
                             metric_col_name = f"{dt_column.namespace}_{metric_name}"
-
-                        wide_record[f"COL_{metric_col_name}"] = float_val
-                        # wide_record[f"col_{metric_col_name}_str"] = cell.fmt
+                        elif len(section.rows_by_sgroup) > 1:
+                            metric_col_name = f"{section_key}_{metric_name}"
+                        metric_col_name = f"{self.dt.id}_{metric_col_name}"
+                        wide_record[metric_col_name] = float_val
 
                     # Only add records that have at least one metric
-                    if any(k.startswith("COL_") for k in wide_record.keys()):
+                    if any(k.startswith(f"{self.dt.id}_") for k in wide_record.keys()):
                         wide_records.append(wide_record)
 
         # Create the wide format DataFrame
