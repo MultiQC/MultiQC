@@ -170,10 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        if suffix:
-            header = {f"{k}{suffix}": v for k, v in header.items()}
-
-        return header
+        return {f"{k}{suffix}": v for k, v in header.items()}
 
     def parse_file(self, f):
         """
