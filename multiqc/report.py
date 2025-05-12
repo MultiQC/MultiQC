@@ -14,6 +14,7 @@ import logging
 import mimetypes
 import os
 import re
+import shutil
 import sys
 import time
 from collections import defaultdict
@@ -46,10 +47,11 @@ from multiqc.core import ai, log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
-from multiqc.plots.plot import Plot
+from multiqc.core import plot_data_store
+from multiqc.plots.plot import NormalizedPlotInputData, Plot
+from multiqc.plots.table_object import Cell, ColumnDict, InputRow, SampleName, ValueT
 from multiqc.plots.violin import ViolinPlot
-from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
-from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
+from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section, SectionKey
 from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
     dump_json,
@@ -114,11 +116,16 @@ ai_pseudonym_map_base64: str = ""
 # Following fields are preserved between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
-plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html and load with js
-plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
-plot_input_data: Dict[Anchor, Any] = dict()  # to combine data from previous runs
-general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
-general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
+
+# relative paths to parquet files to combine data from previous runs
+plot_input_data: Dict[Anchor, NormalizedPlotInputData] = dict()
+# plot objects to retried when plots are rendered, for ai, and for interactive use
+plot_by_id: Dict[Anchor, Union[Plot[Any, Any], str]] = dict()
+# plot dumps to embed in html and load with js
+plot_data: Dict[Anchor, Dict[str, Any]] = dict()
+
+general_stats_data: Dict[SectionKey, Dict[SampleGroup, List[InputRow]]]
+general_stats_headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
 saved_raw_data_keys: List[str]  # to make sure write_data_file don't overwrite for repeated modules
@@ -212,12 +219,14 @@ def reset():
     plot_data = dict()
     plot_by_id = dict()
     plot_input_data = dict()
-    general_stats_data = []
-    general_stats_headers = []
+    general_stats_data = dict()
+    general_stats_headers = dict()
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
     saved_raw_data_keys = []
     saved_raw_data = dict()
+
+    plot_data_store.reset()
 
     tmp_dir.new_tmp_dir()
 
@@ -1033,7 +1042,7 @@ def write_data_file(
 
 def multiqc_dump_json(data_dir: Path):
     """
-    Export the parsed data in memory to a JSON file.
+    Export the parsed data in memory to a JSON file and parquet file.
     Upload to MegaQC if requested.
     WARNING: May be depreciated and removed in future versions.
     """
@@ -1044,8 +1053,8 @@ def multiqc_dump_json(data_dir: Path):
             "data_sources",
             "general_stats_data",
             "general_stats_headers",
-            "plot_data",
             "creation_date",
+            "plot_data",
         ],
         "config": [
             "analysis_dir",
@@ -1075,17 +1084,17 @@ def multiqc_dump_json(data_dir: Path):
                     val = getattr(sys.modules[__name__], name)
                     if name == "general_stats_data":
                         # Flattening sample groups for export
-                        flattened_sections: List[Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = []
-                        section: Dict[SampleGroup, List[InputRow]]
-                        for section in general_stats_data:
-                            fl_sec: Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]] = dict()
+                        flattened_sections: Dict[SectionKey, Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = {}
+                        for section_key, section in general_stats_data.items():
+                            fl_sec = dict()
                             for _, rows in section.items():
                                 if isinstance(rows, list):
                                     for row in rows:
-                                        fl_sec[row.sample] = row.data
+                                        vals = {k: v.raw if isinstance(v, Cell) else v for k, v in row.data.items()}
+                                        fl_sec[row.sample] = vals
                                 else:
                                     fl_sec = rows  # old format without grouping, in case if user plugins override it
-                            flattened_sections.append(fl_sec)
+                            flattened_sections[section_key] = fl_sec
                         val = flattened_sections
                     elif name == "modules":
                         val = [
@@ -1104,7 +1113,11 @@ def multiqc_dump_json(data_dir: Path):
                             for mod in modules
                         ]
                     elif name == "creation_date":
-                        val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+                        try:
+                            val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+                        except UnicodeEncodeError:
+                            # Fall back to a format without timezone if we encounter encoding issues
+                            val = creation_date.strftime("%Y-%m-%d, %H:%M")
                     d = {f"{pymod}_{name}": val}
                 if d:
                     with open(os.devnull, "wt") as f:
@@ -1191,7 +1204,10 @@ def remove_tmp_dir():
     Completely remove tmp dir
     """
     log_and_rich.remove_file_handler()
-    rmtree_with_retries(tmp_dir.get_tmp_dir())
+    try:
+        rmtree_with_retries(tmp_dir.get_tmp_dir())
+    except Exception as e:
+        logger.warning(f"Couldn't remove tmp dir: {e}")
     tmp_dir.new_tmp_dir()
 
 

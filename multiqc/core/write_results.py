@@ -12,20 +12,21 @@ import time
 import traceback
 import uuid
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 import jinja2
 
 from multiqc import config, report
 from multiqc.base_module import Section
-from multiqc.core import log_and_rich, plugin_hooks, tmp_dir
+from multiqc.core import log_and_rich, plot_data_store, plugin_hooks, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
-from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
-from multiqc.plots.plot import Plot
+from multiqc.plots.plot import Plot, process_batch_exports
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor
 from multiqc.utils import util_functions
+from multiqc.utils.util_functions import rmtree_with_retries
 
 logger = logging.getLogger(__name__)
 
@@ -120,10 +121,18 @@ def write_results() -> None:
     # Zip the data directory if requested
     if config.zip_data_dir and paths.data_dir is not None:
         shutil.make_archive(str(paths.data_dir), format="zip", root_dir=str(paths.data_dir))
-        tmp_dir.rmtree_with_retries(paths.data_dir)
+        try:
+            util_functions.rmtree_with_retries(paths.data_dir)
+        except Exception as e:
+            logger.warning(f"Couldn't remove data dir: {e}")
 
     if paths.report_path:
         logger.debug(f"Report HTML written to {paths.report_path}")
+
+    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
+    # that goes beyond this write_results run.
+    if log_and_rich.log_tmp_fn and paths.data_dir:
+        shutil.copy2(log_and_rich.log_tmp_fn, str(paths.data_dir))
 
 
 def _maybe_relative_path(path: Path) -> Path:
@@ -253,11 +262,12 @@ def _create_or_override_dirs(output_names: OutputNames) -> OutputPaths:
 
 def render_and_export_plots(plots_dir_name: str):
     """
-    Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir(). Populates report.plot_data
+    Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir().
+    Populates report.plot_data
     """
 
     def update_fn(_, s: Section):
-        if s.plot_anchor:
+        if s.plot_anchor and s.plot_anchor in report.plot_by_id:
             _plot = report.plot_by_id[s.plot_anchor]
             if isinstance(_plot, Plot):
                 s.plot = _plot.add_to_report(
@@ -269,8 +279,6 @@ def render_and_export_plots(plots_dir_name: str):
                 s.plot = _plot
             else:
                 logger.error(f"Unknown plot type for {s.module}/{s.name}")
-        else:
-            s.plot = ""
 
     sections = report.get_all_sections()
 
@@ -292,7 +300,7 @@ def render_and_export_plots(plots_dir_name: str):
         )
     else:
         for s in sections:
-            if s.plot_anchor:
+            if s.plot_anchor and s.plot_anchor in report.plot_by_id:
                 plot = report.plot_by_id[s.plot_anchor]
                 if isinstance(plot, Plot) and plot.flat:
                     show_progress = True
@@ -314,13 +322,16 @@ def render_and_export_plots(plots_dir_name: str):
         update_fn=update_fn,
         item_to_str_fn=lambda s: f"{s.module}/{s.name}" if s.name else s.module,
         desc="rendering plots",
-        disable_progress=not show_progress,
+        disable_progress=True,
     )
 
+    # Process all batched exports in a single process after all plots are rendered
+    process_batch_exports()
+
     report.some_plots_are_deferred = any(
-        isinstance(report.plot_by_id[s.plot_anchor], Plot) and report.plot_by_id[s.plot_anchor].defer_render
+        isinstance(plot := report.plot_by_id[s.plot_anchor], Plot) and plot.defer_render
         for s in sections
-        if s.plot_anchor
+        if s.plot_anchor and s.plot_anchor in report.plot_by_id
     )
 
 
@@ -330,46 +341,55 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
     """
 
     # Remove empty data sections from the General Stats table
-    empty_keys = [i for i, d in enumerate(report.general_stats_data[:]) if len(d) == 0]
+    empty_keys = [i for i, d in report.general_stats_data.items() if len(d) == 0]
     empty_keys.sort(reverse=True)
     for i in empty_keys:
         del report.general_stats_data[i]
         del report.general_stats_headers[i]
 
-    all_hidden = True
-    for headers in report.general_stats_headers:
+    # all_hidden = True
+    for headers in report.general_stats_headers.values():
         for h in headers.values():
             if not h.get("hidden", False):
-                all_hidden = False
+                # all_hidden = False
                 break
 
     # Generate the General Statistics HTML & write to file
-    if len(report.general_stats_data) > 0 and not all_hidden:
-        # Clean previous general stats table if running write_report interactively second time
-        if Anchor("general_stats_table") in report.html_ids_by_scope[None]:
-            report.html_ids_by_scope[None].remove(Anchor("general_stats_table"))  # Violin plot anchor
-            if Anchor("general_stats_table_table") in report.html_ids_by_scope[None]:
-                report.html_ids_by_scope[None].remove(Anchor("general_stats_table_table"))  # Table anchor
-            del report.general_stats_html
-        pconfig = {
+    # Clean previous general stats table if running write_report interactively second time:
+    if Anchor("general_stats_table") in report.html_ids_by_scope[None]:
+        report.html_ids_by_scope[None].remove(Anchor("general_stats_table"))  # Violin plot anchor
+        if Anchor("general_stats_table_table") in report.html_ids_by_scope[None]:
+            report.html_ids_by_scope[None].remove(Anchor("general_stats_table_table"))  # Table anchor
+        del report.general_stats_html
+    p = table.plot_with_sections(
+        data=report.general_stats_data,  # type: ignore
+        headers=report.general_stats_headers,  # type: ignore
+        pconfig={
             "id": "general_stats_table",
             "title": "General Statistics",
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
-        }
-        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
+        },
+    )
+    if p is None and Anchor("general_stats_table") in report.plot_by_id:
+        loaded_plot = report.plot_by_id[Anchor("general_stats_table")]  # loaded from previous run?
+        if isinstance(loaded_plot, Plot):
+            p = cast(ViolinPlot, loaded_plot)
+        elif isinstance(loaded_plot, str):
+            p = loaded_plot
+        else:
+            logger.error("General stats plot is not a Plot object")
+
+    if p is not None:
         if isinstance(p, str):
             report.general_stats_html = p
         else:
             report.plot_by_id[p.anchor] = p
-
-    if genstats_plot := report.plot_by_id.get(Anchor("general_stats_table")):
-        report.general_stats_html = genstats_plot.add_to_report(
-            plots_dir_name=plots_dir_name,
-            module_anchor=Anchor("general_stats_table"),
-            section_anchor=Anchor("general_stats_table"),
-        )
-
+            report.general_stats_html = p.add_to_report(
+                plots_dir_name=plots_dir_name,
+                module_anchor=Anchor("general_stats_table"),
+                section_anchor=Anchor("general_stats_table"),
+            )
     else:
         config.skip_generalstats = True
     return None
@@ -383,16 +403,14 @@ def _write_data_files(data_dir: Path) -> None:
     # Exporting plots to files if requested
     logger.debug("Exporting plot data to files")
     for s in report.get_all_sections():
-        if s.plot_anchor and isinstance(report.plot_by_id.get(s.plot_anchor), Plot):
-            report.plot_by_id[s.plot_anchor].save_data_files()
+        if s.plot_anchor and isinstance(plot := report.plot_by_id.get(s.plot_anchor), Plot):
+            plot.save_data_files()
 
     # Modules have run, so data directory should be complete by now. Move its contents.
     logger.debug(f"Moving data file from '{report.data_tmp_dir()}' to '{data_dir}'")
 
-    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
-    # that goes beyond this write_results run.
-    if log_and_rich.log_tmp_fn:
-        shutil.copy2(log_and_rich.log_tmp_fn, report.data_tmp_dir())
+    # Save metadata to parquet file
+    plot_data_store.save_report_metadata()
 
     shutil.copytree(
         report.data_tmp_dir(),
@@ -403,7 +421,10 @@ def _write_data_files(data_dir: Path) -> None:
         # shutil.copyfile only copies the file without any metadata.
         copy_function=shutil.copyfile,
     )
-    rmtree_with_retries(report.data_tmp_dir())
+    try:
+        rmtree_with_retries(report.data_tmp_dir())
+    except Exception as e:
+        logger.warning(f"Couldn't remove data tmp dir: {e}")
 
     # Write the report sources to disk
     report.data_sources_tofile(data_dir)
@@ -437,7 +458,10 @@ def _move_exported_plots(plots_dir: Path):
         # shutil.copyfile only copies the file without any metadata.
         copy_function=shutil.copyfile,
     )
-    rmtree_with_retries(tmp_dir.plots_tmp_dir())
+    try:
+        rmtree_with_retries(tmp_dir.plots_tmp_dir())
+    except Exception as e:
+        logger.warning(f"Couldn't remove plots tmp dir: {e}")
 
 
 def _write_html_report(to_stdout: bool, report_path: Optional[Path]):

@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
+from multiqc.plots.plot import Plot
 from multiqc.types import Anchor, SampleName
 from multiqc.utils import config_schema
 
@@ -180,11 +181,18 @@ class Client:
         self.model: str
         self.api_key: Optional[str] = api_key
 
+        self.prompt_short = PROMPT_SHORT
+        if config.ai_prompt_short is not None:
+            self.prompt_short = config.ai_prompt_short
+        self.prompt_full = PROMPT_FULL
+        if config.ai_prompt_full is not None:
+            self.prompt_full = config.ai_prompt_full
+
     def _query(self, prompt: str):
         raise NotImplementedError
 
     def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_SHORT + "\n\n" + report_content)
+        response = self._query(self.prompt_short + "\n\n" + report_content)
 
         return InterpretationResponse(
             interpretation=InterpretationOutput(summary=response.content),
@@ -192,7 +200,7 @@ class Client:
         )
 
     def interpret_report_full(self, report_content: str) -> InterpretationResponse:
-        response = self._query(PROMPT_FULL + "\n\n" + report_content)
+        response = self._query(self.prompt_full + "\n\n" + report_content)
 
         try:
             output = yaml.safe_load(response.content)
@@ -229,7 +237,7 @@ class Client:
             return int(len(text) / 1.5)
 
     def _request_with_error_handling_and_retries(
-        self, url: str, headers: Dict[str, Any], body: Dict[str, Any], retries: int = 1
+        self, url: str, headers: Dict[str, Any], body: Dict[str, Any], retries: Optional[int] = None
     ) -> Dict[str, Any]:
         """Make a request with retries and exponential backoff.
 
@@ -239,6 +247,7 @@ class Client:
         """
         import time
 
+        retries = retries or config.ai_retries or 3
         attempt = 0
         while True:
             try:
@@ -312,17 +321,22 @@ class OpenAiClient(Client):
         body.update(
             {
                 "model": self.model,
-                "messages": [
-                    {"role": "user", "content": prompt},
-                ],
+                "messages": [{"role": "user", "content": prompt}],
             }
         )
-        response = self._request_with_error_handling_and_retries(
-            self.endpoint,
-            headers={
+        if config.ai_auth_type == "api-key":
+            headers = {
+                "Content-Type": "application/json",
+                "api-key": self.api_key,
+            }
+        else:
+            headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",
-            },
+            }
+        response = self._request_with_error_handling_and_retries(
+            self.endpoint,
+            headers=headers,
             body=body,
         )
         return OpenAiClient.ApiResponse(
@@ -452,7 +466,7 @@ class SeqeraClient(Client):
         )
 
     def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._send_request(PROMPT_SHORT, report_content, extra_options=None)
+        response = self._send_request(self.prompt_short, report_content, extra_options=None)
 
         return InterpretationResponse(
             interpretation=InterpretationOutput(summary=str(response.content)),
@@ -462,7 +476,7 @@ class SeqeraClient(Client):
 
     def interpret_report_full(self, report_content: str) -> InterpretationResponse:
         response = self._send_request(
-            PROMPT_FULL,
+            self.prompt_full,
             report_content,
             extra_options={
                 "response_schema": {
@@ -676,7 +690,7 @@ def deanonymize_sample_names(text: str) -> str:
 
 
 def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]:
-    system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
+    system_prompt = client.prompt_full if config.ai_summary_full else client.prompt_short
 
     # Account for system message, plus leave 10% buffer
     max_tokens = client.max_tokens()
@@ -701,30 +715,31 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
 
     # General stats - also always include, otherwise we don't have anything to summarize
     if general_stats_plot := report.plot_by_id.get(Anchor("general_stats_table")):
-        genstats_context = f"""
-MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-{general_stats_plot.format_for_ai_prompt()}
-"""
-        genstats_n_tokens = client.n_tokens(genstats_context)
-        if current_n_tokens + genstats_n_tokens > max_tokens:
-            # If it's too long already, try without hidden columns
+        if isinstance(general_stats_plot, Plot):
             genstats_context = f"""
-MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-{general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
-"""
+    MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
+    {general_stats_plot.format_for_ai_prompt()}
+    """
             genstats_n_tokens = client.n_tokens(genstats_context)
             if current_n_tokens + genstats_n_tokens > max_tokens:
-                logger.debug(
-                    f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
-                    f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
-                    "AI summary will not be generated. Try hiding some columns in the general stats table "
-                    "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context. "
-                    "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
-                    "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
-                )
-                return user_prompt + genstats_context, True
-        user_prompt += genstats_context
-        current_n_tokens += genstats_n_tokens
+                # If it's too long already, try without hidden columns
+                genstats_context = f"""
+    MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
+    {general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
+    """
+                genstats_n_tokens = client.n_tokens(genstats_context)
+                if current_n_tokens + genstats_n_tokens > max_tokens:
+                    logger.debug(
+                        f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
+                        f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
+                        "AI summary will not be generated. Try hiding some columns in the general stats table "
+                        "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context. "
+                        "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
+                        "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
+                    )
+                    return user_prompt + genstats_context, True
+            user_prompt += genstats_context
+            current_n_tokens += genstats_n_tokens
 
     user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
 
@@ -749,10 +764,11 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
 
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
-            if plot_content := plot.format_for_ai_prompt(keep_hidden=True):
-                if plot.pconfig.title:
-                    sec_context += f"Title: {plot.pconfig.title}\n"
-                sec_context += "\n" + plot_content
+            if isinstance(plot, Plot):
+                if plot_content := plot.format_for_ai_prompt(keep_hidden=True):
+                    if plot.pconfig.title:
+                        sec_context += f"Title: {plot.pconfig.title}\n"
+                    sec_context += "\n" + plot_content
 
         # Check if adding this section would exceed the limit
         # Using rough estimate of 4 chars per token
@@ -769,10 +785,10 @@ MultiQC General Statistics (overview of key QC metrics for each sample, across a
     return user_prompt, False
 
 
-def _save_prompt_to_file(prompt: str):
+def _save_prompt_to_file(client: Client, prompt: str):
     """Save content to file for debugging"""
     path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
-    system_prompt = PROMPT_FULL if config.ai_summary_full else PROMPT_SHORT
+    system_prompt = client.prompt_full if config.ai_summary_full else client.prompt_short
     path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}")
     logger.debug(f"Saved AI prompt to {path.parent.name}/{path.name}")
 
@@ -804,7 +820,7 @@ def add_ai_summary_to_report():
 
     prompt, exceeded_context_window = build_prompt(client, metadata)
 
-    _save_prompt_to_file(prompt)
+    _save_prompt_to_file(client, prompt)
 
     if exceeded_context_window:
         return

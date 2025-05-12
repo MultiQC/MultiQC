@@ -117,8 +117,12 @@ ai_summary_full: bool
 ai_provider: str
 ai_model: str
 ai_custom_endpoint: Optional[str]
+ai_auth_type: Optional[str]
+ai_retries: int
 ai_extra_query_options: Optional[Dict[str, Any]]
 ai_custom_context_window: Optional[int]
+ai_prompt_short: Optional[str]
+ai_prompt_full: Optional[str]
 no_ai: bool
 ai_anonymize_samples: bool
 
@@ -140,6 +144,7 @@ violin_min_threshold_no_points: int
 collapse_tables: bool
 max_table_rows: int
 max_configurable_table_columns: int
+general_stats_columns: Dict[str, Dict]
 table_columns_visible: Dict[str, Union[bool, Dict[str, bool]]]
 table_columns_placement: Dict[str, Dict[str, float]]
 table_columns_name: Dict[str, Union[str, Dict[str, str]]]
@@ -161,6 +166,8 @@ fn_ignore_dirs: List[str]
 fn_ignore_paths: List[str]
 sample_names_ignore: List[str]
 sample_names_ignore_re: List[str]
+sample_names_only_include: List[str]
+sample_names_only_include_re: List[str]
 sample_names_rename_buttons: List[str]
 sample_names_replace: Dict[str, str]
 sample_names_replace_regex: bool
@@ -222,6 +229,8 @@ megaqc_upload: bool
 
 avail_modules: Dict[str, EntryPoint]
 avail_templates: Dict[str, EntryPoint]
+
+export_plots_timeout: int
 
 
 def load_defaults():

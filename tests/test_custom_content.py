@@ -10,8 +10,13 @@ from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.file_search import file_search
 from multiqc.core.special_case_modules.custom_content import custom_module_classes
 from multiqc.core.update_config import ClConfig, update_config
-from multiqc.core.write_results import write_results
-from multiqc.types import Anchor, ColumnKey, SampleGroup
+from multiqc.plots.box import BoxPlot
+from multiqc.plots.heatmap import HeatmapPlot
+from multiqc.plots.linegraph import LinePlot
+from multiqc.plots.scatter import ScatterPlot
+from multiqc.plots.table_object import Cell
+from multiqc.plots.violin import ViolinPlot
+from multiqc.types import Anchor, ColumnKey, SampleGroup, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
 
@@ -56,8 +61,10 @@ def test_linegraph_single_sample_txt(data_dir):
     anchor = Anchor("dupradar-section-plot")
     assert len(report.plot_by_id) == 1
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].id == "dupradar"
-    assert report.plot_by_id[anchor].plot_type == "x/y line"
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, LinePlot)
+    assert plot.id == "dupradar"
+    assert plot.plot_type == "x/y line"
 
 
 def test_deprecated_fields(tmp_path, capsys):
@@ -93,8 +100,10 @@ def test_deprecated_fields(tmp_path, capsys):
     assert len(report.plot_by_id) == 1
     anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].id == id
-    assert report.plot_by_id[anchor].plot_type == "x/y line"
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, LinePlot)
+    assert plot.id == id
+    assert plot.plot_type == "x/y line"
 
     err = str(capsys.readouterr().err)
     assert "Line plot's x_lines or y_lines 'label' field is expected to be a string" in err
@@ -150,18 +159,20 @@ def test_wrong_fields(tmp_path, caplog, strict, monkeypatch):
         assert len(report.plot_by_id) == 1
         anchor = Anchor(f"{id}-section-plot")
         assert anchor in report.plot_by_id
-        assert report.plot_by_id[anchor].id == id
-        assert report.plot_by_id[anchor].plot_type == "x/y line"
-        assert report.plot_by_id[anchor].pconfig.title == "DupRadar General Linear Model"
+        plot = report.plot_by_id[anchor]
+        assert isinstance(plot, LinePlot)
+        assert plot.id == id
+        assert plot.plot_type == "x/y line"
+        assert plot.pconfig.title == "DupRadar General Linear Model"
         assert (
-            report.plot_by_id[anchor].pconfig.xlab == "True"  # cast to string
-            or report.plot_by_id[anchor].pconfig.xlab is None  # Python < 3.10
+            plot.pconfig.xlab == "True"  # cast to string
+            or plot.pconfig.xlab is None  # Python < 3.10
         )
-        assert report.plot_by_id[anchor].pconfig.xlog is True
-        assert report.plot_by_id[anchor].pconfig.ymax is None
+        assert plot.pconfig.xlog is True
+        assert plot.pconfig.ymax is None
         assert (
-            report.plot_by_id[anchor].pconfig.ymin == 0  # cast to int
-            or report.plot_by_id[anchor].pconfig.ymin is None  # Python < 3.10
+            plot.pconfig.ymin == 0  # cast to int
+            or plot.pconfig.ymin is None  # Python < 3.10
         )
 
 
@@ -185,9 +196,11 @@ def test_missing_id_and_title(tmp_path):
     assert len(report.plot_by_id) == 1
     anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].id == id
-    assert report.plot_by_id[anchor].plot_type == "x/y line"
-    assert report.plot_by_id[anchor].pconfig.xlab == "expression"
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, LinePlot)
+    assert plot.id == id
+    assert plot.plot_type == "x/y line"
+    assert plot.pconfig.xlab == "expression"
 
 
 def test_with_separate_config_and_quotes(data_dir):
@@ -222,13 +235,15 @@ sp:
     assert len(report.plot_by_id) == 1
     anchor = Anchor("concordance_heatmap")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].id == anchor
-    assert report.plot_by_id[anchor].plot_type == "heatmap"
-    assert len(report.plot_by_id[anchor].datasets) == 1
-    assert report.plot_by_id[anchor].datasets[0].rows[0][0] == 1.0
-    assert report.plot_by_id[anchor].datasets[0].rows[0][1] == 0.378
-    assert report.plot_by_id[anchor].datasets[0].xcats[0] == "08021342"
-    assert report.plot_by_id[anchor].datasets[0].ycats[0] == "08021342"
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, HeatmapPlot)
+    assert plot.id == anchor
+    assert plot.plot_type == "heatmap"
+    assert len(plot.datasets) == 1
+    assert plot.datasets[0].rows[0][0] == 1.0
+    assert plot.datasets[0].rows[0][1] == 0.378
+    assert plot.datasets[0].xcats[0] == "08021342"
+    assert plot.datasets[0].ycats[0] == "08021342"
 
 
 def test_full_run_with_config(data_dir, capsys):
@@ -253,19 +268,23 @@ def test_full_run_with_config(data_dir, capsys):
     assert len(report.plot_by_id) == 1
     anchor = Anchor("concordance_heatmap")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].id == "concordance_heatmap"
-    assert report.plot_by_id[anchor].plot_type == "heatmap"
-    assert len(report.plot_by_id[anchor].datasets) == 1
-    assert report.plot_by_id[anchor].datasets[0].rows[0][0] == 1.0
-    assert report.plot_by_id[anchor].datasets[0].rows[0][1] == 0.378
-    assert report.plot_by_id[anchor].datasets[0].xcats[0] == "08021342"
-    assert report.plot_by_id[anchor].datasets[0].ycats[0] == "08021342"
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, HeatmapPlot)
+    assert plot.id == anchor
+    assert plot.plot_type == "heatmap"
+    assert len(plot.datasets) == 1
+    assert plot.datasets[0].rows[0][0] == 1.0
+    assert plot.datasets[0].rows[0][1] == 0.378
+    assert plot.datasets[0].xcats[0] == "08021342"
+    assert plot.datasets[0].ycats[0] == "08021342"
 
 
 def test_mqc_ext_match_custom_op(tmp_path):
     """
     Verify that _mqc.tsv match the specific patterns in sp before being discovered by generic "custom_content" patterns
     """
+    os.chdir(tmp_path)
+
     file1 = tmp_path / "target___test1.o2o_aln.tsv"
     file2 = tmp_path / "target___test2.o2o_aln_mqc.tsv"
     file1.write_text(
@@ -304,8 +323,10 @@ target___test2	2
     assert len(report.plot_by_id) == 1
     anchor = Anchor("last_o2o-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].id == "last_o2o"
-    assert report.plot_by_id[anchor].plot_type == "violin plot"
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, ViolinPlot)
+    assert plot.anchor == anchor
+    assert plot.plot_type == "violin plot"
 
 
 @pytest.mark.parametrize(
@@ -360,6 +381,8 @@ myfile.fasta	chr1	55312	56664	+	GENE""",
     ],
 )
 def test_from_tsv(tmp_path, section_name, is_good, contents):
+    os.chdir(tmp_path)
+
     id = "mysample"
     tmp_path.joinpath(f"{id}_mqc.tsv").write_text(contents)
 
@@ -376,9 +399,12 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
     assert len(report.plot_by_id) == 1
     anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].plot_type == "violin plot"
-    assert len(report.plot_by_id[anchor].datasets) == 1
-    assert report.plot_by_id[anchor].datasets[0].header_by_metric.keys() == {
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, ViolinPlot)
+    assert plot.anchor == anchor
+    assert plot.plot_type == "violin plot"
+    assert len(plot.datasets) == 1
+    assert plot.datasets[0].header_by_metric.keys() == {
         "SEQUENCE",
         "START",
         "END",
@@ -386,7 +412,7 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
         "GENE",
     }
 
-    assert report.plot_by_id[anchor].datasets[0].violin_value_by_sample_by_metric == {
+    assert plot.datasets[0].violin_value_by_sample_by_metric == {
         "SEQUENCE": {"myfile.fasta": "chr1"},
         "START": {"myfile.fasta": 55312.0},
         "END": {"myfile.fasta": 56664.0},
@@ -394,12 +420,14 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
         "GENE": {"myfile.fasta": "GENE"},
     }
     if section_name:
-        assert report.plot_by_id[anchor].layout.title.text == section_name
+        assert plot.layout.title.text == section_name
     else:
-        assert report.plot_by_id[anchor].layout.title.text == id.title()
+        assert plot.layout.title.text == id.title()
 
 
 def test_heatmap_with_numerical_cats(tmp_path):
+    os.chdir(tmp_path)
+
     plot_id = "my_plot"
     file = tmp_path / "mysample_mqc.json"
     file.write_text(
@@ -425,12 +453,14 @@ def test_heatmap_with_numerical_cats(tmp_path):
     assert len(report.plot_by_id) == 1
     anchor = Anchor(f"{plot_id}-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].id == plot_id
-    assert report.plot_by_id[anchor].plot_type == "heatmap"
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, HeatmapPlot)
+    assert plot.id == plot_id
+    assert plot.plot_type == "heatmap"
 
-    assert report.plot_by_id[anchor].datasets[0].rows == [[0.9, 0.87, 0.73, 0], [0, 1, 0, 0.7]]
-    assert report.plot_by_id[anchor].datasets[0].xcats == ["1", "2", "3", "4"]
-    assert report.plot_by_id[anchor].datasets[0].ycats == ["sample 1", "sample 2"]
+    assert plot.datasets[0].rows == [[0.9, 0.87, 0.73, 0], [0, 1, 0, 0.7]]
+    assert plot.datasets[0].xcats == ["1", "2", "3", "4"]
+    assert plot.datasets[0].ycats == ["sample 1", "sample 2"]
 
 
 def test_on_all_example_files(data_dir):
@@ -438,7 +468,7 @@ def test_on_all_example_files(data_dir):
     Run on all example in data/custom_content, verify it didn't fail.
     Deprecate this in the future in favour of more granular tests like those above.
     """
-
+    os.chdir(data_dir)
     report.analysis_files = [data_dir / "custom_content"]
     config.run_modules = ["custom_content"]
 
@@ -447,6 +477,8 @@ def test_on_all_example_files(data_dir):
 
 
 def test_boxplot_json(tmp_path):
+    os.chdir(tmp_path)
+
     file = tmp_path / "mysample_mqc.json"
     file.write_text(
         """\
@@ -471,18 +503,18 @@ def test_boxplot_json(tmp_path):
     assert len(report.plot_by_id) == 1
     anchor = Anchor("boxplot-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].id == "boxplot"
-    assert report.plot_by_id[anchor].plot_type == "box plot"
-    assert len(report.plot_by_id[anchor].datasets) == 1
-    assert report.plot_by_id[anchor].datasets[0].data[
-        report.plot_by_id[anchor].datasets[0].samples.index("sample 1")
-    ] == [1, 2, 3, 4]
-    assert report.plot_by_id[anchor].datasets[0].data[
-        report.plot_by_id[anchor].datasets[0].samples.index("sample 2")
-    ] == [1.1, 0.2, 3.3, 4.4, 5.5]
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, BoxPlot)
+    assert plot.anchor == anchor
+    assert plot.plot_type == "box plot"
+    assert len(plot.datasets) == 1
+    assert plot.datasets[0].data[plot.datasets[0].samples.index("sample 1")] == [1, 2, 3, 4]
+    assert plot.datasets[0].data[plot.datasets[0].samples.index("sample 2")] == [1.1, 0.2, 3.3, 4.4, 5.5]
 
 
 def test_boxplot_txt(tmp_path):
+    os.chdir(tmp_path)
+
     file = tmp_path / "mysample_mqc.txt"
     file.write_text(
         """\
@@ -501,13 +533,17 @@ Sample1	Sample2	Sample3
     assert len(report.plot_by_id) == 1
     anchor = Anchor("mysample-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].plot_type == "box plot"
-    assert len(report.plot_by_id[anchor].datasets[0].data) == 3  # 3 groups
-    assert report.plot_by_id[anchor].datasets[0].data == [[3.4, 4.3, 3.5], [2.3, 3.2, 2.5], [1.2, 2.1, 1.5]]
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, BoxPlot)
+    assert plot.plot_type == "box plot"
+    assert len(plot.datasets[0].data) == 3  # 3 groups
+    assert plot.datasets[0].data == [[3.4, 4.3, 3.5], [2.3, 3.2, 2.5], [1.2, 2.1, 1.5]]
 
 
 def test_scatter_plot_parsing(tmp_path):
     """Test scatter plot data parsing"""
+    os.chdir(tmp_path)
+
     file = tmp_path / "scatter_mqc.txt"
     file.write_text(
         """\
@@ -525,13 +561,17 @@ C	1.5	2.5
     assert len(report.plot_by_id) == 1
     anchor = Anchor("scatter-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].plot_type == "scatter plot"
-    assert len(report.plot_by_id[anchor].datasets[0].points) == 3  # 3 samples
-    assert report.plot_by_id[anchor].datasets[0].points[0] == {"x": 1.2, "y": 2.3, "name": "A"}
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, ScatterPlot)
+    assert plot.plot_type == "scatter plot"
+    assert len(plot.datasets[0].points) == 3  # 3 samples
+    assert plot.datasets[0].points[0] == {"x": 1.2, "y": 2.3, "name": "A"}
 
 
 def test_line_plot_with_x_labels(tmp_path):
     """Test line plot with x-axis labels in first row"""
+    os.chdir(tmp_path)
+
     file = tmp_path / "line_mqc.txt"
     file.write_text(
         """\
@@ -549,14 +589,18 @@ sample2	0.8	1.4	1.6	1.2
     assert len(report.plot_by_id) == 1
     anchor = Anchor("line-section-plot")
     assert anchor in report.plot_by_id
-    assert report.plot_by_id[anchor].plot_type == "x/y line"
-    assert len(report.plot_by_id[anchor].datasets[0].lines) == 2  # 2 samples
-    assert report.plot_by_id[anchor].datasets[0].lines[0].name == "sample1"
-    assert report.plot_by_id[anchor].datasets[0].lines[0].pairs == [("t0", 1.0), ("t1", 1.2), ("t2", 1.1), ("t3", 0.9)]
+    plot = report.plot_by_id[anchor]
+    assert isinstance(plot, LinePlot)
+    assert plot.plot_type == "x/y line"
+    assert len(plot.datasets[0].lines) == 2  # 2 samples
+    assert plot.datasets[0].lines[0].name == "sample1"
+    assert plot.datasets[0].lines[0].pairs == [("t0", 1.0), ("t1", 1.2), ("t2", 1.1), ("t3", 0.9)]
 
 
 def test_general_stats_with_config(tmp_path):
     """Test general stats with custom headers config"""
+    os.chdir(tmp_path)
+
     file = tmp_path / "stats_mqc.txt"
     file.write_text(
         """\
@@ -585,15 +629,22 @@ C	95	45
 
     # General stats are added directly to the report
     assert len(report.general_stats_data) > 0
-    assert "A" in report.general_stats_data[-1]
-    assert report.general_stats_data[-1][SampleGroup("A")][0].data[ColumnKey("value1")] == 85
-    assert report.general_stats_data[-1][SampleGroup("A")][0].data[ColumnKey("value2")] == 42
-    assert report.general_stats_headers[-1][ColumnKey("value1")]["title"] == "Value 1"
-    assert report.general_stats_headers[-1][ColumnKey("value2")]["title"] == "Value 2"
+    assert "custom_content" in report.general_stats_data
+    section = report.general_stats_data[SectionKey("custom_content")]
+    assert "A" in section
+    assert section[SampleGroup("A")][0].data[ColumnKey("value1")] == 85
+    assert section[SampleGroup("A")][0].data[ColumnKey("value2")] == 42
+    header = report.general_stats_headers[SectionKey("custom_content")]
+    assert "title" in header[ColumnKey("value1")]
+    assert "title" in header[ColumnKey("value2")]
+    assert header[ColumnKey("value1")].get("title") == "Value 1"
+    assert header[ColumnKey("value2")].get("title") == "Value 2"
 
 
 def test_quoted_strings_handling(tmp_path):
     """Test handling of quoted strings in data"""
+    os.chdir(tmp_path)
+
     file = tmp_path / "quoted_mqc.txt"
     file.write_text(
         """\
@@ -613,6 +664,7 @@ Sample 3	Group C	'4_5'
     anchor = Anchor("quoted-section-plot")
     assert anchor in report.plot_by_id
     plot = report.plot_by_id[anchor]
+    assert isinstance(plot, ViolinPlot)
     assert plot.plot_type == "violin plot"
 
     # Check that quotes were properly stripped
@@ -622,28 +674,25 @@ Sample 3	Group C	'4_5'
         "Group_Name": {"Sample 1": "Group A", "Sample 2": "Group B", "Sample 3": "Group C"},
         "Value": {"Sample 1": 42.0, "Sample 2": "3_8", "Sample 3": "4_5"},
     }
-    assert plot.datasets[0].dt.sections[0].column_by_key.keys() == {"Group Name", "Value"}
-    assert plot.datasets[0].dt.sections[0].column_by_key["Group Name"].title == "Group Name"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup.keys() == {"Sample 1", "Sample 2", "Sample 3"}
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 1"][0].sample == "Sample 1"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 1"][0].raw_data == {
-        "Group Name": "Group A",
-        "Value": 42.0,
-    }
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 2"][0].sample == "Sample 2"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 2"][0].raw_data == {
-        "Group Name": "Group B",
-        "Value": "3_8",
-    }
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 3"][0].sample == "Sample 3"
-    assert plot.datasets[0].dt.sections[0].rows_by_sgroup["Sample 3"][0].raw_data == {
-        "Group Name": "Group C",
-        "Value": "4_5",
-    }
+    section = plot.datasets[0].dt.section_by_id[SectionKey("quoted-section-plot_table")]
+    assert section.column_by_key.keys() == {"Group Name", "Value"}
+    assert section.column_by_key[ColumnKey("Group Name")].title == "Group Name"
+    assert section.rows_by_sgroup.keys() == {"Sample 1", "Sample 2", "Sample 3"}
+    assert section.rows_by_sgroup[SampleGroup("Sample 1")][0].sample == "Sample 1"
+    assert section.rows_by_sgroup[SampleGroup("Sample 1")][0].data[ColumnKey("Group Name")].raw == "Group A"
+    assert section.rows_by_sgroup[SampleGroup("Sample 1")][0].data[ColumnKey("Value")].raw == 42.0
+    assert section.rows_by_sgroup[SampleGroup("Sample 2")][0].sample == "Sample 2"
+    assert section.rows_by_sgroup[SampleGroup("Sample 2")][0].data[ColumnKey("Group Name")].raw == "Group B"
+    assert section.rows_by_sgroup[SampleGroup("Sample 2")][0].data[ColumnKey("Value")].raw == "3_8"
+    assert section.rows_by_sgroup[SampleGroup("Sample 3")][0].sample == "Sample 3"
+    assert section.rows_by_sgroup[SampleGroup("Sample 3")][0].data[ColumnKey("Group Name")].raw == "Group C"
+    assert section.rows_by_sgroup[SampleGroup("Sample 3")][0].data[ColumnKey("Value")].raw == "4_5"
 
 
 def test_empty_file(tmp_path):
     """Test handling of empty custom content files"""
+    os.chdir(tmp_path)
+
     file = tmp_path / "empty_mqc.txt"
     file.write_text("")
 
@@ -658,6 +707,8 @@ def test_empty_file(tmp_path):
 
 def test_ai_export_rounding(tmp_path):
     """Test that AI export rounding is correct"""
+    os.chdir(tmp_path)
+
     file = tmp_path / "ai_export_rounding_mqc.json"
     data = {
         "plot_type": "generalstats",

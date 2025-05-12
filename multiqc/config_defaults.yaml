@@ -55,10 +55,11 @@ zip_data_dir: false
 data_dump_file: true
 data_dump_file_write_raw: true # Write the `saved_raw_data` section in multiqc_data.json - useful to set to
 # false for large datasets as the raw data can be prohibitively large
-megaqc_url: false
+megaqc_url: null
 megaqc_access_token: null
 megaqc_timeout: 30
 export_plots: false
+export_plots_timeout: 30
 make_report: true
 make_pdf: false
 
@@ -68,8 +69,12 @@ ai_summary_full: false
 ai_provider: "seqera"
 ai_model: null
 ai_custom_endpoint: null
+ai_auth_type: null
+ai_retries: 3
 ai_extra_query_options: null
 ai_custom_context_window: null
+ai_prompt_short: null
+ai_prompt_full: null
 no_ai: false
 ai_anonymize_samples: false
 
@@ -92,6 +97,7 @@ violin_min_threshold_no_points: 1000 # for more than this number of samples, sho
 collapse_tables: true
 max_table_rows: 500
 max_configurable_table_columns: 200
+general_stats_columns: {}
 table_columns_visible: {}
 table_columns_placement: {}
 table_columns_name: {}
@@ -157,6 +163,8 @@ fn_ignore_paths:
   - "*/site-packages/multiqc" # MultiQC installation directory
 sample_names_ignore: []
 sample_names_ignore_re: []
+sample_names_only_include: []
+sample_names_only_include_re: []
 sample_names_rename_buttons: []
 sample_names_replace: {}
 sample_names_replace_regex: false
