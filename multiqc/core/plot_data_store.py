@@ -33,7 +33,7 @@ META_CONFIG = "config"
 META_MULTIQC_VERSION = "multiqc_version"
 
 
-def wide_table_to_parquet(wide_df: pd.DataFrame, metric_col_names: Set[str]) -> None:
+def wide_table_to_parquet(table_df: pd.DataFrame, metric_col_names: Set[str]) -> None:
     """
     Merge wide-format table data with existing sample-based tables.
 
@@ -44,22 +44,22 @@ def wide_table_to_parquet(wide_df: pd.DataFrame, metric_col_names: Set[str]) -> 
     The resulting table must have single row per sample.
     """
     # Fix creation date
-    wide_df = _fix_creation_date(wide_df)
+    table_df = _fix_creation_date(table_df)
 
     existing_df = _read_or_create_df()
 
     # Get all rows that are table_row
-    existing_wide_df = existing_df[existing_df["type"] == "table_row"]
+    existing_table_rows = existing_df[existing_df["type"] == "table_row"]
 
     global _metric_col_names
     _metric_col_names.update(metric_col_names)
 
-    non_metric_cols = [c for c in existing_wide_df.columns if c not in _metric_col_names]
+    non_metric_cols = [c for c in existing_table_rows.columns if c not in _metric_col_names]
 
     # Merge on sample_name, preserving all columns from both dataframes
     new_df = pd.merge(
-        existing_wide_df,
-        wide_df,
+        existing_table_rows,
+        table_df,
         on=non_metric_cols,
         how="outer",
     )

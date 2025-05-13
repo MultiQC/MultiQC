@@ -466,9 +466,16 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         )
         plot_data_store.append_to_parquet(df)
 
-        wide_df, metric_col_names = self.to_wide_df()
-        if not wide_df.empty:
-            plot_data_store.wide_table_to_parquet(wide_df, metric_col_names)
+        # Save table data
+        if self.plot_type == PlotType.VIOLIN:
+            if config.parquet_format == "wide":
+                wide_df, metric_col_names = self.to_wide_df()
+                if not wide_df.empty:
+                    plot_data_store.wide_table_to_parquet(wide_df, metric_col_names)
+            else:
+                df = self.to_df()
+                if not df.empty:
+                    plot_data_store.append_to_parquet(df)
 
     @classmethod
     def merge(

@@ -252,6 +252,8 @@ class MultiQCConfig(BaseModel):
     class Config:
         extra = "allow"  # Allow additional fields that aren't in the schema
 
+    parquet_format: Optional[Literal["long", "wide"]] = Field(None, description="Parquet format")
+
 
 def config_to_schema() -> Dict[str, Any]:
     """Convert the config schema to a JSON Schema dict"""
