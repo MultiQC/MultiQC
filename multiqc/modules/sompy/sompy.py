@@ -15,7 +15,10 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sompy",
             href="https://github.com/Illumina/hap.py/blob/master/doc/sompy.md",
             info=("Benchmarks somatic variant calls against gold standard truth datasets."),
+            # No publication / DOI // doi=
         )
+
+        self.add_software_version(None)
 
         self.sompy_raw_sample_names = set()
         self.sompy_combined_data = dict()
