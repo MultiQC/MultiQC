@@ -18,6 +18,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Set,
     Tuple,
     Type,
     TypeVar,
@@ -330,11 +331,11 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         raise NotImplementedError("Subclasses must implement to_df()")
 
-    def to_wide_df(self) -> pd.DataFrame:
+    def to_wide_df(self) -> Tuple[pd.DataFrame, Set[str]]:
         """
         Used to save data to parquet files.
         """
-        return pd.DataFrame()
+        return pd.DataFrame(), set()
 
     # def extract_data_label(self, ds_idx: int) -> Optional[Union[str, Dict[str, Any]]]:
     #     # Get dataset label if available - used only to merge plots across runs
@@ -465,9 +466,9 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         )
         plot_data_store.append_to_parquet(df)
 
-        wide_df = self.to_wide_df()
+        wide_df, metric_col_names = self.to_wide_df()
         if not wide_df.empty:
-            plot_data_store.wide_table_to_parquet(wide_df)
+            plot_data_store.wide_table_to_parquet(wide_df, metric_col_names)
 
     @classmethod
     def merge(

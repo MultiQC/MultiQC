@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 # Set to keep track of which anchors have been saved
 _saved_anchors: Set[Anchor] = set()
+# Keep track of metric column names
+_metric_col_names: Set[str] = set()
 
 # Metadata keys
 META_MODULES = "modules"
@@ -31,7 +33,7 @@ META_CONFIG = "config"
 META_MULTIQC_VERSION = "multiqc_version"
 
 
-def wide_table_to_parquet(wide_df: pd.DataFrame) -> None:
+def wide_table_to_parquet(wide_df: pd.DataFrame, metric_col_names: Set[str]) -> None:
     """
     Merge wide-format table data with existing sample-based tables.
 
@@ -49,11 +51,16 @@ def wide_table_to_parquet(wide_df: pd.DataFrame) -> None:
     # Get all rows that are table_row
     existing_wide_df = existing_df[existing_df["type"] == "table_row"]
 
+    global _metric_col_names
+    _metric_col_names.update(metric_col_names)
+
+    non_metric_cols = [c for c in existing_wide_df.columns if c not in _metric_col_names]
+
     # Merge on sample_name, preserving all columns from both dataframes
     new_df = pd.merge(
         existing_wide_df,
         wide_df,
-        on=["anchor", "type", "creation_date", "plot_type", "plot_input_data", "sample"],
+        on=non_metric_cols,
         how="outer",
     )
 
@@ -219,8 +226,6 @@ def _write_parquet(df: pd.DataFrame) -> None:
     except Exception as e:
         logger.error(f"Error writing parquet file: {e}")
         raise
-
-    logger.debug(f"Saved parquet file {parquet_file}")
 
 
 def _read_or_create_df() -> pd.DataFrame:

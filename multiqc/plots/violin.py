@@ -112,34 +112,36 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         df = pd.DataFrame(records, dtype=object).astype(column_types)
         return self.finalize_df(df)
 
-    def to_wide_df(self) -> pd.DataFrame:
+    def to_wide_df(self) -> Tuple[pd.DataFrame, Set[str]]:
         """
         Save plot data to a parquet file using a tabular representation where metrics are columns
         and samples are rows, optimized for cross-run analysis. Used for parquet data dump.
         """
         if self.is_empty() or not self.pconfig.rows_are_samples:
-            return pd.DataFrame()
+            return pd.DataFrame(), set()
 
         # Get ordered headers first
         ordered_headers = list(self.dt.get_headers_in_order())
 
-        # Now transform directly to wide format with metrics as columns
-        wide_records = []
+        # Create a dictionary to collect metrics for each sample across all sections
+        samples_data: Dict[str, Dict[str, Any]] = {}
+        metric_col_names = set()
 
-        # Process each section and its rows
+        # Process each section and its rows to collect all metrics for each sample
         for section_key, section in self.dt.section_by_id.items():
             # Process each sample in this section
             for sample_name, group_rows in section.rows_by_sgroup.items():
                 for row in group_rows:
-                    # Create base record with sample information
-                    wide_record: Dict[str, Any] = {
-                        "anchor": None,
-                        "type": "table_row",
-                        "creation_date": self.creation_date,
-                        "plot_type": None,
-                        "plot_input_data": None,
-                        "sample": str(sample_name),
-                    }
+                    # Initialize sample record if not seen before
+                    if str(sample_name) not in samples_data:
+                        samples_data[str(sample_name)] = {
+                            "anchor": None,
+                            "type": "table_row",
+                            "creation_date": self.creation_date,
+                            "plot_type": None,
+                            "plot_input_data": None,
+                            "sample": str(sample_name),
+                        }
 
                     # Process each metric/column in the order from get_headers_in_order()
                     for _, metric_name, dt_column in ordered_headers:
@@ -165,15 +167,17 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                         elif len(self.dt.section_by_id) > 1:
                             metric_col_name = f"{section_key} / {metric_name}"
                         metric_col_name = f"{self.dt.id} / {metric_col_name}"
-                        wide_record[metric_col_name] = float_val
 
-                    # Only add records that have at least one metric
-                    if any(k.startswith(f"{self.dt.id} ") for k in wide_record.keys()):
-                        wide_records.append(wide_record)
+                        # Add metric to the sample's data
+                        samples_data[str(sample_name)][metric_col_name] = float_val
+                        metric_col_names.add(metric_col_name)
+
+        # Convert dictionary to DataFrame - one row per sample
+        wide_records = list(samples_data.values())
 
         # Create the wide format DataFrame
         df = pd.DataFrame(wide_records)
-        return df
+        return df, metric_col_names
 
     @classmethod
     def from_df(
