@@ -26,6 +26,10 @@ const AI_PROVIDERS = {
     apiKeysUrl: "https://platform.openai.com/api-keys",
     modelsUrl: "https://platform.openai.com/docs/models",
   },
+  aws_bedrock: {
+    name: "AWS Bedrock",
+    modelsUrl: "https://docs.anthropic.com/en/docs/intro-to-claude#model-options",
+  },
   custom: {
     name: "Custom",
     defaultModel: "",

@@ -149,8 +149,6 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         for _, row in df.iterrows():
             rows[int(row["row_idx"])][int(row["col_idx"])] = parse_value(row["z_val"], row["z_val_type"])
 
-        cls.data_labels_from_df(df, pconf)
-
         return cls(
             anchor=anchor,
             rows=rows,  # type: ignore
