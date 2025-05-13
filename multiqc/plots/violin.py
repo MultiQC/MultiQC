@@ -15,7 +15,7 @@ import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.core.plot_data_store import parse_value, save_plot_data
+from multiqc.core.plot_data_store import append_to_parquet, parse_value
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
 from multiqc.plots.table_object import (
@@ -133,9 +133,12 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                 for row in group_rows:
                     # Create base record with sample information
                     wide_record: Dict[str, Any] = {
-                        "creation_date": self.creation_date,
+                        "anchor": None,
                         "type": "table_row",
-                        "sample_name": str(sample_name),
+                        "creation_date": self.creation_date,
+                        "plot_type": None,
+                        "plot_input_data": None,
+                        "sample": str(sample_name),
                     }
 
                     # Process each metric/column in the order from get_headers_in_order()
@@ -158,14 +161,14 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                         # to ensure uniqueness across different tables
                         metric_col_name = metric_name
                         if dt_column.namespace:
-                            metric_col_name = f"{dt_column.namespace}_{metric_name}"
-                        elif len(section.rows_by_sgroup) > 1:
-                            metric_col_name = f"{section_key}_{metric_name}"
-                        metric_col_name = f"{self.dt.id}_{metric_col_name}"
+                            metric_col_name = f"{dt_column.namespace} / {metric_name}"
+                        elif len(self.dt.section_by_id) > 1:
+                            metric_col_name = f"{section_key} / {metric_name}"
+                        metric_col_name = f"{self.dt.id} / {metric_col_name}"
                         wide_record[metric_col_name] = float_val
 
                     # Only add records that have at least one metric
-                    if any(k.startswith(f"{self.dt.id}_") for k in wide_record.keys()):
+                    if any(k.startswith(f"{self.dt.id} ") for k in wide_record.keys()):
                         wide_records.append(wide_record)
 
         # Create the wide format DataFrame
@@ -180,84 +183,31 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         anchor: Anchor,
     ) -> "ViolinPlotInputData":
         """
-        Load plot data from a DataFrame.
+        Load plot data from a long DataFrame
         """
         table_anchor = Anchor(f"{anchor}_table")  # make sure it's unique
         creation_date = cls.creation_date_from_df(df)
 
-        # Handle both regular and merged table formats
-        if "type" in df.columns and df["type"].eq("merged_table_row").any():
-            # Processing merged table format
-            df = df[df["type"] == "merged_table_row"].copy()
-
-            # Check if this table exists in the merged data
-            table_prefix = f"tbl_{anchor}_col_"
-            if not any(col.startswith(table_prefix) for col in df.columns):
-                # This table doesn't exist in the merged data
-                return cls._create_empty_instance(pconfig, table_anchor, anchor, creation_date)
-
-            # Filter to only columns for this table
-            relevant_columns = ["sample_name", "creation_date", "section_key"]
-            relevant_columns.extend([col for col in df.columns if col.startswith(table_prefix)])
-
-            # Only keep relevant columns
-            if len(relevant_columns) <= 3:  # Only base columns, no data columns
-                return cls._create_empty_instance(pconfig, table_anchor, anchor, creation_date)
-
-            filtered_df = df[relevant_columns].copy()
-
-            # Rename columns to strip table prefix
-            rename_dict = {}
-            for col in filtered_df.columns:
-                if col.startswith(table_prefix):
-                    new_col = col[len(table_prefix) :]
-                    rename_dict[col] = new_col
-
-            filtered_df.rename(columns=rename_dict, inplace=True)
-
-            # Now reconstruct the regular format expected by the rest of the method
-            reconstructed_rows = []
-            for _, row in filtered_df.iterrows():
-                sample_name = row["sample_name"]
-                section_key = row["section_key"]
-
-                for col in filtered_df.columns:
-                    if col.endswith("_val") and not pd.isna(row[col]):
-                        metric_name = col[:-4]  # Remove "_val" suffix
-                        metric_val = row[col]
-                        metric_str = row.get(f"{metric_name}_str", str(metric_val))
-
-                        # Create a row in the regular format
-                        reconstructed_rows.append(
-                            {
-                                "dt_anchor": str(table_anchor),
-                                "section_key": section_key,
-                                "sample_name": sample_name,
-                                "metric_name": metric_name,
-                                "metric_idx": 0,  # Will be recalculated below
-                                "column_meta": "{}",  # Placeholder
-                                "show_table_by_default": True,
-                                "val_raw": str(metric_val),
-                                "val_raw_type": "float",
-                                "val_mod": str(metric_val),
-                                "val_mod_type": "float",
-                                "val_fmt": metric_str,
-                            }
-                        )
-
-            if not reconstructed_rows:
-                return cls._create_empty_instance(pconfig, table_anchor, anchor, creation_date)
-
-            # Create reconstructed DataFrame
-            df = pd.DataFrame(reconstructed_rows)
-
-            # Assign sequential metric_idx
-            metrics = df["metric_name"].unique()
-            metric_idx_map = {metric: idx for idx, metric in enumerate(metrics)}
-            df["metric_idx"] = df["metric_name"].map(metric_idx_map)
-
         if cls.df_is_empty(df):
-            return cls._create_empty_instance(pconfig, table_anchor, anchor, creation_date)
+            pconf = (
+                pconfig
+                if isinstance(pconfig, TableConfig)
+                else cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
+            )
+            return cls(
+                dt=DataTable.create(
+                    data={},
+                    table_id=pconf.id,
+                    table_anchor=table_anchor,
+                    pconfig=pconf.model_copy(),
+                    headers={},
+                ),
+                plot_type=PlotType.VIOLIN,
+                pconfig=pconf,
+                anchor=anchor,
+                show_table_by_default=True,
+                creation_date=creation_date,
+            )
 
         pconf = cast(TableConfig, TableConfig.from_df(df))
 
@@ -306,19 +256,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     # Create header if it doesn't exist
                     if metric_name not in section_headers:
                         # Parse column metadata from JSON
-                        try:
-                            section_headers[metric_name] = json.loads(row["column_meta"])
-                        except (json.JSONDecodeError, KeyError):
-                            # Create basic header if column_meta is not available or invalid
-                            d: ColumnDict = {
-                                "title": metric_name,
-                                "description": "",
-                                "namespace": "" if "_" not in metric_name else metric_name.split("_")[0],
-                                "dmin": None,
-                                "dmax": None,
-                                "suffix": "",
-                            }
-                            section_headers[metric_name] = d
+                        section_headers[metric_name] = json.loads(row["column_meta"])
 
                 # Add sample data to section
                 if val_by_metric:
@@ -344,29 +282,6 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             pconfig=pconf,
             anchor=anchor,
             show_table_by_default=show_table_by_default,
-            creation_date=creation_date,
-        )
-
-    @classmethod
-    def _create_empty_instance(
-        cls, pconfig: Union[Dict, TableConfig], table_anchor: Anchor, anchor: Anchor, creation_date: datetime
-    ) -> "ViolinPlotInputData":
-        """Helper method to create an empty ViolinPlotInputData instance"""
-        pconf = (
-            pconfig if isinstance(pconfig, TableConfig) else cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
-        )
-        return cls(
-            dt=DataTable.create(
-                data={},
-                table_id=pconf.id,
-                table_anchor=table_anchor,
-                pconfig=pconf.model_copy(),
-                headers={},
-            ),
-            plot_type=PlotType.VIOLIN,
-            pconfig=pconf,
-            anchor=anchor,
-            show_table_by_default=True,
             creation_date=creation_date,
         )
 
@@ -464,7 +379,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             merged_df = new_df
 
         # Save the merged data for future reference
-        save_plot_data(new_data.anchor, merged_df)
+        append_to_parquet(merged_df)
 
         # Create a new ViolinPlotInputData from the merged DataFrame
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
@@ -1177,7 +1092,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             show_table_by_default=inputs.show_table_by_default,
             anchor=inputs.anchor,
         )
-        inputs.save()
+        inputs.save_to_parquet()
         return plot
 
 

@@ -442,7 +442,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             xcats=list(inputs.xcats),
             ycats=list(inputs.ycats),
         )
-        inputs.save()
+        inputs.save_to_parquet()
         return plot
 
     @staticmethod

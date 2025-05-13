@@ -11,7 +11,7 @@ import pandas as pd
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.core.plot_data_store import save_plot_data
+from multiqc.core.plot_data_store import append_to_parquet
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
@@ -273,7 +273,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
             merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
 
         # Save the merged data for future reference
-        save_plot_data(new_data.anchor, merged_df)
+        append_to_parquet(merged_df)
 
         # Create a new BoxPlotInputData from the merged DataFrame
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
@@ -370,7 +370,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             pconfig=inputs.pconfig,
             anchor=inputs.anchor,
         )
-        inputs.save()
+        inputs.save_to_parquet()
         return plot
 
 

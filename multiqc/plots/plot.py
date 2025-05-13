@@ -430,7 +430,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         df["pconfig"] = self.pconfig.model_dump_json(exclude_none=True)
         return df
 
-    def save(self) -> None:
+    def save_to_parquet(self) -> None:
         """
         Save the plot data to a parquet file.
 
@@ -463,10 +463,11 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
                 "plot_input_data": [nan_safe_dumps(self.model_dump(mode="json", exclude_none=True))],
             }
         )
+        plot_data_store.append_to_parquet(df)
+
         wide_df = self.to_wide_df()
         if not wide_df.empty:
-            df = pd.concat([df, wide_df])
-        plot_data_store.save_plot_data(self.anchor, df)
+            plot_data_store.wide_table_to_parquet(wide_df)
 
     @classmethod
     def merge(

@@ -624,5 +624,5 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
             pconfig=pconf,
             anchor=inputs.anchor,
         )
-        inputs.save()
+        inputs.save_to_parquet()
         return plot

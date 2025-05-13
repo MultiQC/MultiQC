@@ -13,7 +13,7 @@ import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
 from multiqc import config, report
-from multiqc.core.plot_data_store import parse_value, save_plot_data
+from multiqc.core.plot_data_store import append_to_parquet, parse_value
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,
@@ -525,7 +525,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             # Combine the filtered old data with new data
             merged_df = pd.concat([old_df_filtered, new_df], ignore_index=True)
 
-        save_plot_data(new_data.anchor, merged_df)
+        append_to_parquet(merged_df)
 
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
@@ -631,7 +631,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
             anchor=inputs.anchor,
             sample_names=sample_names,
         )
-        inputs.save()
+        inputs.save_to_parquet()
         return plot
 
 

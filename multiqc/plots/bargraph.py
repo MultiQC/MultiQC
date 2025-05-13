@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.core.exceptions import RunError
-from multiqc.core.plot_data_store import save_plot_data
+from multiqc.core.plot_data_store import append_to_parquet
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,
@@ -391,7 +391,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             # Sort by timestamp (newest last)
             merged_df.sort_values("creation_date", inplace=True)
 
-        save_plot_data(new_data.anchor, merged_df)
+        append_to_parquet(merged_df)
 
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
@@ -419,7 +419,7 @@ def plot(
         return None
 
     plot = BarPlot.from_inputs(inputs)
-    inputs.save()
+    inputs.save_to_parquet()
     return plot
 
 
