@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "multiqc"
 version = "1.28"
 dependencies = [
+    "boto3",              # for aws bedrock ai support
     "click",
     "humanize",
     "importlib_metadata",
@@ -84,6 +85,7 @@ dev = [
     "types-beautifulsoup4",
     "types-Pillow",
     "types-jsonschema",
+    "types-boto3",
     "pandas-stubs",
     "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
@@ -125,6 +127,7 @@ bustools = "multiqc.modules.bustools:MultiqcModule"
 ccs = "multiqc.modules.ccs:MultiqcModule"
 cellranger = "multiqc.modules.cellranger:MultiqcModule"
 cellranger_arc = "multiqc.modules.cellranger_arc:MultiqcModule"
+cells2stats = "multiqc.modules.cells2stats:MultiqcModule"
 checkm = "multiqc.modules.checkm:MultiqcModule"
 checkm2 = "multiqc.modules.checkm2:MultiqcModule"
 checkqc = "multiqc.modules.checkqc:MultiqcModule"

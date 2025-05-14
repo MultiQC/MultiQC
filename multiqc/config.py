@@ -117,6 +117,8 @@ ai_summary_full: bool
 ai_provider: str
 ai_model: str
 ai_custom_endpoint: Optional[str]
+ai_auth_type: Optional[str]
+ai_retries: int
 ai_extra_query_options: Optional[Dict[str, Any]]
 ai_custom_context_window: Optional[int]
 ai_prompt_short: Optional[str]
@@ -164,6 +166,8 @@ fn_ignore_dirs: List[str]
 fn_ignore_paths: List[str]
 sample_names_ignore: List[str]
 sample_names_ignore_re: List[str]
+sample_names_only_include: List[str]
+sample_names_only_include_re: List[str]
 sample_names_rename_buttons: List[str]
 sample_names_replace: Dict[str, str]
 sample_names_replace_regex: bool

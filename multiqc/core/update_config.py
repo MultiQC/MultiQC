@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from multiqc import config, report
 from multiqc.core import log_and_rich, plugin_hooks
+from multiqc.utils.config_schema import AiProviderLiteral
 from multiqc.core.exceptions import RunError
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ class ClConfig(BaseModel):
     no_version_check: Optional[bool] = None
     ignore: List[str] = []
     ignore_samples: List[str] = []
+    only_samples: List[str] = []
     run_modules: List[str] = []
     exclude_modules: List[str] = []
     config_files: List[Union[str, Path]] = []
@@ -65,7 +67,7 @@ class ClConfig(BaseModel):
     data_dump_file_write_raw: Optional[bool] = None
     ai_summary: Optional[bool] = None
     ai_summary_full: Optional[bool] = None
-    ai_provider: Optional[Literal["seqera", "openai", "anthropic", "custom"]] = None
+    ai_provider: Optional[AiProviderLiteral] = None
     ai_model: Optional[str] = None
     ai_custom_endpoint: Optional[str] = None
     ai_custom_context_window: Optional[int] = None
@@ -250,7 +252,9 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     if len(cfg.ignore_samples) > 0:
         logger.debug(f"Ignoring sample names that match: {', '.join(cfg.ignore_samples)}")
         config.sample_names_ignore.extend(cfg.ignore_samples)
-
+    if len(cfg.only_samples) > 0:
+        logger.debug(f"Only including sample names that match: {', '.join(cfg.only_samples)}")
+        config.sample_names_only_include.extend(cfg.only_samples)
     # Prep module configs
     report.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
     report.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]

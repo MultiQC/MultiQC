@@ -1,6 +1,7 @@
 """MultiQC functions to plot a linegraph"""
 
 import io
+import json
 import logging
 import math
 import os
@@ -324,7 +325,6 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         records = []
         # Create a record for each data point in each series
         for ds_idx, dataset in enumerate(self.data):
-            dataset_label = self.extract_data_label(ds_idx)
             for series in dataset:
                 for x, y in series.pairs:
                     # Convert NaN values to string marker for safe serialization
@@ -333,7 +333,9 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
                     record = {
                         "dataset_idx": ds_idx,
-                        "dataset_label": dataset_label,
+                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx])
+                        if self.pconfig.data_labels
+                        else None,
                         "sample_name": series.name,
                         # values can be be different types (int, float, str...), especially across
                         # plots. parquet requires values of the same type. so we cast them to str
@@ -341,11 +343,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                         "y_val": y_val,
                         "x_val_type": type(x).__name__,
                         "y_val_type": type(y).__name__,
-                        "series_color": series.color,
-                        "series_width": series.width,
-                        "series_dash": series.dash,
-                        "series_marker": series.marker.model_dump() if series.marker else None,
-                        "series_showlegend": series.showlegend,
+                        "series": {k: v for k, v in series.model_dump().items() if k not in ["pairs", "name"]},
                     }
                     records.append(record)
 
@@ -376,36 +374,29 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
         # Reconstruct data structure
         datasets = []
+        data_labels = []
         sample_names = []
 
-        # Group by dataset_idx
-        for ds_idx, ds_group in df.groupby("dataset_idx", sort=True):
+        dataset_indices = sorted(df["dataset_idx"].unique())
+
+        for ds_idx in dataset_indices:
+            ds_group = df[df["dataset_idx"] == ds_idx] if not df.empty else pd.DataFrame()
+
+            data_label = ds_group["data_label"].iloc[0]
+            data_labels.append(json.loads(data_label) if data_label else {})
+
             dataset = []
 
             # Get list of unique sample names in this dataset to preserve order
             unique_samples = ds_group["sample_name"].unique()
-
             # Group by sample_name within each dataset
             for sample_name in unique_samples:
-                # Get data for this sample
                 sample_group = ds_group[ds_group["sample_name"] == sample_name]
 
                 # Extract series properties
                 if len(sample_group) > 0:
                     first_row = sample_group.iloc[0]
-                    color = str(first_row.get("series_color")) if pd.notna(first_row.get("series_color")) else None
-                    width = int(first_row.get("series_width", 2))
-                    dash = str(first_row.get("series_dash")) if pd.notna(first_row.get("series_dash")) else None
-                    marker = (
-                        Marker(**first_row.get("series_marker", {}))
-                        if pd.notna(first_row.get("series_marker"))
-                        else None
-                    )
-                    showlegend = (
-                        bool(first_row.get("series_showlegend"))
-                        if pd.notna(first_row.get("series_showlegend"))
-                        else False
-                    )
+                    series_dict = first_row.get("series", {})
 
                     # Extract x,y pairs and sort by x value for proper display
                     pairs = []
@@ -418,12 +409,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     series = Series(
                         name=str(sample_name),
                         pairs=pairs,
-                        color=color,
-                        width=width,
-                        dash=dash,
-                        showlegend=showlegend,
-                        marker=marker,
                         path_in_cfg=("lineplot", "data"),
+                        **series_dict,
                     )
                     dataset.append(series)
 
@@ -433,8 +420,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
             datasets.append(dataset)
 
-        cls.data_labels_from_df(df, pconf)
-
+        if any(d for d in data_labels if d):
+            pconf.data_labels = data_labels
         return cls(
             anchor=anchor,
             plot_type=PlotType.LINE,
@@ -523,13 +510,13 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             # Get the list of samples that exist in both old and new data, for each dataset
             new_sample_keys = set()
             for _, row in new_df.iterrows():
-                new_sample_keys.add((row["dataset_label"], row["sample_name"]))
+                new_sample_keys.add((row["data_label"], row["sample_name"]))
 
             # Filter out old data for samples that exist in new data
             old_df_filtered = old_df.copy()
             drop_indices = []
             for idx, row in old_df.iterrows():
-                if (row["dataset_label"], row["sample_name"]) in new_sample_keys:
+                if (row["data_label"], row["sample_name"]) in new_sample_keys:
                     drop_indices.append(idx)
 
             if drop_indices:

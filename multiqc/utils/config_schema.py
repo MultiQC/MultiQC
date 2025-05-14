@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
-AiProviderLiteral = Literal["seqera", "openai", "anthropic", "custom"]
+AiProviderLiteral = Literal["seqera", "openai", "anthropic", "aws_bedrock", "custom"]
 
 
 class SearchPattern(BaseModel):
@@ -126,6 +126,8 @@ class MultiQCConfig(BaseModel):
     ai_provider: Optional[AiProviderLiteral] = Field(None, description="AI provider")
     ai_model: Optional[str] = Field(None, description="AI model")
     ai_custom_endpoint: Optional[str] = Field(None, description="AI custom endpoint")
+    ai_auth_type: Optional[str] = Field(None, description="AI auth type")
+    ai_retries: Optional[int] = Field(None, description="AI retries")
     ai_extra_query_options: Optional[str] = Field(None, description="AI extra query options")
     ai_custom_context_window: Optional[str] = Field(None, description="AI custom context window")
     ai_prompt_short: Optional[str] = Field(
@@ -202,6 +204,8 @@ class MultiQCConfig(BaseModel):
     fn_ignore_paths: Optional[List[str]] = Field(None, description="Paths to ignore")
     sample_names_ignore: Optional[List[str]] = Field(None, description="Sample names to ignore")
     sample_names_ignore_re: Optional[List[str]] = Field(None, description="Sample names to ignore (regex)")
+    sample_names_only_include: Optional[List[str]] = Field(None, description="Sample names to include")
+    sample_names_only_include_re: Optional[List[str]] = Field(None, description="Sample names to include (regex)")
     sample_names_rename_buttons: Optional[List[str]] = Field(None, description="Sample names to rename")
     sample_names_replace: Optional[Dict[str, str]] = Field(None, description="Sample names to replace")
     sample_names_replace_regex: Optional[bool] = Field(None, description="Sample names to replace (regex)")

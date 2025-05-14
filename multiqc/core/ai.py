@@ -175,11 +175,11 @@ ResponseT = TypeVar("ResponseT")
 
 
 class Client:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: Optional[str] = None):
         self.name: str
         self.title: str
         self.model: str
-        self.api_key: str = api_key
+        self.api_key: Optional[str] = api_key
 
         self.prompt_short = PROMPT_SHORT
         if config.ai_prompt_short is not None:
@@ -237,7 +237,7 @@ class Client:
             return int(len(text) / 1.5)
 
     def _request_with_error_handling_and_retries(
-        self, url: str, headers: Dict[str, Any], body: Dict[str, Any], retries: int = 1
+        self, url: str, headers: Dict[str, Any], body: Dict[str, Any], retries: Optional[int] = None
     ) -> Dict[str, Any]:
         """Make a request with retries and exponential backoff.
 
@@ -247,6 +247,7 @@ class Client:
         """
         import time
 
+        retries = retries or config.ai_retries or 3
         attempt = 0
         while True:
             try:
@@ -320,17 +321,22 @@ class OpenAiClient(Client):
         body.update(
             {
                 "model": self.model,
-                "messages": [
-                    {"role": "user", "content": prompt},
-                ],
+                "messages": [{"role": "user", "content": prompt}],
             }
         )
-        response = self._request_with_error_handling_and_retries(
-            self.endpoint,
-            headers={
+        if config.ai_auth_type == "api-key":
+            headers = {
+                "Content-Type": "application/json",
+                "api-key": self.api_key,
+            }
+        else:
+            headers = {
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {self.api_key}",
-            },
+            }
+        response = self._request_with_error_handling_and_retries(
+            self.endpoint,
+            headers=headers,
             body=body,
         )
         return OpenAiClient.ApiResponse(
@@ -376,6 +382,47 @@ class AnthropicClient(Client):
             content=response["content"][0]["text"],
             model=response.get("model", self.model),
         )
+
+
+class AWSBedrockClient(Client):
+    def __init__(self):
+        super().__init__()
+
+        import boto3
+
+        self.model = config.ai_model
+        self.name = "aws_bedrock"
+        self.title = "AWS Bedrock"
+
+        self.client = boto3.client(service_name="bedrock-runtime")
+
+    def max_tokens(self) -> int:
+        return config.ai_custom_context_window or 200000
+
+    class ApiResponse(NamedTuple):
+        content: str
+        model: str
+
+    def _query(self, prompt: str) -> ApiResponse:
+        # TODO consider error-handling/backoff
+        body = json.dumps(
+            {
+                # this is the only allowable value as of 2025/03/04
+                # if they ever add more, we can make it configurable
+                # or add smart logic to figure it out.
+                "anthropic_version": "bedrock-2023-05-31",
+                "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+                "max_tokens": 4096,
+            }
+        )
+
+        response = self.client.invoke_model(
+            body=body, modelId=self.model, accept="application/json", contentType="application/json"
+        )
+
+        response_body = json.loads(response["body"].read())
+        content = response_body["content"][0]["text"]  # Extract the assistant's response
+        return AWSBedrockClient.ApiResponse(content=content, model=self.model)
 
 
 class SeqeraClient(Client):
@@ -512,6 +559,14 @@ def get_llm_client() -> Optional[Client]:
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"`'
+            )
+
+    elif config.ai_provider == "aws_bedrock":
+        try:
+            return AWSBedrockClient()
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[aws_bedrock]"`'
             )
 
     elif config.ai_provider == "custom":

@@ -925,6 +925,18 @@ class BaseMultiqcModule:
         """Should a sample name be ignored?"""
         sample_names_ignore = sample_names_ignore or config.sample_names_ignore
         sample_names_ignore_re = sample_names_ignore_re or config.sample_names_ignore_re
+        sample_names_only_include = config.sample_names_only_include
+        sample_names_only_include_re = config.sample_names_only_include_re
+
+        if sample_names_only_include:
+            glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in sample_names_only_include)
+            if not glob_match:
+                return True
+        if sample_names_only_include_re:
+            re_match = any(re.match(sn, s_name) for sn in sample_names_only_include_re)
+            if not re_match:
+                return True
+
         glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in sample_names_ignore)
         re_match = any(re.match(sn, s_name) for sn in sample_names_ignore_re)
         return glob_match or re_match
