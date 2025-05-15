@@ -112,7 +112,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         df = pd.DataFrame(records, dtype=object).astype(column_types)
         return self.finalize_df(df)
 
-    def to_wide_df(self) -> Tuple[pd.DataFrame, Set[str]]:
+    def to_wide_df(self) -> Tuple[pd.DataFrame, Set[ColumnKey]]:
         """
         Save plot data to a parquet file using a tabular representation where metrics are columns
         and samples are rows, optimized for cross-run analysis. Used for parquet data dump.
@@ -161,12 +161,12 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                         # Column names now include both the metric name and any namespace
                         # to ensure uniqueness across different tables
-                        metric_col_name = metric_name
+                        metric_col_name = ColumnKey(metric_name)
                         if dt_column.namespace:
-                            metric_col_name = f"{dt_column.namespace} / {metric_name}"
+                            metric_col_name = ColumnKey(f"{dt_column.namespace} / {metric_name}")
                         elif len(self.dt.section_by_id) > 1:
-                            metric_col_name = f"{section_key} / {metric_name}"
-                        metric_col_name = f"{self.dt.id} / {metric_col_name}"
+                            metric_col_name = ColumnKey(f"{section_key} / {metric_name}")
+                        metric_col_name = ColumnKey(f"{self.dt.id} / {metric_col_name}")
 
                         # Add metric to the sample's data
                         samples_data[str(sample_name)][metric_col_name] = float_val

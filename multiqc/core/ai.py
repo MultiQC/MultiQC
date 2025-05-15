@@ -16,6 +16,7 @@ from multiqc.core.log_and_rich import run_with_spinner
 from multiqc.plots.plot import Plot
 from multiqc.types import Anchor, SampleName
 from multiqc.utils import config_schema
+import boto3  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -387,8 +388,6 @@ class AnthropicClient(Client):
 class AWSBedrockClient(Client):
     def __init__(self):
         super().__init__()
-
-        import boto3
 
         self.model = config.ai_model
         self.name = "aws_bedrock"

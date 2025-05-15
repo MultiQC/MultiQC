@@ -15,7 +15,7 @@ from pydantic import ValidationError  # type: ignore
 
 from multiqc import config, report
 from multiqc.core import tmp_dir
-from multiqc.types import Anchor
+from multiqc.types import Anchor, ColumnKey
 from multiqc.utils.config_schema import MultiQCConfig
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 # Set to keep track of which anchors have been saved
 _saved_anchors: Set[Anchor] = set()
 # Keep track of metric column names
-_metric_col_names: Set[str] = set()
+_metric_col_names: Set[ColumnKey] = set()
 
 # Metadata keys
 META_MODULES = "modules"
@@ -33,7 +33,7 @@ META_CONFIG = "config"
 META_MULTIQC_VERSION = "multiqc_version"
 
 
-def wide_table_to_parquet(table_df: pd.DataFrame, metric_col_names: Set[str]) -> None:
+def wide_table_to_parquet(table_df: pd.DataFrame, metric_col_names: Set[ColumnKey]) -> None:
     """
     Merge wide-format table data with existing sample-based tables.
 
@@ -299,10 +299,9 @@ def reset():
     """
     Reset the module state.
     """
-    global _plot_dataframes, _saved_anchors, _merged_wide_df
-    _plot_dataframes = {}
+    global _saved_anchors, _metric_col_names
     _saved_anchors = set()
-    _merged_wide_df = None
+    _metric_col_names = set()
 
 
 def parse_value(value: Any, value_type: str) -> Any:

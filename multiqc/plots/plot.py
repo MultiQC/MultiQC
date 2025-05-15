@@ -35,7 +35,7 @@ from multiqc.core import plot_data_store, tmp_dir
 from multiqc.core.log_and_rich import init_log, iterate_using_progress_bar
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.utils import check_plotly_version
-from multiqc.types import Anchor, PlotType, SampleName
+from multiqc.types import Anchor, ColumnKey, PlotType, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
@@ -331,7 +331,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         raise NotImplementedError("Subclasses must implement to_df()")
 
-    def to_wide_df(self) -> Tuple[pd.DataFrame, Set[str]]:
+    def to_wide_df(self) -> Tuple[pd.DataFrame, Set[ColumnKey]]:
         """
         Used to save data to parquet files.
         """
@@ -469,6 +469,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         # Save table data
         if self.plot_type == PlotType.VIOLIN:
             if config.parquet_format == "wide":
+                metric_col_names: Set[ColumnKey]
                 wide_df, metric_col_names = self.to_wide_df()
                 if not wide_df.empty:
                     plot_data_store.wide_table_to_parquet(wide_df, metric_col_names)
