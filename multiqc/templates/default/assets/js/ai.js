@@ -195,9 +195,8 @@ async function summarizeWithAi(button) {
     storeModelName(providerId, modelName);
   }
 
-  if ((providerId === "custom" && !endpoint) || !modelName || !aiApiKey) {
+  if ((providerId === "custom" && !endpoint) || (providerId !== "seqera" && !modelName) || !aiApiKey) {
     // Open the AI toolbox section, focus on missing fields
-
     const endpointGroup = $("#ai_endpoint_group");
     const endpointInput = endpointGroup.find("input");
     const modelGroup = $("#ai_model_group");
