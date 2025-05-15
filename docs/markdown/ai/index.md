@@ -292,16 +292,16 @@ Most nf-core pipelines with MultiQC have a `--multiqc_config` option to provide 
 However, because API keys must be passed using environment variables, the recommended method is to use
 environment vars for everything.
 
-Using this approach means that no pipeline code needs adjustment, only a small addition to the Nextflow config
-by using the [`env` config scope](https://nextflow.io/docs/latest/reference/config.html#env).
-
+Using this approach means that no pipeline code needs adjustment, only a small addition to the Nextflow config.
 For example, to use with OpenAI you would set the following in your Nextflow config:
 
 ```groovy
 env {
-   MULTIQC_AI_SUMMARY_FULL = 1              // Enable long summaries during report generation
-   MULTIQC_AI_PROVIDER = "openai"           // Select OpenAI as provider
-   OPENAI_API_KEY = secrets.OPENAI_API_KEY  // Access key for OpenAI
+  MULTIQC_AI_SUMMARY_FULL = 1     // Enable long summaries during report generation
+  MULTIQC_AI_PROVIDER = "openai"  // Select OpenAI as provider
+}
+process.withName: MULTIQC {
+  secret = [ 'OPEN_API_KEY' ]     // Access key for OpenAI
 }
 ```
 
@@ -313,6 +313,10 @@ To add this Nextflow secret you would run the following command in the terminal:
 $ nextflow secrets set OPENAI_API_KEY "xxxx"
 ```
 
+Note that secrets can behave differently across different compute environment types.
+See the [Nextflow docs](https://www.nextflow.io/docs/latest/secrets.html#process-directive)
+for details.
+
 :::tip
 
 Save this Nextflow config to `~/.nextflow/config` and it
@@ -320,23 +324,6 @@ Save this Nextflow config to `~/.nextflow/config` and it
 to every Nextflow pipeline you launch.
 
 :::
-
-### Using Seqera Platform
-
-If using Seqera Platform, the Nextflow `env` config can be used when launching pipelines or adding them to the Launchpad.
-
-Environment variables can also be added at the _Compute Environment_ level, which affects every pipeline
-run using that CE without further modification.
-This allows managing provider API keys at the workspace level.
-
-To do this, toggle the **Environment variables** section when creating a Compute Environment and select **Add variable**.
-Ensure that the **Target environment** has **Compute job** enabled.
-
-![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_var_create.png)
-
-Once added:
-
-![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_vars.png)
 
 ## Security considerations
 
@@ -362,7 +349,7 @@ To enable sample anonymization:
 
 When enabled, sample names are replaced with generic pseudonyms (e.g., "SAMPLE_1", "SAMPLE_2") before being sent to the AI provider. The anonymization is applied consistently across the entire report - each sample name gets the same pseudonym wherever it appears. When the AI response references samples, the pseudonyms are automatically converted back to the original sample names before displaying.
 
-MulitQC replaces sample names that appear as typical keys in plots and tables, specifically:
+MultiQC replaces sample names that appear as typical keys in plots and tables, specifically:
 
 - First column of a table table (e.g. the General statistics table)
 - Labels of bars in bar plots
