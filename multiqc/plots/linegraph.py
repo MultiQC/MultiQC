@@ -397,7 +397,9 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             dataset = []
 
             # Get list of unique sample names in this dataset to preserve order
-            unique_samples = ds_group.select("sample").unique().to_series() if not ds_group.is_empty() else []
+            unique_samples: pl.Series = (
+                ds_group.select("sample").unique().to_series() if not ds_group.is_empty() else pl.Series([])
+            )
             # Group by sample_name within each dataset
             for sample_name in natsorted(unique_samples):
                 sample_group = ds_group.filter(pl.col("sample") == sample_name)

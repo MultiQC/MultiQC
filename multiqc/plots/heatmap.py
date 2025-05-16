@@ -149,10 +149,10 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
             rows.append(row)
 
         # Fill matrix with values
-        for row in df.iter_rows(named=True):
-            row_idx = int(row["row_idx"])
-            col_idx = int(row["col_idx"])
-            val = parse_value(row["z_val"], row["z_val_type"])
+        for r in df.iter_rows(named=True):
+            row_idx = int(r["row_idx"])
+            col_idx = int(r["col_idx"])
+            val = parse_value(r["z_val"], r["z_val_type"])
             rows[row_idx][col_idx] = val
 
         return cls(

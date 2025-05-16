@@ -208,7 +208,9 @@ class BoxPlotInputData(NormalizedPlotInputData):
             # Process each sample in this dataset
             dataset = {}
 
-            unique_samples = ds_group.select("sample").unique().to_series() if not ds_group.is_empty() else []
+            unique_samples: pl.Series = (
+                ds_group.select("sample").unique().to_series() if not ds_group.is_empty() else pl.Series([])
+            )
             # Group by sample_name within each dataset
             for sample_name in unique_samples:
                 # Get data for this sample
