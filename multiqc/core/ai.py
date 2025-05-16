@@ -16,7 +16,6 @@ from multiqc.core.log_and_rich import run_with_spinner
 from multiqc.plots.plot import Plot
 from multiqc.types import Anchor, SampleName
 from multiqc.utils import config_schema
-import boto3  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -388,6 +387,12 @@ class AnthropicClient(Client):
 class AWSBedrockClient(Client):
     def __init__(self):
         super().__init__()
+        try:
+            import boto3  # type: ignore
+        except ImportError:
+            raise ImportError(
+                'AI summary through AWS bedrock requires "boto3" to be installed. Install it with `pip install boto`'
+            )
 
         self.model = config.ai_model
         self.name = "aws_bedrock"
