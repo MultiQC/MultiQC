@@ -39,5 +39,5 @@ trimmomatic:
 
 ```yaml
 trimmomatic:
-  contents: Trimmomatic
+  contents_re: ^Trimmomatic
 ```

@@ -39,6 +39,184 @@
       "title": "CleanPattern",
       "type": "object"
     },
+    "GeneralStatsColumnConfig": {
+      "description": "Configuration for a general stats column",
+      "properties": {
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Column title",
+          "title": "Title"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Column description",
+          "title": "Description"
+        },
+        "namespace": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Column namespace",
+          "title": "Namespace"
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Color scale",
+          "title": "Scale"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Number format",
+          "title": "Format"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Minimum value",
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Maximum value",
+          "title": "Max"
+        },
+        "ceiling": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Ceiling value",
+          "title": "Ceiling"
+        },
+        "floor": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Floor value",
+          "title": "Floor"
+        },
+        "shared_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Shared key name",
+          "title": "Shared Key"
+        },
+        "hidden": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Whether column is hidden by default",
+          "title": "Hidden"
+        },
+        "placement": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Column placement order",
+          "title": "Placement"
+        }
+      },
+      "title": "GeneralStatsColumnConfig",
+      "type": "object"
+    },
+    "GeneralStatsModuleConfig": {
+      "description": "Configuration for a module's general stats columns",
+      "properties": {
+        "columns": {
+          "additionalProperties": {
+            "$ref": "#/$defs/GeneralStatsColumnConfig"
+          },
+          "description": "Columns to show in general stats table. Keys are column IDs.",
+          "title": "Columns",
+          "type": "object"
+        }
+      },
+      "title": "GeneralStatsModuleConfig",
+      "type": "object"
+    },
     "SearchPattern": {
       "description": "Search pattern configuration for finding tool outputs",
       "properties": {
@@ -799,14 +977,14 @@
     "megaqc_url": {
       "anyOf": [
         {
-          "type": "boolean"
+          "type": "string"
         },
         {
           "type": "null"
         }
       ],
       "default": null,
-      "description": "Upload to MegaQC",
+      "description": "MegaQC URL to upload to",
       "title": "Megaqc Url"
     },
     "megaqc_access_token": {
@@ -847,6 +1025,19 @@
       "default": null,
       "description": "Export plots",
       "title": "Export Plots"
+    },
+    "export_plots_timeout": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Export plots timeout",
+      "title": "Export Plots Timeout"
     },
     "make_report": {
       "anyOf": [
@@ -940,6 +1131,32 @@
       "description": "AI custom endpoint",
       "title": "Ai Custom Endpoint"
     },
+    "ai_auth_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "AI auth type",
+      "title": "Ai Auth Type"
+    },
+    "ai_retries": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "AI retries",
+      "title": "Ai Retries"
+    },
     "ai_extra_query_options": {
       "anyOf": [
         {
@@ -965,6 +1182,32 @@
       "default": null,
       "description": "AI custom context window",
       "title": "Ai Custom Context Window"
+    },
+    "ai_prompt_short": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Prompt for short AI summary, put before the report details when sent to the provider",
+      "title": "Ai Prompt Short"
+    },
+    "ai_prompt_full": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Prompt for full AI summary, put before the report details when sent to the provider",
+      "title": "Ai Prompt Full"
     },
     "no_ai": {
       "anyOf": [
@@ -1186,6 +1429,14 @@
       "default": null,
       "description": "Maximum number of columns to show in tables",
       "title": "Max Configurable Table Columns"
+    },
+    "general_stats_columns": {
+      "additionalProperties": {
+        "$ref": "#/$defs/GeneralStatsModuleConfig"
+      },
+      "description": "Configuration for general stats columns per module. Keys are module IDs.",
+      "title": "General Stats Columns",
+      "type": "object"
     },
     "table_columns_visible": {
       "anyOf": [
@@ -1537,6 +1788,38 @@
       "default": null,
       "description": "Sample names to ignore (regex)",
       "title": "Sample Names Ignore Re"
+    },
+    "sample_names_only_include": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Sample names to include",
+      "title": "Sample Names Only Include"
+    },
+    "sample_names_only_include_re": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Sample names to include (regex)",
+      "title": "Sample Names Only Include Re"
     },
     "sample_names_rename_buttons": {
       "anyOf": [
@@ -2010,7 +2293,17 @@
       "anyOf": [
         {
           "additionalProperties": {
-            "$ref": "#/$defs/SearchPattern"
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SearchPattern"
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/SearchPattern"
+                },
+                "type": "array"
+              }
+            ]
           },
           "type": "object"
         },
@@ -2021,6 +2314,20 @@
       "default": null,
       "description": "Search patterns for finding tool outputs",
       "title": "Sp"
+    },
+    "parquet_format": {
+      "anyOf": [
+        {
+          "enum": ["long", "wide"],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw', \n        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast, \n        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to \n        for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as\n        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column \n        to have a single type).\n        ",
+      "title": "Parquet Format"
     }
   },
   "title": "MultiQCConfig",
