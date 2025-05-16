@@ -5,8 +5,6 @@ import json
 import logging
 import math
 from collections import OrderedDict, defaultdict
-from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
@@ -17,7 +15,6 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.core.exceptions import RunError
-from multiqc.core.plot_data_store import append_to_parquet
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,

@@ -7,7 +7,6 @@ import json
 import logging
 import math
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
@@ -15,7 +14,7 @@ import plotly.graph_objects as go  # type: ignore
 import polars as pl
 
 from multiqc import config, report
-from multiqc.core.plot_data_store import append_to_parquet, parse_value
+from multiqc.core.plot_data_store import parse_value
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
 from multiqc.plots.table_object import (
@@ -78,8 +77,8 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             "dt_anchor": self.dt.anchor,
                             "section_key": str(section_key),
                             "section_order": section_order,  # Store original index for ordering
-                            "sample_name": str(sample_name),
-                            "metric_name": str(metric_name),
+                            "sample": str(sample_name),
+                            "metric": str(metric_name),
                             "val_raw": str(cell.raw),
                             "val_raw_type": type(cell.raw).__name__,  # Store type name
                             "val_mod": str(cell.mod),
@@ -217,13 +216,13 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             # Sort metrics by their original index if available
             if "metric_idx" in section_group.columns:
                 # Create ordered dict of metrics for this section
-                metrics_info = section_group.select(["metric_name", "metric_idx"]).unique()
+                metrics_info = section_group.select(["metric", "metric_idx"]).unique()
                 for metric_row in metrics_info.iter_rows(named=True):
-                    ordered_metrics[metric_row["metric_name"]] = metric_row["metric_idx"]
+                    ordered_metrics[metric_row["metric"]] = metric_row["metric_idx"]
 
             # Process samples
-            for sample_name in section_group.select("sample_name").unique().to_series():
-                sample_group = section_group.filter(pl.col("sample_name") == sample_name)
+            for sample_name in section_group.select("sample").unique().to_series():
+                sample_group = section_group.filter(pl.col("sample") == sample_name)
                 val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
 
                 # If we have metric_idx, sort by that first
@@ -232,7 +231,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                 # Process metrics/columns
                 for row in sample_group.iter_rows(named=True):
-                    metric_name = row["metric_name"]
+                    metric_name = row["metric"]
 
                     # Convert string values back to their original types
                     val_raw = parse_value(row["val_raw"], row["val_raw_type"])
@@ -361,19 +360,19 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             # Get original order of metrics
             # We need to preserve metric_name order, which is important for visualization
             metric_order = {}
-            for idx, metric in enumerate(merged_df.select("metric_name").to_series()):
+            for idx, metric in enumerate(merged_df.select("metric").to_series()):
                 if metric not in metric_order:
                     metric_order[metric] = idx
 
             merged_df = merged_df.with_columns(
-                pl.col("metric_name").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
             )
 
             # First ensure the DataFrame is sorted by creation_date (newest last)
             merged_df = merged_df.sort("creation_date")
 
             # Get all unique combinations of the key columns
-            key_columns = ["dt_anchor", "section_key", "sample_name", "metric_name"]
+            key_columns = ["dt_anchor", "section_key", "sample", "metric"]
             unique_keys = merged_df.select(key_columns).unique()
 
             # For each unique key combination, find the newest entry
@@ -399,7 +398,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                 # Add a temporary column to sort by the original metric order
                 deduped_df = deduped_df.with_columns(
-                    pl.col("metric_name").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                    pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
                 )
 
                 # Sort by the order column to preserve metric ordering

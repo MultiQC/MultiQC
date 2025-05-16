@@ -9,7 +9,6 @@ import plotly.graph_objects as go  # type: ignore
 import polars as pl
 
 from multiqc import report
-from multiqc.core.plot_data_store import append_to_parquet
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
@@ -157,7 +156,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
                         "anchor": self.anchor,
                         "dataset_idx": ds_idx,
                         "data_label": json.dumps(self.pconfig.data_labels[ds_idx]) if self.pconfig.data_labels else "",
-                        "sample_name": str(sample_name),
+                        "sample": str(sample_name),
                         "value_idx": value_idx,
                         "value": value,
                     }
@@ -209,11 +208,11 @@ class BoxPlotInputData(NormalizedPlotInputData):
             # Process each sample in this dataset
             dataset = {}
 
-            unique_samples = ds_group.select("sample_name").unique().to_series() if not ds_group.is_empty() else []
+            unique_samples = ds_group.select("sample").unique().to_series() if not ds_group.is_empty() else []
             # Group by sample_name within each dataset
             for sample_name in unique_samples:
                 # Get data for this sample
-                sample_group = ds_group.filter(pl.col("sample_name") == sample_name)
+                sample_group = ds_group.filter(pl.col("sample") == sample_name)
 
                 # Collect all values for this sample
                 sample_values = []
@@ -265,7 +264,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
             merged_df = merged_df.sort("creation_date")
 
             # Group by the key identifiers and keep the last entry (newest)
-            dedupe_columns = ["dataset_idx", "sample_name", "value_idx"]
+            dedupe_columns = ["dataset_idx", "sample", "value_idx"]
             merged_df = (
                 merged_df.group_by(dedupe_columns).agg(pl.all().exclude(dedupe_columns).last()).sort("creation_date")
             )

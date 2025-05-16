@@ -1,7 +1,6 @@
 """MultiQC functions to plot a heatmap"""
 
 import logging
-from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
