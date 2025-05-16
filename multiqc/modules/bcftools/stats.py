@@ -312,6 +312,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
                     ylab="Count",
                     xlab="InDel Length (bp)",
                     xsuffix=" bp",
+                    logswitch=True,
                     ymin=0,
                 ),
             ),
