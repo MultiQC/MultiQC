@@ -6,10 +6,11 @@ import logging
 import math
 import stat
 from collections import defaultdict
+from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import numpy as np
-import pandas as pd
+import polars as pl
 from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
@@ -44,9 +45,9 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
     def is_empty(self) -> bool:
         return len(self.datasets) == 0 or all(len(ds) == 0 for ds in self.datasets)
 
-    def to_df(self) -> pd.DataFrame:
+    def to_df(self) -> pl.DataFrame:
         """
-        Convert the scatter plot data to a pandas DataFrame for storage and reloading.
+        Convert the scatter plot data to a polars DataFrame for storage and reloading.
         """
         records = []
 
@@ -59,10 +60,8 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                 for point_idx, point in enumerate(points):
                     record = {
                         "dataset_idx": ds_idx,
-                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx])
-                        if self.pconfig.data_labels
-                        else None,
-                        "sample_name": sample_name,
+                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx]) if self.pconfig.data_labels else "",
+                        "sample": sample_name,
                         "point_idx": point_idx,
                     }
 
@@ -84,7 +83,13 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                             record[f"point_{key}"] = point_val
                     records.append(record)
 
-        df = pd.DataFrame(records)
+        df = pl.DataFrame(
+            records,
+            schema_overrides={
+                "data_label": pl.Utf8,
+                "sample": pl.Utf8,
+            },
+        )
         return self.finalize_df(df)
 
     @staticmethod
@@ -113,113 +118,39 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
         """
         Merge normalized data from old run and new run, matching by data labels when available
         """
-        # Create dictionaries to map data_labels to datasets
-        old_datasets_by_label = {}
-        new_datasets_by_label = {}
+        new_df = new_data.to_df()
+        if new_df.is_empty():
+            return old_data
 
-        # Create a list for merged datasets
-        merged_datasets = []
+        old_df = old_data.to_df()
 
-        # If data_labels exist, use them as keys for matching datasets
-        if old_data.pconfig.data_labels and new_data.pconfig.data_labels:
-            # First build mappings from label IDs to datasets
-            for i, dl in enumerate(old_data.pconfig.data_labels):
-                if i < len(old_data.datasets):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    old_datasets_by_label[label_id] = old_data.datasets[i]
+        # If we have both old and new data, merge them
+        merged_df = new_df
+        if old_df is not None and not old_df.is_empty():
+            # Get the list of samples that exist in both old and new data, for each dataset
+            new_keys = new_df.select(["data_label", "sample"]).unique()
 
-            for i, dl in enumerate(new_data.pconfig.data_labels):
-                if i < len(new_data.datasets):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    new_datasets_by_label[label_id] = new_data.datasets[i]
-
-            # Create a dictionary to store merged data_labels
-            merged_data_labels = []
-            data_labels_by_id = {}
-
-            # Store all data labels by their ID
-            for i, dl in enumerate(old_data.pconfig.data_labels):
-                if i < len(old_data.datasets):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    data_labels_by_id[label_id] = dl
-
-            for i, dl in enumerate(new_data.pconfig.data_labels):
-                if i < len(new_data.datasets):
-                    label_id = dl.get("name", f"dataset-{i}") if isinstance(dl, dict) else dl
-                    # New data labels override old ones with the same ID
-                    data_labels_by_id[label_id] = dl
-
-            # First process datasets that exist in both old and new data
-            for label_id, old_ds in old_datasets_by_label.items():
-                if label_id in new_datasets_by_label:
-                    new_ds = new_datasets_by_label[label_id]
-                    # Merge datasets - for scatter plots, combine all points
-                    # Create a sample-to-points mapping from old dataset
-                    sample_to_points = defaultdict(list)
-                    for sample_name, points in old_ds.items():
-                        if isinstance(points, list):
-                            sample_to_points[sample_name].extend(points)
-                        else:
-                            sample_to_points[sample_name].append(points)
-
-                    # Add points from new dataset
-                    for sample_name, points in new_ds.items():
-                        if isinstance(points, list):
-                            sample_to_points[sample_name].extend(points)
-                        else:
-                            sample_to_points[sample_name].append(points)
-
-                    # Convert back to a regular dict
-                    merged_ds = dict(sample_to_points)
-                    merged_datasets.append(merged_ds)
-                    merged_data_labels.append(data_labels_by_id[label_id])
-
-                    # Mark as processed
-                    new_datasets_by_label.pop(label_id)
-                else:
-                    # Only in old data
-                    merged_datasets.append(old_ds)
-                    merged_data_labels.append(data_labels_by_id[label_id])
-
-            # Then add datasets that only exist in new data
-            for label_id, new_ds in new_datasets_by_label.items():
-                merged_datasets.append(new_ds)
-                merged_data_labels.append(data_labels_by_id[label_id])
-
-            # Create a new pconfig with merged data_labels
-            merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
-            merged_pconf.data_labels = merged_data_labels
-
-            return cls(
-                plot_type=PlotType.SCATTER,
-                anchor=new_data.anchor,
-                datasets=merged_datasets,
-                pconfig=merged_pconf,
-                creation_date=report.creation_date,
+            # Keep only the rows in old_df whose (data_label, sample) pair
+            # does *not* appear in new_keys. An anti-join is the cleanest way to express this.
+            old_df_filtered = old_df.join(
+                new_keys,
+                on=["data_label", "sample"],
+                how="anti",  # anti-join = “rows in left not matched in right”
             )
-        else:
-            # If no data labels, preserve old behavior (return new data)
-            # But combine extra_series if present
-            if old_data.pconfig.extra_series and new_data.pconfig.extra_series is None:
-                merged_pconf = ScatterConfig(**new_data.pconfig.model_dump())
-                merged_pconf.extra_series = old_data.pconfig.extra_series
-                return cls(
-                    plot_type=PlotType.SCATTER,
-                    anchor=new_data.anchor,
-                    datasets=new_data.datasets,
-                    pconfig=merged_pconf,
-                    creation_date=report.creation_date,
-                )
-            return new_data
+
+            # Combine the filtered old data with new data
+            merged_df = pl.concat([old_df_filtered, new_df], how="diagonal")
+
+        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
     @classmethod
     def from_df(
-        cls, df: pd.DataFrame, pconfig: Union[Dict, ScatterConfig], anchor: Anchor
+        cls, df: pl.DataFrame, pconfig: Union[Dict, ScatterConfig], anchor: Anchor
     ) -> "ScatterNormalizedInputData":
         """
-        Create a ScatterNormalizedInputData object from a pandas DataFrame.
+        Create a ScatterNormalizedInputData object from a polars DataFrame.
         """
-        if df.empty:
+        if df.is_empty():
             pconf = (
                 pconfig
                 if isinstance(pconfig, ScatterConfig)
@@ -238,26 +169,28 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
         # Reconstruct datasets
         data_labels = []
         datasets = []
-        dataset_indices = sorted(df["dataset_idx"].unique())
+        dataset_indices = sorted(df.select("dataset_idx").unique().to_series().to_list())
 
         for dataset_idx in dataset_indices:
-            dataset_df = df[df["dataset_idx"] == dataset_idx]
+            dataset_df = df.filter(pl.col("dataset_idx") == dataset_idx)
             dataset = {}
 
-            data_label = dataset_df["data_label"].iloc[0]
+            data_label = dataset_df.select("data_label").row(0)[0]
             data_labels.append(json.loads(data_label) if data_label else {})
 
             # Group by sample name
-            for sample_name in dataset_df["sample_name"].unique():
-                sample_df = dataset_df[dataset_df["sample_name"] == sample_name]
+            sample_names = dataset_df.select("sample").unique().to_series().to_list()
+            for sample_name in sample_names:
+                sample_df = dataset_df.filter(pl.col("sample") == sample_name)
 
                 # Extract points
                 points = []
-                for _, row in sample_df.iterrows():
+                for row in sample_df.iter_rows(named=True):
                     point = {}
-                    for col in row.index:
-                        point["x"] = parse_value(row["x"], row["x_type"])
-                        point["y"] = parse_value(row["y"], row["y_type"])
+                    point["x"] = parse_value(row["x"], row["x_type"])
+                    point["y"] = parse_value(row["y"], row["y_type"])
+                    # Add any additional point attributes
+                    for col in row.keys():
                         if col.startswith("point_"):
                             key = col[6:]  # Remove "point_" prefix
                             point[key] = row[col]

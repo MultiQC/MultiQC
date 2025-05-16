@@ -9,8 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union, cast
 
-import pandas as pd
 import plotly.graph_objects as go  # type: ignore
+import polars as pl
 import spectra  # type: ignore
 from natsort import natsorted
 from pydantic import BaseModel, Field
@@ -218,7 +218,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             creation_date=report.creation_date,
         )
 
-    def to_df(self) -> pd.DataFrame:
+    def to_df(self) -> pl.DataFrame:
         """
         Save plot data to a parquet file using a tabular representation that's
         optimized for cross-run analysis.
@@ -235,12 +235,10 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
                     record = {
                         "dataset_idx": ds_idx,
-                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx])
-                        if self.pconfig.data_labels
-                        else None,
+                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx]) if self.pconfig.data_labels else "",
                         "sample": str(sample_name),
                         "category": str(category_name),
-                        "bar_value": value,
+                        "bar_value": float(value) if value is not None else float("nan"),
                     }
 
                     # Store category configuration as JSON if available
@@ -257,11 +255,17 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
                     records.append(record)
 
-        df = pd.DataFrame(records)
+        df = pl.DataFrame(
+            records,
+            schema_overrides={
+                "data_label": pl.Utf8,
+                "bar_value": pl.Float64,
+            },
+        )
         return self.finalize_df(df)
 
     @classmethod
-    def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, BarPlotConfig], anchor: Anchor) -> "BarPlotInputData":
+    def from_df(cls, df: pl.DataFrame, pconfig: Union[Dict, BarPlotConfig], anchor: Anchor) -> "BarPlotInputData":
         """
         Load plot data from a parquet file.
         """
@@ -290,32 +294,32 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         cats_per_dataset: List[Dict[CatName, CatConf]] = []
 
         # Group by dataset_idx
-        max_dataset_idx = df["dataset_idx"].max() if not df.empty else 0
+        max_dataset_idx = df.select(pl.col("dataset_idx").max()).item() if not df.is_empty() else 0
         for ds_idx in range(int(max_dataset_idx) + 1):
-            ds_group = df[df["dataset_idx"] == ds_idx] if not df.empty else pd.DataFrame()
+            ds_group = df.filter(pl.col("dataset_idx") == ds_idx) if not df.is_empty() else pl.DataFrame()
 
-            data_label = ds_group["data_label"].iloc[0]
+            data_label = ds_group.select("data_label").item(0, 0) if not ds_group.is_empty() else None
             data_labels.append(json.loads(data_label) if data_label else {})
 
             dataset = {}
             cats_meta = {}
 
             # Get list of unique sample names in this dataset to preserve order
-            unique_samples = ds_group["sample"].unique()
+            unique_samples = list(ds_group.select("sample").unique().to_series()) if not ds_group.is_empty() else []
             # Group by sample_name within each dataset
             for sample_name in unique_samples:
                 # Get data for this sample
-                sample_group = ds_group[ds_group["sample"] == sample_name]
+                sample_group = ds_group.filter(pl.col("sample") == sample_name)
                 data_by_cat = {}
 
                 # Process each category for this sample
-                for _, row in sample_group.iterrows():
+                for row in sample_group.iter_rows(named=True):
                     category_name = row["category"]
                     value = row["bar_value"]
                     data_by_cat[CatName(str(category_name))] = value
 
                     # Process category metadata if available
-                    if "cat_meta" in row and pd.notna(row["cat_meta"]):
+                    if "cat_meta" in row and row["cat_meta"] is not None:
                         try:
                             cat_meta = json.loads(row["cat_meta"])
                             # Use CatConf to ensure proper validation
@@ -361,37 +365,30 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         """
         # Create dataframe for new data
         new_df = new_data.to_df()
-        if new_df.empty:
+        if new_df.is_empty():
             return old_data
 
         old_df = old_data.to_df()
 
         # If we have both old and new data, merge them
         merged_df = new_df
-        if old_df is not None and not old_df.empty:
+        if old_df is not None and not old_df.is_empty():
             # Get the list of samples that exist in both old and new data, for each dataset
-            new_sample_keys = set()
-            for _, row in new_df.iterrows():
-                new_sample_keys.add((row["data_label"], row["sample"]))
+            new_keys = new_df.select(["data_label", "sample"]).unique()
 
-            # Filter out old data for samples that exist in new data
-            old_df_filtered = old_df.copy()
-            drop_indices = []
-            for idx, row in old_df.iterrows():
-                if (row["data_label"], row["sample"]) in new_sample_keys:
-                    drop_indices.append(idx)
-
-            if drop_indices:
-                old_df_filtered = old_df.drop(drop_indices)
+            # Keep only the rows in old_df whose (data_label, sample) pair
+            # does *not* appear in new_keys. An anti-join is the cleanest way to express this.
+            old_df_filtered = old_df.join(
+                new_keys,
+                on=["data_label", "sample"],
+                how="anti",  # anti-join = “rows in left not matched in right”
+            )
 
             # Combine the dataframes, keeping all rows
-            merged_df = pd.concat([old_df_filtered, new_df], ignore_index=True)
+            merged_df = pl.concat([old_df_filtered, new_df], how="diagonal")
 
-            # For duplicates (same sample, category, dataset), keep the latest version
-            # Sort by timestamp (newest last)
-            merged_df.sort_values("creation_date", inplace=True)
-
-        append_to_parquet(merged_df)
+            # Sort by timestamp (newest last) - using creation_date column
+            merged_df = merged_df.sort("creation_date")
 
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
@@ -577,7 +574,10 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 cat_data: List[Union[int, float]] = list()
                 cat_count = 0
                 for s in ordered_samples_names:
-                    cat_data.append(d[SampleName(s)][cat_name])
+                    if cat_name in d[SampleName(s)]:
+                        cat_data.append(d[SampleName(s)][cat_name])
+                    else:
+                        cat_data.append(0)
                     if s not in sample_d_count:
                         sample_d_count[s] = 0
                     cat_count += 1

@@ -1,11 +1,12 @@
 """MultiQC functions to plot a heatmap"""
 
 import logging
+from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go  # type: ignore
+import polars as pl
 from pydantic import Field
 
 from multiqc import report
@@ -25,6 +26,7 @@ from multiqc.utils.util_functions import scipy_hierarchy_leaves_list, scipy_hier
 logger = logging.getLogger(__name__)
 
 
+# Define element types for the heatmap
 ElemT = Union[str, float, int, None]
 
 
@@ -70,9 +72,9 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
     def is_empty(self) -> bool:
         return len(self.rows) == 0 or all(len(row) == 0 for row in self.rows)
 
-    def to_df(self) -> pd.DataFrame:
+    def to_df(self) -> pl.DataFrame:
         """
-        Convert the heatmap data to a pandas DataFrame for storage and reloading.
+        Convert the heatmap data to a polars DataFrame for storage and reloading.
         """
         # Create a DataFrame with row indices, column indices, and values
         records = []
@@ -93,22 +95,21 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
                     }
                 )
 
-        df = pd.DataFrame(records)
-        self.finalize_df(df)
-        return df
+        df = pl.DataFrame(records)
+        return self.finalize_df(df)
 
     @classmethod
     def from_df(
-        cls, df: pd.DataFrame, pconfig: Union[Dict, HeatmapConfig], anchor: Anchor
+        cls, df: pl.DataFrame, pconfig: Union[Dict, HeatmapConfig], anchor: Anchor
     ) -> "HeatmapNormalizedInputData":
         """
-        Create a HeatmapNormalizedInputData object from a pandas DataFrame.
+        Create a HeatmapNormalizedInputData object from a polars DataFrame.
         """
         # Filter out rows related to this anchor if there are multiple
         if "anchor" in df.columns:
-            df = df[df["anchor"] == str(anchor)]
+            df = df.filter(pl.col("anchor") == str(anchor))
 
-        if df.empty:
+        if df.is_empty():
             # Return empty data if no valid rows found
             pconf = (
                 pconfig
@@ -128,30 +129,36 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         pconf = cast(HeatmapConfig, HeatmapConfig.from_df(df))
 
         # Extract and rebuild the 2D matrix
-        max_row_idx = int(df["row_idx"].max())
-        max_col_idx = int(df["col_idx"].max())
+        max_row_idx = int(df.select(pl.col("row_idx").max()).item())
+        max_col_idx = int(df.select(pl.col("col_idx").max()).item())
 
         # Reconstruct xcats and ycats
         xcats = []
         ycats = []
 
         # Get unique row and column categories in the order of indices
-        row_cats_df = df[["row_idx", "row_cat"]].drop_duplicates().sort_values("row_idx")
-        col_cats_df = df[["col_idx", "col_cat"]].drop_duplicates().sort_values("col_idx")
+        row_cats_df = df.select(["row_idx", "row_cat"]).unique().sort("row_idx")
+        col_cats_df = df.select(["col_idx", "col_cat"]).unique().sort("col_idx")
 
-        ycats = row_cats_df["row_cat"].tolist()
-        xcats = col_cats_df["col_cat"].tolist()
+        ycats = row_cats_df.select("row_cat").to_series().to_list()
+        xcats = col_cats_df.select("col_cat").to_series().to_list()
 
-        # Create empty matrix
-        rows = [[None for _ in range(max_col_idx + 1)] for _ in range(max_row_idx + 1)]
+        # Create empty matrix with appropriate type annotations
+        rows: List[List[ElemT]] = []
+        for _ in range(max_row_idx + 1):
+            row: List[ElemT] = [None] * (max_col_idx + 1)  # type: ignore
+            rows.append(row)
 
         # Fill matrix with values
-        for _, row in df.iterrows():
-            rows[int(row["row_idx"])][int(row["col_idx"])] = parse_value(row["z_val"], row["z_val_type"])
+        for row in df.iter_rows(named=True):
+            row_idx = int(row["row_idx"])
+            col_idx = int(row["col_idx"])
+            val = parse_value(row["z_val"], row["z_val_type"])
+            rows[row_idx][col_idx] = val
 
         return cls(
             anchor=anchor,
-            rows=rows,  # type: ignore
+            rows=rows,
             xcats=xcats,
             ycats=ycats,
             pconfig=pconf,
@@ -166,20 +173,66 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         """
         Merge two HeatmapNormalizedInputData objects.
         This method is called when merging data from multiple runs.
-        """
-        if old_data.xcats != new_data.xcats or old_data.ycats != new_data.ycats:
-            logger.warning("Cannot merge heatmaps with different dimensions or categories")
-            return new_data
 
-        # Merge the data by combining rows
-        combined_rows = old_data.rows + new_data.rows
+        The merge takes the union of all categories - if old_data has A and B,
+        and new_data has A and C, the result will have A, B, and C.
+
+        For any overlapping x-y pairs, the value from new_data (latest) is used.
+        """
+        # Check for empty data cases
+        if old_data.is_empty():
+            return new_data
+        if new_data.is_empty():
+            return old_data
+
+        # Create a union of x and y categories
+        all_xcats = list(dict.fromkeys(old_data.xcats + new_data.xcats))
+        all_ycats = list(dict.fromkeys(old_data.ycats + new_data.ycats))
+
+        # Create mappings from categories to indices
+        xcat_to_idx = {str(cat): i for i, cat in enumerate(all_xcats)}
+        ycat_to_idx = {str(cat): i for i, cat in enumerate(all_ycats)}
+
+        # Initialize a matrix with None values
+        merged_rows: List[List[ElemT]] = []
+        for _ in range(len(all_ycats)):
+            row: List[ElemT] = [None] * len(all_xcats)  # type: ignore
+            merged_rows.append(row)
+
+        # Helper function to fill the matrix from a data source
+        def fill_matrix(data, is_newer=False):
+            for y_idx, row in enumerate(data.rows):
+                if y_idx >= len(data.ycats):
+                    continue  # Skip extra rows
+                y_cat = str(data.ycats[y_idx])
+                if y_cat not in ycat_to_idx:
+                    continue  # Skip unknown categories
+
+                merged_y_idx = ycat_to_idx[y_cat]
+
+                for x_idx, val in enumerate(row):
+                    if x_idx >= len(data.xcats):
+                        continue  # Skip extra columns
+                    x_cat = str(data.xcats[x_idx])
+                    if x_cat not in xcat_to_idx:
+                        continue  # Skip unknown categories
+
+                    merged_x_idx = xcat_to_idx[x_cat]
+
+                    # For newer data or missing values, always update
+                    if is_newer or merged_rows[merged_y_idx][merged_x_idx] is None:
+                        merged_rows[merged_y_idx][merged_x_idx] = val
+
+        # Fill matrix with values - old data first, then new data to override duplicates
+        fill_matrix(old_data, is_newer=False)
+        fill_matrix(new_data, is_newer=True)
 
         # Use the newer config (from new_data)
         return HeatmapNormalizedInputData(
             anchor=new_data.anchor,
-            rows=combined_rows,
-            xcats=new_data.xcats,
-            ycats=new_data.ycats,
+            rows=merged_rows,
+            xcats=all_xcats,
+            ycats=all_ycats,
             pconfig=new_data.pconfig,
             plot_type=PlotType.HEATMAP,
             creation_date=report.creation_date,

@@ -6,14 +6,16 @@ import logging
 import math
 import os
 import random
+from datetime import datetime
 from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
 
-import pandas as pd
 import plotly.graph_objects as go  # type: ignore
+import polars as pl
+from natsort import natsorted
 from pydantic import Field
 
 from multiqc import config, report
-from multiqc.core.plot_data_store import append_to_parquet, parse_value
+from multiqc.core.plot_data_store import parse_value
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,
@@ -314,7 +316,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
     def is_empty(self) -> bool:
         return len(self.data) == 0 or all(len(ds) == 0 for ds in self.data)
 
-    def to_df(self) -> pd.DataFrame:
+    def to_df(self) -> pl.DataFrame:
         """
         Save plot data to a parquet file using a tabular representation that's
         optimized for cross-run analysis.
@@ -333,10 +335,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
                     record = {
                         "dataset_idx": ds_idx,
-                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx])
-                        if self.pconfig.data_labels
-                        else None,
-                        "sample_name": series.name,
+                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx]) if self.pconfig.data_labels else "",
+                        "sample": series.name,
                         # values can be be different types (int, float, str...), especially across
                         # plots. parquet requires values of the same type. so we cast them to str
                         "x_val": x_val,
@@ -348,12 +348,22 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     records.append(record)
 
         # Create DataFrame from records
-        df = pd.DataFrame(records)
+        df = pl.DataFrame(
+            records,
+            schema_overrides={
+                "data_label": pl.Utf8,
+                "sample": pl.Utf8,
+                "x_val": pl.Utf8,
+                "y_val": pl.Utf8,
+                "x_val_type": pl.Utf8,
+                "y_val_type": pl.Utf8,
+            },
+        )
         return self.finalize_df(df)
 
     @classmethod
     def from_df(
-        cls, df: pd.DataFrame, pconfig: Union[Dict, LinePlotConfig], anchor: Anchor
+        cls, df: pl.DataFrame, pconfig: Union[Dict, LinePlotConfig], anchor: Anchor
     ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
         pconf: LinePlotConfig
         if cls.df_is_empty(df):
@@ -377,30 +387,30 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         data_labels = []
         sample_names = []
 
-        dataset_indices = sorted(df["dataset_idx"].unique())
+        dataset_indices = sorted(df.select("dataset_idx").unique().to_series()) if not df.is_empty() else []
 
         for ds_idx in dataset_indices:
-            ds_group = df[df["dataset_idx"] == ds_idx] if not df.empty else pd.DataFrame()
+            ds_group = df.filter(pl.col("dataset_idx") == ds_idx) if not df.is_empty() else pl.DataFrame()
 
-            data_label = ds_group["data_label"].iloc[0]
+            data_label = ds_group.select("data_label").item(0, 0) if not ds_group.is_empty() else None
             data_labels.append(json.loads(data_label) if data_label else {})
 
             dataset = []
 
             # Get list of unique sample names in this dataset to preserve order
-            unique_samples = ds_group["sample_name"].unique()
+            unique_samples = ds_group.select("sample").unique().to_series() if not ds_group.is_empty() else []
             # Group by sample_name within each dataset
-            for sample_name in unique_samples:
-                sample_group = ds_group[ds_group["sample_name"] == sample_name]
+            for sample_name in natsorted(unique_samples):
+                sample_group = ds_group.filter(pl.col("sample") == sample_name)
 
                 # Extract series properties
-                if len(sample_group) > 0:
-                    first_row = sample_group.iloc[0]
+                if not sample_group.is_empty():
+                    first_row = sample_group.row(0, named=True)
                     series_dict = first_row.get("series", {})
 
                     # Extract x,y pairs and sort by x value for proper display
                     pairs = []
-                    for _, row in sample_group.iterrows():
+                    for row in sample_group.iter_rows(named=True):
                         x_val = parse_value(row["x_val"], row["x_val_type"])
                         y_val = parse_value(row["y_val"], row["y_val_type"])
                         pairs.append((x_val, y_val))
@@ -461,7 +471,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         datasets: List[List[Series[Any, Any]]] = []
         for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
             list_of_series: List[Series[Any, Any]] = []
-            for s in sorted(raw_data_by_sample.keys()):
+            for s in natsorted(raw_data_by_sample.keys()):
                 if s not in sample_names:
                     sample_names.append(SampleName(s))
                 x_to_y = raw_data_by_sample[s]
@@ -499,33 +509,27 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         for more efficient and reliable merging.
         """
         new_df = new_data.to_df()
-        if new_df.empty:
+        if new_df.is_empty():
             return old_data
 
         old_df = old_data.to_df()
 
         # If we have both old and new data, merge them
         merged_df = new_df
-        if old_df is not None and not old_df.empty:
+        if old_df is not None and not old_df.is_empty():
             # Get the list of samples that exist in both old and new data, for each dataset
-            new_sample_keys = set()
-            for _, row in new_df.iterrows():
-                new_sample_keys.add((row["data_label"], row["sample_name"]))
+            new_keys = new_df.select(["data_label", "sample"]).unique()
 
-            # Filter out old data for samples that exist in new data
-            old_df_filtered = old_df.copy()
-            drop_indices = []
-            for idx, row in old_df.iterrows():
-                if (row["data_label"], row["sample_name"]) in new_sample_keys:
-                    drop_indices.append(idx)
-
-            if drop_indices:
-                old_df_filtered = old_df.drop(drop_indices)
+            # Keep only the rows in old_df whose (data_label, sample) pair
+            # does *not* appear in new_keys. An anti-join is the cleanest way to express this.
+            old_df_filtered = old_df.join(
+                new_keys,
+                on=["data_label", "sample"],
+                how="anti",  # anti-join = “rows in left not matched in right”
+            )
 
             # Combine the filtered old data with new data
-            merged_df = pd.concat([old_df_filtered, new_df], ignore_index=True)
-
-        append_to_parquet(merged_df)
+            merged_df = pl.concat([old_df_filtered, new_df], how="diagonal")
 
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 

@@ -10,7 +10,7 @@ import os
 from re import Pattern
 from typing import Any, Dict, List, Optional, Set
 
-import pandas as pd
+import polars as pl
 from pydantic import ValidationError  # type: ignore
 
 from multiqc import config, report
@@ -33,7 +33,7 @@ META_CONFIG = "config"
 META_MULTIQC_VERSION = "multiqc_version"
 
 
-def wide_table_to_parquet(table_df: pd.DataFrame, metric_col_names: Set[ColumnKey]) -> None:
+def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKey]) -> None:
     """
     Merge wide-format table data with existing sample-based tables.
 
@@ -44,12 +44,12 @@ def wide_table_to_parquet(table_df: pd.DataFrame, metric_col_names: Set[ColumnKe
     The resulting table must have single row per sample.
     """
     # Fix creation date
-    table_df = _fix_creation_date(table_df)
+    # table_df = _fix_creation_date(table_df)
 
     existing_df = _read_or_create_df()
 
     # Get all rows that are table_row
-    existing_table_rows = existing_df[existing_df["type"] == "table_row"]
+    existing_table_rows = existing_df.filter(pl.col("type") == "table_row")
 
     global _metric_col_names
     _metric_col_names.update(metric_col_names)
@@ -57,46 +57,45 @@ def wide_table_to_parquet(table_df: pd.DataFrame, metric_col_names: Set[ColumnKe
     non_metric_cols = [c for c in existing_table_rows.columns if c not in _metric_col_names]
 
     # Merge on sample_name, preserving all columns from both dataframes
-    new_df = pd.merge(
-        existing_table_rows,
+    new_df = existing_table_rows.join(
         table_df,
         on=non_metric_cols,
         how="outer",
     )
 
-    existing_other_rows_df = existing_df[existing_df["type"] != "table_row"]
-    new_df = pd.concat([existing_other_rows_df, new_df], ignore_index=True)
+    existing_other_rows_df = existing_df.filter(pl.col("type") != "table_row")
+    new_df = pl.concat([existing_other_rows_df, new_df], how="diagonal")
     _write_parquet(new_df)
 
 
-def _fix_creation_date(df: pd.DataFrame) -> pd.DataFrame:
+def _fix_creation_date(df: pl.DataFrame) -> pl.DataFrame:
     """
     Fix for Iceberg. Iceberg never keeps an arbitrary zone offset in the data –
     a value that has a zone is normalised to UTC, and the zone itself is discarded.
     """
-    df["creation_date"] = (
-        pd.to_datetime(df["creation_date"], utc=True)
-        .dt.floor("us")  # tz-aware (+02:00)
-        .dt.tz_localize(None)  # …but drop the zone
-        .astype("datetime64[us]")  # make it explicit
+    return df.with_columns(
+        pl.col("creation_date")
+        .str.to_datetime(time_unit="us", time_zone="UTC")
+        .dt.truncate("microseconds")
+        .dt.replace_time_zone(None)
+        .cast(pl.Datetime(time_unit="us"))
     )
-    return df
 
 
-def append_to_parquet(df: pd.DataFrame) -> None:
+def append_to_parquet(df: pl.DataFrame) -> None:
     """
     Save plot data to the parquet file.
 
     This function adds/updates data for a specific plot in the file.
     """
-    df = _fix_creation_date(df)
+    # df = _fix_creation_date(df)
     existing_df = _read_or_create_df()
 
-    df = pd.concat([existing_df, df], ignore_index=True)
+    df = pl.concat([existing_df, df], how="diagonal")
     _write_parquet(df)
 
 
-def get_report_metadata(df: pd.DataFrame) -> Optional[Dict[str, Any]]:
+def get_report_metadata(df: pl.DataFrame) -> Optional[Dict[str, Any]]:
     """
     Extract all report metadata from the parquet file.
 
@@ -105,31 +104,31 @@ def get_report_metadata(df: pd.DataFrame) -> Optional[Dict[str, Any]]:
 
     Returns a dictionary with modules, data_sources, creation_date, and config.
     """
-    if df.empty:
+    if df.is_empty():
         return None
 
     try:
         # Read the metadata table from the parquet file
-        metadata_df = df[df["anchor"] == "run_metadata"]
+        metadata_df = df.filter(pl.col("anchor") == "run_metadata")
 
         # New method: get metadata from DataFrame
         result = {}
 
         # Read modules
-        if "modules" in metadata_df.columns and not metadata_df["modules"].empty:
-            result["modules"] = json.loads(metadata_df["modules"].iloc[0])
+        if "modules" in metadata_df.columns and not metadata_df.get_column("modules").is_empty():
+            result["modules"] = json.loads(metadata_df.get_column("modules")[0])
 
         # Read data sources
-        if "data_sources" in metadata_df.columns and not metadata_df["data_sources"].empty:
-            result["data_sources"] = json.loads(metadata_df["data_sources"].iloc[0])
+        if "data_sources" in metadata_df.columns and not metadata_df.get_column("data_sources").is_empty():
+            result["data_sources"] = json.loads(metadata_df.get_column("data_sources")[0])
 
         # Read creation date
-        if "creation_date" in metadata_df.columns and not metadata_df["creation_date"].empty:
-            result["creation_date"] = metadata_df["creation_date"].iloc[0]
+        if "creation_date" in metadata_df.columns and not metadata_df.get_column("creation_date").is_empty():
+            result["creation_date"] = metadata_df.get_column("creation_date")[0]
 
         # Read config
-        if "config" in metadata_df.columns and not metadata_df["config"].empty:
-            result["config"] = json.loads(metadata_df["config"].iloc[0])
+        if "config" in metadata_df.columns and not metadata_df.get_column("config").is_empty():
+            result["config"] = json.loads(metadata_df.get_column("config")[0])
 
         return result
     except Exception as e:
@@ -200,7 +199,7 @@ def save_report_metadata() -> None:
         logger.error(f"Error validating config: {e}")
 
     # Create metadata DataFrame
-    metadata_df = pd.DataFrame(
+    metadata_df = pl.DataFrame(
         {
             "type": ["run_metadata"],
             "anchor": ["run_metadata"],
@@ -215,26 +214,26 @@ def save_report_metadata() -> None:
     append_to_parquet(metadata_df)
 
 
-def _write_parquet(df: pd.DataFrame) -> None:
+def _write_parquet(df: pl.DataFrame) -> None:
     parquet_file = tmp_dir.parquet_file()
     # Ensure directory exists
     os.makedirs(parquet_file.parent, exist_ok=True)
 
     # Write to file
     try:
-        df.to_parquet(parquet_file, compression="gzip")
+        df.write_parquet(parquet_file, compression="gzip")
     except Exception as e:
         logger.error(f"Error writing parquet file: {e}")
         raise
 
 
-def _read_or_create_df() -> pd.DataFrame:
+def _read_or_create_df() -> pl.DataFrame:
     parquet_file = tmp_dir.parquet_file()
 
     # Update existing file or create new one
     if parquet_file.exists():
         try:
-            return pd.read_parquet(parquet_file)
+            return pl.read_parquet(parquet_file)
 
         except Exception as e:
             logger.error(f"Error updating parquet file with metadata: {e}")
@@ -244,7 +243,7 @@ def _read_or_create_df() -> pd.DataFrame:
         # Create directory if needed
         os.makedirs(parquet_file.parent, exist_ok=True)
 
-    return pd.DataFrame(
+    return pl.DataFrame(
         {
             "anchor": [],
             "type": [],
@@ -252,11 +251,19 @@ def _read_or_create_df() -> pd.DataFrame:
             "plot_type": [],
             "plot_input_data": [],
             "sample": [],
-        }
+        },
+        schema_overrides={
+            "anchor": pl.Utf8,
+            "type": pl.Utf8,
+            "creation_date": pl.Datetime(time_unit="us", time_zone="UTC"),
+            "plot_type": pl.Utf8,
+            "plot_input_data": pl.Utf8,
+            "sample": pl.Utf8,
+        },
     )
 
 
-# def _update_parquet(df: pd.DataFrame, anchor: Anchor) -> None:
+# def _update_parquet(df: pl.DataFrame, anchor: Anchor) -> None:
 #     """
 #     Update the parquet file with new data.
 
@@ -268,14 +275,14 @@ def _read_or_create_df() -> pd.DataFrame:
 #     if parquet_file.exists():
 #         try:
 #             # Read existing data
-#             existing_df = pd.read_parquet(parquet_file)
+#             existing_df = pl.read_parquet(parquet_file)
 
 #             # Remove any existing data for this anchor
 #             if "anchor" in existing_df.columns:
-#                 existing_df = existing_df[existing_df["anchor"] != str(anchor)]
+#                 existing_df = existing_df.filter(pl.col("anchor") != str(anchor))
 
 #             # Append new data
-#             merged_df = pd.concat([existing_df, df], ignore_index=True)
+#             merged_df = pl.concat([existing_df, df], how="diagonal")
 #         except Exception as e:
 #             logger.error(f"Error reading existing parquet file: {e}")
 #             # If there was an error, just use the new data
@@ -289,7 +296,7 @@ def _read_or_create_df() -> pd.DataFrame:
 
 #     # Write to file
 #     try:
-#         merged_df.to_parquet(parquet_file, compression="gzip")
+#         merged_df.write_parquet(parquet_file, compression="gzip")
 #     except Exception as e:
 #         logger.error(f"Error writing parquet file: {e}")
 #         raise
