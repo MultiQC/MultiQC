@@ -387,8 +387,12 @@ class AnthropicClient(Client):
 class AWSBedrockClient(Client):
     def __init__(self):
         super().__init__()
-
-        import boto3
+        try:
+            import boto3  # type: ignore
+        except ImportError:
+            raise ImportError(
+                'AI summary through AWS bedrock requires "boto3" to be installed. Install it with `pip install boto`'
+            )
 
         self.model = config.ai_model
         self.name = "aws_bedrock"
