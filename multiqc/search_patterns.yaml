@@ -762,7 +762,9 @@ picard/sam_file_validation:
 picard/variant_calling_metrics:
   contents_re: "## METRICS CLASS.*VariantCallingDetailMetrics"
 picard/wgs_metrics:
-  contents_re: "## METRICS CLASS.*WgsMetrics"
+  - contents: "--algo WgsMetricsAlgo"
+  - contents_re: "## METRICS CLASS.*WgsMetrics"
+    shared: true
 picard/collectilluminabasecallingmetrics:
   contents: "CollectIlluminaBasecallingMetrics"
 picard/collectilluminalanemetrics:
