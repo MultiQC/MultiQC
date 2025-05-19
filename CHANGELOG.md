@@ -4,14 +4,17 @@
 
 ### Highlights
 
-MultiQC now writes out a parquet file for each run containing plot and table data and metadata.
-This outputs is useful to:
+BETA: MultiQC now writes out an Apache Parquet file `multiqc_data/BETA-multiqc.parquet`
+for each run containing plot and table data and metadata. This outputs is useful to:
 
 - Reproduce MultiQC runs without access to the original data.
 - Combine multiple MultiQC runs across different sampels or modules.
 - Populate an analytics database for e.g. time series analysis.
 
 See the full documentation on using parquet output [here](https://docs.seqera.io/multiqc/usage/downstream#multiqc-parquet-output).
+
+Note that the format is unstable may change in the following release as we are still exploring
+the best format for the OLAP integration.
 
 ### Feature updates and improvements
 

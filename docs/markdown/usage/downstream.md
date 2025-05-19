@@ -7,7 +7,7 @@ description: How to use MultiQC raw data outputs
 
 Whilst MultiQC is typically used as a final reporting step in an analysis, it can also be used as an intermediate in your analysis.
 
-MultiQC saves a directory of machine-readable outputs called `multiqc_data/`. In here there are files from each module and table, as well as a verbose `multiqc.log` file and, a `multiqc.parquet` file that contains all the intermediate data and metadata needed to regenereate a report.
+MultiQC saves a directory of machine-readable outputs called `multiqc_data/`. In here there are files from each module and table, as well as a verbose `multiqc.log` file and, a `BETA-multiqc.parquet` file that contains all the intermediate data and metadata needed to regenereate a report.
 
 Most of these files are tab-separated `.tsv` files by default, but you can choose to have them as JSON, YAML if you prefer with the `-k`/`--data-format` flag or the `data_format` option in a config file.
 
@@ -44,13 +44,15 @@ It's useful for anyone who wants to monitor MultiQC statistics (eg. clinical lab
 
 ChronQC is a quality control (QC) tracking system for clinical implementation of next-generation sequencing (NGS). ChronQC generates time series plots for various QC metrics, which allows comparison of the current run to historical runs. ChronQC has multiple features for tracking QC data including Westgard rules for clinical validity, laboratory-defined thresholds, and historical observations within a specified period. Users can record their notes and corrective actions directly onto the plots for long-term recordkeeping.
 
-## MultiQC Parquet Output
+## MultiQC Parquet Output (BETA)
 
-Starting from version 1.29, MultiQC writes out all plot and table data in a standardized Apache Parquet file format (`multiqc.parquet`) in the `multiqc_data` directory. This feature provides several significant benefits:
+Starting from version 1.29, MultiQC writes out all plot and table data in a standardized Apache Parquet file format (`BETA-multiqc.parquet`) in the `multiqc_data` directory. This feature provides several significant benefits:
 
 - **Persistence**: The parquet file contains all the data necessary to regenerate MultiQC reports without needing access to the original analysis files
 - **Reusability**: The data is structured in a way that's optimized for cross-run analysis and data warehousing
 - **Interoperability**: Parquet is a widely supported columnar format that can be used with various data analysis tools and platforms
+
+Note that the format is unstable as of 1.29 may change in 1.30, where it will be renamed to `multiqc.parquet`
 
 ### Parquet Format Options
 
@@ -74,7 +76,7 @@ multiqc --parquet-format long /path/to/analysis/
 
 ### Parquet File Structure
 
-The `multiqc.parquet` file contains several different types of rows that can be distinguished by the `type` column:
+The `BETA-multiqc.parquet` file contains several different types of rows that can be distinguished by the `type` column:
 
 1. **`run_metadata`**: Contains metadata about the MultiQC run, including:
 
@@ -131,7 +133,7 @@ To explore the structure programmatically:
 import polars as pl
 
 # Load the parquet file
-df = pl.read_parquet("multiqc_data/multiqc.parquet")
+df = pl.read_parquet("multiqc_data/BETA-multiqc.parquet")
 
 # Get unique row types
 print(df.select("type").unique())
@@ -165,7 +167,7 @@ Developers can use these relationships to reconstruct the full structure of the 
 One of the key benefits of the parquet output is the ability to regenerate MultiQC reports without needing the original data files:
 
 ```bash
-multiqc multiqc_data/multiqc.parquet
+multiqc multiqc_data/BETA-multiqc.parquet
 ```
 
 This will load all the data from the parquet file and generate a new report.
@@ -179,7 +181,7 @@ The parquet output enables easy aggregation of data from multiple MultiQC runs:
 multiqc /path/to/analysis1/ -o run1_output
 
 # Run MultiQC on both the second set of data and the parquet from the first run
-multiqc /path/to/analysis2/ run1_output/multiqc_data/multiqc.parquet -o combined_output
+multiqc /path/to/analysis2/ run1_output/multiqc_data/BETA-multiqc.parquet -o combined_output
 ```
 
 This will generate a report containing data from both runs. You can combine any number of parquet files with new data in a single command.
@@ -192,7 +194,7 @@ For programmatic access to MultiQC data, you can use the Python API to load parq
 import multiqc
 
 # Load data from a parquet file
-multiqc.parse_logs('multiqc_data/multiqc.parquet')
+multiqc.parse_logs('multiqc_data/BETA-multiqc.parquet')
 
 # List loaded modules and access data
 modules = multiqc.list_modules()
@@ -209,7 +211,7 @@ import polars as pl
 from pyiceberg.catalog import load_catalog
 
 # Load the MultiQC parquet file
-multiqc_df = pl.read_parquet("multiqc_data/multiqc.parquet")
+multiqc_df = pl.read_parquet("multiqc_data/BETA-multiqc.parquet")
 
 # Configure and load Iceberg catalog
 catalog = load_catalog(

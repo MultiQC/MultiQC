@@ -30,7 +30,7 @@ def test_rerun_parquet(data_dir, tmp_path):
     # Run 2: Run on the intermediate data from run1
     run_b_dir = tmp_path / "run_b"
     run_b_dir.mkdir()
-    multiqc.run(run_a_dir / "multiqc_data" / "multiqc.parquet", cfg=ClConfig(output_dir=run_b_dir, strict=True))
+    multiqc.run(run_a_dir / "multiqc_data" / "BETA-multiqc.parquet", cfg=ClConfig(output_dir=run_b_dir, strict=True))
 
     # Compare reports
     with open(run_b_dir / "multiqc_data" / "multiqc_data.json") as f:
@@ -64,7 +64,7 @@ def test_rerun_and_combine(data_dir, tmp_path):
     run_combined_dir = tmp_path / "run_combined"
     multiqc.run(
         data_dir / "modules/fastp/SAMPLE.json",
-        run_a_dir / "multiqc_data" / "multiqc.parquet",
+        run_a_dir / "multiqc_data" / "BETA-multiqc.parquet",
         cfg=ClConfig(output_dir=run_combined_dir, strict=True),
     )
 
