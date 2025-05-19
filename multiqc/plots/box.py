@@ -3,15 +3,12 @@
 import copy
 import json
 import logging
-from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 
-import pandas as pd
 import plotly.graph_objects as go  # type: ignore
+import polars as pl
 
-from multiqc import config, report
-from multiqc.core.plot_data_store import save_plot_data
+from multiqc import report
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
@@ -140,13 +137,13 @@ class BoxPlotInputData(NormalizedPlotInputData):
     def is_empty(self) -> bool:
         return len(self.list_of_data_by_sample) == 0 or all(len(ds) == 0 for ds in self.list_of_data_by_sample)
 
-    def to_df(self) -> pd.DataFrame:
+    def to_df(self) -> pl.DataFrame:
         """
         Save plot data to a parquet file using a tabular representation that's
         optimized for cross-run analysis.
         """
         if self.is_empty():
-            return pd.DataFrame()
+            return pl.DataFrame()
 
         records = []
 
@@ -158,10 +155,8 @@ class BoxPlotInputData(NormalizedPlotInputData):
                     record = {
                         "anchor": self.anchor,
                         "dataset_idx": ds_idx,
-                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx])
-                        if self.pconfig.data_labels
-                        else None,
-                        "sample_name": str(sample_name),
+                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx]) if self.pconfig.data_labels else "",
+                        "sample": str(sample_name),
                         "value_idx": value_idx,
                         "value": value,
                     }
@@ -176,16 +171,15 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
                     records.append(record)
 
-        df = pd.DataFrame(records)
-        self.finalize_df(df)
-        return df
+        df = pl.DataFrame(records, schema_overrides={"data_label": pl.Utf8})
+        return self.finalize_df(df)
 
     @classmethod
-    def from_df(cls, df: pd.DataFrame, pconfig: Union[Dict, BoxPlotConfig], anchor: Anchor) -> "BoxPlotInputData":
+    def from_df(cls, df: pl.DataFrame, pconfig: Union[Dict, BoxPlotConfig], anchor: Anchor) -> "BoxPlotInputData":
         """
         Load plot data from a DataFrame.
         """
-        if df.empty:
+        if df.is_empty():
             pconf = (
                 pconfig
                 if isinstance(pconfig, BoxPlotConfig)
@@ -204,29 +198,32 @@ class BoxPlotInputData(NormalizedPlotInputData):
         list_of_data_by_sample: List[Dict[str, BoxT]] = []
         data_labels = []
 
-        max_dataset_idx = df["dataset_idx"].max() if not df.empty else 0
+        max_dataset_idx = df.select(pl.col("dataset_idx").max()).item() if not df.is_empty() else 0
         for ds_idx in range(int(max_dataset_idx) + 1):
-            ds_group = df[df["dataset_idx"] == ds_idx] if not df.empty else pd.DataFrame()
-            data_label = ds_group["data_label"].iloc[0]
+            ds_group = df.filter(pl.col("dataset_idx") == ds_idx) if not df.is_empty() else pl.DataFrame()
+
+            data_label = ds_group.select("data_label").item(0) if not ds_group.is_empty() else None
             data_labels.append(json.loads(data_label) if data_label else {})
 
             # Process each sample in this dataset
             dataset = {}
 
-            unique_samples = ds_group["sample_name"].unique()
+            unique_samples: pl.Series = (
+                ds_group.select("sample").unique().to_series() if not ds_group.is_empty() else pl.Series([])
+            )
             # Group by sample_name within each dataset
             for sample_name in unique_samples:
                 # Get data for this sample
-                sample_group = ds_group[ds_group["sample_name"] == sample_name]
+                sample_group = ds_group.filter(pl.col("sample") == sample_name)
 
                 # Collect all values for this sample
                 sample_values = []
 
                 # Sort by value_idx if available
                 if "value_idx" in sample_group.columns:
-                    sample_group = sample_group.sort_values("value_idx")
+                    sample_group = sample_group.sort("value_idx")
 
-                for _, row in sample_group.iterrows():
+                for row in sample_group.iter_rows(named=True):
                     value = row["value"]
                     sample_values.append(value)
 
@@ -253,27 +250,26 @@ class BoxPlotInputData(NormalizedPlotInputData):
         """
         # Create dataframe for new data
         new_df = new_data.to_df()
-        if new_df.empty:
+        if new_df.is_empty():
             return old_data
 
         old_df = old_data.to_df()
 
         # If we have both old and new data, merge them
         merged_df = new_df
-        if old_df is not None and not old_df.empty:
+        if old_df is not None and not old_df.is_empty():
             # Combine the dataframes, keeping all rows
-            merged_df = pd.concat([old_df, new_df], ignore_index=True)
+            merged_df = pl.concat([old_df, new_df], how="diagonal")
 
             # For duplicates (same sample, dataset, value_idx), keep the latest version
             # Sort by timestamp (newest last)
-            merged_df.sort_values("creation_date", inplace=True)
+            merged_df = merged_df.sort("creation_date")
 
             # Group by the key identifiers and keep the last entry (newest)
-            dedupe_columns = ["dataset_idx", "sample_name", "value_idx"]
-            merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
-
-        # Save the merged data for future reference
-        save_plot_data(new_data.anchor, merged_df)
+            dedupe_columns = ["dataset_idx", "sample", "value_idx"]
+            merged_df = (
+                merged_df.group_by(dedupe_columns).agg(pl.all().exclude(dedupe_columns).last()).sort("creation_date")
+            )
 
         # Create a new BoxPlotInputData from the merged DataFrame
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
@@ -370,7 +366,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             pconfig=inputs.pconfig,
             anchor=inputs.anchor,
         )
-        inputs.save()
+        inputs.save_to_parquet()
         return plot
 
 

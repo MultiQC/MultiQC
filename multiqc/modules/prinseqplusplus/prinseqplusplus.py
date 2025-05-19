@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parsing Logs."""
         s_name = f["s_name"]
         if self.prinseqplusplus_data.get(s_name) is not None:
-            log.warn(f"Duplicate sample name found! Overwriting: {s_name}")
+            log.warning(f"Duplicate sample name found! Overwriting: {s_name}")
 
         self.prinseqplusplus_data[s_name] = {}
         self.add_data_source(f, s_name=s_name)

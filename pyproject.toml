@@ -30,7 +30,7 @@ dependencies = [
     "natsort",
     "tiktoken",
     "jsonschema",
-    "pandas",             # for parquet support
+    "polars",             # for parquet support
     "pyarrow",            # for parquet support
 ]
 requires-python = ">=3.8"

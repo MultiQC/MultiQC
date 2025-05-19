@@ -7,10 +7,10 @@ import multiprocessing
 import platform
 import random
 import re
-import subprocess
+from pathlib import Path
 from datetime import datetime
 from functools import lru_cache
-from pathlib import Path
+import subprocess
 from typing import (
     Any,
     Dict,
@@ -18,6 +18,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Set,
     Tuple,
     Type,
     TypeVar,
@@ -25,8 +26,8 @@ from typing import (
     cast,
 )
 
-import pandas as pd
 import plotly.graph_objects as go  # type: ignore
+import polars as pl
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from multiqc import config, report
@@ -34,7 +35,7 @@ from multiqc.core import plot_data_store, tmp_dir
 from multiqc.core.log_and_rich import init_log, iterate_using_progress_bar
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.utils import check_plotly_version
-from multiqc.types import Anchor, PlotType, SampleName
+from multiqc.types import Anchor, ColumnKey, PlotType, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
@@ -173,11 +174,11 @@ class PConfig(ValidatedConfig):
             return cls(path_in_cfg=(), **pconfig)
 
     @classmethod
-    def from_df(cls, df: pd.DataFrame):
+    def from_df(cls, df: pl.DataFrame):
         """
         Extract pconfig from dataframe and populate pconfig.data_labels
         """
-        d = json.loads(df["pconfig"].iloc[0])
+        d = json.loads(df.select("pconfig").row(0)[0])
         return cls(path_in_cfg=(), **d)
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
@@ -324,28 +325,21 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """Return True if this plot has no data"""
         raise NotImplementedError("Subclasses must implement is_empty()")
 
-    def to_df(self) -> pd.DataFrame:
+    def to_df(self) -> pl.DataFrame:
         """
         Used to merge plots across runs.
         """
         raise NotImplementedError("Subclasses must implement to_df()")
 
-    def to_wide_df(self) -> pd.DataFrame:
+    def to_wide_df(self) -> Tuple[pl.DataFrame, Set[ColumnKey]]:
         """
         Used to save data to parquet files.
         """
-        return pd.DataFrame()
-
-    # def extract_data_label(self, ds_idx: int) -> Optional[Union[str, Dict[str, Any]]]:
-    #     # Get dataset label if available - used only to merge plots across runs
-    #     if self.pconfig.data_labels and ds_idx < len(self.pconfig.data_labels):
-    #         return self.datasets[ds_idx].dconfig
-    #     else:
-    #         return None
+        return pl.DataFrame(), set()
 
     @classmethod
     def from_df(
-        cls: Type[NormalizedPlotInputDataT], df: pd.DataFrame, pconfig: Union[Dict, PConfigT], anchor: Anchor
+        cls: Type[NormalizedPlotInputDataT], df: pl.DataFrame, pconfig: Union[Dict, PConfigT], anchor: Anchor
     ) -> NormalizedPlotInputDataT:
         """
         Abstract method to parse a dataframe (i.e. stored in parquet files)
@@ -353,38 +347,20 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         raise NotImplementedError("Subclasses must implement from_df()")
 
-    # @classmethod
-    # def data_labels_from_df(cls, df: pd.DataFrame, pconfig: PConfigT) -> None:
-    #     """
-    #     Extract dataset labels from dataframe and populate pconfig.data_labels
-    #     """
-    #     if "dataset_label" in df.columns:
-    #         data_labels: List[Union[str, Dict[str, Any]]] = []
-    #         for ds_idx in sorted(df["dataset_idx"].unique()):
-    #             ds_rows = df[df["dataset_idx"] == ds_idx]
-    #             if not ds_rows.empty:
-    #                 # Get the first dataset_label for this dataset index
-    #                 label = ds_rows["dataset_label"].iloc[0]
-    #                 if label:
-    #                     data_labels.append({"name": label})
-
-    #         # Only set data_labels if we have valid labels
-    #         pconfig.data_labels = data_labels
-
     @classmethod
-    def creation_date_from_df(cls, df: pd.DataFrame) -> datetime:
+    def creation_date_from_df(cls, df: pl.DataFrame) -> datetime:
         """
         Extract creation date from dataframe.
         """
-        assert not df.empty
-        return df["creation_date"].iloc[0]
+        assert not df.is_empty()
+        return df.select("creation_date").row(0)[0]
 
     @classmethod
-    def df_is_empty(cls, df: pd.DataFrame) -> bool:
+    def df_is_empty(cls, df: pl.DataFrame) -> bool:
         """
         Check if dataframe only contains metadata.
         """
-        return df.empty
+        return df.is_empty()
 
     @classmethod
     def load(cls, anchor: Anchor) -> Optional["NormalizedPlotInputData"]:
@@ -418,19 +394,20 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
         return merged_data
 
-    def finalize_df(self, df: pd.DataFrame) -> pd.DataFrame:
+    def finalize_df(self, df: pl.DataFrame) -> pl.DataFrame:
         """
         Finalize the dataframe before saving. Add common plot metadata.
         """
         # There facilitate merging with other dataframes
-        df["anchor"] = str(self.anchor)
-        df["creation_date"] = self.creation_date
-        df["type"] = "plot_input_row" if "type" not in df.columns else df["type"]
-        df["plot_type"] = str(self.plot_type.value)
-        df["pconfig"] = self.pconfig.model_dump_json(exclude_none=True)
-        return df
+        return df.with_columns(
+            pl.lit(str(self.anchor)).alias("anchor"),
+            pl.lit(self.creation_date).alias("creation_date"),
+            pl.lit("plot_input_row").alias("type"),
+            pl.lit(str(self.plot_type.value)).alias("plot_type"),
+            pl.lit(self.pconfig.model_dump_json(exclude_none=True)).alias("pconfig"),
+        )
 
-    def save(self) -> None:
+    def save_to_parquet(self) -> None:
         """
         Save the plot data to a parquet file.
 
@@ -454,7 +431,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
 
             return json.dumps(replace_nan_with_marker(obj))
 
-        df = pd.DataFrame(
+        df = pl.DataFrame(
             {
                 "anchor": [str(self.anchor)],
                 "type": ["plot_input"],
@@ -463,10 +440,19 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
                 "plot_input_data": [nan_safe_dumps(self.model_dump(mode="json", exclude_none=True))],
             }
         )
-        wide_df = self.to_wide_df()
-        if not wide_df.empty:
-            df = pd.concat([df, wide_df])
-        plot_data_store.save_plot_data(self.anchor, df)
+        plot_data_store.append_to_parquet(df)
+
+        # Save table data
+        if self.plot_type == PlotType.VIOLIN:
+            if config.parquet_format == "wide":
+                metric_col_names: Set[ColumnKey]
+                wide_df, metric_col_names = self.to_wide_df()
+                if not wide_df.is_empty():
+                    plot_data_store.wide_table_to_parquet(wide_df, metric_col_names)
+            else:
+                df = self.to_df()
+                if not df.is_empty():
+                    plot_data_store.append_to_parquet(df)
 
     @classmethod
     def merge(
