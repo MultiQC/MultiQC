@@ -2,12 +2,16 @@
 
 ## [MultiQC v1.29](https://github.com/MultiQC/MultiQC/releases/tag/v1.29) - 2025-05-16
 
-This version writes out a parquet file for each run containing plot and table data and metadata.
-This is useful to:
+### Highlights
 
-- reproduce MultiQC runs without access to the original data
-- combine multiple MultiQC runs
-- populate an analytics database for e.g. time series analysis
+MultiQC now writes out a parquet file for each run containing plot and table data and metadata.
+This outputs is useful to:
+
+- Reproduce MultiQC runs without access to the original data.
+- Combine multiple MultiQC runs across different sampels or modules.
+- Populate an analytics database for e.g. time series analysis.
+
+See the full documentation on using parquet output [here](https://docs.seqera.io/multiqc/usage/downstream#multiqc-parquet-output).
 
 ### Feature updates and improvements
 
