@@ -25,13 +25,6 @@ _saved_anchors: Set[Anchor] = set()
 # Keep track of metric column names
 _metric_col_names: Set[ColumnKey] = set()
 
-# Metadata keys
-META_MODULES = "modules"
-META_DATA_SOURCES = "data_sources"
-META_CREATION_DATE = "creation_date"
-META_CONFIG = "config"
-META_MULTIQC_VERSION = "multiqc_version"
-
 
 def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKey]) -> None:
     """
@@ -44,7 +37,7 @@ def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKe
     The resulting table must have single row per sample.
     """
     # Fix creation date
-    # table_df = _fix_creation_date(table_df)
+    table_df = _fix_creation_date(table_df)
 
     existing_df = _read_or_create_df()
 
@@ -73,13 +66,7 @@ def _fix_creation_date(df: pl.DataFrame) -> pl.DataFrame:
     Fix for Iceberg. Iceberg never keeps an arbitrary zone offset in the data –
     a value that has a zone is normalised to UTC, and the zone itself is discarded.
     """
-    return df.with_columns(
-        pl.col("creation_date")
-        .str.to_datetime(time_unit="us", time_zone="UTC")
-        .dt.truncate("microseconds")
-        .dt.replace_time_zone(None)
-        .cast(pl.Datetime(time_unit="us"))
-    )
+    return df.with_columns(pl.col("creation_date").dt.replace_time_zone(None))
 
 
 def append_to_parquet(df: pl.DataFrame) -> None:
@@ -88,9 +75,8 @@ def append_to_parquet(df: pl.DataFrame) -> None:
 
     This function adds/updates data for a specific plot in the file.
     """
-    # df = _fix_creation_date(df)
+    df = _fix_creation_date(df)
     existing_df = _read_or_create_df()
-
     df = pl.concat([existing_df, df], how="diagonal")
     _write_parquet(df)
 
@@ -255,7 +241,7 @@ def _read_or_create_df() -> pl.DataFrame:
         schema_overrides={
             "anchor": pl.Utf8,
             "type": pl.Utf8,
-            "creation_date": pl.Datetime(time_unit="us", time_zone="UTC"),
+            "creation_date": pl.Datetime(time_unit="us"),
             "plot_type": pl.Utf8,
             "plot_input_data": pl.Utf8,
             "sample": pl.Utf8,
