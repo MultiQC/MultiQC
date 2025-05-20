@@ -52,27 +52,9 @@ Starting from version 1.29, MultiQC writes out all plot and table data in a stan
 - **Reusability**: The data is structured in a way that's optimized for cross-run analysis and data warehousing
 - **Interoperability**: Parquet is a widely supported columnar format that can be used with various data analysis tools and platforms
 
-Note that the format is unstable as of 1.29 may change in 1.30, where it will be renamed to `multiqc.parquet`
-
-### Parquet Format Options
-
-MultiQC offers two format options for the parquet output:
-
-1. **Long format** (default): Data is stored with columns 'sample_name', 'metric_name', 'val_raw', 'val_raw_type', and 'val_str'. This format is very flexible and ensures all data types can be preserved.
-
-2. **Wide format**: Data is stored with each metric as a separate column, prefixed with the table name and optional namespace. While more intuitive for analytics, it may hit limits on the maximum number of columns in certain edge cases, and can have issues with mixed types (since Parquet requires columns to have consistent types).
-
-You can configure the format in your MultiQC configuration file:
-
-```yaml
-parquet_format: "long" # or "wide"
-```
-
-Or via command line:
-
-```bash
-multiqc --parquet-format long /path/to/analysis/
-```
+:::note
+Note that the format is unstable as of 1.29 may change in 1.30, where it will be finally renamed to `multiqc.parquet`.
+:::
 
 ### Parquet File Structure
 
@@ -96,7 +78,7 @@ The `BETA-multiqc.parquet` file contains several different types of rows that ca
    - `sample_name`: Name of the sample
    - `metric_name`: Name of the metric
    - `val_raw`: Raw value of the metric (numeric)
-   - `val_raw_type`: Type of the raw value (e.g., "int", "float")
+   - `val_raw_type`: Type of the raw value (e.g., "int", "float", "bool")
    - `val_str`: String representation of the value
    - `metric_col_name`: Column name in the source table
    - `module`: Name of the module that generated this data
@@ -112,7 +94,7 @@ The schema is dynamically created based on the data, but here's a representative
 {
     "anchor": pl.Utf8,
     "type": pl.Utf8,
-    "creation_date": pl.Datetime(time_unit="us", time_zone="UTC"),
+    "creation_date": pl.Datetime(time_unit="us"),  # no timezone specifier, but assumed UTC (for compatibility with Iceberg)
     "plot_type": pl.Utf8,
     "plot_input_data": pl.Utf8,
     "sample_name": pl.Utf8,
@@ -230,3 +212,17 @@ table.append(multiqc_df.to_arrow())
 ```
 
 This approach enables more sophisticated analysis workflows, better reproducibility, and easier collaboration across teams - all while maintaining the comprehensive and intuitive reporting that MultiQC is known for.
+
+### Parquet Format Options
+
+Currently MultiQC offers two format options for the parquet output, but we might settle with only one format in the future.
+
+1. **Long format** (default): Data is stored with columns 'sample_name', 'metric_name', 'val_raw', 'val_raw_type', and 'val_str'. This format is very flexible and ensures all data types can be preserved.
+
+2. **Wide format**: Data is stored with each metric as a separate column, prefixed with the table name and optional namespace. While more intuitive for analytics, it may hit limits on the maximum number of columns in certain edge cases, and can have issues with mixed types (since Parquet requires columns to have consistent types).
+
+You can configure the format in your MultiQC configuration file:
+
+```yaml
+parquet_format: "long" # or "wide"
+```
