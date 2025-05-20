@@ -79,9 +79,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             "section_order": section_order,  # Store original index for ordering
                             "sample": str(sample_name),
                             "metric": str(metric_name),
-                            "val_raw": str(cell.raw),
+                            "val_raw": float(cell.raw) if isinstance(cell.raw, (int, float)) else float("nan"),
                             "val_raw_type": type(cell.raw).__name__,  # Store type name
-                            "val_mod": str(cell.mod),
+                            "val_mod": float(cell.mod) if isinstance(cell.mod, (int, float)) else float("nan"),
                             "val_mod_type": type(cell.mod).__name__,  # Store type name
                             "val_fmt": str(cell.fmt),
                             # Store column metadata as JSON. Note that "format" and "modify" lambda won't be stored,
@@ -234,8 +234,18 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     metric_name = row["metric"]
 
                     # Convert string values back to their original types
-                    val_raw = parse_value(row["val_raw"], row["val_raw_type"])
-                    val_mod = parse_value(row["val_mod"], row["val_mod_type"])
+                    val_raw: float = row["val_raw"]
+                    if not math.isnan(val_raw):
+                        if row["val_raw_type"] == "int":
+                            val_raw = int(val_raw)
+                        elif row["val_raw_type"] == "bool":
+                            val_raw = bool(val_raw)
+                    val_mod: float = row["val_mod"]
+                    if not math.isnan(val_mod):
+                        if row["val_mod_type"] == "int":
+                            val_mod = int(val_mod)
+                        elif row["val_mod_type"] == "bool":
+                            val_mod = bool(val_mod)
                     val_by_metric[ColumnKey(str(metric_name))] = Cell(
                         raw=val_raw,
                         mod=val_mod,
