@@ -119,7 +119,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     # Initialize sample record if not seen before
                     if str(sample_name) not in samples_data:
                         samples_data[str(sample_name)] = {
-                            "anchor": str(self.dt.anchor),
+                            "anchor": "",  # column is prefixed with table anchor instead
                             "type": "table_row",
                             "creation_date": self.creation_date,
                             "plot_type": None,
