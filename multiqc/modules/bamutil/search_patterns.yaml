@@ -1,3 +1,0 @@
-bamutil_clipoverlap:
-    fn: "*.clipoverlap.log"
-    contents: "Overlap Statistics"|"Number of overlapping pairs"
