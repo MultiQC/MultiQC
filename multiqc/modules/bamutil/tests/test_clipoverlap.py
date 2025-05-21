@@ -47,9 +47,24 @@ def test_parse_logs(monkeypatch):
 
     def fake_find_log_files(self, pattern, filehandles=False):
         return [
-            {"s_name": "sample1", "f": DummyFile(bamutil_stderr1.splitlines())},
-            {"s_name": "sample2", "f": DummyFile(bamutil_stderr2.splitlines())},
-            {"s_name": "sample3", "f": DummyFile(bamutil_stderr3.splitlines())},
+            {
+                "s_name": "sample1",
+                "f": DummyFile(bamutil_stderr1.splitlines()),
+                "root": "/fake/path",
+                "fn": "sample1.log",
+            },
+            {
+                "s_name": "sample2",
+                "f": DummyFile(bamutil_stderr2.splitlines()),
+                "root": "/fake/path",
+                "fn": "sample2.log",
+            },
+            {
+                "s_name": "sample3",
+                "f": DummyFile(bamutil_stderr3.splitlines()),
+                "root": "/fake/path",
+                "fn": "sample3.log",
+            },
         ]
 
     monkeypatch.setattr(clipoverlap.MultiqcModule, "find_log_files", fake_find_log_files)
