@@ -47,14 +47,8 @@ def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKe
     global _metric_col_names
     _metric_col_names.update(metric_col_names)
 
-    non_metric_cols = [c for c in existing_table_rows.columns if c not in _metric_col_names]
-
     # Merge on sample_name, preserving all columns from both dataframes
-    new_df = existing_table_rows.join(
-        table_df,
-        on=non_metric_cols,
-        how="outer",
-    )
+    new_df = pl.concat([existing_table_rows, table_df], how="diagonal")
 
     existing_other_rows_df = existing_df.filter(pl.col("type") != "table_row")
     new_df = pl.concat([existing_other_rows_df, new_df], how="diagonal")

@@ -119,7 +119,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     # Initialize sample record if not seen before
                     if str(sample_name) not in samples_data:
                         samples_data[str(sample_name)] = {
-                            "anchor": None,
+                            "anchor": str(self.dt.anchor),
                             "type": "table_row",
                             "creation_date": self.creation_date,
                             "plot_type": None,
@@ -160,7 +160,17 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         wide_records = list(samples_data.values())
 
         # Create the wide format DataFrame
-        df = pl.DataFrame(wide_records)
+        df = pl.DataFrame(
+            wide_records,
+            schema_overrides={
+                "anchor": pl.Utf8,
+                "type": pl.Utf8,
+                "creation_date": pl.Datetime(time_unit="us"),
+                "plot_type": pl.Utf8,
+                "plot_input_data": pl.Utf8,
+                "sample": pl.Utf8,
+            },
+        )
         return df, metric_col_names
 
     @classmethod
