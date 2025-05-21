@@ -150,7 +150,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             metric_col_name = ColumnKey(f"{dt_column.namespace} / {metric_name}")
                         elif len(self.dt.section_by_id) > 1:
                             metric_col_name = ColumnKey(f"{section_key} / {metric_name}")
-                        metric_col_name = ColumnKey(f"{self.dt.id} / {metric_col_name}")
+                        metric_col_name = ColumnKey(f"{self.dt.id} / {metric_col_name}".lower())
 
                         # Add metric to the sample's data
                         samples_data[str(sample_name)][metric_col_name] = float_val

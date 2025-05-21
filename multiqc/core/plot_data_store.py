@@ -47,7 +47,8 @@ def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKe
     # Merge existing and new tables, keeping one row per sample (defined by join_cols)
     if existing_table_rows.height > 0 and table_df.height > 0:
         new_df = existing_table_rows.join(table_df, on=["sample", "creation_date"], how="outer")
-        new_df = new_df.select(existing_table_rows.columns)
+        all_cols = existing_table_rows.columns + [c for c in table_df.columns if c not in existing_table_rows.columns]
+        new_df = new_df.select(all_cols)
     else:
         # If one of the dataframes is empty, just use diagonal concat
         new_df = pl.concat([existing_table_rows, table_df], how="diagonal")
