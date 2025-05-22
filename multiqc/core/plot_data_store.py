@@ -25,13 +25,6 @@ _saved_anchors: Set[Anchor] = set()
 # Keep track of metric column names
 _metric_col_names: Set[ColumnKey] = set()
 
-# Metadata keys
-META_MODULES = "modules"
-META_DATA_SOURCES = "data_sources"
-META_CREATION_DATE = "creation_date"
-META_CONFIG = "config"
-META_MULTIQC_VERSION = "multiqc_version"
-
 
 def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKey]) -> None:
     """
@@ -44,42 +37,33 @@ def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKe
     The resulting table must have single row per sample.
     """
     # Fix creation date
-    # table_df = _fix_creation_date(table_df)
+    table_df = fix_creation_date(table_df)
 
     existing_df = _read_or_create_df()
 
     # Get all rows that are table_row
     existing_table_rows = existing_df.filter(pl.col("type") == "table_row")
 
-    global _metric_col_names
-    _metric_col_names.update(metric_col_names)
-
-    non_metric_cols = [c for c in existing_table_rows.columns if c not in _metric_col_names]
-
-    # Merge on sample_name, preserving all columns from both dataframes
-    new_df = existing_table_rows.join(
-        table_df,
-        on=non_metric_cols,
-        how="outer",
-    )
+    # Merge existing and new tables, keeping one row per sample (defined by join_cols)
+    if existing_table_rows.height > 0 and table_df.height > 0:
+        new_df = existing_table_rows.join(table_df, on=["sample", "creation_date"], how="outer")
+        all_cols = existing_table_rows.columns + [c for c in table_df.columns if c not in existing_table_rows.columns]
+        new_df = new_df.select(all_cols)
+    else:
+        # If one of the dataframes is empty, just use diagonal concat
+        new_df = pl.concat([existing_table_rows, table_df], how="diagonal")
 
     existing_other_rows_df = existing_df.filter(pl.col("type") != "table_row")
     new_df = pl.concat([existing_other_rows_df, new_df], how="diagonal")
     _write_parquet(new_df)
 
 
-def _fix_creation_date(df: pl.DataFrame) -> pl.DataFrame:
+def fix_creation_date(df: pl.DataFrame) -> pl.DataFrame:
     """
     Fix for Iceberg. Iceberg never keeps an arbitrary zone offset in the data –
     a value that has a zone is normalised to UTC, and the zone itself is discarded.
     """
-    return df.with_columns(
-        pl.col("creation_date")
-        .str.to_datetime(time_unit="us", time_zone="UTC")
-        .dt.truncate("microseconds")
-        .dt.replace_time_zone(None)
-        .cast(pl.Datetime(time_unit="us"))
-    )
+    return df.with_columns(pl.col("creation_date").dt.replace_time_zone(None))
 
 
 def append_to_parquet(df: pl.DataFrame) -> None:
@@ -88,9 +72,8 @@ def append_to_parquet(df: pl.DataFrame) -> None:
 
     This function adds/updates data for a specific plot in the file.
     """
-    # df = _fix_creation_date(df)
+    df = fix_creation_date(df)
     existing_df = _read_or_create_df()
-
     df = pl.concat([existing_df, df], how="diagonal")
     _write_parquet(df)
 
@@ -255,7 +238,7 @@ def _read_or_create_df() -> pl.DataFrame:
         schema_overrides={
             "anchor": pl.Utf8,
             "type": pl.Utf8,
-            "creation_date": pl.Datetime(time_unit="us", time_zone="UTC"),
+            "creation_date": pl.Datetime(time_unit="us"),
             "plot_type": pl.Utf8,
             "plot_input_data": pl.Utf8,
             "sample": pl.Utf8,

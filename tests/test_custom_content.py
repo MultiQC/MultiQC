@@ -420,9 +420,9 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
         "GENE": {"myfile.fasta": "GENE"},
     }
     if section_name:
-        assert plot.layout.title.text == section_name
+        assert plot.layout.title.text == section_name  # type: ignore[attr-defined]
     else:
-        assert plot.layout.title.text == id.title()
+        assert plot.layout.title.text == id.title()  # type: ignore[attr-defined]
 
 
 def test_heatmap_with_numerical_cats(tmp_path):
@@ -741,3 +741,84 @@ def test_ai_export_rounding(tmp_path):
     # assert that file contains |0.3802|
     with summary_path.open() as f:
         assert "|0.3802|" in f.read()
+
+
+def test_markdown_custom_content(tmp_path, monkeypatch):
+    """Test that markdown files are parsed and rendered as HTML custom content."""
+    import os
+
+    # Prepare markdown file with _mqc.md extension
+    md_file = tmp_path / "readme_mqc.md"
+    md_file.write_text(
+        """\
+# My *Markdown* Section
+
+This is **bold** text rendered from markdown.
+"""
+    )
+
+    # Ensure working directory is the temp path
+    os.chdir(tmp_path)
+
+    # Reset and prepare report search input
+    report.analysis_files = [md_file]
+    report.search_files(["custom_content"])
+
+    modules = custom_module_classes()
+
+    # Markdown produces no Plot objects – plot_by_id should remain empty
+    assert len(report.plot_by_id) == 0
+
+    # Verify that at least one section contains rendered HTML from markdown
+    rendered_html_found = False
+    for m in modules:
+        for s in m.sections:
+            if "<strong>bold</strong>" in s.content or "<b>bold</b>" in s.content:
+                rendered_html_found = True
+                break
+        if rendered_html_found:
+            break
+
+    assert rendered_html_found, "Rendered markdown content not found in any custom-content section"
+
+
+def test_markdown_front_matter_config(tmp_path):
+    """Markdown file with YAML front-matter should set section_name and id."""
+    import os
+
+    md_file = tmp_path / "front_matter_mqc.md"
+    md_file.write_text(
+        """\
+---
+section_name: "My Markdown Section"
+id: "my_md_section"
+---
+
+# Heading
+
+Some text.
+"""
+    )
+
+    os.chdir(tmp_path)
+
+    report.analysis_files = [md_file]
+    report.search_files(["custom_content"])
+
+    modules = custom_module_classes()
+
+    # Find module with anchor "my_md_section"
+    target_anchor = Anchor("my_md_section")
+    target_module = next((m for m in modules if m.anchor == target_anchor), None)
+    assert target_module is not None, "Module with front-matter id not found"
+    assert target_module.name == "My Markdown Section"
+
+    # Validate section IDs and anchors
+    assert len(target_module.sections) == 1
+    section = target_module.sections[0]
+    # Section anchor is adjusted to avoid collision with module anchor
+    assert str(section.anchor) == "my_md_section-section"
+    assert section.id == "my_md_section"
+
+    # Ensure markdown converted to HTML
+    assert "<h1>Heading</h1>" in section.content or "<h1>Heading" in section.content
