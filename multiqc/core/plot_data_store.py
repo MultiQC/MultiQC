@@ -37,7 +37,7 @@ def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKe
     The resulting table must have single row per sample.
     """
     # Fix creation date
-    table_df = _fix_creation_date(table_df)
+    table_df = fix_creation_date(table_df)
 
     existing_df = _read_or_create_df()
 
@@ -58,7 +58,7 @@ def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKe
     _write_parquet(new_df)
 
 
-def _fix_creation_date(df: pl.DataFrame) -> pl.DataFrame:
+def fix_creation_date(df: pl.DataFrame) -> pl.DataFrame:
     """
     Fix for Iceberg. Iceberg never keeps an arbitrary zone offset in the data –
     a value that has a zone is normalised to UTC, and the zone itself is discarded.
@@ -72,7 +72,7 @@ def append_to_parquet(df: pl.DataFrame) -> None:
 
     This function adds/updates data for a specific plot in the file.
     """
-    df = _fix_creation_date(df)
+    df = fix_creation_date(df)
     existing_df = _read_or_create_df()
     df = pl.concat([existing_df, df], how="diagonal")
     _write_parquet(df)
