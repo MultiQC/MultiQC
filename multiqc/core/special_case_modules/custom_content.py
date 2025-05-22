@@ -9,6 +9,7 @@ from collections import defaultdict
 from io import BufferedReader
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
+import markdown
 import yaml
 from natsort import natsorted
 from pydantic import BaseModel
@@ -158,6 +159,37 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             elif f_extension == ".html":
                 parsed_dict = {"id": f["s_name"], "plot_type": "html", "data": str(f["f"])}
                 parsed_dict.update(_find_html_file_header(f))
+            elif f_extension == ".md":
+                # Render Markdown content to HTML for custom content sections
+                md_raw: str = str(f["f"])
+                # Support optional YAML front-matter fenced by '---' lines
+                md_config: Dict[str, Any] = {}
+                if md_raw.lstrip().startswith("---"):
+                    # Attempt to parse front-matter
+                    front_end = md_raw.find("\n---", 3)
+                    if front_end != -1:
+                        fm_text = md_raw.lstrip()[3:front_end]
+                        try:
+                            md_config = yaml.safe_load(fm_text) or {}
+                        except Exception:
+                            md_config = {}
+                        md_raw = md_raw[front_end + 4 :]
+                html_content = markdown.markdown(md_raw)
+                parsed_dict = {
+                    "id": f["s_name"],
+                    "plot_type": "html",
+                    "section_name": f["s_name"]
+                    .rstrip(f_extension)
+                    .rstrip("_mqc")
+                    .replace("_", " ")
+                    .replace("-", " ")
+                    .replace(".", " "),
+                    "data": html_content,
+                }
+                # Merge any configuration from YAML front-matter or matching config item
+                parsed_dict.update(md_config)  # type: ignore
+                if config_custom_data_id in ccdict_by_id:
+                    parsed_dict.update(ccdict_by_id[config_custom_data_id].config)  # type: ignore
 
             if parsed_dict is not None:
                 parsed_item: Union[str, Dict, List, None] = parsed_dict.get("data", {})
