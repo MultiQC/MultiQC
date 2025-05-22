@@ -187,7 +187,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     "data": html_content,
                 }
                 # Merge any configuration from YAML front-matter or matching config item
-                parsed_dict.update(md_config)  # type: ignore[arg-type]
+                parsed_dict.update(md_config)  # type: ignore
                 if config_custom_data_id in ccdict_by_id:
                     parsed_dict.update(ccdict_by_id[config_custom_data_id].config)  # type: ignore
 
