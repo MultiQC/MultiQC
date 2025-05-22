@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## [MultiQC v1.29](https://github.com/MultiQC/MultiQC/releases/tag/v1.29) - 2025-05-16
+## [MultiQC v1.29](https://github.com/MultiQC/MultiQC/releases/tag/v1.29) - 2025-05-22
 
 ### Highlights
 

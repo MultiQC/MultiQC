@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.29"
+version = "1.30dev"
 dependencies = [
     "boto3",              # for aws bedrock ai support
     "click",
