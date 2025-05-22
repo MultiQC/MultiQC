@@ -49,7 +49,7 @@ def parquet_file() -> Path:
     """
     Returns the path to the combined parquet file that contains all plot data
     """
-    return data_tmp_dir() / "multiqc.parquet"
+    return data_tmp_dir() / "BETA-multiqc.parquet"
 
 
 def new_tmp_dir():

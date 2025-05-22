@@ -7,10 +7,10 @@ import multiprocessing
 import platform
 import random
 import re
-from pathlib import Path
+import subprocess
 from datetime import datetime
 from functools import lru_cache
-import subprocess
+from pathlib import Path
 from typing import (
     Any,
     Dict,
@@ -399,12 +399,14 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         Finalize the dataframe before saving. Add common plot metadata.
         """
         # There facilitate merging with other dataframes
-        return df.with_columns(
-            pl.lit(str(self.anchor)).alias("anchor"),
-            pl.lit(self.creation_date).alias("creation_date"),
-            pl.lit("plot_input_row").alias("type"),
-            pl.lit(str(self.plot_type.value)).alias("plot_type"),
-            pl.lit(self.pconfig.model_dump_json(exclude_none=True)).alias("pconfig"),
+        return plot_data_store.fix_creation_date(
+            df.with_columns(
+                pl.lit(str(self.anchor)).alias("anchor"),
+                pl.lit(self.creation_date).alias("creation_date"),
+                pl.lit("plot_input_row").alias("type"),
+                pl.lit(str(self.plot_type.value)).alias("plot_type"),
+                pl.lit(self.pconfig.model_dump_json(exclude_none=True)).alias("pconfig"),
+            )
         )
 
     def save_to_parquet(self) -> None:
