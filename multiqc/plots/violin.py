@@ -224,20 +224,20 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             section_headers: Dict[ColumnKey, ColumnDict] = {}
 
             # Sort metrics by their original index if available
-            if "metric_idx" in section_group.columns:
+            if "section_order" in section_group.columns:
                 # Create ordered dict of metrics for this section
-                metrics_info = section_group.select(["metric", "metric_idx"]).unique()
+                metrics_info = section_group.select(["metric", "section_order"]).unique()
                 for metric_row in metrics_info.iter_rows(named=True):
-                    ordered_metrics[metric_row["metric"]] = metric_row["metric_idx"]
+                    ordered_metrics[metric_row["metric"]] = metric_row["section_order"]
 
             # Process samples
             for sample_name in section_group.select("sample").unique().to_series():
                 sample_group = section_group.filter(pl.col("sample") == sample_name)
                 val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
 
-                # If we have metric_idx, sort by that first
-                if "metric_idx" in sample_group.columns:
-                    sample_group = sample_group.sort("metric_idx")
+                # If we have section_order, sort by that first
+                if "section_order" in sample_group.columns:
+                    sample_group = sample_group.sort("section_order")
 
                 # Process metrics/columns
                 for row in sample_group.iter_rows(named=True):
