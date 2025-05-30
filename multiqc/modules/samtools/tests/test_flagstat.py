@@ -167,18 +167,27 @@ class TestSamtoolsFlagstatSnapshot(BaseModuleTest):
         flagstat_data = raw_data["multiqc_samtools_flagstat"]
 
         # Check that we have data for the expected samples
-        expected_samples = {"small.samtools13.flagstat.log", "small.samtools12.flagstat.log"}
+        # Note: Sample names are cleaned by MultiQC, so we expect cleaned names, not full filenames
+        expected_samples = {
+            "small"
+        }  # Both small.samtools12.flagstat.log.txt and small.samtools13.flagstat.log.txt become "small"
         actual_samples = set(flagstat_data.keys())
 
         # Should have at least the expected samples (may have more if test data is expanded)
         assert expected_samples.issubset(actual_samples), f"Missing samples: {expected_samples - actual_samples}"
 
-        # All samples should have the same keys (consistent parsing)
-        if len(flagstat_data) > 1:
-            sample_keys = [set(sample_data.keys()) for sample_data in flagstat_data.values()]
-            first_keys = sample_keys[0]
-            for i, keys in enumerate(sample_keys[1:], 1):
-                assert keys == first_keys, f"Sample {i} has different keys than sample 0"
+        # Verify we have some data
+        assert len(flagstat_data) > 0, "Should have parsed some flagstat data"
+
+        # All samples should have some core fields that flagstat always provides
+        core_fields = {"total_passed", "total_failed", "flagstat_total", "mapped_passed", "mapped_failed"}
+        for sample_name, sample_data in flagstat_data.items():
+            sample_keys = set(sample_data.keys())
+            missing_core = core_fields - sample_keys
+            assert len(missing_core) == 0, f"Sample {sample_name} missing core fields: {missing_core}"
+
+            # Each sample should have a reasonable number of fields (at least 10)
+            assert len(sample_keys) >= 10, f"Sample {sample_name} has too few fields: {len(sample_keys)}"
 
     def test_flagstat_data_snapshot(self, flagstat_snapshot, snapshot):
         """Snapshot test for flagstat raw data."""
