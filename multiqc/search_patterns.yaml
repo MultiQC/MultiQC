@@ -727,6 +727,7 @@ picard/markdups:
   - contents: "--algo Dedup"
 picard/oxogmetrics:
   - contents: "# picard.analysis.CollectOxoGMetrics"
+  - contents: "# CollectOxoGMetrics"
   - contents_re: "# CollectMultipleMetrics .*OxoGMetrics"
     shared: true
 picard/pcr_metrics:
