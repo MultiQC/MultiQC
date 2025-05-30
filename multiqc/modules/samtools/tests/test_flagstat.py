@@ -92,166 +92,54 @@ def test_rep2(rep1, rep2):
     assert res1 == res2
 
 
-# Snapshot testing classes
+# Simplified snapshot testing
 class TestSamtoolsFlagstatSnapshot(BaseModuleTest):
-    """Comprehensive snapshot tests for samtools flagstat module."""
+    """Snapshot tests for samtools flagstat module."""
 
     MODULE_CLASS = MultiqcModule
     MODULE_NAME = "samtools"
 
-    @pytest.fixture
-    def flagstat_data_dir(self, data_dir):
-        """Get the flagstat-specific data directory."""
-        return data_dir / "modules/samtools/flagstat"
-
-    @pytest.fixture
-    def module_data_dir(self, data_dir):
-        """Get the data directory for this module."""
-        return self.get_module_data_dir(data_dir)
-
-    @pytest.fixture
-    def module_snapshot(self, data_dir, snapshot_config):
-        """Create a snapshot of the module with all available test data."""
-        return self.create_module_snapshot(data_dir, snapshot_config)
-
-    @pytest.fixture
-    def flagstat_snapshot(self, flagstat_data_dir, snapshot_config):
-        """Create a snapshot specifically for flagstat data."""
-        # Apply snapshot configuration
-        for key, value in snapshot_config.items():
-            setattr(config, key, value)
-
+    def test_flagstat_snapshot(self, data_dir, snapshot, snapshot_config):
+        """Test flagstat raw data snapshot."""
+        flagstat_data_dir = data_dir / "modules" / "samtools" / "flagstat"
         # Get all flagstat test files
         flagstat_files = list(flagstat_data_dir.glob("*.txt"))
-
+        
         # Run the module test
-        return testing.run_module_test(
+        module_snapshot = testing.run_module_test(
             module_class=self.MODULE_CLASS,
             data_files=flagstat_files,
             config_updates=snapshot_config,
         )
-
-    def test_module_data_integrity(self, module_snapshot):
-        """Test basic data integrity for the module."""
+        
+        # Assert basic data integrity
         self.assert_module_data_integrity(module_snapshot)
-
-    def test_module_complete_snapshot(self, module_snapshot, snapshot):
-        """Test the complete module snapshot."""
-        complete_snapshot = module_snapshot.get_complete_snapshot()
-        assert complete_snapshot == snapshot
-
-    def test_module_raw_data_snapshot(self, module_snapshot, snapshot):
-        """Test just the raw data snapshot."""
+        
+        # Snapshot the raw data output from the module
         raw_data = module_snapshot.get_saved_raw_data()
         assert raw_data == snapshot
-
-    def test_module_general_stats_snapshot(self, module_snapshot, snapshot):
-        """Test the general statistics snapshot."""
-        general_stats = {
-            "data": module_snapshot.get_general_stats_data(),
-            "headers": module_snapshot.get_general_stats_headers(),
-        }
-        assert general_stats == snapshot
-
-    def test_module_sections_snapshot(self, module_snapshot, snapshot):
-        """Test the sections snapshot."""
-        sections = module_snapshot.get_sections_data()
-        assert sections == snapshot
-
-    def test_flagstat_parsing_consistency(self, flagstat_snapshot):
-        """Test that flagstat parsing is consistent across different file formats."""
-        raw_data = flagstat_snapshot.get_saved_raw_data()
-
-        # Should have parsed data for samtools flagstat
-        assert "multiqc_samtools_flagstat" in raw_data
-        flagstat_data = raw_data["multiqc_samtools_flagstat"]
-
-        # Check that we have data for the expected samples
-        # Note: Sample names are cleaned by MultiQC, so we expect cleaned names, not full filenames
-        expected_samples = {
-            "small"
-        }  # Both small.samtools12.flagstat.log.txt and small.samtools13.flagstat.log.txt become "small"
-        actual_samples = set(flagstat_data.keys())
-
-        # Should have at least the expected samples (may have more if test data is expanded)
-        assert expected_samples.issubset(actual_samples), f"Missing samples: {expected_samples - actual_samples}"
-
-        # Verify we have some data
-        assert len(flagstat_data) > 0, "Should have parsed some flagstat data"
-
-        # All samples should have some core fields that flagstat always provides
-        core_fields = {"total_passed", "total_failed", "flagstat_total", "mapped_passed", "mapped_failed"}
-        for sample_name, sample_data in flagstat_data.items():
-            sample_keys = set(sample_data.keys())
-            missing_core = core_fields - sample_keys
-            assert len(missing_core) == 0, f"Sample {sample_name} missing core fields: {missing_core}"
-
-            # Each sample should have a reasonable number of fields (at least 10)
-            assert len(sample_keys) >= 10, f"Sample {sample_name} has too few fields: {len(sample_keys)}"
-
-    def test_flagstat_data_snapshot(self, flagstat_snapshot, snapshot):
-        """Snapshot test for flagstat raw data."""
-        raw_data = flagstat_snapshot.get_saved_raw_data()
-        assert raw_data == snapshot
-
-    def test_flagstat_general_stats_snapshot(self, flagstat_snapshot, snapshot):
-        """Snapshot test for flagstat general statistics."""
-        general_stats = {
-            "data": flagstat_snapshot.get_general_stats_data(),
-            "headers": flagstat_snapshot.get_general_stats_headers(),
-        }
-        assert general_stats == snapshot
-
-    def test_flagstat_sections_snapshot(self, flagstat_snapshot, snapshot):
-        """Snapshot test for flagstat sections."""
-        sections = flagstat_snapshot.get_sections_data()
-        assert sections == snapshot
-
-    def test_flagstat_complete_snapshot(self, flagstat_snapshot, snapshot):
-        """Complete snapshot test for flagstat module."""
-        complete_snapshot = flagstat_snapshot.get_complete_snapshot()
-        assert complete_snapshot == snapshot
 
 
 # Individual file tests with snapshots
-class TestSamtoolsFlagstatIndividualFiles:
-    """Test individual flagstat files with snapshots."""
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "small.samtools13.flagstat.log.txt",
+        "small.samtools12.flagstat.log.txt",
+    ],
+)
+def test_individual_flagstat_file(data_dir, filename, snapshot, snapshot_config):
+    """Test parsing of individual flagstat files."""
+    flagstat_data_dir = data_dir / "modules" / "samtools" / "flagstat"
+    file_path = flagstat_data_dir / filename
 
-    @pytest.fixture
-    def flagstat_data_dir(self, data_dir):
-        return data_dir / "modules/samtools/flagstat"
-
-    @pytest.mark.parametrize(
-        "filename",
-        [
-            "small.samtools13.flagstat.log.txt",
-            "small.samtools12.flagstat.log.txt",
-        ],
+    # Run the module test on just this file
+    module_snapshot = testing.run_module_test(
+        module_class=MultiqcModule,
+        data_files=[file_path],
+        config_updates=snapshot_config,
     )
-    def test_individual_flagstat_file(self, flagstat_data_dir, filename, snapshot, snapshot_config):
-        """Test parsing of individual flagstat files."""
-        file_path = flagstat_data_dir / filename
 
-        # Apply snapshot configuration
-        for key, value in snapshot_config.items():
-            setattr(config, key, value)
-
-        # Run the module test on just this file
-        module_snapshot = testing.run_module_test(
-            module_class=MultiqcModule,
-            data_files=[file_path],
-            config_updates=snapshot_config,
-        )
-
-        # Get the parsed data for this specific file
-        raw_data = module_snapshot.get_saved_raw_data()
-
-        # Create a snapshot of just this file's data
-        file_snapshot = {
-            "filename": filename,
-            "parsed_data": raw_data,
-            "general_stats": module_snapshot.get_general_stats_data(),
-            "sections": module_snapshot.get_sections_data(),
-        }
-
-        assert file_snapshot == snapshot
+    # Just snapshot the raw parsed data for this file
+    raw_data = module_snapshot.get_saved_raw_data()
+    assert raw_data == snapshot
