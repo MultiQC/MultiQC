@@ -23,7 +23,7 @@ ampliconclip_headers = {
         "description": "Total Clipped ({config.read_count_desc})",
         "shared_key": "read_count",
         "hidden": True,
-        "source_col": "TOTAL CLIPPED"
+        "source_col": "TOTAL CLIPPED",
     },
     "ampliconclip_forward_clipped": {
         "title": "Forward Clipped",
@@ -82,6 +82,7 @@ ampliconclip_headers = {
         "source_col": "WRITTEN",
     },
 }
+
 
 def parse_samtools_ampliconclip(module: BaseMultiqcModule):
     """Find Samtools ampliconclip logs and parse their data"""
@@ -186,15 +187,9 @@ def parse_single_report(file_obj):
     Take a filename, parse the data assuming it's a ampliconclip file
     Returns a dictionary of metrics to value
     """
-    parsed_data: Dict = {
-        k: None
-        for k in ampliconclip_headers
-    }
+    parsed_data: Dict = {k: None for k in ampliconclip_headers}
 
-    source_to_key = {
-        data_dict["source_col"]: data_key
-        for data_key, data_dict in ampliconclip_headers.items()
-    }
+    source_to_key = {data_dict["source_col"]: data_key for data_key, data_dict in ampliconclip_headers.items()}
     source_to_key["COMMAND"] = None
 
     for line in file_obj.splitlines():
@@ -208,5 +203,5 @@ def parse_single_report(file_obj):
     for k, v in parsed_data.items():
         if v is None:
             raise ValueError(f"Missing value '{k}' for samtools ampliconclip")
-    
+
     return parsed_data
