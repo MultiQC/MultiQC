@@ -1,215 +1,46 @@
-# import csv
-# from typing import Dict, Union
-# import logging
-# from multiqc.base_module import ModuleNoSamplesFound
-
-# from multiqc.base_module import BaseMultiqcModule
-
-
-# log = logging.getLogger(__name__)
-
-# def parse_file(fh) -> Dict[str, Union[float, int]]:
-#     data = {}
-#     reader = csv.DictReader(fh)
-#     for row in reader:
-#         print("Row:", row)  # shows all columns in the row
-#         metric_name = row.get("Metric Name", "").strip()
-#         value = row.get("Metric Value", "").strip()
-#         print("Parsed metric:", metric_name, "| Value:", value)
-
-
-#         if not metric_name or not value:
-#             continue
-
-#         value = value.replace(",", "").replace("%", "")
-#         try:
-#             data[metric_name] = float(value)
-#         except ValueError:
-#             log.warning(f"Couldn't convert value '{value}' for metric '{metric_name}'")
-#     return data
-
-
-# # def parse_file(fh) -> Dict[str, Union[float, int]]:
-# #         """Parses an open CSV filehandle and returns a dict of metrics"""
-# #         data = {}
-# #         reader = csv.DictReader(fh)
-# #         for row in reader:
-# #             for key, val in row.items():
-# #                 if key.lower() == "sample":
-# #                     continue  # skip sample name column
-# #                 try:
-# #                     data[key] = float(val)
-# #                 except (ValueError, TypeError):
-# #                     log.warning(f"Couldn't convert value '{val}' for key '{key}'")
-# #         return data
-
-# class MultiqcModule(BaseMultiqcModule):
-#     def __init__(self):
-#         super(MultiqcModule, self).__init__(
-#           name="CSVFlex",
-#           anchor="custom_csv",
-#           info="parses in files of the type .csv and extracts metrics",
-#         )
-#         log.info("Hello World!")
-
-#         data_by_sample: Dict[str, Dict[str, Union[float, int]]] = {}
-
-#         for f in self.find_log_files("csv", filehandles=True):
-#             parsed = parse_file(f["f"])
-#             print(parsed)
-
-#             if parsed:
-#                 s_name = f["s_name"]
-#                 print("Sample name detected:", f["s_name"])
-#                 log.info(parsed)
-#                 log.info(s_name)
-#                 if self.is_ignore_sample(s_name):
-#                     continue
-                
-#                 if s_name in data_by_sample:
-#                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-#                 data_by_sample[s_name] = parsed
-#                 self.add_data_source(f)
-
-#         self.add_software_version(None)
-    
-            
-#         data_by_sample = self.ignore_samples(data_by_sample)
-        
-        
-#         if len(data_by_sample) == 0:
-#             raise ModuleNoSamplesFound
-#         log.info(f"Found {len(data_by_sample)} reports")
-        
-#         self.write_data_file(data_by_sample, "multiqc_csv")
-
-#         self.add_section(
-#             name="CSV Results Summary",
-#             anchor="csv_summary",
-#             description="Summary of parsed results from CSV files."
-#         )
-
-
-# import csv
-# from typing import Dict, Union
-# import logging
-# from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
-# log = logging.getLogger(__name__)
-
-# def parse_file(fh) -> Dict[str, Union[float, int]]:
-#     data = {}
-#     reader = csv.DictReader(fh)
-#     for row in reader:
-#         log.debug(f"Row: {row}")
-
-#         metric_name = row.get("Metric Name", "").strip()
-#         value = row.get("Metric Value", "").strip()
-
-#         if not metric_name or not value:
-#             continue
-
-#         # Remove commas and percentage signs
-#         value = value.replace(",", "").replace("%", "")
-#         try:
-#             data[metric_name] = float(value)
-#         except ValueError:
-#             log.warning(f"Couldn't convert value '{value}' for metric '{metric_name}'")
-#     return data
-
-
-# class MultiqcModule(BaseMultiqcModule):
-#     def __init__(self):
-#         super().__init__(
-#             name="CSVFlex",
-#             anchor="custom_csv",
-#             info="Parses .csv files and extracts metrics for summary reporting."
-#         )
-#         log.info("Hello World!")
-
-#         data_by_sample: Dict[str, Dict[str, Union[float, int]]] = {}
-
-#         for f in self.find_log_files("csv", filehandles=True):
-#             log.info(f"Processing file: {f}")
-#             log.info(f"Found log file: {f['fn']} (sample name: {f['s_name']})")
-#             # parsed = parse_file(f["f"])
-#             parsed = parse_file(f)
-#             log.debug(f"Parsed data: {parsed}")
-
-
-#             if parsed:
-#                 s_name = f.get("s_name") or f.get("fn") or "unknown_sample"
-#                 log.info(f"Sample name: {s_name}")
-
-#                 if s_name
-
-#                 if self.is_ignore_sample(s_name):
-#                     continue
-
-#                 if s_name in data_by_sample:
-#                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-
-#                 data_by_sample[s_name] = parsed
-#                 self.add_data_source(f)
-
-#         self.add_software_version(None)
-#         data_by_sample = self.ignore_samples(data_by_sample)
-
-#         if len(data_by_sample) == 0:
-#             log.warning("No sample data found after processing CSV files.")
-#             raise ModuleNoSamplesFound
-
-#         self.write_data_file(data_by_sample, "multiqc_csv")
-
-#         self.add_section(
-#             name="CSV Results Summary",
-#             anchor="csv_summary",
-#             description="Summary of parsed results from CSV files."
-#         )
-
 import csv
-from typing import Dict, Union
 import logging
+from typing import Dict, Union, cast, Any
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import table
+from multiqc.plots.table_object import TableConfig, ColumnMeta, ColumnDict
+from pprint import pprint
 
 log = logging.getLogger(__name__)
 
 
-def parse_file(fh) -> Dict[str, Dict[str, Union[float, int]]]:
-    """
-    Parses a CSV file and returns a dictionary mapping sample names (Group Name)
-    to their associated metrics.
-    """
-    data: Dict[str, Dict[str, Union[float, int]]] = {}
-
+def parse_csv_metrics(fh) -> Dict[str, Dict[str, Union[float, int]]]:
+    data: Dict[str, Dict[str, Union[int, float]]] = {}
     reader = csv.DictReader(fh)
-
     for row in reader:
         metric_name = row.get("Metric Name", "").strip()
         value = row.get("Metric Value", "").strip()
         s_name = row.get("Group Name", "").strip() or "global"
-
-        log.debug(f"Parsing row - Sample: {s_name}, Metric: {metric_name}, Value: {value}")
-
         if not metric_name or not value:
             continue
-
-        # Clean numeric values
         value = value.replace(",", "").replace("%", "")
-
         try:
             val = float(value)
         except ValueError:
-            log.warning(f"Couldn't convert value '{value}' for metric '{metric_name}'")
             continue
-
-        # Initialize sample if not already present
         if s_name not in data:
             data[s_name] = {}
-
         data[s_name][metric_name] = val
-
     return data
+
+
+def format_general_stats( 
+    data: Dict[str, Dict[str, Union[int, float]]],
+    headers: Dict[str, ColumnDict]
+) -> Dict[str, Dict[str, Union[int, float, str, bool]]]:
+    formatted: Dict[str, Dict[str, Union[int, float, str, bool]]] = {}
+    for sample, metrics in data.items():
+        formatted[sample] = {}
+        for k, v in metrics.items():
+            formatted[sample][k] = v
+    return formatted
+
+
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -217,44 +48,99 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="CSVFlex",
             anchor="custom_csv",
-            info="Parses .csv files and extracts summary metrics grouped by sample.",
+            info="Parses a CSV file to extract summary metrics and display them in MultiQC.",
         )
-        log.info("Custom CSV Module initialized!")
 
-        data_by_sample: Dict[str, Dict[str, Union[float, int]]] = {}
+        data_by_sample: Dict[str, Dict[str, Union[int, float]]] = {}
 
         for f in self.find_log_files("custom_csv", filehandles=True):
-            log.info(f"Processing file: {f['fn']} (initial sample guess: {f['s_name']})")
-
-            parsed_samples = parse_file(f["f"])
-
-            if not parsed_samples:
-                log.warning(f"No data parsed from: {f['fn']}")
+            parsed = parse_csv_metrics(f["f"])
+            if not parsed:
                 continue
-
-            for s_name, metrics in parsed_samples.items():
-                log.info(f"Parsed sample: {s_name} with {len(metrics)} metrics")
-                if self.is_ignore_sample(s_name):
-                    continue
-
-                if s_name in data_by_sample:
-                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-
-                data_by_sample[s_name] = metrics
+            for sample, metrics in parsed.items():
+                data_by_sample[sample] = metrics
                 self.add_data_source(f)
 
-        self.add_software_version(None)
-
-        data_by_sample = self.ignore_samples(data_by_sample)
-
-        if len(data_by_sample) == 0:
+        if not data_by_sample:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(data_by_sample)} sample(s) with metrics.")
 
         self.write_data_file(data_by_sample, "multiqc_csv")
 
+        headers: Dict[str, ColumnDict] = {
+            "Cells": {
+                "title": "Cell Count",
+                "scale": "Greens",
+                "description": "Number of cells identified in the sample",
+                # "rid": "cells",
+                # "clean_rid": "cells"
+            },
+            "Confidently mapped reads in cells": {
+                "title": "% Reads in Cells",
+                "suffix": "%",
+                "description": "Percentage of confidently mapped reads that are within cells",
+                # "rid": "mapped_reads_in_cells",
+                # "clean_rid": "mapped_reads_in_cells"
+            },
+            "Mean reads per cell": {
+                "title": "Reads/Cell",
+                "scale": "Blues",
+                "description": "Average number of reads per identified cell",
+                # "rid": "mean_reads_per_cell",
+                # "clean_rid": "mean_reads_per_cell"
+            },
+            "Number of reads": {
+                "title": "# Reads",
+                "scale": "Oranges",
+                "description": "Total number of sequencing reads",
+                # "rid": "number_of_reads",
+                # "clean_rid": "number_of_reads"
+            },
+            "Valid barcodes": {
+                "title": "Valid Barcodes",
+                "suffix": "%",
+                "description": "Percentage of barcodes deemed valid",
+                # "rid": "valid_barcodes",
+                # "clean_rid": "valid_barcodes"
+            },
+            "Q30 RNA read": {
+                "title": "Q30 RNA",
+                "suffix": "%",
+                "description": "Percentage of RNA bases with a quality score above Q30",
+                # "rid": "q30_rna",
+                # "clean_rid": "q30_rna"
+            }
+        }
+
+
+        # Plot the custom summary table
         self.add_section(
-            name="CSV Results Summary",
+            name="CSV Summary",
             anchor="csv_summary",
-            description="Summary of parsed results from CSV files."
+            description="Metrics parsed from the input CSV file.",
+            plot=table.plot(
+                data_by_sample,
+                headers,
+                pconfig=TableConfig(
+                    id="csv_summary_table",
+                    title="CSV Summary Metrics"
+                ),
+            ),
+        )
+
+        # Configure which general stats columns are hidden or visible
+        general_stats_headers = {k: dict(v) for k, v in headers.items()}
+        for col in general_stats_headers.values():
+            col["hidden"] = True
+        general_stats_headers["Cells"]["hidden"] = False
+        general_stats_headers["Number of reads"]["hidden"] = False
+
+        # Format stats for general stats table
+        formatted_stats = format_general_stats(data_by_sample, headers)
+
+        print("📊 FINAL general_stats DATA:")
+        pprint(formatted_stats)
+
+        self.general_stats_addcols(
+            format_general_stats(data_by_sample, headers),
+            general_stats_headers
         )
