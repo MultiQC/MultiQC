@@ -99,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_percolator(self, file):
         """Extract the normalized weights for each feature from the percolator logs."""
         s_name = file["s_name"]
-        lines = file["f"].readlines()
+        lines = [line for line in file["f"] if not line.startswith("#")]
         header = lines[0].strip().split("\t")
         if s_name in self.data_by_sample:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
