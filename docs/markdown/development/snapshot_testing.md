@@ -28,7 +28,7 @@ from multiqc.modules.yourmodule import MultiqcModule
 class TestYourModuleSnapshot(BaseModuleTest):
     MODULE_CLASS = MultiqcModule
     MODULE_NAME = "yourmodule"
-    
+
     # The base class provides these tests automatically:
     # - test_module_data_integrity()
     # - test_module_complete_snapshot()
@@ -70,25 +70,25 @@ class TestYourModuleCustom:
     def test_specific_parsing_logic(self, data_dir, snapshot, snapshot_config):
         """Test specific parsing logic with custom data."""
         test_file = data_dir / "modules/yourmodule/special_case.log"
-        
+
         # Apply snapshot configuration
         for key, value in snapshot_config.items():
             setattr(config, key, value)
-        
+
         # Run module test
         module_snapshot = testing.run_module_test(
             module_class=MultiqcModule,
             data_files=[test_file],
             config_updates=snapshot_config,
         )
-        
+
         # Create custom snapshot
         custom_data = {
             "parsed_metrics": module_snapshot.get_saved_raw_data(),
             "sample_count": len(module_snapshot.get_saved_raw_data().get("multiqc_yourmodule", {})),
             "has_general_stats": bool(module_snapshot.get_general_stats_data()),
         }
-        
+
         assert custom_data == snapshot
 ```
 
@@ -105,21 +105,21 @@ Test specific input files separately:
 def test_individual_file(self, module_data_dir, filename, snapshot, snapshot_config):
     """Test parsing of individual files."""
     file_path = module_data_dir / filename
-    
+
     if not file_path.exists():
         pytest.skip(f"Test file {filename} not found")
-    
+
     # Apply snapshot configuration
     for key, value in snapshot_config.items():
         setattr(config, key, value)
-    
+
     # Run the module test on just this file
     module_snapshot = testing.run_module_test(
         module_class=MultiqcModule,
         data_files=[file_path],
         config_updates=snapshot_config,
     )
-    
+
     # Create a snapshot of this file's data
     file_snapshot = {
         "filename": filename,
@@ -127,7 +127,7 @@ def test_individual_file(self, module_data_dir, filename, snapshot, snapshot_con
         "general_stats": module_snapshot.get_general_stats_data(),
         "sections": module_snapshot.get_sections_data(),
     }
-    
+
     assert file_snapshot == snapshot
 ```
 
@@ -139,19 +139,19 @@ Ensure your module produces consistent table formats:
 def test_table_format_consistency(self, module_snapshot):
     """Test that table headers follow MultiQC standards."""
     headers = module_snapshot.get_general_stats_headers()
-    
+
     for section_key, section_headers in headers.items():
         for header_key, header_config in section_headers.items():
             # Required fields
             assert "title" in header_config, f"Header {header_key} missing title"
             assert "description" in header_config, f"Header {header_key} missing description"
-            
+
             # Title formatting
             title = header_config["title"]
             assert isinstance(title, str), f"Header {header_key} title must be string"
             assert len(title) > 0, f"Header {header_key} title cannot be empty"
             assert title[0].isupper(), f"Header {header_key} title should start with capital letter"
-            
+
             # Description formatting
             description = header_config["description"]
             assert isinstance(description, str), f"Header {header_key} description must be string"
@@ -265,7 +265,7 @@ def test_empty_file(self, tmp_path, snapshot, snapshot_config):
     """Test behavior with empty input file."""
     empty_file = tmp_path / "empty.log"
     empty_file.write_text("")
-    
+
     # Test that module handles empty file gracefully
     # (might raise ModuleNoSamplesFound or parse empty data)
 ```
@@ -278,14 +278,14 @@ Always include data integrity checks:
 def test_data_integrity(self, module_snapshot):
     """Test that parsed data is valid."""
     raw_data = module_snapshot.get_saved_raw_data()
-    
+
     for file_key, file_data in raw_data.items():
         for sample_name, sample_data in file_data.items():
             # Check that all required metrics are present
             required_metrics = ["metric1", "metric2"]
             for metric in required_metrics:
                 assert metric in sample_data, f"Missing {metric} for {sample_name}"
-            
+
             # Check that numeric values are valid
             for metric, value in sample_data.items():
                 if isinstance(value, (int, float)):
@@ -299,10 +299,10 @@ Make test names descriptive so it's clear what failed:
 ```python
 def test_parsing_with_missing_headers(self, snapshot):
     """Test parsing when some expected headers are missing."""
-    
+
 def test_parsing_with_malformed_data(self, snapshot):
     """Test parsing when data is malformed or incomplete."""
-    
+
 def test_general_stats_table_format(self, snapshot):
     """Test that general stats table follows standard format."""
 ```
@@ -319,7 +319,7 @@ class TestYourModuleBasicFunctionality(BaseModuleTest):
 
 class TestYourModuleEdgeCases:
     """Edge cases and error handling."""
-    
+
 class TestYourModuleTableFormat:
     """Table format consistency tests."""
 ```
@@ -365,28 +365,30 @@ To migrate existing tests to use snapshots:
 ### Example Migration
 
 Before:
+
 ```python
 def test_module(self, data_dir):
     # Run module
     m = MultiqcModule()
-    
+
     # Check specific values
     assert m.saved_raw_data["multiqc_module"]["sample1"]["metric1"] == 100
     assert len(m.sections) == 2
 ```
 
 After:
+
 ```python
 class TestModuleSnapshot(BaseModuleTest):
     MODULE_CLASS = MultiqcModule
     MODULE_NAME = "module"
-    
+
     def test_specific_values(self, module_snapshot):
         """Test specific values (keep existing logic)."""
         raw_data = module_snapshot.get_saved_raw_data()
         assert raw_data["multiqc_module"]["sample1"]["metric1"] == 100
         assert len(module_snapshot.module.sections) == 2
-    
+
     # Snapshot tests are automatically included from BaseModuleTest
 ```
 
@@ -431,4 +433,4 @@ def custom_snapshot_config(self, snapshot_config):
         **snapshot_config,
         "yourmodule_custom_option": True,
     }
-``` 
+```

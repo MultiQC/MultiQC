@@ -104,17 +104,17 @@ class TestSamtoolsFlagstatSnapshot(BaseModuleTest):
         flagstat_data_dir = data_dir / "modules" / "samtools" / "flagstat"
         # Get all flagstat test files
         flagstat_files = list(flagstat_data_dir.glob("*.txt"))
-        
+
         # Run the module test
         module_snapshot = testing.run_module_test(
             module_class=self.MODULE_CLASS,
             data_files=flagstat_files,
             config_updates=snapshot_config,
         )
-        
+
         # Assert basic data integrity
         self.assert_module_data_integrity(module_snapshot)
-        
+
         # Snapshot the raw data output from the module
         raw_data = module_snapshot.get_saved_raw_data()
         assert raw_data == snapshot

@@ -245,45 +245,46 @@ def assert_module_data_integrity(snapshot: ModuleSnapshot):
 class BaseModuleTest:
     """
     Base class for module snapshot tests.
-    
+
     This class provides common functionality for testing MultiQC modules
     with snapshot testing capabilities.
     """
-    
+
     # Override these in subclasses
     MODULE_CLASS = None
     MODULE_NAME = None
     DATA_DIR_NAME = None  # If different from MODULE_NAME
-    
+
     def get_module_data_dir(self, data_dir):
         """Get the data directory for this module."""
         dir_name = self.DATA_DIR_NAME or self.MODULE_NAME
         return data_dir / "modules" / dir_name
-    
+
     def create_module_snapshot(self, data_dir, snapshot_config):
         """
         Create a snapshot of the module with all available test data.
-        
+
         This method automatically finds all test files in the module's data directory
         and runs the module on them, returning a ModuleSnapshot instance.
         """
         if self.MODULE_CLASS is None:
             pytest.skip("MODULE_CLASS not defined")
-        
+
         module_data_dir = self.get_module_data_dir(data_dir)
-        
+
         # Apply snapshot configuration
         from multiqc import config
+
         for key, value in snapshot_config.items():
             setattr(config, key, value)
-        
+
         # Run the module test
         return run_module_test(
             module_class=self.MODULE_CLASS,
             data_files=list(module_data_dir.rglob("*")),
             config_updates=snapshot_config,
         )
-    
+
     def assert_module_data_integrity(self, module_snapshot):
         """Test basic data integrity for the module."""
         assert_module_data_integrity(module_snapshot)
