@@ -70,51 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_by_sample, "multiqc_csv")
         log.info(data_by_sample)
 
-        # headers: Dict[str, ColumnDict] = {
-        #     "Cells": {
-        #         "title": "Cell Count",
-        #         "scale": "Greens",
-        #         "description": "Number of cells identified in the sample",
-        #         # "rid": "cells",
-        #         # "clean_rid": "cells"
-        #     },
-        #     "Confidently mapped reads in cells": {
-        #         "title": "% Reads in Cells",
-        #         "suffix": "%",
-        #         "description": "Percentage of confidently mapped reads that are within cells",
-        #         # "rid": "mapped_reads_in_cells",
-        #         # "clean_rid": "mapped_reads_in_cells"
-        #     },
-        #     "Mean reads per cell": {
-        #         "title": "Reads/Cell",
-        #         "scale": "Blues",
-        #         "description": "Average number of reads per identified cell",
-        #         # "rid": "mean_reads_per_cell",
-        #         # "clean_rid": "mean_reads_per_cell"
-        #     },
-        #     "Number of reads": {
-        #         "title": "# Reads",
-        #         "scale": "Oranges",
-        #         "description": "Total number of sequencing reads",
-        #         # "rid": "number_of_reads",
-        #         # "clean_rid": "number_of_reads"
-        #     },
-        #     "Valid barcodes": {
-        #         "title": "Valid Barcodes",
-        #         "suffix": "%",
-        #         "description": "Percentage of barcodes deemed valid",
-        #         # "rid": "valid_barcodes",
-        #         # "clean_rid": "valid_barcodes"
-        #     },
-        #     "Q30 RNA read": {
-        #         "title": "Q30 RNA",
-        #         "suffix": "%",
-        #         "description": "Percentage of RNA bases with a quality score above Q30",
-        #         # "rid": "q30_rna",
-        #         # "clean_rid": "q30_rna"
-        #     }
-        # }
-
+        
         headers: Dict[str, ColumnDict] = {}
         for sample_metrics in data_by_sample.values():
             for metric in sample_metrics:
