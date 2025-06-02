@@ -78,11 +78,8 @@ def parse_reports(module: BaseMultiqcModule):
             counts the number of known splicing junctions that are observed
             in each dataset. If sequencing depth is sufficient, all (annotated) splice junctions should
             be rediscovered, resulting in a curve that reaches a plateau. Missing low abundance splice
-            junctions can affect downstream analysis.</p>
-            <div class="alert alert-info" id="rseqc-junction_sat_single_hint">
-              <span class="glyphicon glyphicon-hand-up"></span>
-              Click a line to see the data side by side (as in the original RSeQC plot).
-            </div><p>""",
+            junctions can affect downstream analysis.
+            """,
         plot=linegraph.plot(
             [junction_saturation_all, junction_saturation_known, junction_saturation_novel],
             pconfig,
