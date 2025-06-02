@@ -37,9 +37,10 @@ def parse_reports(module: BaseMultiqcModule):
                 junction_saturation_known[f["s_name"]] = dict()
                 junction_saturation_novel[f["s_name"]] = dict()
                 for k, v in enumerate(parsed["x"]):
-                    junction_saturation_all[f["s_name"]][v] = parsed["z"][k]
-                    junction_saturation_known[f["s_name"]][v] = parsed["y"][k]
-                    junction_saturation_novel[f["s_name"]][v] = parsed["w"][k]
+                    # Normalise junction counts to the percentage of total junctions (100% of reads)
+                    junction_saturation_all[f["s_name"]][v] = 100 * parsed["z"][k] / parsed["z"][-1]
+                    junction_saturation_known[f["s_name"]][v] = 100 * parsed["y"][k] / parsed["y"][-1]
+                    junction_saturation_novel[f["s_name"]][v] = 100 * parsed["w"][k] / parsed["w"][-1]
 
     # Filter to strip out ignored sample names
     junction_saturation_all = module.ignore_samples(junction_saturation_all)
@@ -62,12 +63,12 @@ def parse_reports(module: BaseMultiqcModule):
     pconfig = {
         "id": "rseqc_junction_saturation_plot",
         "title": "RSeQC: Junction Saturation",
-        "ylab": "Number of Junctions",
+        "ylab": "Percent of Junctions",
         "ymin": 0,
         "xlab": "Percent of reads",
         "xmin": 0,
         "xmax": 100,
-        "tt_label": "<strong>{point.x}% of reads</strong>: {point.y:.2f}",
+        "tt_label": "<strong>{point.x}% of reads</strong>: {point.y:.1f}% of junctions",
         "data_labels": [{"name": "All Junctions"}, {"name": "Known Junctions"}, {"name": "Novel Junctions"}],
     }
     module.add_section(
