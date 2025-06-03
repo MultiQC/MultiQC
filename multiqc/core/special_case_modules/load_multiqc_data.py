@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import packaging.version
-import pandas as pd
+import polars as pl
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, Section
@@ -99,7 +99,7 @@ class LoadMultiqcData(BaseMultiqcModule):
 
         try:
             # Read the entire parquet file
-            df = pd.read_parquet(path)
+            df = pl.read_parquet(path)
 
             # Extract metadata from parquet
             metadata = plot_data_store.get_report_metadata(df)
@@ -147,17 +147,23 @@ class LoadMultiqcData(BaseMultiqcModule):
             # Set creation date
             if "creation_date" in metadata:
                 try:
-                    report.creation_date = pd.Timestamp(metadata["creation_date"]).tz_localize("UTC").to_pydatetime()
-                except ValueError:
-                    log.error(f"Could not parse creation date: {metadata['creation_date']}")
+                    # Convert the datetime to a Python datetime object
+                    if isinstance(metadata["creation_date"], datetime):
+                        report.creation_date = metadata["creation_date"]
+                    else:
+                        creation_date_str = str(metadata["creation_date"])
+                        # Use standard Python datetime parsing
+                        report.creation_date = datetime.fromisoformat(creation_date_str.replace("Z", "+00:00"))
+                except ValueError as e:
+                    log.error(f"Could not parse creation date: {metadata['creation_date']}, error: {e}")
 
             if "config" in metadata:
                 pass  # We do not load config, but keep the current one
 
             # Load plot input data from plot_input rows in the dataframe
             if "type" in df.columns and "plot_input_data" in df.columns:
-                plot_input_rows = df[df["type"] == "plot_input"]
-                for _, row in plot_input_rows.iterrows():
+                plot_input_rows = df.filter(pl.col("type") == "plot_input")
+                for row in plot_input_rows.iter_rows(named=True):
                     anchor = Anchor(str(row["anchor"]))
                     plot_input_data = row["plot_input_data"]
                     plot_input_data_dict = json.loads(plot_input_data)

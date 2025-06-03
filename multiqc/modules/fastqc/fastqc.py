@@ -1233,6 +1233,10 @@ class MultiqcModule(BaseMultiqcModule):
             for seq, _ in top_seqs
         }
 
+        table_data = dict(
+            sorted(table_data.items(), key=lambda x: (x[1]["total_count"], x[1]["samples"]), reverse=True)
+        )
+
         ranked_by = (
             "the number of samples they occur in" if by == "samples" else "the number of occurrences across all samples"
         )
@@ -1277,6 +1281,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "col1_header": "Overrepresented sequence",
                     "sort_rows": False,
                     "rows_are_samples": False,
+                    "defaultsort": [{"column": "total_count"}, {"column": "samples"}],
                 },
             ),
         )

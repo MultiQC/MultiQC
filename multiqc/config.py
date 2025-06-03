@@ -12,7 +12,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import importlib_metadata
 import yaml
@@ -231,6 +231,8 @@ avail_modules: Dict[str, EntryPoint]
 avail_templates: Dict[str, EntryPoint]
 
 export_plots_timeout: int
+
+parquet_format: Literal["long", "wide"]
 
 
 def load_defaults():

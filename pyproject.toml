@@ -4,8 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.28"
+version = "1.30dev"
 dependencies = [
+    "boto3",              # for aws bedrock ai support
     "click",
     "humanize",
     "importlib_metadata",
@@ -29,7 +30,7 @@ dependencies = [
     "natsort",
     "tiktoken",
     "jsonschema",
-    "pandas",             # for parquet support
+    "polars",             # for parquet support
     "pyarrow",            # for parquet support
 ]
 requires-python = ">=3.8"
@@ -84,7 +85,7 @@ dev = [
     "types-beautifulsoup4",
     "types-Pillow",
     "types-jsonschema",
-    "pandas-stubs",
+    "types-boto3",
     "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
 ]

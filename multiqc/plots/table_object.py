@@ -199,7 +199,7 @@ class ColumnMeta(ValidatedConfig):
         # Overwrite (2nd time) any given config with table-level user config
         # This is to override column-specific values set by modules
         for _id in [table_anchor, pconfig.id]:  # Back-compatibility using pconfig.id instead of table_anchor
-            if config_dict := config.custom_plot_config.get(_id, {}):
+            if config_dict := config.custom_plot_config.get(_id):
                 for cpc_k, cpc_v in config_dict.items():
                     if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
                         col_dict[cpc_k] = cpc_v  # type: ignore
@@ -374,6 +374,13 @@ class DataTable(BaseModel):
         headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]],
     ) -> "DataTable":
         """Prepare data for use in a table or plot"""
+        # Violin plot's PConfig does this for the plot ID. We also do that second turn time for
+        # the table anchor because that's the ID that is shown in the Configure Columns modal
+        if table_anchor in config.custom_plot_config:
+            for k, v in config.custom_plot_config[table_anchor].items():
+                if isinstance(k, str) and k in pconfig.__dict__:
+                    setattr(pconfig, k, v)
+
         # Each section to have a list of groups (even if there is just one element in a group)
         input_section_key: SectionKey
         input_section: SectionT
@@ -1178,7 +1185,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
     html += f"""
         <div id="{dt.anchor}_container" class="mqc_table_container">
             <div class="table-responsive mqc-table-responsive {collapse_class}">
-                <table id="{dt.anchor}" class="table table-condensed mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist(dt)}">
+                <table id="{dt.anchor}" class="table table-condensed mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist_js(dt)}">
         """
 
     # Build the header row
@@ -1299,9 +1306,11 @@ def _configuration_modal(table_anchor: str, title: str, trows: str, violin_ancho
     </div> </div> </div>"""
 
 
-def _get_sortlist(dt: DataTable) -> str:
+def _get_sortlist_js(dt: DataTable) -> str:
     """
-    Custom column sorting order for a table plot. The order is provided in the following form:
+    Custom column sorting order string for JavaScript table plot property.
+
+    The order is provided in the following form:
 
     ```yaml
     custom_plot_config:

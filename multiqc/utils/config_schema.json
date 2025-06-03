@@ -1094,7 +1094,7 @@
     "ai_provider": {
       "anyOf": [
         {
-          "enum": ["seqera", "openai", "anthropic", "custom"],
+          "enum": ["seqera", "openai", "anthropic", "aws_bedrock", "custom"],
           "type": "string"
         },
         {
@@ -2314,6 +2314,20 @@
       "default": null,
       "description": "Search patterns for finding tool outputs",
       "title": "Sp"
+    },
+    "parquet_format": {
+      "anyOf": [
+        {
+          "enum": ["long", "wide"],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw', \n        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast, \n        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to \n        for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as\n        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column \n        to have a single type).\n        ",
+      "title": "Parquet Format"
     }
   },
   "title": "MultiQCConfig",

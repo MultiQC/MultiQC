@@ -10,9 +10,13 @@ MultiQC v1.27 and newer can generate AI-powered summaries of your reports. These
 - When creating the report, baked into the report HTML.
 - Dynamically in the browser, while viewing an existing HTML report.
 
-The AI summaries are generated using LLMs (large-language models) AI, using
-[Seqera AI](https://seqera.io/ask-ai/), [OpenAI](https://openai.com/) or [Anthropic](https://www.anthropic.com/).
-MultiQC reports also have an option to copy a prompt to your clipboard, to paste into any provider you have access to.
+The AI summaries are generated using LLMs (large-language models) AI, with the following supported providers:
+
+- [Seqera AI](https://seqera.io/ask-ai/)
+- [OpenAI](https://openai.com/)
+- [Anthropic](https://www.anthropic.com/)
+- [AWS Bedrock](https://aws.amazon.com/bedrock/)
+- MultiQC reports also have an option to copy a prompt to your clipboard, to paste into any provider you have access to
 
 :::warning
 
@@ -41,6 +45,9 @@ Remember: Treat your API keys like passwords and do not share them.
   - Sign up at [https://console.anthropic.com](https://console.anthropic.com)
   - Add a payment method to enable API access
   - Create a new key on on the _API Keys_ section in your [account settings](https://console.anthropic.com/settings/keys)
+- [AWS Bedrock](https://aws.amazon.com/bedrock/)
+  - Bedrock supports a plethora of models across many providers
+  - Sign up, access credentials and payment are handled via an AWS account
 - Other providers, via custom endpoint
   - Works for providers supporting OpenAI-compatible API, specify a custom endpoint URL. See [Using custom OpenAI-compatible endpoints](#using-custom-openai-compatible-endpoints) for details
 - Other providers, via your clipboard
@@ -49,12 +56,12 @@ Remember: Treat your API keys like passwords and do not share them.
     See [Copying prompts](#copying-prompts) for instructions.
 
 Seqera AI is free to use.[^seqera-ai-usage-limits]
-Use of OpenAI and Anthropic APIs are billed by their respective providers based on consumption.
+Use of other third-party APIs are billed by their respective providers based on consumption.
 Seqera AI uses the latest AI provider models under the hood, at the time of writing that is Anthropic Claude sonnet 3.5.
 
 ### Choosing a model
 
-If you're using OpenAI or Anthropic you can choose the exact model used for report summaries.
+If you're using OpenAI, Anthropic or AWS Bedrock you can choose the exact model used for report summaries.
 This is done by setting `ai_model` in the MultiQC config.
 
 - Anthropic model names must begin with `claude`
@@ -63,6 +70,7 @@ This is done by setting `ai_model` in the MultiQC config.
 - OpenAI model names must being with `gpt`
   - Default: `gpt-4o`.
   - Tested with GPT-4o and GPT-4o-mini. See the [OpenAI docs](https://platform.openai.com/docs/models).
+- Bedrock model names must be valid inputs to the `modelId` parameter of the `InvokeModel` API ([docs](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html#API_runtime_InvokeModel_RequestSyntax)).
 
 This model is used during report generation and also set as the default toolbox panel setting for browser report summaries.
 
@@ -81,14 +89,14 @@ To generate them, you must enable them either on the command line or via a Multi
 
   - `--ai` / `--ai-summary`: Generate a short report summary and put it on top of the report (fast)
   - `--ai-summary-full`: Generate a detailed version of the summary with analysis and recommendations (slower)
-  - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai` or `anthropic`. Default `seqera`
+  - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai`, `anthropic` or `aws_bedrock`. Default `seqera`
   - `--no-ai`: Disable AI toolbox and buttons in the report
 
 - Alternatively, MultiQC configuration file:
   ```yaml
   ai_summary: false # Set to true for short summaries
   ai_summary_full: false # Set to true for  long summaries
-  ai_provider: "seqera" # 'seqera', 'openai' or 'anthropic'. Default: 'seqera'
+  ai_provider: "seqera" # 'seqera', 'openai', 'anthropic' or 'aws_bedrock'. Default: 'seqera'
   no_ai: false # Set to true to disable AI toolbox and buttons in the report
   ```
 
@@ -107,6 +115,8 @@ export ANTHROPIC_API_KEY="..."
 It's possible to save these in an `.env` file instead of exporting to your shell's environment.
 This `.env` file can either be in the current working directory or the MultiQC source code directory.
 MultiQC uses the [python-dotenv](https://saurabh-kumar.com/python-dotenv/) package.
+
+For AWS Bedrock, the client uses the [default `boto3` credential chain](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html).
 
 If you run MultiQC without the appropriate key you will get a warning printed to the console,
 but report generation will otherwise proceed without the summary. MultiQC will not return an error exit code.
@@ -239,7 +249,7 @@ If you're unable to generate an AI summary, you can try the following:
 
 ## Using custom OpenAI-compatible endpoints
 
-In addition to the built-in providers (Seqera AI, OpenAI, and Anthropic), MultiQC supports using custom OpenAI-compatible endpoints. This allows you to use self-hosted models or alternative providers that implement the OpenAI API specification.
+In addition to the built-in providers, MultiQC supports using custom OpenAI-compatible endpoints. This allows you to use self-hosted models or alternative providers that implement the OpenAI API specification.
 
 To use a custom endpoint:
 
@@ -282,16 +292,16 @@ Most nf-core pipelines with MultiQC have a `--multiqc_config` option to provide 
 However, because API keys must be passed using environment variables, the recommended method is to use
 environment vars for everything.
 
-Using this approach means that no pipeline code needs adjustment, only a small addition to the Nextflow config
-by using the [`env` config scope](https://nextflow.io/docs/latest/reference/config.html#env).
-
+Using this approach means that no pipeline code needs adjustment, only a small addition to the Nextflow config.
 For example, to use with OpenAI you would set the following in your Nextflow config:
 
 ```groovy
 env {
-   MULTIQC_AI_SUMMARY_FULL = 1              // Enable long summaries during report generation
-   MULTIQC_AI_PROVIDER = "openai"           // Select OpenAI as provider
-   OPENAI_API_KEY = secrets.OPENAI_API_KEY  // Access key for OpenAI
+  MULTIQC_AI_SUMMARY_FULL = 1     // Enable long summaries during report generation
+  MULTIQC_AI_PROVIDER = "openai"  // Select OpenAI as provider
+}
+process.withName: MULTIQC {
+  secret = [ 'OPEN_API_KEY' ]     // Access key for OpenAI
 }
 ```
 
@@ -303,6 +313,10 @@ To add this Nextflow secret you would run the following command in the terminal:
 $ nextflow secrets set OPENAI_API_KEY "xxxx"
 ```
 
+Note that secrets can behave differently across different compute environment types.
+See the [Nextflow docs](https://www.nextflow.io/docs/latest/secrets.html#process-directive)
+for details.
+
 :::tip
 
 Save this Nextflow config to `~/.nextflow/config` and it
@@ -310,23 +324,6 @@ Save this Nextflow config to `~/.nextflow/config` and it
 to every Nextflow pipeline you launch.
 
 :::
-
-### Using Seqera Platform
-
-If using Seqera Platform, the Nextflow `env` config can be used when launching pipelines or adding them to the Launchpad.
-
-Environment variables can also be added at the _Compute Environment_ level, which affects every pipeline
-run using that CE without further modification.
-This allows managing provider API keys at the workspace level.
-
-To do this, toggle the **Environment variables** section when creating a Compute Environment and select **Add variable**.
-Ensure that the **Target environment** has **Compute job** enabled.
-
-![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_var_create.png)
-
-Once added:
-
-![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_vars.png)
 
 ## Security considerations
 
@@ -352,7 +349,7 @@ To enable sample anonymization:
 
 When enabled, sample names are replaced with generic pseudonyms (e.g., "SAMPLE_1", "SAMPLE_2") before being sent to the AI provider. The anonymization is applied consistently across the entire report - each sample name gets the same pseudonym wherever it appears. When the AI response references samples, the pseudonyms are automatically converted back to the original sample names before displaying.
 
-MulitQC replaces sample names that appear as typical keys in plots and tables, specifically:
+MultiQC replaces sample names that appear as typical keys in plots and tables, specifically:
 
 - First column of a table table (e.g. the General statistics table)
 - Labels of bars in bar plots

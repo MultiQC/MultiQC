@@ -175,11 +175,11 @@ ResponseT = TypeVar("ResponseT")
 
 
 class Client:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: Optional[str] = None):
         self.name: str
         self.title: str
         self.model: str
-        self.api_key: str = api_key
+        self.api_key: Optional[str] = api_key
 
         self.prompt_short = PROMPT_SHORT
         if config.ai_prompt_short is not None:
@@ -384,6 +384,51 @@ class AnthropicClient(Client):
         )
 
 
+class AWSBedrockClient(Client):
+    def __init__(self):
+        super().__init__()
+        try:
+            import boto3  # type: ignore
+        except ImportError:
+            raise ImportError(
+                'AI summary through AWS bedrock requires "boto3" to be installed. Install it with `pip install boto`'
+            )
+
+        self.model = config.ai_model
+        self.name = "aws_bedrock"
+        self.title = "AWS Bedrock"
+
+        self.client = boto3.client(service_name="bedrock-runtime")
+
+    def max_tokens(self) -> int:
+        return config.ai_custom_context_window or 200000
+
+    class ApiResponse(NamedTuple):
+        content: str
+        model: str
+
+    def _query(self, prompt: str) -> ApiResponse:
+        # TODO consider error-handling/backoff
+        body = json.dumps(
+            {
+                # this is the only allowable value as of 2025/03/04
+                # if they ever add more, we can make it configurable
+                # or add smart logic to figure it out.
+                "anthropic_version": "bedrock-2023-05-31",
+                "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+                "max_tokens": 4096,
+            }
+        )
+
+        response = self.client.invoke_model(
+            body=body, modelId=self.model, accept="application/json", contentType="application/json"
+        )
+
+        response_body = json.loads(response["body"].read())
+        content = response_body["content"][0]["text"]  # Extract the assistant's response
+        return AWSBedrockClient.ApiResponse(content=content, model=self.model)
+
+
 class SeqeraClient(Client):
     def __init__(self, api_key: str):
         super().__init__(api_key)
@@ -518,6 +563,14 @@ def get_llm_client() -> Optional[Client]:
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"`'
+            )
+
+    elif config.ai_provider == "aws_bedrock":
+        try:
+            return AWSBedrockClient()
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[aws_bedrock]"`'
             )
 
     elif config.ai_provider == "custom":

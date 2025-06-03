@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
-AiProviderLiteral = Literal["seqera", "openai", "anthropic", "custom"]
+AiProviderLiteral = Literal["seqera", "openai", "anthropic", "aws_bedrock", "custom"]
 
 
 class SearchPattern(BaseModel):
@@ -251,6 +251,17 @@ class MultiQCConfig(BaseModel):
 
     class Config:
         extra = "allow"  # Allow additional fields that aren't in the schema
+
+    parquet_format: Optional[Literal["long", "wide"]] = Field(
+        None,
+        description="""Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw', 
+        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast, 
+        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to 
+        for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as
+        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column 
+        to have a single type).
+        """,
+    )
 
 
 def config_to_schema() -> Dict[str, Any]:
