@@ -118,7 +118,7 @@ class Stats:
                         "color": "#5D4B87",
                         "width": 1,
                         "value": (midpoint - 1) / 2,
-                        "dashStyle": "shortdash",
+                        "dashStyle": "solid",
                     }
                 ]
 
@@ -182,7 +182,7 @@ class Stats:
                         "color": "#5D4B87",
                         "width": 1,
                         "value": (midpoint - 1) / 2,
-                        "dashStyle": "shortdash",
+                        "dashStyle": "solid",
                     }
                 ]
 
