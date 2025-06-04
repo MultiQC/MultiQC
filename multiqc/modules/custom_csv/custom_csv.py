@@ -1,3 +1,4 @@
+import os
 import csv
 import logging
 from typing import Dict, Union, cast, Any
@@ -52,11 +53,21 @@ class MultiqcModule(BaseMultiqcModule):
             info="Parses a CSV file to extract summary metrics and display them in MultiQC.",
         )
         log.info("Hello World!")
-
+        
         data_by_sample: Dict[str, Dict[str, Union[int, float]]] = {}
 
         for f in self.find_log_files("custom_csv", filehandles=True):
-            parsed = parse_csv_metrics(f["f"], f["fn"])
+            file_path = f["fn"]
+
+            # Get 'Sample1' assuming structure is: .../Sample1/outs/...
+            sample_dir = os.path.dirname(os.path.dirname(file_path))
+            sample_id = os.path.basename(sample_dir)
+
+            # Clean the sample name for MultiQC standards
+            sample_name = self.clean_s_name(sample_id, f)
+
+            # Parse the file using sample_name
+            parsed = parse_csv_metrics(f["f"], sample_name)
             pprint(parsed)
             log.info(parsed)
             if not parsed:
