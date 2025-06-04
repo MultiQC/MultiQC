@@ -2,6 +2,8 @@ import difflib
 import json
 from datetime import datetime, timedelta
 
+import polars as pl
+
 import multiqc
 from multiqc.core.update_config import ClConfig
 from multiqc.plots.bargraph import BarPlotConfig, BarPlotInputData, CatConf
@@ -28,7 +30,7 @@ def test_rerun_parquet(data_dir, tmp_path):
     # Run 2: Run on the intermediate data from run1
     run_b_dir = tmp_path / "run_b"
     run_b_dir.mkdir()
-    multiqc.run(run_a_dir / "multiqc_data" / "multiqc.parquet", cfg=ClConfig(output_dir=run_b_dir, strict=True))
+    multiqc.run(run_a_dir / "multiqc_data" / "BETA-multiqc.parquet", cfg=ClConfig(output_dir=run_b_dir, strict=True))
 
     # Compare reports
     with open(run_b_dir / "multiqc_data" / "multiqc_data.json") as f:
@@ -62,7 +64,7 @@ def test_rerun_and_combine(data_dir, tmp_path):
     run_combined_dir = tmp_path / "run_combined"
     multiqc.run(
         data_dir / "modules/fastp/SAMPLE.json",
-        run_a_dir / "multiqc_data" / "multiqc.parquet",
+        run_a_dir / "multiqc_data" / "BETA-multiqc.parquet",
         cfg=ClConfig(output_dir=run_combined_dir, strict=True),
     )
 
@@ -72,23 +74,23 @@ def test_rerun_and_combine(data_dir, tmp_path):
     # Run MultiQC on inputs A + B directly
     run_normal_dir = tmp_path / "run_normal"
     multiqc.run(
-        data_dir / "modules/fastp/single_end",
-        data_dir / "modules/fastp/SAMPLE.json",
+        data_dir / "modules/fastp/SAMPLE.json",  # "smalltest_S10_R1_001"
+        data_dir / "modules/fastp/single_end",  # "SRR5442949_1"
         cfg=ClConfig(output_dir=run_normal_dir, strict=True),
     )
 
     with open(run_normal_dir / "multiqc_data" / "multiqc_data.json") as f:
         report_normal_data = json.load(f)
 
-    # # Write report plot data to separate files for inspection
-    # combined_plot_data_file = tmp_path / "combined_plot_data.json"
-    # normal_plot_data_file = tmp_path / "normal_plot_data.json"
-    # with open(combined_plot_data_file, "w") as f:
-    #     json.dump(report_combined_data["report_plot_data"], f, indent=4)
-    # with open(normal_plot_data_file, "w") as f:
-    #     json.dump(report_normal_data["report_plot_data"], f, indent=4)
-    # print(f"\nCombined plot data written to: {combined_plot_data_file}")
-    # print(f"Normal plot data written to: {normal_plot_data_file}")
+    # Write report plot data to separate files for inspection
+    combined_plot_data_file = tmp_path / "combined_plot_data.json"
+    normal_plot_data_file = tmp_path / "normal_plot_data.json"
+    with open(combined_plot_data_file, "w") as f:
+        json.dump(report_combined_data["report_plot_data"], f, indent=4)
+    with open(normal_plot_data_file, "w") as f:
+        json.dump(report_normal_data["report_plot_data"], f, indent=4)
+    print(f"\nCombined plot data written to: {combined_plot_data_file}")
+    print(f"Normal plot data written to: {normal_plot_data_file}")
 
     # Compare only the relevant fields, not the entire report
     # The 'config_analysis_dir_abs' will be different between runs
@@ -147,30 +149,30 @@ def test_merge_linegraph():
     merged_df = merged_data.to_df()
 
     # Verify the merged data has three unique samples: Sample1 (from dataset2), Sample2, and Sample3
-    unique_samples = merged_df["sample_name"].unique()
+    unique_samples = merged_df.select("sample").unique().to_series()
     assert len(unique_samples) == 3
     assert "Sample1" in unique_samples
     assert "Sample2" in unique_samples
     assert "Sample3" in unique_samples
 
     # Group by sample and verify data points
-    sample1_data = merged_df[merged_df["sample_name"] == "Sample1"]
-    sample2_data = merged_df[merged_df["sample_name"] == "Sample2"]
-    sample3_data = merged_df[merged_df["sample_name"] == "Sample3"]
+    sample1_data = merged_df.filter(pl.col("sample") == "Sample1")
+    sample2_data = merged_df.filter(pl.col("sample") == "Sample2")
+    sample3_data = merged_df.filter(pl.col("sample") == "Sample3")
 
     # Sample1 should have the values from dataset2
-    assert len(sample1_data) == 3  # 3 data points
-    sample1_y_vals = sorted([row["y_val"] for _, row in sample1_data.iterrows()])
+    assert sample1_data.height == 3  # 3 data points
+    sample1_y_vals = sample1_data.select("y_val").sort("y_val").to_series().to_list()
     assert sample1_y_vals == ["5", "6", "7"]  # Values come from dataset2
 
     # Sample2 should have values from dataset1 (unchanged)
-    assert len(sample2_data) == 3
-    sample2_y_vals = sorted([row["y_val"] for _, row in sample2_data.iterrows()])
+    assert sample2_data.height == 3
+    sample2_y_vals = sample2_data.select("y_val").sort("y_val").to_series().to_list()
     assert sample2_y_vals == ["2", "3", "4"]
 
     # Sample3 should have values from dataset2
-    assert len(sample3_data) == 3
-    sample3_y_vals = sorted([row["y_val"] for _, row in sample3_data.iterrows()])
+    assert sample3_data.height == 3
+    sample3_y_vals = sample3_data.select("y_val").sort("y_val").to_series().to_list()
     assert sample3_y_vals == ["3", "4", "5"]
 
 
@@ -199,8 +201,8 @@ def test_merge_bargraph():
     input_data1 = BarPlotInputData(
         anchor=anchor,
         plot_type=PlotType.BAR,
-        data=[dataset1],
-        cats=[cats1],
+        data=[dataset1],  # type: ignore
+        cats=[cats1],  # type: ignore
         pconfig=pconfig,
         creation_date=datetime.now() - timedelta(days=1),
     )
@@ -220,8 +222,8 @@ def test_merge_bargraph():
     input_data2 = BarPlotInputData(
         anchor=anchor,
         plot_type=PlotType.BAR,
-        data=[dataset2],
-        cats=[cats2],
+        data=[dataset2],  # type: ignore
+        cats=[cats2],  # type: ignore
         pconfig=pconfig,
         creation_date=datetime.now(),
     )
@@ -233,8 +235,8 @@ def test_merge_bargraph():
     merged_df = merged_data.to_df()
 
     # Verify the merged data has all samples and categories preserved correctly
-    unique_samples = merged_df["sample"].unique()
-    unique_cats = merged_df["category"].unique()
+    unique_samples = merged_df.select("sample").unique().to_series()
+    unique_cats = merged_df.select("category").unique().to_series()
 
     assert len(unique_samples) == 3
     assert "Sample1" in unique_samples
@@ -248,25 +250,25 @@ def test_merge_bargraph():
 
     # Group by sample/category and verify data points
     # Sample1/Cat1 should have the value from dataset2
-    sample1_cat1 = merged_df[(merged_df["sample"] == "Sample1") & (merged_df["category"] == "Cat1")]
-    assert len(sample1_cat1) == 1
-    assert float(sample1_cat1.iloc[0]["bar_value"]) == 30.0  # Updated value from dataset2
+    sample1_cat1 = merged_df.filter((pl.col("sample") == "Sample1") & (pl.col("category") == "Cat1"))
+    assert sample1_cat1.height == 1
+    assert float(sample1_cat1.select("bar_value").item()) == 30.0  # Updated value from dataset2
 
     # Sample1/Cat2 should be overridden
-    sample1_cat2 = merged_df[(merged_df["sample"] == "Sample1") & (merged_df["category"] == "Cat2")]
-    assert len(sample1_cat2) == 0
+    sample1_cat2 = merged_df.filter((pl.col("sample") == "Sample1") & (pl.col("category") == "Cat2"))
+    assert sample1_cat2.height == 0
 
     # Sample1/Cat3 should be from dataset2
-    sample1_cat3 = merged_df[(merged_df["sample"] == "Sample1") & (merged_df["category"] == "Cat3")]
-    assert len(sample1_cat3) == 1
-    assert float(sample1_cat3.iloc[0]["bar_value"]) == 35.0
+    sample1_cat3 = merged_df.filter((pl.col("sample") == "Sample1") & (pl.col("category") == "Cat3"))
+    assert sample1_cat3.height == 1
+    assert float(sample1_cat3.select("bar_value").item()) == 35.0
 
     # Sample3/Cat1 should be from dataset2
-    sample3_cat1 = merged_df[(merged_df["sample"] == "Sample3") & (merged_df["category"] == "Cat1")]
-    assert len(sample3_cat1) == 1
-    assert float(sample3_cat1.iloc[0]["bar_value"]) == 40.0
+    sample3_cat1 = merged_df.filter((pl.col("sample") == "Sample3") & (pl.col("category") == "Cat1"))
+    assert sample3_cat1.height == 1
+    assert float(sample3_cat1.select("bar_value").item()) == 40.0
 
-    # Sample3/Cat1 should be from dataset2
-    sample3_cat1 = merged_df[(merged_df["sample"] == "Sample3") & (merged_df["category"] == "Cat3")]
-    assert len(sample3_cat1) == 1
-    assert float(sample3_cat1.iloc[0]["bar_value"]) == 45.0
+    # Sample3/Cat3 should be from dataset2
+    sample3_cat3 = merged_df.filter((pl.col("sample") == "Sample3") & (pl.col("category") == "Cat3"))
+    assert sample3_cat3.height == 1
+    assert float(sample3_cat3.select("bar_value").item()) == 45.0
