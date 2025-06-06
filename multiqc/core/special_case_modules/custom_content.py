@@ -340,8 +340,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         # Initialise this new module class and append to list
         else:
             # Is this file asking to be a sub-section under a parent section?
-            mod_id = ccdict.config.get("parent_id", ccdict.config.get("id", mod_id))
-            section_id: SectionId = ccdict.config.get("section_id", mod_id)
+            mod_id = ModuleId(ccdict.config.get("parent_id", ccdict.config.get("id", mod_id)))
+            section_id: SectionId = SectionId(ccdict.config.get("section_id", mod_id))
 
             mod_anchor: Optional[Anchor] = None
             if "parent_anchor" in ccdict.config:
