@@ -10,11 +10,11 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go  # type: ignore
+import polars as pl
 
 from multiqc import config, report
-from multiqc.core.plot_data_store import parse_value, save_plot_data
+from multiqc.core.plot_data_store import parse_value
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
 from multiqc.plots.table_object import (
@@ -42,30 +42,15 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
     def is_empty(self) -> bool:
         return self.dt.is_empty()
 
-    def to_df(self) -> pd.DataFrame:
+    def to_df(self) -> pl.DataFrame:
         """
         Save plot data to a parquet file using a tabular representation that's
         optimized for cross-run analysis.
         """
         if self.is_empty():
-            return pd.DataFrame()
+            return pl.DataFrame()
 
         records = []
-        # Track column types for proper DataFrame initialization
-        column_types: Dict[str, type] = {
-            "dt_anchor": str,
-            "section_key": str,
-            "sample_name": str,
-            "metric_name": str,
-            "metric_idx": int,
-            "column_meta": str,
-            "show_table_by_default": bool,
-            "val_raw": str,
-            "val_raw_type": str,  # Store the type information
-            "val_mod": str,
-            "val_mod_type": str,  # Store the type information
-            "val_fmt": str,
-        }
 
         # Get ordered headers first
         ordered_headers = list(self.dt.get_headers_in_order())
@@ -78,7 +63,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             for sample_name, group_rows in section.rows_by_sgroup.items():
                 for row in group_rows:
                     # Process each metric/column in the order from get_headers_in_order()
-                    for idx, metric_name, dt_column in ordered_headers:
+                    for section_order, metric_name, dt_column in ordered_headers:
                         if metric_name not in row.data:
                             continue
 
@@ -91,15 +76,15 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                         record = {
                             "dt_anchor": self.dt.anchor,
                             "section_key": str(section_key),
-                            "sample_name": str(sample_name),
-                            "metric_name": str(metric_name),
-                            "metric_idx": idx,  # Store original index for ordering
-                            "val_raw": str(cell.raw),
+                            "section_order": section_order,  # Store original index for ordering
+                            "sample": str(sample_name),
+                            "metric": str(metric_name),
+                            "val_raw": float(cell.raw) if isinstance(cell.raw, (int, float)) else float("nan"),
                             "val_raw_type": type(cell.raw).__name__,  # Store type name
-                            "val_mod": str(cell.mod),
+                            "val_mod": float(cell.mod) if isinstance(cell.mod, (int, float)) else float("nan"),
                             "val_mod_type": type(cell.mod).__name__,  # Store type name
                             "val_fmt": str(cell.fmt),
-                            # Store column metadata as JSON. Note thaet "format" and "modify" lambda won't be stored,
+                            # Store column metadata as JSON. Note that "format" and "modify" lambda won't be stored,
                             # that's why we are saving val_mod and val_fmt separately.
                             "column_meta": dt_column.model_dump_json(),
                             "show_table_by_default": self.show_table_by_default,
@@ -107,40 +92,43 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                         records.append(record)
 
-        # Create DataFrame with appropriate dtypes
-        df = pd.DataFrame(records, dtype=object).astype(column_types)
+        # Create DataFrame
+        df = pl.DataFrame(records)
         return self.finalize_df(df)
 
-    def to_wide_df(self) -> pd.DataFrame:
+    def to_wide_df(self) -> Tuple[pl.DataFrame, Set[ColumnKey]]:
         """
         Save plot data to a parquet file using a tabular representation where metrics are columns
         and samples are rows, optimized for cross-run analysis. Used for parquet data dump.
         """
         if self.is_empty() or not self.pconfig.rows_are_samples:
-            return pd.DataFrame()
+            return pl.DataFrame(), set()
 
         # Get ordered headers first
         ordered_headers = list(self.dt.get_headers_in_order())
 
-        # Now transform directly to wide format with metrics as columns
-        wide_records = []
+        # Create a dictionary to collect metrics for each sample across all sections
+        samples_data: Dict[str, Dict[str, Any]] = {}
+        metric_col_names = set()
 
-        # Process each section and its rows
-        for section_idx, section in enumerate(self.dt.section_by_id.values()):
-            section_key = list(self.dt.section_by_id.keys())[section_idx]
-
+        # Process each section and its rows to collect all metrics for each sample
+        for section_key, section in self.dt.section_by_id.items():
             # Process each sample in this section
             for sample_name, group_rows in section.rows_by_sgroup.items():
                 for row in group_rows:
-                    # Create base record with sample information
-                    wide_record: Dict[str, Any] = {
-                        "type": "table_row",
-                        "section_key": str(section_key),
-                        "sample_name": str(sample_name),
-                    }
+                    # Initialize sample record if not seen before
+                    if str(sample_name) not in samples_data:
+                        samples_data[str(sample_name)] = {
+                            "anchor": "",  # column is prefixed with table anchor instead
+                            "type": "table_row",
+                            "creation_date": self.creation_date,
+                            "plot_type": None,
+                            "plot_input_data": None,
+                            "sample": str(sample_name),
+                        }
 
                     # Process each metric/column in the order from get_headers_in_order()
-                    for _, metric_name, _ in ordered_headers:
+                    for _, metric_name, dt_column in ordered_headers:
                         if metric_name not in row.data:
                             continue
 
@@ -154,27 +142,46 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             float_val = float(cell.mod)
                         except ValueError:
                             float_val = float("nan")
-                        wide_record[f"col_{metric_name}_val"] = float_val
-                        wide_record[f"col_{metric_name}_str"] = cell.fmt
 
-                    # Only add records that have at least one metric
-                    if any(k.startswith("col_") for k in wide_record.keys()):
-                        wide_records.append(wide_record)
+                        # Column names now include both the metric name and any namespace
+                        # to ensure uniqueness across different tables
+                        metric_col_name = ColumnKey(metric_name)
+                        if dt_column.namespace:
+                            metric_col_name = ColumnKey(f"{dt_column.namespace} / {metric_name}")
+                        elif len(self.dt.section_by_id) > 1:
+                            metric_col_name = ColumnKey(f"{section_key} / {metric_name}")
+                        metric_col_name = ColumnKey(f"{self.dt.id} / {metric_col_name}".lower())
+
+                        # Add metric to the sample's data
+                        samples_data[str(sample_name)][metric_col_name] = float_val
+                        metric_col_names.add(metric_col_name)
+
+        # Convert dictionary to DataFrame - one row per sample
+        wide_records = list(samples_data.values())
 
         # Create the wide format DataFrame
-        df = pd.DataFrame(wide_records)
-        self.finalize_df(df)
-        return df
+        df = pl.DataFrame(
+            wide_records,
+            schema_overrides={
+                "anchor": pl.Utf8,
+                "type": pl.Utf8,
+                "creation_date": pl.Datetime(time_unit="us"),
+                "plot_type": pl.Utf8,
+                "plot_input_data": pl.Utf8,
+                "sample": pl.Utf8,
+            },
+        )
+        return df, metric_col_names
 
     @classmethod
     def from_df(
         cls,
-        df: pd.DataFrame,
+        df: pl.DataFrame,
         pconfig: Union[Dict, TableConfig],
         anchor: Anchor,
     ) -> "ViolinPlotInputData":
         """
-        Load plot data from a DataFrame.
+        Load plot data from a long DataFrame
         """
         table_anchor = Anchor(f"{anchor}_table")  # make sure it's unique
         creation_date = cls.creation_date_from_df(df)
@@ -199,10 +206,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                 show_table_by_default=True,
                 creation_date=creation_date,
             )
-
         pconf = cast(TableConfig, TableConfig.from_df(df))
 
-        show_table_by_default = df.iloc[0]["show_table_by_default"]
+        show_table_by_default = df.select("show_table_by_default").row(0)[0]
 
         # Prepare data structure for DataTable creation
         data_dict: Dict[SectionKey, Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]]] = {}
@@ -212,32 +218,44 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         ordered_metrics = {}
 
         # Group by section
-        for section_key, section_group in df.groupby("section_key", sort=False):
+        for section_key in df.select("section_key").unique().to_series():
+            section_group = df.filter(pl.col("section_key") == section_key)
             val_by_sample_by_metric: Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]] = {}
             section_headers: Dict[ColumnKey, ColumnDict] = {}
 
             # Sort metrics by their original index if available
-            if "metric_idx" in section_group.columns:
+            if "section_order" in section_group.columns:
                 # Create ordered dict of metrics for this section
-                metrics_info = section_group[["metric_name", "metric_idx"]].drop_duplicates()
-                for _, row in metrics_info.iterrows():
-                    ordered_metrics[row["metric_name"]] = row["metric_idx"]
+                metrics_info = section_group.select(["metric", "section_order"]).unique()
+                for metric_row in metrics_info.iter_rows(named=True):
+                    ordered_metrics[metric_row["metric"]] = metric_row["section_order"]
 
             # Process samples
-            for sample_name, sample_group in section_group.groupby("sample_name", sort=False):
+            for sample_name in section_group.select("sample").unique().to_series():
+                sample_group = section_group.filter(pl.col("sample") == sample_name)
                 val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
 
-                # If we have metric_idx, sort by that first
-                if "metric_idx" in sample_group.columns:
-                    sample_group = sample_group.sort_values("metric_idx")
+                # If we have section_order, sort by that first
+                if "section_order" in sample_group.columns:
+                    sample_group = sample_group.sort("section_order")
 
                 # Process metrics/columns
-                for _, row in sample_group.iterrows():
-                    metric_name = row["metric_name"]
+                for row in sample_group.iter_rows(named=True):
+                    metric_name = row["metric"]
 
                     # Convert string values back to their original types
-                    val_raw = parse_value(row["val_raw"], row["val_raw_type"])
-                    val_mod = parse_value(row["val_mod"], row["val_mod_type"])
+                    val_raw: float = row["val_raw"]
+                    if not math.isnan(val_raw):
+                        if row["val_raw_type"] == "int":
+                            val_raw = int(val_raw)
+                        elif row["val_raw_type"] == "bool":
+                            val_raw = bool(val_raw)
+                    val_mod: float = row["val_mod"]
+                    if not math.isnan(val_mod):
+                        if row["val_mod_type"] == "int":
+                            val_mod = int(val_mod)
+                        elif row["val_mod_type"] == "bool":
+                            val_mod = bool(val_mod)
                     val_by_metric[ColumnKey(str(metric_name))] = Cell(
                         raw=val_raw,
                         mod=val_mod,
@@ -355,22 +373,60 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
         # If we have both old and new data, merge them
         merged_df = None
-        if old_df is not None and not old_df.empty:
+        if old_df is not None and not old_df.is_empty():
             # Combine the dataframes, keeping all rows
-            merged_df = pd.concat([old_df, new_df], ignore_index=True)
+            merged_df = pl.concat([old_df, new_df], how="vertical")
 
-            # For duplicates (same sample, metric, dataset, section), keep the latest version
-            # Sort by timestamp (newest last)
-            merged_df.sort_values("creation_date", inplace=True)
+            # Get original order of metrics
+            # We need to preserve metric_name order, which is important for visualization
+            metric_order = {}
+            for idx, metric in enumerate(merged_df.select("metric").to_series()):
+                if metric not in metric_order:
+                    metric_order[metric] = idx
 
-            # Group by the key identifiers and keep the last entry (newest)
-            dedupe_columns = ["dt_anchor", "section_key", "sample_name", "metric_name"]
-            merged_df = merged_df.drop_duplicates(subset=dedupe_columns, keep="last")
+            merged_df = merged_df.with_columns(
+                pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+            )
+
+            # First ensure the DataFrame is sorted by creation_date (newest last)
+            merged_df = merged_df.sort("creation_date")
+
+            # Get all unique combinations of the key columns
+            key_columns = ["dt_anchor", "section_key", "sample", "metric"]
+            unique_keys = merged_df.select(key_columns).unique()
+
+            # For each unique key combination, find the newest entry
+            latest_records = []
+            for key_row in unique_keys.iter_rows(named=True):
+                # Build filter expression for this key combination
+                filter_expr = pl.lit(True)
+                for col, val in key_row.items():
+                    filter_expr = filter_expr & (pl.col(col) == val)
+
+                # Get matching rows (should be sorted by creation_date already)
+                matches = merged_df.filter(filter_expr)
+                if not matches.is_empty():
+                    # Get the last/newest record for this key combination
+                    row: Tuple[Any, ...] = matches.row(-1)
+                    entry = {k: v for k, v in zip(merged_df.columns, row)}
+                    latest_records.append(entry)
+
+            # Create a new DataFrame from the latest records
+            if latest_records:
+                # Create DataFrame with same schema as merged_df
+                deduped_df = pl.DataFrame(latest_records, schema=merged_df.schema)
+
+                # Add a temporary column to sort by the original metric order
+                deduped_df = deduped_df.with_columns(
+                    pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                )
+
+                # Sort by the order column to preserve metric ordering
+                merged_df = deduped_df.sort("__metric_order").drop("__metric_order")
+            else:
+                merged_df = pl.DataFrame(schema=merged_df.schema)
         else:
             merged_df = new_df
-
-        # Save the merged data for future reference
-        save_plot_data(new_data.anchor, merged_df)
 
         # Create a new ViolinPlotInputData from the merged DataFrame
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
@@ -950,13 +1006,25 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                             val = row.data[col_key]
                             data.setdefault(row.sample, {})[rid] = val.raw
 
-            import pandas as pd  # type: ignore
+            # Use polars to create a DataFrame
+            records = []
+            for sample_name, metrics in data.items():
+                record = {"sample": sample_name, **metrics}
+                records.append(record)
 
-            df = pd.DataFrame(data)
-            # Showing the first column header if it's not default
+            df = pl.DataFrame(records, schema_overrides={"sample": pl.Utf8})
+
+            # Set the index to the sample column
+            if len(records) > 0:
+                df = df.with_row_index("sample_idx")
+
+            # Return the transposed DataFrame for display
+            result_df = df.transpose(include_header=True)
+            # Rename the first column if it's not the default
             if self.pconfig.col1_header != TableConfig.model_fields["col1_header"].default:
-                df.index.name = self.pconfig.col1_header
-            return df.T  # Jupyter knows how to display dataframes
+                result_df = result_df.rename({"column_0": self.pconfig.col1_header})
+
+            return result_df
 
         else:
             return super().show(dataset_id, flat, **kwargs)
@@ -1083,7 +1151,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             show_table_by_default=inputs.show_table_by_default,
             anchor=inputs.anchor,
         )
-        inputs.save()
+        inputs.save_to_parquet()
         return plot
 
 
