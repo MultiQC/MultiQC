@@ -57,29 +57,44 @@ class MultiqcModule(BaseMultiqcModule):
         data_by_sample: Dict[str, Dict[str, Union[int, float]]] = {}
 
         for f in self.find_log_files("custom_csv", filehandles=True):
-            file_path = f["fn"]
+            # file_name = f["fn"]
 
-            # Get 'Sample1' assuming structure is: .../Sample1/outs/...
-            sample_dir = os.path.dirname(os.path.dirname(file_path))
-            sample_id = os.path.basename(sample_dir)
+            # # Get 'Sample1' assuming structure is: .../Sample1/outs/...
+            # sample_dir = os.path.dirname(os.path.dirname(file_name))
+            # sample_id = os.path.basename(sample_dir)
 
+            # # Clean the sample name for MultiQC standards
+            # sample_name = self.clean_s_name(sample_id, f)
+
+            d_name = f["root"]
             # Clean the sample name for MultiQC standards
-            sample_name = self.clean_s_name(sample_id, f)
+            sample_name = self.clean_s_name(d_name, f)
+
+            # sample_name = self.clean_s_name(os.path.basename(os.path.dirname(f["fn"])), f)
+
+
+            log.info(sample_name)
+            pprint(sample_name)
+            print(sample_name)
 
             # Parse the file using sample_name
             parsed = parse_csv_metrics(f["f"], sample_name)
-            pprint(parsed)
-            log.info(parsed)
+            # pprint(parsed)
+            # log.info(parsed)
             if not parsed:
                 continue
-            data_by_sample = parsed
+
+            for sample_id, sample_metrics in parsed.items():
+                data_by_sample[sample_id] = sample_metrics
+
+            # data_by_sample = parsed
             self.add_data_source(f)
 
         if not data_by_sample:
             raise ModuleNoSamplesFound
 
         self.write_data_file(data_by_sample, "multiqc_csv")
-        log.info(data_by_sample)
+        # log.info(data_by_sample)
 
         
         headers: Dict[str, ColumnDict] = {}
@@ -120,8 +135,8 @@ class MultiqcModule(BaseMultiqcModule):
         formatted_stats = format_general_stats(data_by_sample, headers)
         # pprint(format_general_stats((data_by_sample, headers)))
 
-        print("FINAL general_stats DATA:")
-        pprint(formatted_stats)
+        # print("FINAL general_stats DATA:")
+        # pprint(formatted_stats)
 
         self.general_stats_addcols(
             format_general_stats(data_by_sample, headers),

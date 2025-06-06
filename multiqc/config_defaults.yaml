@@ -595,7 +595,6 @@ module_order:
   - mgikit
   - mosaicatcher
   - custom_csv
-  - bd_custom_csv
 
 # Preserves `saved_raw_data` section in modules - default for interactive runs
 preserve_module_raw_data: false
