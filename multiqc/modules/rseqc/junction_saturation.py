@@ -37,9 +37,10 @@ def parse_reports(module: BaseMultiqcModule):
                 junction_saturation_known[f["s_name"]] = dict()
                 junction_saturation_novel[f["s_name"]] = dict()
                 for k, v in enumerate(parsed["x"]):
-                    junction_saturation_all[f["s_name"]][v] = parsed["z"][k]
-                    junction_saturation_known[f["s_name"]][v] = parsed["y"][k]
-                    junction_saturation_novel[f["s_name"]][v] = parsed["w"][k]
+                    # Normalise junction counts to the percentage of total junctions (100% of reads)
+                    junction_saturation_all[f["s_name"]][v] = 100 * parsed["z"][k] / parsed["z"][-1]
+                    junction_saturation_known[f["s_name"]][v] = 100 * parsed["y"][k] / parsed["y"][-1]
+                    junction_saturation_novel[f["s_name"]][v] = 100 * parsed["w"][k] / parsed["w"][-1]
 
     # Filter to strip out ignored sample names
     junction_saturation_all = module.ignore_samples(junction_saturation_all)
@@ -62,12 +63,12 @@ def parse_reports(module: BaseMultiqcModule):
     pconfig = {
         "id": "rseqc_junction_saturation_plot",
         "title": "RSeQC: Junction Saturation",
-        "ylab": "Number of Junctions",
+        "ylab": "Percent of Junctions",
         "ymin": 0,
         "xlab": "Percent of reads",
         "xmin": 0,
         "xmax": 100,
-        "tt_label": "<strong>{point.x}% of reads</strong>: {point.y:.2f}",
+        "tt_label": "<strong>{point.x}% of reads</strong>: {point.y:.1f}% of junctions",
         "data_labels": [{"name": "All Junctions"}, {"name": "Known Junctions"}, {"name": "Novel Junctions"}],
     }
     module.add_section(
@@ -77,11 +78,8 @@ def parse_reports(module: BaseMultiqcModule):
             counts the number of known splicing junctions that are observed
             in each dataset. If sequencing depth is sufficient, all (annotated) splice junctions should
             be rediscovered, resulting in a curve that reaches a plateau. Missing low abundance splice
-            junctions can affect downstream analysis.</p>
-            <div class="alert alert-info" id="rseqc-junction_sat_single_hint">
-              <span class="glyphicon glyphicon-hand-up"></span>
-              Click a line to see the data side by side (as in the original RSeQC plot).
-            </div><p>""",
+            junctions can affect downstream analysis.
+            """,
         plot=linegraph.plot(
             [junction_saturation_all, junction_saturation_known, junction_saturation_novel],
             pconfig,
