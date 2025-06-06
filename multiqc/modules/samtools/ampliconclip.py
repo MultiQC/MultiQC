@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict
+from typing import Any, Dict, Optional
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import violin
@@ -87,10 +87,8 @@ ampliconclip_headers = {
 def parse_samtools_ampliconclip(module: BaseMultiqcModule):
     """Find Samtools ampliconclip logs and parse their data"""
 
-    print("DEBUG HERE")
     samtools_ampliconclip: Dict = dict()
     for f in module.find_log_files("samtools/ampliconclip"):
-        print(f"DEBUG HERE f: {f}")
         parsed_data = parse_single_report(f["f"])
         if len(parsed_data) > 0:
             if f["s_name"] in samtools_ampliconclip:
@@ -111,14 +109,24 @@ def parse_samtools_ampliconclip(module: BaseMultiqcModule):
     # General Stats Table
 
     # Get general stats headers using the utility function, will read config.general_stats_columns
-    general_stats_headers = module.get_general_stats_headers(all_headers=ampliconclip_headers)
+    general_stats_headers = module.get_general_stats_headers(
+        all_headers={
+            data_dict["source_col"]: {
+                "title": data_dict["title"],
+                "description": data_dict["description"],
+                "shared_key": data_dict["shared_key"],
+                "hidden": data_dict["hidden"],
+            }
+            for data_key, data_dict in ampliconclip_headers.items()
+        }
+    )
 
     # Add headers to general stats table
     if general_stats_headers:
         module.general_stats_addcols(samtools_ampliconclip, general_stats_headers, namespace="ampliconclip")
 
     # Make a violin plot
-    keys_counts = {
+    keys_counts: Dict[str, Dict[str, Any]] = {
         key: {
             "shared_key": "read_count",
             "modify": None,
@@ -187,7 +195,17 @@ def parse_single_report(file_obj):
     Take a filename, parse the data assuming it's a ampliconclip file
     Returns a dictionary of metrics to value
     """
-    parsed_data: Dict = {k: None for k in ampliconclip_headers}
+    parsed_data: Dict[str, Optional[int]] = {k: None for k in ampliconclip_headers}
+
+    # source_to_key = {
+    #     data_dict["source_col"]: {
+    #         "title": data_dict["title"],
+    #         "description": data_dict["description"],
+    #         "shared_key": data_dict["shared_key"],
+    #         "hidden": data_dict["hidden"],
+    #     }
+    #     for data_key, data_dict in ampliconclip_headers.items()
+    # }
 
     source_to_key = {data_dict["source_col"]: data_key for data_key, data_dict in ampliconclip_headers.items()}
     source_to_key["COMMAND"] = None
