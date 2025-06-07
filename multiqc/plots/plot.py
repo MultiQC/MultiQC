@@ -402,7 +402,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         return plot_data_store.fix_creation_date(
             df.with_columns(
                 pl.lit(str(self.anchor)).alias("anchor"),
-                pl.lit(self.creation_date).alias("creation_date"),
+                pl.lit(self.creation_date.replace(tzinfo=None)).alias("creation_date"),
                 pl.lit("plot_input_row").alias("type"),
                 pl.lit(str(self.plot_type.value)).alias("plot_type"),
                 pl.lit(self.pconfig.model_dump_json(exclude_none=True)).alias("pconfig"),
@@ -437,7 +437,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             {
                 "anchor": [str(self.anchor)],
                 "type": ["plot_input"],
-                "creation_date": [self.creation_date],
+                "creation_date": [self.creation_date.replace(tzinfo=None)],
                 "plot_type": [str(self.plot_type.value)],
                 "plot_input_data": [nan_safe_dumps(self.model_dump(mode="json", exclude_none=True))],
             }
