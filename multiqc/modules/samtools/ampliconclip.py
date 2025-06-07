@@ -197,16 +197,6 @@ def parse_single_report(file_obj):
     """
     parsed_data: Dict[str, Optional[int]] = {k: None for k in ampliconclip_headers}
 
-    # source_to_key = {
-    #     data_dict["source_col"]: {
-    #         "title": data_dict["title"],
-    #         "description": data_dict["description"],
-    #         "shared_key": data_dict["shared_key"],
-    #         "hidden": data_dict["hidden"],
-    #     }
-    #     for data_key, data_dict in ampliconclip_headers.items()
-    # }
-
     source_to_key = {data_dict["source_col"]: data_key for data_key, data_dict in ampliconclip_headers.items()}
     source_to_key["COMMAND"] = None
 
