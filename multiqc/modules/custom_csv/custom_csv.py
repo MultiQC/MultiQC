@@ -1,7 +1,6 @@
-import os
 import csv
 import logging
-from typing import Dict, Union, cast, Any
+from typing import Dict, Union, cast, Any, List
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from multiqc.plots.table_object import TableConfig, ColumnMeta, ColumnDict
@@ -96,15 +95,28 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_by_sample, "multiqc_csv")
         # log.info(data_by_sample)
 
-        
+
+        # color_palette: List[str] = [
+        #     "#ff9999", "#66b3ff", "#99ff99", "#ffcc99", "#c2c2f0", "#ffb3e6",
+        #     "#c2f0c2", "#ff6666", "#c2d6d6", "#ffff99"
+        # ]
+
+        color_palette: List[str] = [
+            "OrRd", "BuPu", "Oranges", "BuGn", "PuBu", "PuRd",
+            "PuBuGn", "Reds", "RdPu", "Greens", "Greys", "Purples", "GnBu"
+        ]
+
         headers: Dict[str, ColumnDict] = {}
+        color_index = 0
         for sample_metrics in data_by_sample.values():
             for metric in sample_metrics:
                 if metric not in headers:
                     headers[metric] = {
                         "title": metric,
-                        "description": f"Parsed metric: {metric}"
+                        "description": f"Parsed metric: {metric}",
+                        "scale": color_palette[color_index % len(color_palette)]
                     }
+                    color_index += 1
 
 
 
