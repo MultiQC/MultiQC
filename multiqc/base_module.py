@@ -148,11 +148,6 @@ class BaseMultiqcModule:
         if _config_section_comment := config.section_comments.get(str(self.anchor)):
             self.comment = _config_section_comment
 
-        self.info = self.info.strip().strip(".")
-        # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
-        if self.info and self.info[0].islower():
-            self.info = f"{self.name} {self.info}"
-
         if isinstance(self.href, str):
             self.href = [self.href]
         self.href = [i for i in self.href if i != ""]
@@ -205,7 +200,7 @@ class BaseMultiqcModule:
                 "; ".join(url_links)
             )
 
-        info = (self.info + ".") if self.info else ""
+        info = self.info.replace("\n", "<br>")
         return f"<p>{info}{url_link}{doi_html}</p>{self.extra}"
 
     def clean_child_attributes(self):
