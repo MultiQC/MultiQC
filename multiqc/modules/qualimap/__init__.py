@@ -99,8 +99,14 @@ def parse_numerals(
 
 
 def get_s_name(module: BaseMultiqcModule, f):
-    s_name = os.path.basename(os.path.dirname(f["root"]))
-    s_name = module.clean_s_name(s_name, f)
-    if s_name.endswith(".qc"):
-        s_name = s_name[:-3]
-    return s_name
+    path_parts = os.path.normpath(f["root"]).split(os.sep)
+    try:
+        rpt_index = path_parts.index("raw_data_qualimapReport")
+        if rpt_index >= 2:
+            s_name = path_parts[rpt_index - 2]  # go two levels up
+        else:
+            s_name = os.path.basename(os.path.dirname(f["root"]))
+    except ValueError:
+        # fallback if raw_data_qualimapReport isn't in path
+        s_name = os.path.basename(os.path.dirname(f["root"]))
+    return module.clean_s_name(s_name, f)
