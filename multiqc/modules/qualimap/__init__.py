@@ -99,7 +99,8 @@ def parse_numerals(
 
 
 def get_s_name(module: BaseMultiqcModule, f):
-    s_name = os.path.basename(os.path.dirname(f["root"]))
+    # Go two directories up: raw_data_qualimapReport → qualimap → sample_name
+    s_name = os.path.basename(os.path.dirname(os.path.dirname(f["root"])))
     s_name = module.clean_s_name(s_name, f)
     if s_name.endswith(".qc"):
         s_name = s_name[:-3]
