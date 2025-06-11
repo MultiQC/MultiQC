@@ -30,9 +30,8 @@ def parse_csv_metrics(fh, filename: str) -> Dict[str, Dict[str, Union[float, int
     return data
 
 
-def format_general_stats( 
-    data: Dict[str, Dict[str, Union[int, float]]],
-    headers: Dict[str, ColumnDict]
+def format_general_stats(
+    data: Dict[str, Dict[str, Union[int, float]]], headers: Dict[str, ColumnDict]
 ) -> Dict[str, Dict[str, Union[int, float, str, bool]]]:
     formatted: Dict[str, Dict[str, Union[int, float, str, bool]]] = {}
     for sample, metrics in data.items():
@@ -40,8 +39,6 @@ def format_general_stats(
         for k, v in metrics.items():
             formatted[sample][k] = v
     return formatted
-
-
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -52,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Parses a CSV file to extract summary metrics and display them in MultiQC.",
         )
         log.info("Hello World!")
-        
+
         data_by_sample: Dict[str, Dict[str, Union[int, float]]] = {}
 
         for f in self.find_log_files("custom_csv", filehandles=True):
@@ -70,7 +67,6 @@ class MultiqcModule(BaseMultiqcModule):
             sample_name = self.clean_s_name(d_name, f)
 
             # sample_name = self.clean_s_name(os.path.basename(os.path.dirname(f["fn"])), f)
-
 
             log.info(sample_name)
             pprint(sample_name)
@@ -94,16 +90,20 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(data_by_sample, "multiqc_csv")
         # log.info(data_by_sample)
-
-
-        # color_palette: List[str] = [
-        #     "#ff9999", "#66b3ff", "#99ff99", "#ffcc99", "#c2c2f0", "#ffb3e6",
-        #     "#c2f0c2", "#ff6666", "#c2d6d6", "#ffff99"
-        # ]
-
         color_palette: List[str] = [
-            "OrRd", "BuPu", "Oranges", "BuGn", "PuBu", "PuRd",
-            "PuBuGn", "Reds", "RdPu", "Greens", "Greys", "Purples", "GnBu"
+            "OrRd",
+            "BuPu",
+            "Oranges",
+            "BuGn",
+            "PuBu",
+            "PuRd",
+            "PuBuGn",
+            "Reds",
+            "RdPu",
+            "Greens",
+            "Greys",
+            "Purples",
+            "GnBu",
         ]
 
         headers: Dict[str, ColumnDict] = {}
@@ -114,11 +114,9 @@ class MultiqcModule(BaseMultiqcModule):
                     headers[metric] = {
                         "title": metric,
                         "description": f"Parsed metric: {metric}",
-                        "scale": color_palette[color_index % len(color_palette)]
+                        "scale": color_palette[color_index % len(color_palette)],
                     }
                     color_index += 1
-
-
 
         # Plot the custom summary table
         self.add_section(
@@ -128,10 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 data_by_sample,
                 headers,
-                pconfig=TableConfig(
-                    id="csv_summary_table",
-                    title="CSV Summary Metrics"
-                ),
+                pconfig=TableConfig(id="csv_summary_table", title="CSV Summary Metrics"),
             ),
         )
 
@@ -141,16 +136,4 @@ class MultiqcModule(BaseMultiqcModule):
             col["hidden"] = True
         general_stats_headers["Cells"]["hidden"] = False
         general_stats_headers["Number of reads"]["hidden"] = False
-
-        # Format stats for general stats table
-        # log.info(data_by_sample)
-        formatted_stats = format_general_stats(data_by_sample, headers)
-        # pprint(format_general_stats((data_by_sample, headers)))
-
-        # print("FINAL general_stats DATA:")
-        # pprint(formatted_stats)
-
-        self.general_stats_addcols(
-            format_general_stats(data_by_sample, headers),
-            general_stats_headers
-        )
+        self.general_stats_addcols(format_general_stats(data_by_sample, headers), general_stats_headers)
