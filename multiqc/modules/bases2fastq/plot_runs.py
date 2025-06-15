@@ -309,7 +309,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
                 cycle_no = int(cycle["Cycle"]) + r1r2_split
                 cycle_dict.update({cycle_no: cycle["PercentQ40"]})
         Q40_dict.update({s_name: cycle_dict})
-    
+
     # Prepare plot data for % base calls below PF threshold
     below_pf_dict = {}
     for s_name in run_data.keys():
