@@ -254,13 +254,11 @@ def plot_base_quality_by_cycle(run_data, color_dict):
 
     median_dict = {}
     for s_name in run_data.keys():
+        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         cycle_dict = dict()
         R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
-            cycle_dict.update({cycle_no: cycle["QualityScore50thPercentile"]})
-        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
-            cycle_no = int(cycle["Cycle"]) + r1r2_split
             cycle_dict.update({cycle_no: cycle["QualityScore50thPercentile"]})
         if paired_end:
             for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
@@ -277,9 +275,6 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["QualityScoreMean"]})
-        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
-            cycle_no = int(cycle["Cycle"]) + r1r2_split
-            cycle_dict.update({cycle_no: cycle["QualityScoreMean"]})
         if paired_end:
             for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
                 cycle_no = int(cycle["Cycle"]) + r1r2_split
@@ -295,9 +290,6 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["PercentQ30"]})
-        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
-            cycle_no = int(cycle["Cycle"]) + r1r2_split
-            cycle_dict.update({cycle_no: cycle["PercentQ30"]})
         if paired_end:
             for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
                 cycle_no = int(cycle["Cycle"]) + r1r2_split
@@ -312,23 +304,38 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["PercentQ40"]})
-        for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
-            cycle_no = int(cycle["Cycle"]) + r1r2_split
-            cycle_dict.update({cycle_no: cycle["PercentQ40"]})
         if paired_end:
             for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
                 cycle_no = int(cycle["Cycle"]) + r1r2_split
                 cycle_dict.update({cycle_no: cycle["PercentQ40"]})
         Q40_dict.update({s_name: cycle_dict})
 
+    # Prepare plot data for % base calls below PF threshold
+    below_pf_dict = {}
+    for s_name in run_data.keys():
+        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
+        cycle_dict = dict()
+        R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
+        if "PercentBelowFilterThreshold" not in run_data[s_name]["Reads"][0]["Cycles"][0]:
+            continue
+        for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
+            cycle_no = int(cycle["Cycle"])
+            cycle_dict.update({cycle_no: cycle["PercentBelowFilterThreshold"]})
+        if paired_end:
+            for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
+                cycle_no = int(cycle["Cycle"]) + r1r2_split
+                cycle_dict.update({cycle_no: cycle["PercentBelowFilterThreshold"]})
+        below_pf_dict.update({s_name: cycle_dict})
+
     # aggregate plot data
-    plot_content = [median_dict, mean_dict, Q30_dict, Q40_dict]
+    plot_content = [median_dict, mean_dict, Q30_dict, Q40_dict, below_pf_dict]
     pconfig = {
         "data_labels": [
             {"name": "Median Quality", "xlab": "cycle", "ylab": "Quality"},
             {"name": "Mean Quality", "ylab": "Quality"},
             {"name": "%Q30", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
             {"name": "%Q40", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
+            {"name": "%Base Calls Below PF", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
         ],
         "x_lines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "dash"}],
         "colors": color_dict,
