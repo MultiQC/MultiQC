@@ -29,7 +29,6 @@ def parse_csv_metrics(fh, filename: str) -> Dict[str, Dict[str, Union[float, int
     for row in reader:
         metric_name = row.get("Metric Name", "").strip()
         value = row.get("Metric Value", "").strip()
-        # s_name = row.get("Group Name", "").strip() or "global"
         if not metric_name or not value:
             continue
         value = value.replace(",", "").replace("%", "")
@@ -61,46 +60,31 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="custom_csv",
             info="Parses a CSV file to extract summary metrics and display them in MultiQC.",
         )
-        log.info("Hello World!")
+        # self.doi = None  # No DOI – this module parses custom CSV data
 
         data_by_sample: Dict[str, Dict[str, Union[int, float]]] = {}
 
         for f in self.find_log_files("custom_csv", filehandles=True):
-            # file_name = f["fn"]
-
-            # # Get 'Sample1' assuming structure is: .../Sample1/outs/...
-            # sample_dir = os.path.dirname(os.path.dirname(file_name))
-            # sample_id = os.path.basename(sample_dir)
-
-            # # Clean the sample name for MultiQC standards
-            # sample_name = self.clean_s_name(sample_id, f)
-
             d_name = f["root"]
             # Clean the sample name for MultiQC standards
             sample_name = self.clean_s_name(d_name, f)
-
-            # sample_name = self.clean_s_name(os.path.basename(os.path.dirname(f["fn"])), f)
 
             self.add_software_version(None, sample_name)
 
             # Parse the file using sample_name
             parsed = parse_csv_metrics(f["f"], sample_name)
-            # pprint(parsed)
-            # log.info(parsed)
             if not parsed:
                 continue
 
             for sample_id, sample_metrics in parsed.items():
                 data_by_sample[sample_id] = sample_metrics
 
-            # data_by_sample = parsed
             self.add_data_source(f)
 
         if not data_by_sample:
             raise ModuleNoSamplesFound
 
         self.write_data_file(data_by_sample, "multiqc_csv")
-        # log.info(data_by_sample)
         color_palette: List[str] = [
             "OrRd",
             "BuPu",
