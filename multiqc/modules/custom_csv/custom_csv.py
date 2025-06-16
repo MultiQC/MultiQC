@@ -1,4 +1,5 @@
 import csv
+import io
 import logging
 from typing import Dict, Union, cast, Any, List
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -6,12 +7,24 @@ from multiqc.plots import table
 from multiqc.plots.table_object import TableConfig, ColumnMeta, ColumnDict
 from pprint import pprint
 
+# No DOI available – the data parsed here is custom and not from a published source
+# self.add_software_version not needed – no external software version applies
+
 log = logging.getLogger(__name__)
 
 
 def parse_csv_metrics(fh, filename: str) -> Dict[str, Dict[str, Union[float, int]]]:
     data: Dict[str, Dict[str, Union[int, float]]] = {}
     sample_name = filename.replace(".csv", "")
+
+    if isinstance(fh, io.BytesIO):
+        fh = io.TextIOWrapper(fh, encoding="latin-1")
+    else:
+        try:
+            fh = io.TextIOWrapper(fh.buffer, encoding="latin-1")
+        except AttributeError:
+            pass
+
     reader = csv.DictReader(fh)
     for row in reader:
         metric_name = row.get("Metric Name", "").strip()
@@ -68,9 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # sample_name = self.clean_s_name(os.path.basename(os.path.dirname(f["fn"])), f)
 
-            log.info(sample_name)
-            pprint(sample_name)
-            print(sample_name)
+            self.add_software_version(None, sample_name)
 
             # Parse the file using sample_name
             parsed = parse_csv_metrics(f["f"], sample_name)
