@@ -59,6 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="CSVFlex",
             anchor="custom_csv",
             info="Parses a CSV file to extract summary metrics and display them in MultiQC.",
+            doi="",
         )
         # self.doi = None  # No DOI – this module parses custom CSV data
 
