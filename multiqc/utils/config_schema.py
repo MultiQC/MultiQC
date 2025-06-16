@@ -5,7 +5,7 @@ Generated from the config defaults and type hints.
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 AiProviderLiteral = Literal["seqera", "openai", "anthropic", "aws_bedrock", "custom"]
 
@@ -249,8 +249,7 @@ class MultiQCConfig(BaseModel):
         None, description="Search patterns for finding tool outputs"
     )
 
-    class Config:
-        extra = "allow"  # Allow additional fields that aren't in the schema
+    model_config = ConfigDict(extra="allow")  # Allow additional fields that aren't in the schema
 
     parquet_format: Optional[Literal["long", "wide"]] = Field(
         None,
