@@ -26,9 +26,8 @@ class ScatterConfig(PConfig):
     marker_line_width: Optional[int] = None
     color: Optional[str] = None
     opacity: Optional[float] = None
-    #symbol: Optional[Union[str, Dict[str, str]]] = None  # NEW
+    # symbol: Optional[Union[str, Dict[str, str]]] = None  # NEW
     symbol: Optional[str] = None  # NEW
-
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("scatterplot",), **data)
@@ -252,13 +251,7 @@ class Dataset(BaseDataset):
 
         dataset.trace_params.update(
             textfont=dict(size=8),
-            marker=dict(
-                size=10,
-                line=dict(width=1),
-                opacity=1,
-                color="rgba(124, 181, 236, .5)",
-                symbol="circle"
-            ),
+            marker=dict(size=10, line=dict(width=1), opacity=1, color="rgba(124, 181, 236, .5)", symbol="circle"),
         )
         # if categories is provided, set them as x-axis ticks
         if pconfig.categories:
@@ -321,7 +314,7 @@ class Dataset(BaseDataset):
         # If there are few unique colors, we can additionally put a unique list into a legend
         # (even though some color might belong to many distinct names - we will just crop the list)
         names_by_legend_key: Dict[Tuple[Any, Any, Any, Any], Set[str]] = defaultdict(set)
- 
+
         for el in self.points:
             legend_key = (el.get("color"), el.get("marker_size"), el.get("marker_line_width"), el.get("group"))
             name = el["name"]
@@ -356,23 +349,23 @@ class Dataset(BaseDataset):
             marker = params.pop("marker")
             if color:
                 marker["color"] = color
-    
+
             if "marker_line_width" in el:
                 marker["line"]["width"] = el["marker_line_width"]
-                
+
             if "marker_size" in el:
                 marker["size"] = el["marker_size"]
             if "opacity" in el:
                 marker["opacity"] = el["opacity"]
 
             # Add support for symbol
-            if "symbol" in el:   # NEW
+            if "symbol" in el:  # NEW
                 marker["symbol"] = el["symbol"]
                 print(f"Using marker symbol for {el['name']}: {el['symbol']}")
-                
+
             if annotation:
                 params["mode"] = "markers+text"
-                
+
             if n_annotated > 0:  # Reduce opacity of the borders that clutter the annotations:
                 marker["line"]["color"] = "rgba(0, 0, 0, .2)"
 
@@ -451,7 +444,6 @@ class Dataset(BaseDataset):
 class ScatterPlot(Plot[Dataset, ScatterConfig]):
     datasets: List[Dataset]
 
-    
     @staticmethod
     def create(
         points_lists: List[List[PointT]],
@@ -473,7 +465,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
 
         # Make a tooltip always show on hover over nearest point on plot
         model.layout.hoverdistance = -1
- 
+
         return ScatterPlot(**model.__dict__)
 
     def _plot_ai_header(self) -> str:
@@ -561,7 +553,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
                 for i, es in enumerate(extra_series):
                     for s in es:
                         plotdata[i].append(s)
-        
+
         except Exception:
             pass
 
