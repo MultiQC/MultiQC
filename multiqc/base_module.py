@@ -1110,7 +1110,7 @@ class BaseMultiqcModule:
             i += 1
 
         # To map back keys data to specific module
-        report.saved_raw_data_keys.append(fn)
+        report.saved_raw_data_keys[fn] = None
 
         # Save the file (usualy TSV)
         report.write_data_file(data, fn, sort_cols, data_format)
