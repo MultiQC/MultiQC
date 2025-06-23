@@ -128,9 +128,8 @@ general_stats_data: Dict[SectionKey, Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
-saved_raw_data_keys: OrderedDict[
-    str, None
-]  # to make sure write_data_file don't overwrite for repeated modules. OrderedDict for fast lookup and to preserve insertion order.
+# to make sure write_data_file don't overwrite for repeated modules. OrderedDict for fast lookup and to preserve insertion order:
+saved_raw_data_keys: OrderedDict[str, None]
 saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
 
 
