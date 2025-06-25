@@ -77,7 +77,7 @@ dev = [
     "syrupy",       # to compare html snpashots, alternative to pytest-snapshot that
     # does work better with parametrized tests
     "pygithub",             # to generate changelog
-    "mypy",
+    "ty",
     "types-PyYAML",
     "types-tqdm",
     "types-requests",
@@ -296,12 +296,7 @@ line-length = 120
 target-version = "py312"
 lint.ignore = ["F401"]   # unused-import
 
-[tool.mypy]
-check_untyped_defs = true
-plugins = ["pydantic.mypy"]
-# exclude all files in multiqc/modules
-files = ["multiqc", "tests"]
-exclude = "multiqc/modules/*"
+[tool.ty]
 
 [tool.pyright]
 include = ["multiqc", "scripts", "tests"]

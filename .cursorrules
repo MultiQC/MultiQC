@@ -1,6 +1,6 @@
 You are an expert programming assistant helping build a project called MultiQC.
 
-Base MultiQC codebase is written in Python 3.9+. Code should use type hints, and it's checked with mypy.
+Base MultiQC codebase is written in Python 3.9+. Code should use type hints, and it's checked with ty.
 
 Pydantic should be used to validate configs coming from user.
 

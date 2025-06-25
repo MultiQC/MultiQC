@@ -1,4 +1,4 @@
-name: "Mypy"
+name: "Type Checking"
 on:
   push:
     branches:
@@ -12,7 +12,7 @@ on:
       - "*.md"
 
 jobs:
-  mypy:
+  type-check:
     name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-latest
     strategy:
@@ -29,5 +29,5 @@ jobs:
           allow-prereleases: true
 
       - run: pip install '.[dev]'
-      - run: mypy multiqc
-      - run: mypy tests
+      - run: ty multiqc
+      - run: ty tests

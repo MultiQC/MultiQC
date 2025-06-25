@@ -123,12 +123,12 @@ strict: True
 
 ## Static code analysis
 
-MultiQC uses type hints and static code analysis with [mypy](http://mypy-lang.org/)
+MultiQC uses type hints and static code analysis with [ty](https://github.com/tiangolo/ty)
 to prevent bugs.
 
-Mypy is run on the entire codebase using a GitHub Actions job,
+Ty is run on the entire codebase using a GitHub Actions job,
 however, you can run it locally to check your changes before pushing them. In order to
-do that, install MultiQC in the dev mode, which will bring `mypy` along with additional pluginsL
+do that, install MultiQC in the dev mode, which will bring `ty` along with additional pluginsL
 
 ```bash
 pip install -e .[dev]
@@ -137,14 +137,14 @@ pip install -e .[dev]
 Then run the following command to check your module:
 
 ```bash
-mypy multiqc/modules/your_module
+ty multiqc/modules/your_module
 ```
 
-Fix any problems that mypy finds before submitting your pull request.
+Fix any problems that ty finds before submitting your pull request.
 
-For a more convenient development experience, you can consider installing a mypy plugin
-for your editor. Both [VS Code](https://github.com/microsoft/vscode-mypy) and
-[PyCharm](https://plugins.jetbrains.com/plugin/11086-mypy) have plugins that can
+For a more convenient development experience, you can consider installing a ty plugin
+for your editor. Both [VS Code](https://github.com/tiangolo/ty) and
+[PyCharm](https://github.com/tiangolo/ty) have plugins that can
 highlight type errors in your code as you write it.
 
 ## Code formatting
