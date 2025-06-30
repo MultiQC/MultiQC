@@ -94,6 +94,8 @@ def test_write_data_file(monkeypatch, tmp_path, config_options, expected_to_writ
         (True, False, None, "SAMPLE_FROM_FILENAME.stderr"),
         (None, None, True, "subdir | SAMPLE_FROM_CONTENTS"),
         (True, None, True, "subdir | SAMPLE_FROM_FILENAME"),
+        (["trimmomatic"], None, None, "SAMPLE_FROM_FILENAME"),
+        (["other_module"], None, None, "SAMPLE_FROM_CONTENTS"),  # Should not affect trimmomatic
     ],
 )
 def test_use_filename_as_sample_name(

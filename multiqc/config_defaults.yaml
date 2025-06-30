@@ -205,7 +205,16 @@ custom_content:
 fn_clean_sample_names: true
 
 # Option to use the filename as the sample name if desired
-# Set to True to apply for all modules. Define a list of search pattern keys to be specific.
+# Set to True to apply for all modules. Define a list of module/search pattern keys to be specific.
+# Examples:
+# use_filename_as_sample_name: true  # Apply to all modules
+# use_filename_as_sample_name:       # Apply to specific modules/patterns
+#   - verifybamid
+#   - verifybamid/selfsm
+#   - prokka
+#   - trimmomatic
+#   - fastp
+#   - picard
 use_filename_as_sample_name: false
 
 # Used for cleaning sample names. Should be strings.
