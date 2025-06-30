@@ -233,7 +233,7 @@ class MultiQCConfig(BaseModel):
     custom_content: Optional[Dict[str, Any]] = Field(None, description="Custom content")
     fn_clean_sample_names: Optional[bool] = Field(None, description="Clean sample names")
     use_filename_as_sample_name: Optional[Union[bool, List[str]]] = Field(
-        None,
+        False,
         description="Use filename as sample name (can be bool for all modules or list for specific modules/patterns)",
     )
     fn_clean_exts: Optional[List[Union[str, CleanPattern]]] = Field(
