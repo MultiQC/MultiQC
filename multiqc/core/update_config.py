@@ -8,8 +8,8 @@ from pydantic import BaseModel
 
 from multiqc import config, report
 from multiqc.core import log_and_rich, plugin_hooks
-from multiqc.utils.config_schema import AiProviderLiteral
 from multiqc.core.exceptions import RunError
+from multiqc.utils.config_schema import AiProviderLiteral
 
 logger = logging.getLogger(__name__)
 

@@ -194,7 +194,7 @@ export_plot_formats: List[str]
 filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
-use_filename_as_sample_name: bool
+use_filename_as_sample_name: Union[bool, List[str]]
 fn_clean_exts: List[CleanPatternT]
 fn_clean_trim: List[str]
 fn_ignore_files: List[str]
