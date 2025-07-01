@@ -143,7 +143,7 @@ def test_boxplot_custom_boxpoints(boxpoints_value):
     # Test with "all" boxpoints (show all data points)
     plot_all = _verify_rendered(
         box.plot(
-            data,
+            data,  # type: ignore
             box.BoxPlotConfig(id=f"box_{boxpoints_value}", title=f"Box Plot - {boxpoints_value}"),
         )
     )
