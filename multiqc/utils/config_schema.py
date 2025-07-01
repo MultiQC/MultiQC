@@ -155,6 +155,7 @@ class MultiQCConfig(BaseModel):
     barplot_legend_on_bottom: Optional[bool] = Field(
         None, description="Place bar plot legend at the bottom (not recommended)"
     )
+    boxplot_boxpoints: Optional[Union[str, bool]] = Field(None, description="Boxplot boxpoints setting")
     violin_downsample_after: Optional[int] = Field(
         None, description="Downsample data for violin plot starting from this number os samples"
     )

@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
 
-from multiqc import report
+from multiqc import config, report
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
@@ -49,7 +49,7 @@ class Dataset(BaseDataset):
         dataset.data = list(reversed(dataset.data))
 
         dataset.trace_params.update(
-            boxpoints="outliers",
+            boxpoints=config.boxplot_boxpoints if config.boxplot_boxpoints is not None else "outliers",
             jitter=0.5,
             orientation="h",
             marker=dict(

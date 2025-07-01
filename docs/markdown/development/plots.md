@@ -393,6 +393,27 @@ html = box.plot(data, pconfig=...)
 Similarly to other plot types, multiple datasets can be passed as `data`, along with
 dataset-specific configurations provided with the `pconfig["data_labels"]` option.
 
+### Box plot outlier display
+
+The global configuration option `boxplot_boxpoints` controls how outliers are displayed in box plots by passing the value directly to Plotly's `boxpoints` parameter. This setting can be configured in your MultiQC config file:
+
+```yaml
+boxplot_boxpoints: "outliers" # Default: show only outliers
+```
+
+Available options (as defined by [Plotly's box trace reference](https://plotly.com/python/reference/box/#box-boxpoints)):
+
+- `"outliers"` (default): Show only outlier points beyond the whiskers
+- `"all"`: Show all data points
+- `"suspectedoutliers"`: Show only suspected outliers (points beyond 1.5 _ IQR but within 3 _ IQR)
+- `false`: Hide all data points, showing only the box and whiskers
+
+This setting applies to all box plots in the report and can be useful for:
+
+- Reducing visual clutter when dealing with many samples
+- Highlighting specific outlier patterns
+- Creating cleaner visualizations for presentations
+
 ## Scatter plots
 
 Scatter plots work in almost exactly the same way as line plots. Most (if not all)
