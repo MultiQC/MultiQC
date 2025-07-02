@@ -1173,14 +1173,14 @@ class BaseMultiqcModule:
         """
         # Get general stats config for this module
         sp_key = sp_key or self.id
+        module_config: Dict[ColumnKey, ColumnDict] = {}
         for k, v in config.general_stats_columns.items():
             if k == sp_key:
-                module_config = v
+                module_config = cast(Dict[ColumnKey, ColumnDict], v.get("columns", {}))
                 break
             elif k.split("/")[0] in [self.id, self.name]:
-                module_config = v
+                module_config = cast(Dict[ColumnKey, ColumnDict], v.get("columns", {}))
                 break
-        module_config = cast(Dict[ColumnKey, ColumnDict], module_config.get("columns", {}))
         general_stats_headers: Dict[ColumnKey, ColumnDict] = {}
 
         # Check if we have a valid config for this module
