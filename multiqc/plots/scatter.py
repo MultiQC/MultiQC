@@ -26,7 +26,7 @@ class ScatterConfig(PConfig):
     marker_line_width: Optional[int] = None
     color: Optional[str] = None
     opacity: Optional[float] = None
-    marker_symbol: Optional[str] = "circle"
+    marker_symbol: Optional[str] = None
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("scatterplot",), **data)

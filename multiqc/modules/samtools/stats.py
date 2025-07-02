@@ -131,7 +131,10 @@ def parse_samtools_stats(module: BaseMultiqcModule):
     }
 
     # Get general stats headers using the utility function, will read config.general_stats_columns
-    general_stats_headers = module.get_general_stats_headers(all_headers=stats_headers)
+    general_stats_headers = module.get_general_stats_headers(
+        all_headers=stats_headers,
+        sp_key="samtools/stats",
+    )
 
     # Add headers to general stats table
     if general_stats_headers:
