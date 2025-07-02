@@ -395,24 +395,39 @@ dataset-specific configurations provided with the `pconfig["data_labels"]` optio
 
 ### Box plot outlier display
 
-The global configuration option `boxplot_boxpoints` controls how outliers are displayed in box plots by passing the value directly to Plotly's `boxpoints` parameter. This setting can be configured in your MultiQC config file:
+Box plots now dynamically control outlier display based on the number of samples, similar to violin plots. The behavior is determined by two configuration thresholds:
 
 ```yaml
-boxplot_boxpoints: "outliers" # Default: show only outliers
+box_min_threshold_outliers: 100 # For more than this number of samples, show only outliers
+box_min_threshold_no_points: 1000 # For more than this number of samples, show no points
+```
+
+**Dynamic behavior:**
+
+- **≤ 100 samples**: Show all data points (`"all"`)
+- **101-1000 samples**: Show only outliers (`"outliers"`)
+- **> 1000 samples**: Show no points (`false`)
+
+**Manual override:**
+You can still manually control the behavior using the `boxplot_boxpoints` configuration option, which will override the dynamic logic:
+
+```yaml
+boxplot_boxpoints: "outliers" # Override dynamic behavior
 ```
 
 Available options (as defined by [Plotly's box trace reference](https://plotly.com/python/reference/box/#box-boxpoints)):
 
-- `"outliers"` (default): Show only outlier points beyond the whiskers
+- `"outliers"`: Show only outlier points beyond the whiskers
 - `"all"`: Show all data points
-- `"suspectedoutliers"`: Show only suspected outliers (points beyond 1.5 _ IQR but within 3 _ IQR)
+- `"suspectedoutliers"`: Show only suspected outliers (points beyond 1.5 × IQR but within 3 × IQR)
 - `false`: Hide all data points, showing only the box and whiskers
 
-This setting applies to all box plots in the report and can be useful for:
+This dynamic approach helps to:
 
-- Reducing visual clutter when dealing with many samples
-- Highlighting specific outlier patterns
-- Creating cleaner visualizations for presentations
+- Reduce visual clutter when dealing with many samples
+- Maintain interactivity for smaller datasets
+- Automatically optimize performance for large datasets
+- Highlight specific outlier patterns when appropriate
 
 ## Scatter plots
 

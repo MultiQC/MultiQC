@@ -156,6 +156,12 @@ class MultiQCConfig(BaseModel):
         None, description="Place bar plot legend at the bottom (not recommended)"
     )
     boxplot_boxpoints: Optional[Union[str, bool]] = Field(None, description="Boxplot boxpoints setting")
+    box_min_threshold_outliers: Optional[int] = Field(
+        None, description="For more than this number of samples, show only outliers"
+    )
+    box_min_threshold_no_points: Optional[int] = Field(
+        None, description="For more than this number of samples, show no points"
+    )
     violin_downsample_after: Optional[int] = Field(
         None, description="Downsample data for violin plot starting from this number os samples"
     )
