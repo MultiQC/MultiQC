@@ -113,6 +113,7 @@ class LineBand(ValidatedConfig):
     from_: Union[float, int]
     to: Union[float, int]
     color: Optional[str] = None
+    opacity: float = Field(1.0, ge=0.0, le=1.0)
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
         path_in_cfg = path_in_cfg or ("LineBand",)
@@ -784,6 +785,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     y1=1,
                     yref="paper",  # make y coords are relative to the plot paper [0,1]
                     fillcolor=band.color,
+                    opacity=band.opacity,
                     line={
                         "width": 0,
                     },
@@ -855,6 +857,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     x1=1,
                     xref="paper",  # make x coords are relative to the plot paper [0,1]
                     fillcolor=band.color,
+                    opacity=band.opacity,
                     line={
                         "width": 0,
                     },

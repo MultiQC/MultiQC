@@ -382,6 +382,59 @@ pconfig = {
 html = linegraph.plot(..., pconfig)
 ```
 
+### Background bands and lines
+
+Line graphs can include background bands and reference lines to highlight specific regions or thresholds. These are configured using the `x_bands`, `y_bands`, `x_lines`, and `y_lines` options.
+
+#### Background bands
+
+Background bands are colored rectangular regions that span across the plot. They can be used to highlight acceptable ranges, warning zones, or other meaningful regions in your data.
+
+```python
+from multiqc.plots import linegraph
+pconfig = {
+    "y_bands": [
+        {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},           # Good range (green)
+        {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},          # Warning range (yellow)
+        {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},        # Bad range (red)
+    ],
+    "x_bands": [
+        {"from": 10, "to": 50, "color": "#f0f0f0", "opacity": 0.3},   # Highlighted region
+    ]
+}
+html = linegraph.plot(data, pconfig)
+```
+
+Each band definition supports the following options:
+
+- `from`: Start value for the band
+- `to`: End value for the band
+- `color`: Background color (any valid CSS color)
+- `opacity`: Transparency level from 0.0 (fully transparent) to 1.0 (fully opaque). Defaults to 1.0 if not specified.
+
+#### Reference lines
+
+Reference lines are single horizontal or vertical lines that can mark specific thresholds or reference points.
+
+```python
+pconfig = {
+    "y_lines": [
+        {"value": 30, "color": "#ff0000", "width": 2, "dash": "dash", "label": "Threshold"}
+    ],
+    "x_lines": [
+        {"value": 25, "color": "#0000ff", "width": 1, "dash": "solid"}
+    ]
+}
+```
+
+Each line definition supports:
+
+- `value`: Position of the line on the respective axis
+- `color`: Line color (any valid CSS color)
+- `width`: Line thickness in pixels (default: 2)
+- `dash`: Line style - "solid", "dash", "dot", "dashdot", etc. (default: "solid")
+- `label`: Optional text label for the line
+
 ## Box plots
 
 Box plots take similar data structure as line plots, but better visualize the
