@@ -26,8 +26,7 @@ class ScatterConfig(PConfig):
     marker_line_width: Optional[int] = None
     color: Optional[str] = None
     opacity: Optional[float] = None
-    # symbol: Optional[Union[str, Dict[str, str]]] = None  # NEW
-    symbol: Optional[str] = None  # NEW
+    marker_symbol: Optional[str] = "circle"
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("scatterplot",), **data)
@@ -251,7 +250,13 @@ class Dataset(BaseDataset):
 
         dataset.trace_params.update(
             textfont=dict(size=8),
-            marker=dict(size=10, line=dict(width=1), opacity=1, color="rgba(124, 181, 236, .5)", symbol="circle"),
+            marker=dict(
+                size=10,
+                line=dict(width=1),
+                opacity=1,
+                color="rgba(124, 181, 236, .5)",
+                symbol="circle",
+            ),
         )
         # if categories is provided, set them as x-axis ticks
         if pconfig.categories:
@@ -352,16 +357,12 @@ class Dataset(BaseDataset):
 
             if "marker_line_width" in el:
                 marker["line"]["width"] = el["marker_line_width"]
-
             if "marker_size" in el:
                 marker["size"] = el["marker_size"]
+            if "marker_symbol" in el:
+                marker["symbol"] = el["marker_symbol"]
             if "opacity" in el:
                 marker["opacity"] = el["opacity"]
-
-            # Add support for symbol
-            if "symbol" in el:  # NEW
-                marker["symbol"] = el["symbol"]
-                print(f"Using marker symbol for {el['name']}: {el['symbol']}")
 
             if annotation:
                 params["mode"] = "markers+text"
@@ -516,7 +517,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
                     else:
                         point["name"] = s_name
 
-                    for k in ["color", "opacity", "marker_size", "marker_line_width", "symbol"]:
+                    for k in ["color", "opacity", "marker_size", "marker_line_width", "marker_symbol"]:
                         if k not in point:
                             v = getattr(series_config, k)
                             if v is not None:
