@@ -1352,6 +1352,22 @@
       "description": "Place bar plot legend at the bottom (not recommended)",
       "title": "Barplot Legend On Bottom"
     },
+    "boxplot_boxpoints": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Boxplot boxpoints setting",
+      "title": "Boxplot Boxpoints"
+    },
     "violin_downsample_after": {
       "anyOf": [
         {
@@ -2213,7 +2229,7 @@
           "type": "null"
         }
       ],
-      "default": null,
+      "default": false,
       "description": "Use filename as sample name (can be bool for all modules or list for specific modules/patterns)",
       "title": "Use Filename As Sample Name"
     },
