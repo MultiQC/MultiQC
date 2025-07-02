@@ -477,7 +477,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     sample_names.append(SampleName(s))
                 x_to_y = raw_data_by_sample[s]
                 if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
-                    if isinstance(x_to_y[0], tuple):
+                    if isinstance(x_to_y[0], tuple) or (isinstance(x_to_y[0], list) and len(x_to_y[0]) == 2):
                         x_to_y = dict(x_to_y)
                     else:
                         x_to_y = {i: y for i, y in enumerate(x_to_y)}
