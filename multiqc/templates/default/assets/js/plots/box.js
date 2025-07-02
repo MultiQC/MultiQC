@@ -93,6 +93,8 @@ class BoxPlot extends Plot {
       let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
 
       // Override boxpoints with global config if available
+      // Note: The Python side now handles dynamic boxpoints based on sample count
+      // This override is kept for backward compatibility
       if (mqc_config.boxplot_boxpoints !== undefined) {
         params.boxpoints = mqc_config.boxplot_boxpoints;
       }
