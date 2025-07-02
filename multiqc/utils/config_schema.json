@@ -2204,11 +2204,17 @@
           "type": "boolean"
         },
         {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
           "type": "null"
         }
       ],
       "default": null,
-      "description": "Use filename as sample name",
+      "description": "Use filename as sample name (can be bool for all modules or list for specific modules/patterns)",
       "title": "Use Filename As Sample Name"
     },
     "fn_clean_exts": {

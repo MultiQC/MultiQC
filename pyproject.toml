@@ -30,7 +30,7 @@ dependencies = [
     "natsort",
     "tiktoken",
     "jsonschema",
-    "polars",             # for parquet support
+    "polars-lts-cpu",     # for parquet support. Using LTS version for compatibility with older architectures
     "pyarrow",            # for parquet support
 ]
 requires-python = ">=3.8"

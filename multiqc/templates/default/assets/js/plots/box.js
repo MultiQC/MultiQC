@@ -92,6 +92,11 @@ class BoxPlot extends Plot {
     return this.filteredSettings.map((sample, sampleIdx) => {
       let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
 
+      // Override boxpoints with global config if available
+      if (mqc_config.boxplot_boxpoints !== undefined) {
+        params.boxpoints = mqc_config.boxplot_boxpoints;
+      }
+
       if (highlighted.length > 0) {
         if (sample.highlight !== null) {
           params.marker.color = sample.highlight;

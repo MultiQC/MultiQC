@@ -1251,7 +1251,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
         report.write_data_file(flatten_raw_vals, fname)
         if config.data_dump_file_write_raw:
             report.write_data_file(flatten_raw_vals, fname, data_format="json")
-            report.saved_raw_data_keys.append(fname)
+            report.saved_raw_data_keys[fname] = None
 
     # Build the bootstrap modal to customise columns and order
     modal = ""

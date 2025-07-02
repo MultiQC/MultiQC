@@ -155,6 +155,7 @@ class MultiQCConfig(BaseModel):
     barplot_legend_on_bottom: Optional[bool] = Field(
         None, description="Place bar plot legend at the bottom (not recommended)"
     )
+    boxplot_boxpoints: Optional[Union[str, bool]] = Field(None, description="Boxplot boxpoints setting")
     violin_downsample_after: Optional[int] = Field(
         None, description="Downsample data for violin plot starting from this number os samples"
     )
@@ -232,7 +233,10 @@ class MultiQCConfig(BaseModel):
     filesearch_file_shared: Optional[List[str]] = Field(None, description="Filesearch file shared")
     custom_content: Optional[Dict[str, Any]] = Field(None, description="Custom content")
     fn_clean_sample_names: Optional[bool] = Field(None, description="Clean sample names")
-    use_filename_as_sample_name: Optional[bool] = Field(None, description="Use filename as sample name")
+    use_filename_as_sample_name: Optional[Union[bool, List[str]]] = Field(
+        False,
+        description="Use filename as sample name (can be bool for all modules or list for specific modules/patterns)",
+    )
     fn_clean_exts: Optional[List[Union[str, CleanPattern]]] = Field(
         None, description="Extensions to clean from sample names"
     )

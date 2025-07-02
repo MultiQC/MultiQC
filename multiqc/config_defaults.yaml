@@ -90,6 +90,7 @@ plots_defer_loading_numseries: 100 # plot will require user to press button to r
 num_datasets_plot_limit: 100 # DEPRECATED in favour of plots_defer_loading_numseries
 lineplot_number_of_points_to_hide_markers: 50 # sum of data points in all samples
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
+boxplot_boxpoints: "outliers" # box plot outlier display: "outliers", "all", "suspectedoutliers", or false
 violin_downsample_after: 2000 # downsample data for violin plot starting from this number os samples
 violin_min_threshold_outliers: 100 # for more than this number of samples, show only outliers
 violin_min_threshold_no_points: 1000 # for more than this number of samples, show no points
@@ -205,7 +206,16 @@ custom_content:
 fn_clean_sample_names: true
 
 # Option to use the filename as the sample name if desired
-# Set to True to apply for all modules. Define a list of search pattern keys to be specific.
+# Set to True to apply for all modules. Define a list of module/search pattern keys to be specific.
+# Examples:
+# use_filename_as_sample_name: true  # Apply to all modules
+# use_filename_as_sample_name:       # Apply to specific modules/patterns
+#   - verifybamid
+#   - verifybamid/selfsm
+#   - prokka
+#   - trimmomatic
+#   - fastp
+#   - picard
 use_filename_as_sample_name: false
 
 # Used for cleaning sample names. Should be strings.

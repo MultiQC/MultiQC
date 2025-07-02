@@ -111,6 +111,48 @@ def test_boxplot():
     )
 
 
+@pytest.mark.parametrize(
+    "boxpoints_value",
+    ["outliers", "all", "suspectedoutliers", False],
+)
+def test_boxplot_custom_boxpoints(boxpoints_value):
+    """
+    Test box plot with custom boxpoints configuration using global config
+    """
+    config.boxplot_boxpoints = boxpoints_value
+
+    data = {
+        "Sample": [
+            # Tight distribution with few outliers
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            # Outliers
+            20,
+            50,
+        ],
+    }
+    # Test with "all" boxpoints (show all data points)
+    plot_all = _verify_rendered(
+        box.plot(
+            data,  # type: ignore
+            box.BoxPlotConfig(id=f"box_{boxpoints_value}", title=f"Box Plot - {boxpoints_value}"),
+        )
+    )
+
+    plot_data_all = report.plot_data[plot_all.anchor]
+    trace_params_all = plot_data_all["datasets"][0]["trace_params"]
+    assert trace_params_all["boxpoints"] == boxpoints_value
+
+
 ############################################
 # Plot special cases.
 

@@ -174,7 +174,22 @@ class MultiqcModule(BaseMultiqcModule):
             return None, {}
 
         s_name = None
-        if getattr(config, "fastp", {}).get("s_name_filenames", False):
+        # Check if we should use filename instead of parsed sample name
+        should_use_filename = False
+        if isinstance(config.use_filename_as_sample_name, list):
+            # Check for module anchor
+            if self.anchor in config.use_filename_as_sample_name:
+                should_use_filename = True
+        elif config.use_filename_as_sample_name is True:
+            should_use_filename = True
+        elif getattr(config, "fastp", {}).get("s_name_filenames", False):
+            # Deprecated option - warn user
+            log.warning(
+                "The 'fastp.s_name_filenames' config option is deprecated. Use the global 'use_filename_as_sample_name' option instead."
+            )
+            should_use_filename = True
+
+        if should_use_filename:
             s_name = f["s_name"]
 
         if s_name is None:

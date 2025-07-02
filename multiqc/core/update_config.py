@@ -8,8 +8,8 @@ from pydantic import BaseModel
 
 from multiqc import config, report
 from multiqc.core import log_and_rich, plugin_hooks
-from multiqc.utils.config_schema import AiProviderLiteral
 from multiqc.core.exceptions import RunError
+from multiqc.utils.config_schema import AiProviderLiteral
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class ClConfig(BaseModel):
     template: Optional[str] = None
     require_logs: Optional[bool] = None
     output_dir: Optional[Union[str, Path]] = None
-    use_filename_as_sample_name: Optional[bool] = None
+    use_filename_as_sample_name: Optional[Union[bool, List[str]]] = None
     replace_names: Optional[str] = None
     sample_names: Optional[str] = None
     sample_filters: Optional[str] = None
