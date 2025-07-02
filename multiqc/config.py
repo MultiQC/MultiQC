@@ -137,7 +137,7 @@ plots_defer_loading_numseries: int
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
-boxplot_boxpoints: Union[str, bool]
+boxplot_boxpoints: Union[str, bool, None]
 box_min_threshold_outliers: int
 box_min_threshold_no_points: int
 violin_downsample_after: Optional[int]
