@@ -59,6 +59,15 @@ a filename when exporting plots, and all plots should have a title when exported
 Plot titles should use the format _Module name: Plot name_ (this is partly for
 ease of use within MegaQC and other downstream tools).
 
+### Plotly themes
+
+MultiQC plots use Plotly for visualization. You can customize the appearance of all plots by setting a Plotly theme using the `plot_theme` configuration option. This option accepts any [registered Plotly theme](https://plotly.com/python/templates/#view-available-themes)
+name as a string.
+
+```yaml
+plot_theme: "plotly_dark"
+```
+
 ## Bar graphs
 
 Simple data can be plotted in bar graphs. Many MultiQC modules make use

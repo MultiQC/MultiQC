@@ -43,6 +43,34 @@ logger = logging.getLogger(__name__)
 
 check_plotly_version()
 
+# Create and register MultiQC default Plotly template
+multiqc_plotly_template = dict(
+    layout=go.Layout(
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
+        colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
+        xaxis=dict(
+            gridcolor="rgba(0,0,0,0.05)",
+            zerolinecolor="rgba(0,0,0,0.05)",
+            color="rgba(0,0,0,0.3)",  # axis labels
+            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
+        ),
+        yaxis=dict(
+            gridcolor="rgba(0,0,0,0.05)",
+            zerolinecolor="rgba(0,0,0,0.05)",
+            color="rgba(0,0,0,0.3)",  # axis labels
+            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
+        ),
+        title=dict(font=dict(size=20)),
+        modebar=dict(
+            bgcolor="rgba(0, 0, 0, 0)",
+            color="rgba(0, 0, 0, 0.5)",
+            activecolor="rgba(0, 0, 0, 1)",
+        ),
+    )
+)
+
 
 class FlatLine(ValidatedConfig):
     """
@@ -586,33 +614,24 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if showlegend is None:
             showlegend = True if flat else False
 
+        # Use the specified template or default to multiqc
+        template = config.plot_theme if config.plot_theme else go.layout.Template(multiqc_plotly_template)
+
         layout: go.Layout = go.Layout(
+            template=template,
             title=go.layout.Title(
                 text=pconfig.title,
                 xanchor="center",
                 x=0.5,
-                font=dict(size=20),
             ),
             xaxis=go.layout.XAxis(
-                gridcolor="rgba(0,0,0,0.05)",
-                zerolinecolor="rgba(0,0,0,0.05)",
-                color="rgba(0,0,0,0.3)",  # axis labels
-                tickfont=dict(size=10, color="rgba(0,0,0,1)"),
                 automargin=True,  # auto-expand axis to fit the tick labels
             ),
             yaxis=go.layout.YAxis(
-                gridcolor="rgba(0,0,0,0.05)",
-                zerolinecolor="rgba(0,0,0,0.05)",
-                color="rgba(0,0,0,0.3)",  # axis labels
-                tickfont=dict(size=10, color="rgba(0,0,0,1)"),
                 automargin=True,  # auto-expand axis to fit the tick labels
             ),
             height=height,
             width=width,
-            paper_bgcolor="white",
-            plot_bgcolor="white",
-            font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
-            colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
             margin=go.layout.Margin(
                 pad=5,  # pad sample names in a bar graph a bit
@@ -623,11 +642,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             ),
             hoverlabel=go.layout.Hoverlabel(
                 namelength=-1,  # do not crop sample names inside hover label <extra></extra>
-            ),
-            modebar=go.layout.Modebar(
-                bgcolor="rgba(0, 0, 0, 0)",
-                color="rgba(0, 0, 0, 0.5)",
-                activecolor="rgba(0, 0, 0, 1)",
             ),
             showlegend=showlegend,
             legend=go.layout.Legend(
@@ -640,6 +654,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             if flat
             else None,
         )
+
         # Layout update for the counts/percentage switch
         pct_axis_update = dict(
             ticksuffix="%",
@@ -1248,7 +1263,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if not config.no_ai:
             ai_btn = f"""
             <div class="ai-plot-buttons-container" style="float: right;">
-                <button 
+                <button
                     class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
                     style="margin-left: 1px;"
                     data-section-anchor="{section_anchor}"
@@ -1256,7 +1271,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-module-anchor="{module_anchor}"
                     data-view="plot"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-toggle="tooltip"
                     title="Copy plot data for use with AI tools like ChatGPT"
                 >
                     <span style="vertical-align: baseline">
@@ -1281,7 +1296,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-action="generate"
                     data-clear-text="Clear summary"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-toggle="tooltip"
                     aria-controls="{section_anchor}_ai_summary_wrapper"
                 >
                     <span style="vertical-align: baseline">
