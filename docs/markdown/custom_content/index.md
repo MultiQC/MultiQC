@@ -92,7 +92,7 @@ This example YAML file is data only, and is not to be confused with a config fil
 See the docs [Data as part of MultiQC config](#data-as-part-of-multiqc-config) for more on that.
 :::
 
-The file format can also be JSON:
+The file format can also be JSON. Note however that JSON doesn't preserve the order of elements in dicts, thus the preferred way to specify the series data points is through a list of tuples. For example:
 
 ```json
 {
@@ -107,8 +107,20 @@ The file format can also be JSON:
     "xDecimals": false
   },
   "data": {
-    "sample_1": { "1": 12, "2": 14, "3": 10, "4": 7, "5": 16 },
-    "sample_2": { "1": 9, "2": 11, "3": 15, "4": 18, "5": 21 }
+    "sample_1": [
+      [1, 12],
+      [2, 14],
+      [3, 10],
+      [4, 7],
+      [5, 16]
+    ],
+    "sample_2": [
+      [1, 9],
+      [2, 11],
+      [3, 15],
+      [4, 18],
+      [5, 21]
+    ]
   }
 }
 ```
