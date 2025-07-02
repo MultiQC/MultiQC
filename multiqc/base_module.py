@@ -1152,6 +1152,7 @@ class BaseMultiqcModule:
         all_headers: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
         default_shown: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
         default_hidden: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+        sp_key: Optional[str] = None,
     ) -> Dict[ColumnKey, ColumnDict]:
         """
         Get general stats columns for a module based on user configuration.
@@ -1171,22 +1172,29 @@ class BaseMultiqcModule:
             Dictionary of headers to add to general stats
         """
         # Get general stats config for this module
-        module_config = cast(
-            Dict[ColumnKey, ColumnDict],
-            config.general_stats_columns.get(self.id, config.general_stats_columns.get(self.name, {})).get(
-                "columns", {}
-            ),
-        )
+        sp_key = sp_key or self.id
+        for k, v in config.general_stats_columns.items():
+            if k == sp_key:
+                module_config = v
+                break
+            elif k.split("/")[0] in [self.id, self.name]:
+                module_config = v
+                break
+        module_config = cast(Dict[ColumnKey, ColumnDict], module_config.get("columns", {}))
         general_stats_headers: Dict[ColumnKey, ColumnDict] = {}
 
         # Check if we have a valid config for this module
         if module_config:
-            # Use configured columns
+            # Update default columns with custom config
             for k in all_headers:
                 if k in module_config:
                     h = all_headers[ColumnKey(k)].copy()
                     h.update(module_config[ColumnKey(k)] or {})
                     general_stats_headers[ColumnKey(k)] = h
+            # Add custom columns that are not in default headers
+            for key, col_conf in module_config.items():
+                if key not in all_headers:
+                    general_stats_headers[ColumnKey(key)] = col_conf
 
         elif all_headers:
             # Default behavior - use all headers
