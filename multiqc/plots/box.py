@@ -54,6 +54,7 @@ class Dataset(BaseDataset):
         show_only_outliers = n_samples > config.box_min_threshold_outliers
 
         # Set boxpoints based on dynamic logic
+        boxpoints: Union[bool, str] = "outliers"
         if not show_points:
             boxpoints = False  # Show no points
         elif not show_only_outliers:
