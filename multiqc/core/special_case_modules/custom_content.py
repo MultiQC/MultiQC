@@ -521,9 +521,17 @@ class MultiqcModule(BaseMultiqcModule):
             # Try to coerce x-axis to numeric
             if plot_type in [PlotType.LINE, PlotType.SCATTER]:
                 try:
+                    # a series is represented by a dict
                     ccdict.data = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in plot_datasets]
-                except ValueError:
-                    pass
+                except (ValueError, TypeError):
+                    try:
+                        # a series is represented by a list of paris
+                        ccdict.data = [
+                            {_sname: {float(x): float(y) for x, y in _sdata} for _sname, _sdata in ds.items()}
+                            for ds in plot_datasets
+                        ]
+                    except ValueError:
+                        pass
 
             # Table
             if plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
