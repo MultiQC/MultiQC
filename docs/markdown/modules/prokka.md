@@ -2,7 +2,7 @@
 title: Prokka
 displayed_sidebar: multiqcSidebar
 description: >
-  Rapid annotation of prokaryotic genomes
+  Rapid annotation of prokaryotic genomes.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/prokka/prokka.py
 -->
 
 :::note
-Rapid annotation of prokaryotic genomes
+Rapid annotation of prokaryotic genomes.
 
 [http://www.vicbioinformatics.com/software.prokka.shtml](http://www.vicbioinformatics.com/software.prokka.shtml)
 :::
@@ -24,7 +24,7 @@ The Prokka module accepts two configuration options:
 
 - `prokka_table`: default `False`. Show a table in the report.
 - `prokka_barplot`: default `True`. Show a barplot in the report.
-- `prokka_fn_snames`: default `False`. Use filenames for sample names (see below).
+- `prokka_fn_snames`: default `False`. Use filenames for sample names (DEPRECATED - use global `use_filename_as_sample_name` instead).
 
 Sample names are generated using the first line in the prokka reports:
 
@@ -36,7 +36,7 @@ The module assumes that the first two words are the organism name and
 the third is the sample name. So the above will give a sample name of
 `Sample1`.
 
-If you prefer, you can set `config.prokka_fn_snames` to `True` and MultiQC
+If you prefer, you can set `config.use_filename_as_sample_name` to `True` and MultiQC
 will instead use the log filename as the sample name.
 
 ### File search patterns

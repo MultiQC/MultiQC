@@ -2,7 +2,7 @@
 title: mapDamage
 displayed_sidebar: multiqcSidebar
 description: >
-  Tracks and quantifies damage patterns in ancient DNA sequences
+  Tracks and quantifies damage patterns in ancient DNA sequences.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/mapdamage/mapdamage.py
 -->
 
 :::note
-Tracks and quantifies damage patterns in ancient DNA sequences
+Tracks and quantifies damage patterns in ancient DNA sequences.
 
 [https://github.com/ginolhac/mapDamage](https://github.com/ginolhac/mapDamage)
 :::

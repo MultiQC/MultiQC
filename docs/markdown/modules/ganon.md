@@ -2,7 +2,7 @@
 title: Ganon
 displayed_sidebar: multiqcSidebar
 description: >
-  Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers
+  Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/ganon/ganon.py
 -->
 
 :::note
-Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers
+Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers.
 
 [https://pirovc.github.io/ganon/](https://pirovc.github.io/ganon/)
 :::

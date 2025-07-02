@@ -2,7 +2,7 @@
 title: Cluster Flow
 displayed_sidebar: multiqcSidebar
 description: >
-  Simple and flexible bioinformatics pipeline tool
+  Simple and flexible bioinformatics pipeline tool.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/clusterflow/clusterflo
 -->
 
 :::note
-Simple and flexible bioinformatics pipeline tool
+Simple and flexible bioinformatics pipeline tool.
 
 [http://clusterflow.io](http://clusterflow.io)
 :::
