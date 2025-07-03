@@ -9,12 +9,11 @@ The side navigation for the report.
 <div class="side-nav-wrapper">
   <div class="side-nav">
     <h1>
-              <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target=".mqc-nav, .mqc-toolbox">
-          <span class="visually-hidden">Toggle navigation</span>
+        <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target=".mqc-nav, .mqc-toolbox" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
       <a href="#">
-            <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
+          <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
           <br class="d-none d-sm-block">
           <small class="d-none d-sm-block">v{{ config.version }}</small>
       </a>
