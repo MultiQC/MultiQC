@@ -381,7 +381,7 @@ input.form-control[type="color"] {
 
 @media only screen and (min-width: 768px) {
   .mqc-toolbox {
-    display: block;
+    display: block !important;
     position: fixed;
     z-index: 1040;
     width: 36px;

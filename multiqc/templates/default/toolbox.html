@@ -13,9 +13,9 @@ of the report.
   <div class="mqc-toolbox-buttons d-none d-sm-block">
     <a class="mqc-toolbox-label" href="#mqc_cols" title="Open Toolbox">Toolbox</a>
     <ul>
-              <li><a href="#mqc_cols" title="Highlight" data-bs-placement="start" data-bs-toggle="tooltip"><span aria-hidden="true">📌</span></a></li>
-        <li><a href="#mqc_renamesamples" title="Rename" data-bs-placement="start" data-bs-toggle="tooltip"><span aria-hidden="true">🅰️</span></a></li>
-        <li><a href="#mqc_hidesamples" title="Hide" data-bs-placement="start" data-bs-toggle="tooltip"><span aria-hidden="true">👁️</span></a></li>
+              <li><a href="#mqc_cols" title="Highlight" data-bs-placement="start" data-bs-toggle="tooltip">{{ material_icon('push_pin', 18) }}</a></li>
+        <li><a href="#mqc_renamesamples" title="Rename" data-bs-placement="start" data-bs-toggle="tooltip">{{ material_icon('text_fields', 18) }}</a></li>
+        <li><a href="#mqc_hidesamples" title="Hide" data-bs-placement="start" data-bs-toggle="tooltip">{{ material_icon('visibility_off', 18) }}</a></li>
       {% if not config.no_ai %}
               <li><a href="#mqc_ai" title="AI" data-bs-placement="start" data-bs-toggle="tooltip">
         <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -24,10 +24,10 @@ of the report.
         </svg>
       </a></li>
       {% endif %}
-              <li><a href="#mqc_exportplots" title="Export" data-bs-placement="start" data-bs-toggle="tooltip"><span aria-hidden="true">⬇️</span></a></li>
-        <li><a href="#mqc_saveconfig" title="Save" data-bs-placement="start" data-bs-toggle="tooltip"><span aria-hidden="true">💾</span></a></li>
-        <li><a href="#mqc_citations" title="Citations" data-bs-placement="start" data-bs-toggle="tooltip"><span aria-hidden="true">🎓</span></a></li>
-        <li><a href="#mqc_about" title="About" data-bs-placement="start" data-bs-toggle="tooltip"><span aria-hidden="true">❓</span></a></li>
+              <li><a href="#mqc_exportplots" title="Export" data-bs-placement="start" data-bs-toggle="tooltip">{{ material_icon('download', 18) }}</a></li>
+        <li><a href="#mqc_saveconfig" title="Save" data-bs-placement="start" data-bs-toggle="tooltip">{{ material_icon('save', 18) }}</a></li>
+        <li><a href="#mqc_citations" title="Citations" data-bs-placement="start" data-bs-toggle="tooltip">{{ material_icon('school', 18) }}</a></li>
+        <li><a href="#mqc_about" title="About" data-bs-placement="start" data-bs-toggle="tooltip">{{ material_icon('help', 18) }}</a></li>
     </ul>
   </div>
 

@@ -57,7 +57,7 @@ was generated and the button that launches the welcome tour.
   </div>
 </noscript>
 
-<div class="alert alert-warning mqc_loading_warning" style="display:none;"><span aria-hidden="true">⏰</span> &nbsp;Loading report..</div>
+<div class="alert alert-warning mqc_loading_warning" style="display:none;">{{ material_icon('schedule', 16) }} &nbsp;Loading report..</div>
 
 {% if config.show_analysis_time or config.show_analysis_paths %}
 <div id="analysis_dirs_wrapper" style="display: flex; justify-content: space-between; align-items: center;">
@@ -152,7 +152,7 @@ was generated and the button that launches the welcome tour.
   <div class="alert alert-info alert-dismissible d-print-none" id="mqc_welcome" style="display: none;">
           <button type="button" data-bs-dismiss="alert" class="btn-close" aria-label="Close"></button>
       <button type="button" data-bs-dismiss="alert" class="btn-link btn-sm" id="mqc_hide_welcome_btn">don't show again</button>
-      <span aria-hidden="true">ℹ️</span>
+      {{ material_icon('info', 16) }}
   <strong>Welcome!</strong> Not sure where to start? &nbsp;
   <a href="https://www.youtube.com/watch?v=qPbIlO_KWN0" target="_blank" class="btn btn-info btn-sm">Watch a tutorial video</a>
   &nbsp; <small><em>(6:06)</em></small>
@@ -161,7 +161,7 @@ was generated and the button that launches the welcome tour.
 {% if report.plot_data | length > 0 and report.some_plots_are_deferred %}
   <div id="mqc-warning-many-samples" class="alert alert-warning alert-dismissible d-print-none">
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    <span aria-hidden="true">⚠️</span>
+    {{ material_icon('warning', 16) }}
   Because this report contains a lot of samples, you may need to click 'Show plot' to see some graphs.
       <button id="mqc-render-all-plots" class="btn btn-secondary btn-sm">Render all plots</button>
 </div>
@@ -239,6 +239,6 @@ was generated and the button that launches the welcome tour.
     class="mqc-table-expand ai-summary-expand"
     style="display: {% if report.ai_global_detailed_analysis %}block{% else %}none{% endif %};"
   >
-          <span aria-hidden="true">▼</span>
+          {{ material_icon('expand_more', 16) }}
   </div>
 </div>
