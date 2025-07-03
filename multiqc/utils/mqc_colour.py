@@ -278,7 +278,8 @@ class mqc_colour_scale(object):
                 alpha = (1 - lightened) / (1 - x)
                 alpha_values.append(max(0, min(1, alpha)))
 
-        r, g, b = [*thecolour.rgb]
+        rgb_values = list(thecolour.rgb)
+        r, g, b = rgb_values[0], rgb_values[1], rgb_values[2]
         return f"rgba({int(r * 255)},{int(g * 255)},{int(b * 255)},{min(alpha_values)})"
 
     def get_colour(
