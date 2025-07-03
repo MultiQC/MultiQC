@@ -154,6 +154,8 @@ multiqc multiqc_data/BETA-multiqc.parquet
 
 This will load all the data from the parquet file and generate a new report.
 
+Note that to be discovered, the file name must end with `*multiqc.parquet`.
+
 ### Combining Multiple MultiQC Runs
 
 The parquet output enables easy aggregation of data from multiple MultiQC runs:

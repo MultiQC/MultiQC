@@ -891,6 +891,11 @@ samtools/idxstats:
   fn: "*idxstat*"
 samtools/rmdup:
   contents: "[bam_rmdup"
+samtools/ampliconclip:
+  contents:
+    - "COMMAND:"
+    - "samtools ampliconclip"
+  num_lines: 11
 samtools/coverage:
   contents: "#rname	startpos	endpos	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq"
   num_lines: 10

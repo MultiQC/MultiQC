@@ -148,11 +148,6 @@ class BaseMultiqcModule:
         if _config_section_comment := config.section_comments.get(str(self.anchor)):
             self.comment = _config_section_comment
 
-        self.info = self.info.strip().strip(".")
-        # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
-        if self.info and self.info[0].islower():
-            self.info = f"{self.name} {self.info}"
-
         if isinstance(self.href, str):
             self.href = [self.href]
         self.href = [i for i in self.href if i != ""]
@@ -205,7 +200,7 @@ class BaseMultiqcModule:
                 "; ".join(url_links)
             )
 
-        info = (self.info + ".") if self.info else ""
+        info = self.info.replace("\n", "<br>")
         return f"<p>{info}{url_link}{doi_html}</p>{self.extra}"
 
     def clean_child_attributes(self):
@@ -781,15 +776,23 @@ class BaseMultiqcModule:
 
         # For modules setting s_name from file contents, set s_name back to the filename
         # (if wanted in the config)
-        if filename is not None and (
-            config.use_filename_as_sample_name is True
-            or (
-                isinstance(config.use_filename_as_sample_name, list)
-                and search_pattern_key is not None
-                and search_pattern_key in config.use_filename_as_sample_name
-            )
-        ):
-            trimmed_name = SampleName(filename)
+        if filename is not None:
+            should_use_filename = False
+
+            # Check if we should use filename for this specific module/pattern
+            if isinstance(config.use_filename_as_sample_name, list):
+                # Check for module anchor (e.g., "verifybamid")
+                if self.anchor in config.use_filename_as_sample_name:
+                    should_use_filename = True
+                # Check for search pattern key (e.g., "verifybamid/selfsm")
+                elif search_pattern_key is not None and search_pattern_key in config.use_filename_as_sample_name:
+                    should_use_filename = True
+            # Check if we should use filename for all modules
+            elif config.use_filename_as_sample_name is True:
+                should_use_filename = True
+
+            if should_use_filename:
+                trimmed_name = SampleName(filename)
 
         # if s_name comes from file contents, it may have a file path
         # For consistency with other modules, we keep just the basename
@@ -1115,7 +1118,7 @@ class BaseMultiqcModule:
             i += 1
 
         # To map back keys data to specific module
-        report.saved_raw_data_keys.append(fn)
+        report.saved_raw_data_keys[fn] = None
 
         # Save the file (usualy TSV)
         report.write_data_file(data, fn, sort_cols, data_format)
@@ -1149,6 +1152,7 @@ class BaseMultiqcModule:
         all_headers: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
         default_shown: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
         default_hidden: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+        sp_key: Optional[str] = None,
     ) -> Dict[ColumnKey, ColumnDict]:
         """
         Get general stats columns for a module based on user configuration.
@@ -1168,22 +1172,29 @@ class BaseMultiqcModule:
             Dictionary of headers to add to general stats
         """
         # Get general stats config for this module
-        module_config = cast(
-            Dict[ColumnKey, ColumnDict],
-            config.general_stats_columns.get(self.id, config.general_stats_columns.get(self.name, {})).get(
-                "columns", {}
-            ),
-        )
+        sp_key = sp_key or self.id
+        module_config: Dict[ColumnKey, ColumnDict] = {}
+        for k, v in config.general_stats_columns.items():
+            if k == sp_key:
+                module_config = cast(Dict[ColumnKey, ColumnDict], v.get("columns", {}))
+                break
+            elif k.split("/")[0] in [self.id, self.name]:
+                module_config = cast(Dict[ColumnKey, ColumnDict], v.get("columns", {}))
+                break
         general_stats_headers: Dict[ColumnKey, ColumnDict] = {}
 
         # Check if we have a valid config for this module
         if module_config:
-            # Use configured columns
+            # Update default columns with custom config
             for k in all_headers:
                 if k in module_config:
                     h = all_headers[ColumnKey(k)].copy()
                     h.update(module_config[ColumnKey(k)] or {})
                     general_stats_headers[ColumnKey(k)] = h
+            # Add custom columns that are not in default headers
+            for key, col_conf in module_config.items():
+                if key not in all_headers:
+                    general_stats_headers[ColumnKey(key)] = col_conf
 
         elif all_headers:
             # Default behavior - use all headers

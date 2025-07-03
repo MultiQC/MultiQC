@@ -721,17 +721,17 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                 f"""
                 <div class="btn-group" role="group">
                     <button
-                        type="button" 
-                        class="btn btn-default btn-sm {"" if self.pconfig.cluster_switch_clustered_active else "active"}" 
-                        data-action="unclustered" 
+                        type="button"
+                        class="btn btn-default btn-sm {"" if self.pconfig.cluster_switch_clustered_active else "active"}"
+                        data-action="unclustered"
                         data-plot-anchor="{self.anchor}"
                     >
                         Sorted by sample
                     </button>
                     <button
-                        type="button" 
-                        class="btn btn-default btn-sm {"active" if self.pconfig.cluster_switch_clustered_active else ""}" 
-                        data-action="clustered" 
+                        type="button"
+                        class="btn btn-default btn-sm {"active" if self.pconfig.cluster_switch_clustered_active else ""}"
+                        data-action="clustered"
                         data-plot-anchor="{self.anchor}"
                     >
                         Clustered

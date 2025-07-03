@@ -134,9 +134,13 @@ plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
 plots_defer_loading_numseries: int
+plot_theme: Optional[str]
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
+boxplot_boxpoints: Union[str, bool, None]
+box_min_threshold_outliers: int
+box_min_threshold_no_points: int
 violin_downsample_after: Optional[int]
 violin_min_threshold_outliers: int
 violin_min_threshold_no_points: int
@@ -194,7 +198,7 @@ export_plot_formats: List[str]
 filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
-use_filename_as_sample_name: bool
+use_filename_as_sample_name: Union[bool, List[str]]
 fn_clean_exts: List[CleanPatternT]
 fn_clean_trim: List[str]
 fn_ignore_files: List[str]

@@ -338,14 +338,22 @@ use_filename_as_sample_name: true
 ```
 
 This affects all modules and all search patterns. If you want to limit this to just
-one or more specific search patterns, you can do by giving a list:
+one or more specific modules or search patterns, you can do by giving a list:
 
 ```yaml
 use_filename_as_sample_name:
-  - cutadapt
-  - picard/gcbias
-  - picard/markdups
+  - verifybamid
+  - verifybamid/selfsm
+  - prokka
+  - trimmomatic
+  - fastp
+  - picard
 ```
+
+You can specify either:
+
+- Module anchors (e.g., `verifybamid`, `prokka`) to apply to all search patterns for that module
+- Search pattern keys (e.g., `verifybamid/selfsm`, `picard/gcbias`) to apply to specific patterns
 
 Note that this should be the search pattern key and not just the module name.
 This is because some modules search for multiple files.

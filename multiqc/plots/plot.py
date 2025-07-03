@@ -43,6 +43,34 @@ logger = logging.getLogger(__name__)
 
 check_plotly_version()
 
+# Create and register MultiQC default Plotly template
+multiqc_plotly_template = dict(
+    layout=go.Layout(
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
+        colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
+        xaxis=dict(
+            gridcolor="rgba(0,0,0,0.05)",
+            zerolinecolor="rgba(0,0,0,0.05)",
+            color="rgba(0,0,0,0.3)",  # axis labels
+            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
+        ),
+        yaxis=dict(
+            gridcolor="rgba(0,0,0,0.05)",
+            zerolinecolor="rgba(0,0,0,0.05)",
+            color="rgba(0,0,0,0.3)",  # axis labels
+            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
+        ),
+        title=dict(font=dict(size=20)),
+        modebar=dict(
+            bgcolor="rgba(0, 0, 0, 0)",
+            color="rgba(0, 0, 0, 0.5)",
+            activecolor="rgba(0, 0, 0, 1)",
+        ),
+    )
+)
+
 
 class FlatLine(ValidatedConfig):
     """
@@ -85,6 +113,7 @@ class LineBand(ValidatedConfig):
     from_: Union[float, int]
     to: Union[float, int]
     color: Optional[str] = None
+    opacity: float = Field(1.0, ge=0.0, le=1.0)
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
         path_in_cfg = path_in_cfg or ("LineBand",)
@@ -402,7 +431,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         return plot_data_store.fix_creation_date(
             df.with_columns(
                 pl.lit(str(self.anchor)).alias("anchor"),
-                pl.lit(self.creation_date).alias("creation_date"),
+                pl.lit(self.creation_date.replace(tzinfo=None)).alias("creation_date"),
                 pl.lit("plot_input_row").alias("type"),
                 pl.lit(str(self.plot_type.value)).alias("plot_type"),
                 pl.lit(self.pconfig.model_dump_json(exclude_none=True)).alias("pconfig"),
@@ -437,7 +466,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             {
                 "anchor": [str(self.anchor)],
                 "type": ["plot_input"],
-                "creation_date": [self.creation_date],
+                "creation_date": [self.creation_date.replace(tzinfo=None)],
                 "plot_type": [str(self.plot_type.value)],
                 "plot_input_data": [nan_safe_dumps(self.model_dump(mode="json", exclude_none=True))],
             }
@@ -586,33 +615,24 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if showlegend is None:
             showlegend = True if flat else False
 
+        # Use the specified template or default to multiqc
+        template = config.plot_theme if config.plot_theme else go.layout.Template(multiqc_plotly_template)
+
         layout: go.Layout = go.Layout(
+            template=template,
             title=go.layout.Title(
                 text=pconfig.title,
                 xanchor="center",
                 x=0.5,
-                font=dict(size=20),
             ),
             xaxis=go.layout.XAxis(
-                gridcolor="rgba(0,0,0,0.05)",
-                zerolinecolor="rgba(0,0,0,0.05)",
-                color="rgba(0,0,0,0.3)",  # axis labels
-                tickfont=dict(size=10, color="rgba(0,0,0,1)"),
                 automargin=True,  # auto-expand axis to fit the tick labels
             ),
             yaxis=go.layout.YAxis(
-                gridcolor="rgba(0,0,0,0.05)",
-                zerolinecolor="rgba(0,0,0,0.05)",
-                color="rgba(0,0,0,0.3)",  # axis labels
-                tickfont=dict(size=10, color="rgba(0,0,0,1)"),
                 automargin=True,  # auto-expand axis to fit the tick labels
             ),
             height=height,
             width=width,
-            paper_bgcolor="white",
-            plot_bgcolor="white",
-            font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
-            colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
             margin=go.layout.Margin(
                 pad=5,  # pad sample names in a bar graph a bit
@@ -623,11 +643,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             ),
             hoverlabel=go.layout.Hoverlabel(
                 namelength=-1,  # do not crop sample names inside hover label <extra></extra>
-            ),
-            modebar=go.layout.Modebar(
-                bgcolor="rgba(0, 0, 0, 0)",
-                color="rgba(0, 0, 0, 0.5)",
-                activecolor="rgba(0, 0, 0, 1)",
             ),
             showlegend=showlegend,
             legend=go.layout.Legend(
@@ -640,6 +655,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             if flat
             else None,
         )
+
         # Layout update for the counts/percentage switch
         pct_axis_update = dict(
             ticksuffix="%",
@@ -769,6 +785,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     y1=1,
                     yref="paper",  # make y coords are relative to the plot paper [0,1]
                     fillcolor=band.color,
+                    opacity=band.opacity,
                     line={
                         "width": 0,
                     },
@@ -840,6 +857,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     x1=1,
                     xref="paper",  # make x coords are relative to the plot paper [0,1]
                     fillcolor=band.color,
+                    opacity=band.opacity,
                     line={
                         "width": 0,
                     },
@@ -1248,7 +1266,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if not config.no_ai:
             ai_btn = f"""
             <div class="ai-plot-buttons-container" style="float: right;">
-                <button 
+                <button
                     class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
                     style="margin-left: 1px;"
                     data-section-anchor="{section_anchor}"
@@ -1256,7 +1274,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-module-anchor="{module_anchor}"
                     data-view="plot"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-toggle="tooltip"
                     title="Copy plot data for use with AI tools like ChatGPT"
                 >
                     <span style="vertical-align: baseline">
@@ -1281,7 +1299,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-action="generate"
                     data-clear-text="Clear summary"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-toggle="tooltip"
                     aria-controls="{section_anchor}_ai_summary_wrapper"
                 >
                     <span style="vertical-align: baseline">
