@@ -159,6 +159,11 @@ class BaseMultiqcModule:
         self.intro = self._get_intro()
 
         # Format the markdown strings
+        if autoformat and self.info:
+            self.info = textwrap.dedent(self.info)
+            if autoformat_type == "markdown":
+                self.info = markdown.markdown(self.info)
+
         if autoformat and self.comment:
             self.comment = textwrap.dedent(self.comment)
             if autoformat_type == "markdown":
@@ -200,8 +205,17 @@ class BaseMultiqcModule:
                 "; ".join(url_links)
             )
 
-        info = self.info.replace("\n", "<br>")
-        return f"<p>{info}{url_link}{doi_html}</p>{self.extra}"
+        # If info is markdown-formatted, it will already have proper HTML tags
+        # Otherwise, wrap in <p> tags and handle newlines manually
+        if self.info.startswith("<"):
+            # Already HTML formatted (from markdown)
+            info_html = f"{self.info}{url_link}{doi_html}"
+        else:
+            # Plain text, wrap in <p> tags and handle newlines
+            info = self.info.replace("\n", "<br>")
+            info_html = f"<p>{info}{url_link}{doi_html}</p>"
+
+        return f"{info_html}{self.extra}"
 
     def clean_child_attributes(self):
         """
