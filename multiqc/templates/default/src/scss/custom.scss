@@ -2,13 +2,7 @@
 
 /* General Styles */
 code {
-  background-color: #f3f3f3;
-  color: #666;
-}
-
-kbd {
-  background-color: #ccc;
-  color: #333;
+  background-color: var(--#{$prefix}tertiary-bg);
 }
 
 @media only screen and (max-width: 768px) {
@@ -46,30 +40,26 @@ kbd {
     -moz-transition: margin-left 0.5s;
     -webkit-transition: margin-left 0.5s;
     transition: margin-left 0.5s;
-  }
-
-  .mainpage.hidden-nav,
-  .footer.hidden-nav {
-    margin-left: 0;
+    &.hidden-nav {
+      margin-left: 0;
+    }
   }
 
   .side-nav-wrapper {
     position: fixed;
-  }
-
-  .side-nav {
-    height: 100%;
-    width: 250px;
-    border-right: 1px solid #ccc;
-    overflow: auto;
-    padding-bottom: 30px;
-    -webkit-transition: margin-left 0.5s;
-    transition: margin-left 0.5s;
-    margin-left: 0;
-  }
-
-  .side-nav.hidden-nav {
-    margin-left: -250px;
+    .side-nav {
+      height: 100%;
+      width: 250px;
+      border-right: 1px solid var(--#{$prefix}border-color);
+      overflow: auto;
+      padding-bottom: 30px;
+      -webkit-transition: margin-left 0.5s;
+      transition: margin-left 0.5s;
+      margin-left: 0;
+      &.hidden-nav {
+        margin-left: -250px;
+      }
+    }
   }
 }
 
@@ -79,88 +69,92 @@ kbd {
 
 .side-nav-wrapper {
   height: 100%;
-  background-color: #ededed;
+  background-color: var(--#{$prefix}tertiary-bg);
 }
 
-.side-nav h1 {
-  font-size: 18px;
-  text-align: center;
-  margin: 0;
-  border-bottom: 1px solid #ccc;
-}
+.side-nav {
+  h1 {
+    font-size: 18px;
+    text-align: center;
+    margin: 0;
+    border-bottom: 1px solid var(--#{$prefix}border-color);
 
-.side-nav h1 a {
-  padding: 20px 0 15px;
-}
+    a {
+      padding: 20px 0 15px;
+    }
 
-.side-nav h1 img {
-  height: 26px;
-}
+    img {
+      height: 26px;
+    }
 
-.side-nav h1 small {
-  font-size: 12px;
-}
+    small {
+      font-size: 12px;
+    }
+  }
 
-.side-nav .side-nav-title a {
-  color: #333;
-  font-size: 16px;
-  font-weight: normal;
-  padding: 15px 0;
-}
+  .side-nav-title a {
+    color: #333;
+    font-size: 16px;
+    font-weight: normal;
+    padding: 15px 0;
+  }
 
-.side-nav .mqc_loading_warning {
-  text-align: center;
-  border-bottom: 1px solid #ccc;
-  color: #ca424c;
-}
+  .mqc_loading_warning {
+    text-align: center;
+    border-bottom: 1px solid var(--#{$prefix}border-color);
+    color: #ca424c;
+  }
 
-.side-nav p {
-  font-size: 0.8em;
-  color: #999;
-  padding: 10px;
-}
+  p {
+    font-size: 0.8em;
+    color: #999;
+    padding: 10px;
+  }
 
-.side-nav ul.mqc-nav {
-  border-bottom: 1px solid #ccc;
-}
+  ul {
+    &.mqc-nav {
+      border-bottom: 1px solid var(--#{$prefix}border-color);
+    }
+    &.mqc-nav,
+    &.mqc-nav ul {
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+    }
+  }
 
-.side-nav ul.mqc-nav,
-.side-nav ul.mqc-nav ul {
-  margin: 0;
-  padding: 0;
-  list-style-type: none;
-}
+  a {
+    display: inline-block;
+    width: 100%;
+    text-decoration: none;
+    &:hover,
+    &:active,
+    &:focus {
+      background-color: var(--#{$prefix}tertiary-bg);
+    }
+  }
 
-.side-nav a {
-  display: inline-block;
-  width: 100%;
-  text-decoration: none;
-}
+  .mqc-nav {
+    a.nav-l1 {
+      padding: 10px;
+      border-top: 1px solid var(--#{$prefix}border-color);
+    }
 
-.side-nav a:hover,
-.side-nav a:active,
-.side-nav a:focus {
-  background-color: #dedede;
-}
+    li:first-child .nav-l1 {
+      border-top: 0;
+    }
 
-.side-nav .mqc-nav a.nav-l1 {
-  padding: 10px;
-  border-top: 1px solid #ccc;
-}
+    a.nav-l2 {
+      padding: 5px 10px 5px 15px;
+      border-top: 1px solid var(--#{$prefix}border-color);
+      font-size: 0.9em;
+      color: #788fa4;
+    }
 
-.side-nav .mqc-nav li:first-child .nav-l1 {
-  border-top: 0;
-}
-
-.side-nav .mqc-nav a.nav-l2 {
-  padding: 5px 10px 5px 15px;
-  border-top: 1px solid #dedede;
-  font-size: 0.9em;
-  color: #788fa4;
-}
-
-.side-nav .mqc-nav li {
-  position: relative;
+    li {
+      position: relative;
+    }
+  }
 }
 
 #side-nav-handle {
@@ -171,12 +165,11 @@ kbd {
   height: 50px;
   width: 15px;
   padding-top: 14px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--#{$prefix}border-color);
   border-left: 0;
-  background-color: #ededed;
+  background-color: var(--#{$prefix}tertiary-bg);
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
-  color: #ccc;
   cursor: pointer;
 }
 
@@ -191,8 +184,8 @@ kbd {
 }
 
 .side-nav .navbar-toggle {
-  background-color: #ddd;
-  border-color: #999;
+  background-color: var(--#{$prefix}tertiary-bg);
+  border-color: var(--#{$prefix}border-color);
   position: absolute;
   right: 10px;
   top: 15px;
@@ -274,8 +267,8 @@ h2.mqc-module-title {
 }
 
 .footer {
-  background-color: #ededed;
-  border-top: 1px solid #ccc;
+  background-color: var(--#{$prefix}tertiary-bg);
+  border-top: 1px solid var(--#{$prefix}border-color);
   font-size: 0.9em;
   color: #999;
   padding: 20px 0;
@@ -370,8 +363,8 @@ input.form-control[type="color"] {
 @media only screen and (max-width: 768px) {
   .mqc-toolbox {
     padding: 0 15px;
-    background-color: #ededed;
-    border-bottom: 1px solid #ccc;
+    background-color: var(--#{$prefix}tertiary-bg);
+    border-bottom: 1px solid var(--#{$prefix}border-color);
   }
 
   #mqc_saveconfig {
@@ -420,8 +413,8 @@ input.form-control[type="color"] {
     overflow: auto;
     left: 36px;
     margin: 0;
-    background-color: #ededed;
-    border-left: 1px solid #ccc;
+    background-color: var(--#{$prefix}tertiary-bg);
+    border-left: 1px solid var(--#{$prefix}border-color);
     z-index: 10;
   }
 
@@ -436,7 +429,7 @@ input.form-control[type="color"] {
 
 .mqc-toolbox-label {
   display: inline-block;
-  background-color: #ededed;
+  background-color: var(--#{$prefix}tertiary-bg);
   color: #999;
   height: 31px;
   width: 67px;
@@ -458,7 +451,7 @@ input.form-control[type="color"] {
 
 .mqc-toolbox-header {
   margin: 10px;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--#{$prefix}border-color);
 }
 
 .mqc-toolbox-buttons ul,
@@ -481,28 +474,29 @@ input.form-control[type="color"] {
   width: 37px;
   height: 36px;
   padding: 7px 8px 9px;
-  color: #999;
-  background-color: #dedede;
+  color: var(--#{$prefix}tertiary-color);
+  background-color: var(--#{$prefix}secondary-bg);
   border: 1px solid transparent;
-  border-right: 1px solid #ccc;
+  border-right: 1px solid var(--#{$prefix}border-color);
 }
 
 .mqc-toolbox-buttons li a:hover,
 .mqc-toolbox-buttons li a.active {
-  color: #333;
-  background-color: #ededed;
-  border: 1px solid #ccc;
+  color: var(--#{$prefix}body-color);
+  background-color: var(--#{$prefix}tertiary-bg);
+  border: 1px solid var(--#{$prefix}border-color);
 }
 
 .mqc-toolbox-buttons li .in_use {
-  color: #333;
+  color: var(--#{$prefix}body-color);
   border: 3px solid #5bc0de;
   padding: 5px 8px 7px 6px;
-  border-right: 1px solid #ededed;
+  border-right: 1px solid var(--#{$prefix}tertiary-bg);
 }
 
 .mqc-toolbox-buttons li a.active {
-  border-right: 1px solid #ededed;
+  border-right: 1px solid var(--#{$prefix}tertiary-bg);
+  background-color: var(--#{$prefix}tertiary-bg);
 }
 
 .mqc-toplink,
@@ -515,7 +509,7 @@ input.form-control[type="color"] {
   text-align: center;
   padding: 5px 0 5px 2px;
   border-radius: 28px;
-  background-color: #ededed;
+  background-color: var(--#{$prefix}tertiary-bg);
   color: #999;
 }
 
@@ -545,7 +539,7 @@ input.form-control[type="color"] {
 }
 
 .mqc_filters li:hover {
-  background-color: #dedede;
+  background-color: var(--#{$prefix}tertiary-bg);
 }
 
 .mqc_filter_section .mqc_regex_mode_p {
@@ -595,7 +589,7 @@ input.form-control[type="color"] {
 
 .mqc_filter_section hr {
   margin: 10px 0;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--#{$prefix}border-color);
 }
 
 .mqc_filter_section p {
@@ -640,7 +634,7 @@ input.form-control[type="color"] {
 }
 
 #mqc_renamesamples_bulk_collapse {
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--#{$prefix}border-color);
 }
 
 #mqc_renamesamples_bulk_update {
@@ -654,7 +648,7 @@ input.form-control[type="color"] {
 
 .f_text {
   border: 0;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--#{$prefix}border-color);
   padding: 5px 0 5px 10px;
   margin: 0;
   background-color: transparent;
@@ -701,7 +695,7 @@ input.form-control[type="color"] {
 #mqc_exportplots blockquote {
   font-size: 0.7em;
   padding: 0 0 0 10px;
-  border-left: 2px solid #cccccc;
+  border-left: 2px solid var(--#{$prefix}border-color);
   color: #666;
 }
 
@@ -710,13 +704,13 @@ input.form-control[type="color"] {
 }
 
 #mqc_exportplots .nav-tabs {
-  border-color: #cccccc;
+  border-color: var(--#{$prefix}border-color);
   margin-bottom: 15px;
 }
 
 #mqc_exportplots .nav-tabs li a {
   background-color: #dddddd;
-  border-color: #cccccc;
+  border-color: var(--#{$prefix}border-color);
   padding: 8px 10px;
   color: #999;
   font-size: 12px;
@@ -749,7 +743,7 @@ input.form-control[type="color"] {
 #mqc_about blockquote {
   font-size: 0.8em;
   padding: 0 0 0 10px;
-  border-left: 2px solid #cccccc;
+  border-left: 2px solid var(--#{$prefix}border-color);
   color: #666;
 }
 
@@ -811,14 +805,14 @@ input.form-control[type="color"] {
   cursor: pointer;
   /* Border doesn't scroll with the CSS transform, so just a box-shadow instead. */
   border-bottom: 0;
-  -webkit-box-shadow: inset 0px -2px 0px 0 #ddd;
-  -moz-box-shadow: inset 0px -2px 0px 0 #ddd;
-  box-shadow: inset 0px -2px 0px 0 #ddd;
+  -webkit-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
+  -moz-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
+  box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
 }
 
 .mqc_table thead th,
 .mqc_table thead td {
-  background-color: #ffffff;
+  background-color: var(--#{$prefix}body-bg);
 }
 
 .mqc_table thead th .tablesorter-header-inner:after {
@@ -842,7 +836,7 @@ input.form-control[type="color"] {
 
 .mqc_table thead th.tablesorter-headerAsc,
 .mqc_table thead th.tablesorter-headerDesc {
-  background-color: #ededed;
+  background-color: var(--#{$prefix}secondary-bg);
   color: #1ca8dd;
   border-bottom: 2px solid #1ca8dd;
 }
@@ -856,7 +850,7 @@ input.form-control[type="color"] {
   color: #999;
   padding: 5px;
   cursor: pointer;
-  background-color: #ffffff;
+  background-color: var(--#{$prefix}secondary-bg);
   -webkit-transition: background-color 0.2s;
   transition: background-color 0.2s;
 }
@@ -864,7 +858,7 @@ input.form-control[type="color"] {
 .mqc-table-expand:hover,
 .mqc-table-expand:focus,
 .mqc-table-expand:active {
-  background-color: #ededed;
+  background-color: var(--#{$prefix}tertiary-bg);
 }
 
 .mqc_table_numrows_text {
@@ -1025,7 +1019,7 @@ tbody .sorthandle {
   top: 0;
   left: 0;
   bottom: 0;
-  background-color: #dedede;
+  background-color: var(--#{$prefix}tertiary-bg);
   z-index: -1;
 }
 
@@ -1037,7 +1031,7 @@ tbody .sorthandle {
 
 /* Flat plots */
 .mqc_mplplot {
-  border: 1px solid #dedede;
+  border: 1px solid var(--#{$prefix}border-color);
   margin-top: 0;
   width: 100%;
 }
@@ -1054,7 +1048,7 @@ tbody .sorthandle {
 }
 
 .hc-plot.not_rendered {
-  background-color: #ededed;
+  background-color: var(--#{$prefix}tertiary-bg);
   text-align: center;
 }
 
@@ -1073,7 +1067,7 @@ tbody .sorthandle {
   width: 100%;
   height: 512px;
   position: relative;
-  border: 1px solid #dedede;
+  border: 1px solid var(--#{$prefix}border-color);
   margin-top: 5px;
 }
 
@@ -1081,14 +1075,14 @@ tbody .sorthandle {
   position: absolute;
   width: 100%;
   height: 10px;
-  background-color: #dedede;
+  background-color: var(--#{$prefix}tertiary-bg);
   cursor: row-resize;
-  border-top: 1px solid #ededed;
+  border-top: 1px solid var(--#{$prefix}border-color);
   -moz-transition: background-color 0.1s;
   -webkit-transition: background-color 0.1s;
   transition: background-color 0.1s;
   /* two lines below are a hack to hide hanging plotly long vertical tick labels */
-  border-bottom: 2px solid white;
+  border-bottom: 2px solid var(--#{$prefix}body-bg);
   bottom: -3px;
 }
 
@@ -1151,7 +1145,7 @@ tbody .sorthandle {
 }
 
 .beeswarm-plot:nth-child(odd) {
-  background-color: #ededed;
+  background-color: var(--#{$prefix}tertiary-bg);
 }
 
 .mqc-custom-content-image img {
@@ -1161,10 +1155,6 @@ tbody .sorthandle {
 /* MultiQC Software Versions table */
 .mqc_versions_table {
   width: 100%;
-}
-
-.mqc_versions_table tbody:nth-child(even) {
-  background-color: #f2f2f2;
 }
 
 g.annotation {
@@ -1252,7 +1242,7 @@ tr.row-empty {
 .ai-summary {
   position: relative;
   padding: 8px 4px 0px 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--#{$prefix}border-color);
   border-radius: 4px;
   color: #160f26;
 }
@@ -1405,7 +1395,7 @@ tr.row-empty {
 }
 
 .ai-model-suggestion code {
-  background-color: #dedede;
+  background-color: var(--#{$prefix}tertiary-bg);
   padding: 2px 4px;
   border-radius: 4px;
 }

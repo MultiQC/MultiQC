@@ -1131,7 +1131,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
                     data-module-anchor="{module_anchor}"
                     data-plot-view="table"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-toggle="tooltip"
                     title="Copy table data for use with AI tools like ChatGPT"
                 >
                     <span style="vertical-align: baseline">
@@ -1157,7 +1157,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
                     data-action="generate"
                     data-clear-text="Clear summary"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-toggle="tooltip"
                     aria-controls="{dt.anchor}_ai_summary_wrapper"
                     title="Dynamically generate AI summary for this table"
                 >
@@ -1185,7 +1185,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
     html += f"""
         <div id="{dt.anchor}_container" class="mqc_table_container">
             <div class="table-responsive mqc-table-responsive {collapse_class}">
-                <table id="{dt.anchor}" class="table table-condensed mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist_js(dt)}">
+                <table id="{dt.anchor}" class="table table-sm mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist_js(dt)}">
         """
 
     # Build the header row
