@@ -1053,8 +1053,8 @@ def render_html(
 
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_config_modal_btn btn btn-outline-secondary btn-sm {disabled_class}" data-toggle="modal"
-                data-target="#{dt.anchor}_config_modal" {disabled_attrs} title="Configure visibility and ordering of columns">
+            <button type="button" class="mqc_table_config_modal_btn btn btn-outline-secondary btn-sm {disabled_class}" data-bs-toggle="modal"
+                data-bs-target="#{dt.anchor}_config_modal" {disabled_attrs} title="Configure visibility and ordering of columns">
                                     {get_material_icon("mdi:view-column", 16)} Configure columns
             </button>
             """
@@ -1075,7 +1075,7 @@ def render_html(
             buttons.append(
                 f"""
                 <button type="button" class="mqc_table_make_scatter btn btn-outline-secondary btn-sm"
-                data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.anchor}" title="Visualize pairs of values on a scatter plot">
+                data-bs-toggle="modal" data-bs-target="#table_scatter_modal" data-table-anchor="{dt.anchor}" title="Visualize pairs of values on a scatter plot">
                                             {get_material_icon("mdi:chart-scatter-plot", 16)} Scatter plot
                 </button>
                 """
@@ -1274,11 +1274,11 @@ def _configuration_modal(table_anchor: str, title: str, trows: str, violin_ancho
     return f"""
     <!-- MultiQC Table Columns Modal -->
     <div class="modal fade mqc_config_modal" id="{table_anchor}_config_modal" tabindex="-1">
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title">{title}: Columns</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order. Table ID: <code>{table_anchor}</code></p>
@@ -1303,7 +1303,7 @@ def _configuration_modal(table_anchor: str, title: str, trows: str, violin_ancho
               </tbody>
             </table>
         </div>
-        <div class="modal-footer"> <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button> </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button> </div>
     </div> </div> </div>"""
 
 
