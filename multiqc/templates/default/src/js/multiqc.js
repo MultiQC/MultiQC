@@ -4,10 +4,10 @@
 
 // Collect functions to be called after plot data is decompressed.
 // Includes functions in plotting.js, and any module-specific JS like multiqc_fastqc.js
-let callAfterDecompressed = [];
+window.callAfterDecompressed = [];
 
 // Helper config - is defined and object length > 0?
-function notEmptyObj(obj) {
+window.notEmptyObj = function (obj) {
   try {
     if (obj === undefined) {
       return false;
@@ -19,7 +19,7 @@ function notEmptyObj(obj) {
     return false;
   }
   return true;
-}
+};
 
 $(function () {
   // Enable the bootstrap tooltip hovers

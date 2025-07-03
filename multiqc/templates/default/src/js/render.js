@@ -8,7 +8,7 @@ $(function () {
       console.error(err);
       return;
     }
-    callAfterDecompressed.forEach(function (fn) {
+    window.callAfterDecompressed.forEach(function (fn) {
       fn(mqc_plotdata);
     });
   });

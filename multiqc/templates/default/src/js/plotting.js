@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////
 
 // Global plot data variable. Accessed in many other JavaScript files.
-let mqc_plots = {};
+window.mqc_plots = {};
 
 // Initialise the toolbox filters
 window.mqc_highlight_f_texts = [];
@@ -178,8 +178,8 @@ $(function () {
   loadingWarning = $(".mqc_loading_warning").show();
 });
 
-callAfterDecompressed.push(function (mqc_plotdata) {
-  mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.anchor, initPlot(data)]));
+window.callAfterDecompressed.push(function (mqc_plotdata) {
+  window.mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.anchor, initPlot(data)]));
 
   let shouldLoad = $(".hc-plot.not_loaded:visible");
 
