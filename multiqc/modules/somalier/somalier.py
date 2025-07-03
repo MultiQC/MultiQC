@@ -140,6 +140,8 @@ class MultiqcModule(BaseMultiqcModule):
                     log.warning(f"Could not find sample name in somalier output: {f['fn']}")
                     return None
             else:
+                if s_name_idx is None:
+                    continue
                 s_name = "*".join([s[idx] for idx in s_name_idx])  # not safe to hard code, but works
                 parsed_data[s_name] = dict()
                 for i, v in enumerate(s):
