@@ -1172,13 +1172,9 @@ class BaseMultiqcModule:
             Dictionary of headers to add to general stats
         """
         # Get general stats config for this module
-        sp_key = sp_key or self.id
         module_config: Dict[ColumnKey, ColumnDict] = {}
         for k, v in config.general_stats_columns.items():
-            if k == sp_key:
-                module_config = cast(Dict[ColumnKey, ColumnDict], v.get("columns", {}))
-                break
-            elif k.split("/")[0] in [self.id, self.name]:
+            if (sp_key and k == sp_key) or k.split("/")[0] in [self.id, self.name]:
                 module_config = cast(Dict[ColumnKey, ColumnDict], v.get("columns", {}))
                 break
         general_stats_headers: Dict[ColumnKey, ColumnDict] = {}
@@ -1192,9 +1188,9 @@ class BaseMultiqcModule:
                     h.update(module_config[ColumnKey(k)] or {})
                     general_stats_headers[ColumnKey(k)] = h
             # Add custom columns that are not in default headers
-            for key, col_conf in module_config.items():
-                if key not in all_headers:
-                    general_stats_headers[ColumnKey(key)] = col_conf
+            for sp_key, col_conf in module_config.items():
+                if sp_key not in all_headers:
+                    general_stats_headers[ColumnKey(sp_key)] = col_conf
 
         elif all_headers:
             # Default behavior - use all headers
