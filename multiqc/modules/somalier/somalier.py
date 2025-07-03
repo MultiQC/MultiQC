@@ -23,10 +23,10 @@ class MultiqcModule(BaseMultiqcModule):
             extra="""
             Somalier can be used to find sample swaps or duplicates in cancer
             projects, where there is often no jointly-called VCF across samples.
-        
+
             It is also extremely efficient and so can be used to find all-vs-all
             relatedness estimates for thousands of samples.
-        
+
             It also outputs information on sex, depth, heterozgyosity, and ancestry
             to be used for general QC.
             """,
@@ -702,7 +702,13 @@ def _make_col_alpha(cols, alpha):
     """Take an HTML colour value and return a rgba string with alpha"""
     cols_return = []
     for col in cols:
-        col_srgb = spectra.html(col)
-        cols_rgb = [c * 255.0 for c in col_srgb.clamped_rgb]
-        cols_return.append("rgba({},{},{},{})".format(*cols_rgb, alpha))
+        # Check if already in rgba format
+        if col.startswith("rgba("):
+            # Already has alpha, just return as-is
+            cols_return.append(col)
+        else:
+            # Convert to rgba
+            col_srgb = spectra.html(col)
+            cols_rgb = [c * 255.0 for c in col_srgb.clamped_rgb]
+            cols_return.append("rgba({},{},{},{})".format(*cols_rgb, alpha))
     return cols_return
