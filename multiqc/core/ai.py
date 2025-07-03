@@ -387,16 +387,22 @@ class AnthropicClient(Client):
 class AWSBedrockClient(Client):
     def __init__(self):
         super().__init__()
-        try:
-            import boto3  # type: ignore
-        except ImportError:
-            raise ImportError(
-                'AI summary through AWS bedrock requires "boto3" to be installed. Install it with `pip install boto`'
-            )
+
+        # Check Bedrock availability with detailed error reporting
+        is_available, error_msg = _check_bedrock_availability()
+        if not is_available:
+            if "boto3 not installed" in str(error_msg):
+                raise ImportError(
+                    'AI summary through AWS bedrock requires "boto3" to be installed. Install it with `pip install boto3`'
+                )
+            else:
+                raise RuntimeError(f"AWS Bedrock is not available: {error_msg}")
 
         self.model = config.ai_model
         self.name = "aws_bedrock"
         self.title = "AWS Bedrock"
+
+        import boto3  # type: ignore
 
         self.client = boto3.client(service_name="bedrock-runtime")
 
@@ -514,33 +520,187 @@ class SeqeraClient(Client):
             raise
 
 
+def check_bedrock_availability() -> Tuple[bool, Optional[str]]:
+    """
+    Public function to check if AWS Bedrock is available and usable.
+    Can be used for diagnostics.
+
+    Returns:
+        Tuple of (is_available, error_message)
+    """
+    return _check_bedrock_availability()
+
+
+def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
+    """
+    Check if AWS Bedrock is available and usable.
+
+    Returns:
+        Tuple of (is_available, error_message)
+    """
+    try:
+        import boto3  # type: ignore
+    except ImportError:
+        return False, "boto3 not installed"
+
+    try:
+        # Create bedrock runtime client
+        client = boto3.client("bedrock-runtime")
+
+        # Get the current region
+        session = boto3.Session()
+        region: Optional[str] = session.region_name
+
+        # If no region is set, try to get it from the client
+        if not region:
+            try:
+                region = client.meta.region_name
+            except Exception:
+                pass
+
+        # If still no region, check environment variable
+        if not region:
+            region = os.environ.get("AWS_DEFAULT_REGION") or os.environ.get("AWS_REGION")
+
+        # Default to us-east-1 if still no region found
+        if not region:
+            region = "us-east-1"
+
+        # Check if Bedrock is available in this region
+        # Bedrock is available in specific regions only (as of 2024)
+        bedrock_regions = {
+            "us-east-1",
+            "us-west-2",
+            "us-gov-west-1",  # US regions
+            "ap-southeast-1",
+            "ap-southeast-2",
+            "ap-northeast-1",
+            "ap-south-1",  # Asia Pacific
+            "eu-central-1",
+            "eu-west-1",
+            "eu-west-3",  # Europe
+            "ca-central-1",  # Canada
+            "sa-east-1",  # South America
+        }
+
+        if region not in bedrock_regions:
+            return False, f"Bedrock not available in region {region}"
+
+        # Try to list available foundation models to verify permissions
+        # This is a read-only operation that should work if user has basic Bedrock access
+        bedrock_client = boto3.client("bedrock", region_name=region)
+        try:
+            response = bedrock_client.list_foundation_models()
+
+            # Get list of available models
+            available_models = [model.get("modelId", "") for model in response.get("modelSummaries", [])]
+
+            # If a specific model is configured, check if it's available
+            if config.ai_model:
+                if config.ai_model not in available_models:
+                    return (
+                        False,
+                        f"Configured model '{config.ai_model}' not available in Bedrock. Available models: {', '.join(available_models)}",
+                    )
+            else:
+                # Check if any Claude models are available (since that's what we typically use)
+                claude_models = [model_id for model_id in available_models if "claude" in model_id.lower()]
+
+                if not claude_models:
+                    return (
+                        False,
+                        f"No Claude models available in Bedrock. Available models: {', '.join(available_models)}",
+                    )
+
+            return True, None
+
+        except Exception as e:
+            if "AccessDenied" in str(e):
+                return False, f"Access denied to Bedrock: {e}"
+            elif "UnauthorizedOperation" in str(e):
+                return False, f"Insufficient permissions for Bedrock: {e}"
+            else:
+                return False, f"Error checking Bedrock permissions: {e}"
+
+    except Exception as e:
+        if "NoCredentialsError" in str(e):
+            return False, "AWS credentials not configured"
+        elif "InvalidAccessKeyId" in str(e):
+            return False, "Invalid AWS credentials"
+        else:
+            return False, f"Error creating Bedrock client: {e}"
+
+
+def _auto_detect_provider() -> Optional[str]:
+    """
+    Auto-detect AI provider based on available environment variables.
+
+    Returns the provider name in order of preference:
+    1. "seqera" if SEQERA_ACCESS_TOKEN or TOWER_ACCESS_TOKEN is set
+    2. "anthropic" if ANTHROPIC_API_KEY is set
+    3. "openai" if OPENAI_API_KEY is set
+    4. "aws_bedrock" if AWS credentials are available
+    5. None if no provider can be detected
+    """
+    # Check for Seqera tokens
+    if os.environ.get("SEQERA_ACCESS_TOKEN") or os.environ.get("TOWER_ACCESS_TOKEN"):
+        return "seqera"
+
+    # Check for Anthropic API key
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return "anthropic"
+
+    # Check for OpenAI API key
+    if os.environ.get("OPENAI_API_KEY"):
+        return "openai"
+
+    # Check for AWS Bedrock availability with improved detection
+    is_available, error_msg = _check_bedrock_availability()
+    if is_available:
+        return "aws_bedrock"
+    elif error_msg and config.verbose:
+        logger.debug(f"AWS Bedrock not available: {error_msg}")
+
+    return None
+
+
 def get_llm_client() -> Optional[Client]:
     if not config.ai_summary:
         return None
 
-    if config.ai_provider == "seqera":
+    # Auto-detect provider if not explicitly set
+    provider = config.ai_provider
+    if provider is None:
+        provider = _auto_detect_provider()
+        if provider is None:
+            raise RuntimeError(
+                "config.ai_summary is set to true, but no AI provider could be detected. "
+                "Please set config.ai_provider explicitly or ensure one of the following environment variables is set: "
+                "SEQERA_ACCESS_TOKEN, TOWER_ACCESS_TOKEN, ANTHROPIC_API_KEY, OPENAI_API_KEY, or configure AWS credentials"
+            )
+        logger.debug(f"Auto-detected AI provider: {provider}")
+
+    if provider == "seqera":
         if api_key := os.environ.get("SEQERA_ACCESS_TOKEN"):
             logger.debug("Using Seqera access token from $SEQERA_ACCESS_TOKEN environment variable")
         elif api_key := os.environ.get("TOWER_ACCESS_TOKEN"):
             logger.debug("Using Seqera access token from TOWER_ACCESS_TOKEN environment variable")
         else:
-            logger.error(
+            raise RuntimeError(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', "
                 "but Seqera access token is not set. "
                 "Please set the SEQERA_ACCESS_TOKEN / TOWER_ACCESS_TOKEN environment variable "
                 "or change config.ai_provider"
             )
-            return None
         return SeqeraClient(api_key)
 
-    elif config.ai_provider == "anthropic":
+    elif provider == "anthropic":
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
-            logger.error(
+            raise RuntimeError(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'anthropic', but Anthropic API "
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
-            return None
         logger.debug("Using Anthropic API key from ANTHROPIC_API_KEY environment variable")
         try:
             return AnthropicClient(api_key)
@@ -549,14 +709,13 @@ def get_llm_client() -> Optional[Client]:
                 'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[anthropic]"`'
             )
 
-    elif config.ai_provider == "openai":
+    elif provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
-            logger.error(
+            raise RuntimeError(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'openai', but OpenAI API "
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
-            return None
         logger.debug("Using OpenAI API key from OPENAI_API_KEY environment variable")
         try:
             return OpenAiClient(api_key)
@@ -565,7 +724,7 @@ def get_llm_client() -> Optional[Client]:
                 'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"`'
             )
 
-    elif config.ai_provider == "aws_bedrock":
+    elif provider == "aws_bedrock":
         try:
             return AWSBedrockClient()
         except ModuleNotFoundError:
@@ -573,14 +732,13 @@ def get_llm_client() -> Optional[Client]:
                 'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[aws_bedrock]"`'
             )
 
-    elif config.ai_provider == "custom":
+    elif provider == "custom":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
-            logger.error(
+            raise RuntimeError(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but OpenAI API "
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
-            return None
         if not config.ai_model:
             raise ValueError(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_model is provided. Please set config.ai_model"
@@ -595,11 +753,9 @@ def get_llm_client() -> Optional[Client]:
         return OpenAiClient(api_key=api_key, endpoint=config.ai_custom_endpoint)
     else:
         avail_providers = config_schema.AiProviderLiteral.__args__  # type: ignore
-        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(avail_providers)}]'
-        if config.strict:
-            raise RuntimeError(msg)
-        logger.error(msg + ". Skipping AI summary")
-        return None
+        raise RuntimeError(
+            f'Unknown AI provider "{provider}". Please set config.ai_provider to one of the following: [{", ".join(avail_providers)}]'
+        )
 
 
 def _strip_html(text: str) -> str:
@@ -815,8 +971,9 @@ def add_ai_summary_to_report():
         # Not generating report in Python, leaving for JS runtime
         return
 
-    if not (client := get_llm_client()):
-        return
+    # get_llm_client() will raise an exception if configuration is invalid when ai_summary=True
+    client = get_llm_client()
+    assert client is not None, "get_llm_client() should not return None when config.ai_summary is True"
 
     report.ai_provider_id = client.name
     report.ai_provider_title = client.title
