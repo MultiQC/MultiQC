@@ -539,7 +539,7 @@ def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
         Tuple of (is_available, error_message)
     """
     try:
-        import boto3
+        import boto3  # type: ignore
     except ImportError:
         return False, "boto3 not installed"
 
