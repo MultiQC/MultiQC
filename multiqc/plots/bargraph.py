@@ -380,7 +380,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             old_df_filtered = old_df.join(
                 new_keys,
                 on=["data_label", "sample"],
-                how="anti",  # anti-join = “rows in left not matched in right”
+                how="anti",  # anti-join = "rows in left not matched in right"
             )
 
             # Combine the dataframes, keeping all rows
@@ -449,9 +449,13 @@ class Dataset(BaseDataset):
             # Split long category names
             name = "<br>".join(split_long_string(input_cat["name"]))
 
+            # Colour is already in rgb format
+            if input_cat["color"].startswith("rgb"):
+                color_str = input_cat["color"]
             # Reformat color to be ready to add alpha in Plotly-JS
-            color = spectra.html(input_cat["color"])
-            color_str = ",".join([f"{int(float(x) * 256)}" for x in color.rgb])
+            else:
+                color = spectra.html(input_cat["color"])
+                color_str = ",".join([f"{int(float(x) * 256)}" for x in color.rgb])
 
             # Reverse the data to match the reversed samples
             cat: Category = Category(
