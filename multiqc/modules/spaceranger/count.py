@@ -6,10 +6,9 @@ import os
 from collections import defaultdict
 from typing import Dict, Union
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import BaseMultiqcModule, config
+from multiqc.modules.spaceranger.utils import populate_data_and_headers, set_hidden_cols, transform_data
 from multiqc.plots import linegraph, table
-
-from multiqc.modules.spaceranger.utils import set_hidden_cols, transform_data, populate_data_and_headers
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +52,8 @@ def parse_count_html(module: BaseMultiqcModule):
             if line.startswith("const data"):
                 line = line.replace("const data = ", "")
                 summary = json.loads(line)
-                summary = summary["summary"]
+                if "summary" in summary:
+                    summary = summary["summary"]
                 break
 
         if summary is None:

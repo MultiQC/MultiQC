@@ -963,6 +963,9 @@ spaceranger/count_html:
   - fn: "*.html"
     contents: '"command": "Space Ranger", "subcommand": "count"'
     num_lines: 20
+  - fn: "*web_summary*.html"
+    contents: '"pipeline":"Space Ranger • count"'
+    num_lines: 1000
 stacks/gstacks:
   fn: "gstacks.log.distribs"
   contents: "BEGIN effective_coverages_per_sample"
