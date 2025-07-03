@@ -4,8 +4,8 @@
   "description": "Default template for MultiQC reports",
   "private": true,
   "scripts": {
-    "build-css": "sass scss/main.scss:assets/css/multiqc.min.css --style=compressed --no-source-map",
-    "watch-css": "sass --watch scss/main.scss:assets/css/multiqc.min.css --style=compressed --no-source-map",
+    "build-css": "sass scss/main.scss:assets/css/multiqc.min.css --style=compressed --no-source-map --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions",
+    "watch-css": "sass --watch scss/main.scss:assets/css/multiqc.min.css --style=compressed --no-source-map --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions",
     "build": "npm run build-css"
   },
   "devDependencies": {
