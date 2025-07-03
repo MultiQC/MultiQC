@@ -134,6 +134,7 @@ plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
 plots_defer_loading_numseries: int
+plot_theme: Optional[str]
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool

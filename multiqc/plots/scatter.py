@@ -275,7 +275,6 @@ class Dataset(BaseDataset):
         """
         Create a Plotly figure for a dataset
         """
-
         fig = go.Figure(layout=layout)
         MAX_ANNOTATIONS = 10  # Maximum number of dots to be annotated directly on the plot
         n_annotated = len([el for el in self.points if "annotation" in el])
