@@ -38,9 +38,9 @@ repos:
 
   - repo: local
     hooks:
-      - id: compile-sass
-        name: Compile Sass to CSS
+      - id: build-assets
+        name: Build assets with Vite
         language: script
-        entry: .github/compile-sass.sh
-        files: ^multiqc/templates/default/scss/.*\.scss$
+        entry: .github/build-assets.sh
+        files: ^multiqc/templates/default/src/.*\.(scss|js)$
         pass_filenames: false

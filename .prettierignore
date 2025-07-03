@@ -1,4 +1,5 @@
 *.html
 multiqc/templates/*/assets/js/packages
+multiqc/templates/*/compiled
 bootstrap.min.css
 jquery.toast.css

@@ -2,7 +2,7 @@
 // This file imports Bootstrap and custom MultiQC styles
 
 // Use Bootstrap 5
-@use "../node_modules/bootstrap/scss/bootstrap";
+@use "../../node_modules/bootstrap/scss/bootstrap";
 
 // Use custom MultiQC styles
 @use "custom";

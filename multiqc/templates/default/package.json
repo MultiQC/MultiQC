@@ -3,13 +3,17 @@
   "version": "1.30.0",
   "description": "Default template for MultiQC reports",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build-css": "sass scss/main.scss:assets/css/multiqc.min.css --style=compressed --no-source-map --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions",
-    "watch-css": "sass --watch scss/main.scss:assets/css/multiqc.min.css --style=compressed --no-source-map --silence-deprecation=import --silence-deprecation=global-builtin --silence-deprecation=color-functions",
-    "build": "npm run build-css"
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "dev": "vite build --watch"
   },
   "devDependencies": {
+    "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.7",
-    "sass": "^1.83.0"
+    "sass": "^1.83.0",
+    "terser": "^5.43.1",
+    "vite": "^7.0.0"
   }
 }
