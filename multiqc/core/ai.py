@@ -402,7 +402,7 @@ class AWSBedrockClient(Client):
         self.name = "aws_bedrock"
         self.title = "AWS Bedrock"
 
-        import boto3
+        import boto3  # type: ignore
 
         self.client = boto3.client(service_name="bedrock-runtime")
 
@@ -549,7 +549,7 @@ def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
 
         # Get the current region
         session = boto3.Session()
-        region = session.region_name
+        region: Optional[str] = session.region_name
 
         # If no region is set, try to get it from the client
         if not region:
