@@ -16,8 +16,8 @@ the output from each module and print it to a single section.
       {% for s in m.sections %}
         {% if s['print_section'] %}
           {% if (s['name'] is none or s['name'] | length == 0) and s['helptext'] is not none and s['helptext'] | length > 0 %}
-            <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
-              <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+            <button class="btn btn-secondary btn-sm float-end btn-help" type="button" data-bs-toggle="collapse" data-bs-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+              {{ material_icon('help', 16) }}
               Help
             </button>
           {% endif %}
@@ -25,8 +25,8 @@ the output from each module and print it to a single section.
               <h3 id="{{ s['anchor'] }}">
                   {{ s['name'] }}
                   {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
-                    <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
-                      <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+                    <button class="btn btn-secondary btn-sm float-end btn-help" type="button" data-bs-toggle="collapse" data-bs-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+                      {{ material_icon('help', 16) }}
                       Help
                     </button>
                   {% endif %}
@@ -36,7 +36,7 @@ the output from each module and print it to a single section.
             {% if s['comment'] is not none and s['comment'] | length > 0 %}<blockquote class="mqc-section-comment">{{ s['comment'] }}</blockquote>{% endif %}
             {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
               <div class="collapse mqc-section-helptext " id="{{ s['anchor'] }}_helptext">
-                <div class="well">{{ s['helptext'] }}</div>
+                <div class="card card-body bg-light">{{ s['helptext'] }}</div>
               </div>
             {% endif %}
             {% if s['plot'] is not none %}<div class="mqc-section-plot">{{ s['plot'] }}</div>{% endif %}
