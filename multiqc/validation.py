@@ -155,7 +155,8 @@ class ValidatedConfig(BaseModel):
                 if config.strict:
                     raise ModuleConfigValidationError(message=msg, module_name=modname)
 
-        # By this point, data is a valid dict with only valid fields, but it still can raise PydanticValidationError with unexpected errors
+        # By this point, data is a valid dict with only valid fields, but it still can
+        # raise PydanticValidationError with unexpected errors
         super().__init__(**data)
 
     @classmethod
