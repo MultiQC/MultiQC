@@ -66,7 +66,7 @@ make_pdf: false
 # AI settings:
 ai_summary: false
 ai_summary_full: false
-ai_provider: "seqera"
+ai_provider: null
 ai_model: null
 ai_custom_endpoint: null
 ai_auth_type: null
