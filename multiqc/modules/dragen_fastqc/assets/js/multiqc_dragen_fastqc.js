@@ -577,8 +577,8 @@ function fastqc_module(module_element, module_key) {
             <div id="fastqc_sequence_content_single_controls">\
                 <button class="btn btn-primary btn-sm" id="fastqc_sequence_content_single_back">Back to overview heatmap</button> \
                 <div class="btn-group btn-group-sm"> \
-                    <button class="btn btn-default fastqc_seqcontent_single_prevnext" data-action="prev">&laquo; Prev</button> \
-                    <button class="btn btn-default fastqc_seqcontent_single_prevnext" data-action="next">Next &raquo;</button> \
+                    <button class="btn btn-outline-secondary fastqc_seqcontent_single_prevnext" data-action="prev">&laquo; Prev</button> \
+                    <button class="btn btn-outline-secondary fastqc_seqcontent_single_prevnext" data-action="next">Next &raquo;</button> \
                 </div>\
             </div>\
             <div class="hc-plot-wrapper"><div id="fastqc_sequence_content_single" class="hc-plot hc-line-plot"><small>loading..</small></div></div></div>';

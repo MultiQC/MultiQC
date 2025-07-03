@@ -81,7 +81,7 @@ was generated and the button that launches the welcome tour.
   {% if not config.no_ai and not report.ai_global_summary %}
   <div class="ai-generate-button-wrapper">
     <button
-                    class="btn btn-secondary btn-sm ai-generate-button ai-generate-button-global"
+                    class="btn btn-outline-secondary btn-sm ai-generate-button ai-generate-button-global"
       data-response-div="global_ai_summary_response"
       data-detailed-analysis-div="global_ai_summary_detailed_analysis_response"
       data-error-div="global_ai_summary_error"
@@ -108,7 +108,7 @@ was generated and the button that launches the welcome tour.
   <div class="ai-copy-button-wrapper">
     <button
       type="button"
-                    class="btn btn-secondary btn-sm ai-copy-content ai-copy-content-report"
+                    class="btn btn-outline-secondary btn-sm ai-copy-content ai-copy-content-report"
       data-toggle="tooltip"
       data-section-anchor="global"
       title="Copies the report data to the clipboard formatted to discuss with AI chats like ChatGPT or Claude"
@@ -163,7 +163,7 @@ was generated and the button that launches the welcome tour.
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     {{ material_icon('warning', 16) }}
   Because this report contains a lot of samples, you may need to click 'Show plot' to see some graphs.
-      <button id="mqc-render-all-plots" class="btn btn-secondary btn-sm">Render all plots</button>
+      <button id="mqc-render-all-plots" class="btn btn-outline-secondary btn-sm">Render all plots</button>
 </div>
 {% endif %}
 
@@ -219,7 +219,7 @@ was generated and the button that launches the welcome tour.
         model: <span class="ai-summary-disclaimer-model">{{ report.ai_model_resolved or report.ai_model }}</span>
       </span>
       <a
-        class='btn btn-secondary btn-sm ai-continue-in-chat'
+        class='btn btn-outline-secondary btn-sm ai-continue-in-chat'
         id="global_ai_summary_continue_in_chat"
         style="display: {% if report.ai_thread_id %}block{% else %}none{% endif %};"
         data-thread-id="{{ report.ai_thread_id }}"

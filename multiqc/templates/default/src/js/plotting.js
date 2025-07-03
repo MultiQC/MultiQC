@@ -195,7 +195,7 @@ window.callAfterDecompressed.push(function (mqc_plotdata) {
       if (plot.deferRender) {
         $("#" + anchor)
           .removeClass("not_loaded")
-          .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+          .html('<button class="btn btn-outline-secondary btn-lg render_plot">Show plot</button>');
       } else {
         renderPlot(anchor);
       }

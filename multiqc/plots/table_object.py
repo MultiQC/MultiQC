@@ -1034,7 +1034,7 @@ def render_html(
 
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.anchor}" data-toggle="tooltip" title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets">
+        <button type="button" class="mqc_table_copy_btn btn btn-outline-secondary btn-sm" data-clipboard-target="table#{dt.anchor}" data-toggle="tooltip" title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
         """
@@ -1052,7 +1052,7 @@ def render_html(
 
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_config_modal_btn btn btn-default btn-sm {disabled_class}" data-toggle="modal"
+            <button type="button" class="mqc_table_config_modal_btn btn btn-outline-secondary btn-sm {disabled_class}" data-toggle="modal"
                 data-target="#{dt.anchor}_config_modal" {disabled_attrs} title="Configure visibility and ordering of columns">
             <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
@@ -1062,7 +1062,7 @@ def render_html(
         # Sort By Highlight button
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm"
+        <button type="button" class="mqc_table_sortHighlight btn btn-outline-secondary btn-sm"
             data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;" data-toggle="tooltip" title="Place highlighted samples on top">
         <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
@@ -1073,7 +1073,7 @@ def render_html(
         if len(col_to_th) > 1:
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_make_scatter btn btn-default btn-sm"
+            <button type="button" class="mqc_table_make_scatter btn btn-outline-secondary btn-sm"
 data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.anchor}" title="Visualize pairs of values on a scatter plot">
                                 <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
             </button>
@@ -1083,7 +1083,7 @@ data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.an
         if violin_anchor is not None:
             buttons.append(
                 f"""
-            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm"
+            <button type="button" class="mqc-table-to-violin btn btn-outline-secondary btn-sm"
 data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle="tooltip" title="View as a violin plot">
                                 <span class="glyphicon glyphicon-align-left"></span> Violin plot
             </button>
@@ -1092,7 +1092,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
 
         buttons.append(
             f"""
-        <button type="button" class="export-plot btn btn-default btn-sm"
+        <button type="button" class="export-plot btn btn-outline-secondary btn-sm"
             data-plot-anchor="{violin_anchor or dt.anchor}" data-type="table" data-toggle="tooltip" title="Show export options"
         >Export as CSV...</button>
         """
@@ -1125,7 +1125,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
                 f"""
             <div class="ai-plot-buttons-container" style="float: right">
                 <button
-                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-table ai-copy-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-copy-content ai-copy-content-table ai-copy-button-wrapper"
                     data-section-anchor="{section_anchor}"
                     data-plot-anchor="{violin_anchor}"
                     data-module-anchor="{module_anchor}"
@@ -1143,7 +1143,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
                     <span class="button-text">Copy Prompt</span>
                 </button>
                 <button
-                    class="btn btn-default btn-sm ai-generate-button ai-generate-button-table ai-generate-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-generate-button ai-generate-button-table ai-generate-button-wrapper"
                     data-response-div="{section_anchor}_ai_summary_response"
                     data-error-div="{section_anchor}_ai_summary_error"
                     data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
@@ -1282,8 +1282,8 @@ def _configuration_modal(table_anchor: str, title: str, trows: str, violin_ancho
           <div class="modal-body">
             <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order. Table ID: <code>{table_anchor}</code></p>
             <p>
-                <button class="btn btn-default btn-sm mqc_config_modal_bulk_visible" {data} data-action="showAll">Show All</button>
-                <button class="btn btn-default btn-sm mqc_config_modal_bulk_visible" {data} data-action="showNone">Show None</button>
+                <button class="btn btn-outline-secondary btn-sm mqc_config_modal_bulk_visible" {data} data-action="showAll">Show All</button>
+                <button class="btn btn-outline-secondary btn-sm mqc_config_modal_bulk_visible" {data} data-action="showNone">Show None</button>
             </p>
             <table class="table mqc_table mqc_sortable mqc_config_modal_table" id="{table_anchor}_config_modal_table" data-title="{title}">
               <thead>
@@ -1302,7 +1302,7 @@ def _configuration_modal(table_anchor: str, title: str, trows: str, violin_ancho
               </tbody>
             </table>
         </div>
-        <div class="modal-footer"> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button> </div>
     </div> </div> </div>"""
 
 

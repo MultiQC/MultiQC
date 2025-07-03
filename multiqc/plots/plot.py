@@ -1207,7 +1207,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         style_str = f'style="{style}"' if style else ""
 
-        return f'<button {attrs_str} class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
+        return f'<button {attrs_str} class="btn btn-outline-secondary btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
 
     def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """
@@ -1267,7 +1267,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             ai_btn = f"""
             <div class="ai-plot-buttons-container" style="float: right;">
                 <button
-                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
                     style="margin-left: 1px;"
                     data-section-anchor="{section_anchor}"
                     data-plot-anchor="{self.anchor}"
@@ -1286,7 +1286,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     <span class="button-text">Copy prompt</span>
                 </button>
                 <button
-                    class="btn btn-default btn-sm ai-generate-button ai-generate-button-plot ai-generate-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-generate-button ai-generate-button-plot ai-generate-button-wrapper"
                     data-response-div="{section_anchor}_ai_summary_response"
                     data-error-div="{section_anchor}_ai_summary_error"
                     data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
