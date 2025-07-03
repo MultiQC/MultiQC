@@ -114,6 +114,19 @@ copy_files = ['assets']
 config.plots_force_flat = True
 ```
 
+## Development mode
+
+When developing a template, you can use the `development: true` config option
+or the `--development` command line flag. This instructs MultiQC not to embed source files
+directly into the HTML and instead link to the MultiQC source code files:
+
+- JavaScript and CSS files are loaded directly from the source code template directory instead of being embedded
+- Plot images are linked from external files rather than being embedded as base64 data URIs
+- Plot data is exported as an uncompressed JSON file (`multiqc_plots.js`) in the data directory
+
+This allows you to see changes to your template files immediately without rebuilding or
+recompiling. Simply refresh the report in your browser after making changes.
+
 ## Jinja template variables
 
 There are a number of variables that you can use within your Jinja template.
