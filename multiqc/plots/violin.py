@@ -31,6 +31,7 @@ from multiqc.plots.table_object import (
     render_html,
 )
 from multiqc.types import Anchor, ColumnKey, SampleName, SectionKey
+from multiqc.utils.material_icons import get_material_icon
 
 logger = logging.getLogger(__name__)
 
@@ -1093,20 +1094,23 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         if self.show_table_by_default and not self.show_table:
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
-                + '<span class="glyphicon glyphicon-exclamation-sign" '
-                + 'title="An interactive table is not available because of the large number of samples. '
+                + '<span title="An interactive table is not available because of the large number of samples. '
                 + "A violin plot is generated instead, showing density of values for each metric, as "
                 + 'well as hoverable points for outlier samples in each metric."'
-                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+                + ' data-toggle="tooltip">'
+                + get_material_icon("mdi:alert", 16, class_name="text-warning")
+                + "</span> Showing {self.n_samples} samples.</p>"
             )
         elif not self.show_table:
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
-                + '<span class="glyphicon glyphicon-exclamation-sign" '
+                + "<span "
                 + 'title="An interactive table is not available because of the large number of samples. '
                 + "The violin plot displays hoverable points only for outlier samples in each metric, "
                 + 'and the hiding/highlighting functionality through the toolbox only works for outliers"'
-                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+                + ' data-toggle="tooltip">'
+                + get_material_icon("mdi:alert", 16, class_name="text-warning")
+                + f"</span> Showing {self.n_samples} samples.</p>"
             )
 
         assert self.datasets[0].dt is not None

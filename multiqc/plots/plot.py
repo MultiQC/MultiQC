@@ -37,6 +37,7 @@ from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, ColumnKey, PlotType, SampleName
 from multiqc.utils import mqc_colour
+from multiqc.utils.material_icons import get_material_icon
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
@@ -1116,7 +1117,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html = "".join(
             [
                 '<p class="text-info">',
-                '<small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
+                f"<small>{get_material_icon('mdi:image', 16)} ",
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
                 '(see the <a href="https://docs.seqera.io/multiqc/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
                 "</small>",

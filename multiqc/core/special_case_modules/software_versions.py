@@ -8,6 +8,7 @@ from multiqc import config
 from multiqc import report
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.types import Anchor
+from multiqc.utils.material_icons import get_material_icon
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
             dedent(
                 f"""\
                 <button type="button" class="mqc_table_copy_btn btn btn-outline-secondary btn-sm" data-clipboard-target="table#{table_id}">
-                    <span class="glyphicon glyphicon-copy"></span> Copy table
+                    {get_material_icon("mdi:content-copy", 16)} Copy table
                 </button>
                 <table class="table table-striped mqc_versions_table" id="{table_id}">
                     <thead>

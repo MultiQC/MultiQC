@@ -16,6 +16,7 @@ from multiqc import config, report
 from multiqc.plots.plot import PConfig
 from multiqc.types import Anchor, ColumnKey, SampleGroup, SampleName, SectionKey
 from multiqc.utils import mqc_colour
+from multiqc.utils.material_icons import get_material_icon
 from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
@@ -1035,7 +1036,7 @@ def render_html(
         buttons.append(
             f"""
         <button type="button" class="mqc_table_copy_btn btn btn-outline-secondary btn-sm" data-clipboard-target="table#{dt.anchor}" data-toggle="tooltip" title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets">
-            <span class="glyphicon glyphicon-copy"></span> Copy table
+                                    {get_material_icon("mdi:content-copy", 16)} Copy table
         </button>
         """
         )
@@ -1054,7 +1055,7 @@ def render_html(
                 f"""
             <button type="button" class="mqc_table_config_modal_btn btn btn-outline-secondary btn-sm {disabled_class}" data-toggle="modal"
                 data-target="#{dt.anchor}_config_modal" {disabled_attrs} title="Configure visibility and ordering of columns">
-            <span class="glyphicon glyphicon-th"></span> Configure columns
+                                    {get_material_icon("mdi:view-column", 16)} Configure columns
             </button>
             """
             )
@@ -1062,10 +1063,10 @@ def render_html(
         # Sort By Highlight button
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_sortHighlight btn btn-outline-secondary btn-sm"
-            data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;" data-toggle="tooltip" title="Place highlighted samples on top">
-        <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
-        </button>
+            <button type="button" class="mqc_table_sortHighlight btn btn-outline-secondary btn-sm"
+                data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;" data-toggle="tooltip" title="Place highlighted samples on top">
+                                        {get_material_icon("mdi:sort", 16)} Sort by highlight
+            </button>
         """
         )
 
@@ -1073,21 +1074,21 @@ def render_html(
         if len(col_to_th) > 1:
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_make_scatter btn btn-outline-secondary btn-sm"
-data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.anchor}" title="Visualize pairs of values on a scatter plot">
-                                <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
-            </button>
-            """
+                <button type="button" class="mqc_table_make_scatter btn btn-outline-secondary btn-sm"
+                data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.anchor}" title="Visualize pairs of values on a scatter plot">
+                                            {get_material_icon("mdi:chart-scatter-plot", 16)} Scatter plot
+                </button>
+                """
             )
 
         if violin_anchor is not None:
             buttons.append(
                 f"""
-            <button type="button" class="mqc-table-to-violin btn btn-outline-secondary btn-sm"
-data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle="tooltip" title="View as a violin plot">
-                                <span class="glyphicon glyphicon-align-left"></span> Violin plot
-            </button>
-            """
+                <button type="button" class="mqc-table-to-violin btn btn-outline-secondary btn-sm"
+                data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle="tooltip" title="View as a violin plot">
+                                            {get_material_icon("mdi:format-align-left", 16)} Violin plot
+                </button>
+                """
             )
 
         buttons.append(
@@ -1238,7 +1239,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
             html += "</tr>"
     html += "</tbody></table></div>"
     if len(group_to_sample_to_anchor_to_td) > 10 and config.collapse_tables:
-        html += '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>'
+        html += f'<div class="mqc-table-expand">{get_material_icon("mdi:chevron-down", 16)}</div>'
     html += "</div>"
 
     # Save the raw values to a file if requested
