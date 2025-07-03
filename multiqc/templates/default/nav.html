@@ -9,23 +9,21 @@ The side navigation for the report.
 <div class="side-nav-wrapper">
   <div class="side-nav">
     <h1>
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".mqc-nav, .mqc-toolbox">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
+              <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target=".mqc-nav, .mqc-toolbox">
+          <span class="visually-hidden">Toggle navigation</span>
+          <span class="navbar-toggler-icon"></span>
+        </button>
       <a href="#">
-        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
-        <br class="hidden-xs">
-        <small class="hidden-xs">v{{ config.version }}</small>
+            <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
+          <br class="d-none d-sm-block">
+          <small class="d-none d-sm-block">v{{ config.version }}</small>
       </a>
     </h1>
     {% if config.title is not none %}
       <h1 class="side-nav-title"><a href="#">{{ config.title }}</a></h1>
     {% endif %}
     <p class="mqc_loading_warning">Loading report..</p>
-    <ul class="mqc-nav collapse navbar-collapse">
+          <ul class="mqc-nav collapse navbar-collapse show">
       {% if not config.skip_generalstats %}
       <li>
         <a href="#general_stats" class="nav-l1">General Stats</a>
@@ -56,5 +54,5 @@ The side navigation for the report.
     </ul>
   </div>
   <!-- Nav Width Toggle Button -->
-  <div id="side-nav-handle"><span class="glyphicon glyphicon-triangle-left" aria-hidden="true"></span></div>
+      <div id="side-nav-handle"><span aria-hidden="true">◀</span></div>
 </div>

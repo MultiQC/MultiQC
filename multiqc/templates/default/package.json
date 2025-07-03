@@ -5,11 +5,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "watch": "vite build --watch",
-    "dev": "vite build --watch"
+    "build": "vite build --emptyOutDir",
+    "watch": "vite build --emptyOutDir --watch",
+    "dev": "vite build --emptyOutDir --watch"
   },
   "devDependencies": {
+    "@material-design-icons/svg": "^0.14.15",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.7",
     "sass": "^1.83.0",

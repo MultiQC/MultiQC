@@ -84,6 +84,10 @@ your own `header.html` which will overwrite the default header.
 Files within the default template have comments at the top explaining what
 part of the report they generate.
 
+Child templates also inherit template functions from their parent. For example,
+the default template provides the `material_icon` function which can be used
+in any child template without additional configuration.
+
 ## Extra init variables
 
 There are a few extra variables that can be added to the `__init__.py` file
@@ -131,6 +135,35 @@ function. For example:
   }
 </script>
 <img src="data:image/png;base64,{{ include_file('img/logo.png', b64=True) }}" />
+```
+
+### Material Design Icons
+
+The default template includes a `material_icon` function that embeds Material Design
+Icons as inline SVG. This function is available to child templates that inherit from
+the default template. Usage:
+
+```jinja
+{{ material_icon('delete') }}
+{{ material_icon('warning', 16) }}
+{{ material_icon('info', 20, '#0066cc') }}
+```
+
+The function takes three parameters:
+
+- `icon_name` (required): Name of the Material Design Icon (e.g., 'delete', 'info', 'warning')
+- `size` (optional, default 24): Size of the icon in pixels
+- `color` (optional, default 'currentColor'): Color of the icon
+
+The function will try to load the filled variant first, then fall back to the outlined
+variant if the filled version is not found. If the icon cannot be found, it returns an
+empty string. In strict mode (`--strict`), missing icons will be reported as errors.
+
+To make this function available in your custom template (if not inheriting from default),
+you can define it in your template's `__init__.py`:
+
+```python
+template_functions = { 'material_icon': your_icon_function }
 ```
 
 ## Appendices
