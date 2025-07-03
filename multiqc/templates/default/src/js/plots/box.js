@@ -129,3 +129,6 @@ class BoxPlot extends Plot {
     return csv;
   }
 }
+
+// Make BoxPlot globally available
+window.BoxPlot = BoxPlot;

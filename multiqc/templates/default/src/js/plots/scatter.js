@@ -97,3 +97,6 @@ class ScatterPlot extends Plot {
     return csv;
   }
 }
+
+// Make ScatterPlot globally available
+window.ScatterPlot = ScatterPlot;

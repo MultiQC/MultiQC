@@ -160,6 +160,9 @@ class Plot {
   }
 }
 
+// Make Plot class available globally for plot classes to extend
+window.Plot = Plot;
+
 function initPlot(dump) {
   if (dump["plot_type"] === "bar plot") return new BarPlot(dump);
   if (dump["plot_type"] === "x/y line") return new LinePlot(dump);
@@ -430,6 +433,9 @@ function applyToolboxSettings(samples, plotAnchor) {
   return objects;
 }
 
+// Make functions available globally
+window.applyToolboxSettings = applyToolboxSettings;
+
 // Call to render any plot
 function renderPlot(plotAnchor) {
   let plot = mqc_plots[plotAnchor];
@@ -504,6 +510,9 @@ function renderPlot(plotAnchor) {
   plot.afterPlotCreated();
 }
 
+// Make renderPlot available globally
+window.renderPlot = renderPlot;
+
 // Highlight text with a fadeout background colour highlight
 function highlight_fade_text(obj) {
   let orig_col = $(obj).css("color");
@@ -555,3 +564,6 @@ function updateObject(target, source, nullOnly = false) {
     }
   }
 }
+
+// Make updateObject globally available
+window.updateObject = updateObject;

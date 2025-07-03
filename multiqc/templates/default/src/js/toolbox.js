@@ -1796,6 +1796,9 @@ function getStoredSampleAnonymizationEnabled() {
   const stored = getFromLocalStorage("mqc_ai_anonymize_samples");
   return stored === null ? null : stored === "true";
 }
+
+// Make function available globally
+window.getStoredSampleAnonymizationEnabled = getStoredSampleAnonymizationEnabled;
 function storeSampleAnonymizationEnabled(value) {
   saveToLocalStorage("mqc_ai_anonymize_samples", value.toString());
 }

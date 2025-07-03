@@ -151,6 +151,9 @@ class HeatmapPlot extends Plot {
   }
 }
 
+// Make HeatmapPlot globally available
+window.HeatmapPlot = HeatmapPlot;
+
 $(function () {
   // Listeners for range slider
   $(".mqc_hcplot_range_sliders input").on("keyup change input", function () {

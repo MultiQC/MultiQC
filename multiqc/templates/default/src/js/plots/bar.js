@@ -161,3 +161,6 @@ class BarPlot extends Plot {
     return csv;
   }
 }
+
+// Make BarPlot globally available
+window.BarPlot = BarPlot;

@@ -411,3 +411,6 @@ class ViolinPlot extends Plot {
     });
   }
 }
+
+// Make ViolinPlot globally available
+window.ViolinPlot = ViolinPlot;

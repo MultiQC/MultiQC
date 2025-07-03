@@ -169,3 +169,6 @@ class LinePlot extends Plot {
     return csv;
   }
 }
+
+// Make LinePlot globally available
+window.LinePlot = LinePlot;

@@ -12,6 +12,9 @@ function decompressPlotData(base64Str, callback) {
   }
 }
 
+// Make decompressPlotData available globally
+window.decompressPlotData = decompressPlotData;
+
 function decodeDecompressedBytes(decompressedBytes) {
   const decoder = new TextDecoder("utf-8");
   const jsonStr = decoder.decode(decompressedBytes);
