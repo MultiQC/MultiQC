@@ -371,7 +371,7 @@ click.rich_click.OPTION_GROUPS = {
     "development",
     is_flag=True,
     default=None,
-    help="Development mode. Do not compress and minimise JS, export uncompressed plot data",
+    help="Development mode. Do not inline JS and CSS, export uncompressed plot data",
 )
 @click.option(
     "--pdf",
