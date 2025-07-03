@@ -7,7 +7,7 @@ const mqc_colours = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a9
 const zip_threshold = 8;
 
 // Add these constants at the top of the file
-const AI_PROVIDERS = {
+window.AI_PROVIDERS = {
   seqera: {
     name: "Seqera AI",
     apiKeysUrl: "https://cloud.seqera.io/tokens",
@@ -1519,7 +1519,7 @@ function getFromLocalStorage(key) {
 }
 
 function updatePanel(providerId) {
-  const provider = AI_PROVIDERS[providerId];
+  const provider = window.AI_PROVIDERS[providerId];
 
   // Add label dynamically
   let aiModelInfo = "";
@@ -1631,7 +1631,7 @@ $(function () {
       optgroup.append(
         $("<option>", {
           value: groupProviderID,
-          text: AI_PROVIDERS[groupProviderID].name,
+          text: window.AI_PROVIDERS[groupProviderID].name,
         }),
       );
     });
@@ -1641,7 +1641,7 @@ $(function () {
   // Set initial values from storage or values from Python
   const providerId = getStoredProvider() || aiConfigProviderId || "seqera";
   aiProviderSelect.val(providerId);
-  const provider = AI_PROVIDERS[providerId];
+  const provider = window.AI_PROVIDERS[providerId];
   $("#ai-api-key").val(getStoredApiKey(providerId) || "");
 
   let model = getStoredModelName(providerId);
@@ -1753,7 +1753,7 @@ $(function () {
 // Storing user settings
 function getStoredProvider() {
   let storedProviderId = getFromLocalStorage("mqc_ai_provider");
-  if (storedProviderId && AI_PROVIDERS[storedProviderId]) return storedProviderId;
+  if (storedProviderId && window.AI_PROVIDERS[storedProviderId]) return storedProviderId;
   return null;
 }
 function storeProvider(providerId) {

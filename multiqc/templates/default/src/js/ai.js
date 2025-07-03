@@ -19,7 +19,7 @@ function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsV
   let userPrompt = "";
   let currentTokens = systemTokens ?? 0;
   const providerId = $("#ai-provider").val();
-  const provider = AI_PROVIDERS[providerId];
+  const provider = window.AI_PROVIDERS[providerId];
   const model = $("#ai-model").val();
 
   const maxTokens = getMaxTokens(model);
@@ -166,15 +166,15 @@ async function summarizeWithAi(button) {
   let content;
   let systemPrompt;
   if (isGlobal) {
-    systemPrompt = isMore ? systemPromptReportFull : systemPromptReportShort;
+    systemPrompt = isMore ? window.systemPromptReportFull : window.systemPromptReportShort;
     content = formatReportForAi(countTokens(systemPrompt));
     title += "MultiQC report";
   } else if (sectionAnchor === "general_stats_table") {
-    systemPrompt = systemPromptPlot;
+    systemPrompt = window.systemPromptPlot;
     content = formatReportForAi(countTokens(systemPrompt), true, plotView);
     title += "MultiQC General Statistics";
   } else {
-    systemPrompt = systemPromptPlot;
+    systemPrompt = window.systemPromptPlot;
     content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
     const section = aiReportMetadata.sections[sectionAnchor];
     title += `MultiQC ${section.name}`;
@@ -183,7 +183,7 @@ async function summarizeWithAi(button) {
   // Check total tokens before making the request
   const totalTokens = countTokens(systemPrompt + content);
   const providerId = $("#ai-provider").val();
-  const provider = AI_PROVIDERS[providerId];
+  const provider = window.AI_PROVIDERS[providerId];
 
   let modelName = $("#ai-model").val();
   let aiApiKey = $("#ai-api-key").val();
@@ -282,7 +282,7 @@ async function summarizeWithAi(button) {
   const startTime = performance.now();
   await (async () => {
     let receievedMarkdown = "";
-    runStreamGeneration({
+    window.runStreamGeneration({
       title: title + `, created on ${configCreationDate}`,
       systemPrompt: systemPrompt,
       userMessage: content,
@@ -295,7 +295,7 @@ async function summarizeWithAi(button) {
         responseDiv.show();
         if (wrapperDiv) wrapperDiv.show();
         receievedMarkdown += token;
-        responseDiv.html(markdownToHtml(receievedMarkdown));
+        responseDiv.html(window.markdownToHtml(receievedMarkdown));
         button.html(`Generating...`);
       },
       onStreamError: (error) => {
@@ -436,9 +436,9 @@ $(function () {
       const cachedSummaryDump = localStorage.getItem(`ai_response_${reportUuid}_${plotAnchor}${isMore ? "_more" : ""}`);
       if (cachedSummaryDump) {
         const cachedSummary = JSON.parse(cachedSummaryDump);
-        responseDiv.show().html(markdownToHtml(cachedSummary.text));
+        responseDiv.show().html(window.markdownToHtml(cachedSummary.text));
         if (wrapperDiv) wrapperDiv.show();
-        const provider = AI_PROVIDERS[cachedSummary.provider];
+        const provider = window.AI_PROVIDERS[cachedSummary.provider];
         disclaimerDiv
           .find(".ai-summary-disclaimer-provider")
           .text(provider.name == "Custom" ? cachedSummary.endpoint : provider.name);
@@ -523,7 +523,7 @@ $(function () {
     }
 
     systemPrompt += ". Your task is to analyse the data and give a concise summary.";
-    const text = multiqcDescription + "\n" + systemPrompt + "\n\n" + content;
+    const text = window.multiqcDescription + "\n" + systemPrompt + "\n\n" + content;
 
     navigator.clipboard.writeText(text);
     const originalButtonText = button.find(".button-text").text();
