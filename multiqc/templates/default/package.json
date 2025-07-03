@@ -1,0 +1,15 @@
+{
+  "name": "multiqc-default-template",
+  "version": "1.30.0",
+  "description": "Default template for MultiQC reports",
+  "private": true,
+  "scripts": {
+    "build-css": "sass scss/main.scss:assets/css/multiqc.min.css --style=compressed --no-source-map",
+    "watch-css": "sass --watch scss/main.scss:assets/css/multiqc.min.css --style=compressed --no-source-map",
+    "build": "npm run build-css"
+  },
+  "devDependencies": {
+    "bootstrap": "^5.3.7",
+    "sass": "^1.83.0"
+  }
+}

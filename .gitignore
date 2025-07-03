@@ -54,7 +54,5 @@ venv*
 /seqeralabs-docs
 
 node_modules/
-package-lock.json
-package.json
 
 .env
