@@ -373,128 +373,56 @@ input.form-control[type="color"] {
 }
 
 @media only screen and (min-width: 768px) {
-  .mqc-toolbox {
-    display: block !important;
-    position: fixed;
-    z-index: 1040;
-    width: 36px;
-    height: 100% !important;
-    top: 0;
-    right: 0;
-    -o-transition: width 0.5s;
-    -webkit-transition: width 0.5s;
-    transition: width 0.5s;
-  }
-
-  .mqc-toolbox.active {
-    width: 282px;
-  }
-
-  .mqc-toolbox .row {
-    margin: 0;
-  }
-
   .mainpage {
-    padding-right: 50px;
+    padding-right: 3rem;
   }
+}
 
+#mqc-toolbox {
   .mqc-toolbox-buttons {
-    position: absolute;
-    width: 36px;
-    top: 100px;
-    left: 0;
-    z-index: 20;
+    left: -1.5rem;
+    top: 150px;
+    visibility: visible;
+    a.in_use {
+      border: 2px solid var(--#{$prefix}primary);
+    }
   }
 
-  .mqc-toolbox-wrapper {
-    position: absolute;
-    width: 250px;
-    height: 100%;
-    overflow: auto;
-    left: 36px;
-    margin: 0;
-    background-color: var(--#{$prefix}tertiary-bg);
-    border-left: 1px solid var(--#{$prefix}border-color);
-    z-index: 10;
+  .mqc-toolbox-label {
+    margin-left: -27px;
+    -ms-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    -webkit-transform: rotate(270deg);
+    transform: rotate(270deg);
   }
 
-  .mqc_filter_section {
-    display: none;
+  .list-group {
+    width: 2.5rem;
+    margin-left: -1rem;
+    border-right: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+
+    .list-group-item {
+      background-color: var(--#{$prefix}secondary-bg);
+      padding: 0.5rem;
+      text-align: center;
+      margin-top: 0.5rem;
+      border-top-width: var(--bs-list-group-border-width);
+      border-top-left-radius: var(--#{$prefix}border-radius);
+      border-bottom-left-radius: var(--#{$prefix}border-radius);
+      &.active {
+        background-color: var(--#{$prefix}body-bg);
+        color: var(--#{$prefix}body-color);
+        border-color: var(--#{$prefix}secondary);
+        border-right-color: var(--#{$prefix}body-bg);
+      }
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
   }
-
-  .mqc_filter_section.active {
-    display: block;
-  }
-}
-
-.mqc-toolbox-label {
-  display: inline-block;
-  background-color: var(--#{$prefix}tertiary-bg);
-  color: #999;
-  height: 31px;
-  width: 67px;
-  padding: 3px 6px;
-  margin-left: -6px;
-  margin-bottom: 30px;
-  -ms-transform: rotate(270deg);
-  -moz-transform: rotate(270deg);
-  -webkit-transform: rotate(270deg);
-  transform: rotate(270deg);
-}
-
-.mqc-toolbox-label:hover,
-.mqc-toolbox-label:focus,
-.mqc-toolbox-label:active {
-  color: #999;
-  text-decoration: none;
-}
-
-.mqc-toolbox-header {
-  margin: 10px;
-  border-bottom: 1px solid var(--#{$prefix}border-color);
-}
-
-.mqc-toolbox-buttons ul,
-.mqc-toolbox-buttons li {
-  padding: 0;
-  margin: 0;
-  list-style-type: none;
-}
-
-.mqc-toolbox-buttons li {
-  margin: 5px 0;
-  display: inline-block;
-  width: 36px;
-  height: 36px;
-}
-
-.mqc-toolbox-buttons li a {
-  display: inline-block;
-  font-size: 18px;
-  width: 37px;
-  height: 36px;
-  padding: 7px 8px 9px;
-  color: var(--#{$prefix}tertiary-color);
-  background-color: var(--#{$prefix}secondary-bg);
-  border: 1px solid transparent;
-  border-right: 1px solid var(--#{$prefix}border-color);
-}
-
-.mqc-toolbox-buttons li a:hover,
-.mqc-toolbox-buttons li a.active {
-  color: var(--#{$prefix}body-color);
-  background-color: var(--#{$prefix}tertiary-bg);
-  border: 1px solid var(--#{$prefix}border-color);
-}
-.mqc-toolbox-buttons li a svg {
-  vertical-align: baseline;
-}
-
-.mqc-toolbox-buttons li .in_use {
-  color: var(--#{$prefix}body-color);
-  border: 3px solid #5bc0de;
-  padding: 5px 8px 7px 6px;
-  border-right: 1px solid var(--#{$prefix}tertiary-bg);
 }
 
 .mqc-toolbox-buttons li a.active {

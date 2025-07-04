@@ -50,10 +50,32 @@ const AI_PROVIDER_GROUPS = {
 // TOOLBOX LISTENERS
 //////////////////////////////////////////////////////
 $(function () {
-  // Close toolbox when Escape key is pressed
-  $(document).keyup(function (e) {
-    if (e.key === "Escape" && $(".mqc-toolbox").hasClass("active")) {
-      mqc_toolbox_openclose(undefined, false);
+  const toolboxOffcanvasDiv = document.getElementById("mqc-toolbox");
+  const toolboxOffcanvas = new bootstrap.Offcanvas("#mqc-toolbox");
+
+  // Show the toolbox when a button is clicked
+  $(".mqc-toolbox-buttons a").click(function (e) {
+    if (!toolboxOffcanvasDiv.classList.contains("show")) {
+      toolboxOffcanvas.show();
+    }
+    // Show the tab
+    const tabTrigger = new bootstrap.Tab(this);
+    tabTrigger.show();
+  });
+
+  // Listener when toolbox is hidden
+  toolboxOffcanvasDiv.addEventListener("hidden.bs.offcanvas", (event) => {
+    // Show toast if if unsaved changes
+    mqc_toolbox_confirmapply();
+    // Remove active class from all tabs
+    $(".mqc-toolbox-buttons .list-group-item").removeClass("active");
+    $("#mqc-toolbox .tab-pane").removeClass("active show");
+  });
+
+  // Hide toolbox when a modal is shown
+  $(".modal").on("show.bs.modal", function (e) {
+    if (toolboxOffcanvasDiv.classList.contains("show")) {
+      toolboxOffcanvas.hide();
     }
   });
 
@@ -135,35 +157,12 @@ $(function () {
     apply_mqc_hidesamples(show_hide_mode);
   });
 
-  // Hide toolbox when clicking outside
-  $(document).mouseup(function (e) {
-    if (!$(".mqc-toolbox").is(e.target) && $(".mqc-toolbox").has(e.target).length === 0) {
-      if ($(".mqc-toolbox").hasClass("active")) {
-        mqc_toolbox_openclose(undefined, false);
-      }
-    }
-  });
-
-  // Hide toolbox when a modal is shown
-  $(".modal").on("show.bs.modal", function (e) {
-    if ($(".mqc-toolbox").hasClass("active")) {
-      mqc_toolbox_openclose(undefined, false);
-    }
-  });
-
   // Listener to re-plot graphs if config loaded
   $(document).on("mqc_config_loaded", function (e) {
     $(".hc-plot:not(.not_rendered)").each(function () {
       let target = $(this).attr("id");
       renderPlot(target);
     });
-  });
-
-  // Toolbox buttons
-  $(".mqc-toolbox-buttons a").click(function (e) {
-    e.preventDefault();
-    var target = $(this).attr("href");
-    mqc_toolbox_openclose(target);
   });
 
   // Download DOIs
@@ -856,47 +855,6 @@ function rgbToHex(rgb) {
 //////////////////////////////////////////////////////
 // GENERAL TOOLBOX FUNCTIONS
 //////////////////////////////////////////////////////
-function mqc_toolbox_openclose(target, open, dataTab) {
-  // Hide any open tooltip so it's not left dangling
-  $(".mqc-toolbox-buttons li a").tooltip("hide");
-  // Find if what we clicked is already open
-  let btn = $('.mqc-toolbox-buttons li a[href="' + target + '"]');
-  if (open === undefined) {
-    open = !btn.hasClass("active");
-  }
-  let already_open = $(".mqc-toolbox").hasClass("active");
-  if (open) {
-    if (already_open) {
-      mqc_toolbox_confirmapply();
-    }
-    $(".mqc-toolbox, .mqc-toolbox-buttons li a, .mqc_filter_section").removeClass("active");
-    btn.addClass("active");
-    $(".mqc-toolbox, " + target).addClass("active");
-    $(document).trigger("mqc_toolbox_open");
-    let timeout = already_open ? 0 : 510;
-    setTimeout(function () {
-      if (target === "#mqc_cols") {
-        $("#mqc_colour_filter").focus();
-      }
-      if (target === "#mqc_renamesamples") {
-        $("#mqc_renamesamples_from").focus();
-      }
-      if (target === "#mqc_hidesamples") {
-        $("#mqc_hidesamples_filter").focus();
-      }
-    }, timeout);
-    if (dataTab) {
-      $('#mqc_exportplots a[href="#mqc_data_download"]').tab("show");
-    } else {
-      $('#mqc_exportplots a[href="#mqc_image_download"]').tab("show");
-    }
-  } else {
-    mqc_toolbox_confirmapply();
-    btn.removeClass("active");
-    $(".mqc-toolbox, .mqc-toolbox-buttons li a").removeClass("active");
-    $(document).trigger("mqc_toolbox_close");
-  }
-}
 function mqc_toolbox_confirmapply() {
   // Check if there's anything waiting to be applied
   if ($("#mqc_cols_apply").is(":enabled") && $("#mqc_cols").is(":visible")) {
