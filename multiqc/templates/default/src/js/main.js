@@ -15,6 +15,9 @@ import "./flat.js";
 import "./plotting.js";
 import "./tables.js";
 
+// Color mode toggle functionality
+import "./color-mode.js";
+
 // Toolbox modules (separated for better maintainability)
 import "./toolbox/constants.js";
 import "./toolbox/utils.js";

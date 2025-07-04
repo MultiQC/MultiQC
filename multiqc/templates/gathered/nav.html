@@ -19,7 +19,7 @@ The side navigation for the report.
         <span class="navbar-toggler-icon"></span>
       </button>
       <a href="#">
-        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC" />
+        <div class="multiqc-logo-wrapper">{{ include_file('assets/img/MultiQC_logo.svg') }}</div>
         <br class="d-none d-sm-inline" />
         <small class="d-none d-sm-inline">v{{ config.version }}</small>
       </a>

@@ -20,11 +20,72 @@ The side navigation for the report.
         <span class="navbar-toggler-icon"></span>
       </button>
       <a href="#">
-        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC" />
-        <br class="d-none d-sm-block" />
-        <small class="d-none d-sm-block">v{{ config.version }}</small>
+        <div class="multiqc-logo-wrapper">{{ include_file('assets/img/MultiQC_logo.svg') }}</div>
       </a>
+
+      <!-- Version and Color mode toggle in 2-column layout -->
+      <div class="d-flex justify-content-center pb-2">
+        <div class="px-2">
+          <small class="d-inline-block text-secondary">v{{ config.version }}</small>
+        </div>
+        <div>
+          <!-- Color mode toggle -->
+          <div class="dropdown">
+            <button
+              class="btn btn-outline-secondary border-0 dropdown-toggle"
+              type="button"
+              id="bd-theme"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+              aria-label="Toggle theme (auto)"
+              style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;"
+            >
+              <span class="theme-icon-active">{{ material_icon('mdi:circle-half-full', 16) }}</span>
+              <span id="bd-theme-text" class="visually-hidden">Theme</span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="bd-theme">
+              <li>
+                <button
+                  type="button"
+                  class="dropdown-item d-flex align-items-center"
+                  data-bs-theme-value="light"
+                  aria-pressed="false"
+                >
+                  <span class="me-2">{{ material_icon('mdi:weather-sunny', 16) }}</span>
+                  Light
+                  <span class="ms-auto check-icon d-none">{{ material_icon('mdi:check', 16) }}</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  class="dropdown-item d-flex align-items-center"
+                  data-bs-theme-value="dark"
+                  aria-pressed="false"
+                >
+                  <span class="me-2">{{ material_icon('mdi:weather-night', 16) }}</span>
+                  Dark
+                  <span class="ms-auto check-icon d-none">{{ material_icon('mdi:check', 16) }}</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  class="dropdown-item d-flex align-items-center active"
+                  data-bs-theme-value="auto"
+                  aria-pressed="true"
+                >
+                  <span class="me-2">{{ material_icon('mdi:circle-half-full', 16) }}</span>
+                  Auto
+                  <span class="ms-auto check-icon d-none">{{ material_icon('mdi:check', 16) }}</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </h1>
+
     {% if config.title is not none %}
       <h1 class="side-nav-title"><a href="#">{{ config.title }}</a></h1>
     {% endif %}

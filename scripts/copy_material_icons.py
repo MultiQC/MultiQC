@@ -70,6 +70,11 @@ REQUIRED_ICONS: List[str] = [
     "mdi:radiobox-marked",
     "mdi:thumb-up",
     "mdi:thumb-down",
+    # Color mode toggle icons
+    "mdi:circle-half-full",
+    "mdi:weather-sunny",
+    "mdi:weather-night",
+    "mdi:check",
     # Additional common icons
     "mdi:home",
     "mdi:view-dashboard",

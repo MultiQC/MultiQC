@@ -80,7 +80,7 @@ code {
     border-bottom: 1px solid var(--#{$prefix}border-color);
 
     a {
-      padding: 20px 0 15px;
+      padding: 20px 0 5px;
     }
 
     img {
@@ -1347,4 +1347,35 @@ tr.row-empty {
 
 .btn-sm {
   padding: 5px 10px 5px 8px;
+}
+
+/* MultiQC Logo Styling */
+.multiqc-logo-wrapper {
+  display: inline-block;
+}
+
+.multiqc-logo-wrapper {
+  /* Sizing for navigation (sidebar) */
+  height: 26px;
+  width: auto;
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* Larger sizing for main header */
+#page_title .multiqc-logo-wrapper {
+  max-width: 320px;
+  height: auto;
+  width: auto;
+}
+
+/* Dark mode color switching for logo text */
+.multiqc-logo-text {
+  color: #160f26; /* Default dark color */
+}
+
+[data-bs-theme="dark"] .multiqc-logo-text {
+  color: #ffffff; /* White in dark mode */
 }
