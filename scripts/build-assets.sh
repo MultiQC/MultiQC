@@ -1,9 +1,10 @@
 #!/bin/bash
 # Pre-commit hook to build assets with Vite when source files are modified
 
-# Check if any source files in the default template were modified
-if git diff --cached --name-only | grep -E "^multiqc/templates/default/src/.*\.(scss|js)$"; then
-    echo "Source files modified, building assets with Vite..."
+# Check if any source files were passed as arguments (pre-commit filters by the files pattern)
+if [ $# -gt 0 ]; then
+    echo "Source files modified: $*"
+    echo "Building assets with Vite..."
 
     # Change to the default template directory
     cd multiqc/templates/default
@@ -18,4 +19,6 @@ if git diff --cached --name-only | grep -E "^multiqc/templates/default/src/.*\.(
     npm run build
 
     echo "Build complete."
+else
+    echo "No relevant source files modified."
 fi

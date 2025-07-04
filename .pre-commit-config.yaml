@@ -41,6 +41,5 @@ repos:
       - id: build-assets
         name: Build assets with Vite
         language: script
-        entry: .github/build-assets.sh
+        entry: scripts/build-assets.sh
         files: ^multiqc/templates/default/src/.*\.(scss|js)$
-        pass_filenames: false
