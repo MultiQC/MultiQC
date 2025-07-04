@@ -18,7 +18,7 @@ Bug fixes and small improvements.
 - Custom content: Support Markdown ([#3204](https://github.com/MultiQC/MultiQC/pull/3204))
 - Allow multi-line `info` section in module sections ([#3225](https://github.com/MultiQC/MultiQC/pull/3225))
 - Detect AI provider from environment variables ([#3254](https://github.com/MultiQC/MultiQC/pull/3254))
-- Always save AI prompt to file ([#3255](https://github.com/MultiQC/MultiQC/pull/3255))
+- Always save AI prompt to file as `llms-full.txt` ([#3257](https://github.com/MultiQC/MultiQC/pull/3257))
 
 ### Fixes
 

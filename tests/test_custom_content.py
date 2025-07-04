@@ -735,7 +735,7 @@ def test_ai_export_rounding(tmp_path):
         cfg=ClConfig(run_modules=["custom_content"], ai_summary=True, development=True),
     )
 
-    summary_path = tmp_path / "multiqc_data" / "multiqc_ai_prompt.txt"
+    summary_path = tmp_path / "multiqc_data" / "llms-full.txt"
     assert summary_path.exists()
     print(summary_path)
     # assert that file contains |0.3802|
