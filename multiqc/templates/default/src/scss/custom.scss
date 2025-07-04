@@ -486,6 +486,9 @@ input.form-control[type="color"] {
   background-color: var(--#{$prefix}tertiary-bg);
   border: 1px solid var(--#{$prefix}border-color);
 }
+.mqc-toolbox-buttons li a svg {
+  vertical-align: baseline;
+}
 
 .mqc-toolbox-buttons li .in_use {
   color: var(--#{$prefix}body-color);
@@ -615,7 +618,7 @@ input.form-control[type="color"] {
   color: #3c763d;
 }
 
-.mqc_filter_section .form-inline .form-control {
+.mqc_filter_section .row .form-control {
   vertical-align: middle;
 }
 
