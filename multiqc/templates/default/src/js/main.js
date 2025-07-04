@@ -14,6 +14,19 @@ import "./multiqc.js";
 import "./flat.js";
 import "./plotting.js";
 import "./tables.js";
+
+// Toolbox modules (separated for better maintainability)
+import "./toolbox/constants.js";
+import "./toolbox/utils.js";
+import "./toolbox/filters.js";
+import "./toolbox/highlights.js";
+import "./toolbox/rename.js";
+import "./toolbox/hide.js";
+import "./toolbox/export.js";
+import "./toolbox/ai.js";
+import "./toolbox/save-load.js";
+import "./toolbox/citations.js";
+import "./toolbox/help.js";
 import "./toolbox.js";
 
 // Plot types

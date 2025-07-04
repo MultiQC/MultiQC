@@ -1,5 +1,8 @@
 // Bootstrap variables
 $font-size-base: 0.9rem;
-$table-bg: transparent;
+
 $code-color: $body-secondary-color;
 $code-color-dark: $body-secondary-color-dark;
+
+// Needed for value bars to show
+$table-bg: transparent;

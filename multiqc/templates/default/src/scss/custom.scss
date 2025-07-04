@@ -385,6 +385,9 @@ input.form-control[type="color"] {
     visibility: visible;
     a.in_use {
       border: 2px solid var(--#{$prefix}primary);
+      border-right: 0;
+      color: var(--#{$prefix}primary);
+      background-color: var(--#{$prefix}primary-bg-subtle);
     }
   }
 
