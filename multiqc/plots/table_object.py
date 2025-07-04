@@ -1086,7 +1086,7 @@ def render_html(
                 f"""
                 <button type="button" class="mqc-table-to-violin btn btn-outline-secondary btn-sm"
                 data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle="tooltip" title="View as a violin plot">
-                                            {get_material_icon("mdi:format-align-left", 16)} Violin plot
+                                            {get_material_icon("mdi:violin", 16)} Violin plot
                 </button>
                 """
             )

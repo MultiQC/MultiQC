@@ -95,6 +95,7 @@ REQUIRED_ICONS: List[str] = [
     "mdi:content-save-outline",
     "mdi:qrcode",
     "mdi:format-bold",
+    "mdi:violin"
 ]
 
 
@@ -114,13 +115,17 @@ def fetch_icon_from_iconify(icon_name: str) -> bool:
 
     # Convert to filename format (mdi:home -> mdi-home.svg)
     file_name = icon_name.replace(":", "-")
+    dest_path = ICONS_DIR / f"{file_name}.svg"
+
+    # Check if the file already exists
+    if dest_path.exists():
+        return True
 
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
 
         # Save the SVG content
-        dest_path = ICONS_DIR / f"{file_name}.svg"
         with open(dest_path, "w", encoding="utf-8") as f:
             f.write(response.text)
 
