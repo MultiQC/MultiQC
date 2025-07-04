@@ -152,6 +152,8 @@ class BaseMultiqcModule:
         # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
         if self.info and self.info[0].islower():
             self.info = f"{self.name} {self.info}"
+        if self.info and not self.info.endswith("."):
+            self.info += "."
 
         if isinstance(self.href, str):
             self.href = [self.href]
