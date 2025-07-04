@@ -12,6 +12,7 @@ import polars as pl
 from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
+from multiqc.utils import mqc_colour
 from multiqc.core.plot_data_store import parse_value
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.types import Anchor, SampleName
@@ -331,7 +332,7 @@ class Dataset(BaseDataset):
             x = el["x"]
             name = el["name"]
             group = el.get("group")
-            color = el.get("color")
+            color = mqc_colour.color_to_rgb_string(cast(Optional[str], el.get("color")))
             annotation = el.get("annotation")
 
             show_in_legend = False
