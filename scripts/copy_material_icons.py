@@ -95,7 +95,7 @@ REQUIRED_ICONS: List[str] = [
     "mdi:content-save-outline",
     "mdi:qrcode",
     "mdi:format-bold",
-    "mdi:violin"
+    "mdi:violin",
 ]
 
 

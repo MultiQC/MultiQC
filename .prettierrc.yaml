@@ -1,3 +1,8 @@
 printWidth: 120
 tabWidth: 2
 trailingComma: all
+plugins: [prettier-plugin-jinja-template]
+overrides:
+  - files: ["*.html"]
+    options:
+      parser: "jinja-template"

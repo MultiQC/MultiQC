@@ -1,5 +1,5 @@
-*.html
+docs/markdown/modules/
 multiqc/templates/*/assets/js/packages
 multiqc/templates/*/compiled
-bootstrap.min.css
 jquery.toast.css
+bootstrap.min.css
