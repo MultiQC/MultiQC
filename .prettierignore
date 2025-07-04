@@ -3,3 +3,6 @@ multiqc/templates/*/assets/js/packages
 multiqc/templates/*/compiled
 jquery.toast.css
 bootstrap.min.css
+
+# The Jinja {% raw %} block crashes on this file for some reason
+multiqc/templates/default/head.html

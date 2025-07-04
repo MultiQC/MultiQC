@@ -11,11 +11,27 @@ it prints the contents of these files into the report.
 #}
 
 <!-- Favicon includes -->
-<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,{{ include_file('assets/img/favicon-32x32.png', b64=True) }}">
-<link rel="icon" type="image/png" sizes="96x96" href="data:image/png;base64,{{ include_file('assets/img/favicon-96x96.png', b64=True) }}">
-<link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,{{ include_file('assets/img/favicon-16x16.png', b64=True) }}">
+<link
+  rel="icon"
+  type="image/png"
+  sizes="32x32"
+  href="data:image/png;base64,{{ include_file('assets/img/favicon-32x32.png', b64=True) }}"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="96x96"
+  href="data:image/png;base64,{{ include_file('assets/img/favicon-96x96.png', b64=True) }}"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="16x16"
+  href="data:image/png;base64,{{ include_file('assets/img/favicon-16x16.png', b64=True) }}"
+/>
 
 <!-- Include CSS -->
+<!-- prettier-ignore-start -->
 <style type="text/css">
     {{ include_file('compiled/css/multiqc.min.css') }}
     {{ include_file('assets/css/jquery.toast.css') }}
@@ -30,21 +46,82 @@ it prints the contents of these files into the report.
 <style type="text/css">{{ include_file(css_href, None) }}</style>
 {% endif %}
 {%- endfor %}{% endif %}{% endfor %}
+<!-- prettier-ignore-end -->
 
 <!-- Include javascript files -->
-<script type="text/javascript">{{ include_file('assets/js/packages/jquery-3.1.1.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/jquery-ui.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/jquery.tablesorter.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/FileSaver.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/lz-string.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/jquery.toast.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/jszip.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/plotly-2.27.0.min.js') }}</script>
-<script type="text/javascript">{{ include_file('compiled/js/multiqc.min.js') }}</script>
+<script type="text/javascript">
+  {
+    {
+      include_file("assets/js/packages/jquery-3.1.1.min.js");
+    }
+  }
+</script>
+<script type="text/javascript">
+  {
+    {
+      include_file("assets/js/packages/jquery-ui.min.js");
+    }
+  }
+</script>
+<script type="text/javascript">
+  {
+    {
+      include_file("assets/js/packages/jquery.tablesorter.min.js");
+    }
+  }
+</script>
+<script type="text/javascript">
+  {
+    {
+      include_file("assets/js/packages/FileSaver.min.js");
+    }
+  }
+</script>
+<script type="text/javascript">
+  {
+    {
+      include_file("assets/js/packages/lz-string.min.js");
+    }
+  }
+</script>
+<script type="text/javascript">
+  {
+    {
+      include_file("assets/js/packages/jquery.toast.min.js");
+    }
+  }
+</script>
+<script type="text/javascript">
+  {
+    {
+      include_file("assets/js/packages/jszip.min.js");
+    }
+  }
+</script>
+<script type="text/javascript">
+  {
+    {
+      include_file("assets/js/packages/plotly-2.27.0.min.js");
+    }
+  }
+</script>
+<script type="text/javascript">
+  {
+    {
+      include_file("compiled/js/multiqc.min.js");
+    }
+  }
+</script>
 {% set included_js = [] %}
 {%- for m in report.modules %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js.values() %}
-{% if js_href not in included_js -%}
-{{ '' if included_js.append( js_href ) }}
-<script type="text/javascript">{{ include_file( js_href, None ) }}</script>
-{% endif %}
+  {% if js_href not in included_js -%}
+    {{ '' if included_js.append( js_href ) }}
+    <script type="text/javascript">
+      {
+        {
+          include_file(js_href, None);
+        }
+      }
+    </script>
+  {% endif %}
 {%- endfor %}{% endif %}{% endfor %}
