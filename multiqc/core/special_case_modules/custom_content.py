@@ -607,9 +607,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name=section_name,
                 anchor=section_anchor,
                 id=section_id,
-                description=ccdict.config.get("description", "")
-                if isinstance(ccdict.config.get("parent_description"), str)
-                else "",
+                description=ccdict.config.get("description", ""),
                 plot=plot,
                 content=content or "",
             )

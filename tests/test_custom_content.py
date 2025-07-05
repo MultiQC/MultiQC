@@ -863,7 +863,7 @@ sample2,20
     assert len(modules) == 1
     module = modules[0]
     assert module.name == "My Grouped Data"
-    assert module.info == "This is the parent description"
+    assert module.info == "<p>This is the parent description.</p>"
     assert len(module.sections) == 2
 
     # Debug: print what sections we actually have

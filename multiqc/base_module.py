@@ -218,9 +218,9 @@ class BaseMultiqcModule:
             # Already HTML formatted (from markdown)
             info_html = f"{self.info}{url_link}{doi_html}"
         else:
-            # Plain text, wrap in <p> tags and handle newlines
-            info = self.info.replace("\n", "<br>")
-            info_html = f"<p>{info}{url_link}{doi_html}</p>"
+            # Assume markdown, convert to HTML
+            info_html = markdown.markdown(self.info)
+            info_html = f"<p>{info_html}{url_link}{doi_html}</p>"
 
         return f"{info_html}{self.extra}"
 
