@@ -19,6 +19,7 @@ Bug fixes and small improvements.
 - Allow multi-line `info` section in module sections ([#3225](https://github.com/MultiQC/MultiQC/pull/3225))
 - Detect AI provider from environment variables ([#3254](https://github.com/MultiQC/MultiQC/pull/3254))
 - Always save AI prompt to file as `llms-full.txt` ([#3257](https://github.com/MultiQC/MultiQC/pull/3257))
+- Fix series labels in heatmap subtitle ([#3260](https://github.com/MultiQC/MultiQC/pull/3260))
 
 ### Fixes
 
@@ -34,7 +35,10 @@ Bug fixes and small improvements.
 - samtools: support `ampliconclip` stats ([#3214](https://github.com/MultiQC/MultiQC/pull/3214))
 - Percolator: handle comments in parsing ([#3217](https://github.com/MultiQC/MultiQC/pull/3217))
 - RSeQC: normalise junction saturation plot ([#3216](https://github.com/MultiQC/MultiQC/pull/3216))
-- Somalier: fix sex plot labels
+- Somalier: fix sex plot description ([#3261](https://github.com/MultiQC/MultiQC/pull/3261))
+- FastQC: fix subtitle in status check heatmap and adapters content plot ([#3260](https://github.com/MultiQC/MultiQC/pull/3260))
+- Cutadapt: fix extracting sample name from command line params ([#3262](https://github.com/MultiQC/MultiQC/pull/3262))
+- UMItools: bump up search pattern checked number of lines ([#3263](https://github.com/MultiQC/MultiQC/pull/3263))
 
 ## [MultiQC v1.29](https://github.com/MultiQC/MultiQC/releases/tag/v1.29) - 2025-05-22
 
