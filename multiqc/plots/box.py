@@ -340,7 +340,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             plot_type=PlotType.BOX,
             pconfig=pconfig,
             anchor=anchor,
-            n_samples_per_dataset=[len(x) for x in list_of_data_by_sample],
+            n_series_per_dataset=[len(x) for x in list_of_data_by_sample],
         )
 
         model.datasets = [

@@ -2,7 +2,7 @@
 title: HiCExplorer
 displayed_sidebar: multiqcSidebar
 description: >
-  Hi-C analysis from processing to visualization
+  Hi-C analysis from processing to visualization.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/hicexplorer/hicexplore
 -->
 
 :::note
-Hi-C analysis from processing to visualization
+Hi-C analysis from processing to visualization.
 
 [https://hicexplorer.readthedocs.io](https://hicexplorer.readthedocs.io)
 :::

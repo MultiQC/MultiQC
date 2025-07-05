@@ -140,6 +140,8 @@ class MultiqcModule(BaseMultiqcModule):
                     log.warning(f"Could not find sample name in somalier output: {f['fn']}")
                     return None
             else:
+                if s_name_idx is None:
+                    continue
                 s_name = "*".join([s[idx] for idx in s_name_idx])  # not safe to hard code, but works
                 parsed_data[s_name] = dict()
                 for i, v in enumerate(s):
@@ -571,7 +573,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(data) > 0:
             pconfig = {
                 "id": "somalier_sex_check_plot",
-                "title": "Somalier: Sample Predicted Sex",
+                "title": "Somalier: Provided Sex vs. Scaled X Depth",
                 "xlab": "Sex from pedigree",
                 "ylab": "Scaled mean depth on X",
                 "categories": ["Female", "Male", "Unknown"],
@@ -579,8 +581,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section(
                 name="Sex",
-                description="Predicted sex against scaled depth on X",
-                helptext="Higher values of depth, low values suggest male.",
+                description="Provided sex against scaled depth on X",
+                helptext="Higher depth values suggest female, lower values suggest male.",
                 anchor="somalier-sexcheck",
                 plot=scatter.plot(data, pconfig),
             )

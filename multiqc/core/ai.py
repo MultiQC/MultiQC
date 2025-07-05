@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import math
 import os
 import re
 from textwrap import indent
@@ -180,13 +181,8 @@ class Client:
         self.title: str
         self.model: str
         self.api_key: Optional[str] = api_key
-
-        self.prompt_short = PROMPT_SHORT
-        if config.ai_prompt_short is not None:
-            self.prompt_short = config.ai_prompt_short
-        self.prompt_full = PROMPT_FULL
-        if config.ai_prompt_full is not None:
-            self.prompt_full = config.ai_prompt_full
+        self.prompt_short = config.ai_prompt_short or PROMPT_SHORT
+        self.prompt_full = config.ai_prompt_full or PROMPT_FULL
 
     def _query(self, prompt: str):
         raise NotImplementedError
@@ -849,14 +845,12 @@ def deanonymize_sample_names(text: str) -> str:
     return text
 
 
-def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]:
-    system_prompt = client.prompt_full if config.ai_summary_full else client.prompt_short
-
+def build_prompt(metadata: AiReportMetadata, system_prompt, client: Optional[Client] = None) -> Tuple[str, bool]:
     # Account for system message, plus leave 10% buffer
-    max_tokens = client.max_tokens()
+    max_tokens = client.max_tokens() if client is not None else math.inf
 
     user_prompt: str = ""
-    current_n_tokens = client.n_tokens(system_prompt)
+    current_n_tokens = client.n_tokens(system_prompt) if client is not None else 0
 
     # Details about modules used in the report - include first in the prompt
     tools_context: str = ""
@@ -880,26 +874,27 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
     MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
     {general_stats_plot.format_for_ai_prompt()}
     """
-            genstats_n_tokens = client.n_tokens(genstats_context)
-            if current_n_tokens + genstats_n_tokens > max_tokens:
-                # If it's too long already, try without hidden columns
-                genstats_context = f"""
-    MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-    {general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
-    """
-                genstats_n_tokens = client.n_tokens(genstats_context)
+            if client is not None:
+                genstats_n_tokens = client.n_tokens(genstats_context) if client is not None else 0
                 if current_n_tokens + genstats_n_tokens > max_tokens:
-                    logger.debug(
-                        f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
-                        f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
-                        "AI summary will not be generated. Try hiding some columns in the general stats table "
-                        "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context. "
-                        "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
-                        "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
-                    )
-                    return user_prompt + genstats_context, True
-            user_prompt += genstats_context
-            current_n_tokens += genstats_n_tokens
+                    # If it's too long already, try without hidden columns
+                    genstats_context = f"""
+        MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
+        {general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
+        """
+                    genstats_n_tokens = client.n_tokens(genstats_context)
+                    if current_n_tokens + genstats_n_tokens > max_tokens:
+                        logger.debug(
+                            f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
+                            f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
+                            "AI summary will not be generated. Try hiding some columns in the general stats table "
+                            "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context. "
+                            "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
+                            "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
+                        )
+                        return user_prompt + genstats_context, True
+                user_prompt += genstats_context
+                current_n_tokens += genstats_n_tokens
 
     user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
 
@@ -932,24 +927,24 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
 
         # Check if adding this section would exceed the limit
         # Using rough estimate of 4 chars per token
-        sec_n_tokens = client.n_tokens(sec_context)
-        if current_n_tokens + sec_n_tokens > max_tokens:
-            logger.debug(
-                f"Including only General Statistics table to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
-                f"Tokens estimate: {current_n_tokens}, with sections: {current_n_tokens + sec_n_tokens}"
-            )
-            return user_prompt, False
+        if client is not None:
+            sec_n_tokens = client.n_tokens(sec_context)
+            if current_n_tokens + sec_n_tokens > max_tokens:
+                logger.debug(
+                    f"Including only General Statistics table to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
+                    f"Tokens estimate: {current_n_tokens}, with sections: {current_n_tokens + sec_n_tokens}"
+                )
+                return user_prompt, False
 
     user_prompt += sec_context
     user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
     return user_prompt, False
 
 
-def _save_prompt_to_file(client: Client, prompt: str):
+def _save_prompt_to_file(system_prompt: str, prompt: str):
     """Save content to file for debugging"""
-    path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
-    system_prompt = client.prompt_full if config.ai_summary_full else client.prompt_short
-    path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}")
+    path = report.data_tmp_dir() / "llms-full.txt"
+    path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}", encoding="utf-8")
     logger.debug(f"Saved AI prompt to {path.parent.name}/{path.name}")
 
 
@@ -966,9 +961,15 @@ def add_ai_summary_to_report():
     # because JS runtime might need it even if Python runtime doesn't
     report.ai_pseudonym_map_base64 = base64.b64encode(json.dumps(report.ai_pseudonym_map).encode()).decode()
 
+    system_prompt_short = config.ai_prompt_short or PROMPT_SHORT
+    system_prompt_full = config.ai_prompt_full or PROMPT_FULL
+    system_prompt = system_prompt_full if config.ai_summary_full else system_prompt_short
+
     # Now that everything for JS runtime is set, we only continue if static summaries are requested
     if not config.ai_summary:
-        # Not generating report in Python, leaving for JS runtime
+        # Not generating report in Python, leaving for JS runtime, but saving full and complete prompt to llms-full.txt file
+        prompt, _ = build_prompt(metadata, system_prompt)
+        _save_prompt_to_file(system_prompt, prompt)
         return
 
     # get_llm_client() will raise an exception if configuration is invalid when ai_summary=True
@@ -979,10 +980,8 @@ def add_ai_summary_to_report():
     report.ai_provider_title = client.title
     report.ai_model = client.model
 
-    prompt, exceeded_context_window = build_prompt(client, metadata)
-
-    _save_prompt_to_file(client, prompt)
-
+    prompt, exceeded_context_window = build_prompt(metadata, system_prompt, client)
+    _save_prompt_to_file(system_prompt, prompt)
     if exceeded_context_window:
         return
 

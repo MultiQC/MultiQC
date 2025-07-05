@@ -2,7 +2,7 @@
 title: SeqWho
 displayed_sidebar: multiqcSidebar
 description: >
-  Determines FASTQ(A) sequencing file source protocol and the species of origin, to check that the composition of the library is expected
+  Determines FASTQ(A) sequencing file source protocol and the species of origin, to check that the composition of the library is expected.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/seqwho/seqwho.py
 -->
 
 :::note
-Determines FASTQ(A) sequencing file source protocol and the species of origin, to check that the composition of the library is expected
+Determines FASTQ(A) sequencing file source protocol and the species of origin, to check that the composition of the library is expected.
 
 [https://daehwankimlab.github.io/seqwho/](https://daehwankimlab.github.io/seqwho/)
 :::
