@@ -944,7 +944,7 @@ def build_prompt(metadata: AiReportMetadata, system_prompt, client: Optional[Cli
 def _save_prompt_to_file(system_prompt: str, prompt: str):
     """Save content to file for debugging"""
     path = report.data_tmp_dir() / "llms-full.txt"
-    path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}")
+    path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}", encoding="utf-8")
     logger.debug(f"Saved AI prompt to {path.parent.name}/{path.name}")
 
 
