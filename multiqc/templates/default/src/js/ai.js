@@ -299,13 +299,7 @@ async function summarizeWithAi(button) {
         button.html(`Generating...`);
       },
       onStreamError: (error) => {
-        $.toast({
-          heading: "Error generating summary",
-          text: error,
-          icon: "error",
-          position: "bottom-right",
-          hideAfter: 5000,
-        });
+        showToast("Error generating summary", error, "error");
         wrapUpResponse(disclaimerDiv, provider.name, modelName);
         if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").hide();
         disclaimerDiv.hide();

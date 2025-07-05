@@ -21,6 +21,60 @@ window.notEmptyObj = function (obj) {
   return true;
 };
 
+// Bootstrap toast utility function
+window.showToast = function (heading, text, icon = "info", hideAfter = 5000) {
+  const template = document.getElementById("toast-template");
+  const container = document.getElementById("toast-container");
+
+  // Clone the template
+  const toastElement = template.cloneNode(true);
+
+  // Create unique ID for this toast
+  const toastId = "toast-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+  toastElement.id = toastId;
+
+  // Remove hidden class and show the toast
+  toastElement.classList.remove("d-none");
+
+  // Map icon types to Bootstrap classes and colors
+  const iconMap = {
+    success: { bg: "text-bg-success", icon: "✓" },
+    warning: { bg: "text-bg-warning", icon: "⚠" },
+    error: { bg: "text-bg-danger", icon: "✗" },
+    info: { bg: "text-bg-info", icon: "ℹ" },
+  };
+
+  const iconConfig = iconMap[icon] || iconMap.info;
+
+  // Update the toast content
+  const header = toastElement.querySelector(".toast-header");
+  const iconSpan = toastElement.querySelector(".toast-icon");
+  const headingElement = toastElement.querySelector(".toast-heading");
+  const bodyElement = toastElement.querySelector(".toast-body");
+
+  header.className = `toast-header ${iconConfig.bg}`;
+  iconSpan.textContent = iconConfig.icon;
+  headingElement.textContent = heading;
+  bodyElement.innerHTML = text;
+
+  // Add toast to container
+  container.appendChild(toastElement);
+
+  // Initialize and show the toast
+  const bsToast = new bootstrap.Toast(toastElement, {
+    autohide: hideAfter !== false,
+    delay: hideAfter,
+  });
+
+  // Show the toast
+  bsToast.show();
+
+  // Remove from DOM when hidden to prevent accumulation
+  toastElement.addEventListener("hidden.bs.toast", () => {
+    toastElement.remove();
+  });
+};
+
 $(function () {
   // Enable the bootstrap tooltip hovers
   $('[data-toggle="tooltip"]').tooltip();

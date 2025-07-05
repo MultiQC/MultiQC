@@ -295,6 +295,7 @@ function load_mqc_config(name, config_obj) {
 
   // Trigger loaded event to initialise plots
   $(document).trigger("mqc_config_loaded");
+  return true;
 }
 
 //////////////////////////////////////////////////////
@@ -327,19 +328,9 @@ function loadConfigFromFile(file) {
       mqc_auto_save_config();
 
       // Show success message
-      $.toast({
-        heading: "Configuration Loaded",
-        text: "Settings have been loaded from file successfully",
-        icon: "success",
-        position: "bottom-right",
-      });
+      showToast("Configuration Loaded", "Settings have been loaded from file successfully", "success");
     } catch (err) {
-      $.toast({
-        heading: "Error Loading Configuration",
-        text: "Could not parse the configuration file: " + err.message,
-        icon: "error",
-        position: "bottom-right",
-      });
+      showToast("Error Loading Configuration", "Could not parse the configuration file: " + err.message, "error");
     }
   };
   reader.readAsText(file);
@@ -395,7 +386,12 @@ window.initSaveLoad = function () {
     if (name == "") {
       alert("Error - No saved setting selected.");
     } else {
-      load_mqc_config(name);
+      if (load_mqc_config(name)) {
+        // Show success message
+        showToast("Configuration Loaded", "Settings have been loaded successfully", "success");
+      } else {
+        showToast("Error Loading Configuration", "Could not load the configuration", "error");
+      }
     }
   });
 

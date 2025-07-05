@@ -8,6 +8,7 @@ across all MultiQC templates and Python code using the Iconify naming scheme.
 import logging
 from typing import Optional, Dict
 from pathlib import Path
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -74,8 +75,8 @@ def get_material_icon(
 
     # Parse and modify the SVG
     # Replace width/height attributes
-    svg_content = svg_content.replace('width="24"', f'width="{size}"')
-    svg_content = svg_content.replace('height="24"', f'height="{size}"')
+    svg_content = re.sub(r'width="[^"]*"', f'width="{size}"', svg_content)
+    svg_content = re.sub(r'height="[^"]*"', f'height="{size}"', svg_content)
 
     # Add color and class attributes
     style_attrs = []

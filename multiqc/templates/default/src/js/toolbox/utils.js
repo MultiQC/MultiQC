@@ -35,17 +35,14 @@ window.validate_regexp = function (pattern) {
     new RegExp(pattern, "g");
     return true;
   } catch (error) {
-    $.toast({
-      heading: "Invalid Regular Expression!",
-      text:
-        "Apologies, your regular expression pattern is invalid: <code>" +
+    showToast(
+      "Invalid Regular Expression!",
+      "Apologies, your regular expression pattern is invalid: <code>" +
         pattern +
         "</code><br><br>" +
         'For more help and testing, try it out at <a href="https://regex101.com/" target="_blank">regex101.com</a>.',
-      icon: "error",
-      position: "bottom-right",
-      hideAfter: 5000,
-    });
+      "error",
+    );
     return false;
   }
 };
@@ -53,31 +50,25 @@ window.validate_regexp = function (pattern) {
 window.mqc_toolbox_confirmapply = function () {
   // Check if there's anything waiting to be applied
   if ($("#mqc_cols_apply").is(":enabled") && $("#mqc_cols").is(":visible")) {
-    $.toast({
-      heading: "Highlights Not Applied",
-      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
-      icon: "warning",
-      position: "bottom-right",
-      hideAfter: 5000,
-    });
+    showToast(
+      "Highlights Not Applied",
+      "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      "warning",
+    );
   }
   if ($("#mqc_rename_apply").is(":enabled") && $("#mqc_renamesamples").is(":visible")) {
-    $.toast({
-      heading: "Rename Patterns Not Applied",
-      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
-      icon: "warning",
-      position: "bottom-right",
-      hideAfter: 5000,
-    });
+    showToast(
+      "Rename Patterns Not Applied",
+      "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      "warning",
+    );
   }
   if ($("#mqc_hide_apply").is(":enabled") && $("#mqc_hidesamples").is(":visible")) {
-    $.toast({
-      heading: "Hide Samples Not Applied",
-      text: "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
-      icon: "warning",
-      position: "bottom-right",
-      hideAfter: 5000,
-    });
+    showToast(
+      "Hide Samples Not Applied",
+      "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
+      "warning",
+    );
   }
 };
 
