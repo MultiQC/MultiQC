@@ -1321,7 +1321,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
-            "series_label": "samples x adapters",
+            "series_label": "sample-adapter combinations",
         }
         if status_checks:
             pconfig["y_bands"] = [
