@@ -631,7 +631,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             plot_type=PlotType.BAR,
             pconfig=pconfig,
             anchor=anchor,
-            n_samples_per_dataset=[len(x) for x in samples_lists],
+            n_series_per_dataset=[len(x) for x in samples_lists],
             axis_controlled_by_switches=["xaxis"],
             default_tt_label="%{meta}: <b>%{x}</b>",
             defer_render_if_large=False,  # We hide samples on large bar plots, so no need to defer render

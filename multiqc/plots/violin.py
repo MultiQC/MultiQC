@@ -904,7 +904,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         model: Plot[Dataset, TableConfig] = Plot.initialize(
             plot_type=PlotType.VIOLIN,
             pconfig=dt.pconfig,
-            n_samples_per_dataset=[len(ds_samples)],
+            n_series_per_dataset=[len(ds_samples)],
             id=dt.id,
             anchor=anchor,
             default_tt_label=": %{x}",
