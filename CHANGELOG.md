@@ -34,6 +34,7 @@ Bug fixes and small improvements.
 - samtools: support `ampliconclip` stats ([#3214](https://github.com/MultiQC/MultiQC/pull/3214))
 - Percolator: handle comments in parsing ([#3217](https://github.com/MultiQC/MultiQC/pull/3217))
 - RSeQC: normalise junction saturation plot ([#3216](https://github.com/MultiQC/MultiQC/pull/3216))
+- Somalier: fix sex plot labels
 
 ## [MultiQC v1.29](https://github.com/MultiQC/MultiQC/releases/tag/v1.29) - 2025-05-22
 
