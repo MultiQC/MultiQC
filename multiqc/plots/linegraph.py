@@ -564,7 +564,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
             plot_type=PlotType.LINE,
             pconfig=pconfig,
             anchor=anchor,
-            n_samples_per_dataset=n_samples_per_dataset,
+            n_series_per_dataset=n_samples_per_dataset,
             axis_controlled_by_switches=["yaxis"],
             default_tt_label="<br>%{x}: %{y}",
         )
