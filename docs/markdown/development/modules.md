@@ -551,6 +551,7 @@ mymodule:
 
 You can use _AND_ logic by specifying keys within a single list item. For example:
 
+<!-- prettier-ignore-start -->
 ```yaml
 mymodule:
   fn: "mylog.txt"
@@ -560,8 +561,9 @@ myother_module:
     contents: "This is myprogram v1.3"
   - fn: "another.txt"
     contents: ["What are these files anyway?", "End of program"]
-    contents_re: "^Metric: \d+\.\d+"
+    contents_re: '^Metric: \d+\.\d+'
 ```
+<!-- prettier-ignore-end -->
 
 For `mymodule`, a file must have the filename `mylog.txt` _and_ contain the string `mystring`.
 

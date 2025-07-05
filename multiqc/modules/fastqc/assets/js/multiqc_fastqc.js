@@ -612,10 +612,10 @@ function fastqc_module(module_element, module_key) {
         module_key +
         '_sequence_content_single_back">Back to overview heatmap</button> \
                 <div class="btn-group btn-group-sm"> \
-                    <button class="btn btn-default ' +
+                    <button class="btn btn-outline-secondary ' +
         module_key +
         '_seqcontent_single_prevnext" data-action="prev">&laquo; Prev</button> \
-                    <button class="btn btn-default ' +
+                    <button class="btn btn-outline-secondary ' +
         module_key +
         '_seqcontent_single_prevnext" data-action="next">Next &raquo;</button> \
                 </div>\

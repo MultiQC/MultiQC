@@ -270,7 +270,7 @@ You can pre-configure which samples to show or hide:
 
 ```yaml
 show_hide_buttons: ["Hide controls"]
-show_hide_patterns: ["control_"]]
+show_hide_patterns: ["control_"]
 show_hide_regex: [false]
 show_hide_mode: ["hide"] # can be "show" or "hide"
 ```

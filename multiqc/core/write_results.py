@@ -27,6 +27,7 @@ from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor
 from multiqc.utils import util_functions
 from multiqc.utils.util_functions import rmtree_with_retries
+from multiqc.utils.material_icons import get_material_icon
 
 logger = logging.getLogger(__name__)
 
@@ -552,6 +553,15 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir.get_tmp_dir()))
         env.globals["include_file"] = include_file
+
+        # Add Material Design Icons function to all templates
+        env.globals["material_icon"] = get_material_icon
+
+        # Add template functions if available
+        if hasattr(template_mod, "template_functions"):
+            for func_name, func in template_mod.template_functions.items():
+                env.globals[func_name] = func
+
         j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
     except:  # noqa: E722
         raise IOError(f"Could not load {config.template} template file '{template_mod.base_fn}'")

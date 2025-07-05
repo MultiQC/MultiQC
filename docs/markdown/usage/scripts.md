@@ -377,7 +377,7 @@ Parameters:
 - `plots_force_flat`: Use only flat plots (static images)
 - `plots_force_interactive`: Use only interactive plots (in-browser Javascript)
 - `strict`: Don't catch exceptions, run additional code checks to help development
-- `development`: Development mode. Do not compress and minimise JS, export uncompressed plot data
+- `development`: Development mode. Do not inline JS and CSS, export uncompressed plot data
 - `make_pdf`: Create PDF report. Requires Pandoc to be installed
 - `no_megaqc_upload`: Don't upload generated report to MegaQC, even if MegaQC options are found
 - `quiet`: Only show log warnings

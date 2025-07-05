@@ -35,3 +35,11 @@ repos:
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
+
+  - repo: local
+    hooks:
+      - id: build-assets
+        name: Build assets with Vite
+        language: script
+        entry: scripts/build-assets.sh
+        files: ^multiqc/templates/default/src/.*\.(scss|js)$

@@ -910,7 +910,7 @@ Note that the formatting is done in a specific order - `pass`/`warn`/`fail` by d
 
 To find the unique ID for your table / column, right click it in a report and inspect it's HTML (_Inpsect_ in Chrome).
 
-- Tables should look something like `<table id="general_stats_table" class="table table-condensed mqc_table" data-title="General Statistics">`, where `general_stats_table` is the ID.
+- Tables should look something like `<table id="general_stats_table" class="table table-sm mqc_table" data-title="General Statistics">`, where `general_stats_table` is the ID.
 - Table cells should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
 
 :::note
