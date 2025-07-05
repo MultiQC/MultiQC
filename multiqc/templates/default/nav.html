@@ -19,15 +19,13 @@ The side navigation for the report.
       >
         <span class="navbar-toggler-icon"></span>
       </button>
-      <a href="#">
-        <div class="multiqc-logo-wrapper">{{ include_file('assets/img/MultiQC_logo.svg') }}</div>
-      </a>
+      <a href="#" class="side-nav-logo">{{ include_file('assets/img/MultiQC_logo.svg') }}</a>
 
       <!-- Version and Color mode toggle in 2-column layout -->
       <div class="d-flex justify-content-center pb-2">
-        <div class="px-2">
+        <a href="#" class="px-2 d-block">
           <small class="d-inline-block text-secondary">v{{ config.version }}</small>
-        </div>
+        </a>
         <div>
           <!-- Color mode toggle -->
           <div class="dropdown">
