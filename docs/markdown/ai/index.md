@@ -80,8 +80,8 @@ MultiQC supports reasoning models from multiple providers which provide enhanced
 
 ### Supported Reasoning Models
 
-- OpenAI: `o1`, `o3`, `o3-mini`, `o3-pro`, `o4-mini`
-- Anthropic Claude 4 series: `claude-sonnet-4-0`, `claude-haiku-4-0`
+- OpenAI: `o1`, `o3`, `o3-mini`, `o4-mini`
+- Anthropic Claude 4 series: `claude-sonnet-4-0`
 
 ### Configuration
 
@@ -90,7 +90,7 @@ Simply set your AI model to a reasoning model:
 ```yaml
 # multiqc_config.yaml
 ai_summary: true
-ai_provider: openai # or anthropic for Claude 4
+ai_provider: openai # or Anthropic for Claude 4
 ai_model: o3-mini # or claude-sonnet-4-0, o4-mini, etc.
 ```
 
@@ -183,7 +183,7 @@ ai_max_completion_tokens: 3000
 ```yaml
 ai_summary: true
 ai_provider: anthropic
-ai_model: claude-sonnet-4-0 # or claude-haiku-4-0
+ai_model: claude-sonnet-4-0
 ai_extended_thinking: true # enable extended thinking
 ai_thinking_budget_tokens: 12000 # budget for thinking process
 ```
