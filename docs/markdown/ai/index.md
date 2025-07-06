@@ -57,7 +57,7 @@ Remember: Treat your API keys like passwords and do not share them.
 
 Seqera AI is free to use.[^seqera-ai-usage-limits]
 Use of other third-party APIs are billed by their respective providers based on consumption.
-Seqera AI uses the latest AI provider models under the hood, at the time of writing that is Anthropic Claude sonnet 3.5.
+Seqera AI uses the latest AI provider models under the hood, at the time of writing that is Anthropic Claude Sonnet 4.0.
 
 ### Choosing a model
 
@@ -65,14 +65,129 @@ If you're using OpenAI, Anthropic or AWS Bedrock you can choose the exact model 
 This is done by setting `ai_model` in the MultiQC config.
 
 - Anthropic model names must begin with `claude`
-  - Default: `claude-3-5-sonnet-latest`.
-  - Tested with Sonnet 3.5 and Haiku 3.5. See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
+  - Default: `claude-sonnet-4-0`.
+  - See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
 - OpenAI model names must being with `gpt`
   - Default: `gpt-4o`.
-  - Tested with GPT-4o and GPT-4o-mini. See the [OpenAI docs](https://platform.openai.com/docs/models).
+  - See the [OpenAI docs](https://platform.openai.com/docs/models).
 - Bedrock model names must be valid inputs to the `modelId` parameter of the `InvokeModel` API ([docs](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html#API_runtime_InvokeModel_RequestSyntax)).
 
 This model is used during report generation and also set as the default toolbox panel setting for browser report summaries.
+
+## Reasoning Models
+
+MultiQC supports reasoning models from multiple providers which provide enhanced reasoning capabilities for complex bioinformatics analysis interpretation. These models "think" before responding, using internal reasoning to provide more accurate and thorough analysis.
+
+### Supported Reasoning Models
+
+The following reasoning models are automatically detected and supported:
+
+**OpenAI reasoning models:**
+
+- `o1`, `o1-preview`, `o1-mini`
+- `o3`, `o3-mini`, `o3-pro`
+- `o4-mini`, `codex-mini`
+
+**Anthropic Claude 4 series (extended thinking models):**
+
+- `claude-sonnet-4-0`
+- `claude-haiku-4-0`
+
+### Configuration
+
+Simply set your AI model to a reasoning model:
+
+```yaml
+# multiqc_config.yaml
+ai_summary: true
+ai_provider: openai # or anthropic for Claude 4
+ai_model: o1-mini # or claude-sonnet-4-0, o3-mini, etc.
+```
+
+Reasoning models support additional configuration parameters:
+
+```yaml
+# multiqc_config.yaml
+ai_summary: true
+ai_provider: openai
+ai_model: o3-mini
+ai_reasoning_effort: high # low, medium, or high
+ai_max_completion_tokens: 8000 # adjust based on needs
+```
+
+### Configuration Options
+
+- **`ai_reasoning_effort`**: Controls how much time the model spends reasoning
+
+  - `low`: Faster responses, less thorough reasoning
+  - `medium`: Balanced speed and reasoning depth (default)
+  - `high`: Slower but most thorough reasoning
+
+- **`ai_max_completion_tokens`**: Maximum tokens for model output (default: 4000)
+  - Reasoning models use this instead of `max_tokens`
+  - Higher values allow longer, more detailed summaries
+
+### Key Differences from Regular Models
+
+1. **Internal Reasoning**: Reasoning models "think" before responding, using hidden reasoning tokens
+2. **Enhanced Accuracy**: Better performance on complex analytical tasks
+3. **Different Parameters**: Use `max_completion_tokens` and `reasoning_effort`
+4. **Developer Messages**: Use developer messages instead of system messages for better performance
+
+### Usage Examples
+
+**Basic Configuration for o1-mini:**
+
+```yaml
+ai_summary: true
+ai_provider: openai
+ai_model: o1-mini
+```
+
+**High-Quality Analysis with o3:**
+
+```yaml
+ai_summary: true
+ai_summary_full: true
+ai_provider: openai
+ai_model: o3
+ai_reasoning_effort: high
+ai_max_completion_tokens: 6000
+```
+
+**Cost-Optimized Setup with o4-mini:**
+
+```yaml
+ai_summary: true
+ai_provider: openai
+ai_model: o4-mini
+ai_reasoning_effort: low
+ai_max_completion_tokens: 3000
+```
+
+**Anthropic Claude 4 Series:**
+
+```yaml
+ai_summary: true
+ai_provider: anthropic
+ai_model: claude-sonnet-4-0 # or claude-haiku-4-0
+# Note: reasoning_effort and max_completion_tokens are OpenAI-specific
+```
+
+### Model Recommendations
+
+- **`o4-mini`**: Most cost-effective, good for routine analysis
+- **`o3-mini`**: Balanced performance and cost
+- **`o3`**: Best reasoning capabilities for complex reports
+- **`o1-mini`**: Good for coding-heavy bioinformatics analysis
+
+### Notes
+
+- Reasoning models may take longer to respond due to internal reasoning
+- Reasoning tokens are charged but not visible in the output
+- Context windows vary: o1 series (128k), o3/o4 series (200k), Claude 4 series (200k+)
+- Some parameters like `temperature` are not supported with OpenAI reasoning models
+- **Claude 4 series**: Currently treated as reasoning models but use standard Anthropic API parameters. Special reasoning parameters like `reasoning_effort` and `max_completion_tokens` are specific to OpenAI models
 
 ## Summaries during report generation
 

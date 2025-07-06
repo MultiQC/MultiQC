@@ -142,6 +142,22 @@ function getMaxTokens(model) {
       console.error("Error parsing custom context window", e);
     }
   }
+
+  // Reasoning models have different context windows
+  if (isReasoningModel(model)) {
+    if (model.startsWith("o1-preview") || model.startsWith("o1-mini")) {
+      return 128000; // o1-preview and o1-mini have 128k context
+    } else if (
+      model.startsWith("claude-opus-4") ||
+      model.startsWith("claude-sonnet-4") ||
+      model.startsWith("claude-haiku-4")
+    ) {
+      return 200000; // Claude 4 series have 200k context
+    } else {
+      return 200000; // Other reasoning models (o3, o4-mini) have 200k context
+    }
+  }
+
   if (model.startsWith("claude")) return 200000;
   return 128000; // default for gpt models
 }

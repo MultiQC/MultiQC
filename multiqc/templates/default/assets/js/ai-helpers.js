@@ -5,6 +5,94 @@ function handleStreamError(error) {
   return error;
 }
 
+function isReasoningModel(model) {
+  if (!model) return false;
+  const reasoningModels = [
+    // OpenAI reasoning models
+    "o1",
+    "o1-preview",
+    "o1-mini",
+    "o3",
+    "o3-mini",
+    "o3-pro",
+    "o4-mini",
+    "codex-mini",
+    // Anthropic Claude 4 series (extended thinking models)
+    "claude-sonnet-4-0",
+    "claude-haiku-4-0",
+  ];
+  return reasoningModels.some((prefix) => model.toLowerCase().startsWith(prefix));
+}
+
+function getStoredReasoningEffort() {
+  return localStorage.getItem("ai_reasoning_effort") || "medium";
+}
+
+function getStoredMaxCompletionTokens() {
+  const stored = localStorage.getItem("ai_max_completion_tokens");
+  if (stored) {
+    try {
+      return parseInt(stored);
+    } catch (e) {
+      console.error("Error parsing stored max completion tokens", e);
+    }
+  }
+  return 4000; // Default value
+}
+
+function storeReasoningEffort(effort) {
+  localStorage.setItem("ai_reasoning_effort", effort);
+}
+
+function storeMaxCompletionTokens(tokens) {
+  localStorage.setItem("ai_max_completion_tokens", tokens.toString());
+}
+
+// Load reasoning model configuration on page load
+$(function () {
+  // Set up event handlers for reasoning model controls if they exist
+  $("#ai-reasoning-effort").change(function () {
+    storeReasoningEffort($(this).val());
+  });
+
+  $("#ai-max-completion-tokens").change(function () {
+    storeMaxCompletionTokens($(this).val());
+  });
+
+  // Load stored values into controls if they exist
+  const storedEffort = getStoredReasoningEffort();
+  if ($("#ai-reasoning-effort").length && storedEffort) {
+    $("#ai-reasoning-effort").val(storedEffort);
+  }
+
+  const storedTokens = getStoredMaxCompletionTokens();
+  if ($("#ai-max-completion-tokens").length && storedTokens) {
+    $("#ai-max-completion-tokens").val(storedTokens);
+  }
+
+  // Show/hide reasoning model controls based on selected model
+  $("#ai-model").change(function () {
+    const modelName = $(this).val();
+    const isReasoning = isReasoningModel(modelName);
+
+    // Show/hide reasoning-specific controls if they exist
+    $("#ai_reasoning_effort_group").toggle(isReasoning);
+    $("#ai_max_completion_tokens_group").toggle(isReasoning);
+
+    if (isReasoning) {
+      console.log(`Reasoning model selected: ${modelName}`);
+    }
+  });
+
+  // Initial state based on current model
+  const currentModel = $("#ai-model").val();
+  if (currentModel) {
+    const isReasoning = isReasoningModel(currentModel);
+    $("#ai_reasoning_effort_group").toggle(isReasoning);
+    $("#ai_max_completion_tokens_group").toggle(isReasoning);
+  }
+});
+
 function runStreamGeneration({
   onStreamStart,
   onStreamNewToken,
@@ -67,12 +155,68 @@ function runStreamGeneration({
         console.error("Error parsing extra query options", e);
       }
     }
-    body = {
-      ...body,
-      model: modelName,
-      messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
-      stream: true,
-    };
+
+    // Check if this is a reasoning model
+    const isReasoning = isReasoningModel(modelName);
+    const isClaudeReasoning =
+      isReasoning &&
+      (modelName.toLowerCase().startsWith("claude-opus-4") ||
+        modelName.toLowerCase().startsWith("claude-sonnet-4") ||
+        modelName.toLowerCase().startsWith("claude-haiku-4"));
+
+    if (isReasoning && !isClaudeReasoning) {
+      console.log(`Using OpenAI reasoning model: ${modelName}`);
+
+      // For OpenAI reasoning models, use developer messages and specific parameters
+      const messages = [
+        {
+          role: "developer",
+          content:
+            "You are a helpful assistant expert in bioinformatics. Please provide clear, well-formatted responses using markdown where appropriate.",
+        },
+        { role: "user", content: systemPrompt + "\n\n" + userMessage },
+      ];
+
+      body = {
+        ...body,
+        model: modelName,
+        messages: messages,
+        stream: true,
+        max_completion_tokens: getStoredMaxCompletionTokens(),
+        reasoning_effort: getStoredReasoningEffort(),
+      };
+
+      // Remove unsupported parameters for reasoning models
+      delete body.temperature;
+      delete body.top_p;
+      delete body.presence_penalty;
+      delete body.frequency_penalty;
+      delete body.max_tokens; // Use max_completion_tokens instead
+
+      console.log(
+        `OpenAI reasoning model parameters: max_completion_tokens=${body.max_completion_tokens}, reasoning_effort=${body.reasoning_effort}`,
+      );
+    } else if (isClaudeReasoning) {
+      console.log(`Using Claude 4 reasoning model: ${modelName} (using standard parameters for now)`);
+
+      // For Claude 4 reasoning models, use standard parameters for now
+      // Future: May need different parameters when Anthropic specifies reasoning model API
+      body = {
+        ...body,
+        model: modelName,
+        messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
+        stream: true,
+      };
+    } else {
+      // Regular models
+      body = {
+        ...body,
+        model: modelName,
+        messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
+        stream: true,
+      };
+    }
+
     fetchOptions.body = JSON.stringify(body);
     fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
 

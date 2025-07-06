@@ -125,6 +125,8 @@ ai_prompt_short: Optional[str]
 ai_prompt_full: Optional[str]
 no_ai: bool
 ai_anonymize_samples: bool
+ai_reasoning_effort: Optional[str]
+ai_max_completion_tokens: Optional[int]
 
 seqera_api_url: str
 seqera_website: str
