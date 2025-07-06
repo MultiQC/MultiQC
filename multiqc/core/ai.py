@@ -23,14 +23,13 @@ logger = logging.getLogger(__name__)
 # List of known reasoning models
 REASONING_MODELS = {
     # OpenAI reasoning models
-    "o1",
-    "o1-preview",
-    "o1-mini",
+    "o4-mini",
     "o3",
     "o3-mini",
     "o3-pro",
-    "o4-mini",
-    "codex-mini",
+    "o1",
+    "o1-mini",
+    "o1-pro",
     # Anthropic Claude 4 series (extended thinking models)
     "claude-sonnet-4-0",
     "claude-haiku-4-0",
