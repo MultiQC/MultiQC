@@ -77,8 +77,10 @@ ai_prompt_short: null
 ai_prompt_full: null
 no_ai: false
 ai_anonymize_samples: false
-ai_reasoning_effort: null # Reasoning effort level for reasoning models (low, medium, high)
-ai_max_completion_tokens: null # Maximum completion tokens for reasoning models
+ai_reasoning_effort: null # Reasoning effort level for OpenAI reasoning models (low, medium, high)
+ai_max_completion_tokens: null # Maximum completion tokens for OpenAI reasoning models
+ai_extended_thinking: false # Enable extended thinking for Anthropic Claude 4 models
+ai_thinking_budget_tokens: null # Budget tokens for Anthropic extended thinking
 
 # Development settings:
 seqera_api_url: "https://intern.seqera.io"

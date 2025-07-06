@@ -127,6 +127,8 @@ no_ai: bool
 ai_anonymize_samples: bool
 ai_reasoning_effort: Optional[str]
 ai_max_completion_tokens: Optional[int]
+ai_extended_thinking: bool
+ai_thinking_budget_tokens: Optional[int]
 
 seqera_api_url: str
 seqera_website: str

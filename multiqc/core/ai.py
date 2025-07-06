@@ -23,13 +23,10 @@ logger = logging.getLogger(__name__)
 # List of known reasoning models
 REASONING_MODELS = {
     # OpenAI reasoning models
-    "o4-mini",
+    "o1",
     "o3",
     "o3-mini",
-    "o3-pro",
-    "o1",
-    "o1-mini",
-    "o1-pro",
+    "o4-mini",
     # Anthropic Claude 4 series (extended thinking models)
     "claude-sonnet-4-0",
     "claude-haiku-4-0",
@@ -412,8 +409,16 @@ class OpenAiClient(Client):
             or self.model.startswith("claude-sonnet-4")
             or self.model.startswith("claude-haiku-4")
         ):
-            # Claude 4 reasoning models - parameters may be different than OpenAI
-            logger.debug(f"Claude 4 reasoning model detected: {self.model}. Using standard parameters for now.")
+            # Claude 4 reasoning models - use extended thinking if enabled
+            if config.ai_extended_thinking:
+                thinking_budget_tokens = config.ai_thinking_budget_tokens or 10000
+                if config.ai_extra_query_options and "thinking_budget_tokens" in config.ai_extra_query_options:
+                    thinking_budget_tokens = config.ai_extra_query_options["thinking_budget_tokens"]
+
+                body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens}
+                logger.debug(f"Claude 4 model with extended thinking enabled: budget_tokens={thinking_budget_tokens}")
+            else:
+                logger.debug("Claude 4 model without extended thinking (ai_extended_thinking=False)")
 
         if config.ai_auth_type == "api-key":
             headers = {

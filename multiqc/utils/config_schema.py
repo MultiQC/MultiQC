@@ -139,9 +139,15 @@ class MultiQCConfig(BaseModel):
     no_ai: Optional[bool] = Field(None, description="Disable AI")
     ai_anonymize_samples: Optional[bool] = Field(None, description="Anonymize samples")
     ai_reasoning_effort: Optional[str] = Field(
-        None, description="Reasoning effort level for reasoning models (low, medium, high)"
+        None, description="Reasoning effort level for OpenAI reasoning models (low, medium, high)"
     )
-    ai_max_completion_tokens: Optional[int] = Field(None, description="Maximum completion tokens for reasoning models")
+    ai_max_completion_tokens: Optional[int] = Field(
+        None, description="Maximum completion tokens for OpenAI reasoning models"
+    )
+    ai_extended_thinking: Optional[bool] = Field(
+        None, description="Enable extended thinking for Anthropic Claude 4 models"
+    )
+    ai_thinking_budget_tokens: Optional[int] = Field(None, description="Budget tokens for Anthropic extended thinking")
 
     seqera_api_url: Optional[str] = Field(None, description="Seqera API URL")
     seqera_website: Optional[str] = Field(None, description="Seqera website")

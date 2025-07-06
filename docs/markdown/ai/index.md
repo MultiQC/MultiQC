@@ -80,18 +80,8 @@ MultiQC supports reasoning models from multiple providers which provide enhanced
 
 ### Supported Reasoning Models
 
-The following reasoning models are automatically detected and supported:
-
-**OpenAI reasoning models:**
-
-- `o1`, `o1-preview`, `o1-mini`
-- `o3`, `o3-mini`, `o3-pro`
-- `o4-mini`, `codex-mini`
-
-**Anthropic Claude 4 series (extended thinking models):**
-
-- `claude-sonnet-4-0`
-- `claude-haiku-4-0`
+- OpenAI: `o1`, `o3`, `o3-mini`, `o3-pro`, `o4-mini`
+- Anthropic Claude 4 series: `claude-sonnet-4-0`, `claude-haiku-4-0`
 
 ### Configuration
 
@@ -101,10 +91,12 @@ Simply set your AI model to a reasoning model:
 # multiqc_config.yaml
 ai_summary: true
 ai_provider: openai # or anthropic for Claude 4
-ai_model: o1-mini # or claude-sonnet-4-0, o3-mini, etc.
+ai_model: o3-mini # or claude-sonnet-4-0, o4-mini, etc.
 ```
 
 Reasoning models support additional configuration parameters:
+
+**OpenAI reasoning models:**
 
 ```yaml
 # multiqc_config.yaml
@@ -115,17 +107,38 @@ ai_reasoning_effort: high # low, medium, or high
 ai_max_completion_tokens: 8000 # adjust based on needs
 ```
 
+**Anthropic Claude 4 extended thinking:**
+
+```yaml
+# multiqc_config.yaml
+ai_summary: true
+ai_provider: anthropic
+ai_model: claude-sonnet-4-0
+ai_extended_thinking: true # enable extended thinking
+ai_thinking_budget_tokens: 15000 # budget for extended thinking
+```
+
 ### Configuration Options
 
-- **`ai_reasoning_effort`**: Controls how much time the model spends reasoning
+**OpenAI reasoning models:**
 
+- **`ai_reasoning_effort`**: Controls how much time the model spends reasoning
   - `low`: Faster responses, less thorough reasoning
   - `medium`: Balanced speed and reasoning depth (default)
   - `high`: Slower but most thorough reasoning
-
 - **`ai_max_completion_tokens`**: Maximum tokens for model output (default: 4000)
-  - Reasoning models use this instead of `max_tokens`
   - Higher values allow longer, more detailed summaries
+
+**Anthropic extended thinking:**
+
+- **`ai_extended_thinking`**: Enable extended thinking for Claude 4 models (default: false)
+  - Must be set to `true` to enable extended thinking capabilities
+  - When disabled, Claude 4 models run as regular models without extended thinking
+- **`ai_thinking_budget_tokens`**: Maximum tokens for internal reasoning process (default: 10000)
+  - Only applies when `ai_extended_thinking` is enabled
+  - Controls how much "thinking" the model can do before responding
+  - Higher budgets enable more thorough analysis for complex problems
+  - The model may not use the entire budget allocated
 
 ### Key Differences from Regular Models
 
@@ -165,13 +178,14 @@ ai_reasoning_effort: low
 ai_max_completion_tokens: 3000
 ```
 
-**Anthropic Claude 4 Series:**
+**Anthropic Claude 4 Extended Thinking:**
 
 ```yaml
 ai_summary: true
 ai_provider: anthropic
 ai_model: claude-sonnet-4-0 # or claude-haiku-4-0
-# Note: reasoning_effort and max_completion_tokens are OpenAI-specific
+ai_extended_thinking: true # enable extended thinking
+ai_thinking_budget_tokens: 12000 # budget for thinking process
 ```
 
 ### Model Recommendations
@@ -183,11 +197,12 @@ ai_model: claude-sonnet-4-0 # or claude-haiku-4-0
 
 ### Notes
 
-- Reasoning models may take longer to respond due to internal reasoning
-- Reasoning tokens are charged but not visible in the output
-- Context windows vary: o1 series (128k), o3/o4 series (200k), Claude 4 series (200k+)
-- Some parameters like `temperature` are not supported with OpenAI reasoning models
-- **Claude 4 series**: Currently treated as reasoning models but use standard Anthropic API parameters. Special reasoning parameters like `reasoning_effort` and `max_completion_tokens` are specific to OpenAI models
+- **Performance**: Both OpenAI reasoning models and Anthropic extended thinking may take longer to respond due to internal reasoning
+- **Billing**: Reasoning/thinking tokens are charged but internal reasoning is not visible in the output
+- **Context windows**: o1 series (128k), o3/o4 series (200k), Claude 4 series (200k+)
+- **OpenAI reasoning models**: Don't support parameters like `temperature`, use `reasoning_effort` and `max_completion_tokens`
+- **Anthropic extended thinking**: Uses standard Anthropic API with `thinking.budget_tokens` parameter, supports regular parameters like `temperature`
+- **Different approaches**: OpenAI uses specialized reasoning models, while Anthropic adds extended thinking capabilities to their regular models
 
 ## Summaries during report generation
 

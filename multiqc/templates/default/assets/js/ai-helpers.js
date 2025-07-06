@@ -40,12 +40,37 @@ function getStoredMaxCompletionTokens() {
   return 4000; // Default value
 }
 
+function getStoredThinkingBudgetTokens() {
+  const stored = localStorage.getItem("ai_thinking_budget_tokens");
+  if (stored) {
+    try {
+      return parseInt(stored);
+    } catch (e) {
+      console.error("Error parsing stored thinking budget tokens", e);
+    }
+  }
+  return 10000; // Default value for Anthropic extended thinking
+}
+
+function getStoredExtendedThinking() {
+  const stored = localStorage.getItem("ai_extended_thinking");
+  return stored === "true"; // Default to false
+}
+
 function storeReasoningEffort(effort) {
   localStorage.setItem("ai_reasoning_effort", effort);
 }
 
 function storeMaxCompletionTokens(tokens) {
   localStorage.setItem("ai_max_completion_tokens", tokens.toString());
+}
+
+function storeThinkingBudgetTokens(tokens) {
+  localStorage.setItem("ai_thinking_budget_tokens", tokens.toString());
+}
+
+function storeExtendedThinking(enabled) {
+  localStorage.setItem("ai_extended_thinking", enabled.toString());
 }
 
 // Load reasoning model configuration on page load
@@ -59,6 +84,14 @@ $(function () {
     storeMaxCompletionTokens($(this).val());
   });
 
+  $("#ai-thinking-budget-tokens").change(function () {
+    storeThinkingBudgetTokens($(this).val());
+  });
+
+  $("#ai-extended-thinking").change(function () {
+    storeExtendedThinking($(this).is(":checked"));
+  });
+
   // Load stored values into controls if they exist
   const storedEffort = getStoredReasoningEffort();
   if ($("#ai-reasoning-effort").length && storedEffort) {
@@ -70,17 +103,39 @@ $(function () {
     $("#ai-max-completion-tokens").val(storedTokens);
   }
 
+  const storedThinkingTokens = getStoredThinkingBudgetTokens();
+  if ($("#ai-thinking-budget-tokens").length && storedThinkingTokens) {
+    $("#ai-thinking-budget-tokens").val(storedThinkingTokens);
+  }
+
+  const storedExtendedThinking = getStoredExtendedThinking();
+  if ($("#ai-extended-thinking").length) {
+    $("#ai-extended-thinking").prop("checked", storedExtendedThinking);
+  }
+
   // Show/hide reasoning model controls based on selected model
   $("#ai-model").change(function () {
     const modelName = $(this).val();
     const isReasoning = isReasoningModel(modelName);
+    const isClaudeReasoning =
+      isReasoning &&
+      (modelName.toLowerCase().startsWith("claude-opus-4") ||
+        modelName.toLowerCase().startsWith("claude-sonnet-4") ||
+        modelName.toLowerCase().startsWith("claude-haiku-4"));
+    const isOpenAIReasoning = isReasoning && !isClaudeReasoning;
 
     // Show/hide reasoning-specific controls if they exist
-    $("#ai_reasoning_effort_group").toggle(isReasoning);
-    $("#ai_max_completion_tokens_group").toggle(isReasoning);
+    $("#ai_reasoning_effort_group").toggle(isOpenAIReasoning);
+    $("#ai_max_completion_tokens_group").toggle(isOpenAIReasoning);
+    $("#ai_extended_thinking_group").toggle(isClaudeReasoning);
+    $("#ai_thinking_budget_tokens_group").toggle(isClaudeReasoning);
 
     if (isReasoning) {
-      console.log(`Reasoning model selected: ${modelName}`);
+      console.log(
+        `Reasoning model selected: ${modelName} (${
+          isClaudeReasoning ? "Claude extended thinking" : "OpenAI reasoning"
+        })`,
+      );
     }
   });
 
@@ -88,8 +143,17 @@ $(function () {
   const currentModel = $("#ai-model").val();
   if (currentModel) {
     const isReasoning = isReasoningModel(currentModel);
-    $("#ai_reasoning_effort_group").toggle(isReasoning);
-    $("#ai_max_completion_tokens_group").toggle(isReasoning);
+    const isClaudeReasoning =
+      isReasoning &&
+      (currentModel.toLowerCase().startsWith("claude-opus-4") ||
+        currentModel.toLowerCase().startsWith("claude-sonnet-4") ||
+        currentModel.toLowerCase().startsWith("claude-haiku-4"));
+    const isOpenAIReasoning = isReasoning && !isClaudeReasoning;
+
+    $("#ai_reasoning_effort_group").toggle(isOpenAIReasoning);
+    $("#ai_max_completion_tokens_group").toggle(isOpenAIReasoning);
+    $("#ai_extended_thinking_group").toggle(isClaudeReasoning);
+    $("#ai_thinking_budget_tokens_group").toggle(isClaudeReasoning);
   }
 });
 
@@ -197,16 +261,35 @@ function runStreamGeneration({
         `OpenAI reasoning model parameters: max_completion_tokens=${body.max_completion_tokens}, reasoning_effort=${body.reasoning_effort}`,
       );
     } else if (isClaudeReasoning) {
-      console.log(`Using Claude 4 reasoning model: ${modelName} (using standard parameters for now)`);
+      const extendedThinkingEnabled = getStoredExtendedThinking();
 
-      // For Claude 4 reasoning models, use standard parameters for now
-      // Future: May need different parameters when Anthropic specifies reasoning model API
-      body = {
-        ...body,
-        model: modelName,
-        messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
-        stream: true,
-      };
+      if (extendedThinkingEnabled) {
+        console.log(`Using Claude 4 model with extended thinking: ${modelName}`);
+
+        const thinkingBudgetTokens = getStoredThinkingBudgetTokens();
+
+        body = {
+          ...body,
+          model: modelName,
+          messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
+          stream: true,
+          thinking: {
+            type: "enabled",
+            budget_tokens: thinkingBudgetTokens,
+          },
+        };
+
+        console.log(`Extended thinking parameters: budget_tokens=${thinkingBudgetTokens}`);
+      } else {
+        console.log(`Using Claude 4 model without extended thinking: ${modelName}`);
+
+        body = {
+          ...body,
+          model: modelName,
+          messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
+          stream: true,
+        };
+      }
     } else {
       // Regular models
       body = {
