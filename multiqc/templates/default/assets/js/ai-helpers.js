@@ -16,7 +16,6 @@ function isReasoningModel(model) {
     "o3-mini",
     "o3-pro",
     "o4-mini",
-    "codex-mini",
     // Anthropic Claude 4 series (extended thinking models)
     "claude-sonnet-4-0",
     "claude-haiku-4-0",
