@@ -20,6 +20,33 @@ from multiqc.utils import config_schema
 
 logger = logging.getLogger(__name__)
 
+# List of known reasoning models
+REASONING_MODELS = {
+    # OpenAI reasoning models
+    "o1",
+    "o1-preview",
+    "o1-mini",
+    "o3",
+    "o3-mini",
+    "o3-pro",
+    "o4-mini",
+    # Anthropic Claude 4 series (extended thinking models)
+    "claude-3-7-sonnet-latest",
+    "claude-sonnet-4-0",
+    "claude-haiku-4-0",
+    "claude-opus-4-0",
+}
+
+
+def is_reasoning_model(model_name: str) -> bool:
+    """Check if a model is a reasoning model based on its name."""
+    if not model_name:
+        return False
+
+    # Check if model name starts with any of the reasoning model prefixes
+    model_lower = model_name.lower()
+    return any(model_lower.startswith(prefix) for prefix in REASONING_MODELS)
+
 
 _MULTIQC_DESCRIPTION = """\
 You are an expert in bioinformatics, sequencing technologies, genomics data analysis, and adjacent fields.
@@ -300,26 +327,104 @@ class OpenAiClient(Client):
             self.title = "OpenAI"
 
     def max_tokens(self) -> int:
-        return config.ai_custom_context_window or 128000
+        if config.ai_custom_context_window:
+            return config.ai_custom_context_window
+
+        # Reasoning models have different context windows
+        if is_reasoning_model(self.model):
+            if self.model.startswith("o1-preview") or self.model.startswith("o1-mini"):
+                return 128000  # o1-preview and o1-mini have 128k context
+            elif (
+                self.model.startswith("claude-opus-4")
+                or self.model.startswith("claude-sonnet-4")
+                or self.model.startswith("claude-haiku-4")
+            ):
+                return 200000  # Claude 4 series have 200k context
+            else:
+                return 200000  # Other reasoning models (o3, o4-mini) have 200k context
+
+        return 128000  # Default for regular models
 
     class ApiResponse(NamedTuple):
         content: str
         model: str
 
     def _query(self, prompt: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
-        body: Dict[str, Any] = {
-            "temperature": 0.0,
-        }
+        is_reasoning = is_reasoning_model(self.model)
+
+        if is_reasoning:
+            logger.debug(f"Using reasoning model: {self.model}")
+
+        body: Dict[str, Any] = {}
+
+        # For reasoning models, don't include temperature and other unsupported parameters
+        if not is_reasoning:
+            body["temperature"] = 0.0
+
         if config.ai_extra_query_options:
             body.update(config.ai_extra_query_options)
         if extra_options:
             body.update(extra_options)
+
+        # Set up messages - reasoning models benefit from developer messages
+        messages = []
+        if is_reasoning:
+            # Add developer message to encourage proper formatting for reasoning models
+            messages.append(
+                {
+                    "role": "developer",
+                    "content": "You are a helpful assistant expert in bioinformatics. Please provide clear, well-formatted responses using markdown where appropriate.",
+                }
+            )
+
+        messages.append({"role": "user", "content": prompt})
+
         body.update(
             {
                 "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": messages,
             }
         )
+
+        # For OpenAI reasoning models, use max_completion_tokens and reasoning effort
+        # Note: Claude 4 series are also reasoning models but may use different parameters
+        if is_reasoning and not (
+            self.model.startswith("claude-opus-4")
+            or self.model.startswith("claude-sonnet-4")
+            or self.model.startswith("claude-haiku-4")
+        ):
+            # Use config or reasonable default for max_completion_tokens
+            max_completion_tokens = config.ai_max_completion_tokens or 4000
+            if config.ai_extra_query_options and "max_completion_tokens" in config.ai_extra_query_options:
+                max_completion_tokens = config.ai_extra_query_options["max_completion_tokens"]
+
+            body["max_completion_tokens"] = max_completion_tokens
+
+            # Add reasoning effort parameter - use config or default to medium
+            reasoning_effort = config.ai_reasoning_effort or "medium"
+            if config.ai_extra_query_options and "reasoning_effort" in config.ai_extra_query_options:
+                reasoning_effort = config.ai_extra_query_options["reasoning_effort"]
+
+            body["reasoning_effort"] = reasoning_effort
+            logger.debug(
+                f"OpenAI reasoning model parameters: max_completion_tokens={max_completion_tokens}, reasoning_effort={reasoning_effort}"
+            )
+        elif is_reasoning and (
+            self.model.startswith("claude-opus-4")
+            or self.model.startswith("claude-sonnet-4")
+            or self.model.startswith("claude-haiku-4")
+        ):
+            # Claude 4 reasoning models - use extended thinking if enabled
+            if config.ai_extended_thinking:
+                thinking_budget_tokens = config.ai_thinking_budget_tokens or 10000
+                if config.ai_extra_query_options and "thinking_budget_tokens" in config.ai_extra_query_options:
+                    thinking_budget_tokens = config.ai_extra_query_options["thinking_budget_tokens"]
+
+                body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens}
+                logger.debug(f"Claude 4 model with extended thinking enabled: budget_tokens={thinking_budget_tokens}")
+            else:
+                logger.debug("Claude 4 model without extended thinking (ai_extended_thinking=False)")
+
         if config.ai_auth_type == "api-key":
             headers = {
                 "Content-Type": "application/json",
@@ -345,7 +450,7 @@ class AnthropicClient(Client):
     def __init__(self, api_key: str):
         super().__init__(api_key)
         self.model = (
-            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-3-5-sonnet-latest"
+            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-sonnet-4-0"
         )
         self.name = "anthropic"
         self.title = "Anthropic"
@@ -439,7 +544,7 @@ class SeqeraClient(Client):
         creation_date = report.creation_date.strftime("%d %b %Y, %H:%M %Z")
         self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, created on {creation_date}"
         self.tags = ["multiqc", f"multiqc_version:{config.version}"]
-        self.model = config.ai_model or "claude-3-5-sonnet-latest"
+        self.model = config.ai_model or "claude-sonnet-4-0"
 
     def max_tokens(self) -> int:
         return 200000
