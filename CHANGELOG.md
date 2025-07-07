@@ -1,32 +1,35 @@
 # MultiQC Version History
 
-Bug fixes and small improvements.
-
 ## [MultiQC v1.30](https://github.com/MultiQC/MultiQC/releases/tag/v1.30) - 2025-07-02
 
-### Feature updates and improvements
+### Feature updates
 
-- Add support for `config.plot_theme` ([#3250](https://github.com/MultiQC/MultiQC/pull/3250))
-- Lighten colours with alpha instead of admixing white ([#3252](https://github.com/MultiQC/MultiQC/pull/3252))
+- Support markdown in custom content ([#3204](https://github.com/MultiQC/MultiQC/pull/3204))
+- Support reasoning models in AI summaries ([#3265](https://github.com/MultiQC/MultiQC/pull/3265))
+- Always save AI prompt to file as `llms-full.txt` ([#3257](https://github.com/MultiQC/MultiQC/pull/3257))
+- Allow Plotly theme configuration with `config.plot_theme` ([#3250](https://github.com/MultiQC/MultiQC/pull/3250))
 - Use `polars-lts-cpu` library for polars for better CPU compatibility across docker contaners ([#3240](https://github.com/MultiQC/MultiQC/pull/3240))
-- Use `OrderedDict` for `saved_raw_data_keys` to increase performance ([#3235](https://github.com/MultiQC/MultiQC/pull/3235))
-- Box plot: dynically determine whether to show interactive points for outliers (similar to violin plots); add `boxplot_boxpoints` config option to override it explicitly ([#3244](https://github.com/MultiQC/MultiQC/pull/3244), [#3248](https://github.com/MultiQC/MultiQC/pull/3248))
+- Box plot: dynically determine whether to show interactive points for outliers (similar to violin plots), and add `boxplot_boxpoints` config option to override it explicitly ([#3244](https://github.com/MultiQC/MultiQC/pull/3244), [#3248](https://github.com/MultiQC/MultiQC/pull/3248))
+
+### Minor improvements
+
 - Custom content line plots: allow passing data as a list of tuples in JSON to avoid ordering issues ([#3246](https://github.com/MultiQC/MultiQC/pull/3246))
-- Allow add any metric from `multiqc_data.json` to general stats ([#3245](https://github.com/MultiQC/MultiQC/pull/3245))
+- Allow adding any metric from `multiqc_data.json` to general stats with `config.general_stats_columns` ([#3245](https://github.com/MultiQC/MultiQC/pull/3245))
+- Detect AI provider from environment variables ([#3254](https://github.com/MultiQC/MultiQC/pull/3254))
 - Scatter plot: allow custom marker symbol ([#3234](https://github.com/MultiQC/MultiQC/pull/3234))
 - Use universal `config.use_filename_as_sample_name` config flag for modules, and depreate module-specific flags ([3241](https://github.com/MultiQC/MultiQC/pull/3241))
-- Custom content: Support Markdown ([#3204](https://github.com/MultiQC/MultiQC/pull/3204))
 - Allow multi-line `info` section in module sections ([#3225](https://github.com/MultiQC/MultiQC/pull/3225))
-- Detect AI provider from environment variables ([#3254](https://github.com/MultiQC/MultiQC/pull/3254))
-- Always save AI prompt to file as `llms-full.txt` ([#3257](https://github.com/MultiQC/MultiQC/pull/3257))
-- Fix series labels in heatmap subtitle ([#3260](https://github.com/MultiQC/MultiQC/pull/3260))
+- AI summaries: update model defaults ([#3265](https://github.com/MultiQC/MultiQC/pull/3265))
+- Color schemes: lighten colours with alpha instead of admixing white ([#3252](https://github.com/MultiQC/MultiQC/pull/3252))
+- Performance: use `OrderedDict` for `saved_raw_data_keys` ([#3235](https://github.com/MultiQC/MultiQC/pull/3235))
 
 ### Fixes
 
+- Fix series labels in heatmap subtitle ([#3260](https://github.com/MultiQC/MultiQC/pull/3260))
 - Fix custom content description when grouping section with `parent_id` ([#3242](https://github.com/MultiQC/MultiQC/pull/3242))
 - Fix timezone issue in parquet export ([#3224](https://github.com/MultiQC/MultiQC/pull/3224))
 
-### Modules
+### Module updates and fixes
 
 - Elembio bases2fastq: fix PE bug, add % bases below PF plot ([#3233](https://github.com/MultiQC/MultiQC/pull/3233))
 - Picard: support sentieon for WgsMetrics ([#3200](https://github.com/MultiQC/MultiQC/pull/3200))
@@ -39,6 +42,7 @@ Bug fixes and small improvements.
 - FastQC: fix subtitle in status check heatmap and adapters content plot ([#3260](https://github.com/MultiQC/MultiQC/pull/3260))
 - Cutadapt: fix extracting sample name from command line params ([#3262](https://github.com/MultiQC/MultiQC/pull/3262))
 - UMItools: bump up search pattern checked number of lines ([#3263](https://github.com/MultiQC/MultiQC/pull/3263))
+- Samtools: allow configuring metrics to add to general stats with `config.general_stats_columns` ([#3245](https://github.com/MultiQC/MultiQC/pull/3245))
 
 ## [MultiQC v1.29](https://github.com/MultiQC/MultiQC/releases/tag/v1.29) - 2025-05-22
 
