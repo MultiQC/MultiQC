@@ -13,11 +13,11 @@ code {
   }
 }
 
-.radio.input-sm {
+.radio.form-control-sm {
   height: 20px;
 }
 
-.radio.input-sm input {
+.radio.form-control-sm input {
   margin: 2px 0 0 -20px;
 }
 
@@ -336,8 +336,9 @@ h4:before {
 
 /* Fancy sample highlighting in the side nav */
 input.form-control[type="color"] {
-  padding: 0 2px;
+  padding: 5px;
   width: 30px;
+  cursor: pointer;
 }
 
 .hc_handle {
@@ -478,11 +479,6 @@ input.form-control[type="color"] {
   background-color: var(--#{$prefix}tertiary-bg);
 }
 
-.mqc_filter_section .mqc_regex_mode_p {
-  margin-top: 12px;
-  white-space: nowrap;
-}
-
 .mqc_switch_wrapper {
   cursor: pointer;
 }
@@ -563,10 +559,6 @@ input.form-control[type="color"] {
   .mqc_filter_section input[type="text"] {
     width: auto;
   }
-}
-
-#mqc_renamesamples input[type="text"] {
-  width: 80px;
 }
 
 #mqc_renamesamples_bulk_collapse {
