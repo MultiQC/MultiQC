@@ -127,6 +127,30 @@ class LoadMultiqcData(BaseMultiqcModule):
                     intro = mod_dict.pop("intro", "")
                     comment = mod_dict.pop("comment", "")
 
+                    # Special handling for Software Versions modules - skip them to avoid duplicates
+                    if anchor == "multiqc_software_versions" and name == "Software Versions":
+                        # Extract software versions from the HTML content
+                        if sections:
+                            log.info("Extracting software versions from HTML content in parquet file")
+                            import re
+
+                            for section in sections:
+                                if section.content:
+                                    # Parse the HTML table to extract software versions
+                                    # Look for table rows with pattern: <td>Software</td><td><samp>Version</samp></td>
+                                    row_pattern = r"<tr><td>([^<]+)</td><td><samp>([^<]+)</samp></td></tr>"
+                                    matches = re.findall(row_pattern, section.content)
+
+                                    for software_name, version in matches:
+                                        # Add to global software_versions using software name as group
+                                        report.software_versions[software_name][software_name].append(version)
+                                        log.debug(f"Added software version: {software_name} = {version}")
+
+                        log.info(
+                            "Skipping Software Versions module from parquet file - extracted data to global software_versions"
+                        )
+                        continue  # Skip adding this module to report.modules
+
                     # Create module
                     mod = BaseMultiqcModule(name=name, anchor=Anchor(anchor), info=info)
                     mod.sections = sections
@@ -136,6 +160,15 @@ class LoadMultiqcData(BaseMultiqcModule):
 
                     log.info(f"Loading module {mod.name} from parquet")
                     report.modules.append(mod)
+
+            # Load global software versions data
+            if "software_versions" in metadata:
+                software_versions_data = metadata["software_versions"]
+                log.info("Loading global software versions data from parquet file")
+                for group_name, group_versions in software_versions_data.items():
+                    for software_name, versions_list in group_versions.items():
+                        for version_str in versions_list:
+                            report.software_versions[group_name][software_name].append(version_str)
 
             # Load data sources
             if "data_sources" in metadata:
