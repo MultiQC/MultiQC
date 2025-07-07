@@ -212,15 +212,9 @@ class BaseMultiqcModule:
                 "; ".join(url_links)
             )
 
-        # If info is markdown-formatted, it will already have proper HTML tags
-        # Otherwise, wrap in <p> tags and handle newlines manually
-        if self.info.startswith("<"):
-            # Already HTML formatted (from markdown)
-            info_html = f"{self.info}{url_link}{doi_html}"
-        else:
-            # Assume markdown, convert to HTML
-            info_html = markdown.markdown(self.info)
-            info_html = f"<p>{info_html}{url_link}{doi_html}</p>"
+        info_html = f"{self.info}{url_link}{doi_html}"
+        if not info_html.startswith("<"):  # Assume markdown, convert to HTML
+            info_html = markdown.markdown(info_html)
 
         return f"{info_html}{self.extra}"
 
