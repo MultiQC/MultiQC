@@ -524,13 +524,16 @@ of the report.
         <hr />
         <p class="text-center seqera-logo">
           MultiQC is developed by:<br />
-          <a href="https://seqera.io" target="_blank"
-            ><img src="data:image/png;base64,{{ include_file('assets/img/seqera_logo_mono.png', b64=True) }}"
-          /></a>
+          <a href="https://seqera.io" target="_blank">
+            <img src="data:image/png;base64,{{ include_file('assets/img/seqera_logo_mono.png', b64=True) }}" />
+          </a>
         </p>
       </div>
     </div>
   </div>
 </div>
 
-<a href="#top" class="mqc-toplink d-none d-sm-inline" title="Go to top">{{ material_icon('mdi:chevron-up', 24) }}</a>
+<a href="#top" class="mqc-toplink d-none d-sm-block rounded border small" title="Go to top">
+  <span>Scroll to top</span>
+  {{ material_icon('mdi:chevron-up', 24) }}
+</a>

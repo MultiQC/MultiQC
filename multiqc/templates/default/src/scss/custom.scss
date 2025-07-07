@@ -377,7 +377,7 @@ input.form-control[type="color"] {
 #mqc-toolbox {
   .mqc-toolbox-buttons {
     left: -1.5rem;
-    top: 150px;
+    top: 50px;
     visibility: visible;
     a.in_use {
       border: 2px solid var(--#{$prefix}primary);
@@ -431,21 +431,27 @@ input.form-control[type="color"] {
 
 .mqc-toplink,
 .mqc-toplink:visited {
-  display: block;
-  position: absolute;
-  bottom: 5px;
-  width: 28px;
-  height: 28px;
-  text-align: center;
-  padding: 5px 0 5px 2px;
-  border-radius: 28px;
+  position: fixed;
+  bottom: 0.8rem;
+  right: 0.8rem;
+  padding: 2px 1px;
+  z-index: 900;
   background-color: var(--#{$prefix}tertiary-bg);
-  color: #999;
+  color: var(--#{$prefix}tertiary-color);
+  text-decoration: none;
+  span {
+    display: none;
+    padding-left: 0.5rem;
+  }
 }
 
-.mqc-toplink:hover,
-.mqc-toplink:focus {
-  color: #333;
+.mqc-toplink:hover {
+  background-color: var(--#{$prefix}secondary-bg);
+  color: var(--#{$prefix}body-color);
+  span {
+    display: inline;
+    color: var(--#{$prefix}tertiary-color);
+  }
 }
 
 .mqc_filters {
