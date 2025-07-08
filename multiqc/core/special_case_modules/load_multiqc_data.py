@@ -142,7 +142,7 @@ class LoadMultiqcData(BaseMultiqcModule):
         """
         path = Path(path)
         assert path.suffix == ".parquet"
-        log.info(f"Loading report data from parquet file: {path}")
+        log.debug(f"Loading report data from parquet file: {path}")
 
         try:
             # Read the entire parquet file
@@ -193,7 +193,7 @@ class LoadMultiqcData(BaseMultiqcModule):
                     if anchor == "multiqc_software_versions" and name == "Software Versions":
                         # Extract software versions from the HTML content
                         if sections:
-                            log.info("Extracting software versions from HTML content in parquet file")
+                            log.debug("Extracting software versions from HTML content in parquet file")
                             import re
 
                             for section in sections:
@@ -210,7 +210,7 @@ class LoadMultiqcData(BaseMultiqcModule):
                                         self.collected_software_versions[software_name].append(version)
                                         log.debug(f"Collected software version: {software_name} = {version}")
 
-                        log.info(
+                        log.debug(
                             "Skipping Software Versions module from parquet file - extracted data to global software_versions"
                         )
                         continue  # Skip adding this module to report.modules
@@ -233,69 +233,117 @@ class LoadMultiqcData(BaseMultiqcModule):
                         # Merge the existing module into the new one
                         mod.merge(existing_mod)  # This only merges versions
 
-                        # Also merge sections manually since the base merge() doesn't do this
+                        # Debug: Log sections before merging
+                        log.debug(f"Before merging - Existing module has {len(existing_mod.sections)} sections:")
+                        for s in existing_mod.sections:
+                            log.debug(f"  - Existing: {s.name} (anchor: {s.anchor})")
+                        log.debug(f"Before merging - New module has {len(mod.sections)} sections:")
+                        for s in mod.sections:
+                            log.debug(f"  - New: {s.name} (anchor: {s.anchor})")
+
+                        # Merge sections based on anchor - keep all unique sections from both modules
                         existing_sections = {s.anchor: s for s in existing_mod.sections}
                         new_sections = {s.anchor: s for s in mod.sections}
 
-                        # Combine sections - if anchors match, we'll need to merge the section content
                         merged_sections = []
                         all_section_anchors = set(existing_sections.keys()) | set(new_sections.keys())
 
+                        log.debug(f"All section anchors to process: {sorted(all_section_anchors)}")
+
                         for section_anchor in all_section_anchors:
                             if section_anchor in existing_sections and section_anchor in new_sections:
-                                # Both modules have this section - we need to merge them
+                                # Both modules have this section - merge content if different
+                                log.debug(f"Merging content for section: {section_anchor}")
                                 existing_section = existing_sections[section_anchor]
                                 new_section = new_sections[section_anchor]
 
-                                # For now, combine content (this works for tables and plots)
-                                # In the future, might need more sophisticated merging based on section type
-                                merged_content = existing_section.content
-                                if new_section.content and new_section.content != existing_section.content:
-                                    # If content is different, append it
-                                    if merged_content:
-                                        merged_content += "\n\n" + new_section.content
-                                    else:
-                                        merged_content = new_section.content
-
-                                # Use the new section as base but with merged content
-                                merged_section = Section(
-                                    name=new_section.name,
-                                    anchor=new_section.anchor,
-                                    id=new_section.id,
-                                    description=new_section.description,
-                                    module=new_section.module,
-                                    module_anchor=new_section.module_anchor,
-                                    module_info=new_section.module_info,
-                                    comment=new_section.comment,
-                                    helptext=new_section.helptext,
-                                    content_before_plot=new_section.content_before_plot,
-                                    plot=new_section.plot,  # The plot object will be merged in plotting code
-                                    content=merged_content,
-                                    print_section=new_section.print_section,
-                                    plot_anchor=new_section.plot_anchor,
-                                    ai_summary=new_section.ai_summary,
+                                # Determine which section has actual data
+                                existing_has_data = existing_section.plot_anchor is not None or (
+                                    existing_section.content and existing_section.content.strip()
                                 )
-                                merged_sections.append(merged_section)
+                                new_has_data = new_section.plot_anchor is not None or (
+                                    new_section.content and new_section.content.strip()
+                                )
 
+                                if existing_has_data and not new_has_data:
+                                    # Existing section has data, new section is empty - use existing as base
+                                    log.debug(
+                                        f"Using existing section as base (new section is empty): {section_anchor}"
+                                    )
+                                    merged_sections.append(existing_section)
+                                elif new_has_data and not existing_has_data:
+                                    # New section has data, existing section is empty - use new as base
+                                    log.debug(
+                                        f"Using new section as base (existing section is empty): {section_anchor}"
+                                    )
+                                    merged_sections.append(new_section)
+                                elif existing_has_data and new_has_data:
+                                    # Both sections have data - perform proper merging
+                                    log.debug(f"Both sections have data, merging content: {section_anchor}")
+
+                                    # Combine content if it's different
+                                    merged_content = new_section.content
+                                    if existing_section.content and existing_section.content != new_section.content:
+                                        # If content is different, append existing content to new content
+                                        if merged_content:
+                                            merged_content = merged_content + "\n\n" + existing_section.content
+                                        else:
+                                            merged_content = existing_section.content
+
+                                    # Preserve plot-related attributes from whichever section has them
+                                    merged_plot = new_section.plot or existing_section.plot
+                                    merged_plot_anchor = new_section.plot_anchor or existing_section.plot_anchor
+
+                                    # Create merged section with combined content
+                                    merged_section = Section(
+                                        name=new_section.name,
+                                        anchor=new_section.anchor,
+                                        id=new_section.id,
+                                        description=new_section.description,
+                                        module=new_section.module,
+                                        module_anchor=new_section.module_anchor,
+                                        module_info=new_section.module_info,
+                                        comment=new_section.comment,
+                                        helptext=new_section.helptext,
+                                        content_before_plot=new_section.content_before_plot,
+                                        plot=merged_plot,  # Use merged plot
+                                        content=merged_content,
+                                        print_section=new_section.print_section,
+                                        plot_anchor=merged_plot_anchor,  # Use merged plot_anchor
+                                        ai_summary=new_section.ai_summary,
+                                    )
+                                    merged_sections.append(merged_section)
+                                else:
+                                    # Both sections are empty - use new section as default
+                                    log.debug(f"Both sections are empty, using new section: {section_anchor}")
+                                    merged_sections.append(new_section)
                             elif section_anchor in existing_sections:
                                 # Only in existing module
+                                log.debug(f"Preserving section from existing module: {section_anchor}")
                                 merged_sections.append(existing_sections[section_anchor])
                             else:
                                 # Only in new module
+                                log.debug(f"Adding section from new module: {section_anchor}")
                                 merged_sections.append(new_sections[section_anchor])
 
                         mod.sections = merged_sections
-                        log.info(f'Updating module "{existing_mod.name}" with data from parquet')
+
+                        # Debug: Log sections after merging
+                        log.debug(f"After merging - Final module has {len(mod.sections)} sections:")
+                        for s in mod.sections:
+                            log.debug(f"  - Final: {s.name} (anchor: {s.anchor})")
+
+                        log.debug(f'Updating module "{existing_mod.name}" with data from parquet')
                         report.modules.remove(existing_mod)
                     else:
-                        log.info(f"Loading module {mod.name} from parquet")
+                        log.debug(f"Loading module {mod.name} from parquet")
 
                     report.modules.append(mod)
 
             # Load global software versions data
             if "software_versions" in metadata:
                 software_versions_data = metadata["software_versions"]
-                log.info("Loading global software versions data from parquet file")
+                log.debug("Loading global software versions data from parquet file")
                 for group_name, group_versions in software_versions_data.items():
                     for software_name, versions_list in group_versions.items():
                         # Collect software versions for later processing
@@ -336,30 +384,30 @@ class LoadMultiqcData(BaseMultiqcModule):
                     try:
                         # First, create only the plot input data (without the plot object)
                         plot_input = create_plot_input_data_only(plot_input_data_dict)
-                        log.info(f"Loading plot input data for {anchor}, type: {plot_input.__class__.__name__}")
+                        log.debug(f"Loading plot input data for {anchor}, type: {plot_input.__class__.__name__}")
 
                         # Check if we already have plot input data for this anchor (from previous parquet files)
                         if anchor in report.plot_input_data:
                             # Merge the existing data with the new data using the appropriate merge method
                             existing_plot_input = report.plot_input_data[anchor]
-                            log.info(
+                            log.debug(
                                 f"Found existing plot input data for {anchor}, merging {existing_plot_input.__class__.__name__} with {plot_input.__class__.__name__}"
                             )
 
                             # Use the merge class method from the plot input data class
                             merged_plot_input = existing_plot_input.__class__.merge(existing_plot_input, plot_input)
                             report.plot_input_data[anchor] = merged_plot_input
-                            log.info(f"Successfully merged plot input data for {anchor}")
+                            log.debug(f"Successfully merged plot input data for {anchor}")
 
                             # Create the plot object from the merged data (this ensures proper color assignment)
                             merged_plot = create_plot_from_input_data(merged_plot_input)
                             if merged_plot is not None:
                                 report.plot_by_id[anchor] = merged_plot
-                                log.info(f"Updated plot object for {anchor} with merged data")
+                                log.debug(f"Updated plot object for {anchor} with merged data")
 
                         else:
                             # No existing data, just add the new data and create plot object
-                            log.info(f"No existing plot input data for {anchor}, adding new data")
+                            log.debug(f"No existing plot input data for {anchor}, adding new data")
                             report.plot_input_data[anchor] = plot_input
 
                             # Create the plot object from the input data
@@ -400,4 +448,4 @@ class LoadMultiqcData(BaseMultiqcModule):
                 final_versions = [version_str for _, version_str in sorted_versions]
                 report.software_versions[software_name][software_name].extend(final_versions)
 
-                log.info(f"Processed {len(final_versions)} versions for {software_name}: {', '.join(final_versions)}")
+                log.debug(f"Processed {len(final_versions)} versions for {software_name}: {', '.join(final_versions)}")
