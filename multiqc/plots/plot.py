@@ -416,11 +416,17 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         # Try to load previous data (empty or unloadable means no data from previous run)
         old_data = report.plot_input_data.get(new_data.anchor)
+        logger.debug(f"merge_with_previous for {new_data.anchor}: found old_data = {old_data is not None}")
         if old_data is None or old_data.is_empty():
+            logger.debug(f"merge_with_previous for {new_data.anchor}: no old data or empty, using new data only")
             merged_data = new_data
         else:
             # Merge using class-specific implementation
+            logger.debug(
+                f"merge_with_previous for {new_data.anchor}: merging {old_data.__class__.__name__} with {new_data.__class__.__name__}"
+            )
             merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
+            logger.debug(f"merge_with_previous for {new_data.anchor}: merge completed")
         return merged_data
 
     def finalize_df(self, df: pl.DataFrame) -> pl.DataFrame:
