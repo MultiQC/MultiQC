@@ -291,7 +291,6 @@ class LoadMultiqcData(BaseMultiqcModule):
                                             merged_content = existing_section.content
 
                                     # Preserve plot-related attributes from whichever section has them
-                                    merged_plot = new_section.plot or existing_section.plot
                                     merged_plot_anchor = new_section.plot_anchor or existing_section.plot_anchor
 
                                     # Create merged section with combined content
@@ -306,7 +305,6 @@ class LoadMultiqcData(BaseMultiqcModule):
                                         comment=new_section.comment,
                                         helptext=new_section.helptext,
                                         content_before_plot=new_section.content_before_plot,
-                                        plot=merged_plot,  # Use merged plot
                                         content=merged_content,
                                         print_section=new_section.print_section,
                                         plot_anchor=merged_plot_anchor,  # Use merged plot_anchor
@@ -354,9 +352,9 @@ class LoadMultiqcData(BaseMultiqcModule):
             # Load data sources
             if "data_sources" in metadata:
                 for mod_id, source_dict in metadata["data_sources"].items():
-                    for section, sources in source_dict.items():
+                    for section_name, sources in source_dict.items():
                         for sname, source in sources.items():
-                            report.data_sources[mod_id][section][sname] = source
+                            report.data_sources[mod_id][section_name][sname] = source
 
             # Set creation date
             if "creation_date" in metadata:
@@ -400,7 +398,7 @@ class LoadMultiqcData(BaseMultiqcModule):
                             log.debug(f"Successfully merged plot input data for {anchor}")
 
                             # Create the plot object from the merged data (this ensures proper color assignment)
-                            merged_plot = create_plot_from_input_data(merged_plot_input)
+                            merged_plot: Union[Plot, str, None] = create_plot_from_input_data(merged_plot_input)
                             if merged_plot is not None:
                                 report.plot_by_id[anchor] = merged_plot
                                 log.debug(f"Updated plot object for {anchor} with merged data")
