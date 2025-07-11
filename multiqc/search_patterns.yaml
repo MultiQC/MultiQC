@@ -908,6 +908,9 @@ samtools/markdup_json:
   num_lines: 10
 sargasso:
   fn: "overall_filtering_summary.txt"
+seqfu/stats:
+  contents: "File	#Seq	Total bp	Avg	N50	N75	N90	auN	Min	Max"
+  num_lines: 1
 seqwho:
   contents: '  "Per Base Seq": ['
   num_lines: 10

@@ -578,6 +578,7 @@ module_order:
   - skewer
   - sortmerna
   - biobloomtools
+  - seqfu
   - fastq_screen
   - afterqc
   - fastp
