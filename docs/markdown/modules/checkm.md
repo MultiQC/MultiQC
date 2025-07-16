@@ -2,7 +2,7 @@
 title: CheckM
 displayed_sidebar: multiqcSidebar
 description: >
-  Estimates genome completeness and contamination based on the presence or absence of marker genes
+  Estimates genome completeness and contamination based on the presence or absence of marker genes.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/checkm/checkm.py
 -->
 
 :::note
-Estimates genome completeness and contamination based on the presence or absence of marker genes
+Estimates genome completeness and contamination based on the presence or absence of marker genes.
 
 [https://github.com/Ecogenomics/CheckM](https://github.com/Ecogenomics/CheckM)
 :::

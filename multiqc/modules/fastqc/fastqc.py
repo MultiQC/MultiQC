@@ -644,9 +644,9 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "colors": self.get_status_cols("per_base_sequence_quality"),
                     "y_bands": [
-                        {"from": 28, "to": 100, "color": "#c3e6c3"},
-                        {"from": 20, "to": 28, "color": "#e6dcc3"},
-                        {"from": 0, "to": 20, "color": "#e6c3c3"},
+                        {"from": 28, "to": 100, "color": "#009500", "opacity": 0.13},
+                        {"from": 20, "to": 28, "color": "#a07300", "opacity": 0.13},
+                        {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
                     ],
                 }
             )
@@ -698,9 +698,9 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "colors": self.get_status_cols("per_sequence_quality_scores"),
                     "x_bands": [
-                        {"from": 28, "to": 100, "color": "#c3e6c3"},
-                        {"from": 20, "to": 28, "color": "#e6dcc3"},
-                        {"from": 0, "to": 20, "color": "#e6c3c3"},
+                        {"from": 28, "to": 100, "color": "#009500", "opacity": 0.13},
+                        {"from": 20, "to": 28, "color": "#a07300", "opacity": 0.13},
+                        {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
                     ],
                 }
             )
@@ -966,9 +966,9 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "colors": self.get_status_cols("per_base_n_content"),
                     "y_bands": [
-                        {"from": 20, "to": 100, "color": "#e6c3c3"},
-                        {"from": 5, "to": 20, "color": "#e6dcc3"},
-                        {"from": 0, "to": 5, "color": "#c3e6c3"},
+                        {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},
+                        {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},
+                        {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},
                     ],
                 }
             )
@@ -1321,13 +1321,13 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
-            "series_label": "samples x adapters",
+            "series_label": "sample-adapter combinations",
         }
         if status_checks:
             pconfig["y_bands"] = [
-                {"from": 20, "to": 100, "color": "#e6c3c3"},
-                {"from": 5, "to": 20, "color": "#e6dcc3"},
-                {"from": 0, "to": 5, "color": "#c3e6c3"},
+                {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},
+                {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},
             ]
 
         plot = None

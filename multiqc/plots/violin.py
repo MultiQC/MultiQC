@@ -867,7 +867,7 @@ class Dataset(BaseDataset):
                     elif isinstance(fmt, str):
                         try:
                             value = fmt.format(value)
-                        except ValueError:
+                        except (ValueError, KeyError):
                             logger.info(f"Value {value} failed to format with {fmt=}")
                 row.append(str(value))
             result += f"|{pseudonym}|" + "|".join(row) + "|\n"
@@ -904,7 +904,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         model: Plot[Dataset, TableConfig] = Plot.initialize(
             plot_type=PlotType.VIOLIN,
             pconfig=dt.pconfig,
-            n_samples_per_dataset=[len(ds_samples)],
+            n_series_per_dataset=[len(ds_samples)],
             id=dt.id,
             anchor=anchor,
             default_tt_label=": %{x}",

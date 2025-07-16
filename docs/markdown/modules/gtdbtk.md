@@ -2,7 +2,7 @@
 title: GTDB-Tk
 displayed_sidebar: multiqcSidebar
 description: >
-  Assigns objective taxonomic classifications to bacterial and archaeal genomes
+  Assigns objective taxonomic classifications to bacterial and archaeal genomes.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/gtdbtk/gtdbtk.py
 -->
 
 :::note
-Assigns objective taxonomic classifications to bacterial and archaeal genomes
+Assigns objective taxonomic classifications to bacterial and archaeal genomes.
 
 [https://ecogenomics.github.io/GTDBTk/index.html](https://ecogenomics.github.io/GTDBTk/index.html)
 :::

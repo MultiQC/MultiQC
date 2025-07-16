@@ -505,17 +505,21 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
         xcats: List[Union[str, int]],
         ycats: List[Union[str, int]],
     ) -> "HeatmapPlot":
-        max_n_samples = 0
+        max_n_rows = 0
+        max_n_cols = 0
         if rows:
-            max_n_samples = len(rows)
+            max_n_rows = len(rows)
             if len(rows[0]) > 0:
-                max_n_samples = max(max_n_samples, len(rows[0]))
+                max_n_cols = max(max_n_cols, len(rows[0]))
+
+        n_samples = max_n_cols if pconfig.xcats_samples else (max_n_rows if pconfig.ycats_samples else 0)
 
         model: Plot[Dataset, HeatmapConfig] = Plot.initialize(
             plot_type=PlotType.HEATMAP,
             pconfig=pconfig,
             anchor=anchor,
-            n_samples_per_dataset=[max_n_samples],
+            n_series_per_dataset=[max_n_rows],
+            n_samples_per_dataset=[n_samples],
             defer_render_if_large=False,  # We hide samples on large heatmaps, so no need to defer render
             flat_if_very_large=True,  # However, the data is still embedded into the HTML, and we don't want the report size to inflate
         )
@@ -721,17 +725,17 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                 f"""
                 <div class="btn-group" role="group">
                     <button
-                        type="button" 
-                        class="btn btn-default btn-sm {"" if self.pconfig.cluster_switch_clustered_active else "active"}" 
-                        data-action="unclustered" 
+                        type="button"
+                        class="btn btn-default btn-sm {"" if self.pconfig.cluster_switch_clustered_active else "active"}"
+                        data-action="unclustered"
                         data-plot-anchor="{self.anchor}"
                     >
                         Sorted by sample
                     </button>
                     <button
-                        type="button" 
-                        class="btn btn-default btn-sm {"active" if self.pconfig.cluster_switch_clustered_active else ""}" 
-                        data-action="clustered" 
+                        type="button"
+                        class="btn btn-default btn-sm {"active" if self.pconfig.cluster_switch_clustered_active else ""}"
+                        data-action="clustered"
                         data-plot-anchor="{self.anchor}"
                     >
                         Clustered

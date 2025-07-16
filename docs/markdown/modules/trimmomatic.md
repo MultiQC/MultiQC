@@ -2,7 +2,7 @@
 title: Trimmomatic
 displayed_sidebar: multiqcSidebar
 description: >
-  Read trimming tool for Illumina NGS data
+  Read trimming tool for Illumina NGS data.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/trimmomatic/trimmomati
 -->
 
 :::note
-Read trimming tool for Illumina NGS data
+Read trimming tool for Illumina NGS data.
 
 [http://www.usadellab.org/cms/?page=trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
 :::
@@ -31,9 +31,10 @@ the command line used by Trimmomatic. If you prefer, you can tell the module to 
 the filenames as sample names instead. To do so, use the following config option:
 
 ```yaml
-trimmomatic:
-  s_name_filenames: true
+use_filename_as_sample_name: true
 ```
+
+Note: The old `trimmomatic.s_name_filenames` option is deprecated and will be removed in a future version.
 
 ### File search patterns
 

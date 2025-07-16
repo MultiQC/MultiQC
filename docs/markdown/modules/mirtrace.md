@@ -2,7 +2,7 @@
 title: miRTrace
 displayed_sidebar: multiqcSidebar
 description: >
-  Quality control for small RNA sequencing data
+  Quality control for small RNA sequencing data.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/mirtrace/mirtrace.py
 -->
 
 :::note
-Quality control for small RNA sequencing data
+Quality control for small RNA sequencing data.
 
 [https://github.com/friedlanderlab/mirtrace](https://github.com/friedlanderlab/mirtrace)
 :::

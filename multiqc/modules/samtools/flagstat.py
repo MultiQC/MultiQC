@@ -5,7 +5,6 @@ from typing import Dict
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import violin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 

@@ -70,6 +70,7 @@ class ScatterPlot extends Plot {
       };
       params.marker.opacity = point["opacity"] ?? params.marker.opacity;
       params.marker.color = point["color"] ?? params.marker.color;
+      params.marker.symbol = point["marker_symbol"] ?? params.marker.symbol;
       if (highlighted.length > 0) params.marker.color = point.highlight ?? "#cccccc";
 
       return {

@@ -66,7 +66,7 @@ make_pdf: false
 # AI settings:
 ai_summary: false
 ai_summary_full: false
-ai_provider: "seqera"
+ai_provider: null
 ai_model: null
 ai_custom_endpoint: null
 ai_auth_type: null
@@ -77,6 +77,10 @@ ai_prompt_short: null
 ai_prompt_full: null
 no_ai: false
 ai_anonymize_samples: false
+ai_reasoning_effort: null # Reasoning effort level for OpenAI reasoning models (low, medium, high)
+ai_max_completion_tokens: null # Maximum completion tokens for OpenAI reasoning models
+ai_extended_thinking: false # Enable extended thinking for Anthropic Claude 4 models
+ai_thinking_budget_tokens: null # Budget tokens for Anthropic extended thinking
 
 # Development settings:
 seqera_api_url: "https://intern.seqera.io"
@@ -87,9 +91,13 @@ plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false
 plots_flat_numseries: 2000
 plots_defer_loading_numseries: 100 # plot will require user to press button to render plot
+plot_theme: null # Plotly theme template - any registered Plotly theme name (e.g. "plotly", "plotly_white", "plotly_dark", "ggplot2", "seaborn", "simple_white", "none")
 num_datasets_plot_limit: 100 # DEPRECATED in favour of plots_defer_loading_numseries
 lineplot_number_of_points_to_hide_markers: 50 # sum of data points in all samples
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
+boxplot_boxpoints: "outliers" # box plot outlier display: "outliers", "all", "suspectedoutliers", or false
+box_min_threshold_outliers: 100 # for more than this number of samples, show only outliers
+box_min_threshold_no_points: 1000 # for more than this number of samples, show no points
 violin_downsample_after: 2000 # downsample data for violin plot starting from this number os samples
 violin_min_threshold_outliers: 100 # for more than this number of samples, show only outliers
 violin_min_threshold_no_points: 1000 # for more than this number of samples, show no points
@@ -205,7 +213,16 @@ custom_content:
 fn_clean_sample_names: true
 
 # Option to use the filename as the sample name if desired
-# Set to True to apply for all modules. Define a list of search pattern keys to be specific.
+# Set to True to apply for all modules. Define a list of module/search pattern keys to be specific.
+# Examples:
+# use_filename_as_sample_name: true  # Apply to all modules
+# use_filename_as_sample_name:       # Apply to specific modules/patterns
+#   - verifybamid
+#   - verifybamid/selfsm
+#   - prokka
+#   - trimmomatic
+#   - fastp
+#   - picard
 use_filename_as_sample_name: false
 
 # Used for cleaning sample names. Should be strings.

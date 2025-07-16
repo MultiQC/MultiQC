@@ -2,7 +2,7 @@
 title: MACS2
 displayed_sidebar: multiqcSidebar
 description: >
-  Identifies transcription factor binding sites in ChIP-seq data
+  Identifies transcription factor binding sites in ChIP-seq data.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/macs2/macs2.py
 -->
 
 :::note
-Identifies transcription factor binding sites in ChIP-seq data
+Identifies transcription factor binding sites in ChIP-seq data.
 
 [https://macs3-project.github.io/MACS/](https://macs3-project.github.io/MACS/)
 :::

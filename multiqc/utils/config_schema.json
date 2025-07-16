@@ -1352,6 +1352,48 @@
       "description": "Place bar plot legend at the bottom (not recommended)",
       "title": "Barplot Legend On Bottom"
     },
+    "boxplot_boxpoints": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Boxplot boxpoints setting",
+      "title": "Boxplot Boxpoints"
+    },
+    "box_min_threshold_outliers": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "For more than this number of samples, show only outliers",
+      "title": "Box Min Threshold Outliers"
+    },
+    "box_min_threshold_no_points": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "For more than this number of samples, show no points",
+      "title": "Box Min Threshold No Points"
+    },
     "violin_downsample_after": {
       "anyOf": [
         {
@@ -2204,11 +2246,17 @@
           "type": "boolean"
         },
         {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
           "type": "null"
         }
       ],
-      "default": null,
-      "description": "Use filename as sample name",
+      "default": false,
+      "description": "Use filename as sample name (can be bool for all modules or list for specific modules/patterns)",
       "title": "Use Filename As Sample Name"
     },
     "fn_clean_exts": {

@@ -2,7 +2,7 @@
 title: DRAGEN
 displayed_sidebar: multiqcSidebar
 description: >
-  Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
+  Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/dragen/dragen.py
 -->
 
 :::note
-Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
+Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data.
 
 [https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
 :::

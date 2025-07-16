@@ -2,7 +2,7 @@
 title: Xenome
 displayed_sidebar: multiqcSidebar
 description: >
-  Classifies reads from xenograft sources
+  Classifies reads from xenograft sources.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/xenome/xenome.py
 -->
 
 :::note
-Classifies reads from xenograft sources
+Classifies reads from xenograft sources.
 
 [https://github.com/data61/gossamer/blob/master/docs/xenome.md](https://github.com/data61/gossamer/blob/master/docs/xenome.md)
 :::

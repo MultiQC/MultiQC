@@ -5,7 +5,7 @@ Generated from the config defaults and type hints.
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 AiProviderLiteral = Literal["seqera", "openai", "anthropic", "aws_bedrock", "custom"]
 
@@ -138,6 +138,16 @@ class MultiQCConfig(BaseModel):
     )
     no_ai: Optional[bool] = Field(None, description="Disable AI")
     ai_anonymize_samples: Optional[bool] = Field(None, description="Anonymize samples")
+    ai_reasoning_effort: Optional[str] = Field(
+        None, description="Reasoning effort level for OpenAI reasoning models (low, medium, high)"
+    )
+    ai_max_completion_tokens: Optional[int] = Field(
+        None, description="Maximum completion tokens for OpenAI reasoning models"
+    )
+    ai_extended_thinking: Optional[bool] = Field(
+        None, description="Enable extended thinking for Anthropic Claude 4 models"
+    )
+    ai_thinking_budget_tokens: Optional[int] = Field(None, description="Budget tokens for Anthropic extended thinking")
 
     seqera_api_url: Optional[str] = Field(None, description="Seqera API URL")
     seqera_website: Optional[str] = Field(None, description="Seqera website")
@@ -149,11 +159,23 @@ class MultiQCConfig(BaseModel):
     plots_defer_loading_numseries: Optional[int] = Field(
         None, description="Number of series to defer loading - user will need to press button to render plot"
     )
+    plot_theme: Optional[str] = Field(
+        None,
+        description="Plotly theme template - any registered Plotly theme name "
+        "(e.g. 'plotly', 'plotly_white', 'plotly_dark', 'ggplot2', 'seaborn', 'simple_white', 'none')",
+    )
     lineplot_number_of_points_to_hide_markers: Optional[int] = Field(
         None, description="Number of points to hide markers - sum of data points in all samples"
     )
     barplot_legend_on_bottom: Optional[bool] = Field(
         None, description="Place bar plot legend at the bottom (not recommended)"
+    )
+    boxplot_boxpoints: Optional[Union[str, bool]] = Field(None, description="Boxplot boxpoints setting")
+    box_min_threshold_outliers: Optional[int] = Field(
+        None, description="For more than this number of samples, show only outliers"
+    )
+    box_min_threshold_no_points: Optional[int] = Field(
+        None, description="For more than this number of samples, show no points"
     )
     violin_downsample_after: Optional[int] = Field(
         None, description="Downsample data for violin plot starting from this number os samples"
@@ -232,7 +254,10 @@ class MultiQCConfig(BaseModel):
     filesearch_file_shared: Optional[List[str]] = Field(None, description="Filesearch file shared")
     custom_content: Optional[Dict[str, Any]] = Field(None, description="Custom content")
     fn_clean_sample_names: Optional[bool] = Field(None, description="Clean sample names")
-    use_filename_as_sample_name: Optional[bool] = Field(None, description="Use filename as sample name")
+    use_filename_as_sample_name: Optional[Union[bool, List[str]]] = Field(
+        False,
+        description="Use filename as sample name (can be bool for all modules or list for specific modules/patterns)",
+    )
     fn_clean_exts: Optional[List[Union[str, CleanPattern]]] = Field(
         None, description="Extensions to clean from sample names"
     )
@@ -249,16 +274,15 @@ class MultiQCConfig(BaseModel):
         None, description="Search patterns for finding tool outputs"
     )
 
-    class Config:
-        extra = "allow"  # Allow additional fields that aren't in the schema
+    model_config = ConfigDict(extra="allow")  # Allow additional fields that aren't in the schema
 
     parquet_format: Optional[Literal["long", "wide"]] = Field(
         None,
-        description="""Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw', 
-        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast, 
-        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to 
+        description="""Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw',
+        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast,
+        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to
         for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as
-        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column 
+        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column
         to have a single type).
         """,
     )

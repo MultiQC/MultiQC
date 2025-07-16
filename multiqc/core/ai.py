@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import math
 import os
 import re
 from textwrap import indent
@@ -18,6 +19,33 @@ from multiqc.types import Anchor, SampleName
 from multiqc.utils import config_schema
 
 logger = logging.getLogger(__name__)
+
+# List of known reasoning models
+REASONING_MODELS = {
+    # OpenAI reasoning models
+    "o1",
+    "o1-preview",
+    "o1-mini",
+    "o3",
+    "o3-mini",
+    "o3-pro",
+    "o4-mini",
+    # Anthropic Claude 4 series (extended thinking models)
+    "claude-3-7-sonnet-latest",
+    "claude-sonnet-4-0",
+    "claude-haiku-4-0",
+    "claude-opus-4-0",
+}
+
+
+def is_reasoning_model(model_name: str) -> bool:
+    """Check if a model is a reasoning model based on its name."""
+    if not model_name:
+        return False
+
+    # Check if model name starts with any of the reasoning model prefixes
+    model_lower = model_name.lower()
+    return any(model_lower.startswith(prefix) for prefix in REASONING_MODELS)
 
 
 _MULTIQC_DESCRIPTION = """\
@@ -180,13 +208,8 @@ class Client:
         self.title: str
         self.model: str
         self.api_key: Optional[str] = api_key
-
-        self.prompt_short = PROMPT_SHORT
-        if config.ai_prompt_short is not None:
-            self.prompt_short = config.ai_prompt_short
-        self.prompt_full = PROMPT_FULL
-        if config.ai_prompt_full is not None:
-            self.prompt_full = config.ai_prompt_full
+        self.prompt_short = config.ai_prompt_short or PROMPT_SHORT
+        self.prompt_full = config.ai_prompt_full or PROMPT_FULL
 
     def _query(self, prompt: str):
         raise NotImplementedError
@@ -304,26 +327,104 @@ class OpenAiClient(Client):
             self.title = "OpenAI"
 
     def max_tokens(self) -> int:
-        return config.ai_custom_context_window or 128000
+        if config.ai_custom_context_window:
+            return config.ai_custom_context_window
+
+        # Reasoning models have different context windows
+        if is_reasoning_model(self.model):
+            if self.model.startswith("o1-preview") or self.model.startswith("o1-mini"):
+                return 128000  # o1-preview and o1-mini have 128k context
+            elif (
+                self.model.startswith("claude-opus-4")
+                or self.model.startswith("claude-sonnet-4")
+                or self.model.startswith("claude-haiku-4")
+            ):
+                return 200000  # Claude 4 series have 200k context
+            else:
+                return 200000  # Other reasoning models (o3, o4-mini) have 200k context
+
+        return 128000  # Default for regular models
 
     class ApiResponse(NamedTuple):
         content: str
         model: str
 
     def _query(self, prompt: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
-        body: Dict[str, Any] = {
-            "temperature": 0.0,
-        }
+        is_reasoning = is_reasoning_model(self.model)
+
+        if is_reasoning:
+            logger.debug(f"Using reasoning model: {self.model}")
+
+        body: Dict[str, Any] = {}
+
+        # For reasoning models, don't include temperature and other unsupported parameters
+        if not is_reasoning:
+            body["temperature"] = 0.0
+
         if config.ai_extra_query_options:
             body.update(config.ai_extra_query_options)
         if extra_options:
             body.update(extra_options)
+
+        # Set up messages - reasoning models benefit from developer messages
+        messages = []
+        if is_reasoning:
+            # Add developer message to encourage proper formatting for reasoning models
+            messages.append(
+                {
+                    "role": "developer",
+                    "content": "You are a helpful assistant expert in bioinformatics. Please provide clear, well-formatted responses using markdown where appropriate.",
+                }
+            )
+
+        messages.append({"role": "user", "content": prompt})
+
         body.update(
             {
                 "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": messages,
             }
         )
+
+        # For OpenAI reasoning models, use max_completion_tokens and reasoning effort
+        # Note: Claude 4 series are also reasoning models but may use different parameters
+        if is_reasoning and not (
+            self.model.startswith("claude-opus-4")
+            or self.model.startswith("claude-sonnet-4")
+            or self.model.startswith("claude-haiku-4")
+        ):
+            # Use config or reasonable default for max_completion_tokens
+            max_completion_tokens = config.ai_max_completion_tokens or 4000
+            if config.ai_extra_query_options and "max_completion_tokens" in config.ai_extra_query_options:
+                max_completion_tokens = config.ai_extra_query_options["max_completion_tokens"]
+
+            body["max_completion_tokens"] = max_completion_tokens
+
+            # Add reasoning effort parameter - use config or default to medium
+            reasoning_effort = config.ai_reasoning_effort or "medium"
+            if config.ai_extra_query_options and "reasoning_effort" in config.ai_extra_query_options:
+                reasoning_effort = config.ai_extra_query_options["reasoning_effort"]
+
+            body["reasoning_effort"] = reasoning_effort
+            logger.debug(
+                f"OpenAI reasoning model parameters: max_completion_tokens={max_completion_tokens}, reasoning_effort={reasoning_effort}"
+            )
+        elif is_reasoning and (
+            self.model.startswith("claude-opus-4")
+            or self.model.startswith("claude-sonnet-4")
+            or self.model.startswith("claude-haiku-4")
+        ):
+            # Claude 4 reasoning models - use extended thinking if enabled
+            if config.ai_extended_thinking:
+                thinking_budget_tokens = config.ai_thinking_budget_tokens or 10000
+                if config.ai_extra_query_options and "thinking_budget_tokens" in config.ai_extra_query_options:
+                    thinking_budget_tokens = config.ai_extra_query_options["thinking_budget_tokens"]
+
+                body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens}
+                logger.debug(f"Claude 4 model with extended thinking enabled: budget_tokens={thinking_budget_tokens}")
+            else:
+                logger.debug("Claude 4 model without extended thinking (ai_extended_thinking=False)")
+
         if config.ai_auth_type == "api-key":
             headers = {
                 "Content-Type": "application/json",
@@ -349,7 +450,7 @@ class AnthropicClient(Client):
     def __init__(self, api_key: str):
         super().__init__(api_key)
         self.model = (
-            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-3-5-sonnet-latest"
+            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-sonnet-4-0"
         )
         self.name = "anthropic"
         self.title = "Anthropic"
@@ -387,16 +488,22 @@ class AnthropicClient(Client):
 class AWSBedrockClient(Client):
     def __init__(self):
         super().__init__()
-        try:
-            import boto3  # type: ignore
-        except ImportError:
-            raise ImportError(
-                'AI summary through AWS bedrock requires "boto3" to be installed. Install it with `pip install boto`'
-            )
+
+        # Check Bedrock availability with detailed error reporting
+        is_available, error_msg = _check_bedrock_availability()
+        if not is_available:
+            if "boto3 not installed" in str(error_msg):
+                raise ImportError(
+                    'AI summary through AWS bedrock requires "boto3" to be installed. Install it with `pip install boto3`'
+                )
+            else:
+                raise RuntimeError(f"AWS Bedrock is not available: {error_msg}")
 
         self.model = config.ai_model
         self.name = "aws_bedrock"
         self.title = "AWS Bedrock"
+
+        import boto3  # type: ignore
 
         self.client = boto3.client(service_name="bedrock-runtime")
 
@@ -437,7 +544,7 @@ class SeqeraClient(Client):
         creation_date = report.creation_date.strftime("%d %b %Y, %H:%M %Z")
         self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, created on {creation_date}"
         self.tags = ["multiqc", f"multiqc_version:{config.version}"]
-        self.model = config.ai_model or "claude-3-5-sonnet-latest"
+        self.model = config.ai_model or "claude-sonnet-4-0"
 
     def max_tokens(self) -> int:
         return 200000
@@ -514,33 +621,187 @@ class SeqeraClient(Client):
             raise
 
 
+def check_bedrock_availability() -> Tuple[bool, Optional[str]]:
+    """
+    Public function to check if AWS Bedrock is available and usable.
+    Can be used for diagnostics.
+
+    Returns:
+        Tuple of (is_available, error_message)
+    """
+    return _check_bedrock_availability()
+
+
+def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
+    """
+    Check if AWS Bedrock is available and usable.
+
+    Returns:
+        Tuple of (is_available, error_message)
+    """
+    try:
+        import boto3  # type: ignore
+    except ImportError:
+        return False, "boto3 not installed"
+
+    try:
+        # Create bedrock runtime client
+        client = boto3.client("bedrock-runtime")
+
+        # Get the current region
+        session = boto3.Session()
+        region: Optional[str] = session.region_name
+
+        # If no region is set, try to get it from the client
+        if not region:
+            try:
+                region = client.meta.region_name
+            except Exception:
+                pass
+
+        # If still no region, check environment variable
+        if not region:
+            region = os.environ.get("AWS_DEFAULT_REGION") or os.environ.get("AWS_REGION")
+
+        # Default to us-east-1 if still no region found
+        if not region:
+            region = "us-east-1"
+
+        # Check if Bedrock is available in this region
+        # Bedrock is available in specific regions only (as of 2024)
+        bedrock_regions = {
+            "us-east-1",
+            "us-west-2",
+            "us-gov-west-1",  # US regions
+            "ap-southeast-1",
+            "ap-southeast-2",
+            "ap-northeast-1",
+            "ap-south-1",  # Asia Pacific
+            "eu-central-1",
+            "eu-west-1",
+            "eu-west-3",  # Europe
+            "ca-central-1",  # Canada
+            "sa-east-1",  # South America
+        }
+
+        if region not in bedrock_regions:
+            return False, f"Bedrock not available in region {region}"
+
+        # Try to list available foundation models to verify permissions
+        # This is a read-only operation that should work if user has basic Bedrock access
+        bedrock_client = boto3.client("bedrock", region_name=region)
+        try:
+            response = bedrock_client.list_foundation_models()
+
+            # Get list of available models
+            available_models = [model.get("modelId", "") for model in response.get("modelSummaries", [])]
+
+            # If a specific model is configured, check if it's available
+            if config.ai_model:
+                if config.ai_model not in available_models:
+                    return (
+                        False,
+                        f"Configured model '{config.ai_model}' not available in Bedrock. Available models: {', '.join(available_models)}",
+                    )
+            else:
+                # Check if any Claude models are available (since that's what we typically use)
+                claude_models = [model_id for model_id in available_models if "claude" in model_id.lower()]
+
+                if not claude_models:
+                    return (
+                        False,
+                        f"No Claude models available in Bedrock. Available models: {', '.join(available_models)}",
+                    )
+
+            return True, None
+
+        except Exception as e:
+            if "AccessDenied" in str(e):
+                return False, f"Access denied to Bedrock: {e}"
+            elif "UnauthorizedOperation" in str(e):
+                return False, f"Insufficient permissions for Bedrock: {e}"
+            else:
+                return False, f"Error checking Bedrock permissions: {e}"
+
+    except Exception as e:
+        if "NoCredentialsError" in str(e):
+            return False, "AWS credentials not configured"
+        elif "InvalidAccessKeyId" in str(e):
+            return False, "Invalid AWS credentials"
+        else:
+            return False, f"Error creating Bedrock client: {e}"
+
+
+def _auto_detect_provider() -> Optional[str]:
+    """
+    Auto-detect AI provider based on available environment variables.
+
+    Returns the provider name in order of preference:
+    1. "seqera" if SEQERA_ACCESS_TOKEN or TOWER_ACCESS_TOKEN is set
+    2. "anthropic" if ANTHROPIC_API_KEY is set
+    3. "openai" if OPENAI_API_KEY is set
+    4. "aws_bedrock" if AWS credentials are available
+    5. None if no provider can be detected
+    """
+    # Check for Seqera tokens
+    if os.environ.get("SEQERA_ACCESS_TOKEN") or os.environ.get("TOWER_ACCESS_TOKEN"):
+        return "seqera"
+
+    # Check for Anthropic API key
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return "anthropic"
+
+    # Check for OpenAI API key
+    if os.environ.get("OPENAI_API_KEY"):
+        return "openai"
+
+    # Check for AWS Bedrock availability with improved detection
+    is_available, error_msg = _check_bedrock_availability()
+    if is_available:
+        return "aws_bedrock"
+    elif error_msg and config.verbose:
+        logger.debug(f"AWS Bedrock not available: {error_msg}")
+
+    return None
+
+
 def get_llm_client() -> Optional[Client]:
     if not config.ai_summary:
         return None
 
-    if config.ai_provider == "seqera":
+    # Auto-detect provider if not explicitly set
+    provider = config.ai_provider
+    if provider is None:
+        provider = _auto_detect_provider()
+        if provider is None:
+            raise RuntimeError(
+                "config.ai_summary is set to true, but no AI provider could be detected. "
+                "Please set config.ai_provider explicitly or ensure one of the following environment variables is set: "
+                "SEQERA_ACCESS_TOKEN, TOWER_ACCESS_TOKEN, ANTHROPIC_API_KEY, OPENAI_API_KEY, or configure AWS credentials"
+            )
+        logger.debug(f"Auto-detected AI provider: {provider}")
+
+    if provider == "seqera":
         if api_key := os.environ.get("SEQERA_ACCESS_TOKEN"):
             logger.debug("Using Seqera access token from $SEQERA_ACCESS_TOKEN environment variable")
         elif api_key := os.environ.get("TOWER_ACCESS_TOKEN"):
             logger.debug("Using Seqera access token from TOWER_ACCESS_TOKEN environment variable")
         else:
-            logger.error(
+            raise RuntimeError(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', "
                 "but Seqera access token is not set. "
                 "Please set the SEQERA_ACCESS_TOKEN / TOWER_ACCESS_TOKEN environment variable "
                 "or change config.ai_provider"
             )
-            return None
         return SeqeraClient(api_key)
 
-    elif config.ai_provider == "anthropic":
+    elif provider == "anthropic":
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
-            logger.error(
+            raise RuntimeError(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'anthropic', but Anthropic API "
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
-            return None
         logger.debug("Using Anthropic API key from ANTHROPIC_API_KEY environment variable")
         try:
             return AnthropicClient(api_key)
@@ -549,14 +810,13 @@ def get_llm_client() -> Optional[Client]:
                 'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[anthropic]"`'
             )
 
-    elif config.ai_provider == "openai":
+    elif provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
-            logger.error(
+            raise RuntimeError(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'openai', but OpenAI API "
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
-            return None
         logger.debug("Using OpenAI API key from OPENAI_API_KEY environment variable")
         try:
             return OpenAiClient(api_key)
@@ -565,7 +825,7 @@ def get_llm_client() -> Optional[Client]:
                 'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"`'
             )
 
-    elif config.ai_provider == "aws_bedrock":
+    elif provider == "aws_bedrock":
         try:
             return AWSBedrockClient()
         except ModuleNotFoundError:
@@ -573,14 +833,13 @@ def get_llm_client() -> Optional[Client]:
                 'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[aws_bedrock]"`'
             )
 
-    elif config.ai_provider == "custom":
+    elif provider == "custom":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
-            logger.error(
+            raise RuntimeError(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but OpenAI API "
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
-            return None
         if not config.ai_model:
             raise ValueError(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_model is provided. Please set config.ai_model"
@@ -595,11 +854,9 @@ def get_llm_client() -> Optional[Client]:
         return OpenAiClient(api_key=api_key, endpoint=config.ai_custom_endpoint)
     else:
         avail_providers = config_schema.AiProviderLiteral.__args__  # type: ignore
-        msg = f'Unknown AI provider "{config.ai_provider}". Please set config.ai_provider to one of the following: [{", ".join(avail_providers)}]'
-        if config.strict:
-            raise RuntimeError(msg)
-        logger.error(msg + ". Skipping AI summary")
-        return None
+        raise RuntimeError(
+            f'Unknown AI provider "{provider}". Please set config.ai_provider to one of the following: [{", ".join(avail_providers)}]'
+        )
 
 
 def _strip_html(text: str) -> str:
@@ -693,14 +950,12 @@ def deanonymize_sample_names(text: str) -> str:
     return text
 
 
-def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]:
-    system_prompt = client.prompt_full if config.ai_summary_full else client.prompt_short
-
+def build_prompt(metadata: AiReportMetadata, system_prompt, client: Optional[Client] = None) -> Tuple[str, bool]:
     # Account for system message, plus leave 10% buffer
-    max_tokens = client.max_tokens()
+    max_tokens = client.max_tokens() if client is not None else math.inf
 
     user_prompt: str = ""
-    current_n_tokens = client.n_tokens(system_prompt)
+    current_n_tokens = client.n_tokens(system_prompt) if client is not None else 0
 
     # Details about modules used in the report - include first in the prompt
     tools_context: str = ""
@@ -724,26 +979,27 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
     MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
     {general_stats_plot.format_for_ai_prompt()}
     """
-            genstats_n_tokens = client.n_tokens(genstats_context)
-            if current_n_tokens + genstats_n_tokens > max_tokens:
-                # If it's too long already, try without hidden columns
-                genstats_context = f"""
-    MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-    {general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
-    """
-                genstats_n_tokens = client.n_tokens(genstats_context)
+            if client is not None:
+                genstats_n_tokens = client.n_tokens(genstats_context) if client is not None else 0
                 if current_n_tokens + genstats_n_tokens > max_tokens:
-                    logger.debug(
-                        f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
-                        f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
-                        "AI summary will not be generated. Try hiding some columns in the general stats table "
-                        "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context. "
-                        "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
-                        "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
-                    )
-                    return user_prompt + genstats_context, True
-            user_prompt += genstats_context
-            current_n_tokens += genstats_n_tokens
+                    # If it's too long already, try without hidden columns
+                    genstats_context = f"""
+        MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
+        {general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
+        """
+                    genstats_n_tokens = client.n_tokens(genstats_context)
+                    if current_n_tokens + genstats_n_tokens > max_tokens:
+                        logger.debug(
+                            f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
+                            f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
+                            "AI summary will not be generated. Try hiding some columns in the general stats table "
+                            "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context. "
+                            "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
+                            "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
+                        )
+                        return user_prompt + genstats_context, True
+                user_prompt += genstats_context
+                current_n_tokens += genstats_n_tokens
 
     user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
 
@@ -776,24 +1032,24 @@ def build_prompt(client: Client, metadata: AiReportMetadata) -> Tuple[str, bool]
 
         # Check if adding this section would exceed the limit
         # Using rough estimate of 4 chars per token
-        sec_n_tokens = client.n_tokens(sec_context)
-        if current_n_tokens + sec_n_tokens > max_tokens:
-            logger.debug(
-                f"Including only General Statistics table to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
-                f"Tokens estimate: {current_n_tokens}, with sections: {current_n_tokens + sec_n_tokens}"
-            )
-            return user_prompt, False
+        if client is not None:
+            sec_n_tokens = client.n_tokens(sec_context)
+            if current_n_tokens + sec_n_tokens > max_tokens:
+                logger.debug(
+                    f"Including only General Statistics table to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
+                    f"Tokens estimate: {current_n_tokens}, with sections: {current_n_tokens + sec_n_tokens}"
+                )
+                return user_prompt, False
 
     user_prompt += sec_context
     user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
     return user_prompt, False
 
 
-def _save_prompt_to_file(client: Client, prompt: str):
+def _save_prompt_to_file(system_prompt: str, prompt: str):
     """Save content to file for debugging"""
-    path = report.data_tmp_dir() / "multiqc_ai_prompt.txt"
-    system_prompt = client.prompt_full if config.ai_summary_full else client.prompt_short
-    path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}")
+    path = report.data_tmp_dir() / "llms-full.txt"
+    path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}", encoding="utf-8")
     logger.debug(f"Saved AI prompt to {path.parent.name}/{path.name}")
 
 
@@ -810,22 +1066,27 @@ def add_ai_summary_to_report():
     # because JS runtime might need it even if Python runtime doesn't
     report.ai_pseudonym_map_base64 = base64.b64encode(json.dumps(report.ai_pseudonym_map).encode()).decode()
 
+    system_prompt_short = config.ai_prompt_short or PROMPT_SHORT
+    system_prompt_full = config.ai_prompt_full or PROMPT_FULL
+    system_prompt = system_prompt_full if config.ai_summary_full else system_prompt_short
+
     # Now that everything for JS runtime is set, we only continue if static summaries are requested
     if not config.ai_summary:
-        # Not generating report in Python, leaving for JS runtime
+        # Not generating report in Python, leaving for JS runtime, but saving full and complete prompt to llms-full.txt file
+        prompt, _ = build_prompt(metadata, system_prompt)
+        _save_prompt_to_file(system_prompt, prompt)
         return
 
-    if not (client := get_llm_client()):
-        return
+    # get_llm_client() will raise an exception if configuration is invalid when ai_summary=True
+    client = get_llm_client()
+    assert client is not None, "get_llm_client() should not return None when config.ai_summary is True"
 
     report.ai_provider_id = client.name
     report.ai_provider_title = client.title
     report.ai_model = client.model
 
-    prompt, exceeded_context_window = build_prompt(client, metadata)
-
-    _save_prompt_to_file(client, prompt)
-
+    prompt, exceeded_context_window = build_prompt(metadata, system_prompt, client)
+    _save_prompt_to_file(system_prompt, prompt)
     if exceeded_context_window:
         return
 

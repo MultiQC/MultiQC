@@ -2,7 +2,7 @@
 title: iVar
 displayed_sidebar: multiqcSidebar
 description: >
-  Functions for viral amplicon-based sequencing
+  Functions for viral amplicon-based sequencing.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/ivar/ivar.py
 -->
 
 :::note
-Functions for viral amplicon-based sequencing
+Functions for viral amplicon-based sequencing.
 
 [https://github.com/andersen-lab/ivar](https://github.com/andersen-lab/ivar)
 :::

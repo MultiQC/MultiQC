@@ -43,6 +43,34 @@ logger = logging.getLogger(__name__)
 
 check_plotly_version()
 
+# Create and register MultiQC default Plotly template
+multiqc_plotly_template = dict(
+    layout=go.Layout(
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
+        colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
+        xaxis=dict(
+            gridcolor="rgba(0,0,0,0.05)",
+            zerolinecolor="rgba(0,0,0,0.05)",
+            color="rgba(0,0,0,0.3)",  # axis labels
+            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
+        ),
+        yaxis=dict(
+            gridcolor="rgba(0,0,0,0.05)",
+            zerolinecolor="rgba(0,0,0,0.05)",
+            color="rgba(0,0,0,0.3)",  # axis labels
+            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
+        ),
+        title=dict(font=dict(size=20)),
+        modebar=dict(
+            bgcolor="rgba(0, 0, 0, 0)",
+            color="rgba(0, 0, 0, 0.5)",
+            activecolor="rgba(0, 0, 0, 1)",
+        ),
+    )
+)
+
 
 class FlatLine(ValidatedConfig):
     """
@@ -85,6 +113,7 @@ class LineBand(ValidatedConfig):
     from_: Union[float, int]
     to: Union[float, int]
     color: Optional[str] = None
+    opacity: float = Field(1.0, ge=0.0, le=1.0)
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
         path_in_cfg = path_in_cfg or ("LineBand",)
@@ -248,7 +277,7 @@ class BaseDataset(BaseModel):
     layout: Dict[str, Any]  # update when a datasets toggle is clicked, or percentage switch is unselected
     trace_params: Dict[str, Any]
     pct_range: Dict[str, Any]
-    n_samples: int
+    n_series: int
 
     def sample_names(self) -> List[SampleName]:
         raise NotImplementedError
@@ -312,7 +341,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
     Represents normalized input data for a plot.
 
     Plot input data is normalized, but enough data is preseverd to merge plots across
-    multiple samples. Plot objects might post-process and re-summarize the data
+    multiple series. Plot objects might post-process and re-summarize the data
     before creating plot datasets.
     """
 
@@ -387,11 +416,17 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         # Try to load previous data (empty or unloadable means no data from previous run)
         old_data = report.plot_input_data.get(new_data.anchor)
+        logger.debug(f"merge_with_previous for {new_data.anchor}: found old_data = {old_data is not None}")
         if old_data is None or old_data.is_empty():
+            logger.debug(f"merge_with_previous for {new_data.anchor}: no old data or empty, using new data only")
             merged_data = new_data
         else:
             # Merge using class-specific implementation
+            logger.debug(
+                f"merge_with_previous for {new_data.anchor}: merging {old_data.__class__.__name__} with {new_data.__class__.__name__}"
+            )
             merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
+            logger.debug(f"merge_with_previous for {new_data.anchor}: merge completed")
         return merged_data
 
     def finalize_df(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -402,7 +437,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         return plot_data_store.fix_creation_date(
             df.with_columns(
                 pl.lit(str(self.anchor)).alias("anchor"),
-                pl.lit(self.creation_date).alias("creation_date"),
+                pl.lit(self.creation_date.replace(tzinfo=None)).alias("creation_date"),
                 pl.lit("plot_input_row").alias("type"),
                 pl.lit(str(self.plot_type.value)).alias("plot_type"),
                 pl.lit(self.pconfig.model_dump_json(exclude_none=True)).alias("pconfig"),
@@ -437,7 +472,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             {
                 "anchor": [str(self.anchor)],
                 "type": ["plot_input"],
-                "creation_date": [self.creation_date],
+                "creation_date": [self.creation_date.replace(tzinfo=None)],
                 "plot_type": [str(self.plot_type.value)],
                 "plot_input_data": [nan_safe_dumps(self.model_dump(mode="json", exclude_none=True))],
             }
@@ -519,26 +554,30 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         plot_type: PlotType,
         pconfig: PConfigT,
         anchor: Anchor,
-        n_samples_per_dataset: List[int],
+        n_series_per_dataset: List[int],
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
         flat_if_very_large: bool = True,
+        series_label: Optional[str] = None,
+        n_samples_per_dataset: Optional[List[int]] = None,
     ) -> "Plot[DatasetT, PConfigT]":
         """
         Initialize a plot model with the given configuration, but without data.
         :param plot_type: plot type
         :param pconfig: plot configuration model
-        :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
+        :param n_series_per_dataset: number of series for each dataset, to pre-initialize the base dataset models
         :param anchor: plot HTML anchor. Unlike ID, must be globally unique
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
         :param defer_render_if_large: whether to defer rendering if the number of data points is large
         :param flat_if_very_large: whether to render flat if the number of data points is very large
+        :param series_label: label for the series, e.g. "samples" or "statuses"
+        :param n_samples_per_dataset: number of actual samples for each dataset (assumes series_label are samples)
         """
-        if len(n_samples_per_dataset) == 0:
+        if len(n_series_per_dataset) == 0:
             raise ValueError("No datasets to plot")
 
         # Counts / Percentages / Log10 switch
@@ -564,21 +603,21 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if (
             flat_if_very_large
             and not config.plots_force_interactive
-            and n_samples_per_dataset[0] > config.plots_flat_numseries
+            and n_series_per_dataset[0] > config.plots_flat_numseries
         ):
             logger.debug(
-                f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_flat_numseries={config.plots_flat_numseries}, rendering flat"
+                f"Plot {id} has {n_series_per_dataset[0]} series > config.plots_flat_numseries={config.plots_flat_numseries}, rendering flat"
             )
             flat = True
 
         defer_render = False
         if defer_render_if_large:
             if (
-                n_samples_per_dataset[0] > config.plots_defer_loading_numseries
-                or n_samples_per_dataset[0] > config.num_datasets_plot_limit  # DEPRECATED in v1.24
+                n_series_per_dataset[0] > config.plots_defer_loading_numseries
+                or n_series_per_dataset[0] > config.num_datasets_plot_limit  # DEPRECATED in v1.24
             ):
                 logger.debug(
-                    f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_defer_loading_numseries={config.plots_defer_loading_numseries}, will defer render"
+                    f"Plot {id} has {n_series_per_dataset[0]} series > config.plots_defer_loading_numseries={config.plots_defer_loading_numseries}, will defer render"
                 )
                 defer_render = True
 
@@ -586,33 +625,24 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if showlegend is None:
             showlegend = True if flat else False
 
+        # Use the specified template or default to multiqc
+        template = config.plot_theme if config.plot_theme else go.layout.Template(multiqc_plotly_template)
+
         layout: go.Layout = go.Layout(
+            template=template,
             title=go.layout.Title(
                 text=pconfig.title,
                 xanchor="center",
                 x=0.5,
-                font=dict(size=20),
             ),
             xaxis=go.layout.XAxis(
-                gridcolor="rgba(0,0,0,0.05)",
-                zerolinecolor="rgba(0,0,0,0.05)",
-                color="rgba(0,0,0,0.3)",  # axis labels
-                tickfont=dict(size=10, color="rgba(0,0,0,1)"),
                 automargin=True,  # auto-expand axis to fit the tick labels
             ),
             yaxis=go.layout.YAxis(
-                gridcolor="rgba(0,0,0,0.05)",
-                zerolinecolor="rgba(0,0,0,0.05)",
-                color="rgba(0,0,0,0.3)",  # axis labels
-                tickfont=dict(size=10, color="rgba(0,0,0,1)"),
                 automargin=True,  # auto-expand axis to fit the tick labels
             ),
             height=height,
             width=width,
-            paper_bgcolor="white",
-            plot_bgcolor="white",
-            font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
-            colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
             margin=go.layout.Margin(
                 pad=5,  # pad sample names in a bar graph a bit
@@ -623,11 +653,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             ),
             hoverlabel=go.layout.Hoverlabel(
                 namelength=-1,  # do not crop sample names inside hover label <extra></extra>
-            ),
-            modebar=go.layout.Modebar(
-                bgcolor="rgba(0, 0, 0, 0)",
-                color="rgba(0, 0, 0, 0.5)",
-                activecolor="rgba(0, 0, 0, 1)",
             ),
             showlegend=showlegend,
             legend=go.layout.Legend(
@@ -640,6 +665,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             if flat
             else None,
         )
+
         # Layout update for the counts/percentage switch
         pct_axis_update = dict(
             ticksuffix="%",
@@ -660,7 +686,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 layout[axis].type = "log"
 
         datasets = []
-        for idx, n_samples in enumerate(n_samples_per_dataset):
+        for idx, n_series in enumerate(n_series_per_dataset):
             dataset = BaseDataset(
                 plot_id=id,
                 label=str(idx + 1),
@@ -672,9 +698,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     xaxis=dict(min=0, max=100),
                     yaxis=dict(min=0, max=100),
                 ),
-                n_samples=n_samples,
+                n_series=n_series,
             )
-            if len(n_samples_per_dataset) > 1:
+            if len(n_series_per_dataset) > 1:
                 dataset.uid += f"_{idx + 1}"
 
             data_label: Union[str, Dict[str, Union[str, Dict[str, str]]]] = (
@@ -693,10 +719,17 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 dconfig["title"] = pconfig.title
 
             subtitles = []
-            if len(n_samples_per_dataset) > 1:
+            if len(n_series_per_dataset) > 1:
                 subtitles += [dataset.label]
+
+            if n_samples_per_dataset and len(n_samples_per_dataset) > idx:
+                n_samples = n_samples_per_dataset[idx]
+            else:
+                n_samples = 0
             if n_samples > 1:
                 subtitles += [f"{n_samples} {pconfig.series_label}"]
+            elif n_series > 1:
+                subtitles += [f"{n_series} {pconfig.series_label}"]
             if subtitles:
                 dconfig["subtitle"] = ", ".join(subtitles)
 
@@ -769,6 +802,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     y1=1,
                     yref="paper",  # make y coords are relative to the plot paper [0,1]
                     fillcolor=band.color,
+                    opacity=band.opacity,
                     line={
                         "width": 0,
                     },
@@ -840,6 +874,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     x1=1,
                     xref="paper",  # make x coords are relative to the plot paper [0,1]
                     fillcolor=band.color,
+                    opacity=band.opacity,
                     line={
                         "width": 0,
                     },
@@ -1248,7 +1283,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if not config.no_ai:
             ai_btn = f"""
             <div class="ai-plot-buttons-container" style="float: right;">
-                <button 
+                <button
                     class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
                     style="margin-left: 1px;"
                     data-section-anchor="{section_anchor}"
@@ -1256,7 +1291,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-module-anchor="{module_anchor}"
                     data-view="plot"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-toggle="tooltip"
                     title="Copy plot data for use with AI tools like ChatGPT"
                 >
                     <span style="vertical-align: baseline">
@@ -1281,7 +1316,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-action="generate"
                     data-clear-text="Clear summary"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-toggle="tooltip"
                     aria-controls="{section_anchor}_ai_summary_wrapper"
                 >
                     <span style="vertical-align: baseline">

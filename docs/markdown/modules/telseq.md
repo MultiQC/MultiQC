@@ -2,7 +2,7 @@
 title: telseq
 displayed_sidebar: multiqcSidebar
 description: >
-  Estimates telomere length from whole genome sequencing data (BAMs)
+  Estimates telomere length from whole genome sequencing data (BAMs).
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/telseq/telseq.py
 -->
 
 :::note
-Estimates telomere length from whole genome sequencing data (BAMs)
+Estimates telomere length from whole genome sequencing data (BAMs).
 
 [https://github.com/zd1/telseq](https://github.com/zd1/telseq)
 :::

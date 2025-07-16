@@ -2,7 +2,7 @@
 title: Illumina InterOp Statistics
 displayed_sidebar: multiqcSidebar
 description: >
-  Reading and writing InterOp metric files
+  Reading and writing InterOp metric files.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/interop/interop.py
 -->
 
 :::note
-Reading and writing InterOp metric files
+Reading and writing InterOp metric files.
 
 [http://illumina.github.io/interop/index.html](http://illumina.github.io/interop/index.html)
 :::

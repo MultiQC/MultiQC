@@ -735,7 +735,7 @@ def test_ai_export_rounding(tmp_path):
         cfg=ClConfig(run_modules=["custom_content"], ai_summary=True, development=True),
     )
 
-    summary_path = tmp_path / "multiqc_data" / "multiqc_ai_prompt.txt"
+    summary_path = tmp_path / "multiqc_data" / "llms-full.txt"
     assert summary_path.exists()
     print(summary_path)
     # assert that file contains |0.3802|
@@ -822,3 +822,86 @@ Some text.
 
     # Ensure markdown converted to HTML
     assert "<h1>Heading</h1>" in section.content or "<h1>Heading" in section.content
+
+
+def test_parent_grouping_with_description(tmp_path):
+    """Test that descriptions are properly passed to sections when using parent grouping."""
+    # Create two files with the same parent_id but different descriptions
+    file1 = tmp_path / "sample1_mqc.txt"
+    file1.write_text(
+        """\
+#parent_id: "my_group"
+#parent_name: "My Grouped Data"
+#parent_description: "This is the parent description"
+#id: "section1"
+#section_name: "Section 1"
+#description: "This is the description for section 1"
+#plot_type: "table"
+Sample,Value
+sample1,10
+"""
+    )
+
+    file2 = tmp_path / "sample2_mqc.txt"
+    file2.write_text(
+        """\
+#parent_id: "my_group"
+#id: "section2"
+#section_name: "Section 2"
+#description: "This is the description for section 2"
+#plot_type: "table"
+Sample,Value
+sample2,20
+"""
+    )
+
+    report.analysis_files = [file1, file2]
+    report.search_files(["custom_content"])
+    modules = custom_module_classes()
+
+    # Should have one module with two sections
+    assert len(modules) == 1
+    module = modules[0]
+    assert module.name == "My Grouped Data"
+    assert module.info == "<p>This is the parent description.</p>"
+    assert len(module.sections) == 2
+
+    # Debug: print what sections we actually have
+    print(f"Module sections: {[(s.id, s.name) for s in module.sections]}")
+
+    # Check that both sections have their descriptions (HTML-wrapped)
+    section1 = next(s for s in module.sections if s.id == "section1")
+    section2 = next(s for s in module.sections if s.id == "section2")
+
+    assert section1.description == "<p>This is the description for section 1</p>"
+    assert section2.description == "<p>This is the description for section 2</p>"
+
+
+def test_parent_name_without_parent_description(tmp_path):
+    """Test that descriptions work when parent_name is set but parent_description is not."""
+    file1 = tmp_path / "sample1_mqc.txt"
+    file1.write_text(
+        """\
+#parent_name: "My Grouped Data"
+#id: "section1"
+#section_name: "Section 1"
+#description: "This is the description for section 1"
+#plot_type: "table"
+Sample,Value
+sample1,10
+"""
+    )
+
+    report.analysis_files = [file1]
+    report.search_files(["custom_content"])
+    modules = custom_module_classes()
+
+    # Should have one module with one section
+    assert len(modules) == 1
+    module = modules[0]
+    assert module.name == "My Grouped Data"
+    assert len(module.sections) == 1
+
+    # Check that the section has its description (HTML-wrapped)
+    section1 = module.sections[0]
+    assert section1.description == "<p>This is the description for section 1</p>"
