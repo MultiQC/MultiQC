@@ -248,7 +248,25 @@ class MultiqcModule(BaseMultiqcModule):
                     if (
                         not x.startswith("-")
                         and x.endswith((".fastq", ".fq", ".gz", ".dat"))
-                        and (i == 0 or args[i - 1] not in ["-o", "-p", "--output", "--paired-output"])
+                        and (
+                            i == 0
+                            or args[i - 1]
+                            not in [
+                                "-o",
+                                "-p",
+                                "--output",
+                                "--paired-output",
+                                "--untrimmed-output",
+                                "--untrimmed-paired-output",
+                                "--too-long-output",
+                                "--too-short-output",
+                                "--wildcard-file",
+                                "-r",
+                                "--rest-file",
+                                "--json",
+                                "--info-file",
+                            ]
+                        )
                     ):
                         input_fqs.append(x)
                 if input_fqs:

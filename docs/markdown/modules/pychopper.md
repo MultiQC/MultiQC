@@ -2,7 +2,7 @@
 title: Pychopper
 displayed_sidebar: multiqcSidebar
 description: >
-  Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads
+  Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/pychopper/pychopper.py
 -->
 
 :::note
-Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads
+Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads.
 
 [https://github.com/nanoporetech/pychopper](https://github.com/nanoporetech/pychopper)
 :::

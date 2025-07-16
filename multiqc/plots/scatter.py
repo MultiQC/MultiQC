@@ -15,6 +15,7 @@ from multiqc import report
 from multiqc.core.plot_data_store import parse_value
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.types import Anchor, SampleName
+from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ class ScatterConfig(PConfig):
     marker_line_width: Optional[int] = None
     color: Optional[str] = None
     opacity: Optional[float] = None
+    marker_symbol: Optional[str] = None
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("scatterplot",), **data)
@@ -221,6 +223,7 @@ def plot(
     """
     inputs: ScatterNormalizedInputData = ScatterNormalizedInputData.create(data, pconfig)
     inputs = ScatterNormalizedInputData.merge_with_previous(inputs)
+
     if inputs.is_empty():
         return None
 
@@ -253,15 +256,14 @@ class Dataset(BaseDataset):
                 line=dict(width=1),
                 opacity=1,
                 color="rgba(124, 181, 236, .5)",
+                symbol="circle",
             ),
         )
-
         # if categories is provided, set them as x-axis ticks
         if pconfig.categories:
             dataset.layout["xaxis"]["tickmode"] = "array"
             dataset.layout["xaxis"]["tickvals"] = list(range(len(pconfig.categories)))
             dataset.layout["xaxis"]["ticktext"] = pconfig.categories
-
         return dataset
 
     def create_figure(
@@ -275,7 +277,6 @@ class Dataset(BaseDataset):
         Create a Plotly figure for a dataset
         """
         fig = go.Figure(layout=layout)
-
         MAX_ANNOTATIONS = 10  # Maximum number of dots to be annotated directly on the plot
         n_annotated = len([el for el in self.points if "annotation" in el])
         if n_annotated < MAX_ANNOTATIONS:
@@ -318,6 +319,7 @@ class Dataset(BaseDataset):
         # If there are few unique colors, we can additionally put a unique list into a legend
         # (even though some color might belong to many distinct names - we will just crop the list)
         names_by_legend_key: Dict[Tuple[Any, Any, Any, Any], Set[str]] = defaultdict(set)
+
         for el in self.points:
             legend_key = (el.get("color"), el.get("marker_size"), el.get("marker_line_width"), el.get("group"))
             name = el["name"]
@@ -330,7 +332,7 @@ class Dataset(BaseDataset):
             x = el["x"]
             name = el["name"]
             group = el.get("group")
-            color = el.get("color")
+            color = mqc_colour.color_to_rgb_string(cast(Optional[str], el.get("color")))
             annotation = el.get("annotation")
 
             show_in_legend = False
@@ -357,11 +359,14 @@ class Dataset(BaseDataset):
                 marker["line"]["width"] = el["marker_line_width"]
             if "marker_size" in el:
                 marker["size"] = el["marker_size"]
+            if "marker_symbol" in el:
+                marker["symbol"] = el["marker_symbol"]
             if "opacity" in el:
                 marker["opacity"] = el["opacity"]
 
             if annotation:
                 params["mode"] = "markers+text"
+
             if n_annotated > 0:  # Reduce opacity of the borders that clutter the annotations:
                 marker["line"]["color"] = "rgba(0, 0, 0, .2)"
 
@@ -450,7 +455,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
             plot_type=PlotType.SCATTER,
             pconfig=pconfig,
             anchor=anchor,
-            n_samples_per_dataset=[len(x) for x in points_lists],
+            n_series_per_dataset=[len(x) for x in points_lists],
             default_tt_label="<br><b>X</b>: %{x}<br><b>Y</b>: %{y}",
         )
 
@@ -472,6 +477,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
             result += f"Y axis: {self.pconfig.ylab}\n"
         if self.pconfig.categories:
             result += f"X categories: {', '.join(self.pconfig.categories)}\n"
+
         return result
 
     @staticmethod
@@ -511,7 +517,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
                     else:
                         point["name"] = s_name
 
-                    for k in ["color", "opacity", "marker_size", "marker_line_width"]:
+                    for k in ["color", "opacity", "marker_size", "marker_line_width", "marker_symbol"]:
                         if k not in point:
                             v = getattr(series_config, k)
                             if v is not None:
@@ -520,6 +526,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
                                 else:
                                     point[k] = v
                     d.append(point)
+
             plotdata.append(d)
 
         if pconf.square:
@@ -547,6 +554,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
                 for i, es in enumerate(extra_series):
                     for s in es:
                         plotdata[i].append(s)
+
         except Exception:
             pass
 

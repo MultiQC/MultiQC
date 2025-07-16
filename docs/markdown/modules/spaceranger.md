@@ -2,7 +2,7 @@
 title: Space Ranger
 displayed_sidebar: multiqcSidebar
 description: >
-  Tool to analyze 10x Genomics spatial transcriptomics data
+  Tool to analyze 10x Genomics spatial transcriptomics data.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/spaceranger/spacerange
 -->
 
 :::note
-Tool to analyze 10x Genomics spatial transcriptomics data
+Tool to analyze 10x Genomics spatial transcriptomics data.
 
 [https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/what-is-space-ranger](https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/what-is-space-ranger)
 :::

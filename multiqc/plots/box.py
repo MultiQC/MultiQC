@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
 
-from multiqc import report
+from multiqc import config, report
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
@@ -48,8 +48,26 @@ class Dataset(BaseDataset):
         dataset.samples = list(reversed(dataset.samples))
         dataset.data = list(reversed(dataset.data))
 
+        # Determine boxpoints dynamically based on sample count, similar to violin plot
+        n_samples = len(dataset.samples)
+        show_points = n_samples <= config.box_min_threshold_no_points
+        show_only_outliers = n_samples > config.box_min_threshold_outliers
+
+        # Set boxpoints based on dynamic logic
+        boxpoints: Union[bool, str] = "outliers"
+        if not show_points:
+            boxpoints = False  # Show no points
+        elif not show_only_outliers:
+            boxpoints = "all"  # Show all points
+        else:
+            boxpoints = "outliers"  # Show only outliers
+
+        # Override with config if explicitly set
+        if config.boxplot_boxpoints is not None:
+            boxpoints = config.boxplot_boxpoints
+
         dataset.trace_params.update(
-            boxpoints="outliers",
+            boxpoints=boxpoints,
             jitter=0.5,
             orientation="h",
             marker=dict(
@@ -322,7 +340,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             plot_type=PlotType.BOX,
             pconfig=pconfig,
             anchor=anchor,
-            n_samples_per_dataset=[len(x) for x in list_of_data_by_sample],
+            n_series_per_dataset=[len(x) for x in list_of_data_by_sample],
         )
 
         model.datasets = [

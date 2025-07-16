@@ -2,7 +2,7 @@
 title: bcl2fastq
 displayed_sidebar: multiqcSidebar
 description: >
-  Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
+  Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/bcl2fastq/bcl2fastq.py
 -->
 
 :::note
-Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
+Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.
 
 [https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html](https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html)
 :::

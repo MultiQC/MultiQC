@@ -2,7 +2,7 @@
 title: Peddy
 displayed_sidebar: multiqcSidebar
 description: >
-  Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF
+  Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/peddy/peddy.py
 -->
 
 :::note
-Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF
+Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF.
 
 [https://github.com/brentp/peddy](https://github.com/brentp/peddy)
 :::

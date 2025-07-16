@@ -73,9 +73,9 @@ class DragenContentMetrics(BaseMultiqcModule):
             "xmin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "y_bands": [
-                {"from": 20, "to": 100, "color": "#e6c3c3"},
-                {"from": 5, "to": 20, "color": "#e6dcc3"},
-                {"from": 0, "to": 5, "color": "#c3e6c3"},
+                {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},
+                {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},
             ],
         }
 
@@ -244,9 +244,9 @@ class DragenContentMetrics(BaseMultiqcModule):
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
             "y_bands": [
-                {"from": 20, "to": 100, "color": "#e6c3c3"},
-                {"from": 5, "to": 20, "color": "#e6dcc3"},
-                {"from": 0, "to": 5, "color": "#c3e6c3"},
+                {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},
+                {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},
             ],
         }
 

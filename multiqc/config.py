@@ -125,6 +125,10 @@ ai_prompt_short: Optional[str]
 ai_prompt_full: Optional[str]
 no_ai: bool
 ai_anonymize_samples: bool
+ai_reasoning_effort: Optional[str]
+ai_max_completion_tokens: Optional[int]
+ai_extended_thinking: bool
+ai_thinking_budget_tokens: Optional[int]
 
 seqera_api_url: str
 seqera_website: str
@@ -134,9 +138,13 @@ plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
 plots_defer_loading_numseries: int
+plot_theme: Optional[str]
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
+boxplot_boxpoints: Union[str, bool, None]
+box_min_threshold_outliers: int
+box_min_threshold_no_points: int
 violin_downsample_after: Optional[int]
 violin_min_threshold_outliers: int
 violin_min_threshold_no_points: int
@@ -194,7 +202,7 @@ export_plot_formats: List[str]
 filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
-use_filename_as_sample_name: bool
+use_filename_as_sample_name: Union[bool, List[str]]
 fn_clean_exts: List[CleanPatternT]
 fn_clean_trim: List[str]
 fn_ignore_files: List[str]

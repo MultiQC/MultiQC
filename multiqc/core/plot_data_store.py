@@ -113,6 +113,10 @@ def get_report_metadata(df: pl.DataFrame) -> Optional[Dict[str, Any]]:
         if "config" in metadata_df.columns and not metadata_df.get_column("config").is_empty():
             result["config"] = json.loads(metadata_df.get_column("config")[0])
 
+        # Read software versions
+        if "software_versions" in metadata_df.columns and not metadata_df.get_column("software_versions").is_empty():
+            result["software_versions"] = json.loads(metadata_df.get_column("software_versions")[0])
+
         return result
     except Exception as e:
         logger.error(f"Error extracting report metadata from parquet: {e}")
@@ -191,6 +195,7 @@ def save_report_metadata() -> None:
             "data_sources": [json.dumps(data_sources_dict)],
             "multiqc_version": [config.version if hasattr(config, "version") else ""],
             "modules": [json.dumps(modules_data)],
+            "software_versions": [json.dumps(dict(report.software_versions))],
         }
     )
 

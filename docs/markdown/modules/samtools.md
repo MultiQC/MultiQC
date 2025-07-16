@@ -2,7 +2,7 @@
 title: Samtools
 displayed_sidebar: multiqcSidebar
 description: >
-  Toolkit for interacting with BAM/CRAM files
+  Toolkit for interacting with BAM/CRAM files.
 ---
 
 <!--
@@ -15,19 +15,20 @@ File path for the source of this content: multiqc/modules/samtools/samtools.py
 -->
 
 :::note
-Toolkit for interacting with BAM/CRAM files
+Toolkit for interacting with BAM/CRAM files.
 
 [http://www.htslib.org](http://www.htslib.org)
 :::
 
 Supported commands:
 
-- `stats`
+- `ampliconclip`
+- `coverage`
 - `flagstats`
 - `idxstats`
-- `rmdup`
-- `coverage`
 - `markdup`
+- `rmdup`
+- `stats`
 
 #### idxstats
 
@@ -114,17 +115,24 @@ general_stats_columns:
         hidden: false
 ```
 
-Each samtools submodule has its own namespace in the configuration:
+Each samtools submodule has its own namespace in the configuration
 
-- `samtools/stats`
-- `samtools/flagstat`
-- `samtools/rmdup`
-- `samtools/markdup`
+- `samtools/ampliconclip`
 - `samtools/coverage`
+- `samtools/flagstats`
+- `samtools/idxstats`
+- `samtools/markdup`
+- `samtools/rmdup`
+- `samtools/stats`
 
 ### File search patterns
 
 ```yaml
+samtools/ampliconclip:
+  contents:
+    - "COMMAND:"
+    - samtools ampliconclip
+  num_lines: 11
 samtools/coverage:
   contents: "#rname\tstartpos\tendpos\tnumreads\tcovbases\tcoverage\tmeandepth\tmeanbaseq\t\
     meanmapq"

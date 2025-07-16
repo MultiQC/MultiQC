@@ -477,7 +477,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
                     sample_names.append(SampleName(s))
                 x_to_y = raw_data_by_sample[s]
                 if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
-                    if isinstance(x_to_y[0], tuple):
+                    if isinstance(x_to_y[0], tuple) or (isinstance(x_to_y[0], list) and len(x_to_y[0]) == 2):
                         x_to_y = dict(x_to_y)
                     else:
                         x_to_y = {i: y for i, y in enumerate(x_to_y)}
@@ -509,8 +509,10 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         Merge normalized data from old run and new run, leveraging our tabular representation
         for more efficient and reliable merging.
         """
+        logger.debug(f"LinePlot merge called for anchor {new_data.anchor}")
         new_df = new_data.to_df()
         if new_df.is_empty():
+            logger.debug("LinePlot merge: new_df is empty, returning old_data")
             return old_data
 
         old_df = old_data.to_df()
@@ -518,21 +520,33 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         # If we have both old and new data, merge them
         merged_df = new_df
         if old_df is not None and not old_df.is_empty():
+            logger.debug(
+                f"LinePlot merge: both old and new data present, merging. Old: {old_df.shape}, New: {new_df.shape}"
+            )
             # Get the list of samples that exist in both old and new data, for each dataset
             new_keys = new_df.select(["data_label", "sample"]).unique()
+            logger.debug(f"LinePlot merge: new_keys shape: {new_keys.shape}")
 
             # Keep only the rows in old_df whose (data_label, sample) pair
             # does *not* appear in new_keys. An anti-join is the cleanest way to express this.
             old_df_filtered = old_df.join(
                 new_keys,
                 on=["data_label", "sample"],
-                how="anti",  # anti-join = “rows in left not matched in right”
+                how="anti",  # anti-join = "rows in left not matched in right"
             )
+            logger.debug(f"LinePlot merge: old_df_filtered shape: {old_df_filtered.shape}")
 
             # Combine the filtered old data with new data
             merged_df = pl.concat([old_df_filtered, new_df], how="diagonal")
+            logger.debug(f"LinePlot merge: merged_df shape: {merged_df.shape}")
+        else:
+            logger.debug("LinePlot merge: no old data or old data is empty, using new data only")
 
-        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
+        result = cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
+        logger.debug(
+            f"LinePlot merge: created result with {len(result.data)} datasets, {len(result.sample_names)} samples"
+        )
+        return result
 
 
 class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
@@ -564,7 +578,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
             plot_type=PlotType.LINE,
             pconfig=pconfig,
             anchor=anchor,
-            n_samples_per_dataset=n_samples_per_dataset,
+            n_series_per_dataset=n_samples_per_dataset,
             axis_controlled_by_switches=["yaxis"],
             default_tt_label="<br>%{x}: %{y}",
         )
@@ -624,6 +638,8 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
                         pairs = dict(series.pairs)
                         series.pairs = [(x, pairs[x]) for x in xs]
 
+        inputs.save_to_parquet()
+
         scale = mqc_colour.mqc_colour_scale("plot_defaults")
         for _, series_by_sample in enumerate(datasets):
             for si, series in enumerate(series_by_sample):
@@ -636,7 +652,6 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
             anchor=inputs.anchor,
             sample_names=sample_names,
         )
-        inputs.save_to_parquet()
         return plot
 
 

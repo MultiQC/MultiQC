@@ -91,9 +91,9 @@ file_types: Dict = {
         "plot_func": plot_aqhist,
         "plot_params": {
             "x_bands": [
-                {"from": 28, "to": 100, "color": "#c3e6c3"},
-                {"from": 20, "to": 28, "color": "#e6dcc3"},
-                {"from": 0, "to": 20, "color": "#e6c3c3"},
+                {"from": 28, "to": 100, "color": "#009500", "opacity": 0.13},
+                {"from": 20, "to": 28, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
             ],
             "ylog": True,
         },
@@ -345,9 +345,9 @@ file_types: Dict = {
         "plot_func": plot_qchist,
         "plot_params": {
             "x_bands": [
-                {"from": 30, "to": 100, "color": "#c3e6c3"},
-                {"from": 20, "to": 30, "color": "#e6dcc3"},
-                {"from": 0, "to": 20, "color": "#e6c3c3"},
+                {"from": 30, "to": 100, "color": "#009500", "opacity": 0.13},
+                {"from": 20, "to": 30, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
             ],
             "ylog": True,
             "xlab": "Phred Score",

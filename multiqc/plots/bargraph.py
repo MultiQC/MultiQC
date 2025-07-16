@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequenc
 
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
-import spectra  # type: ignore
 from natsort import natsorted
 from pydantic import BaseModel, Field
 
@@ -380,7 +379,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             old_df_filtered = old_df.join(
                 new_keys,
                 on=["data_label", "sample"],
-                how="anti",  # anti-join = “rows in left not matched in right”
+                how="anti",  # anti-join = "rows in left not matched in right"
             )
 
             # Combine the dataframes, keeping all rows
@@ -449,9 +448,8 @@ class Dataset(BaseDataset):
             # Split long category names
             name = "<br>".join(split_long_string(input_cat["name"]))
 
-            # Reformat color to be ready to add alpha in Plotly-JS
-            color = spectra.html(input_cat["color"])
-            color_str = ",".join([f"{int(float(x) * 256)}" for x in color.rgb])
+            # Convert color to RGB format using the generalized function
+            color_str = mqc_colour.color_to_rgb_string(input_cat["color"])
 
             # Reverse the data to match the reversed samples
             cat: Category = Category(
@@ -493,7 +491,7 @@ class Dataset(BaseDataset):
 
             params = copy.deepcopy(self.trace_params)
             assert cat.color is not None
-            params["marker"]["color"] = f"rgb({cat.color})"
+            params["marker"]["color"] = cat.color
             fig.add_trace(
                 go.Bar(
                     y=self.samples,
@@ -633,7 +631,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             plot_type=PlotType.BAR,
             pconfig=pconfig,
             anchor=anchor,
-            n_samples_per_dataset=[len(x) for x in samples_lists],
+            n_series_per_dataset=[len(x) for x in samples_lists],
             axis_controlled_by_switches=["xaxis"],
             default_tt_label="%{meta}: <b>%{x}</b>",
             defer_render_if_large=False,  # We hide samples on large bar plots, so no need to defer render
