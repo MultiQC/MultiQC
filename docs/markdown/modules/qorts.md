@@ -2,7 +2,7 @@
 title: QoRTs
 displayed_sidebar: multiqcSidebar
 description: >
-  Toolkit for analysis, QC, and data management of RNA-Seq datasets
+  Toolkit for analysis, QC, and data management of RNA-Seq datasets.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/qorts/qorts.py
 -->
 
 :::note
-Toolkit for analysis, QC, and data management of RNA-Seq datasets
+Toolkit for analysis, QC, and data management of RNA-Seq datasets.
 
 [http://hartleys.github.io/QoRTs/](http://hartleys.github.io/QoRTs/)
 :::

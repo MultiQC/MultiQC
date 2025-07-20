@@ -2,7 +2,7 @@
 title: GffCompare
 displayed_sidebar: multiqcSidebar
 description: >
-  Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format
+  Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/gffcompare/gffcompare.
 -->
 
 :::note
-Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format
+Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.
 
 [https://ccb.jhu.edu/software/stringtie/gffcompare.shtml](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
 :::

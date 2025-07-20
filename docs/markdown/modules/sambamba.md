@@ -2,7 +2,7 @@
 title: Sambamba
 displayed_sidebar: multiqcSidebar
 description: >
-  Toolkit for interacting with BAM/CRAM files
+  Toolkit for interacting with BAM/CRAM files.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/sambamba/sambamba.py
 -->
 
 :::note
-Toolkit for interacting with BAM/CRAM files
+Toolkit for interacting with BAM/CRAM files.
 
 [https://lomereiter.github.io/sambamba/](https://lomereiter.github.io/sambamba/)
 :::

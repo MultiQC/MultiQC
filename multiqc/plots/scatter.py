@@ -15,6 +15,7 @@ from multiqc import report
 from multiqc.core.plot_data_store import parse_value
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.types import Anchor, SampleName
+from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
 
@@ -331,7 +332,7 @@ class Dataset(BaseDataset):
             x = el["x"]
             name = el["name"]
             group = el.get("group")
-            color = el.get("color")
+            color = mqc_colour.color_to_rgb_string(cast(Optional[str], el.get("color")))
             annotation = el.get("annotation")
 
             show_in_legend = False
@@ -454,7 +455,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
             plot_type=PlotType.SCATTER,
             pconfig=pconfig,
             anchor=anchor,
-            n_samples_per_dataset=[len(x) for x in points_lists],
+            n_series_per_dataset=[len(x) for x in points_lists],
             default_tt_label="<br><b>X</b>: %{x}<br><b>Y</b>: %{y}",
         )
 

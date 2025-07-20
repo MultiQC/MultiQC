@@ -735,7 +735,7 @@ def test_ai_export_rounding(tmp_path):
         cfg=ClConfig(run_modules=["custom_content"], ai_summary=True, development=True),
     )
 
-    summary_path = tmp_path / "multiqc_data" / "multiqc_ai_prompt.txt"
+    summary_path = tmp_path / "multiqc_data" / "llms-full.txt"
     assert summary_path.exists()
     print(summary_path)
     # assert that file contains |0.3802|
@@ -863,7 +863,7 @@ sample2,20
     assert len(modules) == 1
     module = modules[0]
     assert module.name == "My Grouped Data"
-    assert module.info == "This is the parent description"
+    assert module.info == "<p>This is the parent description.</p>"
     assert len(module.sections) == 2
 
     # Debug: print what sections we actually have

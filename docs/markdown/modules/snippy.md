@@ -2,7 +2,7 @@
 title: Snippy
 displayed_sidebar: multiqcSidebar
 description: >
-  Rapid haploid variant calling and core genome alignment
+  Rapid haploid variant calling and core genome alignment.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/snippy/snippy.py
 -->
 
 :::note
-Rapid haploid variant calling and core genome alignment
+Rapid haploid variant calling and core genome alignment.
 
 [https://github.com/tseemann/snippy](https://github.com/tseemann/snippy)
 :::

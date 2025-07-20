@@ -14,15 +14,15 @@ const AI_PROVIDERS = {
   },
   anthropic: {
     name: "Anthropic",
-    defaultModel: "claude-3-5-sonnet-latest",
-    suggestedModels: ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest"],
+    defaultModel: "claude-sonnet-4-0",
+    suggestedModels: ["claude-sonnet-4-0"],
     apiKeysUrl: "https://console.anthropic.com/settings/keys",
     modelsUrl: "https://docs.anthropic.com/en/docs/intro-to-claude#model-options",
   },
   openai: {
     name: "OpenAI",
     defaultModel: "gpt-4o",
-    suggestedModels: ["gpt-4o", "gpt-4o-mini"],
+    suggestedModels: ["gpt-4o", "gpt-4.1"],
     apiKeysUrl: "https://platform.openai.com/api-keys",
     modelsUrl: "https://platform.openai.com/docs/models",
   },
@@ -1713,8 +1713,8 @@ $(function () {
     $(this).trigger("change");
   });
 
-  // Add click handlers for model suggestions
-  $(".ai-model-suggestion").click(function (e) {
+  // Add click handlers for model suggestions (using event delegation for dynamic content)
+  $(document).on("click", ".ai-model-suggestion", function (e) {
     e.preventDefault();
     const modelName = $(this).data("model");
     $("#ai-model").val(modelName).trigger("change");

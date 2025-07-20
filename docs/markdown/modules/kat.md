@@ -2,7 +2,7 @@
 title: K-mer Analysis Toolkit
 displayed_sidebar: multiqcSidebar
 description: >
-  Analyses sequencing data via its k-mer spectra
+  Analyses sequencing data via its k-mer spectra.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/kat/kat.py
 -->
 
 :::note
-Analyses sequencing data via its k-mer spectra
+Analyses sequencing data via its k-mer spectra.
 
 [https://github.com/TGAC/KAT](https://github.com/TGAC/KAT)
 :::

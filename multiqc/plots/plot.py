@@ -277,7 +277,7 @@ class BaseDataset(BaseModel):
     layout: Dict[str, Any]  # update when a datasets toggle is clicked, or percentage switch is unselected
     trace_params: Dict[str, Any]
     pct_range: Dict[str, Any]
-    n_samples: int
+    n_series: int
 
     def sample_names(self) -> List[SampleName]:
         raise NotImplementedError
@@ -341,7 +341,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
     Represents normalized input data for a plot.
 
     Plot input data is normalized, but enough data is preseverd to merge plots across
-    multiple samples. Plot objects might post-process and re-summarize the data
+    multiple series. Plot objects might post-process and re-summarize the data
     before creating plot datasets.
     """
 
@@ -416,11 +416,17 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         # Try to load previous data (empty or unloadable means no data from previous run)
         old_data = report.plot_input_data.get(new_data.anchor)
+        logger.debug(f"merge_with_previous for {new_data.anchor}: found old_data = {old_data is not None}")
         if old_data is None or old_data.is_empty():
+            logger.debug(f"merge_with_previous for {new_data.anchor}: no old data or empty, using new data only")
             merged_data = new_data
         else:
             # Merge using class-specific implementation
+            logger.debug(
+                f"merge_with_previous for {new_data.anchor}: merging {old_data.__class__.__name__} with {new_data.__class__.__name__}"
+            )
             merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
+            logger.debug(f"merge_with_previous for {new_data.anchor}: merge completed")
         return merged_data
 
     def finalize_df(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -548,26 +554,30 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         plot_type: PlotType,
         pconfig: PConfigT,
         anchor: Anchor,
-        n_samples_per_dataset: List[int],
+        n_series_per_dataset: List[int],
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
         flat_if_very_large: bool = True,
+        series_label: Optional[str] = None,
+        n_samples_per_dataset: Optional[List[int]] = None,
     ) -> "Plot[DatasetT, PConfigT]":
         """
         Initialize a plot model with the given configuration, but without data.
         :param plot_type: plot type
         :param pconfig: plot configuration model
-        :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
+        :param n_series_per_dataset: number of series for each dataset, to pre-initialize the base dataset models
         :param anchor: plot HTML anchor. Unlike ID, must be globally unique
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
         :param defer_render_if_large: whether to defer rendering if the number of data points is large
         :param flat_if_very_large: whether to render flat if the number of data points is very large
+        :param series_label: label for the series, e.g. "samples" or "statuses"
+        :param n_samples_per_dataset: number of actual samples for each dataset (assumes series_label are samples)
         """
-        if len(n_samples_per_dataset) == 0:
+        if len(n_series_per_dataset) == 0:
             raise ValueError("No datasets to plot")
 
         # Counts / Percentages / Log10 switch
@@ -593,21 +603,21 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if (
             flat_if_very_large
             and not config.plots_force_interactive
-            and n_samples_per_dataset[0] > config.plots_flat_numseries
+            and n_series_per_dataset[0] > config.plots_flat_numseries
         ):
             logger.debug(
-                f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_flat_numseries={config.plots_flat_numseries}, rendering flat"
+                f"Plot {id} has {n_series_per_dataset[0]} series > config.plots_flat_numseries={config.plots_flat_numseries}, rendering flat"
             )
             flat = True
 
         defer_render = False
         if defer_render_if_large:
             if (
-                n_samples_per_dataset[0] > config.plots_defer_loading_numseries
-                or n_samples_per_dataset[0] > config.num_datasets_plot_limit  # DEPRECATED in v1.24
+                n_series_per_dataset[0] > config.plots_defer_loading_numseries
+                or n_series_per_dataset[0] > config.num_datasets_plot_limit  # DEPRECATED in v1.24
             ):
                 logger.debug(
-                    f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_defer_loading_numseries={config.plots_defer_loading_numseries}, will defer render"
+                    f"Plot {id} has {n_series_per_dataset[0]} series > config.plots_defer_loading_numseries={config.plots_defer_loading_numseries}, will defer render"
                 )
                 defer_render = True
 
@@ -676,7 +686,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 layout[axis].type = "log"
 
         datasets = []
-        for idx, n_samples in enumerate(n_samples_per_dataset):
+        for idx, n_series in enumerate(n_series_per_dataset):
             dataset = BaseDataset(
                 plot_id=id,
                 label=str(idx + 1),
@@ -688,9 +698,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     xaxis=dict(min=0, max=100),
                     yaxis=dict(min=0, max=100),
                 ),
-                n_samples=n_samples,
+                n_series=n_series,
             )
-            if len(n_samples_per_dataset) > 1:
+            if len(n_series_per_dataset) > 1:
                 dataset.uid += f"_{idx + 1}"
 
             data_label: Union[str, Dict[str, Union[str, Dict[str, str]]]] = (
@@ -709,10 +719,17 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 dconfig["title"] = pconfig.title
 
             subtitles = []
-            if len(n_samples_per_dataset) > 1:
+            if len(n_series_per_dataset) > 1:
                 subtitles += [dataset.label]
+
+            if n_samples_per_dataset and len(n_samples_per_dataset) > idx:
+                n_samples = n_samples_per_dataset[idx]
+            else:
+                n_samples = 0
             if n_samples > 1:
                 subtitles += [f"{n_samples} {pconfig.series_label}"]
+            elif n_series > 1:
+                subtitles += [f"{n_series} {pconfig.series_label}"]
             if subtitles:
                 dconfig["subtitle"] = ", ".join(subtitles)
 
