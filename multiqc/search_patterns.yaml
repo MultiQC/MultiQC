@@ -8,6 +8,10 @@ adapterremoval:
   fn: "*.settings"
   contents: "AdapterRemoval"
   num_lines: 1
+xenium:
+  fn: "metrics_summary.csv"
+  contents: "num_cells_detected"
+  num_lines: 5
 afterqc:
   fn: "*.json"
   contents: "allow_mismatch_in_poly"
