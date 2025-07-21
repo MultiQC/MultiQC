@@ -31,6 +31,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(data_by_sample)} Xenium reports")
 
+        # Add software version info (Xenium files don't contain version info)
+        for s_name in data_by_sample.keys():
+            self.add_software_version(None, s_name)
+
         # Write parsed data to a file
         self.write_data_file(data_by_sample, "multiqc_xenium")
 
