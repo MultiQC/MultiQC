@@ -231,7 +231,7 @@ cellranger_arc:
     num_lines: 250
 cells2stats/run:
   fn: "RunStats.json"
-  contents: "DemuxStats"
+  contents: '"AnalysisID": "c2s.'
   num_lines: 100
 checkm:
   - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})# markers(?:\t| {3,})# marker sets.*"
