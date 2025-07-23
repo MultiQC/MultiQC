@@ -257,6 +257,13 @@ class MultiqcModule(BaseMultiqcModule):
         except KeyError:
             log.debug(f"fastp JSON did not have a 'duplication' key: '{s_name}'")
 
+        # Parse before_filtering
+        try:
+            for k in parsed_json["summary"]["before_filtering"]:
+                self.fastp_data[s_name][f"before_filtering_{k}"] = float(parsed_json["summary"]["before_filtering"][k])
+        except KeyError:
+            log.debug(f"fastp JSON did not have a 'summary'-'before_filtering' keys: '{s_name}'")
+
         # Parse after_filtering
         try:
             for k in parsed_json["summary"]["after_filtering"]:
@@ -427,6 +434,18 @@ class MultiqcModule(BaseMultiqcModule):
                     "description": "Percentage adapter-trimmed reads",
                     "suffix": "%",
                     "scale": "RdYlGn-rev",
+                },
+                "before_filtering_read1_mean_length": {
+                    "title": "Mean R1 Length",
+                    "description": "Mean read length of R1",
+                    "suffix": "bp",
+                    "hidden": True,
+                },
+                "before_filtering_read2_mean_length": {
+                    "title": "Mean R2 Length",
+                    "description": "Mean read length of R2",
+                    "suffix": "bp",
+                    "hidden": True,
                 },
             },
         )
