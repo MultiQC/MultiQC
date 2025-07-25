@@ -49,3 +49,18 @@ def summarize_batch_names(c2s_run_data):
                     batch_names.add(batch_data["BatchName"])
 
     return sorted(batch_names)
+
+
+def summarize_target_site_names(c2s_run_data):
+    """
+    Generate a list of target site names from the cells2stats report
+    """
+    target_site_names = set()
+    for run_name in c2s_run_data:
+        run_data = c2s_run_data[run_name]
+        for batch_data in run_data.get("TargetStats", {}).get("Batches", []):
+            for target_site_data in batch_data.get("TargetSites", []):
+                target_site_name = target_site_data.get("TargetSiteName", "")
+                if target_site_name != "":
+                    target_site_names.add(target_site_name)
+    return sorted(target_site_names)
