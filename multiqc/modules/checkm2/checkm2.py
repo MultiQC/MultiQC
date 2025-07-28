@@ -74,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlOrRd",
             },
             "Completeness_Model_Used": {
-                "title": "Completness Model Used",
+                "title": "Completeness Model Used",
                 "description": "Which ML model was used to predict completeness.",
                 "hidden": True,
             },
