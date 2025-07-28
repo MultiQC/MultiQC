@@ -4,20 +4,12 @@ import os
 import re
 import json
 
-import yaml
-
-from typing import Any, Mapping
+from typing import Any, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.base_module import SampleName, ColumnKey
-from multiqc.types import SampleGroup
-from multiqc.plots import linegraph, table
-from multiqc.plots.table_object import ColumnMeta
-from multiqc.plots import bargraph
-from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots import table
 from multiqc.plots.table_object import TableConfig
-
-from typing import Dict, Union
 
 log = logging.getLogger(__name__)
 
@@ -45,9 +37,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Get data by sample
-        # data_by_sample: Dict[str, Dict[str, Union[float, int]]] = dict()
-        # data_by_sample: Dict[SampleName, Dict[ColumnKey, Union[float, int]]] =
-        # dict()
         data_by_sample: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]] = dict()
         for f in self.find_log_files("longreadsum/summary"):
             # sample_name = f["s_name"]
@@ -168,14 +157,11 @@ class MultiqcModule(BaseMultiqcModule):
         for sample, sample_data in data.items():
             tin_field_raw: int | float | str | bool | dict[str, Any] = sample_data.get("tin_data", {})
             if isinstance(tin_field_raw, dict):
-                # for filepath in sample_data.get("tin_data", {}).keys():
                 tin_field: dict[str, Any] = tin_field_raw
                 for filepath in tin_field.keys():
                     filename = os.path.basename(filepath)
 
                     # Extract TIN statistics from the sample data
-                    # tin_stats = sample_data["tin_data"][filepath]
-
                     tin_stats_raw: int | float | str | bool | dict[str, Any] = tin_field.get(filepath, {})
                     if isinstance(tin_stats_raw, dict):
                         tin_stats: dict[str, Any] = tin_stats_raw
@@ -197,10 +183,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(tin_data),
         )
 
-    # def add_passed_failed_reads_table(self, data: Dict[str, Dict[str,
-    # Union[float, int]]]) -> None:
-    # def add_passed_failed_reads_table(self, data: Dict[str, Dict[str,
-    # Union[float, int]]]) -> None:
     def add_passed_failed_reads_table(
         self, data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]]
     ) -> None:
@@ -349,8 +331,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(distribution_data, pconfig=pconfig),
         )
 
-    # def add_nxx_read_length_table(self, data: Dict[str, Dict[str, Union[float,
-    # int]]]) -> None:
     def add_nxx_read_length_table(
         self, data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]]
     ) -> None:
@@ -358,12 +338,8 @@ class MultiqcModule(BaseMultiqcModule):
         Add a table for NXX read length statistics.
         """
         # Prepare data for the table
-        # nxx_data = {
-        #     sample: sample_data.get("NXX_read_length", 0) for sample, sample_data in data.items()
-        # }
         nxx_data = {}
         for sample, sample_data in data.items():
-            # nxx_read_length = sample_data.get("NXX_read_length", {})
             nxx_read_length: Union[int | float | str | dict[str, Any]] = sample_data.get("NXX_read_length", {})
             if isinstance(nxx_read_length, dict):
                 # Flatten the NXX read length data
