@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "Average_Gene_Length": {
-                "title": "Average Gene Leght",
+                "title": "Average Gene Length",
                 "description": "The average number of amino acids in predicted genes.",
                 "suffix": "a.a.",
                 "format": "{:,.0f}",
