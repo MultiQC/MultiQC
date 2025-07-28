@@ -439,7 +439,7 @@ subsequent columns including the key(s) defined in the header.
 
 ### Quoting strings
 
-If you happen to use sample names or other values that appear number-like, and want to prevent MultiQC from attempt to parse them, you can quote them. For example, in this TSV defining a table al values would have been interpreted as numbers if they were not wrapped in quotes `"`:
+If you happen to use sample names or other values that appear number-like, and want to prevent MultiQC from attempt to parse them, you can quote them. For example, in this TSV defining a table all values would have been interpreted as numbers if they were not wrapped in quotes `"`:
 
 ```
 # plot_type: "table"
