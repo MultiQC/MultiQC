@@ -20,22 +20,26 @@ from typing import (
     Iterable,
     List,
     Literal,
+    Mapping,
     Optional,
+    Sequence,
     Set,
     Tuple,
     TypeVar,
     Union,
+    cast,
     overload,
 )
 
 import markdown
 import packaging.version
+from natsort import natsorted
 
 from multiqc import config, report, validation
 from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
 from multiqc.core.strict_helpers import lint_error
-from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.plot import Plot
 from multiqc.plots.table_object import (
     ColumnDict,
     ColumnKey,
@@ -44,7 +48,7 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId, SampleNameMeta, Section
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SampleNameMeta, Section, SectionId, SectionKey
 
 logger = logging.getLogger(__name__)
 
@@ -140,9 +144,6 @@ class BaseMultiqcModule:
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})
 
-        # Sanitise anchor ID and check for duplicates
-        self.anchor = Anchor(report.save_htmlid(str(self.anchor)))
-
         # See if we have a user comment in the config
         if _config_section_comment := config.section_comments.get(str(self.anchor)):
             self.comment = _config_section_comment
@@ -151,6 +152,8 @@ class BaseMultiqcModule:
         # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
         if self.info and self.info[0].islower():
             self.info = f"{self.name} {self.info}"
+        if self.info and not self.info.endswith("."):
+            self.info += "."
 
         if isinstance(self.href, str):
             self.href = [self.href]
@@ -163,6 +166,11 @@ class BaseMultiqcModule:
         self.intro = self._get_intro()
 
         # Format the markdown strings
+        if autoformat and self.info:
+            self.info = textwrap.dedent(self.info)
+            if autoformat_type == "markdown":
+                self.info = markdown.markdown(self.info)
+
         if autoformat and self.comment:
             self.comment = textwrap.dedent(self.comment)
             if autoformat_type == "markdown":
@@ -180,8 +188,6 @@ class BaseMultiqcModule:
 
         # Get list of all base attributes, so we clean up any added by child modules
         self._base_attributes = [k for k in dir(self)]
-
-        self.sample_names: List[SampleNameMeta] = []
 
     def _get_intro(self):
         doi_html = ""
@@ -206,8 +212,11 @@ class BaseMultiqcModule:
                 "; ".join(url_links)
             )
 
-        info = (self.info + ".") if self.info else ""
-        return f"<p>{info}{url_link}{doi_html}</p>{self.extra}"
+        info_html = f"{self.info}{url_link}{doi_html}"
+        if not info_html.startswith("<"):  # Assume markdown, convert to HTML
+            info_html = markdown.markdown(info_html)
+
+        return f"{info_html}{self.extra}"
 
     def clean_child_attributes(self):
         """
@@ -278,7 +287,14 @@ class BaseMultiqcModule:
         path_filters: List[str] = get_path_filters("path_filters")
         path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
 
-        for f in report.files.get(ModuleId(sp_key), []):
+        # Get files and sort them by their clean sample names
+        module_files = list(report.files.get(ModuleId(sp_key), []))
+
+        # Sort files naturally by their clean sample names
+        module_files = natsorted(module_files, key=lambda f: self.clean_s_name(f["fn"], f))
+
+        # Process the sorted files
+        for f in module_files:
             # Make a note of the filename so that we can report it if something crashes
             last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file
@@ -464,7 +480,7 @@ class BaseMultiqcModule:
             helptext=helptext,
             content_before_plot=content_before_plot,
             content=content,
-            print_section=any([description, comment, helptext, content_before_plot, plot, content]),
+            print_section=any([content_before_plot, plot, content]),
         )
 
         if plot is not None:
@@ -775,15 +791,23 @@ class BaseMultiqcModule:
 
         # For modules setting s_name from file contents, set s_name back to the filename
         # (if wanted in the config)
-        if filename is not None and (
-            config.use_filename_as_sample_name is True
-            or (
-                isinstance(config.use_filename_as_sample_name, list)
-                and search_pattern_key is not None
-                and search_pattern_key in config.use_filename_as_sample_name
-            )
-        ):
-            trimmed_name = SampleName(filename)
+        if filename is not None:
+            should_use_filename = False
+
+            # Check if we should use filename for this specific module/pattern
+            if isinstance(config.use_filename_as_sample_name, list):
+                # Check for module anchor (e.g., "verifybamid")
+                if self.anchor in config.use_filename_as_sample_name:
+                    should_use_filename = True
+                # Check for search pattern key (e.g., "verifybamid/selfsm")
+                elif search_pattern_key is not None and search_pattern_key in config.use_filename_as_sample_name:
+                    should_use_filename = True
+            # Check if we should use filename for all modules
+            elif config.use_filename_as_sample_name is True:
+                should_use_filename = True
+
+            if should_use_filename:
+                trimmed_name = SampleName(filename)
 
         # if s_name comes from file contents, it may have a file path
         # For consistency with other modules, we keep just the basename
@@ -919,6 +943,18 @@ class BaseMultiqcModule:
         """Should a sample name be ignored?"""
         sample_names_ignore = sample_names_ignore or config.sample_names_ignore
         sample_names_ignore_re = sample_names_ignore_re or config.sample_names_ignore_re
+        sample_names_only_include = config.sample_names_only_include
+        sample_names_only_include_re = config.sample_names_only_include_re
+
+        if sample_names_only_include:
+            glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in sample_names_only_include)
+            if not glob_match:
+                return True
+        if sample_names_only_include_re:
+            re_match = any(re.match(sn, s_name) for sn in sample_names_only_include_re)
+            if not re_match:
+                return True
+
         glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in sample_names_ignore)
         re_match = any(re.match(sn, s_name) for sn in sample_names_ignore_re)
         return glob_match or re_match
@@ -926,7 +962,14 @@ class BaseMultiqcModule:
     def general_stats_addcols(
         self,
         data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
-        headers: Optional[Dict[Union[ColumnKey, str], ColumnDict]] = None,
+        headers: Optional[
+            Union[
+                Mapping[ColumnKey, ColumnDict],
+                Mapping[ColumnKey, Dict[str, Any]],
+                Mapping[str, ColumnDict],
+                Mapping[str, Dict[str, Any]],
+            ]
+        ] = None,
         namespace: Optional[str] = None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
     ):
@@ -971,7 +1014,7 @@ class BaseMultiqcModule:
                 _headers[col_id] = {}
         else:
             # Make a copy
-            _headers = {ColumnKey(col_id): col_dict.copy() for col_id, col_dict in headers.items()}
+            _headers = {ColumnKey(col_id): cast(ColumnDict, col_dict.copy()) for col_id, col_dict in headers.items()}
 
         # Add the module name to the description if not already done
         for col_id in _headers.keys():
@@ -997,9 +1040,16 @@ class BaseMultiqcModule:
                     desc += " (summed for grouped samples)"
                 _headers[col_id]["description"] = desc
 
+        # Add incremental suffix to SectionKey(self.anchor) until it's unique
+        anchor = SectionKey(self.anchor)
+        suffix = 2
+        while anchor in report.general_stats_data:
+            suffix += 1
+            anchor = SectionKey(f"{self.anchor}_{suffix}")
+
         # Append to report.general_stats for later assembly into table
-        report.general_stats_data.append(rows_by_group)
-        report.general_stats_headers.append(_headers)  # type: ignore
+        report.general_stats_data[anchor] = rows_by_group
+        report.general_stats_headers[anchor] = _headers  # type: ignore
 
     def add_data_source(
         self,
@@ -1083,7 +1133,7 @@ class BaseMultiqcModule:
             i += 1
 
         # To map back keys data to specific module
-        report.saved_raw_data_keys.append(fn)
+        report.saved_raw_data_keys[fn] = None
 
         # Save the file (usualy TSV)
         report.write_data_file(data, fn, sort_cols, data_format)
@@ -1098,3 +1148,73 @@ class BaseMultiqcModule:
                 self.__saved_raw_data = dict()
             self.__saved_raw_data[fn] = data
             report.saved_raw_data[fn] = data
+
+    def merge(self, m: "BaseMultiqcModule"):
+        """
+        Running module on a new set of input.
+        Merging versions.
+        Plots in sections will be merged in the plotting code.
+        TODO: handle saved_raw_data if it makes sence at all. Maybe should be a breaking change.
+        """
+        if m.versions is not None:
+            if self.versions is not None:
+                self.versions.update(m.versions)
+            else:
+                self.versions = m.versions
+
+    def get_general_stats_headers(
+        self,
+        all_headers: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
+        default_shown: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+        default_hidden: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+        sp_key: Optional[str] = None,
+    ) -> Dict[ColumnKey, ColumnDict]:
+        """
+        Get general stats columns for a module based on user configuration.
+
+        This function checks if the module has configuration in config.general_stats_columns
+        and returns the columns accordingly. It supports custom column settings
+        and an exclusion list.
+
+        Args:
+            default_headers: Default dictionary of headers the module can add
+            all_headers: Dictionary of other possible headers the module can add
+            default_hidden_keys: Dictionary with keys and boolean values for default
+                            visibility settings. If not provided, all columns
+                            are shown by default.
+
+        Returns:
+            Dictionary of headers to add to general stats
+        """
+        # Get general stats config for this module
+        module_config: Dict[ColumnKey, ColumnDict] = {}
+        for k, v in config.general_stats_columns.items():
+            if (sp_key and k == sp_key) or k.split("/")[0] in [self.id, self.name]:
+                module_config = cast(Dict[ColumnKey, ColumnDict], v.get("columns", {}))
+                break
+        general_stats_headers: Dict[ColumnKey, ColumnDict] = {}
+
+        # Check if we have a valid config for this module
+        if module_config:
+            # Update default columns with custom config
+            for k in all_headers:
+                if k in module_config:
+                    h = all_headers[ColumnKey(k)].copy()
+                    h.update(module_config[ColumnKey(k)] or {})
+                    general_stats_headers[ColumnKey(k)] = h
+            # Add custom columns that are not in default headers
+            for sp_key, col_conf in module_config.items():
+                if sp_key not in all_headers:
+                    general_stats_headers[ColumnKey(sp_key)] = col_conf
+
+        elif all_headers:
+            # Default behavior - use all headers
+            default_shown = default_shown or [k for k, v in all_headers.items() if not v.get("hidden", False)]
+            default_hidden = default_hidden or list(set(all_headers.keys()) - set(default_shown))
+            for k in all_headers:
+                if k in default_hidden or k in default_shown:
+                    general_stats_headers[ColumnKey(k)] = all_headers[ColumnKey(k)].copy()
+                    general_stats_headers[ColumnKey(k)]["hidden"] = k in default_hidden
+
+        # Cast to satisfy mypy - this is safe as the structure is identical
+        return general_stats_headers

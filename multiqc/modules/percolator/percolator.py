@@ -1,10 +1,10 @@
-from collections import defaultdict
 import logging
+from collections import defaultdict
 from statistics import median
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc import config
 
 log = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_percolator(self, file):
         """Extract the normalized weights for each feature from the percolator logs."""
         s_name = file["s_name"]
-        lines = file["f"].readlines()
+        lines = [line for line in file["f"] if not line.startswith("#")]
         header = lines[0].strip().split("\t")
         if s_name in self.data_by_sample:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")

@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from typing import List, Dict
+from typing import Dict, List
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -126,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QoRTs: Alignment Locations",
             "ylab": "# Read Pairs",
             "cpswitch_counts_label": "Number of Read Pairs",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
 
         self.add_section(
@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QoRTs: Splice Loci",
             "ylab": "# Splice Loci",
             "cpswitch_counts_label": "Number of Splice Loci",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
 
         self.add_section(
@@ -232,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "QoRTs: Splice Events",
             "ylab": "# Splice Events",
             "cpswitch_counts_label": "Number of Splice Events",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
 
         self.add_section(

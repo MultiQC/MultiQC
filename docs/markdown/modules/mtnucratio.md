@@ -2,7 +2,7 @@
 title: mtnucratio
 displayed_sidebar: multiqcSidebar
 description: >
-  Computes mitochondrial to nuclear genome ratios in NGS datasets
+  Computes mitochondrial to nuclear genome ratios in NGS datasets.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/mtnucratio/mtnucratio.
 -->
 
 :::note
-Computes mitochondrial to nuclear genome ratios in NGS datasets
+Computes mitochondrial to nuclear genome ratios in NGS datasets.
 
 [http://www.github.com/apeltzer/MTNucRatioCalculator](http://www.github.com/apeltzer/MTNucRatioCalculator)
 :::

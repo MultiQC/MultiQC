@@ -110,25 +110,20 @@ There are a few different ways to install MultiQC into your local Python environ
 
 ### Conda
 
-MultiQC is available on [BioConda](https://bioconda.github.io/).
+MultiQC is available on [Bioconda](https://bioconda.github.io/).
 
 ```bash
 conda install multiqc
 ```
 
-:::info
-
-The order of conda channels is important!
-Please make sure that you have [configured your conda channels](https://bioconda.github.io/#usage) prior to installing anything with BioConda:
+Note that the order of conda channels is important.
+Please make sure that you have [configured your conda channels](https://bioconda.github.io/#usage) prior to installing anything with Bioconda:
 
 ```bash
-conda config --add channels defaults
 conda config --add channels bioconda
 conda config --add channels conda-forge
 conda config --set channel_priority strict
 ```
-
-:::
 
 :::warning
 
@@ -150,6 +145,15 @@ pip install multiqc
 
 Use the `--upgrade` flag to update to the latest version.
 
+If you have problems with read-only directories, you can install to
+your home directory with the `--user` parameter:
+
+```bash
+pip install --user multiqc
+```
+
+#### Development version
+
 If you would like the development version, the command is:
 
 ```bash
@@ -157,13 +161,6 @@ pip install git+https://github.com/MultiQC/MultiQC.git
 ```
 
 To update the dev version between releases, use `--upgrade --force-reinstall`. This is needed as the version number isn't changing.
-
-If you have problems with read-only directories, you can install to
-your home directory with the `--user` parameter:
-
-```bash
-pip install --user multiqc
-```
 
 ### Spack
 
@@ -206,6 +203,9 @@ pip install .
 
 This will fetch the latest development code. To update to the latest changes, use `git pull`.
 
+Use the `--editable` flag (`pip install -e .`) if you intend to develop the code locally.
+This symlinks the source files so that you don't have to reinstall every time you edit a file.
+
 `git` not installed? No problem - just download the flat files:
 
 ```bash
@@ -218,14 +218,14 @@ pip install .
 ### Nix
 
 If you're using the [nix package manager](https://nixos.org/download.html#download-nixm) with [flakes](https://nixos.wiki/wiki/Flakes) enabled, you can
-run `nix develop`in the cloned MultiQC repository to enter a shell
+run `nix develop` in the cloned MultiQC repository to enter a shell
 with required dependencies. To build MultiQC, run `nix build`.
 
 ## MultiQC container images
 
 ### Docker
 
-A Docker container is provided on Docker Hub called [`multiqc/multiqc`](https://hub.docker.com/r/ewels/multiqc/).
+A Docker container is provided on Docker Hub called [`multiqc/multiqc`](https://hub.docker.com/r/multiqc/multiqc/).
 It's based on an `python-slim` base image to give the smallest image size possible.
 
 To use, call the `docker run` with your current working directory mounted as a volume and working directory. Then just specify the MultiQC command at the end as usual:
@@ -273,8 +273,6 @@ multiqc .
 
 :::
 
-:::note{title="Compute architectures"}
-
 These docker images are [multi-platform images](https://docs.docker.com/build/building/multi-platform/) – each build contains two digests, one for `linux/amd64` and one for `linux/arm64`.
 
 Generally, the Docker client should be clever enough to pull the digest appropriate for your local compute architecture.
@@ -283,8 +281,6 @@ However, if you wish you can force it with the `--platform` flag.
 ```bash
 docker pull --platform linux/arm64 multiqc/multiqc:latest
 ```
-
-:::
 
 ### GitHub Packages
 
@@ -328,7 +324,7 @@ If you prefer, you can download a pre-built Singularity image from BioContainers
 
 ### BioContainers
 
-[BioContainers](https://biocontainers.pro/) is a project that automatically builds Docker and Singularity container images from [BioConda](https://bioconda.github.io/). The images are less fine-tuned for MultiQC so tend to have a larger filesize, but they should work well and are convenient.
+[BioContainers](https://biocontainers.pro/) is a project that automatically builds Docker and Singularity container images from [Bioconda](https://bioconda.github.io/). The images are less fine-tuned for MultiQC so tend to have a larger filesize, but they should work well and are convenient.
 
 To see available images, visit the BioContainers [registry page for MultiQC](https://biocontainers.pro/tools/multiqc).
 

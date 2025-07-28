@@ -1,12 +1,9 @@
 import json
 import logging
 import re
+from typing import Dict, Union
 
-from typing import Dict
-from typing import Union
-
-from multiqc.plots import bargraph
-from multiqc.plots import table
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 
@@ -102,7 +99,12 @@ def parse_samtools_markdup(module) -> int:
             "format": "{:,d}",
         },
     }
-    module.general_stats_addcols(data_by_sample=val_by_metric_by_sample, headers=genstats_headers, namespace="markdup")
+    # Get general stats headers using the utility function, will read config.general_stats_columns
+    general_stats_headers = module.get_general_stats_headers(all_headers=genstats_headers)
+
+    # Add headers to general stats table
+    if general_stats_headers:
+        module.general_stats_addcols(val_by_metric_by_sample, general_stats_headers, namespace="markdup")
 
     module.add_section(
         name="Markdup: stats",

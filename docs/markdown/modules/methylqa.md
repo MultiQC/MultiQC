@@ -2,7 +2,7 @@
 title: methylQA
 displayed_sidebar: multiqcSidebar
 description: >
-  Methylation sequencing data quality assessment tool
+  Methylation sequencing data quality assessment tool.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/methylqa/methylqa.py
 -->
 
 :::note
-Methylation sequencing data quality assessment tool
+Methylation sequencing data quality assessment tool.
 
 [http://methylqa.sourceforge.net/](http://methylqa.sourceforge.net/)
 :::

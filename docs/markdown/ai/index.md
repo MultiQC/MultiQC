@@ -10,9 +10,13 @@ MultiQC v1.27 and newer can generate AI-powered summaries of your reports. These
 - When creating the report, baked into the report HTML.
 - Dynamically in the browser, while viewing an existing HTML report.
 
-The AI summaries are generated using LLMs (large-language models) AI, using
-[Seqera AI](https://seqera.io/ask-ai/), [OpenAI](https://openai.com/) or [Anthropic](https://www.anthropic.com/).
-MultiQC reports also have an option to copy a prompt to your clipboard, to paste into any provider you have access to.
+The AI summaries are generated using LLMs (large-language models) AI, with the following supported providers:
+
+- [Seqera AI](https://seqera.io/ask-ai/)
+- [OpenAI](https://openai.com/)
+- [Anthropic](https://www.anthropic.com/)
+- [AWS Bedrock](https://aws.amazon.com/bedrock/)
+- MultiQC reports also have an option to copy a prompt to your clipboard, to paste into any provider you have access to
 
 :::warning
 
@@ -41,28 +45,164 @@ Remember: Treat your API keys like passwords and do not share them.
   - Sign up at [https://console.anthropic.com](https://console.anthropic.com)
   - Add a payment method to enable API access
   - Create a new key on on the _API Keys_ section in your [account settings](https://console.anthropic.com/settings/keys)
-- Any other provider, via your clipboard
+- [AWS Bedrock](https://aws.amazon.com/bedrock/)
+  - Bedrock supports a plethora of models across many providers
+  - Sign up, access credentials and payment are handled via an AWS account
+- Other providers, via custom endpoint
+  - Works for providers supporting OpenAI-compatible API, specify a custom endpoint URL. See [Using custom OpenAI-compatible endpoints](#using-custom-openai-compatible-endpoints) for details
+- Other providers, via your clipboard
   - You can use buttons in MultiQC reports to copy a prompt to your clipboard,
     in order to manually summarise report data.
     See [Copying prompts](#copying-prompts) for instructions.
 
 Seqera AI is free to use.[^seqera-ai-usage-limits]
-Use of OpenAI and Anthropic APIs are billed by their respective providers based on consumption.
-Seqera AI uses the latest AI provider models under the hood, at the time of writing that is Anthropic Claude sonnet 3.5.
+Use of other third-party APIs are billed by their respective providers based on consumption.
+Seqera AI uses the latest AI provider models under the hood, at the time of writing that is Anthropic Claude Sonnet 4.0.
 
 ### Choosing a model
 
-If you're using OpenAI or Anthropic you can choose the exact model used for report summaries.
+If you're using OpenAI, Anthropic or AWS Bedrock you can choose the exact model used for report summaries.
 This is done by setting `ai_model` in the MultiQC config.
 
 - Anthropic model names must begin with `claude`
-  - Default: `claude-3-5-sonnet-latest`.
-  - Tested with Sonnet 3.5 and Haiku 3.5. See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
+  - Default: `claude-sonnet-4-0`.
+  - See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
 - OpenAI model names must being with `gpt`
   - Default: `gpt-4o`.
-  - Tested with GPT-4o and GPT-4o-mini. See the [OpenAI docs](https://platform.openai.com/docs/models).
+  - See the [OpenAI docs](https://platform.openai.com/docs/models).
+- Bedrock model names must be valid inputs to the `modelId` parameter of the `InvokeModel` API ([docs](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html#API_runtime_InvokeModel_RequestSyntax)).
 
 This model is used during report generation and also set as the default toolbox panel setting for browser report summaries.
+
+## Reasoning Models
+
+MultiQC supports reasoning models from multiple providers which provide enhanced reasoning capabilities for complex bioinformatics analysis interpretation. These models "think" before responding, using internal reasoning to provide more accurate and thorough analysis.
+
+### Supported Reasoning Models
+
+- OpenAI: `o1`, `o3`, `o3-mini`, `o4-mini`
+- Anthropic Claude 4 series: `claude-sonnet-4-0`
+
+### Configuration
+
+Simply set your AI model to a reasoning model:
+
+```yaml
+# multiqc_config.yaml
+ai_summary: true
+ai_provider: openai # or Anthropic for Claude 4
+ai_model: o3-mini # or claude-sonnet-4-0, o4-mini, etc.
+```
+
+Reasoning models support additional configuration parameters:
+
+**OpenAI reasoning models:**
+
+```yaml
+# multiqc_config.yaml
+ai_summary: true
+ai_provider: openai
+ai_model: o3-mini
+ai_reasoning_effort: high # low, medium, or high
+ai_max_completion_tokens: 8000 # adjust based on needs
+```
+
+**Anthropic Claude 4 extended thinking:**
+
+```yaml
+# multiqc_config.yaml
+ai_summary: true
+ai_provider: anthropic
+ai_model: claude-sonnet-4-0
+ai_extended_thinking: true # enable extended thinking
+ai_thinking_budget_tokens: 15000 # budget for extended thinking
+```
+
+### Configuration Options
+
+**OpenAI reasoning models:**
+
+- **`ai_reasoning_effort`**: Controls how much time the model spends reasoning
+  - `low`: Faster responses, less thorough reasoning
+  - `medium`: Balanced speed and reasoning depth (default)
+  - `high`: Slower but most thorough reasoning
+- **`ai_max_completion_tokens`**: Maximum tokens for model output (default: 4000)
+  - Higher values allow longer, more detailed summaries
+
+**Anthropic extended thinking:**
+
+- **`ai_extended_thinking`**: Enable extended thinking for Claude 4 models (default: false)
+  - Must be set to `true` to enable extended thinking capabilities
+  - When disabled, Claude 4 models run as regular models without extended thinking
+- **`ai_thinking_budget_tokens`**: Maximum tokens for internal reasoning process (default: 10000)
+  - Only applies when `ai_extended_thinking` is enabled
+  - Controls how much "thinking" the model can do before responding
+  - Higher budgets enable more thorough analysis for complex problems
+  - The model may not use the entire budget allocated
+
+### Key Differences from Regular Models
+
+1. **Internal Reasoning**: Reasoning models "think" before responding, using hidden reasoning tokens
+2. **Enhanced Accuracy**: Better performance on complex analytical tasks
+3. **Different Parameters**: Use `max_completion_tokens` and `reasoning_effort`
+4. **Developer Messages**: Use developer messages instead of system messages for better performance
+
+### Usage Examples
+
+**Basic Configuration for o1-mini:**
+
+```yaml
+ai_summary: true
+ai_provider: openai
+ai_model: o1-mini
+```
+
+**High-Quality Analysis with o3:**
+
+```yaml
+ai_summary: true
+ai_summary_full: true
+ai_provider: openai
+ai_model: o3
+ai_reasoning_effort: high
+ai_max_completion_tokens: 6000
+```
+
+**Cost-Optimized Setup with o4-mini:**
+
+```yaml
+ai_summary: true
+ai_provider: openai
+ai_model: o4-mini
+ai_reasoning_effort: low
+ai_max_completion_tokens: 3000
+```
+
+**Anthropic Claude 4 Extended Thinking:**
+
+```yaml
+ai_summary: true
+ai_provider: anthropic
+ai_model: claude-sonnet-4-0
+ai_extended_thinking: true # enable extended thinking
+ai_thinking_budget_tokens: 12000 # budget for thinking process
+```
+
+### Model Recommendations
+
+- **`o4-mini`**: Most cost-effective, good for routine analysis
+- **`o3-mini`**: Balanced performance and cost
+- **`o3`**: Best reasoning capabilities for complex reports
+- **`o1-mini`**: Good for coding-heavy bioinformatics analysis
+
+### Notes
+
+- **Performance**: Both OpenAI reasoning models and Anthropic extended thinking may take longer to respond due to internal reasoning
+- **Billing**: Reasoning/thinking tokens are charged but internal reasoning is not visible in the output
+- **Context windows**: o1 series (128k), o3/o4 series (200k), Claude 4 series (200k+)
+- **OpenAI reasoning models**: Don't support parameters like `temperature`, use `reasoning_effort` and `max_completion_tokens`
+- **Anthropic extended thinking**: Uses standard Anthropic API with `thinking.budget_tokens` parameter, supports regular parameters like `temperature`
+- **Different approaches**: OpenAI uses specialized reasoning models, while Anthropic adds extended thinking capabilities to their regular models
 
 ## Summaries during report generation
 
@@ -79,14 +219,14 @@ To generate them, you must enable them either on the command line or via a Multi
 
   - `--ai` / `--ai-summary`: Generate a short report summary and put it on top of the report (fast)
   - `--ai-summary-full`: Generate a detailed version of the summary with analysis and recommendations (slower)
-  - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai` or `anthropic`. Default `seqera`
+  - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai`, `anthropic` or `aws_bedrock`. Default `seqera`
   - `--no-ai`: Disable AI toolbox and buttons in the report
 
 - Alternatively, MultiQC configuration file:
   ```yaml
   ai_summary: false # Set to true for short summaries
   ai_summary_full: false # Set to true for  long summaries
-  ai_provider: "seqera" # 'seqera', 'openai' or 'anthropic'. Default: 'seqera'
+  ai_provider: "seqera" # 'seqera', 'openai', 'anthropic' or 'aws_bedrock'. Default: 'seqera'
   no_ai: false # Set to true to disable AI toolbox and buttons in the report
   ```
 
@@ -105,6 +245,8 @@ export ANTHROPIC_API_KEY="..."
 It's possible to save these in an `.env` file instead of exporting to your shell's environment.
 This `.env` file can either be in the current working directory or the MultiQC source code directory.
 MultiQC uses the [python-dotenv](https://saurabh-kumar.com/python-dotenv/) package.
+
+For AWS Bedrock, the client uses the [default `boto3` credential chain](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html).
 
 If you run MultiQC without the appropriate key you will get a warning printed to the console,
 but report generation will otherwise proceed without the summary. MultiQC will not return an error exit code.
@@ -198,6 +340,14 @@ This is done at user level and will be stored in the browser's local storage and
 MultiQC reports that you open.
 You can also use `--no-ai` when generating reports, which removes this functionality from the HTML for all users.
 
+## Using `llms-full.txt`
+
+MultiQC always saves the full prompt and response to `multiqc_data/llms-full.txt` file,
+regardless of whether the summary was generated during report generation or in the browser.
+
+This file can be used to debug or further analyse the AI summary generation process.
+It can be used to directly copy the prompt into your clipboard and use it with external services, e.g. ones with a larger context window.
+
 ## Continue chat
 
 If using Seqera AI as a provider, you can click the **Chat with Seqera AI** button to open the Seqera AI
@@ -233,7 +383,45 @@ If you're unable to generate an AI summary, you can try the following:
 - Hide General statistics data in the browser, and request the AI summary dynamically:
   - Hide columns with the **Configure columns** button
   - Filter shown samples dynamically with the toolbox
-- Copy the prompt from `multiqc_data/multiqc_ai_prompt.txt` into clipboard with the **Copy prompt** button in the toolbox, and use it with external services with a larger context window.
+- Copy the prompt from `multiqc_data/llms-full.txt` into clipboard with the **Copy prompt** button in the toolbox, and use it with external services with a larger context window.
+
+## Using custom OpenAI-compatible endpoints
+
+In addition to the built-in providers, MultiQC supports using custom OpenAI-compatible endpoints. This allows you to use self-hosted models or alternative providers that implement the OpenAI API specification.
+
+To use a custom endpoint:
+
+1. Select "Custom" as the AI provider in the toolbox
+2. Enter the endpoint URL (e.g., `http://localhost:8000/v1/chat/completions`)
+3. Specify the model name to use with this endpoint
+4. Provide an API key (if required by the endpoint)
+5. Optionally specify a custom context window size if different from the default 128k tokens
+
+You can configure this in the MultiQC config:
+
+```yaml
+ai_provider: custom
+ai_model: your-model-name
+ai_custom_endpoint: http://localhost:8000/v1/chat/completions
+ai_custom_context_window: 32000 # Optional
+```
+
+Make sure to set the `OPENAI_API_KEY` environment variable to use with the custom endpoint:
+
+```bash
+export OPENAI_API_KEY=your-api-key
+```
+
+You can also customize the query payload sent to the endpoint by setting `ai_extra_query_options` in your config:
+
+```yaml
+ai_extra_query_options:
+  temperature: 0.7
+  top_p: 0.9
+  # Any other parameters supported by your endpoint
+```
+
+In browser, you can also select "Custom" provider from the toolbox, and enter the endpoint URL, model name, API key, and optional extra query options manually.
 
 ## Configuring within Nextflow
 
@@ -242,16 +430,16 @@ Most nf-core pipelines with MultiQC have a `--multiqc_config` option to provide 
 However, because API keys must be passed using environment variables, the recommended method is to use
 environment vars for everything.
 
-Using this approach means that no pipeline code needs adjustment, only a small addition to the Nextflow config
-by using the [`env` config scope](https://nextflow.io/docs/latest/reference/config.html#env).
-
+Using this approach means that no pipeline code needs adjustment, only a small addition to the Nextflow config.
 For example, to use with OpenAI you would set the following in your Nextflow config:
 
 ```groovy
 env {
-   MULTIQC_AI_SUMMARY_FULL = 1              // Enable long summaries during report generation
-   MULTIQC_AI_PROVIDER = "openai"           // Select OpenAI as provider
-   OPENAI_API_KEY = secrets.OPENAI_API_KEY  // Access key for OpenAI
+  MULTIQC_AI_SUMMARY_FULL = 1     // Enable long summaries during report generation
+  MULTIQC_AI_PROVIDER = "openai"  // Select OpenAI as provider
+}
+process.withName: MULTIQC {
+  secret = [ 'OPEN_API_KEY' ]     // Access key for OpenAI
 }
 ```
 
@@ -263,6 +451,10 @@ To add this Nextflow secret you would run the following command in the terminal:
 $ nextflow secrets set OPENAI_API_KEY "xxxx"
 ```
 
+Note that secrets can behave differently across different compute environment types.
+See the [Nextflow docs](https://www.nextflow.io/docs/latest/secrets.html#process-directive)
+for details.
+
 :::tip
 
 Save this Nextflow config to `~/.nextflow/config` and it
@@ -270,23 +462,6 @@ Save this Nextflow config to `~/.nextflow/config` and it
 to every Nextflow pipeline you launch.
 
 :::
-
-### Using Seqera Platform
-
-If using Seqera Platform, the Nextflow `env` config can be used when launching pipelines or adding them to the Launchpad.
-
-Environment variables can also be added at the _Compute Environment_ level, which affects every pipeline
-run using that CE without further modification.
-This allows managing provider API keys at the workspace level.
-
-To do this, toggle the **Environment variables** section when creating a Compute Environment and select **Add variable**.
-Ensure that the **Target environment** has **Compute job** enabled.
-
-![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_var_create.png)
-
-Once added:
-
-![Seqera Platform: Setting environment variables at CE level](../../../docs/images/ai_seqera_platform_env_vars.png)
 
 ## Security considerations
 
@@ -312,7 +487,7 @@ To enable sample anonymization:
 
 When enabled, sample names are replaced with generic pseudonyms (e.g., "SAMPLE_1", "SAMPLE_2") before being sent to the AI provider. The anonymization is applied consistently across the entire report - each sample name gets the same pseudonym wherever it appears. When the AI response references samples, the pseudonyms are automatically converted back to the original sample names before displaying.
 
-MulitQC replaces sample names that appear as typical keys in plots and tables, specifically:
+MultiQC replaces sample names that appear as typical keys in plots and tables, specifically:
 
 - First column of a table table (e.g. the General statistics table)
 - Labels of bars in bar plots

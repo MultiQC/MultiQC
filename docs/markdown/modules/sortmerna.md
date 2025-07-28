@@ -2,7 +2,7 @@
 title: SortMeRNA
 displayed_sidebar: multiqcSidebar
 description: >
-  Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data
+  Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/sortmerna/sortmerna.py
 -->
 
 :::note
-Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data
+Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.
 
 [http://bioinfo.lifl.fr/RNA/sortmerna/](http://bioinfo.lifl.fr/RNA/sortmerna/)
 :::

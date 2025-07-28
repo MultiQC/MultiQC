@@ -53,8 +53,8 @@ class BarPlot extends Plot {
       return prompt;
     }
 
-    prompt += "| Sample | " + cats.map((cat) => cat.name).join(" | ") + " |\n";
-    prompt += "| --- | " + cats.map(() => "---").join(" | ") + " |\n";
+    prompt += "|Sample|" + cats.map((cat) => cat.name).join("|") + "|\n";
+    prompt += "|---|" + cats.map(() => "---").join("|") + "|\n";
 
     let suffix = "";
     if (this.pActive) {
@@ -71,7 +71,7 @@ class BarPlot extends Plot {
     samplesSettings.forEach((sample, idx) => {
       if (sample.hidden) return;
       prompt +=
-        `| ${sample.pseudonym ?? sample.name} | ` +
+        `|${sample.pseudonym ?? sample.name}|` +
         cats
           .map((cat) => {
             let val = this.pActive ? cat.data_pct[idx] : cat.data[idx];
@@ -79,8 +79,8 @@ class BarPlot extends Plot {
             if (val !== "" && suffix) val += suffix;
             return val;
           })
-          .join(" | ") +
-        " |\n";
+          .join("|") +
+        "|\n";
     });
 
     return prompt;
@@ -156,7 +156,7 @@ class BarPlot extends Plot {
 
     let csv = "Sample" + delim + cats.map((cat) => cat.name).join(delim) + "\n";
     for (let i = 0; i < this.filteredSettings.length; i++) {
-      csv += this.filteredSettings[i] + delim + cats.map((cat) => cat.data[i]).join(delim) + "\n";
+      csv += this.filteredSettings[i].name + delim + cats.map((cat) => cat.data[i]).join(delim) + "\n";
     }
     return csv;
   }

@@ -2,7 +2,7 @@
 title: featureCounts
 displayed_sidebar: multiqcSidebar
 description: >
-  Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations
+  Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/featurecounts/featurec
 -->
 
 :::note
-Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations
+Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations.
 
 [http://subread.sourceforge.net/](http://subread.sourceforge.net/)
 :::

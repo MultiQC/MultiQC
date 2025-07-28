@@ -280,7 +280,7 @@ function fastqc_module(module_element, module_key) {
       "</div> \
         </div>";
     module_element
-      .find("[id*=fastqc_" + k + "]")
+      .find("h3[id*=fastqc_" + k + "]")
       .first()
       .append(p_bar);
   });
@@ -292,7 +292,7 @@ function fastqc_module(module_element, module_key) {
       return false;
     }
     // Create it
-    let pid = $(this).closest("h3").attr("id");
+    let pid = $(this).closest(".mqc-module-section").data("module-anchor");
     let k = pid.substr(7);
     // Remove suffix when there are multiple fastqc sections
     let n = k.indexOf("-");

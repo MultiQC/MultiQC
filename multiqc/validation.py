@@ -6,7 +6,7 @@ import inspect
 import logging
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Set, Tuple, Union, Type, cast
+from typing import Any, Dict, Set, Tuple
 
 from PIL import ImageColor
 from pydantic import BaseModel
@@ -155,7 +155,8 @@ class ValidatedConfig(BaseModel):
                 if config.strict:
                     raise ModuleConfigValidationError(message=msg, module_name=modname)
 
-        # By this point, data is a valid dict with only valid fields, but it still can raise PydanticValidationError with unexpected errors
+        # By this point, data is a valid dict with only valid fields, but it still can
+        # raise PydanticValidationError with unexpected errors
         super().__init__(**data)
 
     @classmethod
@@ -255,6 +256,24 @@ class ValidatedConfig(BaseModel):
             val_correct = f"rgb({val})"
         else:
             val_correct = val
+
+        # Check if it's an rgba format - ImageColor.getrgb doesn't support rgba
+        rgba_match = re.match(r"rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)", val_correct)
+        if rgba_match:
+            # Validate that RGB values are in range 0-255
+            try:
+                r, g, b, a = rgba_match.groups()
+                if not all(0 <= int(v) <= 255 for v in [r, g, b]):
+                    raise ValueError("RGB values must be between 0 and 255")
+                if not 0 <= float(a) <= 1:
+                    raise ValueError("Alpha value must be between 0 and 1")
+            except ValueError as e:
+                add_validation_error(path_in_cfg, f"invalid color value '{val}': {e}")
+                return None
+            else:
+                return val  # Return the original rgba string
+
+        # For other formats, use ImageColor.getrgb
         try:
             ImageColor.getrgb(val_correct)
         except ValueError:

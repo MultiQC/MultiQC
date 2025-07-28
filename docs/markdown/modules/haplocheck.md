@@ -2,7 +2,7 @@
 title: Haplocheck
 displayed_sidebar: multiqcSidebar
 description: >
-  Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content
+  Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/haplocheck/haplocheck.
 -->
 
 :::note
-Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content
+Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.
 
 [https://github.com/genepi/haplocheck/](https://github.com/genepi/haplocheck/)
 :::

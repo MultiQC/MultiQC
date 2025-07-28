@@ -2,7 +2,7 @@
 title: Samblaster
 displayed_sidebar: multiqcSidebar
 description: >
-  Marks duplicates and extracts discordant and split reads from sam files
+  Marks duplicates and extracts discordant and split reads from sam files.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/samblaster/samblaster.
 -->
 
 :::note
-Marks duplicates and extracts discordant and split reads from sam files
+Marks duplicates and extracts discordant and split reads from sam files.
 
 [https://github.com/GregoryFaust/samblaster](https://github.com/GregoryFaust/samblaster)
 :::

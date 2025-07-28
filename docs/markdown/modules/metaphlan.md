@@ -2,7 +2,7 @@
 title: MetaPhlAn
 displayed_sidebar: multiqcSidebar
 description: >
-  Profiles the composition of microbial communities from metagenomic shotgun sequencing data
+  Profiles the composition of microbial communities from metagenomic shotgun sequencing data.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/metaphlan/metaphlan.py
 -->
 
 :::note
-Profiles the composition of microbial communities from metagenomic shotgun sequencing data
+Profiles the composition of microbial communities from metagenomic shotgun sequencing data.
 
 [https://github.com/biobakery/MetaPhlAn](https://github.com/biobakery/MetaPhlAn)
 :::

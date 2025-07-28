@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypedDict, Un
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, heatmap, linegraph, table
-from multiqc.plots.plotly.line import LinePlotConfig, Series
+from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.table_object import ColumnKey, InputRow, SampleName
 from multiqc.types import Anchor, LoadedFileDict
 
@@ -527,11 +527,10 @@ class MultiqcModule(BaseMultiqcModule):
                 },
                 ColumnKey("total_sequences"): {
                     "title": "Seqs",
+                    "shared_key": "read_count",
                     "description": f"Total sequences ({config.read_count_desc})",
                     "min": 0,
                     "scale": "Blues",
-                    "suffix": "M",
-                    "modify": lambda x: x * config.read_count_multiplier,
                 },
             },
             group_samples_config=SampleGroupingConfig(
@@ -645,9 +644,9 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "colors": self.get_status_cols("per_base_sequence_quality"),
                     "y_bands": [
-                        {"from": 28, "to": 100, "color": "#c3e6c3"},
-                        {"from": 20, "to": 28, "color": "#e6dcc3"},
-                        {"from": 0, "to": 20, "color": "#e6c3c3"},
+                        {"from": 28, "to": 100, "color": "#009500", "opacity": 0.13},
+                        {"from": 20, "to": 28, "color": "#a07300", "opacity": 0.13},
+                        {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
                     ],
                 }
             )
@@ -699,9 +698,9 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "colors": self.get_status_cols("per_sequence_quality_scores"),
                     "x_bands": [
-                        {"from": 28, "to": 100, "color": "#c3e6c3"},
-                        {"from": 20, "to": 28, "color": "#e6dcc3"},
-                        {"from": 0, "to": 20, "color": "#e6c3c3"},
+                        {"from": 28, "to": 100, "color": "#009500", "opacity": 0.13},
+                        {"from": 20, "to": 28, "color": "#a07300", "opacity": 0.13},
+                        {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
                     ],
                 }
             )
@@ -967,9 +966,9 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "colors": self.get_status_cols("per_base_n_content"),
                     "y_bands": [
-                        {"from": 20, "to": 100, "color": "#e6c3c3"},
-                        {"from": 5, "to": 20, "color": "#e6dcc3"},
-                        {"from": 0, "to": 5, "color": "#c3e6c3"},
+                        {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},
+                        {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},
+                        {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},
                     ],
                 }
             )
@@ -1022,7 +1021,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="Sequence Length Distribution",
                 anchor="fastqc_sequence_length_distribution",
-                description=f'<div class="alert alert-info">{desc}</div>',
+                content=f'<div class="alert alert-info">{desc}</div>',
             )
         else:
             pconfig = LinePlotConfig(
@@ -1234,6 +1233,10 @@ class MultiqcModule(BaseMultiqcModule):
             for seq, _ in top_seqs
         }
 
+        table_data = dict(
+            sorted(table_data.items(), key=lambda x: (x[1]["total_count"], x[1]["samples"]), reverse=True)
+        )
+
         ranked_by = (
             "the number of samples they occur in" if by == "samples" else "the number of occurrences across all samples"
         )
@@ -1277,6 +1280,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "FastQC: Top overrepresented sequences",
                     "col1_header": "Overrepresented sequence",
                     "sort_rows": False,
+                    "rows_are_samples": False,
+                    "defaultsort": [{"column": "total_count"}, {"column": "samples"}],
                 },
             ),
         )
@@ -1316,16 +1321,17 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
+            "series_label": "sample-adapter combinations",
         }
         if status_checks:
             pconfig["y_bands"] = [
-                {"from": 20, "to": 100, "color": "#e6c3c3"},
-                {"from": 5, "to": 20, "color": "#e6dcc3"},
-                {"from": 0, "to": 5, "color": "#c3e6c3"},
+                {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},
+                {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},
             ]
 
         plot = None
-        content = None
+        content = ""
         if len(pct_by_pos_by_sample) > 0:
             plot = linegraph.plot(pct_by_pos_by_sample, pconfig)
         else:

@@ -2,7 +2,7 @@
 title: Kraken
 displayed_sidebar: multiqcSidebar
 description: >
-  Taxonomic classification using exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
+  Taxonomic classification using exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/kraken/kraken.py
 -->
 
 :::note
-Taxonomic classification using exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
+Taxonomic classification using exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.
 
 [https://ccb.jhu.edu/software/kraken/](https://ccb.jhu.edu/software/kraken/)
 :::

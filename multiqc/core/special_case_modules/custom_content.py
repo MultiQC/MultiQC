@@ -1,29 +1,23 @@
 """Core MultiQC module to parse output from custom script output"""
 
 import base64
-from io import BufferedReader
 import json
 import logging
 import os
 import re
 from collections import defaultdict
-from token import OP
-from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, TypedDict, Union, cast
+from io import BufferedReader
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
+import markdown
 import yaml
+from natsort import natsorted
 from pydantic import BaseModel
 
 from multiqc import Plot, config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
-from multiqc.plots.plotly.bar import BarPlotConfig
-from multiqc.plots.plotly.box import BoxPlotConfig
-from multiqc.plots.plotly.heatmap import HeatmapConfig
-from multiqc.plots.plotly.line import LinePlotConfig
-from multiqc.plots.plotly.plot import PlotType
-from multiqc.plots.plotly.scatter import ScatterConfig
-from multiqc.plots.table_object import TableConfig
-from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
+from multiqc.types import Anchor, LoadedFileDict, ModuleId, PlotType, SectionId, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
 # Initialise the logger
@@ -165,6 +159,37 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             elif f_extension == ".html":
                 parsed_dict = {"id": f["s_name"], "plot_type": "html", "data": str(f["f"])}
                 parsed_dict.update(_find_html_file_header(f))
+            elif f_extension == ".md":
+                # Render Markdown content to HTML for custom content sections
+                md_raw: str = str(f["f"])
+                # Support optional YAML front-matter fenced by '---' lines
+                md_config: Dict[str, Any] = {}
+                if md_raw.lstrip().startswith("---"):
+                    # Attempt to parse front-matter
+                    front_end = md_raw.find("\n---", 3)
+                    if front_end != -1:
+                        fm_text = md_raw.lstrip()[3:front_end]
+                        try:
+                            md_config = yaml.safe_load(fm_text) or {}
+                        except Exception:
+                            md_config = {}
+                        md_raw = md_raw[front_end + 4 :]
+                html_content = markdown.markdown(md_raw)
+                parsed_dict = {
+                    "id": f["s_name"],
+                    "plot_type": "html",
+                    "section_name": f["s_name"]
+                    .rstrip(f_extension)
+                    .rstrip("_mqc")
+                    .replace("_", " ")
+                    .replace("-", " ")
+                    .replace(".", " "),
+                    "data": html_content,
+                }
+                # Merge any configuration from YAML front-matter or matching config item
+                parsed_dict.update(md_config)  # type: ignore
+                if config_custom_data_id in ccdict_by_id:
+                    parsed_dict.update(ccdict_by_id[config_custom_data_id].config)  # type: ignore
 
             if parsed_dict is not None:
                 parsed_item: Union[str, Dict, List, None] = parsed_dict.get("data", {})
@@ -315,8 +340,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         # Initialise this new module class and append to list
         else:
             # Is this file asking to be a sub-section under a parent section?
-            mod_id = ccdict.config.get("parent_id", ccdict.config.get("id", mod_id))
-            section_id: SectionId = ccdict.config.get("section_id", mod_id)
+            mod_id = cast(ModuleId, ccdict.config.get("parent_id", ccdict.config.get("id", mod_id)))
+            section_id: SectionId = cast(SectionId, ccdict.config.get("section_id", ccdict.config.get("id", mod_id)))
 
             mod_anchor: Optional[Anchor] = None
             if "parent_anchor" in ccdict.config:
@@ -369,6 +394,11 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         parsed_mod for mod_id in mod_order for parsed_mod in parsed_modules.values() if parsed_mod.anchor == mod_id
     ]
     sorted_modules = modules_in_order + modules__not_in_order
+
+    # sort the sections in each module by name by default
+    # this can always be overridden via config
+    for module in sorted_modules:
+        module.sections = natsorted(module.sections, key=lambda s: s.name)
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
@@ -450,13 +480,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = ccdict.config.get("pconfig", {})
         if pconfig.get("anchor") is None:
-            if pconfig.get("id") is not None:
-                pconfig["anchor"] = pconfig["id"]
-                if pconfig["anchor"] == self.anchor or pconfig["anchor"] == section_anchor:
-                    # making sure plot anchor is globally unique
-                    pconfig["anchor"] += "-plot"
-            else:
-                pconfig["anchor"] = section_anchor + "-plot"  # making sure anchor is globally unique
+            pconfig["anchor"] = pconfig["id"] if pconfig.get("id") is not None else section_anchor
+
+        # Making sure plot anchor is globally unique
+        if pconfig["anchor"] == self.anchor or pconfig["anchor"] == section_anchor:
+            pconfig["anchor"] += "-plot"
+
         if pconfig.get("id") is None:
             pconfig["id"] = section_id
         if pconfig.get("title") is None:
@@ -483,7 +512,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ccdict.data,  # type: ignore
                 ccdict.config.get("xcats"),
                 ccdict.config.get("ycats"),
-                pconfig=HeatmapConfig(**pconfig),
+                pconfig=heatmap.HeatmapConfig(**pconfig),
             )
             plot_datasets = [ccdict.data]  # to save after rendering
         else:
@@ -492,9 +521,17 @@ class MultiqcModule(BaseMultiqcModule):
             # Try to coerce x-axis to numeric
             if plot_type in [PlotType.LINE, PlotType.SCATTER]:
                 try:
+                    # a series is represented by a dict
                     ccdict.data = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in plot_datasets]
-                except ValueError:
-                    pass
+                except (ValueError, TypeError):
+                    try:
+                        # a series is represented by a list of paris
+                        ccdict.data = [
+                            {_sname: {float(x): float(y) for x, y in _sdata} for _sname, _sdata in ds.items()}
+                            for ds in plot_datasets
+                        ]
+                    except ValueError:
+                        pass
 
             # Table
             if plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
@@ -510,29 +547,38 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig["parse_numeric"] = False
 
                 plot = (table if plot_type == PlotType.TABLE else violin).plot(
-                    plot_datasets, headers=headers, pconfig=pconfig
+                    plot_datasets[0],  # type: ignore
+                    headers=headers,
+                    pconfig=pconfig,  # type: ignore
                 )
 
             # Bar plot
             elif plot_type == PlotType.BAR:
                 ccdict.data = [{str(k): v for k, v in ds.items()} for ds in plot_datasets]
-                plot = bargraph.plot(plot_datasets, ccdict.config.get("categories"), pconfig=BarPlotConfig(**pconfig))
+                plot = bargraph.plot(
+                    plot_datasets,  # type: ignore
+                    ccdict.config.get("categories"),
+                    pconfig=bargraph.BarPlotConfig(**pconfig),  # type: ignore
+                )
 
             # Line plot
             elif plot_type == PlotType.LINE:
-                plot = linegraph.plot(plot_datasets, pconfig=LinePlotConfig(**pconfig))  # type: ignore
+                plot = linegraph.plot(plot_datasets, pconfig=linegraph.LinePlotConfig(**pconfig))
 
             # Scatter plot
             elif plot_type == PlotType.SCATTER:
-                plot = scatter.plot(ccdict.data, pconfig=ScatterConfig(**pconfig))  # type: ignore
+                scatter_data = ccdict.data
+                assert not isinstance(scatter_data, str)
+                plot = scatter.plot(scatter_data, pconfig=scatter.ScatterConfig(**pconfig))
 
             # Box plot
             elif plot_type == PlotType.BOX:
-                plot = box.plot(plot_datasets, pconfig=BoxPlotConfig(**pconfig))  # type: ignore
+                plot = box.plot(plot_datasets, pconfig=box.BoxPlotConfig(**pconfig))
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
-                plot = violin.plot(plot_datasets, pconfig=TableConfig(**pconfig))  # type: ignore
+                violin_data = cast(List[Tuple[SectionKey, Mapping[str, Any]]], plot_datasets)
+                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))  # type: ignore
 
             # Raw HTML
             elif plot_type == PlotType.HTML:
@@ -557,10 +603,17 @@ class MultiqcModule(BaseMultiqcModule):
                     plot.pconfig.save_data_file = False
 
         if plot is not None or content:
+            # Only add description to section if section name is different from module name
+            # to avoid duplication between module intro and section description
+            section_description = ""
+            if section_name and section_name != self.name:
+                section_description = ccdict.config.get("description", "")
+
             self.add_section(
                 name=section_name,
                 anchor=section_anchor,
                 id=section_id,
+                description=section_description,
                 plot=plot,
                 content=content or "",
             )
@@ -650,6 +703,11 @@ def _guess_file_format(f):
             spaces.append(len(line.split()))
         if j == 10:
             break
+
+    # Handle empty files
+    if not tabs:
+        return "spaces"  # default format for empty files
+
     tab_mode = max(set(tabs), key=tabs.count)
     commas_mode = max(set(commas), key=commas.count)
     spaces_mode = max(set(spaces), key=spaces.count)
@@ -763,6 +821,10 @@ def _parse_txt(
                 first_row_all_strings = False
             if i != 0 and j != 0 and isinstance(v, str):
                 inner_cells_all_numeric = False
+
+    # Return None for empty files
+    if len(matrix) == 0:
+        return None, conf, plot_type
 
     # General stat info files - expected to have at least 2 rows (first row always being the header)
     # and have at least 2 columns (first column always being sample name)

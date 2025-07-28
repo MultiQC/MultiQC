@@ -3,11 +3,12 @@ This module provides functions useful to interact with MultiQC in an interactive
 Python environment, such as Jupyter notebooks.
 """
 
-import json
 import logging
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
+
+from numpy import isin
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
@@ -18,13 +19,13 @@ from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.plots.plotly.bar import BarPlot
-from multiqc.plots.plotly.box import BoxPlot
-from multiqc.plots.plotly.heatmap import HeatmapPlot
-from multiqc.plots.plotly.line import LinePlot
-from multiqc.plots.plotly.plot import Plot, PlotType
-from multiqc.plots.plotly.scatter import ScatterPlot
-from multiqc.plots.plotly.violin import ViolinPlot
+from multiqc.plots.bargraph import BarPlot
+from multiqc.plots.box import BoxPlot
+from multiqc.plots.heatmap import HeatmapPlot
+from multiqc.plots.linegraph import LinePlot
+from multiqc.plots.plot import Plot, PlotType
+from multiqc.plots.scatter import ScatterPlot
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ModuleId
 
 logger = logging.getLogger("multiqc")
@@ -106,45 +107,6 @@ def parse_logs(
         logger.warning(e)
 
 
-def parse_data_json(path: Union[str, Path]):
-    """
-    Try find multiqc_data.json in the given directory, and load it into the report.
-
-    @param path: Path to the directory containing multiqc_data.json or the path to the file itself.
-    """
-    check_version(parse_data_json.__name__)
-
-    json_path_found = False
-    json_path: Path
-    if str(path).endswith(".json"):
-        json_path = Path(path)
-        json_path_found = True
-    else:
-        json_path = Path(path) / "multiqc_data.json"
-        if json_path.exists():
-            json_path_found = True
-
-    if not json_path_found:
-        logger.error(f"multiqc_data.json not found in {path}")
-        return
-
-    logger.info(f"Loading data from {json_path}")
-    try:
-        with json_path.open("r") as f:
-            data = json.load(f)
-
-        for mod, sections in data["report_data_sources"].items():
-            logger.info(f"Loaded module {mod}")
-            for section, sources in sections.items():
-                for sname, source in sources.items():
-                    report.data_sources[mod][section][sname] = source
-        for id, plot_dump in data["report_plot_data"].items():
-            logger.info(f"Loaded plot {id}")
-            report.plot_data[id] = plot_dump
-    except (json.JSONDecodeError, KeyError) as e:
-        logger.error(f"Error loading data from multiqc_data.json: {e}")
-
-
 def list_data_sources() -> List[str]:
     """
     Return a list of the data sources that have been loaded.
@@ -176,10 +138,22 @@ def list_samples() -> List[str]:
     """
     samples = set()
 
-    for mod, sections in report.data_sources.items():
-        for section, sources in sections.items():
-            for sname, source in sources.items():
-                samples.add(sname)
+    for _, plot in report.plot_by_id.items():
+        if isinstance(plot, Plot):
+            for ds in plot.datasets:
+                samples |= set(ds.sample_names())
+
+    # Also add samples from report.plot_data
+    for plot_id, plot_dump in report.plot_data.items():
+        if isinstance(plot_dump, dict):
+            for ds in plot_dump.get("datasets", []):
+                samples |= set(ds.get("all_samples", []))
+
+    # And from general_stats_data
+    for section_key, rows_by_group in report.general_stats_data.items():
+        for s, rows in rows_by_group.items():
+            for row in rows:
+                samples.add(row.sample)
 
     return sorted(samples)
 
@@ -202,10 +176,11 @@ def list_plots() -> Dict:
             if plot_anchor not in report.plot_by_id:
                 raise ValueError(f'CRITICAL: Plot "{plot_anchor}" not found in report.plot_by_id')
             plot = report.plot_by_id[plot_anchor]
-            if len(plot.datasets) == 1:
-                result[module.id].append(section_id)
-            if len(plot.datasets) > 1:
-                result[module.id].append({section_id: [d.label for d in plot.datasets]})
+            if isinstance(plot, Plot):
+                if len(plot.datasets) == 1:
+                    result[module.id].append(section_id)
+                if len(plot.datasets) > 1:
+                    result[module.id].append({section_id: [d.label for d in plot.datasets]})
 
     return result
 
@@ -213,7 +188,7 @@ def list_plots() -> Dict:
 def get_plot(
     module: str,
     section: str,
-) -> Plot:
+) -> Union[Plot, str, None]:
     """
     Get plot Object by module name and section ID.
 
@@ -266,7 +241,8 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     """
 
     data: Dict[str, Dict] = defaultdict(dict)
-    for rows_by_group, header in zip(report.general_stats_data, report.general_stats_headers):
+    for section_key, rows_by_group in report.general_stats_data.items():
+        header = report.general_stats_headers[section_key]
         for s, rows in rows_by_group.items():
             if sample and s != sample:
                 continue
