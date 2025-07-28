@@ -7,7 +7,8 @@ import json
 from typing import Any, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.base_module import SampleName, ColumnKey
+
+# from multiqc.base_module import SampleName, ColumnKey
 from multiqc.plots import table
 from multiqc.plots.table_object import TableConfig
 
@@ -17,13 +18,16 @@ log = logging.getLogger(__name__)
 # https://github.com/MultiQC/MultiQC/blob/main/.github/CONTRIBUTING.md
 # https://docs.seqera.io/multiqc/development/modules
 
+SampleName = str
+ColumnKey = str
+
 
 class MultiqcModule(BaseMultiqcModule):
     """
     The module parses data in the `summary.txt` LongReadSum output files.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super(MultiqcModule, self).__init__(
             name="LongReadSum",
             anchor="longreadsum",
@@ -311,12 +315,21 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(base_modification_data_fmt, pconfig=pconfig),
         )
 
-    def add_distribution_table(self, data, title: str, desc: str, key_name: str) -> None:
+    def add_distribution_table(
+        self,
+        data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]],
+        title: str,
+        desc: str,
+        key_name: str,
+    ) -> None:
         """
         Add a distribution table.
         """
         # Prepare data for the table
-        distribution_data = {sample: sample_data.get(key_name, 0) for sample, sample_data in data.items()}
+        distribution_data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]] = {}
+        for sample, sample_data in data.items():
+            if key_name in sample_data:
+                distribution_data[sample] = {key_name: sample_data[key_name]}
 
         pconfig = TableConfig(
             id=f"longreadsum-{key_name}",
