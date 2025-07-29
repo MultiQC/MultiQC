@@ -46,8 +46,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Get data by sample
         data_by_sample: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]] = dict()
         for f in self.find_log_files("longreadsum/summary"):
-            # sample_name = f["s_name"]
             sample_name = SampleName(f["s_name"])
+            self.add_data_source(f, sample_name)
             log.debug("Processing file for sample: %s", sample_name)
             if sample_name in data_by_sample:
                 log.debug("Duplicate sample name found! Overwriting: %s", sample_name)
@@ -119,7 +119,8 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Creating TIN summary statistics table.")
             self.add_tin_summary_table(data_by_sample)
 
-        log.debug("Data processing complete. Adding sections to MultiQC report.")
+        log.debug("Writing parsed data to file.")
+        self.write_data_file(data_by_sample, "multiqc_longreadsum")
 
     def create_stats_table(self, data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]]) -> None:
         """
