@@ -1,9 +1,8 @@
 """MultiQC submodule to parse output from Picard HsMetrics"""
 
 import logging
-from collections import defaultdict
-
 import re
+from collections import Counter, defaultdict
 from typing import Any, Dict, List, Optional, Set, cast
 
 from multiqc import config
@@ -64,20 +63,20 @@ FIELD_DESCRIPTIONS = {
 }
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
     """Find Picard HsMetrics reports and parse their data"""
 
-    data_by_bait_by_sample: Dict[str, Dict[str, Dict[str, Any]]] = dict()
+    data_by_bait_by_sample: dict[str, dict[str, dict[str, Any]]] = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/hsmetrics", filehandles=True):
-        s_name: Optional[str] = f["s_name"]
-        keys: Optional[List[str]] = None
-        commadecimal: Optional[bool] = None
-        baits: Set[str] = set()
+        s_name: str | None = f["s_name"]
+        keys: list[str] | None = None
+        commadecimal: bool | None = None
+        baits: set[str] = set()
 
         for line in f["f"]:
-            maybe_s_name: Optional[str] = util.extract_sample_name(
+            maybe_s_name: str | None = util.extract_sample_name(
                 module,
                 line,
                 f,
@@ -89,7 +88,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
                 keys = None
 
             if util.is_line_right_before_table(line, picard_class="HsMetrics", sentieon_algo="HsMetricAlgo"):
-                keys = cast(List[str], f["f"].readline().strip("\n").split("\t"))
+                keys = cast(list[str], f["f"].readline().strip("\n").split("\t"))
                 if s_name in data_by_bait_by_sample:
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                 data_by_bait_by_sample[s_name] = dict()
@@ -134,7 +133,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         if len(data_by_bait_by_sample[s_name]) == 0:
             data_by_bait_by_sample.pop(s_name, None)
 
-    data_by_sample: Dict[str, Dict[str, Any]] = dict()
+    data_by_sample: dict[str, dict[str, Any]] = dict()
     # Manipulate sample names if multiple baits found
     for s_name in data_by_bait_by_sample:
         for bait in data_by_bait_by_sample[s_name]:
@@ -206,11 +205,14 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             plot=hs_pen_plot,
         )
 
+    # Parse per-target coverage
+    target_cov_samples = _parse_target_coverage(module)
+
     # Return the number of detected samples to the parent module
-    return set(data_by_sample.keys())
+    return set(data_by_sample.keys()) | target_cov_samples
 
 
-def _general_stats_table(module: BaseMultiqcModule, data: Dict[str, Any]):
+def _general_stats_table(module: BaseMultiqcModule, data: dict[str, Any]):
     """
     Generate table header configs for the General Stats table,
     add config and data to the base module.
@@ -220,7 +222,7 @@ def _general_stats_table(module: BaseMultiqcModule, data: Dict[str, Any]):
     genstats_table_cols = picard_config.get("HsMetrics_genstats_table_cols", [])
     genstats_table_cols_hidden = picard_config.get("HsMetrics_genstats_table_cols_hidden", [])
 
-    headers: Dict[str, ColumnDict] = {}
+    headers: dict[str, ColumnDict] = {}
     # Custom general stats columns
     if len(genstats_table_cols) or len(genstats_table_cols_hidden):
         for k, v in _generate_table_header_config(genstats_table_cols, genstats_table_cols_hidden).items():
@@ -265,7 +267,7 @@ def _general_stats_table(module: BaseMultiqcModule, data: Dict[str, Any]):
     module.general_stats_addcols(data, headers, namespace="HsMetrics")
 
 
-def _get_table_headers() -> Dict[ColumnKey, ColumnDict]:
+def _get_table_headers() -> dict[ColumnKey, ColumnDict]:
     # Look for a user config of which table columns we should use
     picard_config = getattr(config, "picard_config", {})
     HsMetrics_table_cols = picard_config.get("HsMetrics_table_cols")
@@ -316,7 +318,7 @@ def _get_table_headers() -> Dict[ColumnKey, ColumnDict]:
     return _generate_table_header_config(HsMetrics_table_cols, HsMetrics_table_cols_hidden)
 
 
-def _generate_table_header_config(table_cols: List[str], hidden_table_cols: List[str]) -> Dict[ColumnKey, ColumnDict]:
+def _generate_table_header_config(table_cols: list[str], hidden_table_cols: list[str]) -> dict[ColumnKey, ColumnDict]:
     """
     Automatically generate some nice table header configs based on what we know about
     the different types of Picard data fields.
@@ -336,7 +338,7 @@ def _generate_table_header_config(table_cols: List[str], hidden_table_cols: List
         if c not in FIELD_DESCRIPTIONS and c[:17] != "PCT_TARGET_BASES_":
             log.error(f"Field '{c}' not found in expected Picard fields. Please check your config.")
 
-    headers: Dict[ColumnKey, ColumnDict] = dict()
+    headers: dict[ColumnKey, ColumnDict] = dict()
     for h in table_cols + hidden_table_cols:
         # Set up the configuration for each column
         if h not in headers:
@@ -383,8 +385,8 @@ def _generate_table_header_config(table_cols: List[str], hidden_table_cols: List
     return headers
 
 
-def _add_target_bases(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
-    data_clean: Dict[str, Dict[int, float]] = defaultdict(dict)
+def _add_target_bases(module: BaseMultiqcModule, data: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    data_clean: dict[str, dict[int, float]] = defaultdict(dict)
     max_non_zero_cov = 0
     for s in data:
         for h in data[s]:
@@ -414,8 +416,8 @@ def _add_target_bases(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]
     }
 
 
-def hs_penalty_plot(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]):
-    data_clean: Dict[str, Dict[int, float]] = defaultdict(dict)
+def hs_penalty_plot(module: BaseMultiqcModule, data: dict[str, dict[str, Any]]):
+    data_clean: dict[str, dict[int, float]] = defaultdict(dict)
     any_non_zero = False
     for s in data:
         for h in data[s]:
@@ -437,3 +439,118 @@ def hs_penalty_plot(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]):
 
     if any_non_zero:
         return linegraph.plot(data_clean, pconfig)
+
+
+def _parse_target_coverage(module: BaseMultiqcModule) -> set[str]:
+    """
+    Parse Picard HsMetrics per_target_coverage files.
+
+    Generates:
+    - Coverage distribution plot: distribution of normalized coverage across targets
+    - GC bias plot: normalized coverage vs %GC
+    """
+    coverage_data: dict[str, dict[float, int]] = {}
+    gc_data: dict[str, dict[float, float]] = {}
+
+    for f in module.find_log_files("picard/hsmetrics_target_coverage", filehandles=True):
+        module.add_data_source(f, section=f"{module.anchor}_target_coverage_distribution")
+        s_name = module.clean_s_name(f["s_name"], f["root"])
+
+        fh = f["f"]
+        header_line = fh.readline().rstrip("\r\n")
+        header = header_line.split("\t")
+
+        header_lower = [h.strip().lower() for h in header]
+        if "normalized_coverage" not in header_lower and "mean_coverage" not in header_lower:
+            continue
+
+        gc_idx = header_lower.index("%gc") if "%gc" in header_lower else None
+        norm_cov_idx = header_lower.index("normalized_coverage") if "normalized_coverage" in header_lower else None
+        mean_cov_idx = header_lower.index("mean_coverage") if "mean_coverage" in header_lower else None
+
+        cov_vals = []
+        gc_bins = defaultdict(list)
+
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split("\t")
+            if len(parts) != len(header):
+                continue
+
+            try:
+                if norm_cov_idx is not None:
+                    cov = float(parts[norm_cov_idx])
+                elif mean_cov_idx is not None:
+                    cov = float(parts[mean_cov_idx])
+                else:
+                    continue
+                cov_vals.append(cov)
+
+                if gc_idx is not None:
+                    gc_val = float(parts[gc_idx])
+                    if gc_val <= 1.0:
+                        gc_val *= 100.0
+                    gc_bin = round(gc_val)
+                    gc_bins[gc_bin].append(cov)
+            except ValueError:
+                continue
+
+        if cov_vals:
+            hist = Counter(round(v * 20.0) / 20.0 for v in cov_vals if 0 <= v <= 4.0)
+            coverage_data[s_name] = {round(x, 2): hist[x] for x in sorted(hist.keys())}
+
+        if gc_bins:
+            gc_data[s_name] = {
+                gc: round(sum(vals) / len(vals), 4) for gc, vals in sorted(gc_bins.items()) if len(vals) >= 2
+            }
+
+        module.add_software_version(None, s_name)
+
+    coverage_data = module.ignore_samples(coverage_data)
+    gc_data = module.ignore_samples(gc_data)
+
+    if coverage_data:
+        pconfig = {
+            "id": f"{module.anchor}_target_coverage_distribution",
+            "title": f"{module.name}: Target Coverage Distribution",
+            "ylab": "Target Count",
+            "xlab": "Normalized Coverage",
+            "tt_label": "<b>Coverage {point.x}X</b>: {point.y} targets",
+        }
+        module.add_section(
+            name="Target coverage distribution",
+            anchor=f"{module.anchor}_target_coverage_distribution",
+            description="Distribution of normalized coverage across all targeted hybrid-selection regions.",
+            helptext="""
+            This plot shows the distribution of coverage across target intervals, normalized so that 1.0
+            represents the median or mean target coverage. A narrower peak around 1.0 indicates higher
+            sequencing uniformity across targets.
+            """,
+            plot=linegraph.plot(coverage_data, pconfig),
+        )
+
+    if gc_data:
+        pconfig = {
+            "id": f"{module.anchor}_target_coverage_gc_bias",
+            "title": f"{module.name}: Target Coverage GC Bias",
+            "ylab": "Normalized Coverage",
+            "xlab": "Target GC Content (%)",
+            "ymin": 0,
+            "yplotlines": [{"value": 1.0, "color": "#cccccc", "width": 1, "dashStyle": "Dash"}],
+            "tt_label": "<b>{point.x}% GC</b>: {point.y:.2f}X",
+        }
+        module.add_section(
+            name="Target coverage GC bias",
+            anchor=f"{module.anchor}_target_coverage_gc_bias",
+            description="Normalized coverage of target regions plotted against target GC content percentage.",
+            helptext="""
+            Hybrid capture can exhibit bias towards or against targets with high or low GC content.
+            This plot displays the mean normalized coverage for targets binned by their GC percentage.
+            Points close to 1.0 indicate consistent coverage across varying GC percentages.
+            """,
+            plot=linegraph.plot(gc_data, pconfig),
+        )
+
+    return set(coverage_data.keys()) | set(gc_data.keys())
