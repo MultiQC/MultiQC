@@ -418,6 +418,14 @@ fgbio/groupreadsbyumi:
 fgbio/errorratebyreadposition:
   contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
   num_lines: 3
+fgbio/duplex_yield_metrics:
+  fn: "*duplex_yield_metrics.txt"
+  contents: "ds_fraction_duplexes"
+  num_lines: 2
+fgbio/family_sizes:
+  fn: "*family_sizes.txt"
+  contents: "family_size	cs_count	cs_fraction"
+  num_lines: 2
 fgumi/clip:
   contents: "read_type\treads\treads_unmapped\treads_clipped_pre"
   num_lines: 2
