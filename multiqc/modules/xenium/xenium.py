@@ -1,5 +1,4 @@
 import logging
-from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -91,13 +90,6 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="xenium-cells",
             description="Number of cells detected and cells per 100μm²",
             plot=self.xenium_cells_plot(data_by_sample),
-        )
-
-        self.add_section(
-            name="Transcript Assignment",
-            anchor="xenium-transcripts",
-            description="Fraction of transcripts assigned to cells and transcripts per cell",
-            plot=self.xenium_transcripts_plot(data_by_sample),
         )
 
         self.add_section(
@@ -302,29 +294,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         return bargraph.plot(plot_data, keys, config)
 
-    def xenium_transcripts_plot(self, data_by_sample):
-        """Create bar plot for transcript metrics"""
-        plot_data = {}
-        for s_name, data in data_by_sample.items():
-            plot_data[s_name] = {
-                "fraction_transcripts_assigned": data.get("fraction_transcripts_assigned", 0) * 100,
-                "median_transcripts_per_cell": data.get("median_transcripts_per_cell", 0),
-            }
-
-        keys = {
-            "fraction_transcripts_assigned": {"name": "% Transcripts Assigned", "color": "#2ca02c"},
-            "median_transcripts_per_cell": {"name": "Median Transcripts/Cell", "color": "#d62728"},
-        }
-
-        config = {
-            "id": "xenium_transcripts",
-            "title": "Xenium: Transcript Assignment",
-            "ylab": "Percentage / Count",
-            "cpswitch_counts_label": "Values",
-        }
-
-        return bargraph.plot(plot_data, keys, config)
-
     def xenium_segmentation_plot(self, data_by_sample):
         """Create stacked bar plot for segmentation methods"""
         plot_data = {}
@@ -436,7 +405,7 @@ class MultiqcModule(BaseMultiqcModule):
                     all_categories.add(category)
 
         # Create a dataset for "all transcripts" first (combining all categories)
-        datasets = {"All transcripts": {}}
+        datasets: Dict[str, Dict[str, Dict]] = {"All transcripts": {}}
         for cat in all_categories:
             datasets[cat] = {}
 
