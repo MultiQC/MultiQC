@@ -409,8 +409,7 @@ fn_clean_trim:
   - ".tar"
   - "runs_"
 
-# Files to ignore when indexing files.
-# Grep file match patterns.
+# Files to ignore when checking content with "content" and "content_re" search patterns.
 fn_ignore_files:
   - ".DS_Store"
   - ".py[cod]"
