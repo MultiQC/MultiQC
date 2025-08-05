@@ -232,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "comment": "",
                         }
 
-                        self.report_sections[app_name + " (" + rtype + " PE Base by Cycle)"] = {
+                        self.report_sections[app_name + " (" + rtype + " Base by Cycle)"] = {
                             "name": app_name + " " + rtype + " Base by Cycle",
                             "description": """Provides a measure of the uniformity of a distribution. 
                                                                                                     The higher the average deviation from 25% is, 
@@ -242,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "comment": "",
                         }
 
-                        self.report_sections[app_name + " (" + rtype + " PE Quality by Cycle)"] = {
+                        self.report_sections[app_name + " (" + rtype + " Quality by Cycle)"] = {
                             "name": app_name + " " + rtype + " Quality by Cycle",
                             "description": """Mean quality score for each position along the read. 
                                                                                                     Sample is colored red if less than 60% of bps have mean score of at least Q30, 
