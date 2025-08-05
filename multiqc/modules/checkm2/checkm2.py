@@ -74,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlOrRd",
             },
             "Completeness_Model_Used": {
-                "title": "Completness Model Used",
+                "title": "Completeness Model Used",
                 "description": "Which ML model was used to predict completeness.",
                 "hidden": True,
             },
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "Average_Gene_Length": {
-                "title": "Average Gene Leght",
+                "title": "Average Gene Length",
                 "description": "The average number of amino acids in predicted genes.",
                 "suffix": "a.a.",
                 "format": "{:,.0f}",
