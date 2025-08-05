@@ -208,8 +208,9 @@ class MultiqcModule(BaseMultiqcModule):
                         }
 
                 else:
-                    self.report_sections[app_name + " (Summary Table)"] = {
-                        "name": app_name + " Table",
+                    index = app_name.split("_")[-1]
+                    self.report_sections["Summary Table " + index] = {
+                        "name": "Summary Table " + index,
                         "description": "Basic statistics about the reads in a dataset.",
                         "figure": section_dict["Table"],
                         "content": "",
@@ -224,16 +225,16 @@ class MultiqcModule(BaseMultiqcModule):
                         read_types.append("SE")
 
                     for rtype in read_types:
-                        self.report_sections[app_name + " (" + rtype + " Read Length)"] = {
-                            "name": app_name + " " + rtype + " Read Length",
+                        self.report_sections[rtype + " Read Length " + index] = {
+                            "name": rtype + " Read Length " + index,
                             "description": "Distribution of read lengths for each sample.",
                             "figure": section_dict[rtype]["Read_Length"],
                             "content": "",
                             "comment": "",
                         }
 
-                        self.report_sections[app_name + " (" + rtype + " Base by Cycle)"] = {
-                            "name": app_name + " " + rtype + " Base by Cycle",
+                        self.report_sections[rtype + " Base by Cycle " + index] = {
+                            "name": rtype + " Base by Cycle " + index,
                             "description": """Provides a measure of the uniformity of a distribution. 
                                                                                                     The higher the average deviation from 25% is, 
                                                                                                     the more unequal the base pair composition. N's are excluded from this calculation.""",
@@ -242,8 +243,8 @@ class MultiqcModule(BaseMultiqcModule):
                             "comment": "",
                         }
 
-                        self.report_sections[app_name + " (" + rtype + " Quality by Cycle)"] = {
-                            "name": app_name + " " + rtype + " Quality by Cycle",
+                        self.report_sections[rtype + " Quality by Cycle " + index] = {
+                            "name": rtype + " Quality by Cycle " + index,
                             "description": """Mean quality score for each position along the read. 
                                                                                                     Sample is colored red if less than 60% of bps have mean score of at least Q30, 
                                                                                                     orange if between 60% and 80%, and green otherwise.""",
@@ -314,8 +315,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # add app sections
         for section, content in self.report_sections.items():
-            if "hts_" + section.split("_")[1] not in self.repeated_apps:
-                content["name"] = section[:-2]
+            if not any(map(section.__contains__, ["Summary", "SE", "PE"])):
+                if "hts_" + section.split("_")[1] not in self.repeated_apps:
+                    content["name"] = section[:-2]
 
             try:
                 self.add_section(
