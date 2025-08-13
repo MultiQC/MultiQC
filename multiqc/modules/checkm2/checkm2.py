@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Genome Size",
                 "description": "The predicted size of the genome",
                 "scale": "YlGn",
-                "hidden": True
+                "hidden": True,
             },
         }
         self.general_stats_addcols(data_by_sample, headers)
