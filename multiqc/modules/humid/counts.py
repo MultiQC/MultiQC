@@ -51,7 +51,7 @@ def add_to_humid_section(self):
         "xlab": "Number of identical reads in a node",
         "logswitch": True,
         "logswitch_active": True,
-        "hide_empty": False,
+        "hide_zero_cats": False,
     }
     self.add_section(
         name="Counts statistics",

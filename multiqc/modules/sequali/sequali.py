@@ -250,7 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Sequali: Sequence Counts",
                 "ylab": "Number of reads",
                 "cpswitch_counts_label": "Number of reads",
-                "hide_empty": False,
+                "hide_zero_cats": False,
             },
         )
 
