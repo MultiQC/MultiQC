@@ -221,7 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "fastq_screen_bisulfite_plot",
             "title": "FastQ Screen: Bisulfite Mapping Strand Orientation",
-            "hide_empty": False,
+            "hide_zero_cats": False,
             "ylab": "Reads",
             "data_labels": [],
         }
