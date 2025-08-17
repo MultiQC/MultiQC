@@ -844,7 +844,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                         data-action="unsorted"
                         data-plot-anchor="{self.anchor}"
                     >
-                        Sorted by sample
+                        Sorted by label
                     </button>
                     <button
                         type="button"

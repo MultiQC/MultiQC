@@ -79,12 +79,13 @@ class Dataset(BaseDataset):
             data_sorted = list(reversed(list(sorted_data_by_sample.values())))
             samples_sorted = list(reversed(list(sorted_data_by_sample.keys())))
 
-            # If starting with sorted view active, swap the main and sorted data
+            # If starting with sorted view active, keep sorted data in data_sorted
+            # JavaScript will choose based on sortSwitchSortedActive flag
             if pconfig.sort_switch_sorted_active:
-                main_data = data_sorted
-                main_samples = samples_sorted
-                data_sorted = original_data
-                samples_sorted = original_samples
+                # Keep the original data as main, sorted data as data_sorted
+                # JavaScript will use data_sorted when sortSwitchSortedActive is true
+                main_data = original_data
+                main_samples = original_samples
 
         dataset = Dataset(
             **dataset.__dict__,
@@ -440,7 +441,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
                         data-action="unsorted"
                         data-plot-anchor="{self.anchor}"
                     >
-                        Sorted by sample
+                        Sorted by label
                     </button>
                     <button
                         type="button"
