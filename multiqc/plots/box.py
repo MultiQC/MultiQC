@@ -5,6 +5,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 
+from natsort import natsorted
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
 
@@ -309,7 +310,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
                 # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
                 pass
             elif pconf.sort_samples:
-                samples = sorted(list(list_of_data_by_sample[0].keys()))
+                samples = natsorted(list(list_of_data_by_sample[0].keys()))
                 list_of_data_by_sample[i] = {s: list_of_data_by_sample[i][s] for s in samples}
 
         return BoxPlotInputData(
