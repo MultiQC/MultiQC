@@ -881,7 +881,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "xenium_fov_quality_single",
             "title": "Xenium: transcript quality distribution by field of view",
             "xlab": "Field of view",
-            "series_label": "Field of views",
+            "series_label": "fields of view",
             "ylab": "Quality value (QV)",
             "sort_by_median": True,  # Use the new core box plot sorting feature
             "sort_switch_sorted_active": True,  # Start with sorted view active
@@ -909,10 +909,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_fov_quality_multi",
-            "title": "Xenium: Transcript quality distribution by field of view (average across samples)",
+            "title": "Xenium: Transcript quality distribution by field of view (averaged across samples)",
             "xlab": "Quality Score (QV)",
             "ylab": "Field of View",
-            "series_label": "Field of views",
+            "series_label": "fields of view",
             "sort_by_median": True,  # Use the new core box plot sorting feature
             "sort_switch_sorted_active": True,  # Start with sorted view active
         }
