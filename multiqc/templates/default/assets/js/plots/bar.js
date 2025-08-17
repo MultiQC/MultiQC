@@ -2,6 +2,7 @@ class BarPlot extends Plot {
   constructor(dump) {
     super(dump);
     this.filteredSettings = [];
+    this.sortSwitchSortedActive = dump["sort_switch_sorted_active"];
   }
 
   activeDatasetSize() {
@@ -15,6 +16,32 @@ class BarPlot extends Plot {
     dataset = dataset ?? this.datasets[this.activeDatasetIdx];
     let cats = dataset["cats"];
     let samples = dataset["samples"];
+
+    // Apply sorting if sortSwitchSortedActive is true
+    if (this.sortSwitchSortedActive && this.pconfig.sort_by_values) {
+      // Calculate total values for each sample across all categories
+      let sampleTotals = samples.map((sample, sampleIdx) => {
+        let total = cats.reduce((sum, cat) => {
+          let value = this.pActive ? cat["data_pct"][sampleIdx] : cat.data[sampleIdx];
+          return sum + (isFinite(value) ? value : 0);
+        }, 0);
+        return { sample, sampleIdx, total };
+      });
+
+      // Sort by total values (descending)
+      sampleTotals.sort((a, b) => b.total - a.total);
+
+      // Create new sorted arrays
+      let sortedIndices = sampleTotals.map((item) => item.sampleIdx);
+      samples = sampleTotals.map((item) => item.sample);
+
+      // Re-order all category data according to the sorted sample indices
+      cats = cats.map((cat) => ({
+        ...cat,
+        data: sortedIndices.map((idx) => cat.data[idx]),
+        data_pct: sortedIndices.map((idx) => cat.data_pct[idx]),
+      }));
+    }
 
     let samplesSettings = applyToolboxSettings(samples);
 
@@ -161,3 +188,27 @@ class BarPlot extends Plot {
     return csv;
   }
 }
+
+$(function () {
+  // Listener for bar plot sorting toggle - use exact same pattern as heatmap
+  $('button[data-action="unsorted"], button[data-action="sorted_by_values"]').on("click", function (e) {
+    e.preventDefault();
+    let $btn = $(this);
+    let plotAnchor = $(this).data("plot-anchor");
+    let plot = mqc_plots[plotAnchor];
+
+    // Only proceed if this is a bar plot
+    if (!plot || !(plot instanceof BarPlot)) {
+      return;
+    }
+
+    // Toggle buttons
+    $btn.toggleClass("active").siblings().toggleClass("active");
+
+    // Update plot state
+    plot.sortSwitchSortedActive = $btn.data("action") === "sorted_by_values";
+
+    // Re-render plot
+    renderPlot(plotAnchor);
+  });
+});

@@ -59,6 +59,8 @@ class BarPlotConfig(PConfig):
     hide_empty: Optional[bool] = Field(None, deprecated="hide_zero_cats")
     hide_zero_cats: bool = True
     sort_samples: bool = True
+    sort_by_values: bool = False  # Sort samples by their total values instead of alphabetically
+    sort_switch_sorted_active: bool = False  # Whether the sorted view is initially active
     use_legend: Optional[bool] = None
     suffix: Optional[str] = None
     lab_format: Optional[str] = None
@@ -544,6 +546,7 @@ class Dataset(BaseDataset):
 
 class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
+    sort_switch_sorted_active: bool = False
 
     def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
@@ -563,6 +566,18 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 # Legacy: users assumed that passing an OrderedDict indicates that we
                 # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
                 pass
+            elif inputs.pconfig.sort_by_values and not inputs.pconfig.sort_switch_sorted_active:
+                # Sort samples by their total values (sum across all categories) - only if not using interactive sorting
+                # When sort_switch_sorted_active=True, JavaScript handles the sorting dynamically
+                sample_totals = {}
+                for sample_name, sample_data in d.items():
+                    total = sum(
+                        float(v) if isinstance(v, (int, float)) and not math.isnan(float(v)) else 0
+                        for v in sample_data.values()
+                    )
+                    sample_totals[SampleName(sample_name)] = total
+                # Sort by total values in descending order
+                ordered_samples_names = sorted(sample_totals.keys(), key=lambda x: sample_totals[x], reverse=True)
             elif inputs.pconfig.sort_samples:
                 ordered_samples_names = natsorted([SampleName(s) for s in d.keys()])
             cat_data_dicts: List[CatDataDict] = list()
@@ -812,7 +827,37 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 # But reversing the legend so the largest bars are still on the top
                 model.layout.legend.traceorder = "reversed"
 
-        return BarPlot(**model.__dict__)
+        return BarPlot(**model.__dict__, sort_switch_sorted_active=pconfig.sort_switch_sorted_active)
+
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
+        """
+        Bar plot-specific controls, only for the interactive version.
+        """
+        buttons = super().buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor)
+        if self.pconfig.sort_by_values:
+            buttons.append(
+                f"""
+                <div class="btn-group" role="group">
+                    <button
+                        type="button"
+                        class="btn btn-default btn-sm {"" if self.pconfig.sort_switch_sorted_active else "active"}"
+                        data-action="unsorted"
+                        data-plot-anchor="{self.anchor}"
+                    >
+                        Sorted by sample
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-default btn-sm {"active" if self.pconfig.sort_switch_sorted_active else ""}"
+                        data-action="sorted_by_values"
+                        data-plot-anchor="{self.anchor}"
+                    >
+                        Sorted by values
+                    </button>
+                </div>
+                """
+            )
+        return buttons
 
     def _plot_ai_header(self) -> str:
         result = super()._plot_ai_header()
