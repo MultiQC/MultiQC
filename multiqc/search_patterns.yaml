@@ -14,6 +14,11 @@ xenium/metrics:
   num_lines: 5
 xenium/transcripts:
   fn: "transcripts.parquet"
+xenium/experiment:
+  fn: "experiment.xenium"
+  num_lines: 50
+xenium/cells:
+  fn: "cells.parquet"
 afterqc:
   fn: "*.json"
   contents: "allow_mismatch_in_poly"

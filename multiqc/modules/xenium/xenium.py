@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -57,6 +58,20 @@ class MultiqcModule(BaseMultiqcModule):
                 data_by_sample[parent_dir] = parsed_data
                 self.add_data_source(f, parent_dir)
 
+        # Parse experiment.xenium files for additional metrics
+        for f in self.find_log_files("xenium/experiment"):
+            parsed_experiment_data = self.parse_experiment_json(f)
+            if parsed_experiment_data:
+                # Use parent directory name as sample name
+                parent_dir = Path(f["root"]).name if f["root"] else f["s_name"]
+                if parent_dir in data_by_sample:
+                    # Merge with existing metrics data
+                    data_by_sample[parent_dir].update(parsed_experiment_data)
+                else:
+                    # Create new entry if metrics file wasn't found
+                    data_by_sample[parent_dir] = parsed_experiment_data
+                self.add_data_source(f, parent_dir)
+
         # Parse transcript quality data
         transcript_data_by_sample = {}
         for transcript_f in self.find_log_files("xenium/transcripts", filecontents=False, filehandles=False):
@@ -67,12 +82,25 @@ class MultiqcModule(BaseMultiqcModule):
                 transcript_data_by_sample[parent_dir] = parsed_transcript_data
                 self.add_data_source(transcript_f, parent_dir)
 
+        # Parse cells.parquet files for cell-level metrics
+        cells_data_by_sample = {}
+        for cells_f in self.find_log_files("xenium/cells", filecontents=False, filehandles=False):
+            parsed_cells_data = self.parse_cells_parquet(cells_f)
+            if parsed_cells_data:
+                # Use parent directory name as sample name
+                parent_dir = Path(cells_f["root"]).name if cells_f["root"] else cells_f["s_name"]
+                cells_data_by_sample[parent_dir] = parsed_cells_data
+                self.add_data_source(cells_f, parent_dir)
+
         data_by_sample = self.ignore_samples(data_by_sample)
 
-        if len(data_by_sample) == 0 and len(transcript_data_by_sample) == 0:
+        if len(data_by_sample) == 0 and len(transcript_data_by_sample) == 0 and len(cells_data_by_sample) == 0:
             raise ModuleNoSamplesFound
 
         log.info(f"Found {len(data_by_sample)} Xenium reports")
+
+        # Check for QC issues and add warnings
+        self.check_qc_warnings(data_by_sample)
 
         # Add software version info (Xenium files don't contain version info)
         for s_name in data_by_sample.keys():
@@ -106,6 +134,25 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="xenium-transcript-quality",
                 description="Distribution of transcript quality values by codeword category across samples",
                 plot=self.xenium_transcript_quality_plot(transcript_data_by_sample),
+            )
+
+            # Add Field of View quality section if FoV data is available
+            fov_plot = self.xenium_fov_quality_plot(transcript_data_by_sample)
+            if fov_plot is not None:
+                self.add_section(
+                    name="Field of View Quality",
+                    anchor="xenium-fov-quality",
+                    description="Transcript quality distribution by Field of View (FoV)",
+                    plot=fov_plot,
+                )
+
+        # Add cell metrics section if cells data is available
+        if cells_data_by_sample:
+            self.add_section(
+                name="Cell Area Distribution",
+                anchor="xenium-cell-area",
+                description="Distribution of cell and nucleus areas",
+                plot=self.xenium_cell_area_plot(cells_data_by_sample),
             )
 
     def parse_xenium_metrics(self, f) -> Dict:
@@ -197,6 +244,38 @@ class MultiqcModule(BaseMultiqcModule):
 
         return parsed_metrics
 
+    def parse_experiment_json(self, f) -> Dict:
+        """Parse Xenium experiment.xenium JSON file for additional metrics"""
+        try:
+            experiment_data = json.loads(f["f"])
+
+            # Extract key metrics that aren't in the CSV
+            parsed_experiment = {}
+
+            # Total transcript count - this is the main missing metric from notebooks
+            if "num_transcripts" in experiment_data:
+                parsed_experiment["num_transcripts"] = experiment_data["num_transcripts"]
+
+            # High quality transcript count
+            if "num_transcripts_high_quality" in experiment_data:
+                parsed_experiment["num_transcripts_high_quality"] = experiment_data["num_transcripts_high_quality"]
+
+            # Software version info
+            if "analysis_sw_version" in experiment_data:
+                parsed_experiment["analysis_sw_version"] = experiment_data["analysis_sw_version"]
+
+            # Panel information
+            if "panel_num_targets_predesigned" in experiment_data:
+                parsed_experiment["panel_num_targets_predesigned"] = experiment_data["panel_num_targets_predesigned"]
+            if "panel_num_targets_custom" in experiment_data:
+                parsed_experiment["panel_num_targets_custom"] = experiment_data["panel_num_targets_custom"]
+
+            return parsed_experiment
+
+        except (json.JSONDecodeError, KeyError) as e:
+            log.warning(f"Could not parse experiment.xenium file {f['fn']}: {e}")
+            return {}
+
     def parse_transcripts_parquet(self, f) -> Optional[Dict]:
         """Parse Xenium transcripts.parquet file to extract quality distribution by codeword"""
         # Read the parquet file content - sample more for better scatter plots
@@ -232,16 +311,140 @@ class MultiqcModule(BaseMultiqcModule):
                 qv_dict[qv_row["qv"]] = qv_row["count"]
             quality_dist[feature] = qv_dict
 
-        return {
+        result = {
             "quality_distribution": quality_dist,
             "transcript_counts": transcript_counts,
             "total_transcripts": df.height,
             "unique_features": len(quality_dist),
         }
 
+        # Add FoV quality analysis if fov_name column is present
+        if "fov_name" in df.columns:
+            fov_quality_stats = {}
+
+            # Group by FoV and calculate quality stats
+            fov_grouped = df.group_by("fov_name").agg(
+                [
+                    pl.col("qv").mean().alias("mean_qv"),
+                    pl.col("qv").median().alias("median_qv"),
+                    pl.len().alias("transcript_count"),
+                ]
+            )
+
+            for row in fov_grouped.iter_rows(named=True):
+                fov_name = str(row["fov_name"])
+                fov_quality_stats[fov_name] = {
+                    "mean_quality": row["mean_qv"],
+                    "median_quality": row["median_qv"],
+                    "transcript_count": row["transcript_count"],
+                }
+
+            result["fov_quality_stats"] = fov_quality_stats
+
+        return result
+
+    def parse_cells_parquet(self, f) -> Optional[Dict]:
+        """Parse Xenium cells.parquet file to extract cell-level metrics"""
+        file_path = Path(f["root"]) / f["fn"]
+
+        try:
+            # Read cells parquet file
+            df = pl.read_parquet(file_path)
+
+            # Check for required columns
+            required_cols = ["cell_area", "nucleus_area", "total_counts"]
+            missing_cols = [col for col in required_cols if col not in df.columns]
+            if missing_cols:
+                log.warning(f"Missing columns in {f['fn']}: {missing_cols}")
+                return None
+
+            # Calculate summary statistics
+            cell_stats = {}
+
+            # Cell area distribution stats
+            cell_area_stats = df["cell_area"].drop_nulls()
+            if cell_area_stats.len() > 0:
+                cell_stats.update(
+                    {
+                        "cell_area_mean": cell_area_stats.mean(),
+                        "cell_area_median": cell_area_stats.median(),
+                        "cell_area_std": cell_area_stats.std(),
+                        "cell_area_min": cell_area_stats.min(),
+                        "cell_area_max": cell_area_stats.max(),
+                    }
+                )
+
+            # Nucleus area distribution stats
+            nucleus_area_stats = df["nucleus_area"].drop_nulls()
+            if nucleus_area_stats.len() > 0:
+                cell_stats.update(
+                    {
+                        "nucleus_area_mean": nucleus_area_stats.mean(),
+                        "nucleus_area_median": nucleus_area_stats.median(),
+                        "nucleus_area_std": nucleus_area_stats.std(),
+                    }
+                )
+
+                # Nucleus to cell area ratio (only for non-null values)
+                valid_ratio_df = df.filter(
+                    (pl.col("cell_area").is_not_null())
+                    & (pl.col("nucleus_area").is_not_null())
+                    & (pl.col("cell_area") > 0)
+                )
+                if valid_ratio_df.height > 0:
+                    ratio = valid_ratio_df["nucleus_area"] / valid_ratio_df["cell_area"]
+                    cell_stats.update(
+                        {
+                            "nucleus_to_cell_area_ratio_mean": ratio.mean(),
+                            "nucleus_to_cell_area_ratio_median": ratio.median(),
+                        }
+                    )
+
+            # Total cell count
+            cell_stats["total_cells"] = df.height
+
+            # Add nucleus RNA fraction if nucleus_count is available
+            if "nucleus_count" in df.columns:
+                # Filter out cells with zero total counts to avoid division by zero
+                valid_cells = df.filter(pl.col("total_counts") > 0)
+                if valid_cells.height > 0:
+                    nucleus_rna_fraction = valid_cells["nucleus_count"] / valid_cells["total_counts"]
+                    cell_stats.update(
+                        {
+                            "nucleus_rna_fraction_mean": nucleus_rna_fraction.mean(),
+                            "nucleus_rna_fraction_median": nucleus_rna_fraction.median(),
+                        }
+                    )
+
+            return cell_stats
+
+        except Exception as e:
+            log.warning(f"Could not parse cells.parquet file {f['fn']}: {e}")
+            return None
+
+    def check_qc_warnings(self, data_by_sample):
+        """Check for quality control issues and log warnings"""
+        low_assignment_threshold = 0.7  # 70% threshold as mentioned in notebooks
+
+        for s_name, data in data_by_sample.items():
+            if "fraction_transcripts_assigned" in data:
+                assignment_rate = data["fraction_transcripts_assigned"]
+                if assignment_rate < low_assignment_threshold:
+                    log.warning(
+                        f"Sample '{s_name}' has low transcript assignment rate: "
+                        f"{assignment_rate:.3f} (< {low_assignment_threshold}). "
+                        f"Cell segmentation likely needs refinement."
+                    )
+
     def xenium_general_stats_table(self, data_by_sample):
         """Add key Xenium metrics to the general statistics table"""
         headers: Dict[str, Dict[str, Any]] = {
+            "num_transcripts": {
+                "title": "Total Transcripts",
+                "description": "Total number of transcripts detected",
+                "scale": "YlOrRd",
+                "format": "{:,.0f}",
+            },
             "num_cells_detected": {
                 "title": "Cells",
                 "description": "Number of cells detected",
@@ -438,3 +641,94 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return linegraph.plot(list(datasets.values()), config)
+
+    def xenium_cell_area_plot(self, cells_data_by_sample):
+        """Create bar plot for cell area metrics"""
+        plot_data = {}
+        for s_name, data in cells_data_by_sample.items():
+            plot_data[s_name] = {}
+
+            # Only add metrics that exist and are not None/NaN
+            if (
+                "cell_area_mean" in data
+                and data["cell_area_mean"] is not None
+                and str(data["cell_area_mean"]).lower() != "nan"
+            ):
+                try:
+                    plot_data[s_name]["cell_area_mean"] = float(data["cell_area_mean"])
+                except (ValueError, TypeError):
+                    pass
+
+            if (
+                "nucleus_area_mean" in data
+                and data["nucleus_area_mean"] is not None
+                and str(data["nucleus_area_mean"]).lower() != "nan"
+            ):
+                try:
+                    plot_data[s_name]["nucleus_area_mean"] = float(data["nucleus_area_mean"])
+                except (ValueError, TypeError):
+                    pass
+
+            if (
+                "nucleus_to_cell_area_ratio_mean" in data
+                and data["nucleus_to_cell_area_ratio_mean"] is not None
+                and str(data["nucleus_to_cell_area_ratio_mean"]).lower() != "nan"
+            ):
+                try:
+                    plot_data[s_name]["nucleus_to_cell_ratio"] = float(data["nucleus_to_cell_area_ratio_mean"])
+                except (ValueError, TypeError):
+                    pass
+
+        # Check if we have any data to plot
+        has_data = any(bool(sample_data) for sample_data in plot_data.values())
+        if not has_data:
+            return None
+
+        keys = {
+            "cell_area_mean": {"name": "Mean Cell Area (μm²)", "color": "#1f77b4"},
+            "nucleus_area_mean": {"name": "Mean Nucleus Area (μm²)", "color": "#ff7f0e"},
+            "nucleus_to_cell_ratio": {"name": "Nucleus/Cell Area Ratio", "color": "#2ca02c"},
+        }
+
+        config = {
+            "id": "xenium_cell_area",
+            "title": "Xenium: Cell Area Metrics",
+            "ylab": "Area (μm²) / Ratio",
+            "cpswitch_counts_label": "Values",
+        }
+
+        return bargraph.plot(plot_data, keys, config)
+
+    def xenium_fov_quality_plot(self, transcript_data_by_sample):
+        """Create FoV quality plot if FoV data is available"""
+        fov_data_found = False
+        plot_data = {}
+
+        for s_name, data in transcript_data_by_sample.items():
+            if "fov_quality_stats" in data:
+                fov_data_found = True
+                for fov_name, fov_stats in data["fov_quality_stats"].items():
+                    # Use sample_fov as the key to avoid conflicts between samples
+                    key = f"{s_name}_{fov_name}"
+                    plot_data[key] = {
+                        "mean_quality": fov_stats.get("mean_quality", 0),
+                        "transcript_count": fov_stats.get("transcript_count", 0),
+                    }
+
+        if not fov_data_found or not plot_data:
+            return None
+
+        keys = {
+            "mean_quality": {"name": "Mean Quality (QV)", "color": "#1f77b4"},
+            "transcript_count": {"name": "Transcript Count", "color": "#ff7f0e"},
+        }
+
+        config = {
+            "id": "xenium_fov_quality",
+            "title": "Xenium: Field of View Quality Metrics",
+            "xlab": "Field of View",
+            "ylab": "Quality / Count",
+            "cpswitch_counts_label": "Values",
+        }
+
+        return bargraph.plot(plot_data, keys, config)
