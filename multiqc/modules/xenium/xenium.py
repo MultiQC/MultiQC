@@ -198,21 +198,28 @@ class MultiqcModule(BaseMultiqcModule):
                     anchor="xenium-fov-quality",
                     description="Transcript quality distribution by Field of View (FoV)",
                     helptext="""
-                    This plot shows mean transcript quality across different imaging fields (FoVs - Fields of View):
+                    This plot shows transcript quality distributions across different imaging fields (FoVs - Fields of View):
                     
                     **What is a Field of View?**
                     * Each FoV represents one microscope imaging area/tile
                     * Large tissue sections are imaged as multiple overlapping FoVs
                     * FoVs are systematically captured in a grid pattern across the tissue
                     
-                    **Metrics shown:**
+                    **Plot types:**
                     * **Single sample**: Box plots showing quality distributions per FoV (median, quartiles, outliers)
-                    * **Multiple samples**: Mean quality per FoV across all samples
+                    * **Multiple samples**: Box plots with aggregated quality distributions per FoV across all samples
+                    
+                    **Box plot interpretation:**
+                    * **Box boundaries**: 25th and 75th percentiles (Q1 and Q3)
+                    * **Center line**: Median quality score
+                    * **Whiskers**: Extend to 1.5 × IQR or the most extreme data point
+                    * **Points**: Individual transcript quality scores (outliers or small datasets)
                     
                     **What to look for:**
-                    * **Consistent quality** across FoVs (similar mean QV values around 30-40)
+                    * **Consistent quality** across FoVs (similar median QV values around 30-40)
+                    * **Tight distributions** (narrow boxes indicate consistent quality within FoVs)
                     * **No systematic patterns**: Random variation is normal, systematic gradients are not
-                    * **Outlier FoVs**: Any FoV with notably poor quality (<20 QV)
+                    * **Outlier FoVs**: Any FoV with notably poor median quality (<20 QV)
                     
                     **Quality thresholds:**
                     * QV >30: Excellent imaging quality
@@ -872,9 +879,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_fov_quality_single",
-            "title": "Xenium: Transcript Quality Distribution by Field of View",
-            "xlab": "Field of View",
-            "ylab": "Quality Value (QV)",
+            "title": "Xenium: transcript quality distribution by field of view",
+            "xlab": "Field of view",
+            "series_label": "Field of views",
+            "ylab": "Quality value (QV)",
             "sort_by_median": True,  # Use the new core box plot sorting feature
             "sort_switch_sorted_active": True,  # Start with sorted view active
         }
@@ -882,33 +890,31 @@ class MultiqcModule(BaseMultiqcModule):
         return box.plot(plot_data, config)
 
     def _create_multi_sample_fov_summary(self, transcript_data_by_sample, samples_with_fov):
-        """Create summary bar plot for multiple samples showing mean quality per FoV"""
-        plot_data = {}
+        """Create box plot showing quality distributions for each FoV aggregated across all samples"""
+        fov_quality_data = {}
 
+        # Aggregate quality distributions for each FoV across all samples
         for s_name in samples_with_fov:
             data = transcript_data_by_sample[s_name]
-            if "fov_quality_stats" in data:
-                for fov_name, fov_stats in data["fov_quality_stats"].items():
-                    # Use sample_fov as the key to avoid conflicts between samples
-                    key = f"{s_name}_{fov_name}"
-                    plot_data[key] = {
-                        "mean_quality": float(fov_stats.get("mean_quality", 0)),
-                    }
+            if "fov_quality_distributions" in data:
+                fov_distributions = data["fov_quality_distributions"]
+                for fov_name, quality_values in fov_distributions.items():
+                    if fov_name not in fov_quality_data:
+                        fov_quality_data[fov_name] = []
+                    # Add all quality values from this sample's FoV to the aggregated distribution
+                    fov_quality_data[fov_name].extend(quality_values)
 
-        if not plot_data:
+        if not fov_quality_data:
             return None
-
-        keys = {
-            "mean_quality": {"name": "Mean Quality (QV)", "color": "#1f77b4"},
-        }
 
         config = {
             "id": "xenium_fov_quality_multi",
-            "title": "Xenium: Mean Transcript Quality by Field of View",
-            "xlab": "Field of View (Sample_FoV)",
-            "ylab": "Mean Quality (QV)",
-            "sort_by_values": True,  # Use the new core bargraph sorting feature
+            "title": "Xenium: Transcript quality distribution by field of view (average across samples)",
+            "xlab": "Quality Score (QV)",
+            "ylab": "Field of View",
+            "series_label": "Field of views",
+            "sort_by_median": True,  # Use the new core box plot sorting feature
             "sort_switch_sorted_active": True,  # Start with sorted view active
         }
 
-        return bargraph.plot(plot_data, keys, config)
+        return box.plot(fov_quality_data, config)
