@@ -104,7 +104,7 @@ class LinePlotConfig(PConfig):
     smooth_points_sumcounts: Union[bool, List[bool], None] = None
     extra_series: Optional[Union[Series, List[Series], List[List[Series]]]] = None
     style: Optional[Literal["lines", "lines+markers"]] = None
-    hide_empty: bool = Field(True, deprecated="hide_empty")
+    hide_empty: bool = Field(True)
     colors: Dict[str, str] = {}
 
     @classmethod
