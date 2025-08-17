@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 import polars as pl
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, linegraph, scatter
+from multiqc.plots import bargraph, linegraph, scatter, box
 
 log = logging.getLogger(__name__)
 
@@ -117,6 +117,21 @@ class MultiqcModule(BaseMultiqcModule):
             name="Cell Detection",
             anchor="xenium-cells",
             description="Number of cells detected and cells per 100μm²",
+            helptext="""
+            This plot shows fundamental cell detection metrics from Xenium spatial transcriptomics:
+            
+            * **Total Cells**: Total number of cells detected via segmentation algorithms
+            * **Cells per 100μm²**: Cell density normalized by tissue area
+            
+            **What to look for:**
+            * Consistent cell counts across similar tissue types
+            * Cell densities appropriate for the tissue type (e.g., brain ~1000-2000 cells/100μm², liver ~500-1000)
+            * Large variations might indicate segmentation issues or genuine biological differences
+            
+            **Troubleshooting:**
+            * Very low cell counts: Check segmentation parameters, tissue quality, or imaging issues
+            * Very high cell counts: May indicate over-segmentation or dense cell types
+            """,
             plot=self.xenium_cells_plot(data_by_sample),
         )
 
@@ -124,6 +139,23 @@ class MultiqcModule(BaseMultiqcModule):
             name="Segmentation Methods",
             anchor="xenium-segmentation",
             description="Distribution of cell segmentation methods used",
+            helptext="""
+            This stacked bar chart shows the fraction of cells segmented by each method:
+            
+            * **Boundary**: Cells segmented using boundary staining (e.g., ATP1A1/E-cadherin/CD45)
+            * **Interior**: Cells segmented using interior staining (e.g., 18S RNA)  
+            * **Nuclear Expansion**: Cells segmented by expanding from nucleus boundaries
+            
+            **What to look for:**
+            * **Boundary segmentation** typically provides the most accurate cell boundaries
+            * **High nuclear expansion fraction** may indicate poor membrane staining
+            * Consistent ratios across samples of the same tissue type
+            
+            **Interpretation:**
+            * >80% boundary segmentation: Excellent membrane staining and segmentation
+            * >50% nuclear expansion: Consider optimizing membrane staining protocols
+            * Large sample-to-sample variation: Check staining consistency
+            """,
             plot=self.xenium_segmentation_plot(data_by_sample),
         )
 
@@ -133,6 +165,28 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Transcript Quality Distribution",
                 anchor="xenium-transcript-quality",
                 description="Distribution of transcript quality values by codeword category across samples",
+                helptext="""
+                This plot shows transcript quality (QV score) vs. transcript count by gene category:
+                
+                * **Pre-designed genes**: Standard genes from Xenium panels (blue)
+                * **Custom genes**: User-added custom targets (orange)  
+                * **Negative controls**: Control probes for background estimation (red/yellow)
+                * **Genomic controls**: Genomic DNA controls (pink)
+                
+                **Quality Score (QV) Interpretation:**
+                * QV ≥20: High-quality transcripts (≥99% accuracy)
+                * QV 10-20: Medium quality (90-99% accuracy)
+                * QV <10: Low-quality transcripts (<90% accuracy)
+                
+                **What to look for:**
+                * Pre-designed genes should cluster at high QV (>20) and reasonable counts
+                * Negative controls should have low counts and variable quality
+                * Outlier genes with very low quality or unexpectedly high/low counts
+                
+                **Single vs. Multiple samples:**
+                * Single sample: Scatter plot showing individual genes
+                * Multiple samples: Line plot showing category trends
+                """,
                 plot=self.xenium_transcript_quality_plot(transcript_data_by_sample),
             )
 
@@ -143,6 +197,33 @@ class MultiqcModule(BaseMultiqcModule):
                     name="Field of View Quality",
                     anchor="xenium-fov-quality",
                     description="Transcript quality distribution by Field of View (FoV)",
+                    helptext="""
+                    This plot shows mean transcript quality across different imaging fields (FoVs - Fields of View):
+                    
+                    **What is a Field of View?**
+                    * Each FoV represents one microscope imaging area/tile
+                    * Large tissue sections are imaged as multiple overlapping FoVs
+                    * FoVs are systematically captured in a grid pattern across the tissue
+                    
+                    **Metrics shown:**
+                    * **Single sample**: Box plots showing quality distributions per FoV (median, quartiles, outliers)
+                    * **Multiple samples**: Mean quality per FoV across all samples
+                    
+                    **What to look for:**
+                    * **Consistent quality** across FoVs (similar mean QV values around 30-40)
+                    * **No systematic patterns**: Random variation is normal, systematic gradients are not
+                    * **Outlier FoVs**: Any FoV with notably poor quality (<20 QV)
+                    
+                    **Quality thresholds:**
+                    * QV >30: Excellent imaging quality
+                    * QV 20-30: Good quality  
+                    * QV <20: Poor quality, investigate issues
+                    
+                    **Troubleshooting:**
+                    * Specific low-quality FoVs: Focus/illumination issues, debris, tissue damage
+                    * Edge effects: FoVs at tissue edges often have lower quality
+                    * Systematic gradients: Temperature, timing, or optical alignment issues
+                    """,
                     plot=fov_plot,
                 )
 
@@ -152,6 +233,30 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Cell Area Distribution",
                 anchor="xenium-cell-area",
                 description="Distribution of cell and nucleus areas",
+                helptext="""
+                This plot shows cell morphology metrics derived from segmentation:
+                
+                **Metrics displayed:**
+                * **Mean Cell Area**: Average cell size in μm² 
+                * **Mean Nucleus Area**: Average nucleus size in μm²
+                * **Nucleus/Cell Area Ratio**: Proportion of cell occupied by nucleus
+                
+                **Typical ranges (tissue-dependent):**
+                * **Cell area**: 50-200 μm² for most tissues
+                * **Nucleus area**: 20-80 μm² 
+                * **Nucleus/cell ratio**: 0.1-0.4 (10-40%)
+                
+                **What to look for:**
+                * **Consistent metrics** across samples of same tissue type
+                * **Biologically reasonable values** for your tissue
+                * **Nucleus/cell ratio** should be <0.5 (nucleus shouldn't dominate cell)
+                
+                **Troubleshooting:**
+                * Very large cells: Over-segmentation issues, cell doublets
+                * Very small cells: Under-segmentation, debris detection
+                * High nucleus/cell ratio: Nuclear expansion artifacts, poor membrane staining
+                * Missing metrics: Insufficient cells for statistical calculation
+                """,
                 plot=self.xenium_cell_area_plot(cells_data_by_sample),
             )
 
@@ -321,12 +426,15 @@ class MultiqcModule(BaseMultiqcModule):
         # Add FoV quality analysis if fov_name column is present
         if "fov_name" in df.columns:
             fov_quality_stats = {}
+            fov_quality_distributions = {}
 
-            # Group by FoV and calculate quality stats
+            # Group by FoV and calculate quality stats and distributions
             fov_grouped = df.group_by("fov_name").agg(
                 [
                     pl.col("qv").mean().alias("mean_qv"),
                     pl.col("qv").median().alias("median_qv"),
+                    pl.col("qv").std().alias("std_qv"),
+                    pl.col("qv").alias("qv_values"),  # Keep all QV values for distributions
                     pl.len().alias("transcript_count"),
                 ]
             )
@@ -336,10 +444,34 @@ class MultiqcModule(BaseMultiqcModule):
                 fov_quality_stats[fov_name] = {
                     "mean_quality": row["mean_qv"],
                     "median_quality": row["median_qv"],
+                    "std_quality": row["std_qv"],
                     "transcript_count": row["transcript_count"],
                 }
 
+                # Store quality values for violin plots (limit to reasonable sample size)
+                qv_values = row["qv_values"]
+
+                # Check if it's a polars Series or already a list
+                if hasattr(qv_values, "to_list"):
+                    # It's a polars Series
+                    if len(qv_values) > 1000:
+                        sampled_qv = qv_values.sample(1000, seed=42)
+                        fov_quality_distributions[fov_name] = sampled_qv.to_list()
+                    else:
+                        fov_quality_distributions[fov_name] = qv_values.to_list()
+                else:
+                    # It's already a Python list
+                    if len(qv_values) > 1000:
+                        import random
+
+                        random.seed(42)
+                        sampled_qv = random.sample(qv_values, 1000)
+                        fov_quality_distributions[fov_name] = sampled_qv
+                    else:
+                        fov_quality_distributions[fov_name] = qv_values
+
             result["fov_quality_stats"] = fov_quality_stats
+            result["fov_quality_distributions"] = fov_quality_distributions
 
         return result
 
@@ -700,35 +832,83 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(plot_data, keys, config)
 
     def xenium_fov_quality_plot(self, transcript_data_by_sample):
-        """Create FoV quality plot if FoV data is available"""
+        """Create adaptive FoV quality plot - violin plots for single sample, summary for multiple"""
         fov_data_found = False
+        samples_with_fov = []
+
+        # Check which samples have FoV data
+        for s_name, data in transcript_data_by_sample.items():
+            if "fov_quality_distributions" in data and "fov_quality_stats" in data:
+                fov_data_found = True
+                samples_with_fov.append(s_name)
+
+        if not fov_data_found:
+            return None
+
+        num_samples = len(samples_with_fov)
+
+        if num_samples == 1:
+            # Single sample: Create violin plot showing quality distributions per FoV
+            return self._create_single_sample_fov_box(transcript_data_by_sample[samples_with_fov[0]])
+        else:
+            # Multiple samples: Create bar plot showing mean quality per FoV across samples
+            return self._create_multi_sample_fov_summary(transcript_data_by_sample, samples_with_fov)
+
+    def _create_single_sample_fov_box(self, sample_data):
+        """Create box plot showing quality distributions for single sample FoVs"""
+        if "fov_quality_distributions" not in sample_data:
+            return None
+
         plot_data = {}
 
-        for s_name, data in transcript_data_by_sample.items():
+        # Use the raw quality distributions for proper box plots
+        for fov_name, qv_values in sample_data["fov_quality_distributions"].items():
+            if qv_values and len(qv_values) > 0:
+                # Box plot expects the raw data points
+                plot_data[fov_name] = qv_values
+
+        if not plot_data:
+            return None
+
+        config = {
+            "id": "xenium_fov_quality_single",
+            "title": "Xenium: Transcript Quality Distribution by Field of View",
+            "xlab": "Field of View",
+            "ylab": "Quality Value (QV)",
+            "sort_by_median": True,  # Use the new core box plot sorting feature
+            "sort_switch_sorted_active": True,  # Start with sorted view active
+        }
+
+        return box.plot(plot_data, config)
+
+    def _create_multi_sample_fov_summary(self, transcript_data_by_sample, samples_with_fov):
+        """Create summary bar plot for multiple samples showing mean quality per FoV"""
+        plot_data = {}
+
+        for s_name in samples_with_fov:
+            data = transcript_data_by_sample[s_name]
             if "fov_quality_stats" in data:
-                fov_data_found = True
                 for fov_name, fov_stats in data["fov_quality_stats"].items():
                     # Use sample_fov as the key to avoid conflicts between samples
                     key = f"{s_name}_{fov_name}"
                     plot_data[key] = {
-                        "mean_quality": fov_stats.get("mean_quality", 0),
-                        "transcript_count": fov_stats.get("transcript_count", 0),
+                        "mean_quality": float(fov_stats.get("mean_quality", 0)),
                     }
 
-        if not fov_data_found or not plot_data:
+        if not plot_data:
             return None
 
         keys = {
             "mean_quality": {"name": "Mean Quality (QV)", "color": "#1f77b4"},
-            "transcript_count": {"name": "Transcript Count", "color": "#ff7f0e"},
         }
 
         config = {
-            "id": "xenium_fov_quality",
-            "title": "Xenium: Field of View Quality Metrics",
-            "xlab": "Field of View",
-            "ylab": "Quality / Count",
-            "cpswitch_counts_label": "Values",
+            "id": "xenium_fov_quality_multi",
+            "title": "Xenium: Mean Transcript Quality by Field of View",
+            "xlab": "Field of View (Sample_FoV)",
+            "ylab": "Mean Quality (QV)",
+            "sort_by_values": True,  # Use the new core bargraph sorting feature
+            "sort_switch_sorted_active": True,  # Start with sorted view active
         }
 
         return bargraph.plot(plot_data, keys, config)
