@@ -256,7 +256,7 @@ class Dataset(BaseDataset):
             marker=dict(
                 size=10,
                 line=dict(width=1),
-                opacity=0.7,
+                opacity=1,
                 color="rgba(124, 181, 236, .5)",
                 symbol="circle",
             ),

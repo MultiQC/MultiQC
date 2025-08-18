@@ -13,13 +13,13 @@ log = logging.getLogger(__name__)
 
 # Define gene categories for coloring based on Xenium naming conventions
 GENE_CATS = {
-    "Pre-designed": {"color": "#1f77b4"},  # Standard gene names
-    "Custom": {"color": "#ff7f0e"},
-    "Negative Control Probe": {"color": "#d62728"},
-    "Negative Control Codeword": {"color": "#ff9900"},
-    "Genomic Control Probe": {"color": "#e377c2"},
-    "Unassigned Codeword": {"color": "#7f7f7f"},
-    "Deprecated Codeword": {"color": "#bcbd22"},  # Olive - deprecated
+    "Pre-designed": {"color": "rgba(31, 119, 180, 0.8)"},  # Standard gene names - blue with transparency
+    "Custom": {"color": "rgba(255, 127, 14, 0.8)"},  # Orange with transparency
+    "Negative Control Probe": {"color": "rgba(214, 39, 40, 0.8)"},  # Red with transparency
+    "Negative Control Codeword": {"color": "rgba(255, 153, 0, 0.8)"},  # Yellow/Orange with transparency
+    "Genomic Control Probe": {"color": "rgba(227, 119, 194, 0.8)"},  # Pink with transparency
+    "Unassigned Codeword": {"color": "rgba(127, 127, 127, 0.8)"},  # Gray with transparency
+    "Deprecated Codeword": {"color": "rgba(188, 189, 34, 0.8)"},  # Olive with transparency
 }
 
 
