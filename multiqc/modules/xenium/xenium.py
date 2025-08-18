@@ -1047,7 +1047,7 @@ class MultiqcModule(BaseMultiqcModule):
             "series_label": "transcripts",
             "xlog": True,
             "showlegend": True,
-            "categories": category_order,
+            "groups": category_order,
         }
 
         return scatter.plot(final_plot_data, config)

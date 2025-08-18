@@ -65,14 +65,14 @@ class ScatterPlot extends Plot {
     // Group points by group field only
     let inLegend = new Set();
 
-    // Sort points by category order if categories are provided in config
-    if (this.pconfig.categories) {
+    // Sort points by group order if groups are provided in config
+    if (this.pconfig.groups) {
       points.sort((a, b) => {
-        let aIndex = this.pconfig.categories.indexOf(a.group);
-        let bIndex = this.pconfig.categories.indexOf(b.group);
-        // If group not in categories, put it at the end
-        if (aIndex === -1) aIndex = this.pconfig.categories.length;
-        if (bIndex === -1) bIndex = this.pconfig.categories.length;
+        let aIndex = this.pconfig.groups.indexOf(a.group);
+        let bIndex = this.pconfig.groups.indexOf(b.group);
+        // If group not in pconfig.groups, put it at the end
+        if (aIndex === -1) aIndex = this.pconfig.groups.length;
+        if (bIndex === -1) bIndex = this.pconfig.groups.length;
         return aIndex - bIndex;
       });
     }

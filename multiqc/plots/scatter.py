@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class ScatterConfig(PConfig):
-    categories: Optional[List[str]] = None
+    categories: Optional[List[str]] = None  # x-axis labels
+    groups: Optional[List[str]] = None  # color groups
     extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
     marker_size: Optional[int] = None
     marker_line_width: Optional[int] = None
