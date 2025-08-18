@@ -332,7 +332,7 @@ class Dataset(BaseDataset):
             x = el["x"]
             name = el["name"]
             group = el.get("group")
-            color = mqc_colour.color_to_rgb_string(cast(Optional[str], el.get("color")))
+            color = el.get("color")
             annotation = el.get("annotation")
 
             show_in_legend = False
@@ -353,7 +353,7 @@ class Dataset(BaseDataset):
             params = copy.deepcopy(self.trace_params)
             marker = params.pop("marker")
             if color:
-                marker["color"] = color
+                marker["color"] = mqc_colour.color_to_rgb_string(cast(Optional[str], el.get("color")))
 
             if "marker_line_width" in el:
                 marker["line"]["width"] = el["marker_line_width"]
