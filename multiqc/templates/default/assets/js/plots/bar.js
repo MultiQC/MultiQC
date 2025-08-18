@@ -2,7 +2,7 @@ class BarPlot extends Plot {
   constructor(dump) {
     super(dump);
     this.filteredSettings = [];
-    this.sortSwitchSortedActive = dump["sort_switch_sorted_active"];
+    this.clusterSwitchClusteredActive = dump["cluster_switch_clustered_active"];
   }
 
   activeDatasetSize() {
@@ -14,34 +14,13 @@ class BarPlot extends Plot {
 
   prepData(dataset) {
     dataset = dataset ?? this.datasets[this.activeDatasetIdx];
-    let cats = dataset["cats"];
-    let samples = dataset["samples"];
-
-    // Apply sorting if sortSwitchSortedActive is true
-    if (this.sortSwitchSortedActive && this.pconfig.sort_by_values) {
-      // Calculate total values for each sample across all categories
-      let sampleTotals = samples.map((sample, sampleIdx) => {
-        let total = cats.reduce((sum, cat) => {
-          let value = this.pActive ? cat["data_pct"][sampleIdx] : cat.data[sampleIdx];
-          return sum + (isFinite(value) ? value : 0);
-        }, 0);
-        return { sample, sampleIdx, total };
-      });
-
-      // Sort by total values (descending)
-      sampleTotals.sort((a, b) => b.total - a.total);
-
-      // Create new sorted arrays
-      let sortedIndices = sampleTotals.map((item) => item.sampleIdx);
-      samples = sampleTotals.map((item) => item.sample);
-
-      // Re-order all category data according to the sorted sample indices
-      cats = cats.map((cat) => ({
-        ...cat,
-        data: sortedIndices.map((idx) => cat.data[idx]),
-        data_pct: sortedIndices.map((idx) => cat.data_pct[idx]),
-      }));
-    }
+    // Use clustered data if clustering is active and available
+    let cats =
+      this.clusterSwitchClusteredActive && dataset["cats_clustered"] ? dataset["cats_clustered"] : dataset["cats"];
+    let samples =
+      this.clusterSwitchClusteredActive && dataset["samples_clustered"]
+        ? dataset["samples_clustered"]
+        : dataset["samples"];
 
     let samplesSettings = applyToolboxSettings(samples);
 
@@ -190,8 +169,8 @@ class BarPlot extends Plot {
 }
 
 $(function () {
-  // Listener for bar plot sorting toggle - use exact same pattern as heatmap
-  $('button[data-action="unsorted"], button[data-action="sorted_by_values"]').on("click", function (e) {
+  // Listener for bar plot clustering toggle - similar to heatmap clustering
+  $('button[data-action="unclustered"], button[data-action="clustered"]').on("click", function (e) {
     e.preventDefault();
     let $btn = $(this);
     let plotAnchor = $(this).data("plot-anchor");
@@ -206,7 +185,7 @@ $(function () {
     $btn.toggleClass("active").siblings().toggleClass("active");
 
     // Update plot state
-    plot.sortSwitchSortedActive = $btn.data("action") === "sorted_by_values";
+    plot.clusterSwitchClusteredActive = $btn.data("action") === "clustered";
 
     // Re-render plot
     renderPlot(plotAnchor);

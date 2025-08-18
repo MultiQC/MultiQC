@@ -7,6 +7,7 @@ import math
 from collections import OrderedDict, defaultdict
 from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union, cast
 
+import numpy as np
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
 from natsort import natsorted
@@ -26,6 +27,7 @@ from multiqc.plots.plot import (
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
 from multiqc.utils import mqc_colour
+from multiqc.utils.util_functions import scipy_hierarchy_leaves_list, scipy_hierarchy_linkage, scipy_pdist
 from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
@@ -59,8 +61,9 @@ class BarPlotConfig(PConfig):
     hide_empty: Optional[bool] = Field(None, deprecated="hide_zero_cats")
     hide_zero_cats: bool = True
     sort_samples: bool = True
-    sort_by_values: bool = False  # Sort samples by their total values instead of alphabetically
-    sort_switch_sorted_active: bool = False  # Whether the sorted view is initially active
+    cluster_samples: bool = False  # Enable clustering of samples based on their category profiles
+    cluster_method: str = "complete"  # linkage method: single, complete, average, weighted, etc.
+    cluster_switch_clustered_active: bool = True  # Whether the clustered view is initially active
     use_legend: Optional[bool] = None
     suffix: Optional[str] = None
     lab_format: Optional[str] = None
@@ -88,6 +91,60 @@ class CatDataDict(TypedDict):
 
 
 DatasetT = Dict[SampleName, Dict[CatName, Union[int, float]]]
+
+
+def _cluster_samples(data: DatasetT, cats: Dict[CatName, Any], method: str = "complete") -> List[SampleName]:
+    """
+    Cluster samples based on their category profiles using hierarchical clustering.
+
+    Args:
+        data: Dictionary mapping sample names to their category values
+        cats: Dictionary of category configurations
+        method: Linkage method for clustering
+
+    Returns:
+        List of sample names in clustered order
+    """
+    sample_names = list(data.keys())
+    if len(sample_names) <= 1:
+        return sample_names
+
+    # Create a matrix where rows are samples and columns are categories
+    cat_names = list(cats.keys())
+    if len(cat_names) == 0:
+        return sample_names
+
+    # Build data matrix: samples x categories
+    data_matrix = []
+    for sample_name in sample_names:
+        sample_values = []
+        for cat_name in cat_names:
+            value = data[sample_name].get(cat_name, 0)
+            # Handle NaN values by replacing with 0
+            if isinstance(value, float) and math.isnan(value):
+                value = 0
+            sample_values.append(float(value))
+        data_matrix.append(sample_values)
+
+    try:
+        # Convert to numpy array for clustering
+        data_array = np.array(data_matrix)
+
+        # Calculate pairwise distances between samples
+        distances = scipy_pdist(data_array)
+
+        # Perform hierarchical clustering
+        linkage_matrix = scipy_hierarchy_linkage(distances, method=method)
+
+        # Get the order of samples from the dendrogram
+        clustered_indices = scipy_hierarchy_leaves_list(linkage_matrix)
+
+        # Return sample names in clustered order
+        return [sample_names[i] for i in clustered_indices]
+
+    except Exception as e:
+        logger.warning(f"Sample clustering failed: {str(e)}")
+        return sample_names
 
 
 class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
@@ -430,6 +487,8 @@ class Category(BaseModel):
 class Dataset(BaseDataset):
     cats: List[Category]
     samples: List[str]
+    cats_clustered: Optional[List[Category]] = None
+    samples_clustered: Optional[List[str]] = None
 
     def sample_names(self) -> List[SampleName]:
         return [SampleName(sample) for sample in self.samples]
@@ -439,6 +498,10 @@ class Dataset(BaseDataset):
         dataset: BaseDataset,
         cats: Sequence[CatDataDict],
         samples: Sequence[str],
+        cluster_samples: bool = False,
+        cluster_method: str = "complete",
+        original_data: Optional[DatasetT] = None,
+        original_cats: Optional[Dict[CatName, Any]] = None,
     ) -> "Dataset":
         # Need to reverse samples as the bar plot will show them reversed
         samples = list(reversed(samples))
@@ -468,10 +531,77 @@ class Dataset(BaseDataset):
 
             fixed_cats.append(cat)
 
+        # Prepare clustered data if clustering is enabled
+        cats_clustered = None
+        samples_clustered = None
+
+        if cluster_samples and original_data is not None and original_cats is not None:
+            try:
+                # Create a mapping from sample names back to their original (non-reversed) form
+                unreversed_samples = list(reversed(samples))
+                unreversed_data = {
+                    SampleName(s): original_data[SampleName(s)]
+                    for s in unreversed_samples
+                    if SampleName(s) in original_data
+                }
+
+                # Cluster samples based on original data
+                clustered_sample_order = _cluster_samples(unreversed_data, original_cats, cluster_method)
+
+                # Create clustered samples list (reversed for display)
+                samples_clustered_unreversed = [str(s) for s in clustered_sample_order]
+                samples_clustered = list(reversed(samples_clustered_unreversed))
+
+                # Create sample index mapping for reordering
+                original_sample_order = list(reversed(samples))
+                cluster_index_mapping = {
+                    original_sample_order.index(s): i for i, s in enumerate(samples_clustered_unreversed)
+                }
+
+                # Reorder category data according to clustering
+                cats_clustered = []
+                for input_cat in cats:
+                    if "name" not in input_cat:
+                        continue
+
+                    # Split long category names
+                    name = "<br>".join(split_long_string(input_cat["name"]))
+
+                    # Convert color to RGB format
+                    color_str = mqc_colour.color_to_rgb_string(input_cat["color"])
+
+                    # Reorder data according to clustering, then reverse for display
+                    clustered_data = [0.0] * len(input_cat["data"])
+                    clustered_data_pct = [0.0] * len(input_cat.get("data_pct", []))
+
+                    for orig_idx, cluster_idx in cluster_index_mapping.items():
+                        if cluster_idx < len(clustered_data):
+                            clustered_data[cluster_idx] = input_cat["data"][orig_idx]
+                            if (
+                                "data_pct" in input_cat
+                                and input_cat["data_pct"]
+                                and orig_idx < len(input_cat["data_pct"])
+                            ):
+                                clustered_data_pct[cluster_idx] = input_cat["data_pct"][orig_idx]
+
+                    # Reverse the clustered data to match the reversed samples
+                    cat_clustered = Category(
+                        name=name,
+                        color=color_str,
+                        data=list(reversed(clustered_data)),
+                        data_pct=list(reversed(clustered_data_pct)) if "data_pct" in input_cat else [],
+                    )
+                    cats_clustered.append(cat_clustered)
+
+            except Exception as e:
+                logger.warning(f"Failed to create clustered data: {str(e)}")
+
         dataset = Dataset(
             **dataset.model_dump(),
             cats=fixed_cats,
             samples=samples,
+            cats_clustered=cats_clustered,
+            samples_clustered=samples_clustered,
         )
 
         return dataset
@@ -547,6 +677,7 @@ class Dataset(BaseDataset):
 class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
     sort_switch_sorted_active: bool = False
+    cluster_switch_clustered_active: bool = False
 
     def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
@@ -566,18 +697,6 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 # Legacy: users assumed that passing an OrderedDict indicates that we
                 # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
                 pass
-            elif inputs.pconfig.sort_by_values and not inputs.pconfig.sort_switch_sorted_active:
-                # Sort samples by their total values (sum across all categories) - only if not using interactive sorting
-                # When sort_switch_sorted_active=True, JavaScript handles the sorting dynamically
-                sample_totals = {}
-                for sample_name, sample_data in d.items():
-                    total = sum(
-                        float(v) if isinstance(v, (int, float)) and not math.isnan(float(v)) else 0
-                        for v in sample_data.values()
-                    )
-                    sample_totals[SampleName(sample_name)] = total
-                # Sort by total values in descending order
-                ordered_samples_names = sorted(sample_totals.keys(), key=lambda x: sample_totals[x], reverse=True)
             elif inputs.pconfig.sort_samples:
                 ordered_samples_names = natsorted([SampleName(s) for s in d.keys()])
             cat_data_dicts: List[CatDataDict] = list()
@@ -621,6 +740,8 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             samples_lists=plot_samples,
             pconfig=inputs.pconfig,
             anchor=inputs.anchor,
+            original_data=inputs.data,
+            original_cats=inputs.cats,
         )
 
     @staticmethod
@@ -629,6 +750,8 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
         samples_lists: Sequence[Sequence[SampleNameT]],
         pconfig: BarPlotConfig,
         anchor: Anchor,
+        original_data: Optional[List[DatasetT]] = None,
+        original_cats: Optional[List[Dict[CatName, Any]]] = None,
     ) -> "BarPlot":
         """
         :param cats_lists: each dataset is a list of dicts with the keys: {name, color, data},
@@ -654,8 +777,16 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
         )
 
         model.datasets = [
-            Dataset.create(d, cats=cats, samples=samples)
-            for d, cats, samples in zip(model.datasets, cats_lists, samples_lists)
+            Dataset.create(
+                d,
+                cats=cats,
+                samples=samples,
+                cluster_samples=pconfig.cluster_samples,
+                cluster_method=pconfig.cluster_method,
+                original_data=original_data[idx] if original_data and idx < len(original_data) else None,
+                original_cats=original_cats[idx] if original_cats and idx < len(original_cats) else None,
+            )
+            for idx, (d, cats, samples) in enumerate(zip(model.datasets, cats_lists, samples_lists))
         ]
 
         # Set the barmode
@@ -827,32 +958,35 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 # But reversing the legend so the largest bars are still on the top
                 model.layout.legend.traceorder = "reversed"
 
-        return BarPlot(**model.__dict__, sort_switch_sorted_active=pconfig.sort_switch_sorted_active)
+        return BarPlot(
+            **model.__dict__,
+            cluster_switch_clustered_active=pconfig.cluster_switch_clustered_active,
+        )
 
     def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """
         Bar plot-specific controls, only for the interactive version.
         """
         buttons = super().buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor)
-        if self.pconfig.sort_by_values:
+        if self.pconfig.cluster_samples:
             buttons.append(
                 f"""
                 <div class="btn-group" role="group">
                     <button
                         type="button"
-                        class="btn btn-default btn-sm {"" if self.pconfig.sort_switch_sorted_active else "active"}"
-                        data-action="unsorted"
+                        class="btn btn-default btn-sm {"" if self.pconfig.cluster_switch_clustered_active else "active"}"
+                        data-action="unclustered"
                         data-plot-anchor="{self.anchor}"
                     >
-                        Sorted by label
+                        Sorted by sample
                     </button>
                     <button
                         type="button"
-                        class="btn btn-default btn-sm {"active" if self.pconfig.sort_switch_sorted_active else ""}"
-                        data-action="sorted_by_values"
+                        class="btn btn-default btn-sm {"active" if self.pconfig.cluster_switch_clustered_active else ""}"
+                        data-action="clustered"
                         data-plot-anchor="{self.anchor}"
                     >
-                        Sorted by values
+                        Clustered
                     </button>
                 </div>
                 """

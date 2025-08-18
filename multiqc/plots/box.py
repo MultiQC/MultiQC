@@ -20,7 +20,13 @@ logger = logging.getLogger(__name__)
 class BoxPlotConfig(PConfig):
     sort_samples: bool = True
     sort_by_median: bool = False  # Sort samples by their median values instead of alphabetically
-    sort_switch_sorted_active: bool = False  # Whether the sorted view is initially active
+    sort_switch_sorted_active: bool = True  # Whether the sorted view is initially active
+    # Showing separate points:
+    # False - do not show at all
+    # "all" - show all data points
+    # "outliers" - show only outliers
+    # None - use config.boxplot_boxpoints; if not set, determine based on config.box_min_threshold_no_points and config.box_min_threshold_outliers
+    boxpoints: Union[bool, str, None] = None
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("boxplot",), **data)
@@ -95,23 +101,28 @@ class Dataset(BaseDataset):
             samples_sorted=samples_sorted,
         )
 
-        # Determine boxpoints dynamically based on sample count, similar to violin plot
-        n_samples = len(dataset.samples)
-        show_points = n_samples <= config.box_min_threshold_no_points
-        show_only_outliers = n_samples > config.box_min_threshold_outliers
-
-        # Set boxpoints based on dynamic logic
+        # Determine boxpoints based on PConfig first, then global config, then dynamic logic
         boxpoints: Union[bool, str] = "outliers"
-        if not show_points:
-            boxpoints = False  # Show no points
-        elif not show_only_outliers:
-            boxpoints = "all"  # Show all points
-        else:
-            boxpoints = "outliers"  # Show only outliers
 
-        # Override with config if explicitly set
-        if config.boxplot_boxpoints is not None:
+        if pconfig and pconfig.boxpoints is not None:
+            # Use explicit PConfig boxpoints setting
+            boxpoints = pconfig.boxpoints
+        elif config.boxplot_boxpoints is not None:
+            # Use global config setting
             boxpoints = config.boxplot_boxpoints
+        else:
+            # Fall back to dynamic logic based on sample count, similar to violin plot
+            n_samples = len(dataset.samples)
+            show_points = n_samples <= config.box_min_threshold_no_points
+            show_only_outliers = n_samples > config.box_min_threshold_outliers
+
+            # Set boxpoints based on dynamic logic
+            if not show_points:
+                boxpoints = False  # Show no points
+            elif not show_only_outliers:
+                boxpoints = "all"  # Show all points
+            else:
+                boxpoints = "outliers"  # Show only outliers
 
         dataset.trace_params.update(
             boxpoints=boxpoints,
