@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 import polars as pl
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, linegraph, scatter, box
+from multiqc.plots import bargraph, box, linegraph, scatter, violin
 
 log = logging.getLogger(__name__)
 
@@ -106,34 +106,37 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in data_by_sample.keys():
             self.add_software_version(None, s_name)
 
+        # Merge cell area metrics into main data for general stats
+        for sample_name, cell_data in cells_data_by_sample.items():
+            if sample_name in data_by_sample:
+                # Add cell area metrics to existing sample data
+                if "cell_area_mean" in cell_data:
+                    data_by_sample[sample_name]["cell_area_mean"] = cell_data["cell_area_mean"]
+                if "nucleus_area_mean" in cell_data:
+                    data_by_sample[sample_name]["nucleus_area_mean"] = cell_data["nucleus_area_mean"]
+                if "nucleus_to_cell_area_ratio_mean" in cell_data:
+                    data_by_sample[sample_name]["nucleus_to_cell_area_ratio_mean"] = cell_data[
+                        "nucleus_to_cell_area_ratio_mean"
+                    ]
+            elif cell_data:
+                # Create new sample entry if only cell data exists
+                data_by_sample[sample_name] = {}
+                if "cell_area_mean" in cell_data:
+                    data_by_sample[sample_name]["cell_area_mean"] = cell_data["cell_area_mean"]
+                if "nucleus_area_mean" in cell_data:
+                    data_by_sample[sample_name]["nucleus_area_mean"] = cell_data["nucleus_area_mean"]
+                if "nucleus_to_cell_area_ratio_mean" in cell_data:
+                    data_by_sample[sample_name]["nucleus_to_cell_area_ratio_mean"] = cell_data[
+                        "nucleus_to_cell_area_ratio_mean"
+                    ]
+
         # Write parsed data to a file
         self.write_data_file(data_by_sample, "multiqc_xenium")
 
         # Add key metrics to general stats
         self.xenium_general_stats_table(data_by_sample)
 
-        # Create plots
-        self.add_section(
-            name="Cell Detection",
-            anchor="xenium-cells",
-            description="Number of cells detected and cells per 100μm²",
-            helptext="""
-            This plot shows fundamental cell detection metrics from Xenium spatial transcriptomics:
-            
-            * **Total Cells**: Total number of cells detected via segmentation algorithms
-            * **Cells per 100μm²**: Cell density normalized by tissue area
-            
-            **What to look for:**
-            * Consistent cell counts across similar tissue types
-            * Cell densities appropriate for the tissue type (e.g., brain ~1000-2000 cells/100μm², liver ~500-1000)
-            * Large variations might indicate segmentation issues or genuine biological differences
-            
-            **Troubleshooting:**
-            * Very low cell counts: Check segmentation parameters, tissue quality, or imaging issues
-            * Very high cell counts: May indicate over-segmentation or dense cell types
-            """,
-            plot=self.xenium_cells_plot(data_by_sample),
-        )
+        # Create plots - Cell detection metrics are already in general stats table
 
         self.add_section(
             name="Segmentation Methods",
@@ -190,6 +193,78 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=self.xenium_transcript_quality_plot(transcript_data_by_sample),
             )
 
+            # Add violin plot for transcript quality by codeword category if available
+            violin_plot = self.xenium_transcript_category_violin_plot(transcript_data_by_sample)
+            if violin_plot is not None:
+                self.add_section(
+                    name="Transcript Quality by Codeword Category",
+                    anchor="xenium-transcript-category-violin",
+                    description="Distribution of transcript quality values by codeword category (averaged across samples)",
+                    helptext="""
+                    This violin plot shows transcript quality (QV score) distributions for each codeword category:
+                    
+                    **Codeword Categories:**
+                    * **predesigned_gene**: Standard genes from Xenium panels  
+                    * **custom_gene**: User-added custom targets
+                    * **negative_control_probe**: Control probes for background estimation
+                    * **negative_control_codeword**: Control codewords for background estimation
+                    * **genomic_control_probe**: Genomic DNA controls
+                    * **unassigned_codeword**: Unassigned transcripts
+                    
+                    **Quality Score (QV) Interpretation:**
+                    * QV ≥20: High-quality transcripts (≥99% accuracy)
+                    * QV 10-20: Medium quality (90-99% accuracy) 
+                    * QV <10: Low-quality transcripts (<90% accuracy)
+                    
+                    **What to look for:**
+                    * **predesigned_gene** should have the highest QV distributions (centered around 30-40)
+                    * **custom_gene** typically has slightly lower but still good QV distributions
+                    * **Negative controls** should have variable quality and lower overall counts
+                    * **Large differences** between categories may indicate panel design issues
+                    
+                    **Multiple samples:**
+                    * For multiple samples, data is averaged across all samples to show overall category patterns
+                    * The violin shape shows the density of QV values at each quality level
+                    * Wider sections indicate more transcripts at that quality level
+                    """,
+                    plot=violin_plot,
+                )
+
+            # Add molecules per gene distribution if available
+            molecules_plot = self.xenium_molecules_per_gene_plot(transcript_data_by_sample)
+            if molecules_plot is not None:
+                self.add_section(
+                    name="Molecules per Gene Distribution",
+                    anchor="xenium-molecules-per-gene",
+                    description="Distribution of transcript counts per gene",
+                    helptext="""
+                    This histogram shows the distribution of transcript counts per gene across all samples:
+                    
+                    **What it shows:**
+                    * **X-axis**: Number of transcripts per gene (log scale)
+                    * **Y-axis**: Number of genes with that transcript count
+                    * **Two categories**: Genes vs. non-genes (controls, unassigned, etc.)
+                    
+                    **Interpretation:**
+                    * **Most genes** should have moderate transcript counts (hundreds to thousands)
+                    * **Controls and non-genes** typically have lower counts
+                    * **Very high counts** may indicate highly expressed genes or technical artifacts
+                    * **Very low counts** may indicate poorly detected genes
+                    
+                    **What to look for:**
+                    * **Smooth distribution** for genes with a peak in the hundreds-thousands range
+                    * **Lower counts** for non-gene features (controls)  
+                    * **No extreme outliers** unless biologically expected
+                    * **Consistent patterns** across similar tissue types
+                    
+                    **Quality indicators:**
+                    * Peak gene expression around 100-10,000 transcripts per gene is typical
+                    * Clear separation between gene and non-gene distributions
+                    * Absence of unusual spikes or gaps in the distribution
+                    """,
+                    plot=molecules_plot,
+                )
+
             # Add Field of View quality section if FoV data is available
             fov_plot = self.xenium_fov_quality_plot(transcript_data_by_sample)
             if fov_plot is not None:
@@ -234,38 +309,37 @@ class MultiqcModule(BaseMultiqcModule):
                     plot=fov_plot,
                 )
 
-        # Add cell metrics section if cells data is available
+        # Add cell area distribution section if cells data is available
         if cells_data_by_sample:
-            self.add_section(
-                name="Cell Area Distribution",
-                anchor="xenium-cell-area",
-                description="Distribution of cell and nucleus areas",
-                helptext="""
-                This plot shows cell morphology metrics derived from segmentation:
-                
-                **Metrics displayed:**
-                * **Mean Cell Area**: Average cell size in μm² 
-                * **Mean Nucleus Area**: Average nucleus size in μm²
-                * **Nucleus/Cell Area Ratio**: Proportion of cell occupied by nucleus
-                
-                **Typical ranges (tissue-dependent):**
-                * **Cell area**: 50-200 μm² for most tissues
-                * **Nucleus area**: 20-80 μm² 
-                * **Nucleus/cell ratio**: 0.1-0.4 (10-40%)
-                
-                **What to look for:**
-                * **Consistent metrics** across samples of same tissue type
-                * **Biologically reasonable values** for your tissue
-                * **Nucleus/cell ratio** should be <0.5 (nucleus shouldn't dominate cell)
-                
-                **Troubleshooting:**
-                * Very large cells: Over-segmentation issues, cell doublets
-                * Very small cells: Under-segmentation, debris detection
-                * High nucleus/cell ratio: Nuclear expansion artifacts, poor membrane staining
-                * Missing metrics: Insufficient cells for statistical calculation
-                """,
-                plot=self.xenium_cell_area_plot(cells_data_by_sample),
-            )
+            area_plot = self.xenium_cell_area_distribution_plot(cells_data_by_sample)
+            if area_plot:
+                self.add_section(
+                    name="Cell Area Distribution",
+                    anchor="xenium-cell-area-distribution",
+                    description="Distribution of cell areas across samples",
+                    helptext="""
+                    This plot shows the distribution of cell areas in the sample(s):
+                    
+                    **Single sample**: Density plot with vertical lines showing mean and median cell area
+                    **Multiple samples**: Violin plots showing the distribution for each sample
+                    
+                    **Typical cell area ranges (tissue-dependent):**
+                    * **Most tissues**: 50-200 μm²
+                    * **Large cells** (e.g., neurons): 200-500 μm²
+                    * **Small cells** (e.g., lymphocytes): 20-80 μm²
+                    
+                    **What to look for:**
+                    * **Consistent distributions** across samples of the same tissue type
+                    * **Biologically reasonable values** for your tissue
+                    * **Outliers**: Very large or small cells may indicate segmentation issues
+                    
+                    **Troubleshooting:**
+                    * Bimodal distributions: May indicate mixed cell types or segmentation artifacts
+                    * Very large cells: Over-segmentation, cell doublets, or debris
+                    * Very small cells: Under-segmentation, nuclear fragments
+                    """,
+                    plot=area_plot,
+                )
 
     def parse_xenium_metrics(self, f) -> Dict:
         """Parse Xenium metrics_summary.csv file"""
@@ -430,6 +504,56 @@ class MultiqcModule(BaseMultiqcModule):
             "unique_features": len(quality_dist),
         }
 
+        # Add codeword category quality analysis if codeword_category column is present
+        if "codeword_category" in df.columns:
+            category_quality_distributions = {}
+
+            # Group by codeword_category and collect QV values for violin plots
+            category_grouped = df.group_by("codeword_category").agg(pl.col("qv").alias("qv_values"))
+
+            for row in category_grouped.iter_rows(named=True):
+                category = str(row["codeword_category"])
+                qv_values = row["qv_values"]
+
+                # Store quality values for violin plots (sample if too many)
+                if hasattr(qv_values, "to_list"):
+                    # It's a polars Series
+                    if len(qv_values) > 2000:  # Sample more for better violin plot
+                        sampled_qv = qv_values.sample(2000, seed=42)
+                        category_quality_distributions[category] = sampled_qv.to_list()
+                    else:
+                        category_quality_distributions[category] = qv_values.to_list()
+                else:
+                    # It's already a Python list
+                    if len(qv_values) > 2000:
+                        import random
+
+                        random.seed(42)
+                        sampled_qv = random.sample(qv_values, 2000)
+                        category_quality_distributions[category] = sampled_qv
+                    else:
+                        category_quality_distributions[category] = qv_values
+
+            result["category_quality_distributions"] = category_quality_distributions
+
+        # Add molecules per gene analysis if feature_name and is_gene columns are present
+        if "feature_name" in df.columns and "is_gene" in df.columns:
+            # Group by feature_name and calculate molecule count per gene
+            molecules_per_gene = {}
+
+            gene_grouped = df.group_by("feature_name").agg(
+                [pl.len().alias("molecule_count"), pl.col("is_gene").first().alias("is_gene")]
+            )
+
+            for row in gene_grouped.iter_rows(named=True):
+                feature_name = str(row["feature_name"])
+                molecule_count = row["molecule_count"]
+                is_gene = row["is_gene"]
+
+                molecules_per_gene[feature_name] = {"count": molecule_count, "is_gene": is_gene}
+
+            result["molecules_per_gene"] = molecules_per_gene
+
         # Add FoV quality analysis if fov_name column is present
         if "fov_name" in df.columns:
             fov_quality_stats = {}
@@ -555,6 +679,17 @@ class MultiqcModule(BaseMultiqcModule):
                         }
                     )
 
+            # Store cell area values for distribution plots
+            if cell_area_stats.len() > 0:
+                # Sample up to 10000 cells for distribution plotting to avoid memory issues
+                max_cells_for_plot = min(10000, cell_area_stats.len())
+                if cell_area_stats.len() > max_cells_for_plot:
+                    # Random sample
+                    cell_area_values = cell_area_stats.sample(max_cells_for_plot, seed=42).to_list()
+                else:
+                    cell_area_values = cell_area_stats.to_list()
+                cell_stats["cell_area_values"] = cell_area_values
+
             return cell_stats
 
         except Exception as e:
@@ -610,31 +745,29 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "Greens",
                 "modify": lambda x: x * 100.0,
             },
+            "cell_area_mean": {
+                "title": "Cell Area",
+                "description": "Mean cell area",
+                "suffix": " μm²",
+                "scale": "Blues",
+                "format": "{:,.1f}",
+            },
+            "nucleus_area_mean": {
+                "title": "Nucleus Area",
+                "description": "Mean nucleus area",
+                "suffix": " μm²",
+                "scale": "Oranges",
+                "format": "{:,.1f}",
+            },
+            "nucleus_to_cell_area_ratio_mean": {
+                "title": "Nucleus/Cell Ratio",
+                "description": "Mean nucleus to cell area ratio",
+                "scale": "Greens",
+                "format": "{:.3f}",
+                "max": 1.0,
+            },
         }
         self.general_stats_addcols(data_by_sample, headers)
-
-    def xenium_cells_plot(self, data_by_sample):
-        """Create bar plot for cell detection metrics"""
-        plot_data = {}
-        for s_name, data in data_by_sample.items():
-            plot_data[s_name] = {
-                "num_cells_detected": data.get("num_cells_detected", 0),
-                "cells_per_100um2": data.get("cells_per_100um2", 0),
-            }
-
-        keys = {
-            "num_cells_detected": {"name": "Total Cells", "color": "#1f77b4"},
-            "cells_per_100um2": {"name": "Cells per 100μm²", "color": "#ff7f0e"},
-        }
-
-        config = {
-            "id": "xenium_cells",
-            "title": "Xenium: Cell Detection",
-            "ylab": "Count / Density",
-            "cpswitch_counts_label": "Counts",
-        }
-
-        return bargraph.plot(plot_data, keys, config)
 
     def xenium_segmentation_plot(self, data_by_sample):
         """Create stacked bar plot for segmentation methods"""
@@ -728,7 +861,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": title,
             "xlab": "Total transcripts per gene",
             "ylab": "Mean calibrated quality of gene transcripts",
-            "xlog": True,
             "marker_size": 5,
             "series_label": "transcripts",
         }
@@ -775,8 +907,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Xenium: Transcript Quality by Category",
             "xlab": "Total transcripts per gene",
             "ylab": "Mean calibrated quality of gene transcripts",
-            "xlog": True,
-            "data_labels": [{"name": cat} for cat in datasets.keys()],
+            "data_labels": [{"name": cat.replace("_", " ").title()} for cat in datasets.keys()],
         }
 
         return linegraph.plot(list(datasets.values()), config)
@@ -837,6 +968,110 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return bargraph.plot(plot_data, keys, config)
+
+    def xenium_cell_area_distribution_plot(self, cells_data_by_sample):
+        """Create cell area distribution plot - line plot for single sample, violin plots for multiple"""
+        # Check which samples have cell area data
+        samples_with_areas = []
+        for s_name, data in cells_data_by_sample.items():
+            if "cell_area_values" in data:
+                samples_with_areas.append(s_name)
+
+        if not samples_with_areas:
+            return None
+
+        num_samples = len(samples_with_areas)
+
+        if num_samples == 1:
+            # Single sample: Create line plot (density) with vertical lines for mean/median
+            return self._create_single_sample_area_density(cells_data_by_sample[samples_with_areas[0]])
+        else:
+            # Multiple samples: Create violin plots
+            return self._create_multi_sample_area_violins(cells_data_by_sample, samples_with_areas)
+
+    def _create_single_sample_area_density(self, cell_data):
+        """Create density plot for single sample with mean/median lines"""
+        import numpy as np
+        from scipy.stats import gaussian_kde
+
+        cell_areas = cell_data["cell_area_values"]
+        if not cell_areas or len(cell_areas) < 10:
+            return None
+
+        # Create density estimation
+        kde = gaussian_kde(cell_areas)
+
+        # Create x values for density curve
+        min_area = min(cell_areas)
+        max_area = max(cell_areas)
+        x_range = max_area - min_area
+        x_vals = np.linspace(max(0, min_area - 0.1 * x_range), max_area + 0.1 * x_range, 200)
+        density_vals = kde(x_vals)
+
+        # Prepare data for linegraph
+        datasets = {}
+        density_data = {}
+        for x, y in zip(x_vals, density_vals):
+            density_data[float(x)] = float(y)
+        datasets["Density"] = density_data
+
+        config = {
+            "id": "xenium_cell_area_distribution",
+            "title": "Xenium: Cell Area Distribution",
+            "xlab": "Cell area",
+            "ylab": "Density",
+            "suffix": " μm²",
+        }
+
+        # Add vertical lines for mean and median
+        if "cell_area_mean" in cell_data and "cell_area_median" in cell_data:
+            config["x_lines"] = [
+                {
+                    "value": float(cell_data["cell_area_mean"]),
+                    "color": "red",
+                    "dash": "dash",
+                    "width": 2,
+                    "label": f"Mean ({cell_data['cell_area_mean']:.1f} μm²)",
+                },
+                {
+                    "value": float(cell_data["cell_area_median"]),
+                    "color": "green",
+                    "dash": "dash",
+                    "width": 2,
+                    "label": f"Median ({cell_data['cell_area_median']:.1f} μm²)",
+                },
+            ]
+
+        return linegraph.plot(datasets, config)
+
+    def _create_multi_sample_area_violins(self, cells_data_by_sample, samples_with_areas):
+        """Create box plots for multiple samples - one box per sample"""
+        from multiqc.plots import box
+
+        # For box plots, we provide the raw data points grouped by sample
+        data = {}
+
+        for s_name in samples_with_areas:
+            cell_data = cells_data_by_sample[s_name]
+            if "cell_area_values" in cell_data:
+                # Store all cell area values for this sample
+                cell_areas = cell_data["cell_area_values"]
+                if cell_areas:
+                    # Box plots expect raw data points as a list
+                    data[s_name] = [float(area) for area in cell_areas]
+
+        if not data:
+            return None
+
+        config = {
+            "id": "xenium_cell_area_distribution",
+            "title": "Xenium: Cell Area Distribution",
+            "ylab": "Cell area (μm²)",
+            "xlab": "Sample",
+            "boxpoints": False,
+        }
+
+        return box.plot(data, config)
 
     def xenium_fov_quality_plot(self, transcript_data_by_sample):
         """Create adaptive FoV quality plot - violin plots for single sample, summary for multiple"""
@@ -920,3 +1155,336 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return box.plot(fov_quality_data, config)
+
+    def xenium_transcript_category_violin_plot(self, transcript_data_by_sample):
+        """Create violin plot showing transcript quality distribution by codeword category"""
+        # Check if any sample has category quality distributions
+        samples_with_categories = []
+        for s_name, data in transcript_data_by_sample.items():
+            if "category_quality_distributions" in data:
+                samples_with_categories.append(s_name)
+
+        if not samples_with_categories:
+            return None
+
+        # Aggregate quality distributions across all samples for each category
+        category_quality_data = {}
+
+        for s_name in samples_with_categories:
+            data = transcript_data_by_sample[s_name]
+            if "category_quality_distributions" in data:
+                category_distributions = data["category_quality_distributions"]
+                for category, quality_values in category_distributions.items():
+                    if category not in category_quality_data:
+                        category_quality_data[category] = []
+                    # Add all quality values from this sample's category to the aggregated distribution
+                    category_quality_data[category].extend(quality_values)
+
+        if not category_quality_data:
+            return None
+
+        # Define color mapping for each category based on notebook analysis
+        category_colors = {
+            "predesigned_gene": "#1f77b4",  # Blue - primary genes
+            "custom_gene": "#ff7f0e",  # Orange - custom targets
+            "negative_control_probe": "#d62728",  # Red - negative controls
+            "negative_control_codeword": "#ff9900",  # Yellow/Orange - negative controls
+            "genomic_control_probe": "#e377c2",  # Pink - genomic controls
+            "unassigned_codeword": "#7f7f7f",  # Gray - unassigned
+            "deprecated_codeword": "#bcbd22",  # Olive - deprecated
+        }
+
+        # Create headers for the violin plot - each category is a "metric"
+        headers = {}
+        for category in category_quality_data.keys():
+            headers[category] = {
+                "title": category.replace("_", " ").title(),
+                "description": f"Quality score distribution for {category}",
+                "suffix": " QV",
+                "color": category_colors.get(category, "#888888"),
+                "min": 0,
+                "max": 50,  # QV scores typically range 0-50
+            }
+
+        # Create data dict - for violin plots we need sample -> category -> single value
+        # Each transcript becomes a "pseudo-sample" so we can show the distribution
+        data = {}
+        transcript_idx = 0
+
+        for category, values in category_quality_data.items():
+            for value in values:
+                sample_name = f"transcript_{transcript_idx:06d}"
+                if sample_name not in data:
+                    data[sample_name] = {}
+                data[sample_name][category] = value
+                transcript_idx += 1
+
+        # Fill missing categories with None for samples that don't have all categories
+        all_categories = set(category_quality_data.keys())
+        for sample_name in data:
+            for category in all_categories:
+                if category not in data[sample_name]:
+                    data[sample_name][category] = None
+
+        config = {
+            "id": "xenium_transcript_category_violin",
+            "title": "Xenium: Transcript Quality by Codeword Category (averaged across samples)",
+            "col1_header": "Category",
+            "series_label": "transcripts",
+        }
+
+        return violin.plot(data, headers, config)
+
+    def xenium_molecules_per_gene_plot(self, transcript_data_by_sample):
+        """Create histogram plot showing distribution of molecules per gene with separate lines per sample"""
+        # Check if any sample has molecules per gene data
+        samples_with_molecules = []
+        for s_name, data in transcript_data_by_sample.items():
+            if "molecules_per_gene" in data:
+                samples_with_molecules.append(s_name)
+
+        if not samples_with_molecules:
+            return None
+
+        import numpy as np
+
+        # Calculate noise threshold based on aggregated data (for vertical line)
+        aggregated_gene_counts = {}
+        for s_name in samples_with_molecules:
+            data = transcript_data_by_sample[s_name]
+            molecules_data = data["molecules_per_gene"]
+            for gene_name, gene_info in molecules_data.items():
+                if gene_name not in aggregated_gene_counts:
+                    aggregated_gene_counts[gene_name] = {"count": 0, "is_gene": gene_info["is_gene"]}
+                aggregated_gene_counts[gene_name]["count"] += gene_info["count"]
+
+        n_mols_threshold = self.calculate_noise_threshold(aggregated_gene_counts)
+
+        # Determine global bins based on all samples' data
+        all_gene_counts = []
+        all_non_gene_counts = []
+
+        for s_name in samples_with_molecules:
+            data = transcript_data_by_sample[s_name]
+            molecules_data = data["molecules_per_gene"]
+
+            for gene_name, gene_info in molecules_data.items():
+                count = gene_info["count"]
+                if count > 0:
+                    if gene_info["is_gene"]:
+                        all_gene_counts.append(count)
+                    else:
+                        all_non_gene_counts.append(count)
+
+        # Create consistent bins for all samples
+        all_counts = all_gene_counts + all_non_gene_counts
+        if not all_counts:
+            return None
+
+        min_count = max(1, min(all_counts))
+        max_count = max(all_counts)
+        bins = np.logspace(np.log10(min_count), np.log10(max_count), 50)
+        bin_centers = (bins[:-1] + bins[1:]) / 2
+
+        # Check if single sample - handle differently
+        num_samples = len(samples_with_molecules)
+
+        if num_samples == 1:
+            # Single sample: Put both Gene and Non-gene lines on the same plot
+            return self._create_single_sample_molecules_plot(
+                transcript_data_by_sample[samples_with_molecules[0]], bins, bin_centers, n_mols_threshold
+            )
+        else:
+            # Multiple samples: Use tabs for Genes vs Non-genes
+            return self._create_multi_sample_molecules_plot(
+                transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
+            )
+
+    def _create_single_sample_molecules_plot(self, sample_data, bins, bin_centers, n_mols_threshold):
+        """Create single plot with both Gene and Non-gene lines for single sample"""
+        import numpy as np
+
+        molecules_data = sample_data["molecules_per_gene"]
+
+        # Separate counts by gene type
+        gene_counts = []
+        non_gene_counts = []
+
+        for gene_name, gene_info in molecules_data.items():
+            count = gene_info["count"]
+            if count > 0:
+                if gene_info["is_gene"]:
+                    gene_counts.append(count)
+                else:
+                    non_gene_counts.append(count)
+
+        # Create plot data with both lines
+        plot_data = {}
+
+        if gene_counts:
+            gene_hist, _ = np.histogram(gene_counts, bins=bins)
+            gene_line_data = {}
+            for i, count in enumerate(gene_hist):
+                gene_line_data[float(bin_centers[i])] = int(count)
+            plot_data["Genes"] = gene_line_data
+
+        if non_gene_counts:
+            non_gene_hist, _ = np.histogram(non_gene_counts, bins=bins)
+            non_gene_line_data = {}
+            for i, count in enumerate(non_gene_hist):
+                non_gene_line_data[float(bin_centers[i])] = int(count)
+            plot_data["Non-genes"] = non_gene_line_data
+
+        if not plot_data:
+            return None
+
+        config = {
+            "id": "xenium_molecules_per_gene",
+            "title": "Xenium: Distribution of Molecules per Gene",
+            "xlab": "Number of molecules per gene",
+            "ylab": "Number of features",
+        }
+
+        # Add vertical line for noise threshold if calculated
+        if n_mols_threshold is not None and n_mols_threshold > 0:
+            config["x_lines"] = [
+                {
+                    "value": n_mols_threshold,
+                    "color": "grey",
+                    "dash": "dash",
+                    "width": 1,
+                    "label": f"Noise threshold ({n_mols_threshold:.0f})",
+                }
+            ]
+
+        return linegraph.plot(plot_data, config)
+
+    def _create_multi_sample_molecules_plot(
+        self, transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
+    ):
+        """Create tabbed plot with separate lines per sample for multiple samples"""
+        import numpy as np
+
+        # Create separate datasets for Genes and Non-genes
+        genes_dataset = {}
+        non_genes_dataset = {}
+
+        for s_name in samples_with_molecules:
+            data = transcript_data_by_sample[s_name]
+            molecules_data = data["molecules_per_gene"]
+
+            # Separate this sample's counts by gene type
+            sample_gene_counts = []
+            sample_non_gene_counts = []
+
+            for gene_name, gene_info in molecules_data.items():
+                count = gene_info["count"]
+                if count > 0:
+                    if gene_info["is_gene"]:
+                        sample_gene_counts.append(count)
+                    else:
+                        sample_non_gene_counts.append(count)
+
+            # Create histograms for this sample
+            if sample_gene_counts:
+                gene_hist, _ = np.histogram(sample_gene_counts, bins=bins)
+                gene_data = {}
+                for i, count in enumerate(gene_hist):
+                    gene_data[float(bin_centers[i])] = int(count)
+                genes_dataset[s_name] = gene_data
+
+            if sample_non_gene_counts:
+                non_gene_hist, _ = np.histogram(sample_non_gene_counts, bins=bins)
+                non_gene_data = {}
+                for i, count in enumerate(non_gene_hist):
+                    non_gene_data[float(bin_centers[i])] = int(count)
+                non_genes_dataset[s_name] = non_gene_data
+
+        # Create datasets list for multiple tabs
+        datasets = []
+        data_labels = []
+
+        if genes_dataset:
+            datasets.append(genes_dataset)
+            data_labels.append({"name": "Genes", "ylab": "Number of genes"})
+
+        if non_genes_dataset:
+            datasets.append(non_genes_dataset)
+            data_labels.append({"name": "Non-genes", "ylab": "Number of non-gene features"})
+
+        if not datasets:
+            return None
+
+        config = {
+            "id": "xenium_molecules_per_gene",
+            "title": "Xenium: Distribution of Molecules per Gene",
+            "xlab": "Number of molecules per gene",
+            "ylab": "Number of genes",
+            "data_labels": data_labels,
+        }
+
+        # Add vertical line for noise threshold if calculated
+        if n_mols_threshold is not None and n_mols_threshold > 0:
+            config["x_lines"] = [
+                {
+                    "value": n_mols_threshold,
+                    "color": "grey",
+                    "dash": "dash",
+                    "width": 1,
+                    "label": f"Noise threshold ({n_mols_threshold:.0f})",
+                }
+            ]
+
+        return linegraph.plot(datasets, config)
+
+    def calculate_noise_threshold(self, gene_molecule_counts, quantile=0.99):
+        """
+        Calculate noise threshold based on negative control molecules.
+
+        Args:
+            gene_molecule_counts: Dict of {gene_name: {"count": int, "is_gene": bool}}
+            quantile: Quantile for threshold calculation (default 0.99)
+
+        Returns:
+            Float threshold value or None if insufficient data
+        """
+        import numpy as np
+
+        # Extract counts for negative control features (non-genes starting with "NegControl")
+        neg_control_counts = []
+        neg_control_found = 0
+        for gene_name, gene_info in gene_molecule_counts.items():
+            if not gene_info["is_gene"] and gene_name.startswith("NegControl"):
+                neg_control_found += 1
+                if gene_info["count"] > 0:
+                    neg_control_counts.append(gene_info["count"])
+
+        if len(neg_control_counts) < 3:  # Need at least 3 data points for meaningful statistics
+            return None
+
+        try:
+            # Calculate threshold using log-space statistics (similar to notebook)
+            log_counts = np.log10(neg_control_counts)
+
+            # Use median absolute deviation as robust estimate of standard deviation
+            median_log = np.median(log_counts)
+            mad = np.median(np.abs(log_counts - median_log))
+            # Convert MAD to standard deviation equivalent (normal distribution scaling factor)
+            std_log = mad * 1.4826
+
+            # Calculate upper bound using quantile
+            from scipy.stats import norm
+
+            z_score = norm.ppf(quantile)
+            threshold_log = median_log + z_score * std_log
+
+            threshold = 10**threshold_log
+            return threshold
+
+        except (ImportError, ValueError):
+            # Fallback to simple percentile if scipy not available
+            return np.percentile(neg_control_counts, quantile * 100)
+
+        except Exception:
+            # Return None if calculation fails
+            return None
