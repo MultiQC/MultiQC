@@ -512,9 +512,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
                             continue
                         if series_config.ymin is not None and float(point["y"]) < float(series_config.ymin):
                             continue
-                    if "name" in point:
-                        point["name"] = f"{s_name}: {point['name']}"
-                    else:
+                    if "name" not in point:
                         point["name"] = s_name
 
                     for k in ["color", "opacity", "marker_size", "marker_line_width", "marker_symbol"]:
