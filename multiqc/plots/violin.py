@@ -386,7 +386,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     metric_order[metric] = idx
 
             merged_df = merged_df.with_columns(
-                pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                pl.col("metric")
+                .map_elements(lambda x: metric_order.get(x, 99999), return_dtype=pl.Int64)
+                .alias("__metric_order")
             )
 
             # First ensure the DataFrame is sorted by creation_date (newest last)
@@ -419,7 +421,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                 # Add a temporary column to sort by the original metric order
                 deduped_df = deduped_df.with_columns(
-                    pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                    pl.col("metric")
+                    .map_elements(lambda x: metric_order.get(x, 99999), return_dtype=pl.Int64)
+                    .alias("__metric_order")
                 )
 
                 # Sort by the order column to preserve metric ordering
