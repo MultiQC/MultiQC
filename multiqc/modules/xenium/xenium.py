@@ -265,7 +265,160 @@ class MultiqcModule(BaseMultiqcModule):
                     plot=molecules_plot,
                 )
 
-            # Add Field of View quality section if FoV data is available
+        # Add cell area distribution section if cells data is available
+        if cells_data_by_sample:
+            area_plot = self.xenium_cell_area_distribution_plot(cells_data_by_sample)
+            if area_plot:
+                self.add_section(
+                    name="Cell Area Distribution",
+                    anchor="xenium-cell-area-distribution",
+                    description="Distribution of cell areas across samples",
+                    helptext="""
+                    This plot shows the distribution of cell areas in the sample(s):
+                    
+                    **Single sample**: Density plot with vertical lines showing mean and median cell area
+                    **Multiple samples**: Violin plots showing the distribution for each sample
+                    
+                    **Typical cell area ranges (tissue-dependent):**
+                    * **Most tissues**: 50-200 μm²
+                    * **Large cells** (e.g., neurons): 200-500 μm²
+                    * **Small cells** (e.g., lymphocytes): 20-80 μm²
+                    
+                    **What to look for:**
+                    * **Consistent distributions** across samples of the same tissue type
+                    * **Biologically reasonable values** for your tissue
+                    * **Outliers**: Very large or small cells may indicate segmentation issues
+                    
+                    **Troubleshooting:**
+                    * Bimodal distributions: May indicate mixed cell types or segmentation artifacts
+                    * Very large cells: Over-segmentation, cell doublets, or debris
+                    * Very small cells: Under-segmentation, nuclear fragments
+                    """,
+                    plot=area_plot,
+                )
+
+            # Add nucleus RNA fraction distribution plot
+            nucleus_plot = self.xenium_nucleus_rna_fraction_plot(cells_data_by_sample)
+            if nucleus_plot:
+                self.add_section(
+                    name="Distribution of fractions of molecules in nucleus per cell",
+                    anchor="xenium-nucleus-rna-fraction",
+                    description="Distribution of nucleus RNA molecule fractions across cells",
+                    helptext="""
+                    This plot shows the distribution of the fraction of RNA molecules located in the nucleus versus cytoplasm for each cell:
+                    
+                    **Single sample**: Density plot showing the distribution of nucleus RNA fractions
+                    **Multiple samples**: Box plots comparing distributions across samples
+                    
+                    **Biological interpretation:**
+                    * **Low values (0.0-0.2)**: Most RNA is cytoplasmic (expected for mature mRNAs)
+                    * **High values (>0.5)**: High nuclear retention (may indicate processing issues)
+                    * **Peak around 0.0-0.1**: Normal for most cell types with efficient RNA export
+                    
+                    **What to look for:**
+                    * **Consistent distributions** across samples of the same tissue type
+                    * **Biologically reasonable values** for your cell types
+                    * **Sample differences**: May reflect cell type composition or processing efficiency
+                    
+                    **Troubleshooting:**
+                    * Very high nuclear fractions: Check for nuclear segmentation issues
+                    * Bimodal distributions: May indicate different cell types or states
+                    * Outliers: Individual cells with unusual RNA localization patterns
+                    """,
+                    plot=nucleus_plot,
+                )
+
+            # Add nucleus-to-cell area ratio distribution plot
+            ratio_plot = self.xenium_nucleus_cell_area_ratio_plot(cells_data_by_sample)
+            if ratio_plot:
+                self.add_section(
+                    name="Nucleus to cell area distribution",
+                    anchor="xenium-nucleus-cell-area-ratio",
+                    description="Distribution of nucleus-to-cell area ratios across cells",
+                    helptext="""
+                    This plot shows the distribution of the ratio between nucleus area and total cell area for each cell:
+                    
+                    **Single sample**: Density plot showing the distribution of nucleus-to-cell area ratios
+                    **Multiple samples**: Box plots comparing distributions across samples
+                    
+                    **Biological interpretation:**
+                    * **Typical range**: 0.2-0.6 for most cell types
+                    * **Low values (<0.2)**: Small nucleus relative to cell (may indicate active/mature cells)
+                    * **High values (>0.6)**: Large nucleus relative to cell (may indicate dividing or stressed cells)
+                    * **Peak around 0.3-0.5**: Normal for most healthy cell types
+                    
+                    **What to look for:**
+                    * **Consistent distributions** across samples of the same tissue type
+                    * **Biologically reasonable values** for your cell types
+                    * **Sample differences**: May reflect different cell states or tissue composition
+                    
+                    **Quality assessment:**
+                    * Very low ratios: May indicate over-segmented cells or debris
+                    * Very high ratios: May indicate under-segmented cells or nuclear fragments
+                    * Bimodal distributions: May indicate different cell types or segmentation artifacts
+                    
+                    **Troubleshooting:**
+                    * Unusual distributions may suggest issues with nuclear or cell segmentation parameters
+                    * Consider tissue-specific expected ranges when evaluating results
+                    """,
+                    plot=ratio_plot,
+                )
+
+            # Add combined cell distribution plot (transcripts and genes per cell)
+            combined_plot = self.xenium_cell_distributions_combined_plot(cells_data_by_sample)
+            if combined_plot:
+                self.add_section(
+                    name="Cell Distribution Analysis",
+                    anchor="xenium-cell-distributions",
+                    description="Distribution of transcripts and detected genes per cell",
+                    helptext="""
+                    This plot shows two key cell-level distributions with separate tabs/datasets:
+                    
+                    **Tab 1: Transcripts per cell** - Shows the distribution of total transcript counts per cell
+                    **Tab 2: Detected genes per cell** - Shows the distribution of unique genes detected per cell
+                    
+                    **Plot types:**
+                    * **Single sample**: Density plots showing the distribution shapes
+                    * **Multiple samples**: Box plots comparing distributions across samples
+                    
+                    **Transcripts per cell interpretation:**
+                    * **Typical range**: 100-5000 transcripts per cell for most tissues
+                    * **High transcript counts**: Metabolically active cells or large cell types
+                    * **Low transcript counts**: Less active cells, technical dropouts, or small cell fragments
+                    * **Quality thresholds**: <50 may indicate poor segmentation, >10,000 may indicate doublets
+                    
+                    **Detected genes per cell interpretation:**
+                    * **Typical range**: 50-2000 genes per cell depending on cell type and panel size
+                    * **High gene counts**: Metabolically active cells or cells with high expression diversity
+                    * **Low gene counts**: Specialized cells, inactive cells, or technical dropouts
+                    * **Quality thresholds**: <20 may indicate poor cells or debris
+                    
+                    **What to look for:**
+                    * **Unimodal distributions**: Expected for homogeneous cell populations
+                    * **Multimodal distributions**: May indicate different cell types or technical artifacts
+                    * **Sample consistency**: Similar distributions expected for replicate samples
+                    * **Positive correlation**: Generally expect transcripts and genes per cell to correlate
+                    
+                    **Panel considerations:**
+                    * **Pre-designed panels**: Gene counts limited by panel design (typically 100-1000 genes)
+                    * **Custom panels**: Consider gene selection bias when interpreting results
+                    * **Detection efficiency**: Some genes may be harder to detect than others
+                    
+                    **Quality assessment:**
+                    * **Transcripts**: Very low (<50) or very high (>10,000) may indicate segmentation issues
+                    * **Genes**: Very low (<20) may indicate poor cells, counts near panel size may indicate artifacts
+                    * **Shoulder distributions**: May indicate presence of different cell types
+                    
+                    **Troubleshooting:**
+                    * Unusual distributions may suggest issues with transcript detection or cell segmentation
+                    * Consider cell type and tissue context when evaluating expected ranges
+                    * Low gene detection may suggest transcript assignment issues
+                    """,
+                    plot=combined_plot,
+                )
+
+        # Add Field of View quality section at the end if FoV data is available
+        if transcript_data_by_sample:
             fov_plot = self.xenium_fov_quality_plot(transcript_data_by_sample)
             if fov_plot is not None:
                 self.add_section(
@@ -307,38 +460,6 @@ class MultiqcModule(BaseMultiqcModule):
                     * Systematic gradients: Temperature, timing, or optical alignment issues
                     """,
                     plot=fov_plot,
-                )
-
-        # Add cell area distribution section if cells data is available
-        if cells_data_by_sample:
-            area_plot = self.xenium_cell_area_distribution_plot(cells_data_by_sample)
-            if area_plot:
-                self.add_section(
-                    name="Cell Area Distribution",
-                    anchor="xenium-cell-area-distribution",
-                    description="Distribution of cell areas across samples",
-                    helptext="""
-                    This plot shows the distribution of cell areas in the sample(s):
-                    
-                    **Single sample**: Density plot with vertical lines showing mean and median cell area
-                    **Multiple samples**: Violin plots showing the distribution for each sample
-                    
-                    **Typical cell area ranges (tissue-dependent):**
-                    * **Most tissues**: 50-200 μm²
-                    * **Large cells** (e.g., neurons): 200-500 μm²
-                    * **Small cells** (e.g., lymphocytes): 20-80 μm²
-                    
-                    **What to look for:**
-                    * **Consistent distributions** across samples of the same tissue type
-                    * **Biologically reasonable values** for your tissue
-                    * **Outliers**: Very large or small cells may indicate segmentation issues
-                    
-                    **Troubleshooting:**
-                    * Bimodal distributions: May indicate mixed cell types or segmentation artifacts
-                    * Very large cells: Over-segmentation, cell doublets, or debris
-                    * Very small cells: Under-segmentation, nuclear fragments
-                    """,
-                    plot=area_plot,
                 )
 
     def parse_xenium_metrics(self, f) -> Dict:
@@ -615,7 +736,7 @@ class MultiqcModule(BaseMultiqcModule):
             df = pl.read_parquet(file_path)
 
             # Check for required columns
-            required_cols = ["cell_area", "nucleus_area", "total_counts"]
+            required_cols = ["cell_area", "nucleus_area", "total_counts", "transcript_counts"]
             missing_cols = [col for col in required_cols if col not in df.columns]
             if missing_cols:
                 log.warning(f"Missing columns in {f['fn']}: {missing_cols}")
@@ -663,6 +784,16 @@ class MultiqcModule(BaseMultiqcModule):
                         }
                     )
 
+                    # Store nucleus-to-cell area ratio values for distribution plots
+                    # Sample up to 10000 cells for distribution plotting to avoid memory issues
+                    max_cells_for_plot = min(10000, ratio.len())
+                    if ratio.len() > max_cells_for_plot:
+                        # Random sample
+                        ratio_values = ratio.sample(max_cells_for_plot, seed=42).to_list()
+                    else:
+                        ratio_values = ratio.to_list()
+                    cell_stats["nucleus_to_cell_area_ratio_values"] = ratio_values
+
             # Total cell count
             cell_stats["total_cells"] = df.height
 
@@ -679,6 +810,16 @@ class MultiqcModule(BaseMultiqcModule):
                         }
                     )
 
+                    # Store nucleus RNA fraction values for distribution plots
+                    # Sample up to 10000 cells for distribution plotting to avoid memory issues
+                    max_cells_for_plot = min(10000, nucleus_rna_fraction.len())
+                    if nucleus_rna_fraction.len() > max_cells_for_plot:
+                        # Random sample
+                        nucleus_fraction_values = nucleus_rna_fraction.sample(max_cells_for_plot, seed=42).to_list()
+                    else:
+                        nucleus_fraction_values = nucleus_rna_fraction.to_list()
+                    cell_stats["nucleus_rna_fraction_values"] = nucleus_fraction_values
+
             # Store cell area values for distribution plots
             if cell_area_stats.len() > 0:
                 # Sample up to 10000 cells for distribution plotting to avoid memory issues
@@ -689,6 +830,30 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     cell_area_values = cell_area_stats.to_list()
                 cell_stats["cell_area_values"] = cell_area_values
+
+            # Store transcript counts per cell (total_counts) for distribution plots
+            total_counts_stats = df["total_counts"].drop_nulls()
+            if total_counts_stats.len() > 0:
+                # Sample up to 10000 cells for distribution plotting to avoid memory issues
+                max_cells_for_plot = min(10000, total_counts_stats.len())
+                if total_counts_stats.len() > max_cells_for_plot:
+                    # Random sample
+                    transcript_counts_values = total_counts_stats.sample(max_cells_for_plot, seed=42).to_list()
+                else:
+                    transcript_counts_values = total_counts_stats.to_list()
+                cell_stats["transcript_counts_values"] = transcript_counts_values
+
+            # Store detected genes per cell (transcript_counts) for distribution plots
+            detected_genes_stats = df["transcript_counts"].drop_nulls()
+            if detected_genes_stats.len() > 0:
+                # Sample up to 10000 cells for distribution plotting to avoid memory issues
+                max_cells_for_plot = min(10000, detected_genes_stats.len())
+                if detected_genes_stats.len() > max_cells_for_plot:
+                    # Random sample
+                    detected_genes_values = detected_genes_stats.sample(max_cells_for_plot, seed=42).to_list()
+                else:
+                    detected_genes_values = detected_genes_stats.to_list()
+                cell_stats["detected_genes_values"] = detected_genes_values
 
             return cell_stats
 
@@ -863,6 +1028,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Mean calibrated quality of gene transcripts",
             "marker_size": 5,
             "series_label": "transcripts",
+            "xlog": True,
         }
 
         return scatter.plot(final_plot_data, config)
@@ -1020,7 +1186,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Xenium: Cell Area Distribution",
             "xlab": "Cell area",
             "ylab": "Density",
-            "suffix": " μm²",
+            "xsuffix": " μm²",
         }
 
         # Add vertical lines for mean and median
@@ -1067,6 +1233,189 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "xenium_cell_area_distribution",
             "title": "Xenium: Cell Area Distribution",
             "ylab": "Cell area (μm²)",
+            "xlab": "Sample",
+            "boxpoints": False,
+        }
+
+        return box.plot(data, config)
+
+    def xenium_nucleus_rna_fraction_plot(self, cells_data_by_sample):
+        """Create nucleus RNA fraction distribution plot - density for single sample, box plots for multiple"""
+        # Check which samples have nucleus RNA fraction data
+        samples_with_nucleus_data = []
+        for s_name, data in cells_data_by_sample.items():
+            if "nucleus_rna_fraction_values" in data and data["nucleus_rna_fraction_values"]:
+                samples_with_nucleus_data.append(s_name)
+
+        if not samples_with_nucleus_data:
+            return None
+
+        num_samples = len(samples_with_nucleus_data)
+
+        if num_samples == 1:
+            # Single sample: Create density plot
+            return self._create_single_sample_nucleus_density(cells_data_by_sample[samples_with_nucleus_data[0]])
+        else:
+            # Multiple samples: Create box plots
+            return self._create_multi_sample_nucleus_boxes(cells_data_by_sample, samples_with_nucleus_data)
+
+    def _create_single_sample_nucleus_density(self, cell_data):
+        """Create density plot for single sample nucleus RNA fractions"""
+        import numpy as np
+        from scipy import stats
+
+        from multiqc.plots import linegraph
+
+        nucleus_fractions = cell_data["nucleus_rna_fraction_values"]
+        if not nucleus_fractions:
+            return None
+
+        # Use a more appropriate range for nucleus RNA fractions (0 to 1)
+        x_range = np.linspace(0, 1, 200)
+
+        # Calculate kernel density estimation
+        try:
+            kde = stats.gaussian_kde(nucleus_fractions)
+            density = kde(x_range)
+        except Exception:
+            # Fallback to histogram if KDE fails
+            hist, bin_edges = np.histogram(nucleus_fractions, bins=50, range=(0, 1), density=True)
+            x_range = (bin_edges[:-1] + bin_edges[1:]) / 2
+            density = hist
+
+        # Create the density plot data
+        data = {}
+        data["Nucleus RNA Fraction Density"] = {str(x): y for x, y in zip(x_range, density)}
+
+        # Note: Could add statistical lines (mean/median) in future if desired
+
+        config = {
+            "id": "xenium_nucleus_rna_fraction_single",
+            "title": "Distribution of fractions of molecules in nucleus per cell",
+            "xlab": "Fraction of molecules in nucleus per cell",
+            "ylab": "Density",
+            "data_labels": [
+                {"name": "Density", "ylab": "Density"},
+            ],
+        }
+
+        # Add vertical lines for mean and median
+        plot = linegraph.plot(data, config)
+
+        return plot
+
+    def _create_multi_sample_nucleus_boxes(self, cells_data_by_sample, samples_with_nucleus_data):
+        """Create box plots for multiple samples - one box per sample"""
+        from multiqc.plots import box
+
+        # For box plots, we provide the raw data points grouped by sample
+        data = {}
+
+        for s_name in samples_with_nucleus_data:
+            cell_data = cells_data_by_sample[s_name]
+            if "nucleus_rna_fraction_values" in cell_data:
+                nucleus_fractions = cell_data["nucleus_rna_fraction_values"]
+                if nucleus_fractions:
+                    # Box plots expect raw data points as a list
+                    data[s_name] = [float(fraction) for fraction in nucleus_fractions]
+
+        if not data:
+            return None
+
+        config = {
+            "id": "xenium_nucleus_rna_fraction_multi",
+            "title": "Distribution of fractions of molecules in nucleus per cell",
+            "ylab": "Fraction of molecules in nucleus per cell",
+            "xlab": "Sample",
+            "boxpoints": False,
+        }
+
+        return box.plot(data, config)
+
+    def xenium_nucleus_cell_area_ratio_plot(self, cells_data_by_sample):
+        """Create nucleus-to-cell area ratio distribution plot - density for single sample, box plots for multiple"""
+        # Check which samples have nucleus-to-cell area ratio data
+        samples_with_ratio_data = []
+        for s_name, data in cells_data_by_sample.items():
+            if "nucleus_to_cell_area_ratio_values" in data and data["nucleus_to_cell_area_ratio_values"]:
+                samples_with_ratio_data.append(s_name)
+
+        if not samples_with_ratio_data:
+            return None
+
+        num_samples = len(samples_with_ratio_data)
+
+        if num_samples == 1:
+            # Single sample: Create density plot
+            return self._create_single_sample_ratio_density(cells_data_by_sample[samples_with_ratio_data[0]])
+        else:
+            # Multiple samples: Create box plots
+            return self._create_multi_sample_ratio_boxes(cells_data_by_sample, samples_with_ratio_data)
+
+    def _create_single_sample_ratio_density(self, cell_data):
+        """Create density plot for single sample nucleus-to-cell area ratios"""
+        import numpy as np
+        from scipy import stats
+
+        from multiqc.plots import linegraph
+
+        ratio_values = cell_data["nucleus_to_cell_area_ratio_values"]
+        if not ratio_values:
+            return None
+
+        # Use a reasonable range for nucleus-to-cell area ratios (0 to 1.0)
+        x_range = np.linspace(0, 1.0, 200)
+
+        # Calculate kernel density estimation
+        try:
+            kde = stats.gaussian_kde(ratio_values)
+            density = kde(x_range)
+        except Exception:
+            # Fallback to histogram if KDE fails
+            hist, bin_edges = np.histogram(ratio_values, bins=50, range=(0, 1.0), density=True)
+            x_range = (bin_edges[:-1] + bin_edges[1:]) / 2
+            density = hist
+
+        # Create the density plot data
+        data = {}
+        data["Nucleus-to-Cell Area Ratio Density"] = {str(x): y for x, y in zip(x_range, density)}
+
+        config = {
+            "id": "xenium_nucleus_cell_area_ratio_single",
+            "title": "Nucleus to cell area distribution",
+            "xlab": "Nucleus-to-cell area ratio",
+            "ylab": "Density",
+            "data_labels": [
+                {"name": "Density", "ylab": "Density"},
+            ],
+        }
+
+        plot = linegraph.plot(data, config)
+
+        return plot
+
+    def _create_multi_sample_ratio_boxes(self, cells_data_by_sample, samples_with_ratio_data):
+        """Create box plots for multiple samples - one box per sample"""
+        from multiqc.plots import box
+
+        # For box plots, we provide the raw data points grouped by sample
+        data = {}
+
+        for s_name in samples_with_ratio_data:
+            cell_data = cells_data_by_sample[s_name]
+            if "nucleus_to_cell_area_ratio_values" in cell_data:
+                ratio_values = cell_data["nucleus_to_cell_area_ratio_values"]
+                if ratio_values:
+                    # Box plots expect raw data points as a list
+                    data[s_name] = [float(ratio) for ratio in ratio_values]
+
+        if not data:
+            return None
+
+        config = {
+            "id": "xenium_nucleus_cell_area_ratio_multi",
+            "title": "Nucleus to cell area distribution",
+            "ylab": "Nucleus-to-cell area ratio",
             "xlab": "Sample",
             "boxpoints": False,
         }
@@ -1488,3 +1837,325 @@ class MultiqcModule(BaseMultiqcModule):
         except Exception:
             # Return None if calculation fails
             return None
+
+    def xenium_cell_distributions_combined_plot(self, cells_data_by_sample):
+        """Create combined plot for transcripts and detected genes per cell distributions"""
+        # Check if we have data for either transcripts or genes
+        samples_with_transcripts = {}
+        samples_with_genes = {}
+
+        for s_name, data in cells_data_by_sample.items():
+            if data and "transcript_counts_values" in data and data["transcript_counts_values"]:
+                samples_with_transcripts[s_name] = data["transcript_counts_values"]
+            if data and "detected_genes_values" in data and data["detected_genes_values"]:
+                samples_with_genes[s_name] = data["detected_genes_values"]
+
+        # If neither dataset is available, return None
+        if not samples_with_transcripts and not samples_with_genes:
+            return None
+
+        num_samples = max(len(samples_with_transcripts), len(samples_with_genes))
+
+        if num_samples == 1:
+            # Single sample: Create combined density plots
+            return self._create_single_sample_combined_density(samples_with_transcripts, samples_with_genes)
+        else:
+            # Multiple samples: Create combined box plots
+            return self._create_multi_sample_combined_boxes(samples_with_transcripts, samples_with_genes)
+
+    def _create_single_sample_combined_density(self, samples_with_transcripts, samples_with_genes):
+        """Create single sample combined density plots for transcripts and genes per cell"""
+        plot_data = []
+        data_labels = []
+
+        # Handle transcripts per cell data
+        if samples_with_transcripts:
+            s_name, transcript_values = next(iter(samples_with_transcripts.items()))
+            try:
+                import numpy as np
+                from scipy.stats import gaussian_kde
+
+                transcript_values = np.array(transcript_values)
+                kde = gaussian_kde(transcript_values)
+                x_min, x_max = transcript_values.min(), transcript_values.max()
+                x_range = np.linspace(x_min, x_max, 1000)
+                density = kde(x_range)
+
+                # Add to plot data with dataset identifier
+                transcripts_data = {}
+                for x, y in zip(x_range, density):
+                    transcripts_data[float(x)] = float(y)
+                plot_data.append({s_name: transcripts_data})
+                data_labels.append({"name": "Transcripts per cell", "xlab": "Number of transcripts per cell"})
+
+            except ImportError:
+                # Fallback to histogram if scipy not available
+                import numpy as np
+
+                bins = min(50, len(transcript_values) // 20)
+                hist, bin_edges = np.histogram(transcript_values, bins=bins)
+                bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+                transcripts_data = {}
+                for x, y in zip(bin_centers, hist):
+                    transcripts_data[float(x)] = float(y)
+                plot_data.append({s_name: transcripts_data})
+                data_labels.append({"name": "Transcripts per cell", "xlab": "Number of transcripts per cell"})
+
+        # Handle detected genes per cell data
+        if samples_with_genes:
+            s_name, gene_values = next(iter(samples_with_genes.items()))
+            try:
+                import numpy as np
+                from scipy.stats import gaussian_kde
+
+                gene_values = np.array(gene_values)
+                kde = gaussian_kde(gene_values)
+                x_min, x_max = gene_values.min(), gene_values.max()
+                x_range = np.linspace(x_min, x_max, 1000)
+                density = kde(x_range)
+
+                # Add to plot data with dataset identifier
+                genes_data = {}
+                for x, y in zip(x_range, density):
+                    genes_data[float(x)] = float(y)
+                plot_data.append({s_name: genes_data})
+                data_labels.append({"name": "Detected genes per cell", "xlab": "Number of detected genes per cell"})
+
+            except ImportError:
+                # Fallback to histogram if scipy not available
+                import numpy as np
+
+                bins = min(50, len(gene_values) // 20)
+                hist, bin_edges = np.histogram(gene_values, bins=bins)
+                bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+                genes_data = {}
+                for x, y in zip(bin_centers, hist):
+                    genes_data[float(x)] = float(y)
+                plot_data.append({s_name: genes_data})
+                data_labels.append({"name": "Detected genes per cell", "xlab": "Number of detected genes per cell"})
+
+        config = {
+            "id": "xenium_cell_distributions_combined",
+            "title": "Xenium: Cell Distribution Analysis",
+            "ylab": "Density",
+            "smooth_points": 100,
+            "data_labels": data_labels,
+        }
+
+        return linegraph.plot(plot_data, config)
+
+    def _create_multi_sample_combined_boxes(self, samples_with_transcripts, samples_with_genes):
+        """Create multi-sample combined box plots for transcripts and genes per cell"""
+        from multiqc.plots import box
+
+        plot_data = []
+        data_labels = []
+
+        # Add transcripts per cell data
+        if samples_with_transcripts:
+            transcripts_data = {}
+            for s_name, transcript_values in samples_with_transcripts.items():
+                transcripts_data[s_name] = transcript_values
+            plot_data.append(transcripts_data)
+            data_labels.append({"name": "Transcripts per cell", "ylab": "Number of transcripts per cell"})
+
+        # Add detected genes per cell data
+        if samples_with_genes:
+            genes_data = {}
+            for s_name, gene_values in samples_with_genes.items():
+                genes_data[s_name] = gene_values
+            plot_data.append(genes_data)
+            data_labels.append({"name": "Detected genes per cell", "ylab": "Number of detected genes per cell"})
+
+        config = {
+            "id": "xenium_cell_distributions_combined",
+            "title": "Xenium: Cell Distribution Analysis",
+            "boxpoints": False,
+            "data_labels": data_labels,
+        }
+
+        return box.plot(plot_data, config)
+
+    def xenium_transcripts_per_cell_plot(self, cells_data_by_sample):
+        """Create transcripts per cell distribution plot"""
+        # Filter samples with transcript count data
+        samples_with_transcripts = {}
+        for s_name, data in cells_data_by_sample.items():
+            if data and "transcript_counts_values" in data and data["transcript_counts_values"]:
+                samples_with_transcripts[s_name] = data["transcript_counts_values"]
+
+        if not samples_with_transcripts:
+            return None
+
+        num_samples = len(samples_with_transcripts)
+
+        if num_samples == 1:
+            # Single sample: Create density plot
+            return self._create_single_sample_transcripts_density(samples_with_transcripts)
+        else:
+            # Multiple samples: Create box plots
+            return self._create_multi_sample_transcripts_boxes(samples_with_transcripts)
+
+    def _create_single_sample_transcripts_density(self, samples_with_transcripts):
+        """Create single sample transcripts per cell density plot"""
+        s_name, transcript_values = next(iter(samples_with_transcripts.items()))
+
+        # Create kernel density estimation
+        try:
+            import numpy as np
+            from scipy.stats import gaussian_kde
+
+            transcript_values = np.array(transcript_values)
+            kde = gaussian_kde(transcript_values)
+
+            # Create x range for density plot
+            x_min, x_max = transcript_values.min(), transcript_values.max()
+            x_range = np.linspace(x_min, x_max, 1000)
+            density = kde(x_range)
+
+            # Create plot data
+            plot_data = {s_name: {}}
+            for x, y in zip(x_range, density):
+                plot_data[s_name][float(x)] = float(y)
+
+            config = {
+                "id": "xenium_transcripts_per_cell_single",
+                "title": "Xenium: Distribution of Transcripts per Cell",
+                "xlab": "Number of transcripts per cell",
+                "ylab": "Density",
+                "smooth_points": 100,
+            }
+
+            return linegraph.plot(plot_data, config)
+
+        except ImportError:
+            # Fallback to histogram if scipy not available
+            import numpy as np
+
+            bins = min(50, len(transcript_values) // 20)
+            hist, bin_edges = np.histogram(transcript_values, bins=bins)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+            plot_data = {s_name: {}}
+            for x, y in zip(bin_centers, hist):
+                plot_data[s_name][float(x)] = float(y)
+
+            config = {
+                "id": "xenium_transcripts_per_cell_single",
+                "title": "Xenium: Distribution of Transcripts per Cell",
+                "xlab": "Number of transcripts per cell",
+                "ylab": "Number of cells",
+            }
+
+            return linegraph.plot(plot_data, config)
+
+    def _create_multi_sample_transcripts_boxes(self, samples_with_transcripts):
+        """Create multi-sample transcripts per cell box plots"""
+        from multiqc.plots import box
+
+        # Prepare data for box plot
+        plot_data = {}
+        for s_name, transcript_values in samples_with_transcripts.items():
+            plot_data[s_name] = transcript_values
+
+        config = {
+            "id": "xenium_transcripts_per_cell_multi",
+            "title": "Xenium: Distribution of Transcripts per Cell",
+            "ylab": "Number of transcripts per cell",
+            "boxpoints": False,
+        }
+
+        return box.plot(plot_data, config)
+
+    def xenium_detected_genes_per_cell_plot(self, cells_data_by_sample):
+        """Create detected genes per cell distribution plot"""
+        # Filter samples with detected genes data
+        samples_with_genes = {}
+        for s_name, data in cells_data_by_sample.items():
+            if data and "detected_genes_values" in data and data["detected_genes_values"]:
+                samples_with_genes[s_name] = data["detected_genes_values"]
+
+        if not samples_with_genes:
+            return None
+
+        num_samples = len(samples_with_genes)
+
+        if num_samples == 1:
+            # Single sample: Create density plot
+            return self._create_single_sample_genes_density(samples_with_genes)
+        else:
+            # Multiple samples: Create box plots
+            return self._create_multi_sample_genes_boxes(samples_with_genes)
+
+    def _create_single_sample_genes_density(self, samples_with_genes):
+        """Create single sample detected genes per cell density plot"""
+        s_name, gene_values = next(iter(samples_with_genes.items()))
+
+        # Create kernel density estimation
+        try:
+            import numpy as np
+            from scipy.stats import gaussian_kde
+
+            gene_values = np.array(gene_values)
+            kde = gaussian_kde(gene_values)
+
+            # Create x range for density plot
+            x_min, x_max = gene_values.min(), gene_values.max()
+            x_range = np.linspace(x_min, x_max, 1000)
+            density = kde(x_range)
+
+            # Create plot data
+            plot_data = {s_name: {}}
+            for x, y in zip(x_range, density):
+                plot_data[s_name][float(x)] = float(y)
+
+            config = {
+                "id": "xenium_detected_genes_per_cell_single",
+                "title": "Xenium: Distribution of Detected Genes per Cell",
+                "xlab": "Number of detected genes per cell",
+                "ylab": "Density",
+                "smooth_points": 100,
+            }
+
+            return linegraph.plot(plot_data, config)
+
+        except ImportError:
+            # Fallback to histogram if scipy not available
+            import numpy as np
+
+            bins = min(50, len(gene_values) // 20)
+            hist, bin_edges = np.histogram(gene_values, bins=bins)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+            plot_data = {s_name: {}}
+            for x, y in zip(bin_centers, hist):
+                plot_data[s_name][float(x)] = float(y)
+
+            config = {
+                "id": "xenium_detected_genes_per_cell_single",
+                "title": "Xenium: Distribution of Detected Genes per Cell",
+                "xlab": "Number of detected genes per cell",
+                "ylab": "Number of cells",
+            }
+
+            return linegraph.plot(plot_data, config)
+
+    def _create_multi_sample_genes_boxes(self, samples_with_genes):
+        """Create multi-sample detected genes per cell box plots"""
+        from multiqc.plots import box
+
+        # Prepare data for box plot
+        plot_data = {}
+        for s_name, gene_values in samples_with_genes.items():
+            plot_data[s_name] = gene_values
+
+        config = {
+            "id": "xenium_detected_genes_per_cell_multi",
+            "title": "Xenium: Distribution of Detected Genes per Cell",
+            "ylab": "Number of detected genes per cell",
+            "boxpoints": False,
+        }
+
+        return box.plot(plot_data, config)
