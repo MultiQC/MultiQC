@@ -88,6 +88,8 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             schema_overrides={
                 "data_label": pl.Utf8,
                 "sample": pl.Utf8,
+                "dataset_idx": pl.Int64,
+                "point_idx": pl.Int64,
             },
         )
         return self.finalize_df(df)
@@ -254,7 +256,7 @@ class Dataset(BaseDataset):
             marker=dict(
                 size=10,
                 line=dict(width=1),
-                opacity=1,
+                opacity=0.7,
                 color="rgba(124, 181, 236, .5)",
                 symbol="circle",
             ),

@@ -65,6 +65,18 @@ class ScatterPlot extends Plot {
     // Group points by group field only
     let inLegend = new Set();
 
+    // Sort points by category order if categories are provided in config
+    if (this.pconfig.categories) {
+      points.sort((a, b) => {
+        let aIndex = this.pconfig.categories.indexOf(a.group);
+        let bIndex = this.pconfig.categories.indexOf(b.group);
+        // If group not in categories, put it at the end
+        if (aIndex === -1) aIndex = this.pconfig.categories.length;
+        if (bIndex === -1) bIndex = this.pconfig.categories.length;
+        return aIndex - bIndex;
+      });
+    }
+
     // Create traces with group-based legend handling
     return points.map((point) => {
       let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
