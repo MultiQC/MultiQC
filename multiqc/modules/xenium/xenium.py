@@ -45,13 +45,24 @@ def categorize_feature(feature_name) -> Tuple[str, str]:
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    Xenium is a spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.
+
+    NOTE: parsing huge files is not an intended MultiQC usage. By default, MultiQC will ignore the `*.parquet` files
+    as they are gigabyte-sized. To enable parsing those, make sure to have this line in your config:
+
+    ```
+    log_filesize_limit: 5000000000 # 5GB
+    ```
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Xenium",
             anchor="xenium",
-            href="https://www.10xgenomics.com/products/xenium-in-situ",
-            info="is a spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.",
-            doi="10.1038/s41587-022-01483-z",
+            href="https://www.10xgenomics.com/platforms/xenium",
+            info="Spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.",
+            # doi=,
         )
 
         data_by_sample = {}
