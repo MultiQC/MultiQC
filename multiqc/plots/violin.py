@@ -17,6 +17,7 @@ from multiqc import config, report
 from multiqc.core.plot_data_store import parse_value
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
+from multiqc.utils import mqc_colour
 from multiqc.plots.table_object import (
     Cell,
     ColumnAnchor,
@@ -759,7 +760,7 @@ class Dataset(BaseDataset):
 
             if header.color:
                 layout[f"yaxis{metric_idx + 1}"]["tickfont"] = {
-                    "color": f"rgb({header.color})",
+                    "color": mqc_colour.color_to_rgb_string(header.color),
                 }
 
         layout["xaxis"] = layout["xaxis1"]
@@ -773,8 +774,8 @@ class Dataset(BaseDataset):
             header = self.header_by_metric[metric]
             params = copy.deepcopy(self.trace_params)
             if header.color:
-                params["fillcolor"] = f"rgb({header.color})"
-                params["line"]["color"] = f"rgb({header.color})"
+                params["fillcolor"] = mqc_colour.color_to_rgb_string(header.color)
+                params["line"]["color"] = mqc_colour.color_to_rgb_string(header.color)
 
             violin_values_by_sample = violin_values_by_sample_by_metric[metric]
             axis_key = "" if metric_idx == 0 else str(metric_idx + 1)
