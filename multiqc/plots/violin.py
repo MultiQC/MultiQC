@@ -1094,19 +1094,19 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
                 + '<span class="glyphicon glyphicon-exclamation-sign" '
-                + 'title="An interactive table is not available because of the large number of samples. '
+                + 'title="An interactive table is not available because of the large number of rows. '
                 + "A violin plot is generated instead, showing density of values for each metric, as "
-                + 'well as hoverable points for outlier samples in each metric."'
-                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+                + 'well as hoverable points for outliers in each metric."'
+                + f' data-toggle="tooltip"></span> Showing violin plots for {self.n_samples} data points.</p>'
             )
         elif not self.show_table:
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
                 + '<span class="glyphicon glyphicon-exclamation-sign" '
-                + 'title="An interactive table is not available because of the large number of samples. '
-                + "The violin plot displays hoverable points only for outlier samples in each metric, "
+                + 'title="An interactive table is not available because of the large number of rows. '
+                + "The violin plot displays hoverable points only for outliers in each metric, "
                 + 'and the hiding/highlighting functionality through the toolbox only works for outliers"'
-                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+                + f' data-toggle="tooltip"></span> Showing violin plots for {self.n_samples} data points.</p>'
             )
 
         assert self.datasets[0].dt is not None
