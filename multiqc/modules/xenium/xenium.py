@@ -1093,6 +1093,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Total transcripts per gene",
             "ylab": "Mean calibrated quality of gene transcripts",
             "data_labels": [{"name": cat} for cat in datasets.keys()],
+            "xlog": True,
         }
 
         return linegraph.plot(list(datasets.values()), config)
