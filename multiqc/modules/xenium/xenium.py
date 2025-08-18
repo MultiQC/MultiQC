@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import polars as pl
 
@@ -13,30 +13,35 @@ log = logging.getLogger(__name__)
 
 # Define gene categories for coloring based on Xenium naming conventions
 GENE_CATS = {
-    "pre-designed": {"color": "#1f77b4"},  # Standard gene names
-    "custom": {"color": "#ff7f0e"},
-    "negative_control_probe": {"color": "#d62728"},
-    "negative_control_codeword": {"color": "#ff9900"},
-    "genomic_control": {"color": "#e377c2"},
-    "unassigned": {"color": "#7f7f7f"},
+    "Pre-designed": {"color": "#1f77b4"},  # Standard gene names
+    "Custom": {"color": "#ff7f0e"},
+    "Negative Control Probe": {"color": "#d62728"},
+    "Negative Control Codeword": {"color": "#ff9900"},
+    "Genomic Control Probe": {"color": "#e377c2"},
+    "Unassigned Codeword": {"color": "#7f7f7f"},
+    "Deprecated Codeword": {"color": "#bcbd22"},  # Olive - deprecated
 }
 
 
-def categorize_feature(feature_name):
-    """Categorize a feature based on its name"""
+def categorize_feature(feature_name) -> Tuple[str, str]:
+    """Categorize a feature based on its name
+    Splits the feature name into category and feature id"""
     # Check prefixes directly instead of using regex for better performance
+    category = ""
+    feature_id = feature_name.split("_")[1] if "_" in feature_name else feature_name
     if feature_name.startswith("Custom_"):
-        return "custom"
+        category = "Custom"
     elif feature_name.startswith("NegControlProbe_"):
-        return "negative_control_probe"
+        category = "Negative Control Probe"
     elif feature_name.startswith("NegControlCodeword_"):
-        return "negative_control_codeword"
+        category = "Negative Control Codeword"
     elif feature_name.startswith("GenomicControlProbe_"):
-        return "genomic_control"
+        category = "Genomic Control Probe"
     elif feature_name.startswith("UnassignedCodeword_"):
-        return "unassigned"
+        category = "Unassigned Codeword"
     else:
-        return "pre-designed"  # Default category for standard gene names
+        category = "Pre-designed"  # Default category for standard gene names
+    return category, feature_id
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -986,7 +991,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             for feature, counts_data in sample_data["transcript_counts"].items():
-                category = categorize_feature(feature)
+                category, feature_id = categorize_feature(feature)
 
                 if category not in plot_data:
                     plot_data[category] = []
@@ -994,15 +999,16 @@ class MultiqcModule(BaseMultiqcModule):
                 # Each point is a separate data point
                 # For multiple samples, include sample name in the hover text
                 if len(transcript_data_by_sample) > 1:
-                    point_name = f"{feature} ({sample_name})"
+                    point_name = f"{feature_id} ({sample_name})"
                 else:
-                    point_name = feature
+                    point_name = feature_id
 
                 plot_data[category].append(
                     {
                         "x": counts_data["count"],
                         "y": counts_data["mean_quality"],
                         "name": point_name,  # Use gene name (+ sample) for hover text
+                        "group": category,
                     }
                 )
 
@@ -1021,6 +1027,17 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             title = f"Xenium: Gene-Specific Transcript Quality ({len(transcript_data_by_sample)} samples)"
 
+        # Define desired category order for legend
+        category_order = [
+            "Pre-designed",
+            "Custom",
+            "Genomic Control Probe",
+            "Negative Control Probe",
+            "Negative Control Codeword",
+            "Unassigned Codeword",
+            "Deprecated Codeword",
+        ]
+
         config = {
             "id": "xenium_transcript_quality_combined",
             "title": title,
@@ -1029,6 +1046,8 @@ class MultiqcModule(BaseMultiqcModule):
             "marker_size": 5,
             "series_label": "transcripts",
             "xlog": True,
+            "showlegend": True,
+            "categories": category_order,
         }
 
         return scatter.plot(final_plot_data, config)
@@ -1041,7 +1060,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sample_data in transcript_data_by_sample.values():
             if "transcript_counts" in sample_data:
                 for feature in sample_data["transcript_counts"].keys():
-                    category = categorize_feature(feature)
+                    category, _ = categorize_feature(feature)
                     all_categories.add(category)
 
         # Create a dataset for "all transcripts" first (combining all categories)
@@ -1062,7 +1081,7 @@ class MultiqcModule(BaseMultiqcModule):
                 quality = counts_data["mean_quality"]
                 datasets["All transcripts"][sample_name][count] = quality
                 for cat in all_categories:
-                    if categorize_feature(feature) == cat:
+                    if categorize_feature(feature)[0] == cat:
                         datasets[cat][sample_name][count] = quality
 
         if not datasets:
@@ -1073,7 +1092,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Xenium: Transcript Quality by Category",
             "xlab": "Total transcripts per gene",
             "ylab": "Mean calibrated quality of gene transcripts",
-            "data_labels": [{"name": cat.replace("_", " ").title()} for cat in datasets.keys()],
+            "data_labels": [{"name": cat} for cat in datasets.keys()],
         }
 
         return linegraph.plot(list(datasets.values()), config)
@@ -1532,48 +1551,35 @@ class MultiqcModule(BaseMultiqcModule):
         if not category_quality_data:
             return None
 
-        # Define color mapping for each category based on notebook analysis
-        category_colors = {
-            "predesigned_gene": "#1f77b4",  # Blue - primary genes
-            "custom_gene": "#ff7f0e",  # Orange - custom targets
-            "negative_control_probe": "#d62728",  # Red - negative controls
-            "negative_control_codeword": "#ff9900",  # Yellow/Orange - negative controls
-            "genomic_control_probe": "#e377c2",  # Pink - genomic controls
-            "unassigned_codeword": "#7f7f7f",  # Gray - unassigned
-            "deprecated_codeword": "#bcbd22",  # Olive - deprecated
-        }
-
         # Create headers for the violin plot - each category is a "metric"
         headers = {}
         for category in category_quality_data.keys():
             headers[category] = {
-                "title": category.replace("_", " ").title(),
+                "title": category,
                 "description": f"Quality score distribution for {category}",
                 "suffix": " QV",
-                "color": category_colors.get(category, "#888888"),
+                "color": GENE_CATS.get(category, {}).get("color", "#888888"),
                 "min": 0,
                 "max": 50,  # QV scores typically range 0-50
             }
 
-        # Create data dict - for violin plots we need sample -> category -> single value
-        # Each transcript becomes a "pseudo-sample" so we can show the distribution
+        # Create data dict - for violin plots we need sample -> category -> values
+        # For multiple samples, we want to show category distributions per sample
+        # but group all samples under each category tab
         data = {}
-        transcript_idx = 0
 
-        for category, values in category_quality_data.items():
-            for value in values:
-                sample_name = f"transcript_{transcript_idx:06d}"
-                if sample_name not in data:
-                    data[sample_name] = {}
-                data[sample_name][category] = value
-                transcript_idx += 1
+        # For each sample, create entries with category-wise data
+        for s_name in samples_with_categories:
+            sample_data = transcript_data_by_sample[s_name]
+            if "category_quality_distributions" in sample_data:
+                data[s_name] = sample_data["category_quality_distributions"]
 
-        # Fill missing categories with None for samples that don't have all categories
-        all_categories = set(category_quality_data.keys())
-        for sample_name in data:
-            for category in all_categories:
-                if category not in data[sample_name]:
-                    data[sample_name][category] = None
+        # If we only have one sample but want to show all categories together,
+        # we can flatten the structure, otherwise keep sample-wise structure
+        if len(samples_with_categories) == 1:
+            # For single sample, use the aggregated data
+            sample_name = samples_with_categories[0]
+            data = {sample_name: category_quality_data}
 
         config = {
             "id": "xenium_transcript_category_violin",
