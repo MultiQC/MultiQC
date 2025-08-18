@@ -885,6 +885,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Quality value (QV)",
             "sort_by_median": True,  # Use the new core box plot sorting feature
             "sort_switch_sorted_active": True,  # Start with sorted view active
+            "boxpoints": False,  # Do not show individual data points
         }
 
         return box.plot(plot_data, config)
@@ -915,6 +916,7 @@ class MultiqcModule(BaseMultiqcModule):
             "series_label": "fields of view",
             "sort_by_median": True,  # Use the new core box plot sorting feature
             "sort_switch_sorted_active": True,  # Start with sorted view active
+            "boxpoints": False,  # Do not show individual data points
         }
 
         return box.plot(fov_quality_data, config)
