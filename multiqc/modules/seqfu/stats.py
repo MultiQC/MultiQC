@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional
+from typing import Dict, Any
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, SampleGroupingConfig, ModuleNoSamplesFound
@@ -19,7 +19,7 @@ def parse_seqfu_stats(module: BaseMultiqcModule):
     elif config.use_filename_as_sample_name is True:
         use_filename = True
 
-    seqfu_stats: Dict[SampleName, Dict] = {}
+    seqfu_stats: Dict[SampleName, Dict[str, Any]] = {}
     for f in module.find_log_files("seqfu/stats", filehandles=True):
         for sample_name, data in parse_file(f, use_filename):
             sample_name = SampleName(module.clean_s_name(sample_name, f=f))
@@ -84,7 +84,7 @@ def parse_file(f, use_filename=False):
         yield sample_name, data
 
 
-def add_general_stats_cols(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName, Dict]):
+def add_general_stats_cols(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName, Dict[str, Any]]):
     # Add columns to General Stats Table
     general_stats_headers = get_general_stats_headers()
 
@@ -107,22 +107,22 @@ def add_general_stats_cols(module: BaseMultiqcModule, seqfu_stats: Dict[SampleNa
     )
 
     module.general_stats_addcols(
-        data_by_sample=seqfu_stats,
+        data_by_sample={s_name: {ColumnKey(k): v for k, v in data.items()} for s_name, data in seqfu_stats.items()},
         headers=general_stats_headers,
         namespace="stats",
         group_samples_config=general_stats_grouping_config,
     )
 
 
-def all_same_length(seqfu_stats: Dict[SampleName, Dict]):
+def all_same_length(seqfu_stats: Dict[SampleName, Dict[str, Any]]):
     """Check if all sequences are the same length"""
-    lengths = set()
+    lengths: set[float] = set()
     for col in ["Min", "Max"]:
         lengths.update(data[col] for data in seqfu_stats.values())
     return len(lengths) == 1
 
 
-def plot_sequence_lengths(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName, Dict]):
+def plot_sequence_lengths(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName, Dict[str, Any]]):
     """
     Plot sequence length statistics as a bar graph with switches for different stats
     """
@@ -154,7 +154,7 @@ def plot_sequence_lengths(module: BaseMultiqcModule, seqfu_stats: Dict[SampleNam
 
     seqfu_lengths_data = []
     for c in seqfu_lengths_cols:
-        seqfu_lengths_data.append({s: {c: seqfu_stats[s][c]} for s in seqfu_stats.keys()})
+        seqfu_lengths_data.append({str(s): {c: seqfu_stats[s][c]} for s in seqfu_stats.keys()})
 
     module.add_section(
         name="Sequence lengths",
@@ -185,7 +185,7 @@ def plot_sequence_lengths(module: BaseMultiqcModule, seqfu_stats: Dict[SampleNam
     )
 
 
-def plot_sequence_counts(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName, Dict]):
+def plot_sequence_counts(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName, Dict[str, Any]]):
     """
     Plot sequence count statistics as a bar graph with switches for sequences and bases
     """
@@ -198,7 +198,7 @@ def plot_sequence_counts(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName
 
     seqfu_counts_data = []
     for c in seqfu_counts_cols:
-        seqfu_counts_data.append({s: {c: seqfu_stats[s][c]} for s in seqfu_stats.keys()})
+        seqfu_counts_data.append({str(s): {c: seqfu_stats[s][c]} for s in seqfu_stats.keys()})
 
     module.add_section(
         name="Sequence counts",
@@ -223,13 +223,13 @@ def plot_sequence_counts(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName
 def get_general_stats_headers():
     return {
         "#Seq": {
-            "title": "# seqs",
+            "title": "Seqs",
             "description": "Number of sequences",
             "shared_key": "read_count",
             "scale": "Oranges",
         },
         "Total bp": {
-            "title": "# bases",
+            "title": "Bases",
             "description": "Number of bases",
             "shared_key": "base_count",
             "scale": "Purples",
