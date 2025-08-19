@@ -45,17 +45,30 @@ def parse_reports(self):
         sentieon_algo="MeanQualityByCycle",
     )
 
-    # Combine all data - extended format takes precedence for samples that have it
+    # Combine all data - merge intelligently to avoid data loss
     all_data = {}
     has_original_quality = False
 
-    # Add standard format data first
+    # Start with standard format data
     all_data.update(all_data_standard)
 
-    # Add extended format data (may overwrite standard format for same samples)
+    # Add extended format data, only overwriting if sample has extended data
     if all_data_extended:
-        all_data.update(all_data_extended)
-        has_original_quality = True
+        extended_samples_count = 0
+        # Only overwrite if the extended data is actually extended (has MEAN_ORIGINAL_QUALITY)
+        for s_name, s_data in all_data_extended.items():
+            if s_data:  # Ensure sample has data
+                sample_data = next(iter(s_data.values()), {})
+                if "MEAN_ORIGINAL_QUALITY" in sample_data:
+                    all_data[s_name] = s_data
+                    has_original_quality = True
+                    extended_samples_count += 1
+                elif s_name not in all_data:
+                    # If sample wasn't in standard format, still add it
+                    all_data[s_name] = s_data
+
+        if extended_samples_count > 0:
+            log.debug(f"Found {extended_samples_count} samples with MEAN_ORIGINAL_QUALITY data for BQSR comparison")
 
     if not all_data:
         return set()
@@ -99,9 +112,14 @@ def parse_reports(self):
         try:
             sample_data = next(iter(all_data[s_name].values()))
             if "MEAN_ORIGINAL_QUALITY" in sample_data:
-                lg_original_quality[s_name] = {
-                    cycle: data["MEAN_ORIGINAL_QUALITY"] for cycle, data in all_data[s_name].items()
-                }
+                # Validate that all cycles have MEAN_ORIGINAL_QUALITY data
+                original_data = {}
+                for cycle, data in all_data[s_name].items():
+                    if "MEAN_ORIGINAL_QUALITY" in data and data["MEAN_ORIGINAL_QUALITY"] is not None:
+                        original_data[cycle] = data["MEAN_ORIGINAL_QUALITY"]
+
+                if original_data:  # Only add if we have valid original quality data
+                    lg_original_quality[s_name] = original_data
         except StopIteration:
             log.warning(f"No cycle data found for sample {s_name}")
             continue
