@@ -17,6 +17,7 @@ from multiqc import config, report
 from multiqc.core.plot_data_store import parse_value
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
+from multiqc.utils import mqc_colour
 from multiqc.plots.table_object import (
     Cell,
     ColumnAnchor,
@@ -385,7 +386,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     metric_order[metric] = idx
 
             merged_df = merged_df.with_columns(
-                pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                pl.col("metric")
+                .map_elements(lambda x: metric_order.get(x, 99999), return_dtype=pl.Int64)
+                .alias("__metric_order")
             )
 
             # First ensure the DataFrame is sorted by creation_date (newest last)
@@ -418,7 +421,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                 # Add a temporary column to sort by the original metric order
                 deduped_df = deduped_df.with_columns(
-                    pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                    pl.col("metric")
+                    .map_elements(lambda x: metric_order.get(x, 99999), return_dtype=pl.Int64)
+                    .alias("__metric_order")
                 )
 
                 # Sort by the order column to preserve metric ordering
@@ -759,7 +764,7 @@ class Dataset(BaseDataset):
 
             if header.color:
                 layout[f"yaxis{metric_idx + 1}"]["tickfont"] = {
-                    "color": f"rgb({header.color})",
+                    "color": mqc_colour.color_to_rgb_string(header.color),
                 }
 
         layout["xaxis"] = layout["xaxis1"]
@@ -773,8 +778,8 @@ class Dataset(BaseDataset):
             header = self.header_by_metric[metric]
             params = copy.deepcopy(self.trace_params)
             if header.color:
-                params["fillcolor"] = f"rgb({header.color})"
-                params["line"]["color"] = f"rgb({header.color})"
+                params["fillcolor"] = mqc_colour.color_to_rgb_string(header.color)
+                params["line"]["color"] = mqc_colour.color_to_rgb_string(header.color)
 
             violin_values_by_sample = violin_values_by_sample_by_metric[metric]
             axis_key = "" if metric_idx == 0 else str(metric_idx + 1)
@@ -1094,19 +1099,19 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
                 + '<span class="glyphicon glyphicon-exclamation-sign" '
-                + 'title="An interactive table is not available because of the large number of samples. '
+                + 'title="An interactive table is not available because of the large number of rows. '
                 + "A violin plot is generated instead, showing density of values for each metric, as "
-                + 'well as hoverable points for outlier samples in each metric."'
-                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+                + 'well as hoverable points for outliers in each metric."'
+                + f' data-toggle="tooltip"></span> Showing violin plots for {self.n_samples} data points.</p>'
             )
         elif not self.show_table:
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
                 + '<span class="glyphicon glyphicon-exclamation-sign" '
-                + 'title="An interactive table is not available because of the large number of samples. '
-                + "The violin plot displays hoverable points only for outlier samples in each metric, "
+                + 'title="An interactive table is not available because of the large number of rows. '
+                + "The violin plot displays hoverable points only for outliers in each metric, "
                 + 'and the hiding/highlighting functionality through the toolbox only works for outliers"'
-                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+                + f' data-toggle="tooltip"></span> Showing violin plots for {self.n_samples} data points.</p>'
             )
 
         assert self.datasets[0].dt is not None

@@ -62,6 +62,22 @@ class ScatterPlot extends Plot {
     let nonHighlighted = points.filter((p) => !p.highlight);
     points = nonHighlighted.concat(highlighted);
 
+    // Group points by group field only
+    let inLegend = new Set();
+
+    // Sort points by group order if groups are provided in config
+    if (this.pconfig.groups) {
+      points.sort((a, b) => {
+        let aIndex = this.pconfig.groups.indexOf(a.group);
+        let bIndex = this.pconfig.groups.indexOf(b.group);
+        // If group not in pconfig.groups, put it at the end
+        if (aIndex === -1) aIndex = this.pconfig.groups.length;
+        if (bIndex === -1) bIndex = this.pconfig.groups.length;
+        return aIndex - bIndex;
+      });
+    }
+
+    // Create traces with group-based legend handling
     return points.map((point) => {
       let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
       params.marker.size = point["marker_size"] ?? params.marker.size;
@@ -73,12 +89,31 @@ class ScatterPlot extends Plot {
       params.marker.symbol = point["marker_symbol"] ?? params.marker.symbol;
       if (highlighted.length > 0) params.marker.color = point.highlight ?? "#cccccc";
 
+      // Determine if this point should show in legend based on group field
+      let showInLegend = false;
+      let displayName = point.name;
+
+      if (!point.hide_in_legend && point.group) {
+        let legendKey = point.group;
+
+        if (!inLegend.has(legendKey)) {
+          inLegend.add(legendKey);
+          showInLegend = true;
+          displayName = point.group;
+        }
+      } else if (!point.hide_in_legend && !point.group) {
+        // If no group is specified, show individual legend entries
+        showInLegend = true;
+        displayName = point.name;
+      }
+
       return {
         type: "scatter",
         x: [point.x],
         y: [point.y],
-        name: point.name,
+        name: displayName,
         text: [point.annotation ?? point.name],
+        showlegend: showInLegend,
         ...params,
       };
     });
