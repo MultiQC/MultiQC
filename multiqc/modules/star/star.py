@@ -294,14 +294,13 @@ def parse_star_genecounts_report(f) -> Optional[Dict[str, Dict[str, int]]]:
 def star_genecounts_chart(genecounts_unstranded, genecounts_first_strand, genecounts_second_strand):
     """Make a plot for the ReadsPerGene output"""
 
-    # Specify the order of the different possible categories with improved colors
-    # Better distinction between categories, especially No Feature, Ambiguous, and Unmapped
+    # Specify the order of the different possible categories
     keys = {
-        "N_genes": {"color": "#2E86AB", "name": "Overlapping Genes"},  # Blue for successful mapping
-        "N_noFeature": {"color": "#F18F01", "name": "No Feature"},  # Orange for no annotation
-        "N_ambiguous": {"color": "#A23B72", "name": "Ambiguous Features"},  # Purple for ambiguous
-        "N_multimapping": {"color": "#FFB627", "name": "Multimapping"},  # Yellow for multimapping
-        "N_unmapped": {"color": "#C73E1D", "name": "Unmapped"},  # Red for unmapped
+        "N_genes": {"color": "#2f7ed8", "name": "Overlapping Genes"},
+        "N_noFeature": {"color": "#00468B", "name": "No Feature"},
+        "N_ambiguous": {"color": "#925E9F", "name": "Ambiguous Features"},
+        "N_multimapping": {"color": "#f28f43", "name": "Multimapping"},
+        "N_unmapped": {"color": "#AD002A", "name": "Unmapped"},
     }
 
     # Config for the plot
@@ -323,15 +322,14 @@ def star_genecounts_chart(genecounts_unstranded, genecounts_first_strand, geneco
 def star_alignment_chart(data_by_sample):
     """Make the plot showing alignment rates"""
 
-    # Specify the order of the different possible categories with improved colors
-    # Blues for mapped reads, reds for unmapped reads with better distinction
+    # Specify the order of the different possible categories
     keys = {
-        "uniquely_mapped": {"color": "#2E86AB", "name": "Uniquely mapped"},  # Dark blue
-        "multimapped": {"color": "#A23B72", "name": "Mapped to multiple loci"},  # Purple-pink
-        "multimapped_toomany": {"color": "#F18F01", "name": "Mapped to too many loci"},  # Orange
-        "unmapped_mismatches": {"color": "#C73E1D", "name": "Unmapped: too many mismatches"},  # Red
-        "unmapped_tooshort": {"color": "#8B0000", "name": "Unmapped: too short"},  # Dark red
-        "unmapped_other": {"color": "#590D22", "name": "Unmapped: other"},  # Very dark red
+        "uniquely_mapped": {"color": "#437bb1", "name": "Uniquely mapped"},
+        "multimapped": {"color": "#7cb5ec", "name": "Mapped to multiple loci"},
+        "multimapped_toomany": {"color": "#f7a35c", "name": "Mapped to too many loci"},
+        "unmapped_mismatches": {"color": "#e63491", "name": "Unmapped: too many mismatches"},
+        "unmapped_tooshort": {"color": "#AD002A", "name": "Unmapped: too short"},
+        "unmapped_other": {"color": "#925E9F", "name": "Unmapped: other"},
     }
 
     # Config for the plot
