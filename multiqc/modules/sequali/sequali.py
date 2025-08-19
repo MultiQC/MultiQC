@@ -595,7 +595,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "sequali_insert_size_distribution_plot",
             "title": "Sequali: Insert Size Distribution",
             "ylab": "Number of Read Pairs",
-            "xlab": "Insert Size (bp)",
+            "xlab": "Insert Size",
             "ymin": 0,
             "xmin": 0,
         }
