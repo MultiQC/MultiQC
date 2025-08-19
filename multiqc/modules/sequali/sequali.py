@@ -2,7 +2,7 @@ import json
 import logging
 import textwrap
 from collections import defaultdict
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import multiqc
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -48,7 +48,7 @@ def avg_x_label(x_label: str):
     return min_x + ((max_x - min_x) // 2)
 
 
-def get_insert_size_estimate(insert_sizes: list[int]) -> int:
+def get_insert_size_estimate(insert_sizes: List[int]) -> int:
     """
     Given a list of counts, return the cell index with the median count
     :param insert_sizes: List of insert size counts where index represents insert size
