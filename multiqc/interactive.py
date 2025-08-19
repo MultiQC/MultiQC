@@ -395,7 +395,8 @@ def write_report(
     custom_css_files: Sequence[str] = (),
     module_order: Sequence[Union[str, Dict]] = (),
     clean_up=True,
-):
+    return_html: bool = False,
+) -> Optional[str]:
     """
     Render HTML from parsed module data, and write a report and data files to disk.
 
@@ -428,6 +429,10 @@ def write_report(
     @param custom_css_files: Custom CSS files to include in the report
     @param module_order: Names of modules in order of precedence to show in report
     @param clean_up: Clean up temp files after writing the report
+    @param return_html: If True, return the HTML report content as a string instead of writing to file
+
+    Returns:
+        Optional[str]: HTML content if return_html=True, otherwise None
     """
 
     if force is None and overwrite is not None:
@@ -435,14 +440,16 @@ def write_report(
     params = locals()
     del params["overwrite"]
     del params["clean_up"]
+    del params["return_html"]  # Don't pass return_html to config
     update_config(cfg=ClConfig(**params))
 
     check_version(write_report.__name__)
 
+    html_content = None
     try:
         order_modules_and_sections()
 
-        write_results()
+        html_content = write_results(return_html=return_html)
 
     except NoAnalysisFound:
         logger.warning("No analysis results found to make a report")
@@ -455,6 +462,8 @@ def write_report(
         # Clean up temporary directory, reset logger file handler
         if clean_up:
             report.reset_tmp_dir()
+
+    return html_content if return_html else None
 
 
 def load_config(config_file: Union[str, Path]):
