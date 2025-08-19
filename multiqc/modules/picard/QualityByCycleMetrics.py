@@ -11,7 +11,15 @@ log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
-    """Find Picard QualityByCycleMetrics reports and parse their data"""
+    """
+    Find Picard QualityByCycleMetrics reports and parse their data.
+
+    Supports both standard format (CYCLE, MEAN_QUALITY) and extended format
+    (CYCLE, MEAN_QUALITY, MEAN_ORIGINAL_QUALITY) for BQSR comparison.
+
+    Returns:
+        Set of sample names that were successfully parsed
+    """
 
     # First try the extended format with MEAN_ORIGINAL_QUALITY
     headers_extended = ["CYCLE", "MEAN_QUALITY", "MEAN_ORIGINAL_QUALITY"]
@@ -52,6 +60,12 @@ def parse_reports(self):
     if not all_data:
         return set()
 
+    # Filter out empty samples
+    all_data = {s_name: s_data for s_name, s_data in all_data.items() if s_data}
+
+    if not all_data:
+        return set()
+
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
     self.add_software_version(None)
@@ -71,22 +85,29 @@ def parse_reports(self):
     }
 
     # Prepare data for plotting
-    if has_original_quality:
+    lg_mean_quality = {}
+    lg_original_quality = {}
+
+    for s_name in all_data:
+        if not all_data[s_name]:
+            continue
+
+        # All samples get mean quality data
+        lg_mean_quality[s_name] = {cycle: data["MEAN_QUALITY"] for cycle, data in all_data[s_name].items()}
+
+        # Only samples with MEAN_ORIGINAL_QUALITY get original quality data
+        try:
+            sample_data = next(iter(all_data[s_name].values()))
+            if "MEAN_ORIGINAL_QUALITY" in sample_data:
+                lg_original_quality[s_name] = {
+                    cycle: data["MEAN_ORIGINAL_QUALITY"] for cycle, data in all_data[s_name].items()
+                }
+        except StopIteration:
+            log.warning(f"No cycle data found for sample {s_name}")
+            continue
+
+    if has_original_quality and lg_original_quality:
         # Plot both mean quality and mean original quality
-        lg_mean_quality = {}
-        lg_original_quality = {}
-
-        for s_name in all_data:
-            # All samples get mean quality data
-            lg_mean_quality[s_name] = dict((cycle, data["MEAN_QUALITY"]) for cycle, data in all_data[s_name].items())
-
-            # Only samples with MEAN_ORIGINAL_QUALITY get original quality data
-            if "MEAN_ORIGINAL_QUALITY" in next(iter(all_data[s_name].values())):
-                lg_original_quality[s_name] = dict(
-                    (cycle, data["MEAN_ORIGINAL_QUALITY"]) for cycle, data in all_data[s_name].items()
-                )
-
-        # Combine both datasets with data labels
         plot_data = [lg_mean_quality, lg_original_quality]
 
         # Update plot config with data labels
@@ -108,10 +129,6 @@ def parse_reports(self):
         """
     else:
         # Plot only mean quality (legacy behavior)
-        lg_mean_quality = {}
-        for s_name in all_data:
-            lg_mean_quality[s_name] = dict((cycle, data["MEAN_QUALITY"]) for cycle, data in all_data[s_name].items())
-
         plot_data = [lg_mean_quality]
         description = "Plot shows the mean base quality by cycle."
         helptext_addition = ""
