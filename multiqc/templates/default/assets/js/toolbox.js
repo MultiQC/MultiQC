@@ -792,13 +792,26 @@ $(function () {
   if (!has_rename_filters && mqc_config.sample_names_rename && mqc_config.sample_names_rename.length > 0) {
     let mqc_renamesamples_idx = 300;
 
-    // Add each pattern
+    // Check which button is initially active to determine which column to use
+    const activeButton = $(".mqc_sname_switches.active");
+    let activeIndex = 0;
+    if (activeButton.length > 0) {
+      activeIndex = parseInt(activeButton.data("index")) || 0;
+    }
+
+    // If index 0 is active, don't apply any rename filters (show original names)
+    if (activeIndex === 0) {
+      // Don't add any filters, just return
+      return;
+    }
+
+    // For other indices, add rename patterns using the correct column
     for (let i = 0; i < mqc_config.sample_names_rename.length; i++) {
       const pattern = mqc_config.sample_names_rename[i];
-      if (!Array.isArray(pattern) || pattern.length < 2) continue;
+      if (!Array.isArray(pattern) || pattern.length <= activeIndex) continue;
 
       const from_text = pattern[0];
-      const to_text = pattern[1];
+      const to_text = pattern[activeIndex];
 
       // Add to the filters list
       $("#mqc_renamesamples_filters").append(
