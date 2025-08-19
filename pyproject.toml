@@ -265,6 +265,7 @@ verifybamid = "multiqc.modules.verifybamid:MultiqcModule"
 vg = "multiqc.modules.vg:MultiqcModule"
 whatshap = "multiqc.modules.whatshap:MultiqcModule"
 xengsort = "multiqc.modules.xengsort:MultiqcModule"
+xenium = "multiqc.modules.xenium:MultiqcModule"
 xenome = "multiqc.modules.xenome:MultiqcModule"
 
 [project.entry-points."multiqc.templates.v1"]

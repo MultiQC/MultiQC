@@ -5,6 +5,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 
+from natsort import natsorted
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
 
@@ -18,6 +19,14 @@ logger = logging.getLogger(__name__)
 
 class BoxPlotConfig(PConfig):
     sort_samples: bool = True
+    sort_by_median: bool = False  # Sort samples by their median values instead of alphabetically
+    sort_switch_sorted_active: bool = True  # Whether the sorted view is initially active
+    # Showing separate points:
+    # False - do not show at all
+    # "all" - show all data points
+    # "outliers" - show only outliers
+    # None - use config.boxplot_boxpoints; if not set, determine based on config.box_min_threshold_no_points and config.box_min_threshold_outliers
+    boxpoints: Union[bool, str, None] = None
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("boxplot",), **data)
@@ -30,6 +39,8 @@ BoxT = List[Union[int, float]]
 class Dataset(BaseDataset):
     data: List[BoxT]
     samples: List[str]
+    data_sorted: Optional[List[BoxT]] = None  # Sorted version of data
+    samples_sorted: Optional[List[str]] = None  # Sorted version of samples
 
     def sample_names(self) -> List[SampleName]:
         return [SampleName(sample) for sample in self.samples]
@@ -38,33 +49,80 @@ class Dataset(BaseDataset):
     def create(
         dataset: BaseDataset,
         data_by_sample: Dict[str, BoxT],
+        pconfig: Optional[BoxPlotConfig] = None,
     ) -> "Dataset":
+        # Store original order (reversed for box plot display)
+        original_data = list(data_by_sample.values())
+        original_samples = list(data_by_sample.keys())
+        original_data = list(reversed(original_data))
+        original_samples = list(reversed(original_samples))
+
+        # Store sorted version if sort_by_median is enabled
+        data_sorted = None
+        samples_sorted = None
+        main_data = original_data
+        main_samples = original_samples
+
+        if pconfig and pconfig.sort_by_median:
+            # Calculate median for each sample and sort by it
+            median_values = {}
+            for sample, values in data_by_sample.items():
+                if values:
+                    sorted_values = sorted(values)
+                    n = len(sorted_values)
+                    median = (
+                        sorted_values[n // 2] if n % 2 == 1 else (sorted_values[n // 2 - 1] + sorted_values[n // 2]) / 2
+                    )
+                    median_values[sample] = median
+                else:
+                    median_values[sample] = 0  # Handle empty data
+
+            # Sort samples by median (descending order for better visual hierarchy)
+            sorted_sample_names = sorted(median_values.keys(), key=lambda x: median_values[x], reverse=True)
+            sorted_data_by_sample = {sample: data_by_sample[sample] for sample in sorted_sample_names}
+
+            # Store sorted versions (also reversed for box plot display)
+            data_sorted = list(reversed(list(sorted_data_by_sample.values())))
+            samples_sorted = list(reversed(list(sorted_data_by_sample.keys())))
+
+            # If starting with sorted view active, keep sorted data in data_sorted
+            # JavaScript will choose based on sortSwitchSortedActive flag
+            if pconfig.sort_switch_sorted_active:
+                # Keep the original data as main, sorted data as data_sorted
+                # JavaScript will use data_sorted when sortSwitchSortedActive is true
+                main_data = original_data
+                main_samples = original_samples
+
         dataset = Dataset(
             **dataset.__dict__,
-            data=list(data_by_sample.values()),
-            samples=list(data_by_sample.keys()),
+            data=main_data,
+            samples=main_samples,
+            data_sorted=data_sorted,
+            samples_sorted=samples_sorted,
         )
-        # Need to reverse samples as the box plot will show them reversed
-        dataset.samples = list(reversed(dataset.samples))
-        dataset.data = list(reversed(dataset.data))
 
-        # Determine boxpoints dynamically based on sample count, similar to violin plot
-        n_samples = len(dataset.samples)
-        show_points = n_samples <= config.box_min_threshold_no_points
-        show_only_outliers = n_samples > config.box_min_threshold_outliers
-
-        # Set boxpoints based on dynamic logic
+        # Determine boxpoints based on PConfig first, then global config, then dynamic logic
         boxpoints: Union[bool, str] = "outliers"
-        if not show_points:
-            boxpoints = False  # Show no points
-        elif not show_only_outliers:
-            boxpoints = "all"  # Show all points
-        else:
-            boxpoints = "outliers"  # Show only outliers
 
-        # Override with config if explicitly set
-        if config.boxplot_boxpoints is not None:
+        if pconfig and pconfig.boxpoints is not None:
+            # Use explicit PConfig boxpoints setting
+            boxpoints = pconfig.boxpoints
+        elif config.boxplot_boxpoints is not None:
+            # Use global config setting
             boxpoints = config.boxplot_boxpoints
+        else:
+            # Fall back to dynamic logic based on sample count, similar to violin plot
+            n_samples = len(dataset.samples)
+            show_points = n_samples <= config.box_min_threshold_no_points
+            show_only_outliers = n_samples > config.box_min_threshold_outliers
+
+            # Set boxpoints based on dynamic logic
+            if not show_points:
+                boxpoints = False  # Show no points
+            elif not show_only_outliers:
+                boxpoints = "all"  # Show all points
+            else:
+                boxpoints = "outliers"  # Show only outliers
 
         dataset.trace_params.update(
             boxpoints=boxpoints,
@@ -309,7 +367,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
                 # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
                 pass
             elif pconf.sort_samples:
-                samples = sorted(list(list_of_data_by_sample[0].keys()))
+                samples = natsorted(list(list_of_data_by_sample[0].keys()))
                 list_of_data_by_sample[i] = {s: list_of_data_by_sample[i][s] for s in samples}
 
         return BoxPlotInputData(
@@ -323,6 +381,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
 class BoxPlot(Plot[Dataset, BoxPlotConfig]):
     datasets: List[Dataset]
+    sort_switch_sorted_active: bool = False
 
     def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
@@ -344,7 +403,8 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
         )
 
         model.datasets = [
-            Dataset.create(ds, data_by_sample) for ds, data_by_sample in zip(model.datasets, list_of_data_by_sample)
+            Dataset.create(ds, data_by_sample, pconfig)
+            for ds, data_by_sample in zip(model.datasets, list_of_data_by_sample)
         ]
 
         max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
@@ -375,7 +435,37 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
                 font=dict(color="black"),
             ),
         )
-        return BoxPlot(**model.__dict__)
+        return BoxPlot(**model.__dict__, sort_switch_sorted_active=pconfig.sort_switch_sorted_active)
+
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
+        """
+        Box plot-specific controls, only for the interactive version.
+        """
+        buttons = super().buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor)
+        if any(ds.data_sorted for ds in self.datasets):
+            buttons.append(
+                f"""
+                <div class="btn-group" role="group">
+                    <button
+                        type="button"
+                        class="btn btn-default btn-sm {"" if self.pconfig.sort_switch_sorted_active else "active"}"
+                        data-action="unsorted"
+                        data-plot-anchor="{self.anchor}"
+                    >
+                        Sorted by label
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-default btn-sm {"active" if self.pconfig.sort_switch_sorted_active else ""}"
+                        data-action="sorted_by_median"
+                        data-plot-anchor="{self.anchor}"
+                    >
+                        Sorted by median
+                    </button>
+                </div>
+                """
+            )
+        return buttons
 
     @staticmethod
     def from_inputs(inputs: BoxPlotInputData) -> Union["BoxPlot", str, None]:

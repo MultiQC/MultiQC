@@ -2,6 +2,7 @@ class BoxPlot extends Plot {
   constructor(dump) {
     super(dump);
     this.filteredSettings = [];
+    this.sortSwitchSortedActive = dump["sort_switch_sorted_active"];
   }
 
   activeDatasetSize() {
@@ -11,8 +12,11 @@ class BoxPlot extends Plot {
 
   prepData(dataset) {
     dataset = dataset ?? this.datasets[this.activeDatasetIdx];
-    let data = dataset["data"];
-    let samples = dataset["samples"];
+
+    // Choose data and samples based on sorting state
+    let data = this.sortSwitchSortedActive && dataset["data_sorted"] ? dataset["data_sorted"] : dataset["data"];
+    let samples =
+      this.sortSwitchSortedActive && dataset["samples_sorted"] ? dataset["samples_sorted"] : dataset["samples"];
 
     let samplesSettings = applyToolboxSettings(samples);
 
@@ -92,13 +96,6 @@ class BoxPlot extends Plot {
     return this.filteredSettings.map((sample, sampleIdx) => {
       let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
 
-      // Override boxpoints with global config if available
-      // Note: The Python side now handles dynamic boxpoints based on sample count
-      // This override is kept for backward compatibility
-      if (mqc_config.boxplot_boxpoints !== undefined) {
-        params.boxpoints = mqc_config.boxplot_boxpoints;
-      }
-
       if (highlighted.length > 0) {
         if (sample.highlight !== null) {
           params.marker.color = sample.highlight;
@@ -129,3 +126,27 @@ class BoxPlot extends Plot {
     return csv;
   }
 }
+
+$(function () {
+  // Listener for box plot sorting toggle - use exact same pattern as heatmap
+  $('button[data-action="unsorted"], button[data-action="sorted_by_median"]').on("click", function (e) {
+    e.preventDefault();
+    let $btn = $(this);
+    let plotAnchor = $(this).data("plot-anchor");
+    let plot = mqc_plots[plotAnchor];
+
+    // Only proceed if this is a box plot
+    if (!plot || !(plot instanceof BoxPlot)) {
+      return;
+    }
+
+    // Toggle buttons
+    $btn.toggleClass("active").siblings().toggleClass("active");
+
+    // Update plot state
+    plot.sortSwitchSortedActive = $btn.data("action") === "sorted_by_median";
+
+    // Re-render plot
+    renderPlot(plotAnchor);
+  });
+});
