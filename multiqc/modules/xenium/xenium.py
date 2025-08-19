@@ -109,6 +109,8 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(cells_f, parent_dir)
 
         data_by_sample = self.ignore_samples(data_by_sample)
+        transcript_data_by_sample = self.ignore_samples(transcript_data_by_sample)
+        cells_data_by_sample = self.ignore_samples(cells_data_by_sample)
 
         if len(data_by_sample) == 0 and len(transcript_data_by_sample) == 0 and len(cells_data_by_sample) == 0:
             raise ModuleNoSamplesFound
