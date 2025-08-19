@@ -1069,6 +1069,8 @@ def multiqc_dump_json(data_dir: Path):
             "title",
             "version",
             "output_dir",
+            "sample_names_rename",
+            "sample_names_rename_buttons",
         ],
     }
     for pymod, names in export_vars.items():
