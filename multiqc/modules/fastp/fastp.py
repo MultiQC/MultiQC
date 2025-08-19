@@ -211,9 +211,9 @@ class MultiqcModule(BaseMultiqcModule):
             if m:
                 s_names.append(m.group(2))
                 # Second input for paired end?
-                m = re.search(r"--in2\s(.+?)(?:\s-|$)", cmd)
+                m = re.search(r"(-I|--in2)\s(.+?)(?:\s-|$)", cmd)
                 if m:
-                    s_names.append(m.group(1))
+                    s_names.append(m.group(2))
                 s_name = self.clean_s_name(s_names, f)
             else:
                 s_name = f["s_name"]
