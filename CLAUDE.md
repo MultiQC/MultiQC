@@ -159,3 +159,5 @@ All modules follow a consistent pattern:
   - Add entry point into `pyproject.toml`. Ignore `setup.py`.
   - Do not add separate markdown files or module-level docstrings. Instead add a docstring to the module class.
   - Module's `info` MUST start with a capital letter.
+
+DO NOT CREATE Pipfile - use pyproject.toml instead.
