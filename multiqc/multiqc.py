@@ -554,11 +554,13 @@ class RunResult:
 
     * appropriate error code (e.g. 1 if a module broke, 0 on success)
     * error message if a module broke
+    * optionally, the HTML report content if return_html=True was specified
     """
 
-    def __init__(self, sys_exit_code: int = 0, message: str = ""):
+    def __init__(self, sys_exit_code: int = 0, message: str = "", html_content: Optional[str] = None):
         self.sys_exit_code = sys_exit_code
         self.message = message
+        self.html_content = html_content
 
 
 def run(
@@ -566,6 +568,7 @@ def run(
     clean_up: bool = True,
     cfg: Optional[ClConfig] = None,
     interactive: bool = True,
+    return_html: bool = False,
 ) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
@@ -576,6 +579,16 @@ def run(
 
     To run, supply with one or more directory to scan for analysis results.
     To run here, use 'multiqc .'
+
+    Args:
+        *analysis_dir: Directories to scan for analysis results
+        clean_up: Whether to clean up temporary files
+        cfg: Configuration object
+        interactive: Whether to run in interactive mode
+        return_html: If True, return HTML report content in RunResult.html_content
+
+    Returns:
+        RunResult: Contains exit code, message, and optionally HTML content
 
     See http://multiqc.info for more details.
     """
@@ -602,6 +615,7 @@ def run(
     report.multiqc_command = " ".join(sys.argv)
     logger.debug(f"Command used: {report.multiqc_command}")
 
+    html_content = None
     try:
         mod_dicts_in_order = file_search()
 
@@ -609,7 +623,7 @@ def run(
 
         order_modules_and_sections()
 
-        write_results()
+        html_content = write_results(return_html=return_html)
 
     except NoAnalysisFound as e:
         logger.warning(f"{e.message}. Cleaning up…")
@@ -667,7 +681,7 @@ def run(
             logger.info("MultiQC complete")
         else:
             logger.error("MultiQC complete with errors")
-        return RunResult(sys_exit_code=sys_exit_code)
+        return RunResult(sys_exit_code=sys_exit_code, html_content=html_content if return_html else None)
 
     finally:
         if clean_up:

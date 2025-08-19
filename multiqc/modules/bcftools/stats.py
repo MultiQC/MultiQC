@@ -171,9 +171,10 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
                 sample = module.clean_s_name(s[2].strip(), f)
                 bcftools_stats_sample_singletons[s_name][sample] = dict()
                 bcftools_stats_sample_singletons[s_name][sample]["singletons"] = int(s[10].strip())
-                bcftools_stats_sample_singletons[s_name][sample]["rest"] = (
-                    int(s[3].strip()) + int(s[4].strip()) + int(s[5].strip()) - int(s[10].strip())
-                )
+                # Calculate total variants (SNPs + indels) - singletons
+                # s[3]=nRefHom, s[4]=nNonRefHom, s[5]=nHets (SNPs only), s[8]=nIndels
+                total_variants = int(s[3].strip()) + int(s[4].strip()) + int(s[5].strip()) + int(s[8].strip())
+                bcftools_stats_sample_singletons[s_name][sample]["rest"] = total_variants - int(s[10].strip())
 
             # Per-sample coverage stats
             if s[0] == "PSC" and len(s_names) > 0:
