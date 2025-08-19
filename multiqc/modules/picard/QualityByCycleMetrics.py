@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from Picard MeanQualityByCycle"""
 
 import logging
+from typing import Any, Dict
 
 from multiqc.plots import linegraph
 
@@ -58,7 +59,7 @@ def parse_reports(self):
         # Only overwrite if the extended data is actually extended (has MEAN_ORIGINAL_QUALITY)
         for s_name, s_data in all_data_extended.items():
             if s_data:  # Ensure sample has data
-                sample_data = next(iter(s_data.values()), {})
+                sample_data: Dict[str, Any] = next(iter(s_data.values()), {})
                 if "MEAN_ORIGINAL_QUALITY" in sample_data:
                     all_data[s_name] = s_data
                     has_original_quality = True
