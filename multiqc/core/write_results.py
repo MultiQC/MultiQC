@@ -59,7 +59,7 @@ class OutputPaths:
     report_overwritten: bool = False
 
 
-def write_results() -> None:
+def write_results(return_html: bool = False) -> Optional[str]:
     plugin_hooks.mqc_trigger("before_report_generation")
 
     # Did we find anything?
@@ -92,9 +92,10 @@ def write_results() -> None:
         paths.data_dir = None
         logger.info("Data        : None")
 
+    html_content = None
     if config.make_report:
         # Render report HTML, write to file or stdout
-        _write_html_report(paths.to_stdout, paths.report_path)
+        html_content = _write_html_report(paths.to_stdout, paths.report_path, return_html=return_html)
 
         if paths.report_path and not config.make_pdf:
             logger.info(
@@ -133,6 +134,9 @@ def write_results() -> None:
     # that goes beyond this write_results run.
     if log_and_rich.log_tmp_fn and paths.data_dir:
         shutil.copy2(log_and_rich.log_tmp_fn, str(paths.data_dir))
+
+    # Return HTML content if requested
+    return html_content if return_html else None
 
 
 def _maybe_relative_path(path: Path) -> Path:
@@ -464,7 +468,7 @@ def _move_exported_plots(plots_dir: Path):
         logger.warning(f"Couldn't remove plots tmp dir: {e}")
 
 
-def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
+def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html: bool = False) -> Optional[str]:
     """
     Render and write report HTML to disk
     """
@@ -584,6 +588,9 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
                 shutil.copytree(fn, dest_dir, dirs_exist_ok=True)
         except AttributeError:
             pass  # No files to copy
+
+    # Return HTML content if requested
+    return report_output if return_html else None
 
 
 def _write_pdf(report_path: Path) -> Optional[Path]:
