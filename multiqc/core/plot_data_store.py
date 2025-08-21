@@ -210,15 +210,11 @@ def _write_parquet(df: pl.DataFrame) -> None:
     # Write to file
     try:
         df.write_parquet(parquet_file, compression="gzip")
-    except AttributeError as e:
+    except AttributeError:  # 'builtins.PyDataFrame' object has no attribute 'write_parquet'
         # Pyodide polars doesn't support write_parquet, fall back to CSV
-        if "'PyDataFrame' object has no attribute 'write_parquet'" in str(e):
-            csv_file = parquet_file.with_suffix(".csv")
-            logger.warning(f"Parquet writing not supported in Pyodide, falling back to CSV: {csv_file}")
-            df.write_csv(csv_file)
-        else:
-            logger.error(f"Error writing parquet file: {e}")
-            raise
+        csv_file = parquet_file.with_suffix(".csv")
+        logger.warning(f"Parquet writing not supported in Pyodide, falling back to CSV: {csv_file}")
+        df.write_csv(csv_file)
     except Exception as e:
         logger.error(f"Error writing parquet file: {e}")
         raise
