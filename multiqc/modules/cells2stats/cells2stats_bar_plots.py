@@ -99,7 +99,9 @@ def plot_cell_assignment(c2s_run_data):
     cats = [{"total_density": {"name": "Total Density"}}, cat, {"total_count": {"name": "Total Counts"}}, cat, cat]
 
     plot_name = "Barcoding Cell Assignment Metrics"
-    plot_html = bargraph.plot(plot_content, cats, pconfig=pconfig)
+    plot_html = (
+        bargraph.plot(plot_content, cats, pconfig=pconfig) if min([len(el) for el in plot_content]) > 0 else None
+    )
     anchor = "well_assignment_plot"
     description = "Bar plots of barcoding cell assignment metrics"
     helptext = """Plot density and absolute of assigned counts per batch and across all barcoding batches."""
