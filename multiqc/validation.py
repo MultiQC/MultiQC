@@ -10,7 +10,6 @@ from typing import Any, Dict, Set, Tuple
 
 from PIL import ImageColor
 from pydantic import BaseModel
-from typeguard import TypeCheckError, check_type
 
 from multiqc import config
 
@@ -221,25 +220,31 @@ class ValidatedConfig(BaseModel):
                     continue
 
             try:
-                check_type(val, expected_type)
-            except TypeCheckError as e:
-                try:  # try casting to expected type?
-                    if expected_type is not None:
-                        if expected_type.__name__ in ["Optional", "Union"]:
-                            expected_type = expected_type.__args__[0]
-                    val = expected_type(val)  # type: ignore
-                except Exception:
-                    v_str = repr(val)
-                    if len(v_str) > 20:
-                        v_str = v_str[:20] + "..."
-                    expected_type_str = str(expected_type).replace("typing.", "")
-                    msg = rf"expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
-                    add_validation_error(path_in_cfg + (name,), msg)
-                    logger.debug(f"{msg}: {e}")
+                from typeguard import TypeCheckError, check_type
+            except ImportError:
+                logger.debug("typeguard not installed, skipping type checking")
+                corrected_values[name] = val
+            else:
+                try:
+                    check_type(val, expected_type)
+                except TypeCheckError as e:
+                    try:  # try casting to expected type?
+                        if expected_type is not None:
+                            if expected_type.__name__ in ["Optional", "Union"]:
+                                expected_type = expected_type.__args__[0]
+                        val = expected_type(val)  # type: ignore
+                    except Exception:
+                        v_str = repr(val)
+                        if len(v_str) > 20:
+                            v_str = v_str[:20] + "..."
+                        expected_type_str = str(expected_type).replace("typing.", "")
+                        msg = rf"expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
+                        add_validation_error(path_in_cfg + (name,), msg)
+                        logger.debug(f"{msg}: {e}")
+                    else:
+                        corrected_values[name] = val
                 else:
                     corrected_values[name] = val
-            else:
-                corrected_values[name] = val
 
         values = corrected_values
         return values
