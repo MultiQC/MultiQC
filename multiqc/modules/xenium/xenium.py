@@ -1728,18 +1728,6 @@ class MultiqcModule(BaseMultiqcModule):
             for fov in sorted_fovs:
                 heatmap_data[sample][fov] = sample_data.get(fov, None)
 
-        # Calculate appropriate sizing for FoV heatmap
-        num_fovs = len(sorted_fovs)
-        num_samples = len(sorted_samples)
-
-        # For FoV heatmaps, we want to prioritize showing all FoVs clearly
-        # Use wider cells for FoVs to make them readable, and smaller cells for samples since there are fewer
-        fov_cell_width = max(25, min(60, 1200 // max(1, num_fovs)))  # Between 25-60px per FoV
-        sample_cell_height = max(30, min(80, 400 // max(1, num_samples)))  # Between 30-80px per sample
-
-        plot_width = max(600, min(1400, num_fovs * fov_cell_width))  # Between 600-1400px width
-        plot_height = max(150, num_samples * sample_cell_height)  # Dynamic height based on samples
-
         config = {
             "id": "xenium_fov_quality_multi_heatmap",
             "title": "Xenium: Field of View quality heatmap (median QV per FoV)",
@@ -1747,8 +1735,6 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Sample",
             "zlab": "Median Quality (QV)",
             "square": False,  # Don't force square cells - allow rectangular for better FoV visibility
-            "width": plot_width,  # Override default width calculation
-            "height": plot_height,  # Override default height calculation
             "colstops": [
                 [20, "#808080"],  # Gray for low quality (QV 20)
                 [25, "#a0a0a0"],  # Light gray
@@ -1758,7 +1744,7 @@ class MultiqcModule(BaseMultiqcModule):
             ],
             "min": 15,  # Set minimum to ensure good color range
             "max": 45,  # Set maximum to ensure good color range
-            "display_values": True,  # Show values in cells
+            "display_values": False,  # Show values in cells
             "tt_decimals": 1,  # Show 1 decimal place
             "angled_xticks": True,  # Keep FoV labels angled for better readability
         }
