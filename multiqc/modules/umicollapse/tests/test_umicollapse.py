@@ -1,7 +1,16 @@
+import pytest
 from multiqc import config, report
 from multiqc.modules.umicollapse import MultiqcModule
 from multiqc.plots.table_object import InputRow
 from multiqc.types import SampleName, SectionKey
+
+
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state after each test."""
+    original_preserve = config.preserve_module_raw_data
+    yield
+    config.preserve_module_raw_data = original_preserve
 
 
 def test_parse(tmp_path):
