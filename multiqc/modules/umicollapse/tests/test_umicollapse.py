@@ -14,6 +14,8 @@ def reset_config():
 
 
 def test_parse(tmp_path):
+    config.reset()
+
     # File without a file name or content match.
     f1 = tmp_path / "SAMPLE.log"
     f1.write_text("Irrelevant file")
