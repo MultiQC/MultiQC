@@ -99,8 +99,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse transcript quality data
         transcript_data_by_sample = {}
-        for transcript_f in self.find_log_files("xenium/transcripts", filecontents=False, filehandles=False):
-            parsed_transcript_data = self.parse_transcripts_parquet(transcript_f)
+        transcript_files = list(self.find_log_files("xenium/transcripts", filecontents=False, filehandles=False))
+
+        # Determine processing mode based on number of samples
+        is_multi_sample = len(transcript_files) > 1
+
+        for transcript_f in transcript_files:
+            parsed_transcript_data = self.parse_transcripts_parquet(transcript_f, minimal=is_multi_sample)
             if parsed_transcript_data:
                 # Use parent directory name as sample name
                 parent_dir = Path(transcript_f["root"]).name if transcript_f["root"] else transcript_f["s_name"]
@@ -610,8 +615,13 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Could not parse experiment.xenium file {f['fn']}: {e}")
             return {}
 
-    def parse_transcripts_parquet(self, f) -> Optional[Dict]:
-        """Parse Xenium transcripts.parquet file to extract quality distribution by codeword"""
+    def parse_transcripts_parquet(self, f, minimal: bool = False) -> Optional[Dict]:
+        """Parse Xenium transcripts.parquet file to extract quality distribution by codeword
+
+        Args:
+            f: File info dict
+            minimal: If True, store only aggregated data for multi-sample scenarios to save memory
+        """
         file_path = Path(f["root"]) / f["fn"]
 
         # Use lazy loading to avoid reading entire file into memory
@@ -628,63 +638,68 @@ class MultiqcModule(BaseMultiqcModule):
             # Get total row count efficiently without loading full data
             total_transcripts = df_lazy.select(pl.len()).collect().item()
 
-            # Group by feature_name and calculate statistics efficiently
-            grouped = (
-                df_lazy.group_by("feature_name")
-                .agg(
-                    [
-                        pl.col("qv").value_counts().alias("qv_counts"),
-                        pl.col("qv").mean().alias("mean_qv"),
-                        pl.len().alias("transcript_count"),
-                    ]
+            if minimal:
+                # For multi-sample scenarios, store only what's needed for aggregated plots
+                # Group by feature_name and calculate only basic statistics
+                grouped = (
+                    df_lazy.group_by("feature_name")
+                    .agg(
+                        [
+                            pl.col("qv").mean().alias("mean_qv"),
+                            pl.len().alias("transcript_count"),
+                        ]
+                    )
+                    .collect()
                 )
-                .collect(streaming=True)  # Use streaming to reduce memory usage
-            )
 
-            # Process results
-            quality_dist = {}
-            transcript_counts = {}
+                # Store only transcript counts (needed for scatter plots)
+                transcript_counts = {}
+                for row in grouped.iter_rows(named=True):
+                    feature = str(row["feature_name"])
+                    transcript_counts[feature] = {"count": row["transcript_count"], "mean_quality": row["mean_qv"]}
 
-            for row in grouped.iter_rows(named=True):
-                feature = str(row["feature_name"])
-                qv_counts_df = row["qv_counts"]
-                transcript_counts[feature] = {"count": row["transcript_count"], "mean_quality": row["mean_qv"]}
+                # Calculate aggregated quality distributions by category (for violin plots)
+                category_quality_distributions = {}
+                grouped_qv = (
+                    df_lazy.with_columns(
+                        pl.col("feature_name")
+                        .map_elements(lambda x: categorize_feature(str(x))[0], return_dtype=pl.Utf8)
+                        .alias("category")
+                    )
+                    .group_by("category")
+                    .agg([pl.col("qv").sample(n=10000, seed=42, with_replacement=True).alias("quality_sample")])
+                    .collect()
+                )
 
-                # Convert to dictionary format for backward compatibility
-                qv_dict = {}
-                for qv_row in qv_counts_df:
-                    qv_dict[qv_row["qv"]] = qv_row["count"]
-                quality_dist[feature] = qv_dict
+                for row in grouped_qv.iter_rows(named=True):
+                    category = str(row["category"])
+                    quality_values = row["quality_sample"]
+                    if quality_values:
+                        category_quality_distributions[category] = quality_values
 
-            result = {
-                "quality_distribution": quality_dist,
-                "transcript_counts": transcript_counts,
-                "total_transcripts": total_transcripts,
-                "unique_features": len(quality_dist),
-            }
-        except Exception as e:
-            log.warning(f"Lazy processing failed for {file_path}: {e}. Falling back to direct read.")
-            # Fallback to direct read for problematic files
-            try:
-                df = pl.read_parquet(file_path)
+                result = {
+                    "transcript_counts": transcript_counts,
+                    "total_transcripts": total_transcripts,
+                    "unique_features": len(transcript_counts),
+                    "category_quality_distributions": category_quality_distributions,
+                }
+            else:
+                # For single-sample scenarios, store full data for detailed plots
+                grouped = (
+                    df_lazy.group_by("feature_name")
+                    .agg(
+                        [
+                            pl.col("qv").value_counts().alias("qv_counts"),
+                            pl.col("qv").mean().alias("mean_qv"),
+                            pl.len().alias("transcript_count"),
+                        ]
+                    )
+                    .collect()
+                )
 
-                # Check if required columns exist
-                required_cols = ["qv", "feature_name"]
-                if not all(col in df.columns for col in required_cols):
-                    log.warning(f"Missing required columns in {f['fn']}: {required_cols}")
-                    return None
-
-                # Group by feature_name and calculate both quality distribution and transcript counts
+                # Process full quality distributions
                 quality_dist = {}
                 transcript_counts = {}
-
-                grouped = df.group_by("feature_name").agg(
-                    [
-                        pl.col("qv").value_counts().alias("qv_counts"),
-                        pl.col("qv").mean().alias("mean_qv"),
-                        pl.len().alias("transcript_count"),
-                    ]
-                )
 
                 for row in grouped.iter_rows(named=True):
                     feature = str(row["feature_name"])
@@ -700,12 +715,92 @@ class MultiqcModule(BaseMultiqcModule):
                 result = {
                     "quality_distribution": quality_dist,
                     "transcript_counts": transcript_counts,
-                    "total_transcripts": df.height,
+                    "total_transcripts": total_transcripts,
                     "unique_features": len(quality_dist),
                 }
+        except Exception as e:
+            log.warning(f"Lazy processing failed for {file_path}: {e}. Falling back to direct read.")
+            # Fallback to direct read for problematic files
+            try:
+                df = pl.read_parquet(file_path)
 
-                # Handle optional columns with fallback
-                if "codeword_category" in df.columns:
+                # Check if required columns exist
+                required_cols = ["qv", "feature_name"]
+                if not all(col in df.columns for col in required_cols):
+                    log.warning(f"Missing required columns in {f['fn']}: {required_cols}")
+                    return None
+
+                if minimal:
+                    # For multi-sample scenarios, store only what's needed
+                    grouped = df.group_by("feature_name").agg(
+                        [
+                            pl.col("qv").mean().alias("mean_qv"),
+                            pl.len().alias("transcript_count"),
+                        ]
+                    )
+
+                    transcript_counts = {}
+                    for row in grouped.iter_rows(named=True):
+                        feature = str(row["feature_name"])
+                        transcript_counts[feature] = {"count": row["transcript_count"], "mean_quality": row["mean_qv"]}
+
+                    # Calculate aggregated quality distributions by category
+                    df_with_category = df.with_columns(
+                        pl.col("feature_name")
+                        .map_elements(lambda x: categorize_feature(str(x))[0], return_dtype=pl.Utf8)
+                        .alias("category")
+                    )
+
+                    category_grouped = df_with_category.group_by("category").agg(
+                        pl.col("qv").sample(n=10000, seed=42, with_replacement=True).alias("quality_sample")
+                    )
+
+                    category_quality_distributions = {}
+                    for row in category_grouped.iter_rows(named=True):
+                        category = str(row["category"])
+                        quality_values = row["quality_sample"]
+                        if quality_values:
+                            category_quality_distributions[category] = quality_values
+
+                    result = {
+                        "transcript_counts": transcript_counts,
+                        "total_transcripts": df.height,
+                        "unique_features": len(transcript_counts),
+                        "category_quality_distributions": category_quality_distributions,
+                    }
+                else:
+                    # For single-sample scenarios, store full data
+                    grouped = df.group_by("feature_name").agg(
+                        [
+                            pl.col("qv").value_counts().alias("qv_counts"),
+                            pl.col("qv").mean().alias("mean_qv"),
+                            pl.len().alias("transcript_count"),
+                        ]
+                    )
+
+                    quality_dist = {}
+                    transcript_counts = {}
+
+                    for row in grouped.iter_rows(named=True):
+                        feature = str(row["feature_name"])
+                        qv_counts_df = row["qv_counts"]
+                        transcript_counts[feature] = {"count": row["transcript_count"], "mean_quality": row["mean_qv"]}
+
+                        # Convert to dictionary format for backward compatibility
+                        qv_dict = {}
+                        for qv_row in qv_counts_df:
+                            qv_dict[qv_row["qv"]] = qv_row["count"]
+                        quality_dist[feature] = qv_dict
+
+                    result = {
+                        "quality_distribution": quality_dist,
+                        "transcript_counts": transcript_counts,
+                        "total_transcripts": df.height,
+                        "unique_features": len(quality_dist),
+                    }
+
+                # Handle optional columns with fallback (skip in minimal mode to save memory)
+                if not minimal and "codeword_category" in df.columns:
                     try:
                         category_grouped = df.group_by("codeword_category").agg(pl.col("qv").alias("qv_values"))
                         category_quality_distributions = {}
@@ -721,7 +816,7 @@ class MultiqcModule(BaseMultiqcModule):
                     except Exception:
                         log.warning("Could not process codeword category quality data")
 
-                if "is_gene" in df.columns:
+                if not minimal and "is_gene" in df.columns:
                     try:
                         gene_grouped = df.group_by("feature_name").agg(
                             [pl.len().alias("molecule_count"), pl.col("is_gene").first().alias("is_gene")]
@@ -737,7 +832,7 @@ class MultiqcModule(BaseMultiqcModule):
                     except Exception:
                         log.warning("Could not process molecules per gene data")
 
-                if "fov_name" in df.columns:
+                if not minimal and "fov_name" in df.columns:
                     try:
                         fov_grouped = df.group_by("fov_name").agg(
                             [
@@ -979,198 +1074,6 @@ class MultiqcModule(BaseMultiqcModule):
         except Exception as e:
             log.error(f"Error processing cells parquet file {file_path}: {e}")
             return None
-
-            # Sample distribution data for plots using separate efficient queries
-            # Cell area distribution sample
-            try:
-                cell_area_sample = (
-                    df_lazy.filter(pl.col("cell_area").is_not_null())
-                    .select(pl.col("cell_area").sample(n=10000, seed=42, with_replacement=True))
-                    .collect()
-                )
-                if cell_area_sample.height > 0:
-                    cell_stats["cell_area_values"] = cell_area_sample["cell_area"].to_list()
-            except Exception as e:
-                log.warning(f"Could not sample cell area values: {e}")
-
-            # Transcript counts distribution sample
-            try:
-                transcript_sample = (
-                    df_lazy.filter(pl.col("total_counts").is_not_null())
-                    .select(pl.col("total_counts").sample(n=10000, seed=42, with_replacement=True))
-                    .collect()
-                )
-                if transcript_sample.height > 0:
-                    cell_stats["transcript_counts_values"] = transcript_sample["total_counts"].to_list()
-            except Exception as e:
-                log.warning(f"Could not sample transcript counts: {e}")
-
-            # Detected genes distribution sample
-            try:
-                genes_sample = (
-                    df_lazy.filter(pl.col("transcript_counts").is_not_null())
-                    .select(pl.col("transcript_counts").sample(n=10000, seed=42, with_replacement=True))
-                    .collect()
-                )
-                if genes_sample.height > 0:
-                    cell_stats["detected_genes_values"] = genes_sample["transcript_counts"].to_list()
-            except Exception as e:
-                log.warning(f"Could not sample detected genes: {e}")
-
-            # Nucleus RNA fraction if nucleus_count is available
-            if "nucleus_count" in schema:
-                try:
-                    nucleus_stats = (
-                        df_lazy.filter(pl.col("total_counts") > 0)
-                        .with_columns((pl.col("nucleus_count") / pl.col("total_counts")).alias("nucleus_fraction"))
-                        .select(
-                            [
-                                pl.col("nucleus_fraction").mean().alias("nucleus_rna_fraction_mean"),
-                                pl.col("nucleus_fraction").median().alias("nucleus_rna_fraction_median"),
-                                pl.col("nucleus_fraction")
-                                .sample(n=10000, seed=42, with_replacement=True)
-                                .alias("nucleus_fraction_sample"),
-                            ]
-                        )
-                        .collect()
-                    )
-
-                    if nucleus_stats.height > 0:
-                        for stat, value in (
-                            nucleus_stats.select(["nucleus_rna_fraction_mean", "nucleus_rna_fraction_median"])
-                            .to_dicts()[0]
-                            .items()
-                        ):
-                            if value is not None:
-                                cell_stats[stat] = value
-                        cell_stats["nucleus_rna_fraction_values"] = nucleus_stats["nucleus_fraction_sample"].to_list()
-                except Exception as e:
-                    log.warning(f"Could not process nucleus RNA fraction: {e}")
-
-            # Nucleus to cell area ratio distribution sample
-            try:
-                ratio_sample = (
-                    df_lazy.filter(
-                        (pl.col("cell_area").is_not_null())
-                        & (pl.col("nucleus_area").is_not_null())
-                        & (pl.col("cell_area") > 0)
-                    )
-                    .with_columns((pl.col("nucleus_area") / pl.col("cell_area")).alias("ratio"))
-                    .select(pl.col("ratio").sample(n=10000, seed=42, with_replacement=True))
-                    .collect()
-                )
-                if ratio_sample.height > 0:
-                    cell_stats["nucleus_to_cell_area_ratio_values"] = ratio_sample["ratio"].to_list()
-            except Exception as e:
-                log.warning(f"Could not sample nucleus to cell area ratio: {e}")
-
-            return cell_stats
-
-        except Exception as e:
-            log.warning(f"Lazy processing failed for cells file {file_path}: {e}. Falling back to direct read.")
-            # Fallback to direct read for problematic files
-            try:
-                df = pl.read_parquet(file_path)
-
-                # Check for required columns
-                required_cols = ["cell_area", "nucleus_area", "total_counts", "transcript_counts"]
-                missing_cols = [col for col in required_cols if col not in df.columns]
-                if missing_cols:
-                    log.warning(f"Missing columns in {f['fn']}: {missing_cols}")
-                    return None
-
-                # Calculate summary statistics
-                cell_stats = {"total_cells": df.height}
-
-                # Cell area distribution stats
-                cell_area_stats = df["cell_area"].drop_nulls()
-                if cell_area_stats.len() > 0:
-                    cell_stats.update(
-                        {
-                            "cell_area_mean": cell_area_stats.mean(),
-                            "cell_area_median": cell_area_stats.median(),
-                            "cell_area_std": cell_area_stats.std(),
-                            "cell_area_min": cell_area_stats.min(),
-                            "cell_area_max": cell_area_stats.max(),
-                        }
-                    )
-                    # Sample cell area values
-                    if cell_area_stats.len() > 10000:
-                        cell_stats["cell_area_values"] = cell_area_stats.sample(10000, seed=42).to_list()
-                    else:
-                        cell_stats["cell_area_values"] = cell_area_stats.to_list()
-
-                # Nucleus area distribution stats
-                nucleus_area_stats = df["nucleus_area"].drop_nulls()
-                if nucleus_area_stats.len() > 0:
-                    cell_stats.update(
-                        {
-                            "nucleus_area_mean": nucleus_area_stats.mean(),
-                            "nucleus_area_median": nucleus_area_stats.median(),
-                            "nucleus_area_std": nucleus_area_stats.std(),
-                        }
-                    )
-
-                    # Nucleus to cell area ratio
-                    valid_ratio_df = df.filter(
-                        (pl.col("cell_area").is_not_null())
-                        & (pl.col("nucleus_area").is_not_null())
-                        & (pl.col("cell_area") > 0)
-                    )
-                    if valid_ratio_df.height > 0:
-                        ratio = valid_ratio_df["nucleus_area"] / valid_ratio_df["cell_area"]
-                        cell_stats.update(
-                            {
-                                "nucleus_to_cell_area_ratio_mean": ratio.mean(),
-                                "nucleus_to_cell_area_ratio_median": ratio.median(),
-                            }
-                        )
-                        # Sample ratio values
-                        if ratio.len() > 10000:
-                            cell_stats["nucleus_to_cell_area_ratio_values"] = ratio.sample(10000, seed=42).to_list()
-                        else:
-                            cell_stats["nucleus_to_cell_area_ratio_values"] = ratio.to_list()
-
-                # Store transcript counts per cell for distribution plots
-                total_counts_stats = df["total_counts"].drop_nulls()
-                if total_counts_stats.len() > 0:
-                    if total_counts_stats.len() > 10000:
-                        cell_stats["transcript_counts_values"] = total_counts_stats.sample(10000, seed=42).to_list()
-                    else:
-                        cell_stats["transcript_counts_values"] = total_counts_stats.to_list()
-
-                # Store detected genes per cell for distribution plots
-                detected_genes_stats = df["transcript_counts"].drop_nulls()
-                if detected_genes_stats.len() > 0:
-                    if detected_genes_stats.len() > 10000:
-                        cell_stats["detected_genes_values"] = detected_genes_stats.sample(10000, seed=42).to_list()
-                    else:
-                        cell_stats["detected_genes_values"] = detected_genes_stats.to_list()
-
-                # Add nucleus RNA fraction if nucleus_count is available
-                if "nucleus_count" in df.columns:
-                    valid_cells = df.filter(pl.col("total_counts") > 0)
-                    if valid_cells.height > 0:
-                        nucleus_rna_fraction = valid_cells["nucleus_count"] / valid_cells["total_counts"]
-                        cell_stats.update(
-                            {
-                                "nucleus_rna_fraction_mean": nucleus_rna_fraction.mean(),
-                                "nucleus_rna_fraction_median": nucleus_rna_fraction.median(),
-                            }
-                        )
-                        # Sample nucleus fraction values
-                        if nucleus_rna_fraction.len() > 10000:
-                            cell_stats["nucleus_rna_fraction_values"] = nucleus_rna_fraction.sample(
-                                10000, seed=42
-                            ).to_list()
-                        else:
-                            cell_stats["nucleus_rna_fraction_values"] = nucleus_rna_fraction.to_list()
-
-                return cell_stats
-
-            except Exception as fallback_error:
-                log.error(f"Both lazy and direct processing failed for cells file {file_path}: {fallback_error}")
-                return None
 
     def check_qc_warnings(self, data_by_sample):
         """Check for quality control issues and log warnings"""
