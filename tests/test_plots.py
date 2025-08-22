@@ -15,6 +15,29 @@ from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
 
 
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state during tests that modify global config."""
+    original_boxplot_boxpoints = config.boxplot_boxpoints
+    original_box_min_threshold_no_points = config.box_min_threshold_no_points
+    original_box_min_threshold_outliers = config.box_min_threshold_outliers
+    original_development = config.development
+    original_export_plots = config.export_plots
+    original_export_plot_formats = getattr(config, "export_plot_formats", None)
+    original_strict = config.strict
+    yield
+    config.boxplot_boxpoints = original_boxplot_boxpoints
+    config.box_min_threshold_no_points = original_box_min_threshold_no_points
+    config.box_min_threshold_outliers = original_box_min_threshold_outliers
+    config.development = original_development
+    config.export_plots = original_export_plots
+    if original_export_plot_formats is not None:
+        config.export_plot_formats = original_export_plot_formats
+    elif hasattr(config, "export_plot_formats"):
+        delattr(config, "export_plot_formats")
+    config.strict = original_strict
+
+
 def _verify_rendered(plot) -> Plot:
     assert isinstance(plot, Plot)
     plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
