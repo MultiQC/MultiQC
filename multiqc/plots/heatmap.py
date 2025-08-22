@@ -612,16 +612,18 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             width = MAX_WIDTH
             x_px_per_elem = width / num_cols
 
-        if height > MAX_HEIGHT or width > MAX_WIDTH:
+        if height >= MAX_HEIGHT or width >= MAX_WIDTH:
             # logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
             if model.square:
                 px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
                 width = height = int(num_rows * px_per_elem)
             else:
-                x_px_per_elem = MAX_WIDTH / num_cols
-                y_px_per_elem = MAX_HEIGHT / num_rows
-                width = int(num_cols * x_px_per_elem)
-                height = int(num_rows * y_px_per_elem)
+                if height >= MAX_HEIGHT:
+                    x_px_per_elem = MAX_WIDTH / num_cols
+                    height = int(num_rows * y_px_per_elem)
+                if width >= MAX_WIDTH:
+                    y_px_per_elem = MAX_HEIGHT / num_rows
+                    width = int(num_cols * x_px_per_elem)
 
         # logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
 
