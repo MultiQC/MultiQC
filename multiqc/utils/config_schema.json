@@ -2224,7 +2224,7 @@
         }
       ],
       "default": null,
-      "description": "Custom content",
+      "description": "Custom content settings",
       "title": "Custom Content"
     },
     "fn_clean_sample_names": {
