@@ -6,7 +6,16 @@ from typing import Any, Dict, Optional, Tuple
 import polars as pl
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, box, linegraph, scatter, violin
+from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, violin
+
+# Try importing scipy, fallback gracefully if not available
+try:
+    import scipy
+    import scipy.stats
+
+    SCIPY_AVAILABLE = True
+except ImportError:
+    SCIPY_AVAILABLE = False
 
 log = logging.getLogger(__name__)
 
@@ -90,8 +99,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse transcript quality data
         transcript_data_by_sample = {}
-        for transcript_f in self.find_log_files("xenium/transcripts", filecontents=False, filehandles=False):
-            parsed_transcript_data = self.parse_transcripts_parquet(transcript_f)
+        transcript_files = list(self.find_log_files("xenium/transcripts", filecontents=False, filehandles=False))
+
+        # Determine processing mode based on number of samples
+        is_multi_sample = len(transcript_files) > 1
+
+        for transcript_f in transcript_files:
+            parsed_transcript_data = self.parse_transcripts_parquet(transcript_f, minimal=is_multi_sample)
             if parsed_transcript_data:
                 # Use parent directory name as sample name
                 parent_dir = Path(transcript_f["root"]).name if transcript_f["root"] else transcript_f["s_name"]
@@ -284,7 +298,7 @@ class MultiqcModule(BaseMultiqcModule):
                 )
 
         # Add cell area distribution section if cells data is available
-        if cells_data_by_sample:
+        if cells_data_by_sample and SCIPY_AVAILABLE:
             area_plot = self.xenium_cell_area_distribution_plot(cells_data_by_sample)
             if area_plot:
                 self.add_section(
@@ -315,7 +329,7 @@ class MultiqcModule(BaseMultiqcModule):
                     plot=area_plot,
                 )
 
-            # Add nucleus RNA fraction distribution plot
+            # Add nucleus RNA fraction distribution plot (scipy required)
             nucleus_plot = self.xenium_nucleus_rna_fraction_plot(cells_data_by_sample)
             if nucleus_plot:
                 self.add_section(
@@ -444,7 +458,7 @@ class MultiqcModule(BaseMultiqcModule):
                     anchor="xenium-fov-quality",
                     description="Transcript quality distribution by Field of View (FoV)",
                     helptext="""
-                    This plot shows transcript quality distributions across different imaging fields (FoVs - Fields of View):
+                    This plot shows transcript quality across different imaging fields (FoVs - Fields of View):
                     
                     **What is a Field of View?**
                     * Each FoV represents one microscope imaging area/tile
@@ -453,24 +467,30 @@ class MultiqcModule(BaseMultiqcModule):
                     
                     **Plot types:**
                     * **Single sample**: Box plots showing quality distributions per FoV (median, quartiles, outliers)
-                    * **Multiple samples**: Box plots with aggregated quality distributions per FoV across all samples
+                    * **Multiple samples**: Heatmap showing median quality per FoV across samples (each FoV as a square)
                     
-                    **Box plot interpretation:**
+                    **Single sample box plot interpretation:**
                     * **Box boundaries**: 25th and 75th percentiles (Q1 and Q3)
                     * **Center line**: Median quality score
                     * **Whiskers**: Extend to 1.5 × IQR or the most extreme data point
                     * **Points**: Individual transcript quality scores (outliers or small datasets)
                     
+                    **Multi-sample heatmap interpretation:**
+                    * **Gray squares**: Low quality FoVs (QV < 25)
+                    * **Light green squares**: Good quality FoVs (QV 25-35) 
+                    * **Dark green squares**: Excellent quality FoVs (QV > 35)
+                    * **Values shown**: Median quality value (QV) for each FoV
+                    * **Rows**: Samples, **Columns**: Field of View IDs
+                    
                     **What to look for:**
-                    * **Consistent quality** across FoVs (similar median QV values around 30-40)
-                    * **Tight distributions** (narrow boxes indicate consistent quality within FoVs)
+                    * **Consistent quality** across FoVs (similar QV values around 30-40)
                     * **No systematic patterns**: Random variation is normal, systematic gradients are not
-                    * **Outlier FoVs**: Any FoV with notably poor median quality (<20 QV)
+                    * **Outlier FoVs**: Any FoV consistently poor across samples (<20 QV)
                     
                     **Quality thresholds:**
-                    * QV >30: Excellent imaging quality
-                    * QV 20-30: Good quality  
-                    * QV <20: Poor quality, investigate issues
+                    * QV >30: Excellent imaging quality (dark green)
+                    * QV 20-30: Good quality (light green)
+                    * QV <20: Poor quality (gray), investigate issues
                     
                     **Troubleshooting:**
                     * Specific low-quality FoVs: Focus/illumination issues, debris, tissue damage
@@ -601,115 +621,310 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Could not parse experiment.xenium file {f['fn']}: {e}")
             return {}
 
-    def parse_transcripts_parquet(self, f) -> Optional[Dict]:
-        """Parse Xenium transcripts.parquet file to extract quality distribution by codeword"""
-        # Read the parquet file content - sample more for better scatter plots
+    def parse_transcripts_parquet(self, f, minimal: bool = False) -> Optional[Dict]:
+        """Parse Xenium transcripts.parquet file to extract quality distribution by codeword
+
+        Args:
+            f: File info dict
+            minimal: If True, store only aggregated data for multi-sample scenarios to save memory
+        """
         file_path = Path(f["root"]) / f["fn"]
-        df = pl.read_parquet(file_path)
 
-        # Check if required columns exist
-        required_cols = ["qv", "feature_name"]
-        if not all(col in df.columns for col in required_cols):
-            log.warning(f"Missing required columns in {f['fn']}: {required_cols}")
-            return None
+        # Use lazy loading to avoid reading entire file into memory
+        try:
+            df_lazy = pl.scan_parquet(file_path)
 
-        # Group by feature_name and calculate both quality distribution and transcript counts
-        quality_dist = {}
-        transcript_counts = {}
+            # Check if required columns exist by scanning schema (avoid performance warning)
+            schema = df_lazy.collect_schema()
+            required_cols = ["qv", "feature_name"]
+            if not all(col in schema for col in required_cols):
+                log.warning(f"Missing required columns in {f['fn']}: {required_cols}")
+                return None
 
-        grouped = df.group_by("feature_name").agg(
-            [
-                pl.col("qv").value_counts().alias("qv_counts"),
-                pl.col("qv").mean().alias("mean_qv"),
-                pl.len().alias("transcript_count"),
-            ]
-        )
+            # Get total row count efficiently without loading full data
+            total_transcripts = df_lazy.select(pl.len()).collect().item()
 
-        for row in grouped.iter_rows(named=True):
-            feature = str(row["feature_name"])
-            qv_counts_df = row["qv_counts"]
-            transcript_counts[feature] = {"count": row["transcript_count"], "mean_quality": row["mean_qv"]}
+            if minimal:
+                # For multi-sample scenarios, store only what's needed for aggregated plots
+                # Group by feature_name and calculate only basic statistics
+                grouped = (
+                    df_lazy.group_by("feature_name")
+                    .agg(
+                        [
+                            pl.col("qv").mean().alias("mean_qv"),
+                            pl.len().alias("transcript_count"),
+                        ]
+                    )
+                    .collect()
+                )
 
-            # Convert to dictionary format for backward compatibility
-            qv_dict = {}
-            for qv_row in qv_counts_df:
-                qv_dict[qv_row["qv"]] = qv_row["count"]
-            quality_dist[feature] = qv_dict
+                # Store only transcript counts (needed for scatter plots)
+                transcript_counts = {}
+                for row in grouped.iter_rows(named=True):
+                    feature = str(row["feature_name"])
+                    transcript_counts[feature] = {"count": row["transcript_count"], "mean_quality": row["mean_qv"]}
 
-        result = {
-            "quality_distribution": quality_dist,
-            "transcript_counts": transcript_counts,
-            "total_transcripts": df.height,
-            "unique_features": len(quality_dist),
-        }
+                # Calculate aggregated quality distributions by category (for violin plots)
+                category_quality_distributions = {}
+                grouped_qv = (
+                    df_lazy.with_columns(
+                        pl.col("feature_name")
+                        .map_elements(lambda x: categorize_feature(str(x))[0], return_dtype=pl.Utf8)
+                        .alias("category")
+                    )
+                    .group_by("category")
+                    .agg([pl.col("qv").sample(n=10000, seed=42, with_replacement=True).alias("quality_sample")])
+                    .collect()
+                )
+
+                for row in grouped_qv.iter_rows(named=True):
+                    category = str(row["category"])
+                    quality_values = row["quality_sample"]
+                    if quality_values:
+                        category_quality_distributions[category] = quality_values
+
+                result = {
+                    "transcript_counts": transcript_counts,
+                    "total_transcripts": total_transcripts,
+                    "unique_features": len(transcript_counts),
+                    "category_quality_distributions": category_quality_distributions,
+                }
+            else:
+                # For single-sample scenarios, store full data for detailed plots
+                grouped = (
+                    df_lazy.group_by("feature_name")
+                    .agg(
+                        [
+                            pl.col("qv").value_counts().alias("qv_counts"),
+                            pl.col("qv").mean().alias("mean_qv"),
+                            pl.len().alias("transcript_count"),
+                        ]
+                    )
+                    .collect()
+                )
+
+                # Process full quality distributions
+                quality_dist = {}
+                transcript_counts = {}
+
+                for row in grouped.iter_rows(named=True):
+                    feature = str(row["feature_name"])
+                    qv_counts_df = row["qv_counts"]
+                    transcript_counts[feature] = {"count": row["transcript_count"], "mean_quality": row["mean_qv"]}
+
+                    # Convert to dictionary format for backward compatibility
+                    qv_dict = {}
+                    for qv_row in qv_counts_df:
+                        qv_dict[qv_row["qv"]] = qv_row["count"]
+                    quality_dist[feature] = qv_dict
+
+                result = {
+                    "quality_distribution": quality_dist,
+                    "transcript_counts": transcript_counts,
+                    "total_transcripts": total_transcripts,
+                    "unique_features": len(quality_dist),
+                }
+        except Exception as e:
+            log.warning(f"Lazy processing failed for {file_path}: {e}. Falling back to direct read.")
+            # Fallback to direct read for problematic files
+            try:
+                df = pl.read_parquet(file_path)
+
+                # Check if required columns exist
+                required_cols = ["qv", "feature_name"]
+                if not all(col in df.columns for col in required_cols):
+                    log.warning(f"Missing required columns in {f['fn']}: {required_cols}")
+                    return None
+
+                if minimal:
+                    # For multi-sample scenarios, store only what's needed
+                    grouped = df.group_by("feature_name").agg(
+                        [
+                            pl.col("qv").mean().alias("mean_qv"),
+                            pl.len().alias("transcript_count"),
+                        ]
+                    )
+
+                    transcript_counts = {}
+                    for row in grouped.iter_rows(named=True):
+                        feature = str(row["feature_name"])
+                        transcript_counts[feature] = {"count": row["transcript_count"], "mean_quality": row["mean_qv"]}
+
+                    # Calculate aggregated quality distributions by category
+                    df_with_category = df.with_columns(
+                        pl.col("feature_name")
+                        .map_elements(lambda x: categorize_feature(str(x))[0], return_dtype=pl.Utf8)
+                        .alias("category")
+                    )
+
+                    category_grouped = df_with_category.group_by("category").agg(
+                        pl.col("qv").sample(n=10000, seed=42, with_replacement=True).alias("quality_sample")
+                    )
+
+                    category_quality_distributions = {}
+                    for row in category_grouped.iter_rows(named=True):
+                        category = str(row["category"])
+                        quality_values = row["quality_sample"]
+                        if quality_values:
+                            category_quality_distributions[category] = quality_values
+
+                    result = {
+                        "transcript_counts": transcript_counts,
+                        "total_transcripts": df.height,
+                        "unique_features": len(transcript_counts),
+                        "category_quality_distributions": category_quality_distributions,
+                    }
+                else:
+                    # For single-sample scenarios, store full data
+                    grouped = df.group_by("feature_name").agg(
+                        [
+                            pl.col("qv").value_counts().alias("qv_counts"),
+                            pl.col("qv").mean().alias("mean_qv"),
+                            pl.len().alias("transcript_count"),
+                        ]
+                    )
+
+                    quality_dist = {}
+                    transcript_counts = {}
+
+                    for row in grouped.iter_rows(named=True):
+                        feature = str(row["feature_name"])
+                        qv_counts_df = row["qv_counts"]
+                        transcript_counts[feature] = {"count": row["transcript_count"], "mean_quality": row["mean_qv"]}
+
+                        # Convert to dictionary format for backward compatibility
+                        qv_dict = {}
+                        for qv_row in qv_counts_df:
+                            qv_dict[qv_row["qv"]] = qv_row["count"]
+                        quality_dist[feature] = qv_dict
+
+                    result = {
+                        "quality_distribution": quality_dist,
+                        "transcript_counts": transcript_counts,
+                        "total_transcripts": df.height,
+                        "unique_features": len(quality_dist),
+                    }
+
+                # Handle optional columns with fallback (skip in minimal mode to save memory)
+                if not minimal and "codeword_category" in df.columns:
+                    category_grouped = df.group_by("codeword_category").agg(pl.col("qv").alias("qv_values"))
+                    category_quality_distributions = {}
+                    for row in category_grouped.iter_rows(named=True):
+                        category = str(row["codeword_category"])
+                        qv_values = row["qv_values"]
+                        if len(qv_values) > 2000:
+                            sampled_qv = qv_values.sample(2000, seed=42)
+                            category_quality_distributions[category] = sampled_qv.to_list()
+                        else:
+                            category_quality_distributions[category] = qv_values.to_list()
+                    result["category_quality_distributions"] = category_quality_distributions
+
+                if not minimal and "is_gene" in df.columns:
+                    gene_grouped = df.group_by("feature_name").agg(
+                        [pl.len().alias("molecule_count"), pl.col("is_gene").first().alias("is_gene")]
+                    )
+                    molecules_per_gene = {}
+                    for row in gene_grouped.iter_rows(named=True):
+                        feature_name = str(row["feature_name"])
+                        molecules_per_gene[feature_name] = {
+                            "count": row["molecule_count"],
+                            "is_gene": row["is_gene"],
+                        }
+                    result["molecules_per_gene"] = molecules_per_gene
+
+                if not minimal and "fov_name" in df.columns:
+                    fov_grouped = df.group_by("fov_name").agg(
+                        [
+                            pl.col("qv").mean().alias("mean_qv"),
+                            pl.col("qv").median().alias("median_qv"),
+                            pl.col("qv").std().alias("std_qv"),
+                            pl.len().alias("transcript_count"),
+                        ]
+                    )
+                    fov_quality_stats = {}
+                    for row in fov_grouped.iter_rows(named=True):
+                        fov_name = str(row["fov_name"])
+                        fov_quality_stats[fov_name] = {
+                            "mean_quality": row["mean_qv"],
+                            "median_quality": row["median_qv"],
+                            "std_quality": row["std_qv"],
+                            "transcript_count": row["transcript_count"],
+                        }
+                    result["fov_quality_stats"] = fov_quality_stats
+
+                    # Sample FoV distributions
+                    fov_dist_grouped = df.group_by("fov_name").agg(pl.col("qv").alias("qv_values"))
+                    fov_quality_distributions = {}
+                    for row in fov_dist_grouped.iter_rows(named=True):
+                        fov_name = str(row["fov_name"])
+                        qv_values = row["qv_values"]
+                        if len(qv_values) > 1000:
+                            sampled_qv = qv_values.sample(1000, seed=42)
+                            fov_quality_distributions[fov_name] = sampled_qv.to_list()
+                        else:
+                            fov_quality_distributions[fov_name] = qv_values.to_list()
+                    result["fov_quality_distributions"] = fov_quality_distributions
+
+                return result
+
+            except Exception as fallback_error:
+                log.error(f"Both lazy and direct processing failed for {file_path}: {fallback_error}")
+                return None
 
         # Add codeword category quality analysis if codeword_category column is present
-        if "codeword_category" in df.columns:
+        if "codeword_category" in schema:
+            # Group by codeword_category and sample QV values efficiently for violin plots
+            category_grouped = (
+                df_lazy.group_by("codeword_category")
+                .agg(pl.col("qv").sample(n=2000, seed=42, with_replacement=True).alias("qv_sample"))
+                .collect()
+            )
+
             category_quality_distributions = {}
-
-            # Group by codeword_category and collect QV values for violin plots
-            category_grouped = df.group_by("codeword_category").agg(pl.col("qv").alias("qv_values"))
-
             for row in category_grouped.iter_rows(named=True):
                 category = str(row["codeword_category"])
-                qv_values = row["qv_values"]
-
-                # Store quality values for violin plots (sample if too many)
-                if hasattr(qv_values, "to_list"):
-                    # It's a polars Series
-                    if len(qv_values) > 2000:  # Sample more for better violin plot
-                        sampled_qv = qv_values.sample(2000, seed=42)
-                        category_quality_distributions[category] = sampled_qv.to_list()
-                    else:
-                        category_quality_distributions[category] = qv_values.to_list()
-                else:
-                    # It's already a Python list
-                    if len(qv_values) > 2000:
-                        import random
-
-                        random.seed(42)
-                        sampled_qv = random.sample(qv_values, 2000)
-                        category_quality_distributions[category] = sampled_qv
-                    else:
-                        category_quality_distributions[category] = qv_values
+                qv_values = row["qv_sample"]
+                category_quality_distributions[category] = (
+                    qv_values.to_list() if hasattr(qv_values, "to_list") else qv_values
+                )
 
             result["category_quality_distributions"] = category_quality_distributions
 
         # Add molecules per gene analysis if feature_name and is_gene columns are present
-        if "feature_name" in df.columns and "is_gene" in df.columns:
-            # Group by feature_name and calculate molecule count per gene
-            molecules_per_gene = {}
-
-            gene_grouped = df.group_by("feature_name").agg(
-                [pl.len().alias("molecule_count"), pl.col("is_gene").first().alias("is_gene")]
+        if "is_gene" in schema:
+            gene_grouped = (
+                df_lazy.group_by("feature_name")
+                .agg([pl.len().alias("molecule_count"), pl.col("is_gene").first().alias("is_gene")])
+                .collect()
             )
 
+            molecules_per_gene = {}
             for row in gene_grouped.iter_rows(named=True):
                 feature_name = str(row["feature_name"])
                 molecule_count = row["molecule_count"]
                 is_gene = row["is_gene"]
-
                 molecules_per_gene[feature_name] = {"count": molecule_count, "is_gene": is_gene}
 
             result["molecules_per_gene"] = molecules_per_gene
 
         # Add FoV quality analysis if fov_name column is present
-        if "fov_name" in df.columns:
-            fov_quality_stats = {}
-            fov_quality_distributions = {}
-
-            # Group by FoV and calculate quality stats and distributions
-            fov_grouped = df.group_by("fov_name").agg(
-                [
-                    pl.col("qv").mean().alias("mean_qv"),
-                    pl.col("qv").median().alias("median_qv"),
-                    pl.col("qv").std().alias("std_qv"),
-                    pl.col("qv").alias("qv_values"),  # Keep all QV values for distributions
-                    pl.len().alias("transcript_count"),
-                ]
+        if "fov_name" in schema:
+            # Group by FoV and calculate quality stats efficiently
+            fov_stats_grouped = (
+                df_lazy.group_by("fov_name")
+                .agg(
+                    [
+                        pl.col("qv").mean().alias("mean_qv"),
+                        pl.col("qv").median().alias("median_qv"),
+                        pl.col("qv").std().alias("std_qv"),
+                        pl.len().alias("transcript_count"),
+                    ]
+                )
+                .collect()
             )
 
-            for row in fov_grouped.iter_rows(named=True):
+            fov_quality_stats = {}
+            for row in fov_stats_grouped.iter_rows(named=True):
                 fov_name = str(row["fov_name"])
                 fov_quality_stats[fov_name] = {
                     "mean_quality": row["mean_qv"],
@@ -718,27 +933,20 @@ class MultiqcModule(BaseMultiqcModule):
                     "transcript_count": row["transcript_count"],
                 }
 
-                # Store quality values for violin plots (limit to reasonable sample size)
-                qv_values = row["qv_values"]
+            # Separate query for sampled QV distributions to avoid memory issues
+            fov_dist_grouped = (
+                df_lazy.group_by("fov_name")
+                .agg(pl.col("qv").sample(n=1000, seed=42, with_replacement=True).alias("qv_sample"))
+                .collect()
+            )
 
-                # Check if it's a polars Series or already a list
-                if hasattr(qv_values, "to_list"):
-                    # It's a polars Series
-                    if len(qv_values) > 1000:
-                        sampled_qv = qv_values.sample(1000, seed=42)
-                        fov_quality_distributions[fov_name] = sampled_qv.to_list()
-                    else:
-                        fov_quality_distributions[fov_name] = qv_values.to_list()
-                else:
-                    # It's already a Python list
-                    if len(qv_values) > 1000:
-                        import random
-
-                        random.seed(42)
-                        sampled_qv = random.sample(qv_values, 1000)
-                        fov_quality_distributions[fov_name] = sampled_qv
-                    else:
-                        fov_quality_distributions[fov_name] = qv_values
+            fov_quality_distributions = {}
+            for row in fov_dist_grouped.iter_rows(named=True):
+                fov_name = str(row["fov_name"])
+                qv_values = row["qv_sample"]
+                fov_quality_distributions[fov_name] = (
+                    qv_values.to_list() if hasattr(qv_values, "to_list") else qv_values
+                )
 
             result["fov_quality_stats"] = fov_quality_stats
             result["fov_quality_distributions"] = fov_quality_distributions
@@ -749,8 +957,10 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse Xenium cells.parquet file to extract cell-level metrics"""
         file_path = Path(f["root"]) / f["fn"]
 
+        # Due to persistent Polars panic issues with certain parquet files,
+        # we'll use direct reading approach for cells files
+        log.info(f"Processing cells parquet file with direct read: {file_path}")
         try:
-            # Read cells parquet file
             df = pl.read_parquet(file_path)
 
             # Check for required columns
@@ -761,7 +971,7 @@ class MultiqcModule(BaseMultiqcModule):
                 return None
 
             # Calculate summary statistics
-            cell_stats = {}
+            cell_stats = {"total_cells": df.height}
 
             # Cell area distribution stats
             cell_area_stats = df["cell_area"].drop_nulls()
@@ -775,6 +985,11 @@ class MultiqcModule(BaseMultiqcModule):
                         "cell_area_max": cell_area_stats.max(),
                     }
                 )
+                # Sample cell area values for distribution plots
+                if cell_area_stats.len() > 10000:
+                    cell_stats["cell_area_values"] = cell_area_stats.sample(10000, seed=42).to_list()
+                else:
+                    cell_stats["cell_area_values"] = cell_area_stats.to_list()
 
             # Nucleus area distribution stats
             nucleus_area_stats = df["nucleus_area"].drop_nulls()
@@ -801,23 +1016,30 @@ class MultiqcModule(BaseMultiqcModule):
                             "nucleus_to_cell_area_ratio_median": ratio.median(),
                         }
                     )
-
-                    # Store nucleus-to-cell area ratio values for distribution plots
-                    # Sample up to 10000 cells for distribution plotting to avoid memory issues
-                    max_cells_for_plot = min(10000, ratio.len())
-                    if ratio.len() > max_cells_for_plot:
-                        # Random sample
-                        ratio_values = ratio.sample(max_cells_for_plot, seed=42).to_list()
+                    # Sample ratio values for distribution plots
+                    if ratio.len() > 10000:
+                        cell_stats["nucleus_to_cell_area_ratio_values"] = ratio.sample(10000, seed=42).to_list()
                     else:
-                        ratio_values = ratio.to_list()
-                    cell_stats["nucleus_to_cell_area_ratio_values"] = ratio_values
+                        cell_stats["nucleus_to_cell_area_ratio_values"] = ratio.to_list()
 
-            # Total cell count
-            cell_stats["total_cells"] = df.height
+            # Store transcript counts per cell (total_counts) for distribution plots
+            total_counts_stats = df["total_counts"].drop_nulls()
+            if total_counts_stats.len() > 0:
+                if total_counts_stats.len() > 10000:
+                    cell_stats["transcript_counts_values"] = total_counts_stats.sample(10000, seed=42).to_list()
+                else:
+                    cell_stats["transcript_counts_values"] = total_counts_stats.to_list()
+
+            # Store detected genes per cell (transcript_counts) for distribution plots
+            detected_genes_stats = df["transcript_counts"].drop_nulls()
+            if detected_genes_stats.len() > 0:
+                if detected_genes_stats.len() > 10000:
+                    cell_stats["detected_genes_values"] = detected_genes_stats.sample(10000, seed=42).to_list()
+                else:
+                    cell_stats["detected_genes_values"] = detected_genes_stats.to_list()
 
             # Add nucleus RNA fraction if nucleus_count is available
             if "nucleus_count" in df.columns:
-                # Filter out cells with zero total counts to avoid division by zero
                 valid_cells = df.filter(pl.col("total_counts") > 0)
                 if valid_cells.height > 0:
                     nucleus_rna_fraction = valid_cells["nucleus_count"] / valid_cells["total_counts"]
@@ -827,56 +1049,18 @@ class MultiqcModule(BaseMultiqcModule):
                             "nucleus_rna_fraction_median": nucleus_rna_fraction.median(),
                         }
                     )
-
-                    # Store nucleus RNA fraction values for distribution plots
-                    # Sample up to 10000 cells for distribution plotting to avoid memory issues
-                    max_cells_for_plot = min(10000, nucleus_rna_fraction.len())
-                    if nucleus_rna_fraction.len() > max_cells_for_plot:
-                        # Random sample
-                        nucleus_fraction_values = nucleus_rna_fraction.sample(max_cells_for_plot, seed=42).to_list()
+                    # Sample nucleus fraction values for distribution plots
+                    if nucleus_rna_fraction.len() > 10000:
+                        cell_stats["nucleus_rna_fraction_values"] = nucleus_rna_fraction.sample(
+                            10000, seed=42
+                        ).to_list()
                     else:
-                        nucleus_fraction_values = nucleus_rna_fraction.to_list()
-                    cell_stats["nucleus_rna_fraction_values"] = nucleus_fraction_values
-
-            # Store cell area values for distribution plots
-            if cell_area_stats.len() > 0:
-                # Sample up to 10000 cells for distribution plotting to avoid memory issues
-                max_cells_for_plot = min(10000, cell_area_stats.len())
-                if cell_area_stats.len() > max_cells_for_plot:
-                    # Random sample
-                    cell_area_values = cell_area_stats.sample(max_cells_for_plot, seed=42).to_list()
-                else:
-                    cell_area_values = cell_area_stats.to_list()
-                cell_stats["cell_area_values"] = cell_area_values
-
-            # Store transcript counts per cell (total_counts) for distribution plots
-            total_counts_stats = df["total_counts"].drop_nulls()
-            if total_counts_stats.len() > 0:
-                # Sample up to 10000 cells for distribution plotting to avoid memory issues
-                max_cells_for_plot = min(10000, total_counts_stats.len())
-                if total_counts_stats.len() > max_cells_for_plot:
-                    # Random sample
-                    transcript_counts_values = total_counts_stats.sample(max_cells_for_plot, seed=42).to_list()
-                else:
-                    transcript_counts_values = total_counts_stats.to_list()
-                cell_stats["transcript_counts_values"] = transcript_counts_values
-
-            # Store detected genes per cell (transcript_counts) for distribution plots
-            detected_genes_stats = df["transcript_counts"].drop_nulls()
-            if detected_genes_stats.len() > 0:
-                # Sample up to 10000 cells for distribution plotting to avoid memory issues
-                max_cells_for_plot = min(10000, detected_genes_stats.len())
-                if detected_genes_stats.len() > max_cells_for_plot:
-                    # Random sample
-                    detected_genes_values = detected_genes_stats.sample(max_cells_for_plot, seed=42).to_list()
-                else:
-                    detected_genes_values = detected_genes_stats.to_list()
-                cell_stats["detected_genes_values"] = detected_genes_values
+                        cell_stats["nucleus_rna_fraction_values"] = nucleus_rna_fraction.to_list()
 
             return cell_stats
 
         except Exception as e:
-            log.warning(f"Could not parse cells.parquet file {f['fn']}: {e}")
+            log.error(f"Error processing cells parquet file {file_path}: {e}")
             return None
 
     def check_qc_warnings(self, data_by_sample):
@@ -1123,30 +1307,21 @@ class MultiqcModule(BaseMultiqcModule):
                 and data["cell_area_mean"] is not None
                 and str(data["cell_area_mean"]).lower() != "nan"
             ):
-                try:
-                    plot_data[s_name]["cell_area_mean"] = float(data["cell_area_mean"])
-                except (ValueError, TypeError):
-                    pass
+                plot_data[s_name]["cell_area_mean"] = float(data["cell_area_mean"])
 
             if (
                 "nucleus_area_mean" in data
                 and data["nucleus_area_mean"] is not None
                 and str(data["nucleus_area_mean"]).lower() != "nan"
             ):
-                try:
-                    plot_data[s_name]["nucleus_area_mean"] = float(data["nucleus_area_mean"])
-                except (ValueError, TypeError):
-                    pass
+                plot_data[s_name]["nucleus_area_mean"] = float(data["nucleus_area_mean"])
 
             if (
                 "nucleus_to_cell_area_ratio_mean" in data
                 and data["nucleus_to_cell_area_ratio_mean"] is not None
                 and str(data["nucleus_to_cell_area_ratio_mean"]).lower() != "nan"
             ):
-                try:
-                    plot_data[s_name]["nucleus_to_cell_ratio"] = float(data["nucleus_to_cell_area_ratio_mean"])
-                except (ValueError, TypeError):
-                    pass
+                plot_data[s_name]["nucleus_to_cell_ratio"] = float(data["nucleus_to_cell_area_ratio_mean"])
 
         # Check if we have any data to plot
         has_data = any(bool(sample_data) for sample_data in plot_data.values())
@@ -1190,8 +1365,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_single_sample_area_density(self, cell_data):
         """Create density plot for single sample with mean/median lines"""
+        if not SCIPY_AVAILABLE:
+            log.warning("scipy not available, skipping density plots. Install scipy for enhanced plotting.")
+            return None
+
         import numpy as np
-        from scipy.stats import gaussian_kde
+
+        if SCIPY_AVAILABLE:
+            from scipy.stats import gaussian_kde
 
         cell_areas = cell_data["cell_area_values"]
         if not cell_areas or len(cell_areas) < 10:
@@ -1294,6 +1475,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_single_sample_nucleus_density(self, cell_data):
         """Create density plot for single sample nucleus RNA fractions"""
+        if not SCIPY_AVAILABLE:
+            log.warning("scipy not available, skipping nucleus density plots. Install scipy for enhanced plotting.")
+            return None
+
         import numpy as np
         from scipy import stats
 
@@ -1387,6 +1572,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_single_sample_ratio_density(self, cell_data):
         """Create density plot for single sample nucleus-to-cell area ratios"""
+        if not SCIPY_AVAILABLE:
+            log.warning("scipy not available, skipping plots. Install scipy for enhanced plotting.")
+            return None
+
         import numpy as np
         from scipy import stats
 
@@ -1508,35 +1697,70 @@ class MultiqcModule(BaseMultiqcModule):
         return box.plot(plot_data, config)
 
     def _create_multi_sample_fov_summary(self, transcript_data_by_sample, samples_with_fov):
-        """Create box plot showing quality distributions for each FoV aggregated across all samples"""
-        fov_quality_data = {}
+        """Create heatmap showing median quality per FoV across samples (each FoV as a square)"""
+        # Collect median quality per FoV per sample
+        fov_median_by_sample = {}
+        all_fovs = set()
 
-        # Aggregate quality distributions for each FoV across all samples
         for s_name in samples_with_fov:
             data = transcript_data_by_sample[s_name]
-            if "fov_quality_distributions" in data:
-                fov_distributions = data["fov_quality_distributions"]
-                for fov_name, quality_values in fov_distributions.items():
-                    if fov_name not in fov_quality_data:
-                        fov_quality_data[fov_name] = []
-                    # Add all quality values from this sample's FoV to the aggregated distribution
-                    fov_quality_data[fov_name].extend(quality_values)
+            if "fov_quality_stats" in data:
+                fov_median_by_sample[s_name] = {}
+                fov_stats = data["fov_quality_stats"]
+                for fov_name, stats in fov_stats.items():
+                    median_quality = stats["median_quality"]
+                    if median_quality is not None:
+                        fov_median_by_sample[s_name][fov_name] = median_quality
+                        all_fovs.add(fov_name)
 
-        if not fov_quality_data:
+        if not fov_median_by_sample or not all_fovs:
             return None
 
+        # Sort FoVs naturally (if they have numeric components)
+        sorted_fovs = self._sort_fov_names(list(all_fovs))
+        sorted_samples = sorted(samples_with_fov)
+
+        # Create heatmap data structure - samples as rows, FoVs as columns
+        heatmap_data = {}
+        for sample in sorted_samples:
+            heatmap_data[sample] = {}
+            sample_data = fov_median_by_sample.get(sample, {})
+            for fov in sorted_fovs:
+                heatmap_data[sample][fov] = sample_data.get(fov, None)
+
         config = {
-            "id": "xenium_fov_quality_multi",
-            "title": "Xenium: Transcript quality distribution by field of view (averaged across samples)",
-            "xlab": "Quality Score (QV)",
-            "ylab": "Field of View",
-            "series_label": "fields of view",
-            "sort_by_median": True,  # Use the new core box plot sorting feature
-            "sort_switch_sorted_active": True,  # Start with sorted view active
-            "boxpoints": False,  # Do not show individual data points
+            "id": "xenium_fov_quality_multi_heatmap",
+            "title": "Xenium: Field of View quality heatmap (median QV per FoV)",
+            "xlab": "Field of View",
+            "ylab": "Sample",
+            "zlab": "Median Quality (QV)",
+            "square": False,  # Don't force square cells - allow rectangular for better FoV visibility
+            "colstops": [
+                [20, "#808080"],  # Gray for low quality (QV 20)
+                [25, "#a0a0a0"],  # Light gray
+                [30, "#90EE90"],  # Light green for good quality
+                [35, "#32CD32"],  # Lime green for high quality
+                [40, "#228B22"],  # Forest green for excellent quality
+            ],
+            "min": 15,  # Set minimum to ensure good color range
+            "max": 45,  # Set maximum to ensure good color range
+            "display_values": False,  # Show values in cells
+            "tt_decimals": 1,  # Show 1 decimal place
+            "angled_xticks": True,  # Keep FoV labels angled for better readability
         }
 
-        return box.plot(fov_quality_data, config)
+        return heatmap.plot(heatmap_data, xcats=sorted_fovs, ycats=sorted_samples, pconfig=config)
+
+    def _sort_fov_names(self, fov_names):
+        """Sort FoV names naturally, handling numeric components if present"""
+        import re
+
+        def natural_sort_key(fov_name):
+            # Split on digits to handle natural sorting (e.g., fov_1, fov_2, fov_10)
+            parts = re.split(r"(\d+)", str(fov_name))
+            return [int(part) if part.isdigit() else part.lower() for part in parts]
+
+        return sorted(fov_names, key=natural_sort_key)
 
     def xenium_transcript_category_violin_plot(self, transcript_data_by_sample):
         """Create violin plot showing transcript quality distribution by codeword category"""
@@ -1842,7 +2066,8 @@ class MultiqcModule(BaseMultiqcModule):
             std_log = mad * 1.4826
 
             # Calculate upper bound using quantile
-            from scipy.stats import norm
+            if SCIPY_AVAILABLE:
+                from scipy.stats import norm
 
             z_score = norm.ppf(quantile)
             threshold_log = median_log + z_score * std_log
@@ -1893,7 +2118,9 @@ class MultiqcModule(BaseMultiqcModule):
             s_name, transcript_values = next(iter(samples_with_transcripts.items()))
             try:
                 import numpy as np
-                from scipy.stats import gaussian_kde
+
+                if SCIPY_AVAILABLE:
+                    from scipy.stats import gaussian_kde
 
                 transcript_values = np.array(transcript_values)
                 kde = gaussian_kde(transcript_values)
@@ -1927,7 +2154,9 @@ class MultiqcModule(BaseMultiqcModule):
             s_name, gene_values = next(iter(samples_with_genes.items()))
             try:
                 import numpy as np
-                from scipy.stats import gaussian_kde
+
+                if SCIPY_AVAILABLE:
+                    from scipy.stats import gaussian_kde
 
                 gene_values = np.array(gene_values)
                 kde = gaussian_kde(gene_values)
@@ -2025,7 +2254,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Create kernel density estimation
         try:
             import numpy as np
-            from scipy.stats import gaussian_kde
+
+            if SCIPY_AVAILABLE:
+                from scipy.stats import gaussian_kde
 
             transcript_values = np.array(transcript_values)
             kde = gaussian_kde(transcript_values)
@@ -2116,7 +2347,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Create kernel density estimation
         try:
             import numpy as np
-            from scipy.stats import gaussian_kde
+
+            if SCIPY_AVAILABLE:
+                from scipy.stats import gaussian_kde
 
             gene_values = np.array(gene_values)
             kde = gaussian_kde(gene_values)
