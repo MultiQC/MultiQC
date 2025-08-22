@@ -801,72 +801,63 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Handle optional columns with fallback (skip in minimal mode to save memory)
                 if not minimal and "codeword_category" in df.columns:
-                    try:
-                        category_grouped = df.group_by("codeword_category").agg(pl.col("qv").alias("qv_values"))
-                        category_quality_distributions = {}
-                        for row in category_grouped.iter_rows(named=True):
-                            category = str(row["codeword_category"])
-                            qv_values = row["qv_values"]
-                            if len(qv_values) > 2000:
-                                sampled_qv = qv_values.sample(2000, seed=42)
-                                category_quality_distributions[category] = sampled_qv.to_list()
-                            else:
-                                category_quality_distributions[category] = qv_values.to_list()
-                        result["category_quality_distributions"] = category_quality_distributions
-                    except Exception:
-                        log.warning("Could not process codeword category quality data")
+                    category_grouped = df.group_by("codeword_category").agg(pl.col("qv").alias("qv_values"))
+                    category_quality_distributions = {}
+                    for row in category_grouped.iter_rows(named=True):
+                        category = str(row["codeword_category"])
+                        qv_values = row["qv_values"]
+                        if len(qv_values) > 2000:
+                            sampled_qv = qv_values.sample(2000, seed=42)
+                            category_quality_distributions[category] = sampled_qv.to_list()
+                        else:
+                            category_quality_distributions[category] = qv_values.to_list()
+                    result["category_quality_distributions"] = category_quality_distributions
 
                 if not minimal and "is_gene" in df.columns:
-                    try:
-                        gene_grouped = df.group_by("feature_name").agg(
-                            [pl.len().alias("molecule_count"), pl.col("is_gene").first().alias("is_gene")]
-                        )
-                        molecules_per_gene = {}
-                        for row in gene_grouped.iter_rows(named=True):
-                            feature_name = str(row["feature_name"])
-                            molecules_per_gene[feature_name] = {
-                                "count": row["molecule_count"],
-                                "is_gene": row["is_gene"],
-                            }
-                        result["molecules_per_gene"] = molecules_per_gene
-                    except Exception:
-                        log.warning("Could not process molecules per gene data")
+                    gene_grouped = df.group_by("feature_name").agg(
+                        [pl.len().alias("molecule_count"), pl.col("is_gene").first().alias("is_gene")]
+                    )
+                    molecules_per_gene = {}
+                    for row in gene_grouped.iter_rows(named=True):
+                        feature_name = str(row["feature_name"])
+                        molecules_per_gene[feature_name] = {
+                            "count": row["molecule_count"],
+                            "is_gene": row["is_gene"],
+                        }
+                    result["molecules_per_gene"] = molecules_per_gene
 
                 if not minimal and "fov_name" in df.columns:
-                    try:
-                        fov_grouped = df.group_by("fov_name").agg(
-                            [
-                                pl.col("qv").mean().alias("mean_qv"),
-                                pl.col("qv").median().alias("median_qv"),
-                                pl.col("qv").std().alias("std_qv"),
-                                pl.len().alias("transcript_count"),
-                            ]
-                        )
-                        fov_quality_stats = {}
-                        for row in fov_grouped.iter_rows(named=True):
-                            fov_name = str(row["fov_name"])
-                            fov_quality_stats[fov_name] = {
-                                "mean_quality": row["mean_qv"],
-                                "median_quality": row["median_qv"],
-                                "std_quality": row["std_qv"],
-                                "transcript_count": row["transcript_count"],
-                            }
-                        result["fov_quality_stats"] = fov_quality_stats
+                    fov_grouped = df.group_by("fov_name").agg(
+                        [
+                            pl.col("qv").mean().alias("mean_qv"),
+                            pl.col("qv").median().alias("median_qv"),
+                            pl.col("qv").std().alias("std_qv"),
+                            pl.len().alias("transcript_count"),
+                        ]
+                    )
+                    fov_quality_stats = {}
+                    for row in fov_grouped.iter_rows(named=True):
+                        fov_name = str(row["fov_name"])
+                        fov_quality_stats[fov_name] = {
+                            "mean_quality": row["mean_qv"],
+                            "median_quality": row["median_qv"],
+                            "std_quality": row["std_qv"],
+                            "transcript_count": row["transcript_count"],
+                        }
+                    result["fov_quality_stats"] = fov_quality_stats
 
-                        # Sample FoV distributions
-                        fov_dist_grouped = df.group_by("fov_name").agg(pl.col("qv").alias("qv_values"))
-                        fov_quality_distributions = {}
-                        for row in fov_dist_grouped.iter_rows(named=True):
-                            fov_name = str(row["fov_name"])
-                            qv_values = row["qv_values"]
-                            if len(qv_values) > 1000:
-                                sampled_qv = qv_values.sample(1000, seed=42)
-                                fov_quality_distributions[fov_name] = sampled_qv.to_list()
-                            else:
-                                fov_quality_distributions[fov_name] = qv_values.to_list()
-                        result["fov_quality_distributions"] = fov_quality_distributions
-                    except Exception:
-                        log.warning("Could not process FoV quality data")
+                    # Sample FoV distributions
+                    fov_dist_grouped = df.group_by("fov_name").agg(pl.col("qv").alias("qv_values"))
+                    fov_quality_distributions = {}
+                    for row in fov_dist_grouped.iter_rows(named=True):
+                        fov_name = str(row["fov_name"])
+                        qv_values = row["qv_values"]
+                        if len(qv_values) > 1000:
+                            sampled_qv = qv_values.sample(1000, seed=42)
+                            fov_quality_distributions[fov_name] = sampled_qv.to_list()
+                        else:
+                            fov_quality_distributions[fov_name] = qv_values.to_list()
+                    result["fov_quality_distributions"] = fov_quality_distributions
 
                 return result
 
@@ -876,92 +867,83 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add codeword category quality analysis if codeword_category column is present
         if "codeword_category" in schema:
-            try:
-                # Group by codeword_category and sample QV values efficiently for violin plots
-                category_grouped = (
-                    df_lazy.group_by("codeword_category")
-                    .agg(pl.col("qv").sample(n=2000, seed=42, with_replacement=True).alias("qv_sample"))
-                    .collect(streaming=True)
+            # Group by codeword_category and sample QV values efficiently for violin plots
+            category_grouped = (
+                df_lazy.group_by("codeword_category")
+                .agg(pl.col("qv").sample(n=2000, seed=42, with_replacement=True).alias("qv_sample"))
+                .collect()
+            )
+
+            category_quality_distributions = {}
+            for row in category_grouped.iter_rows(named=True):
+                category = str(row["codeword_category"])
+                qv_values = row["qv_sample"]
+                category_quality_distributions[category] = (
+                    qv_values.to_list() if hasattr(qv_values, "to_list") else qv_values
                 )
 
-                category_quality_distributions = {}
-                for row in category_grouped.iter_rows(named=True):
-                    category = str(row["codeword_category"])
-                    qv_values = row["qv_sample"]
-                    category_quality_distributions[category] = (
-                        qv_values.to_list() if hasattr(qv_values, "to_list") else qv_values
-                    )
-
-                result["category_quality_distributions"] = category_quality_distributions
-            except Exception as e:
-                log.warning(f"Could not process codeword category quality data: {e}")
+            result["category_quality_distributions"] = category_quality_distributions
 
         # Add molecules per gene analysis if feature_name and is_gene columns are present
         if "is_gene" in schema:
-            try:
-                gene_grouped = (
-                    df_lazy.group_by("feature_name")
-                    .agg([pl.len().alias("molecule_count"), pl.col("is_gene").first().alias("is_gene")])
-                    .collect(streaming=True)
-                )
+            gene_grouped = (
+                df_lazy.group_by("feature_name")
+                .agg([pl.len().alias("molecule_count"), pl.col("is_gene").first().alias("is_gene")])
+                .collect()
+            )
 
-                molecules_per_gene = {}
-                for row in gene_grouped.iter_rows(named=True):
-                    feature_name = str(row["feature_name"])
-                    molecule_count = row["molecule_count"]
-                    is_gene = row["is_gene"]
-                    molecules_per_gene[feature_name] = {"count": molecule_count, "is_gene": is_gene}
+            molecules_per_gene = {}
+            for row in gene_grouped.iter_rows(named=True):
+                feature_name = str(row["feature_name"])
+                molecule_count = row["molecule_count"]
+                is_gene = row["is_gene"]
+                molecules_per_gene[feature_name] = {"count": molecule_count, "is_gene": is_gene}
 
-                result["molecules_per_gene"] = molecules_per_gene
-            except Exception as e:
-                log.warning(f"Could not process molecules per gene data: {e}")
+            result["molecules_per_gene"] = molecules_per_gene
 
         # Add FoV quality analysis if fov_name column is present
         if "fov_name" in schema:
-            try:
-                # Group by FoV and calculate quality stats efficiently
-                fov_stats_grouped = (
-                    df_lazy.group_by("fov_name")
-                    .agg(
-                        [
-                            pl.col("qv").mean().alias("mean_qv"),
-                            pl.col("qv").median().alias("median_qv"),
-                            pl.col("qv").std().alias("std_qv"),
-                            pl.len().alias("transcript_count"),
-                        ]
-                    )
-                    .collect(streaming=True)
+            # Group by FoV and calculate quality stats efficiently
+            fov_stats_grouped = (
+                df_lazy.group_by("fov_name")
+                .agg(
+                    [
+                        pl.col("qv").mean().alias("mean_qv"),
+                        pl.col("qv").median().alias("median_qv"),
+                        pl.col("qv").std().alias("std_qv"),
+                        pl.len().alias("transcript_count"),
+                    ]
+                )
+                .collect()
+            )
+
+            fov_quality_stats = {}
+            for row in fov_stats_grouped.iter_rows(named=True):
+                fov_name = str(row["fov_name"])
+                fov_quality_stats[fov_name] = {
+                    "mean_quality": row["mean_qv"],
+                    "median_quality": row["median_qv"],
+                    "std_quality": row["std_qv"],
+                    "transcript_count": row["transcript_count"],
+                }
+
+            # Separate query for sampled QV distributions to avoid memory issues
+            fov_dist_grouped = (
+                df_lazy.group_by("fov_name")
+                .agg(pl.col("qv").sample(n=1000, seed=42, with_replacement=True).alias("qv_sample"))
+                .collect()
+            )
+
+            fov_quality_distributions = {}
+            for row in fov_dist_grouped.iter_rows(named=True):
+                fov_name = str(row["fov_name"])
+                qv_values = row["qv_sample"]
+                fov_quality_distributions[fov_name] = (
+                    qv_values.to_list() if hasattr(qv_values, "to_list") else qv_values
                 )
 
-                fov_quality_stats = {}
-                for row in fov_stats_grouped.iter_rows(named=True):
-                    fov_name = str(row["fov_name"])
-                    fov_quality_stats[fov_name] = {
-                        "mean_quality": row["mean_qv"],
-                        "median_quality": row["median_qv"],
-                        "std_quality": row["std_qv"],
-                        "transcript_count": row["transcript_count"],
-                    }
-
-                # Separate query for sampled QV distributions to avoid memory issues
-                fov_dist_grouped = (
-                    df_lazy.group_by("fov_name")
-                    .agg(pl.col("qv").sample(n=1000, seed=42, with_replacement=True).alias("qv_sample"))
-                    .collect(streaming=True)
-                )
-
-                fov_quality_distributions = {}
-                for row in fov_dist_grouped.iter_rows(named=True):
-                    fov_name = str(row["fov_name"])
-                    qv_values = row["qv_sample"]
-                    fov_quality_distributions[fov_name] = (
-                        qv_values.to_list() if hasattr(qv_values, "to_list") else qv_values
-                    )
-
-                result["fov_quality_stats"] = fov_quality_stats
-                result["fov_quality_distributions"] = fov_quality_distributions
-            except Exception as e:
-                log.warning(f"Could not process FoV quality data: {e}")
+            result["fov_quality_stats"] = fov_quality_stats
+            result["fov_quality_distributions"] = fov_quality_distributions
 
         return result
 
@@ -1319,30 +1301,21 @@ class MultiqcModule(BaseMultiqcModule):
                 and data["cell_area_mean"] is not None
                 and str(data["cell_area_mean"]).lower() != "nan"
             ):
-                try:
-                    plot_data[s_name]["cell_area_mean"] = float(data["cell_area_mean"])
-                except (ValueError, TypeError):
-                    pass
+                plot_data[s_name]["cell_area_mean"] = float(data["cell_area_mean"])
 
             if (
                 "nucleus_area_mean" in data
                 and data["nucleus_area_mean"] is not None
                 and str(data["nucleus_area_mean"]).lower() != "nan"
             ):
-                try:
-                    plot_data[s_name]["nucleus_area_mean"] = float(data["nucleus_area_mean"])
-                except (ValueError, TypeError):
-                    pass
+                plot_data[s_name]["nucleus_area_mean"] = float(data["nucleus_area_mean"])
 
             if (
                 "nucleus_to_cell_area_ratio_mean" in data
                 and data["nucleus_to_cell_area_ratio_mean"] is not None
                 and str(data["nucleus_to_cell_area_ratio_mean"]).lower() != "nan"
             ):
-                try:
-                    plot_data[s_name]["nucleus_to_cell_ratio"] = float(data["nucleus_to_cell_area_ratio_mean"])
-                except (ValueError, TypeError):
-                    pass
+                plot_data[s_name]["nucleus_to_cell_ratio"] = float(data["nucleus_to_cell_area_ratio_mean"])
 
         # Check if we have any data to plot
         has_data = any(bool(sample_data) for sample_data in plot_data.values())
