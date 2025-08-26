@@ -1,0 +1,50 @@
+import logging
+import os
+import json 
+
+from multiqc.base_module import BaseMultiqcModule
+
+log = logging.getLogger(__name__) 
+#Logger
+
+class MultiqcModule(BaseMultiqcModule):
+    def __init__(self):
+        super(MultiqcModule, self).__init__(
+            name = "Deacon",
+            anchor = "deacon", 
+            href = "https://github.com/bede/deacon",
+            info = "Search and depletion of FASTA/FASTQ files and streams using accelerated minimizer matching."
+
+    )
+        
+        self.deacon_data = dict() 
+        #self. verhindert lokale Variable -> für betrachtetes Objekt gültig, nicht für def __init__
+        for f in self.find_log_files("deacon", filehandles = True): #filhandles = True sagt, dass Multiqc Dateien öffnen soll
+            sample_name = self.clean_s_name(f["s_name"], f) #f["s_name"] -> Samplename; self.clean_s_name -> normiert den Namen(Dateipfade entfernen etc.), verhindert, dass zwei Dateien gleichen Namen haben
+            try:
+                data = json.load(f["f"]) #json-Inhalt der Datei wird gelesen und soll geparsed werden; f["f"] -> offenes file
+            except Exception as e: #Fehler werden abgefangen in e
+                log.error("failed to parse data from {f['f']} : {e}") #{e} -> liefert Fehlermeldung
+                continue
+
+            #Metriken extrahieren 
+            self.deacon_data[sample_name] = {
+                "k" : data.get("k"), #k-mer Länge?
+                "w" : data.get("w"), #Window Größe?
+                "abs_threshold" : data.get("abs_threshold"),
+                "rel_threshold" : data.get("rel_threshold"),
+                "prefix_length" : data.get("prefix_length"),
+                "deplete" : data.get("deplete"),
+                "rename" : data.get("rename"),
+                "seqs_in" : data.get("seqs_in"),
+                "seqs_out" : data.get("seqs_out"),
+                "seqs_out_proportion" : data.get("seqs_out_proportion"),
+                "seqs_removed" : data.get("seqs_removed"),
+                "seqs_removed_proportion" : data.get("seqs_removed_proportion"),
+                "bp_in" : data.get("bp_in"),
+                "bp_out" : data.get("bp_out"),
+                "bp_out_proportion" : data.get("bp_out_proportion"),
+                "time" : data.get("time"),
+                "seqs_per_second" : data.get("seqs_per_second"),
+                "bp_per_second" : data.get("bp_per_second")
+            }
