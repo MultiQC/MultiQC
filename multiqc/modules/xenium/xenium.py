@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 import polars as pl
-from memory_profiler import profile
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table
@@ -335,9 +334,9 @@ class MultiqcModule(BaseMultiqcModule):
             nucleus_plot = self.xenium_nucleus_rna_fraction_plot(cells_data_by_sample)
             if nucleus_plot:
                 self.add_section(
-                    name="Distribution of Fractions of Molecules in Nucleus per Cell",
+                    name="Fraction of Transcripts in Nucleus",
                     anchor="xenium-nucleus-rna-fraction",
-                    description="Distribution of nucleus RNA molecule fractions across cells",
+                    description="Distribution of the fraction of transcripts found in the nucleus across cells",
                     helptext="""
                     This plot shows the distribution of the fraction of RNA molecules located in the nucleus versus cytoplasm for each cell:
                     
@@ -366,7 +365,7 @@ class MultiqcModule(BaseMultiqcModule):
             ratio_plot = self.xenium_nucleus_cell_area_ratio_plot(cells_data_by_sample)
             if ratio_plot:
                 self.add_section(
-                    name="Nucleus to cell area distribution",
+                    name="Nucleus to Cell Area",
                     anchor="xenium-nucleus-cell-area-ratio",
                     description="Distribution of nucleus-to-cell area ratios across cells",
                     helptext="""
@@ -402,7 +401,7 @@ class MultiqcModule(BaseMultiqcModule):
             combined_plot = self.xenium_cell_distributions_combined_plot(cells_data_by_sample)
             if combined_plot:
                 self.add_section(
-                    name="Cell Distribution Analysis",
+                    name="Distribution of Transcripts/Genes per Cell",
                     anchor="xenium-cell-distributions",
                     description="Distribution of transcripts and detected genes per cell",
                     helptext="""
@@ -623,7 +622,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Could not parse experiment.xenium file {f['fn']}: {e}")
             return {}
 
-    @profile
     def parse_transcripts_parquet(self, f) -> Optional[Dict]:
         """Parse Xenium transcripts.parquet file with optimized lazy dataframe processing
 
@@ -1505,8 +1503,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_nucleus_rna_fraction_single",
-            "title": "Xenium: Distribution of Fractions of Molecules in Nucleus per Cell",
-            "xlab": "Fraction of molecules in nucleus per cell",
+            "title": "Xenium: Fraction of Transcripts in Nucleus",
+            "xlab": "Distribution of the fraction of transcripts found in the nucleus across cells",
             "ylab": "Density",
             "data_labels": [
                 {"name": "Density", "ylab": "Density"},
@@ -1558,9 +1556,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_nucleus_rna_fraction_multi",
-            "title": "Xenium: Distribution of Fractions of Molecules in Nucleus per Cell",
-            "ylab": "Fraction of molecules in nucleus per cell",
-            "xlab": "Sample",
+            "title": "Xenium: Fraction of Transcripts in Nucleus",
+            "xlab": "Distribution of the fraction of transcripts found in the nucleus across cells",
             "boxpoints": False,
         }
 
@@ -1674,8 +1671,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "xenium_nucleus_cell_area_ratio_multi",
             "title": "Xenium: Nucleus to Cell Area Distribution",
-            "ylab": "Nucleus-to-cell area ratio",
-            "xlab": "Sample",
+            "xlab": "Nucleus-to-cell area ratio",
             "boxpoints": False,
         }
 
@@ -2328,7 +2324,7 @@ class MultiqcModule(BaseMultiqcModule):
             for s_name, transcript_values in samples_with_transcripts.items():
                 transcripts_data[s_name] = transcript_values
             plot_data.append(transcripts_data)
-            data_labels.append({"name": "Transcripts per cell", "ylab": "Number of transcripts per cell"})
+            data_labels.append({"name": "Transcripts per Cell", "ylab": "Transcripts per cell"})
 
         # Add detected genes per cell data
         if samples_with_genes:
@@ -2336,11 +2332,11 @@ class MultiqcModule(BaseMultiqcModule):
             for s_name, gene_values in samples_with_genes.items():
                 genes_data[s_name] = gene_values
             plot_data.append(genes_data)
-            data_labels.append({"name": "Detected genes per cell", "ylab": "Number of detected genes per cell"})
+            data_labels.append({"name": "Detected Genes per Cell", "ylab": "Detected genes per cell"})
 
         config = {
             "id": "xenium_cell_distributions_combined",
-            "title": "Xenium: Cell Distribution Analysis",
+            "title": "Xenium: Distribution of Transcripts/Genes per Cell",
             "boxpoints": False,
             "data_labels": data_labels,
         }
