@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
     :::
 
     You can customise the patterns used for finding these files in your
-    MultiQC config (see [Module search patterns](#module-search-patterns)).
+    MultiQC config see [Module search patterns](../getting_started/config#module-search-patterns).
     The below code shows the default file patterns:
 
     ```yaml
