@@ -65,9 +65,7 @@ class BoxPlot extends Plot {
         return (isInt ? val : parseFloat(val.toFixed(2))) + suffix;
       };
 
-      prompt += `|${anonymizeSampleName(sample)}|${fmt(min)}|${fmt(q1)}|${fmt(median)}|${fmt(q3)}|${fmt(max)}|${fmt(
-        mean,
-      )}|\n`;
+      prompt += `|${sample}|${fmt(min)}|${fmt(q1)}|${fmt(median)}|${fmt(q3)}|${fmt(max)}|${fmt(mean)}|\n`;
     });
 
     return prompt;
