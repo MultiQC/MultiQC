@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Tuple
 import polars as pl
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table
+from multiqc.plots import bargraph, box, linegraph, scatter, table
 from multiqc.plots.table_object import ColumnDict, TableConfig
 
 # Try importing scipy, fallback gracefully if not available
@@ -457,46 +457,37 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_section(
                     name="Field of View Quality",
                     anchor="xenium-fov-quality",
-                    description="Transcript quality distribution by Field of View (FoV)",
+                    description="Field of View quality distribution across QV ranges",
                     helptext="""
-                    This plot shows transcript quality across different imaging fields (FoVs - Fields of View):
+                    This plot shows the distribution of Field of View (FoV) quality across different quality ranges:
                     
                     **What is a Field of View?**
                     * Each FoV represents one microscope imaging area/tile
                     * Large tissue sections are imaged as multiple overlapping FoVs
                     * FoVs are systematically captured in a grid pattern across the tissue
                     
-                    **Plot types:**
-                    * **Single sample**: Box plots showing quality distributions per FoV (median, quartiles, outliers)
-                    * **Multiple samples**: Heatmap showing median quality per FoV across samples (each FoV as a square)
+                    **Plot interpretation:**
+                    * **X-axis**: Quality ranges (Low to Excellent QV ranges)
+                    * **Y-axis**: Number of Fields of View in each quality range
+                    * **Colors**: Color-coded by quality level (grey=poor, green=excellent)
+                    * **Bars**: Each sample shown as separate colored bars for comparison
                     
-                    **Single sample box plot interpretation:**
-                    * **Box boundaries**: 25th and 75th percentiles (Q1 and Q3)
-                    * **Center line**: Median quality score
-                    * **Whiskers**: Extend to 1.5 × IQR or the most extreme data point
-                    * **Points**: Individual transcript quality scores (outliers or small datasets)
-                    
-                    **Multi-sample heatmap interpretation:**
-                    * **Gray squares**: Low quality FoVs (QV < 25)
-                    * **Light green squares**: Good quality FoVs (QV 25-35) 
-                    * **Dark green squares**: Excellent quality FoVs (QV > 35)
-                    * **Values shown**: Median quality value (QV) for each FoV
-                    * **Rows**: Samples, **Columns**: Field of View IDs
+                    **Quality ranges:**
+                    * **Low (QV < 20)**: Poor imaging quality - investigate issues (dark grey)
+                    * **Poor (QV 20-25)**: Below optimal quality - may need attention (light grey)
+                    * **Fair (QV 25-30)**: Acceptable quality (lighter grey)
+                    * **Good (QV 30-35)**: Good imaging quality (light green)
+                    * **Excellent (QV ≥ 35)**: Optimal imaging quality (bright green)
                     
                     **What to look for:**
-                    * **Consistent quality** across FoVs (similar QV values around 30-40)
-                    * **No systematic patterns**: Random variation is normal, systematic gradients are not
-                    * **Outlier FoVs**: Any FoV consistently poor across samples (<20 QV)
-                    
-                    **Quality thresholds:**
-                    * QV >30: Excellent imaging quality (dark green)
-                    * QV 20-30: Good quality (light green)
-                    * QV <20: Poor quality (gray), investigate issues
+                    * **Good distribution**: Most FoVs should be in "Good" or "Excellent" ranges
+                    * **Few poor FoVs**: Minimal counts in "Low" and "Poor" ranges
+                    * **Sample consistency**: Similar distributions across samples
                     
                     **Troubleshooting:**
-                    * Specific low-quality FoVs: Focus/illumination issues, debris, tissue damage
+                    * Many low-quality FoVs: Focus/illumination issues, debris, tissue damage
+                    * Sample inconsistency: Processing or storage differences
                     * Edge effects: FoVs at tissue edges often have lower quality
-                    * Systematic gradients: Temperature, timing, or optical alignment issues
                     """,
                     plot=fov_plot,
                 )
@@ -1675,10 +1666,9 @@ class MultiqcModule(BaseMultiqcModule):
         return box.plot(data, config)
 
     def xenium_fov_quality_plot(self, transcript_data_by_sample):
-        """Create heatmap showing median quality per FoV across samples (each FoV as a square)"""
+        """Create bar plot showing FoV count distribution across QV ranges"""
         # Collect median quality per FoV per sample
         fov_median_by_sample = {}
-        all_fovs = set()
 
         for s_name, data in transcript_data_by_sample.items():
             data = transcript_data_by_sample[s_name]
@@ -1689,45 +1679,69 @@ class MultiqcModule(BaseMultiqcModule):
                     median_quality = stats["median_quality"]
                     if median_quality is not None:
                         fov_median_by_sample[s_name][fov_name] = median_quality
-                        all_fovs.add(fov_name)
 
-        if not fov_median_by_sample or not all_fovs:
+        if not fov_median_by_sample:
             return None
 
-        # Sort FoVs naturally (if they have numeric components)
-        sorted_fovs = self._sort_fov_names(list(all_fovs))
-        sorted_samples = sorted(fov_median_by_sample.keys())
+        # Define QV ranges (ordered high to low for display)
+        qv_ranges = [
+            ("Excellent (QV ≥ 35)", 35, float("inf")),
+            ("Good (QV 30-35)", 30, 35),
+            ("Fair (QV 25-30)", 25, 30),
+            ("Poor (QV 20-25)", 20, 25),
+            ("Low (QV < 20)", 0, 20),
+        ]
 
-        # Create heatmap data structure - samples as rows, FoVs as columns
-        heatmap_data = {}
-        for sample in sorted_samples:
-            heatmap_data[sample] = {}
-            sample_data = fov_median_by_sample.get(sample, {})
-            for fov in sorted_fovs:
-                heatmap_data[sample][fov] = sample_data.get(fov, None)
+        # Create bar plot data - count FoVs in each QV range per sample
+        bar_data = {}
+        for sample_name, fov_qualities in fov_median_by_sample.items():
+            bar_data[sample_name] = {}
+
+            # Initialize counts for each range
+            for range_name, _, _ in qv_ranges:
+                bar_data[sample_name][range_name] = 0
+
+            # Count FoVs in each range
+            for fov_name, quality in fov_qualities.items():
+                for range_name, min_qv, max_qv in qv_ranges:
+                    if min_qv <= quality < max_qv:
+                        bar_data[sample_name][range_name] += 1
+                        break
 
         config = {
-            "id": "xenium_fov_quality_multi_heatmap",
-            "title": "Xenium: Field of View Quality (median QV per FoV)",
-            "xlab": "Field of View",
-            "ylab": "Sample",
-            "zlab": "Median Quality (QV)",
-            "square": False,  # Don't force square cells - allow rectangular for better FoV visibility
-            "colstops": [
-                [20, "#808080"],  # Gray for low quality (QV 20)
-                [25, "#a0a0a0"],  # Light gray
-                [30, "#90EE90"],  # Light green for good quality
-                [35, "#32CD32"],  # Lime green for high quality
-                [40, "#228B22"],  # Forest green for excellent quality
-            ],
-            "min": 15,  # Set minimum to ensure good color range
-            "max": 45,  # Set maximum to ensure good color range
-            "display_values": False,  # Show values in cells
-            "tt_decimals": 1,  # Show 1 decimal place
-            "angled_xticks": True,  # Keep FoV labels angled for better readability
+            "id": "xenium_fov_quality_ranges",
+            "title": "Xenium: Field of View Quality Distribution",
+            "xlab": "Quality Range",
+            "ylab": "Number of Fields of View",
+            "cpswitch_c_active": True,
+            "use_legend": True,
         }
 
-        return heatmap.plot(heatmap_data, xcats=sorted_fovs, ycats=sorted_samples, pconfig=config)
+        # Define categories with colors (grey-to-green gradient, ordered high to low)
+        cats = {
+            "Excellent (QV ≥ 35)": {
+                "name": "Excellent (QV ≥ 35)",
+                "color": "#32CD32",  # Bright green for excellent quality
+            },
+            "Good (QV 30-35)": {
+                "name": "Good (QV 30-35)",
+                "color": "#90EE90",  # Light green for good quality
+            },
+            "Fair (QV 25-30)": {
+                "name": "Fair (QV 25-30)",
+                "color": "#c0c0c0",  # Lighter gray for fair quality
+            },
+            "Poor (QV 20-25)": {
+                "name": "Poor (QV 20-25)",
+                "color": "#a0a0a0",  # Light gray for poor quality
+            },
+            "Low (QV < 20)": {
+                "name": "Low (QV < 20)",
+                "color": "#808080",  # Gray for low quality
+            },
+        }
+
+        return bargraph.plot(bar_data, cats, config)
 
     def _sort_fov_names(self, fov_names):
         """Sort FoV names naturally, handling numeric components if present"""
@@ -2077,7 +2091,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle transcripts per cell data
         if samples_with_transcripts:
-            s_name, transcript_values = next(iter(samples_with_transcripts.items()))
+            _, transcript_values = next(iter(samples_with_transcripts.items()))
             try:
                 import numpy as np
 
@@ -2157,7 +2171,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle detected genes per cell data
         if samples_with_genes:
-            s_name, gene_values = next(iter(samples_with_genes.items()))
+            _, gene_values = next(iter(samples_with_genes.items()))
             try:
                 import numpy as np
 
