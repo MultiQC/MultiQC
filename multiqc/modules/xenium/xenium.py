@@ -1679,26 +1679,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def xenium_fov_quality_plot(self, transcript_data_by_sample):
         """Create adaptive FoV quality plot - violin plots for single sample, summary for multiple"""
-        fov_data_found = False
-        samples_with_fov = []
-
-        # Check which samples have FoV data
-        for s_name, data in transcript_data_by_sample.items():
-            if "fov_quality_distributions" in data and "fov_quality_stats" in data:
-                fov_data_found = True
-                samples_with_fov.append(s_name)
-
-        if not fov_data_found:
-            return None
-
-        num_samples = len(samples_with_fov)
-
-        if num_samples == 1:
+        if len(transcript_data_by_sample) == 1:
             # Single sample: Create violin plot showing quality distributions per FoV
-            return self._create_single_sample_fov_box(transcript_data_by_sample[samples_with_fov[0]])
+            return self._create_single_sample_fov_box(
+                transcript_data_by_sample[list(transcript_data_by_sample.keys())[0]]
+            )
         else:
             # Multiple samples: Create bar plot showing mean quality per FoV across samples
-            return self._create_multi_sample_fov_summary(transcript_data_by_sample, samples_with_fov)
+            return self._create_multi_sample_fov_summary(transcript_data_by_sample)
 
     def _create_single_sample_fov_box(self, sample_data):
         """Create box plot showing quality distributions for single sample FoVs"""
@@ -1729,13 +1717,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         return box.plot(plot_data, config)
 
-    def _create_multi_sample_fov_summary(self, transcript_data_by_sample, samples_with_fov):
+    def _create_multi_sample_fov_summary(self, transcript_data_by_sample):
         """Create heatmap showing median quality per FoV across samples (each FoV as a square)"""
         # Collect median quality per FoV per sample
         fov_median_by_sample = {}
         all_fovs = set()
 
-        for s_name in samples_with_fov:
+        for s_name, data in transcript_data_by_sample.items():
             data = transcript_data_by_sample[s_name]
             if "fov_quality_stats" in data:
                 fov_median_by_sample[s_name] = {}
@@ -1751,7 +1739,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Sort FoVs naturally (if they have numeric components)
         sorted_fovs = self._sort_fov_names(list(all_fovs))
-        sorted_samples = sorted(samples_with_fov)
+        sorted_samples = sorted(fov_median_by_sample.keys())
 
         # Create heatmap data structure - samples as rows, FoVs as columns
         heatmap_data = {}
@@ -1763,7 +1751,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_fov_quality_multi_heatmap",
-            "title": "Xenium: Field of View Quality Heatmap (median QV per FoV)",
+            "title": "Xenium: Field of View Quality (median QV per FoV)",
             "xlab": "Field of View",
             "ylab": "Sample",
             "zlab": "Median Quality (QV)",

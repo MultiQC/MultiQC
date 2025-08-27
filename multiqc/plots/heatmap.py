@@ -521,7 +521,6 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             n_series_per_dataset=[max_n_rows],
             n_samples_per_dataset=[n_samples],
             defer_render_if_large=False,  # We hide samples on large heatmaps, so no need to defer render
-            flat_if_very_large=True,  # However, the data is still embedded into the HTML, and we don't want the report size to inflate
         )
 
         model.layout.update(
