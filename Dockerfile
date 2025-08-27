@@ -26,8 +26,8 @@ RUN \
     echo "Docker build log: Run apt-get update" 1>&2 && \
     apt-get update -y -qq \
     && \
-    echo "Docker build log: Install procps" 1>&2 && \
-    apt-get install -y -qq procps && \
+    echo "Docker build log: Install procps and pandoc" 1>&2 && \
+    apt-get install -y -qq procps pandoc && \
     echo "Docker build log: Clean apt cache" 1>&2 && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean -y && \
