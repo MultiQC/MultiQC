@@ -141,18 +141,18 @@ class MultiqcModule(BaseMultiqcModule):
         for sample_name, cell_data in cells_data_by_sample.items():
             if sample_name in data_by_sample:
                 # Add cell area metrics to existing sample data
-                data_by_sample[sample_name]["cell_area_mean"] = cell_data["cell_area_mean"]
-                data_by_sample[sample_name]["nucleus_area_mean"] = cell_data["nucleus_area_mean"]
-                data_by_sample[sample_name]["nucleus_to_cell_area_ratio_mean"] = cell_data[
-                    "nucleus_to_cell_area_ratio_mean"
+                data_by_sample[sample_name]["cell_area_median"] = cell_data["cell_area_median"]
+                data_by_sample[sample_name]["nucleus_area_median"] = cell_data["nucleus_area_median"]
+                data_by_sample[sample_name]["nucleus_to_cell_area_ratio_median"] = cell_data[
+                    "nucleus_to_cell_area_ratio_median"
                 ]
             elif cell_data:
                 # Create new sample entry if only cell data exists
                 data_by_sample[sample_name] = {}
-                data_by_sample[sample_name]["cell_area_mean"] = cell_data["cell_area_mean"]
-                data_by_sample[sample_name]["nucleus_area_mean"] = cell_data["nucleus_area_mean"]
-                data_by_sample[sample_name]["nucleus_to_cell_area_ratio_mean"] = cell_data[
-                    "nucleus_to_cell_area_ratio_mean"
+                data_by_sample[sample_name]["cell_area_median"] = cell_data["cell_area_median"]
+                data_by_sample[sample_name]["nucleus_area_median"] = cell_data["nucleus_area_median"]
+                data_by_sample[sample_name]["nucleus_to_cell_area_ratio_median"] = cell_data[
+                    "nucleus_to_cell_area_ratio_median"
                 ]
 
         # Use transcript count from parquet file if missing from JSON
@@ -205,6 +205,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add transcript quality section if transcript data is available
         if transcript_data_by_sample:
+            if len(transcript_data_by_sample) == 1:
+                plot = self.xenium_transcript_quality_scatter_plot(transcript_data_by_sample)
+            else:
+                plot = self.xenium_transcript_quality_table(transcript_data_by_sample)
+
             self.add_section(
                 name="Transcript Quality Summary",
                 anchor="xenium-transcript-quality",
@@ -235,15 +240,15 @@ class MultiqcModule(BaseMultiqcModule):
                 * High standard deviations may indicate heterogeneous quality within a category
                 * Missing values (empty cells) indicate no transcripts found for that category in that sample
                 """,
-                plot=self.xenium_transcript_quality_table(transcript_data_by_sample),
+                plot=plot,
             )
 
-            # Add molecules per gene distribution if available
-            molecules_plot = self.xenium_molecules_per_gene_plot(transcript_data_by_sample)
-            if molecules_plot is not None:
+            # Add transcripts per gene distribution if available
+            transcripts_per_gene_plot = self.xenium_transcripts_per_gene_plot(transcript_data_by_sample)
+            if transcripts_per_gene_plot is not None:
                 self.add_section(
-                    name="Molecules per Gene Distribution",
-                    anchor="xenium-molecules-per-gene",
+                    name="Distribution of Transcripts",
+                    anchor="xenium-transcripts-per-gene",
                     description="Distribution of transcript counts per gene",
                     helptext="""
                     This histogram shows the distribution of transcript counts per gene across all samples:
@@ -270,7 +275,7 @@ class MultiqcModule(BaseMultiqcModule):
                     * Clear separation between gene and non-gene distributions
                     * Absence of unusual spikes or gaps in the distribution
                     """,
-                    plot=molecules_plot,
+                    plot=transcripts_per_gene_plot,
                 )
 
         # Add cell area distribution section if cells data is available
@@ -309,7 +314,7 @@ class MultiqcModule(BaseMultiqcModule):
             nucleus_plot = self.xenium_nucleus_rna_fraction_plot(cells_data_by_sample)
             if nucleus_plot:
                 self.add_section(
-                    name="Distribution of fractions of molecules in nucleus per cell",
+                    name="Distribution of Fractions of Molecules in Nucleus per Cell",
                     anchor="xenium-nucleus-rna-fraction",
                     description="Distribution of nucleus RNA molecule fractions across cells",
                     helptext="""
@@ -657,33 +662,47 @@ class MultiqcModule(BaseMultiqcModule):
             "total_transcripts": total_transcripts,
         }
 
-        # # Add molecules per gene analysis if is_gene column is present
-        # if "is_gene" in schema:
-        #     gene_stats = (
-        #         df_lazy.filter(pl.col("is_gene"))
-        #         .group_by("feature_name")
-        #         .agg([pl.len().alias("molecule_count")])
-        #         .with_columns(
-        #             [
-        #                 pl.col("molecule_count").log10().alias("log_count")  # Pre-compute for histograms
-        #             ]
-        #         )
-        #         .select(
-        #             [
-        #                 pl.col("molecule_count").mean().alias("mean_molecules"),
-        #                 pl.col("molecule_count").std().alias("std_molecules"),
-        #                 pl.col("log_count").alias("log_counts"),
-        #             ]
-        #         )
-        #         .collect()
-        #     )
+        # Add feature-level transcript counts for scatter plot (single sample case)
+        # This is needed for the transcript quality scatter plot
+        feature_stats = (
+            df_lazy.group_by("feature_name")
+            .agg(
+                [
+                    pl.col("qv").mean().alias("mean_quality"),
+                    pl.col("qv").count().alias("count"),
+                ]
+            )
+            .collect()
+        )
 
-        #     if not gene_stats.is_empty():
-        #         result["gene_molecule_stats"] = {
-        #             "mean_molecules": gene_stats["mean_molecules"][0],
-        #             "std_molecules": gene_stats["std_molecules"][0] or 0.0,
-        #             "log_counts": gene_stats["log_counts"].to_list(),
-        #         }
+        # Create transcript_counts dictionary for scatter plot
+        transcript_counts = {}
+        for row in feature_stats.iter_rows(named=True):
+            feature_name = str(row["feature_name"])
+            transcript_counts[feature_name] = {
+                "count": row["count"],
+                "mean_quality": row["mean_quality"],
+            }
+
+        result["transcript_counts"] = transcript_counts
+
+        # Add transcripts per gene analysis if is_gene column is present
+        if "is_gene" in schema:
+            transcript_stats = (
+                df_lazy.group_by("feature_name")
+                .agg([pl.len().alias("transcript_count"), pl.col("is_gene").first().alias("is_gene")])
+                .collect()
+            )
+
+            if not transcript_stats.is_empty():
+                molecules_per_gene = {}
+                for row in transcript_stats.iter_rows(named=True):
+                    feature_name = str(row["feature_name"])
+                    molecules_per_gene[feature_name] = {
+                        "count": row["transcript_count"],  # This is transcript count per gene
+                        "is_gene": row["is_gene"],
+                    }
+                result["molecules_per_gene"] = molecules_per_gene
 
         # Add FoV quality analysis if fov_name column is present
         if "fov_name" in schema:
@@ -1003,7 +1022,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.0f}",
             },
             "fraction_transcripts_assigned": {
-                "title": "% Transcripts Assigned",
+                "title": "Transcripts Assigned",
                 "description": "Fraction of transcripts assigned to cells",
                 "suffix": "%",
                 "scale": "RdYlGn",
@@ -1016,29 +1035,31 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.0f}",
             },
             "fraction_transcripts_decoded_q20": {
-                "title": "% Q20+ Transcripts",
+                "title": "Q20+ Transcripts",
                 "description": "Fraction of transcripts decoded with Q20+",
                 "suffix": "%",
                 "scale": "Greens",
                 "modify": lambda x: x * 100.0,
             },
-            "cell_area_mean": {
-                "title": "Cell Area",
-                "description": "Mean cell area",
+            "cell_area_median": {
+                "title": "Median Cell",
+                "description": "Median cell area",
                 "suffix": " μm²",
                 "scale": "Blues",
                 "format": "{:,.1f}",
+                "shared_key": "xenium_cell_area",
             },
-            "nucleus_area_mean": {
-                "title": "Nucleus Area",
-                "description": "Mean nucleus area",
+            "nucleus_area_median": {
+                "title": "Median Nucleus",
+                "description": "Median nucleus area",
                 "suffix": " μm²",
                 "scale": "Oranges",
                 "format": "{:,.1f}",
+                "shared_key": "xenium_cell_area",
             },
-            "nucleus_to_cell_area_ratio_mean": {
-                "title": "Nucleus/Cell Ratio",
-                "description": "Mean nucleus to cell area ratio",
+            "nucleus_to_cell_area_ratio_median": {
+                "title": "Nucleus/Cell",
+                "description": "Median nucleus to cell area ratio",
                 "scale": "Greens",
                 "format": "{:.3f}",
                 "max": 1.0,
@@ -1065,22 +1086,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return bargraph.plot(data_by_sample, keys, config)
 
-    def xenium_transcript_quality_plot(self, transcript_data_by_sample):
-        """Create adaptive transcript quality plots based on sample count"""
-        if not transcript_data_by_sample:
-            return None
-
-        num_samples = len(transcript_data_by_sample)
-
-        if num_samples == 1:
-            # Single sample: scatter plot of transcript count vs mean quality
-            return self._create_single_sample_scatter(transcript_data_by_sample)
-
-        else:
-            # Many samples: violin plots with tabs for categories
-            return self._create_multi_sample(transcript_data_by_sample)
-
-    def _create_single_sample_scatter(self, transcript_data_by_sample):
+    def xenium_transcript_quality_scatter_plot(self, transcript_data_by_sample):
         """Create scatter plot - handles both single and multiple samples"""
         # Prepare scatter data - create individual points for each gene from all samples
         plot_data: Dict[str, Any] = {}
@@ -1142,11 +1148,14 @@ class MultiqcModule(BaseMultiqcModule):
             "title": title,
             "xlab": "Total transcripts per gene",
             "ylab": "Mean calibrated quality of gene transcripts",
-            "marker_size": 5,
+            "marker_size": 4,
+            "marker_line_width": 0,
+            "opacity": 0.75,
             "series_label": "transcripts",
             "xlog": True,
             "showlegend": True,
             "groups": category_order,
+            "flat_if_very_large": False,
         }
 
         return scatter.plot(final_plot_data, config)
@@ -1451,6 +1460,22 @@ class MultiqcModule(BaseMultiqcModule):
             x_range = (bin_edges[:-1] + bin_edges[1:]) / 2
             density = hist
 
+        # Trim long tail: find cutoff where all values above X are below 1% of max
+        max_density = np.max(density)
+        threshold = max_density * 0.01  # 1% of max
+
+        # Find the last point where density is above threshold
+        last_significant_point = len(density) - 1
+        for i in range(len(density) - 1, -1, -1):
+            if density[i] >= threshold:
+                last_significant_point = i
+                break
+
+        # Trim the data to only include up to the last significant point
+        if last_significant_point < len(density) - 1:
+            x_range = x_range[: last_significant_point + 1]
+            density = density[: last_significant_point + 1]
+
         # Create the density plot data
         data = {}
         data["Nucleus RNA Fraction Density"] = {str(x): y for x, y in zip(x_range, density)}
@@ -1459,7 +1484,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_nucleus_rna_fraction_single",
-            "title": "Distribution of fractions of molecules in nucleus per cell",
+            "title": "Xenium: Distribution of Fractions of Molecules in Nucleus per Cell",
             "xlab": "Fraction of molecules in nucleus per cell",
             "ylab": "Density",
             "data_labels": [
@@ -1468,6 +1493,26 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Add vertical lines for mean and median
+        mean_fraction = np.nanmean(nucleus_fractions)
+        median_fraction = np.nanmedian(nucleus_fractions)
+
+        config["x_lines"] = [
+            {
+                "value": float(mean_fraction),
+                "color": "red",
+                "dash": "dash",
+                "width": 2,
+                "label": f"Mean ({mean_fraction:.3f})",
+            },
+            {
+                "value": float(median_fraction),
+                "color": "green",
+                "dash": "dash",
+                "width": 2,
+                "label": f"Median ({median_fraction:.3f})",
+            },
+        ]
+
         plot = linegraph.plot(data, config)
 
         return plot
@@ -1492,7 +1537,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_nucleus_rna_fraction_multi",
-            "title": "Distribution of fractions of molecules in nucleus per cell",
+            "title": "Xenium: Distribution of Fractions of Molecules in Nucleus per Cell",
             "ylab": "Fraction of molecules in nucleus per cell",
             "xlab": "Sample",
             "boxpoints": False,
@@ -1554,13 +1599,34 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_nucleus_cell_area_ratio_single",
-            "title": "Nucleus to cell area distribution",
+            "title": "Xenium: Nucleus to Cell Area Distribution",
             "xlab": "Nucleus-to-cell area ratio",
             "ylab": "Density",
             "data_labels": [
                 {"name": "Density", "ylab": "Density"},
             ],
         }
+
+        # Add vertical lines for mean and median
+        mean_ratio = np.nanmean(ratio_values)
+        median_ratio = np.nanmedian(ratio_values)
+
+        config["x_lines"] = [
+            {
+                "value": float(mean_ratio),
+                "color": "red",
+                "dash": "dash",
+                "width": 2,
+                "label": f"Mean ({mean_ratio:.3f})",
+            },
+            {
+                "value": float(median_ratio),
+                "color": "green",
+                "dash": "dash",
+                "width": 2,
+                "label": f"Median ({median_ratio:.3f})",
+            },
+        ]
 
         plot = linegraph.plot(data, config)
 
@@ -1586,7 +1652,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_nucleus_cell_area_ratio_multi",
-            "title": "Nucleus to cell area distribution",
+            "title": "Xenium: Nucleus to Cell Area Distribution",
             "ylab": "Nucleus-to-cell area ratio",
             "xlab": "Sample",
             "boxpoints": False,
@@ -1635,7 +1701,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_fov_quality_single",
-            "title": "Xenium: transcript quality distribution by field of view",
+            "title": "Xenium: Transcript Quality by Field of View",
             "xlab": "Field of view",
             "series_label": "fields of view",
             "ylab": "Quality value (QV)",
@@ -1680,7 +1746,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         config = {
             "id": "xenium_fov_quality_multi_heatmap",
-            "title": "Xenium: Field of View quality heatmap (median QV per FoV)",
+            "title": "Xenium: Field of View Quality Heatmap (median QV per FoV)",
             "xlab": "Field of View",
             "ylab": "Sample",
             "zlab": "Median Quality (QV)",
@@ -1712,8 +1778,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         return sorted(fov_names, key=natural_sort_key)
 
-    def xenium_molecules_per_gene_plot(self, transcript_data_by_sample):
-        """Create histogram plot showing distribution of molecules per gene with separate lines per sample"""
+    def xenium_transcripts_per_gene_plot(self, transcript_data_by_sample):
+        """Create histogram plot showing distribution of transcripts per gene with separate lines per sample"""
         # Check if any sample has molecules per gene data
         samples_with_molecules = []
         for s_name, data in transcript_data_by_sample.items():
@@ -1763,89 +1829,109 @@ class MultiqcModule(BaseMultiqcModule):
         bins = np.logspace(np.log10(min_count), np.log10(max_count), 50)
         bin_centers = (bins[:-1] + bins[1:]) / 2
 
-        # Check if single sample - handle differently
-        num_samples = len(samples_with_molecules)
+        # Always use multi-sample plot for consistent color-coded representation
+        return self._create_multi_sample_molecules_plot(
+            transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
+        )
 
-        if num_samples == 1:
-            # Single sample: Put both Gene and Non-gene lines on the same plot
-            return self._create_single_sample_molecules_plot(
-                transcript_data_by_sample[samples_with_molecules[0]], bins, bin_centers, n_mols_threshold
-            )
-        else:
-            # Multiple samples: Use tabs for Genes vs Non-genes
-            return self._create_multi_sample_molecules_plot(
-                transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
-            )
+    # def _create_single_sample_molecules_plot(self, sample_data, bins, bin_centers, n_mols_threshold):
+    #     """Create single plot with both Gene and Non-gene lines for single sample"""
+    #     import numpy as np
 
-    def _create_single_sample_molecules_plot(self, sample_data, bins, bin_centers, n_mols_threshold):
-        """Create single plot with both Gene and Non-gene lines for single sample"""
-        import numpy as np
+    #     molecules_data = sample_data["molecules_per_gene"]
 
-        molecules_data = sample_data["molecules_per_gene"]
+    #     # Separate counts by gene type
+    #     gene_counts = []
+    #     non_gene_counts = []
 
-        # Separate counts by gene type
-        gene_counts = []
-        non_gene_counts = []
+    #     for _, gene_info in molecules_data.items():
+    #         count = gene_info["count"]
+    #         if count > 0:
+    #             if gene_info["is_gene"]:
+    #                 gene_counts.append(count)
+    #             else:
+    #                 non_gene_counts.append(count)
 
-        for _, gene_info in molecules_data.items():
-            count = gene_info["count"]
-            if count > 0:
-                if gene_info["is_gene"]:
-                    gene_counts.append(count)
-                else:
-                    non_gene_counts.append(count)
+    #     # Create plot data with both lines
+    #     plot_data = {}
+    #     all_histograms = []
 
-        # Create plot data with both lines
-        plot_data = {}
+    #     if gene_counts:
+    #         gene_hist, _ = np.histogram(gene_counts, bins=bins)
+    #         all_histograms.append(gene_hist)
+    #         gene_line_data = {}
+    #         for i, count in enumerate(gene_hist):
+    #             gene_line_data[float(bin_centers[i])] = int(count)
+    #         plot_data["Genes"] = gene_line_data
 
-        if gene_counts:
-            gene_hist, _ = np.histogram(gene_counts, bins=bins)
-            gene_line_data = {}
-            for i, count in enumerate(gene_hist):
-                gene_line_data[float(bin_centers[i])] = int(count)
-            plot_data["Genes"] = gene_line_data
+    #     if non_gene_counts:
+    #         non_gene_hist, _ = np.histogram(non_gene_counts, bins=bins)
+    #         all_histograms.append(non_gene_hist)
+    #         non_gene_line_data = {}
+    #         for i, count in enumerate(non_gene_hist):
+    #             non_gene_line_data[float(bin_centers[i])] = int(count)
+    #         plot_data["Non-genes"] = non_gene_line_data
 
-        if non_gene_counts:
-            non_gene_hist, _ = np.histogram(non_gene_counts, bins=bins)
-            non_gene_line_data = {}
-            for i, count in enumerate(non_gene_hist):
-                non_gene_line_data[float(bin_centers[i])] = int(count)
-            plot_data["Non-genes"] = non_gene_line_data
+    #     if not plot_data:
+    #         return None
 
-        if not plot_data:
-            return None
+    #     # Trim long tail: find cutoff where all values above X are below 1% of max
+    #     if all_histograms:
+    #         # Get maximum value across all histograms
+    #         max_value = max(np.max(hist) for hist in all_histograms)
+    #         threshold = max_value * 0.01  # 1% of max
 
-        config: Dict[str, Any] = {
-            "id": "xenium_molecules_per_gene",
-            "title": "Xenium: Distribution of Molecules per Gene",
-            "xlab": "Number of molecules per gene",
-            "ylab": "Number of features",
-        }
+    #         # Find the last bin where any histogram has values above threshold
+    #         last_significant_bin = len(bin_centers) - 1
+    #         for i in range(len(bin_centers) - 1, -1, -1):
+    #             if any(hist[i] >= threshold for hist in all_histograms):
+    #                 last_significant_bin = i
+    #                 break
 
-        # Add vertical line for noise threshold if calculated
-        if n_mols_threshold is not None and n_mols_threshold > 0:
-            config["x_lines"] = [
-                {
-                    "value": n_mols_threshold,
-                    "color": "grey",
-                    "dash": "dash",
-                    "width": 1,
-                    "label": f"Noise threshold ({n_mols_threshold:.0f})",
-                }
-            ]
+    #         # Trim the data to only include up to the last significant bin
+    #         if last_significant_bin < len(bin_centers) - 1:
+    #             trimmed_plot_data = {}
+    #             for dataset_name, data in plot_data.items():
+    #                 trimmed_data = {}
+    #                 for i, (x_val, y_val) in enumerate(data.items()):
+    #                     if i <= last_significant_bin:
+    #                         trimmed_data[x_val] = y_val
+    #                 trimmed_plot_data[dataset_name] = trimmed_data
+    #             plot_data = trimmed_plot_data
 
-        return linegraph.plot(plot_data, config)
+    #     config: Dict[str, Any] = {
+    #         "id": "xenium_transcripts_per_gene",
+    #         "title": "Xenium: Distribution of Transcripts",
+    #         "xlab": "Number of transcripts per gene",
+    #         "ylab": "Number of features",
+    #     }
+
+    #     # Add vertical line for noise threshold if calculated
+    #     if n_mols_threshold is not None and n_mols_threshold > 0:
+    #         config["x_lines"] = [
+    #             {
+    #                 "value": n_mols_threshold,
+    #                 "color": "grey",
+    #                 "dash": "dash",
+    #                 "width": 1,
+    #                 "label": f"Noise threshold ({n_mols_threshold:.0f})",
+    #             }
+    #         ]
+
+    #     return linegraph.plot(plot_data, config)
 
     def _create_multi_sample_molecules_plot(
         self, transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
     ):
-        """Create tabbed plot with separate lines per sample for multiple samples"""
+        """Create single plot with all samples shown as separate lines, color-coded by gene type"""
         import numpy as np
 
-        # Create separate datasets for Genes and Non-genes
-        genes_dataset = {}
-        non_genes_dataset = {}
+        from multiqc.plots import linegraph
 
+        plot_data = {}
+        all_histograms = []
+
+        # Process each sample and separate by gene type
         for s_name in samples_with_molecules:
             data = transcript_data_by_sample[s_name]
             molecules_data = data["molecules_per_gene"]
@@ -1862,43 +1948,69 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         sample_non_gene_counts.append(count)
 
-            # Create histograms for this sample
+            # Create histograms for genes (blue lines)
             if sample_gene_counts:
                 gene_hist, _ = np.histogram(sample_gene_counts, bins=bins)
-                gene_data = {}
+                all_histograms.append(gene_hist)
+                gene_line_data = {}
                 for i, count in enumerate(gene_hist):
-                    gene_data[float(bin_centers[i])] = int(count)
-                genes_dataset[s_name] = gene_data
+                    gene_line_data[float(bin_centers[i])] = int(count)
+                plot_data[f"{s_name} (Genes)"] = gene_line_data
 
+            # Create histograms for non-genes (black lines)
             if sample_non_gene_counts:
                 non_gene_hist, _ = np.histogram(sample_non_gene_counts, bins=bins)
-                non_gene_data = {}
+                all_histograms.append(non_gene_hist)
+                non_gene_line_data = {}
                 for i, count in enumerate(non_gene_hist):
-                    non_gene_data[float(bin_centers[i])] = int(count)
-                non_genes_dataset[s_name] = non_gene_data
+                    non_gene_line_data[float(bin_centers[i])] = int(count)
+                plot_data[f"{s_name} (Non-genes)"] = non_gene_line_data
 
-        # Create datasets list for multiple tabs
-        datasets = []
-        data_labels = []
-
-        if genes_dataset:
-            datasets.append(genes_dataset)
-            data_labels.append({"name": "Genes", "ylab": "Number of genes"})
-
-        if non_genes_dataset:
-            datasets.append(non_genes_dataset)
-            data_labels.append({"name": "Non-genes", "ylab": "Number of non-gene features"})
-
-        if not datasets:
+        if not plot_data:
             return None
 
+        # Trim long tail: find cutoff where all values above X are below 1% of max
+        if all_histograms:
+            # Get maximum value across all histograms
+            max_value = max(np.max(hist) for hist in all_histograms)
+            threshold = max_value * 0.01  # 1% of max
+
+            # Find the last bin where any histogram has values above threshold
+            last_significant_bin = len(bin_centers) - 1
+            for i in range(len(bin_centers) - 1, -1, -1):
+                if any(hist[i] >= threshold for hist in all_histograms):
+                    last_significant_bin = i
+                    break
+
+            # Trim the data to only include up to the last significant bin
+            if last_significant_bin < len(bin_centers) - 1:
+                trimmed_plot_data = {}
+                for dataset_name, data in plot_data.items():
+                    trimmed_data = {}
+                    for i, (x_val, y_val) in enumerate(data.items()):
+                        if i <= last_significant_bin:
+                            trimmed_data[x_val] = y_val
+                    trimmed_plot_data[dataset_name] = trimmed_data
+                plot_data = trimmed_plot_data
+
         config: Dict[str, Any] = {
-            "id": "xenium_molecules_per_gene",
-            "title": "Xenium: Distribution of Molecules per Gene",
-            "xlab": "Number of molecules per gene",
-            "ylab": "Number of genes",
-            "data_labels": data_labels,
+            "id": "xenium_transcripts_per_gene",
+            "title": "Xenium: Distribution of Transcripts per Gene",
+            "xlab": "Number of transcripts per gene",
+            "ylab": "Number of features",
+            "series_label": None,
         }
+
+        # Add color configuration for genes (blue) and non-genes (black)
+        colors = {}
+        for dataset_name in plot_data.keys():
+            if "(Genes)" in dataset_name:
+                colors[dataset_name] = "#7cb5ec"  # Blue
+            elif "(Non-genes)" in dataset_name:
+                colors[dataset_name] = "#434348"  # Black
+
+        if colors:
+            config["colors"] = colors
 
         # Add vertical line for noise threshold if calculated
         if n_mols_threshold is not None and n_mols_threshold > 0:
@@ -1912,7 +2024,7 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             ]
 
-        return linegraph.plot(datasets, config)
+        return linegraph.plot(plot_data, config)
 
     def calculate_noise_threshold(self, gene_molecule_counts, quantile=0.99):
         """
@@ -1993,9 +2105,13 @@ class MultiqcModule(BaseMultiqcModule):
             return self._create_multi_sample_combined_boxes(samples_with_transcripts, samples_with_genes)
 
     def _create_single_sample_combined_density(self, samples_with_transcripts, samples_with_genes):
-        """Create single sample combined density plots for transcripts and genes per cell"""
-        plot_data = []
-        data_labels = []
+        """Create single sample combined density plot with transcripts (blue) and genes (grey) on the same plot"""
+        import numpy as np
+
+        from multiqc.plots import linegraph
+
+        plot_data = {}
+        all_x_lines = []
 
         # Handle transcripts per cell data
         if samples_with_transcripts:
@@ -2012,12 +2128,34 @@ class MultiqcModule(BaseMultiqcModule):
                 x_range = np.linspace(x_min, x_max, 1000)
                 density = kde(x_range)
 
-                # Add to plot data with dataset identifier
+                # Add to plot data
                 transcripts_data = {}
                 for x, y in zip(x_range, density):
                     transcripts_data[float(x)] = float(y)
-                plot_data.append({s_name: transcripts_data})
-                data_labels.append({"name": "Transcripts per cell", "xlab": "Number of transcripts per cell"})
+                plot_data["Transcripts per cell"] = transcripts_data
+
+                # Add mean/median lines for transcripts
+                mean_transcripts = np.nanmean(transcript_values)
+                median_transcripts = np.nanmedian(transcript_values)
+
+                all_x_lines.extend(
+                    [
+                        {
+                            "value": float(mean_transcripts),
+                            "color": "#7cb5ec",  # blue
+                            "dash": "dash",
+                            "width": 2,
+                            "label": f"Transcripts Mean ({mean_transcripts:.0f})",
+                        },
+                        {
+                            "value": float(median_transcripts),
+                            "color": "#99c2e8",  # lighter version of blue
+                            "dash": "dash",
+                            "width": 2,
+                            "label": f"Transcripts Median ({median_transcripts:.0f})",
+                        },
+                    ]
+                )
 
             except ImportError:
                 # Fallback to histogram if scipy not available
@@ -2030,8 +2168,30 @@ class MultiqcModule(BaseMultiqcModule):
                 transcripts_data = {}
                 for x, y in zip(bin_centers, hist):
                     transcripts_data[float(x)] = float(y)
-                plot_data.append({s_name: transcripts_data})
-                data_labels.append({"name": "Transcripts per cell", "xlab": "Number of transcripts per cell"})
+                plot_data["Transcripts per cell"] = transcripts_data
+
+                # Add mean/median lines for transcripts
+                mean_transcripts = np.nanmean(transcript_values)
+                median_transcripts = np.nanmedian(transcript_values)
+
+                all_x_lines.extend(
+                    [
+                        {
+                            "value": float(mean_transcripts),
+                            "color": "#7cb5ec",  # blue
+                            "dash": "dash",
+                            "width": 2,
+                            "label": f"Transcripts Mean ({mean_transcripts:.0f})",
+                        },
+                        {
+                            "value": float(median_transcripts),
+                            "color": "#99c2e8",  # lighter version of blue
+                            "dash": "dash",
+                            "width": 2,
+                            "label": f"Transcripts Median ({median_transcripts:.0f})",
+                        },
+                    ]
+                )
 
         # Handle detected genes per cell data
         if samples_with_genes:
@@ -2052,8 +2212,30 @@ class MultiqcModule(BaseMultiqcModule):
                 genes_data = {}
                 for x, y in zip(x_range, density):
                     genes_data[float(x)] = float(y)
-                plot_data.append({s_name: genes_data})
-                data_labels.append({"name": "Detected genes per cell", "xlab": "Number of detected genes per cell"})
+                plot_data["Detected genes per cell"] = genes_data
+
+                # Add mean/median lines for genes
+                mean_genes = np.nanmean(gene_values)
+                median_genes = np.nanmedian(gene_values)
+
+                all_x_lines.extend(
+                    [
+                        {
+                            "value": float(mean_genes),
+                            "color": "#434348",  # black
+                            "dash": "dash",
+                            "width": 2,
+                            "label": f"Genes Mean ({mean_genes:.0f})",
+                        },
+                        {
+                            "value": float(median_genes),
+                            "color": "#888888",  # lighter version of that black
+                            "dash": "dash",
+                            "width": 2,
+                            "label": f"Genes Median ({median_genes:.0f})",
+                        },
+                    ]
+                )
 
             except ImportError:
                 # Fallback to histogram if scipy not available
@@ -2066,16 +2248,49 @@ class MultiqcModule(BaseMultiqcModule):
                 genes_data = {}
                 for x, y in zip(bin_centers, hist):
                     genes_data[float(x)] = float(y)
-                plot_data.append({s_name: genes_data})
-                data_labels.append({"name": "Detected genes per cell", "xlab": "Number of detected genes per cell"})
+                plot_data["Detected genes per cell"] = genes_data
+
+                # Add mean/median lines for genes
+                mean_genes = np.nanmean(gene_values)
+                median_genes = np.nanmedian(gene_values)
+
+                all_x_lines.extend(
+                    [
+                        {
+                            "value": float(mean_genes),
+                            "color": "darkgrey",
+                            "dash": "dash",
+                            "width": 2,
+                            "label": f"Genes Mean ({mean_genes:.0f})",
+                        },
+                        {
+                            "value": float(median_genes),
+                            "color": "lightgrey",
+                            "dash": "dash",
+                            "width": 2,
+                            "label": f"Genes Median ({median_genes:.0f})",
+                        },
+                    ]
+                )
+
+        if not plot_data:
+            return None
 
         config = {
             "id": "xenium_cell_distributions_combined",
             "title": "Xenium: Cell Distribution Analysis",
+            "xlab": "Number per cell",
             "ylab": "Density",
             "smooth_points": 100,
-            "data_labels": data_labels,
         }
+
+        # Add color configuration
+        colors = {"Transcripts per cell": "#7cb5ec", "Detected genes per cell": "#434348"}
+        config["colors"] = colors
+
+        # Add all mean/median lines
+        if all_x_lines:
+            config["x_lines"] = all_x_lines
 
         return linegraph.plot(plot_data, config)
 
@@ -2163,6 +2378,27 @@ class MultiqcModule(BaseMultiqcModule):
                 "smooth_points": 100,
             }
 
+            # Add vertical lines for mean and median
+            mean_transcripts = np.mean(transcript_values)
+            median_transcripts = np.median(transcript_values)
+
+            config["x_lines"] = [
+                {
+                    "value": float(mean_transcripts),
+                    "color": "red",
+                    "dash": "dash",
+                    "width": 2,
+                    "label": f"Mean ({mean_transcripts:.0f})",
+                },
+                {
+                    "value": float(median_transcripts),
+                    "color": "green",
+                    "dash": "dash",
+                    "width": 2,
+                    "label": f"Median ({median_transcripts:.0f})",
+                },
+            ]
+
             return linegraph.plot(plot_data, config)
 
         except ImportError:
@@ -2183,6 +2419,27 @@ class MultiqcModule(BaseMultiqcModule):
                 "xlab": "Number of transcripts per cell",
                 "ylab": "Number of cells",
             }
+
+            # Add vertical lines for mean and median
+            mean_transcripts = np.mean(transcript_values)
+            median_transcripts = np.median(transcript_values)
+
+            config["x_lines"] = [
+                {
+                    "value": float(mean_transcripts),
+                    "color": "red",
+                    "dash": "dash",
+                    "width": 2,
+                    "label": f"Mean ({mean_transcripts:.0f})",
+                },
+                {
+                    "value": float(median_transcripts),
+                    "color": "green",
+                    "dash": "dash",
+                    "width": 2,
+                    "label": f"Median ({median_transcripts:.0f})",
+                },
+            ]
 
             return linegraph.plot(plot_data, config)
 
