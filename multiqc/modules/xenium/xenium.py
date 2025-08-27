@@ -206,42 +206,63 @@ class MultiqcModule(BaseMultiqcModule):
         # Add transcript quality section if transcript data is available
         if transcript_data_by_sample:
             if len(transcript_data_by_sample) == 1:
-                plot = self.xenium_transcript_quality_scatter_plot(transcript_data_by_sample)
+                self.add_section(
+                    name="Transcript Quality",
+                    anchor="xenium-transcript-quality",
+                    description="Transcript quality statistics by gene category",
+                    helptext="""
+                    This scatter plot shows transcript quality statistics broken down by gene category:
+                    
+                    **Gene Categories:**
+                    * **Pre-designed**: Standard genes from Xenium panels  
+                    * **Custom**: User-added custom targets
+                    * **Deprecated**: Genes no longer recommended for use
+                    * **Control**: Control probe sequences (e.g., negative controls)
+                    
+                    **Quality Metrics:**
+                    * **X-axis**: Transcript count per gene category
+                    * **Y-axis**: Quality score distribution for each category
+                    
+                    **Expected patterns:**
+                    * Pre-designed genes typically show the highest counts and quality
+                    * Custom genes may show variable performance depending on probe design
+                    * Control probes should show expected low signal
+                    """,
+                    plot=self.xenium_transcript_quality_scatter_plot(transcript_data_by_sample),
+                )
             else:
-                plot = self.xenium_transcript_quality_table(transcript_data_by_sample)
-
-            self.add_section(
-                name="Transcript Quality Summary",
-                anchor="xenium-transcript-quality",
-                description="Per-sample transcript quality statistics by gene category",
-                helptext="""
-                This table shows transcript quality statistics for each sample, with separate columns for each gene category:
-                
-                **Gene Categories:**
-                * **Pre-designed**: Standard genes from Xenium panels
-                * **Custom**: User-added custom targets  
-                * **Negative Control Probe/Codeword**: Control probes for background estimation
-                * **Genomic Control Probe**: Genomic DNA controls
-                * **Unassigned/Deprecated Codeword**: Other transcript types
-                
-                **Quality Score (QV) Interpretation:**
-                * QV ≥20: High-quality transcripts (≥99% accuracy)
-                * QV 10-20: Medium quality (90-99% accuracy)
-                * QV <10: Low-quality transcripts (<90% accuracy)
-                
-                **Table Layout:**
-                * **Rows**: Individual samples
-                * **Columns**: Mean QV and Standard Deviation for each category
-                * Values show quality statistics computed from all transcripts in that category for each sample
-                
-                **What to look for:**
-                * Pre-designed genes should have high mean QV (>20) across all samples
-                * Consistent quality patterns across samples indicate good data quality
-                * High standard deviations may indicate heterogeneous quality within a category
-                * Missing values (empty cells) indicate no transcripts found for that category in that sample
-                """,
-                plot=plot,
-            )
+                self.add_section(
+                    name="Transcript Quality Summary",
+                    anchor="xenium-transcript-quality",
+                    description="Per-sample transcript quality statistics by gene category",
+                    helptext="""
+                    This table shows transcript quality statistics for each sample, with separate columns for each gene category:
+                    
+                    **Gene Categories:**
+                    * **Pre-designed**: Standard genes from Xenium panels
+                    * **Custom**: User-added custom targets  
+                    * **Negative Control Probe/Codeword**: Control probes for background estimation
+                    * **Genomic Control Probe**: Genomic DNA controls
+                    * **Unassigned/Deprecated Codeword**: Other transcript types
+                    
+                    **Quality Score (QV) Interpretation:**
+                    * QV ≥20: High-quality transcripts (≥99% accuracy)
+                    * QV 10-20: Medium quality (90-99% accuracy)
+                    * QV <10: Low-quality transcripts (<90% accuracy)
+                    
+                    **Table Layout:**
+                    * **Rows**: Individual samples
+                    * **Columns**: Mean QV and Standard Deviation for each category
+                    * Values show quality statistics computed from all transcripts in that category for each sample
+                    
+                    **What to look for:**
+                    * Pre-designed genes should have high mean QV (>20) across all samples
+                    * Consistent quality patterns across samples indicate good data quality
+                    * High standard deviations may indicate heterogeneous quality within a category
+                    * Missing values (empty cells) indicate no transcripts found for that category in that sample
+                    """,
+                    plot=self.xenium_transcript_quality_table(transcript_data_by_sample),
+                )
 
             # Add transcripts per gene distribution if available
             transcripts_per_gene_plot = self.xenium_transcripts_per_gene_plot(transcript_data_by_sample)
