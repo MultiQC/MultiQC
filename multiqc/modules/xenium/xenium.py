@@ -1404,7 +1404,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_multi_sample_area_violins(self, cells_data_by_sample, samples_with_areas):
         """Create box plots for multiple samples - one box per sample"""
-        from multiqc.plots import box
 
         # For box plots, we provide the raw data points grouped by sample
         data = {}
@@ -1538,7 +1537,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_multi_sample_nucleus_boxes(self, cells_data_by_sample, samples_with_nucleus_data):
         """Create box plots for multiple samples - one box per sample"""
-        from multiqc.plots import box
 
         # For box plots, we provide the raw data points grouped by sample
         data = {}
@@ -1652,7 +1650,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_multi_sample_ratio_boxes(self, cells_data_by_sample, samples_with_ratio_data):
         """Create box plots for multiple samples - one box per sample"""
-        from multiqc.plots import box
 
         # For box plots, we provide the raw data points grouped by sample
         data = {}
@@ -1678,46 +1675,6 @@ class MultiqcModule(BaseMultiqcModule):
         return box.plot(data, config)
 
     def xenium_fov_quality_plot(self, transcript_data_by_sample):
-        """Create adaptive FoV quality plot - violin plots for single sample, summary for multiple"""
-        if len(transcript_data_by_sample) == 1:
-            # Single sample: Create violin plot showing quality distributions per FoV
-            return self._create_single_sample_fov_box(
-                transcript_data_by_sample[list(transcript_data_by_sample.keys())[0]]
-            )
-        else:
-            # Multiple samples: Create bar plot showing mean quality per FoV across samples
-            return self._create_multi_sample_fov_summary(transcript_data_by_sample)
-
-    def _create_single_sample_fov_box(self, sample_data):
-        """Create box plot showing quality distributions for single sample FoVs"""
-        if "fov_quality_distributions" not in sample_data:
-            return None
-
-        plot_data = {}
-
-        # Use the raw quality distributions for proper box plots
-        for fov_name, qv_values in sample_data["fov_quality_distributions"].items():
-            if qv_values and len(qv_values) > 0:
-                # Box plot expects the raw data points
-                plot_data[fov_name] = qv_values
-
-        if not plot_data:
-            return None
-
-        config = {
-            "id": "xenium_fov_quality_single",
-            "title": "Xenium: Transcript Quality by Field of View",
-            "xlab": "Field of view",
-            "series_label": "fields of view",
-            "ylab": "Quality value (QV)",
-            "sort_by_median": True,  # Use the new core box plot sorting feature
-            "sort_switch_sorted_active": True,  # Start with sorted view active
-            "boxpoints": False,  # Do not show individual data points
-        }
-
-        return box.plot(plot_data, config)
-
-    def _create_multi_sample_fov_summary(self, transcript_data_by_sample):
         """Create heatmap showing median quality per FoV across samples (each FoV as a square)"""
         # Collect median quality per FoV per sample
         fov_median_by_sample = {}
@@ -2301,7 +2258,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_multi_sample_combined_boxes(self, samples_with_transcripts, samples_with_genes):
         """Create multi-sample combined box plots for transcripts and genes per cell"""
-        from multiqc.plots import box
 
         plot_data = []
         data_labels = []
@@ -2450,7 +2406,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_multi_sample_transcripts_boxes(self, samples_with_transcripts):
         """Create multi-sample transcripts per cell box plots"""
-        from multiqc.plots import box
 
         # Prepare data for box plot
         plot_data = {}
@@ -2543,7 +2498,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_multi_sample_genes_boxes(self, samples_with_genes):
         """Create multi-sample detected genes per cell box plots"""
-        from multiqc.plots import box
 
         # Prepare data for box plot
         plot_data = {}
