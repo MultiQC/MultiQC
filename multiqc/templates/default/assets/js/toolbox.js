@@ -1652,7 +1652,8 @@ $(function () {
   });
 
   // Set initial values from storage or values from Python
-  const providerId = getStoredProvider() || aiConfigProviderId || "seqera";
+  let providerId = getStoredProvider() || aiConfigProviderId;
+  if (!providerId || providerId === "None") providerId = "seqera";
   aiProviderSelect.val(providerId);
   const provider = AI_PROVIDERS[providerId];
   $("#ai-api-key").val(getStoredApiKey(providerId) || "");
