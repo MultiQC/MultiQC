@@ -48,3 +48,29 @@ class MultiqcModule(BaseMultiqcModule):
                 "seqs_per_second" : data.get("seqs_per_second"),
                 "bp_per_second" : data.get("bp_per_second")
             }
+        
+        if len(self.deacon_data) == 0:
+            raise UserWarning("no deacon reports found")
+        
+        self.add_data_table(
+            self.deacon_data,
+            headers = {
+                "k" : {"title" : "k-mer length"},
+                "w" : {"title" : "window size"},
+                "abs_threshold" : {"title" : "absolute threshold"},
+                "rel_threshold" : {"title" : "relative threshold"},
+                "seqs_in" : {"title" : "reads in"},
+                "seqs_out" : {"title" : "reads out"},
+                "seqs_removed" : {"title" : "reads removed"},
+                "seqs_removed_proportion" : {"title" : "reads removed (%)", "formate" : "{:%}"}, #Angabe in Prozent
+                "bp_in" : {"title" : "bp in"},
+                "bp_out" : {"title" : "bp out"},
+                "bp_removed" : {"title" : "bp removed"},
+                "bp_removed_proportion" : {"title" : "bp removed (%)", "formate" : "{:%}"},
+                "time": {"title" : "time (in s)"},
+                "seqs_per_second" : {"title" : "reads/s"},
+                "bp_per_second" : {"title" : "bp/s"}
+            },
+            title = "deacon statistics",
+            description = "statistics parsed from deacon reports"
+        )
