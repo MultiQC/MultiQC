@@ -1,0 +1,4 @@
+deacon:
+  fn : "deacon*.json"
+  contents_re : '"seqs_in"'
+  module : "deacon"
