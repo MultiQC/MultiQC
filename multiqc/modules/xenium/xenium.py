@@ -2142,6 +2142,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Number of transcripts per gene",
             "ylab": "Number of features",
             "series_label": None,
+            "xlog": True,
         }
 
         # Add color configuration for genes (blue) and non-genes (black)
@@ -2470,7 +2471,7 @@ class MultiqcModule(BaseMultiqcModule):
             mean_transcripts = np.mean(transcript_values)
             median_transcripts = np.median(transcript_values)
 
-            config["x_lines"] = self._create_non_overlapping_labels(
+            config["x_lines"] = self._create_non_overlapping_labels(  # type: ignore
                 mean_transcripts,
                 median_transcripts,
                 data_min=np.min(transcript_values),
