@@ -2,6 +2,7 @@ import logging
 import json 
 
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.plots import bargraph #für Balkendiagramm
 
 log = logging.getLogger(__name__) 
 #Logger
@@ -51,6 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.deacon_data) == 0:
             raise UserWarning("no deacon reports found")
         
+        #Tabelle als Bericht mit Metriken
         self.add_data_table(
             self.deacon_data,
             headers = {
@@ -73,3 +75,23 @@ class MultiqcModule(BaseMultiqcModule):
             title = "deacon statistics",
             description = "statistics parsed from deacon reports"
         )
+
+        #Plots hinzufügen -> Reads entfernt
+        plot_data = {}
+        for sample, stats in self.deacon_data.items(): #für alle samples und deren Statistiken
+            if stats.get("seqs_removed_proprtion") is not None: #überprüfen, ob der Report "seqs_removed_proportion" vorhanden ist
+                plot_data[sample] = stats["seqs_removed_proportion"] * 100 #Umwandlung in %
+
+        if len(plot_data) > 0: #wenn samples mit Daten enthalten sind
+            pconfig = { #Plot-Konfiguration, Dictionary; Report-Konfiguration nicht nach default (ohne pconfig wäre default)
+                "id" : "deacon_removed_reads",
+                "title" : "% Reads removed (Deacon)",
+                "ylab" : "% removed"
+            }
+
+            self.add_section( #neue report-Sektion für MultiQC
+                name = "Reads removed",
+                anchor = "deacon_removed_reads",
+                description = "percentage of removed reads per sample",
+                plot = bargraph.plot(plot_data, pconfig) #erzeugt das Balkendiagramm
+            )
