@@ -1614,7 +1614,7 @@ function updatePanel(providerId) {
     }
     // Doing it here again because model depends on provider
     const storedModel = getStoredModelName(providerId);
-    const defaultModel = provider.defaultModel;
+    const defaultModel = provider && provider.defaultModel ? provider.defaultModel : null;
     $("#ai-model").val(storedModel || defaultModel);
 
     if (providerId === "openai") {
@@ -1659,7 +1659,7 @@ $(function () {
 
   let model = getStoredModelName(providerId);
   if (model === null && aiConfigModel !== "None") model = aiConfigModel;
-  if (model === null && provider.defaultModel) model = provider.defaultModel;
+  if (model === null && provider && provider.defaultModel) model = provider.defaultModel;
   $("#ai-model").val(model);
 
   let endpoint = getStoredEndpoint();
