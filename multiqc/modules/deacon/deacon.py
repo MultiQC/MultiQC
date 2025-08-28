@@ -33,9 +33,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "w" : data.get("w"), #Window Größe?
                 "abs_threshold" : data.get("abs_threshold"),
                 "rel_threshold" : data.get("rel_threshold"),
-                "prefix_length" : data.get("prefix_length"),
-                "deplete" : data.get("deplete"),
-                "rename" : data.get("rename"),
+                #"prefix_length" : data.get("prefix_length"),
+                #"deplete" : data.get("deplete"),
+                #"rename" : data.get("rename"),
                 "seqs_in" : data.get("seqs_in"),
                 "seqs_out" : data.get("seqs_out"),
                 "seqs_out_proportion" : data.get("seqs_out_proportion"),
