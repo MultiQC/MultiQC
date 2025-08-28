@@ -1037,6 +1037,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": "%",
                 "scale": "RdYlGn",
                 "modify": lambda x: x * 100.0,
+                "max": 100.0,
             },
             "median_genes_per_cell": {
                 "title": "Genes/Cell",
@@ -1050,6 +1051,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": "%",
                 "scale": "Greens",
                 "modify": lambda x: x * 100.0,
+                "max": 100.0,
             },
             "cell_area_median": {
                 "title": "Median Cell",
