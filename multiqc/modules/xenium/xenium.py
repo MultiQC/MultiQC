@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
+import numpy as np
 import polars as pl
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -492,6 +493,262 @@ class MultiqcModule(BaseMultiqcModule):
                     plot=fov_plot,
                 )
 
+    def _create_non_overlapping_labels(
+        self,
+        mean_value,
+        median_value,
+        mean_color="red",
+        median_color="green",
+        precision=0,
+        suffix="",
+        prefix="",
+        threshold_percent=5,
+        data_min=None,
+        data_max=None,
+    ):
+        """
+        Create vertical line configurations with non-overlapping labels when mean and median are close.
+
+        Args:
+            mean_value: Mean value for vertical line
+            median_value: Median value for vertical line
+            mean_color: Color for mean line (default: "red")
+            median_color: Color for median line (default: "green")
+            precision: Decimal places for value display
+            suffix: Unit suffix to add to labels (e.g., " μm²")
+            prefix: Prefix for labels (e.g., "Transcripts ", "Genes ")
+            threshold_percent: If values are within this percentage of plot range, offset labels
+            data_min: Minimum value of the underlying data range (optional)
+            data_max: Maximum value of the underlying data range (optional)
+
+        Returns:
+            List of line configurations with appropriate label positioning
+        """
+        # Calculate plot range for scale-aware overlap detection
+        if data_min is not None and data_max is not None:
+            plot_range = data_max - data_min
+
+            # If data range is too small, use mean/median range
+            if plot_range == 0:
+                plot_range = max(abs(mean_value - median_value), max(abs(mean_value), abs(median_value), 1))
+        else:
+            # Fall back to using mean/median values to estimate scale
+            plot_range = max(abs(mean_value), abs(median_value), 1)
+
+        # Calculate percentage difference relative to plot scale
+        value_diff = abs(mean_value - median_value)
+        range_percent_diff = (value_diff / plot_range) * 100
+
+        # Format values according to precision
+        if precision == 0:
+            mean_str = f"{mean_value:.0f}"
+            median_str = f"{median_value:.0f}"
+        else:
+            mean_str = f"{mean_value:.{precision}f}"
+            median_str = f"{median_value:.{precision}f}"
+
+        # Create base line configurations
+        lines = [
+            {
+                "value": float(mean_value),
+                "color": mean_color,
+                "dash": "dash",
+                "width": 2,
+                "label": f"{prefix}Mean ({mean_str}{suffix})",
+            },
+            {
+                "value": float(median_value),
+                "color": median_color,
+                "dash": "dash",
+                "width": 2,
+                "label": f"{prefix}Median ({median_str}{suffix})",
+            },
+        ]
+
+        # If values are too close on the plot scale, create labels with non-breaking spaces to offset them horizontally
+        if range_percent_diff < threshold_percent:
+            # Use non-breaking spaces to create horizontal offset
+            space = "&nbsp;" * 30
+            lines[0]["label"] = f"{prefix}Mean ({mean_str}{suffix}){space}"  # Add trailing spaces
+            lines[1]["label"] = f"{space}{prefix}Median ({median_str}{suffix})"  # Add leading spaces
+
+        return lines
+
+    def _create_non_overlapping_combined_lines(
+        self, transcript_values=None, gene_values=None, plot_data=None, threshold_percent=5
+    ):
+        """
+        Create all vertical lines for combined plots with intelligent label positioning to avoid any overlaps.
+
+        Args:
+            transcript_values: Array of transcript values (optional)
+            gene_values: Array of gene values (optional)
+            plot_data: Dictionary of plot data to calculate X-axis range (optional)
+            threshold_percent: Minimum percentage difference relative to plot range
+
+        Returns:
+            List of all line configurations with non-overlapping labels
+        """
+        import numpy as np
+
+        lines = []
+        all_values = []  # Track all line values for overlap detection
+
+        # Collect transcript lines if provided
+        if transcript_values is not None:
+            mean_transcripts = np.nanmean(transcript_values)
+            median_transcripts = np.nanmedian(transcript_values)
+
+            transcript_lines = [
+                {
+                    "value": float(mean_transcripts),
+                    "color": "#7cb5ec",
+                    "dash": "dash",
+                    "width": 2,
+                    "label": f"Transcripts Mean ({mean_transcripts:.0f})",
+                    "type": "mean",
+                    "dataset": "transcripts",
+                },
+                {
+                    "value": float(median_transcripts),
+                    "color": "#99c2e8",
+                    "dash": "dash",
+                    "width": 2,
+                    "label": f"Transcripts Median ({median_transcripts:.0f})",
+                    "type": "median",
+                    "dataset": "transcripts",
+                },
+            ]
+            lines.extend(transcript_lines)
+            all_values.extend([mean_transcripts, median_transcripts])
+
+        # Collect gene lines if provided
+        if gene_values is not None:
+            mean_genes = np.nanmean(gene_values)
+            median_genes = np.nanmedian(gene_values)
+
+            gene_lines = [
+                {
+                    "value": float(mean_genes),
+                    "color": "#434348",
+                    "dash": "dash",
+                    "width": 2,
+                    "label": f"Genes Mean ({mean_genes:.0f})",
+                    "type": "mean",
+                    "dataset": "genes",
+                },
+                {
+                    "value": float(median_genes),
+                    "color": "#888888",
+                    "dash": "dash",
+                    "width": 2,
+                    "label": f"Genes Median ({median_genes:.0f})",
+                    "type": "median",
+                    "dataset": "genes",
+                },
+            ]
+            lines.extend(gene_lines)
+            all_values.extend([mean_genes, median_genes])
+
+        if not lines:
+            return []
+
+        # Sort lines by value for easier overlap detection
+        lines.sort(key=lambda x: x["value"])
+
+        # Calculate plot range from actual plot data X values
+        if plot_data:
+            all_x_values = []
+            for dataset in plot_data.values():
+                all_x_values.extend(dataset.keys())
+
+            if all_x_values:
+                min_value = min(all_x_values)
+                max_value = max(all_x_values)
+                plot_range = max_value - min_value
+            else:
+                # Fallback to line values if no plot data
+                all_line_values = [line["value"] for line in lines]
+                min_value = min(all_line_values)
+                max_value = max(all_line_values)
+                plot_range = max_value - min_value
+        else:
+            # Fallback to line values if no plot data provided
+            all_line_values = [line["value"] for line in lines]
+            min_value = min(all_line_values)
+            max_value = max(all_line_values)
+            plot_range = max_value - min_value
+
+        # If plot range is too small, fall back to absolute threshold
+        if plot_range == 0:
+            plot_range = max(abs(max_value), 1)  # Avoid division by zero
+
+        # Group overlapping lines and apply spacing once per group
+        processed = set()
+
+        for i in range(len(lines)):
+            if i in processed:
+                continue
+
+            line = lines[i]
+            overlap_group = [i]
+
+            # Find all lines that overlap with this one
+            for j in range(i + 1, len(lines)):
+                if j in processed:
+                    continue
+
+                other_line = lines[j]
+                value_diff = abs(line["value"] - other_line["value"])
+
+                # Calculate percentage relative to the plot range, not individual values
+                range_percent_diff = (value_diff / plot_range) * 100
+
+                if range_percent_diff < threshold_percent:
+                    overlap_group.append(j)
+
+            # Apply spacing to the entire overlap group
+            if len(overlap_group) > 1:
+                space = "&nbsp;" * 15
+                group_size = len(overlap_group)
+
+                for idx, line_idx in enumerate(overlap_group):
+                    target_line = lines[line_idx]
+
+                    if group_size == 2:
+                        # Two lines: one gets trailing space, other gets leading space
+                        if idx == 0:
+                            target_line["label"] = target_line["label"] + space
+                        else:
+                            target_line["label"] = space + target_line["label"]
+                    elif group_size == 3:
+                        # Three lines: spread out with different amounts of spacing
+                        if idx == 0:
+                            target_line["label"] = target_line["label"] + space + space
+                        elif idx == 1:
+                            target_line["label"] = space + target_line["label"] + space
+                        else:
+                            target_line["label"] = space + space + target_line["label"]
+                    elif group_size >= 4:
+                        # Four or more lines: maximum spreading
+                        if idx == 0:
+                            target_line["label"] = target_line["label"] + space + space + space
+                        elif idx == 1:
+                            target_line["label"] = target_line["label"] + space
+                        elif idx == group_size - 2:
+                            target_line["label"] = space + target_line["label"]
+                        else:
+                            target_line["label"] = space + space + space + target_line["label"]
+
+                    processed.add(line_idx)
+
+        # Clean up temporary fields
+        for line in lines:
+            line.pop("type", None)
+            line.pop("dataset", None)
+
+        return lines
+
     def parse_xenium_metrics(self, f) -> Dict:
         """Parse Xenium metrics_summary.csv file"""
         lines = f["f"].splitlines()
@@ -799,23 +1056,9 @@ class MultiqcModule(BaseMultiqcModule):
             # Sample cell area values for distribution plots
             count = cell_area_stats["count"].item()
             print(f"count: {count}, sample name: {f['s_name']}")
-            if count > 10000:
-                sample_values = (
-                    lazy_df.filter(pl.col("cell_area").is_not_null())
-                    .select("cell_area")
-                    .collect()
-                    .to_series()
-                    .sample(10000, seed=42)
-                    .to_list()
-                )
-            else:
-                sample_values = (
-                    lazy_df.filter(pl.col("cell_area").is_not_null())
-                    .select("cell_area")
-                    .collect()
-                    .to_series()
-                    .to_list()
-                )
+            sample_values = (
+                lazy_df.filter(pl.col("cell_area").is_not_null()).select("cell_area").collect().to_series().to_list()
+            )
             cell_stats["cell_area_values"] = sample_values
 
         # Nucleus area distribution stats using lazy operations
@@ -869,36 +1112,22 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Sample ratio values for distribution plots
                 count = ratio_stats["count"].item()
-                if count > 10000:
-                    sample_values = (
-                        lazy_df.filter(
-                            (pl.col("cell_area").is_not_null())
-                            & (pl.col("nucleus_area").is_not_null())
-                            & (pl.col("cell_area") > 0)
-                        )
-                        .with_columns((pl.col("nucleus_area") / pl.col("cell_area")).alias("ratio"))
-                        .select("ratio")
-                        .collect()
-                        .to_series()
-                        .sample(10000, seed=42)
-                        .to_list()
+                sample_values = (
+                    lazy_df.filter(
+                        (pl.col("cell_area").is_not_null())
+                        & (pl.col("nucleus_area").is_not_null())
+                        & (pl.col("cell_area") > 0)
                     )
-                else:
-                    sample_values = (
-                        lazy_df.filter(
-                            (pl.col("cell_area").is_not_null())
-                            & (pl.col("nucleus_area").is_not_null())
-                            & (pl.col("cell_area") > 0)
-                        )
-                        .with_columns((pl.col("nucleus_area") / pl.col("cell_area")).alias("ratio"))
-                        .select("ratio")
-                        .collect()
-                        .to_series()
-                        .to_list()
-                    )
+                    .with_columns((pl.col("nucleus_area") / pl.col("cell_area")).alias("ratio"))
+                    .select("ratio")
+                    .collect()
+                    .to_series()
+                    .to_list()
+                )
+
                 cell_stats["nucleus_to_cell_area_ratio_values"] = sample_values
 
-        # Store transcript counts per cell (total_counts) for distribution plots
+        # Store total transcript counts per cell (total_counts) for distribution plots
         total_count_check = (
             lazy_df.filter(pl.col("total_counts").is_not_null())
             .select(pl.col("total_counts").count().alias("count"))
@@ -907,24 +1136,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         if total_count_check["count"].item() > 0:
             count = total_count_check["count"].item()
-            if count > 10000:
-                sample_values = (
-                    lazy_df.filter(pl.col("total_counts").is_not_null())
-                    .select("total_counts")
-                    .collect()
-                    .to_series()
-                    .sample(10000, seed=42)
-                    .to_list()
-                )
-            else:
-                sample_values = (
-                    lazy_df.filter(pl.col("total_counts").is_not_null())
-                    .select("total_counts")
-                    .collect()
-                    .to_series()
-                    .to_list()
-                )
-            cell_stats["transcript_counts_values"] = sample_values
+            sample_values = (
+                lazy_df.filter(pl.col("total_counts").is_not_null())
+                .select("total_counts")
+                .collect()
+                .to_series()
+                .to_list()
+            )
+            cell_stats["total_counts_values"] = sample_values
 
         # Store detected genes per cell (transcript_counts) for distribution plots
         detected_count_check = (
@@ -935,23 +1154,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         if detected_count_check["count"].item() > 0:
             count = detected_count_check["count"].item()
-            if count > 10000:
-                sample_values = (
-                    lazy_df.filter(pl.col("transcript_counts").is_not_null())
-                    .select("transcript_counts")
-                    .collect()
-                    .to_series()
-                    .sample(10000, seed=42)
-                    .to_list()
-                )
-            else:
-                sample_values = (
-                    lazy_df.filter(pl.col("transcript_counts").is_not_null())
-                    .select("transcript_counts")
-                    .collect()
-                    .to_series()
-                    .to_list()
-                )
+            sample_values = (
+                lazy_df.filter(pl.col("transcript_counts").is_not_null())
+                .select("transcript_counts")
+                .collect()
+                .to_series()
+                .to_list()
+            )
             cell_stats["detected_genes_values"] = sample_values
 
         # Add nucleus RNA fraction if nucleus_count is available
@@ -979,25 +1188,14 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Sample nucleus fraction values for distribution plots
                 count = nucleus_fraction_stats["count"].item()
-                if count > 10000:
-                    sample_values = (
-                        lazy_df.filter(pl.col("total_counts") > 0)
-                        .with_columns((pl.col("nucleus_count") / pl.col("total_counts")).alias("fraction"))
-                        .select("fraction")
-                        .collect()
-                        .to_series()
-                        .sample(10000, seed=42)
-                        .to_list()
-                    )
-                else:
-                    sample_values = (
-                        lazy_df.filter(pl.col("total_counts") > 0)
-                        .with_columns((pl.col("nucleus_count") / pl.col("total_counts")).alias("fraction"))
-                        .select("fraction")
-                        .collect()
-                        .to_series()
-                        .to_list()
-                    )
+                sample_values = (
+                    lazy_df.filter(pl.col("total_counts") > 0)
+                    .with_columns((pl.col("nucleus_count") / pl.col("total_counts")).alias("fraction"))
+                    .select("fraction")
+                    .collect()
+                    .to_series()
+                    .to_list()
+                )
                 cell_stats["nucleus_rna_fraction_values"] = sample_values
 
         return cell_stats
@@ -1360,11 +1558,9 @@ class MultiqcModule(BaseMultiqcModule):
         density_vals = kde(x_vals)
 
         # Prepare data for linegraph
-        datasets = {}
         density_data = {}
         for x, y in zip(x_vals, density_vals):
             density_data[float(x)] = float(y)
-        datasets["Density"] = density_data
 
         config: Dict[str, Any] = {
             "id": "xenium_cell_area_distribution",
@@ -1376,24 +1572,17 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add vertical lines for mean and median
         if "cell_area_mean" in cell_data and "cell_area_median" in cell_data:
-            config["x_lines"] = [
-                {
-                    "value": float(cell_data["cell_area_mean"]),
-                    "color": "red",
-                    "dash": "dash",
-                    "width": 2,
-                    "label": f"Mean ({cell_data['cell_area_mean']:.1f} μm²)",
-                },
-                {
-                    "value": float(cell_data["cell_area_median"]),
-                    "color": "green",
-                    "dash": "dash",
-                    "width": 2,
-                    "label": f"Median ({cell_data['cell_area_median']:.1f} μm²)",
-                },
-            ]
+            density_keys = [float(k) for k in density_data.keys()]
+            config["x_lines"] = self._create_non_overlapping_labels(
+                cell_data["cell_area_mean"],
+                cell_data["cell_area_median"],
+                precision=1,
+                suffix=" μm²",
+                data_min=min(density_keys),
+                data_max=max(density_keys),
+            )
 
-        return linegraph.plot(datasets, config)
+        return linegraph.plot({"Density": density_data}, config)
 
     def _create_multi_sample_area_violins(self, cells_data_by_sample, samples_with_areas):
         """Create box plots for multiple samples - one box per sample"""
@@ -1416,8 +1605,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "xenium_cell_area_distribution",
             "title": "Xenium: Cell Area Distribution",
-            "ylab": "Cell area (μm²)",
-            "xlab": "Sample",
+            "xlab": "Cell area (μm²)",
             "boxpoints": False,
         }
 
@@ -1449,10 +1637,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("scipy not available, skipping nucleus density plots. Install scipy for enhanced plotting.")
             return None
 
-        import numpy as np
         from scipy import stats
-
-        from multiqc.plots import linegraph
 
         nucleus_fractions = cell_data["nucleus_rna_fraction_values"]
         if not nucleus_fractions:
@@ -1507,22 +1692,14 @@ class MultiqcModule(BaseMultiqcModule):
         mean_fraction = np.nanmean(nucleus_fractions)
         median_fraction = np.nanmedian(nucleus_fractions)
 
-        config["x_lines"] = [
-            {
-                "value": float(mean_fraction),
-                "color": "red",
-                "dash": "dash",
-                "width": 2,
-                "label": f"Mean ({mean_fraction:.3f})",
-            },
-            {
-                "value": float(median_fraction),
-                "color": "green",
-                "dash": "dash",
-                "width": 2,
-                "label": f"Median ({median_fraction:.3f})",
-            },
-        ]
+        density_keys = [float(k) for k in data["Nucleus RNA Fraction Density"].keys()]
+        config["x_lines"] = self._create_non_overlapping_labels(
+            mean_fraction,
+            median_fraction,
+            precision=3,
+            data_min=min(density_keys),
+            data_max=max(density_keys),
+        )
 
         plot = linegraph.plot(data, config)
 
@@ -1620,22 +1797,10 @@ class MultiqcModule(BaseMultiqcModule):
         mean_ratio = np.nanmean(ratio_values)
         median_ratio = np.nanmedian(ratio_values)
 
-        config["x_lines"] = [
-            {
-                "value": float(mean_ratio),
-                "color": "red",
-                "dash": "dash",
-                "width": 2,
-                "label": f"Mean ({mean_ratio:.3f})",
-            },
-            {
-                "value": float(median_ratio),
-                "color": "green",
-                "dash": "dash",
-                "width": 2,
-                "label": f"Median ({median_ratio:.3f})",
-            },
-        ]
+        density_keys = [float(k) for k in data["Nucleus-to-Cell Area Ratio Density"].keys()]
+        config["x_lines"] = self._create_non_overlapping_labels(
+            mean_ratio, median_ratio, precision=3, data_min=min(density_keys), data_max=max(density_keys)
+        )
 
         plot = linegraph.plot(data, config)
 
@@ -2064,8 +2229,8 @@ class MultiqcModule(BaseMultiqcModule):
         samples_with_genes = {}
 
         for s_name, data in cells_data_by_sample.items():
-            if data and "transcript_counts_values" in data and data["transcript_counts_values"]:
-                samples_with_transcripts[s_name] = data["transcript_counts_values"]
+            if data and "total_counts_values" in data and data["total_counts_values"]:
+                samples_with_transcripts[s_name] = data["total_counts_values"]
             if data and "detected_genes_values" in data and data["detected_genes_values"]:
                 samples_with_genes[s_name] = data["detected_genes_values"]
 
@@ -2089,11 +2254,15 @@ class MultiqcModule(BaseMultiqcModule):
         from multiqc.plots import linegraph
 
         plot_data = {}
-        all_x_lines = []
+
+        # Store raw values for intelligent line positioning
+        raw_transcript_values = None
+        raw_gene_values = None
 
         # Handle transcripts per cell data
         if samples_with_transcripts:
             _, transcript_values = next(iter(samples_with_transcripts.items()))
+            raw_transcript_values = transcript_values
             try:
                 import numpy as np
 
@@ -2112,29 +2281,6 @@ class MultiqcModule(BaseMultiqcModule):
                     transcripts_data[float(x)] = float(y)
                 plot_data["Transcripts per cell"] = transcripts_data
 
-                # Add mean/median lines for transcripts
-                mean_transcripts = np.nanmean(transcript_values)
-                median_transcripts = np.nanmedian(transcript_values)
-
-                all_x_lines.extend(
-                    [
-                        {
-                            "value": float(mean_transcripts),
-                            "color": "#7cb5ec",  # blue
-                            "dash": "dash",
-                            "width": 2,
-                            "label": f"Transcripts Mean ({mean_transcripts:.0f})",
-                        },
-                        {
-                            "value": float(median_transcripts),
-                            "color": "#99c2e8",  # lighter version of blue
-                            "dash": "dash",
-                            "width": 2,
-                            "label": f"Transcripts Median ({median_transcripts:.0f})",
-                        },
-                    ]
-                )
-
             except ImportError:
                 # Fallback to histogram if scipy not available
                 import numpy as np
@@ -2148,32 +2294,10 @@ class MultiqcModule(BaseMultiqcModule):
                     transcripts_data[float(x)] = float(y)
                 plot_data["Transcripts per cell"] = transcripts_data
 
-                # Add mean/median lines for transcripts
-                mean_transcripts = np.nanmean(transcript_values)
-                median_transcripts = np.nanmedian(transcript_values)
-
-                all_x_lines.extend(
-                    [
-                        {
-                            "value": float(mean_transcripts),
-                            "color": "#7cb5ec",  # blue
-                            "dash": "dash",
-                            "width": 2,
-                            "label": f"Transcripts Mean ({mean_transcripts:.0f})",
-                        },
-                        {
-                            "value": float(median_transcripts),
-                            "color": "#99c2e8",  # lighter version of blue
-                            "dash": "dash",
-                            "width": 2,
-                            "label": f"Transcripts Median ({median_transcripts:.0f})",
-                        },
-                    ]
-                )
-
         # Handle detected genes per cell data
         if samples_with_genes:
             _, gene_values = next(iter(samples_with_genes.items()))
+            raw_gene_values = gene_values
             try:
                 import numpy as np
 
@@ -2192,29 +2316,6 @@ class MultiqcModule(BaseMultiqcModule):
                     genes_data[float(x)] = float(y)
                 plot_data["Detected genes per cell"] = genes_data
 
-                # Add mean/median lines for genes
-                mean_genes = np.nanmean(gene_values)
-                median_genes = np.nanmedian(gene_values)
-
-                all_x_lines.extend(
-                    [
-                        {
-                            "value": float(mean_genes),
-                            "color": "#434348",  # black
-                            "dash": "dash",
-                            "width": 2,
-                            "label": f"Genes Mean ({mean_genes:.0f})",
-                        },
-                        {
-                            "value": float(median_genes),
-                            "color": "#888888",  # lighter version of that black
-                            "dash": "dash",
-                            "width": 2,
-                            "label": f"Genes Median ({median_genes:.0f})",
-                        },
-                    ]
-                )
-
             except ImportError:
                 # Fallback to histogram if scipy not available
                 import numpy as np
@@ -2228,35 +2329,12 @@ class MultiqcModule(BaseMultiqcModule):
                     genes_data[float(x)] = float(y)
                 plot_data["Detected genes per cell"] = genes_data
 
-                # Add mean/median lines for genes
-                mean_genes = np.nanmean(gene_values)
-                median_genes = np.nanmedian(gene_values)
-
-                all_x_lines.extend(
-                    [
-                        {
-                            "value": float(mean_genes),
-                            "color": "darkgrey",
-                            "dash": "dash",
-                            "width": 2,
-                            "label": f"Genes Mean ({mean_genes:.0f})",
-                        },
-                        {
-                            "value": float(median_genes),
-                            "color": "lightgrey",
-                            "dash": "dash",
-                            "width": 2,
-                            "label": f"Genes Median ({median_genes:.0f})",
-                        },
-                    ]
-                )
-
         if not plot_data:
             return None
 
         config = {
             "id": "xenium_cell_distributions_combined",
-            "title": "Xenium: Cell Distribution Analysis",
+            "title": "Xenium: Distribution of Transcripts/Genes per Cell",
             "xlab": "Number per cell",
             "ylab": "Density",
             "smooth_points": 100,
@@ -2266,9 +2344,12 @@ class MultiqcModule(BaseMultiqcModule):
         colors = {"Transcripts per cell": "#7cb5ec", "Detected genes per cell": "#434348"}
         config["colors"] = colors
 
-        # Add all mean/median lines
-        if all_x_lines:
-            config["x_lines"] = all_x_lines
+        # Add all mean/median lines with intelligent overlap prevention
+        combined_lines = self._create_non_overlapping_combined_lines(
+            transcript_values=raw_transcript_values, gene_values=raw_gene_values, plot_data=plot_data
+        )
+        if combined_lines:
+            config["x_lines"] = combined_lines
 
         return linegraph.plot(plot_data, config)
 
@@ -2298,6 +2379,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "xenium_cell_distributions_combined",
             "title": "Xenium: Distribution of Transcripts/Genes per Cell",
             "boxpoints": False,
+            "xlab": "Transcripts per cell",
             "data_labels": data_labels,
         }
 
@@ -2308,8 +2390,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Filter samples with transcript count data
         samples_with_transcripts = {}
         for s_name, data in cells_data_by_sample.items():
-            if data and "transcript_counts_values" in data and data["transcript_counts_values"]:
-                samples_with_transcripts[s_name] = data["transcript_counts_values"]
+            if data and "total_counts_values" in data and data["total_counts_values"]:
+                samples_with_transcripts[s_name] = data["total_counts_values"]
 
         if not samples_with_transcripts:
             return None
@@ -2359,22 +2441,9 @@ class MultiqcModule(BaseMultiqcModule):
             mean_transcripts = np.mean(transcript_values)
             median_transcripts = np.median(transcript_values)
 
-            config["x_lines"] = [
-                {
-                    "value": float(mean_transcripts),
-                    "color": "red",
-                    "dash": "dash",
-                    "width": 2,
-                    "label": f"Mean ({mean_transcripts:.0f})",
-                },
-                {
-                    "value": float(median_transcripts),
-                    "color": "green",
-                    "dash": "dash",
-                    "width": 2,
-                    "label": f"Median ({median_transcripts:.0f})",
-                },
-            ]
+            config["x_lines"] = self._create_non_overlapping_labels(
+                mean_transcripts, median_transcripts, data_min=x_min, data_max=x_max
+            )
 
             return linegraph.plot(plot_data, config)
 
@@ -2401,22 +2470,12 @@ class MultiqcModule(BaseMultiqcModule):
             mean_transcripts = np.mean(transcript_values)
             median_transcripts = np.median(transcript_values)
 
-            config["x_lines"] = [
-                {
-                    "value": float(mean_transcripts),
-                    "color": "red",
-                    "dash": "dash",
-                    "width": 2,
-                    "label": f"Mean ({mean_transcripts:.0f})",
-                },
-                {
-                    "value": float(median_transcripts),
-                    "color": "green",
-                    "dash": "dash",
-                    "width": 2,
-                    "label": f"Median ({median_transcripts:.0f})",
-                },
-            ]
+            config["x_lines"] = self._create_non_overlapping_labels(
+                mean_transcripts,
+                median_transcripts,
+                data_min=np.min(transcript_values),
+                data_max=np.max(transcript_values),
+            )
 
             return linegraph.plot(plot_data, config)
 
