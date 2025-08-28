@@ -1713,7 +1713,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Xenium: Field of View Quality Distribution",
             "xlab": "Quality Range",
             "ylab": "Number of Fields of View",
-            "cpswitch_c_active": True,
+            "cpswitch_c_active": False,
             "use_legend": True,
         }
 
@@ -1729,15 +1729,15 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "Fair (QV 25-30)": {
                 "name": "Fair (QV 25-30)",
-                "color": "#c0c0c0",  # Lighter gray for fair quality
+                "color": "#FFB6C1",  # Light pink for fair quality
             },
             "Poor (QV 20-25)": {
                 "name": "Poor (QV 20-25)",
-                "color": "#a0a0a0",  # Light gray for poor quality
+                "color": "#FF8C94",  # Medium pink-red for poor quality
             },
             "Low (QV < 20)": {
                 "name": "Low (QV < 20)",
-                "color": "#808080",  # Gray for low quality
+                "color": "#DC143C",  # Dark red for low quality
             },
         }
 
