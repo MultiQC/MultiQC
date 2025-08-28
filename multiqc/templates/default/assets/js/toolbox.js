@@ -21,8 +21,8 @@ const AI_PROVIDERS = {
   },
   openai: {
     name: "OpenAI",
-    defaultModel: "gpt-4o",
-    suggestedModels: ["gpt-4o", "gpt-4.1"],
+    defaultModel: "gpt-5",
+    suggestedModels: ["gpt-5"],
     apiKeysUrl: "https://platform.openai.com/api-keys",
     modelsUrl: "https://platform.openai.com/docs/models",
   },
