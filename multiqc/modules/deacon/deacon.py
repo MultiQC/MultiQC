@@ -1,5 +1,4 @@
 import logging
-import os
 import json 
 
 from multiqc.base_module import BaseMultiqcModule
