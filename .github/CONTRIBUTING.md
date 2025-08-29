@@ -10,10 +10,11 @@ We've implemented an automated triage system for module requests to help manage 
 
 ### How Module Requests Are Managed
 
-**Automated Workflows:**
-- **Individual Analysis**: New module requests get immediate analysis via `module-analysis.yml`
-- **Bulk Triage**: Weekly automated review of all requests via `module-triage.yml`  
-- **Project Tracking**: All requests automatically added to the Module Triage project board
+**Unified Workflow** (`module-requests.yml`):
+- **Individual Analysis**: New requests and `@claude analyze-module` comments get immediate analysis
+- **Weekly Bulk Triage**: Automated Monday review of all open requests
+- **Project Integration**: Automatic tracking and board synchronization
+- **Flexible Modes**: Supports single analysis, bulk processing, and dry-run testing
 
 **Priority Scoring** based on multiple criteria:
 1. **Tool Popularity**: GitHub stars, forks, recent development activity

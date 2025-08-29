@@ -1,0 +1,281 @@
+name: Module Request Management
+
+on:
+  # Individual request analysis
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened]
+  
+  # Weekly bulk triage
+  schedule:
+    - cron: "0 9 * * 1"  # Mondays at 9 AM UTC
+  
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Mode: analyze-single, triage-all, or dry-run'
+        required: false
+        default: 'triage-all'
+        type: choice
+        options:
+          - analyze-single
+          - triage-all  
+          - dry-run
+      issue_number:
+        description: 'Issue number for analyze-single mode'
+        required: false
+        type: string
+
+permissions:
+  issues: write
+  contents: read
+  projects: write
+
+jobs:
+  module-request-handler:
+    runs-on: ubuntu-latest
+    
+    # Determine what mode to run in
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' && 
+       contains(github.event.issue.labels.*.name, 'module: new') && 
+       contains(github.event.comment.body, '@claude analyze-module')) ||
+      (github.event_name == 'issues' && 
+       github.event.action == 'opened' &&
+       contains(github.event.issue.labels.*.name, 'module: new'))
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Module Request Context
+        id: verify
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const eventName = context.eventName;
+            const action = context.payload.action;
+            
+            // For scheduled and manual runs, always proceed
+            if (eventName === 'schedule' || eventName === 'workflow_dispatch') {
+              console.log(`✅ ${eventName} event - proceeding with bulk operations`);
+              return { isModuleRequest: true };
+            }
+            
+            // For issue events, verify it's a module request
+            if (eventName === 'issues' || eventName === 'issue_comment') {
+              const issue = context.payload.issue;
+              const hasModuleLabel = issue.labels?.some(label => label.name === 'module: new');
+              
+              // Additional check: look for module request template indicators in issue body
+              const issueBody = issue.body || '';
+              const hasModuleContent = issueBody.includes('Name of the tool') || 
+                                     issueBody.includes('Tool homepage') || 
+                                     issueBody.includes('example files');
+              
+              if (hasModuleLabel) {
+                console.log(`✅ Issue #${issue.number} has 'module: new' label`);
+                return { isModuleRequest: true, issueNumber: issue.number };
+              } else if (hasModuleContent && action === 'opened') {
+                console.log(`⚠️  Issue #${issue.number} appears to be module request but missing label`);
+                console.log(`Adding 'module: new' label and proceeding...`);
+                
+                // Add the missing label
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: ['module: new']
+                });
+                
+                return { isModuleRequest: true, issueNumber: issue.number };
+              } else {
+                console.log(`❌ Issue #${issue.number} is not a module request`);
+                return { isModuleRequest: false };
+              }
+            }
+            
+            return { isModuleRequest: false };
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Exit if Not Module Request
+        if: fromJSON(steps.verify.outputs.result).isModuleRequest == false
+        run: |
+          echo "❌ Not a module request - exiting workflow"
+          exit 0
+
+      - name: Determine Operation Mode
+        id: mode  
+        if: fromJSON(steps.verify.outputs.result).isModuleRequest == true
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "mode=triage-all" >> $GITHUB_OUTPUT
+            echo "Running scheduled weekly triage"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "mode=${{ inputs.mode }}" >> $GITHUB_OUTPUT
+            echo "issue_number=${{ inputs.issue_number }}" >> $GITHUB_OUTPUT
+            echo "Running manual workflow: ${{ inputs.mode }}"
+          elif [[ "${{ github.event_name }}" == "issues" && "${{ github.event.action }}" == "opened" ]]; then
+            echo "mode=analyze-single" >> $GITHUB_OUTPUT
+            echo "issue_number=$(echo '${{ steps.verify.outputs.result }}' | jq -r '.issueNumber')" >> $GITHUB_OUTPUT
+            echo "Running analysis for new issue #$(echo '${{ steps.verify.outputs.result }}' | jq -r '.issueNumber')"
+          elif [[ "${{ github.event_name }}" == "issue_comment" ]]; then
+            echo "mode=analyze-single" >> $GITHUB_OUTPUT
+            echo "issue_number=$(echo '${{ steps.verify.outputs.result }}' | jq -r '.issueNumber')" >> $GITHUB_OUTPUT
+            echo "Running analysis for issue #$(echo '${{ steps.verify.outputs.result }}' | jq -r '.issueNumber') via comment"
+          fi
+
+      - name: Run Module Request Analysis
+        if: fromJSON(steps.verify.outputs.result).isModuleRequest == true
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            # Module Request Management System
+
+            **Operation Mode**: ${{ steps.mode.outputs.mode }}
+            **Issue Number**: ${{ steps.mode.outputs.issue_number || 'N/A' }}
+            **Dry Run**: ${{ inputs.mode == 'dry-run' }}
+
+            ## Mode-Specific Instructions:
+
+            ### If mode = "analyze-single":
+            Perform detailed analysis of issue #${{ steps.mode.outputs.issue_number }} (or the current context issue):
+            
+            1. **Comprehensive Assessment**:
+               - Technical feasibility (example files, output format clarity)
+               - Tool popularity analysis (GitHub stars, maintenance status)
+               - Request completeness (all required fields filled)
+               - Community engagement (reactions, comments)
+               - Priority scoring using exact criteria from issue #3219
+            
+            2. **Required Actions**:
+               - Add appropriate priority label: `priority: high/medium/low`
+               - Add specific status labels: `needs-examples`, `needs-triage`, etc.
+               - Post detailed analysis comment with score breakdown
+               - Provide specific improvement recommendations
+            
+            3. **Project Integration**:
+               - Ensure issue is added to Module Triage project
+               - Move to appropriate project column based on priority/status
+
+            ### If mode = "triage-all":
+            Analyze ALL open issues with "module: new" label:
+            
+            1. **Batch Processing**:
+               - Score each request using standardized criteria
+               - Apply consistent priority and status labeling
+               - Identify stale requests (>6 months, no activity)
+               - Close low-priority stale requests with explanation
+            
+            2. **Project Management**:
+               - Sync all issues to Module Triage project
+               - Update project board positions based on current status
+               - Ensure consistent labeling across all requests
+            
+            3. **Reporting**:
+               - Generate comprehensive triage report
+               - Post summary comment on issue #3219
+               - Include statistics and high-priority recommendations
+               - Tag @ewels and @vladsavelyev
+
+            ## Scoring Criteria (0-100 scale):
+            - **Tool Popularity**: +30 (>500 stars), +15 (100-500), +5 (50-100)
+            - **Community Engagement**: +5 per 👍 reaction, +3 per meaningful comment
+            - **Request Completeness**: +10 for all required fields
+            - **Example Files**: +20 for complete, +10 for partial, 0 for missing
+            - **Stale Penalty**: -20 if >6 months old with no recent activity
+
+            ## Priority Labels:
+            - `priority: high` (score ≥ 70)
+            - `priority: medium` (score 40-69)
+            - `priority: low` (score < 40)
+
+            ## Status Labels:
+            - `needs-examples` (no example files)
+            - `needs-triage` (not yet analyzed)
+            - `stale` (>6 months, no activity)
+            - `ready-for-dev` (complete and approved)
+
+            ## Important Notes:
+            - Be constructive and helpful in all communications
+            - Focus on improving request quality, not just scoring
+            - Use GitHub API to gather accurate metrics
+            - If dry run mode, analyze and report but take no actions
+            - Always explain scoring rationale clearly
+
+          claude_args: |
+            --max-turns 20
+            --model claude-sonnet-4-20250514
+
+      # Project synchronization for all requests
+      - name: Sync to Project Board
+        if: fromJSON(steps.verify.outputs.result).isModuleRequest == true && (steps.mode.outputs.mode == 'triage-all' || steps.mode.outputs.mode == 'analyze-single')
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const mode = '${{ steps.mode.outputs.mode }}';
+            const issueNumber = '${{ steps.mode.outputs.issue_number }}';
+
+            if (mode === 'triage-all') {
+              // Get all open module requests
+              const { data: issues } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: 'module: new',
+                state: 'open'
+              });
+
+              console.log(`Syncing ${issues.length} module requests to project`);
+
+              // Ensure all have appropriate labels
+              for (const issue of issues) {
+                const hasTriageLabel = issue.labels.some(label => 
+                  label.name.startsWith('priority:') || 
+                  ['needs-examples', 'needs-triage', 'stale', 'ready-for-dev'].includes(label.name)
+                );
+                
+                if (!hasTriageLabel) {
+                  console.log(`Adding needs-triage label to issue #${issue.number}`);
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    labels: ['needs-triage']
+                  });
+                }
+              }
+            } else if (mode === 'analyze-single' && issueNumber) {
+              console.log(`Ensuring issue #${issueNumber} is tracked in project`);
+              // Individual issue project sync handled by Claude analysis
+            }
+
+      # Generate summary report for bulk triage
+      - name: Generate Triage Summary
+        if: fromJSON(steps.verify.outputs.result).isModuleRequest == true && steps.mode.outputs.mode == 'triage-all'
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Generate a comprehensive Module Request Triage Summary and post it as a comment on issue #3219.
+
+            **Report Sections:**
+            1. **Executive Summary**: Total requests, priority distribution, actions taken
+            2. **High Priority Highlights**: Requests ready for maintainer attention
+            3. **Quality Improvements**: Common issues and template suggestions
+            4. **Stale Request Actions**: Issues closed or flagged for closure
+            5. **Community Engagement**: Most active requests, trending tools
+            6. **Next Steps**: Specific recommendations for maintainers
+
+            **Format**: Professional, concise, with clear action items and statistics.
+            **Tag**: @ewels and @vladsavelyev for visibility.
+
+          claude_args: |
+            --max-turns 5
+            --model claude-sonnet-4-20250514

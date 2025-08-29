@@ -97,11 +97,12 @@ Ensure these labels exist in the repository:
 
 ## Workflow Integration
 
-The automated workflows will:
+The unified `module-requests.yml` workflow handles:
 
-1. **module-analysis.yml**: Analyze individual requests and add appropriate labels
-2. **module-triage.yml**: Bulk analyze all requests weekly and ensure project sync
-3. **GitHub Project Automation**: Automatically move cards based on labels
+1. **Individual Analysis**: Immediate analysis of new requests and `@claude analyze-module` commands
+2. **Weekly Bulk Triage**: Comprehensive review of all open requests every Monday
+3. **Project Synchronization**: Automatic issue tracking and board management
+4. **Flexible Execution**: Manual triggers with different modes (analyze-single, triage-all, dry-run)
 
 ## Manual Project Management
 
@@ -131,13 +132,13 @@ The project provides visibility into:
 
 ### Workflow Permissions
 
-For full project integration, ensure workflows have:
+The unified workflow includes all necessary permissions:
 
 ```yaml
 permissions:
-  issues: write
-  projects: write  # Required for project management
-  contents: read
+  issues: write     # Add labels, post comments
+  projects: write   # Project board management  
+  contents: read    # Repository access
 ```
 
 ### Environment Variables (if using organization-level project)
@@ -163,8 +164,8 @@ env:
    - Manual moves may be needed initially
 
 3. **Missing priority labels**
-   - Run weekly triage workflow manually to catch up
-   - Check that `module-analysis.yml` is running on new issues
+   - Run the unified workflow manually: `workflow_dispatch` with `triage-all` mode
+   - Check that `module-requests.yml` is running on new issues
 
 ### Manual Sync
 
