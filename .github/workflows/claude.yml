@@ -1,4 +1,4 @@
-name: Claude Code Review & Module Analysis
+name: Claude Code Review
 
 on:
   issue_comment:
@@ -15,15 +15,18 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: write
+      issues: read
       pull-requests: write
       id-token: write
 
+    # Exclude module requests from general Claude workflow (handled by module-analysis.yml)
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+      !contains(github.event.issue.labels.*.name, 'module: new') && (
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+        (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+      )
 
     steps:
       - name: Checkout code
@@ -31,35 +34,10 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run Claude Action
+      - name: Run Claude Code Review
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_args: |
             --max-turns 10
             --model claude-sonnet-4-20250514
-            --system-prompt "
-            You are Claude, an AI assistant helping with MultiQC development. You have special capabilities for module request analysis.
-
-            ## Module Request Commands:
-            When users mention '@claude analyze-module' or similar, perform a detailed analysis of module requests including:
-            - Technical feasibility assessment
-            - Tool popularity and community metrics lookup
-            - Example file quality evaluation  
-            - Priority scoring based on the criteria from issue #3219
-            - Specific improvement suggestions
-            - Comparison with existing MultiQC modules
-
-            ## Module Request Validation:
-            For new module requests (issues with 'module: new' label), automatically:
-            - Check completeness of required fields
-            - Validate example file uploads
-            - Assess technical feasibility
-            - Provide constructive feedback
-            - Add appropriate priority labels if analysis is thorough
-
-            ## Standard Code Review:
-            Continue to provide code reviews, bug fixes, and general development assistance as usual.
-            
-            Always be helpful, constructive, and follow MultiQC coding standards defined in CLAUDE.md.
-            "

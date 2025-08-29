@@ -1,0 +1,107 @@
+name: Module Request Analysis
+
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+  contents: read
+  projects: write
+
+jobs:
+  module-analysis:
+    # Only run on issues with "module: new" label
+    if: |
+      contains(github.event.issue.labels.*.name, 'module: new') && (
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude analyze-module')) ||
+        (github.event_name == 'issues' && github.event.action == 'opened')
+      )
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Analyze Module Request
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Perform a comprehensive analysis of this module request using the criteria from issue #3219.
+
+            ## Analysis Framework:
+
+            ### 1. Technical Feasibility Assessment
+            - Evaluate completeness of request (all required fields filled?)
+            - Check for example files (critical requirement)
+            - Assess tool output format clarity
+            - Identify any technical blockers
+
+            ### 2. Tool Popularity Analysis
+            - Look up GitHub repository if provided
+            - Check stars, forks, recent activity
+            - Assess tool maintenance status
+            - Evaluate community adoption
+
+            ### 3. Priority Scoring (0-100 scale)
+            Use these exact criteria:
+            - **Stale factor**: -20 points if >6 months old with no activity in last 3 months
+            - **Tool popularity**: +30 for >500 stars, +15 for 100-500, +5 for 50-100
+            - **Community engagement**: +5 per 👍 reaction, +3 per meaningful comment  
+            - **Technical feasibility**: +20 for complete example files, +10 for partial
+            - **Request completeness**: +10 for all required fields filled
+
+            ### 4. Actionable Recommendations
+            - Specific steps to improve the request
+            - Technical requirements for implementation
+            - Suggestions for community engagement
+
+            ## Required Actions:
+            1. **Add Priority Label**: Based on score - `priority: high` (≥70), `priority: medium` (40-69), `priority: low` (<40)
+            2. **Add to Module Triage Project**: Move issue to appropriate column based on priority
+            3. **Post Analysis Comment**: Comprehensive analysis with score breakdown and recommendations
+            
+            ## Response Format:
+            Start with a clear priority assessment, then provide detailed analysis with specific recommendations for improvement.
+
+          claude_args: |
+            --max-turns 8
+            --model claude-sonnet-4-20250514
+
+  # Add issue to GitHub project for tracking
+  add-to-project:
+    needs: module-analysis
+    if: always() && contains(github.event.issue.labels.*.name, 'module: new')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Add to Module Triage Project
+        uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/orgs/MultiQC/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Update project status based on priority label
+  update-project-status:
+    needs: [module-analysis, add-to-project]
+    if: always() && contains(github.event.issue.labels.*.name, 'module: new')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Update Project Item Status
+        uses: titoportas/update-project-fields@v0.1.0
+        with:
+          project-url: https://github.com/orgs/MultiQC/projects/1
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          item-id: ${{ github.event.issue.node_id }}
+          field-keys: Status
+          field-values: |
+            ${{ 
+              contains(github.event.issue.labels.*.name, 'priority: high') && 'High Priority' ||
+              contains(github.event.issue.labels.*.name, 'priority: medium') && 'Medium Priority' ||
+              contains(github.event.issue.labels.*.name, 'priority: low') && 'Low Priority' ||
+              'Needs Analysis'
+            }}

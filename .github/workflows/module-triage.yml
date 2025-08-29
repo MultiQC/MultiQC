@@ -17,6 +17,7 @@ permissions:
   issues: write
   pull-requests: read
   contents: read
+  projects: write
 
 jobs:
   triage-module-requests:
@@ -75,12 +76,56 @@ jobs:
             - Be respectful and constructive in all comments
             - Focus on helping improve request quality, not just scoring
             - Use GitHub's REST API to gather issue metrics and repository data
+            - Add issues to the "Module Triage" project with appropriate status
             - If this is a dry run (${{ inputs.dry_run == 'true' }}), only analyze and report - don't take actions
             - Tag @ewels and @vladsavelyev in the summary report
 
           claude_args: |
             --max-turns 15
             --model claude-sonnet-4-20250514
+
+  # Ensure all module requests are tracked in the project
+  sync-to-project:
+    needs: triage-module-requests
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Add Module Requests to Project
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Get all open module requests
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'module: new',
+              state: 'open'
+            });
+
+            console.log(`Found ${issues.length} open module requests`);
+
+            // Note: Project integration requires organization-level setup
+            // For now, we'll ensure all issues have appropriate labels
+            // Project sync can be handled through GitHub's UI or additional automation
+
+            // Add triage labels if missing
+            for (const issue of issues) {
+              const hasTriageLabel = issue.labels.some(label => 
+                label.name.startsWith('priority:') || label.name === 'needs-examples'
+              );
+              
+              if (!hasTriageLabel) {
+                console.log(`Issue #${issue.number} needs triage`);
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: ['needs-triage']
+                });
+              }
+            }
 
   # Separate job to create a comprehensive report
   generate-triage-report:

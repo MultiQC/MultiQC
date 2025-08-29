@@ -8,45 +8,54 @@ I try to manage the required tasks for MultiQC using GitHub issues, you probably
 
 We've implemented an automated triage system for module requests to help manage the growing number of requests and ensure the most valuable modules are prioritized:
 
-### How Module Requests Are Prioritized
+### How Module Requests Are Managed
 
-Module requests are automatically scored and prioritized based on several criteria:
+**Automated Workflows:**
+- **Individual Analysis**: New module requests get immediate analysis via `module-analysis.yml`
+- **Bulk Triage**: Weekly automated review of all requests via `module-triage.yml`  
+- **Project Tracking**: All requests automatically added to the Module Triage project board
 
-1. **Tool Popularity** (major factor): GitHub stars, forks, recent development activity
-2. **Community Engagement**: 👍 reactions on the issue, meaningful comments and discussion
+**Priority Scoring** based on multiple criteria:
+1. **Tool Popularity**: GitHub stars, forks, recent development activity
+2. **Community Engagement**: 👍 reactions, meaningful comments and discussion
 3. **Request Quality**: Complete information, quality example files, clear use case
 4. **Technical Feasibility**: Well-structured tool output, parseable format
-5. **Maintenance Status**: Active development, recent releases, documentation quality
+5. **Maintenance Status**: Active development, recent releases, documentation
 
-### Automatic Actions
+### Project Board Workflow
 
-- **Weekly Triage**: Every Monday, an automated system analyzes all open module requests
-- **Priority Labels**: Issues are tagged with `priority: high/medium/low` based on scoring
-- **Stale Request Closure**: Low-priority requests with no activity for 6+ months may be automatically closed
-- **Feedback & Guidance**: All analyzed requests receive constructive feedback for improvement
+Module requests flow through a structured project board:
+
+| Status | Description | How to Get Here |
+|--------|-------------|----------------|
+| **Needs Analysis** | New requests awaiting triage | Automatically added when issue created |
+| **High Priority** | Score ≥ 70, ready for development | Complete request with popular tool + examples |
+| **Medium Priority** | Score 40-69, good candidates | Well-specified requests needing examples |
+| **Low Priority** | Score < 40, needs improvement | Incomplete or stale requests |
+| **Needs Examples** | Missing critical example files | Any request without uploaded example files |
+| **Ready for Development** | Maintainer-approved and complete | Manual promotion after review |
 
 ### Getting Your Request Prioritized
 
-To increase your module request's priority score:
+**Quick wins for higher priority:**
+- ✅ **Upload example files** (+20 points) - Most important factor
+- ✅ **Popular tool** (>500 GitHub stars) (+30 points)  
+- ✅ **Complete information** (+10 points)
+- ✅ **Community engagement** (+5 per 👍, +3 per comment)
 
-- **Provide complete information**: Fill all required fields thoroughly  
-- **Upload quality example files**: Real tool outputs (not copy-pasted text)
-- **Include tool repository**: Help us assess popularity and maintenance status
-- **Explain the value**: Why would this module benefit the MultiQC community?
-- **Engage constructively**: Participate in discussions, provide additional context
-- **Use `@claude analyze-module`**: Get instant automated feedback on your request
+**Interactive help available:**
+- Comment `@claude analyze-module` for instant detailed analysis
+- Get specific recommendations for improvement
+- Understand your current priority score and how to increase it
 
-### Interactive Analysis
+### Automated Actions
 
-You can get immediate analysis of any module request by commenting `@claude analyze-module` on the issue. This provides:
+- **Instant Analysis**: New requests get immediate feedback and labeling
+- **Weekly Bulk Triage**: Monday analysis of all open requests
+- **Project Sync**: Issues automatically move through project board columns
+- **Stale Management**: Low-priority requests with no activity may be closed (reopenable)
 
-- Technical feasibility assessment
-- Tool popularity metrics
-- Priority scoring explanation  
-- Specific improvement suggestions
-- Comparison with existing modules
-
-Closed requests can always be reopened if there's renewed interest or significant improvements to the tool/request.
+The system is transparent, fair, and designed to help both maintainers prioritize work and contributors understand how to create successful requests.
 
 However, don't be put off by this template - other more general issues and suggestions are welcome! Contributions to the code are even more welcome ;)
 

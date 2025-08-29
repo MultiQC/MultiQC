@@ -14,7 +14,7 @@ body:
         3. **Check if a similar module already exists** in the [modules list](https://multiqc.info/modules/)
         4. **Consider tool popularity and community need** - this affects prioritization
 
-        ✨ **Pro tip**: After submitting, comment `@claude analyze-module` for instant automated feedback and priority assessment!
+        ✨ **Automated help**: This request will be automatically analyzed and added to our Module Triage project board. Comment `@claude analyze-module` anytime for detailed feedback!
   - type: input
     id: name
     attributes:
