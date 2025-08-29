@@ -1,4 +1,4 @@
 deacon:
-  fn : "deacon*.json"
-  contents_re : '"seqs_in"'
-  module : "deacon"
+  fn : "deacon*.json" #Sucht Dateien mit Namen deacon[...].json
+  contents_re : '"seqs_in"' #Sucht nach Inhalt "seqs_in"
+  module : "deacon" #wenn gefunden, rufe deacon auf
