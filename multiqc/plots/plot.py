@@ -188,6 +188,7 @@ class PConfig(ValidatedConfig):
     x_lines: Optional[List[FlatLine]] = None
     y_lines: Optional[List[FlatLine]] = None
     series_label: str = "samples"
+    flat_if_very_large: bool = True
 
     @classmethod
     def from_pconfig_dict(cls, pconfig: Union[Mapping[str, Any], "PConfig", None]):
@@ -559,7 +560,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
-        flat_if_very_large: bool = True,
         series_label: Optional[str] = None,
         n_samples_per_dataset: Optional[List[int]] = None,
     ) -> "Plot[DatasetT, PConfigT]":
@@ -573,7 +573,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
         :param defer_render_if_large: whether to defer rendering if the number of data points is large
-        :param flat_if_very_large: whether to render flat if the number of data points is very large
         :param series_label: label for the series, e.g. "samples" or "statuses"
         :param n_samples_per_dataset: number of actual samples for each dataset (assumes series_label are samples)
         """
@@ -601,7 +600,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if config.plots_force_flat:
             flat = True
         if (
-            flat_if_very_large
+            pconfig.flat_if_very_large
             and not config.plots_force_interactive
             and n_series_per_dataset[0] > config.plots_flat_numseries
         ):
@@ -726,9 +725,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 n_samples = n_samples_per_dataset[idx]
             else:
                 n_samples = 0
-            if n_samples > 1:
+            if n_samples > 1 and series_label:
                 subtitles += [f"{n_samples} {pconfig.series_label}"]
-            elif n_series > 1:
+            elif n_series > 1 and series_label:
                 subtitles += [f"{n_series} {pconfig.series_label}"]
             if subtitles:
                 dconfig["subtitle"] = ", ".join(subtitles)
