@@ -1,4 +1,4 @@
-name: Claude Code Review
+name: Claude Code Review & Module Analysis
 
 on:
   issue_comment:
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: read
+      issues: write
       pull-requests: write
       id-token: write
 
@@ -31,8 +31,35 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run Claude PR Action
-        uses: anthropics/claude-code-action@beta
+      - name: Run Claude Action
+        uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          timeout_minutes: "60"
+          claude_args: |
+            --max-turns 10
+            --model claude-sonnet-4-20250514
+            --system-prompt "
+            You are Claude, an AI assistant helping with MultiQC development. You have special capabilities for module request analysis.
+
+            ## Module Request Commands:
+            When users mention '@claude analyze-module' or similar, perform a detailed analysis of module requests including:
+            - Technical feasibility assessment
+            - Tool popularity and community metrics lookup
+            - Example file quality evaluation  
+            - Priority scoring based on the criteria from issue #3219
+            - Specific improvement suggestions
+            - Comparison with existing MultiQC modules
+
+            ## Module Request Validation:
+            For new module requests (issues with 'module: new' label), automatically:
+            - Check completeness of required fields
+            - Validate example file uploads
+            - Assess technical feasibility
+            - Provide constructive feedback
+            - Add appropriate priority labels if analysis is thorough
+
+            ## Standard Code Review:
+            Continue to provide code reviews, bug fixes, and general development assistance as usual.
+            
+            Always be helpful, constructive, and follow MultiQC coding standards defined in CLAUDE.md.
+            "

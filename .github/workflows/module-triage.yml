@@ -1,0 +1,113 @@
+name: Module Request Triage
+
+on:
+  # Run weekly on Mondays at 9 AM UTC
+  schedule:
+    - cron: "0 9 * * 1"
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (no actions taken)'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  issues: write
+  pull-requests: read
+  contents: read
+
+jobs:
+  triage-module-requests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Triage Module Requests
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            /triage-module-requests
+            
+            Analyze all open GitHub issues with the "module: new" label and perform automated triage based on these criteria:
+
+            ## Scoring Criteria (as requested in issue #3219):
+            1. **Stale Factor**: Issue age and recent activity level
+            2. **Tool Popularity**: GitHub repository metrics (stars, forks, recent commits)
+            3. **Community Engagement**: Number of 👍 reactions, comments, and participant count
+            4. **Technical Feasibility**: Quality of example files, clear output format, well-defined tool
+            5. **Request Completeness**: All required fields filled, example files provided
+
+            ## Actions to Take:
+            
+            ### For Each Module Request Issue:
+            1. **Calculate Priority Score** (0-100):
+               - Stale factor: -20 points if >6 months old with no activity in last 3 months
+               - Tool popularity: +30 points for >500 GitHub stars, +15 for 100-500, +5 for 50-100
+               - Community engagement: +5 per 👍 reaction, +3 per meaningful comment
+               - Technical feasibility: +20 for complete example files, +10 for partial
+               - Request completeness: +10 for all required fields filled
+            
+            2. **Add Priority Labels**:
+               - `priority: high` (score ≥ 70)
+               - `priority: medium` (score 40-69) 
+               - `priority: low` (score < 40)
+            
+            3. **Add Comments with Analysis**:
+               - Explain the priority score and reasoning
+               - Provide specific feedback for improvement if needed
+               - Include tool popularity metrics when available
+            
+            4. **Handle Low Priority Stale Requests**:
+               - Close issues with score < 30 AND no activity in last 6 months
+               - Add informative closing comment explaining the decision
+               - Mention that the issue can be reopened if there's renewed interest
+            
+            5. **Create Summary Report**:
+               - Generate a summary of all analyzed requests
+               - Include statistics on priority distribution
+               - Highlight any high-priority requests needing attention
+
+            ## Additional Instructions:
+            - Be respectful and constructive in all comments
+            - Focus on helping improve request quality, not just scoring
+            - Use GitHub's REST API to gather issue metrics and repository data
+            - If this is a dry run (${{ inputs.dry_run == 'true' }}), only analyze and report - don't take actions
+            - Tag @ewels and @vladsavelyev in the summary report
+
+          claude_args: |
+            --max-turns 15
+            --model claude-sonnet-4-20250514
+
+  # Separate job to create a comprehensive report
+  generate-triage-report:
+    needs: triage-module-requests
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate Module Request Report
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Create a comprehensive Module Request Triage Report and post it as a comment on issue #3219.
+
+            The report should include:
+            1. **Triage Summary**: Total requests analyzed, priority distribution
+            2. **High Priority Requests**: List of module requests that need maintainer attention
+            3. **Actions Taken**: Issues closed, labels added, feedback provided
+            4. **Tool Popularity Insights**: Popular tools that might be good candidates
+            5. **Quality Improvements**: Common issues found and suggested template improvements
+            6. **Next Steps**: Recommendations for maintainers
+
+            Format the report professionally and include relevant statistics and links to specific issues.
+
+          claude_args: |
+            --max-turns 5
+            --model claude-sonnet-4-20250514
