@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Currently, `dedup` and `extract` commands are supported.
+    Supported commands: `dedup`, `extract`, `whitelist`, and `count`.
 
     Sample names are extracted from log files if possible. In logs, input and output file paths are printed.
     However, either can be redirected from stdin/stdout:
@@ -68,17 +68,52 @@ class MultiqcModule(BaseMultiqcModule):
                 if "version" in data:  # Add version info
                     self.add_software_version(data.pop("version"), f["s_name"])
 
+        whitelist_data_by_sample = dict()
+        for f in self.find_log_files("umitools/whitelist"):
+            # Parse the log file for sample name and statistics
+            data = self.parse_whitelist_logs(f)
+            if data:
+                f["s_name"] = self._parse_s_name(f)
+                if f["s_name"] in whitelist_data_by_sample:
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                whitelist_data_by_sample[f["s_name"]] = data
+                self.add_data_source(f)  # Add the log file information to the multiqc_sources.txt
+                if "version" in data:  # Add version info
+                    self.add_software_version(data.pop("version"), f["s_name"])
+
+        count_data_by_sample = dict()
+        for f in self.find_log_files("umitools/count"):
+            # Parse the log file for sample name and statistics
+            data = self.parse_count_logs(f)
+            if data:
+                f["s_name"] = self._parse_s_name(f)
+                if f["s_name"] in count_data_by_sample:
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                count_data_by_sample[f["s_name"]] = data
+                self.add_data_source(f)  # Add the log file information to the multiqc_sources.txt
+                if "version" in data:  # Add version info
+                    self.add_software_version(data.pop("version"), f["s_name"])
+
         # Check the log files against the user supplied list of samples to ignore
         dedup_data_by_sample = self.ignore_samples(dedup_data_by_sample)
         extract_data_by_sample = self.ignore_samples(extract_data_by_sample)
-        if len(dedup_data_by_sample) == 0 and len(extract_data_by_sample) == 0:
+        whitelist_data_by_sample = self.ignore_samples(whitelist_data_by_sample)
+        count_data_by_sample = self.ignore_samples(count_data_by_sample)
+        
+        if (len(dedup_data_by_sample) == 0 and len(extract_data_by_sample) == 0 and 
+            len(whitelist_data_by_sample) == 0 and len(count_data_by_sample) == 0):
             raise ModuleNoSamplesFound
+        
         log.info(f"Found {len(dedup_data_by_sample)} deduplication reports")
         log.info(f"Found {len(extract_data_by_sample)} extract reports")
+        log.info(f"Found {len(whitelist_data_by_sample)} whitelist reports")
+        log.info(f"Found {len(count_data_by_sample)} count reports")
 
         # Write parsed reports data to a file
         self.write_data_file(dedup_data_by_sample, "multiqc_umitools_dedup")
         self.write_data_file(extract_data_by_sample, "multiqc_umitools_extract")
+        self.write_data_file(whitelist_data_by_sample, "multiqc_umitools_whitelist")
+        self.write_data_file(count_data_by_sample, "multiqc_umitools_count")
 
         if dedup_data_by_sample:
             self.dedup_general_stats_table(dedup_data_by_sample)
@@ -95,6 +130,14 @@ class MultiqcModule(BaseMultiqcModule):
                 for v in extract_data_by_sample.values()
             ):
                 self.umitools_extract_barplot_regex(extract_data_by_sample)
+
+        if whitelist_data_by_sample:
+            self.whitelist_general_stats_table(whitelist_data_by_sample)
+            self.whitelist_barplot(whitelist_data_by_sample)
+
+        if count_data_by_sample:
+            self.count_general_stats_table(count_data_by_sample)
+            self.count_barplot(count_data_by_sample)
 
     def _parse_s_name(self, f) -> str:
         """
@@ -203,6 +246,92 @@ class MultiqcModule(BaseMultiqcModule):
 
         return data
 
+    @staticmethod
+    def parse_whitelist_logs(f) -> Dict:
+        regexes = [
+            (int, "whitelist_input_reads", r"INFO Input Reads: (\d+)"),
+            (int, "reads_matched_barcode", r"INFO Reads with cell barcodes: (\d+)"),
+            (int, "reads_matched_whitelisted", r"INFO Reads with whitelisted cell barcodes: (\d+)"),
+            (int, "reads_error_corrected", r"INFO Reads with cell barcodes error corrected to whitelisted cell barcodes: (\d+)"),
+            (int, "unique_barcodes", r"INFO Number of unique cell barcodes: (\d+)"),
+            (int, "whitelisted_barcodes", r"INFO Number of whitelisted cell barcodes: (\d+)"),
+            (str, "version", r"# UMI-tools version: ([\d\.]+)"),
+        ]
+
+        data: Dict[str, Union[str, int, float]] = {}
+        # Search for values using regular expressions
+        for type_, key, regex in regexes:
+            re_matches = re.search(regex, f["f"])
+            if re_matches:
+                if key == "version":
+                    data[key] = re_matches.group(1)
+                else:
+                    data[key] = type_(re_matches.group(1))
+
+        # Calculate supplementary stats
+        try:
+            data["whitelist_percent_matched"] = round(
+                ((data["reads_matched_barcode"] / data["whitelist_input_reads"]) * 100.0), 2
+            )
+        except (KeyError, ZeroDivisionError):
+            pass
+        try:
+            data["whitelist_percent_whitelisted"] = round(
+                ((data["reads_matched_whitelisted"] / data["whitelist_input_reads"]) * 100.0), 2
+            )
+        except (KeyError, ZeroDivisionError):
+            pass
+        try:
+            data["whitelist_error_correction_rate"] = round(
+                ((data["reads_error_corrected"] / data["reads_matched_barcode"]) * 100.0), 2
+            )
+        except (KeyError, ZeroDivisionError):
+            pass
+
+        return data
+
+    @staticmethod
+    def parse_count_logs(f) -> Dict:
+        regexes = [
+            (int, "count_input_reads", r"INFO Input Reads: (\d+)"),
+            (int, "count_output_reads", r"INFO Number of reads out: (\d+)"),
+            (int, "genes_with_umis", r"INFO Total genes: (\d+)"),
+            (int, "umis_deduplicated", r"INFO Total number of UMIs: (\d+)"),
+            (int, "positions_deduplicated", r"INFO Total number of positions deduplicated: (\d+)"),
+            (float, "mean_umi_per_gene", r"INFO Mean number of UMIs per gene: ([\d\.]+)"),
+            (str, "version", r"# UMI-tools version: ([\d\.]+)"),
+        ]
+
+        data: Dict[str, Union[str, int, float]] = {}
+        # Search for values using regular expressions
+        for type_, key, regex in regexes:
+            re_matches = re.search(regex, f["f"])
+            if re_matches:
+                if key == "version":
+                    data[key] = re_matches.group(1)
+                else:
+                    data[key] = type_(re_matches.group(1))
+
+        # Calculate supplementary stats
+        try:
+            data["count_percent_passing"] = round(
+                ((data["count_output_reads"] / data["count_input_reads"]) * 100.0), 2
+            )
+        except (KeyError, ZeroDivisionError):
+            pass
+        try:
+            data["count_removed_reads"] = data["count_input_reads"] - data["count_output_reads"]
+        except KeyError:
+            pass
+        try:
+            data["deduplication_rate"] = round(
+                ((data["count_removed_reads"] / data["count_input_reads"]) * 100.0), 2
+            )
+        except (KeyError, ZeroDivisionError):
+            pass
+
+        return data
+
     def dedup_general_stats_table(self, data_by_sample):
         """
         Take the parsed stats from the umitools report and add it to the
@@ -241,6 +370,50 @@ class MultiqcModule(BaseMultiqcModule):
             "extract_percent_passing": {
                 "title": "% UMI Extract",
                 "description": "% reads from which a UMI extraction succeeded.",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
+        }
+        self.general_stats_addcols(data_by_sample, headers)
+
+    def whitelist_general_stats_table(self, data_by_sample):
+        """Add key whitelist metrics to the general statistics table"""
+        headers = {
+            "reads_matched_whitelisted": {
+                "title": f"{config.read_count_prefix} Whitelisted",
+                "description": f"Reads with whitelisted cell barcodes ({config.read_count_desc})",
+                "min": 0,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "scale": "PuRd",
+            },
+            "whitelist_percent_whitelisted": {
+                "title": "% Whitelisted",
+                "description": "% reads matching whitelisted cell barcodes",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
+        }
+        self.general_stats_addcols(data_by_sample, headers)
+
+    def count_general_stats_table(self, data_by_sample):
+        """Add key count metrics to the general statistics table"""
+        headers = {
+            "count_output_reads": {
+                "title": f"{config.read_count_prefix} Counted",
+                "description": f"Reads counted after UMI collapsing ({config.read_count_desc})",
+                "min": 0,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "scale": "PuRd",
+            },
+            "count_percent_passing": {
+                "title": "% UMI Counted", 
+                "description": "% reads that passed UMI counting",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
@@ -395,6 +568,109 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "id": "umitools_stats_violin",
                     "title": "UMI-tools: UMI stats",
+                },
+            ),
+        )
+
+    def whitelist_barplot(self, data_by_sample):
+        """Generate bar plots for whitelist metrics"""
+        
+        # Whitelist success rate plot
+        keys = {
+            "reads_matched_whitelisted": {"color": "#7fc97f", "name": "Whitelisted reads"},
+        }
+        
+        # Calculate non-whitelisted but matched reads
+        plot_data = {}
+        for sample, data in data_by_sample.items():
+            plot_data[sample] = {
+                "reads_matched_whitelisted": data.get("reads_matched_whitelisted", 0),
+            }
+            # Add non-whitelisted reads that matched barcode pattern
+            non_whitelisted = data.get("reads_matched_barcode", 0) - data.get("reads_matched_whitelisted", 0)
+            if non_whitelisted > 0:
+                plot_data[sample]["reads_matched_non_whitelisted"] = non_whitelisted
+
+        # Update keys if we have non-whitelisted reads
+        if any("reads_matched_non_whitelisted" in sample_data for sample_data in plot_data.values()):
+            keys["reads_matched_non_whitelisted"] = {"color": "#fdc086", "name": "Non-whitelisted barcode matches"}
+
+        self.add_section(
+            name="Whitelist Success Rate",
+            anchor="umitools-whitelist-plot", 
+            description="Cell barcode whitelisting success rate from `umi_tools whitelist`",
+            plot=bargraph.plot(
+                plot_data,
+                keys,
+                {
+                    "id": "umitools_whitelist_barplot",
+                    "title": "UMI-tools: Whitelist Success Rate",
+                    "ylab": "# Reads",
+                    "cpswitch_counts_label": "Number of Reads",
+                },
+            ),
+        )
+
+        # Barcode statistics plot
+        if any("unique_barcodes" in data for data in data_by_sample.values()):
+            barcode_keys = {
+                "whitelisted_barcodes": {"color": "#7fc97f", "name": "Whitelisted barcodes"},
+            }
+
+            # Create data for barcode plot
+            barcode_data = {}
+            for sample, data in data_by_sample.items():
+                if "unique_barcodes" in data and "whitelisted_barcodes" in data:
+                    barcode_data[sample] = {
+                        "whitelisted_barcodes": data.get("whitelisted_barcodes", 0),
+                    }
+                    # Add non-whitelisted unique barcodes
+                    non_whitelisted_barcodes = data.get("unique_barcodes", 0) - data.get("whitelisted_barcodes", 0)
+                    if non_whitelisted_barcodes > 0:
+                        barcode_data[sample]["non_whitelisted_barcodes"] = non_whitelisted_barcodes
+
+            # Update keys if we have non-whitelisted barcodes
+            if any("non_whitelisted_barcodes" in sample_data for sample_data in barcode_data.values()):
+                barcode_keys["non_whitelisted_barcodes"] = {"color": "#beaed4", "name": "Non-whitelisted barcodes"}
+
+            if barcode_data:
+                self.add_section(
+                    name="Cell Barcode Statistics",
+                    anchor="umitools-whitelist-barcodes",
+                    description="Number of unique vs whitelisted cell barcodes",
+                    plot=bargraph.plot(
+                        barcode_data,
+                        barcode_keys,
+                        {
+                            "id": "umitools_whitelist_barcodes_barplot",
+                            "title": "UMI-tools: Cell Barcode Statistics", 
+                            "ylab": "# Barcodes",
+                            "cpswitch_counts_label": "Number of Barcodes",
+                        },
+                    ),
+                )
+
+    def count_barplot(self, data_by_sample):
+        """Generate bar plots for count metrics"""
+        
+        # Count deduplication plot
+        keys = {
+            "count_output_reads": {"color": "#7fc97f", "name": "Reads counted"},
+            "count_removed_reads": {"color": "#fdc086", "name": "Reads removed"},
+        }
+
+        self.add_section(
+            name="UMI Count Results", 
+            anchor="umitools-count-plot",
+            description="Read counting and deduplication results from `umi_tools count`",
+            plot=bargraph.plot(
+                data_by_sample,
+                keys,
+                {
+                    "id": "umitools_count_barplot",
+                    "title": "UMI-tools: Count Results",
+                    "ylab": "# Reads",
+                    "cpswitch_counts_label": "Number of Reads",
                 },
             ),
         )
