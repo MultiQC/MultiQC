@@ -67,7 +67,6 @@ class MultiqcModule(BaseMultiqcModule):
                 #"prefix_length" : {"title" : "prefix length"},
                 #"deplete" : {"title" : "title"},
                 #"rename" : {"title" : "rename"},
-                #-> optionale headers?
                 "seqs_in" : {"title" : "reads in"},
                 "seqs_out" : {"title" : "reads out"},
                 "seqs_removed" : {"title" : "reads removed"},
@@ -88,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
         plot_data = {}
         for sample, stats in self.deacon_data.items(): #iterate through all samples and their statistics
             if stats.get("seqs_removed_proportion") is not None: #check, if report contains "seqs_removed_proportion"
-                plot_data[sample] = stats["seqs_removed_proportion"] * 100 #convert to %
+                plot_data[sample] = stats["seqs_removed_proportion"]
 
         if len(plot_data) > 0: #create if there is data
             pconfig = { #plot-configuration, dictionary; no default configuration
