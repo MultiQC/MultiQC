@@ -1,5 +1,6 @@
 import logging
 import json 
+import re
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph 
@@ -22,12 +23,23 @@ class MultiqcModule(BaseMultiqcModule):
 
         #iterate through all detected Deacon log files
         for f in self.find_log_files("deacon", filehandles = True): #filehandles = opens the files
-            sample_name = self.clean_s_name(f["s_name"], f) #f["s_name"] -> samplename; self.clean_s_name -> normalizes the name to avoid duplicates
+            if not f["fn"].endswith("deacon.json"): #every json-report ends with deacon.json
+                continue
+            #check, if the first line with the version metrics contains deacon:
+            f["f"].seek(0) #to be safe to begin the search at the beginning
+            first_line = f["f"].readline().strip() #.strip() removes spaces and line brakes
+            if not re.match(r'^version:\s*"deacon', first_line): #regex, ignores spaces between version: and "deacon ......"
+                log.warining(f"Skipping {f['f']} : no deacon report")
+                continue
+            f["f"].seek(0) #to get back to the beginning again
             try:
                 data = json.load(f["f"]) #load JSON data from filehandles
             except Exception as e: #catch parsing-errors in e
                 log.error(f"failed to parse data from {f['f']} : {e}") #{e} -> error message
                 continue
+            
+            sample_name = self.clean_s_name(f["s_name"], f) #f["s_name"] -> samplename; self.clean_s_name -> normalizes the name to avoid duplicates
+
 
             #extract metrics for each sample
             self.deacon_data[sample_name] = {
@@ -54,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         
         if len(self.deacon_data) == 0:
-            raise UserWarning("no deacon reports found")
+            log.warning("no deacon reports found")
         
         #create table in the report
         self.add_data_table(
