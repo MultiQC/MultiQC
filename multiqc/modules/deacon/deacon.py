@@ -95,3 +95,4 @@ class MultiqcModule(BaseMultiqcModule):
                 description = "percentage of removed reads per sample",
                 plot = bargraph.plot(plot_data, pconfig) #erzeugt das Balkendiagramm
             )
+
