@@ -71,7 +71,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "seqs_in" : {"title" : "reads in"},
                 "seqs_out" : {"title" : "reads out"},
                 "seqs_removed" : {"title" : "reads removed"},
-                "seqs_removed_proportion" : {"title" : "reads removed (%)", "format" : "{:%}"}, #Angabe in Prozent
+                "seqs_removed_proportion" : {"title" : "reads removed (%)", "format" : "{:%}"},
                 "bp_in" : {"title" : "bp in"},
                 "bp_out" : {"title" : "bp out"},
                 "bp_removed" : {"title" : "bp removed"},
