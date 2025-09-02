@@ -32,8 +32,10 @@ class BoxPlotConfig(PConfig):
         super().__init__(path_in_cfg=path_in_cfg or ("boxplot",), **data)
 
 
-# Type of single box (matching one sample)
-BoxT = List[Union[int, float]]
+# Type of single box (matching one sample) - can be raw data or statistics
+BoxT = Union[List[Union[int, float]], Dict[str, Union[int, float]]]
+# Type for statistics dict
+BoxStatsT = Dict[str, Union[int, float]]
 
 
 class Dataset(BaseDataset):
@@ -41,6 +43,7 @@ class Dataset(BaseDataset):
     samples: List[str]
     data_sorted: Optional[List[BoxT]] = None  # Sorted version of data
     samples_sorted: Optional[List[str]] = None  # Sorted version of samples
+    is_stats_data: bool = False  # True if data contains pre-calculated statistics
 
     def sample_names(self) -> List[SampleName]:
         return [SampleName(sample) for sample in self.samples]
@@ -51,6 +54,12 @@ class Dataset(BaseDataset):
         data_by_sample: Dict[str, BoxT],
         pconfig: Optional[BoxPlotConfig] = None,
     ) -> "Dataset":
+        # Detect if we have statistics data or raw data
+        is_stats_data = False
+        if data_by_sample:
+            first_sample_data = next(iter(data_by_sample.values()))
+            if isinstance(first_sample_data, dict):
+                is_stats_data = True
         # Store original order (reversed for box plot display)
         original_data = list(data_by_sample.values())
         original_samples = list(data_by_sample.keys())
@@ -68,12 +77,19 @@ class Dataset(BaseDataset):
             median_values = {}
             for sample, values in data_by_sample.items():
                 if values:
-                    sorted_values = sorted(values)
-                    n = len(sorted_values)
-                    median = (
-                        sorted_values[n // 2] if n % 2 == 1 else (sorted_values[n // 2 - 1] + sorted_values[n // 2]) / 2
-                    )
-                    median_values[sample] = median
+                    if is_stats_data:
+                        # Use pre-calculated median from statistics
+                        median_values[sample] = values.get("median", 0)
+                    else:
+                        # Calculate median from raw data
+                        sorted_values = sorted(values)
+                        n = len(sorted_values)
+                        median = (
+                            sorted_values[n // 2]
+                            if n % 2 == 1
+                            else (sorted_values[n // 2 - 1] + sorted_values[n // 2]) / 2
+                        )
+                        median_values[sample] = median
                 else:
                     median_values[sample] = 0  # Handle empty data
 
@@ -99,12 +115,16 @@ class Dataset(BaseDataset):
             samples=main_samples,
             data_sorted=data_sorted,
             samples_sorted=samples_sorted,
+            is_stats_data=is_stats_data,
         )
 
         # Determine boxpoints based on PConfig first, then global config, then dynamic logic
         boxpoints: Union[bool, str] = "outliers"
 
-        if pconfig and pconfig.boxpoints is not None:
+        if is_stats_data:
+            # For statistics data, we can't show individual points
+            boxpoints = False
+        elif pconfig and pconfig.boxpoints is not None:
             # Use explicit PConfig boxpoints setting
             boxpoints = pconfig.boxpoints
         elif config.boxplot_boxpoints is not None:
@@ -151,22 +171,46 @@ class Dataset(BaseDataset):
 
         for sname, values in zip(self.samples, self.data):
             params = copy.deepcopy(self.trace_params)
-            fig.add_trace(
-                go.Box(
-                    x=values,
-                    name=sname,
-                    **params,
-                ),
-            )
+
+            if self.is_stats_data:
+                # Use statistics to create box plot
+                stats_dict = cast(BoxStatsT, values)
+                fig.add_trace(
+                    go.Box(
+                        q1=[stats_dict.get("q1", 0)],
+                        median=[stats_dict.get("median", 0)],
+                        q3=[stats_dict.get("q3", 0)],
+                        lowerfence=[stats_dict.get("min", 0)],
+                        upperfence=[stats_dict.get("max", 0)],
+                        mean=[stats_dict.get("mean", stats_dict.get("median", 0))],
+                        name=sname,
+                        **params,
+                    ),
+                )
+            else:
+                # Use raw data points
+                raw_values = cast(List[Union[int, float]], values)
+                fig.add_trace(
+                    go.Box(
+                        x=raw_values,
+                        name=sname,
+                        **params,
+                    ),
+                )
         return fig
 
     def save_data_file(self) -> None:
         vals_by_sample: Dict[str, BoxT] = {}
         for sample, values in zip(self.samples, self.data):
-            vals_by_sample[sample] = values
+            if self.is_stats_data:
+                # For statistics data, save the statistics dict
+                vals_by_sample[sample] = values
+            else:
+                # For raw data, save the raw values
+                vals_by_sample[sample] = values
         report.write_data_file(vals_by_sample, self.uid)
 
-    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:  # type: ignore[override]
         """Format dataset as a markdown table with basic statistics"""
         prompt = "|Sample|Min|Q1|Median|Q3|Max|Mean|\n"
         prompt += "|---|---|---|---|---|---|---|\n"
@@ -177,22 +221,33 @@ class Dataset(BaseDataset):
 
         for sample, values in zip(self.samples, self.data):
             # Skip samples with no data
-            if len(values) == 0:
+            if (self.is_stats_data and not values) or (not self.is_stats_data and len(values) == 0):
                 continue
 
             # Use pseudonym if available, otherwise use original sample name
             pseudonym = report.anonymize_sample_name(sample)
 
-            # Calculate statistics
-            sorted_vals = sorted(values)
-            n = len(sorted_vals)
+            if self.is_stats_data:
+                # Use pre-calculated statistics
+                stats_dict = cast(BoxStatsT, values)
+                min_val = stats_dict.get("min", 0)
+                max_val = stats_dict.get("max", 0)
+                median = stats_dict.get("median", 0)
+                q1 = stats_dict.get("q1", min_val)
+                q3 = stats_dict.get("q3", max_val)
+                mean = stats_dict.get("mean", median)
+            else:
+                # Calculate statistics from raw data
+                raw_values = cast(List[Union[int, float]], values)
+                sorted_vals = sorted(raw_values)
+                n = len(sorted_vals)
 
-            min_val = sorted_vals[0]
-            max_val = sorted_vals[-1]
-            median = sorted_vals[n // 2] if n % 2 == 1 else (sorted_vals[n // 2 - 1] + sorted_vals[n // 2]) / 2
-            q1 = sorted_vals[n // 4] if n >= 4 else sorted_vals[0]
-            q3 = sorted_vals[3 * n // 4] if n >= 4 else sorted_vals[-1]
-            mean = sum(values) / len(values)
+                min_val = sorted_vals[0]
+                max_val = sorted_vals[-1]
+                median = sorted_vals[n // 2] if n % 2 == 1 else (sorted_vals[n // 2 - 1] + sorted_vals[n // 2]) / 2
+                q1 = sorted_vals[n // 4] if n >= 4 else sorted_vals[0]
+                q3 = sorted_vals[3 * n // 4] if n >= 4 else sorted_vals[-1]
+                mean = sum(raw_values) / len(raw_values)
 
             prompt += (
                 f"|{pseudonym}|"
@@ -483,9 +538,20 @@ def plot(
     pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
 ) -> Union["BoxPlot", str, None]:
     """
-    Plot a box plot. Expects either:
-    - a dict mapping sample names to data point lists or dicts,
-    - a dict mapping sample names to a dict of statistics (e.g. {min, max, median, mean, std, q1, q3 etc.})
+    Plot a box plot. Supports two input formats:
+
+    1. Raw data points (traditional):
+       {'sample1': [1.2, 3.4, 2.1, ...], 'sample2': [2.3, 4.1, ...]}
+
+    2. Pre-calculated statistics (memory efficient for large datasets):
+       {'sample1': {'min': 1.0, 'q1': 2.0, 'median': 3.0, 'q3': 4.0, 'max': 5.0, 'mean': 3.2},
+        'sample2': {'min': 1.5, 'q1': 2.2, 'median': 3.1, 'q3': 4.1, 'max': 5.2, 'mean': 3.3}}
+
+    The statistics format dramatically reduces memory usage and file sizes for large datasets
+    (e.g., cell-level measurements) while producing identical visual output.
+
+    Required statistics keys: min, q1, median, q3, max
+    Optional statistics keys: mean, count, std
     """
     inputs: BoxPlotInputData = BoxPlotInputData.create(list_of_data_by_sample, pconfig)
     inputs = BoxPlotInputData.merge_with_previous(inputs)
