@@ -1030,6 +1030,8 @@ class MultiqcModule(BaseMultiqcModule):
                     pl.col("cell_area").std().alias("std"),
                     pl.col("cell_area").min().alias("min"),
                     pl.col("cell_area").max().alias("max"),
+                    pl.col("cell_area").quantile(0.25).alias("q1"),
+                    pl.col("cell_area").quantile(0.75).alias("q3"),
                     pl.col("cell_area").count().alias("count"),
                 ]
             )
@@ -1044,16 +1046,21 @@ class MultiqcModule(BaseMultiqcModule):
                     "cell_area_std": cell_area_stats["std"].item(),
                     "cell_area_min": cell_area_stats["min"].item(),
                     "cell_area_max": cell_area_stats["max"].item(),
+                    "cell_area_q1": cell_area_stats["q1"].item(),
+                    "cell_area_q3": cell_area_stats["q3"].item(),
                 }
             )
 
-            # Sample cell area values for distribution plots
-            count = cell_area_stats["count"].item()
-            print(f"count: {count}, sample name: {f['s_name']}")
-            sample_values = (
-                lazy_df.filter(pl.col("cell_area").is_not_null()).select("cell_area").collect().to_series().to_list()
-            )
-            cell_stats["cell_area_values"] = sample_values
+            # Store box plot statistics instead of raw values
+            cell_stats["cell_area_box_stats"] = {
+                "min": cell_area_stats["min"].item(),
+                "q1": cell_area_stats["q1"].item(),
+                "median": cell_area_stats["median"].item(),
+                "q3": cell_area_stats["q3"].item(),
+                "max": cell_area_stats["max"].item(),
+                "mean": cell_area_stats["mean"].item(),
+                "count": cell_area_stats["count"].item(),
+            }
 
         # Nucleus area distribution stats using lazy operations
         nucleus_area_stats = (
@@ -1104,22 +1111,38 @@ class MultiqcModule(BaseMultiqcModule):
                     }
                 )
 
-                # Sample ratio values for distribution plots
-                count = ratio_stats["count"].item()
-                sample_values = (
+                # Calculate ratio distribution statistics for box plots
+                ratio_dist_stats = (
                     lazy_df.filter(
                         (pl.col("cell_area").is_not_null())
                         & (pl.col("nucleus_area").is_not_null())
                         & (pl.col("cell_area") > 0)
                     )
                     .with_columns((pl.col("nucleus_area") / pl.col("cell_area")).alias("ratio"))
-                    .select("ratio")
+                    .select(
+                        [
+                            pl.col("ratio").min().alias("min"),
+                            pl.col("ratio").quantile(0.25).alias("q1"),
+                            pl.col("ratio").median().alias("median"),
+                            pl.col("ratio").quantile(0.75).alias("q3"),
+                            pl.col("ratio").max().alias("max"),
+                            pl.col("ratio").mean().alias("mean"),
+                            pl.col("ratio").count().alias("count"),
+                        ]
+                    )
                     .collect()
-                    .to_series()
-                    .to_list()
                 )
 
-                cell_stats["nucleus_to_cell_area_ratio_values"] = sample_values
+                if ratio_dist_stats["count"].item() > 0:
+                    cell_stats["nucleus_to_cell_area_ratio_box_stats"] = {
+                        "min": ratio_dist_stats["min"].item(),
+                        "q1": ratio_dist_stats["q1"].item(),
+                        "median": ratio_dist_stats["median"].item(),
+                        "q3": ratio_dist_stats["q3"].item(),
+                        "max": ratio_dist_stats["max"].item(),
+                        "mean": ratio_dist_stats["mean"].item(),
+                        "count": ratio_dist_stats["count"].item(),
+                    }
 
         # Store total transcript counts per cell (total_counts) for distribution plots
         total_count_check = (
@@ -1129,15 +1152,31 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         if total_count_check["count"].item() > 0:
-            count = total_count_check["count"].item()
-            sample_values = (
+            # Calculate total counts distribution statistics for box plots
+            total_counts_stats = (
                 lazy_df.filter(pl.col("total_counts").is_not_null())
-                .select("total_counts")
+                .select(
+                    [
+                        pl.col("total_counts").min().alias("min"),
+                        pl.col("total_counts").quantile(0.25).alias("q1"),
+                        pl.col("total_counts").median().alias("median"),
+                        pl.col("total_counts").quantile(0.75).alias("q3"),
+                        pl.col("total_counts").max().alias("max"),
+                        pl.col("total_counts").mean().alias("mean"),
+                        pl.col("total_counts").count().alias("count"),
+                    ]
+                )
                 .collect()
-                .to_series()
-                .to_list()
             )
-            cell_stats["total_counts_values"] = sample_values
+            cell_stats["total_counts_box_stats"] = {
+                "min": total_counts_stats["min"].item(),
+                "q1": total_counts_stats["q1"].item(),
+                "median": total_counts_stats["median"].item(),
+                "q3": total_counts_stats["q3"].item(),
+                "max": total_counts_stats["max"].item(),
+                "mean": total_counts_stats["mean"].item(),
+                "count": total_counts_stats["count"].item(),
+            }
 
         # Store gene transcript counts per cell (transcript_counts) for distribution plots
         detected_count_check = (
@@ -1147,15 +1186,31 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         if detected_count_check["count"].item() > 0:
-            count = detected_count_check["count"].item()
-            sample_values = (
+            # Calculate gene transcript counts distribution statistics for box plots
+            gene_counts_stats = (
                 lazy_df.filter(pl.col("transcript_counts").is_not_null())
-                .select("transcript_counts")
+                .select(
+                    [
+                        pl.col("transcript_counts").min().alias("min"),
+                        pl.col("transcript_counts").quantile(0.25).alias("q1"),
+                        pl.col("transcript_counts").median().alias("median"),
+                        pl.col("transcript_counts").quantile(0.75).alias("q3"),
+                        pl.col("transcript_counts").max().alias("max"),
+                        pl.col("transcript_counts").mean().alias("mean"),
+                        pl.col("transcript_counts").count().alias("count"),
+                    ]
+                )
                 .collect()
-                .to_series()
-                .to_list()
             )
-            cell_stats["gene_transcript_counts_values"] = sample_values
+            cell_stats["gene_transcript_counts_box_stats"] = {
+                "min": gene_counts_stats["min"].item(),
+                "q1": gene_counts_stats["q1"].item(),
+                "median": gene_counts_stats["median"].item(),
+                "q3": gene_counts_stats["q3"].item(),
+                "max": gene_counts_stats["max"].item(),
+                "mean": gene_counts_stats["mean"].item(),
+                "count": gene_counts_stats["count"].item(),
+            }
 
         # Add nucleus RNA fraction if nucleus_count is available
         if "nucleus_count" in schema:
@@ -1180,17 +1235,32 @@ class MultiqcModule(BaseMultiqcModule):
                     }
                 )
 
-                # Sample nucleus fraction values for distribution plots
-                count = nucleus_fraction_stats["count"].item()
-                sample_values = (
+                # Calculate nucleus RNA fraction distribution statistics for box plots
+                nucleus_fraction_dist_stats = (
                     lazy_df.filter(pl.col("total_counts") > 0)
                     .with_columns((pl.col("nucleus_count") / pl.col("total_counts")).alias("fraction"))
-                    .select("fraction")
+                    .select(
+                        [
+                            pl.col("fraction").min().alias("min"),
+                            pl.col("fraction").quantile(0.25).alias("q1"),
+                            pl.col("fraction").median().alias("median"),
+                            pl.col("fraction").quantile(0.75).alias("q3"),
+                            pl.col("fraction").max().alias("max"),
+                            pl.col("fraction").mean().alias("mean"),
+                            pl.col("fraction").count().alias("count"),
+                        ]
+                    )
                     .collect()
-                    .to_series()
-                    .to_list()
                 )
-                cell_stats["nucleus_rna_fraction_values"] = sample_values
+                cell_stats["nucleus_rna_fraction_box_stats"] = {
+                    "min": nucleus_fraction_dist_stats["min"].item(),
+                    "q1": nucleus_fraction_dist_stats["q1"].item(),
+                    "median": nucleus_fraction_dist_stats["median"].item(),
+                    "q3": nucleus_fraction_dist_stats["q3"].item(),
+                    "max": nucleus_fraction_dist_stats["max"].item(),
+                    "mean": nucleus_fraction_dist_stats["mean"].item(),
+                    "count": nucleus_fraction_dist_stats["count"].item(),
+                }
 
         return cell_stats
 
@@ -1511,7 +1581,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Check which samples have cell area data
         samples_with_areas = []
         for s_name, data in cells_data_by_sample.items():
-            if "cell_area_values" in data:
+            # Accept either pre-calculated statistics or raw values
+            if ("cell_area_box_stats" in data) or ("cell_area_values" in data and data["cell_area_values"]):
                 samples_with_areas.append(s_name)
 
         if not samples_with_areas:
@@ -1536,6 +1607,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         if SCIPY_AVAILABLE:
             from scipy.stats import gaussian_kde
+
+        # Skip density plots if only pre-calculated statistics are available
+        if "cell_area_values" not in cell_data:
+            log.info(
+                "Skipping cell area density plot - using pre-calculated statistics. Density plots require raw data."
+            )
+            return None
 
         cell_areas = cell_data["cell_area_values"]
         if not cell_areas or len(cell_areas) < 10:
@@ -1579,19 +1657,16 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot({"Density": density_data}, config)
 
     def _create_multi_sample_area_violins(self, cells_data_by_sample, samples_with_areas):
-        """Create box plots for multiple samples - one box per sample"""
+        """Create box plots for multiple samples using pre-calculated statistics"""
 
-        # For box plots, we provide the raw data points grouped by sample
+        # For box plots, we now provide pre-calculated statistics instead of raw data
         data = {}
 
         for s_name in samples_with_areas:
             cell_data = cells_data_by_sample[s_name]
-            if "cell_area_values" in cell_data:
-                # Store all cell area values for this sample
-                cell_areas = cell_data["cell_area_values"]
-                if cell_areas:
-                    # Box plots expect raw data points as a list
-                    data[s_name] = [float(area) for area in cell_areas]
+            if "cell_area_box_stats" in cell_data:
+                # Use pre-calculated box plot statistics
+                data[s_name] = cell_data["cell_area_box_stats"]
 
         if not data:
             return None
@@ -1610,7 +1685,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Check which samples have nucleus RNA fraction data
         samples_with_nucleus_data = []
         for s_name, data in cells_data_by_sample.items():
-            if "nucleus_rna_fraction_values" in data and data["nucleus_rna_fraction_values"]:
+            if "nucleus_rna_fraction_box_stats" in data or (
+                "nucleus_rna_fraction_values" in data and data["nucleus_rna_fraction_values"]
+            ):
                 samples_with_nucleus_data.append(s_name)
 
         if not samples_with_nucleus_data:
@@ -1632,6 +1709,13 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         from scipy import stats
+
+        # Skip density plots if only pre-calculated statistics are available
+        if "nucleus_rna_fraction_values" not in cell_data:
+            log.info(
+                "Skipping nucleus RNA fraction density plot - using pre-calculated statistics. Density plots require raw data."
+            )
+            return None
 
         nucleus_fractions = cell_data["nucleus_rna_fraction_values"]
         if not nucleus_fractions:
@@ -1700,17 +1784,20 @@ class MultiqcModule(BaseMultiqcModule):
         return plot
 
     def _create_multi_sample_nucleus_boxes(self, cells_data_by_sample, samples_with_nucleus_data):
-        """Create box plots for multiple samples - one box per sample"""
+        """Create box plots for multiple samples using pre-calculated statistics"""
 
-        # For box plots, we provide the raw data points grouped by sample
+        # For box plots, we now provide pre-calculated statistics instead of raw data
         data = {}
 
         for s_name in samples_with_nucleus_data:
             cell_data = cells_data_by_sample[s_name]
-            if "nucleus_rna_fraction_values" in cell_data:
+            if "nucleus_rna_fraction_box_stats" in cell_data:
+                # Use pre-calculated box plot statistics
+                data[s_name] = cell_data["nucleus_rna_fraction_box_stats"]
+            elif "nucleus_rna_fraction_values" in cell_data:
+                # Fallback to raw data if statistics not available (backward compatibility)
                 nucleus_fractions = cell_data["nucleus_rna_fraction_values"]
                 if nucleus_fractions:
-                    # Box plots expect raw data points as a list
                     data[s_name] = [float(fraction) for fraction in nucleus_fractions]
 
         if not data:
@@ -1730,7 +1817,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Check which samples have nucleus-to-cell area ratio data
         samples_with_ratio_data = []
         for s_name, data in cells_data_by_sample.items():
-            if "nucleus_to_cell_area_ratio_values" in data and data["nucleus_to_cell_area_ratio_values"]:
+            if "nucleus_to_cell_area_ratio_box_stats" in data or (
+                "nucleus_to_cell_area_ratio_values" in data and data["nucleus_to_cell_area_ratio_values"]
+            ):
                 samples_with_ratio_data.append(s_name)
 
         if not samples_with_ratio_data:
@@ -1755,6 +1844,13 @@ class MultiqcModule(BaseMultiqcModule):
         from scipy import stats
 
         from multiqc.plots import linegraph
+
+        # Skip density plots if only pre-calculated statistics are available
+        if "nucleus_to_cell_area_ratio_values" not in cell_data:
+            log.info(
+                "Skipping nucleus-to-cell area ratio density plot - using pre-calculated statistics. Density plots require raw data."
+            )
+            return None
 
         ratio_values = cell_data["nucleus_to_cell_area_ratio_values"]
         if not ratio_values:
@@ -1801,17 +1897,20 @@ class MultiqcModule(BaseMultiqcModule):
         return plot
 
     def _create_multi_sample_ratio_boxes(self, cells_data_by_sample, samples_with_ratio_data):
-        """Create box plots for multiple samples - one box per sample"""
+        """Create box plots for multiple samples using pre-calculated statistics"""
 
-        # For box plots, we provide the raw data points grouped by sample
+        # For box plots, we now provide pre-calculated statistics instead of raw data
         data = {}
 
         for s_name in samples_with_ratio_data:
             cell_data = cells_data_by_sample[s_name]
-            if "nucleus_to_cell_area_ratio_values" in cell_data:
+            if "nucleus_to_cell_area_ratio_box_stats" in cell_data:
+                # Use pre-calculated box plot statistics
+                data[s_name] = cell_data["nucleus_to_cell_area_ratio_box_stats"]
+            elif "nucleus_to_cell_area_ratio_values" in cell_data:
+                # Fallback to raw data if statistics not available (backward compatibility)
                 ratio_values = cell_data["nucleus_to_cell_area_ratio_values"]
                 if ratio_values:
-                    # Box plots expect raw data points as a list
                     data[s_name] = [float(ratio) for ratio in ratio_values]
 
         if not data:
@@ -2225,9 +2324,15 @@ class MultiqcModule(BaseMultiqcModule):
         samples_with_transcript_counts = {}
 
         for s_name, data in cells_data_by_sample.items():
-            if data and "total_counts_values" in data and data["total_counts_values"]:
+            # Check for pre-calculated statistics first, fall back to raw values
+            if data and "total_counts_box_stats" in data:
+                samples_with_transcripts[s_name] = data["total_counts_box_stats"]
+            elif data and "total_counts_values" in data and data["total_counts_values"]:
                 samples_with_transcripts[s_name] = data["total_counts_values"]
-            if data and "gene_transcript_counts_values" in data and data["gene_transcript_counts_values"]:
+
+            if data and "gene_transcript_counts_box_stats" in data:
+                samples_with_transcript_counts[s_name] = data["gene_transcript_counts_box_stats"]
+            elif data and "gene_transcript_counts_values" in data and data["gene_transcript_counts_values"]:
                 samples_with_transcript_counts[s_name] = data["gene_transcript_counts_values"]
 
         # If neither dataset is available, return None
@@ -2254,6 +2359,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Handle transcripts per cell data
         if samples_with_transcripts:
             _, transcript_values = next(iter(samples_with_transcripts.items()))
+            # Skip density plots for pre-calculated statistics (use box plots instead)
+            if isinstance(transcript_values, dict) and "min" in transcript_values:
+                log.info(
+                    "Skipping density plot for transcripts per cell - using pre-calculated statistics. Density plots require raw data."
+                )
+                return None
             raw_transcript_values = transcript_values
             try:
                 if SCIPY_AVAILABLE:
@@ -2285,7 +2396,16 @@ class MultiqcModule(BaseMultiqcModule):
         # Handle gene transcript counts per cell data
         if samples_with_transcript_counts:
             _, gene_values = next(iter(samples_with_transcript_counts.items()))
-            raw_gene_values = gene_values
+            # Skip density plots for pre-calculated statistics
+            if isinstance(gene_values, dict) and "min" in gene_values:
+                log.info(
+                    "Skipping density plot for gene transcripts per cell - using pre-calculated statistics. Density plots require raw data."
+                )
+                # For mixed cases, only show available density plots
+                if not raw_transcript_values:
+                    return None
+            else:
+                raw_gene_values = gene_values
             try:
                 if SCIPY_AVAILABLE:
                     from scipy.stats import gaussian_kde
@@ -2338,24 +2458,32 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(plot_data, config)
 
     def _create_multi_sample_combined_boxes(self, samples_with_transcripts, samples_with_transcript_counts):
-        """Create multi-sample combined box plots for transcripts and genes per cell"""
+        """Create multi-sample combined box plots for transcripts and genes per cell using pre-calculated statistics"""
 
         plot_data = []
         data_labels = []
 
-        # Add transcripts per cell data
+        # Add transcripts per cell data (prefer statistics over raw values)
         if samples_with_transcripts:
             transcripts_data = {}
             for s_name, transcript_values in samples_with_transcripts.items():
-                transcripts_data[s_name] = transcript_values
+                # Use pre-calculated statistics if available, otherwise use raw values
+                if isinstance(transcript_values, dict) and "min" in transcript_values:
+                    transcripts_data[s_name] = transcript_values  # Pre-calculated stats
+                else:
+                    transcripts_data[s_name] = transcript_values  # Raw values (backward compatibility)
             plot_data.append(transcripts_data)
             data_labels.append({"name": "Transcripts per Cell", "ylab": "Transcripts per cell"})
 
-        # Add gene transcript counts per cell data
+        # Add gene transcript counts per cell data (prefer statistics over raw values)
         if samples_with_transcript_counts:
             genes_data = {}
             for s_name, gene_values in samples_with_transcript_counts.items():
-                genes_data[s_name] = gene_values
+                # Use pre-calculated statistics if available, otherwise use raw values
+                if isinstance(gene_values, dict) and "min" in gene_values:
+                    genes_data[s_name] = gene_values  # Pre-calculated stats
+                else:
+                    genes_data[s_name] = gene_values  # Raw values (backward compatibility)
             plot_data.append(genes_data)
             data_labels.append({"name": "Gene Transcripts per Cell", "ylab": "Gene transcripts per cell"})
 

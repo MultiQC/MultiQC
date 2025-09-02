@@ -129,6 +129,7 @@ class BoxPlot extends Plot {
           lowerfence: [values.min || 0],
           upperfence: [values.max || 0],
           mean: [values.mean || values.median || 0],
+          y: [sample.name], // Add y-coordinate for horizontal box plot positioning
           name: sample.name,
           ...params,
         };
