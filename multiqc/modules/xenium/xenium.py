@@ -2,6 +2,7 @@ import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
+import re
 
 import numpy as np
 import polars as pl
@@ -409,7 +410,7 @@ class MultiqcModule(BaseMultiqcModule):
                     This plot shows two key cell-level distributions with separate tabs/datasets:
                     
                     **Tab 1: Transcripts per cell** - Shows the distribution of total transcript counts per cell
-                    **Tab 2: Gene transcript counts per cell** - Shows the distribution of gene transcript counts per cell
+                    **Tab 2: Gene transcripts per cell** - Shows the distribution of gene transcripts per cell (excluding controls)
                     
                     **Plot types:**
                     * **Single sample**: Density plots showing the distribution shapes
@@ -421,17 +422,11 @@ class MultiqcModule(BaseMultiqcModule):
                     * **Low transcript counts**: Less active cells, technical dropouts, or small cell fragments
                     * **Quality thresholds**: <50 may indicate poor segmentation, >10,000 may indicate doublets
                     
-                    **Gene transcript counts per cell interpretation:**
-                    * **Typical range**: 50-2000 genes per cell depending on cell type and panel size
-                    * **High gene counts**: Metabolically active cells or cells with high expression diversity
-                    * **Low gene counts**: Specialized cells, inactive cells, or technical dropouts
-                    * **Quality thresholds**: <20 may indicate poor cells or debris
-                    
                     **What to look for:**
                     * **Unimodal distributions**: Expected for homogeneous cell populations
                     * **Multimodal distributions**: May indicate different cell types or technical artifacts
                     * **Sample consistency**: Similar distributions expected for replicate samples
-                    * **Positive correlation**: Generally expect transcripts and genes per cell to correlate
+                    * **Positive correlation**: Generally expect transcripts and gene transcripts per cell to correlate
                     
                     **Panel considerations:**
                     * **Pre-designed panels**: Gene counts limited by panel design (typically 100-1000 genes)
@@ -439,8 +434,7 @@ class MultiqcModule(BaseMultiqcModule):
                     * **Detection efficiency**: Some genes may be harder to detect than others
                     
                     **Quality assessment:**
-                    * **Transcripts**: Very low (<50) or very high (>10,000) may indicate segmentation issues
-                    * **Genes**: Very low (<20) may indicate poor cells, counts near panel size may indicate artifacts
+                    * **Counts**: Very low (<50) or very high (>10,000) may indicate segmentation issues
                     * **Shoulder distributions**: May indicate presence of different cell types
                     
                     **Troubleshooting:**
@@ -1912,7 +1906,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _sort_fov_names(self, fov_names):
         """Sort FoV names naturally, handling numeric components if present"""
-        import re
 
         def natural_sort_key(fov_name):
             # Split on digits to handle natural sorting (e.g., fov_1, fov_2, fov_10)
@@ -1932,11 +1925,8 @@ class MultiqcModule(BaseMultiqcModule):
         if not samples_with_molecules:
             return None
 
-        import numpy as np
-
         # Determine if single or multi-sample plot
         num_samples = len(samples_with_molecules)
-
         if num_samples == 1:
             # Single sample: calculate noise threshold for this sample only
             s_name = samples_with_molecules[0]
@@ -1993,10 +1983,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_single_sample_molecules_plot(self, sample_data, bins, bin_centers, n_mols_threshold):
         """Create single plot with both Gene and Non-gene lines for single sample"""
-        import numpy as np
-
-        from multiqc.plots import linegraph
-
         molecules_data = sample_data["molecules_per_gene"]
 
         # Separate counts by gene type
@@ -2091,10 +2077,6 @@ class MultiqcModule(BaseMultiqcModule):
         self, transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
     ):
         """Create single plot with all samples shown as separate lines, color-coded by gene type"""
-        import numpy as np
-
-        from multiqc.plots import linegraph
-
         plot_data = {}
         all_histograms = []
 
@@ -2196,8 +2178,6 @@ class MultiqcModule(BaseMultiqcModule):
         Returns:
             Float threshold value or None if insufficient data
         """
-        import numpy as np
-
         # Extract counts for negative control features (non-genes starting with "NegControl")
         neg_control_counts = []
         neg_control_found = 0
@@ -2265,10 +2245,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _create_single_sample_combined_density(self, samples_with_transcripts, samples_with_transcript_counts):
         """Create single sample combined density plot with transcripts (blue) and genes (grey) on the same plot"""
-        import numpy as np
-
-        from multiqc.plots import linegraph
-
         plot_data = {}
 
         # Store raw values for intelligent line positioning
@@ -2280,8 +2256,6 @@ class MultiqcModule(BaseMultiqcModule):
             _, transcript_values = next(iter(samples_with_transcripts.items()))
             raw_transcript_values = transcript_values
             try:
-                import numpy as np
-
                 if SCIPY_AVAILABLE:
                     from scipy.stats import gaussian_kde
 
@@ -2299,8 +2273,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             except ImportError:
                 # Fallback to histogram if scipy not available
-                import numpy as np
-
                 bins = min(50, len(transcript_values) // 20)
                 hist, bin_edges = np.histogram(transcript_values, bins=bins)
                 bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
@@ -2315,8 +2287,6 @@ class MultiqcModule(BaseMultiqcModule):
             _, gene_values = next(iter(samples_with_transcript_counts.items()))
             raw_gene_values = gene_values
             try:
-                import numpy as np
-
                 if SCIPY_AVAILABLE:
                     from scipy.stats import gaussian_kde
 
@@ -2330,12 +2300,10 @@ class MultiqcModule(BaseMultiqcModule):
                 genes_data = {}
                 for x, y in zip(x_range, density):
                     genes_data[float(x)] = float(y)
-                plot_data["Gene transcript counts per cell"] = genes_data
+                plot_data["Gene transcripts per cell"] = genes_data
 
             except ImportError:
                 # Fallback to histogram if scipy not available
-                import numpy as np
-
                 bins = min(50, len(gene_values) // 20)
                 hist, bin_edges = np.histogram(gene_values, bins=bins)
                 bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
@@ -2343,21 +2311,21 @@ class MultiqcModule(BaseMultiqcModule):
                 genes_data = {}
                 for x, y in zip(bin_centers, hist):
                     genes_data[float(x)] = float(y)
-                plot_data["Gene transcript counts per cell"] = genes_data
+                plot_data["Gene transcripts per cell"] = genes_data
 
         if not plot_data:
             return None
 
         config = {
             "id": "xenium_cell_distributions_combined",
-            "title": "Xenium: Distribution of Transcripts/Genes per Cell",
+            "title": "Xenium: Distribution of Transcripts per Cell",
             "xlab": "Number per cell",
             "ylab": "Density",
             "smooth_points": 100,
         }
 
         # Add color configuration
-        colors = {"Transcripts per cell": "#7cb5ec", "Gene transcript counts per cell": "#434348"}
+        colors = {"Transcripts per cell": "#7cb5ec", "Gene transcripts per cell": "#434348"}
         config["colors"] = colors
 
         # Add all mean/median lines with intelligent overlap prevention
@@ -2389,11 +2357,11 @@ class MultiqcModule(BaseMultiqcModule):
             for s_name, gene_values in samples_with_transcript_counts.items():
                 genes_data[s_name] = gene_values
             plot_data.append(genes_data)
-            data_labels.append({"name": "Gene Transcript Counts per Cell", "ylab": "Gene transcript counts per cell"})
+            data_labels.append({"name": "Gene Transcripts per Cell", "ylab": "Gene transcripts per cell"})
 
         config = {
             "id": "xenium_cell_distributions_combined",
-            "title": "Xenium: Distribution of Transcripts/Genes per Cell",
+            "title": "Xenium: Distribution of Transcripts per Cell",
             "boxpoints": False,
             "xlab": "Transcripts per cell",
             "data_labels": data_labels,
@@ -2427,8 +2395,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create kernel density estimation
         try:
-            import numpy as np
-
             if SCIPY_AVAILABLE:
                 from scipy.stats import gaussian_kde
 
@@ -2465,8 +2431,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         except ImportError:
             # Fallback to histogram if scipy not available
-            import numpy as np
-
             bins = min(50, len(transcript_values) // 20)
             hist, bin_edges = np.histogram(transcript_values, bins=bins)
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
@@ -2538,8 +2502,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create kernel density estimation
         try:
-            import numpy as np
-
             if SCIPY_AVAILABLE:
                 from scipy.stats import gaussian_kde
 
@@ -2568,8 +2530,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         except ImportError:
             # Fallback to histogram if scipy not available
-            import numpy as np
-
             bins = min(50, len(gene_values) // 20)
             hist, bin_edges = np.histogram(gene_values, bins=bins)
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
