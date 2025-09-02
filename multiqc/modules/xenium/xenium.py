@@ -404,12 +404,12 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_section(
                     name="Distribution of Transcripts/Genes per Cell",
                     anchor="xenium-cell-distributions",
-                    description="Distribution of transcripts and detected genes per cell",
+                    description="Distribution of transcripts and gene transcript counts per cell",
                     helptext="""
                     This plot shows two key cell-level distributions with separate tabs/datasets:
                     
                     **Tab 1: Transcripts per cell** - Shows the distribution of total transcript counts per cell
-                    **Tab 2: Detected genes per cell** - Shows the distribution of unique genes detected per cell
+                    **Tab 2: Gene transcript counts per cell** - Shows the distribution of gene transcript counts per cell
                     
                     **Plot types:**
                     * **Single sample**: Density plots showing the distribution shapes
@@ -421,7 +421,7 @@ class MultiqcModule(BaseMultiqcModule):
                     * **Low transcript counts**: Less active cells, technical dropouts, or small cell fragments
                     * **Quality thresholds**: <50 may indicate poor segmentation, >10,000 may indicate doublets
                     
-                    **Detected genes per cell interpretation:**
+                    **Gene transcript counts per cell interpretation:**
                     * **Typical range**: 50-2000 genes per cell depending on cell type and panel size
                     * **High gene counts**: Metabolically active cells or cells with high expression diversity
                     * **Low gene counts**: Specialized cells, inactive cells, or technical dropouts
@@ -469,7 +469,7 @@ class MultiqcModule(BaseMultiqcModule):
                     
                     **Plot interpretation:**
                     * **X-axis**: Quality ranges (Low to Excellent QV ranges)
-                    * **Y-axis**: Number of Fields of View in each quality range
+                    * **Y-axis**: Fields of View in each quality range
                     * **Colors**: Color-coded by quality level (grey=poor, green=excellent)
                     * **Bars**: Each sample shown as separate colored bars for comparison
                     
@@ -1145,7 +1145,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
             cell_stats["total_counts_values"] = sample_values
 
-        # Store detected genes per cell (transcript_counts) for distribution plots
+        # Store gene transcript counts per cell (transcript_counts) for distribution plots
         detected_count_check = (
             lazy_df.filter(pl.col("transcript_counts").is_not_null())
             .select(pl.col("transcript_counts").count().alias("count"))
@@ -1161,7 +1161,7 @@ class MultiqcModule(BaseMultiqcModule):
                 .to_series()
                 .to_list()
             )
-            cell_stats["detected_genes_values"] = sample_values
+            cell_stats["gene_transcript_counts_values"] = sample_values
 
         # Add nucleus RNA fraction if nucleus_count is available
         if "nucleus_count" in schema:
@@ -1879,7 +1879,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "xenium_fov_quality_ranges",
             "title": "Xenium: Field of View Quality Distribution",
             "xlab": "Quality Range",
-            "ylab": "Number of Fields of View",
+            "ylab": "Fields of View",
             "cpswitch_c_active": False,
             "use_legend": True,
         }
@@ -1934,17 +1934,24 @@ class MultiqcModule(BaseMultiqcModule):
 
         import numpy as np
 
-        # Calculate noise threshold based on aggregated data (for vertical line)
-        aggregated_gene_counts = {}
-        for s_name in samples_with_molecules:
-            data = transcript_data_by_sample[s_name]
-            molecules_data = data["molecules_per_gene"]
-            for gene_name, gene_info in molecules_data.items():
-                if gene_name not in aggregated_gene_counts:
-                    aggregated_gene_counts[gene_name] = {"count": 0, "is_gene": gene_info["is_gene"]}
-                aggregated_gene_counts[gene_name]["count"] += gene_info["count"]
+        # Determine if single or multi-sample plot
+        num_samples = len(samples_with_molecules)
 
-        n_mols_threshold = self.calculate_noise_threshold(aggregated_gene_counts)
+        if num_samples == 1:
+            # Single sample: calculate noise threshold for this sample only
+            s_name = samples_with_molecules[0]
+            sample_data = transcript_data_by_sample[s_name]
+            molecules_data = sample_data["molecules_per_gene"]
+
+            # Convert to the format expected by calculate_noise_threshold
+            sample_gene_counts = {}
+            for gene_name, gene_info in molecules_data.items():
+                sample_gene_counts[gene_name] = {"count": gene_info["count"], "is_gene": gene_info["is_gene"]}
+
+            n_mols_threshold = self.calculate_noise_threshold(sample_gene_counts)
+        else:
+            # Multi-sample: no noise threshold (different for each sample)
+            n_mols_threshold = None
 
         # Determine global bins based on all samples' data
         all_gene_counts = []
@@ -1972,96 +1979,113 @@ class MultiqcModule(BaseMultiqcModule):
         bins = np.logspace(np.log10(min_count), np.log10(max_count), 50)
         bin_centers = (bins[:-1] + bins[1:]) / 2
 
-        # Always use multi-sample plot for consistent color-coded representation
-        return self._create_multi_sample_molecules_plot(
-            transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
-        )
+        # Choose between single and multi-sample plots
+        if num_samples == 1:
+            # Single sample with noise threshold
+            s_name = samples_with_molecules[0]
+            sample_data = transcript_data_by_sample[s_name]
+            return self._create_single_sample_molecules_plot(sample_data, bins, bin_centers, n_mols_threshold)
+        else:
+            # Multi-sample without noise threshold
+            return self._create_multi_sample_molecules_plot(
+                transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
+            )
 
-    # def _create_single_sample_molecules_plot(self, sample_data, bins, bin_centers, n_mols_threshold):
-    #     """Create single plot with both Gene and Non-gene lines for single sample"""
-    #     import numpy as np
+    def _create_single_sample_molecules_plot(self, sample_data, bins, bin_centers, n_mols_threshold):
+        """Create single plot with both Gene and Non-gene lines for single sample"""
+        import numpy as np
 
-    #     molecules_data = sample_data["molecules_per_gene"]
+        from multiqc.plots import linegraph
 
-    #     # Separate counts by gene type
-    #     gene_counts = []
-    #     non_gene_counts = []
+        molecules_data = sample_data["molecules_per_gene"]
 
-    #     for _, gene_info in molecules_data.items():
-    #         count = gene_info["count"]
-    #         if count > 0:
-    #             if gene_info["is_gene"]:
-    #                 gene_counts.append(count)
-    #             else:
-    #                 non_gene_counts.append(count)
+        # Separate counts by gene type
+        gene_counts = []
+        non_gene_counts = []
 
-    #     # Create plot data with both lines
-    #     plot_data = {}
-    #     all_histograms = []
+        for _, gene_info in molecules_data.items():
+            count = gene_info["count"]
+            if count > 0:
+                if gene_info["is_gene"]:
+                    gene_counts.append(count)
+                else:
+                    non_gene_counts.append(count)
 
-    #     if gene_counts:
-    #         gene_hist, _ = np.histogram(gene_counts, bins=bins)
-    #         all_histograms.append(gene_hist)
-    #         gene_line_data = {}
-    #         for i, count in enumerate(gene_hist):
-    #             gene_line_data[float(bin_centers[i])] = int(count)
-    #         plot_data["Genes"] = gene_line_data
+        # Create plot data with both lines
+        plot_data = {}
+        all_histograms = []
 
-    #     if non_gene_counts:
-    #         non_gene_hist, _ = np.histogram(non_gene_counts, bins=bins)
-    #         all_histograms.append(non_gene_hist)
-    #         non_gene_line_data = {}
-    #         for i, count in enumerate(non_gene_hist):
-    #             non_gene_line_data[float(bin_centers[i])] = int(count)
-    #         plot_data["Non-genes"] = non_gene_line_data
+        if gene_counts:
+            gene_hist, _ = np.histogram(gene_counts, bins=bins)
+            all_histograms.append(gene_hist)
+            gene_line_data = {}
+            for i, count in enumerate(gene_hist):
+                gene_line_data[float(bin_centers[i])] = int(count)
+            plot_data["Genes"] = gene_line_data
 
-    #     if not plot_data:
-    #         return None
+        if non_gene_counts:
+            non_gene_hist, _ = np.histogram(non_gene_counts, bins=bins)
+            all_histograms.append(non_gene_hist)
+            non_gene_line_data = {}
+            for i, count in enumerate(non_gene_hist):
+                non_gene_line_data[float(bin_centers[i])] = int(count)
+            plot_data["Non-genes"] = non_gene_line_data
 
-    #     # Trim long tail: find cutoff where all values above X are below 1% of max
-    #     if all_histograms:
-    #         # Get maximum value across all histograms
-    #         max_value = max(np.max(hist) for hist in all_histograms)
-    #         threshold = max_value * 0.01  # 1% of max
+        if not plot_data:
+            return None
 
-    #         # Find the last bin where any histogram has values above threshold
-    #         last_significant_bin = len(bin_centers) - 1
-    #         for i in range(len(bin_centers) - 1, -1, -1):
-    #             if any(hist[i] >= threshold for hist in all_histograms):
-    #                 last_significant_bin = i
-    #                 break
+        # Trim long tail: find cutoff where all values above X are below 1% of max
+        if all_histograms:
+            # Get maximum value across all histograms
+            max_value = max(np.max(hist) for hist in all_histograms)
+            threshold = max_value * 0.01  # 1% of max
 
-    #         # Trim the data to only include up to the last significant bin
-    #         if last_significant_bin < len(bin_centers) - 1:
-    #             trimmed_plot_data = {}
-    #             for dataset_name, data in plot_data.items():
-    #                 trimmed_data = {}
-    #                 for i, (x_val, y_val) in enumerate(data.items()):
-    #                     if i <= last_significant_bin:
-    #                         trimmed_data[x_val] = y_val
-    #                 trimmed_plot_data[dataset_name] = trimmed_data
-    #             plot_data = trimmed_plot_data
+            # Find the last bin where any histogram has values above threshold
+            last_significant_bin = len(bin_centers) - 1
+            for i in range(len(bin_centers) - 1, -1, -1):
+                if any(hist[i] >= threshold for hist in all_histograms):
+                    last_significant_bin = i
+                    break
 
-    #     config: Dict[str, Any] = {
-    #         "id": "xenium_transcripts_per_gene",
-    #         "title": "Xenium: Distribution of Transcripts",
-    #         "xlab": "Number of transcripts per gene",
-    #         "ylab": "Number of features",
-    #     }
+            # Trim the data to only include up to the last significant bin
+            if last_significant_bin < len(bin_centers) - 1:
+                trimmed_plot_data = {}
+                for dataset_name, data in plot_data.items():
+                    trimmed_data = {}
+                    for i, (x_val, y_val) in enumerate(data.items()):
+                        if i <= last_significant_bin:
+                            trimmed_data[x_val] = y_val
+                    trimmed_plot_data[dataset_name] = trimmed_data
+                plot_data = trimmed_plot_data
 
-    #     # Add vertical line for noise threshold if calculated
-    #     if n_mols_threshold is not None and n_mols_threshold > 0:
-    #         config["x_lines"] = [
-    #             {
-    #                 "value": n_mols_threshold,
-    #                 "color": "grey",
-    #                 "dash": "dash",
-    #                 "width": 1,
-    #                 "label": f"Noise threshold ({n_mols_threshold:.0f})",
-    #             }
-    #         ]
+        config: Dict[str, Any] = {
+            "id": "xenium_transcripts_per_gene",
+            "title": "Xenium: Distribution of Transcripts per Gene",
+            "xlab": "Number of transcripts per gene",
+            "ylab": "Number of features",
+            "xlog": True,
+        }
 
-    #     return linegraph.plot(plot_data, config)
+        # Add color configuration for genes (blue) and non-genes (black)
+        colors = {
+            "Genes": "#7cb5ec",  # Blue
+            "Non-genes": "#434348",  # Black
+        }
+        config["colors"] = colors
+
+        # Add vertical line for noise threshold if calculated
+        if n_mols_threshold is not None and n_mols_threshold > 0:
+            config["x_lines"] = [
+                {
+                    "value": n_mols_threshold,
+                    "color": "grey",
+                    "dash": "dash",
+                    "width": 1,
+                    "label": f"Noise threshold ({n_mols_threshold:.0f})",
+                }
+            ]
+
+        return linegraph.plot(plot_data, config)
 
     def _create_multi_sample_molecules_plot(
         self, transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
@@ -2156,17 +2180,8 @@ class MultiqcModule(BaseMultiqcModule):
         if colors:
             config["colors"] = colors
 
-        # Add vertical line for noise threshold if calculated
-        if n_mols_threshold is not None and n_mols_threshold > 0:
-            config["x_lines"] = [
-                {
-                    "value": n_mols_threshold,
-                    "color": "grey",
-                    "dash": "dash",
-                    "width": 1,
-                    "label": f"Noise threshold ({n_mols_threshold:.0f})",
-                }
-            ]
+        # Multi-sample plots do not show noise threshold (different for each sample)
+        # Only single-sample plots show the noise threshold line
 
         return linegraph.plot(plot_data, config)
 
@@ -2224,31 +2239,31 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
     def xenium_cell_distributions_combined_plot(self, cells_data_by_sample):
-        """Create combined plot for transcripts and detected genes per cell distributions"""
+        """Create combined plot for transcripts and gene transcript counts per cell distributions"""
         # Check if we have data for either transcripts or genes
         samples_with_transcripts = {}
-        samples_with_genes = {}
+        samples_with_transcript_counts = {}
 
         for s_name, data in cells_data_by_sample.items():
             if data and "total_counts_values" in data and data["total_counts_values"]:
                 samples_with_transcripts[s_name] = data["total_counts_values"]
-            if data and "detected_genes_values" in data and data["detected_genes_values"]:
-                samples_with_genes[s_name] = data["detected_genes_values"]
+            if data and "gene_transcript_counts_values" in data and data["gene_transcript_counts_values"]:
+                samples_with_transcript_counts[s_name] = data["gene_transcript_counts_values"]
 
         # If neither dataset is available, return None
-        if not samples_with_transcripts and not samples_with_genes:
+        if not samples_with_transcripts and not samples_with_transcript_counts:
             return None
 
-        num_samples = max(len(samples_with_transcripts), len(samples_with_genes))
+        num_samples = max(len(samples_with_transcripts), len(samples_with_transcript_counts))
 
         if num_samples == 1:
             # Single sample: Create combined density plots
-            return self._create_single_sample_combined_density(samples_with_transcripts, samples_with_genes)
+            return self._create_single_sample_combined_density(samples_with_transcripts, samples_with_transcript_counts)
         else:
             # Multiple samples: Create combined box plots
-            return self._create_multi_sample_combined_boxes(samples_with_transcripts, samples_with_genes)
+            return self._create_multi_sample_combined_boxes(samples_with_transcripts, samples_with_transcript_counts)
 
-    def _create_single_sample_combined_density(self, samples_with_transcripts, samples_with_genes):
+    def _create_single_sample_combined_density(self, samples_with_transcripts, samples_with_transcript_counts):
         """Create single sample combined density plot with transcripts (blue) and genes (grey) on the same plot"""
         import numpy as np
 
@@ -2295,9 +2310,9 @@ class MultiqcModule(BaseMultiqcModule):
                     transcripts_data[float(x)] = float(y)
                 plot_data["Transcripts per cell"] = transcripts_data
 
-        # Handle detected genes per cell data
-        if samples_with_genes:
-            _, gene_values = next(iter(samples_with_genes.items()))
+        # Handle gene transcript counts per cell data
+        if samples_with_transcript_counts:
+            _, gene_values = next(iter(samples_with_transcript_counts.items()))
             raw_gene_values = gene_values
             try:
                 import numpy as np
@@ -2315,7 +2330,7 @@ class MultiqcModule(BaseMultiqcModule):
                 genes_data = {}
                 for x, y in zip(x_range, density):
                     genes_data[float(x)] = float(y)
-                plot_data["Detected genes per cell"] = genes_data
+                plot_data["Gene transcript counts per cell"] = genes_data
 
             except ImportError:
                 # Fallback to histogram if scipy not available
@@ -2328,7 +2343,7 @@ class MultiqcModule(BaseMultiqcModule):
                 genes_data = {}
                 for x, y in zip(bin_centers, hist):
                     genes_data[float(x)] = float(y)
-                plot_data["Detected genes per cell"] = genes_data
+                plot_data["Gene transcript counts per cell"] = genes_data
 
         if not plot_data:
             return None
@@ -2342,7 +2357,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Add color configuration
-        colors = {"Transcripts per cell": "#7cb5ec", "Detected genes per cell": "#434348"}
+        colors = {"Transcripts per cell": "#7cb5ec", "Gene transcript counts per cell": "#434348"}
         config["colors"] = colors
 
         # Add all mean/median lines with intelligent overlap prevention
@@ -2354,7 +2369,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return linegraph.plot(plot_data, config)
 
-    def _create_multi_sample_combined_boxes(self, samples_with_transcripts, samples_with_genes):
+    def _create_multi_sample_combined_boxes(self, samples_with_transcripts, samples_with_transcript_counts):
         """Create multi-sample combined box plots for transcripts and genes per cell"""
 
         plot_data = []
@@ -2368,13 +2383,13 @@ class MultiqcModule(BaseMultiqcModule):
             plot_data.append(transcripts_data)
             data_labels.append({"name": "Transcripts per Cell", "ylab": "Transcripts per cell"})
 
-        # Add detected genes per cell data
-        if samples_with_genes:
+        # Add gene transcript counts per cell data
+        if samples_with_transcript_counts:
             genes_data = {}
-            for s_name, gene_values in samples_with_genes.items():
+            for s_name, gene_values in samples_with_transcript_counts.items():
                 genes_data[s_name] = gene_values
             plot_data.append(genes_data)
-            data_labels.append({"name": "Detected Genes per Cell", "ylab": "Detected genes per cell"})
+            data_labels.append({"name": "Gene Transcript Counts per Cell", "ylab": "Gene transcript counts per cell"})
 
         config = {
             "id": "xenium_cell_distributions_combined",
@@ -2497,29 +2512,29 @@ class MultiqcModule(BaseMultiqcModule):
 
         return box.plot(plot_data, config)
 
-    def xenium_detected_genes_per_cell_plot(self, cells_data_by_sample):
-        """Create detected genes per cell distribution plot"""
-        # Filter samples with detected genes data
-        samples_with_genes = {}
+    def xenium_gene_transcript_counts_per_cell_plot(self, cells_data_by_sample):
+        """Create gene transcript counts per cell distribution plot"""
+        # Filter samples with gene transcript counts data
+        samples_with_transcript_counts = {}
         for s_name, data in cells_data_by_sample.items():
-            if data and "detected_genes_values" in data and data["detected_genes_values"]:
-                samples_with_genes[s_name] = data["detected_genes_values"]
+            if data and "gene_transcript_counts_values" in data and data["gene_transcript_counts_values"]:
+                samples_with_transcript_counts[s_name] = data["gene_transcript_counts_values"]
 
-        if not samples_with_genes:
+        if not samples_with_transcript_counts:
             return None
 
-        num_samples = len(samples_with_genes)
+        num_samples = len(samples_with_transcript_counts)
 
         if num_samples == 1:
             # Single sample: Create density plot
-            return self._create_single_sample_genes_density(samples_with_genes)
+            return self._create_single_sample_transcript_counts_density(samples_with_transcript_counts)
         else:
             # Multiple samples: Create box plots
-            return self._create_multi_sample_genes_boxes(samples_with_genes)
+            return self._create_multi_sample_transcript_counts_boxes(samples_with_transcript_counts)
 
-    def _create_single_sample_genes_density(self, samples_with_genes):
-        """Create single sample detected genes per cell density plot"""
-        s_name, gene_values = next(iter(samples_with_genes.items()))
+    def _create_single_sample_transcript_counts_density(self, samples_with_transcript_counts):
+        """Create single sample gene transcript counts per cell density plot"""
+        s_name, gene_values = next(iter(samples_with_transcript_counts.items()))
 
         # Create kernel density estimation
         try:
@@ -2542,9 +2557,9 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data[s_name][float(x)] = float(y)
 
             config = {
-                "id": "xenium_detected_genes_per_cell_single",
-                "title": "Xenium: Distribution of Detected Genes per Cell",
-                "xlab": "Number of detected genes per cell",
+                "id": "xenium_gene_transcript_counts_per_cell_single",
+                "title": "Xenium: Distribution of Gene Transcript Counts per Cell",
+                "xlab": "Gene transcript counts per cell",
                 "ylab": "Density",
                 "smooth_points": 100,
             }
@@ -2564,26 +2579,26 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data[s_name][float(x)] = float(y)
 
             config = {
-                "id": "xenium_detected_genes_per_cell_single",
-                "title": "Xenium: Distribution of Detected Genes per Cell",
-                "xlab": "Number of detected genes per cell",
+                "id": "xenium_gene_transcript_counts_per_cell_single",
+                "title": "Xenium: Distribution of Gene Transcript Counts per Cell",
+                "xlab": "Gene transcript counts per cell",
                 "ylab": "Number of cells",
             }
 
             return linegraph.plot(plot_data, config)
 
-    def _create_multi_sample_genes_boxes(self, samples_with_genes):
-        """Create multi-sample detected genes per cell box plots"""
+    def _create_multi_sample_transcript_counts_boxes(self, samples_with_transcript_counts):
+        """Create multi-sample gene transcript counts per cell box plots"""
 
         # Prepare data for box plot
         plot_data = {}
-        for s_name, gene_values in samples_with_genes.items():
+        for s_name, gene_values in samples_with_transcript_counts.items():
             plot_data[s_name] = gene_values
 
         config = {
-            "id": "xenium_detected_genes_per_cell_multi",
-            "title": "Xenium: Distribution of Detected Genes per Cell",
-            "ylab": "Number of detected genes per cell",
+            "id": "xenium_gene_transcript_counts_per_cell_multi",
+            "title": "Xenium: Distribution of Gene Transcript Counts per Cell",
+            "ylab": "Gene transcript counts per cell",
             "boxpoints": False,
         }
 
