@@ -20,6 +20,14 @@ try:
 except ImportError:
     SCIPY_AVAILABLE = False
 
+# Try importing scanpy for H5 file reading, fallback gracefully if not available
+try:
+    import scanpy as sc
+
+    SCANPY_AVAILABLE = True
+except ImportError:
+    SCANPY_AVAILABLE = False
+
 log = logging.getLogger(__name__)
 
 
@@ -121,6 +129,20 @@ class MultiqcModule(BaseMultiqcModule):
                 parent_dir = Path(cells_f["root"]).name if cells_f["root"] else cells_f["s_name"]
                 cells_data_by_sample[parent_dir] = parsed_cells_data
                 self.add_data_source(cells_f, parent_dir)
+
+        # Parse cell_feature_matrix.h5 files for detected genes per cell calculation
+        for h5_f in self.find_log_files("xenium/cell_feature_matrix", filecontents=False, filehandles=False):
+            detected_genes_data = self.parse_cell_feature_matrix_h5(h5_f)
+            if detected_genes_data:
+                # Use parent directory name as sample name
+                parent_dir = Path(h5_f["root"]).name if h5_f["root"] else h5_f["s_name"]
+                if parent_dir in cells_data_by_sample:
+                    # Merge detected genes data with existing cells data
+                    cells_data_by_sample[parent_dir].update(detected_genes_data)
+                else:
+                    # Create new entry if cells.parquet wasn't found
+                    cells_data_by_sample[parent_dir] = detected_genes_data
+                self.add_data_source(h5_f, parent_dir)
 
         data_by_sample = self.ignore_samples(data_by_sample)
         transcript_data_by_sample = self.ignore_samples(transcript_data_by_sample)
@@ -405,12 +427,12 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_section(
                     name="Distribution of Transcripts/Genes per Cell",
                     anchor="xenium-cell-distributions",
-                    description="Distribution of transcripts and gene transcript counts per cell",
+                    description="Distribution of transcripts and detected genes per cell",
                     helptext="""
                     This plot shows two key cell-level distributions with separate tabs/datasets:
                     
                     **Tab 1: Transcripts per cell** - Shows the distribution of total transcript counts per cell
-                    **Tab 2: Gene transcripts per cell** - Shows the distribution of gene transcripts per cell (excluding controls)
+                    **Tab 2: Detected genes per cell** - Shows the distribution of unique genes detected per cell
                     
                     **Plot types:**
                     * **Single sample**: Density plots showing the distribution shapes
@@ -422,11 +444,16 @@ class MultiqcModule(BaseMultiqcModule):
                     * **Low transcript counts**: Less active cells, technical dropouts, or small cell fragments
                     * **Quality thresholds**: <50 may indicate poor segmentation, >10,000 may indicate doublets
                     
+                    **Detected genes per cell interpretation:**
+                    * **Typical range**: 50-2000 genes per cell depending on cell type and panel size
+                    * **High gene counts**: Metabolically active cells or cells with high expression diversity
+                    * **Low gene counts**: Specialized cells, inactive cells, or technical dropouts
+
                     **What to look for:**
                     * **Unimodal distributions**: Expected for homogeneous cell populations
                     * **Multimodal distributions**: May indicate different cell types or technical artifacts
                     * **Sample consistency**: Similar distributions expected for replicate samples
-                    * **Positive correlation**: Generally expect transcripts and gene transcripts per cell to correlate
+                    * **Positive correlation**: Generally expect transcripts and detected genes per cell to correlate
                     
                     **Panel considerations:**
                     * **Pre-designed panels**: Gene counts limited by panel design (typically 100-1000 genes)
@@ -1178,7 +1205,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "count": total_counts_stats["count"].item(),
             }
 
-        # Store gene transcript counts per cell (transcript_counts) for distribution plots
+        # Store detected genes per cell (transcript_counts) for distribution plots
+        # NOTE: This will be overridden by H5-based calculation if cell_feature_matrix.h5 is available
         detected_count_check = (
             lazy_df.filter(pl.col("transcript_counts").is_not_null())
             .select(pl.col("transcript_counts").count().alias("count"))
@@ -1186,7 +1214,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         if detected_count_check["count"].item() > 0:
-            # Calculate gene transcript counts distribution statistics for box plots
+            # Calculate detected genes per cell distribution statistics for box plots
             gene_counts_stats = (
                 lazy_df.filter(pl.col("transcript_counts").is_not_null())
                 .select(
@@ -2318,7 +2346,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
     def xenium_cell_distributions_combined_plot(self, cells_data_by_sample):
-        """Create combined plot for transcripts and gene transcript counts per cell distributions"""
+        """Create combined plot for transcripts and detected genes per cell distributions"""
         # Check if we have data for either transcripts or genes
         samples_with_transcripts = {}
         samples_with_transcript_counts = {}
@@ -2393,13 +2421,13 @@ class MultiqcModule(BaseMultiqcModule):
                     transcripts_data[float(x)] = float(y)
                 plot_data["Transcripts per cell"] = transcripts_data
 
-        # Handle gene transcript counts per cell data
+        # Handle detected genes per cell data
         if samples_with_transcript_counts:
             _, gene_values = next(iter(samples_with_transcript_counts.items()))
             # Skip density plots for pre-calculated statistics
             if isinstance(gene_values, dict) and "min" in gene_values:
                 log.info(
-                    "Skipping density plot for gene transcripts per cell - using pre-calculated statistics. Density plots require raw data."
+                    "Skipping density plot for detected genes per cell - using pre-calculated statistics. Density plots require raw data."
                 )
                 # For mixed cases, only show available density plots
                 if not raw_transcript_values:
@@ -2420,7 +2448,7 @@ class MultiqcModule(BaseMultiqcModule):
                 genes_data = {}
                 for x, y in zip(x_range, density):
                     genes_data[float(x)] = float(y)
-                plot_data["Gene transcripts per cell"] = genes_data
+                plot_data["Detected genes per cell"] = genes_data
 
             except ImportError:
                 # Fallback to histogram if scipy not available
@@ -2431,7 +2459,7 @@ class MultiqcModule(BaseMultiqcModule):
                 genes_data = {}
                 for x, y in zip(bin_centers, hist):
                     genes_data[float(x)] = float(y)
-                plot_data["Gene transcripts per cell"] = genes_data
+                plot_data["Detected genes per cell"] = genes_data
 
         if not plot_data:
             return None
@@ -2445,7 +2473,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Add color configuration
-        colors = {"Transcripts per cell": "#7cb5ec", "Gene transcripts per cell": "#434348"}
+        colors = {"Transcripts per cell": "#7cb5ec", "Detected genes per cell": "#434348"}
         config["colors"] = colors
 
         # Add all mean/median lines with intelligent overlap prevention
@@ -2475,7 +2503,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot_data.append(transcripts_data)
             data_labels.append({"name": "Transcripts per Cell", "ylab": "Transcripts per cell"})
 
-        # Add gene transcript counts per cell data (prefer statistics over raw values)
+        # Add detected genes per cell data (prefer statistics over raw values)
         if samples_with_transcript_counts:
             genes_data = {}
             for s_name, gene_values in samples_with_transcript_counts.items():
@@ -2485,7 +2513,7 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     genes_data[s_name] = gene_values  # Raw values (backward compatibility)
             plot_data.append(genes_data)
-            data_labels.append({"name": "Gene Transcripts per Cell", "ylab": "Gene transcripts per cell"})
+            data_labels.append({"name": "Detected Genes per Cell", "ylab": "Detected genes per cell"})
 
         config = {
             "id": "xenium_cell_distributions_combined",
@@ -2604,9 +2632,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         return box.plot(plot_data, config)
 
-    def xenium_gene_transcript_counts_per_cell_plot(self, cells_data_by_sample):
-        """Create gene transcript counts per cell distribution plot"""
-        # Filter samples with gene transcript counts data
+    def xenium_detected_genes_per_cell_plot(self, cells_data_by_sample):
+        """Create detected genes per cell distribution plot"""
+        # Filter samples with detected genes data
         samples_with_transcript_counts = {}
         for s_name, data in cells_data_by_sample.items():
             if data and "gene_transcript_counts_values" in data and data["gene_transcript_counts_values"]:
@@ -2625,7 +2653,7 @@ class MultiqcModule(BaseMultiqcModule):
             return self._create_multi_sample_transcript_counts_boxes(samples_with_transcript_counts)
 
     def _create_single_sample_transcript_counts_density(self, samples_with_transcript_counts):
-        """Create single sample gene transcript counts per cell density plot"""
+        """Create single sample detected genes per cell density plot"""
         s_name, gene_values = next(iter(samples_with_transcript_counts.items()))
 
         # Create kernel density estimation
@@ -2647,9 +2675,9 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data[s_name][float(x)] = float(y)
 
             config = {
-                "id": "xenium_gene_transcript_counts_per_cell_single",
-                "title": "Xenium: Distribution of Gene Transcript Counts per Cell",
-                "xlab": "Gene transcript counts per cell",
+                "id": "xenium_detected_genes_per_cell_single",
+                "title": "Xenium: Distribution of Detected Genes per Cell",
+                "xlab": "Detected genes per cell",
                 "ylab": "Density",
                 "smooth_points": 100,
             }
@@ -2667,16 +2695,16 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data[s_name][float(x)] = float(y)
 
             config = {
-                "id": "xenium_gene_transcript_counts_per_cell_single",
-                "title": "Xenium: Distribution of Gene Transcript Counts per Cell",
-                "xlab": "Gene transcript counts per cell",
+                "id": "xenium_detected_genes_per_cell_single",
+                "title": "Xenium: Distribution of Detected Genes per Cell",
+                "xlab": "Detected genes per cell",
                 "ylab": "Number of cells",
             }
 
             return linegraph.plot(plot_data, config)
 
     def _create_multi_sample_transcript_counts_boxes(self, samples_with_transcript_counts):
-        """Create multi-sample gene transcript counts per cell box plots"""
+        """Create multi-sample detected genes per cell box plots"""
 
         # Prepare data for box plot
         plot_data = {}
@@ -2684,10 +2712,60 @@ class MultiqcModule(BaseMultiqcModule):
             plot_data[s_name] = gene_values
 
         config = {
-            "id": "xenium_gene_transcript_counts_per_cell_multi",
-            "title": "Xenium: Distribution of Gene Transcript Counts per Cell",
-            "ylab": "Gene transcript counts per cell",
+            "id": "xenium_detected_genes_per_cell_multi",
+            "title": "Xenium: Distribution of Detected Genes per Cell",
+            "ylab": "Detected genes per cell",
             "boxpoints": False,
         }
 
         return box.plot(plot_data, config)
+
+    def parse_cell_feature_matrix_h5(self, f):
+        """Parse cell_feature_matrix.h5 file to calculate detected genes per cell"""
+        if not SCANPY_AVAILABLE:
+            log.warning(
+                "scanpy is not available. Cannot process cell_feature_matrix.h5 files. Install scanpy to enable detected genes per cell calculation."
+            )
+            return None
+
+        try:
+            # Construct full file path
+            file_path = Path(f["root"]) / f["fn"]
+
+            # Read H5 file using scanpy
+            adata = sc.read_10x_h5(str(file_path))
+
+            # Calculate detected genes per cell (number of non-zero genes per cell)
+            # This matches the notebook's approach: (ad.X != 0).sum(axis=1).A1
+            n_genes_per_cell = (adata.X != 0).sum(axis=1).A1
+
+            result = {}
+
+            # Calculate statistics for detected genes per cell (similar to transcript_counts processing)
+            if len(n_genes_per_cell) > 0:
+                detected_genes_stats = {
+                    "min": float(np.min(n_genes_per_cell)),
+                    "q1": float(np.percentile(n_genes_per_cell, 25)),
+                    "median": float(np.median(n_genes_per_cell)),
+                    "q3": float(np.percentile(n_genes_per_cell, 75)),
+                    "max": float(np.max(n_genes_per_cell)),
+                    "mean": float(np.mean(n_genes_per_cell)),
+                    "count": len(n_genes_per_cell),
+                }
+
+                # Store as gene_transcript_counts_box_stats to replace the current implementation
+                result["gene_transcript_counts_box_stats"] = detected_genes_stats
+
+                # Also store raw values if needed for single-sample density plots
+                result["gene_transcript_counts_values"] = n_genes_per_cell.tolist()
+
+                log.info(f"Processed {file_path}: {len(n_genes_per_cell)} cells, {adata.n_vars} genes")
+                log.info(
+                    f"Detected genes per cell - mean: {detected_genes_stats['mean']:.1f}, median: {detected_genes_stats['median']:.1f}"
+                )
+
+            return result
+
+        except Exception as e:
+            log.warning(f"Failed to process {f.get('fn', 'cell_feature_matrix.h5')}: {str(e)}")
+            return None
