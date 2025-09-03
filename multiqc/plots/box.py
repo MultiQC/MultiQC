@@ -5,9 +5,9 @@ import json
 import logging
 from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
 
-from natsort import natsorted
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
+from natsort import natsorted
 
 from multiqc import config, report
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
@@ -162,9 +162,9 @@ class Dataset(BaseDataset):
     def create_figure(
         self,
         layout: go.Layout,
-        is_log: bool = False,
-        is_pct: bool = False,
-        **kwargs,
+        is_log: bool = False,  # noqa: ARG002
+        is_pct: bool = False,  # noqa: ARG002
+        **kwargs,  # noqa: ARG002
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
@@ -476,15 +476,15 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             yaxis=dict(
                 automargin=True,  # to make sure there is enough space for ticks labels
                 categoryorder="trace",  # keep sample order
-                hoverformat=model.layout.xaxis.hoverformat,
-                ticksuffix=model.layout.xaxis.ticksuffix,
+                hoverformat=getattr(model.layout.xaxis, "hoverformat", None),
+                ticksuffix=getattr(model.layout.xaxis, "ticksuffix", None),
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
             ),
             xaxis=dict(
-                title=dict(text=model.layout.yaxis.title.text),
-                hoverformat=model.layout.yaxis.hoverformat,
-                ticksuffix=model.layout.yaxis.ticksuffix,
+                title=dict(text=getattr(getattr(model.layout.yaxis, "title", None), "text", None)),
+                hoverformat=getattr(model.layout.yaxis, "hoverformat", None),
+                ticksuffix=getattr(model.layout.yaxis, "ticksuffix", None),
             ),
             hovermode="y",
             hoverlabel=dict(
