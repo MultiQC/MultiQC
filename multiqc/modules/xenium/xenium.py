@@ -2379,35 +2379,35 @@ class MultiqcModule(BaseMultiqcModule):
     def xenium_cell_distributions_combined_plot(self, cells_data_by_sample):
         """Create combined plot for transcripts and detected genes per cell distributions"""
         # Check if we have data for either transcripts or genes
-        samples_with_transcripts = {}
         samples_with_transcript_counts = {}
+        samples_with_gene_counts = {}
 
         for s_name, data in cells_data_by_sample.items():
             # Check for pre-calculated statistics first, fall back to raw values
             if data and "total_counts_box_stats" in data:
-                samples_with_transcripts[s_name] = data["total_counts_box_stats"]
+                samples_with_transcript_counts[s_name] = data["total_counts_box_stats"]
             elif data and "total_counts_values" in data and data["total_counts_values"]:
-                samples_with_transcripts[s_name] = data["total_counts_values"]
+                samples_with_transcript_counts[s_name] = data["total_counts_values"]
 
-            if data and "gene_transcript_counts_box_stats" in data:
-                samples_with_transcript_counts[s_name] = data["gene_transcript_counts_box_stats"]
-            elif data and "gene_transcript_counts_values" in data and data["gene_transcript_counts_values"]:
-                samples_with_transcript_counts[s_name] = data["gene_transcript_counts_values"]
+            if data and "detected_genes_stats" in data:
+                samples_with_gene_counts[s_name] = data["detected_genes_stats"]
+            elif data and "detected_genes_values" in data and data["detected_genes_values"]:
+                samples_with_gene_counts[s_name] = data["detected_genes_values"]
 
         # If neither dataset is available, return None
-        if not samples_with_transcripts and not samples_with_transcript_counts:
+        if not samples_with_transcript_counts and not samples_with_gene_counts:
             return None
 
-        num_samples = max(len(samples_with_transcripts), len(samples_with_transcript_counts))
+        num_samples = max(len(samples_with_transcript_counts), len(samples_with_gene_counts))
 
         if num_samples == 1:
             # Single sample: Create combined density plots
-            return self._create_single_sample_combined_density(samples_with_transcripts, samples_with_transcript_counts)
+            return self._create_single_sample_combined_density(samples_with_transcript_counts, samples_with_gene_counts)
         else:
             # Multiple samples: Create combined box plots
-            return self._create_multi_sample_combined_boxes(samples_with_transcripts, samples_with_transcript_counts)
+            return self._create_multi_sample_combined_boxes(samples_with_transcript_counts, samples_with_gene_counts)
 
-    def _create_single_sample_combined_density(self, samples_with_transcripts, samples_with_transcript_counts):
+    def _create_single_sample_combined_density(self, samples_with_transcript_counts, samples_with_gene_counts):
         """Create single sample combined density plot with transcripts (blue) and genes (grey) on the same plot"""
         plot_data = {}
 
@@ -2416,8 +2416,8 @@ class MultiqcModule(BaseMultiqcModule):
         raw_gene_values = None
 
         # Handle transcripts per cell data
-        if samples_with_transcripts:
-            _, transcript_values = next(iter(samples_with_transcripts.items()))
+        if samples_with_transcript_counts:
+            _, transcript_values = next(iter(samples_with_transcript_counts.items()))
             # Skip density plots for pre-calculated statistics (use box plots instead)
             if isinstance(transcript_values, dict) and "min" in transcript_values:
                 log.info(
@@ -2453,10 +2453,10 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data["Transcripts per cell"] = transcripts_data
 
         # Handle detected genes per cell data
-        if samples_with_transcript_counts:
-            _, gene_values = next(iter(samples_with_transcript_counts.items()))
+        if samples_with_gene_counts:
+            _, gene_counts = next(iter(samples_with_gene_counts.items()))
             # Skip density plots for pre-calculated statistics
-            if isinstance(gene_values, dict) and "min" in gene_values:
+            if isinstance(gene_counts, dict) and "min" in gene_counts:
                 log.info(
                     "Skipping density plot for detected genes per cell - using pre-calculated statistics. Density plots require raw data."
                 )
@@ -2464,14 +2464,14 @@ class MultiqcModule(BaseMultiqcModule):
                 if not raw_transcript_values:
                     return None
             else:
-                raw_gene_values = gene_values
+                raw_gene_values = gene_counts
             try:
                 if SCIPY_AVAILABLE:
                     from scipy.stats import gaussian_kde
 
-                gene_values = np.array(gene_values)
-                kde = gaussian_kde(gene_values)
-                x_min, x_max = gene_values.min(), gene_values.max()
+                gene_counts = np.array(gene_counts)
+                kde = gaussian_kde(gene_counts)
+                x_min, x_max = gene_counts.min(), gene_counts.max()
                 x_range = np.linspace(x_min, x_max, 1000)
                 density = kde(x_range)
 
@@ -2483,8 +2483,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             except ImportError:
                 # Fallback to histogram if scipy not available
-                bins = min(50, len(gene_values) // 20)
-                hist, bin_edges = np.histogram(gene_values, bins=bins)
+                bins = min(50, len(gene_counts) // 20)
+                hist, bin_edges = np.histogram(gene_counts, bins=bins)
                 bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
                 genes_data = {}
@@ -2516,33 +2516,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         return linegraph.plot(plot_data, config)
 
-    def _create_multi_sample_combined_boxes(self, samples_with_transcripts, samples_with_transcript_counts):
+    def _create_multi_sample_combined_boxes(self, samples_with_transcript_counts, samples_with_genes_counts):
         """Create multi-sample combined box plots for transcripts and genes per cell using pre-calculated statistics"""
 
         plot_data = []
         data_labels = []
 
         # Add transcripts per cell data (prefer statistics over raw values)
-        if samples_with_transcripts:
+        if samples_with_transcript_counts:
             transcripts_data = {}
-            for s_name, transcript_values in samples_with_transcripts.items():
-                # Use pre-calculated statistics if available, otherwise use raw values
-                if isinstance(transcript_values, dict) and "min" in transcript_values:
-                    transcripts_data[s_name] = transcript_values  # Pre-calculated stats
-                else:
-                    transcripts_data[s_name] = transcript_values  # Raw values (backward compatibility)
+            for s_name, transcript_counts_stats in samples_with_transcript_counts.items():
+                transcripts_data[s_name] = transcript_counts_stats
             plot_data.append(transcripts_data)
             data_labels.append({"name": "Transcripts per Cell", "ylab": "Transcripts per cell"})
 
         # Add detected genes per cell data (prefer statistics over raw values)
-        if samples_with_transcript_counts:
+        if samples_with_genes_counts:
             genes_data = {}
-            for s_name, gene_values in samples_with_transcript_counts.items():
-                # Use pre-calculated statistics if available, otherwise use raw values
-                if isinstance(gene_values, dict) and "min" in gene_values:
-                    genes_data[s_name] = gene_values  # Pre-calculated stats
-                else:
-                    genes_data[s_name] = gene_values  # Raw values (backward compatibility)
+            for s_name, gene_count_stats in samples_with_genes_counts.items():
+                genes_data[s_name] = gene_count_stats
             plot_data.append(genes_data)
             data_labels.append({"name": "Detected Genes per Cell", "ylab": "Detected genes per cell"})
 
@@ -2785,10 +2777,10 @@ class MultiqcModule(BaseMultiqcModule):
                 }
 
                 # Store as gene_transcript_counts_box_stats to replace the current implementation
-                result["gene_transcript_counts_box_stats"] = detected_genes_stats
+                result["detected_genes_stats"] = detected_genes_stats
 
                 # Also store raw values if needed for single-sample density plots
-                result["gene_transcript_counts_values"] = n_genes_per_cell.tolist()
+                result["detected_genes_values"] = n_genes_per_cell.tolist()
 
                 log.info(f"Processed {file_path}: {len(n_genes_per_cell)} cells, {adata.n_vars} genes")
                 log.info(
