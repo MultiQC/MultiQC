@@ -140,9 +140,9 @@ class Dataset(BaseDataset):
     def create_figure(
         self,
         layout: go.Layout,
-        is_log: bool = False,
-        is_pct: bool = False,
-        **kwargs,
+        is_log: bool = False,  # noqa: ARG002
+        is_pct: bool = False,  # noqa: ARG002
+        **kwargs,  # noqa: ARG002
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
@@ -166,7 +166,7 @@ class Dataset(BaseDataset):
             vals_by_sample[sample] = values
         report.write_data_file(vals_by_sample, self.uid)
 
-    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:  # noqa: ARG002
         """Format dataset as a markdown table with basic statistics"""
         prompt = "|Sample|Min|Q1|Median|Q3|Max|Mean|\n"
         prompt += "|---|---|---|---|---|---|---|\n"
@@ -419,15 +419,15 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             yaxis=dict(
                 automargin=True,  # to make sure there is enough space for ticks labels
                 categoryorder="trace",  # keep sample order
-                hoverformat=model.layout.xaxis.hoverformat,
-                ticksuffix=model.layout.xaxis.ticksuffix,
+                hoverformat=getattr(model.layout.xaxis, "hoverformat", None),
+                ticksuffix=getattr(model.layout.xaxis, "ticksuffix", None),
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
             ),
             xaxis=dict(
-                title=dict(text=model.layout.yaxis.title.text),
-                hoverformat=model.layout.yaxis.hoverformat,
-                ticksuffix=model.layout.yaxis.ticksuffix,
+                title=dict(text=getattr(getattr(model.layout.yaxis, "title", None), "text", None)),
+                hoverformat=getattr(model.layout.yaxis, "hoverformat", None),
+                ticksuffix=getattr(model.layout.yaxis, "ticksuffix", None),
             ),
             hovermode="y",
             hoverlabel=dict(
