@@ -3,7 +3,7 @@
 import copy
 import json
 import logging
-from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, OrderedDict, Tuple, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
@@ -51,7 +51,7 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        data_by_sample: Dict[str, BoxT],
+        data_by_sample: Mapping[str, BoxT],
         pconfig: Optional[BoxPlotConfig] = None,
     ) -> "Dataset":
         # Detect if we have statistics data or raw data
@@ -264,7 +264,7 @@ class Dataset(BaseDataset):
 
 
 class BoxPlotInputData(NormalizedPlotInputData):
-    list_of_data_by_sample: List[Dict[str, BoxT]]
+    list_of_data_by_sample: List[Mapping[str, BoxT]]
     pconfig: BoxPlotConfig
 
     def is_empty(self) -> bool:
@@ -328,7 +328,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
         pconf = cast(BoxPlotConfig, BoxPlotConfig.from_df(df))
 
         # Group by dataset_idx to rebuild data structure
-        list_of_data_by_sample: List[Dict[str, BoxT]] = []
+        list_of_data_by_sample: List[Mapping[str, BoxT]] = []
         data_labels = []
 
         max_dataset_idx = df.select(pl.col("dataset_idx").max()).item() if not df.is_empty() else 0
@@ -364,7 +364,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
                 if sample_values:
                     dataset[str(sample_name)] = sample_values
 
-            list_of_data_by_sample.append(cast(Dict[str, BoxT], dataset))
+            list_of_data_by_sample.append(cast(Mapping[str, BoxT], dataset))
 
         if any(d for d in data_labels if d):
             pconf.data_labels = data_labels
@@ -409,7 +409,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
     @staticmethod
     def create(
-        list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
+        list_of_data_by_sample: Union[Mapping[str, BoxT], List[Mapping[str, BoxT]]],
         pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
     ) -> "BoxPlotInputData":
         pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
@@ -448,7 +448,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
 
     @staticmethod
     def create(
-        list_of_data_by_sample: List[Dict[str, BoxT]],
+        list_of_data_by_sample: List[Mapping[str, BoxT]],
         pconfig: BoxPlotConfig,
         anchor: Anchor,
     ) -> "BoxPlot":
@@ -536,7 +536,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
 
 
 def plot(
-    list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
+    list_of_data_by_sample: Union[Mapping[str, BoxT], List[Mapping[str, BoxT]]],
     pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
 ) -> Union["BoxPlot", str, None]:
     """
