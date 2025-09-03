@@ -1,8 +1,8 @@
 import json
 import logging
+import re
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
-import re
 
 import numpy as np
 import polars as pl
@@ -257,9 +257,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_section(
                     name="Transcript Quality Summary",
                     anchor="xenium-transcript-quality",
-                    description="Per-sample transcript quality statistics by gene category",
+                    description="Per-sample mean transcript quality statistics by gene category",
                     helptext="""
-                    This table shows transcript quality statistics for each sample, with separate columns for each gene category:
+                    This table shows mean transcript quality statistics for each sample, with separate columns for each gene category:
                     
                     **Gene Categories:**
                     * **Pre-designed**: Standard genes from Xenium panels
@@ -1242,6 +1242,20 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add nucleus RNA fraction if nucleus_count is available
         if "nucleus_count" in schema:
+            # Check for data quality issues: nucleus_count should not exceed total_counts
+            invalid_fractions = (
+                lazy_df.filter((pl.col("total_counts") > 0) & (pl.col("nucleus_count") > pl.col("total_counts")))
+                .select(pl.len().alias("count"))
+                .collect()
+                .item()
+            )
+
+            if invalid_fractions > 0:
+                log.warning(
+                    f"Found {invalid_fractions} cells with nucleus_count > total_counts in {f['fn']}. "
+                    f"This indicates potential data quality issues. Values will be capped at 1.0."
+                )
+
             nucleus_fraction_stats = (
                 lazy_df.filter(pl.col("total_counts") > 0)
                 .with_columns((pl.col("nucleus_count") / pl.col("total_counts")).alias("fraction"))
@@ -1561,38 +1575,55 @@ class MultiqcModule(BaseMultiqcModule):
                 else 1
                 if x == "Custom"
                 else 2
-                if x == "Genomic Control Probe"
+                if x == "Genomic Сontrol probe"
                 else 3
-                if x == "Negative Control Probe"
+                if x == "Negative Сontrol probe"
                 else 4
-                if x == "Negative Control Codeword"
+                if x == "Negative Сontrol codeword"
                 else 5
-                if x == "Unassigned Codeword"
+                if x == "Unassigned Сodeword"
                 else 6
-                if x == "Deprecated Codeword"
+                if x == "Deprecated Сodeword"
                 else 7
             ),
         )
 
+        # Create consistent abbreviations for column titles
+        category_abbreviations = {
+            "Pre-designed": "Pre-designed",
+            "Custom": "Custom",
+            "Genomic Сontrol Probe": "Genomic Ctrl",
+            "Negative Control Probe": "Negative Ctrl",
+            "Negative Control Codeword": "Neg Codeword",
+            "Unassigned Codeword": "Unassigned",
+            "Deprecated Codeword": "Deprecated",
+        }
+
         for category in sorted_categories:
+            # Get abbreviated title for consistent column width
+            abbrev_title = category_abbreviations[category]
+
             # Mean quality column
             headers[f"{category} Mean QV"] = {
-                "title": f"{category} Mean",  # Abbreviated for space
+                "title": f"{abbrev_title}",
                 "description": f"Mean calibrated quality score (QV) for {category}",
                 "scale": "Blues",
                 "format": "{:.2f}",
                 "suffix": "",
                 "shared_key": "xenium_transcript_quality",
+                "min": 0,
+                "max": 40,
             }
 
             # Standard deviation column
             headers[f"{category} Std Dev"] = {
-                "title": f"{category} StdDev",  # Abbreviated for space
+                "title": f"{abbrev_title} StdDev",
                 "description": f"Standard deviation of quality scores for {category}",
                 "scale": "Oranges",
                 "format": "{:.2f}",
                 "suffix": "",
                 "shared_key": "xenium_transcript_quality",
+                "hidden": True,
             }
 
         return table.plot(
@@ -1600,7 +1631,7 @@ class MultiqcModule(BaseMultiqcModule):
             headers,
             pconfig=TableConfig(
                 id="xenium_transcript_quality_per_sample_table",
-                title="Xenium: Transcript Quality by Sample and Category",
+                title="Xenium: Mean Transcript Quality by Sample and Category",
             ),
         )
 
