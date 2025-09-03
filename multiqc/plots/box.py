@@ -79,10 +79,12 @@ class Dataset(BaseDataset):
                 if values:
                     if is_stats_data:
                         # Use pre-calculated median from statistics
-                        median_values[sample] = values.get("median", 0)
+                        stats_dict = cast(BoxStatsT, values)
+                        median_values[sample] = stats_dict.get("median", 0)
                     else:
                         # Calculate median from raw data
-                        sorted_values = sorted(values)
+                        raw_values = cast(List[Union[int, float]], values)
+                        sorted_values = sorted(raw_values)
                         n = len(sorted_values)
                         median = (
                             sorted_values[n // 2]
@@ -362,7 +364,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
                 if sample_values:
                     dataset[str(sample_name)] = sample_values
 
-            list_of_data_by_sample.append(dataset)
+            list_of_data_by_sample.append(cast(Dict[str, BoxT], dataset))
 
         if any(d for d in data_labels if d):
             pconf.data_labels = data_labels
