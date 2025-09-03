@@ -32,6 +32,7 @@ dependencies = [
     "jsonschema",
     "polars-lts-cpu",     # for parquet support. Using LTS version for compatibility with older architectures
     "pyarrow",            # for parquet support
+    "scanpy",             # to parse h5 files
 ]
 requires-python = ">=3.8"
 authors = [
