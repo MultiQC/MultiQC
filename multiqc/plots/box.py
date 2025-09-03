@@ -3,7 +3,7 @@
 import copy
 import json
 import logging
-from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, OrderedDict, Tuple, Union, cast
 
 from natsort import natsorted
 import plotly.graph_objects as go  # type: ignore
@@ -34,6 +34,8 @@ class BoxPlotConfig(PConfig):
 
 # Type of single box (matching one sample)
 BoxT = List[Union[int, float]]
+# Input type that can be either raw data points or statistics dict
+BoxInputT = Union[List[Union[int, float]], Dict[str, Union[int, float]]]
 
 
 class Dataset(BaseDataset):
@@ -48,7 +50,7 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        data_by_sample: Dict[str, BoxT],
+        data_by_sample: Mapping[str, BoxInputT],
         pconfig: Optional[BoxPlotConfig] = None,
     ) -> "Dataset":
         # Store original order (reversed for box plot display)
@@ -68,11 +70,18 @@ class Dataset(BaseDataset):
             median_values = {}
             for sample, values in data_by_sample.items():
                 if values:
-                    sorted_values = sorted(values)
-                    n = len(sorted_values)
-                    median = (
-                        sorted_values[n // 2] if n % 2 == 1 else (sorted_values[n // 2 - 1] + sorted_values[n // 2]) / 2
-                    )
+                    if isinstance(values, dict):
+                        # If values is a stats dict, use median if available, otherwise use mean
+                        median = values.get("median", values.get("mean", 0))
+                    else:
+                        # If values is a list, calculate median
+                        sorted_values = sorted(values)
+                        n = len(sorted_values)
+                        median = (
+                            sorted_values[n // 2]
+                            if n % 2 == 1
+                            else (sorted_values[n // 2 - 1] + sorted_values[n // 2]) / 2
+                        )
                     median_values[sample] = median
                 else:
                     median_values[sample] = 0  # Handle empty data
@@ -161,7 +170,7 @@ class Dataset(BaseDataset):
         return fig
 
     def save_data_file(self) -> None:
-        vals_by_sample: Dict[str, BoxT] = {}
+        vals_by_sample: Dict[str, BoxInputT] = {}
         for sample, values in zip(self.samples, self.data):
             vals_by_sample[sample] = values
         report.write_data_file(vals_by_sample, self.uid)
@@ -207,7 +216,7 @@ class Dataset(BaseDataset):
 
 
 class BoxPlotInputData(NormalizedPlotInputData):
-    list_of_data_by_sample: List[Dict[str, BoxT]]
+    list_of_data_by_sample: List[Mapping[str, BoxInputT]]
     pconfig: BoxPlotConfig
 
     def is_empty(self) -> bool:
@@ -271,7 +280,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
         pconf = cast(BoxPlotConfig, BoxPlotConfig.from_df(df))
 
         # Group by dataset_idx to rebuild data structure
-        list_of_data_by_sample: List[Dict[str, BoxT]] = []
+        list_of_data_by_sample: List[Mapping[str, BoxInputT]] = []
         data_labels = []
 
         max_dataset_idx = df.select(pl.col("dataset_idx").max()).item() if not df.is_empty() else 0
@@ -352,7 +361,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
     @staticmethod
     def create(
-        list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
+        list_of_data_by_sample: Union[Mapping[str, BoxInputT], List[Mapping[str, BoxInputT]]],
         pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
     ) -> "BoxPlotInputData":
         pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
@@ -391,7 +400,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
 
     @staticmethod
     def create(
-        list_of_data_by_sample: List[Dict[str, BoxT]],
+        list_of_data_by_sample: List[Mapping[str, BoxInputT]],
         pconfig: BoxPlotConfig,
         anchor: Anchor,
     ) -> "BoxPlot":
@@ -479,7 +488,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
 
 
 def plot(
-    list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
+    list_of_data_by_sample: Union[Mapping[str, BoxInputT], List[Mapping[str, BoxInputT]]],
     pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
 ) -> Union["BoxPlot", str, None]:
     """
