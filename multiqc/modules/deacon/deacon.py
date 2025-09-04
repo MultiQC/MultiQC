@@ -31,6 +31,10 @@ class MultiqcModule(BaseMultiqcModule):
                 log.error(f"failed to parse data from {f['fn']} : {e}") #{e} -> error message
                 continue
             
+            #check, if data is a dict
+            if not isinstance(data, dict):
+                log.warining(f"{f['fn']} : does not contain a valod JSON object")
+                continue
             #check, if there is "version" in JSON report and contains "version...."
             version = data.get("version", "")
             if not version.startswith("deacon"):
