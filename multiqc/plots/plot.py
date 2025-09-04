@@ -1706,7 +1706,7 @@ def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
         conf["yaxis"] = conf.pop("y_ceiling")
     if "xAxis" in conf:
         conf["xaxis"] = conf.pop("xAxis")
-    if "tooltip" in conf:
+    if "tooltip" in conf and "hovertemplate" not in conf:
         conf["hovertemplate"] = conf.pop("tooltip")
     return conf
 

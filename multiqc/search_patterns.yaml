@@ -19,6 +19,8 @@ xenium/experiment:
   num_lines: 50
 xenium/cells:
   fn: "cells.parquet"
+xenium/cell_feature_matrix:
+  fn: "cell_feature_matrix.h5"
 afterqc:
   fn: "*.json"
   contents: "allow_mismatch_in_poly"
