@@ -102,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data[sample] = stats["seqs_removed_proportion"]
 
         if len(plot_data) > 0: #create if there is data
-            pconfig = { #plot-configuration, dictionary; no default configuration
+            pconfig_plot = { #plot-configuration, dictionary; no default configuration
                 "id" : "deacon_removed_reads",
                 "title" : "% Reads removed (Deacon)",
                 "ylab" : "% removed"
@@ -112,6 +112,31 @@ class MultiqcModule(BaseMultiqcModule):
                 name = "Reads removed",
                 anchor = "deacon_removed_reads",
                 description = "percentage of removed reads per sample",
-                plot = bargraph.plot(plot_data, pconfig) #generates a barplot
+                plot = bargraph.plot(plot_data, pconfig_plot) #generates a barplot
             )
 
+
+        #add plot in report for: Reads removed and remaining in absolute and percentage number
+        plot2_data = {}
+        for sample, stats in self.deacon_data.items(): #iterate through all samples and their statistics
+            if stats.get("seqs_removed") is not None and stats.get("seqs_out") is not None: #check, if report contains "seqs_removed" and "seqs_out"
+                plot2_data[sample] = {
+                    "Reads removed" : stats["seqs_removed"],
+                    "Reads remaining" : stats["seqs_out"]
+                }
+            
+        if len(plot2_data) > 0: #create if there is data
+            pconfig_plot2 = {
+                "id" : "Reads_removed_remaining",
+                "title" : "Reads removed and Reads remaining",
+                "ylab" : "Number of Reads",
+                "cpswitch" : True,  #switch between absolute and percentage number
+                "stacked" : True    #stacked bars
+            }
+
+            self.add_section( #new section in MultiQC report
+                name = "Reads removed and Reads remaining",
+                anchor = "Reads_removed_remaining",
+                description = "Comparison between removed and remaining Reads, switch between absolute and percentage number.",
+                plot = bargraph.plot(plot2_data, pconfig_plot2) #generate a barplot
+            )
