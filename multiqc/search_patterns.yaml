@@ -279,7 +279,7 @@ cutadapt:
 damageprofiler:
   fn: "*dmgprof.json"
 deacon:
-  fn: "*deacon"
+  fn: "*deacon.json"
   contents: 'version:\s*"deacon'
 dedup:
   fn: "*.json"
