@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             f["f"].seek(0) #to be safe to begin the search at the beginning
             first_line = f["f"].readline().strip() #.strip() removes spaces and line brakes
             if not re.match(r'^version:\s*"deacon', first_line): #regex, ignores spaces between version: and "deacon ......"
-                log.warining(f"Skipping {f['f']} : no deacon report")
+                log.warning(f"Skipping {f['f']} : no deacon report")
                 continue
             f["f"].seek(0) #to get back to the beginning again
             try:
