@@ -10,6 +10,7 @@ import polars as pl
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, linegraph, scatter, table
 from multiqc.plots.table_object import ColumnDict, TableConfig
+from multiqc.utils import mqc_colour
 
 # Try importing scipy, fallback gracefully if not available
 try:
@@ -2086,8 +2087,21 @@ class MultiqcModule(BaseMultiqcModule):
 
             n_mols_threshold = self.calculate_noise_threshold(sample_gene_counts)
         else:
-            # Multi-sample: no noise threshold (different for each sample)
-            n_mols_threshold = None
+            # Multi-sample: calculate noise threshold for each sample
+            sample_thresholds = {}
+            for s_name in samples_with_molecules:
+                sample_data = transcript_data_by_sample[s_name]
+                molecules_data = sample_data["molecules_per_gene"]
+
+                # Convert to the format expected by calculate_noise_threshold
+                sample_gene_counts = {}
+                for gene_name, gene_info in molecules_data.items():
+                    sample_gene_counts[gene_name] = {"count": gene_info["count"], "is_gene": gene_info["is_gene"]}
+
+                threshold = self.calculate_noise_threshold(sample_gene_counts)
+                sample_thresholds[s_name] = threshold
+
+            n_mols_threshold = None  # Keep for single-sample compatibility
 
         # Determine global bins based on all samples' data
         all_gene_counts = []
@@ -2120,14 +2134,18 @@ class MultiqcModule(BaseMultiqcModule):
             # Single sample with noise threshold
             s_name = samples_with_molecules[0]
             sample_data = transcript_data_by_sample[s_name]
-            return self._create_single_sample_molecules_plot(sample_data, bins, bin_centers, n_mols_threshold)
+            # Create single-item threshold dict for consistency
+            single_sample_thresholds = {s_name: n_mols_threshold}
+            return self._create_single_sample_molecules_plot(
+                sample_data, bins, bin_centers, single_sample_thresholds, s_name
+            )
         else:
-            # Multi-sample without noise threshold
+            # Multi-sample with per-sample thresholds
             return self._create_multi_sample_molecules_plot(
-                transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
+                transcript_data_by_sample, samples_with_molecules, bins, bin_centers, sample_thresholds
             )
 
-    def _create_single_sample_molecules_plot(self, sample_data, bins, bin_centers, n_mols_threshold):
+    def _create_single_sample_molecules_plot(self, sample_data, bins, bin_centers, sample_thresholds, sample_name):
         """Create single plot with both Gene and Non-gene lines for single sample"""
         molecules_data = sample_data["molecules_per_gene"]
 
@@ -2198,12 +2216,35 @@ class MultiqcModule(BaseMultiqcModule):
             "xlog": True,
         }
 
-        # Add color configuration for genes (blue) and non-genes (black)
+        # Use same color for genes and controls from same sample (distinguished by line style)
+        from multiqc.utils import mqc_colour
+
+        scale = mqc_colour.mqc_colour_scale("plot_defaults")
+        sample_color = scale.get_colour(0, lighten=1)  # Use first color for single sample
+
+        n_mols_threshold = sample_thresholds.get(sample_name) if sample_thresholds else None
+        threshold_text = f" (noise threshold: {n_mols_threshold:.0f})" if n_mols_threshold is not None else ""
+
         colors = {
-            "Genes": "#7cb5ec",  # Blue
-            "Non-genes": "#434348",  # Black
+            "Genes": sample_color,
         }
         config["colors"] = colors
+
+        # Use dash_styles and hovertemplates for series styling
+        if "Non-genes" in plot_data:
+            colors["Non-genes"] = sample_color  # Same color as genes
+            config["dash_styles"] = {
+                "Genes": "solid",
+                "Non-genes": "dash",  # Dashed line for controls
+            }
+            config["hovertemplates"] = {
+                "Genes": f"<b>%{{text}}</b><br>%{{x}}: %{{y}}{threshold_text}<extra></extra>",
+                "Non-genes": f"<b>%{{text}}</b><br>%{{x}}: %{{y}}{threshold_text}<extra></extra>",
+            }
+            config["legend_groups"] = {"Genes": sample_name, "Non-genes": sample_name}
+        else:
+            config["hovertemplates"] = {"Genes": f"<b>%{{text}}</b><br>%{{x}}: %{{y}}{threshold_text}<extra></extra>"}
+            config["legend_groups"] = {"Genes": sample_name}
 
         # Add vertical line for noise threshold if calculated
         if n_mols_threshold is not None and n_mols_threshold > 0:
@@ -2220,7 +2261,7 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(plot_data, config)
 
     def _create_multi_sample_molecules_plot(
-        self, transcript_data_by_sample, samples_with_molecules, bins, bin_centers, n_mols_threshold
+        self, transcript_data_by_sample, samples_with_molecules, bins, bin_centers, sample_thresholds
     ):
         """Create single plot with all samples shown as separate lines, color-coded by gene type"""
         plot_data = {}
@@ -2250,7 +2291,7 @@ class MultiqcModule(BaseMultiqcModule):
                 gene_line_data = {}
                 for i, count in enumerate(gene_hist):
                     gene_line_data[float(bin_centers[i])] = int(count)
-                plot_data[f"{s_name} (Genes)"] = gene_line_data
+                plot_data[f"{s_name} (genes)"] = gene_line_data
 
             # Create histograms for non-genes (black lines)
             if sample_non_gene_counts:
@@ -2259,7 +2300,7 @@ class MultiqcModule(BaseMultiqcModule):
                 non_gene_line_data = {}
                 for i, count in enumerate(non_gene_hist):
                     non_gene_line_data[float(bin_centers[i])] = int(count)
-                plot_data[f"{s_name} (Non-genes)"] = non_gene_line_data
+                plot_data[f"{s_name} (non-genes)"] = non_gene_line_data
 
         if not plot_data:
             return None
@@ -2295,21 +2336,59 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Number of features",
             "series_label": None,
             "xlog": True,
+            "x_decimals": 2,
         }
 
-        # Add color configuration for genes (blue) and non-genes (black)
-        colors = {}
+        # Use per-sample coloring with mqc_colour plot_defaults scheme
+        scale = mqc_colour.mqc_colour_scale("plot_defaults")
+
+        # Group paired lines by sample name and assign colors
+        sample_names = set()
         for dataset_name in plot_data.keys():
-            if "(Genes)" in dataset_name:
-                colors[dataset_name] = "#7cb5ec"  # Blue
-            elif "(Non-genes)" in dataset_name:
-                colors[dataset_name] = "#434348"  # Black
+            if "(genes)" in dataset_name:
+                sample_name = dataset_name.replace(" (genes)", "")
+                sample_names.add(sample_name)
+            elif "(non-genes)" in dataset_name:
+                sample_name = dataset_name.replace(" (non-genes)", "")
+                sample_names.add(sample_name)
 
-        if colors:
-            config["colors"] = colors
+        # Create color mapping for each sample
+        sample_colors = {}
+        for idx, sample_name in enumerate(sorted(sample_names)):
+            sample_colors[sample_name] = scale.get_colour(idx, lighten=1)
 
-        # Multi-sample plots do not show noise threshold (different for each sample)
-        # Only single-sample plots show the noise threshold line
+        # Use the new parameters to style series instead of extra_series
+        colors = {}
+        dash_styles = {}
+        hovertemplates = {}
+        legend_groups = {}
+
+        # Set up styling for all series using the new parameters
+        for dataset_name in plot_data.keys():
+            if "(genes)" in dataset_name:
+                sample_name = dataset_name.replace(" (genes)", "")
+                threshold = sample_thresholds.get(sample_name)
+                threshold_text = f" (noise threshold: {threshold:.0f})" if threshold is not None else ""
+
+                colors[dataset_name] = sample_colors[sample_name]
+                dash_styles[dataset_name] = "solid"  # Solid lines for genes
+                hovertemplates[dataset_name] = f"<b>%{{text}}</b><br>%{{x}}: %{{y}}{threshold_text}<extra></extra>"
+                legend_groups[dataset_name] = sample_name
+
+            elif "(non-genes)" in dataset_name:
+                sample_name = dataset_name.replace(" (non-genes)", "")
+                threshold = sample_thresholds.get(sample_name)
+                threshold_text = f" (noise threshold: {threshold:.0f})" if threshold is not None else ""
+
+                colors[dataset_name] = sample_colors[sample_name]
+                dash_styles[dataset_name] = "dash"  # Dashed lines for controls
+                hovertemplates[dataset_name] = f"<b>%{{text}}</b><br>%{{x}}: %{{y}}{threshold_text}<extra></extra>"
+                legend_groups[dataset_name] = sample_name
+
+        config["colors"] = colors
+        config["dash_styles"] = dash_styles
+        config["hovertemplates"] = hovertemplates
+        config["legend_groups"] = legend_groups
 
         return linegraph.plot(plot_data, config)
 
