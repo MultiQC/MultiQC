@@ -24,15 +24,23 @@ class MultiqcModule(BaseMultiqcModule):
 
         #iterate through all detected Deacon log files
         for f in self.find_log_files("deacon", filehandles = True): #filehandles = opens the files
+            if not f["fn"].endswith("deacon.json"): #every json-report ends with deacon.json
+                continue
             try:
                 data = json.load(f["f"]) #load JSON data from filehandles
             except Exception as e: #catch parsing-errors in e
                 log.error(f"failed to parse data from {f['f']} : {e}") #{e} -> error message
                 continue
             
-            #check, if JSON has version starting with "deacon"
-            if not str(data.get("version", "")).startswith("deacon"):
-                log.warning(f"Skipping {f['fn']} : no a deacon report")
+            #check, if data is a dict
+            if not isinstance(data, dict):
+                log.warning("fSkipping {f['fn']} : parsed JSON is not an oject")
+                continue 
+            
+            #check, if version is version
+            version = data.get("version")
+            if version is None or not version.startswith("deacon"):
+                log.warning(f"Skipping {f['fn']} : not a deacon report (version = {version})")
                 continue
             
             sample_name = self.clean_s_name(f["s_name"], f) #f["s_name"] -> samplename; self.clean_s_name -> normalizes the name to avoid duplicates
@@ -89,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "time": {"title" : "time (in s)"},
                 "seqs_per_second" : {"title" : "reads/s"},
                 "bp_per_second" : {"title" : "bp/s"}
-            })      
+            })
         )
 
         #add plot in report for: reads removed
