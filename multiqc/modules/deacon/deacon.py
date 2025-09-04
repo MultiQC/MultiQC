@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             
             #check, if data is a dict
             if not isinstance(data, dict):
-                log.warining(f"{f['fn']} : does not contain a valod JSON object")
+                log.warning(f"{f['fn']} : does not contain a valod JSON object")
                 continue
             #check, if there is "version" in JSON report and contains "version...."
             version = data.get("version", "")
