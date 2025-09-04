@@ -43,6 +43,29 @@ logger = logging.getLogger(__name__)
 
 check_plotly_version()
 
+
+def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> str:
+    """
+    Get the appropriate series label for a plot type.
+    If series_label is the default "samples", return a plot type-specific label.
+    Otherwise, return the custom series_label as-is.
+    """
+    if series_label != "samples":
+        return str(series_label)
+
+    # Map plot types to their specific series labels
+    plot_type_labels = {
+        PlotType.LINE: "lines",
+        PlotType.BAR: "bars",
+        PlotType.BOX: "boxes",
+        PlotType.SCATTER: "points",
+        PlotType.HEATMAP: "samples",  # heatmaps typically show samples
+        PlotType.VIOLIN: "samples",  # violins keep the default "samples"
+    }
+
+    return plot_type_labels.get(plot_type, "samples")  # fallback for unknown plot types
+
+
 # Create and register MultiQC default Plotly template
 multiqc_plotly_template = dict(
     layout=go.Layout(
@@ -724,9 +747,11 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             else:
                 n_samples = 0
             if n_samples > 1 and pconfig.series_label:
-                subtitles += [f"{n_samples} {pconfig.series_label}"]
+                series_label = _get_series_label(plot_type, pconfig.series_label)
+                subtitles += [f"{n_samples} {series_label}"]
             elif n_series > 1 and pconfig.series_label:
-                subtitles += [f"{n_series} {pconfig.series_label}"]
+                series_label = _get_series_label(plot_type, pconfig.series_label)
+                subtitles += [f"{n_series} {series_label}"]
             if subtitles:
                 dconfig["subtitle"] = ", ".join(subtitles)
 
