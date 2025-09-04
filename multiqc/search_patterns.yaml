@@ -280,6 +280,7 @@ damageprofiler:
   fn: "*dmgprof.json"
 deacon:
   fn: "*deacon.json"
+  contents: 'version:\s*"deacon'
 dedup:
   fn: "*.json"
   contents: '"tool_name": "DeDup"'
