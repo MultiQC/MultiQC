@@ -1,3 +1,3 @@
-from deacon import MultiqcModule
+from .deacon import MultiqcModule
 
 __all__ = ["MultiqcModule"]
