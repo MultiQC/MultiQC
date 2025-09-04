@@ -4,6 +4,7 @@ import re
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph 
+from multiqc.plots import table
 
 log = logging.getLogger(__name__) 
 #logger
@@ -69,9 +70,11 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("no deacon reports found")
         
         #create table in the report
-        self.add_data_table(
-            self.deacon_data,
-            headers = {
+        self.add_section(
+            name = "Deacon statistics",
+            anchor = "deacon_stats",
+            description = "Statistics parsed from deacon reports",
+            plot = table.plot(self.deacon_data, {
                 "k" : {"title" : "k-mer length"},
                 "w" : {"title" : "window size"},
                 "abs_threshold" : {"title" : "absolute threshold"},
@@ -90,9 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "time": {"title" : "time (in s)"},
                 "seqs_per_second" : {"title" : "reads/s"},
                 "bp_per_second" : {"title" : "bp/s"}
-            },
-            title = "deacon statistics",
-            description = "statistics parsed from deacon reports"
+            })      
         )
 
         #add plot in report for: reads removed
