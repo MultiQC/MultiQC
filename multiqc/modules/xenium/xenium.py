@@ -993,6 +993,9 @@ class MultiqcModule(BaseMultiqcModule):
                     }
                 result["molecules_per_gene"] = molecules_per_gene
 
+                # Calculate noise threshold directly from transcript_stats DataFrame
+                result["noise_threshold"] = self.calculate_noise_threshold_from_df(transcript_stats)
+
         # Add FoV quality analysis if fov_name column is present
         if "fov_name" in schema:
             fov_stats = (
@@ -2080,25 +2083,16 @@ class MultiqcModule(BaseMultiqcModule):
             sample_data = transcript_data_by_sample[s_name]
             molecules_data = sample_data["molecules_per_gene"]
 
-            # Convert to the format expected by calculate_noise_threshold
-            sample_gene_counts = {}
-            for gene_name, gene_info in molecules_data.items():
-                sample_gene_counts[gene_name] = {"count": gene_info["count"], "is_gene": gene_info["is_gene"]}
-
-            n_mols_threshold = self.calculate_noise_threshold(sample_gene_counts)
+            # Use pre-calculated noise threshold if available
+            n_mols_threshold = sample_data.get("noise_threshold")
         else:
-            # Multi-sample: calculate noise threshold for each sample
+            # Multi-sample: use pre-calculated noise thresholds
             sample_thresholds = {}
             for s_name in samples_with_molecules:
                 sample_data = transcript_data_by_sample[s_name]
-                molecules_data = sample_data["molecules_per_gene"]
 
-                # Convert to the format expected by calculate_noise_threshold
-                sample_gene_counts = {}
-                for gene_name, gene_info in molecules_data.items():
-                    sample_gene_counts[gene_name] = {"count": gene_info["count"], "is_gene": gene_info["is_gene"]}
-
-                threshold = self.calculate_noise_threshold(sample_gene_counts)
+                # Use pre-calculated noise threshold if available
+                threshold = sample_data.get("noise_threshold")
                 sample_thresholds[s_name] = threshold
 
             n_mols_threshold = None  # Keep for single-sample compatibility
@@ -2336,7 +2330,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Number of features",
             "series_label": None,
             "xlog": True,
-            "x_decimals": 2,
+            "x_decimals": 0,
         }
 
         # Use per-sample coloring with mqc_colour plot_defaults scheme
@@ -2392,25 +2386,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         return linegraph.plot(plot_data, config)
 
-    def calculate_noise_threshold(self, gene_molecule_counts, quantile=0.99):
+    def calculate_noise_threshold_from_df(self, transcript_stats_df, quantile=0.99):
         """
-        Calculate noise threshold based on negative control molecules.
+        Calculate noise threshold directly from transcript_stats DataFrame.
+        This is the most efficient version as it works on the already-processed DataFrame.
 
         Args:
-            gene_molecule_counts: Dict of {gene_name: {"count": int, "is_gene": bool}}
+            transcript_stats_df: Polars DataFrame with columns ['feature_name', 'transcript_count', 'is_gene']
             quantile: Quantile for threshold calculation (default 0.99)
 
         Returns:
             Float threshold value or None if insufficient data
         """
-        # Extract counts for negative control features (non-genes starting with "NegControl")
-        neg_control_counts = []
-        neg_control_found = 0
-        for gene_name, gene_info in gene_molecule_counts.items():
-            if not gene_info["is_gene"] and gene_name.startswith("NegControl"):
-                neg_control_found += 1
-                if gene_info["count"] > 0:
-                    neg_control_counts.append(gene_info["count"])
+        # Filter for negative control features using polars
+        neg_controls = transcript_stats_df.filter(
+            (~pl.col("is_gene")) & pl.col("feature_name").str.starts_with("NegControl")
+        )
+
+        # Get counts > 0 for negative controls
+        neg_control_counts = neg_controls.filter(pl.col("transcript_count") > 0)["transcript_count"].to_list()
 
         if len(neg_control_counts) < 3:  # Need at least 3 data points for meaningful statistics
             return None
