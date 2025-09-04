@@ -2208,11 +2208,10 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Number of transcripts per gene",
             "ylab": "Number of features",
             "xlog": True,
+            "series_label": False,
         }
 
         # Use same color for genes and controls from same sample (distinguished by line style)
-        from multiqc.utils import mqc_colour
-
         scale = mqc_colour.mqc_colour_scale("plot_defaults")
         sample_color = scale.get_colour(0, lighten=1)  # Use first color for single sample
 
@@ -2328,7 +2327,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Xenium: Distribution of Transcripts per Gene",
             "xlab": "Number of transcripts per gene",
             "ylab": "Number of features",
-            "series_label": None,
+            "series_label": False,
             "xlog": True,
             "x_decimals": 0,
         }

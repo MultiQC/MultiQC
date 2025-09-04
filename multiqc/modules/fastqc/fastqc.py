@@ -1320,7 +1320,7 @@ class MultiqcModule(BaseMultiqcModule):
             "y_minrange": 5,
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
-            "hide_zero_cats": True,
+            "hide_empty": True,
             "series_label": "sample-adapter combinations",
         }
         if status_checks:
