@@ -85,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "seqs_in" : {"title" : "reads in"},
                 "seqs_out" : {"title" : "reads out"},
                 "seqs_removed" : {"title" : "reads removed"},
-                "seqs_removed_proportion" : {"title" : "reads removed (%)", "format" : "{:%}"}, 
+                "seqs_removed_proportion" : {"title" : "reads removed (%)"}, #, "format" : "{:%}"
                 "bp_in" : {"title" : "bp in"},
                 "bp_out" : {"title" : "bp out"},
                 "bp_removed" : {"title" : "bp removed"},
@@ -99,15 +99,20 @@ class MultiqcModule(BaseMultiqcModule):
         #add plot in report for: reads removed
         plot_data = {}
         for sample, stats in self.deacon_data.items(): #iterate through all samples and their statistics
-            if stats.get("seqs_removed_proportion") is not None: #check, if report contains "seqs_removed_proportion"
-                plot_data[sample] = stats["seqs_removed_proportion"]
+            val = stats.get("seqs_removed_proportion")
+            if val is not None:
+                plot_data[sample] = {"removed" : float(val)}
 
-        if len(plot_data) > 0: #create if there is data
+        if plot_data: #create if there is data
             pconfig_plot = { #plot-configuration, dictionary; no default configuration
                 "id" : "deacon_removed_reads",
                 "title" : "% Reads removed (Deacon)",
-                "ylab" : "% removed"
+                "ylab" : "% removed",
+                "cpswitch" : False,
             }
+            #import pprint
+            #pprint.pprint(plot_data)
+            #pprint.pprint(pconfig_plot)
 
             self.add_section( #new section in MultiQC report
                 name = "Reads removed",
@@ -120,13 +125,16 @@ class MultiqcModule(BaseMultiqcModule):
         #add plot in report for: Reads removed and remaining in absolute and percentage number
         plot2_data = {}
         for sample, stats in self.deacon_data.items(): #iterate through all samples and their statistics
-            if stats.get("seqs_removed") is not None and stats.get("seqs_out") is not None: #check, if report contains "seqs_removed" and "seqs_out"
+            removed = stats.get("seqs_removed")
+            remaining = stats.get("seqs_out")
+
+            if removed is not None and remaining is not None:
                 plot2_data[sample] = {
-                    "Reads removed" : stats["seqs_removed"],
-                    "Reads remaining" : stats["seqs_out"]
+                    "removed" : float(removed),
+                    "remaining" : float(remaining)
                 }
             
-        if len(plot2_data) > 0: #create if there is data
+        if plot2_data: #create if there is data
             pconfig_plot2 = {
                 "id" : "Reads_removed_remaining",
                 "title" : "Reads removed and Reads remaining",
