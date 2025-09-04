@@ -26,7 +26,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("deacon", filehandles = True): #filehandles = opens the files
             
             try:
-                data = json.load(f["f"]) #load JSON data from filehandles
+                if isinstance(f["f"], str):
+                    data = json.loads(f["f"])
+                else:
+                    data = json.load(f["f"]) #load JSON data from filehandles
             except Exception as e: #catch parsing-errors in e
                 log.error(f"failed to parse data from {f['fn']} : {e}") #{e} -> error message
                 continue
@@ -34,11 +37,10 @@ class MultiqcModule(BaseMultiqcModule):
             #check, if there is "version" in JSON report and contains "version"
             version = data.get("version", "")
             if not version.startswith("deacon"):
-                log.warning(F"Skipping {f['f']} : no deacon report or wrong version ({version})")
+                log.warning(f"Skipping {f['fn']} : no deacon report or wrong version")
                 continue
             
             sample_name = self.clean_s_name(f["s_name"], f) #f["s_name"] -> samplename; self.clean_s_name -> normalizes the name to avoid duplicates
-
 
             #extract metrics for each sample
             self.deacon_data[sample_name] = {
@@ -83,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "seqs_in" : {"title" : "reads in"},
                 "seqs_out" : {"title" : "reads out"},
                 "seqs_removed" : {"title" : "reads removed"},
-                "seqs_removed_proportion" : {"title" : "reads removed (%)", "format" : "{:%}"},
+                "seqs_removed_proportion" : {"title" : "reads removed (%)", "format" : "{:%}"}, 
                 "bp_in" : {"title" : "bp in"},
                 "bp_out" : {"title" : "bp out"},
                 "bp_removed" : {"title" : "bp removed"},
@@ -111,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name = "Reads removed",
                 anchor = "deacon_removed_reads",
                 description = "percentage of removed reads per sample",
-                plot = bargraph.plot(plot_data, pconfig_plot) #generates a barplot
+                #plot = bargraph.plot(plot_data, pconfig_plot) #generates a barplot
             )
 
 
@@ -137,5 +139,5 @@ class MultiqcModule(BaseMultiqcModule):
                 name = "Reads removed and Reads remaining",
                 anchor = "Reads_removed_remaining",
                 description = "Comparison between removed and remaining Reads, switch between absolute and percentage number.",
-                plot = bargraph.plot(plot2_data, pconfig_plot2) #generate a barplot
+                #plot = bargraph.plot(plot2_data, pconfig_plot2) #generates a barplot
             )
