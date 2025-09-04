@@ -27,17 +27,11 @@ class MultiqcModule(BaseMultiqcModule):
             
             try:
                 data = json.load(f["f"]) #load JSON data from filehandles
-                if isinstance(data, str):
-                    data = json.loads(data)
             except Exception as e: #catch parsing-errors in e
                 log.error(f"failed to parse data from {f['fn']} : {e}") #{e} -> error message
                 continue
             
-            #check, if data is a dict
-            if not isinstance(data, dict):
-                log.warning(f"{f['fn']} : does not contain a valod JSON object")
-                continue
-            #check, if there is "version" in JSON report and contains "version...."
+            #check, if there is "version" in JSON report and contains "version"
             version = data.get("version", "")
             if not version.startswith("deacon"):
                 log.warning(F"Skipping {f['f']} : no deacon report or wrong version ({version})")
