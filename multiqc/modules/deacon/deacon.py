@@ -27,6 +27,8 @@ class MultiqcModule(BaseMultiqcModule):
             
             try:
                 data = json.load(f["f"]) #load JSON data from filehandles
+                if isinstance(data, str):
+                    data = json.loads(data)
             except Exception as e: #catch parsing-errors in e
                 log.error(f"failed to parse data from {f['fn']} : {e}") #{e} -> error message
                 continue
