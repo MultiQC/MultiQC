@@ -1,4 +1,0 @@
-deacon:
-  fn: "*deacon.json"
-  contents_re: '^version:\s*"deacon'
-  filetype: "json"
