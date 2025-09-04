@@ -24,23 +24,17 @@ class MultiqcModule(BaseMultiqcModule):
 
         #iterate through all detected Deacon log files
         for f in self.find_log_files("deacon", filehandles = True): #filehandles = opens the files
-            if not f["fn"].endswith("deacon.json"): #every json-report ends with deacon.json
-                continue
+            
             try:
                 data = json.load(f["f"]) #load JSON data from filehandles
             except Exception as e: #catch parsing-errors in e
-                log.error(f"failed to parse data from {f['f']} : {e}") #{e} -> error message
+                log.error(f"failed to parse data from {f['fn']} : {e}") #{e} -> error message
                 continue
             
-            #check, if data is a dict
-            if not isinstance(data, dict):
-                log.warning("fSkipping {f['fn']} : parsed JSON is not an oject")
-                continue 
-            
-            #check, if version is version
-            version = data.get("version")
-            if version is None or not version.startswith("deacon"):
-                log.warning(f"Skipping {f['fn']} : not a deacon report (version = {version})")
+            #check, if there is "version" in JSON report and contains "version...."
+            version = data.get("version", "")
+            if not version.startswith("deacon"):
+                log.warning(F"Skipping {f['f']} : no deacon report or wrong version ({version})")
                 continue
             
             sample_name = self.clean_s_name(f["s_name"], f) #f["s_name"] -> samplename; self.clean_s_name -> normalizes the name to avoid duplicates
