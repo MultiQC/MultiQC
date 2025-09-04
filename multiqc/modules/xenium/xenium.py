@@ -1242,22 +1242,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add nucleus RNA fraction if nucleus_count is available
         if "nucleus_count" in schema:
-            # Check for data quality issues: nucleus_count should not exceed total_counts
-            invalid_fractions = (
-                lazy_df.filter((pl.col("total_counts") > 0) & (pl.col("nucleus_count") > pl.col("total_counts")))
-                .select(pl.len().alias("count"))
-                .collect()
-                .item()
-            )
-
-            if invalid_fractions > 0:
-                log.warning(
-                    f"Found {invalid_fractions} cells with nucleus_count > total_counts in {f['fn']}. "
-                    f"This indicates potential data quality issues. Values will be capped at 1.0."
-                )
-
             nucleus_fraction_stats = (
-                lazy_df.filter(pl.col("total_counts") > 0)
+                lazy_df.filter(pl.col("total_counts") >= 10)
                 .with_columns((pl.col("nucleus_count") / pl.col("total_counts")).alias("fraction"))
                 .select(
                     [
@@ -1975,12 +1961,14 @@ class MultiqcModule(BaseMultiqcModule):
         if not data:
             return None
 
-        config = {
-            "id": "xenium_nucleus_cell_area_ratio_multi",
-            "title": "Xenium: Nucleus to Cell Area Distribution",
-            "xlab": "Nucleus-to-cell area ratio",
-            "boxpoints": False,
-        }
+        config = box.BoxPlotConfig(
+            id="xenium_nucleus_cell_area_ratio_multi",
+            title="Xenium: Nucleus to Cell Area Distribution",
+            xlab="Nucleus-to-cell area ratio",
+            boxpoints=False,
+            xmin=0,
+            xmax=1,
+        )
 
         return box.plot(data, config)
 
