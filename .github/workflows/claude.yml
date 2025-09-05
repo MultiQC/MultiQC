@@ -19,11 +19,14 @@ jobs:
       pull-requests: write
       id-token: write
 
+    # Exclude module requests from general Claude workflow (handled by module-analysis.yml)
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+      !contains(github.event.issue.labels.*.name, 'module: new') && (
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+        (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+      )
 
     steps:
       - name: Checkout code
@@ -31,8 +34,10 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Run Claude PR Action
-        uses: anthropics/claude-code-action@beta
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          timeout_minutes: "60"
+          claude_args: |
+            --max-turns 10
+            --model claude-sonnet-4-20250514
