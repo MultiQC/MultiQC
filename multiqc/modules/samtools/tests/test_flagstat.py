@@ -7,11 +7,26 @@ import pytest
 from multiqc import config, report
 from multiqc.modules.samtools import MultiqcModule
 from multiqc.utils import testing
+from multiqc.utils.testing import BaseModuleTest
 
 
 @pytest.fixture
 def data_dir():
     return testing.data_dir()
+
+
+@pytest.fixture
+def snapshot_config():
+    """
+    Configuration for snapshot testing.
+
+    Returns a dictionary with common configuration options for snapshot tests.
+    """
+    return {
+        "preserve_module_raw_data": True,
+        "strict": True,
+        "make_data_dir": False,  # Don't create data directories during testing
+    }
 
 
 def test_data_parsed(data_dir):
@@ -75,3 +90,56 @@ def test_rep2(rep1, rep2):
         del res2[k]
 
     assert res1 == res2
+
+
+# Simplified snapshot testing
+class TestSamtoolsFlagstatSnapshot(BaseModuleTest):
+    """Snapshot tests for samtools flagstat module."""
+
+    MODULE_CLASS = MultiqcModule
+    MODULE_NAME = "samtools"
+
+    def test_flagstat_snapshot(self, data_dir, snapshot, snapshot_config):
+        """Test flagstat raw data snapshot."""
+        flagstat_data_dir = data_dir / "modules" / "samtools" / "flagstat"
+        # Get all flagstat test files
+        flagstat_files = list(flagstat_data_dir.glob("*.txt"))
+
+        # Run the module test
+        module_snapshot = testing.run_module_test(
+            module_class=self.MODULE_CLASS,
+            data_files=flagstat_files,
+            config_updates=snapshot_config,
+        )
+
+        # Assert basic data integrity
+        self.assert_module_data_integrity(module_snapshot)
+
+        # Snapshot the raw data output from the module
+        raw_data = module_snapshot.get_saved_raw_data()
+        assert raw_data == snapshot
+
+
+# Individual file tests with snapshots
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "small.samtools13.flagstat.log.txt",
+        "small.samtools12.flagstat.log.txt",
+    ],
+)
+def test_individual_flagstat_file(data_dir, filename, snapshot, snapshot_config):
+    """Test parsing of individual flagstat files."""
+    flagstat_data_dir = data_dir / "modules" / "samtools" / "flagstat"
+    file_path = flagstat_data_dir / filename
+
+    # Run the module test on just this file
+    module_snapshot = testing.run_module_test(
+        module_class=MultiqcModule,
+        data_files=[file_path],
+        config_updates=snapshot_config,
+    )
+
+    # Just snapshot the raw parsed data for this file
+    raw_data = module_snapshot.get_saved_raw_data()
+    assert raw_data == snapshot
