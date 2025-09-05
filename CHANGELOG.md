@@ -2,7 +2,9 @@
 
 ## [MultiQC v1.31](https://github.com/MultiQC/MultiQC/releases/tag/v1.31) - 2025-09-05
 
-Adds new module for [Xenium analysis](https://www.10xgenomics.com/products/xenium-analysis) - 10x Genomics Xenium spatial transcriptomics quality control.
+Adding new module for [Xenium analysis](https://www.10xgenomics.com/products/xenium-analysis), 10x Genomics Xenium spatial transcriptomics quality control report.
+
+The parquet format is stable since 1.29, renaming the output file from `BETA-multiqc.parquet` to `multiqc.parquet`.
 
 ### New modules
 
@@ -14,6 +16,7 @@ Adds new module for [Xenium analysis](https://www.10xgenomics.com/products/xeniu
 - Add `return_html` parameter for programmatic HTML access ([#3304](https://github.com/MultiQC/MultiQC/pull/3304))
 - File search optimization: avoid reading files when contents exclusion patterns are not
   provided ([#3312](https://github.com/MultiQC/MultiQC/pull/3312))
+- Rename `BETA-multiqc.parquet` to `multiqc.parquet` ([#3332](https://github.com/MultiQC/MultiQC/pull/3332))
 
 ### Fixes
 
@@ -31,6 +34,7 @@ Adds new module for [Xenium analysis](https://www.10xgenomics.com/products/xeniu
 - Missing modules to general stats: Busco, CheckM, CheckM2, GTDB-Tk ([#3289](https://github.com/MultiQC/MultiQC/pull/3289))
 - cells2stats: add support for optical pooled screening output ([#3277](https://github.com/MultiQC/MultiQC/pull/3277))
 - fastp: add before-filtering mean r1/r2 length to general stats ([#3280](https://github.com/MultiQC/MultiQC/pull/3280))
+- Cutadapt: improve sample name extraction for stdin input ([#3333](https://github.com/MultiQC/MultiQC/pull/3333))
 
 ### Module fixes
 
