@@ -21,6 +21,9 @@ GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 WORKSPACE_PATH = Path(os.environ.get("GITHUB_WORKSPACE", "."))
 MODULES_SUBDIR = Path("multiqc/modules")
 
+if not GITHUB_TOKEN:
+    raise ValueError("Please set the GITHUB_TOKEN environment variable")
+
 
 def run_cmd(cmd):
     print(cmd)
