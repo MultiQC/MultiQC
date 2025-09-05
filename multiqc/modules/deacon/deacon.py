@@ -109,6 +109,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "title" : "% Reads removed (Deacon)",
                 "ylab" : "% removed",
                 "cpswitch" : False,
+                "cats" : { #"cats" defines categories for the configuration of the plot
+                    "removed" : {"name" : "% removed"}
+                }
             }
             #import pprint
             #pprint.pprint(plot_data)
@@ -140,7 +143,11 @@ class MultiqcModule(BaseMultiqcModule):
                 "title" : "Reads removed and Reads remaining",
                 "ylab" : "Number of Reads",
                 "cpswitch" : True,  #switch between absolute and percentage number
-                "stacked" : True    #stacked bars
+                "stacked" : True,    #stacked bars
+                "cats" : {
+                    "removed" : {"name" : "Reads removed"},
+                    "remaining" : {"name" : "Reads remaining"}
+                }
             }
 
             self.add_section( #new section in MultiQC report
