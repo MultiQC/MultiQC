@@ -98,32 +98,34 @@ class MultiqcModule(BaseMultiqcModule):
 
         #add plot in report for: reads removed
         plot_data = {}
+        cats: List[str] = list()
         for sample, stats in self.deacon_data.items(): #iterate through all samples and their statistics
             val = stats.get("seqs_removed_proportion")
             if val is not None:
                 plot_data[sample] = {"removed" : float(val)}
 
         if plot_data: #create if there is data
+
+            cats.append("removed")
+            
             pconfig_plot = { #plot-configuration, dictionary; no default configuration
                 "id" : "deacon_removed_reads",
                 "title" : "% Reads removed (Deacon)",
                 "ylab" : "% removed",
                 "cpswitch" : False,
             }
-            #import pprint
-            #pprint.pprint(plot_data)
-            #pprint.pprint(pconfig_plot)
 
             self.add_section( #new section in MultiQC report
                 name = "Reads removed",
                 anchor = "deacon_removed_reads",
                 description = "percentage of removed reads per sample",
-                #plot = bargraph.plot(plot_data, pconfig_plot) #generates a barplot
+                #plot = bargraph.plot(plot_data, cats, pconfig_plot) #generates a barplot
             )
 
 
         #add plot in report for: Reads removed and remaining in absolute and percentage number
         plot2_data = {}
+        cats2: List[str] = list()
         for sample, stats in self.deacon_data.items(): #iterate through all samples and their statistics
             removed = stats.get("seqs_removed")
             remaining = stats.get("seqs_out")
@@ -135,6 +137,10 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             
         if plot2_data: #create if there is data
+
+            cats2.append("removed")
+            cats2.append("remaining")
+            
             pconfig_plot2 = {
                 "id" : "Reads_removed_remaining",
                 "title" : "Reads removed and Reads remaining",
@@ -147,5 +153,5 @@ class MultiqcModule(BaseMultiqcModule):
                 name = "Reads removed and Reads remaining",
                 anchor = "Reads_removed_remaining",
                 description = "Comparison between removed and remaining Reads, switch between absolute and percentage number.",
-                #plot = bargraph.plot(plot2_data, pconfig_plot2) #generates a barplot
+                #plot = bargraph.plot(plot2_data, cats2, pconfig_plot2) #generates a barplot
             )
