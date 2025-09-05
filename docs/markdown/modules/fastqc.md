@@ -2,7 +2,7 @@
 title: FastQC
 displayed_sidebar: multiqcSidebar
 description: >
-  Quality control tool for high throughput sequencing data
+  <p>Quality control tool for high throughput sequencing data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/fastqc/fastqc.py
 -->
 
 :::note
-Quality control tool for high throughput sequencing data
+
+<p>Quality control tool for high throughput sequencing data.</p>
 
 [http://www.bioinformatics.babraham.ac.uk/projects/fastqc/](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 :::
@@ -50,7 +51,7 @@ that they will share a sample name with data that has already been parsed.
 :::
 
 You can customise the patterns used for finding these files in your
-MultiQC config (see [Module search patterns](#module-search-patterns)).
+MultiQC config (see [Module search patterns](https://docs.seqera.io/multiqc/getting_started/config#module-search-patterns)).
 The below code shows the default file patterns:
 
 ```yaml

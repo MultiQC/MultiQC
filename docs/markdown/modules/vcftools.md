@@ -2,7 +2,7 @@
 title: VCFTools
 displayed_sidebar: multiqcSidebar
 description: >
-  Program to analyse and reporting on VCF files.
+  <p>Program to analyse and reporting on VCF files.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/vcftools/vcftools.py
 -->
 
 :::note
-Program to analyse and reporting on VCF files.
+
+<p>Program to analyse and reporting on VCF files.</p>
 
 [https://vcftools.github.io](https://vcftools.github.io)
 :::

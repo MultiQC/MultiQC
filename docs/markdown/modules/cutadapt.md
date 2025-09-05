@@ -2,7 +2,7 @@
 title: Cutadapt
 displayed_sidebar: multiqcSidebar
 description: >
-  Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.
+  <p>Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/cutadapt/cutadapt.py
 -->
 
 :::note
-Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.
+
+<p>Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.</p>
 
 [https://cutadapt.readthedocs.io/](https://cutadapt.readthedocs.io/)
 :::
