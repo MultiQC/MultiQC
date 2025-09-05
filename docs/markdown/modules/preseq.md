@@ -2,7 +2,7 @@
 title: Preseq
 displayed_sidebar: multiqcSidebar
 description: >
-  Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count.
+  <p>Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/preseq/preseq.py
 -->
 
 :::note
-Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count.
+
+<p>Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count.</p>
 
 [http://smithlabresearch.org/software/preseq/](http://smithlabresearch.org/software/preseq/)
 :::
