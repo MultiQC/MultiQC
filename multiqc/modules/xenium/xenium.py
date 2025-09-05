@@ -1526,6 +1526,28 @@ class MultiqcModule(BaseMultiqcModule):
         if not all_categories:
             return None
 
+        # Sort categories for consistent ordering
+        sorted_categories = sorted(
+            all_categories,
+            key=lambda x: (
+                0
+                if x == "Pre-designed"
+                else 1
+                if x == "Custom"
+                else 2
+                if x == "Genomic Control Probe"
+                else 3
+                if x == "Negative Control Probe"
+                else 4
+                if x == "Negative Control Codeword"
+                else 5
+                if x == "Unassigned Codeword"
+                else 6
+                if x == "Deprecated Codeword"
+                else 7
+            ),
+        )
+
         # Create table data: samples as rows, categories as columns
         table_data = {}
         for sample_name, sample_data in transcript_data_by_sample.items():
@@ -1535,7 +1557,7 @@ class MultiqcModule(BaseMultiqcModule):
             table_data[sample_name] = {}
 
             # Add mean quality for each category
-            for category in all_categories:
+            for category in sorted_categories:
                 if category in sample_data["category_summary"]:
                     mean_quality = sample_data["category_summary"][category]["mean_quality"]
                     table_data[sample_name][f"{category} Mean QV"] = mean_quality
@@ -1543,7 +1565,7 @@ class MultiqcModule(BaseMultiqcModule):
                     table_data[sample_name][f"{category} Mean QV"] = None
 
             # Add standard deviation for each category
-            for category in all_categories:
+            for category in sorted_categories:
                 if category in sample_data["category_summary"]:
                     std_quality = sample_data["category_summary"][category]["std_quality"]
                     table_data[sample_name][f"{category} Std Dev"] = std_quality
@@ -1555,28 +1577,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create table headers for each category (both mean and std dev)
         headers: Dict[str, ColumnDict] = {}
-
-        # Sort categories for consistent ordering
-        sorted_categories = sorted(
-            all_categories,
-            key=lambda x: (
-                0
-                if x == "Pre-designed"
-                else 1
-                if x == "Custom"
-                else 2
-                if x == "Genomic Сontrol probe"
-                else 3
-                if x == "Negative Сontrol probe"
-                else 4
-                if x == "Negative Сontrol codeword"
-                else 5
-                if x == "Unassigned Сodeword"
-                else 6
-                if x == "Deprecated Сodeword"
-                else 7
-            ),
-        )
 
         # Create consistent abbreviations for column titles
         category_abbreviations = {
