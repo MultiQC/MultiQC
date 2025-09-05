@@ -1526,6 +1526,28 @@ class MultiqcModule(BaseMultiqcModule):
         if not all_categories:
             return None
 
+        # Sort categories for consistent ordering
+        sorted_categories = sorted(
+            all_categories,
+            key=lambda x: (
+                0
+                if x == "Pre-designed"
+                else 1
+                if x == "Custom"
+                else 2
+                if x == "Genomic Control Probe"
+                else 3
+                if x == "Negative Control Probe"
+                else 4
+                if x == "Negative Control Codeword"
+                else 5
+                if x == "Unassigned Codeword"
+                else 6
+                if x == "Deprecated Codeword"
+                else 7
+            ),
+        )
+
         # Create table data: samples as rows, categories as columns
         table_data = {}
         for sample_name, sample_data in transcript_data_by_sample.items():
@@ -1535,7 +1557,7 @@ class MultiqcModule(BaseMultiqcModule):
             table_data[sample_name] = {}
 
             # Add mean quality for each category
-            for category in all_categories:
+            for category in sorted_categories:
                 if category in sample_data["category_summary"]:
                     mean_quality = sample_data["category_summary"][category]["mean_quality"]
                     table_data[sample_name][f"{category} Mean QV"] = mean_quality
@@ -1543,7 +1565,7 @@ class MultiqcModule(BaseMultiqcModule):
                     table_data[sample_name][f"{category} Mean QV"] = None
 
             # Add standard deviation for each category
-            for category in all_categories:
+            for category in sorted_categories:
                 if category in sample_data["category_summary"]:
                     std_quality = sample_data["category_summary"][category]["std_quality"]
                     table_data[sample_name][f"{category} Std Dev"] = std_quality
@@ -1555,28 +1577,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create table headers for each category (both mean and std dev)
         headers: Dict[str, ColumnDict] = {}
-
-        # Sort categories for consistent ordering
-        sorted_categories = sorted(
-            all_categories,
-            key=lambda x: (
-                0
-                if x == "Pre-designed"
-                else 1
-                if x == "Custom"
-                else 2
-                if x == "Genomic Сontrol probe"
-                else 3
-                if x == "Negative Сontrol probe"
-                else 4
-                if x == "Negative Сontrol codeword"
-                else 5
-                if x == "Unassigned Сodeword"
-                else 6
-                if x == "Deprecated Сodeword"
-                else 7
-            ),
-        )
 
         # Create consistent abbreviations for column titles
         category_abbreviations = {
@@ -1652,10 +1652,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("scipy not available, skipping density plots. Install scipy for enhanced plotting.")
             return None
 
-        import numpy as np
-
-        if SCIPY_AVAILABLE:
-            from scipy.stats import gaussian_kde
+        from scipy.stats import gaussian_kde
 
         # Skip density plots if only pre-calculated statistics are available
         if "cell_area_values" not in cell_data:
@@ -1889,10 +1886,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("scipy not available, skipping plots. Install scipy for enhanced plotting.")
             return None
 
-        import numpy as np
         from scipy import stats
-
-        from multiqc.plots import linegraph
 
         # Skip density plots if only pre-calculated statistics are available
         if "nucleus_to_cell_area_ratio_values" not in cell_data:
@@ -2408,33 +2402,28 @@ class MultiqcModule(BaseMultiqcModule):
         if len(neg_control_counts) < 3:  # Need at least 3 data points for meaningful statistics
             return None
 
-        try:
-            # Calculate threshold using log-space statistics (similar to notebook)
-            log_counts = np.log10(neg_control_counts)
-
-            # Use median absolute deviation as robust estimate of standard deviation
-            median_log = np.median(log_counts)
-            mad = np.median(np.abs(log_counts - median_log))
-            # Convert MAD to standard deviation equivalent (normal distribution scaling factor)
-            std_log = mad * 1.4826
-
-            # Calculate upper bound using quantile
-            if SCIPY_AVAILABLE:
-                from scipy.stats import norm
-
-            z_score = norm.ppf(quantile)
-            threshold_log = median_log + z_score * std_log
-
-            threshold = 10**threshold_log
-            return threshold
-
-        except (ImportError, ValueError):
+        if not SCIPY_AVAILABLE:
             # Fallback to simple percentile if scipy not available
+            log.warning("scipy not available, falling back to simple percentile for noise threshold")
             return np.percentile(neg_control_counts, quantile * 100)
 
-        except Exception:
-            # Return None if calculation fails
-            return None
+        # Calculate upper bound using quantile
+        from scipy.stats import norm
+
+        # Calculate threshold using log-space statistics (similar to notebook)
+        log_counts = np.log10(neg_control_counts)
+
+        # Use median absolute deviation as robust estimate of standard deviation
+        median_log = np.median(log_counts)
+        mad = np.median(np.abs(log_counts - median_log))
+        # Convert MAD to standard deviation equivalent (normal distribution scaling factor)
+        std_log = mad * 1.4826
+
+        z_score = norm.ppf(quantile)
+        threshold_log = median_log + z_score * std_log
+
+        threshold = 10**threshold_log
+        return threshold
 
     def xenium_cell_distributions_combined_plot(self, cells_data_by_sample):
         """Create combined plot for transcripts and detected genes per cell distributions"""
@@ -2485,11 +2474,11 @@ class MultiqcModule(BaseMultiqcModule):
                 )
                 return None
             raw_transcript_values = transcript_values
-            try:
-                if SCIPY_AVAILABLE:
-                    from scipy.stats import gaussian_kde
+            transcript_values = np.array(transcript_values)
 
-                transcript_values = np.array(transcript_values)
+            if SCIPY_AVAILABLE:
+                from scipy.stats import gaussian_kde
+
                 kde = gaussian_kde(transcript_values)
                 x_min, x_max = transcript_values.min(), transcript_values.max()
                 x_range = np.linspace(x_min, x_max, 1000)
@@ -2501,7 +2490,8 @@ class MultiqcModule(BaseMultiqcModule):
                     transcripts_data[float(x)] = float(y)
                 plot_data["Transcripts per cell"] = transcripts_data
 
-            except ImportError:
+            else:
+                log.warning("scipy not available, falling back to histogram")
                 # Fallback to histogram if scipy not available
                 bins = min(50, len(transcript_values) // 20)
                 hist, bin_edges = np.histogram(transcript_values, bins=bins)
@@ -2525,11 +2515,12 @@ class MultiqcModule(BaseMultiqcModule):
                     return None
             else:
                 raw_gene_values = gene_counts
-            try:
-                if SCIPY_AVAILABLE:
-                    from scipy.stats import gaussian_kde
 
-                gene_counts = np.array(gene_counts)
+            gene_counts = np.array(gene_counts)
+
+            if SCIPY_AVAILABLE:
+                from scipy.stats import gaussian_kde
+
                 kde = gaussian_kde(gene_counts)
                 x_min, x_max = gene_counts.min(), gene_counts.max()
                 x_range = np.linspace(x_min, x_max, 1000)
@@ -2541,7 +2532,8 @@ class MultiqcModule(BaseMultiqcModule):
                     genes_data[float(x)] = float(y)
                 plot_data["Detected genes per cell"] = genes_data
 
-            except ImportError:
+            else:
+                log.warning("scipy not available, falling back to histogram")
                 # Fallback to histogram if scipy not available
                 bins = min(50, len(gene_counts) // 20)
                 hist, bin_edges = np.histogram(gene_counts, bins=bins)
@@ -2633,9 +2625,8 @@ class MultiqcModule(BaseMultiqcModule):
         s_name, transcript_values = next(iter(samples_with_transcripts.items()))
 
         # Create kernel density estimation
-        try:
-            if SCIPY_AVAILABLE:
-                from scipy.stats import gaussian_kde
+        if SCIPY_AVAILABLE:
+            from scipy.stats import gaussian_kde
 
             transcript_values = np.array(transcript_values)
             kde = gaussian_kde(transcript_values)
@@ -2668,7 +2659,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             return linegraph.plot(plot_data, config)
 
-        except ImportError:
+        else:
+            log.warning("scipy not available, falling back to histogram")
             # Fallback to histogram if scipy not available
             bins = min(50, len(transcript_values) // 20)
             hist, bin_edges = np.histogram(transcript_values, bins=bins)
@@ -2740,9 +2732,8 @@ class MultiqcModule(BaseMultiqcModule):
         s_name, gene_values = next(iter(samples_with_transcript_counts.items()))
 
         # Create kernel density estimation
-        try:
-            if SCIPY_AVAILABLE:
-                from scipy.stats import gaussian_kde
+        if SCIPY_AVAILABLE:
+            from scipy.stats import gaussian_kde
 
             gene_values = np.array(gene_values)
             kde = gaussian_kde(gene_values)
@@ -2767,7 +2758,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             return linegraph.plot(plot_data, config)
 
-        except ImportError:
+        else:
+            log.warning("scipy not available, falling back to histogram")
             # Fallback to histogram if scipy not available
             bins = min(50, len(gene_values) // 20)
             hist, bin_edges = np.histogram(gene_values, bins=bins)
