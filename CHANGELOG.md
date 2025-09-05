@@ -21,7 +21,7 @@ The parquet format is stable since 1.29, renaming the output file from `BETA-mul
 ### Fixes
 
 - Scatter plot: fix hiding dots by legend click ([#3321](https://github.com/MultiQC/MultiQC/pull/3321))
-- Plots: seuset unique series label for each plot type ([#3330](https://github.com/MultiQC/MultiQC/pull/3330))
+- Plots: set unique series label for each plot type ([#3330](https://github.com/MultiQC/MultiQC/pull/3330))
 - Fix bulk sample renaming buttons ([#3300](https://github.com/MultiQC/MultiQC/pull/3300))
 - Fix config flag types in schema ([#3318](https://github.com/MultiQC/MultiQC/pull/3318))
 - Ignore pyc files when copying html files ([#3320](https://github.com/MultiQC/MultiQC/pull/3320))
