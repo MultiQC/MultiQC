@@ -43,6 +43,8 @@ class MultiqcModule(BaseMultiqcModule):
                 log.warning(f"Skipping {f['fn']} : no deacon report or wrong version")
                 continue
 
+            self.add_data_source(f)
+
             sample_name = self.clean_s_name(
                 f["s_name"], f
             )  # f["s_name"] -> samplename; self.clean_s_name -> normalizes the name to avoid duplicates
