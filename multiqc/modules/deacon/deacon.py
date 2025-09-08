@@ -73,6 +73,9 @@ class MultiqcModule(BaseMultiqcModule):
                 # "bp_per_second" : data.get("bp_per_second")
             }
 
+             # Write data to file
+            self.write_data_file(self.deacon_data, "deacon_stats")
+
         # check, if the dict is empty (if so, it either failed to parse or didnt match any deacon reports)
         if len(self.deacon_data) == 0:
             log.warning("no deacon reports found")
