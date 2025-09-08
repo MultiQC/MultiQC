@@ -119,7 +119,7 @@ def test_parse_parquet(tmp_path):
     assert multiqc.list_samples() == []
 
     # Load data from the JSON file
-    multiqc.parse_logs(tmp_path / "multiqc_data" / "BETA-multiqc.parquet")
+    multiqc.parse_logs(tmp_path / "multiqc_data" / "multiqc.parquet")
 
     # Verify data was loaded correctly
     assert "sample1" in multiqc.list_samples()

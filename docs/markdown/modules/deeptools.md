@@ -2,7 +2,7 @@
 title: deepTools
 displayed_sidebar: multiqcSidebar
 description: >
-  Tools to process and analyze deep sequencing data.
+  <p>Tools to process and analyze deep sequencing data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/deeptools/deeptools.py
 -->
 
 :::note
-Tools to process and analyze deep sequencing data.
+
+<p>Tools to process and analyze deep sequencing data.</p>
 
 [http://deeptools.readthedocs.io](http://deeptools.readthedocs.io)
 :::

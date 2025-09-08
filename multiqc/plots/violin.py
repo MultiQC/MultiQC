@@ -915,7 +915,6 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             default_tt_label=": %{x}",
             # Violins scale well, so can always keep them interactive and visible:
             defer_render_if_large=False,
-            flat_if_very_large=False,
         )
 
         no_violin: bool = model.pconfig.no_violin

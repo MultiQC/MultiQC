@@ -2,7 +2,7 @@
 title: CheckM2
 displayed_sidebar: multiqcSidebar
 description: >
-  Assesses microbial genome quality using machine learning.
+  <p>Assesses microbial genome quality using machine learning.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/checkm2/checkm2.py
 -->
 
 :::note
-Assesses microbial genome quality using machine learning.
+
+<p>Assesses microbial genome quality using machine learning.</p>
 
 [https://github.com/chklovski/CheckM2](https://github.com/chklovski/CheckM2)
 :::

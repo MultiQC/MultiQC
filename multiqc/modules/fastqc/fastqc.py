@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
     :::
 
     You can customise the patterns used for finding these files in your
-    MultiQC config (see [Module search patterns](#module-search-patterns)).
+    MultiQC config (see [Module search patterns](https://docs.seqera.io/multiqc/getting_started/config#module-search-patterns)).
     The below code shows the default file patterns:
 
     ```yaml
@@ -1320,7 +1320,7 @@ class MultiqcModule(BaseMultiqcModule):
             "y_minrange": 5,
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
-            "hide_zero_cats": True,
+            "hide_empty": True,
             "series_label": "sample-adapter combinations",
         }
         if status_checks:

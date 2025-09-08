@@ -192,10 +192,10 @@ highlight_regex: bool
 no_version_check: bool
 log_filesize_limit: int
 filesearch_lines_limit: int
-report_readerrors: int
-skip_generalstats: int
-skip_versions_section: int
-disable_version_detection: int
+report_readerrors: bool
+skip_generalstats: bool
+skip_versions_section: bool
+disable_version_detection: bool
 versions_table_group_header: str
 data_format_extensions: Dict[str, str]
 export_plot_formats: List[str]
