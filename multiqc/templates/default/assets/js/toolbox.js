@@ -21,8 +21,8 @@ const AI_PROVIDERS = {
   },
   openai: {
     name: "OpenAI",
-    defaultModel: "gpt-4o",
-    suggestedModels: ["gpt-4o", "gpt-4.1"],
+    defaultModel: "gpt-5",
+    suggestedModels: ["gpt-5"],
     apiKeysUrl: "https://platform.openai.com/api-keys",
     modelsUrl: "https://platform.openai.com/docs/models",
   },
@@ -1614,7 +1614,7 @@ function updatePanel(providerId) {
     }
     // Doing it here again because model depends on provider
     const storedModel = getStoredModelName(providerId);
-    const defaultModel = provider.defaultModel;
+    const defaultModel = provider && provider.defaultModel ? provider.defaultModel : null;
     $("#ai-model").val(storedModel || defaultModel);
 
     if (providerId === "openai") {
@@ -1652,14 +1652,15 @@ $(function () {
   });
 
   // Set initial values from storage or values from Python
-  const providerId = getStoredProvider() || aiConfigProviderId || "seqera";
+  let providerId = getStoredProvider() || aiConfigProviderId;
+  if (!providerId || providerId === "None") providerId = "seqera";
   aiProviderSelect.val(providerId);
   const provider = AI_PROVIDERS[providerId];
   $("#ai-api-key").val(getStoredApiKey(providerId) || "");
 
   let model = getStoredModelName(providerId);
   if (model === null && aiConfigModel !== "None") model = aiConfigModel;
-  if (model === null && provider.defaultModel) model = provider.defaultModel;
+  if (model === null && provider && provider.defaultModel) model = provider.defaultModel;
   $("#ai-model").val(model);
 
   let endpoint = getStoredEndpoint();

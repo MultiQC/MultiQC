@@ -773,7 +773,6 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             axis_controlled_by_switches=["xaxis"],
             default_tt_label="%{meta}: <b>%{x}</b>",
             defer_render_if_large=False,  # We hide samples on large bar plots, so no need to defer render
-            flat_if_very_large=True,  # However, the data is still embedded into the HTML, and we don't want the report size to inflate
         )
 
         model.datasets = [

@@ -2,7 +2,7 @@
 title: DeDup
 displayed_sidebar: multiqcSidebar
 description: >
-  Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
+  <p>Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/dedup/dedup.py
 -->
 
 :::note
-Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
+
+<p>Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis.</p>
 
 [http://www.github.com/apeltzer/DeDup](http://www.github.com/apeltzer/DeDup)
 :::

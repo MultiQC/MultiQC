@@ -1,6 +1,6 @@
 import sys
 import tempfile
-from typing import Dict
+from typing import Dict, List, Union
 from unittest.mock import patch
 
 import pytest
@@ -187,7 +187,7 @@ def test_boxplot_dynamic_boxpoints():
     config.box_min_threshold_no_points = 10
     config.box_min_threshold_outliers = 5
 
-    data_few = {
+    data_few: Dict[str, List[Union[int, float]]] = {
         "Sample1": [1.0, 2.0, 3.0, 4.0, 5.0],
         "Sample2": [2.0, 3.0, 4.0, 5.0, 6.0],
     }
@@ -206,7 +206,7 @@ def test_boxplot_dynamic_boxpoints():
     report.reset()
 
     # Test with many samples (should show only outliers)
-    data_many = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(10)}
+    data_many: Dict[str, List[Union[int, float]]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(10)}
 
     plot_many = _verify_rendered(
         box.plot(
@@ -222,7 +222,7 @@ def test_boxplot_dynamic_boxpoints():
     report.reset()
 
     # Test with very many samples (should show no points)
-    data_very_many = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(15)}
+    data_very_many: Dict[str, List[Union[int, float]]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(15)}
 
     plot_very_many = _verify_rendered(
         box.plot(
