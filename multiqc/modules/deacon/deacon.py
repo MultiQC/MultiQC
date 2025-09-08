@@ -33,16 +33,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("deacon", filehandles = True): #filehandles: opens the files
             
             try:
-                #f["f"] -> EITHER an open file-like object OR a string containing the file contents
-                if isinstance(f["f"], str): 
-                    #if `f["f"]` is already a string, use json.loads(), which parses a string into a Python object
-                    data = json.loads(f["f"])
-                
-                else:
-                    #load JSON data from filehandles, if `f["f"]` is a file-like object
-                    data = json.load(f["f"]) 
+                #load JSON data from filehandles, if `f["f"]` is a file-like object
+                data = json.load(f["f"]) 
             except Exception as e: #catch parsing-errors in e
-                log.error(f"failed to parse data from {f['fn']} : {e}") #{e} -> error message
+                log.warning(f"failed to parse data from {f['fn']} : {e}") #{e} -> error message
                 continue
             
             #check, if there is "version" in JSON report and contains "version"
@@ -143,7 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title" : "Sequences removed and Sequences kept",
                 "ylab" : "Number of Sequences",
                 "cpswitch" : True,  #switch between absolute and percentage number
-                "stacked" : True    #stacked bars
+                "stacking" : "relative"   #stacked bars
             }
 
             #add a new section in MultiQC report
