@@ -1,5 +1,6 @@
 import logging
 import json
+import re
 
 from typing import List
 from multiqc.base_module import BaseMultiqcModule
@@ -72,8 +73,9 @@ class MultiqcModule(BaseMultiqcModule):
                 # "seqs_per_second" : data.get("seqs_per_second"),
                 # "bp_per_second" : data.get("bp_per_second")
             }
+            self.add_software_version(re.sub(r"^\D*", "", data.get("version")))
 
-             # Write data to file
+            # Write data to file
             self.write_data_file(self.deacon_data, "deacon_stats")
 
         # check, if the dict is empty (if so, it either failed to parse or didnt match any deacon reports)
