@@ -20,6 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Deacon",
             anchor="deacon",
             href="https://github.com/bede/deacon",
+            doi="https://doi.org/10.1101/2025.06.09.658732",
             info="Search and depletion of FASTA/FASTQ files and streams using accelerated minimizer matching.",
         )
 
