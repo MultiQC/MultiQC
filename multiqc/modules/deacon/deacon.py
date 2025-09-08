@@ -28,17 +28,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # iterate through all detected Deacon log files
         # includes an open file handle in the returned dict under key "f"
-        for f in self.find_log_files(
-            "deacon", filehandles=True
-        ):  # filehandles: opens the files
-
+        for f in self.find_log_files("deacon", filehandles=True):  # filehandles: opens the files
             try:
                 # load JSON data from filehandles, if `f["f"]` is a file-like object
                 data = json.load(f["f"])
             except Exception as e:  # catch parsing-errors in e
-                log.warning(
-                    f"failed to parse data from {f['fn']} : {e}"
-                )  # {e} -> error message
+                log.warning(f"failed to parse data from {f['fn']} : {e}")  # {e} -> error message
                 continue
 
             # check, if there is "version" in JSON report and contains "version"
@@ -58,9 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # "abs_threshold" : data.get("abs_threshold"), #number of k-mers that count as hit
                 # "rel_threshold" : data.get("rel_threshold"),
                 # "prefix_length" : data.get("prefix_length"), #prefix length used for hashing/filtering
-                "deplete": (
-                    "True" if data.get("deplete") else "False"
-                ),  # boolean, deplete mode (True/False)
+                "deplete": ("True" if data.get("deplete") else "False"),  # boolean, deplete mode (True/False)
                 # "rename" : data.get("rename"), #boolean, renamed seqs after export (True/False)
                 "seqs_in": data.get("seqs_in"),  # number of input seqs
                 "seqs_out": data.get("seqs_out"),  # number of output seqs
@@ -120,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "id": "Deacon_statistics",
                     "title": "Deacon report statistics",
-                }
+                },
             ),
         )
 
@@ -145,7 +138,6 @@ class MultiqcModule(BaseMultiqcModule):
                 }
 
         if plot_data:  # create if at least one sample has data
-
             # add category names
             cats.append("removed")
             cats.append("kept")
@@ -164,9 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Removed and kept sequences",
                 anchor="Deacon_Sequences_removed_vs_kept_section",
                 description="Number of removed and kept sequences",
-                plot=bargraph.plot(
-                    plot_data, cats, pconfig_plot
-                ),  # generates a barplot
+                plot=bargraph.plot(plot_data, cats, pconfig_plot),  # generates a barplot
             )
 
     def deacon_general_stats_table(self, data_by_sample):
