@@ -117,6 +117,10 @@ class MultiqcModule(BaseMultiqcModule):
                     # "seqs_per_second" : {"title" : "reads/s"},
                     # "bp_per_second" : {"title" : "bp/s"}
                 },
+                {
+                    "id": "Deacon_statistics",
+                    "title": "Deacon report statistics",
+                }
             ),
         )
 
@@ -148,8 +152,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             # configuration of plot settings
             pconfig_plot = {
-                "id": "Sequences_removed_kept",
-                "title": "Sequences removed and Sequences kept",
+                "id": "Deacon_Sequences_removed_vs_kept_plot",
+                "title": "Removed and kept sequences",
                 "ylab": "Number of Sequences",
                 "cpswitch": True,  # switch between absolute and percentage number
                 "stacking": "relative",  # stacked bars
@@ -157,9 +161,9 @@ class MultiqcModule(BaseMultiqcModule):
 
             # add a new section in MultiQC report
             self.add_section(
-                name="Sequences removed and Seqs kept",
-                anchor="Sequences_removed_kept",
-                description="Comparison between removed and kept Sequences, switch between absolute number and percentages.",
+                name="Removed and kept sequences",
+                anchor="Deacon_Sequences_removed_vs_kept_section",
+                description="Number of removed and kept sequences",
                 plot=bargraph.plot(
                     plot_data, cats, pconfig_plot
                 ),  # generates a barplot
