@@ -106,6 +106,7 @@ collapse_tables: true
 max_table_rows: 500
 max_configurable_table_columns: 200
 general_stats_columns: {}
+general_stats_helptext: null
 table_columns_visible: {}
 table_columns_placement: {}
 table_columns_name: {}

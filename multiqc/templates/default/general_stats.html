@@ -39,6 +39,18 @@ This block generates the General Statistics table at the top of the report.
     <div class="ai-summary-error" id="general_stats_table_ai_summary_error" style="display: none;"></div>
   </div>
 
+  {% if config.general_stats_helptext is not none and config.general_stats_helptext | length > 0 %}
+  <div class="general-stats-help-btn">
+    <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#general_stats_table_helptext" aria-expanded="false" aria-controls="general_stats_table_helptext">
+      <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+      Help
+    </button>
+  </div>
+  <div class="collapse mqc-section-helptext " id="general_stats_table_helptext">
+    <div class="well">{{ config.general_stats_helptext }}</div>
+  </div>
+  {% endif %}
+
   {{ report.general_stats_html }}
 </div>
 {% endif %}
