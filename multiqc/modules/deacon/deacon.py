@@ -182,21 +182,3 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             },
         )
-
-    def deacon_general_stats_table(self, data_by_sample):
-        """Take the parsed stats from the fastp report and add it to the
-        General Statistics table at the top of the report"""
-
-        self.general_stats_addcols(
-            data_by_sample,
-            headers={
-                "seqs_removed": {
-                    "title": "Sequences removed",
-                    "description": "Sequences removed while filtering",
-                },
-                "seqs_out": {
-                    "title": "Sequences kept",
-                    "description": "Number of sequences kept after filtering",
-                },
-            },
-        )
