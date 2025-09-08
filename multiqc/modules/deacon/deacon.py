@@ -80,7 +80,10 @@ class MultiqcModule(BaseMultiqcModule):
         #check, if the dict is empty (if so, it either failed to parse or didnt match any deacon reports)
         if len(self.deacon_data) == 0: 
             log.warning("no deacon reports found")
-        
+            
+        #General Stats Table
+        self.deacon_general_stats_table(self.deacon_data)
+
         #create table in the report
         self.add_section(
             name = "Deacon statistics",
@@ -150,3 +153,21 @@ class MultiqcModule(BaseMultiqcModule):
                 description = "Comparison between removed and kept Sequences, switch between absolute number and percentages.",
                 plot = bargraph.plot(plot_data, cats, pconfig_plot) #generates a barplot
             )
+
+    def deacon_general_stats_table(self, data_by_sample):
+        """Take the parsed stats from the fastp report and add it to the
+        General Statistics table at the top of the report"""
+
+        self.general_stats_addcols(
+            data_by_sample,
+            headers = {
+                "seqs_removed" : {
+                    "title" : "Sequences removed",
+                    "description" : "Sequences removed while filtering"
+                },
+                "seqs_out" : {
+                    "title" : "Sequences kept",
+                    "description" : "Number of sequences kept after filtering"
+                }
+            }
+        )
