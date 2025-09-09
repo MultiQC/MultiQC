@@ -972,13 +972,8 @@ software_versions:
   fn_re: ".+_mqc_versions\\.(yaml|yml)"
 sortmerna:
   contents: "Minimal SW score based on E-value"
-spaceranger/count_html:
-  - fn: "*.html"
-    contents: '"command":"Space Ranger","subcommand":"count"'
-    num_lines: 20
-  - fn: "*.html"
-    contents: '"command": "Space Ranger", "subcommand": "count"'
-    num_lines: 20
+spaceranger:
+  fn: "*_metrics_summary.csv"
 stacks/gstacks:
   fn: "gstacks.log.distribs"
   contents: "BEGIN effective_coverages_per_sample"
