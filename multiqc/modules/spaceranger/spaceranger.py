@@ -51,6 +51,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * 100.0,
                 "format": "{:,.0f}%",
             },
+            "Valid UMIs": {
+                "title": "Valid UMIs",
+                "description": "%Valid UMIs",
+                "scale": "YlOrRd",
+                "modify": lambda x: x * 100.0,
+                "format": "{:,.0f}%",
+            },
              "Reads Mapped to Probe Set": {
                 "title": "Reads Mapped to Probe Set",
                 "description": "Reads Mapped to Probe Set",
@@ -67,12 +74,24 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlOrRd",
                 "format": "{:,.2f}",
             },
+             "Number of Spots Under Tissue": {
+                "title": "Number of Spots Under Tissue",
+                "description": "Number of Spots Under Tissue",
+                "scale": "YlOrRd",
+                "format": "{:,.2f}",
+            },
+             "Median Genes per Spot": {
+                "title": "Median Genes per Spot",
+                "description": "Median Genes per Spot",
+                "scale": "YlOrRd",
+                "format": "{:,.2f}",
+            },
              "Median Genes per Cell": {
                 "title": "Median Genes per Cell",
                 "description": "Median Genes per Cell",
                 "scale": "YlOrRd",
                 "format": "{:,.2f}",
-            },
+            }            ,
              "Mean Genes Under Tissue per Square 2 µm": {
                 "title": "Mean Genes Under Tissue per Square 2 µm",
                 "description": "Mean Genes Under Tissue per Square 2 µm",
