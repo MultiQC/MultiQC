@@ -42,7 +42,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Number of Reads",
                 "description": "Total number of reads sequenced",
                 "scale": "YlOrRd",
-                "format": "{:,.0f}",
+                "format": "{:,.2f}",
+            },
+            "Valid Barcodes": {
+                "title": "Valid Barcodes",
+                "description": "%Valid barcodes",
+                "scale": "YlOrRd",
+                "modify": lambda x: x * 100.0,
+                "format": "{:,.0f}%",
             },
              "Reads Mapped to Probe Set": {
                 "title": "Reads Mapped to Probe Set",
@@ -58,8 +65,33 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Estimated UMIs from Genomic DNA",
                 "description": "Estimated UMIs from Genomic DNA",
                 "scale": "YlOrRd",
-                "format": "{:,.0f}",
+                "format": "{:,.2f}",
             },
+             "Median Genes per Cell": {
+                "title": "Median Genes per Cell",
+                "description": "Median Genes per Cell",
+                "scale": "YlOrRd",
+                "format": "{:,.2f}",
+            },
+             "Mean Genes Under Tissue per Square 2 µm": {
+                "title": "Mean Genes Under Tissue per Square 2 µm",
+                "description": "Mean Genes Under Tissue per Square 2 µm",
+                "scale": "YlOrRd",
+                "format": "{:,.2f}",
+            },
+             "Mean Genes Under Tissue per Bin 8 µm": {
+                "title": "Mean Genes Under Tissue per Bin 8 µm",
+                "description": "Mean Genes Under Tissue per Bin 8 µm",
+                "scale": "YlOrRd",
+                "format": "{:,.2f}",
+            },
+             "Mean Genes Under Tissue per Bin 16 µm": {
+                "title": "Mean Genes Under Tissue per Bin 16 µm",
+                "description": "Mean Genes Under Tissue per Bin 16 µm",
+                "scale": "YlOrRd",
+                "format": "{:,.2f}",
+            },
+
             }
 
         self.add_section(
@@ -97,6 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Convert numeric fields
         numeric_fields = [
+            # visium hd
             "Number of Reads",
             "Valid Barcodes",
             "Valid UMI Sequences",	
@@ -142,8 +175,33 @@ class MultiqcModule(BaseMultiqcModule):
             "Median UMIs per Cell",
             "Median Cell Area (μm²)"
             "Median Nucleus Area (μm²)",
-            "Maximum Nucleus Diameter (pixels)"
+            "Maximum Nucleus Diameter (pixels)",
+            # visium SD
+            'Number of Spots Under Tissue',
+            'Number of Reads',
+            'Mean Reads per Spot',
+            'Mean Reads Under Tissue per Spot',
+            'Fraction of Spots Under Tissue',
+            'Median Genes per Spot',
+            'Median UMI Counts per Spot',
+            'Valid Barcodes',
+            'Valid UMIs',
+            'Sequencing Saturation',
+            'Q30 Bases in Barcode',
+            'Q30 Bases in RNA Read',
+            'Q30 Bases in UMI',
+            'Reads Mapped to Genome',
+            'Reads Mapped Confidently to Genome',
+            'Reads Mapped Confidently to Intergenic Regions',
+            'Reads Mapped Confidently to Intronic Regions',
+            'Reads Mapped Confidently to Exonic Regions',
+            'Reads Mapped Confidently to Transcriptome',
+            'Reads Mapped Antisense to Gene',
+            'Fraction Reads in Spots Under Tissue',
+            'Total Genes Detected'
         ]
+        # do duplicates even matter? idk
+        #numeric_fields = list(set(numeric_fields))
 
         parsed_metrics = {}
         for field in numeric_fields:
@@ -176,18 +234,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Reads Mapped to Probe Set",
                 "description": "Reads Mapped to Probe Set",
                 "scale": "YlOrRd",
+                "format": "{:,.2f}",
             },
              "Number of Genes": {
                 "title": "Number of Genes",
                 "description": "Number of Genes",
                 "scale": "YlOrRd",
-            },
-             "Estimated UMIs from Genomic DNA": {
-                "title": "Estimated UMIs from Genomic DNA",
-                "description": "Estimated UMIs from Genomic DNA",
-                "scale": "YlOrRd",
-                "format": "{:,.0f}",
-            },
+                "format": "{:,.0f}"
+            }
             }
         self.general_stats_addcols(data_by_sample, headers)
 """            ,
@@ -199,7 +253,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * 100.0,
                 "max": 100.0,
             },
-            "median_genes_per_cell": {
+            "median_genes_cell": {
                 "title": "Genes/Cell",
                 "description": "Median number of genes per cell",
                 "scale": "Purples",
