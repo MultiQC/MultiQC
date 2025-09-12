@@ -26,7 +26,7 @@ def mapq_table(data_dir):
 
 def test_mapq_table(mapq_table):
     """Test that parsing the MAPQ table works as expected"""
-    from multiqc.modules.biscuit import parse_align_mapq
+    from multiqc.modules.biscuit.biscuit import parse_align_mapq
 
     parsed = parse_align_mapq(mapq_table)
 
