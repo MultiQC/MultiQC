@@ -28,7 +28,7 @@ def test_mapq_table(mapq_table):
     """Test that parsing the MAPQ table works as expected"""
     from multiqc.modules.biscuit.biscuit import parse_align_mapq
 
-    parsed = parse_align_mapq(mapq_table)
+    parsed = parse_align_mapq(mapq_table, "tcga_lusc_normal_subsampled_mapq_table.txt")
 
     # Four keys are expected (frac_align, opt_align, sub_align, mapqs)
     assert len(parsed) == 4
