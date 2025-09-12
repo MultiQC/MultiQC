@@ -30,21 +30,21 @@ def test_mapq_table(mapq_table):
 
     parsed = parse_align_mapq(mapq_table, "tcga_lusc_normal_subsampled_mapq_table.txt")
 
-    # Four keys are expected (frac_align, opt_align, sub_align, mapqs)
-    assert len(parsed) == 4
+    # Four keys are expected (frac_align, opt_align, sub_align, not_align, mapqs)
+    assert len(parsed) == 5
 
     # mapqs key should have 61 keys
     assert len(parsed["mapqs"]) == 61
 
     # Check correctly parsed values
-    assert parsed["frac_align"] - 98.81 < EPSILON
+    assert abs(parsed["frac_align"] - 98.80779) < EPSILON
     assert parsed["opt_align"] == 56535091
     assert parsed["sub_align"] == 9287487
     assert parsed["not_align"] == 794210
 
     # Spot check MAPQ values
-    assert parsed["mapqs"][0] - 9.41 < EPSILON
-    assert parsed["mapqs"][14] - 0.05 < EPSILON
-    assert parsed["mapqs"][26] - 0.04 < EPSILON
-    assert parsed["mapqs"][40] - 3.83 < EPSILON
-    assert parsed["mapqs"][60] - 78.25 < EPSILON
+    assert abs(parsed["mapqs"][0] - 9.41347) < EPSILON
+    assert abs(parsed["mapqs"][14] - 0.05310) < EPSILON
+    assert abs(parsed["mapqs"][26] - 0.04399) < EPSILON
+    assert abs(parsed["mapqs"][40] - 3.82724) < EPSILON
+    assert abs(parsed["mapqs"][60] - 78.25065) < EPSILON
