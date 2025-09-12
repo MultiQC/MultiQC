@@ -195,7 +195,7 @@ class MultiQCConfig(BaseModel):
     general_stats_columns: Dict[str, GeneralStatsModuleConfig] = Field(
         default_factory=dict, description="Configuration for general stats columns per module. Keys are module IDs."
     )
-    general_stats_helptext: str = Field(
+    general_stats_helptext: Optional[str] = Field(
         None, description="Help text for general statistics table."
     )
     table_columns_visible: Optional[Dict[str, Union[bool, Dict[str, bool]]]] = Field(
