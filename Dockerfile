@@ -4,6 +4,9 @@ LABEL author="Phil Ewels & Vlad Savelyev" \
       description="MultiQC" \
       maintainer="phil.ewels@seqera.io"
 
+# Optional pandoc installation for PDF support
+ARG INSTALL_PANDOC=false
+
 RUN mkdir /usr/src/multiqc
 
 # Add the MultiQC source files to the container
@@ -26,8 +29,12 @@ RUN \
     echo "Docker build log: Run apt-get update" 1>&2 && \
     apt-get update -y -qq \
     && \
-    echo "Docker build log: Install procps and pandoc" 1>&2 && \
-    apt-get install -y -qq procps pandoc && \
+    echo "Docker build log: Install procps" 1>&2 && \
+    apt-get install -y -qq procps && \
+    if [ "$INSTALL_PANDOC" = "true" ]; then \
+        echo "Docker build log: Install pandoc and LaTeX for PDF generation" 1>&2 && \
+        apt-get install -y -qq pandoc texlive-latex-base texlive-fonts-recommended texlive-latex-extra texlive-luatex; \
+    fi && \
     echo "Docker build log: Clean apt cache" 1>&2 && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean -y && \
@@ -53,7 +60,7 @@ WORKDIR /home/multiqc
 
 # Check everything is working smoothly
 RUN echo "Docker build log: Testing multiqc" 1>&2 && \
-    multiqc --help 
+    multiqc --help
 
 # Display the command line help if the container is run without any parameters
 CMD multiqc --help
