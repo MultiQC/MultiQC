@@ -102,7 +102,7 @@ You can do this by using `-m`/`--modules` to explicitly define which modules you
 
 If an explicitly requested module couldn't find any expected input files, MultiQC will
 just continue with other modules. You can change this behaviour and make MultiQC
-strict about missing input by setting the `--require-log` flag.
+strict about missing input by setting the `--require-logs` flag.
 If set, MultiQC will exit with an error and exit code `1` if any of the modules specified with `-m` did not produce a section in the report.
 
 ## Directory prefixes in sample names
