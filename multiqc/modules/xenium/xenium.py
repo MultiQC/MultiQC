@@ -69,12 +69,17 @@ class MultiqcModule(BaseMultiqcModule):
     """
     Xenium is a spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.
 
-    NOTE: parsing huge files is not an intended MultiQC usage. By default, MultiQC will ignore the `*.parquet` files
+    :::note
+    Parsing huge files is not an intended MultiQC usage. By default, MultiQC will ignore the `*.parquet` files
     as they are gigabyte-sized. To enable parsing those, make sure to have this line in your config:
 
     ```
     log_filesize_limit: 5000000000 # 5GB
     ```
+    :::
+
+    The MultiQC module is tested with outputs from xenium-3.x, older versions of xenium output are
+    not supported and may even cause MultiQC to crash (see https://github.com/MultiQC/MultiQC/issues/3344).
     """
 
     def __init__(self):
@@ -236,17 +241,17 @@ class MultiqcModule(BaseMultiqcModule):
                     description="Transcript quality statistics by gene category",
                     helptext="""
                     This scatter plot shows transcript quality statistics broken down by gene category:
-                    
+
                     **Gene Categories:**
-                    * **Pre-designed**: Standard genes from Xenium panels  
+                    * **Pre-designed**: Standard genes from Xenium panels
                     * **Custom**: User-added custom targets
                     * **Deprecated**: Genes no longer recommended for use
                     * **Control**: Control probe sequences (e.g., negative controls)
-                    
+
                     **Quality Metrics:**
                     * **X-axis**: Transcript count per gene category
                     * **Y-axis**: Quality score distribution for each category
-                    
+
                     **Expected patterns:**
                     * Pre-designed genes typically show the highest counts and quality
                     * Custom genes may show variable performance depending on probe design
@@ -261,24 +266,24 @@ class MultiqcModule(BaseMultiqcModule):
                     description="Per-sample mean transcript quality statistics by gene category",
                     helptext="""
                     This table shows mean transcript quality statistics for each sample, with separate columns for each gene category:
-                    
+
                     **Gene Categories:**
                     * **Pre-designed**: Standard genes from Xenium panels
-                    * **Custom**: User-added custom targets  
+                    * **Custom**: User-added custom targets
                     * **Negative Control Probe/Codeword**: Control probes for background estimation
                     * **Genomic Control Probe**: Genomic DNA controls
                     * **Unassigned/Deprecated Codeword**: Other transcript types
-                    
+
                     **Quality Score (QV) Interpretation:**
                     * QV ≥20: High-quality transcripts (≥99% accuracy)
                     * QV 10-20: Medium quality (90-99% accuracy)
                     * QV <10: Low-quality transcripts (<90% accuracy)
-                    
+
                     **Table Layout:**
                     * **Rows**: Individual samples
                     * **Columns**: Mean QV and Standard Deviation for each category
                     * Values show quality statistics computed from all transcripts in that category for each sample
-                    
+
                     **What to look for:**
                     * Pre-designed genes should have high mean QV (>20) across all samples
                     * Consistent quality patterns across samples indicate good data quality
@@ -297,24 +302,24 @@ class MultiqcModule(BaseMultiqcModule):
                     description="Distribution of transcript counts per gene",
                     helptext="""
                     This histogram shows the distribution of transcript counts per gene across all samples:
-                    
+
                     **What it shows:**
                     * **X-axis**: Number of transcripts per gene (log scale)
                     * **Y-axis**: Number of genes with that transcript count
                     * **Two categories**: Genes vs. non-genes (controls, unassigned, etc.)
-                    
+
                     **Interpretation:**
                     * **Most genes** should have moderate transcript counts (hundreds to thousands)
                     * **Controls and non-genes** typically have lower counts
                     * **Very high counts** may indicate highly expressed genes or technical artifacts
                     * **Very low counts** may indicate poorly detected genes
-                    
+
                     **What to look for:**
                     * **Smooth distribution** for genes with a peak in the hundreds-thousands range
-                    * **Lower counts** for non-gene features (controls)  
+                    * **Lower counts** for non-gene features (controls)
                     * **No extreme outliers** unless biologically expected
                     * **Consistent patterns** across similar tissue types
-                    
+
                     **Quality indicators:**
                     * Peak gene expression around 100-10,000 transcripts per gene is typical
                     * Clear separation between gene and non-gene distributions
@@ -333,20 +338,20 @@ class MultiqcModule(BaseMultiqcModule):
                     description="Distribution of cell areas across samples",
                     helptext="""
                     This plot shows the distribution of cell areas in the sample(s):
-                    
+
                     **Single sample**: Density plot with vertical lines showing mean and median cell area
                     **Multiple samples**: Violin plots showing the distribution for each sample
-                    
+
                     **Typical cell area ranges (tissue-dependent):**
                     * **Most tissues**: 50-200 μm²
                     * **Large cells** (e.g., neurons): 200-500 μm²
                     * **Small cells** (e.g., lymphocytes): 20-80 μm²
-                    
+
                     **What to look for:**
                     * **Consistent distributions** across samples of the same tissue type
                     * **Biologically reasonable values** for your tissue
                     * **Outliers**: Very large or small cells may indicate segmentation issues
-                    
+
                     **Troubleshooting:**
                     * Bimodal distributions: May indicate mixed cell types or segmentation artifacts
                     * Very large cells: Over-segmentation, cell doublets, or debris
@@ -364,20 +369,20 @@ class MultiqcModule(BaseMultiqcModule):
                     description="Distribution of the fraction of transcripts found in the nucleus across cells",
                     helptext="""
                     This plot shows the distribution of the fraction of RNA molecules located in the nucleus versus cytoplasm for each cell:
-                    
+
                     **Single sample**: Density plot showing the distribution of nucleus RNA fractions
                     **Multiple samples**: Box plots comparing distributions across samples
-                    
+
                     **Biological interpretation:**
                     * **Low values (0.0-0.2)**: Most RNA is cytoplasmic (expected for mature mRNAs)
                     * **High values (>0.5)**: High nuclear retention (may indicate processing issues)
                     * **Peak around 0.0-0.1**: Normal for most cell types with efficient RNA export
-                    
+
                     **What to look for:**
                     * **Consistent distributions** across samples of the same tissue type
                     * **Biologically reasonable values** for your cell types
                     * **Sample differences**: May reflect cell type composition or processing efficiency
-                    
+
                     **Troubleshooting:**
                     * Very high nuclear fractions: Check for nuclear segmentation issues
                     * Bimodal distributions: May indicate different cell types or states
@@ -395,26 +400,26 @@ class MultiqcModule(BaseMultiqcModule):
                     description="Distribution of nucleus-to-cell area ratios across cells",
                     helptext="""
                     This plot shows the distribution of the ratio between nucleus area and total cell area for each cell:
-                    
+
                     **Single sample**: Density plot showing the distribution of nucleus-to-cell area ratios
                     **Multiple samples**: Box plots comparing distributions across samples
-                    
+
                     **Biological interpretation:**
                     * **Typical range**: 0.2-0.6 for most cell types
                     * **Low values (<0.2)**: Small nucleus relative to cell (may indicate active/mature cells)
                     * **High values (>0.6)**: Large nucleus relative to cell (may indicate dividing or stressed cells)
                     * **Peak around 0.3-0.5**: Normal for most healthy cell types
-                    
+
                     **What to look for:**
                     * **Consistent distributions** across samples of the same tissue type
                     * **Biologically reasonable values** for your cell types
                     * **Sample differences**: May reflect different cell states or tissue composition
-                    
+
                     **Quality assessment:**
                     * Very low ratios: May indicate over-segmented cells or debris
                     * Very high ratios: May indicate under-segmented cells or nuclear fragments
                     * Bimodal distributions: May indicate different cell types or segmentation artifacts
-                    
+
                     **Troubleshooting:**
                     * Unusual distributions may suggest issues with nuclear or cell segmentation parameters
                     * Consider tissue-specific expected ranges when evaluating results
@@ -431,20 +436,20 @@ class MultiqcModule(BaseMultiqcModule):
                     description="Distribution of transcripts and detected genes per cell",
                     helptext="""
                     This plot shows two key cell-level distributions with separate tabs/datasets:
-                    
+
                     **Tab 1: Transcripts per cell** - Shows the distribution of total transcript counts per cell
                     **Tab 2: Detected genes per cell** - Shows the distribution of unique genes detected per cell
-                    
+
                     **Plot types:**
                     * **Single sample**: Density plots showing the distribution shapes
                     * **Multiple samples**: Box plots comparing distributions across samples
-                    
+
                     **Transcripts per cell interpretation:**
                     * **Typical range**: 100-5000 transcripts per cell for most tissues
                     * **High transcript counts**: Metabolically active cells or large cell types
                     * **Low transcript counts**: Less active cells, technical dropouts, or small cell fragments
                     * **Quality thresholds**: <50 may indicate poor segmentation, >10,000 may indicate doublets
-                    
+
                     **Detected genes per cell interpretation:**
                     * **Typical range**: 50-2000 genes per cell depending on cell type and panel size
                     * **High gene counts**: Metabolically active cells or cells with high expression diversity
@@ -455,16 +460,16 @@ class MultiqcModule(BaseMultiqcModule):
                     * **Multimodal distributions**: May indicate different cell types or technical artifacts
                     * **Sample consistency**: Similar distributions expected for replicate samples
                     * **Positive correlation**: Generally expect transcripts and detected genes per cell to correlate
-                    
+
                     **Panel considerations:**
                     * **Pre-designed panels**: Gene counts limited by panel design (typically 100-1000 genes)
                     * **Custom panels**: Consider gene selection bias when interpreting results
                     * **Detection efficiency**: Some genes may be harder to detect than others
-                    
+
                     **Quality assessment:**
                     * **Counts**: Very low (<50) or very high (>10,000) may indicate segmentation issues
                     * **Shoulder distributions**: May indicate presence of different cell types
-                    
+
                     **Troubleshooting:**
                     * Unusual distributions may suggest issues with transcript detection or cell segmentation
                     * Consider cell type and tissue context when evaluating expected ranges
@@ -483,30 +488,30 @@ class MultiqcModule(BaseMultiqcModule):
                     description="Field of View quality distribution across QV ranges",
                     helptext="""
                     This plot shows the distribution of Field of View (FoV) quality across different quality ranges:
-                    
+
                     **What is a Field of View?**
                     * Each FoV represents one microscope imaging area/tile
                     * Large tissue sections are imaged as multiple overlapping FoVs
                     * FoVs are systematically captured in a grid pattern across the tissue
-                    
+
                     **Plot interpretation:**
                     * **X-axis**: Quality ranges (Low to Excellent QV ranges)
                     * **Y-axis**: Fields of View in each quality range
                     * **Colors**: Color-coded by quality level (grey=poor, green=excellent)
                     * **Bars**: Each sample shown as separate colored bars for comparison
-                    
+
                     **Quality ranges:**
                     * **Low (QV < 20)**: Poor imaging quality - investigate issues (dark grey)
                     * **Poor (QV 20-25)**: Below optimal quality - may need attention (light grey)
                     * **Fair (QV 25-30)**: Acceptable quality (lighter grey)
                     * **Good (QV 30-35)**: Good imaging quality (light green)
                     * **Excellent (QV ≥ 35)**: Optimal imaging quality (bright green)
-                    
+
                     **What to look for:**
                     * **Good distribution**: Most FoVs should be in "Good" or "Excellent" ranges
                     * **Few poor FoVs**: Minimal counts in "Low" and "Poor" ranges
                     * **Sample consistency**: Similar distributions across samples
-                    
+
                     **Troubleshooting:**
                     * Many low-quality FoVs: Focus/illumination issues, debris, tissue damage
                     * Sample inconsistency: Processing or storage differences
