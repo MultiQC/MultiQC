@@ -23,12 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        variant:
-          - name: "standard"
-            tag_prefix: ""
+        v:
+          - lab: ""
             build_args: ""
-          - name: "pdf"
-            tag_prefix: "pdf-"
+          - lab: "pdf-"
             build_args: "INSTALL_PANDOC=true"
     steps:
       - name: "Check out the repo"
@@ -66,12 +64,12 @@ jobs:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
           # But 32-bit binaries likely require compilation from source so stick with linux/amd64 and linux/arm64 for now
           platforms: linux/amd64,linux/arm64
-          build-args: ${{ matrix.variant.build_args }}
+          build-args: ${{ matrix.v.build_args }}
           push: true
           # If it's a PR, use the branch name as a tag, otherwise use "dev"
           tags: |
-            ${{ github.ref == 'refs/heads/main' && format('multiqc/multiqc:{0}dev', matrix.variant.tag_prefix) || format('multiqc/multiqc:{0}{1}', matrix.variant.tag_prefix, github.head_ref) }}
-            ${{ github.ref == 'refs/heads/main' && format('ghcr.io/multiqc/multiqc:{0}dev', matrix.variant.tag_prefix) || format('ghcr.io/multiqc/multiqc:{0}{1}', matrix.variant.tag_prefix, github.head_ref) }}
+            ${{ github.ref == 'refs/heads/main' && format('multiqc/multiqc:{0}dev', matrix.v.lab) || format('multiqc/multiqc:{0}{1}', matrix.v.lab, github.head_ref) }}
+            ${{ github.ref == 'refs/heads/main' && format('ghcr.io/multiqc/multiqc:{0}dev', matrix.v.lab) || format('ghcr.io/multiqc/multiqc:{0}{1}', matrix.v.lab, github.head_ref) }}
 
       - name: "Build release"
         uses: docker/build-push-action@v3
@@ -81,10 +79,10 @@ jobs:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
           # But 32-bit binaries likely require compilation from source so stick with linux/amd64 and linux/arm64 for now
           platforms: linux/amd64,linux/arm64
-          build-args: ${{ matrix.variant.build_args }}
+          build-args: ${{ matrix.v.build_args }}
           push: true
           tags: |
-            multiqc/multiqc:${{ matrix.variant.tag_prefix }}${{ github.event.release.tag_name }}
-            multiqc/multiqc:${{ matrix.variant.tag_prefix }}latest
-            ghcr.io/multiqc/multiqc:${{ matrix.variant.tag_prefix }}${{ github.event.release.tag_name }}
-            ghcr.io/multiqc/multiqc:${{ matrix.variant.tag_prefix }}latest
+            multiqc/multiqc:${{ matrix.v.lab }}${{ github.event.release.tag_name }}
+            multiqc/multiqc:${{ matrix.v.lab }}latest
+            ghcr.io/multiqc/multiqc:${{ matrix.v.lab }}${{ github.event.release.tag_name }}
+            ghcr.io/multiqc/multiqc:${{ matrix.v.lab }}latest
