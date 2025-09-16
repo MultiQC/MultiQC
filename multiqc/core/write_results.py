@@ -625,8 +625,6 @@ def _write_pdf(report_path: Path) -> Optional[Path]:
         "title=",
         "-V",
         "tables=true",
-        "-V",
-        "geometry=margin=0.75in",
     ]
     if config.pandoc_template is not None:
         pandoc_call.append(f"--template={config.pandoc_template}")
