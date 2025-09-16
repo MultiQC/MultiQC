@@ -8,21 +8,40 @@
 # ]
 # ///
 
-import datetime
 import fnmatch
 import json
 import plotly.graph_objects as go
 from pydriller import Repository, ModificationType
 import re
 
+def extract_coauthors(commit_msg):
+    """Extract co-authors from commit message"""
+    coauthors = []
+    # Look for Co-authored-by: Name <email>
+    coauthor_pattern = r'Co-authored-by:\s*([^<\n\r]+?)(?:\s*<[^>]+>)?\s*$'
+    matches = re.findall(coauthor_pattern, commit_msg, re.MULTILINE | re.IGNORECASE)
+    
+    for match in matches:
+        # Clean up the name
+        name = match.strip()
+        # Skip bot accounts, empty names, and single character names
+        if (name and len(name) > 2 and 
+            not any(bot in name.lower() for bot in ['bot', 'github-actions', 'multiqc bot']) and
+            not name.startswith('Co-authored-by')):
+            coauthors.append(name)
+    
+    return coauthors
+
 # Find when each new module was added to MultiQC
 modules = {}
 mods_plot_x = []
 mods_plot_y = []
 
-committers = {}
-committers_plot_x = []
-committers_plot_y = []
+# Track both committers and co-authors
+contributors = {}
+contributors_plot_x = []
+contributors_plot_y = []
+
 for commit in Repository(".").traverse_commits():
     # Count new modules
     for modification in commit.modified_files:
@@ -38,21 +57,31 @@ for commit in Repository(".").traverse_commits():
                         # Plotting data points
                         mods_plot_x.append(commit.committer_date)
                         mods_plot_y.append(len(modules))
-    # Count new committers
-    if commit.committer.name not in committers:
-        committers[commit.committer.name] = str(commit.committer_date)
+    
+    # Count new contributors (main committer)
+    if commit.committer.name not in contributors:
+        contributors[commit.committer.name] = str(commit.committer_date)
         # Plotting data points
-        committers_plot_x.append(commit.committer_date)
-        committers_plot_y.append(len(committers))
+        contributors_plot_x.append(commit.committer_date)
+        contributors_plot_y.append(len(contributors))
+    
+    # Count co-authors from commit message
+    coauthors = extract_coauthors(commit.msg)
+    for coauthor in coauthors:
+        if coauthor not in contributors:
+            contributors[coauthor] = str(commit.committer_date)
+            # Plotting data points
+            contributors_plot_x.append(commit.committer_date)
+            contributors_plot_y.append(len(contributors))
 
-print(json.dumps(modules, indent=4))
-print(json.dumps(committers, indent=4))
+print(f"Total modules found: {len(modules)}")
+print(f"Total contributors found (including co-authors): {len(contributors)}")
 
-# Make a graph
+# Modules over time
 fig = go.Figure()
 fig.add_trace(
-    go.Scatter(x=mods_plot_x, y=mods_plot_y, fill="tozeroy")
-)  # fill down to xaxis
+    go.Scatter(x=mods_plot_x, y=mods_plot_y, fill="tozeroy", name="Modules")
+)
 fig.update_layout(
     title="MultiQC modules over time",
     xaxis_title="Date",
@@ -61,20 +90,13 @@ fig.update_layout(
     plot_bgcolor="rgba(0, 0, 0, 0)",
     paper_bgcolor="rgba(0, 0, 0, 0)",
 )
-fig.show()
 fig.write_image("modules_over_time.svg")
 
-# Add BOSC 2017
-bosc_datetime = datetime.datetime.strptime("2017-07-22", "%Y-%m-%d")
-fig.add_trace(go.Scatter(x=[bosc_datetime, bosc_datetime], y=[0, 50], mode="lines"))
-fig.show()
-fig.write_image("modules_over_time_bosc_label.svg")
-
-# Committers over time
+# Contributors over time (including co-authors from squash merges)
 fig = go.Figure()
 fig.add_trace(
-    go.Scatter(x=committers_plot_x, y=committers_plot_y, fill="tozeroy")
-)  # fill down to xaxis
+    go.Scatter(x=contributors_plot_x, y=contributors_plot_y, fill="tozeroy", name="Contributors")
+)
 fig.update_layout(
     title="MultiQC code contributors over time",
     xaxis_title="Date",
@@ -83,5 +105,8 @@ fig.update_layout(
     plot_bgcolor="rgba(0, 0, 0, 0)",
     paper_bgcolor="rgba(0, 0, 0, 0)",
 )
-fig.show()
-fig.write_image("code_contributors_over_time.svg")
+fig.write_image("contributors_over_time.svg")
+
+print(f"\nGenerated charts:")
+print(f"- modules_over_time.svg ({len(modules)} modules)")
+print(f"- contributors_over_time.svg ({len(contributors)} contributors, including co-authors from squash merges)")
