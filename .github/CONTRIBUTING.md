@@ -4,6 +4,60 @@ Hi there! Many thanks for taking an interest in improving MultiQC.
 
 I try to manage the required tasks for MultiQC using GitHub issues, you probably came to this page when creating one. Most issues come in two flavours - either reporting a problem or requesting a feature. Please use the template prefilled into new issues when this is the case as it saves time. The most common reason for long-running issues is module requests without any example log files for example.
 
+## Module Request Triage System
+
+We've implemented an automated triage system for module requests to help manage the growing number of requests and ensure the most valuable modules are prioritized:
+
+### How Module Requests Are Managed
+
+**Unified Workflow** (`module-requests.yml`):
+- **Individual Analysis**: New requests and `@claude analyze-module` comments get immediate analysis
+- **Weekly Bulk Triage**: Automated Monday review of all open requests
+- **Project Integration**: Automatic tracking and board synchronization
+- **Flexible Modes**: Supports single analysis, bulk processing, and dry-run testing
+
+**Priority Scoring** based on multiple criteria:
+1. **Tool Popularity**: GitHub stars, forks, recent development activity
+2. **Community Engagement**: 👍 reactions, meaningful comments and discussion
+3. **Request Quality**: Complete information, quality example files, clear use case
+4. **Technical Feasibility**: Well-structured tool output, parseable format
+5. **Maintenance Status**: Active development, recent releases, documentation
+
+### Project Board Workflow
+
+Module requests flow through a structured project board:
+
+| Status | Description | How to Get Here |
+|--------|-------------|----------------|
+| **Needs Analysis** | New requests awaiting triage | Automatically added when issue created |
+| **High Priority** | Score ≥ 70, ready for development | Complete request with popular tool + examples |
+| **Medium Priority** | Score 40-69, good candidates | Well-specified requests needing examples |
+| **Low Priority** | Score < 40, needs improvement | Incomplete or stale requests |
+| **Needs Examples** | Missing critical example files | Any request without uploaded example files |
+| **Ready for Development** | Maintainer-approved and complete | Manual promotion after review |
+
+### Getting Your Request Prioritized
+
+**Quick wins for higher priority:**
+- ✅ **Upload example files** (+20 points) - Most important factor
+- ✅ **Popular tool** (>500 GitHub stars) (+30 points)  
+- ✅ **Complete information** (+10 points)
+- ✅ **Community engagement** (+5 per 👍, +3 per comment)
+
+**Interactive help available:**
+- Comment `@claude analyze-module` for instant detailed analysis
+- Get specific recommendations for improvement
+- Understand your current priority score and how to increase it
+
+### Automated Actions
+
+- **Instant Analysis**: New requests get immediate feedback and labeling
+- **Weekly Bulk Triage**: Monday analysis of all open requests
+- **Project Sync**: Issues automatically move through project board columns
+- **Stale Management**: Low-priority requests with no activity may be closed (reopenable)
+
+The system is transparent, fair, and designed to help both maintainers prioritize work and contributors understand how to create successful requests.
+
 However, don't be put off by this template - other more general issues and suggestions are welcome! Contributions to the code are even more welcome ;)
 
 > _If you need help using MultiQC then the best place to go is the Seqera community forum where you can questions in the MultiQC category: [https://community.seqera.io](https://community.seqera.io/c/multiqc/6)_
