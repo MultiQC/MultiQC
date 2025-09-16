@@ -58,22 +58,22 @@ jobs:
 
       - name: "Build dev"
         uses: docker/build-push-action@v3
-        if: github.event_name != 'pull_request' && github.event_name != 'release'
+        if: github.event_name != 'release'
         with:
           # All available with python:3.X-slim are:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
           # But 32-bit binaries likely require compilation from source so stick with linux/amd64 and linux/arm64 for now
           platforms: linux/amd64,linux/arm64
           build-args: ${{ matrix.v.build_args }}
-          push: true
-          # If it's a PR, use the branch name as a tag, otherwise use "dev"
+          # Only push if it's commit to main, or workflow_dispatch
+          push: ${{github.event_name != 'pull_request'}}
           tags: |
-            ${{ github.ref == 'refs/heads/main' && format('multiqc/multiqc:{0}dev', matrix.v.lab) || format('multiqc/multiqc:{0}{1}', matrix.v.lab, github.head_ref) }}
-            ${{ github.ref == 'refs/heads/main' && format('ghcr.io/multiqc/multiqc:{0}dev', matrix.v.lab) || format('ghcr.io/multiqc/multiqc:{0}{1}', matrix.v.lab, github.head_ref) }}
+            multiqc/multiqc:${{matrix.v.lab}}dev
+            ghcr.io/multiqc/multiqc:${{matrix.v.lab}}dev
 
       - name: "Build release"
         uses: docker/build-push-action@v3
-        if: github.event_name != 'pull_request' && github.event_name == 'release'
+        if: github.event_name == 'release'
         with:
           # All available with python:3.X-slim are:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
