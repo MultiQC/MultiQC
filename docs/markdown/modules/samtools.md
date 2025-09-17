@@ -2,7 +2,7 @@
 title: Samtools
 displayed_sidebar: multiqcSidebar
 description: >
-  Toolkit for interacting with BAM/CRAM files
+  <p>Toolkit for interacting with BAM/CRAM files.</p>
 ---
 
 <!--
@@ -15,19 +15,21 @@ File path for the source of this content: multiqc/modules/samtools/samtools.py
 -->
 
 :::note
-Toolkit for interacting with BAM/CRAM files
+
+<p>Toolkit for interacting with BAM/CRAM files.</p>
 
 [http://www.htslib.org](http://www.htslib.org)
 :::
 
 Supported commands:
 
-- `stats`
+- `ampliconclip`
+- `coverage`
 - `flagstats`
 - `idxstats`
-- `rmdup`
-- `coverage`
 - `markdup`
+- `rmdup`
+- `stats`
 
 #### idxstats
 
@@ -88,9 +90,50 @@ samtools_coverage:
   show_excluded_debug_logs: True
 ```
 
+### General Statistics Columns
+
+You can customize which metrics from samtools modules appear in the General Statistics table.
+For example, to show reads mapped percentage and error rate from stats module, and
+add reads mapped from flagstat module:
+
+```yaml
+general_stats_columns:
+  samtools/stats:
+    columns:
+      reads_mapped_percent:
+        title: "% Mapped"
+        description: "% Mapped reads from samtools stats"
+        hidden: false
+      error_rate:
+        title: "Error rate"
+        description: "Error rate from samtools stats"
+        hidden: false
+  samtools/flagstat:
+    columns:
+      mapped_passed:
+        title: "Flagstat Mapped"
+        description: "Reads mapped from samtools flagstat"
+        hidden: false
+```
+
+Each samtools submodule has its own namespace in the configuration
+
+- `samtools/ampliconclip`
+- `samtools/coverage`
+- `samtools/flagstats`
+- `samtools/idxstats`
+- `samtools/markdup`
+- `samtools/rmdup`
+- `samtools/stats`
+
 ### File search patterns
 
 ```yaml
+samtools/ampliconclip:
+  contents:
+    - "COMMAND:"
+    - samtools ampliconclip
+  num_lines: 11
 samtools/coverage:
   contents: "#rname\tstartpos\tendpos\tnumreads\tcovbases\tcoverage\tmeandepth\tmeanbaseq\t\
     meanmapq"
@@ -100,10 +143,14 @@ samtools/flagstat:
 samtools/idxstats:
   fn: "*idxstat*"
 samtools/markdup_json:
-  contents: '"COMMAND": "samtools markdup'
+  contents:
+    - '"COMMAND":'
+    - samtools markdup
   num_lines: 10
 samtools/markdup_txt:
-  contents: "COMMAND: samtools markdup"
+  contents:
+    - "^COMMAND:"
+    - samtools markdup
   num_lines: 2
 samtools/rmdup:
   contents: "[bam_rmdup"

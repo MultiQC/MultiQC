@@ -17,7 +17,7 @@ import re
 import shutil
 import sys
 import time
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from datetime import datetime
 from pathlib import Path, PosixPath
 from typing import (
@@ -43,11 +43,10 @@ from multiqc import config
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core import ai, log_and_rich, tmp_dir
+from multiqc.core import ai, log_and_rich, plot_data_store, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
-from multiqc.core import plot_data_store
 from multiqc.plots.plot import NormalizedPlotInputData, Plot
 from multiqc.plots.table_object import Cell, ColumnDict, InputRow, SampleName, ValueT
 from multiqc.plots.violin import ViolinPlot
@@ -128,7 +127,8 @@ general_stats_data: Dict[SectionKey, Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
-saved_raw_data_keys: List[str]  # to make sure write_data_file don't overwrite for repeated modules
+# to make sure write_data_file don't overwrite for repeated modules. OrderedDict for fast lookup and to preserve insertion order:
+saved_raw_data_keys: Dict[str, None]
 saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
 
 
@@ -223,7 +223,7 @@ def reset():
     general_stats_headers = dict()
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
-    saved_raw_data_keys = []
+    saved_raw_data_keys = OrderedDict()
     saved_raw_data = dict()
 
     plot_data_store.reset()
@@ -649,6 +649,7 @@ def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searc
         for ignore_pat in config.fn_ignore_files:
             if fnmatch.fnmatch(search_f.filename, ignore_pat):
                 is_ignore_file = True
+                break
 
         # Test file for each search pattern
         file_matched = False
@@ -811,15 +812,16 @@ def exclude_file(sp, f: SearchFile):
             return True
 
     # Search the contents of the file
-    for num_lines, line_block in f.line_block_iterator():
-        if sp.exclude_contents:
-            for pat in sp.exclude_contents:
-                if pat and pat in line_block:
-                    return True
-        if sp.exclude_contents_re:
-            for pat in sp.exclude_contents_re:
-                if pat and re.search(pat, line_block):
-                    return True
+    if sp.exclude_contents or sp.exclude_contents_re:
+        for _, line_block in f.line_block_iterator():
+            if sp.exclude_contents:
+                for pat in sp.exclude_contents:
+                    if pat and pat in line_block:
+                        return True
+            if sp.exclude_contents_re:
+                for pat in sp.exclude_contents_re:
+                    if pat and re.search(pat, line_block):
+                        return True
     return False
 
 
@@ -1068,6 +1070,8 @@ def multiqc_dump_json(data_dir: Path):
             "title",
             "version",
             "output_dir",
+            "sample_names_rename",
+            "sample_names_rename_buttons",
         ],
     }
     for pymod, names in export_vars.items():
@@ -1166,7 +1170,7 @@ def multiqc_dump_json(data_dir: Path):
                 fh.write(',\n    "report_saved_raw_data": {\n')
 
                 # Write each key's data individually
-                for i, key in enumerate(saved_raw_data_keys):
+                for i, key in enumerate(saved_raw_data_keys.keys()):
                     if (json_path := data_dir / f"{key}.json").exists():
                         fh.write(f'        "{key}": ')
                         # Stream the contents of the individual JSON file

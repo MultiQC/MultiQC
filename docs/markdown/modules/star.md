@@ -2,7 +2,7 @@
 title: STAR
 displayed_sidebar: multiqcSidebar
 description: >
-  Universal RNA-seq aligner
+  <p>Universal RNA-seq aligner.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/star/star.py
 -->
 
 :::note
-Universal RNA-seq aligner
+
+<p>Universal RNA-seq aligner.</p>
 
 [https://github.com/alexdobin/STAR](https://github.com/alexdobin/STAR)
 :::

@@ -2,7 +2,7 @@
 title: Bustools
 displayed_sidebar: multiqcSidebar
 description: >
-  Tools for BUS files - a file format for single-cell RNA-seq data designed to facilitate the development of modular workflows for data processing
+  <p>Tools for BUS files - a file format for single-cell RNA-seq data designed to facilitate the development of modular workflows for data processing.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/bustools/bustools.py
 -->
 
 :::note
-Tools for BUS files - a file format for single-cell RNA-seq data designed to facilitate the development of modular workflows for data processing
+
+<p>Tools for BUS files - a file format for single-cell RNA-seq data designed to facilitate the development of modular workflows for data processing.</p>
 
 [https://bustools.github.io/](https://bustools.github.io/)
 :::

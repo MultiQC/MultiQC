@@ -5,6 +5,159 @@ function handleStreamError(error) {
   return error;
 }
 
+function isReasoningModel(model) {
+  if (!model) return false;
+  const reasoningModels = [
+    // OpenAI reasoning models
+    "o1",
+    "o1-preview",
+    "o1-mini",
+    "o3",
+    "o3-mini",
+    "o3-pro",
+    "o4-mini",
+    // Anthropic Claude 4 series (extended thinking models)
+    "claude-3-7-sonnet-latest",
+    "claude-sonnet-4-0",
+    "claude-haiku-4-0",
+    "claude-opus-4-0",
+  ];
+  return reasoningModels.some((prefix) => model.toLowerCase().startsWith(prefix));
+}
+
+function getStoredReasoningEffort() {
+  return localStorage.getItem("ai_reasoning_effort") || "medium";
+}
+
+function getStoredMaxCompletionTokens() {
+  const stored = localStorage.getItem("ai_max_completion_tokens");
+  if (stored) {
+    try {
+      return parseInt(stored);
+    } catch (e) {
+      console.error("Error parsing stored max completion tokens", e);
+    }
+  }
+  return 4000; // Default value
+}
+
+function getStoredThinkingBudgetTokens() {
+  const stored = localStorage.getItem("ai_thinking_budget_tokens");
+  if (stored) {
+    try {
+      return parseInt(stored);
+    } catch (e) {
+      console.error("Error parsing stored thinking budget tokens", e);
+    }
+  }
+  return 10000; // Default value for Anthropic extended thinking
+}
+
+function getStoredExtendedThinking() {
+  const stored = localStorage.getItem("ai_extended_thinking");
+  return stored === "true"; // Default to false
+}
+
+function storeReasoningEffort(effort) {
+  localStorage.setItem("ai_reasoning_effort", effort);
+}
+
+function storeMaxCompletionTokens(tokens) {
+  localStorage.setItem("ai_max_completion_tokens", tokens.toString());
+}
+
+function storeThinkingBudgetTokens(tokens) {
+  localStorage.setItem("ai_thinking_budget_tokens", tokens.toString());
+}
+
+function storeExtendedThinking(enabled) {
+  localStorage.setItem("ai_extended_thinking", enabled.toString());
+}
+
+// Load reasoning model configuration on page load
+$(function () {
+  // Set up event handlers for reasoning model controls if they exist
+  $("#ai-reasoning-effort").change(function () {
+    storeReasoningEffort($(this).val());
+  });
+
+  $("#ai-max-completion-tokens").change(function () {
+    storeMaxCompletionTokens($(this).val());
+  });
+
+  $("#ai-thinking-budget-tokens").change(function () {
+    storeThinkingBudgetTokens($(this).val());
+  });
+
+  $("#ai-extended-thinking").change(function () {
+    storeExtendedThinking($(this).is(":checked"));
+  });
+
+  // Load stored values into controls if they exist
+  const storedEffort = getStoredReasoningEffort();
+  if ($("#ai-reasoning-effort").length && storedEffort) {
+    $("#ai-reasoning-effort").val(storedEffort);
+  }
+
+  const storedTokens = getStoredMaxCompletionTokens();
+  if ($("#ai-max-completion-tokens").length && storedTokens) {
+    $("#ai-max-completion-tokens").val(storedTokens);
+  }
+
+  const storedThinkingTokens = getStoredThinkingBudgetTokens();
+  if ($("#ai-thinking-budget-tokens").length && storedThinkingTokens) {
+    $("#ai-thinking-budget-tokens").val(storedThinkingTokens);
+  }
+
+  const storedExtendedThinking = getStoredExtendedThinking();
+  if ($("#ai-extended-thinking").length) {
+    $("#ai-extended-thinking").prop("checked", storedExtendedThinking);
+  }
+
+  // Show/hide reasoning model controls based on selected model
+  $("#ai-model").change(function () {
+    const modelName = $(this).val();
+    const isReasoning = isReasoningModel(modelName);
+    const isClaudeReasoning =
+      isReasoning &&
+      (modelName.toLowerCase().startsWith("claude-opus-4") ||
+        modelName.toLowerCase().startsWith("claude-sonnet-4") ||
+        modelName.toLowerCase().startsWith("claude-haiku-4"));
+    const isOpenAIReasoning = isReasoning && !isClaudeReasoning;
+
+    // Show/hide reasoning-specific controls if they exist
+    $("#ai_reasoning_effort_group").toggle(isOpenAIReasoning);
+    $("#ai_max_completion_tokens_group").toggle(isOpenAIReasoning);
+    $("#ai_extended_thinking_group").toggle(isClaudeReasoning);
+    $("#ai_thinking_budget_tokens_group").toggle(isClaudeReasoning);
+
+    if (isReasoning) {
+      console.log(
+        `Reasoning model selected: ${modelName} (${
+          isClaudeReasoning ? "Claude extended thinking" : "OpenAI reasoning"
+        })`,
+      );
+    }
+  });
+
+  // Initial state based on current model
+  const currentModel = $("#ai-model").val();
+  if (currentModel) {
+    const isReasoning = isReasoningModel(currentModel);
+    const isClaudeReasoning =
+      isReasoning &&
+      (currentModel.toLowerCase().startsWith("claude-opus-4") ||
+        currentModel.toLowerCase().startsWith("claude-sonnet-4") ||
+        currentModel.toLowerCase().startsWith("claude-haiku-4"));
+    const isOpenAIReasoning = isReasoning && !isClaudeReasoning;
+
+    $("#ai_reasoning_effort_group").toggle(isOpenAIReasoning);
+    $("#ai_max_completion_tokens_group").toggle(isOpenAIReasoning);
+    $("#ai_extended_thinking_group").toggle(isClaudeReasoning);
+    $("#ai_thinking_budget_tokens_group").toggle(isClaudeReasoning);
+  }
+});
+
 function runStreamGeneration({
   onStreamStart,
   onStreamNewToken,
@@ -67,12 +220,87 @@ function runStreamGeneration({
         console.error("Error parsing extra query options", e);
       }
     }
-    body = {
-      ...body,
-      model: modelName,
-      messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
-      stream: true,
-    };
+
+    // Check if this is a reasoning model
+    const isReasoning = isReasoningModel(modelName);
+    const isClaudeReasoning =
+      isReasoning &&
+      (modelName.toLowerCase().startsWith("claude-opus-4") ||
+        modelName.toLowerCase().startsWith("claude-sonnet-4") ||
+        modelName.toLowerCase().startsWith("claude-haiku-4"));
+
+    if (isReasoning && !isClaudeReasoning) {
+      console.log(`Using OpenAI reasoning model: ${modelName}`);
+
+      // For OpenAI reasoning models, use developer messages and specific parameters
+      const messages = [
+        {
+          role: "developer",
+          content:
+            "You are a helpful assistant expert in bioinformatics. Please provide clear, well-formatted responses using markdown where appropriate.",
+        },
+        { role: "user", content: systemPrompt + "\n\n" + userMessage },
+      ];
+
+      body = {
+        ...body,
+        model: modelName,
+        messages: messages,
+        stream: true,
+        max_completion_tokens: getStoredMaxCompletionTokens(),
+        reasoning_effort: getStoredReasoningEffort(),
+      };
+
+      // Remove unsupported parameters for reasoning models
+      delete body.temperature;
+      delete body.top_p;
+      delete body.presence_penalty;
+      delete body.frequency_penalty;
+      delete body.max_tokens; // Use max_completion_tokens instead
+
+      console.log(
+        `OpenAI reasoning model parameters: max_completion_tokens=${body.max_completion_tokens}, reasoning_effort=${body.reasoning_effort}`,
+      );
+    } else if (isClaudeReasoning) {
+      const extendedThinkingEnabled = getStoredExtendedThinking();
+
+      if (extendedThinkingEnabled) {
+        console.log(`Using Claude 4 model with extended thinking: ${modelName}`);
+
+        const thinkingBudgetTokens = getStoredThinkingBudgetTokens();
+
+        body = {
+          ...body,
+          model: modelName,
+          messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
+          stream: true,
+          thinking: {
+            type: "enabled",
+            budget_tokens: thinkingBudgetTokens,
+          },
+        };
+
+        console.log(`Extended thinking parameters: budget_tokens=${thinkingBudgetTokens}`);
+      } else {
+        console.log(`Using Claude 4 model without extended thinking: ${modelName}`);
+
+        body = {
+          ...body,
+          model: modelName,
+          messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
+          stream: true,
+        };
+      }
+    } else {
+      // Regular models
+      body = {
+        ...body,
+        model: modelName,
+        messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
+        stream: true,
+      };
+    }
+
     fetchOptions.body = JSON.stringify(body);
     fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
 

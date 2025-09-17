@@ -174,7 +174,22 @@ class MultiqcModule(BaseMultiqcModule):
             return None, {}
 
         s_name = None
-        if getattr(config, "fastp", {}).get("s_name_filenames", False):
+        # Check if we should use filename instead of parsed sample name
+        should_use_filename = False
+        if isinstance(config.use_filename_as_sample_name, list):
+            # Check for module anchor
+            if self.anchor in config.use_filename_as_sample_name:
+                should_use_filename = True
+        elif config.use_filename_as_sample_name is True:
+            should_use_filename = True
+        elif getattr(config, "fastp", {}).get("s_name_filenames", False):
+            # Deprecated option - warn user
+            log.warning(
+                "The 'fastp.s_name_filenames' config option is deprecated. Use the global 'use_filename_as_sample_name' option instead."
+            )
+            should_use_filename = True
+
+        if should_use_filename:
             s_name = f["s_name"]
 
         if s_name is None:
@@ -196,9 +211,9 @@ class MultiqcModule(BaseMultiqcModule):
             if m:
                 s_names.append(m.group(2))
                 # Second input for paired end?
-                m = re.search(r"--in2\s(.+?)(?:\s-|$)", cmd)
+                m = re.search(r"(-I|--in2)\s(.+?)(?:\s-|$)", cmd)
                 if m:
-                    s_names.append(m.group(1))
+                    s_names.append(m.group(2))
                 s_name = self.clean_s_name(s_names, f)
             else:
                 s_name = f["s_name"]
@@ -241,6 +256,13 @@ class MultiqcModule(BaseMultiqcModule):
             self.fastp_data[s_name]["pct_duplication"] = float(parsed_json["duplication"]["rate"] * 100.0)
         except KeyError:
             log.debug(f"fastp JSON did not have a 'duplication' key: '{s_name}'")
+
+        # Parse before_filtering
+        try:
+            for k in parsed_json["summary"]["before_filtering"]:
+                self.fastp_data[s_name][f"before_filtering_{k}"] = float(parsed_json["summary"]["before_filtering"][k])
+        except KeyError:
+            log.debug(f"fastp JSON did not have a 'summary'-'before_filtering' keys: '{s_name}'")
 
         # Parse after_filtering
         try:
@@ -412,6 +434,18 @@ class MultiqcModule(BaseMultiqcModule):
                     "description": "Percentage adapter-trimmed reads",
                     "suffix": "%",
                     "scale": "RdYlGn-rev",
+                },
+                "before_filtering_read1_mean_length": {
+                    "title": "Mean R1 Length",
+                    "description": "Mean read length of R1",
+                    "suffix": "bp",
+                    "hidden": True,
+                },
+                "before_filtering_read2_mean_length": {
+                    "title": "Mean R2 Length",
+                    "description": "Mean read length of R2",
+                    "suffix": "bp",
+                    "hidden": True,
                 },
             },
         )

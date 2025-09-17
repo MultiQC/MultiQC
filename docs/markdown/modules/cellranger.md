@@ -2,7 +2,7 @@
 title: Cell Ranger
 displayed_sidebar: multiqcSidebar
 description: >
-  Analyzes single cell expression or VDJ data produced by 10X Genomics
+  <p>Analyzes single cell expression or VDJ data produced by 10X Genomics.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/cellranger/cellranger.
 -->
 
 :::note
-Analyzes single cell expression or VDJ data produced by 10X Genomics
+
+<p>Analyzes single cell expression or VDJ data produced by 10X Genomics.</p>
 
 [https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger)
 :::

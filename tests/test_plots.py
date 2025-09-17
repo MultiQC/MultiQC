@@ -1,6 +1,6 @@
 import sys
 import tempfile
-from typing import Dict
+from typing import Dict, List, Union
 from unittest.mock import patch
 
 import pytest
@@ -13,6 +13,29 @@ from multiqc.plots.plot import Plot, process_batch_exports
 from multiqc.plots.table_object import ColumnDict
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
+
+
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state during tests that modify global config."""
+    original_boxplot_boxpoints = config.boxplot_boxpoints
+    original_box_min_threshold_no_points = config.box_min_threshold_no_points
+    original_box_min_threshold_outliers = config.box_min_threshold_outliers
+    original_development = config.development
+    original_export_plots = config.export_plots
+    original_export_plot_formats = getattr(config, "export_plot_formats", None)
+    original_strict = config.strict
+    yield
+    config.boxplot_boxpoints = original_boxplot_boxpoints
+    config.box_min_threshold_no_points = original_box_min_threshold_no_points
+    config.box_min_threshold_outliers = original_box_min_threshold_outliers
+    config.development = original_development
+    config.export_plots = original_export_plots
+    if original_export_plot_formats is not None:
+        config.export_plot_formats = original_export_plot_formats
+    elif hasattr(config, "export_plot_formats"):
+        delattr(config, "export_plot_formats")
+    config.strict = original_strict
 
 
 def _verify_rendered(plot) -> Plot:
@@ -109,6 +132,108 @@ def test_boxplot():
             box.BoxPlotConfig(id="box", title="Box"),
         )
     )
+
+
+@pytest.mark.parametrize(
+    "boxpoints_value",
+    ["outliers", "all", "suspectedoutliers", False],
+)
+def test_boxplot_custom_boxpoints(boxpoints_value):
+    """
+    Test box plot with custom boxpoints configuration using global config
+    """
+    config.boxplot_boxpoints = boxpoints_value
+
+    data = {
+        "Sample": [
+            # Tight distribution with few outliers
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            # Outliers
+            20,
+            50,
+        ],
+    }
+    # Test with "all" boxpoints (show all data points)
+    plot_all = _verify_rendered(
+        box.plot(
+            data,  # type: ignore
+            box.BoxPlotConfig(id=f"box_{boxpoints_value}", title=f"Box Plot - {boxpoints_value}"),
+        )
+    )
+
+    plot_data_all = report.plot_data[plot_all.anchor]
+    trace_params_all = plot_data_all["datasets"][0]["trace_params"]
+    assert trace_params_all["boxpoints"] == boxpoints_value
+
+
+def test_boxplot_dynamic_boxpoints():
+    """
+    Test box plot dynamic boxpoints behavior based on sample count
+    """
+    # Reset config to test dynamic behavior
+    config.boxplot_boxpoints = None
+
+    # Test with few samples (should show all points)
+    config.box_min_threshold_no_points = 10
+    config.box_min_threshold_outliers = 5
+
+    data_few: Dict[str, List[Union[int, float]]] = {
+        "Sample1": [1.0, 2.0, 3.0, 4.0, 5.0],
+        "Sample2": [2.0, 3.0, 4.0, 5.0, 6.0],
+    }
+
+    plot_few = _verify_rendered(
+        box.plot(
+            data_few,
+            box.BoxPlotConfig(id="box_few_samples", title="Box Plot - Few Samples"),
+        )
+    )
+
+    plot_data_few = report.plot_data[plot_few.anchor]
+    trace_params_few = plot_data_few["datasets"][0]["trace_params"]
+    assert trace_params_few["boxpoints"] == "all"
+
+    report.reset()
+
+    # Test with many samples (should show only outliers)
+    data_many: Dict[str, List[Union[int, float]]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(10)}
+
+    plot_many = _verify_rendered(
+        box.plot(
+            data_many,
+            box.BoxPlotConfig(id="box_many_samples", title="Box Plot - Many Samples"),
+        )
+    )
+
+    plot_data_many = report.plot_data[plot_many.anchor]
+    trace_params_many = plot_data_many["datasets"][0]["trace_params"]
+    assert trace_params_many["boxpoints"] == "outliers"
+
+    report.reset()
+
+    # Test with very many samples (should show no points)
+    data_very_many: Dict[str, List[Union[int, float]]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(15)}
+
+    plot_very_many = _verify_rendered(
+        box.plot(
+            data_very_many,
+            box.BoxPlotConfig(id="box_very_many_samples", title="Box Plot - Very Many Samples"),
+        )
+    )
+
+    plot_data_very_many = report.plot_data[plot_very_many.anchor]
+    trace_params_very_many = plot_data_very_many["datasets"][0]["trace_params"]
+    assert trace_params_very_many["boxpoints"] is False
 
 
 ############################################

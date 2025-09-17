@@ -6,6 +6,7 @@ import spectra  # type: ignore
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
+from multiqc.utils.mqc_colour import mqc_colour_scale
 
 log = logging.getLogger(__name__)
 
@@ -155,12 +156,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     @staticmethod
     def _lighten_color(code: str, lighten=1.0):
-        def _rgb_converter(x):
-            return max(0, min(1, 1 + ((x - 1) * lighten)))
-
+        """Use the common mqc_colour module to lighten colors with alpha transparency"""
+        scale = mqc_colour_scale()
         c = spectra.html(code)
-        c = spectra.rgb(*[_rgb_converter(v) for v in c.rgb])
-        return c.hexcode
+        return scale.lighten_colour(c, lighten)
 
     def _get_color(self, cls: Union[str, int], lighten=1.0, return_scale=False) -> str:
         if not isinstance(cls, int) and cls in self.all_species:
@@ -280,12 +279,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             description="This plot shows the number of reads classified by Xenome",
             helptext="""
-            There are 5 possible categories:  
+            There are 5 possible categories:
             * Reads found in graft species, e.g. **Human**
-            * Reads found in host species, e.g. **Mouse**  
+            * Reads found in host species, e.g. **Mouse**
             * **Both**: read was found in either of the species
             * **Neither**: Read was found in neither of the species
-            * **Ambiguous**: Read origin could not be adequately determined.  
+            * **Ambiguous**: Read origin could not be adequately determined.
             """,
             name="Summary classification",
             anchor="xenome_summary_bar_plot_section",

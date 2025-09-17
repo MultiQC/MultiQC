@@ -2,7 +2,7 @@
 title: Slamdunk
 displayed_sidebar: multiqcSidebar
 description: >
-  Tool to analyze SLAM-Seq data
+  <p>Tool to analyze SLAM-Seq data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/slamdunk/slamdunk.py
 -->
 
 :::note
-Tool to analyze SLAM-Seq data
+
+<p>Tool to analyze SLAM-Seq data.</p>
 
 [http://t-neumann.github.io/slamdunk/](http://t-neumann.github.io/slamdunk/)
 :::

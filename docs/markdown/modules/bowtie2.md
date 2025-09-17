@@ -2,7 +2,7 @@
 title: Bowtie 2 / HiSAT2
 displayed_sidebar: multiqcSidebar
 description: >
-  Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome
+  <p>Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/bowtie2/bowtie2.py
 -->
 
 :::note
-Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome
+
+<p>Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome.</p>
 
 [http://bowtie-bio.sourceforge.net/bowtie2/](http://bowtie-bio.sourceforge.net/bowtie2/), [https://ccb.jhu.edu/software/hisat2/](https://ccb.jhu.edu/software/hisat2/)
 :::

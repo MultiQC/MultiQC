@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
     The second tab of this plot uses the config option `read_count_multiplier`,
     so if millions of reads is not useful for your data you can customise this.
 
-    See [Number base (multiplier)](https://docs.seqera.io/multiqc/#number-base-multiplier)
+    See [Number base (multiplier)](https://docs.seqera.io/multiqc/reports/customisation#number-base-multiplier)
     in the documentation.
     """
 

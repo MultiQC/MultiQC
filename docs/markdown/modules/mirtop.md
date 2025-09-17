@@ -2,7 +2,7 @@
 title: mirtop
 displayed_sidebar: multiqcSidebar
 description: >
-  Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format
+  <p>Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/mirtop/mirtop.py
 -->
 
 :::note
-Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format
+
+<p>Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format.</p>
 
 [https://github.com/miRTop/mirtop/](https://github.com/miRTop/mirtop/)
 :::

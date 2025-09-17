@@ -2,7 +2,7 @@
 title: hap.py
 displayed_sidebar: multiqcSidebar
 description: >
-  Benchmarks variant calls against gold standard truth datasets
+  <p>Benchmarks variant calls against gold standard truth datasets.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/happy/happy.py
 -->
 
 :::note
-Benchmarks variant calls against gold standard truth datasets
+
+<p>Benchmarks variant calls against gold standard truth datasets.</p>
 
 [https://github.com/Illumina/hap.py](https://github.com/Illumina/hap.py)
 :::

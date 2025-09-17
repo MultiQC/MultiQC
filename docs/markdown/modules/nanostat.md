@@ -2,7 +2,7 @@
 title: NanoStat
 displayed_sidebar: multiqcSidebar
 description: >
-  Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp)
+  <p>Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp).</p>
 ---
 
 <!--
@@ -15,12 +15,66 @@ File path for the source of this content: multiqc/modules/nanostat/nanostat.py
 -->
 
 :::note
-Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp)
+
+<p>Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp).</p>
 
 [https://github.com/wdecoster/nanostat/](https://github.com/wdecoster/nanostat/), [https://github.com/wdecoster/nanoplot/](https://github.com/wdecoster/nanoplot/)
 :::
 
 Programs are part of the NanoPack family for summarising results of sequencing on Oxford Nanopore methods (MinION, PromethION etc.)
+
+NanoStat module for parsing statistics from Oxford Nanopore sequencing data.
+
+By default, only the Read N50 metric is shown in the General Statistics table, with all other metrics hidden.
+You can customize which metrics appear in the General Statistics table using the `general_stats_columns`
+configuration option in your MultiQC config file.
+
+For example, to show number of reads, mean read length and median quality for FASTQ data:
+
+```yaml
+general_stats_columns:
+  nanostat:
+    columns:
+      Number of reads_fastq:
+        title: "# Reads"
+        description: "Number of reads"
+        hidden: false
+      Mean read length_fastq:
+        title: "Mean Length"
+        description: "Mean read length"
+        hidden: false
+      Median read quality_fastq:
+        title: "Median Quality"
+        description: "Median read quality"
+        hidden: false
+```
+
+Available metrics that can be added to General Statistics (append `_fastq`, `_aligned`, `_fasta` or `_seq summary`
+depending on the data type):
+
+- `Active channels` - Number of active channels
+- `Median read length` - Median read length (bp)
+- `Mean read length` - Mean read length (bp)
+- `Read length N50` - Read length N50
+- `Median read quality` - Median read quality (Phred scale)
+- `Mean read quality` - Mean read quality (Phred scale)
+- `Median percent identity` - Median percent identity
+- `Average percent identity` - Average percent identity
+- `Number of reads` - Number of reads
+- `Total bases` - Total number of bases
+- `Total bases aligned` - Total number of aligned bases
+
+Each metric can be customized with the following options:
+
+- `title` - Column title
+- `description` - Column description
+- `hidden` - Whether to hide the column by default
+- `scale` - Color scale for the column
+- `format` - Number format
+- `min` - Minimum value for the color scale
+- `max` - Maximum value for the color scale
+- `suffix` - Suffix to add to values
+- `shared_key` - Share color scale with other columns
 
 ### File search patterns
 

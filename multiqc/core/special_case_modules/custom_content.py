@@ -9,6 +9,7 @@ from collections import defaultdict
 from io import BufferedReader
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
+import markdown
 import yaml
 from natsort import natsorted
 from pydantic import BaseModel
@@ -158,6 +159,37 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             elif f_extension == ".html":
                 parsed_dict = {"id": f["s_name"], "plot_type": "html", "data": str(f["f"])}
                 parsed_dict.update(_find_html_file_header(f))
+            elif f_extension == ".md":
+                # Render Markdown content to HTML for custom content sections
+                md_raw: str = str(f["f"])
+                # Support optional YAML front-matter fenced by '---' lines
+                md_config: Dict[str, Any] = {}
+                if md_raw.lstrip().startswith("---"):
+                    # Attempt to parse front-matter
+                    front_end = md_raw.find("\n---", 3)
+                    if front_end != -1:
+                        fm_text = md_raw.lstrip()[3:front_end]
+                        try:
+                            md_config = yaml.safe_load(fm_text) or {}
+                        except Exception:
+                            md_config = {}
+                        md_raw = md_raw[front_end + 4 :]
+                html_content = markdown.markdown(md_raw)
+                parsed_dict = {
+                    "id": f["s_name"],
+                    "plot_type": "html",
+                    "section_name": f["s_name"]
+                    .rstrip(f_extension)
+                    .rstrip("_mqc")
+                    .replace("_", " ")
+                    .replace("-", " ")
+                    .replace(".", " "),
+                    "data": html_content,
+                }
+                # Merge any configuration from YAML front-matter or matching config item
+                parsed_dict.update(md_config)  # type: ignore
+                if config_custom_data_id in ccdict_by_id:
+                    parsed_dict.update(ccdict_by_id[config_custom_data_id].config)  # type: ignore
 
             if parsed_dict is not None:
                 parsed_item: Union[str, Dict, List, None] = parsed_dict.get("data", {})
@@ -308,8 +340,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         # Initialise this new module class and append to list
         else:
             # Is this file asking to be a sub-section under a parent section?
-            mod_id = ccdict.config.get("parent_id", ccdict.config.get("id", mod_id))
-            section_id: SectionId = ccdict.config.get("section_id", mod_id)
+            mod_id = cast(ModuleId, ccdict.config.get("parent_id", ccdict.config.get("id", mod_id)))
+            section_id: SectionId = cast(SectionId, ccdict.config.get("section_id", ccdict.config.get("id", mod_id)))
 
             mod_anchor: Optional[Anchor] = None
             if "parent_anchor" in ccdict.config:
@@ -489,9 +521,17 @@ class MultiqcModule(BaseMultiqcModule):
             # Try to coerce x-axis to numeric
             if plot_type in [PlotType.LINE, PlotType.SCATTER]:
                 try:
+                    # a series is represented by a dict
                     ccdict.data = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in plot_datasets]
-                except ValueError:
-                    pass
+                except (ValueError, TypeError):
+                    try:
+                        # a series is represented by a list of paris
+                        ccdict.data = [
+                            {_sname: {float(x): float(y) for x, y in _sdata} for _sname, _sdata in ds.items()}
+                            for ds in plot_datasets
+                        ]
+                    except ValueError:
+                        pass
 
             # Table
             if plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
@@ -533,7 +573,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Box plot
             elif plot_type == PlotType.BOX:
-                plot = box.plot(plot_datasets, pconfig=box.BoxPlotConfig(**pconfig))
+                from multiqc.plots.box import BoxT
+
+                box_data = cast(Union[Mapping[str, BoxT], List[Mapping[str, BoxT]]], plot_datasets)
+                plot = box.plot(box_data, pconfig=box.BoxPlotConfig(**pconfig))
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
@@ -563,10 +606,17 @@ class MultiqcModule(BaseMultiqcModule):
                     plot.pconfig.save_data_file = False
 
         if plot is not None or content:
+            # Only add description to section if section name is different from module name
+            # to avoid duplication between module intro and section description
+            section_description = ""
+            if section_name and section_name != self.name:
+                section_description = ccdict.config.get("description", "")
+
             self.add_section(
                 name=section_name,
                 anchor=section_anchor,
                 id=section_id,
+                description=section_description,
                 plot=plot,
                 content=content or "",
             )

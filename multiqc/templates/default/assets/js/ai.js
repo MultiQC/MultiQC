@@ -142,6 +142,22 @@ function getMaxTokens(model) {
       console.error("Error parsing custom context window", e);
     }
   }
+
+  // Reasoning models have different context windows
+  if (isReasoningModel(model)) {
+    if (model.startsWith("o1-preview") || model.startsWith("o1-mini")) {
+      return 128000; // o1-preview and o1-mini have 128k context
+    } else if (
+      model.startsWith("claude-opus-4") ||
+      model.startsWith("claude-sonnet-4") ||
+      model.startsWith("claude-haiku-4")
+    ) {
+      return 200000; // Claude 4 series have 200k context
+    } else {
+      return 200000; // Other reasoning models (o3, o4-mini) have 200k context
+    }
+  }
+
   if (model.startsWith("claude")) return 200000;
   return 128000; // default for gpt models
 }
@@ -189,7 +205,7 @@ async function summarizeWithAi(button) {
   let aiApiKey = $("#ai-api-key").val();
   let endpoint = $("#ai-endpoint").val();
 
-  if (!modelName && provider.defaultModel) {
+  if (!modelName && provider && provider.defaultModel) {
     modelName = provider.defaultModel;
     $("#ai-model").val(modelName);
     storeModelName(providerId, modelName);
@@ -330,7 +346,7 @@ async function summarizeWithAi(button) {
           }),
         );
         const endTime = performance.now();
-        console.log(`Time to generate more: ${endTime - startTime}ms`);
+        console.log(`Time to run generation: ${endTime - startTime}ms`);
         if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").show();
         disclaimerDiv.show();
       },

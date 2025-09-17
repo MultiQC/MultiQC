@@ -2,7 +2,7 @@
 title: BISCUIT
 displayed_sidebar: multiqcSidebar
 description: >
-  Maps bisulfite converted DNA sequence reads and determines cytosine methylation states
+  <p>Maps bisulfite converted DNA sequence reads and determines cytosine methylation states.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/biscuit/biscuit.py
 -->
 
 :::note
-Maps bisulfite converted DNA sequence reads and determines cytosine methylation states
+
+<p>Maps bisulfite converted DNA sequence reads and determines cytosine methylation states.</p>
 
 [https://github.com/huishenlab/biscuit](https://github.com/huishenlab/biscuit)
 :::
@@ -31,7 +32,7 @@ If you have BISCUIT data from before this, please use MultiQC v1.8.
 The second tab of this plot uses the config option `read_count_multiplier`,
 so if millions of reads is not useful for your data you can customise this.
 
-See [Number base (multiplier)](https://docs.seqera.io/multiqc/#number-base-multiplier)
+See [Number base (multiplier)](../reports/customisation#number-base-multiplier)
 in the documentation.
 
 ### File search patterns

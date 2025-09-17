@@ -2,6 +2,7 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
+from .ampliconclip import parse_samtools_ampliconclip
 from .coverage import parse_samtools_coverage
 from .flagstat import parse_samtools_flagstat
 from .idxstats import parse_samtools_idxstats
@@ -16,12 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
     """
     Supported commands:
 
-    - `stats`
+    - `ampliconclip`
+    - `coverage`
     - `flagstats`
     - `idxstats`
-    - `rmdup`
-    - `coverage`
     - `markdup`
+    - `rmdup`
+    - `stats`
 
     #### idxstats
 
@@ -109,12 +111,14 @@ class MultiqcModule(BaseMultiqcModule):
             hidden: false
     ```
 
-    Each samtools submodule has its own namespace in the configuration:
-    - `samtools/stats`
-    - `samtools/flagstat`
-    - `samtools/rmdup`
-    - `samtools/markdup`
+    Each samtools submodule has its own namespace in the configuration
+    - `samtools/ampliconclip`
     - `samtools/coverage`
+    - `samtools/flagstats`
+    - `samtools/idxstats`
+    - `samtools/markdup`
+    - `samtools/rmdup`
+    - `samtools/stats`
 
     """
 
@@ -131,6 +135,10 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
 
         # Call submodule functions
+        n["ampliconclip"] = parse_samtools_ampliconclip(self)
+        if n["ampliconclip"] > 0:
+            log.info(f"Found {n['ampliconclip']} stats reports")
+
         n["stats"] = parse_samtools_stats(self)
         if n["stats"] > 0:
             log.info(f"Found {n['stats']} stats reports")

@@ -122,6 +122,7 @@ class LinePlot extends Plot {
         };
       }
 
+      updateObject(params, line["extra_trace_params"], true);
       updateObject(params, dataset["trace_params"], true);
 
       return {

@@ -2,7 +2,7 @@
 title: HUMID
 displayed_sidebar: multiqcSidebar
 description: >
-  Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs
+  <p>Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/humid/humid.py
 -->
 
 :::note
-Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs
+
+<p>Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs.</p>
 
 [https://github.com/jfjlaros/HUMID](https://github.com/jfjlaros/HUMID)
 :::

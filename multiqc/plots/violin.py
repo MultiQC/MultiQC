@@ -17,6 +17,7 @@ from multiqc import config, report
 from multiqc.core.plot_data_store import parse_value
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
+from multiqc.utils import mqc_colour
 from multiqc.plots.table_object import (
     Cell,
     ColumnAnchor,
@@ -79,9 +80,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             "section_order": section_order,  # Store original index for ordering
                             "sample": str(sample_name),
                             "metric": str(metric_name),
-                            "val_raw": str(cell.raw),
+                            "val_raw": float(cell.raw) if isinstance(cell.raw, (int, float)) else float("nan"),
                             "val_raw_type": type(cell.raw).__name__,  # Store type name
-                            "val_mod": str(cell.mod),
+                            "val_mod": float(cell.mod) if isinstance(cell.mod, (int, float)) else float("nan"),
                             "val_mod_type": type(cell.mod).__name__,  # Store type name
                             "val_fmt": str(cell.fmt),
                             # Store column metadata as JSON. Note that "format" and "modify" lambda won't be stored,
@@ -119,7 +120,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     # Initialize sample record if not seen before
                     if str(sample_name) not in samples_data:
                         samples_data[str(sample_name)] = {
-                            "anchor": None,
+                            "anchor": "",  # column is prefixed with table anchor instead
                             "type": "table_row",
                             "creation_date": self.creation_date,
                             "plot_type": None,
@@ -150,7 +151,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             metric_col_name = ColumnKey(f"{dt_column.namespace} / {metric_name}")
                         elif len(self.dt.section_by_id) > 1:
                             metric_col_name = ColumnKey(f"{section_key} / {metric_name}")
-                        metric_col_name = ColumnKey(f"{self.dt.id} / {metric_col_name}")
+                        metric_col_name = ColumnKey(f"{self.dt.id} / {metric_col_name}".lower())
 
                         # Add metric to the sample's data
                         samples_data[str(sample_name)][metric_col_name] = float_val
@@ -160,7 +161,17 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         wide_records = list(samples_data.values())
 
         # Create the wide format DataFrame
-        df = pl.DataFrame(wide_records)
+        df = pl.DataFrame(
+            wide_records,
+            schema_overrides={
+                "anchor": pl.Utf8,
+                "type": pl.Utf8,
+                "creation_date": pl.Datetime(time_unit="us"),
+                "plot_type": pl.Utf8,
+                "plot_input_data": pl.Utf8,
+                "sample": pl.Utf8,
+            },
+        )
         return df, metric_col_names
 
     @classmethod
@@ -214,28 +225,38 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             section_headers: Dict[ColumnKey, ColumnDict] = {}
 
             # Sort metrics by their original index if available
-            if "metric_idx" in section_group.columns:
+            if "section_order" in section_group.columns:
                 # Create ordered dict of metrics for this section
-                metrics_info = section_group.select(["metric", "metric_idx"]).unique()
+                metrics_info = section_group.select(["metric", "section_order"]).unique()
                 for metric_row in metrics_info.iter_rows(named=True):
-                    ordered_metrics[metric_row["metric"]] = metric_row["metric_idx"]
+                    ordered_metrics[metric_row["metric"]] = metric_row["section_order"]
 
             # Process samples
             for sample_name in section_group.select("sample").unique().to_series():
                 sample_group = section_group.filter(pl.col("sample") == sample_name)
                 val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
 
-                # If we have metric_idx, sort by that first
-                if "metric_idx" in sample_group.columns:
-                    sample_group = sample_group.sort("metric_idx")
+                # If we have section_order, sort by that first
+                if "section_order" in sample_group.columns:
+                    sample_group = sample_group.sort("section_order")
 
                 # Process metrics/columns
                 for row in sample_group.iter_rows(named=True):
                     metric_name = row["metric"]
 
                     # Convert string values back to their original types
-                    val_raw = parse_value(row["val_raw"], row["val_raw_type"])
-                    val_mod = parse_value(row["val_mod"], row["val_mod_type"])
+                    val_raw: float = row["val_raw"]
+                    if not math.isnan(val_raw):
+                        if row["val_raw_type"] == "int":
+                            val_raw = int(val_raw)
+                        elif row["val_raw_type"] == "bool":
+                            val_raw = bool(val_raw)
+                    val_mod: float = row["val_mod"]
+                    if not math.isnan(val_mod):
+                        if row["val_mod_type"] == "int":
+                            val_mod = int(val_mod)
+                        elif row["val_mod_type"] == "bool":
+                            val_mod = bool(val_mod)
                     val_by_metric[ColumnKey(str(metric_name))] = Cell(
                         raw=val_raw,
                         mod=val_mod,
@@ -365,7 +386,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     metric_order[metric] = idx
 
             merged_df = merged_df.with_columns(
-                pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                pl.col("metric")
+                .map_elements(lambda x: metric_order.get(x, 99999), return_dtype=pl.Int64)
+                .alias("__metric_order")
             )
 
             # First ensure the DataFrame is sorted by creation_date (newest last)
@@ -398,7 +421,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                 # Add a temporary column to sort by the original metric order
                 deduped_df = deduped_df.with_columns(
-                    pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                    pl.col("metric")
+                    .map_elements(lambda x: metric_order.get(x, 99999), return_dtype=pl.Int64)
+                    .alias("__metric_order")
                 )
 
                 # Sort by the order column to preserve metric ordering
@@ -739,7 +764,7 @@ class Dataset(BaseDataset):
 
             if header.color:
                 layout[f"yaxis{metric_idx + 1}"]["tickfont"] = {
-                    "color": f"rgb({header.color})",
+                    "color": mqc_colour.color_to_rgb_string(header.color),
                 }
 
         layout["xaxis"] = layout["xaxis1"]
@@ -753,8 +778,8 @@ class Dataset(BaseDataset):
             header = self.header_by_metric[metric]
             params = copy.deepcopy(self.trace_params)
             if header.color:
-                params["fillcolor"] = f"rgb({header.color})"
-                params["line"]["color"] = f"rgb({header.color})"
+                params["fillcolor"] = mqc_colour.color_to_rgb_string(header.color)
+                params["line"]["color"] = mqc_colour.color_to_rgb_string(header.color)
 
             violin_values_by_sample = violin_values_by_sample_by_metric[metric]
             axis_key = "" if metric_idx == 0 else str(metric_idx + 1)
@@ -847,7 +872,7 @@ class Dataset(BaseDataset):
                     elif isinstance(fmt, str):
                         try:
                             value = fmt.format(value)
-                        except ValueError:
+                        except (ValueError, KeyError):
                             logger.info(f"Value {value} failed to format with {fmt=}")
                 row.append(str(value))
             result += f"|{pseudonym}|" + "|".join(row) + "|\n"
@@ -884,13 +909,12 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         model: Plot[Dataset, TableConfig] = Plot.initialize(
             plot_type=PlotType.VIOLIN,
             pconfig=dt.pconfig,
-            n_samples_per_dataset=[len(ds_samples)],
+            n_series_per_dataset=[len(ds_samples)],
             id=dt.id,
             anchor=anchor,
             default_tt_label=": %{x}",
             # Violins scale well, so can always keep them interactive and visible:
             defer_render_if_large=False,
-            flat_if_very_large=False,
         )
 
         no_violin: bool = model.pconfig.no_violin
@@ -1074,19 +1098,19 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
                 + '<span class="glyphicon glyphicon-exclamation-sign" '
-                + 'title="An interactive table is not available because of the large number of samples. '
+                + 'title="An interactive table is not available because of the large number of rows. '
                 + "A violin plot is generated instead, showing density of values for each metric, as "
-                + 'well as hoverable points for outlier samples in each metric."'
-                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+                + 'well as hoverable points for outliers in each metric."'
+                + f' data-toggle="tooltip"></span> Showing violin plots for {self.n_samples} data points.</p>'
             )
         elif not self.show_table:
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
                 + '<span class="glyphicon glyphicon-exclamation-sign" '
-                + 'title="An interactive table is not available because of the large number of samples. '
-                + "The violin plot displays hoverable points only for outlier samples in each metric, "
+                + 'title="An interactive table is not available because of the large number of rows. '
+                + "The violin plot displays hoverable points only for outliers in each metric, "
                 + 'and the hiding/highlighting functionality through the toolbox only works for outliers"'
-                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+                + f' data-toggle="tooltip"></span> Showing violin plots for {self.n_samples} data points.</p>'
             )
 
         assert self.datasets[0].dt is not None

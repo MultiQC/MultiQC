@@ -2,7 +2,7 @@
 title: Preseq
 displayed_sidebar: multiqcSidebar
 description: >
-  Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count
+  <p>Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/preseq/preseq.py
 -->
 
 :::note
-Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count
+
+<p>Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count.</p>
 
 [http://smithlabresearch.org/software/preseq/](http://smithlabresearch.org/software/preseq/)
 :::
@@ -29,7 +30,7 @@ file sizes. To avoid this, MultiQC trims back the x-axis until each dataset
 shows 80% of its maximum y-value (unique molecules).
 
 To disable this feature and show all the data, add the following to your
-[MultiQC configuration](https://docs.seqera.io/multiqc/getting_started/config):
+[MultiQC configuration](../getting_started/config):
 
 ```yaml
 preseq:
@@ -41,7 +42,7 @@ preseq:
 Preseq reports its numbers as "Molecule counts". This isn't always very intuitive,
 and it's often easier to talk about sequencing depth in terms of coverage.
 You can plot the estimated coverage instead by specifying the reference genome or target size,
-and the read length in your [MultiQC configuration](https://docs.seqera.io/multiqc/getting_started/config):
+and the read length in your [MultiQC configuration](../getting_started/config):
 
 ```yaml
 preseq:
