@@ -3,8 +3,8 @@ name: "Docker image"
 on:
   pull_request:
     paths:
-      # Step takes 5 min, too long for PR commits, so leaving it only to significant changes
-      - "pyproject.toml"
+      # Step takes 30 min, too long for PR commits, so leaving it only to significant changes
+      # - "pyproject.toml"
       - "Dockerfile"
   push:
     # Build multiqc:dev on every push to main
