@@ -231,6 +231,10 @@ kbd {
   column-gap: 10px;
 }
 
+.general-stats-help-btn {
+  overflow: auto;
+}
+
 h2.mqc-module-title {
   margin: 0;
 }
