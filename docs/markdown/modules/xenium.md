@@ -23,12 +23,18 @@ File path for the source of this content: multiqc/modules/xenium/xenium.py
 
 Xenium is a spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.
 
-NOTE: parsing huge files is not an intended MultiQC usage. By default, MultiQC will ignore the `*.parquet` files
+:::note
+Parsing huge files is not an intended MultiQC usage. By default, MultiQC will ignore the `*.parquet` files
 as they are gigabyte-sized. To enable parsing those, make sure to have this line in your config:
 
 ```
 log_filesize_limit: 5000000000 # 5GB
 ```
+
+:::
+
+The MultiQC module is tested with outputs from xenium-3.x, older versions of xenium output are
+not supported and may even cause MultiQC to crash (see https://github.com/MultiQC/MultiQC/issues/3344).
 
 ### File search patterns
 

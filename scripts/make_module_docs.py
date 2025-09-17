@@ -53,7 +53,7 @@ def main():
                 "id": f"modules/{mod_id}",
                 "data": {
                     "name": f"{module.name}",
-                    "summary": f"{module.info}",
+                    "summary": f"{module.info.replace('<p>', '').replace('</p>', '')}",
                 },
             }
         )
