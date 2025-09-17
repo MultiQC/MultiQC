@@ -34,22 +34,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info("Found %s sompy reports", len(self.sompy_raw_sample_names))
 
-        self.write_data_file(
-            self.sompy_combined_data,
-            "multiqc_sompy_combined_data",
-            data_format="json",
-        )
-        self.write_data_file(
-            self.sompy_indel_data,
-            "multiqc_sompy_indel_data",
-            data_format="json",
-        )
-        self.write_data_file(
-            self.sompy_snv_data,
-            "multiqc_sompy_snv_data",
-            data_format="json",
-        )
-
         helptext = (
             "No plots are generated, as som.py is generally run on single"
             " control samples (HD757, etc.). Ideally, precision, recall and"
@@ -96,6 +80,10 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
+        self.write_data_file(self.sompy_combined_data, "multiqc_sompy_combined_data")
+        self.write_data_file(self.sompy_indel_data, "multiqc_sompy_indel_data")
+        self.write_data_file(self.sompy_snv_data, "multiqc_sompy_snv_data")
+
     def generate_table_headers(self, suffix: str = "") -> dict:
         """
         Generates the dict of table header metadata
@@ -122,21 +110,19 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "tp": {
-                "title": "True Positives",
+                "title": "True Positive Variants",
                 "description": "Number of true-positive calls",
-                "suffix": " variants",
-                "scale": "Reds",
+                "scale": "Greens",
                 "format": None,
             },
             "fn": {
-                "title": "False Negatives",
+                "title": "False Negative Variants",
                 "description": "Calls in truth without matching query call",
-                "suffix": " variants",
                 "scale": "Reds",
                 "format": None,
             },
             "fp": {
-                "title": "False Positives",
+                "title": "False Positive Variants",
                 "description": "Number of false-positive calls",
                 "format": None,
                 "scale": "Reds",
@@ -210,7 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for fn in reader.fieldnames:
                     self.sompy_indel_data[row_id][fn + "_indel"] = row[fn]
 
-            elif row["type"] == "SNVs":
+            if row["type"] == "SNVs":
                 if row_id not in self.sompy_snv_data:
                     self.sompy_snv_data[row_id] = {"sample_id": f["s_name"]}
 
