@@ -43,7 +43,7 @@ quast_config:
 ```
 
 The default module values are shown above. See the
-[main MultiQC documentation](https://docs.seqera.io/multiqc/getting_started/config)
+[main MultiQC documentation](../getting_started/config)
 for more information about how to configure MultiQC.
 
 #### MetaQUAST

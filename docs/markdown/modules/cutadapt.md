@@ -34,7 +34,7 @@ sp:
     contents: "cutadapt version"
 ```
 
-See the [module search patterns](https://docs.seqera.io/multiqc/getting_started/config#module-search-patterns)
+See the [module search patterns](../getting_started/config#module-search-patterns)
 section of the MultiQC documentation for more information.
 
 The module also understands logs saved by Trim Galore, which contain cutadapt logs.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Generate documentation for MultiQC modules and changelog.
 
@@ -57,6 +58,9 @@ def main():
         )
 
         docstring = module_cls.__doc__ or ""
+
+        # Replace absolute URLs with relative, so that Docs CI can find broken links
+        docstring = docstring.replace("https://docs.seqera.io/multiqc/", "../")
 
         if module.extra:
             extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
