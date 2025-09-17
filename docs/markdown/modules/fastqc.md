@@ -148,7 +148,7 @@ fastqc_config:
 
 Remember that it is possible to customise the order in which the different module sections appear
 in the report if you wish.
-See [the docs](../#order-of-module-and-module-subsection-output) for more information.
+See [the docs](../reports/customisation#order-of-module-and-module-subsection-output) for more information.
 
 For example, to show the _Status Checks_ section at the top, use the following config:
 
