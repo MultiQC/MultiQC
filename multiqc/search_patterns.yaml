@@ -970,6 +970,10 @@ snpsplit/new:
   fn: "*SNPsplit_report.yaml"
 software_versions:
   fn_re: ".+_mqc_versions\\.(yaml|yml)"
+sompy:
+  fn: "*.stats.csv"
+  contents: ",sompyversion,sompycmd"
+  num_lines: 2
 sortmerna:
   contents: "Minimal SW score based on E-value"
 spaceranger/count_html:
