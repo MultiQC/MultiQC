@@ -5,12 +5,10 @@ Usage:
     python scripts/make_docs.py <docs_repo_path>
 """
 
-from datetime import datetime
 import json
-import os
 from typing import Dict
 import yaml
-import argparse
+from markdownify import markdownify
 from pathlib import Path
 from textwrap import dedent, indent
 import subprocess
@@ -53,7 +51,7 @@ def main():
                 "id": f"modules/{mod_id}",
                 "data": {
                     "name": f"{module.name}",
-                    "summary": f"{module.info.replace('<p>', '').replace('</p>', '')}",
+                    "summary": f"{markdownify(module.info)}",
                 },
             }
         )
