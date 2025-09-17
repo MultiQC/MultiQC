@@ -43,7 +43,7 @@ the output from each module and print it in sections.
         {% endif %}
           {% if s['print_section'] %}
             <div class="mqc-section mqc-section-{{ m.anchor }}" id="mqc-section-wrapper-{{ s['anchor'] }}">
-              <h3 id="{{ s['anchor'] }}">
+              <h3 class="mqc-section-name-helpbutton" id="{{ s['anchor'] }}">
                 {% if s['name'] is not none and s['name'] | length > 0 %}
                   {{ s['name'] }}
                 {% endif %}

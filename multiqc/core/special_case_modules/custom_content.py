@@ -619,6 +619,7 @@ class MultiqcModule(BaseMultiqcModule):
                 description=section_description,
                 plot=plot,
                 content=content or "",
+                helptext=ccdict.config.get("helptext", ""),
             )
 
 
