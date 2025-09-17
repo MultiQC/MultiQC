@@ -2,7 +2,7 @@
 title: MEGAHIT
 displayed_sidebar: multiqcSidebar
 description: >
-  NGS read assembler
+  <p>NGS read assembler.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/megahit/megahit.py
 -->
 
 :::note
-NGS read assembler
+
+<p>NGS read assembler.</p>
 
 [https://github.com/voutcn/megahit](https://github.com/voutcn/megahit)
 :::

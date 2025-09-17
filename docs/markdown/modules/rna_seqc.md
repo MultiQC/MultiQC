@@ -2,7 +2,7 @@
 title: RNA-SeQC
 displayed_sidebar: multiqcSidebar
 description: >
-  RNA-Seq metrics for quality control and process optimization
+  <p>RNA-Seq metrics for quality control and process optimization.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/rna_seqc/rna_seqc.py
 -->
 
 :::note
-RNA-Seq metrics for quality control and process optimization
+
+<p>RNA-Seq metrics for quality control and process optimization.</p>
 
 [https://github.com/getzlab/rnaseqc](https://github.com/getzlab/rnaseqc)
 :::

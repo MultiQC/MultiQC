@@ -2,7 +2,7 @@
 title: VarScan2
 displayed_sidebar: multiqcSidebar
 description: >
-  Variant detection in massively parallel sequencing data
+  <p>Variant detection in massively parallel sequencing data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/varscan2/varscan2.py
 -->
 
 :::note
-Variant detection in massively parallel sequencing data
+
+<p>Variant detection in massively parallel sequencing data.</p>
 
 [http://dkoboldt.github.io/varscan/](http://dkoboldt.github.io/varscan/)
 :::
@@ -36,11 +37,11 @@ The MultiQC module can read output from `mpileup2cns`, `mpileup2snp` and `mpileu
 ```yaml
 varscan2/mpileup2cns:
   contents: Only variants will be reported
-  num_lines: 3
+  num_lines: 10
 varscan2/mpileup2indel:
   contents: Only indels will be reported
-  num_lines: 3
+  num_lines: 10
 varscan2/mpileup2snp:
   contents: Only SNPs will be reported
-  num_lines: 3
+  num_lines: 10
 ```

@@ -2,7 +2,7 @@
 title: Sequali
 displayed_sidebar: multiqcSidebar
 description: >
-  Sequencing quality control for both long-read and short-read data
+  <p>Sequencing quality control for both long-read and short-read data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/sequali/sequali.py
 -->
 
 :::note
-Sequencing quality control for both long-read and short-read data
+
+<p>Sequencing quality control for both long-read and short-read data.</p>
 
 [https://github.com/rhpvorderman/sequali](https://github.com/rhpvorderman/sequali)
 :::

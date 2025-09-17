@@ -2,7 +2,7 @@
 title: HiFiasm
 displayed_sidebar: multiqcSidebar
 description: >
-  Haplotype-resolved assembler for accurate Hifi reads
+  <p>Haplotype-resolved assembler for accurate Hifi reads.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/hifiasm/hifiasm.py
 -->
 
 :::note
-Haplotype-resolved assembler for accurate Hifi reads
+
+<p>Haplotype-resolved assembler for accurate Hifi reads.</p>
 
 [https://github.com/chhylp123/hifiasm](https://github.com/chhylp123/hifiasm)
 :::

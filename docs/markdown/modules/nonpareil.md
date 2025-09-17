@@ -2,7 +2,7 @@
 title: Nonpareil
 displayed_sidebar: multiqcSidebar
 description: >
-  Estimates metagenomic coverage and sequence diversity
+  <p>Estimates metagenomic coverage and sequence diversity.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/nonpareil/nonpareil.py
 -->
 
 :::note
-Estimates metagenomic coverage and sequence diversity
+
+<p>Estimates metagenomic coverage and sequence diversity.</p>
 
 [https://github.com/lmrodriguezr/nonpareil](https://github.com/lmrodriguezr/nonpareil)
 :::

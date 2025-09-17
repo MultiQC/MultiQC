@@ -2,7 +2,7 @@
 title: GLIMPSE
 displayed_sidebar: multiqcSidebar
 description: >
-  Low-coverage whole genome sequencing imputation
+  <p>Low-coverage whole genome sequencing imputation.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/glimpse/glimpse.py
 -->
 
 :::note
-Low-coverage whole genome sequencing imputation
+
+<p>Low-coverage whole genome sequencing imputation.</p>
 
 [https://odelaneau.github.io/GLIMPSE/](https://odelaneau.github.io/GLIMPSE/)
 :::

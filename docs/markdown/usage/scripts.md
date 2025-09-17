@@ -102,12 +102,12 @@ multiqc.parse_logs(
 )
 ```
 
-MultiQC v1.29 and higher generates `BETA-multiqc.parquet` file in `multiqc_data` output directory. You can pass that file to `parse_logs`, and it will load that previous MultiQC run into memory.
+MultiQC v1.29 and higher generates `multiqc.parquet` file in `multiqc_data` output directory. You can pass that file to `parse_logs`, and it will load that previous MultiQC run into memory.
 
 Example:
 
 ```python
-multiqc.parse_logs('multiqc_data/BETA-multiqc.parquet')
+multiqc.parse_logs('multiqc_data/multiqc.parquet')
 ```
 
 ## List what's loaded

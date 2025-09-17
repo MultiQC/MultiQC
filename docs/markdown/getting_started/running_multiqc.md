@@ -102,7 +102,7 @@ You can do this by using `-m`/`--modules` to explicitly define which modules you
 
 If an explicitly requested module couldn't find any expected input files, MultiQC will
 just continue with other modules. You can change this behaviour and make MultiQC
-strict about missing input by setting the `--require-log` flag.
+strict about missing input by setting the `--require-logs` flag.
 If set, MultiQC will exit with an error and exit code `1` if any of the modules specified with `-m` did not produce a section in the report.
 
 ## Directory prefixes in sample names
@@ -225,16 +225,16 @@ Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/
 ```
 
 Please note that Pandoc is a complex tool and has a number of its own dependencies
-for PDF generation. Notably, it uses LaTeX / XeLaTeX which you must also have installed.
+for PDF generation. Notably, it uses LaTeX / LuaLaTeX which you must also have installed.
 Please make sure that you have the latest version of Pandoc and
 that it can successfully convert basic HTML files to PDF before reporting
 and errors.
 
 Error messages from Pandoc are piped through to the MultiQC log,
-for example if the xelatex dependency is not installed you will see the following:
+for example if the lualatex dependency is not installed you will see the following:
 
 ```
-xelatex not found. Please select a different --pdf-engine or install xelatex
+lualatex not found. Please select a different --pdf-engine or install lualatex
 ```
 
 Note that not all plots have flat image equivalents, so

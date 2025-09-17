@@ -289,6 +289,14 @@ sample_names_rename:
 
 Each entry is a pair of [from, to] values that will be applied to sample names.
 
+### Advanced sample name replacement
+
+For more powerful sample name replacement options, including regex support and different replacement modes, see the [Sample name replacement](../reports/customisation.md#sample-name-replacement) section in the report customisation documentation. These advanced features include:
+
+- `sample_names_replace` - Direct pattern-to-replacement mapping in config files
+- `sample_names_replace_regex` - Regular expression support for complex patterns
+- `sample_names_replace_exact` and `sample_names_replace_complete` - Fine-tuned matching behavior
+
 ## Module search patterns
 
 Many bioinformatics tools have standard output formats, filenames and other

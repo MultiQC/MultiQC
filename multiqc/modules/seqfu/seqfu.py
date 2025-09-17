@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="seqfu",
             target="seqfu",
             href="https://telatin.github.io/seqfu2",
-            info="A general-purpose program to manipulate and parse information from FASTX files",
+            info="Manipulate FASTA/FASTQ files.",
             doi="10.3390/bioengineering8050059",
         )
 

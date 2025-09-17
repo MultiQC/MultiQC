@@ -2,7 +2,7 @@
 title: BBTools
 displayed_sidebar: multiqcSidebar
 description: >
-  Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads
+  <p>Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/bbmap/bbmap.py
 -->
 
 :::note
-Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads
+
+<p>Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads.</p>
 
 [http://jgi.doe.gov/data-and-tools/bbtools/](http://jgi.doe.gov/data-and-tools/bbtools/)
 :::

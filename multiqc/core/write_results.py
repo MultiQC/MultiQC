@@ -510,11 +510,18 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
     except AttributeError:
         pass  # Not a child theme
     else:
-        shutil.copytree(parent_template.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True)
+        shutil.copytree(
+            parent_template.template_dir,
+            tmp_dir.get_tmp_dir(),
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns("*.pyc"),
+        )
 
     # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
     # parent template files are overwritten)
-    shutil.copytree(template_mod.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True)
+    shutil.copytree(
+        template_mod.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True, ignore=shutil.ignore_patterns("*.pyc")
+    )
 
     # Function to include file contents in Jinja template
     def include_file(name, fdir=tmp_dir.get_tmp_dir(), b64=False):
@@ -601,13 +608,23 @@ def _write_pdf(report_path: Path) -> Optional[Path]:
         str(report_path),
         "--output",
         str(pdf_path),
-        "--pdf-engine=pdflatex",
+        "--pdf-engine=lualatex",
         "-V",
         "documentclass=article",
         "-V",
         "geometry=margin=1in",
         "-V",
+        "mainfont=DejaVu Sans",
+        "-V",
+        "sansfont=DejaVu Sans",
+        "-V",
+        "monofont=DejaVu Sans Mono",
+        "-V",
+        "fontsize=10pt",
+        "-V",
         "title=",
+        "-V",
+        "tables=true",
     ]
     if config.pandoc_template is not None:
         pandoc_call.append(f"--template={config.pandoc_template}")

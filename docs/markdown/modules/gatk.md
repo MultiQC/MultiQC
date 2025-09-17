@@ -2,7 +2,7 @@
 title: GATK
 displayed_sidebar: multiqcSidebar
 description: >
-  Wide variety of tools with a primary focus on variant discovery and genotyping.
+  <p>Wide variety of tools with a primary focus on variant discovery and genotyping.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/gatk/gatk.py
 -->
 
 :::note
-Wide variety of tools with a primary focus on variant discovery and genotyping.
+
+<p>Wide variety of tools with a primary focus on variant discovery and genotyping.</p>
 
 [https://www.broadinstitute.org/gatk/](https://www.broadinstitute.org/gatk/)
 :::
