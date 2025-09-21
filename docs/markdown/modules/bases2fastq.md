@@ -31,4 +31,8 @@ bases2fastq/run:
   contents: SampleStats
   fn: RunStats.json
   num_lines: 100
+bases2fastq/manifest:
+  contents: Settings
+  fn: RunManifest.json
+  num_lines: 100
 ```

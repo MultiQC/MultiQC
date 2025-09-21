@@ -1,9 +1,31 @@
-from multiqc.plots import linegraph, table
+from multiqc.plots import bargraph, linegraph, table
 from multiqc import config
 
 """
 Functions for plotting per sample information of bases2fastq
 """
+
+
+def _calculate_sample_reads_eliminated(run_data) -> int:
+    """
+    Calculate the total number of reads eliminated during trimming.
+
+    This function iterates over the lanes in the given run data and sums the
+    difference between the number of polonies before trimming and after trimming.
+    If required fields are missing, they are skipped.
+
+    Args:
+        run_data (dict): Dictionary containing sequencing run data with lane information.
+
+    Returns:
+        int: The total number of reads eliminated across all lanes.
+    """
+    reads_eliminated = 0
+    if "NumPolonies" not in run_data or "NumPoloniesBeforeTrimming" not in run_data:
+        return reads_eliminated
+    reads_eliminated += run_data["NumPoloniesBeforeTrimming"] - run_data["NumPolonies"]
+
+    return reads_eliminated
 
 
 def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, sample_color):
@@ -20,6 +42,8 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         general_stats.update({"mean_base_quality_sample": sample_data[s_name]["QualityScoreMean"]})
         general_stats.update({"percent_q30_sample": sample_data[s_name]["PercentQ30"]})
         general_stats.update({"percent_q40_sample": sample_data[s_name]["PercentQ40"]})
+        general_stats.update({"reads_eliminated": _calculate_sample_reads_eliminated(sample_data[s_name])})
+        general_stats.update({"percent_mismatch": sample_data[s_name]["PercentMismatch"]})
         plot_content.update({s_name: general_stats})
 
     headers = {}
@@ -37,11 +61,10 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         "scale": False,
     }
     headers["num_polonies_sample"] = {
-        "title": f"# Polonies ({config.base_count_prefix})",
-        "description": f"The total number of polonies that are calculated for the run. ({config.base_count_desc})",
+        "title": "# Polonies",
+        "description": "The total number of polonies that are calculated for the run",
         "min": 0,
         "scale": "Blues",
-        "shared_key": "base_count",
     }
     headers["yield_sample"] = {
         "title": "Yield (Gb)",
@@ -70,24 +93,73 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         "scale": "RdYlGn",
         "suffix": "%",
     }
+    headers["reads_eliminated"] = {
+        "title": "Reads Eliminated",
+        "description": "Number of reads eliminated.",
+    }
+    headers["percent_mismatch"] = {
+        "title": "Percent Mismatch",
+        "description": "Percent mismatch",
+        "max": 100,
+        "min": 0,
+        "scale": "RdYlGn",
+        "suffix": "%",
+    }
 
-    pconfig = {"id": "sample_qc_metric_table", "title": "Sample QC Metrics Table", "no_violin": True}
+    pconfig = {"id": "sample_qc_metric_table", "title": "Sample QC Metrics Table", "no_violin": False}
 
     plot_name = "Sample QC Metrics Table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
     anchor = "sample_qc_metrics_table"
     description = "QC metrics per unique sample"
     helptext = """
-     This section displays metrics that indicate the quality of each sample: \n
-       - Sample Name: Unique identifier composed of (RunName)__(UUID)__(SampleName), where (RunName) maps to the AVITI run name, (UUID) maps to the unique Bases2Fastq analysis result, and (SampleName) maps to the sample name as specified in the RunManifest.csv.
-       - Group: Run/Sample group label that assigns colors in the plot.  To customize group tags:\n
-           - 1) Set the project name when running Bases2Fastq. In this case the group tags will be project name.\n
-           - 2) Generate a csv file with the suffix "_b2fgroup.csv", containing the columns "Sample Name" and "Group".\n
-       - Number of Polonies: The total number of polonies that are assigned to the sample.\n
-       - Assigned Yield (Gb): The sample yield that is based on assigned reads in gigabases.\n
-       - Quality Score Mean: The average  Q score of base calls for the sample.\n
-       - Percent Q30: The percentage of ≥ Q30 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls.\n
-       - Percent Q40: The percentage of ≥ Q40 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls\n
+    This section displays metrics that indicate the quality of each sample: \n
+        - Sample Name: Unique identifier composed of (RunName)__(UUID)__(SampleName), where (RunName) maps to the AVITI run name, (UUID) maps to the unique Bases2Fastq analysis result, and (SampleName) maps to the sample name as specified in the RunManifest.csv.
+        - Group: Run/Sample group label that assigns colors in the plot.  To customize group tags:\n
+            - 1) Set the project name when running Bases2Fastq. In this case the group tags will be project name.\n
+            - 2) Generate a csv file with the suffix "_b2fgroup.csv", containing the columns "Sample Name" and "Group".\n
+        - Number of Polonies: The total number of polonies that are assigned to the sample.\n
+        - Assigned Yield (Gb): The sample yield that is based on assigned reads in gigabases.\n
+        - Quality Score Mean: The average  Q score of base calls for the sample.\n
+        - Percent Q30: The percentage of ≥ Q30 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls.\n
+        - Percent Q40: The percentage of ≥ Q40 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls.\n
+        - Reads Eliminated: Number of reads eliminated across lanes.\n
+        - Percent Mismatch: Percent Mismatch.\n
+    """
+    return plot_html, plot_name, anchor, description, helptext, plot_content
+
+
+def plot_sample_read_length(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
+    """
+    Plot number of cycles per read and lane
+    """
+    plot_content = dict()
+    for s_name, data in sample_data.items():
+        read_lengths = {s_name: {}}
+        if "Reads" not in data:
+            continue
+        for read in data["Reads"]:
+            read_name = read["Read"]
+            mean_length = read["MeanReadLength"]
+            read_lengths[s_name][read_name] = mean_length
+        plot_content.update(read_lengths)
+
+    pconfig = {
+        "title": "Bases2Fastq: Mean Read Length per Sample",
+        "id": "mean_read_length_per_sample",
+        "ylab": "Bases",
+        "cpswitch": False,
+        "subtitle": None,
+        "stacking": "group",
+    }
+
+    plot_name = "Mean Read Length per Sample"
+    plot_html = bargraph.plot(plot_content, pconfig=pconfig)
+    anchor = "mean_read_length_per_sample"
+    description = "Average read length per read for all samples."
+    helptext = """
+    Shows the number of cycles used for each read in every flowcell lane. 
+    Useful for confirming that read lengths match the expected sequencing setup across all lanes.
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -108,6 +180,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
             r1r2_split = max(r1r2_split, len(R1))
 
     for s_name in sorted(sample_data.keys()):
+        paired_end = True if len(sample_data[s_name]["Reads"]) > 1 else False
         R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         for cycle in range(len(R1)):
             base_no = cycle + 1
@@ -135,8 +208,8 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
     plot_content = data
 
     pconfig = {
-        "xlab": "cycle",
-        "ylab": "Percentage",
+        "xlab": "Cycle",
+        "ylab": "Percentage of Total Reads",
         "x_lines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "dash"}],
         "colors": color_dict,
         "ymin": 0,
@@ -147,8 +220,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
     plot_name = "Per Cycle Base Content"
     anchor = "base_content"
     description = """
-    Percentage of unidentified bases ("N" bases) by each sequencing cycle.
-    Read 1 and Read 2 are separated by a red dashed line
+    Base composition per sample per cycle. Read 1 and Read 2 are separated by a red dashed line.
     """
     helptext = """
     If a sequencer is unable to make a base call with sufficient confidence then it will
@@ -212,7 +284,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
         "title": "bases2fastq: Per Cycle N Content Percentage",
     }
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
-    plot_name = "Per Cycle N Content"
+    plot_name = "Per Cycle N Content."
     anchor = "n_content"
     description = """
     Percentage of unidentified bases ("N" bases) by each sequencing cycle.
@@ -253,7 +325,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
 
     pconfig = {
         "xlab": "% GC",
-        "ylab": "Percentage",
+        "ylab": "Percentage of reads that are GC",
         "colors": sample_color,
         "id": "gc_hist",
         "title": "bases2fastq: Per Sample GC Content Histogram",
@@ -323,7 +395,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
     pconfig.update({"colors": sample_color})
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
     anchor = "adapter_content"
-    description = "Adapter content per cycle"
+    description = "Adapter content per cycle. Read 1 and Read 2 are separated by a red dashed line."
     helptext = """
     The plot shows a cumulative percentage count of the proportion
     of your library which has seen each of the adapter sequences at each cycle.

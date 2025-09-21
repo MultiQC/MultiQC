@@ -19,8 +19,8 @@ def plot_run_stats(run_data, color_dict):
     yields = dict()
     for run in run_names:
         # Index Assignment Polonies and Yields ###
-        # percent_assigned = run_data[run].get("PercentAssignedReads",100.0)
-        percent_assigned = run_data[run]["PercentAssignedReads"]
+        percent_assigned = run_data[run].get("PercentAssignedReads", 100.0)
+        # percent_assigned = run_data[run]["PercentAssignedReads"]
 
         percent_perfect_assigned = (
             100.00 - run_data[run]["PercentMismatch"]
@@ -42,7 +42,7 @@ def plot_run_stats(run_data, color_dict):
         num_polonies[run] = num_polonies_run
 
         total_yield_run = {}
-        total_yield = run_data[run].get("TotalYield", 300.0)
+        total_yield = run_data[run].get("TotalYield", run_data[run].get("AssignedYield", 300.0))
         total_yield_run["Perfect Index"] = total_yield * percent_perfect_total * 0.01
         total_yield_run["Mismatched Index"] = total_yield * percent_imperfect_total * 0.01
         total_yield_run["Unassigned"] = (
@@ -54,7 +54,7 @@ def plot_run_stats(run_data, color_dict):
     pconfig = {
         "data_labels": [
             {"name": "Number of Polonies", "ylab": "Number of Polonies", "format": "{d}"},
-            {"name": "Yield (Gb)", "ylab": "Gb"},
+            {"name": "Yield (Gb)", "ylab": "Yield"},
         ],
         "cpswitch": True,
         "stacking": "normal",
@@ -69,15 +69,135 @@ def plot_run_stats(run_data, color_dict):
             "Unassigned": {"name": "Unassigned Index", "color": "#434348"},
         }
     ] * 2
-
     plot_name = "Sequencing Run Yield"
     plot_html = bargraph.plot(plot_content, cats, pconfig=pconfig)
     anchor = "run_yield_plot"
     description = "Bar plots of sequencing run yields. Please see individual run reports for details"
     helptext = """
     This section shows and compare the yield and index assignment rate of each sequencing run.\n\n
-       - Number of Polonies: The total number of polonies that are calculated for the run.\n
-       - Yield: The total yield of all assigned reads in gigabases.
+        - Number of Polonies: The total number of polonies that are calculated for the run.\n
+        - Yield: The total yield of all assigned reads in gigabases.
+    """
+    return plot_html, plot_name, anchor, description, helptext, plot_content
+
+
+def _calculate_reads_eliminated(run_data) -> int:
+    """
+    Calculate the total number of reads eliminated during trimming.
+
+    This function iterates over the lanes in the given run data and sums the
+    difference between the number of polonies before trimming and after trimming.
+    If required fields are missing, they are skipped.
+
+    Args:
+        run_data (dict): Dictionary containing sequencing run data with lane information.
+
+    Returns:
+        int: The total number of reads eliminated across all lanes.
+    """
+    reads_eliminated = 0
+    if "Lanes" not in run_data:
+        return reads_eliminated
+    for lane in run_data["Lanes"]:
+        if "NumPolonies" not in lane or "NumPoloniesBeforeTrimming" not in lane:
+            continue
+        reads_eliminated += lane["NumPoloniesBeforeTrimming"] - lane["NumPolonies"]
+    
+    return reads_eliminated
+
+
+def tabulate_project_stats(run_data, color_dict):
+    """
+    Tabulate general information and statistics of each run
+    """
+    plot_content = dict()
+    for s_name in run_data.keys():
+        project = run_data[s_name]["Project"]
+        run_project_name = f"{s_name} | {project}"
+        run_stats = dict()
+        run_stats.update({"num_polonies_run": int(run_data[s_name]["NumPolonies"])})
+        run_stats.update({"yield_run": run_data[s_name]["AssignedYield"]})
+        run_stats.update({"mean_base_quality_run": run_data[s_name]["QualityScoreMean"]})
+        run_stats.update({"percent_q30_run": run_data[s_name]["PercentQ30"]})
+        run_stats.update({"percent_q40_run": run_data[s_name]["PercentQ40"]})
+        run_stats.update({"reads_eliminated": _calculate_reads_eliminated(run_data[s_name])})
+        plot_content.update({run_project_name: run_stats})
+
+    headers = {}
+    headers["num_polonies_run"] = {
+        "title": "# Polonies",
+        "description": "The total number of polonies that are calculated for the run.",
+        "min": 0,
+        "scale": "RdYlGn",
+    }
+    headers["percent_assigned_run"] = {
+        "title": "% Assigned Reads",
+        "description": "The percentage of reads assigned to sample(s)",
+        "max": 100,
+        "min": 0,
+        "scale": "BuPu",
+        "suffix": "%",
+    }
+    headers["yield_run"] = {
+        "title": "Assigned Yield (Gb)",
+        "description": "The run yield based on assigned reads in gigabases",
+        "scale": "Blues",
+    }
+    headers["mean_base_quality_run"] = {
+        "title": "Quality Score Mean",
+        "description": "Average base quality across Read 1 and Read 2",
+        "min": 0,
+        "scale": "Spectral",
+    }
+    headers["percent_q30_run"] = {
+        "title": "Percent Q30",
+        "description": "The percentage of ≥ Q30 Q scores for the project. This includes assigned and unassigned reads and excludes filtered reads and no calls.",
+        "max": 100,
+        "min": 0,
+        "scale": "RdYlGn",
+        "suffix": "%",
+    }
+    headers["percent_q40_run"] = {
+        "title": "Percent Q40",
+        "description": "The percentage of ≥ Q40 Q scores for the project. This includes assigned and unassigned reads and excludes filtered reads and no calls.",
+        "max": 100,
+        "min": 0,
+        "scale": "RdYlGn",
+        "suffix": "%",
+    }
+    headers["reads_eliminated"] = {
+        "title": "Reads Eliminated",
+        "description": "Number of reads eliminated.",
+    }
+
+    pconfig = {
+        "title": "bases2fastq: General Sequencing (Project) QC metrics",
+        "col1_header": "Run Name",
+        "id": "project_run_metrics_table",
+        "ylab": "QC",
+    }
+
+    project_header = ""
+    run_keys = list(run_data.keys())
+    if len(run_keys) > 1:
+        project_header = "(Project) "
+    elif len(run_keys) == 1:
+        first_key = run_keys[0]
+        project_header = f'{run_data[first_key]["Project"]} | '        
+    plot_name = f"{project_header}Sequencing QC Metrics Table"
+    plot_html = table.plot(plot_content, headers, pconfig=pconfig)
+    anchor = "project_run_qc_metrics_table"
+    description = "QC metrics per run, per project"
+    helptext = """
+    This section displays metrics that indicate the quality of each sequencing run: \n
+        - Run Name: Unique identifier composed of (RunName)__(UUID), where (RunName) maps to the AVITI run name and (UUID) maps to the unique Bases2Fastq analysis result.\n
+        - Number of Polonies: The total number of polonies that are calculated for the run.\n
+        - Percentage Assigned Reads: The percentage of reads that are assigned to a sample.\n
+        - Assigned Yield (Gb): The run yield that is based on assigned reads in gigabases.\n
+        - Quality Score Mean: The mean Q score of base calls for the samples. This excludes filtered reads and no calls.\n
+        - Percent Q30: The percentage of ≥ Q30 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
+        - Percent Q40: The percentage of ≥ Q40 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
+        - Reads Eliminated: Number of reads eliminated across lanes.\n
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -91,23 +211,32 @@ def tabulate_run_stats(run_data, color_dict):
         run_stats = dict()
         run_stats.update({"num_polonies_run": int(run_data[s_name]["NumPolonies"])})
         run_stats.update({"percent_assigned_run": run_data[s_name].get("PercentAssignedReads", 100.0)})
+        run_stats.update({"percent_unexpected_index_pairs": run_data[s_name].get("PercentUnexpectedIndexPairs", 0.0)})
         run_stats.update({"yield_run": run_data[s_name]["AssignedYield"]})
         run_stats.update({"mean_base_quality_run": run_data[s_name]["QualityScoreMean"]})
         run_stats.update({"percent_q30_run": run_data[s_name]["PercentQ30"]})
         run_stats.update({"percent_q40_run": run_data[s_name]["PercentQ40"]})
+        run_stats.update({"reads_eliminated": _calculate_reads_eliminated(run_data[s_name])})
         plot_content.update({s_name: run_stats})
 
     headers = {}
     headers["num_polonies_run"] = {
-        "title": f"# Polonies ({config.base_count_prefix})",
-        "description": f"The total number of polonies that are calculated for the run. ({config.base_count_desc})",
+        "title": "# Polonies",
+        "description": "The total number of polonies that are calculated for the run.)",
         "min": 0,
         "scale": "RdYlGn",
-        "shared_key": "base_count",
     }
     headers["percent_assigned_run"] = {
         "title": "% Assigned Reads",
         "description": "The percentage of reads assigned to sample(s)",
+        "max": 100,
+        "min": 0,
+        "scale": "BuPu",
+        "suffix": "%",
+    }
+    headers["percent_unexpected_index_pairs"] = {
+        "title": "% Unexpected Index Pairs",
+        "description": "The percentage of unexpected index pairs",
         "max": 100,
         "min": 0,
         "scale": "BuPu",
@@ -140,9 +269,13 @@ def tabulate_run_stats(run_data, color_dict):
         "scale": "RdYlGn",
         "suffix": "%",
     }
+    headers["reads_eliminated"] = {
+        "title": "Reads Eliminated",
+        "description": "Number of reads eliminated.",
+    }
 
     pconfig = {
-        "title": "bases2fastq: General Sequencing Run QC metrics",
+        "title": "Bases2Fastq: General Sequencing Run QC metrics",
         "col1_header": "Run Name",
         "id": "run_metrics_table",
         "ylab": "QC",
@@ -161,6 +294,49 @@ def tabulate_run_stats(run_data, color_dict):
        - Quality Score Mean: The mean Q score of base calls for the samples. This excludes filtered reads and no calls.\n
        - Percent Q30: The percentage of ≥ Q30 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
        - Percent Q40: The percentage of ≥ Q40 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
+       - Reads Eliminated: Number of reads eliminated across lanes.\n
+    """
+    return plot_html, plot_name, anchor, description, helptext, plot_content
+
+
+def plot_lane_cycle_stats(run_data, color_dict):
+    """
+    Plot number of cycles per read and lane
+    """
+    plot_content = dict()
+    for s_name in run_data.keys():
+        if "Lanes" not in run_data[s_name]:
+            continue
+        for lane in run_data[s_name]["Lanes"]:
+            if "Lane" not in lane or "Reads" not in lane:
+                continue
+            lane_stats = dict()
+            lane_name = f'L{lane["Lane"]}'
+            run_name = f"{s_name} | {lane_name}"
+            lane_stats[run_name] = {}
+            for read in lane["Reads"]:
+                if "Cycles" not in read or "Read" not in read:
+                    continue
+                read_name = read["Read"]
+                num_cycles = len(read["Cycles"])
+                lane_stats[run_name][read_name] = num_cycles
+            plot_content.update(lane_stats)
+
+    pconfig = {
+        "title": "Bases2Fastq: Cycles Per Read Per Lane",
+        "id": "project_cycles_per_read_per_lane",
+        "ylab": "Read Cycles",
+        "cpswitch": False,
+        "subtitle": None,
+    }
+
+    plot_name = "Cycles Per Read Per Lane"
+    plot_html = bargraph.plot(plot_content, pconfig=pconfig)
+    anchor = "cycles_per_read_per_lane"
+    description = "Number of sequencing cycles per read in each lane."
+    helptext = """
+    Shows the number of cycles used for each read in every flowcell lane. 
+    Useful for confirming that read lengths match the expected sequencing setup across all lanes.
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -206,15 +382,15 @@ def plot_base_quality_hist(run_data, color_dict):
                 "description": "Histogram of bases quality",
                 "ymin": 0,
                 "ylabel": "Percentage of base quality",
-                "xlabel": "base quality",
+                "xlab": "Q Score",
                 "colors": color_dict,
             },
             {
-                "name": "Qualiter Per Read",
+                "name": "Quality Per Read",
                 "description": "Histogram of average read base quality",
                 "ymin": 0,
                 "ylabel": "Percentage of read quality",
-                "xlabel": "base quality",
+                "xlab": "Q Score",
                 "colors": color_dict,
             },
         ],
@@ -332,7 +508,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     pconfig = {
         "data_labels": [
             {"name": "Median Quality", "xlab": "cycle", "ylab": "Quality"},
-            {"name": "Mean Quality", "ylab": "Quality"},
+            {"name": "Mean Quality", "xlab": "cycle", "ylab": "Quality"},
             {"name": "%Q30", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
             {"name": "%Q40", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
             {"name": "%Base Calls Below PF", "xlab": "cycle", "ylab": "Percentage", "ymax": 100},
@@ -347,7 +523,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
     plot_name = "Quality Metrics By Cycle"
     anchor = "per_cycle_quality"
-    description = "Per run base qualities by cycle"
+    description = "Per run base qualities by cycle. Read 1 and Read 2 are separated by a red dashed line."
     helptext = """
     This section plots the base qualities by each instrument cycle.\n
     Choose between Median Quality, Mean Quality, Percent Q30 or Percentage Q40 per cycle.\n

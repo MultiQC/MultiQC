@@ -43,6 +43,10 @@ bases2fastq/project:
   fn: "*_RunStats.json"
   contents: "SampleStats"
   num_lines: 100
+bases2fastq/manifest:
+  fn: "RunManifest.json"
+  contents: "Settings"
+  num_lines: 100
 bbduk:
   contents: "Executing jgi.BBDuk"
   num_lines: 2
