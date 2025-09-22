@@ -2,7 +2,7 @@
 title: PURPLE
 displayed_sidebar: multiqcSidebar
 description: >
-  A purity, ploidy and copy number estimator for whole genome tumor data
+  <p>A purity, ploidy and copy number estimator for whole genome tumor data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/purple/purple.py
 -->
 
 :::note
-A purity, ploidy and copy number estimator for whole genome tumor data
+
+<p>A purity, ploidy and copy number estimator for whole genome tumor data.</p>
 
 [https://github.com/hartwigmedical/hmftools/](https://github.com/hartwigmedical/hmftools/)
 :::

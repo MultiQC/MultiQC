@@ -298,7 +298,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "id": "bclconvert_lane_counts",
                     "title": "bclconvert: Clusters by lane",
                     "ylab": "Number of clusters",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                 },
             ),
         )
@@ -341,7 +341,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig={
                     "id": "bclconvert_sample_counts",
                     "title": "bclconvert: Clusters by sample",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ylab": "Number of clusters",
                     "data_labels": ["Index mismatches", "Counts per lane"],
                 },

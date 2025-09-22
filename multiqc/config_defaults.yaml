@@ -66,7 +66,7 @@ make_pdf: false
 # AI settings:
 ai_summary: false
 ai_summary_full: false
-ai_provider: null
+ai_provider: seqera
 ai_model: null
 ai_custom_endpoint: null
 ai_auth_type: null
@@ -409,8 +409,7 @@ fn_clean_trim:
   - ".tar"
   - "runs_"
 
-# Files to ignore when indexing files.
-# Grep file match patterns.
+# Files to ignore when checking content with "content" and "content_re" search patterns.
 fn_ignore_files:
   - ".DS_Store"
   - ".py[cod]"
@@ -578,6 +577,7 @@ module_order:
   - skewer
   - sortmerna
   - biobloomtools
+  - seqfu
   - fastq_screen
   - afterqc
   - fastp

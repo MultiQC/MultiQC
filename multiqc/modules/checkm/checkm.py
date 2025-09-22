@@ -46,6 +46,29 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.mag_quality_table(data_by_sample)
 
+        # Add important columns to general table
+        headers = {
+            "Completeness": {
+                "title": "Completeness",
+                "description": "Estimated completeness of genome as determined from the presence/absence of marker genes and the expected collocalization of these genes",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Purples",
+                "format": "{:,.2f}",
+            },
+            "Contamination": {
+                "title": "Contamination",
+                "description": "Estimated contamination of genome as determined by the presence of multi-copy marker genes and the expected collocalization of these genes",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Reds",
+                "format": "{:,.2f}",
+            },
+        }
+        self.general_stats_addcols(data_by_sample, headers)
+
     def parse_file(self, f, data_by_sample):
         """Parses the file from `checkm qa`.
         Outputs from this command can come in several formats and with spaces or tabs.

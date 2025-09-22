@@ -21,8 +21,8 @@ const AI_PROVIDERS = {
   },
   openai: {
     name: "OpenAI",
-    defaultModel: "gpt-4o",
-    suggestedModels: ["gpt-4o", "gpt-4.1"],
+    defaultModel: "gpt-5",
+    suggestedModels: ["gpt-5"],
     apiKeysUrl: "https://platform.openai.com/api-keys",
     modelsUrl: "https://platform.openai.com/docs/models",
   },
@@ -792,13 +792,26 @@ $(function () {
   if (!has_rename_filters && mqc_config.sample_names_rename && mqc_config.sample_names_rename.length > 0) {
     let mqc_renamesamples_idx = 300;
 
-    // Add each pattern
+    // Check which button is initially active to determine which column to use
+    const activeButton = $(".mqc_sname_switches.active");
+    let activeIndex = 0;
+    if (activeButton.length > 0) {
+      activeIndex = parseInt(activeButton.data("index")) || 0;
+    }
+
+    // If index 0 is active, don't apply any rename filters (show original names)
+    if (activeIndex === 0) {
+      // Don't add any filters, just return
+      return;
+    }
+
+    // For other indices, add rename patterns using the correct column
     for (let i = 0; i < mqc_config.sample_names_rename.length; i++) {
       const pattern = mqc_config.sample_names_rename[i];
-      if (!Array.isArray(pattern) || pattern.length < 2) continue;
+      if (!Array.isArray(pattern) || pattern.length <= activeIndex) continue;
 
       const from_text = pattern[0];
-      const to_text = pattern[1];
+      const to_text = pattern[activeIndex];
 
       // Add to the filters list
       $("#mqc_renamesamples_filters").append(
@@ -1601,7 +1614,7 @@ function updatePanel(providerId) {
     }
     // Doing it here again because model depends on provider
     const storedModel = getStoredModelName(providerId);
-    const defaultModel = provider.defaultModel;
+    const defaultModel = provider && provider.defaultModel ? provider.defaultModel : null;
     $("#ai-model").val(storedModel || defaultModel);
 
     if (providerId === "openai") {
@@ -1639,14 +1652,15 @@ $(function () {
   });
 
   // Set initial values from storage or values from Python
-  const providerId = getStoredProvider() || aiConfigProviderId || "seqera";
+  let providerId = getStoredProvider() || aiConfigProviderId;
+  if (!providerId || providerId === "None") providerId = "seqera";
   aiProviderSelect.val(providerId);
   const provider = AI_PROVIDERS[providerId];
   $("#ai-api-key").val(getStoredApiKey(providerId) || "");
 
   let model = getStoredModelName(providerId);
   if (model === null && aiConfigModel !== "None") model = aiConfigModel;
-  if (model === null && provider.defaultModel) model = provider.defaultModel;
+  if (model === null && provider && provider.defaultModel) model = provider.defaultModel;
   $("#ai-model").val(model);
 
   let endpoint = getStoredEndpoint();

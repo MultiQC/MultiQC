@@ -2,7 +2,7 @@
 title: Samtools
 displayed_sidebar: multiqcSidebar
 description: >
-  Toolkit for interacting with BAM/CRAM files.
+  <p>Toolkit for interacting with BAM/CRAM files.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/samtools/samtools.py
 -->
 
 :::note
-Toolkit for interacting with BAM/CRAM files.
+
+<p>Toolkit for interacting with BAM/CRAM files.</p>
 
 [http://www.htslib.org](http://www.htslib.org)
 :::

@@ -1,6 +1,6 @@
 import sys
 import tempfile
-from typing import Dict
+from typing import Dict, List, Union
 from unittest.mock import patch
 
 import pytest
@@ -13,6 +13,29 @@ from multiqc.plots.plot import Plot, process_batch_exports
 from multiqc.plots.table_object import ColumnDict
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
+
+
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state during tests that modify global config."""
+    original_boxplot_boxpoints = config.boxplot_boxpoints
+    original_box_min_threshold_no_points = config.box_min_threshold_no_points
+    original_box_min_threshold_outliers = config.box_min_threshold_outliers
+    original_development = config.development
+    original_export_plots = config.export_plots
+    original_export_plot_formats = getattr(config, "export_plot_formats", None)
+    original_strict = config.strict
+    yield
+    config.boxplot_boxpoints = original_boxplot_boxpoints
+    config.box_min_threshold_no_points = original_box_min_threshold_no_points
+    config.box_min_threshold_outliers = original_box_min_threshold_outliers
+    config.development = original_development
+    config.export_plots = original_export_plots
+    if original_export_plot_formats is not None:
+        config.export_plot_formats = original_export_plot_formats
+    elif hasattr(config, "export_plot_formats"):
+        delattr(config, "export_plot_formats")
+    config.strict = original_strict
 
 
 def _verify_rendered(plot) -> Plot:
@@ -164,7 +187,7 @@ def test_boxplot_dynamic_boxpoints():
     config.box_min_threshold_no_points = 10
     config.box_min_threshold_outliers = 5
 
-    data_few = {
+    data_few: Dict[str, List[Union[int, float]]] = {
         "Sample1": [1.0, 2.0, 3.0, 4.0, 5.0],
         "Sample2": [2.0, 3.0, 4.0, 5.0, 6.0],
     }
@@ -183,7 +206,7 @@ def test_boxplot_dynamic_boxpoints():
     report.reset()
 
     # Test with many samples (should show only outliers)
-    data_many = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(10)}
+    data_many: Dict[str, List[Union[int, float]]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(10)}
 
     plot_many = _verify_rendered(
         box.plot(
@@ -199,7 +222,7 @@ def test_boxplot_dynamic_boxpoints():
     report.reset()
 
     # Test with very many samples (should show no points)
-    data_very_many = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(15)}
+    data_very_many: Dict[str, List[Union[int, float]]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(15)}
 
     plot_very_many = _verify_rendered(
         box.plot(

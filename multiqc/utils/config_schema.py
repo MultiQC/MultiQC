@@ -244,7 +244,7 @@ class MultiQCConfig(BaseModel):
     no_version_check: Optional[bool] = Field(None, description="No version check")
     log_filesize_limit: Optional[int] = Field(None, description="Log filesize limit")
     filesearch_lines_limit: Optional[int] = Field(None, description="Filesearch lines limit")
-    report_readerrors: Optional[int] = Field(None, description="Report read errors")
+    report_readerrors: Optional[bool] = Field(None, description="Report read errors")
     skip_generalstats: Optional[bool] = Field(None, description="Skip generalstats")
     skip_versions_section: Optional[bool] = Field(None, description="Skip versions section")
     disable_version_detection: Optional[bool] = Field(None, description="Disable version detection")

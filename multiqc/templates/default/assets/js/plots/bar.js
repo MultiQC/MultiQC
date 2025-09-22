@@ -2,6 +2,7 @@ class BarPlot extends Plot {
   constructor(dump) {
     super(dump);
     this.filteredSettings = [];
+    this.clusterSwitchClusteredActive = dump["cluster_switch_clustered_active"];
   }
 
   activeDatasetSize() {
@@ -13,8 +14,13 @@ class BarPlot extends Plot {
 
   prepData(dataset) {
     dataset = dataset ?? this.datasets[this.activeDatasetIdx];
-    let cats = dataset["cats"];
-    let samples = dataset["samples"];
+    // Use clustered data if clustering is active and available
+    let cats =
+      this.clusterSwitchClusteredActive && dataset["cats_clustered"] ? dataset["cats_clustered"] : dataset["cats"];
+    let samples =
+      this.clusterSwitchClusteredActive && dataset["samples_clustered"]
+        ? dataset["samples_clustered"]
+        : dataset["samples"];
 
     let samplesSettings = applyToolboxSettings(samples);
 
@@ -161,3 +167,27 @@ class BarPlot extends Plot {
     return csv;
   }
 }
+
+$(function () {
+  // Listener for bar plot clustering toggle - similar to heatmap clustering
+  $('button[data-action="unclustered"], button[data-action="clustered"]').on("click", function (e) {
+    e.preventDefault();
+    let $btn = $(this);
+    let plotAnchor = $(this).data("plot-anchor");
+    let plot = mqc_plots[plotAnchor];
+
+    // Only proceed if this is a bar plot
+    if (!plot || !(plot instanceof BarPlot)) {
+      return;
+    }
+
+    // Toggle buttons
+    $btn.toggleClass("active").siblings().toggleClass("active");
+
+    // Update plot state
+    plot.clusterSwitchClusteredActive = $btn.data("action") === "clustered";
+
+    // Re-render plot
+    renderPlot(plotAnchor);
+  });
+});

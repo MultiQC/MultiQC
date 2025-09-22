@@ -297,10 +297,10 @@ def star_genecounts_chart(genecounts_unstranded, genecounts_first_strand, geneco
     # Specify the order of the different possible categories
     keys = {
         "N_genes": {"color": "#2f7ed8", "name": "Overlapping Genes"},
-        "N_noFeature": {"color": "#0d233a", "name": "No Feature"},
-        "N_ambiguous": {"color": "#492970", "name": "Ambiguous Features"},
+        "N_noFeature": {"color": "#00468B", "name": "No Feature"},
+        "N_ambiguous": {"color": "#925E9F", "name": "Ambiguous Features"},
         "N_multimapping": {"color": "#f28f43", "name": "Multimapping"},
-        "N_unmapped": {"color": "#7f0000", "name": "Unmapped"},
+        "N_unmapped": {"color": "#AD002A", "name": "Unmapped"},
     }
 
     # Config for the plot
@@ -328,8 +328,8 @@ def star_alignment_chart(data_by_sample):
         "multimapped": {"color": "#7cb5ec", "name": "Mapped to multiple loci"},
         "multimapped_toomany": {"color": "#f7a35c", "name": "Mapped to too many loci"},
         "unmapped_mismatches": {"color": "#e63491", "name": "Unmapped: too many mismatches"},
-        "unmapped_tooshort": {"color": "#b1084c", "name": "Unmapped: too short"},
-        "unmapped_other": {"color": "#7f0000", "name": "Unmapped: other"},
+        "unmapped_tooshort": {"color": "#AD002A", "name": "Unmapped: too short"},
+        "unmapped_other": {"color": "#925E9F", "name": "Unmapped: other"},
     }
 
     # Config for the plot

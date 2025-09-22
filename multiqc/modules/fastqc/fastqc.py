@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
     :::
 
     You can customise the patterns used for finding these files in your
-    MultiQC config (see [Module search patterns](#module-search-patterns)).
+    MultiQC config (see [Module search patterns](https://docs.seqera.io/multiqc/getting_started/config#module-search-patterns)).
     The below code shows the default file patterns:
 
     ```yaml
@@ -169,7 +169,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     Remember that it is possible to customise the order in which the different module sections appear
     in the report if you wish.
-    See [the docs](https://docs.seqera.io/multiqc/#order-of-module-and-module-subsection-output) for more information.
+    See [the docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output)
+    for more information.
 
     For example, to show the _Status Checks_ section at the top, use the following config:
 

@@ -57,6 +57,8 @@ class Series(ValidatedConfig, Generic[KeyT, ValT]):
     dash: Optional[str] = None
     showlegend: bool = True
     marker: Optional[Marker] = None
+    # Store additional trace parameters that should be passed to Plotly
+    extra_trace_params: Dict[str, Any] = Field(default_factory=dict)
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         path_in_cfg = path_in_cfg or ("Series",)
@@ -74,6 +76,15 @@ class Series(ValidatedConfig, Generic[KeyT, ValT]):
             else:
                 tuples.append(p)
         data["pairs"] = tuples
+
+        # Extract extra trace parameters (fields not in the main model)
+        main_fields = {"name", "pairs", "color", "width", "dash", "showlegend", "marker", "extra_trace_params"}
+        extra_params = {k: v for k, v in data.items() if k not in main_fields}
+        if extra_params:
+            data["extra_trace_params"] = extra_params
+            # Remove extra params from data to avoid validation errors
+            for k in extra_params:
+                data.pop(k)
 
         super().__init__(**data, path_in_cfg=path_in_cfg)
 
@@ -104,8 +115,11 @@ class LinePlotConfig(PConfig):
     smooth_points_sumcounts: Union[bool, List[bool], None] = None
     extra_series: Optional[Union[Series, List[Series], List[List[Series]]]] = None
     style: Optional[Literal["lines", "lines+markers"]] = None
-    hide_empty: bool = Field(True, deprecated="hide_empty")
+    hide_empty: bool = Field(True)
     colors: Dict[str, str] = {}
+    dash_styles: Dict[str, str] = {}
+    hovertemplates: Dict[str, str] = {}
+    legend_groups: Dict[str, str] = {}
 
     @classmethod
     def parse_extra_series(
@@ -223,6 +237,8 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
                     },
                 }
             params = update_dict(params, self.trace_params, none_only=True)
+            # Add extra trace parameters from series
+            params = update_dict(params, series.extra_trace_params, none_only=True)
             if len(series.pairs) == 1:
                 params["mode"] = "lines+markers"  # otherwise it's invisible
 
@@ -693,6 +709,9 @@ def _make_series_dict(
     xmax = pconfig.xmax
     xmin = pconfig.xmin
     colors = pconfig.colors
+    dash_styles = pconfig.dash_styles
+    hovertemplates = pconfig.hovertemplates
+    legend_groups = pconfig.legend_groups
     if data_label:
         if isinstance(data_label, dict):
             _x_are_categories = data_label.get("categories", x_are_categories)
@@ -713,6 +732,15 @@ def _make_series_dict(
             _colors = data_label.get("colors")
             if _colors and isinstance(_colors, dict):
                 colors = {**colors, **cast(Dict[str, str], _colors)}
+            _dash_styles = data_label.get("dash_styles")
+            if _dash_styles and isinstance(_dash_styles, dict):
+                dash_styles = {**dash_styles, **cast(Dict[str, str], _dash_styles)}
+            _hovertemplates = data_label.get("hovertemplates")
+            if _hovertemplates and isinstance(_hovertemplates, dict):
+                hovertemplates = {**hovertemplates, **cast(Dict[str, str], _hovertemplates)}
+            _legend_groups = data_label.get("legend_groups")
+            if _legend_groups and isinstance(_legend_groups, dict):
+                legend_groups = {**legend_groups, **cast(Dict[str, str], _legend_groups)}
 
     xs = [x for x in y_by_x.keys()]
     if not x_are_categories:
@@ -761,7 +789,24 @@ def _make_series_dict(
     if pconfig.smooth_points is not None:
         pairs = smooth_array(pairs, pconfig.smooth_points)
 
-    return Series(name=s, pairs=pairs, color=colors.get(s), path_in_cfg=("lineplot", "pconfig", "pairs"))
+    # Prepare extra trace parameters for hovertemplate and legendgroup
+    extra_trace_params = {}
+    hovertemplate = hovertemplates.get(s)
+    if hovertemplate:
+        extra_trace_params["hovertemplate"] = hovertemplate
+
+    legendgroup = legend_groups.get(s)
+    if legendgroup:
+        extra_trace_params["legendgroup"] = legendgroup
+
+    return Series(
+        name=s,
+        pairs=pairs,
+        color=colors.get(s),
+        dash=dash_styles.get(s),
+        extra_trace_params=extra_trace_params,
+        path_in_cfg=("lineplot", "pconfig", "pairs"),
+    )
 
 
 def smooth_line_data(data_by_sample: DatasetT[KeyT, ValT], numpoints: int) -> Dict[SampleName, Dict[KeyT, ValT]]:
