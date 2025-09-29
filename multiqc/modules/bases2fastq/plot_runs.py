@@ -462,12 +462,12 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
     }
 
     pconfig = {
-        "title": "Bases2Fastq: Unassiged Indices Metrics",
+        "title": "Bases2Fastq: Unassigned Indices Metrics",
         "col1_header": "Index #",
         "id": "index_unassignment_metrics",
     }
 
-    plot_name = "Unassiged Indices Metrics"
+    plot_name = "Unassigned Indices Metrics"
     plot_html = table.plot(run_data, headers, pconfig=pconfig)
     anchor = "index_unassignment_metrics"
     description = "Index unassignment metrics."
