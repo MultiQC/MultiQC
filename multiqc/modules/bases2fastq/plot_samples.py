@@ -1,6 +1,8 @@
 from multiqc.plots import bargraph, linegraph, table
 from multiqc import config
 
+import numpy as np
+
 """
 Functions for plotting per sample information of bases2fastq
 """
@@ -125,6 +127,49 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         - Percent Q40: The percentage of ≥ Q40 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls.\n
         - Reads Eliminated: Number of reads eliminated across lanes.\n
         - Percent Mismatch: Percent Mismatch.\n
+    """
+    return plot_html, plot_name, anchor, description, helptext, plot_content
+
+
+def plot_sample_assignment_histogram(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
+    """
+    Plot number of cycles per read and lane
+    """
+    plot_content = dict()
+    polony_assignments = []
+    for s_name in sample_data.keys():
+        polonies = sample_data[s_name].get("NumPolonies")
+        if polonies:
+            polony_assignments.append(polonies)
+    
+    bins = 100
+    for bins in [100, 50, 20, 10]:
+        if len(polony_assignments) > bins:
+            break
+
+    hist, bin_edges = np.histogram(polony_assignments, bins=bins)
+    bin_ranges = [f"({bin_edges[i]}, {bin_edges[i+1]})" for i in range(len(bin_edges)-1)]
+
+    for range_data, frequency in zip(bin_ranges, hist):
+        plot_content[range_data] = {}
+        plot_content[range_data]["Assigned Polonies"] = float(frequency)
+
+    pconfig = {
+        "title": "Bases2Fastq: Sample Polony Assignment Histogram",
+        "id": "sample_assignment_hist",
+        "ylab": "Number of Samples",
+        "xlab": "Range Assigned Polonies",
+        "cpswitch": False,
+        "subtitle": None,
+    }
+
+    plot_name = "Sample Polony Assignment Histogram"
+    plot_html = bargraph.plot(plot_content, pconfig=pconfig)
+    anchor = "sample_assignment_hist"
+    description = "Average read length per read for all samples."
+    helptext = """
+    Shows the number of cycles used for each read in every flowcell lane. 
+    Useful for confirming that read lengths match the expected sequencing setup across all lanes.
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -324,8 +369,8 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
     plot_content = gc_hist_dict
 
     pconfig = {
-        "xlab": "% GC",
-        "ylab": "Percentage of reads that are GC",
+        "xlab": "GC Content (%)",
+        "ylab": "Percentage of reads that have GC (%)",
         "colors": sample_color,
         "id": "gc_hist",
         "title": "bases2fastq: Per Sample GC Content Histogram",

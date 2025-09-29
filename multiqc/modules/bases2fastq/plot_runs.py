@@ -2,7 +2,7 @@ import math
 
 from multiqc.plots import bargraph, linegraph, table
 from multiqc import config
-
+from natsort import natsorted
 
 """
 Functions for plotting per run information of bases2fastq
@@ -297,6 +297,190 @@ def tabulate_run_stats(run_data, color_dict):
        - Reads Eliminated: Number of reads eliminated across lanes.\n
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
+
+
+def tabulate_manifest_stats(run_data, color_dict):
+    """
+    Tabulate general information and statistics of each run
+    """
+    plot_content = dict()
+    for s_name in run_data.keys():
+        run_stats = dict()
+        run_stats.update({"indexing": run_data[s_name]["Indexing"]})
+        run_stats.update({"adapter_trim_type": run_data[s_name]["AdapterTrimType"]})
+        run_stats.update({"min_read_length_r1": run_data[s_name]["R1AdapterMinimumTrimmedLength"]})
+        run_stats.update({"min_read_length_r2": run_data[s_name]["R2AdapterMinimumTrimmedLength"]})
+        plot_content.update({s_name: run_stats})
+
+    headers = {}
+    headers["indexing"] = {
+        "title": "Indexing",
+        "description": "Indexing scheme.",
+        "scale": "RdYlGn",
+    }
+    headers["adapter_trim_type"] = {
+        "title": "Adapter Trim Type",
+        "description": "Adapter trimming method.",
+    }
+    headers["min_read_length_r1"] = {
+        "title": "Minimum Read Length R1",
+        "description": "Minimum read length for read R1.",
+        "scale": "RdYlGn",
+    }
+    headers["min_read_length_r2"] = {
+        "title": "Minimum Read Length R2",
+        "description": "Minimum read length for read R1 (if applicable).",
+        "scale": "RdYlGn",
+    }
+
+    pconfig = {
+        "title": "Bases2Fastq: Run Manifest Metrics",
+        "col1_header": "Run Name | Lane",
+        "id": "run_manifest_metrics",
+    }
+
+    plot_name = "Run Manifest Table"
+    plot_html = table.plot(plot_content, headers, pconfig=pconfig)
+    anchor = "run_manifest_metrics_table"
+    description = "Run parameters used."
+    helptext = """
+    This section displays metrics that indicate the parameters used in the run: \n
+        - Run Name | Lane: Unique identifier composed of (RunName)__(UUID) | (Lane), where (RunName) maps to the AVITI run name and (UUID) maps to the unique Bases2Fastq analysis result.\n
+        - Indexing: Describes the indexing scheme.\n
+        - Adapter Trim Type: Adapter trimming method.\n
+        - Minimum Read Length R1/R2: Minumum read length after adapter trimming.\n
+    """
+    return plot_html, plot_name, anchor, description, helptext, plot_content
+
+
+def tabulate_index_assignment_stats(run_data, color_dict):
+    """
+    Tabulate general information and statistics of each run
+    """
+    plot_content = dict()
+    sorted_run_data = natsorted(run_data.items(), key=lambda x: x[1]["SampleID"])
+    for index, sample_data in enumerate(sorted_run_data, start=1):
+        sample_data = sample_data[1]
+        sample_index_stats = dict()
+        sample_index_stats.update({"sample_name": sample_data["SampleID"]})
+        sample_index_stats.update({"index_1": sample_data["Index1"]})
+        sample_index_stats.update({"index_2": sample_data["Index2"]})
+        sample_index_stats.update({"polonies": sample_data["SamplePolonyCounts"]})
+        sample_index_stats.update({"polony_percentage": sample_data["PercentOfPolonies"]})
+        plot_content.update({index: sample_index_stats})
+
+    headers = {}
+    headers["sample_name"] = {
+        "title": "Sample Name",
+        "description": "Sample Name (RunID + Sample ID).",
+    }
+    headers["index_1"] = {
+        "title": "Index 1",
+        "description": "Sample Index 1 (I1).",
+    }
+    headers["index_2"] = {
+        "title": "Index 2",
+        "description": "Sample Index 2 (I2).",
+    }
+    headers["polonies"] = {
+        "title": "Polonies",
+        "description": "Number of polonies assigned to sample.",
+        "scale": "RdYlGn",
+    }
+    headers["polony_percentage"] = {
+        "title": "Polony %",
+        "description": "Percentage of total polonies assigned to this index combination.",
+        "max": 100,
+        "min": 0,
+        "scale": "RdYlGn",
+        "suffix": "%",
+    }
+
+    pconfig = {
+        "title": "Bases2Fastq: Index Assignment Metrics",
+        "col1_header": "Sample #",
+        "id": "index_assignment_metrics",
+    }
+
+    plot_name = "Index Assignment Metrics"
+    plot_html = table.plot(plot_content, headers, pconfig=pconfig)
+    anchor = "index_assignment_metrics"
+    description = "Index assignment metrics."
+    helptext = """
+    This section displays index assignment metrics including: \n
+        - Sample Name: Sample identifier combining RunID and SampleID.\n
+        - Index 1: Sample I1.\n
+        - Index 2: Sample I2.\n
+        - Polonies: Number of polonies assigned each sample.\n
+        - Polony %: Percentage of total run's polonies assigned to each sample.\n
+    """
+    return plot_html, plot_name, anchor, description, helptext, plot_content
+
+
+def tabulate_unassigned_index_stats(run_data, color_dict):
+    """
+    Tabulate unassigned index metrics.
+
+    run_data: Dictionary with unassigned index data including:
+        - RunName
+        - Lane
+        - I1
+        - I2
+        - Polonies
+        - % Polonies
+    """
+
+    headers = {}
+    headers["Run Name"] = {
+        "title": "Run Name",
+        "description": "Run Name (Run ID + Analysis ID).",
+    }
+    headers["Lane"] = {
+        "title": "Lane",
+        "description": "Index Lane.",
+    }
+    headers["I1"] = {
+        "title": "I1",
+        "description": "Index 1.",
+    }
+    headers["I2"] = {
+        "title": "I2",
+        "description": "Index 2.",
+    }
+    headers["Polonies"] = {
+        "title": "Polonies",
+        "description": "Number of polonies assigned to indices.",
+        "scale": "GnYlRd",
+    }
+    headers["% Polonies"] = {
+        "title": "% Polonies",
+        "description": "Percentage of total polonies assigned to this index combination.",
+        "max": 100,
+        "min": 0,
+        "scale": "GnYlRd",
+        "suffix": "%",
+    }
+
+    pconfig = {
+        "title": "Bases2Fastq: Unassiged Indices Metrics",
+        "col1_header": "Index #",
+        "id": "index_unassignment_metrics",
+    }
+
+    plot_name = "Unassiged Indices Metrics"
+    plot_html = table.plot(run_data, headers, pconfig=pconfig)
+    anchor = "index_unassignment_metrics"
+    description = "Index unassignment metrics."
+    helptext = """
+    This section displays index assignment metrics including: \n
+        - Run Name: Run identifier. Built from Run ID and Analysis ID.\n
+        - Lane: Lane number.\n
+        - Index 1: Sample I1.\n
+        - Index 2: Sample I2.\n
+        - Polonies: Number of polonies assigned each index combination.\n
+        - Polony %: Percentage of total run's polonies assigned to each index combination.\n
+    """
+    return plot_html, plot_name, anchor, description, helptext, run_data
 
 
 def plot_lane_cycle_stats(run_data, color_dict):
