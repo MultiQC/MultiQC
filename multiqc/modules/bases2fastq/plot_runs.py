@@ -344,12 +344,12 @@ def tabulate_manifest_stats(run_data, color_dict):
     pconfig = {
         "title": "Bases2Fastq: Run Manifest Metrics",
         "col1_header": "Run Name | Lane",
-        "id": f"run_manifest_metrics_table_{random_id}",
+        # "id": f"run_manifest_metrics_table_{random_id}",
     }
 
     plot_name = "Run Manifest Table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
-    anchor = f"run_manifest_metrics_table_{random_id}"
+    anchor = f"run_manifest_metrics_table"
     description = "Run parameters used."
     helptext = """
     This section displays metrics that indicate the parameters used in the run: \n
