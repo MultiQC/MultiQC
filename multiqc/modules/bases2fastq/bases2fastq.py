@@ -160,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             error_msg = "No run- or project-level data was retained. No report will be generated."
             log.error(error_msg)
-            return
+            raise ModuleNoSamplesFound(error_msg)
 
         # Create run and project groups
         run_groups = defaultdict(list)
