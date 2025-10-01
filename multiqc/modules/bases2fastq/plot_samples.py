@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from multiqc.plots import bargraph, linegraph, table
 from multiqc import config
 
@@ -146,7 +147,7 @@ def plot_sample_assignment_histogram(sample_data, group_lookup_dict, project_loo
         polonies = data["NumPolonies"]
         polony_assignments[run_name].append(polonies)
 
-    pconfig = {"data_labels": []}
+    pconfig: Dict[str, Any] = {"data_labels": []}
     for run_name, assignment_data in polony_assignments.items():
         run_data = {}
         bins = 50
@@ -167,14 +168,14 @@ def plot_sample_assignment_histogram(sample_data, group_lookup_dict, project_loo
             }
         )
 
-    pconfig = pconfig | {
+    pconfig.update({
         "id": "sample_assignment_hist",
         "title": "bases2fastq: Sample Polony Assignment Histogram",
         "style": "lines+markers",
         "xlab": "Assigned Polonies (Range)",
         "ylab": "Number of Samples with N Polonies Assigned",
         "categories": True,
-    }
+    })
 
     plot_name = "Sample Polony Assignment Histogram"
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
@@ -242,7 +243,7 @@ def plot_sample_read_length(sample_data, group_lookup_dict, project_lookup_dict,
                     read_lengths[run_name][read_id] = []
                 read_lengths[run_name][read_id].append(read["MeanReadLength"])
 
-        pconfig = {"data_labels": []}
+        pconfig: Dict[str, Any] = {"data_labels": []}
         for run_name, read_data in read_lengths.items():
             run_data = {}
             for read_name, read_lengths in read_data.items():
@@ -266,14 +267,14 @@ def plot_sample_read_length(sample_data, group_lookup_dict, project_lookup_dict,
                 }
             )
 
-        pconfig = pconfig | {
+        pconfig.update({
             "id": "mean_read_length_per_sample",
             "title": "bases2fastq: Mean Read Length Per Sample",
             "style": "lines+markers",
             "xlab": "Average Read Length (Range)",
             "ylab": "Samples with Average Read Length",
             "categories": True,
-        }
+        })
 
         plot_html = linegraph.plot(plot_content, pconfig=pconfig)
         description = "Distribution of average read lengths for all samples."
