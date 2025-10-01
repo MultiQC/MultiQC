@@ -64,7 +64,7 @@ def plot_run_stats(run_data, color_dict):
         ],
         "cpswitch": True,
         "stacking": "normal",
-        "id": generate_random_string(10),
+        "id": f"run_metrics_bar_{generate_random_string(10)}",
         "title": "bases2fastq: General Sequencing Run QC metrics plot",
         "ylab": "QC",
     }
@@ -456,14 +456,14 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
     headers["Polonies"] = {
         "title": "Polonies",
         "description": "Number of polonies assigned to indices.",
-        "scale": "GnYlRd",
+        "scale": "RdYlGn_r",
     }
     headers["% Polonies"] = {
         "title": "% Polonies",
         "description": "Percentage of total polonies assigned to this index combination.",
         "max": 100,
         "min": 0,
-        "scale": "GnYlRd",
+        "scale": "RdYlGn_r",
         "suffix": "%",
     }
 
