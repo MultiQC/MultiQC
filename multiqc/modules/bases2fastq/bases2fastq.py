@@ -175,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
             project_groups[sample_project].append(sample)
             if summary_path == "project_level":
                 in_project_sample_groups[sample].append(sample)
-        merged_groups = dict(run_groups) | dict(project_groups) | dict(in_project_sample_groups)
+        merged_groups = {**run_groups, **project_groups, **in_project_sample_groups}
 
         # Assign color for each group
         self.color_getter = mqc_colour.mqc_colour_scale()
