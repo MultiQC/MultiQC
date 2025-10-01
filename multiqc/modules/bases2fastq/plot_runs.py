@@ -11,15 +11,14 @@ Functions for plotting per run information of bases2fastq
 """
 
 
-def generate_random_string():
-    return "".join(random.choices(string.ascii_letters + string.digits, k=4))
+def generate_random_string(length: int):
+    return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
 
 def plot_run_stats(run_data, color_dict):
     """
     Plot a bar graph for polony numbers, Q30/Q40, index assignment rate and yields for each run
     """
-    random_id = generate_random_string()
     run_names = list(run_data.keys())
     run_names.sort()
     num_polonies = dict()
@@ -65,7 +64,7 @@ def plot_run_stats(run_data, color_dict):
         ],
         "cpswitch": True,
         "stacking": "normal",
-        "id": f"run_metrics_bar_{random_id}",
+        "id": generate_random_string(10),
         "title": "bases2fastq: General Sequencing Run QC metrics plot",
         "ylab": "QC",
     }
@@ -78,7 +77,7 @@ def plot_run_stats(run_data, color_dict):
     ] * 2
     plot_name = "Sequencing Run Yield"
     plot_html = bargraph.plot(plot_content, cats, pconfig=pconfig)
-    anchor = f"run_metrics_bar_{random_id}"
+    anchor = "run_metrics_bar"
     description = "Bar plots of sequencing run yields. Please see individual run reports for details"
     helptext = """
     This section shows and compare the yield and index assignment rate of each sequencing run.\n\n
@@ -310,7 +309,6 @@ def tabulate_manifest_stats(run_data, color_dict):
     """
     Tabulate general information and statistics of each run
     """
-    random_id = generate_random_string()
     plot_content = dict()
     for s_name in run_data.keys():
         run_stats = dict()
@@ -344,12 +342,12 @@ def tabulate_manifest_stats(run_data, color_dict):
     pconfig = {
         "title": "Bases2Fastq: Run Manifest Metrics",
         "col1_header": "Run Name | Lane",
-        # "id": f"run_manifest_metrics_table_{random_id}",
+        "id": generate_random_string(10),
     }
 
     plot_name = "Run Manifest Table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
-    anchor = f"run_manifest_metrics_table"
+    anchor = "run_manifest_metrics_table"
     description = "Run parameters used."
     helptext = """
     This section displays metrics that indicate the parameters used in the run: \n
