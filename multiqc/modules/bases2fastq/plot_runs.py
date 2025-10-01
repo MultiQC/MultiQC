@@ -405,7 +405,7 @@ def tabulate_index_assignment_stats(run_data, color_dict):
     pconfig = {
         "title": "Bases2Fastq: Index Assignment Metrics",
         "col1_header": "Sample #",
-        "id": "index_assignment_metrics",
+        "id": f"index_assignment_metrics_{generate_random_string(5)}",
     }
 
     plot_name = "Index Assignment Metrics"
