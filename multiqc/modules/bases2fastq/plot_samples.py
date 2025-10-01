@@ -168,14 +168,16 @@ def plot_sample_assignment_histogram(sample_data, group_lookup_dict, project_loo
             }
         )
 
-    pconfig.update({
-        "id": "sample_assignment_hist",
-        "title": "bases2fastq: Sample Polony Assignment Histogram",
-        "style": "lines+markers",
-        "xlab": "Assigned Polonies (Range)",
-        "ylab": "Number of Samples with N Polonies Assigned",
-        "categories": True,
-    })
+    pconfig.update(
+        {
+            "id": "sample_assignment_hist",
+            "title": "bases2fastq: Sample Polony Assignment Histogram",
+            "style": "lines+markers",
+            "xlab": "Assigned Polonies (Range)",
+            "ylab": "Number of Samples with N Polonies Assigned",
+            "categories": True,
+        }
+    )
 
     plot_name = "Sample Polony Assignment Histogram"
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
@@ -267,14 +269,16 @@ def plot_sample_read_length(sample_data, group_lookup_dict, project_lookup_dict,
                 }
             )
 
-        pconfig.update({
-            "id": "mean_read_length_per_sample",
-            "title": "bases2fastq: Mean Read Length Per Sample",
-            "style": "lines+markers",
-            "xlab": "Average Read Length (Range)",
-            "ylab": "Samples with Average Read Length",
-            "categories": True,
-        })
+        pconfig.update(
+            {
+                "id": "mean_read_length_per_sample",
+                "title": "bases2fastq: Mean Read Length Per Sample",
+                "style": "lines+markers",
+                "xlab": "Average Read Length (Range)",
+                "ylab": "Samples with Average Read Length",
+                "categories": True,
+            }
+        )
 
         plot_html = linegraph.plot(plot_content, pconfig=pconfig)
         description = "Distribution of average read lengths for all samples."
