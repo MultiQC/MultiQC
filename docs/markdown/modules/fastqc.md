@@ -2,7 +2,7 @@
 title: FastQC
 displayed_sidebar: multiqcSidebar
 description: >
-  Quality control tool for high throughput sequencing data
+  <p>Quality control tool for high throughput sequencing data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/fastqc/fastqc.py
 -->
 
 :::note
-Quality control tool for high throughput sequencing data
+
+<p>Quality control tool for high throughput sequencing data.</p>
 
 [http://www.bioinformatics.babraham.ac.uk/projects/fastqc/](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 :::
@@ -50,7 +51,7 @@ that they will share a sample name with data that has already been parsed.
 :::
 
 You can customise the patterns used for finding these files in your
-MultiQC config (see [Module search patterns](#module-search-patterns)).
+MultiQC config (see [Module search patterns](../getting_started/config#module-search-patterns)).
 The below code shows the default file patterns:
 
 ```yaml
@@ -71,7 +72,7 @@ Sample names are discovered by parsing the line beginning
 It is possible to plot a dashed line showing the theoretical GC content for a
 reference genome. MultiQC comes with genome and transcriptome guides for Human
 and Mouse. You can use these in your reports by adding the following MultiQC
-config keys (see [Configuring MultiQC](https://docs.seqera.io/multiqc/getting_started/config)):
+config keys (see [Configuring MultiQC](../getting_started/config)):
 
 ```yaml
 fastqc_config:
@@ -147,7 +148,7 @@ fastqc_config:
 
 Remember that it is possible to customise the order in which the different module sections appear
 in the report if you wish.
-See [the docs](https://docs.seqera.io/multiqc/#order-of-module-and-module-subsection-output) for more information.
+See [the docs](../reports/customisation#order-of-module-and-module-subsection-output) for more information.
 
 For example, to show the _Status Checks_ section at the top, use the following config:
 

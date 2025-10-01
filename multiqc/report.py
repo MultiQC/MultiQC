@@ -812,15 +812,16 @@ def exclude_file(sp, f: SearchFile):
             return True
 
     # Search the contents of the file
-    for num_lines, line_block in f.line_block_iterator():
-        if sp.exclude_contents:
-            for pat in sp.exclude_contents:
-                if pat and pat in line_block:
-                    return True
-        if sp.exclude_contents_re:
-            for pat in sp.exclude_contents_re:
-                if pat and re.search(pat, line_block):
-                    return True
+    if sp.exclude_contents or sp.exclude_contents_re:
+        for _, line_block in f.line_block_iterator():
+            if sp.exclude_contents:
+                for pat in sp.exclude_contents:
+                    if pat and pat in line_block:
+                        return True
+            if sp.exclude_contents_re:
+                for pat in sp.exclude_contents_re:
+                    if pat and re.search(pat, line_block):
+                        return True
     return False
 
 

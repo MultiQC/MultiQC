@@ -300,7 +300,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
         for cycle in range(len(R1)):
             base_no = cycle + 1
 
-            tot = sum([R1[cycle]["BaseComposition"][base] for base in ["A", "C", "T", "T"]])
+            tot = sum([R1[cycle]["BaseComposition"][base] for base in ["A", "C", "T", "G"]])
 
             for base in "ACTG":
                 base_s_name = "__".join([s_name, base])
@@ -427,13 +427,23 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
         R1_gc_counts = sample_data[s_name]["Reads"][0]["PerReadGCCountHistogram"]
         R2_gc_counts = [0] * len(R1_gc_counts)
         if len(sample_data[s_name]["Reads"]) > 1:
-            R2_gc_counts = sample_data[s_name]["Reads"][1]["PerReadGCCountHistogram"]
+            R2_gc_counts_raw = sample_data[s_name]["Reads"][1]["PerReadGCCountHistogram"]
+            # Handle potential length mismatch between R1 and R2 GC counts
+            if len(R2_gc_counts_raw) == len(R1_gc_counts):
+                R2_gc_counts = R2_gc_counts_raw
+            else:
+                # Pad shorter list with zeros or truncate longer list
+                min_len = min(len(R1_gc_counts), len(R2_gc_counts_raw))
+                R2_gc_counts = R2_gc_counts_raw[:min_len] + [0] * (len(R1_gc_counts) - min_len)
+
         R1R2_gc_counts = [r1 + r2 for r1, r2 in zip(R1_gc_counts, R2_gc_counts)]
         totalReads = sum(R1R2_gc_counts)
         gc_hist_dict.update({s_name: {}})
-        RLen = len(R1_gc_counts)
-        for gc in range(0, RLen):
-            gc_hist_dict[s_name].update({gc / RLen * 100: R1R2_gc_counts[gc] / totalReads * 100})
+
+        if totalReads > 0 and len(R1R2_gc_counts) > 0:  # Avoid division by zero and empty data
+            RLen = len(R1_gc_counts)
+            for gc in range(len(R1R2_gc_counts)):
+                gc_hist_dict[s_name].update({gc / RLen * 100: R1R2_gc_counts[gc] / totalReads * 100})
 
     # perReadQualityHistogram
     plot_content = gc_hist_dict

@@ -107,7 +107,7 @@ class ScatterPlot extends Plot {
         displayName = point.name;
       }
 
-      return {
+      let trace = {
         type: "scatter",
         x: [point.x],
         y: [point.y],
@@ -116,6 +116,13 @@ class ScatterPlot extends Plot {
         showlegend: showInLegend,
         ...params,
       };
+
+      // Add legendgroup for proper legend click behavior with groups
+      if (point.group) {
+        trace.legendgroup = point.group;
+      }
+
+      return trace;
     });
   }
 

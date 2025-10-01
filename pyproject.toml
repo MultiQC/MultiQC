@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.30dev"
+version = "1.31"
 dependencies = [
     "boto3",              # for aws bedrock ai support
     "click",
@@ -32,6 +32,8 @@ dependencies = [
     "jsonschema",
     "polars-lts-cpu",     # for parquet support. Using LTS version for compatibility with older architectures
     "pyarrow",            # for parquet support
+    "scanpy",             # to parse h5 files for Xenium module
+    "scipy",              # for Xenium module. Though Scanpy depends on scipy anyway.
 ]
 requires-python = ">=3.8"
 authors = [
@@ -234,6 +236,7 @@ samblaster = "multiqc.modules.samblaster:MultiqcModule"
 samtools = "multiqc.modules.samtools:MultiqcModule"
 sargasso = "multiqc.modules.sargasso:MultiqcModule"
 seqera_cli = "multiqc.modules.seqera_cli:MultiqcModule"
+seqfu = "multiqc.modules.seqfu:MultiqcModule"
 sequali = "multiqc.modules.sequali:MultiqcModule"
 seqwho = "multiqc.modules.seqwho:MultiqcModule"
 seqyclean = "multiqc.modules.seqyclean:MultiqcModule"
@@ -245,6 +248,7 @@ snippy = "multiqc.modules.snippy:MultiqcModule"
 snpeff = "multiqc.modules.snpeff:MultiqcModule"
 snpsplit = "multiqc.modules.snpsplit:MultiqcModule"
 somalier = "multiqc.modules.somalier:MultiqcModule"
+sompy = "multiqc.modules.sompy:MultiqcModule"
 sortmerna = "multiqc.modules.sortmerna:MultiqcModule"
 sourmash = "multiqc.modules.sourmash:MultiqcModule"
 spaceranger = "multiqc.modules.spaceranger:MultiqcModule"
