@@ -572,7 +572,7 @@ class MultiqcModule(BaseMultiqcModule):
                         if sample_id != sample_to_index_assignment[merged_indices]["SampleID"]:
                             log.error(
                                 f"RunManifest SampleID <{sample_id}> does not match "
-                                f"RunStats SampleID {sample_to_index_assignment[merged_indices]["SampleID"]}."
+                                f"RunStats SampleID {sample_to_index_assignment[merged_indices]['SampleID']}."
                                 "Skipping."
                             )
                             continue
