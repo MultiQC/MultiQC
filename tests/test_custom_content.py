@@ -20,6 +20,16 @@ from multiqc.types import Anchor, ColumnKey, SampleGroup, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
 
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state after each test."""
+    original_strict = config.strict
+    original_run_modules = config.run_modules[:]
+    yield
+    config.strict = original_strict
+    config.run_modules[:] = original_run_modules
+
+
 def test_linegraph_single_sample_txt(data_dir):
     path = data_dir / "custom_content" / "embedded_config" / "linegraph_single_sample_txt_mqc.txt"
     """

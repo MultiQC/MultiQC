@@ -489,16 +489,6 @@ class AWSBedrockClient(Client):
     def __init__(self):
         super().__init__()
 
-        # Check Bedrock availability with detailed error reporting
-        is_available, error_msg = _check_bedrock_availability()
-        if not is_available:
-            if "boto3 not installed" in str(error_msg):
-                raise ImportError(
-                    'AI summary through AWS bedrock requires "boto3" to be installed. Install it with `pip install boto3`'
-                )
-            else:
-                raise RuntimeError(f"AWS Bedrock is not available: {error_msg}")
-
         self.model = config.ai_model
         self.name = "aws_bedrock"
         self.title = "AWS Bedrock"

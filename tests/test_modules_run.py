@@ -17,6 +17,16 @@ def multiqc_reset():
     reset()
 
 
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state after each test."""
+    original_strict = config.strict
+    original_sample_names_ignore = config.sample_names_ignore[:]
+    yield
+    config.strict = original_strict
+    config.sample_names_ignore[:] = original_sample_names_ignore
+
+
 @pytest.mark.parametrize("module_id,entry_point", modules)
 def test_all_modules(module_id, entry_point, data_dir):
     """

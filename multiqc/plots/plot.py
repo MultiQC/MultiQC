@@ -43,6 +43,29 @@ logger = logging.getLogger(__name__)
 
 check_plotly_version()
 
+
+def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> str:
+    """
+    Get the appropriate series label for a plot type.
+    If series_label is the default "samples", return a plot type-specific label.
+    Otherwise, return the custom series_label as-is.
+    """
+    if series_label != "samples":
+        return str(series_label)
+
+    # Map plot types to their specific series labels
+    plot_type_labels = {
+        PlotType.LINE: "lines",
+        PlotType.BAR: "bars",
+        PlotType.BOX: "boxes",
+        PlotType.SCATTER: "points",
+        PlotType.HEATMAP: "samples",  # heatmaps typically show samples
+        PlotType.VIOLIN: "samples",  # violins keep the default "samples"
+    }
+
+    return plot_type_labels.get(plot_type, "samples")  # fallback for unknown plot types
+
+
 # Create and register MultiQC default Plotly template
 multiqc_plotly_template = dict(
     layout=go.Layout(
@@ -187,7 +210,8 @@ class PConfig(ValidatedConfig):
     y_bands: Optional[List[LineBand]] = None
     x_lines: Optional[List[FlatLine]] = None
     y_lines: Optional[List[FlatLine]] = None
-    series_label: str = "samples"
+    series_label: Union[str, bool] = "samples"
+    flat_if_very_large: bool = True
 
     @classmethod
     def from_pconfig_dict(cls, pconfig: Union[Mapping[str, Any], "PConfig", None]):
@@ -559,8 +583,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
-        flat_if_very_large: bool = True,
-        series_label: Optional[str] = None,
         n_samples_per_dataset: Optional[List[int]] = None,
     ) -> "Plot[DatasetT, PConfigT]":
         """
@@ -573,9 +595,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
         :param defer_render_if_large: whether to defer rendering if the number of data points is large
-        :param flat_if_very_large: whether to render flat if the number of data points is very large
-        :param series_label: label for the series, e.g. "samples" or "statuses"
-        :param n_samples_per_dataset: number of actual samples for each dataset (assumes series_label are samples)
+        :param n_samples_per_dataset: number of actual samples for each dataset (assumes series_label from pconfig are samples)
         """
         if len(n_series_per_dataset) == 0:
             raise ValueError("No datasets to plot")
@@ -601,7 +621,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if config.plots_force_flat:
             flat = True
         if (
-            flat_if_very_large
+            pconfig.flat_if_very_large
             and not config.plots_force_interactive
             and n_series_per_dataset[0] > config.plots_flat_numseries
         ):
@@ -726,10 +746,12 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 n_samples = n_samples_per_dataset[idx]
             else:
                 n_samples = 0
-            if n_samples > 1:
-                subtitles += [f"{n_samples} {pconfig.series_label}"]
-            elif n_series > 1:
-                subtitles += [f"{n_series} {pconfig.series_label}"]
+            if n_samples > 1 and pconfig.series_label:
+                series_label = _get_series_label(plot_type, pconfig.series_label)
+                subtitles += [f"{n_samples} {series_label}"]
+            elif n_series > 1 and pconfig.series_label:
+                series_label = _get_series_label(plot_type, pconfig.series_label)
+                subtitles += [f"{n_series} {series_label}"]
             if subtitles:
                 dconfig["subtitle"] = ", ".join(subtitles)
 
@@ -1135,7 +1157,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 '<p class="text-info">',
                 '<small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
-                '(see the <a href="https://docs.seqera.io/multiqc/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
+                '(see the <a href="https://docs.seqera.io/multiqc/getting_started/config#flat--interactive-plots" target="_blank">docs</a>).',
                 "</small>",
                 "</p>",
             ]
@@ -1707,7 +1729,7 @@ def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
         conf["yaxis"] = conf.pop("y_ceiling")
     if "xAxis" in conf:
         conf["xaxis"] = conf.pop("xAxis")
-    if "tooltip" in conf:
+    if "tooltip" in conf and "hovertemplate" not in conf:
         conf["hovertemplate"] = conf.pop("tooltip")
     return conf
 

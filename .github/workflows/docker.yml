@@ -3,8 +3,8 @@ name: "Docker image"
 on:
   pull_request:
     paths:
-      # Step takes 5 min, too long for PR commits, so leaving it only to significant changes
-      - "pyproject.toml"
+      # Step takes 30 min, too long for PR commits, so leaving it only to significant changes
+      # - "pyproject.toml"
       - "Dockerfile"
   push:
     # Build multiqc:dev on every push to main
@@ -21,6 +21,13 @@ jobs:
   build:
     if: github.repository == 'MultiQC/MultiQC'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        v:
+          - lab: ""
+            build_args: ""
+          - lab: "pdf-"
+            build_args: "INSTALL_PANDOC=true"
     steps:
       - name: "Check out the repo"
         uses: actions/checkout@v4
@@ -51,29 +58,31 @@ jobs:
 
       - name: "Build dev"
         uses: docker/build-push-action@v3
-        if: github.event_name != 'pull_request' && github.event_name != 'release'
+        if: github.event_name != 'release'
         with:
           # All available with python:3.X-slim are:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
           # But 32-bit binaries likely require compilation from source so stick with linux/amd64 and linux/arm64 for now
           platforms: linux/amd64,linux/arm64
-          push: true
-          # If it's a PR, use the branch name as a tag, otherwise use "dev"
+          build-args: ${{ matrix.v.build_args }}
+          # Only push if it's commit to main, or workflow_dispatch
+          push: ${{github.event_name != 'pull_request'}}
           tags: |
-            ${{ github.ref == 'refs/heads/main' && 'multiqc/multiqc:dev' || format('multiqc/multiqc:{0}', github.head_ref) }}
-            ${{ github.ref == 'refs/heads/main' && 'ghcr.io/multiqc/multiqc:dev' || format('ghcr.io/multiqc/multiqc:{0}', github.head_ref) }}
+            multiqc/multiqc:${{matrix.v.lab}}dev
+            ghcr.io/multiqc/multiqc:${{matrix.v.lab}}dev
 
       - name: "Build release"
         uses: docker/build-push-action@v3
-        if: github.event_name != 'pull_request' && github.event_name == 'release'
+        if: github.event_name == 'release'
         with:
           # All available with python:3.X-slim are:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
           # But 32-bit binaries likely require compilation from source so stick with linux/amd64 and linux/arm64 for now
           platforms: linux/amd64,linux/arm64
+          build-args: ${{ matrix.v.build_args }}
           push: true
           tags: |
-            multiqc/multiqc:${{ github.event.release.tag_name }}
-            multiqc/multiqc:latest
-            ghcr.io/multiqc/multiqc:${{ github.event.release.tag_name }}
-            ghcr.io/multiqc/multiqc:latest
+            multiqc/multiqc:${{ matrix.v.lab }}${{ github.event.release.tag_name }}
+            multiqc/multiqc:${{ matrix.v.lab }}latest
+            ghcr.io/multiqc/multiqc:${{ matrix.v.lab }}${{ github.event.release.tag_name }}
+            ghcr.io/multiqc/multiqc:${{ matrix.v.lab }}latest

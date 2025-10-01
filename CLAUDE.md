@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+# IMPORTANT
+
+Never push to main branch. When asked to add a change or create a pull request, always check if we are on main first. If we are, create a new branch and push to it.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Development Commands

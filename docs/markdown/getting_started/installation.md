@@ -12,7 +12,7 @@ If you're new to software packaging, this page can be a little overwhelming.
 If in doubt, a general rule is:
 
 - _Running MultiQC in a pipeline?_ &nbsp; Use [Docker](#docker) or [Singularity](#singularity).
-- _Running MultiQC locally?_ &nbsp; Use [Pip](#pip) or [Conda](#conda).
+- _Running MultiQC locally?_ &nbsp; Use [Pip](#pip--pypi) or [Conda](#conda).
 
 :::tip{title="Installation cheat sheet"}
 

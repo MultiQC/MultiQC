@@ -205,7 +205,7 @@ async function summarizeWithAi(button) {
   let aiApiKey = $("#ai-api-key").val();
   let endpoint = $("#ai-endpoint").val();
 
-  if (!modelName && provider.defaultModel) {
+  if (!modelName && provider && provider.defaultModel) {
     modelName = provider.defaultModel;
     $("#ai-model").val(modelName);
     storeModelName(providerId, modelName);
@@ -346,7 +346,7 @@ async function summarizeWithAi(button) {
           }),
         );
         const endTime = performance.now();
-        console.log(`Time to generate more: ${endTime - startTime}ms`);
+        console.log(`Time to run generation: ${endTime - startTime}ms`);
         if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").show();
         disclaimerDiv.show();
       },
