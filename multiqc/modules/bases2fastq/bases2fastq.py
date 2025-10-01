@@ -91,10 +91,8 @@ class MultiqcModule(BaseMultiqcModule):
             ) = self._parse_run_project_data("bases2fastq/project")
 
         # Get run- and project-level samples
-        for data in self.run_level_samples.values():
-            num_run_level_samples += len(data.keys())
-        for data in self.project_level_samples.values():
-            num_project_level_samples += len(data.keys())
+        num_run_level_samples = len(self.run_level_samples)
+        num_project_level_samples = len(self.project_level_samples)
 
         # Ensure run/sample data found
         if all([
@@ -107,20 +105,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.error(error_msg)
             raise ModuleNoSamplesFound(error_msg)
         
-        # Log runs, projects and samples found
-        log.info(f"Found {len(self.run_level_data)} run(s) within the Bases2Fastq results.")
-        log.info(f"Found {len(self.project_level_data)} project(s) within the Bases2Fastq results.")
-        log.info(f"Found {num_project_level_samples} sample(s) within the Bases2Fastq results.")
-
-        # Superfluous function call to confirm that it is used in this module
-        self.add_software_version(None)
-
-        # Warn user if run-level/project-level or sample-level metrics were not found
-        if len(self.run_level_data) == 0 and len(self.project_level_data) == 0:
-            log.warning("No run/project stats found!")
-        if num_project_level_samples == 0:
-            log.warning("No sample stats found!")
-        
         # Choose path to take, if project use only project-level data, otherwise use run- and project-level
         summary_path = ""
         if len(self.run_level_data) > 0 and len(self.project_level_data) == 0:
@@ -129,6 +113,23 @@ class MultiqcModule(BaseMultiqcModule):
             summary_path = "project_level"
         elif len(self.run_level_data) > 0 and len(self.project_level_data) > 0:
             summary_path = "combined_level"
+        
+        # Log runs, projects and samples found
+        log.info(f"Found {len(self.run_level_data)} run(s) within the Bases2Fastq results.")
+        log.info(f"Found {len(self.project_level_data)} project(s) within the Bases2Fastq results.")
+        if summary_path == "run_level":
+            log.info(f"Found {num_run_level_samples} sample(s) within the Bases2Fastq results.")
+        else:
+            log.info(f"Found {num_project_level_samples} sample(s) within the Bases2Fastq results.")
+
+        # Superfluous function call to confirm that it is used in this module
+        self.add_software_version(None)
+
+        # Warn user if run-level/project-level or sample-level metrics were not found
+        if len(self.run_level_data) == 0 and len(self.project_level_data) == 0:
+            log.warning("No run/project stats found!")
+        if num_run_level_samples == 0 and num_project_level_samples == 0:
+            log.warning("No sample stats found!")
 
         # Define data to use
         run_data = {}
@@ -139,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
         unassigned_sequences = {}
         if summary_path == "run_level":
             run_data = self.run_level_data
-            sample_data = self.project_level_samples
+            sample_data = self.run_level_samples
             samples_to_projects = self.run_level_samples_to_project
             manifest_data = self._parse_run_manifest("bases2fastq/manifest")
             index_assigment_data = self._parse_index_assignment("bases2fastq/manifest")
@@ -293,7 +294,7 @@ class MultiqcModule(BaseMultiqcModule):
                 run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
 
                 num_polonies = sample_data["NumPolonies"]
-                if num_polonies < 1000:
+                if num_polonies < MIN_POLONIES:
                     log.warning(
                         f"Skipping {run_analysis_sample_name} because it has"
                         f" <{MIN_POLONIES} assigned reads [n={num_polonies}]."

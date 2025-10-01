@@ -133,79 +133,149 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
 
 def plot_sample_assignment_histogram(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
     """
-    Plot number of cycles per read and lane
+    Plots a histogram of number of assigned polonies in all samples for each run.
     """
-    plot_content = dict()
-    polony_assignments = []
-    for s_name in sample_data.keys():
-        polonies = sample_data[s_name].get("NumPolonies")
-        if polonies:
-            polony_assignments.append(polonies)
+    plot_content = []
+    polony_assignments = {}
+    for s_name, data in sample_data.items():
+        if "NumPolonies" not in data:
+            continue
+        run_name, _ = s_name.split("__")
+        if run_name not in polony_assignments:
+            polony_assignments[run_name] = []
+        polonies = data["NumPolonies"]
+        polony_assignments[run_name].append(polonies)
+
+    pconfig = {"data_labels": []}
+    for run_name, assignment_data in polony_assignments.items():
+        run_data = {}
+        bins = 50
+        for bins in [50, 20, 10]:
+            if len(assignment_data) > bins:
+                break
+        hist, bin_edges = np.histogram(assignment_data, bins=bins)
+        bin_ranges = [f"({round(bin_edges[i], 2)}-{round(bin_edges[i+1], 2)})" for i in range(len(bin_edges)-1)]
+        points = [float(point) for point in hist]
+        run_data["Polonies Assigned"] = {bin_range: point for bin_range, point in zip(bin_ranges, points)}
+        plot_content.append(run_data)
+
+        pconfig["data_labels"].append({
+            "name": run_name,
+            "xlab": "Assigned Polonies (Range)",
+            "ylab": "Number of Samples with N Polonies Assigned",
+        })
     
-    bins = 100
-    for bins in [100, 50, 20, 10]:
-        if len(polony_assignments) > bins:
-            break
-
-    hist, bin_edges = np.histogram(polony_assignments, bins=bins)
-    bin_ranges = [f"({bin_edges[i]}, {bin_edges[i+1]})" for i in range(len(bin_edges)-1)]
-
-    for range_data, frequency in zip(bin_ranges, hist):
-        plot_content[range_data] = {}
-        plot_content[range_data]["Assigned Polonies"] = float(frequency)
-
-    pconfig = {
-        "title": "Bases2Fastq: Sample Polony Assignment Histogram",
-        "id": "sample_assignment_hist",
-        "ylab": "Number of Samples",
-        "xlab": "Range Assigned Polonies",
-        "cpswitch": False,
-        "subtitle": None,
-    }
+    pconfig = pconfig | {
+            "id": "sample_assignment_hist",
+            "title": "bases2fastq: Sample Polony Assignment Histogram",
+            "style": 'lines+markers',
+            "xlab": "Assigned Polonies (Range)",
+            "ylab": "Number of Samples with N Polonies Assigned",
+            "categories": True,
+        }
 
     plot_name = "Sample Polony Assignment Histogram"
-    plot_html = bargraph.plot(plot_content, pconfig=pconfig)
+    plot_html = linegraph.plot(plot_content, pconfig=pconfig)
     anchor = "sample_assignment_hist"
-    description = "Average read length per read for all samples."
+    description = "Histogram showing the distribution of samples according to the number of polonies assigned to them."
     helptext = """
-    Shows the number of cycles used for each read in every flowcell lane. 
-    Useful for confirming that read lengths match the expected sequencing setup across all lanes.
+    Shows bins of assigned polony counts on the X-axis and the number of samples whose number of polonies fall
+    within each bin on the Y-axis.
     """
+
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
 def plot_sample_read_length(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
     """
-    Plot number of cycles per read and lane
+    Plots the average read length for each sample if less than 50 samples in total, or the distribution per run
+    as a lineplot based on histogram bins.
     """
+    total_samples = len(sample_data.keys())
     plot_content = dict()
-    for s_name, data in sample_data.items():
-        read_lengths = {s_name: {}}
-        if "Reads" not in data:
-            continue
-        for read in data["Reads"]:
-            read_name = read["Read"]
-            mean_length = read["MeanReadLength"]
-            read_lengths[s_name][read_name] = mean_length
-        plot_content.update(read_lengths)
-
-    pconfig = {
-        "title": "Bases2Fastq: Mean Read Length per Sample",
-        "id": "mean_read_length_per_sample",
-        "ylab": "Bases",
-        "cpswitch": False,
-        "subtitle": None,
-        "stacking": "group",
-    }
-
+    pconfig = {}
+    plot_html = None
     plot_name = "Mean Read Length per Sample"
-    plot_html = bargraph.plot(plot_content, pconfig=pconfig)
     anchor = "mean_read_length_per_sample"
-    description = "Average read length per read for all samples."
-    helptext = """
-    Shows the number of cycles used for each read in every flowcell lane. 
-    Useful for confirming that read lengths match the expected sequencing setup across all lanes.
-    """
+    description = ""
+    helptext = ""
+
+    if total_samples <= 50:
+        for s_name, data in sample_data.items():
+            read_lengths = {s_name: {}}
+            if "Reads" not in data:
+                continue
+            for read in data["Reads"]:
+                read_name = read["Read"]
+                mean_length = read["MeanReadLength"]
+                read_lengths[s_name][read_name] = mean_length
+            plot_content.update(read_lengths)
+
+        pconfig = {
+            "title": "Bases2Fastq: Mean Read Length per Sample",
+            "id": "mean_read_length_per_sample",
+            "ylab": "Bases",
+            "cpswitch": False,
+            "subtitle": None,
+            "stacking": "group",
+        }
+        plot_html = bargraph.plot(plot_content, pconfig=pconfig)
+        description = "Average read length per read for all samples."
+        helptext = """
+        Shows the average read length for each read in each sample.
+        """
+
+    elif total_samples > 50:
+        plot_content = []
+        read_lengths = {}
+        for s_name, data in sample_data.items():
+            if "Reads" not in data:
+                continue
+            run_name, _ = s_name.split("__")
+            if run_name not in read_lengths:
+                read_lengths[run_name] = {}
+            for read in data["Reads"]:
+                read_id = read["Read"]
+                if read_id not in read_lengths[run_name]:
+                    read_lengths[run_name][read_id] = []
+                read_lengths[run_name][read_id].append(read["MeanReadLength"])
+
+        pconfig = {"data_labels": []}
+        for run_name, read_data in read_lengths.items():
+            run_data = {}
+            for read_name, read_lengths in read_data.items():
+                bins = 50
+                for bins in [50, 20, 10]:
+                    if len(read_lengths) > bins:
+                        break
+                hist, bin_edges = np.histogram(read_lengths, bins=bins)
+                bin_ranges = [f"({round(bin_edges[i], 2)}-{round(bin_edges[i+1], 2)})" for i in range(len(bin_edges)-1)]
+                points = [float(point) for point in hist]
+                run_data[read_name] = {bin_range: point for bin_range, point in zip(bin_ranges, points)}
+            plot_content.append(run_data)
+
+            pconfig["data_labels"].append({
+                "name": run_name,
+                "xlab": "Average Read Length (Range)",
+                "ylab": "Samples with Average Read Length",
+            })
+
+        pconfig = pconfig | {
+            "id": "mean_read_length_per_sample",
+            "title": "bases2fastq: Mean Read Length Per Sample",
+            "style": 'lines+markers',
+            "xlab": "Average Read Length (Range)",
+            "ylab": "Samples with Average Read Length",
+            "categories": True,
+        }
+
+        plot_html = linegraph.plot(plot_content, pconfig=pconfig)
+        description = "Distribution of average read lengths for all samples."
+        helptext = """
+        Shows the distribution of samples whose average read lengths fall in a given range.
+        Reads are shown as different lines.
+        """
+
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
