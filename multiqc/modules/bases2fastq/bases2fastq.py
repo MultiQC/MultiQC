@@ -63,7 +63,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.group_lookup_dict = dict()
         self.project_lookup_dict = dict()
 
-
         self.b2f_sample_data = dict()
         self.b2f_run_data = dict()
         self.b2f_run_project_data = dict()
@@ -74,37 +73,39 @@ class MultiqcModule(BaseMultiqcModule):
         # Define if call is project- or run-level
         run_level_log_files = len(list(self.find_log_files("bases2fastq/run")))
         project_level_log_files = len(list(self.find_log_files("bases2fastq/project")))
-        
+
         if run_level_log_files == 0 and project_level_log_files == 0:
             error_msg = "No run- or project-level log files found within the Bases2Fastq results."
             log.error(error_msg)
             raise ModuleNoSamplesFound(error_msg)
-        
+
         # Parse data
         if run_level_log_files > 0:
-            (
-                self.run_level_data, self.run_level_samples, self.run_level_samples_to_project
-            ) = self._parse_run_project_data("bases2fastq/run")
+            (self.run_level_data, self.run_level_samples, self.run_level_samples_to_project) = (
+                self._parse_run_project_data("bases2fastq/run")
+            )
         if project_level_log_files > 0:
-            (
-                self.project_level_data, self.project_level_samples, self.project_level_samples_to_project
-            ) = self._parse_run_project_data("bases2fastq/project")
+            (self.project_level_data, self.project_level_samples, self.project_level_samples_to_project) = (
+                self._parse_run_project_data("bases2fastq/project")
+            )
 
         # Get run- and project-level samples
         num_run_level_samples = len(self.run_level_samples)
         num_project_level_samples = len(self.project_level_samples)
 
         # Ensure run/sample data found
-        if all([
-            len(self.run_level_data) == 0,
-            num_run_level_samples == 0,
-            len(self.project_level_data),
-            num_project_level_samples == 0,
-        ]):
+        if all(
+            [
+                len(self.run_level_data) == 0,
+                num_run_level_samples == 0,
+                len(self.project_level_data),
+                num_project_level_samples == 0,
+            ]
+        ):
             error_msg = "No run-, project- or sample-level data found"
             log.error(error_msg)
             raise ModuleNoSamplesFound(error_msg)
-        
+
         # Choose path to take, if project use only project-level data, otherwise use run- and project-level
         summary_path = ""
         if len(self.run_level_data) > 0 and len(self.project_level_data) == 0:
@@ -113,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
             summary_path = "project_level"
         elif len(self.run_level_data) > 0 and len(self.project_level_data) > 0:
             summary_path = "combined_level"
-        
+
         # Log runs, projects and samples found
         log.info(f"Found {len(self.run_level_data)} run(s) within the Bases2Fastq results.")
         log.info(f"Found {len(self.project_level_data)} project(s) within the Bases2Fastq results.")
@@ -193,13 +194,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.sample_color = dict()
         for s_name in samples_to_projects.keys():
             s_color = (
-                self.group_color[s_name] if summary_path == "project_level" else
-                self.group_color[samples_to_projects[s_name]]
+                self.group_color[s_name]
+                if summary_path == "project_level"
+                else self.group_color[samples_to_projects[s_name]]
             )
             self.sample_color.update({s_name: s_color})
         self.run_color = copy.deepcopy(self.group_color)  # Make sure that run colors and group colors match
         self.palette = self.palette[len(merged_groups) :]
-
 
         # Plot metrics
         qc_metrics_function = (
@@ -212,34 +213,27 @@ class MultiqcModule(BaseMultiqcModule):
                 data=manifest_data,
                 plot_functions=[
                     tabulate_manifest_stats,
-                ]
+                ],
             )
             self.add_run_plots(
                 data=index_assigment_data,
                 plot_functions=[
                     tabulate_index_assignment_stats,
-                ]
+                ],
             )
             self.add_run_plots(
                 data=unassigned_sequences,
                 plot_functions=[
                     tabulate_unassigned_index_stats,
-                ]
+                ],
             )
-        
+
         self.add_run_plots(
             data=run_data,
-            plot_functions=[
-                plot_lane_cycle_stats,
-                plot_run_stats,
-                plot_base_quality_hist,
-                plot_base_quality_by_cycle
-            ]
+            plot_functions=[plot_lane_cycle_stats, plot_run_stats, plot_base_quality_hist, plot_base_quality_by_cycle],
         )
 
-        self.add_sample_plots(
-            data=sample_data, group_lookup=samples_to_projects, project_lookup=samples_to_projects
-        )
+        self.add_sample_plots(data=sample_data, group_lookup=samples_to_projects, project_lookup=samples_to_projects)
 
     def get_uuid(self):
         return str(uuid.uuid4()).replace("-", "").lower()
@@ -269,15 +263,13 @@ class MultiqcModule(BaseMultiqcModule):
                     "https://docs.elembio.io/docs/bases2fastq/introduction/"
                 )
                 continue
-        
+
             run_analysis_name = "-".join([run_name, analysis_id])
             run_analysis_name = self.clean_s_name(run_analysis_name, f)
 
             # skip run if in user provider ignore list
             if self.is_ignore_sample(run_analysis_name):
-                log.info(
-                    f"Skipping <{run_analysis_name}> because it is present in ignore list."
-                )
+                log.info(f"Skipping <{run_analysis_name}> because it is present in ignore list.")
                 continue
 
             # Check run is present in the final dictionaries
@@ -315,7 +307,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
 
         return [runs_global_data, runs_sample_data, sample_to_project]
-    
 
     def _parse_run_manifest(self, data_source: str) -> Dict[str, Any]:
         runs_manifest_data = {}
@@ -356,8 +347,7 @@ class MultiqcModule(BaseMultiqcModule):
             run_manifest = json.loads(f["f"])
             if "Settings" not in run_manifest:
                 log.warning(
-                    f"<Settings> section not found in {directory}/RunManifest.json.\n"
-                    f"Skipping RunManifest metrics."
+                    f"<Settings> section not found in {directory}/RunManifest.json.\nSkipping RunManifest metrics."
                 )
             else:
                 for lane_data in run_manifest["Settings"]:
@@ -378,7 +368,7 @@ class MultiqcModule(BaseMultiqcModule):
                             if mask_info["Read"] not in indices:
                                 indices.append(mask_info["Read"])
                             indices_cycles.append(str(len(mask_info["Cycles"])))
-                    indexing = f'{" + ".join(indices_cycles)}<br>{" + ".join(indices)}'
+                    indexing = f"{' + '.join(indices_cycles)}<br>{' + '.join(indices)}"
                     runs_manifest_data[run_lane]["Indexing"] = indexing
 
                     runs_manifest_data[run_lane]["AdapterTrimType"] = lane_data.get("AdapterTrimType", "N/A")
@@ -388,7 +378,7 @@ class MultiqcModule(BaseMultiqcModule):
                     runs_manifest_data[run_lane]["R2AdapterMinimumTrimmedLength"] = lane_data.get(
                         "R2AdapterMinimumTrimmedLength", "N/A"
                     )
-            
+
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
 
         return runs_manifest_data
@@ -416,11 +406,9 @@ class MultiqcModule(BaseMultiqcModule):
 
             # skip run if in user provider ignore list
             if self.is_ignore_sample(run_analysis_name):
-                log.info(
-                    f"Skipping <{run_analysis_name}> because it is present in ignore list."
-                )
+                log.info(f"Skipping <{run_analysis_name}> because it is present in ignore list.")
                 continue
-            
+
             # Get total polonies and build unassigned indices dictionary
             total_polonies = data.get("NumPoloniesBeforeTrimming", 0)
             if "Lanes" not in data:
@@ -491,12 +479,10 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug(f"Error in RunStats.json: {run_stats_path}")
                     log.debug(f"Missing: RunName: {run_name} or AnalysisID: {analysis_id}")
                     continue
-                
+
                 # skip run if in user provider ignore list
                 if self.is_ignore_sample(run_analysis_name):
-                    log.info(
-                        f"Skipping <{run_analysis_name}> because it is present in ignore list."
-                    )
+                    log.info(f"Skipping <{run_analysis_name}> because it is present in ignore list.")
                     continue
 
                 # Ensure sample stats are present
@@ -508,7 +494,7 @@ class MultiqcModule(BaseMultiqcModule):
                     )
                     log.debug(f"Missing SampleStats in RunStats.json. Available keys: {list(run_stats.keys())}.")
                     continue
-            
+
                 # Extract per sample polony counts and overall total counts
                 total_polonies = run_stats.get("NumPoloniesBeforeTrimming", 0)
                 for sample_data in run_stats["SampleStats"]:
@@ -552,9 +538,7 @@ class MultiqcModule(BaseMultiqcModule):
                     f"Skipping RunManifest sample index assignment metrics."
                 )
             elif len(sample_to_index_assignment) == 0:
-                log.warning(
-                    "Index assignment data missing. Skipping creation of index assignment metrics."
-                )
+                log.warning("Index assignment data missing. Skipping creation of index assignment metrics.")
             else:
                 for sample_data in run_manifest["Samples"]:
                     sample_name = sample_data.get("SampleName")

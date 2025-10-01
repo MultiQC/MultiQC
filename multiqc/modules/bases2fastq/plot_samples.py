@@ -154,25 +154,27 @@ def plot_sample_assignment_histogram(sample_data, group_lookup_dict, project_loo
             if len(assignment_data) > bins:
                 break
         hist, bin_edges = np.histogram(assignment_data, bins=bins)
-        bin_ranges = [f"({round(bin_edges[i], 2)}-{round(bin_edges[i+1], 2)})" for i in range(len(bin_edges)-1)]
+        bin_ranges = [f"({round(bin_edges[i], 2)}-{round(bin_edges[i + 1], 2)})" for i in range(len(bin_edges) - 1)]
         points = [float(point) for point in hist]
         run_data["Polonies Assigned"] = {bin_range: point for bin_range, point in zip(bin_ranges, points)}
         plot_content.append(run_data)
 
-        pconfig["data_labels"].append({
-            "name": run_name,
-            "xlab": "Assigned Polonies (Range)",
-            "ylab": "Number of Samples with N Polonies Assigned",
-        })
-    
+        pconfig["data_labels"].append(
+            {
+                "name": run_name,
+                "xlab": "Assigned Polonies (Range)",
+                "ylab": "Number of Samples with N Polonies Assigned",
+            }
+        )
+
     pconfig = pconfig | {
-            "id": "sample_assignment_hist",
-            "title": "bases2fastq: Sample Polony Assignment Histogram",
-            "style": 'lines+markers',
-            "xlab": "Assigned Polonies (Range)",
-            "ylab": "Number of Samples with N Polonies Assigned",
-            "categories": True,
-        }
+        "id": "sample_assignment_hist",
+        "title": "bases2fastq: Sample Polony Assignment Histogram",
+        "style": "lines+markers",
+        "xlab": "Assigned Polonies (Range)",
+        "ylab": "Number of Samples with N Polonies Assigned",
+        "categories": True,
+    }
 
     plot_name = "Sample Polony Assignment Histogram"
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
@@ -249,21 +251,25 @@ def plot_sample_read_length(sample_data, group_lookup_dict, project_lookup_dict,
                     if len(read_lengths) > bins:
                         break
                 hist, bin_edges = np.histogram(read_lengths, bins=bins)
-                bin_ranges = [f"({round(bin_edges[i], 2)}-{round(bin_edges[i+1], 2)})" for i in range(len(bin_edges)-1)]
+                bin_ranges = [
+                    f"({round(bin_edges[i], 2)}-{round(bin_edges[i + 1], 2)})" for i in range(len(bin_edges) - 1)
+                ]
                 points = [float(point) for point in hist]
                 run_data[read_name] = {bin_range: point for bin_range, point in zip(bin_ranges, points)}
             plot_content.append(run_data)
 
-            pconfig["data_labels"].append({
-                "name": run_name,
-                "xlab": "Average Read Length (Range)",
-                "ylab": "Samples with Average Read Length",
-            })
+            pconfig["data_labels"].append(
+                {
+                    "name": run_name,
+                    "xlab": "Average Read Length (Range)",
+                    "ylab": "Samples with Average Read Length",
+                }
+            )
 
         pconfig = pconfig | {
             "id": "mean_read_length_per_sample",
             "title": "bases2fastq: Mean Read Length Per Sample",
-            "style": 'lines+markers',
+            "style": "lines+markers",
             "xlab": "Average Read Length (Range)",
             "ylab": "Samples with Average Read Length",
             "categories": True,

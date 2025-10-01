@@ -102,7 +102,7 @@ def _calculate_reads_eliminated(run_data) -> int:
         if "NumPolonies" not in lane or "NumPoloniesBeforeTrimming" not in lane:
             continue
         reads_eliminated += lane["NumPoloniesBeforeTrimming"] - lane["NumPolonies"]
-    
+
     return reads_eliminated
 
 
@@ -183,7 +183,7 @@ def tabulate_project_stats(run_data, color_dict):
         project_header = "(Project) "
     elif len(run_keys) == 1:
         first_key = run_keys[0]
-        project_header = f'{run_data[first_key]["Project"]} | '        
+        project_header = f"{run_data[first_key]['Project']} | "
     plot_name = f"{project_header}Sequencing QC Metrics Table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
     anchor = "project_run_qc_metrics_table"
@@ -495,7 +495,7 @@ def plot_lane_cycle_stats(run_data, color_dict):
             if "Lane" not in lane or "Reads" not in lane:
                 continue
             lane_stats = dict()
-            lane_name = f'L{lane["Lane"]}'
+            lane_name = f"L{lane['Lane']}"
             run_name = f"{s_name} | {lane_name}"
             lane_stats[run_name] = {}
             for read in lane["Reads"]:
