@@ -342,7 +342,7 @@ def tabulate_manifest_stats(run_data, color_dict):
     pconfig = {
         "title": "Bases2Fastq: Run Manifest Metrics",
         "col1_header": "Run Name | Lane",
-        "id": generate_random_string(10),
+        "id": f"run_manifest_metrics_table_{generate_random_string(5)}",
     }
 
     plot_name = "Run Manifest Table"
