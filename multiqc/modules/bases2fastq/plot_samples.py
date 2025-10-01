@@ -1,6 +1,7 @@
 from typing import Any, Dict
 from multiqc.plots import bargraph, linegraph, table
 from multiqc import config
+from .plot_runs import generate_random_string
 
 import numpy as np
 
@@ -109,7 +110,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         "suffix": "%",
     }
 
-    pconfig = {"id": "sample_qc_metric_table", "title": "Sample QC Metrics Table", "no_violin": False}
+    pconfig = {"id": f"sample_qc_metric_table_{generate_random_string(5)}", "title": "Sample QC Metrics Table", "no_violin": False}
 
     plot_name = "Sample QC Metrics Table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
@@ -170,7 +171,7 @@ def plot_sample_assignment_histogram(sample_data, group_lookup_dict, project_loo
 
     pconfig.update(
         {
-            "id": "sample_assignment_hist",
+            "id": f"sample_assignment_hist_{generate_random_string(5)}",
             "title": "bases2fastq: Sample Polony Assignment Histogram",
             "style": "lines+markers",
             "xlab": "Assigned Polonies (Range)",
@@ -218,7 +219,7 @@ def plot_sample_read_length(sample_data, group_lookup_dict, project_lookup_dict,
 
         pconfig = {
             "title": "Bases2Fastq: Mean Read Length per Sample",
-            "id": "mean_read_length_per_sample",
+            "id": f"mean_read_length_per_sample_{generate_random_string(5)}",
             "ylab": "Bases",
             "cpswitch": False,
             "subtitle": None,
@@ -271,7 +272,7 @@ def plot_sample_read_length(sample_data, group_lookup_dict, project_lookup_dict,
 
         pconfig.update(
             {
-                "id": "mean_read_length_per_sample",
+                "id": f"mean_read_length_per_sample_{generate_random_string(5)}",
                 "title": "bases2fastq: Mean Read Length Per Sample",
                 "style": "lines+markers",
                 "xlab": "Average Read Length (Range)",
@@ -339,7 +340,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
         "x_lines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "dash"}],
         "colors": color_dict,
         "ymin": 0,
-        "id": "per_cycle_base_content",
+        "id": f"per_cycle_base_content_{generate_random_string(5)}",
         "title": "bases2fastq: Per Cycle Base Content Percentage",
     }
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
@@ -406,7 +407,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
         "colors": color_dict,
         "ymin": 0,
         "ymax": 100,
-        "id": "per_cycle_n_content",
+        "id": f"per_cycle_n_content_{generate_random_string(5)}",
         "title": "bases2fastq: Per Cycle N Content Percentage",
     }
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
@@ -463,7 +464,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
         "xlab": "GC Content (%)",
         "ylab": "Percentage of reads that have GC (%)",
         "colors": sample_color,
-        "id": "gc_hist",
+        "id": f"gc_hist_{generate_random_string(5)}",
         "title": "bases2fastq: Per Sample GC Content Histogram",
     }
     plot_name = "Per Sample GC Histogram"
@@ -520,7 +521,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
                 adapter_percent = cycle["PercentReadsTrimmed"]
                 plot_content[s_name].update({cycle_no: adapter_percent})
     pconfig = {
-        "id": "per_cycle_adapter_content",
+        "id": f"per_cycle_adapter_content_{generate_random_string(5)}",
         "title": "bases2fastq: Per Cycle Adapter Content",
         "xlab": "Cycle",
         "ylab": "% of Sequences",

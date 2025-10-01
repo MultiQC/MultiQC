@@ -470,7 +470,7 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
     pconfig = {
         "title": "Bases2Fastq: Unassigned Indices Metrics",
         "col1_header": "Index #",
-        "id": "index_unassignment_metrics",
+        "id": f"index_unassignment_metrics_{generate_random_string(5)}",
     }
 
     plot_name = "Unassigned Indices Metrics"
@@ -514,7 +514,7 @@ def plot_lane_cycle_stats(run_data, color_dict):
 
     pconfig = {
         "title": "Bases2Fastq: Cycles Per Read Per Lane",
-        "id": "project_cycles_per_read_per_lane",
+        "id": f"project_cycles_per_read_per_lane_{generate_random_string(5)}",
         "ylab": "Read Cycles",
         "cpswitch": False,
         "subtitle": None,
@@ -584,7 +584,7 @@ def plot_base_quality_hist(run_data, color_dict):
                 "colors": color_dict,
             },
         ],
-        "id": "per_run_bq_hist",
+        "id": f"per_run_bq_hist_{generate_random_string(5)}",
         "title": "bases2fastq: Quality Histograms",
         "ylab": "Percentage",
     }
@@ -706,7 +706,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         "x_lines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "dash"}],
         "colors": color_dict,
         "ymin": 0,
-        "id": "per_run_quality_by_cycle",
+        "id": f"per_run_quality_by_cycle_{generate_random_string(5)}",
         "title": "bases2fastq: Quality by cycles",
         "ylab": "QC",
     }
