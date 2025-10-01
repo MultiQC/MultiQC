@@ -3,16 +3,23 @@ import math
 from multiqc.plots import bargraph, linegraph, table
 from multiqc import config
 from natsort import natsorted
+import random
+import string
 
 """
 Functions for plotting per run information of bases2fastq
 """
 
 
+def generate_random_string():
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=4))
+
+
 def plot_run_stats(run_data, color_dict):
     """
     Plot a bar graph for polony numbers, Q30/Q40, index assignment rate and yields for each run
     """
+    random_id = generate_random_string()
     run_names = list(run_data.keys())
     run_names.sort()
     num_polonies = dict()
@@ -58,7 +65,7 @@ def plot_run_stats(run_data, color_dict):
         ],
         "cpswitch": True,
         "stacking": "normal",
-        "id": "run_metrics_bar",
+        "id": f"run_metrics_bar_{random_id}",
         "title": "bases2fastq: General Sequencing Run QC metrics plot",
         "ylab": "QC",
     }
@@ -71,7 +78,7 @@ def plot_run_stats(run_data, color_dict):
     ] * 2
     plot_name = "Sequencing Run Yield"
     plot_html = bargraph.plot(plot_content, cats, pconfig=pconfig)
-    anchor = "run_yield_plot"
+    anchor = f"run_metrics_bar_{random_id}"
     description = "Bar plots of sequencing run yields. Please see individual run reports for details"
     helptext = """
     This section shows and compare the yield and index assignment rate of each sequencing run.\n\n
@@ -287,14 +294,14 @@ def tabulate_run_stats(run_data, color_dict):
     description = "QC metrics per run"
     helptext = """
     This section displays metrics that indicate the quality of each sequencing run: \n
-       - Run Name: Unique identifier composed of (RunName)__(UUID), where (RunName) maps to the AVITI run name and (UUID) maps to the unique Bases2Fastq analysis result.\n
-       - Number of Polonies: The total number of polonies that are calculated for the run.\n
-       - Percentage Assigned Reads: The percentage of reads that are assigned to a sample.\n
-       - Assigned Yield (Gb): The run yield that is based on assigned reads in gigabases.\n
-       - Quality Score Mean: The mean Q score of base calls for the samples. This excludes filtered reads and no calls.\n
-       - Percent Q30: The percentage of ≥ Q30 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
-       - Percent Q40: The percentage of ≥ Q40 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
-       - Reads Eliminated: Number of reads eliminated across lanes.\n
+        - Run Name: Unique identifier composed of (RunName)__(UUID), where (RunName) maps to the AVITI run name and (UUID) maps to the unique Bases2Fastq analysis result.\n
+        - Number of Polonies: The total number of polonies that are calculated for the run.\n
+        - Percentage Assigned Reads: The percentage of reads that are assigned to a sample.\n
+        - Assigned Yield (Gb): The run yield that is based on assigned reads in gigabases.\n
+        - Quality Score Mean: The mean Q score of base calls for the samples. This excludes filtered reads and no calls.\n
+        - Percent Q30: The percentage of ≥ Q30 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
+        - Percent Q40: The percentage of ≥ Q40 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
+        - Reads Eliminated: Number of reads eliminated across lanes.\n
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
@@ -303,6 +310,7 @@ def tabulate_manifest_stats(run_data, color_dict):
     """
     Tabulate general information and statistics of each run
     """
+    random_id = generate_random_string()
     plot_content = dict()
     for s_name in run_data.keys():
         run_stats = dict()
@@ -336,12 +344,12 @@ def tabulate_manifest_stats(run_data, color_dict):
     pconfig = {
         "title": "Bases2Fastq: Run Manifest Metrics",
         "col1_header": "Run Name | Lane",
-        "id": "run_manifest_metrics",
+        "id": f"run_manifest_metrics_table_{random_id}",
     }
 
     plot_name = "Run Manifest Table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
-    anchor = "run_manifest_metrics_table"
+    anchor = f"run_manifest_metrics_table_{random_id}"
     description = "Run parameters used."
     helptext = """
     This section displays metrics that indicate the parameters used in the run: \n
