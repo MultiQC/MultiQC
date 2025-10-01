@@ -74,6 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
         run_level_log_files = len(list(self.find_log_files("bases2fastq/run")))
         project_level_log_files = len(list(self.find_log_files("bases2fastq/project")))
 
+
         if run_level_log_files == 0 and project_level_log_files == 0:
             error_msg = "No run- or project-level log files found within the Bases2Fastq results."
             log.error(error_msg)
@@ -98,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
             [
                 len(self.run_level_data) == 0,
                 num_run_level_samples == 0,
-                len(self.project_level_data),
+                len(self.project_level_data) == 0,
                 num_project_level_samples == 0,
             ]
         ):
