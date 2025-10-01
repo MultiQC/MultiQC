@@ -12,7 +12,7 @@ Functions for plotting per run information of bases2fastq
 
 
 def generate_random_string():
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=4))
+    return "".join(random.choices(string.ascii_letters + string.digits, k=4))
 
 
 def plot_run_stats(run_data, color_dict):
