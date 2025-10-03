@@ -126,7 +126,11 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         "suffix": "%",
     }
 
-    pconfig = {"id": f"sample_qc_metric_table_{generate_random_string(5)}", "title": "Sample QC Metrics Table", "no_violin": False}
+    pconfig = {
+        "id": f"sample_qc_metric_table_{generate_random_string(5)}",
+        "title": "Sample QC Metrics Table",
+        "no_violin": False,
+    }
 
     plot_name = "Sample QC Metrics Table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)

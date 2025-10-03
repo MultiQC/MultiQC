@@ -72,7 +72,6 @@ class MultiqcModule(BaseMultiqcModule):
         run_level_log_files = len(list(self.find_log_files("bases2fastq/run")))
         project_level_log_files = len(list(self.find_log_files("bases2fastq/project")))
 
-
         if run_level_log_files == 0 and project_level_log_files == 0:
             error_msg = "No run- or project-level log files found within the Bases2Fastq results."
             log.error(error_msg)
@@ -188,7 +187,9 @@ class MultiqcModule(BaseMultiqcModule):
             [],
         )
         if len(merged_groups) > len(self.palette):
-            extra_colors = ["#{:06x}".format(random.randrange(0, 0xFFFFFF)) for _ in range(len(self.palette), len(merged_groups))]
+            extra_colors = [
+                "#{:06x}".format(random.randrange(0, 0xFFFFFF)) for _ in range(len(self.palette), len(merged_groups))
+            ]
             self.palette = self.palette + extra_colors
         self.group_color = {g: c for g, c in zip(merged_groups.keys(), self.palette[: len(merged_groups)])}
         self.sample_color = dict()
