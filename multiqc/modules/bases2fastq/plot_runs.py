@@ -371,7 +371,7 @@ def tabulate_index_assignment_stats(run_data, color_dict):
         sample_index_stats.update({"sample_name": sample_data["SampleID"]})
         sample_index_stats.update({"index_1": sample_data["Index1"]})
         sample_index_stats.update({"index_2": sample_data["Index2"]})
-        sample_index_stats.update({"polonies": sample_data["SamplePolonyCounts"]})
+        sample_index_stats.update({"assigned_polonies": sample_data["SamplePolonyCounts"]})
         sample_index_stats.update({"polony_percentage": sample_data["PercentOfPolonies"]})
         plot_content.update({index: sample_index_stats})
 
@@ -388,8 +388,8 @@ def tabulate_index_assignment_stats(run_data, color_dict):
         "title": "Index 2",
         "description": "Sample Index 2 (I2).",
     }
-    headers["polonies"] = {
-        "title": "Polonies",
+    headers["assigned_polonies"] = {
+        "title": "Assigned Polonies",
         "description": "Number of polonies assigned to sample.",
         "scale": "RdYlGn",
     }
@@ -456,14 +456,14 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
     headers["Polonies"] = {
         "title": "Polonies",
         "description": "Number of polonies assigned to indices.",
-        "scale": "RdYlGn_r",
+        "scale": "RdYlGn-rev",
     }
     headers["% Polonies"] = {
         "title": "% Polonies",
         "description": "Percentage of total polonies assigned to this index combination.",
         "max": 100,
         "min": 0,
-        "scale": "RdYlGn_r",
+        "scale": "RdYlGn-rev",
         "suffix": "%",
     }
 
