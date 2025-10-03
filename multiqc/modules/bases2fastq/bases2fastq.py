@@ -24,12 +24,10 @@ from multiqc.modules.bases2fastq.plot_runs import (
 )
 from multiqc.modules.bases2fastq.plot_samples import (
     tabulate_sample_stats,
-    plot_sample_assignment_histogram,
     sequence_content_plot,
     plot_per_cycle_N_content,
     plot_adapter_content,
     plot_per_read_gc_hist,
-    plot_sample_read_length,
 )
 
 log = logging.getLogger(__name__)
@@ -576,8 +574,6 @@ class MultiqcModule(BaseMultiqcModule):
     def add_sample_plots(self, data, group_lookup, project_lookup):
         plot_functions = [
             tabulate_sample_stats,
-            plot_sample_assignment_histogram,
-            plot_sample_read_length,
             sequence_content_plot,
             plot_per_cycle_N_content,
             plot_adapter_content,
