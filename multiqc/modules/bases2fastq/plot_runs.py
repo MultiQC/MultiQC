@@ -179,7 +179,7 @@ def tabulate_project_stats(run_data, color_dict):
     pconfig = {
         "title": "bases2fastq: General Sequencing (Project) QC metrics",
         "col1_header": "Run Name",
-        "id": "project_run_metrics_table",
+        "id": f"project_run_metrics_table_{generate_random_string(5)}",
         "ylab": "QC",
     }
 
@@ -283,7 +283,7 @@ def tabulate_run_stats(run_data, color_dict):
     pconfig = {
         "title": "Bases2Fastq: General Sequencing Run QC metrics",
         "col1_header": "Run Name",
-        "id": "run_metrics_table",
+        "id": f"run_metrics_table_{generate_random_string(5)}",
         "ylab": "QC",
     }
 
@@ -435,7 +435,6 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
         - Polonies
         - % Polonies
     """
-
     headers = {}
     headers["Run Name"] = {
         "title": "Run Name",
@@ -453,7 +452,7 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
         "title": "I2",
         "description": "Index 2.",
     }
-    headers["Polonies"] = {
+    headers["Number of Polonies"] = {
         "title": "Polonies",
         "description": "Number of polonies assigned to indices.",
         "scale": "RdYlGn-rev",

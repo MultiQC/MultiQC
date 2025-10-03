@@ -429,7 +429,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "Lane": lane_id,
                         "I1": sequence["I1"],
                         "I2": sequence["I2"],
-                        "Polonies": sequence["Count"],
+                        "Number of Polonies": sequence["Count"],
                         "% Polonies": float("nan"),
                     }
                     if total_polonies > 0:
