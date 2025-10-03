@@ -37,6 +37,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     Tabulate general information and statistics per sample
     """
     plot_content = dict()
+    reads_present = set()
     for s_name in sample_data.keys():
         general_stats = dict()
         general_stats.update({"group": group_lookup_dict[s_name]})
@@ -48,6 +49,13 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         general_stats.update({"percent_q40_sample": sample_data[s_name]["PercentQ40"]})
         general_stats.update({"reads_eliminated": _calculate_sample_reads_eliminated(sample_data[s_name])})
         general_stats.update({"percent_mismatch": sample_data[s_name]["PercentMismatch"]})
+        if "Reads" in sample_data[s_name]:
+            for read in sample_data[s_name]["Reads"]:
+                read_name = read["Read"]
+                reads_present.add(read_name)
+                mean_length = read["MeanReadLength"]
+                general_stats.update({f"{read_name}_mean_len": mean_length})
+
         plot_content.update({s_name: general_stats})
 
     headers = {}
@@ -97,6 +105,14 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         "scale": "RdYlGn",
         "suffix": "%",
     }
+
+    for read in sorted(reads_present):
+        headers[f"{read}_mean_len"] = {
+            "title": f"{read} Mean Lenght",
+            "description": f"Average read length for read {read}",
+            "scale": "RdYlGn",
+        }
+
     headers["reads_eliminated"] = {
         "title": "Reads Eliminated",
         "description": "Number of reads eliminated.",

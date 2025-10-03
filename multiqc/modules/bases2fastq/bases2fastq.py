@@ -167,6 +167,7 @@ class MultiqcModule(BaseMultiqcModule):
         run_groups = defaultdict(list)
         project_groups = defaultdict(list)
         in_project_sample_groups = defaultdict(list)
+        ind_sample_groups = defaultdict(list)
         sample_to_run_group = {}
         for sample in sample_data.keys():
             (_run_name, _) = sample.split("__")
@@ -174,9 +175,10 @@ class MultiqcModule(BaseMultiqcModule):
             sample_to_run_group[sample] = _run_name
             sample_project = samples_to_projects[sample]
             project_groups[sample_project].append(sample)
+            ind_sample_groups[sample] = [sample]
             if summary_path == "project_level":
                 in_project_sample_groups[sample].append(sample)
-        merged_groups = {**run_groups, **project_groups, **in_project_sample_groups}
+        merged_groups = {**run_groups, **project_groups, **in_project_sample_groups, **ind_sample_groups}
 
         # Assign color for each group
         self.color_getter = mqc_colour.mqc_colour_scale()
@@ -188,8 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
             [],
         )
         if len(merged_groups) > len(self.palette):
-            hex_range = 2**24
-            extra_colors = [hex(random.randrange(0, hex_range)) for _ in range(len(merged_groups), len(self.palette))]
+            extra_colors = ["#{:06x}".format(random.randrange(0, 0xFFFFFF)) for _ in range(len(self.palette), len(merged_groups))]
             self.palette = self.palette + extra_colors
         self.group_color = {g: c for g, c in zip(merged_groups.keys(), self.palette[: len(merged_groups)])}
         self.sample_color = dict()
