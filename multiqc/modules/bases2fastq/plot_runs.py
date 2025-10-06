@@ -117,6 +117,8 @@ def tabulate_project_stats(run_data, color_dict):
     Tabulate general information and statistics of each run
     """
     plot_content = dict()
+    is_percent_q50_present = False
+    reads_present = []
     for s_name in run_data.keys():
         project = run_data[s_name]["Project"]
         run_project_name = f"{s_name} | {project}"
@@ -126,7 +128,20 @@ def tabulate_project_stats(run_data, color_dict):
         run_stats.update({"mean_base_quality_run": run_data[s_name]["QualityScoreMean"]})
         run_stats.update({"percent_q30_run": run_data[s_name]["PercentQ30"]})
         run_stats.update({"percent_q40_run": run_data[s_name]["PercentQ40"]})
+        percent_q50 = run_data[s_name].get("PercentQ50")
+        if percent_q50 is not None:
+            is_percent_q50_present = True
+            run_stats.update({"percent_q50_run": percent_q50})
         run_stats.update({"reads_eliminated": _calculate_reads_eliminated(run_data[s_name])})
+        if "Reads" in run_data[s_name]:
+            for read in run_data[s_name]["Reads"]:
+                if "Cycles" not in read or "Read" not in read:
+                    continue
+                read_name = read["Read"]
+                num_cycles = len(read["Cycles"])
+                reads_present.append(read_name)
+                run_stats.update({f"{read_name}_cycles": num_cycles})
+
         plot_content.update({run_project_name: run_stats})
 
     headers = {}
@@ -171,6 +186,22 @@ def tabulate_project_stats(run_data, color_dict):
         "scale": "RdYlGn",
         "suffix": "%",
     }
+    if is_percent_q50_present:
+        headers["percent_q50_run"] = {
+            "title": "Percent Q50",
+            "description": "The percentage of ≥ Q50 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.",
+            "max": 100,
+            "min": 0,
+            "scale": "RdYlGn",
+            "suffix": "%",
+        }
+    for read in reads_present:
+        headers[f"{read}_cycles"] = {
+            "title": f"Cycles {read}",
+            "description": f"Number of cycles for read {read}.",
+            "scale": "RdPu",
+        }
+
     headers["reads_eliminated"] = {
         "title": "Reads Eliminated",
         "description": "Number of reads eliminated.",
@@ -213,6 +244,8 @@ def tabulate_run_stats(run_data, color_dict):
     Tabulate general information and statistics of each run
     """
     plot_content = dict()
+    is_percent_q50_present = False
+    reads_present = []
     for s_name in run_data.keys():
         run_stats = dict()
         run_stats.update({"num_polonies_run": int(run_data[s_name]["NumPolonies"])})
@@ -222,7 +255,20 @@ def tabulate_run_stats(run_data, color_dict):
         run_stats.update({"mean_base_quality_run": run_data[s_name]["QualityScoreMean"]})
         run_stats.update({"percent_q30_run": run_data[s_name]["PercentQ30"]})
         run_stats.update({"percent_q40_run": run_data[s_name]["PercentQ40"]})
+        percent_q50 = run_data[s_name].get("PercentQ50")
+        if percent_q50 is not None:
+            is_percent_q50_present = True
+            run_stats.update({"percent_q50_run": percent_q50})
         run_stats.update({"reads_eliminated": _calculate_reads_eliminated(run_data[s_name])})
+        if "Reads" in run_data[s_name]:
+            for read in run_data[s_name]["Reads"]:
+                if "Cycles" not in read or "Read" not in read:
+                    continue
+                read_name = read["Read"]
+                num_cycles = len(read["Cycles"])
+                reads_present.append(read_name)
+                run_stats.update({f"{read_name}_cycles": num_cycles})
+
         plot_content.update({s_name: run_stats})
 
     headers = {}
@@ -275,6 +321,21 @@ def tabulate_run_stats(run_data, color_dict):
         "scale": "RdYlGn",
         "suffix": "%",
     }
+    if is_percent_q50_present:
+        headers["percent_q50_run"] = {
+            "title": "Percent Q50",
+            "description": "The percentage of ≥ Q50 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.",
+            "max": 100,
+            "min": 0,
+            "scale": "RdYlGn",
+            "suffix": "%",
+        }
+    for read in reads_present:
+        headers[f"{read}_cycles"] = {
+            "title": f"Cycles {read}",
+            "description": f"Number of cycles for read {read}.",
+            "scale": "RdPu",
+        }
     headers["reads_eliminated"] = {
         "title": "Reads Eliminated",
         "description": "Number of reads eliminated.",
@@ -300,6 +361,7 @@ def tabulate_run_stats(run_data, color_dict):
         - Quality Score Mean: The mean Q score of base calls for the samples. This excludes filtered reads and no calls.\n
         - Percent Q30: The percentage of ≥ Q30 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
         - Percent Q40: The percentage of ≥ Q40 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
+        - Percent Q50: The percentage of ≥ Q50 Q scores for the run (when applicable). This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
         - Reads Eliminated: Number of reads eliminated across lanes.\n
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content
@@ -488,48 +550,6 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
     return plot_html, plot_name, anchor, description, helptext, run_data
 
 
-def plot_lane_cycle_stats(run_data, color_dict):
-    """
-    Plot number of cycles per read and lane
-    """
-    plot_content = dict()
-    for s_name in run_data.keys():
-        if "Lanes" not in run_data[s_name]:
-            continue
-        for lane in run_data[s_name]["Lanes"]:
-            if "Lane" not in lane or "Reads" not in lane:
-                continue
-            lane_stats = dict()
-            lane_name = f"L{lane['Lane']}"
-            run_name = f"{s_name} | {lane_name}"
-            lane_stats[run_name] = {}
-            for read in lane["Reads"]:
-                if "Cycles" not in read or "Read" not in read:
-                    continue
-                read_name = read["Read"]
-                num_cycles = len(read["Cycles"])
-                lane_stats[run_name][read_name] = num_cycles
-            plot_content.update(lane_stats)
-
-    pconfig = {
-        "title": "Bases2Fastq: Cycles Per Read Per Lane",
-        "id": f"project_cycles_per_read_per_lane_{generate_random_string(5)}",
-        "ylab": "Read Cycles",
-        "cpswitch": False,
-        "subtitle": None,
-    }
-
-    plot_name = "Cycles Per Read Per Lane"
-    plot_html = bargraph.plot(plot_content, pconfig=pconfig)
-    anchor = "cycles_per_read_per_lane"
-    description = "Number of sequencing cycles per read in each lane."
-    helptext = """
-    Shows the number of cycles used for each read in every flowcell lane. 
-    Useful for confirming that read lengths match the expected sequencing setup across all lanes.
-    """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
-
-
 def plot_base_quality_hist(run_data, color_dict):
     # Prepare plot data for per base BQ histogram
     bq_hist_dict = dict()
@@ -675,6 +695,31 @@ def plot_base_quality_by_cycle(run_data, color_dict):
                 cycle_dict.update({cycle_no: cycle["PercentQ40"]})
         Q40_dict.update({s_name: cycle_dict})
 
+    # Prepare plot data for %Q50 of each cycle
+    Q50_dict = {}
+    percent_q50_values = set()
+    for s_name in run_data.keys():
+        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
+        cycle_dict = dict()
+        for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
+            cycle_no = int(cycle["Cycle"])
+            if "PercentQ50" not in cycle:
+                continue
+            cycle_perc_q50 = cycle["PercentQ50"]
+            cycle_dict.update({cycle_no: cycle_perc_q50})
+            if cycle_perc_q50 is not None:
+                percent_q50_values.add(cycle_perc_q50)
+        if paired_end:
+            for cycle in run_data[s_name]["Reads"][1]["Cycles"]:
+                cycle_no = int(cycle["Cycle"]) + r1r2_split
+                if "PercentQ50" not in cycle:
+                    continue
+                cycle_perc_q50 = cycle["PercentQ50"]
+                cycle_dict.update({cycle_no: cycle_perc_q50})
+                if cycle_perc_q50 is not None:
+                    percent_q50_values.add(cycle_perc_q50)
+        Q50_dict.update({s_name: cycle_dict})
+
     # Prepare plot data for % base calls below PF threshold
     below_pf_dict = {}
     for s_name in run_data.keys():
@@ -709,13 +754,16 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         "title": "bases2fastq: Quality by cycles",
         "ylab": "QC",
     }
+    if len(percent_q50_values) > 0 and any(v is not None for v in percent_q50_values):
+        plot_content.insert(4, Q50_dict)
+        pconfig["data_labels"].insert(4, {"name": "%Q50", "xlab": "cycle", "ylab": "Percentage", "ymax": 100})
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
     plot_name = "Quality Metrics By Cycle"
     anchor = "per_cycle_quality"
     description = "Per run base qualities by cycle. Read 1 and Read 2 are separated by a red dashed line."
     helptext = """
     This section plots the base qualities by each instrument cycle.\n
-    Choose between Median Quality, Mean Quality, Percent Q30 or Percentage Q40 per cycle.\n
+    Choose between Median Quality, Mean Quality, Percent Q30, Percent Q40 or Percent Q50 (when applicable) per cycle.\n
     Read 1 and Read 2 are separated by a red dashed line.
     """
     return plot_html, plot_name, anchor, description, helptext, plot_content

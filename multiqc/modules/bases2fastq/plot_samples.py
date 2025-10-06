@@ -38,6 +38,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     """
     plot_content = dict()
     reads_present = set()
+    is_percent_q50_present = False
     for s_name in sample_data.keys():
         general_stats = dict()
         general_stats.update({"group": group_lookup_dict[s_name]})
@@ -47,6 +48,10 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         general_stats.update({"mean_base_quality_sample": sample_data[s_name]["QualityScoreMean"]})
         general_stats.update({"percent_q30_sample": sample_data[s_name]["PercentQ30"]})
         general_stats.update({"percent_q40_sample": sample_data[s_name]["PercentQ40"]})
+        percent_q50 = sample_data[s_name].get("PercentQ50")
+        if percent_q50 is not None:
+            is_percent_q50_present = True
+            general_stats.update({"percent_q50_run": percent_q50})
         general_stats.update({"reads_eliminated": _calculate_sample_reads_eliminated(sample_data[s_name])})
         general_stats.update({"percent_mismatch": sample_data[s_name]["PercentMismatch"]})
         if "Reads" in sample_data[s_name]:
@@ -74,24 +79,24 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     }
     headers["num_polonies_sample"] = {
         "title": "# Polonies",
-        "description": "The total number of polonies that are calculated for the run",
+        "description": "The total number of polonies that are calculated for the run.",
         "min": 0,
         "scale": "Blues",
     }
     headers["yield_sample"] = {
         "title": "Yield (Gb)",
-        "description": "The sample yield based on assigned reads in gigabases",
+        "description": "The sample yield based on assigned reads in gigabases.",
         "scale": "Greens",
     }
     headers["mean_base_quality_sample"] = {
         "title": "Mean Base Quality",
-        "description": "Average base quality across R1/R2",
+        "description": "Average base quality across R1/R2.",
         "min": 0,
         "scale": "Spectral",
     }
     headers["percent_q30_sample"] = {
         "title": "Percent Q30",
-        "description": "The percentage of ≥ Q30 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls",
+        "description": "The percentage of ≥ Q30 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls.",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
@@ -99,12 +104,21 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     }
     headers["percent_q40_sample"] = {
         "title": "Percent Q40",
-        "description": "The percentage of ≥ Q40 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls",
+        "description": "The percentage of ≥ Q40 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls.",
         "max": 100,
         "min": 0,
         "scale": "RdYlGn",
         "suffix": "%",
     }
+    if is_percent_q50_present:
+        headers["percent_q50_run"] = {
+            "title": "Percent Q50",
+            "description": "The percentage of ≥ Q50 Q scores for the sample. This includes assigned reads and excludes filtered reads and no calls.",
+            "max": 100,
+            "min": 0,
+            "scale": "RdYlGn",
+            "suffix": "%",
+        }
 
     for read in sorted(reads_present):
         headers[f"{read}_mean_len"] = {

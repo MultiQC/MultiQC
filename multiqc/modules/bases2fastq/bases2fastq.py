@@ -20,7 +20,6 @@ from multiqc.modules.bases2fastq.plot_runs import (
     tabulate_project_stats,
     plot_base_quality_hist,
     plot_base_quality_by_cycle,
-    plot_lane_cycle_stats,
 )
 from multiqc.modules.bases2fastq.plot_samples import (
     tabulate_sample_stats,
@@ -196,7 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in samples_to_projects.keys():
             s_color = (
                 self.group_color[s_name]
-                if summary_path == "project_level"
+                if (summary_path == "project_level" or len(project_groups) == 1)
                 else self.group_color[samples_to_projects[s_name]]
             )
             self.sample_color.update({s_name: s_color})
@@ -231,7 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_run_plots(
             data=run_data,
-            plot_functions=[plot_lane_cycle_stats, plot_run_stats, plot_base_quality_hist, plot_base_quality_by_cycle],
+            plot_functions=[plot_run_stats, plot_base_quality_hist, plot_base_quality_by_cycle],
         )
 
         self.add_sample_plots(data=sample_data, group_lookup=samples_to_projects, project_lookup=samples_to_projects)
@@ -516,15 +515,17 @@ class MultiqcModule(BaseMultiqcModule):
                                 f"Missing data needed to extract index assignment for sample {sample_id}. Skipping."
                             )
                             continue
-                        if sample_expected_seq not in sample_to_index_assignment:
-                            sample_to_index_assignment[sample_expected_seq] = {
+                        if run_analysis_name not in sample_to_index_assignment:
+                            sample_to_index_assignment[run_analysis_name] = {}
+                        if sample_expected_seq not in sample_to_index_assignment[run_analysis_name]:
+                            sample_to_index_assignment[run_analysis_name][sample_expected_seq] = {
                                 "SampleID": sample_id,
                                 "SamplePolonyCounts": 0,
                                 "PercentOfPolonies": float("nan"),
                                 "Index1": "",
                                 "Index2": "",
                             }
-                        sample_to_index_assignment[sample_expected_seq]["SamplePolonyCounts"] += sample_counts
+                        sample_to_index_assignment[run_analysis_name][sample_expected_seq]["SamplePolonyCounts"] += sample_counts
 
             for index_assigment in sample_to_index_assignment.values():
                 if total_polonies > 0:
