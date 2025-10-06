@@ -525,7 +525,9 @@ class MultiqcModule(BaseMultiqcModule):
                                 "Index1": "",
                                 "Index2": "",
                             }
-                        sample_to_index_assignment[run_analysis_name][sample_expected_seq]["SamplePolonyCounts"] += sample_counts
+                        sample_to_index_assignment[run_analysis_name][sample_expected_seq]["SamplePolonyCounts"] += (
+                            sample_counts
+                        )
 
             for index_assigment in sample_to_index_assignment.values():
                 if total_polonies > 0:
