@@ -147,6 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
             run_data = self.project_level_data
             sample_data = self.project_level_samples
             samples_to_projects = self.project_level_samples_to_project
+            index_assigment_data = self._parse_index_assignment_in_project("bases2fastq/project")
         elif summary_path == "combined_level":
             run_data = self.run_level_data
             sample_data = self.project_level_samples
@@ -225,6 +226,13 @@ class MultiqcModule(BaseMultiqcModule):
                 data=unassigned_sequences,
                 plot_functions=[
                     tabulate_unassigned_index_stats,
+                ],
+            )
+        else:
+            self.add_run_plots(
+                data=index_assigment_data,
+                plot_functions=[
+                    tabulate_index_assignment_stats,
                 ],
             )
 
@@ -529,11 +537,11 @@ class MultiqcModule(BaseMultiqcModule):
                             sample_counts
                         )
 
-            for index_assigment in sample_to_index_assignment.values():
-                if total_polonies > 0:
-                    index_assigment["PercentOfPolonies"] = round(
-                        index_assigment["SamplePolonyCounts"] / total_polonies * 100, 2
-                    )
+                for sample_data in sample_to_index_assignment[run_analysis_name].values():
+                    if total_polonies > 0:
+                        sample_data["PercentOfPolonies"] = round(
+                            sample_data["SamplePolonyCounts"] / total_polonies * 100, 2
+                        )
 
             run_manifest = json.loads(f["f"])
             if "Samples" not in run_manifest:
@@ -554,18 +562,150 @@ class MultiqcModule(BaseMultiqcModule):
                         index_1 = index_data.get("Index1", "")
                         index_2 = index_data.get("Index2", "")
                         merged_indices = f"{index_1}{index_2}"
-                        if merged_indices not in sample_to_index_assignment:
+                        if merged_indices not in sample_to_index_assignment[run_analysis_name]:
                             log.error(f"Index assignment information not found for sample {sample_id}. Skipping.")
                             continue
-                        if sample_id != sample_to_index_assignment[merged_indices]["SampleID"]:
+                        if sample_id != sample_to_index_assignment[run_analysis_name][merged_indices]["SampleID"]:
                             log.error(
                                 f"RunManifest SampleID <{sample_id}> does not match "
                                 f"RunStats SampleID {sample_to_index_assignment[merged_indices]['SampleID']}."
                                 "Skipping."
                             )
                             continue
-                        sample_to_index_assignment[merged_indices]["Index1"] = index_1
-                        sample_to_index_assignment[merged_indices]["Index2"] = index_2
+                        sample_to_index_assignment[run_analysis_name][merged_indices]["Index1"] = index_1
+                        sample_to_index_assignment[run_analysis_name][merged_indices]["Index2"] = index_2
+
+        return sample_to_index_assignment
+    
+    def _parse_index_assignment_in_project(self, data_source: str) -> Dict[str, Any]:
+        sample_to_index_assignment = {}
+
+        if data_source == "":
+            return sample_to_index_assignment
+
+        for f in self.find_log_files(data_source):
+            directory = f.get("root")
+            if not directory:
+                continue
+
+            # Get RunName and RunID from RunParameters.json
+            run_manifest = Path(directory) / "../../RunManifest.json"
+            if not run_manifest.exists():
+                log.error(
+                    f"RunManifest.json could not be found in {run_manifest}. Skipping index assignment.\n"
+                    "Please visit Elembio online documentation for more information - "
+                    "https://docs.elembio.io/docs/bases2fastq/introduction/"
+                )
+                continue
+
+            project_stats = json.loads(f["f"])
+            run_analysis_name = None
+            run_name = project_stats.get("RunName", None)
+            analysis_id = project_stats.get("AnalysisID", None)
+            project = self.clean_s_name(project_stats.get("Project", "DefaultProject"), f)
+
+            if run_name and analysis_id:
+                run_analysis_name = "-".join([run_name, analysis_id[0:4]])
+            else:
+                log.error(
+                    "Error with project's RunStats.json. Either RunName or AnalysisID is absent.\n"
+                    "Please visit Elembio online documentation for more information - "
+                    "https://docs.elembio.io/docs/bases2fastq/introduction/"
+                )
+                log.debug(f"Error in RunStats.json: {f['fn']}")
+                log.debug(f"Missing: RunName: {run_name} or AnalysisID: {analysis_id}")
+                continue
+
+            # skip run if in user provider ignore list
+            if self.is_ignore_sample(run_analysis_name):
+                log.info(f"Skipping <{run_analysis_name}> because it is present in ignore list.")
+                continue
+
+            # Ensure sample stats are present
+            if "SampleStats" not in project_stats:
+                log.error(
+                    "Error, missing SampleStats in RunStats.json. Skipping index assignment metrics.\n"
+                    "Please visit Elembio online documentation for more information - "
+                    "https://docs.elembio.io/docs/bases2fastq/introduction/"
+                )
+                log.debug(f"Missing SampleStats in RunStats.json. Available keys: {list(project_stats.keys())}.")
+                continue
+
+            # Extract per sample polony counts and overall total counts
+            total_polonies = project_stats.get("NumPoloniesBeforeTrimming", 0)
+            for sample_data in project_stats["SampleStats"]:
+                sample_name = sample_data.get("SampleName")
+                sample_id = None
+
+                if run_analysis_name and sample_name:
+                    sample_id = "__".join([run_analysis_name, sample_name])
+
+                if "Occurrences" not in sample_data:
+                    log.error(f"Missing data needed to extract index assignment for sample {sample_id}. Skipping.")
+                    continue
+
+                for occurrence in sample_data["Occurrences"]:
+                    sample_expected_seq = occurrence.get("ExpectedSequence")
+                    sample_counts = occurrence.get("NumPoloniesBeforeTrimming")
+                    if any([element is None for element in [sample_expected_seq, sample_counts, sample_id]]):
+                        log.error(
+                            f"Missing data needed to extract index assignment for sample {sample_id}. Skipping."
+                        )
+                        continue
+                    if run_analysis_name not in sample_to_index_assignment:
+                        sample_to_index_assignment[run_analysis_name] = {}
+                    if sample_expected_seq not in sample_to_index_assignment[run_analysis_name]:
+                        sample_to_index_assignment[run_analysis_name][sample_expected_seq] = {
+                            "SampleID": sample_id,
+                            "Project": project,
+                            "SamplePolonyCounts": 0,
+                            "PercentOfPolonies": float("nan"),
+                            "Index1": "",
+                            "Index2": "",
+                        }
+                    sample_to_index_assignment[run_analysis_name][sample_expected_seq]["SamplePolonyCounts"] += (
+                        sample_counts
+                    )
+
+            for sample_data in sample_to_index_assignment[run_analysis_name].values():
+                if total_polonies > 0:
+                    sample_data["PercentOfPolonies"] = round(
+                        sample_data["SamplePolonyCounts"] / total_polonies * 100, 2
+                    )
+            
+            run_manifest_data = None
+            with open(run_manifest) as _infile:
+                run_manifest_data = json.load(_infile)
+
+            if "Samples" not in run_manifest_data:
+                log.warning(
+                    f"<Samples> section not found in {directory}/RunManifest.json.\n"
+                    f"Skipping RunManifest sample index assignment metrics."
+                )
+            elif len(sample_to_index_assignment) == 0:
+                log.warning("Index assignment data missing. Skipping creation of index assignment metrics.")
+            else:
+                for sample_data in run_manifest_data["Samples"]:
+                    sample_name = sample_data.get("SampleName")
+                    sample_id = None
+                    if run_analysis_name is None or sample_name is None or "Indexes" not in sample_data:
+                        continue
+                    sample_id = "__".join([run_analysis_name, sample_name])
+                    for index_data in sample_data["Indexes"]:
+                        index_1 = index_data.get("Index1", "")
+                        index_2 = index_data.get("Index2", "")
+                        merged_indices = f"{index_1}{index_2}"
+                        if merged_indices not in sample_to_index_assignment[run_analysis_name]:
+                            continue
+                        if sample_id != sample_to_index_assignment[run_analysis_name][merged_indices]["SampleID"]:
+                            log.error(
+                                f"RunManifest SampleID <{sample_id}> does not match "
+                                f"RunStats SampleID {sample_to_index_assignment[merged_indices]['SampleID']}."
+                                "Skipping."
+                            )
+                            continue
+                        sample_to_index_assignment[run_analysis_name][merged_indices]["Index1"] = index_1
+                        sample_to_index_assignment[run_analysis_name][merged_indices]["Index2"] = index_2
 
         return sample_to_index_assignment
 

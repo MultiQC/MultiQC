@@ -426,21 +426,40 @@ def tabulate_index_assignment_stats(run_data, color_dict):
     Tabulate general information and statistics of each run
     """
     plot_content = dict()
-    sorted_run_data = natsorted(run_data.items(), key=lambda x: x[1]["SampleID"])
-    for index, sample_data in enumerate(sorted_run_data, start=1):
-        sample_data = sample_data[1]
-        sample_index_stats = dict()
-        sample_index_stats.update({"sample_name": sample_data["SampleID"]})
-        sample_index_stats.update({"index_1": sample_data["Index1"]})
-        sample_index_stats.update({"index_2": sample_data["Index2"]})
-        sample_index_stats.update({"assigned_polonies": sample_data["SamplePolonyCounts"]})
-        sample_index_stats.update({"polony_percentage": sample_data["PercentOfPolonies"]})
-        plot_content.update({index: sample_index_stats})
+    run_names = sorted(run_data.keys())
+    index = 1
+    project_present = False
+    for run in run_names:
+        run_sample_data = run_data[run]
+        sorted_run_sample_data = natsorted(run_sample_data.items(), key=lambda x: x[1]["SampleID"])
+        for sample_data in sorted_run_sample_data:
+            sample_data = sample_data[1]
+            sample_index_stats = dict()
+            sample_index_stats.update({"run_name": run})
+            if "Project" in sample_data:
+                sample_index_stats.update({"project": sample_data["Project"]})
+                project_present = True
+            sample_index_stats.update({"sample_name": sample_data["SampleID"].split("__")[1]})
+            sample_index_stats.update({"index_1": sample_data["Index1"]})
+            sample_index_stats.update({"index_2": sample_data["Index2"]})
+            sample_index_stats.update({"assigned_polonies": sample_data["SamplePolonyCounts"]})
+            sample_index_stats.update({"polony_percentage": sample_data["PercentOfPolonies"]})
+            plot_content.update({index: sample_index_stats})
+            index += 1
 
     headers = {}
+    headers["run_name"] = {
+        "title": "Run Name",
+        "description": "Run Name.",
+    }
+    if project_present:
+        headers["project"] = {
+        "title": "Project",
+        "description": "Run Project.",
+    }
     headers["sample_name"] = {
         "title": "Sample Name",
-        "description": "Sample Name (RunID + Sample ID).",
+        "description": "Sample Name.",
     }
     headers["index_1"] = {
         "title": "Index 1",
