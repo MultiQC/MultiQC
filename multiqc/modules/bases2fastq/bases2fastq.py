@@ -576,7 +576,7 @@ class MultiqcModule(BaseMultiqcModule):
                         sample_to_index_assignment[run_analysis_name][merged_indices]["Index2"] = index_2
 
         return sample_to_index_assignment
-    
+
     def _parse_index_assignment_in_project(self, data_source: str) -> Dict[str, Any]:
         sample_to_index_assignment = {}
 
@@ -648,9 +648,7 @@ class MultiqcModule(BaseMultiqcModule):
                     sample_expected_seq = occurrence.get("ExpectedSequence")
                     sample_counts = occurrence.get("NumPoloniesBeforeTrimming")
                     if any([element is None for element in [sample_expected_seq, sample_counts, sample_id]]):
-                        log.error(
-                            f"Missing data needed to extract index assignment for sample {sample_id}. Skipping."
-                        )
+                        log.error(f"Missing data needed to extract index assignment for sample {sample_id}. Skipping.")
                         continue
                     if run_analysis_name not in sample_to_index_assignment:
                         sample_to_index_assignment[run_analysis_name] = {}
@@ -672,7 +670,7 @@ class MultiqcModule(BaseMultiqcModule):
                     sample_data["PercentOfPolonies"] = round(
                         sample_data["SamplePolonyCounts"] / total_polonies * 100, 2
                     )
-            
+
             run_manifest_data = None
             with open(run_manifest) as _infile:
                 run_manifest_data = json.load(_infile)

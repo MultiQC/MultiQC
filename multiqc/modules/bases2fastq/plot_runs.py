@@ -454,9 +454,9 @@ def tabulate_index_assignment_stats(run_data, color_dict):
     }
     if project_present:
         headers["project"] = {
-        "title": "Project",
-        "description": "Run Project.",
-    }
+            "title": "Project",
+            "description": "Run Project.",
+        }
     headers["sample_name"] = {
         "title": "Sample Name",
         "description": "Sample Name.",
