@@ -9,6 +9,7 @@ import uuid
 from pathlib import Path
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.types import LoadedFileDict
 from multiqc.utils import mqc_colour
 
 from multiqc.modules.bases2fastq.plot_runs import (
@@ -147,6 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
             run_data = self.project_level_data
             sample_data = self.project_level_samples
             samples_to_projects = self.project_level_samples_to_project
+            manifest_data = self._parse_run_manifest_in_project("bases2fastq/project")
             index_assigment_data = self._parse_index_assignment_in_project("bases2fastq/project")
         elif summary_path == "combined_level":
             run_data = self.run_level_data
@@ -208,14 +210,13 @@ class MultiqcModule(BaseMultiqcModule):
             tabulate_run_stats if summary_path in ["run_level", "combined_level"] else tabulate_project_stats
         )
         self.add_run_plots(data=run_data, plot_functions=[qc_metrics_function])
-
+        self.add_run_plots(
+            data=manifest_data,
+            plot_functions=[
+                tabulate_manifest_stats,
+            ],
+        )
         if summary_path in ["run_level", "combined_level"]:
-            self.add_run_plots(
-                data=manifest_data,
-                plot_functions=[
-                    tabulate_manifest_stats,
-                ],
-            )
             self.add_run_plots(
                 data=index_assigment_data,
                 plot_functions=[
@@ -390,6 +391,95 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
 
         return runs_manifest_data
+
+    def _parse_run_manifest_in_project(self, data_source: str) -> Dict[str, Any]:
+        project_manifest_data = {}
+
+        if data_source == "":
+            return project_manifest_data
+
+        for f in self.find_log_files(data_source):
+            directory = f.get("root")
+            if not directory:
+                continue
+
+            # Get RunName and RunID from RunParameters.json
+            run_manifest = Path(directory) / "../../RunManifest.json"
+            if not run_manifest.exists():
+                log.error(
+                    f"RunManifest.json could not be found in {run_manifest}. Skipping index assignment.\n"
+                    "Please visit Elembio online documentation for more information - "
+                    "https://docs.elembio.io/docs/bases2fastq/introduction/"
+                )
+                continue
+
+            project_stats = json.loads(f["f"])
+            run_analysis_name = None
+            run_name = project_stats.get("RunName", None)
+            analysis_id = project_stats.get("AnalysisID", None)
+
+            if run_name and analysis_id:
+                run_analysis_name = "-".join([run_name, analysis_id[0:4]])
+            else:
+                log.error(
+                    "Error with project's RunStats.json. Either RunName or AnalysisID is absent.\n"
+                    "Please visit Elembio online documentation for more information - "
+                    "https://docs.elembio.io/docs/bases2fastq/introduction/"
+                )
+                log.debug(f"Error in RunStats.json: {f['fn']}")
+                log.debug(f"Missing: RunName: {run_name} or AnalysisID: {analysis_id}")
+                continue
+
+            # skip run if in user provider ignore list
+            if self.is_ignore_sample(run_analysis_name):
+                log.info(f"Skipping <{run_analysis_name}> because it is present in ignore list.")
+                continue
+
+            run_manifest_data = None
+            with open(run_manifest) as _infile:
+                run_manifest_data = json.load(_infile)
+
+            if "Settings" not in run_manifest_data:
+                log.warning(f"<Settings> section not found in {run_manifest}.\nSkipping RunManifest metrics.")
+            else:
+                for lane_data in run_manifest_data["Settings"]:
+                    lane_id = lane_data.get("Lane")
+                    if not lane_id:
+                        log.error("<Lane> not found in Settings section of RunManifest. Skipping lanes.")
+                        continue
+                    lane_name = f"L{lane_id}"
+                    run_lane = f"{run_analysis_name} | {lane_name}"
+                    project_manifest_data[run_lane] = {}
+
+                    indices = []
+                    indices_cycles = []
+                    mask_pattern = re.compile(r"^I\d+Mask$")
+                    matching_keys = [key for key in lane_data.keys() if mask_pattern.match(key)]
+                    for key in matching_keys:
+                        for mask_info in lane_data[key]:
+                            if mask_info["Read"] not in indices:
+                                indices.append(mask_info["Read"])
+                            indices_cycles.append(str(len(mask_info["Cycles"])))
+                    indexing = f"{' + '.join(indices_cycles)}<br>{' + '.join(indices)}"
+                    project_manifest_data[run_lane]["Indexing"] = indexing
+
+                    project_manifest_data[run_lane]["AdapterTrimType"] = lane_data.get("AdapterTrimType", "N/A")
+                    project_manifest_data[run_lane]["R1AdapterMinimumTrimmedLength"] = lane_data.get(
+                        "R1AdapterMinimumTrimmedLength", "N/A"
+                    )
+                    project_manifest_data[run_lane]["R2AdapterMinimumTrimmedLength"] = lane_data.get(
+                        "R2AdapterMinimumTrimmedLength", "N/A"
+                    )
+            data_source_info: LoadedFileDict[Any] = {
+                "fn": str(run_manifest.name),
+                "root": str(run_manifest.parent),
+                "sp_key": data_source,
+                "s_name": str(run_manifest.with_suffix("").name),
+                "f": run_manifest_data,
+            }
+            self.add_data_source(f=data_source_info, s_name=run_analysis_name, module="bases2fastq")
+
+        return project_manifest_data
 
     def _parse_run_unassigned_sequences(self, data_source: str) -> Dict[str, Any]:
         run_unassigned_sequences = {}
