@@ -29,8 +29,9 @@ $(function () {
       toolboxOffcanvas.show();
     }
 
-    // Show the specific tab
-    const tabTrigger = new bootstrap.Tab(targetTab);
+    // Find the actual tab trigger button in the toolbox that corresponds to this tab
+    const actualTabTrigger = $(`.mqc-toolbox-buttons a[href="${targetTab}"]`)[0];
+    const tabTrigger = new bootstrap.Tab(actualTabTrigger);
     tabTrigger.show();
 
     // Close mobile navigation
