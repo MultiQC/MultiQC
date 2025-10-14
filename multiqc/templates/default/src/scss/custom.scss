@@ -99,7 +99,7 @@ hr {
 
   /* Side nav header and logo */
   .side-nav-title a {
-    color: #333;
+    color: $body-color;
     font-size: 16px;
     font-weight: normal;
     padding: 15px 0;
@@ -114,7 +114,7 @@ hr {
   .mqc_loading_warning {
     text-align: center;
     border-bottom: 1px solid $border-color;
-    color: #ca424c;
+    color: $danger;
   }
 
   p {
@@ -164,7 +164,7 @@ hr {
         padding: 5px 10px 5px 15px;
         border-top: 1px solid $border-color;
         font-size: 0.9em;
-        color: #788fa4;
+        color: $secondary;
       }
     }
   }
@@ -261,8 +261,8 @@ hr {
 
 .report_comment,
 .mqc-section-comment {
-  border-left: 5px solid #8eb9dd;
-  background-color: #e8f1f8;
+  border-left: 5px solid $info;
+  background-color: $info-bg-subtle;
 }
 
 .mqc-module-title-section {
@@ -346,25 +346,25 @@ h2.mqc-module-title {
 }
 
 ::-webkit-scrollbar-track {
-  background: #ffffff;
-  border-left: 1px solid #d8d8d8;
-  border-right: 1px solid #d8d8d8;
+  background: $body-bg;
+  border-left: 1px solid $border-color;
+  border-right: 1px solid $border-color;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #dedede;
+  background: $body-secondary-bg;
 
   &:hover {
-    -moz-box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
-    -webkit-box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
-    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+    -moz-box-shadow: $box-shadow-inset;
+    -webkit-box-shadow: $box-shadow-inset;
+    box-shadow: $box-shadow-inset;
   }
 
   &:active {
-    background: #dddddd;
-    -moz-box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.4);
-    -webkit-box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.4);
-    box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.2);
+    background: $body-tertiary-bg;
+    -moz-box-shadow: $box-shadow-inset;
+    -webkit-box-shadow: $box-shadow-inset;
+    box-shadow: $box-shadow-inset;
   }
 }
 
@@ -552,7 +552,7 @@ input.form-control[type="color"] {
     border-radius: 3px;
     padding: 2px 5px;
     margin-left: 5px;
-    background-color: #ddd;
+    background-color: $body-secondary-bg;
   }
 
   .off::after,
@@ -562,7 +562,7 @@ input.form-control[type="color"] {
     height: 0;
     width: 0;
     border-radius: 6px;
-    border: 6px solid #fff;
+    border: 6px solid $body-bg;
   }
 
   .off::after {
@@ -574,8 +574,8 @@ input.form-control[type="color"] {
   }
 
   .on {
-    background-color: #5bc0de;
-    color: #fff;
+    background-color: $primary;
+    color: $body-bg;
   }
 }
 
@@ -592,14 +592,14 @@ input.form-control[type="color"] {
     font-size: 85%;
     padding: 0;
     margin: 5px 0;
-    color: #666;
+    color: $secondary;
 
     a {
-      color: #666;
+      color: $secondary;
     }
 
     .btn {
-      color: #333;
+      color: $body-color;
     }
   }
 
@@ -645,7 +645,7 @@ input.form-control[type="color"] {
   width: calc(100% - 55px);
 
   &:focus {
-    background-color: #f6f6f6;
+    background-color: $body-tertiary-bg;
   }
 }
 
@@ -687,7 +687,7 @@ input.form-control[type="color"] {
     font-size: 0.7em;
     padding: 0 0 0 10px;
     border-left: 2px solid $border-color;
-    color: #666;
+    color: $secondary;
 
     a {
       text-decoration: underline;
@@ -700,7 +700,7 @@ input.form-control[type="color"] {
 
     li {
       a {
-        background-color: #dddddd;
+        background-color: $body-secondary-bg;
         border-color: $border-color;
         padding: 8px 10px;
         color: $body-tertiary-color;
@@ -708,9 +708,9 @@ input.form-control[type="color"] {
       }
 
       &.active a {
-        background-color: #eeeeee;
+        background-color: $body-tertiary-bg;
         border-bottom-color: transparent;
-        color: #333;
+        color: $body-color;
       }
     }
   }
@@ -719,12 +719,12 @@ input.form-control[type="color"] {
 /* Config save/clear success messages */
 #mqc-save-success {
   color: $success-text-emphasis;
-  background-color: #dff0d8;
+  background-color: $success-bg-subtle;
 }
 
 #mqc-cleared-success {
   color: $danger-text-emphasis;
-  background-color: #f2dede;
+  background-color: $danger-bg-subtle;
 }
 
 /* About modal */
@@ -741,7 +741,7 @@ input.form-control[type="color"] {
     font-size: 0.8em;
     padding: 0 0 0 10px;
     border-left: 2px solid $border-color;
-    color: #666;
+    color: $secondary;
   }
 }
 
@@ -852,9 +852,9 @@ input.form-control[type="color"] {
       }
 
       &.tablesorter-headerAsc {
-        background-color: $secondary;
-        color: #1ca8dd;
-        border-bottom: 2px solid #1ca8dd;
+        background-color: $body-secondary-bg;
+        color: $primary;
+        border-bottom: 2px solid $primary;
 
         .tablesorter-header-inner:after {
           border-bottom: 4px dashed;
@@ -862,9 +862,9 @@ input.form-control[type="color"] {
       }
 
       &.tablesorter-headerDesc {
-        background-color: $secondary;
-        color: #1ca8dd;
-        border-bottom: 2px solid #1ca8dd;
+        background-color: $body-secondary-bg;
+        color: $primary;
+        border-bottom: 2px solid $primary;
 
         .tablesorter-header-inner:after {
           border-top: 4px dashed;
@@ -916,7 +916,7 @@ input.form-control[type="color"] {
 
 tbody .sorthandle {
   cursor: pointer;
-  color: #ccc;
+  color: $body-tertiary-color;
 }
 
 .mqc_config_modal_table tbody .sorthandle {
@@ -1151,7 +1151,7 @@ td.column-hidden {
   }
 
   &:hover {
-    background-color: #cdcdcd;
+    background-color: $body-secondary-bg;
 
     span {
       background-color: $body-tertiary-color;
@@ -1186,25 +1186,6 @@ td.column-hidden {
   .mqc_switch_wrapper {
     margin-left: 20px;
   }
-}
-
-/* Beeswarm plots */
-.beeswarm-hovertext {
-  height: 29px;
-  padding: 5px 8px;
-  font-size: 13px;
-  border-left: 2px solid #46b8da;
-  border-bottom: 1px solid #dedede;
-  background-color: #d9edf7;
-  color: #31708f;
-}
-
-.beeswarm-plots {
-  height: calc(100% - 25px);
-}
-
-.beeswarm-plot:nth-child(odd) {
-  background-color: $body-tertiary-bg;
 }
 
 /* Custom content images */
@@ -1281,7 +1262,7 @@ g.annotation {
   }
 
   .ai-summary-disclaimer {
-    color: rgb(158, 158, 158);
+    color: $body-tertiary-color;
     font-size: 12px;
     margin-right: 4px;
   }
@@ -1310,14 +1291,13 @@ g.annotation {
   }
 
   .ai-continue-in-chat {
-    /* background-color: #ffffff; */
     padding: 2px 8px 2px 6px;
-    border: 1px solid #d2d2d2;
-    color: #666;
+    border: 1px solid $border-color;
+    color: $secondary;
 
     &:hover,
     &:focus {
-      background-color: #f2f2f2;
+      background-color: $body-tertiary-bg;
     }
   }
 
@@ -1364,7 +1344,7 @@ g.annotation {
 .ai-loading {
   margin: 15px 0;
   font-style: italic;
-  color: #666;
+  color: $secondary;
 }
 
 /* AI generate button */
@@ -1393,7 +1373,7 @@ g.annotation {
 
 /* AI local content */
 .ai-local-content {
-  background-color: #f2f2f2;
+  background-color: $body-tertiary-bg;
 }
 
 #global_ai_summary_detailed_analysis_response {
@@ -1411,7 +1391,7 @@ g.annotation {
     opacity: 0.8;
 
     code {
-      color: #333;
+      color: $body-color;
     }
   }
 
