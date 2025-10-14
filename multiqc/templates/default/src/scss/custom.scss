@@ -107,30 +107,29 @@ code {
     padding: 10px;
   }
 
-  ul {
-    &.mqc-nav {
-      border-bottom: 1px solid var(--#{$prefix}border-color);
-    }
-    &.mqc-nav,
-    &.mqc-nav ul {
+  .mqc-nav {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    border-bottom: 1px solid var(--#{$prefix}border-color);
+
+    ul {
       margin: 0;
       padding: 0;
       list-style-type: none;
     }
-  }
 
-  a {
-    display: inline-block;
-    width: 100%;
-    text-decoration: none;
-    &:hover,
-    &:active,
-    &:focus {
-      background-color: var(--#{$prefix}tertiary-bg);
+    a {
+      display: inline-block;
+      width: 100%;
+      text-decoration: none;
+      &:hover,
+      &:active,
+      &:focus {
+        background-color: var(--#{$prefix}tertiary-bg);
+      }
     }
-  }
 
-  .mqc-nav {
     a.nav-l1 {
       padding: 10px;
       border-top: 1px solid var(--#{$prefix}border-color);
@@ -179,23 +178,10 @@ code {
   }
 }
 
-.side-nav .navbar-toggle {
-  background-color: var(--#{$prefix}tertiary-bg);
-  border-color: var(--#{$prefix}border-color);
+.side-nav .navbar-toggler {
   position: absolute;
   right: 10px;
   top: 15px;
-  margin: 0;
-}
-
-.side-nav .navbar-toggle:hover,
-.side-nav .navbar-toggle:focus,
-.side-nav .navbar-toggle:active {
-  background-color: #ccc;
-}
-
-.side-nav .navbar-toggle .icon-bar {
-  background-color: #999;
 }
 
 #page_title {
@@ -1341,6 +1327,11 @@ tr.row-empty {
 
 .btn-sm {
   padding: 5px 10px 5px 8px;
+}
+
+.btn-xs {
+  padding: 2px 6px 2px 4px;
+  font-size: 0.75rem;
 }
 
 /* MultiQC Logo Styling */

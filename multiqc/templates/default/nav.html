@@ -9,34 +9,32 @@ The side navigation for the report.
 <div class="side-nav-wrapper">
   <div class="side-nav">
     <h1>
-      <button
-        type="button"
-        class="navbar-toggler"
-        data-bs-toggle="collapse"
-        data-bs-target=".mqc-nav, .mqc-toolbox"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <a href="#" class="side-nav-logo">{{ include_file('assets/img/MultiQC_logo.svg') }}</a>
+      <div>
+        <!-- Logo -->
+        <div class="d-flex align-items-center justify-content-center">
+          <a href="#" class="side-nav-logo">{{ include_file('assets/img/MultiQC_logo.svg') }}</a>
+        </div>
 
-      <!-- Version and Color mode toggle in 2-column layout -->
-      <div class="d-flex justify-content-center pb-2">
-        <a href="#" class="px-2 d-block">
-          <small class="d-inline-block text-secondary">v{{ config.version }}</small>
-        </a>
-        <div>
+        <!-- Version and dark mode toggle -->
+        <div class="d-flex align-items-center justify-content-center gap-2 pb-2">
+          <!-- Version number - visible on desktop only -->
+          <a
+            href="https://github.com/MultiQC/MultiQC/releases/tag/v{{ config.version }}"
+            target="_blank"
+            class="btn btn-xs btn-outline-secondary border-0 d-none d-md-block"
+          >
+            v{{ config.version }}
+          </a>
+
           <!-- Color mode toggle -->
           <div class="dropdown">
             <button
-              class="btn btn-outline-secondary border-0 dropdown-toggle"
+              class="btn btn-xs btn-outline-secondary border-0 dropdown-toggle"
               type="button"
               id="bd-theme"
               data-bs-toggle="dropdown"
               aria-expanded="false"
               aria-label="Toggle theme (auto)"
-              style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;"
             >
               <span class="theme-icon-active align-text-bottom">{{ material_icon('mdi:circle-half-full', 16) }}</span>
               <span id="bd-theme-text" class="visually-hidden">Theme</span>
@@ -82,13 +80,25 @@ The side navigation for the report.
           </div>
         </div>
       </div>
+
+      <!-- Burger menu toggle -->
+      <button
+        type="button"
+        class="navbar-toggler d-md-none"
+        data-bs-toggle="collapse"
+        data-bs-target="#mqc-nav-collapse"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        {{ material_icon('mdi:menu', 24) }}
+      </button>
     </h1>
 
     {% if config.title is not none %}
       <h1 class="side-nav-title"><a href="#">{{ config.title }}</a></h1>
     {% endif %}
     <p class="mqc_loading_warning">Loading report..</p>
-    <ul class="mqc-nav collapse navbar-collapse show">
+    <ul class="mqc-nav collapse navbar-collapse d-md-block" id="mqc-nav-collapse">
       {% if not config.skip_generalstats %}
         <li>
           <a href="#general_stats" class="nav-l1">General Stats</a>
@@ -116,6 +126,34 @@ The side navigation for the report.
           {% endif %}
         {% endif %}
       {% endfor %}
+
+      <!-- Toolbox items for mobile navigation -->
+      <li class="d-md-none">
+        <a href="#mqc_cols" class="nav-l1">Highlight Samples</a>
+      </li>
+      <li class="d-md-none">
+        <a href="#mqc_renamesamples" class="nav-l1">Rename Samples</a>
+      </li>
+      <li class="d-md-none">
+        <a href="#mqc_hidesamples" class="nav-l1">Show / Hide Samples</a>
+      </li>
+      {% if not config.no_ai %}
+        <li class="d-md-none">
+          <a href="#mqc_ai" class="nav-l1">AI Analysis</a>
+        </li>
+      {% endif %}
+      <li class="d-md-none">
+        <a href="#mqc_exportplots" class="nav-l1">Export Plots</a>
+      </li>
+      <li class="d-md-none">
+        <a href="#mqc_saveconfig" class="nav-l1">Save Settings</a>
+      </li>
+      <li class="d-md-none">
+        <a href="#mqc_citations" class="nav-l1">Citations</a>
+      </li>
+      <li class="d-md-none">
+        <a href="#mqc_about" class="nav-l1">About MultiQC</a>
+      </li>
     </ul>
   </div>
   <!-- Nav Width Toggle Button -->

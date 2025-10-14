@@ -19,6 +19,28 @@ $(function () {
     tabTrigger.show();
   });
 
+  // Handle mobile navigation toolbox links
+  $(".mqc-nav .d-md-none a[href^='#mqc_']").click(function (e) {
+    e.preventDefault();
+    const targetTab = $(this).attr("href");
+
+    // Show the toolbox
+    if (!toolboxOffcanvasDiv.classList.contains("show")) {
+      toolboxOffcanvas.show();
+    }
+
+    // Show the specific tab
+    const tabTrigger = new bootstrap.Tab(targetTab);
+    tabTrigger.show();
+
+    // Close mobile navigation
+    const mobileNav = document.getElementById("mqc-nav-collapse");
+    if (mobileNav && mobileNav.classList.contains("show")) {
+      const bsCollapse = new bootstrap.Collapse(mobileNav);
+      bsCollapse.hide();
+    }
+  });
+
   // Listener when toolbox is hidden
   toolboxOffcanvasDiv.addEventListener("hidden.bs.offcanvas", (event) => {
     // Show toast if if unsaved changes

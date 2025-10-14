@@ -41,6 +41,7 @@ Thumbs.db
 .idea
 .vscode
 runTest.sh
+CLAUDE.local.md
 
 # Prevent direnv from cluttering the repo
 .envrc
