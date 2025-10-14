@@ -45,12 +45,12 @@ logger = logging.getLogger(__name__)
 check_plotly_version()
 
 # Create and register MultiQC default Plotly template
-# These colors are for light mode (white background with dark text)
-# JavaScript in plotting.js will override these for dark mode in the HTML report
+# Uses transparent backgrounds so plots adapt to the page theme in the HTML report
+# JavaScript in plotting.js will override colors for dark mode
 multiqc_plotly_template = dict(
     layout=go.Layout(
-        paper_bgcolor="white",  # white background for exports
-        plot_bgcolor="white",  # white background for exports
+        paper_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
+        plot_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
         font=dict(
             family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif",
             color="rgba(60,60,60,1)",
@@ -1425,8 +1425,40 @@ def _batch_export_plots(export_tasks, timeout=None):
     return completed_tasks
 
 
+def _prepare_figure_for_export(fig):
+    """
+    Prepare a figure for export by ensuring it has solid backgrounds.
+    Only modifies transparent backgrounds - preserves custom theme backgrounds.
+
+    Plots use transparent backgrounds by default to adapt to page themes in HTML,
+    but exports need solid backgrounds for readability.
+    """
+    # Create a copy to avoid modifying the original figure used in HTML
+    fig_copy = go.Figure(fig)
+
+    # Helper function to check if a color is transparent
+    def is_transparent(color):
+        if color is None:
+            return True
+        color_str = str(color).lower()
+        # Check for transparent rgba values
+        return color_str.startswith("rgba(") and ",0)" in color_str.replace(" ", "")
+
+    # Only change background if it's transparent
+    if is_transparent(fig_copy.layout.paper_bgcolor):
+        fig_copy.update_layout(paper_bgcolor="white")
+
+    if is_transparent(fig_copy.layout.plot_bgcolor):
+        fig_copy.update_layout(plot_bgcolor="white")
+
+    return fig_copy
+
+
 def _export_plot(fig, plot_path, write_kwargs):
     """Export a plotly figure to a file."""
+
+    # Prepare figure with solid backgrounds for export (only if currently transparent)
+    fig = _prepare_figure_for_export(fig)
 
     # Default timeout of 30 seconds for image export
     timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 30
@@ -1456,6 +1488,9 @@ def _export_plot(fig, plot_path, write_kwargs):
 
 def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
     try:
+        # Prepare figure with solid backgrounds for export (only if currently transparent)
+        fig = _prepare_figure_for_export(fig)
+
         img_buffer = io.BytesIO()
         fig.write_image(img_buffer, **write_kwargs)
         img_buffer = add_logo(img_buffer, format="PNG")
@@ -1543,8 +1578,10 @@ def fig_to_static_html(
 
             # Add to batch if using batch processing
             if batch_processing:
+                # Prepare figure with solid backgrounds for export (only if currently transparent)
+                fig_for_export = _prepare_figure_for_export(fig)
                 task_idx = len(_plot_export_batch)
-                _plot_export_batch.append((fig, plot_path, write_kwargs))
+                _plot_export_batch.append((fig_for_export, plot_path, write_kwargs))
                 tasks_added.append((task_idx, plot_path, file_ext))
 
                 # If we're using batch processing, we'll assume the PNG will be written by the batch process
