@@ -260,16 +260,10 @@ h2.mqc-module-title {
   text-decoration: underline;
 }
 
-.footer .seqera-logo img {
-  height: 24px;
-  padding-right: 30px;
-  margin-top: 8px;
-  opacity: 80%;
-  transition: opacity 0.2s;
-}
-
-.footer .seqera-logo:hover img {
-  opacity: 100%;
+.footer .seqera-logo svg {
+  width: 120px;
+  height: auto;
+  color: var(--#{$prefix}emphasis-color);
 }
 
 /* Epic scroll bar of joy */
@@ -667,15 +661,16 @@ input.form-control[type="color"] {
   font-family: "Consolas", "Monaco", "Courier New", Courier, monospace;
 }
 
-.mqc-toolbox-wrapper .seqera-logo img {
-  height: 24px;
-  max-width: 80%;
+#mqc-toolbox .seqera-logo svg {
+  width: 100%;
+  height: auto;
+  padding: 1.5rem 3rem;
   opacity: 60%;
-  margin-top: 10px;
+  color: var(--bs-offcanvas-color);
   transition: opacity 0.2s;
 }
 
-.mqc-toolbox-wrapper .seqera-logo a:hover img {
+#mqc-toolbox .seqera-logo a:hover svg {
   opacity: 100%;
 }
 
