@@ -1,0 +1,20 @@
+// Sketchy theme for MultiQC
+// Uses Bootswatch Sketchy theme
+
+// Bootstrap - start
+@import "../../../default/src/scss/bs-start";
+
+// Default MultiQC variables
+@import "../../../default/src/scss/variables";
+
+// Sketchy theme variables
+@import "variables";
+
+// Bootstrap - end
+@import "../../../default/src/scss/bs-end";
+
+// Sketchy theme customizations
+@import "bootswatch";
+
+// Custom MultiQC styles
+@import "../../../default/src/scss/custom";

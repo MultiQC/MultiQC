@@ -11,10 +11,11 @@
 
   const getPreferredTheme = () => {
     const storedTheme = getStoredTheme();
-    if (storedTheme) {
+    if (storedTheme && storedTheme !== "auto") {
       return storedTheme;
     }
 
+    // Only use system preference for "auto" or no stored theme
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   };
 
@@ -85,7 +86,8 @@
 
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
     const storedTheme = getStoredTheme();
-    if (storedTheme !== "light" && storedTheme !== "dark") {
+    // Only update theme if user has "auto" selected or no theme stored
+    if (storedTheme === "auto" || !storedTheme) {
       setTheme(getPreferredTheme());
     }
   });
