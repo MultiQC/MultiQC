@@ -698,7 +698,7 @@ class Dataset(BaseDataset):
             },
             "showlegend": False,
             "hovertemplate": ds.trace_params["hovertemplate"],
-            "hoverlabel": {"bgcolor": "white"},
+            "hoverlabel": {"bgcolor": "white", "font": {"color": "rgba(60,60,60,1)"}},
         }
         return ds
 

@@ -45,11 +45,12 @@ logger = logging.getLogger(__name__)
 check_plotly_version()
 
 # Create and register MultiQC default Plotly template
-# These colors must match the JavaScript light mode theme in plotting.js
+# These colors are for light mode (white background with dark text)
+# JavaScript in plotting.js will override these for dark mode in the HTML report
 multiqc_plotly_template = dict(
     layout=go.Layout(
-        paper_bgcolor="rgba(0,0,0,0)",  # transparent background
-        plot_bgcolor="rgba(0,0,0,0)",  # transparent background
+        paper_bgcolor="white",  # white background for exports
+        plot_bgcolor="white",  # white background for exports
         font=dict(
             family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif",
             color="rgba(60,60,60,1)",

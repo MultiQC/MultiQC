@@ -371,8 +371,8 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             ),
             hovermode="y",
             hoverlabel=dict(
-                bgcolor="rgba(255, 255, 255, 0.8)",
-                font=dict(color="black"),
+                bgcolor="white",
+                font=dict(color="rgba(60,60,60,1)"),
             ),
         )
         return BoxPlot(**model.__dict__)
