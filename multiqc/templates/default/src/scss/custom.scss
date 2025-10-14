@@ -1267,8 +1267,8 @@ tr.row-empty {
   color: #ea4f4f;
 }
 
-.ai-settings-button svg {
-  vertical-align: middle;
+.ai-generate-button svg {
+  vertical-align: baseline;
 }
 
 .ai-provider-setting {
@@ -1326,13 +1326,9 @@ tr.row-empty {
   height: 10px;
 }
 
-.btn-sm {
-  padding: 5px 10px 5px 8px;
-}
-
 .btn-xs {
-  padding: 2px 6px 2px 4px;
-  font-size: 0.75rem;
+  padding: $btn-padding-y-xs $btn-padding-x-xs;
+  font-size: $btn-font-size-xs;
 }
 
 /* MultiQC Logo Styling */

@@ -1254,7 +1254,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             export_btn = self._btn(
                 cls="export-plot",
                 style="float: right; margin-left: 5px;",
-                label='<span style="vertical-align: baseline"><svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg></span> Export...',
+                label='<svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg> Export...',
                 attrs={"title": "Show export options"},
                 data_attrs={
                     "plot-anchor": str(self.anchor),
@@ -1278,12 +1278,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-toggle="tooltip"
                     title="Copy plot data for use with AI tools like ChatGPT"
                 >
-                    <span style="vertical-align: baseline">
-                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
                         <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
                         <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                        </svg>
-                    </span>
+                    </svg>
                     <span class="button-text">Copy prompt</span>
                 </button>
                 <button
@@ -1303,12 +1301,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-toggle="tooltip"
                     aria-controls="{section_anchor}_ai_summary_wrapper"
                 >
-                    <span style="vertical-align: baseline">
-                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
                         <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
                         <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                        </svg>
-                    </span>
+                    </svg>
                     <span class="button-text">Summarize plot</span>
                 </button>
             </div>
