@@ -45,29 +45,34 @@ logger = logging.getLogger(__name__)
 check_plotly_version()
 
 # Create and register MultiQC default Plotly template
+# These colors must match the JavaScript light mode theme in plotting.js
 multiqc_plotly_template = dict(
     layout=go.Layout(
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
+        paper_bgcolor="rgba(0,0,0,0)",  # transparent background
+        plot_bgcolor="rgba(0,0,0,0)",  # transparent background
+        font=dict(
+            family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif",
+            color="rgba(60,60,60,1)",
+        ),
         colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
         xaxis=dict(
-            gridcolor="rgba(0,0,0,0.05)",
-            zerolinecolor="rgba(0,0,0,0.05)",
-            color="rgba(0,0,0,0.3)",  # axis labels
-            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
+            gridcolor="rgba(128,128,128,0.15)",
+            zerolinecolor="rgba(128,128,128,0.2)",
+            color="rgba(100,100,100,1)",
+            tickfont=dict(size=10, color="rgba(80,80,80,1)"),
         ),
         yaxis=dict(
-            gridcolor="rgba(0,0,0,0.05)",
-            zerolinecolor="rgba(0,0,0,0.05)",
-            color="rgba(0,0,0,0.3)",  # axis labels
-            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
+            gridcolor="rgba(128,128,128,0.15)",
+            zerolinecolor="rgba(128,128,128,0.2)",
+            color="rgba(100,100,100,1)",
+            tickfont=dict(size=10, color="rgba(80,80,80,1)"),
         ),
-        title=dict(font=dict(size=20)),
+        title=dict(font=dict(size=20, color="rgba(60,60,60,1)")),
+        legend=dict(font=dict(color="rgba(60,60,60,1)")),
         modebar=dict(
             bgcolor="rgba(0, 0, 0, 0)",
-            color="rgba(0, 0, 0, 0.5)",
-            activecolor="rgba(0, 0, 0, 1)",
+            color="rgba(100, 100, 100, 0.5)",
+            activecolor="rgba(80, 80, 80, 1)",
         ),
     )
 )

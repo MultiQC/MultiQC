@@ -567,3 +567,109 @@ function updateObject(target, source, nullOnly = false) {
 
 // Make updateObject globally available
 window.updateObject = updateObject;
+
+// Function to get theme-aware colors for Plotly graphs
+function getPlotlyThemeColors() {
+  const isDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+
+  if (isDark) {
+    return {
+      paper_bgcolor: "rgba(0,0,0,0)", // transparent
+      plot_bgcolor: "rgba(0,0,0,0)", // transparent
+      gridcolor: "rgba(180,180,180,0.25)", // lighter gray for dark mode
+      zerolinecolor: "rgba(180,180,180,0.3)",
+      axiscolor: "rgba(200,200,200,1)", // lighter gray for axis labels
+      tickcolor: "rgba(220,220,220,1)", // even lighter for tick text
+      textcolor: "rgba(220,220,220,1)", // text color for titles and legends
+      modebar_color: "rgba(200, 200, 200, 0.5)",
+      modebar_activecolor: "rgba(220, 220, 220, 1)",
+    };
+  } else {
+    return {
+      paper_bgcolor: "rgba(0,0,0,0)", // transparent
+      plot_bgcolor: "rgba(0,0,0,0)", // transparent
+      gridcolor: "rgba(128,128,128,0.15)", // darker gray for light mode
+      zerolinecolor: "rgba(128,128,128,0.2)",
+      axiscolor: "rgba(100,100,100,1)", // darker gray for axis labels
+      tickcolor: "rgba(80,80,80,1)", // even darker for tick text
+      textcolor: "rgba(60,60,60,1)", // text color for titles and legends
+      modebar_color: "rgba(100, 100, 100, 0.5)",
+      modebar_activecolor: "rgba(80, 80, 80, 1)",
+    };
+  }
+}
+
+// Function to update all rendered Plotly graphs with new theme colors
+function updatePlotlyTheme() {
+  const colors = getPlotlyThemeColors();
+
+  // Update all rendered plots
+  $(".hc-plot:not(.not_rendered)").each(function () {
+    const anchor = $(this).attr("id");
+    const plot = mqc_plots[anchor];
+    if (!plot || !plot.rendered) return;
+
+    // Update layout colors
+    const layoutUpdate = {
+      paper_bgcolor: colors.paper_bgcolor,
+      plot_bgcolor: colors.plot_bgcolor,
+      "font.color": colors.textcolor, // main font color for titles and legends
+      "title.font.color": colors.textcolor, // title color
+      "legend.font.color": colors.textcolor, // legend text color
+      "xaxis.gridcolor": colors.gridcolor,
+      "xaxis.zerolinecolor": colors.zerolinecolor,
+      "xaxis.color": colors.axiscolor,
+      "xaxis.tickfont.color": colors.tickcolor,
+      "xaxis.title.font.color": colors.textcolor, // axis title color
+      "yaxis.gridcolor": colors.gridcolor,
+      "yaxis.zerolinecolor": colors.zerolinecolor,
+      "yaxis.color": colors.axiscolor,
+      "yaxis.tickfont.color": colors.tickcolor,
+      "yaxis.title.font.color": colors.textcolor, // axis title color
+      "modebar.color": colors.modebar_color,
+      "modebar.activecolor": colors.modebar_activecolor,
+    };
+
+    // For plots with multiple axes (like violin plots), update those too
+    for (let i = 2; i <= 20; i++) {
+      if (plot.layout["xaxis" + i]) {
+        layoutUpdate["xaxis" + i + ".gridcolor"] = colors.gridcolor;
+        layoutUpdate["xaxis" + i + ".zerolinecolor"] = colors.zerolinecolor;
+        layoutUpdate["xaxis" + i + ".color"] = colors.axiscolor;
+        layoutUpdate["xaxis" + i + ".tickfont.color"] = colors.tickcolor;
+        layoutUpdate["xaxis" + i + ".title.font.color"] = colors.textcolor;
+      }
+      if (plot.layout["yaxis" + i]) {
+        layoutUpdate["yaxis" + i + ".gridcolor"] = colors.gridcolor;
+        layoutUpdate["yaxis" + i + ".zerolinecolor"] = colors.zerolinecolor;
+        layoutUpdate["yaxis" + i + ".color"] = colors.axiscolor;
+        layoutUpdate["yaxis" + i + ".tickfont.color"] = colors.tickcolor;
+        layoutUpdate["yaxis" + i + ".title.font.color"] = colors.textcolor;
+      }
+    }
+
+    // Apply the layout update
+    Plotly.relayout(anchor, layoutUpdate);
+  });
+}
+
+// Set up a MutationObserver to watch for theme changes
+const themeObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.type === "attributes" && mutation.attributeName === "data-bs-theme") {
+      updatePlotlyTheme();
+    }
+  });
+});
+
+// Start observing when DOM is ready
+$(function () {
+  // Observe the html element for data-bs-theme attribute changes
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-bs-theme"],
+  });
+
+  // Apply initial theme colors
+  setTimeout(updatePlotlyTheme, 100);
+});
