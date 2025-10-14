@@ -1323,7 +1323,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
         buttons = "\n".join(self.buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor))
-        html = f"<div class='row' style='align-items: center;'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
+        html = f"<div class='row' style='align-items: center;'>\n<div class='col-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
 
 

@@ -7,7 +7,7 @@
    ========================================================================== */
 
 code {
-  background-color: var(--#{$prefix}tertiary-bg);
+  background-color: $body-tertiary-bg;
 
   @media only screen and (max-width: 768px) {
     display: inline-block;
@@ -72,7 +72,7 @@ hr {
 
 .side-nav-wrapper {
   height: 100%;
-  background-color: var(--#{$prefix}tertiary-bg);
+  background-color: $body-tertiary-bg;
 
   @media only screen and (min-width: 768px) {
     position: fixed;
@@ -80,12 +80,12 @@ hr {
 }
 
 .side-nav {
-  border-bottom: 1px solid var(--#{$prefix}border-color);
+  border-bottom: 1px solid $border-color;
 
   @media only screen and (min-width: 768px) {
     height: 100%;
     width: 250px;
-    border-right: 1px solid var(--#{$prefix}border-color);
+    border-right: 1px solid $border-color;
     overflow: auto;
     padding-bottom: 30px;
     -webkit-transition: margin-left 0.5s;
@@ -113,13 +113,13 @@ hr {
 
   .mqc_loading_warning {
     text-align: center;
-    border-bottom: 1px solid var(--#{$prefix}border-color);
+    border-bottom: 1px solid $border-color;
     color: #ca424c;
   }
 
   p {
     font-size: 0.8em;
-    color: #999;
+    color: $body-tertiary-color;
     padding: 10px;
   }
 
@@ -128,7 +128,7 @@ hr {
     margin: 0;
     padding: 0;
     list-style-type: none;
-    border-bottom: 1px solid var(--#{$prefix}border-color);
+    border-bottom: 1px solid $border-color;
 
     ul {
       margin: 0;
@@ -152,17 +152,17 @@ hr {
       &:hover,
       &:active,
       &:focus {
-        background-color: var(--#{$prefix}tertiary-bg);
+        background-color: $body-tertiary-bg;
       }
 
       &.nav-l1 {
         padding: 10px;
-        border-top: 1px solid var(--#{$prefix}border-color);
+        border-top: 1px solid $border-color;
       }
 
       &.nav-l2 {
         padding: 5px 10px 5px 15px;
-        border-top: 1px solid var(--#{$prefix}border-color);
+        border-top: 1px solid $border-color;
         font-size: 0.9em;
         color: #788fa4;
       }
@@ -179,15 +179,15 @@ hr {
   height: 50px;
   width: 15px;
   padding-top: 14px;
-  border: 1px solid var(--#{$prefix}border-color);
+  border: 1px solid $border-color;
   border-left: 0;
-  background-color: var(--#{$prefix}tertiary-bg);
+  background-color: $body-tertiary-bg;
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
   cursor: pointer;
 
   .glyphicon-triangle-right {
-    color: #999;
+    color: $body-tertiary-color;
   }
 
   @media only screen and (max-width: 768px) {
@@ -286,10 +286,10 @@ h2.mqc-module-title {
    ========================================================================== */
 
 .footer {
-  background-color: var(--#{$prefix}tertiary-bg);
-  border-top: 1px solid var(--#{$prefix}border-color);
+  background-color: $body-tertiary-bg;
+  border-top: 1px solid $border-color;
   font-size: 0.9em;
-  color: #999;
+  color: $body-tertiary-color;
   padding: 20px 0;
   margin-top: 50px;
 
@@ -312,7 +312,7 @@ h2.mqc-module-title {
     margin: 0;
 
     a {
-      color: #999;
+      color: $body-tertiary-color;
       text-decoration: underline;
     }
   }
@@ -321,7 +321,7 @@ h2.mqc-module-title {
     svg {
       width: 120px;
       height: auto;
-      color: var(--#{$prefix}emphasis-color);
+      color: $body-emphasis-color;
       transition:
         margin 0.3s,
         opacity 0.3s;
@@ -391,7 +391,7 @@ input.form-control[type="color"] {
     height: 100%;
     width: 1px;
     margin: 0 1px;
-    background-color: #999;
+    background-color: $body-tertiary-color;
   }
 }
 
@@ -406,15 +406,15 @@ input.form-control[type="color"] {
     visibility: visible;
 
     a.in_use {
-      border: 2px solid var(--#{$prefix}primary);
+      border: 2px solid $primary;
       border-right: 0;
-      color: var(--#{$prefix}primary);
-      background-color: var(--#{$prefix}primary-bg-subtle);
+      color: $primary;
+      background-color: $primary-bg-subtle;
     }
 
     li a.active {
-      border-right: 1px solid var(--#{$prefix}tertiary-bg);
-      background-color: var(--#{$prefix}tertiary-bg);
+      border-right: 1px solid $body-tertiary-bg;
+      background-color: $body-tertiary-bg;
     }
   }
 
@@ -434,19 +434,19 @@ input.form-control[type="color"] {
     border-bottom-right-radius: 0;
 
     .list-group-item {
-      background-color: var(--#{$prefix}secondary-bg);
+      background-color: $secondary;
       padding: 0.5rem;
       text-align: center;
       margin-top: 0.5rem;
-      border-top-width: var(--bs-list-group-border-width);
-      border-top-left-radius: var(--#{$prefix}border-radius);
-      border-bottom-left-radius: var(--#{$prefix}border-radius);
+      border-top-width: $border-width;
+      border-top-left-radius: $border-radius;
+      border-bottom-left-radius: $border-radius;
 
       &.active {
-        background-color: var(--#{$prefix}body-bg);
-        color: var(--#{$prefix}body-color);
-        border-color: var(--#{$prefix}secondary);
-        border-right-color: var(--#{$prefix}body-bg);
+        background-color: $body-bg;
+        color: $body-color;
+        border-color: $secondary;
+        border-right-color: $body-bg;
       }
 
       svg {
@@ -462,7 +462,7 @@ input.form-control[type="color"] {
       height: auto;
       padding: 1.5rem 3rem;
       opacity: 60%;
-      color: var(--bs-offcanvas-color);
+      color: $offcanvas-color;
       transition: opacity 0.2s;
     }
 
@@ -476,8 +476,8 @@ input.form-control[type="color"] {
 @media only screen and (max-width: 768px) {
   .mqc-toolbox {
     padding: 0 15px;
-    background-color: var(--#{$prefix}tertiary-bg);
-    border-bottom: 1px solid var(--#{$prefix}border-color);
+    background-color: $body-tertiary-bg;
+    border-bottom: 1px solid $border-color;
   }
 
   #mqc_saveconfig {
@@ -493,8 +493,8 @@ input.form-control[type="color"] {
   right: 0.8rem;
   padding: 2px 1px;
   z-index: 900;
-  background-color: var(--#{$prefix}tertiary-bg);
-  color: var(--#{$prefix}tertiary-color);
+  background-color: $body-tertiary-bg;
+  color: $body-tertiary-color;
   text-decoration: none;
 
   span {
@@ -503,12 +503,12 @@ input.form-control[type="color"] {
   }
 
   &:hover {
-    background-color: var(--#{$prefix}secondary-bg);
-    color: var(--#{$prefix}body-color);
+    background-color: $secondary;
+    color: $body-color;
 
     span {
       display: inline;
-      color: var(--#{$prefix}tertiary-color);
+      color: $body-tertiary-color;
     }
   }
 }
@@ -537,7 +537,7 @@ input.form-control[type="color"] {
     }
 
     &:hover {
-      background-color: var(--#{$prefix}tertiary-bg);
+      background-color: $body-tertiary-bg;
     }
   }
 }
@@ -548,7 +548,7 @@ input.form-control[type="color"] {
 
   .mqc_switch {
     display: inline-block;
-    border: 1px solid #999;
+    border: 1px solid $body-tertiary-color;
     border-radius: 3px;
     padding: 2px 5px;
     margin-left: 5px;
@@ -585,7 +585,7 @@ input.form-control[type="color"] {
 
   hr {
     margin: 10px 0;
-    border-top: 1px solid var(--#{$prefix}border-color);
+    border-top: 1px solid $border-color;
   }
 
   p {
@@ -601,14 +601,6 @@ input.form-control[type="color"] {
     .btn {
       color: #333;
     }
-  }
-
-  .text-danger {
-    color: #a94442;
-  }
-
-  .text-success {
-    color: #3c763d;
   }
 
   .row .form-control {
@@ -628,7 +620,7 @@ input.form-control[type="color"] {
 
 /* Rename samples bulk edit */
 #mqc_renamesamples_bulk_collapse {
-  border-top: 1px solid var(--#{$prefix}border-color);
+  border-top: 1px solid $border-color;
 }
 
 #mqc_renamesamples_bulk_update {
@@ -637,13 +629,13 @@ input.form-control[type="color"] {
 
 #mqc_renamesamples_bulk_form textarea {
   font-size: 8px;
-  color: #999;
+  color: $body-tertiary-color;
 }
 
 /* Filter text inputs */
 .f_text {
   border: 0;
-  border-bottom: 1px solid var(--#{$prefix}border-color);
+  border-bottom: 1px solid $border-color;
   padding: 5px 0 5px 10px;
   margin: 0;
   background-color: transparent;
@@ -694,7 +686,7 @@ input.form-control[type="color"] {
   blockquote {
     font-size: 0.7em;
     padding: 0 0 0 10px;
-    border-left: 2px solid var(--#{$prefix}border-color);
+    border-left: 2px solid $border-color;
     color: #666;
 
     a {
@@ -703,15 +695,15 @@ input.form-control[type="color"] {
   }
 
   .nav-tabs {
-    border-color: var(--#{$prefix}border-color);
+    border-color: $border-color;
     margin-bottom: 15px;
 
     li {
       a {
         background-color: #dddddd;
-        border-color: var(--#{$prefix}border-color);
+        border-color: $border-color;
         padding: 8px 10px;
-        color: #999;
+        color: $body-tertiary-color;
         font-size: 12px;
       }
 
@@ -726,12 +718,12 @@ input.form-control[type="color"] {
 
 /* Config save/clear success messages */
 #mqc-save-success {
-  color: #3c763d;
+  color: $success-text-emphasis;
   background-color: #dff0d8;
 }
 
 #mqc-cleared-success {
-  color: #a94442;
+  color: $danger-text-emphasis;
   background-color: #f2dede;
 }
 
@@ -748,7 +740,7 @@ input.form-control[type="color"] {
   blockquote {
     font-size: 0.8em;
     padding: 0 0 0 10px;
-    border-left: 2px solid var(--#{$prefix}border-color);
+    border-left: 2px solid $border-color;
     color: #666;
   }
 }
@@ -786,17 +778,17 @@ input.form-control[type="color"] {
 /* Table expand/collapse button */
 .mqc-table-expand {
   text-align: center;
-  color: #999;
+  color: $body-tertiary-color;
   padding: 5px;
   cursor: pointer;
-  background-color: var(--#{$prefix}secondary-bg);
+  background-color: $secondary;
   -webkit-transition: background-color 0.2s;
   transition: background-color 0.2s;
 
   &:hover,
   &:focus,
   &:active {
-    background-color: var(--#{$prefix}tertiary-bg);
+    background-color: $body-tertiary-bg;
   }
 }
 
@@ -837,16 +829,16 @@ input.form-control[type="color"] {
   thead {
     th,
     td {
-      background-color: var(--#{$prefix}body-bg);
+      background-color: $body-bg;
     }
 
     th {
       cursor: pointer;
       /* Border doesn't scroll with the CSS transform, so just a box-shadow instead. */
       border-bottom: 0;
-      -webkit-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
-      -moz-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
-      box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
+      -webkit-box-shadow: inset 0px -2px 0px 0 $border-color;
+      -moz-box-shadow: inset 0px -2px 0px 0 $border-color;
+      box-shadow: inset 0px -2px 0px 0 $border-color;
 
       .tablesorter-header-inner:after {
         content: "";
@@ -860,7 +852,7 @@ input.form-control[type="color"] {
       }
 
       &.tablesorter-headerAsc {
-        background-color: var(--#{$prefix}secondary-bg);
+        background-color: $secondary;
         color: #1ca8dd;
         border-bottom: 2px solid #1ca8dd;
 
@@ -870,7 +862,7 @@ input.form-control[type="color"] {
       }
 
       &.tablesorter-headerDesc {
-        background-color: var(--#{$prefix}secondary-bg);
+        background-color: $secondary;
         color: #1ca8dd;
         border-bottom: 2px solid #1ca8dd;
 
@@ -904,7 +896,7 @@ input.form-control[type="color"] {
     top: 0;
     left: 0;
     bottom: 0;
-    background-color: var(--#{$prefix}tertiary-bg);
+    background-color: $body-tertiary-bg;
     z-index: -1;
   }
 
@@ -928,16 +920,16 @@ tbody .sorthandle {
 }
 
 .mqc_config_modal_table tbody .sorthandle {
-  color: #999;
+  color: $body-tertiary-color;
 }
 
 .table.mqc_table > thead > tr > th {
   cursor: pointer;
   /* Border doesn't scroll with the CSS transform, so just a box-shadow instead. */
   border-bottom: 0;
-  -webkit-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
-  -moz-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
-  box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
+  -webkit-box-shadow: inset 0px -2px 0px 0 $border-color;
+  -moz-box-shadow: inset 0px -2px 0px 0 $border-color;
+  box-shadow: inset 0px -2px 0px 0 $border-color;
 }
 
 /* Expandable table rows */
@@ -1095,7 +1087,7 @@ td.column-hidden {
 
 /* Static matplotlib plots */
 .mqc_mplplot {
-  border: 1px solid var(--#{$prefix}border-color);
+  border: 1px solid $border-color;
   margin-top: 0;
   width: 100%;
 
@@ -1111,14 +1103,14 @@ td.column-hidden {
   width: 100%;
 
   &.not_rendered {
-    background-color: var(--#{$prefix}tertiary-bg);
+    background-color: $body-tertiary-bg;
     text-align: center;
 
     small {
       display: inline-block;
       font-style: italic;
       padding-top: 40px;
-      color: #999;
+      color: $body-tertiary-color;
     }
   }
 
@@ -1131,7 +1123,7 @@ td.column-hidden {
   width: 100%;
   height: 512px;
   position: relative;
-  border: 1px solid var(--#{$prefix}border-color);
+  border: 1px solid $border-color;
   margin-top: 5px;
 }
 
@@ -1140,14 +1132,14 @@ td.column-hidden {
   position: absolute;
   width: 100%;
   height: 10px;
-  background-color: var(--#{$prefix}tertiary-bg);
+  background-color: $body-tertiary-bg;
   cursor: row-resize;
-  border-top: 1px solid var(--#{$prefix}border-color);
+  border-top: 1px solid $border-color;
   -moz-transition: background-color 0.1s;
   -webkit-transition: background-color 0.1s;
   transition: background-color 0.1s;
   /* two lines below are a hack to hide hanging plotly long vertical tick labels */
-  border-bottom: 2px solid var(--#{$prefix}body-bg);
+  border-bottom: 2px solid $body-bg;
   bottom: -3px;
 
   span {
@@ -1155,14 +1147,14 @@ td.column-hidden {
     height: 1px;
     width: 20px;
     margin: 1px auto;
-    background-color: #999;
+    background-color: $body-tertiary-color;
   }
 
   &:hover {
     background-color: #cdcdcd;
 
     span {
-      background-color: #999;
+      background-color: $body-tertiary-color;
     }
   }
 }
@@ -1212,7 +1204,7 @@ td.column-hidden {
 }
 
 .beeswarm-plot:nth-child(odd) {
-  background-color: var(--#{$prefix}tertiary-bg);
+  background-color: $body-tertiary-bg;
 }
 
 /* Custom content images */
@@ -1232,7 +1224,7 @@ g.annotation {
   right: 4px;
   margin-bottom: 0;
   padding: 0;
-  color: #999999;
+  color: $body-tertiary-color;
   font-size: 8px;
   font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
 }
@@ -1243,21 +1235,15 @@ g.annotation {
 
 /* Status colors */
 .text-green {
-  color: rgb(18, 106, 50);
+  color: $success-text-emphasis;
 }
 
 .text-yellow {
-  color: rgb(178, 122, 3);
+  color: $warning-text-emphasis;
 }
 
 .text-red {
-  color: rgb(184, 31, 31);
-}
-
-/* Misc utilities */
-.col-xs-12 button {
-  margin-top: 0;
-  margin-bottom: 2px;
+  color: $danger-text-emphasis;
 }
 
 /* Software versions table */
@@ -1272,7 +1258,7 @@ g.annotation {
 .ai-summary {
   position: relative;
   padding: 8px 4px 0px 10px;
-  border: 1px solid var(--#{$prefix}border-color);
+  border: 1px solid $border-color;
   border-radius: 4px;
   color: #160f26;
 
@@ -1370,7 +1356,7 @@ g.annotation {
   .ai-summary-error {
     margin: 10px 0;
     font-style: italic;
-    color: #ea4f4f;
+    color: $danger-text-emphasis;
   }
 }
 
@@ -1430,7 +1416,7 @@ g.annotation {
   }
 
   code {
-    background-color: var(--#{$prefix}tertiary-bg);
+    background-color: $body-tertiary-bg;
     padding: 2px 4px;
     border-radius: 4px;
   }

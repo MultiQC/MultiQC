@@ -1172,7 +1172,7 @@ def render_html(
 
         panel = "\n".join(buttons)
         html += f"""
-        <div class='row'>\n<div class='col-xs-12'>\n{panel}\n</div>\n</div>
+        <div class='row'>\n<div class='col-12'>\n{panel}\n</div>\n</div>
         """
 
     # Build the table itself
