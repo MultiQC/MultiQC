@@ -80,12 +80,12 @@ hr {
 }
 
 .side-nav {
-  border-bottom: 1px solid $border-color;
+  border-bottom: $border-width $border-style $border-color;
 
   @media only screen and (min-width: 768px) {
     height: 100%;
     width: 250px;
-    border-right: 1px solid $border-color;
+    border-right: $border-width $border-style $border-color;
     overflow: auto;
     padding-bottom: 30px;
     -webkit-transition: margin-left 0.5s;
@@ -113,7 +113,7 @@ hr {
 
   .mqc_loading_warning {
     text-align: center;
-    border-bottom: 1px solid $border-color;
+    border-bottom: $border-width $border-style $border-color;
     color: $danger;
   }
 
@@ -128,7 +128,7 @@ hr {
     margin: 0;
     padding: 0;
     list-style-type: none;
-    border-bottom: 1px solid $border-color;
+    border-bottom: $border-width $border-style $border-color;
 
     ul {
       margin: 0;
@@ -157,12 +157,12 @@ hr {
 
       &.nav-l1 {
         padding: 10px;
-        border-top: 1px solid $border-color;
+        border-top: $border-width $border-style $border-color;
       }
 
       &.nav-l2 {
         padding: 5px 10px 5px 15px;
-        border-top: 1px solid $border-color;
+        border-top: $border-width $border-style $border-color;
         font-size: 0.9em;
         color: $secondary;
       }
@@ -179,11 +179,11 @@ hr {
   height: 50px;
   width: 15px;
   padding-top: 14px;
-  border: 1px solid $border-color;
+  border: $border-width $border-style $border-color;
   border-left: 0;
   background-color: $body-tertiary-bg;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+  border-top-right-radius: $border-radius-sm;
+  border-bottom-right-radius: $border-radius-sm;
   cursor: pointer;
 
   .glyphicon-triangle-right {
@@ -287,7 +287,7 @@ h2.mqc-module-title {
 
 .footer {
   background-color: $body-tertiary-bg;
-  border-top: 1px solid $border-color;
+  border-top: $border-width $border-style $border-color;
   font-size: 0.9em;
   color: $body-tertiary-color;
   padding: 20px 0;
@@ -347,8 +347,8 @@ h2.mqc-module-title {
 
 ::-webkit-scrollbar-track {
   background: $body-bg;
-  border-left: 1px solid $border-color;
-  border-right: 1px solid $border-color;
+  border-left: $border-width $border-style $border-color;
+  border-right: $border-width $border-style $border-color;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -406,14 +406,14 @@ input.form-control[type="color"] {
     visibility: visible;
 
     a.in_use {
-      border: 2px solid $primary;
+      border: map-get($border-widths, 2) $border-style $primary;
       border-right: 0;
       color: $primary;
       background-color: $primary-bg-subtle;
     }
 
     li a.active {
-      border-right: 1px solid $body-tertiary-bg;
+      border-right: $border-width $border-style $body-tertiary-bg;
       background-color: $body-tertiary-bg;
     }
   }
@@ -477,7 +477,7 @@ input.form-control[type="color"] {
   .mqc-toolbox {
     padding: 0 15px;
     background-color: $body-tertiary-bg;
-    border-bottom: 1px solid $border-color;
+    border-bottom: $border-width $border-style $border-color;
   }
 
   #mqc_saveconfig {
@@ -548,8 +548,8 @@ input.form-control[type="color"] {
 
   .mqc_switch {
     display: inline-block;
-    border: 1px solid $body-tertiary-color;
-    border-radius: 3px;
+    border: $border-width $border-style $body-tertiary-color;
+    border-radius: $border-radius-sm;
     padding: 2px 5px;
     margin-left: 5px;
     background-color: $body-secondary-bg;
@@ -585,7 +585,7 @@ input.form-control[type="color"] {
 
   hr {
     margin: 10px 0;
-    border-top: 1px solid $border-color;
+    border-top: $border-width $border-style $border-color;
   }
 
   p {
@@ -620,7 +620,7 @@ input.form-control[type="color"] {
 
 /* Rename samples bulk edit */
 #mqc_renamesamples_bulk_collapse {
-  border-top: 1px solid $border-color;
+  border-top: $border-width $border-style $border-color;
 }
 
 #mqc_renamesamples_bulk_update {
@@ -635,7 +635,7 @@ input.form-control[type="color"] {
 /* Filter text inputs */
 .f_text {
   border: 0;
-  border-bottom: 1px solid $border-color;
+  border-bottom: $border-width $border-style $border-color;
   padding: 5px 0 5px 10px;
   margin: 0;
   background-color: transparent;
@@ -686,7 +686,7 @@ input.form-control[type="color"] {
   blockquote {
     font-size: 0.7em;
     padding: 0 0 0 10px;
-    border-left: 2px solid $border-color;
+    border-left: map-get($border-widths, 2) $border-style $border-color;
     color: $secondary;
 
     a {
@@ -740,7 +740,7 @@ input.form-control[type="color"] {
   blockquote {
     font-size: 0.8em;
     padding: 0 0 0 10px;
-    border-left: 2px solid $border-color;
+    border-left: map-get($border-widths, 2) $border-style $border-color;
     color: $secondary;
   }
 }
@@ -854,7 +854,7 @@ input.form-control[type="color"] {
       &.tablesorter-headerAsc {
         background-color: $body-secondary-bg;
         color: $primary;
-        border-bottom: 2px solid $primary;
+        border-bottom: map-get($border-widths, 2) $border-style $primary;
 
         .tablesorter-header-inner:after {
           border-bottom: 4px dashed;
@@ -864,7 +864,7 @@ input.form-control[type="color"] {
       &.tablesorter-headerDesc {
         background-color: $body-secondary-bg;
         color: $primary;
-        border-bottom: 2px solid $primary;
+        border-bottom: map-get($border-widths, 2) $border-style $primary;
 
         .tablesorter-header-inner:after {
           border-top: 4px dashed;
@@ -1087,7 +1087,7 @@ td.column-hidden {
 
 /* Static matplotlib plots */
 .mqc_mplplot {
-  border: 1px solid $border-color;
+  border: $border-width $border-style $border-color;
   margin-top: 0;
   width: 100%;
 
@@ -1123,7 +1123,7 @@ td.column-hidden {
   width: 100%;
   height: 512px;
   position: relative;
-  border: 1px solid $border-color;
+  border: $border-width $border-style $border-color;
   margin-top: 5px;
 }
 
@@ -1134,12 +1134,12 @@ td.column-hidden {
   height: 10px;
   background-color: $body-tertiary-bg;
   cursor: row-resize;
-  border-top: 1px solid $border-color;
+  border-top: $border-width $border-style $border-color;
   -moz-transition: background-color 0.1s;
   -webkit-transition: background-color 0.1s;
   transition: background-color 0.1s;
   /* two lines below are a hack to hide hanging plotly long vertical tick labels */
-  border-bottom: 2px solid $body-bg;
+  border-bottom: map-get($border-widths, 2) $border-style $body-bg;
   bottom: -3px;
 
   span {
@@ -1239,8 +1239,8 @@ g.annotation {
 .ai-summary {
   position: relative;
   padding: 8px 4px 0px 10px;
-  border: 1px solid $border-color;
-  border-radius: 4px;
+  border: $border-width $border-style $border-color;
+  border-radius: $border-radius-sm;
   color: #160f26;
 
   summary {
@@ -1292,7 +1292,7 @@ g.annotation {
 
   .ai-continue-in-chat {
     padding: 2px 8px 2px 6px;
-    border: 1px solid $border-color;
+    border: $border-width $border-style $border-color;
     color: $secondary;
 
     &:hover,
@@ -1398,7 +1398,7 @@ g.annotation {
   code {
     background-color: $body-tertiary-bg;
     padding: 2px 4px;
-    border-radius: 4px;
+    border-radius: $border-radius-sm;
   }
 }
 
