@@ -249,21 +249,33 @@ h2.mqc-module-title {
   color: #999;
   padding: 20px 0;
   margin-top: 50px;
-}
 
-.footer p {
-  margin: 0;
-}
+  .container-fluid {
+    padding-right: 3.5rem;
+  }
 
-.footer a {
-  color: #999;
-  text-decoration: underline;
-}
+  p {
+    margin: 0;
+    a {
+      color: #999;
+      text-decoration: underline;
+    }
+  }
 
-.footer .seqera-logo svg {
-  width: 120px;
-  height: auto;
-  color: var(--#{$prefix}emphasis-color);
+  .seqera-logo svg {
+    width: 120px;
+    height: auto;
+    color: var(--#{$prefix}emphasis-color);
+    transition:
+      margin 0.3s,
+      opacity 0.3s;
+    opacity: 80%;
+    margin-bottom: 0;
+  }
+  .seqera-logo:hover svg {
+    margin-bottom: 0.2rem;
+    opacity: 100%;
+  }
 }
 
 /* Epic scroll bar of joy */
