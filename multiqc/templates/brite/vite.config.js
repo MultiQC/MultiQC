@@ -10,13 +10,7 @@ export default {
       },
       output: {
         entryFileNames: "js/multiqc.min.js",
-        // TODO: Should be able to remove this as soon as we use Bootstrap toasts instead of jquery.toast.css
-        assetFileNames: (assetInfo) => {
-          if (assetInfo.name.endsWith(".css")) {
-            return "css/multiqc.min.css";
-          }
-          return "assets/[name][extname]";
-        },
+        assetFileNames: "css/multiqc.min.css",
       },
     },
     minify: "terser",
