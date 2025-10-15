@@ -134,60 +134,29 @@
 
 // Side navigation toggle handle
 #side-nav-handle {
-  display: block;
   position: absolute;
   top: 50%;
   right: -14px;
   height: 50px;
   width: 15px;
   padding-top: 14px;
-  border: $border-width $border-style var(--#{$prefix}border-color);
-  border-left: 0;
   background-color: var(--#{$prefix}tertiary-bg);
-  border-top-right-radius: $border-radius-sm;
-  border-bottom-right-radius: $border-radius-sm;
   cursor: pointer;
-
   svg {
     color: var(--#{$prefix}tertiary-color);
     transition: transform 0.6s ease;
   }
-
-  display: none;
-  @include media-breakpoint-up(sm) {
-    display: block;
-  }
-}
-
-// Mobile nav header adjustments
-#mqc-nav-header {
-  padding-bottom: 10px;
 }
 
 /* ==========================================================================
    Header & Page Title
    ========================================================================== */
 
-#page_title {
-  margin: 0 0 20px;
-
-  img {
-    max-width: 320px;
-  }
-}
-
-// Welcome message
-#mqc_welcome .close {
-  top: 2px;
-}
-
+// "don't show again" text button
 #mqc_hide_welcome_btn {
-  position: relative;
-  float: right;
-  top: -2px;
-  right: -21px;
   color: inherit;
   opacity: 0.4;
+  transition: $transition-fade;
 
   &:hover,
   &:active,
@@ -196,21 +165,11 @@
   }
 }
 
-// Analysis directories
+// Analysis directories - can be a huge list so limit page space
 #analysis_dirs_wrapper {
   max-height: 80px;
   overflow: auto;
   margin-bottom: 10px;
-}
-
-// Sample name switches
-#mqc_sname_switches_txt {
-  margin-bottom: 15px;
-}
-
-#mqc_sname_switches {
-  display: inline-block;
-  margin-left: 10px;
 }
 
 /* ==========================================================================
@@ -221,22 +180,14 @@
 .mqc-section-comment {
   border-left: 5px solid var(--#{$prefix}info);
   background-color: var(--#{$prefix}info-bg-subtle);
+  padding: ($spacer * 0.5) $spacer;
+  margin: 0 0 $spacer;
+  font-size: $font-size-base * 1.2;
 }
 
-.mqc-module-title-section {
-  display: flex;
-  align-items: flex-end;
-  margin-top: 20px;
-  margin-bottom: 10px;
-  column-gap: 10px;
-}
-
-h2.mqc-module-title {
-  margin: 0;
-}
-
+// Markdown paragraphs in the description
 .mqc-section-description > p {
-  margin-bottom: 4px;
+  margin-bottom: $spacer * 0.5;
 }
 
 /* ==========================================================================

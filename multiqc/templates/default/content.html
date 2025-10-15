@@ -16,8 +16,8 @@ the output from each module and print it in sections.
       {% for s in m.sections %}
         {% if loop.first %}
         <div class="mqc-module-section-first">
-          <div class="mqc-module-title-section">
-            <h2 class="mqc-module-title" id="{{ m.anchor }}">{{ m.name }}</h2>
+          <div class="d-flex align-items-end column-gap-2 mt-4 mb-2">
+            <h2 class="mb-0" id="{{ m.anchor }}">{{ m.name }}</h2>
             {% if m.versions %}
               <div class="text-muted">
                 {% for tool, versions in m.versions.items() %}

@@ -1,11 +1,14 @@
 // Main SCSS file for MultiQC default template
 // This file imports Bootstrap and custom MultiQC styles
 
+// Custom colours
+@import "_colors";
+
 // Bootstrap - start
 @import "bs-start";
 
 // Custom Bootstrap variable overrides for light theme
-@import "variables";
+@import "_variables";
 
 // Bootstrap - end
 @import "bs-end";

@@ -8,7 +8,7 @@ was generated and the button that launches the welcome tour.
 
 #}
 
-<h1 id="page_title">
+<h1 id="page_title" class="mb-3">
   {% if config.custom_logo is not none %}
     <div class="float-end">
       {{ '<a href="'+config.custom_logo_url+'" target="_blank">' if config.custom_logo_url is not none }}
@@ -68,9 +68,9 @@ was generated and the button that launches the welcome tour.
 </div>
 
 {% if config.show_analysis_time or config.show_analysis_paths %}
-  <div id="analysis_dirs_wrapper" style="display: flex; justify-content: space-between; align-items: center;">
-    <span style="flex: 1;"
-      >Report
+  <div id="analysis_dirs_wrapper" class="d-flex justify-content-between align-items-center">
+    <div>
+      Report
       {% if config.show_analysis_time %}
         generated on {{ report.creation_date.strftime('%Y-%m-%d, %H:%M %Z') }}
       {% endif %}
@@ -86,7 +86,7 @@ was generated and the button that launches the welcome tour.
           </ul>
         {% endif %}
       {% endif %}
-    </span>
+    </div>
     {% if not config.no_ai and not report.ai_global_summary %}
       <div class="ai-generate-button-wrapper">
         <button
@@ -152,9 +152,9 @@ was generated and the button that launches the welcome tour.
 {% endif %}
 
 {% if config.sample_names_rename_buttons | length > 0 %}
-  <p id="mqc_sname_switches_txt">
+  <p id="mqc_sname_switches_txt" class="mb-1">
     Change sample names:
-    <span class="btn-group btn-group-sm" role="group" id="mqc_sname_switches">
+    <span class="btn-group btn-group-sm ms-1 d-inline-block" role="group" id="mqc_sname_switches">
       {% for sn_t in config.sample_names_rename_buttons %}
         <button
           type="button"
@@ -185,17 +185,23 @@ was generated and the button that launches the welcome tour.
   </p>
 {% endif %}
 
-<div class="alert alert-info alert-dismissible d-print-none" id="mqc_welcome" style="display: none;">
-  <button type="button" data-bs-dismiss="alert" class="btn-close" aria-label="Close"></button>
-  <button type="button" data-bs-dismiss="alert" class=" btn btn-link btn-sm" id="mqc_hide_welcome_btn">
+<div
+  class="alert alert-info alert-dismissible d-print-none d-flex justify-content-between align-items-center"
+  id="mqc_welcome"
+  style="display: none;"
+>
+  <div>
+    {{ material_icon('mdi:information', 16) }}
+    <strong>Welcome!</strong> Not sure where to start?
+    <a href="https://www.youtube.com/watch?v=qPbIlO_KWN0" target="_blank" class="btn btn-outline-secondary btn-sm mx-2">
+      Watch a tutorial video
+    </a>
+    <small><em>(6:06)</em></small>
+  </div>
+  <button type="button" data-bs-dismiss="alert" class="btn btn-link btn-sm" id="mqc_hide_welcome_btn">
     don't show again
   </button>
-  {{ material_icon('mdi:information', 16) }}
-  <strong>Welcome!</strong> Not sure where to start? &nbsp;
-  <a href="https://www.youtube.com/watch?v=qPbIlO_KWN0" target="_blank" class="btn btn-info btn-sm"
-    >Watch a tutorial video</a
-  >
-  &nbsp; <small><em>(6:06)</em></small>
+  <button type="button" data-bs-dismiss="alert" class="btn-close" aria-label="Close"></button>
 </div>
 
 {% if report.plot_data | length > 0 and report.some_plots_are_deferred %}
@@ -212,9 +218,7 @@ was generated and the button that launches the welcome tour.
   class="ai-summary"
   style="display: {% if report.ai_global_summary | length > 0 %}block{% else %}none{% endif %};"
 >
-  <div class="ai-summary-header">
-    <b>Report AI Summary </b>
-  </div>
+  <div class="ai-summary-header"><b>Report AI Summary </b></div>
   <div id="global_ai_summary_response" class="ai-summary-response">{{ report.ai_global_summary }}</div>
 
   {% if report.ai_global_detailed_analysis %}
