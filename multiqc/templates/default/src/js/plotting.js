@@ -459,8 +459,25 @@ function renderPlot(plotAnchor) {
   let dataset = plot.datasets[plot.activeDatasetIdx];
   updateObject(plot.layout, dataset.layout, false);
 
-  // Apply theme-aware colors for hover elements
+  // Apply theme-aware colors for hover elements and text
   const colors = getPlotlyThemeColors();
+
+  // Main font color
+  if (plot.layout.font) {
+    plot.layout.font.color = colors.textcolor;
+  }
+
+  // Title color
+  if (plot.layout.title && plot.layout.title.font) {
+    plot.layout.title.font.color = colors.textcolor;
+  }
+
+  // Legend color
+  if (plot.layout.legend && plot.layout.legend.font) {
+    plot.layout.legend.font.color = colors.textcolor;
+  }
+
+  // Hover label
   plot.layout.hoverlabel = plot.layout.hoverlabel || {};
   plot.layout.hoverlabel.bgcolor = colors.hoverlabel_bgcolor;
   plot.layout.hoverlabel.bordercolor = colors.hoverlabel_bordercolor;
@@ -473,6 +490,36 @@ function renderPlot(plotAnchor) {
   }
   if (plot.layout.yaxis && plot.layout.yaxis.showspikes === true) {
     plot.layout.yaxis.spikecolor = colors.spike_color;
+  }
+
+  // Apply theme colors to all axes (for plots with multiple axes like violin plots)
+  for (let i = 1; i <= 20; i++) {
+    let xaxis = "xaxis" + (i === 1 ? "" : i);
+    let yaxis = "yaxis" + (i === 1 ? "" : i);
+
+    if (plot.layout[xaxis]) {
+      plot.layout[xaxis].gridcolor = colors.gridcolor;
+      plot.layout[xaxis].zerolinecolor = colors.zerolinecolor;
+      plot.layout[xaxis].color = colors.axiscolor;
+      if (plot.layout[xaxis].tickfont) {
+        plot.layout[xaxis].tickfont.color = colors.tickcolor;
+      }
+      if (plot.layout[xaxis].showspikes === true) {
+        plot.layout[xaxis].spikecolor = colors.spike_color;
+      }
+    }
+
+    if (plot.layout[yaxis]) {
+      plot.layout[yaxis].gridcolor = colors.gridcolor;
+      plot.layout[yaxis].zerolinecolor = colors.zerolinecolor;
+      plot.layout[yaxis].color = colors.axiscolor;
+      if (plot.layout[yaxis].tickfont) {
+        plot.layout[yaxis].tickfont.color = colors.tickcolor;
+      }
+      if (plot.layout[yaxis].showspikes === true) {
+        plot.layout[yaxis].spikecolor = colors.spike_color;
+      }
+    }
   }
 
   // Apply pct/log toggle states

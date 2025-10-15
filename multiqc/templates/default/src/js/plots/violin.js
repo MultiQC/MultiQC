@@ -202,6 +202,7 @@ class ViolinPlot extends Plot {
       let header = headerByMetric[metric];
 
       // Set layouts for each violin individually
+      // Note: colors will be overridden by theme in renderPlot()
       layout["yaxis" + (metricIdx + 1)] = {
         automargin: layout["yaxis"]["automargin"],
         color: layout["yaxis"]["color"],
@@ -235,11 +236,6 @@ class ViolinPlot extends Plot {
 
       if (header["hoverformat"] !== undefined && header["hoverformat"] !== null) {
         layout["xaxis" + (metricIdx + 1)]["hoverformat"] = header["hoverformat"];
-      }
-
-      // Set color for each violin individually
-      if (header["color"] !== undefined && header["color"] !== null) {
-        layout["yaxis" + (metricIdx + 1)]["tickfont"] = { color: "rgb(" + header["color"] + ")" };
       }
     });
 
