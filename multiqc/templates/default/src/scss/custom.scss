@@ -17,9 +17,9 @@
 
 /* Main page area */
 .mainpage {
-  padding: 20px;
+  padding: $spacer * 1.25;
 
-  @media only screen and (min-width: 768px) {
+  @include media-breakpoint-up(md) {
     margin-left: 270px;
     padding-right: 3rem;
     -moz-transition: margin-left 0.5s;
@@ -40,7 +40,7 @@
   height: 100%;
   background-color: var(--#{$prefix}tertiary-bg);
 
-  @media only screen and (min-width: 768px) {
+  @include media-breakpoint-up(md) {
     position: fixed;
   }
 }
@@ -48,7 +48,7 @@
 .side-nav {
   border-bottom: $border-width $border-style var(--#{$prefix}border-color);
 
-  @media only screen and (min-width: 768px) {
+  @include media-breakpoint-up(md) {
     height: 100%;
     width: 250px;
     border-right: $border-width $border-style var(--#{$prefix}border-color);
@@ -156,16 +156,15 @@
     color: var(--#{$prefix}tertiary-color);
   }
 
-  @media only screen and (max-width: 768px) {
-    display: none;
+  display: none;
+  @include media-breakpoint-up(sm) {
+    display: block;
   }
 }
 
 /* Mobile nav header adjustments */
-@media only screen and (max-width: 767px) {
-  #mqc-nav-header {
-    padding: 10px;
-  }
+#mqc-nav-header {
+  padding-bottom: 10px;
 }
 
 /* ==========================================================================
@@ -178,10 +177,6 @@
   img {
     max-width: 320px;
   }
-}
-
-#mqc_header_hr {
-  margin: 0;
 }
 
 /* Welcome message */
@@ -259,7 +254,7 @@ h2.mqc-module-title {
   padding: 20px 0;
   margin-top: 50px;
 
-  @media only screen and (min-width: 768px) {
+  @include media-breakpoint-up(md) {
     margin-left: 250px;
     -moz-transition: margin-left 0.5s;
     -webkit-transition: margin-left 0.5s;
@@ -440,19 +435,6 @@ input.form-control[type="color"] {
   }
 }
 
-/* Mobile toolbox styles */
-@media only screen and (max-width: 768px) {
-  .mqc-toolbox {
-    padding: 0 15px;
-    background-color: var(--#{$prefix}tertiary-bg);
-    border-bottom: $border-width $border-style var(--#{$prefix}border-color);
-  }
-
-  #mqc_saveconfig {
-    margin: 0 -15px;
-  }
-}
-
 /* Back-to-top link */
 .mqc-toplink,
 .mqc-toplink:visited {
@@ -544,45 +526,6 @@ input.form-control[type="color"] {
   .on {
     background-color: var(--#{$prefix}primary);
     color: var(--#{$prefix}body-bg);
-  }
-}
-
-/* Filter sections */
-.mqc_filter_section {
-  padding: 10px;
-
-  hr {
-    margin: 10px 0;
-    border-top: $border-width $border-style var(--#{$prefix}border-color);
-  }
-
-  p {
-    font-size: 85%;
-    padding: 0;
-    margin: 5px 0;
-    color: var(--#{$prefix}secondary);
-
-    a {
-      color: var(--#{$prefix}secondary);
-    }
-
-    .btn {
-      color: var(--#{$prefix}body-color);
-    }
-  }
-
-  .row .form-control {
-    vertical-align: middle;
-  }
-
-  @media only screen and (max-width: 768px) {
-    .form-control {
-      display: inline-block;
-    }
-
-    input[type="text"] {
-      width: auto;
-    }
   }
 }
 
