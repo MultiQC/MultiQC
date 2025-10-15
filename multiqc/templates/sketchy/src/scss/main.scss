@@ -8,13 +8,13 @@
 @import "../../../default/src/scss/variables";
 
 // Sketchy theme variables
-@import "variables";
+@import "_variables";
 
 // Bootstrap - end
 @import "../../../default/src/scss/bs-end";
 
 // Sketchy theme customizations
-@import "bootswatch";
+@import "_bootswatch";
 
 // Custom MultiQC styles
 @import "../../../default/src/scss/custom";

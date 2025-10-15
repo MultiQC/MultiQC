@@ -754,7 +754,7 @@ input.form-control[type="color"] {
 
 .regex_example_demo input {
   margin-bottom: 8px;
-  font-family: "Consolas", "Monaco", "Courier New", Courier, monospace;
+  font-family: $font-family-code;
 }
 
 /* ==========================================================================
@@ -1207,7 +1207,7 @@ g.annotation {
   padding: 0;
   color: var(--#{$prefix}tertiary-color);
   font-size: 8px;
-  font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
+  font-family: $font-family-base;
 }
 
 /* ==========================================================================
