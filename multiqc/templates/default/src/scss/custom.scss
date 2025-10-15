@@ -6,43 +6,9 @@
    Base & General Styles
    ========================================================================== */
 
-code {
-  background-color: var(--#{$prefix}tertiary-bg);
-
-  @media only screen and (max-width: 768px) {
-    display: inline-block;
-    max-width: 90%;
-    overflow: auto;
-  }
-}
-
-.radio.form-control-sm {
-  height: 20px;
-
-  input {
-    margin: 2px 0 0 -20px;
-  }
-}
-
+// Used for thousands-separator span in tables
 .mqc_small_space {
   padding: 0 1px;
-}
-
-/* Heading anchor offset - prevents headings from "head-butting" the top of the browser
-   https://css-tricks.com/hash-tag-links-padding/ */
-h1:before,
-h2:before,
-h3:before,
-h4:before {
-  display: block;
-  content: " ";
-  margin-top: -20px;
-  height: 20px;
-  visibility: hidden;
-}
-
-hr {
-  border-top: 0;
 }
 
 /* ==========================================================================
@@ -426,41 +392,43 @@ input.form-control[type="color"] {
     transform: rotate(270deg);
   }
 
-  .list-group {
-    width: 2.5rem;
-    margin-left: -1rem;
-    border-right: 0;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+  .mqc-toolbox-buttons {
+    .list-group {
+      width: 2.5rem;
+      margin-left: -1rem;
+      border-right: 0;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
 
-    .list-group-item {
-      background-color: var(--#{$prefix}secondary-bg);
-      padding: 0.5rem;
-      text-align: center;
-      margin-top: 0.5rem;
-      border-top-width: $border-width;
-      border-top-left-radius: $border-radius;
-      border-bottom-left-radius: $border-radius;
+      .list-group-item {
+        background-color: var(--#{$prefix}secondary-bg);
+        padding: 0.5rem;
+        text-align: center;
+        margin-top: 0.5rem;
+        border-top-width: $border-width;
+        border-top-left-radius: $border-radius;
+        border-bottom-left-radius: $border-radius;
 
-      &.active {
-        background-color: var(--#{$prefix}body-bg);
-        color: var(--#{$prefix}body-color);
-        border-color: var(--#{$prefix}secondary);
-        border-right-color: var(--#{$prefix}body-bg);
-      }
+        &.active {
+          background-color: var(--#{$prefix}body-bg);
+          color: var(--#{$prefix}body-color);
+          border-color: var(--#{$prefix}secondary);
+          border-right-color: var(--#{$prefix}body-bg);
+        }
 
-      svg {
-        width: 20px;
-        height: 20px;
+        svg {
+          width: 20px;
+          height: 20px;
+        }
       }
     }
   }
 
   .seqera-logo {
     svg {
-      width: 100%;
+      width: 50%;
       height: auto;
-      padding: 1.5rem 3rem;
+      padding: 1rem;
       opacity: 60%;
       color: $offcanvas-color;
       transition: opacity 0.2s;
@@ -729,14 +697,6 @@ input.form-control[type="color"] {
 
 /* About modal */
 #mqc_about {
-  p {
-    margin-bottom: 10px;
-  }
-
-  a {
-    text-decoration: underline;
-  }
-
   blockquote {
     font-size: 0.8em;
     padding: 0 0 0 10px;

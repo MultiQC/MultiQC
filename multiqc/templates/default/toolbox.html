@@ -318,8 +318,6 @@ of the report.
           </div>
         </form>
 
-        <hr />
-
         <p class="mqc_anonymize_samples_p" id="mqc_anonymize_samples_switch">
           <span class="mqc_switch_wrapper mqc_anonymize_samples" data-bs-target="mqc_cols"
             >Anonymize samples <span class="mqc_switch anonymize_samples off">off</span></span
@@ -414,7 +412,6 @@ of the report.
             </div>
           </div>
 
-          <hr />
           <h5>Choose Plots</h5>
           <button class="btn btn-sm btn-outline-secondary" id="mqc_export_sall">
             {{ material_icon('mdi:checkbox-marked', 16) }} All
@@ -424,7 +421,6 @@ of the report.
           </button>
           <div id="mqc_export_selectplots"></div>
 
-          <hr />
           <button type="submit" class="btn btn-block btn-primary" id="mqc-dl-plot-btn">
             {{ material_icon('mdi:download', 20) }} &nbsp; Download Plot <span id="mqc-dl-plot-txt">Images</span>
           </button>
@@ -460,7 +456,6 @@ of the report.
             </button>
           </div>
         </form>
-        <hr />
 
         <h5 class="mb-3">Load Settings</h5>
         <p>Choose a saved report profile from the browser or load from a file:</p>
@@ -510,20 +505,39 @@ of the report.
       <div class="tab-pane" id="mqc_about" role="tabpanel">
         <h5 class="mb-3">About MultiQC</h5>
         <p>This report was generated using MultiQC, version {{ config.version }}</p>
-        <p>
-          You can see a YouTube video describing how to use MultiQC reports here:
-          <a href="https://youtu.be/qPbIlO_KWN0?list=PLIA2-lqNuhvFGAsB92N0v7Qi5xCxCNsYM" target="_blank"
-            >https://youtu.be/qPbIlO_KWN0</a
+        <div class="list-group mb-3">
+          <a
+            class="list-group-item list-group-item-action"
+            href="https://youtu.be/qPbIlO_KWN0?list=PLIA2-lqNuhvFGAsB92N0v7Qi5xCxCNsYM"
+            target="_blank"
           >
-        </p>
-        <p>
-          For more information about MultiQC, including other videos and extensive documentation, please visit
-          <a href="http://multiqc.info/?ref=mqc_report" target="_blank">http://multiqc.info</a>
-        </p>
-        <p>
-          You can report bugs, suggest improvements and find the source code for MultiQC on GitHub:
-          <a href="https://github.com/MultiQC/MultiQC" target="_blank">https://github.com/MultiQC/MultiQC</a>
-        </p>
+            <span class="me-2">{{ material_icon('mdi:youtube', 16) }}</span> Video: Using MultiQC Reports
+          </a>
+          <a
+            class="list-group-item list-group-item-action"
+            href="http://seqera.io/multiqc/?ref=mqc_report"
+            target="_blank"
+          >
+            <span class="me-2">{{ material_icon('mdi:home', 16) }}</span> MultiQC homepage
+          </a>
+          <a
+            class="list-group-item list-group-item-action"
+            href="http://docs.seqera.io/multiqc/?ref=mqc_report"
+            target="_blank"
+          >
+            <span class="me-2">{{ material_icon('mdi:book-open-page-variant', 16) }}</span> MultiQC documentation
+          </a>
+          <a class="list-group-item list-group-item-action" href="https://github.com/MultiQC/MultiQC" target="_blank">
+            <span class="me-2">{{ material_icon('mdi:github', 16) }}</span> Source code
+          </a>
+          <a
+            class="list-group-item list-group-item-action"
+            href="https://github.com/MultiQC/MultiQC/issues"
+            target="_blank"
+          >
+            <span class="me-2">{{ material_icon('mdi:alert-circle-outline', 16) }}</span> Issue tracker
+          </a>
+        </div>
         <p>MultiQC is published in Bioinformatics:</p>
         <blockquote>
           <strong>MultiQC: Summarize analysis results for multiple tools and samples in a single report</strong><br />
@@ -534,10 +548,10 @@ of the report.
           ><br />
           PMID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/27312411" target="_blank">27312411</a>
         </blockquote>
-        <hr />
-        <p class="text-center seqera-logo">
-          MultiQC is developed by:<br />
-          <a href="https://seqera.io" target="_blank">
+
+        <p>MultiQC is developed by Seqera.</p>
+        <p class="seqera-logo">
+          <a href="https://seqera.io" target="_blank" class="d-block text-center">
             <svg width="1261" height="250" viewBox="0 0 1261 250" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g clip-path="url(#clip0_933_7347)">
                 <path

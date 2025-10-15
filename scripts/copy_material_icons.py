@@ -101,6 +101,11 @@ REQUIRED_ICONS: List[str] = [
     "mdi:qrcode",
     "mdi:format-bold",
     "mdi:violin",
+    # About section icons
+    "mdi:youtube",
+    "mdi:book-open-page-variant",
+    "mdi:github",
+    "mdi:alert-circle-outline",
 ]
 
 
