@@ -229,7 +229,7 @@
 }
 
 /* ==========================================================================
-   Custom Scrollbar (Webkit browsers)
+   Custom Scrollbar
    ========================================================================== */
 
 ::-webkit-scrollbar {
@@ -245,18 +245,8 @@
 
 ::-webkit-scrollbar-thumb {
   background: var(--#{$prefix}secondary-bg);
-
-  &:hover {
-    -moz-box-shadow: $box-shadow-inset;
-    -webkit-box-shadow: $box-shadow-inset;
-    box-shadow: $box-shadow-inset;
-  }
-
   &:active {
     background: var(--#{$prefix}tertiary-bg);
-    -moz-box-shadow: $box-shadow-inset;
-    -webkit-box-shadow: $box-shadow-inset;
-    box-shadow: $box-shadow-inset;
   }
 }
 
@@ -292,33 +282,15 @@ input.form-control[type="color"] {
    ========================================================================== */
 
 #mqc-toolbox {
-  .mqc-toolbox-buttons {
-    left: -1.5rem;
-    top: 50px;
-    visibility: visible;
-
-    a.in_use {
-      border: map-get($border-widths, 2) $border-style var(--#{$prefix}primary);
-      border-right: 0;
-      color: var(--#{$prefix}primary);
-      background-color: var(--#{$prefix}primary-bg-subtle);
-    }
-
-    li a.active {
-      border-right: $border-width $border-style var(--#{$prefix}tertiary-bg);
-      background-color: var(--#{$prefix}tertiary-bg);
-    }
-  }
-
   .mqc-toolbox-label {
-    margin-left: -27px;
-    -ms-transform: rotate(270deg);
-    -moz-transform: rotate(270deg);
-    -webkit-transform: rotate(270deg);
+    margin-left: -21px;
     transform: rotate(270deg);
   }
 
   .mqc-toolbox-buttons {
+    left: -1.5rem;
+    top: 50px;
+    visibility: visible;
     .list-group {
       width: 2.5rem;
       margin-left: -1rem;
@@ -334,12 +306,18 @@ input.form-control[type="color"] {
         border-top-width: $border-width;
         border-top-left-radius: $border-radius;
         border-bottom-left-radius: $border-radius;
+        border-right: 0;
 
         &.active {
-          background-color: var(--#{$prefix}body-bg);
           color: var(--#{$prefix}body-color);
+          background-color: var(--#{$prefix}body-bg);
           border-color: var(--#{$prefix}secondary);
-          border-right-color: var(--#{$prefix}body-bg);
+        }
+
+        &.in_use {
+          color: var(--#{$prefix}primary);
+          border-color: var(--#{$prefix}primary);
+          background-color: var(--#{$prefix}primary-bg-subtle);
         }
 
         svg {
@@ -356,7 +334,7 @@ input.form-control[type="color"] {
       height: auto;
       padding: 1rem;
       opacity: 60%;
-      color: $offcanvas-color;
+      color: var(--#{$prefix}body-color);
       transition: opacity 0.2s;
     }
 
