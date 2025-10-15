@@ -82,6 +82,9 @@ class MultiQCConfig(BaseModel):
     custom_css_files: Optional[List[str]] = Field(None, description="Custom CSS files to include")
     simple_output: Optional[bool] = Field(None, description="Simple output")
     template: Optional[str] = Field(None, description="Report template to use")
+    template_dark_mode: Optional[bool] = Field(
+        None, description="Enable dark mode toggle and JavaScript for the report template"
+    )
     profile_runtime: Optional[bool] = Field(None, description="Profile runtime")
     profile_memory: Optional[bool] = Field(None, description="Profile memory")
     pandoc_template: Optional[str] = Field(None, description="Pandoc template")
@@ -148,11 +151,6 @@ class MultiQCConfig(BaseModel):
     plots_flat_numseries: Optional[int] = Field(None, description="Number of series to show in flat plots")
     plots_defer_loading_numseries: Optional[int] = Field(
         None, description="Number of series to defer loading - user will need to press button to render plot"
-    )
-    plot_theme: Optional[str] = Field(
-        None,
-        description="Plotly theme template - any registered Plotly theme name "
-        "(e.g. 'plotly', 'plotly_white', 'plotly_dark', 'ggplot2', 'seaborn', 'simple_white', 'none')",
     )
     lineplot_number_of_points_to_hide_markers: Optional[int] = Field(
         None, description="Number of points to hide markers - sum of data points in all samples"

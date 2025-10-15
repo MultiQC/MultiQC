@@ -1,11 +1,9 @@
 """
 ========
- brite
+ crazy
 ========
 
-A child theme of 'default' using the Bootswatch Brite theme.
-
-Brite is a bright, high-contrast theme from Bootswatch.
+A child theme of 'default' - experimental / testing template.
 
 """
 
@@ -15,6 +13,9 @@ import importlib
 template_parent = "default"
 template_dir = os.path.dirname(__file__)
 base_fn = "base.html"
+
+# Template configuration - overrides user config
+template_dark_mode = False  # Disable dark mode toggle for this template
 
 # Import template functions from parent
 try:

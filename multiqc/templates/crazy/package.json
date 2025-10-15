@@ -1,7 +1,7 @@
 {
-  "name": "multiqc-brite-template",
-  "version": "1.30.0",
-  "description": "Brite Bootswatch theme for MultiQC reports",
+  "name": "multiqc-crazy-template",
+  "version": "1.0",
+  "description": "Loopy theme for MultiQC reports",
   "private": true,
   "type": "module",
   "scripts": {

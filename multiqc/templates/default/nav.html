@@ -35,7 +35,9 @@ The side navigation for the report.
           v{{ config.version }}
         </a>
 
-        {% include 'theme_toggle.html' %}
+        {% if config.template_dark_mode %}
+          {% include 'theme_toggle.html' %}
+        {% endif %}
       </div>
 
       {% if config.title is not none %}

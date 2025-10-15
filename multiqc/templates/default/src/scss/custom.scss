@@ -33,7 +33,7 @@
 
 .side-nav-wrapper {
   height: 100%;
-  background-color: var(--#{$prefix}tertiary-bg);
+  background-color: var(--#{$prefix}secondary-bg);
 
   @include media-breakpoint-up(md) {
     position: fixed;

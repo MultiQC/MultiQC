@@ -6,6 +6,11 @@
 (() => {
   "use strict";
 
+  // Check if dark mode is enabled via config
+  if (window.mqc_config && window.mqc_config.template_dark_mode === false) {
+    return;
+  }
+
   const getStoredTheme = () => localStorage.getItem("theme");
   const setStoredTheme = (theme) => localStorage.setItem("theme", theme);
 

@@ -623,7 +623,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             showlegend = True if flat else False
 
         # Use the specified template or default to multiqc
-        template = config.plot_theme if config.plot_theme else go.layout.Template(multiqc_plotly_template)
+        template = go.layout.Template(multiqc_plotly_template)
 
         layout: go.Layout = go.Layout(
             template=template,

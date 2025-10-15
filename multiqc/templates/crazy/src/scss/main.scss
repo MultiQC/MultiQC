@@ -1,10 +1,31 @@
+// Main SCSS file for MultiQC Crazy template
+// This file imports Bootstrap and custom MultiQC styles
+
+$enable-dark-mode: false;
+
+// Default template colours
+@import "../../../default/src/scss/_colors";
+
+// Theme colours
+@import "_colors";
+
+// Bootstrap 5 - Functions and base variables
+@import "../../node_modules/bootstrap/scss/functions";
+@import "../../node_modules/bootstrap/scss/variables";
+
+// Default template variables
+// @import "../../../default/src/scss/_variables";
+
+// Theme variables
+// @import "_variables";
+
 // Required Bootstrap parts
 @import "../../node_modules/bootstrap/scss/maps";
 @import "../../node_modules/bootstrap/scss/mixins";
 @import "../../node_modules/bootstrap/scss/root";
 @import "../../node_modules/bootstrap/scss/utilities";
 
-// Layout & components (shared across all themes)
+// Bootstrap - Layout & components (shared across all themes)
 @import "../../node_modules/bootstrap/scss/reboot";
 @import "../../node_modules/bootstrap/scss/type";
 @import "../../node_modules/bootstrap/scss/images";
@@ -36,8 +57,14 @@
 @import "../../node_modules/bootstrap/scss/offcanvas";
 @import "../../node_modules/bootstrap/scss/placeholders";
 
-// Helpers
+// Bootstrap - Helpers
 @import "../../node_modules/bootstrap/scss/helpers";
 
-// Utilities
+// Bootstrap - Utilities
 @import "../../node_modules/bootstrap/scss/utilities/api";
+
+// Custom MultiQC styles
+@import "../../../default/src/scss/custom";
+
+// Theme styles
+@import "custom";

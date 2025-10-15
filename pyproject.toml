@@ -273,8 +273,7 @@ sections = "multiqc.templates.sections"
 simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
 geo = "multiqc.templates.geo"
-brite = "multiqc.templates.brite"
-sketchy = "multiqc.templates.sketchy"
+crazy = "multiqc.templates.crazy"
 
 ### See https://docs.seqera.io/multiqc/development/plugins for documentation
 #[project.entry-points."multiqc.cli_options.v1"]
