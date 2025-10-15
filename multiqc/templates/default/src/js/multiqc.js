@@ -81,7 +81,7 @@ $(function () {
 
   // Side nav expansion
   $("#side-nav-handle").click(function (e) {
-    $(".mainpage, .side-nav, .footer").toggleClass("hidden-nav");
+    $(".mainpage, .side-nav").toggleClass("hidden-nav");
     const svg = $("#side-nav-handle svg");
     const isRotated = svg.css("transform") !== "none" && svg.css("transform") !== "matrix(1, 0, 0, 1, 0, 0)";
     svg.css("transform", isRotated ? "rotate(0deg)" : "rotate(180deg)");

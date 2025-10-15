@@ -32,13 +32,14 @@ http://multiqc.info
     {% include 'toolbox.html' %}
 
     <div class="mainpage">
-      {% include 'header.html' %}
-      {% include 'general_stats.html' %}
-      {% include 'content.html' %}
-    </div>
-
-    <div class="footer">
-      <div class="container-fluid">{% include 'footer.html' %}</div>
+      <div class="p-4 pe-5">
+        {% include 'header.html' %}
+        {% include 'general_stats.html' %}
+        {% include 'content.html' %}
+      </div>
+      <div class="footer border-top py-3 mt-5">
+        <div class="container-fluid">{% include 'footer.html' %}</div>
+      </div>
     </div>
 
     <!-- Bootstrap Toast Container -->

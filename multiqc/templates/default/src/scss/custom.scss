@@ -17,11 +17,8 @@
 
 // Main page area
 .mainpage {
-  padding: $spacer * 1.25;
-
   @include media-breakpoint-up(md) {
-    margin-left: 270px;
-    padding-right: 3rem;
+    margin-left: 250px;
     transition: margin-left 0.5s;
 
     &.hidden-nav {
@@ -195,29 +192,17 @@
    ========================================================================== */
 
 .footer {
-  background-color: var(--#{$prefix}tertiary-bg);
-  border-top: $border-width $border-style var(--#{$prefix}border-color);
-  font-size: 0.9em;
   color: var(--#{$prefix}tertiary-color);
-  padding: 20px 0;
-  margin-top: 50px;
+  background-color: var(--#{$prefix}tertiary-bg);
+  font-size: $font-size-base * 0.9;
 
-  @include media-breakpoint-up(md) {
-    margin-left: 250px;
-    transition: margin-left 0.5s;
-
-    &.hidden-nav {
-      margin-left: 0;
-    }
-  }
-
+  // Avoid the "jump to top" button
   .container-fluid {
     padding-right: 3.5rem;
   }
 
   p {
     margin: 0;
-
     a {
       color: var(--#{$prefix}tertiary-color);
       text-decoration: underline;
