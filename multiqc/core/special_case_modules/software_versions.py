@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
                 <button type="button" class="mqc_table_copy_btn btn btn-outline-secondary btn-sm" data-clipboard-target="table#{table_id}">
                     {get_material_icon("mdi:content-copy", 16)} Copy table
                 </button>
-                <table class="table table-striped mqc_versions_table" id="{table_id}">
+                <table class="table table-striped w-100 mqc_versions_table" id="{table_id}">
                     <thead>
                         <tr>{"".join(header_rows)}</tr>
                     </thead>
