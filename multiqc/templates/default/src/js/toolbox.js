@@ -20,7 +20,7 @@ $(function () {
   });
 
   // Handle mobile navigation toolbox links
-  $(".mqc-nav .d-md-none a[href^='#mqc_']").click(function (e) {
+  $(".mobile-nav-toolbox-btns a[href^='#mqc_']").click(function (e) {
     e.preventDefault();
     const targetTab = $(this).attr("href");
 

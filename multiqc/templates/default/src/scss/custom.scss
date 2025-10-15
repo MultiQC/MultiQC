@@ -61,39 +61,35 @@
     }
   }
 
-  /* Side nav header and logo */
-  .side-nav-title a {
-    color: var(--#{$prefix}body-color);
-    font-size: 16px;
-    font-weight: normal;
-    padding: 15px 0;
-  }
-
   .navbar-toggler {
     position: absolute;
     right: 10px;
     top: 15px;
   }
 
-  .mqc_loading_warning {
+  // Side nav title, when --title is set
+  .side-nav-title {
     text-align: center;
-    border-bottom: $border-width $border-style var(--#{$prefix}border-color);
-    color: var(--#{$prefix}danger);
-  }
-
-  p {
-    font-size: 0.8em;
-    color: var(--#{$prefix}tertiary-color);
-    padding: 10px;
+    font-size: $font-size-base * 1.2;
+    font-weight: $font-weight-normal;
+    border-top: $border-width $border-style var(--#{$prefix}border-color);
+    margin: 0;
+    a {
+      color: var(--#{$prefix}body-color);
+      text-decoration: none;
+      padding: $spacer * 0.75 0;
+      display: block;
+    }
   }
 
   /* Navigation menu */
   .mqc-nav {
-    margin: 0;
-    padding: 0;
-    list-style-type: none;
-    border-bottom: $border-width $border-style var(--#{$prefix}border-color);
+    // Border for the last nav item, only on desktop
+    @include media-breakpoint-up(sm) {
+      border-bottom: $border-width $border-style var(--#{$prefix}border-color);
+    }
 
+    &,
     ul {
       margin: 0;
       padding: 0;
@@ -101,34 +97,36 @@
     }
 
     li {
-      position: relative;
+      border-top: $border-width $border-style var(--#{$prefix}border-color);
+      a {
+        display: block;
+        text-decoration: none;
 
-      &:last-child .nav-l1 {
-        border-top: 0;
+        &:hover,
+        &:active,
+        &:focus {
+          background-color: var(--#{$prefix}secondary-bg);
+        }
+
+        // Section links
+        &.nav-l1 {
+          padding: $spacer * 0.6;
+        }
+
+        // Subsection links
+        &.nav-l2 {
+          padding: ($spacer * 0.3) ($spacer * 0.6) ($spacer * 0.3) ($spacer * 0.9);
+          font-size: $font-size-base * 0.9;
+          color: var(--#{$prefix}secondary-emphasis);
+        }
       }
     }
-
-    a {
-      display: inline-block;
-      width: 100%;
-      text-decoration: none;
-
+    .mobile-toolbox-nav {
+      background-color: var(--#{$prefix}tertiary-bg);
       &:hover,
       &:active,
       &:focus {
-        background-color: var(--#{$prefix}tertiary-bg);
-      }
-
-      &.nav-l1 {
-        padding: 10px;
-        border-top: $border-width $border-style var(--#{$prefix}border-color);
-      }
-
-      &.nav-l2 {
-        padding: 5px 10px 5px 15px;
-        border-top: $border-width $border-style var(--#{$prefix}border-color);
-        font-size: 0.9em;
-        color: var(--#{$prefix}secondary-emphasis);
+        background-color: var(--#{$prefix}secondary-bg);
       }
     }
   }
