@@ -85,6 +85,9 @@ class MultiQCConfig(BaseModel):
     template_dark_mode: Optional[bool] = Field(
         None, description="Enable dark mode toggle and JavaScript for the report template"
     )
+    plot_font_family: Optional[str] = Field(
+        None, description="Custom font family for plots (defaults to system font stack)"
+    )
     profile_runtime: Optional[bool] = Field(None, description="Profile runtime")
     profile_memory: Optional[bool] = Field(None, description="Profile memory")
     pandoc_template: Optional[str] = Field(None, description="Pandoc template")

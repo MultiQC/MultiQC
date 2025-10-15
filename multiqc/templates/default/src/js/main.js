@@ -2,4 +2,4 @@
 import "../scss/main.scss";
 
 // Import Bootstrap 5 JavaScript
-import "main-js.js";
+import "./main-js.js";

@@ -75,6 +75,7 @@ custom_css_files: List[str]
 simple_output: bool
 template: str
 template_dark_mode: bool
+plot_font_family: Optional[str]
 profile_runtime: bool
 profile_memory: bool
 pandoc_template: str

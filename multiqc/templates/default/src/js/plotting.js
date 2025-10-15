@@ -459,6 +459,22 @@ function renderPlot(plotAnchor) {
   let dataset = plot.datasets[plot.activeDatasetIdx];
   updateObject(plot.layout, dataset.layout, false);
 
+  // Apply theme-aware colors for hover elements
+  const colors = getPlotlyThemeColors();
+  plot.layout.hoverlabel = plot.layout.hoverlabel || {};
+  plot.layout.hoverlabel.bgcolor = colors.hoverlabel_bgcolor;
+  plot.layout.hoverlabel.bordercolor = colors.hoverlabel_bordercolor;
+  plot.layout.hoverlabel.font = plot.layout.hoverlabel.font || {};
+  plot.layout.hoverlabel.font.color = colors.hoverlabel_fontcolor;
+
+  // Set spike line colors for hover crosshairs (only if spikes are explicitly enabled)
+  if (plot.layout.xaxis && plot.layout.xaxis.showspikes === true) {
+    plot.layout.xaxis.spikecolor = colors.spike_color;
+  }
+  if (plot.layout.yaxis && plot.layout.yaxis.showspikes === true) {
+    plot.layout.yaxis.spikecolor = colors.spike_color;
+  }
+
   // Apply pct/log toggle states
   plot.axisControlledBySwitches.map((axis) => {
     // Setting range explicitly just for the bar plot:
@@ -583,6 +599,10 @@ function getPlotlyThemeColors() {
       textcolor: "rgba(220,220,220,1)", // text color for titles and legends
       modebar_color: "rgba(200, 200, 200, 0.5)",
       modebar_activecolor: "rgba(220, 220, 220, 1)",
+      hoverlabel_bgcolor: "rgba(40,40,40,1)", // dark background for tooltips (opaque)
+      hoverlabel_bordercolor: "rgba(100,100,100,1)", // gray border for tooltips
+      hoverlabel_fontcolor: "rgba(220,220,220,1)", // light text for dark mode
+      spike_color: "rgba(220,220,220,1)", // light spike line color
     };
   } else {
     return {
@@ -595,6 +615,10 @@ function getPlotlyThemeColors() {
       textcolor: "rgba(60,60,60,1)", // text color for titles and legends
       modebar_color: "rgba(100, 100, 100, 0.5)",
       modebar_activecolor: "rgba(80, 80, 80, 1)",
+      hoverlabel_bgcolor: "rgba(255,255,255,1)", // white background for tooltips (opaque)
+      hoverlabel_bordercolor: "rgba(100,100,100,1)", // gray border
+      hoverlabel_fontcolor: "rgba(30,30,30,1)", // dark text
+      spike_color: "rgba(80,80,80,1)", // dark spike line color
     };
   }
 }
@@ -628,7 +652,18 @@ function updatePlotlyTheme() {
       "yaxis.title.font.color": colors.textcolor, // axis title color
       "modebar.color": colors.modebar_color,
       "modebar.activecolor": colors.modebar_activecolor,
+      "hoverlabel.bgcolor": colors.hoverlabel_bgcolor,
+      "hoverlabel.bordercolor": colors.hoverlabel_bordercolor,
+      "hoverlabel.font.color": colors.hoverlabel_fontcolor,
     };
+
+    // Only update spike colors if spikes are enabled
+    if (plot.layout.xaxis && plot.layout.xaxis.showspikes === true) {
+      layoutUpdate["xaxis.spikecolor"] = colors.spike_color;
+    }
+    if (plot.layout.yaxis && plot.layout.yaxis.showspikes === true) {
+      layoutUpdate["yaxis.spikecolor"] = colors.spike_color;
+    }
 
     // For plots with multiple axes (like violin plots), update those too
     for (let i = 2; i <= 20; i++) {

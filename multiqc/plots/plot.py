@@ -44,39 +44,47 @@ logger = logging.getLogger(__name__)
 
 check_plotly_version()
 
+
 # Create and register MultiQC default Plotly template
 # Uses transparent backgrounds so plots adapt to the page theme in the HTML report
 # JavaScript in plotting.js will override colors for dark mode
-multiqc_plotly_template = dict(
-    layout=go.Layout(
-        paper_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
-        plot_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
-        font=dict(
-            family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif",
-            color="rgba(60,60,60,1)",
-        ),
-        colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
-        xaxis=dict(
-            gridcolor="rgba(128,128,128,0.15)",
-            zerolinecolor="rgba(128,128,128,0.2)",
-            color="rgba(100,100,100,1)",
-            tickfont=dict(size=10, color="rgba(80,80,80,1)"),
-        ),
-        yaxis=dict(
-            gridcolor="rgba(128,128,128,0.15)",
-            zerolinecolor="rgba(128,128,128,0.2)",
-            color="rgba(100,100,100,1)",
-            tickfont=dict(size=10, color="rgba(80,80,80,1)"),
-        ),
-        title=dict(font=dict(size=20, color="rgba(60,60,60,1)")),
-        legend=dict(font=dict(color="rgba(60,60,60,1)")),
-        modebar=dict(
-            bgcolor="rgba(0, 0, 0, 0)",
-            color="rgba(100, 100, 100, 0.5)",
-            activecolor="rgba(80, 80, 80, 1)",
-        ),
+def get_multiqc_plotly_template():
+    """Get the MultiQC Plotly template with runtime config values."""
+    return dict(
+        layout=go.Layout(
+            paper_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
+            plot_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
+            font=dict(
+                family=config.plot_font_family
+                or "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+                color="rgba(60,60,60,1)",
+            ),
+            colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
+            xaxis=dict(
+                gridcolor="rgba(128,128,128,0.15)",
+                zerolinecolor="rgba(128,128,128,0.2)",
+                color="rgba(100,100,100,1)",
+                tickfont=dict(size=10, color="rgba(80,80,80,1)"),
+                spikecolor="rgba(60,60,60,1)",  # Darker spike line for light mode
+                spikethickness=-3,  # Negative value removes white border, absolute value is thickness
+            ),
+            yaxis=dict(
+                gridcolor="rgba(128,128,128,0.15)",
+                zerolinecolor="rgba(128,128,128,0.2)",
+                color="rgba(100,100,100,1)",
+                tickfont=dict(size=10, color="rgba(80,80,80,1)"),
+                spikecolor="rgba(60,60,60,1)",  # Darker spike line for light mode
+                spikethickness=-3,  # Negative value removes white border, absolute value is thickness
+            ),
+            title=dict(font=dict(size=20, color="rgba(60,60,60,1)")),
+            legend=dict(font=dict(color="rgba(60,60,60,1)")),
+            modebar=dict(
+                bgcolor="rgba(0, 0, 0, 0)",
+                color="rgba(100, 100, 100, 0.5)",
+                activecolor="rgba(80, 80, 80, 1)",
+            ),
+        )
     )
-)
 
 
 class FlatLine(ValidatedConfig):
@@ -622,8 +630,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if showlegend is None:
             showlegend = True if flat else False
 
-        # Use the specified template or default to multiqc
-        template = go.layout.Template(multiqc_plotly_template)
+        # Use the MultiQC template with runtime config values
+        template = go.layout.Template(get_multiqc_plotly_template())
 
         layout: go.Layout = go.Layout(
             template=template,

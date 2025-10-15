@@ -16,6 +16,7 @@ base_fn = "base.html"
 
 # Template configuration - overrides user config
 template_dark_mode = False  # Disable dark mode toggle for this template
+plot_font_family = '"Rock Salt", cursive'
 
 # Import template functions from parent
 try:

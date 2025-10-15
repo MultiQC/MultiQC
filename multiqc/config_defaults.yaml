@@ -24,6 +24,7 @@ custom_css_files: []
 simple_output: false
 template: "default"
 template_dark_mode: true
+plot_font_family: null # Custom font family for plots (defaults to system font stack)
 profile_runtime: false
 profile_memory: false
 pandoc_template: null

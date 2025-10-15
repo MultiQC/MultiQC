@@ -597,6 +597,19 @@
       "description": "Enable dark mode toggle and JavaScript for the report template",
       "title": "Template Dark Mode"
     },
+    "plot_font_family": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custom font family for plots (defaults to system font stack)",
+      "title": "Plot Font Family"
+    },
     "profile_runtime": {
       "anyOf": [
         {

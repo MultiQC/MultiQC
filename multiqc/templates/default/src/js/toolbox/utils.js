@@ -119,7 +119,7 @@ window.addLogo = function (imageDataUrl, callback) {
     ctx.drawImage(plotlyImage, 0, 0, plotlyImage.width, plotlyImage.height);
 
     // Text properties
-    ctx.font = "9px Lucida Grande"; // Set the desired font-size and type
+    ctx.font = "9px system-ui"; // Set the desired font-size and type
     ctx.textAlign = "right";
     ctx.fillStyle = "#9f9f9f"; // Semi-transparent black text
 

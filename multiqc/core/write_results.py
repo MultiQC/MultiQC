@@ -579,6 +579,8 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
     # Allow templates to override config settings
     if hasattr(template_mod, "template_dark_mode"):
         config.template_dark_mode = template_mod.template_dark_mode
+    if hasattr(template_mod, "plot_font_family"):
+        config.plot_font_family = template_mod.plot_font_family
 
     report_output = j_template.render(report=report, config=config)
     if to_stdout:
