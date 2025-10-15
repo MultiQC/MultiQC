@@ -82,7 +82,9 @@ $(function () {
   // Side nav expansion
   $("#side-nav-handle").click(function (e) {
     $(".mainpage, .side-nav, .footer").toggleClass("hidden-nav");
-    $("#side-nav-handle span").toggleClass("glyphicon-triangle-left glyphicon-triangle-right");
+    const svg = $("#side-nav-handle svg");
+    const isRotated = svg.css("transform") !== "none" && svg.css("transform") !== "matrix(1, 0, 0, 1, 0, 0)";
+    svg.css("transform", isRotated ? "rotate(0deg)" : "rotate(180deg)");
     // send resize trigger for replotting after css animation
     setTimeout(function () {
       $(document).resize();

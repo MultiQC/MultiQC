@@ -15,7 +15,7 @@
    Page Layout & Structure
    ========================================================================== */
 
-/* Main page area */
+// Main page area
 .mainpage {
   padding: $spacer * 1.25;
 
@@ -82,7 +82,7 @@
     }
   }
 
-  /* Navigation menu */
+  // Navigation menu
   .mqc-nav {
     // Border for the last nav item, only on desktop
     @include media-breakpoint-up(sm) {
@@ -132,7 +132,7 @@
   }
 }
 
-/* Side navigation toggle handle */
+// Side navigation toggle handle
 #side-nav-handle {
   display: block;
   position: absolute;
@@ -148,8 +148,9 @@
   border-bottom-right-radius: $border-radius-sm;
   cursor: pointer;
 
-  .glyphicon-triangle-right {
+  svg {
     color: var(--#{$prefix}tertiary-color);
+    transition: transform 0.6s ease;
   }
 
   display: none;
@@ -158,7 +159,7 @@
   }
 }
 
-/* Mobile nav header adjustments */
+// Mobile nav header adjustments
 #mqc-nav-header {
   padding-bottom: 10px;
 }
@@ -175,7 +176,7 @@
   }
 }
 
-/* Welcome message */
+// Welcome message
 #mqc_welcome .close {
   top: 2px;
 }
@@ -195,14 +196,14 @@
   }
 }
 
-/* Analysis directories */
+// Analysis directories
 #analysis_dirs_wrapper {
   max-height: 80px;
   overflow: auto;
   margin-bottom: 10px;
 }
 
-/* Sample name switches */
+// Sample name switches
 #mqc_sname_switches_txt {
   margin-bottom: 15px;
 }
@@ -327,14 +328,14 @@ h2.mqc-module-title {
    Interactive UI Elements
    ========================================================================== */
 
-/* Color input for sample highlighting */
+// Color input for sample highlighting
 input.form-control[type="color"] {
   padding: 5px;
   width: 30px;
   cursor: pointer;
 }
 
-/* Drag handle for resizing */
+// Drag handle for resizing
 .hc_handle {
   display: inline-block;
   padding: 9px 4px;
@@ -429,7 +430,7 @@ input.form-control[type="color"] {
   }
 }
 
-/* Back-to-top link */
+// Back-to-top link
 .mqc-toplink,
 .mqc-toplink:visited {
   position: fixed;
@@ -461,7 +462,7 @@ input.form-control[type="color"] {
    Toolbox Filters & Sample Controls
    ========================================================================== */
 
-/* Filter list */
+// Filter list
 .mqc_filters {
   margin: 10px 0;
   padding: 0;
@@ -486,7 +487,7 @@ input.form-control[type="color"] {
   }
 }
 
-/* Toggle switches */
+// Toggle switches
 .mqc_switch_wrapper {
   cursor: pointer;
 
@@ -523,7 +524,7 @@ input.form-control[type="color"] {
   }
 }
 
-/* Rename samples bulk edit */
+// Rename samples bulk edit
 #mqc_renamesamples_bulk_collapse {
   border-top: $border-width $border-style var(--#{$prefix}border-color);
 }
@@ -537,7 +538,7 @@ input.form-control[type="color"] {
   color: var(--#{$prefix}tertiary-color);
 }
 
-/* Filter text inputs */
+// Filter text inputs
 .f_text {
   border: 0;
   border-bottom: $border-width $border-style var(--#{$prefix}border-color);
@@ -561,7 +562,7 @@ input.form-control[type="color"] {
   width: calc(49% - 20px);
 }
 
-/* Export plots modal */
+// Export plots modal
 #mqc_exportplots {
   .col-sm-6 {
     padding: 0 10px 0 0;
@@ -621,7 +622,7 @@ input.form-control[type="color"] {
   }
 }
 
-/* Config save/clear success messages */
+// Config save/clear success messages
 #mqc-save-success {
   color: var(--#{$prefix}success);
   background-color: var(--#{$prefix}success-bg-subtle);
@@ -632,7 +633,7 @@ input.form-control[type="color"] {
   background-color: var(--#{$prefix}danger-bg-subtle);
 }
 
-/* About modal */
+// About modal
 #mqc_about {
   blockquote {
     font-size: 0.8em;
@@ -642,7 +643,7 @@ input.form-control[type="color"] {
   }
 }
 
-/* Regex help modal */
+// Regex help modal
 .regex_example_buttons button {
   float: left;
   clear: left;
@@ -663,7 +664,7 @@ input.form-control[type="color"] {
   height: 30px;
 }
 
-/* Table container */
+// Table container
 .mqc-table-responsive {
   overflow: auto;
 
@@ -672,7 +673,7 @@ input.form-control[type="color"] {
   }
 }
 
-/* Table expand/collapse button */
+// Table expand/collapse button
 .mqc-table-expand {
   text-align: center;
   color: var(--#{$prefix}tertiary-color);
@@ -694,7 +695,7 @@ input.form-control[type="color"] {
   vertical-align: middle;
 }
 
-/* Table structure */
+// Table structure
 .mqc_table {
   tr,
   td {
@@ -721,7 +722,7 @@ input.form-control[type="color"] {
     z-index: -10;
   }
 
-  /* Table header styles */
+  // Table header styles
   thead {
     th,
     td {
@@ -730,7 +731,7 @@ input.form-control[type="color"] {
 
     th {
       cursor: pointer;
-      /* Border doesn't scroll with the CSS transform, so just a box-shadow instead. */
+      // Border doesn't scroll with the CSS transform, so just a box-shadow instead.
       border-bottom: 0;
       -webkit-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
       -moz-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
@@ -769,10 +770,10 @@ input.form-control[type="color"] {
     }
   }
 
-  /* Table body cell values */
+  // Table body cell values
   tbody tr td .wrapper .val {
     z-index: -1;
-    white-space: nowrap; /* keep suffix stick to the value */
+    white-space: nowrap; // keep suffix stick to the value
 
     .label {
       font-size: 100%;
@@ -785,7 +786,7 @@ input.form-control[type="color"] {
     }
   }
 
-  /* Background bars in cells */
+  // Background bars in cells
   .bar {
     display: block;
     position: absolute;
@@ -803,7 +804,7 @@ input.form-control[type="color"] {
   }
 }
 
-/* Sort handle column */
+// Sort handle column
 .sorthandle {
   border-right: none;
   font-weight: bold;
@@ -821,14 +822,14 @@ tbody .sorthandle {
 
 .table.mqc_table > thead > tr > th {
   cursor: pointer;
-  /* Border doesn't scroll with the CSS transform, so just a box-shadow instead. */
+  // Border doesn't scroll with the CSS transform, so just a box-shadow instead.
   border-bottom: 0;
   -webkit-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
   -moz-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
   box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
 }
 
-/* Expandable table rows */
+// Expandable table rows
 tr.expandable-row-primary {
   cursor: pointer;
 
@@ -851,14 +852,14 @@ tr.expandable-row-secondary-hidden {
   visibility: collapse;
 }
 
-/* Safari doesn't support visibility: collapse */
+// Safari doesn't support visibility: collapse
 @supports (-webkit-hyphens: none) {
   tr.expandable-row-secondary-hidden {
     display: none;
   }
 }
 
-/* Hidden rows and columns */
+// Hidden rows and columns
 tr.sample-hidden,
 tr.row-empty {
   display: none;
@@ -874,7 +875,7 @@ td.column-hidden {
    ========================================================================== */
 
 @media print {
-  /* Hide the side-navigation and toolbox */
+  // Hide the side-navigation and toolbox
   .side-nav-wrapper,
   .mqc-toolbox {
     display: none;
@@ -884,12 +885,12 @@ td.column-hidden {
     padding: 20px;
   }
 
-  /* Don't limit the height of the sources */
+  // Don't limit the height of the sources
   #analysis_dirs_wrapper {
     max-height: none !important;
   }
 
-  /* Expand long tables */
+  // Expand long tables
   .mqc-table-expand {
     display: none;
   }
@@ -902,18 +903,18 @@ td.column-hidden {
     transform: none !important;
   }
 
-  /* keep section titles with the first bit of content, and try to keep sections together */
+  // keep section titles with the first bit of content, and try to keep sections together
   .mqc-module-section-first,
   .mqc-section {
     page-break-inside: avoid;
   }
 
-  /* make sure table cell contents show up */
+  // make sure table cell contents show up
   .mqc_table .wrapper {
     z-index: 0;
   }
 
-  /* no use printing a useless expand button */
+  // no use printing a useless expand button
   .mqc-table-expand {
     display: none;
   }
@@ -922,20 +923,20 @@ td.column-hidden {
     display: none;
   }
 
-  /* make sure logos aren't dominantly huge */
+  // make sure logos aren't dominantly huge
   .multiqc_logo,
   .custom_logo {
     width: 200px;
   }
 
-  /* print cell background colors in table */
+  // print cell background colors in table
   td,
   span.bar {
     -webkit-print-color-adjust: exact;
     color-adjust: exact;
   }
 
-  /* tidy up user-provided report header info */
+  // tidy up user-provided report header info
   .dl-horizontal {
     display: flex;
     flex-wrap: wrap;
@@ -944,21 +945,21 @@ td.column-hidden {
       flex: 0 0 34%;
       float: none;
       width: 300px;
-      font-weight: 900; /* bold the key in the kv pair */
+      font-weight: 900; // bold the key in the kv pair
     }
 
     dd {
-      flex: 1 0 34%; /* let the val grow to fill the space */
+      flex: 1 0 34%; // let the val grow to fill the space
       margin-left: 0;
     }
   }
 
-  /* no need to print buttons */
+  // no need to print buttons
   button {
     display: none;
   }
 
-  /* printed link text is fairly ugly */
+  // printed link text is fairly ugly
   a[href]:after {
     content: none !important;
   }
@@ -968,12 +969,12 @@ td.column-hidden {
   }
 
   .mqc_table th {
-    white-space: normal; /* make sure that table header text can wrap */
-    font-weight: 900; /* and that table headers are bolded */
+    white-space: normal; // make sure that table header text can wrap
+    font-weight: 900; // and that table headers are bolded
   }
 
   .table > thead > tr > th {
-    vertical-align: top; /* looks better when all the table-headers are top-aligned, especially when some wrap */
+    vertical-align: top; // looks better when all the table-headers are top-aligned, especially when some wrap
   }
 }
 
@@ -981,7 +982,7 @@ td.column-hidden {
    Plots & Visualizations
    ========================================================================== */
 
-/* Static matplotlib plots */
+// Static matplotlib plots
 .mqc_mplplot {
   border: $border-width $border-style var(--#{$prefix}border-color);
   margin-top: 0;
@@ -993,7 +994,7 @@ td.column-hidden {
   }
 }
 
-/* Interactive plots (Highcharts/Plotly) */
+// Interactive plots (Highcharts/Plotly)
 .hc-plot {
   height: 500px;
   width: 100%;
@@ -1023,7 +1024,7 @@ td.column-hidden {
   margin-top: 5px;
 }
 
-/* Draggable plot resize handle */
+// Draggable plot resize handle
 .hc-plot-handle {
   position: absolute;
   width: 100%;
@@ -1032,7 +1033,7 @@ td.column-hidden {
   cursor: row-resize;
   border-top: $border-width $border-style var(--#{$prefix}border-color);
   transition: background-color 0.1s;
-  /* two lines below are a hack to hide hanging plotly long vertical tick labels */
+  // two lines below are a hack to hide hanging plotly long vertical tick labels
   border-bottom: map-get($border-widths, 2) $border-style var(--#{$prefix}body-bg);
   bottom: -3px;
 
@@ -1053,7 +1054,7 @@ td.column-hidden {
   }
 }
 
-/* Plot controls */
+// Plot controls
 .mqc_hcplot_range_sliders {
   display: inline-block;
 
@@ -1082,17 +1083,17 @@ td.column-hidden {
   }
 }
 
-/* Custom content images */
+// Custom content images
 .mqc-custom-content-image img {
   max-width: 100%;
 }
 
-/* Plot annotations */
+// Plot annotations
 g.annotation {
   position: absolute !important;
 }
 
-/* Plotly watermark */
+// Plotly watermark
 .created-with-multiqc {
   position: absolute;
   bottom: 7px;
@@ -1108,7 +1109,7 @@ g.annotation {
    Utility Classes
    ========================================================================== */
 
-/* Status colors */
+// Status colors
 .text-green {
   color: var(--#{$prefix}success);
 }
@@ -1121,7 +1122,7 @@ g.annotation {
   color: var(--#{$prefix}danger);
 }
 
-/* Software versions table */
+// Software versions table
 .mqc_versions_table {
   width: 100%;
 }
@@ -1140,9 +1141,9 @@ g.annotation {
   summary {
     padding-bottom: 8px;
     position: relative;
-    list-style: none; /* Removes default marker in some browsers */
+    list-style: none; // Removes default marker in some browsers
 
-    /* Hide the default triangle in Safari */
+    // Hide the default triangle in Safari
     &::-webkit-details-marker {
       display: none;
     }
@@ -1207,12 +1208,12 @@ g.annotation {
   }
 
   .ai-summary-expand-expanded {
-    /* margin-top: -5px; */
+    // margin-top: -5px;
   }
 
   sample {
     cursor: pointer;
-    -webkit-text-decoration: underline dashed; /* Safari support */
+    -webkit-text-decoration: underline dashed; // Safari support
     text-decoration-line: underline;
     text-decoration-style: dashed;
 
@@ -1234,19 +1235,19 @@ g.annotation {
   }
 }
 
-/* AI loading state */
+// AI loading state
 .ai-loading {
   margin: 15px 0;
   font-style: italic;
   color: var(--#{$prefix}secondary);
 }
 
-/* AI generate button */
+// AI generate button
 .ai-generate-button svg {
   vertical-align: baseline;
 }
 
-/* AI settings modal */
+// AI settings modal
 .ai-provider-setting {
   margin-bottom: 20px;
 
@@ -1265,7 +1266,7 @@ g.annotation {
   }
 }
 
-/* AI local content */
+// AI local content
 .ai-local-content {
   background-color: var(--#{$prefix}tertiary-bg);
 }
@@ -1279,7 +1280,7 @@ g.annotation {
   }
 }
 
-/* AI model suggestion */
+// AI model suggestion
 .ai-model-suggestion {
   &:hover {
     opacity: 0.8;
@@ -1296,9 +1297,9 @@ g.annotation {
   }
 }
 
-/* Spinner/loading indicator */
+// Spinner/loading indicator
 .spinner {
-  /* background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M304 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zm0 416a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM48 304a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm464-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM142.9 437A48 48 0 1 0 75 369.1 48 48 0 1 0 142.9 437zm0-294.2A48 48 0 1 0 75 75a48 48 0 1 0 67.9 67.9zM369.1 437A48 48 0 1 0 437 369.1 48 48 0 1 0 369.1 437z"/></svg>'); */
+  // background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M304 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zm0 416a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM48 304a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm464-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM142.9 437A48 48 0 1 0 75 369.1 48 48 0 1 0 142.9 437zm0-294.2A48 48 0 1 0 75 75a48 48 0 1 0 67.9 67.9zM369.1 437A48 48 0 1 0 437 369.1 48 48 0 1 0 369.1 437z"/></svg>');
   display: inline-block;
   width: 10px;
   height: 10px;
@@ -1317,7 +1318,7 @@ g.annotation {
    MultiQC Logo Styling
    ========================================================================== */
 
-/* Logo in side navigation */
+// Logo in side navigation
 .side-nav-logo {
   text-align: center;
   margin: 0;
@@ -1329,7 +1330,7 @@ g.annotation {
   }
 }
 
-/* Larger sizing for main header */
+// Larger sizing for main header
 #page_title .multiqc-logo-wrapper {
   max-width: 320px;
   height: auto;
@@ -1341,11 +1342,11 @@ g.annotation {
   }
 }
 
-/* Dark mode color switching for logo text */
+// Dark mode color switching for logo text
 .multiqc-logo-text {
-  color: #160f26; /* Default dark color */
+  color: #160f26; // Default dark color
 }
 
 [data-bs-theme="dark"] .multiqc-logo-text {
-  color: #ffffff; /* White in dark mode */
+  color: #ffffff; // White in dark mode
 }
