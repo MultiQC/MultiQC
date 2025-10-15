@@ -22,8 +22,6 @@
   @include media-breakpoint-up(md) {
     margin-left: 270px;
     padding-right: 3rem;
-    -moz-transition: margin-left 0.5s;
-    -webkit-transition: margin-left 0.5s;
     transition: margin-left 0.5s;
 
     &.hidden-nav {
@@ -51,10 +49,10 @@
   @include media-breakpoint-up(md) {
     height: 100%;
     width: 250px;
+    border-bottom: none;
     border-right: $border-width $border-style var(--#{$prefix}border-color);
     overflow: auto;
-    padding-bottom: 30px;
-    -webkit-transition: margin-left 0.5s;
+    padding-bottom: $spacer;
     transition: margin-left 0.5s;
     margin-left: 0;
 
@@ -256,8 +254,6 @@ h2.mqc-module-title {
 
   @include media-breakpoint-up(md) {
     margin-left: 250px;
-    -moz-transition: margin-left 0.5s;
-    -webkit-transition: margin-left 0.5s;
     transition: margin-left 0.5s;
 
     &.hidden-nav {
@@ -685,7 +681,6 @@ input.form-control[type="color"] {
   padding: 5px;
   cursor: pointer;
   background-color: var(--#{$prefix}secondary-bg);
-  -webkit-transition: background-color 0.2s;
   transition: background-color 0.2s;
 
   &:hover,
@@ -1038,8 +1033,6 @@ td.column-hidden {
   background-color: var(--#{$prefix}tertiary-bg);
   cursor: row-resize;
   border-top: $border-width $border-style var(--#{$prefix}border-color);
-  -moz-transition: background-color 0.1s;
-  -webkit-transition: background-color 0.1s;
   transition: background-color 0.1s;
   /* two lines below are a hack to hide hanging plotly long vertical tick labels */
   border-bottom: map-get($border-widths, 2) $border-style var(--#{$prefix}body-bg);
