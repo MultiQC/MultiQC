@@ -4,15 +4,27 @@
 
 // Make function available globally
 window.initCitations = function () {
+  // Find DOIs and modules
+  var doi_list = { "10.1093/bioinformatics/btw354": "MultiQC" };
+  $(".module-doi").each(function () {
+    var module_id = $(this).closest(".mqc-module-section-first").find("h2").attr("id");
+    doi_list[$(this).data("doi")] = module_id;
+  });
+
+  // Build for export toolbox page
+  for (var doi in doi_list) {
+    $("#mqc_citations_list").append(`
+      <tr>
+        <th>${doi_list[doi]}<td>
+        <a href="https://dx.doi.org/${doi}" target="_blank">${doi}</a></td>
+      </tr>
+    `);
+  }
+
   // Download DOIs
   $(".download-citations-btn").click(function (e) {
     e.preventDefault();
     var format = $(this).data("format");
-    var doi_list = { "10.1093/bioinformatics/btw354": "MultiQC" };
-    $(".module-doi").each(function () {
-      var module_id = $(this).closest(".mqc-module-section-first").find("h2").attr("id");
-      doi_list[$(this).data("doi")] = module_id;
-    });
     // Get BibTeX
     if (format == "bibtex") {
       var bibtex_string = "";
