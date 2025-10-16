@@ -81,17 +81,12 @@ window.initHideSamples = function () {
     // Apply the changes
     $(".mqc_hidesamples_showhide[value=" + show_hide_mode + "]").prop("checked", true);
     $(pattern).each(function (idx, val) {
-      $("#mqc_hidesamples_filters").append(
-        '<li><input class="f_text" value="' +
-          val +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
-      );
+      $("#mqc_hidesamples_filters").append(window.make_hidesamples_filter(val));
     });
     apply_mqc_hidesamples(show_hide_mode);
   });
 
   // Hide sample filters
-  var mqc_hidesamples_idx = 200;
   $("#mqc_hidesamples_form").submit(function (e) {
     e.preventDefault();
     var f_text = $("#mqc_hidesamples_filter").val().trim();
@@ -99,16 +94,9 @@ window.initHideSamples = function () {
       alert("Error - filter text must not be blank.");
       return false;
     }
-    $("#mqc_hidesamples_filters").append(
-      '<li><input class="f_text" value="' +
-        f_text +
-        '" tabindex="' +
-        mqc_hidesamples_idx +
-        '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
-    );
+    $("#mqc_hidesamples_filters").append(window.make_hidesamples_filter(f_text));
     $("#mqc_hidesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     $("#mqc_hidesamples_filter").val("");
-    mqc_hidesamples_idx += 1;
   });
 
   $(".mqc_hidesamples_showhide").change(function (e) {
@@ -129,11 +117,7 @@ window.initHideSamples = function () {
     for (let i = 1; i < mqc_config.show_hide_patterns.length; i++) {
       // Skip first (Show all)
       const pattern = mqc_config.show_hide_patterns[i];
-      $("#mqc_hidesamples_filters").append(
-        '<li><input class="f_text" value="' +
-          pattern +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
-      );
+      $("#mqc_hidesamples_filters").append(window.make_hidesamples_filter(pattern));
     }
 
     // Set regex mode if specified for the first non-empty pattern
@@ -155,4 +139,15 @@ window.initHideSamples = function () {
     // Apply the hide/show
     apply_mqc_hidesamples();
   }
+};
+
+window.mqc_hidesamples_idx = 200;
+window.make_hidesamples_filter = function (f_text) {
+  let row = `
+  <li class="d-flex justify-content-between align-items-center">
+    <input class="f_text flex-grow-1" value="${f_text}" tabindex="${window.mqc_hidesamples_idx}" />
+    <button type="button" class="btn-close py-2 mt-1" aria-label="Remove"></button>
+  </li>`;
+  window.mqc_hidesamples_idx += 2;
+  return row;
 };

@@ -36,20 +36,16 @@
       />
       <label class="form-check-label" for="mqc_hidesamples_show">Show only matching samples</label>
     </div>
-    <div class="row">
-      <div class="col-10">
-        <input
-          id="mqc_hidesamples_filter"
-          type="text"
-          placeholder="Custom Pattern"
-          class="form-control form-control-sm"
-        />
-      </div>
-      <div class="col-2">
-        <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-outline-secondary btn-sm">
-          {{ material_icon('mdi:plus', 18) }}
-        </button>
-      </div>
+    <div class="d-flex justify-content-between gap-2 small">
+      <input
+        id="mqc_hidesamples_filter"
+        type="text"
+        placeholder="Custom Pattern"
+        class="form-control form-control-sm flex-grow-1"
+      />
+      <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-outline-secondary btn-sm">
+        {{ material_icon('mdi:plus', 18) }}
+      </button>
     </div>
   </form>
   {% if report.general_stats_data | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}

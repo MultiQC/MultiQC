@@ -382,11 +382,7 @@ function fastqc_module(module_element, module_key) {
     // Add sample names to the toolbox
     for (i = 0; i < samples.length; i++) {
       var f_text = samples[i];
-      $("#mqc_hidesamples_filters").append(
-        '<li><input class="f_text" value="' +
-          f_text +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
-      );
+      $("#mqc_hidesamples_filters").append(window.make_hidesamples_filter(f_text));
     }
     // Apply highlights and open toolbox
     apply_mqc_hidesamples();

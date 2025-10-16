@@ -270,11 +270,7 @@ function load_mqc_config(name, config_obj) {
       if (f_text.length === 0) {
         return true;
       }
-      $("#mqc_hidesamples_filters").append(
-        '<li><input class="f_text" value="' +
-          f_text +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
-      );
+      $("#mqc_hidesamples_filters").append(window.make_hidesamples_filter(f_text));
       window.mqc_hide_f_texts.push(f_text);
     });
     $(document).trigger("mqc_hidesamples", [window.mqc_hide_f_texts, config["hidesamples_regex"]]);
