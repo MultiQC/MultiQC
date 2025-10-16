@@ -245,9 +245,7 @@
   }
 
   .seqera-logo {
-    svg {
-      width: 120px;
-    }
+    width: 120px;
   }
 }
 
@@ -260,8 +258,6 @@
       opacity 0.3s;
     opacity: 80%;
     margin-bottom: 0;
-    width: 100%;
-    height: auto;
   }
 
   &:hover svg {
