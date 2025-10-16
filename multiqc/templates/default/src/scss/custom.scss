@@ -173,6 +173,13 @@
    Report Comments & Sections
    ========================================================================== */
 
+.mqc-section h3 {
+  margin-top: 1.5rem;
+}
+.mqc-module-section-first .mqc-section h3 {
+  margin-top: 0;
+}
+
 .report_comment,
 .mqc-section-comment {
   border-left: 5px solid var(--#{$prefix}info);
