@@ -18,11 +18,10 @@ window.initExport = function () {
     $(".hc-plot").each(function () {
       var fname = $(this).attr("id");
       $("#mqc_export_selectplots").append(
-        '<div class="checkbox"><label><input type="checkbox" value="' +
-          fname +
-          '" checked> ' +
-          fname +
-          "</label></div>",
+        `<div class="form-check">
+          <input type="checkbox" class="form-check-input" value="${fname}" id="mqc_export_plot_${fname}" checked>
+          <label class="form-check-label" for="mqc_export_plot_${fname}">${fname}</label>
+        </div>`,
       );
     });
 
