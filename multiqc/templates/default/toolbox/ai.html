@@ -1,0 +1,68 @@
+<!-- AI -->
+<div class="tab-pane" id="mqc_ai" role="tabpanel">
+  <h5 class="mb-3">Explain with AI</h5>
+  <p>Configure AI settings to get explanations of plots and data in this report.</p>
+  <form id="mqc_ai_form">
+    <div class="form-group">
+      <label for="ai-provider">AI Provider</label>
+      <select class="form-control form-control-sm" id="ai-provider"></select>
+      <div id="ai_provider_logo" style="text-align: center; margin: 1.5rem 0 0;"></div>
+      <p id="ai_provider_info"></p>
+    </div>
+
+    <div class="form-group" id="ai_endpoint_group" style="display: none;">
+      <label for="ai-endpoint">Endpoint</label>
+      <input
+        type="text"
+        class="form-control form-control-sm"
+        id="ai-endpoint"
+        placeholder="e.g. https://api.perplexity.ai/chat/completions"
+      />
+      <p id="ai_endpoint_info">Use the OpenAI API-style requests with a custom endpoint.</p>
+    </div>
+
+    <div class="form-group" id="ai_model_group">
+      <label for="ai-model">Model</label>
+      <input type="text" class="form-control form-control-sm" id="ai-model" placeholder="Enter model name" />
+      <p id="ai_model_info"></p>
+    </div>
+
+    <div class="form-group" id="ai_api_key_group">
+      <label for="ai-api-key">API Key</label>
+      <input type="password" class="form-control form-control-sm" id="ai-api-key" placeholder="Enter your API key" />
+      <p id="ai_api_key_info"></p>
+      <p>
+        Keys entered here will be stored in your browser's local storage. See
+        <a
+          href="https://docs.seqera.io/multiqc/ai#configuring-the-ai-provider"
+          style="text-decoration: underline;"
+          target="_blank"
+          >the docs</a
+        >.
+      </p>
+    </div>
+
+    <div class="form-group" id="ai_query_options_group" style="display: none;">
+      <label for="ai-query-options">Additional Payload</label>
+      <textarea class="form-control form-control-sm" id="ai-query-options" placeholder="{}"></textarea>
+      <p id="ai_query_options_info">Any additional options passed in API request payload. Enter as a JSON object.</p>
+    </div>
+
+    <div class="form-group" id="ai_context_window_group" style="display: none;">
+      <label for="ai-context-window">Context Window</label>
+      <input
+        type="number"
+        class="form-control form-control-sm"
+        id="ai-context-window"
+        placeholder="Enter context window size"
+      />
+      <p id="ai_context_window_info">The maximum number of tokens that can be processed in a single request</p>
+    </div>
+  </form>
+
+  <p class="mqc_anonymize_samples_p" id="mqc_anonymize_samples_switch">
+    <span class="mqc_switch_wrapper mqc_anonymize_samples" data-bs-target="mqc_cols"
+      >Anonymize samples <span class="mqc_switch anonymize_samples off">off</span></span
+    >
+  </p>
+</div>

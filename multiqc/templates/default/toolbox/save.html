@@ -1,0 +1,48 @@
+<!-- Save -->
+<div class="tab-pane" id="mqc_saveconfig" role="tabpanel">
+  <div class="alert alert-info">
+    {{ material_icon('mdi:information', 20) }} Settings are automatically saved. You can also save named configurations
+    below.
+  </div>
+  <h5 class="mb-3">Save Settings</h5>
+  <p>You can save the toolbox settings for this report to the browser or as a file.</p>
+  <form id="mqc_saveconfig_form">
+    <input type="text" class="form-control form-control-sm mb-2" placeholder="Config Name" />
+    <div class="d-flex justify-content-around">
+      <button type="submit" class="btn btn-sm btn-outline-secondary">
+        {{ material_icon('mdi:content-save', 16) }} Save to Browser
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="mqc_download_config">
+        {{ material_icon('mdi:download', 16) }} Save to File
+      </button>
+    </div>
+  </form>
+
+  <h5 class="mb-3">Load Settings</h5>
+  <p>Choose a saved report profile from the browser or load from a file:</p>
+  <form id="mqc_loadconfig_form">
+    <div class="form-group">
+      <select class="form-control form-control-sm">
+        <option value="">[ select from browser ]</option>
+      </select>
+    </div>
+    <div class="form-group actions">
+      <button type="submit" class="btn btn-sm btn-outline-secondary">
+        {{ material_icon('mdi:folder-open', 16) }} Load
+      </button>
+      <button class="mqc_config_clear btn btn-sm btn-outline-danger">
+        {{ material_icon('mdi:delete', 16) }} Delete
+      </button>
+      <button class="mqc_config_set_default btn btn-sm btn-outline-primary">
+        {{ material_icon('mdi:content-save-outline', 16) }} Set default
+      </button>
+      <button class="mqc_config_clear_default btn btn-sm btn-outline-danger">
+        {{ material_icon('mdi:delete', 16) }} Clear default
+      </button>
+    </div>
+    <div class="form-group">
+      {{ material_icon('mdi:folder-open', 16) }}<span>&nbsp; Load from File</span>
+      <span class="btn btn-sm btn-outline-secondary btn-file" id="mqc_load_config_file_wrapper"> </span>
+    </div>
+  </form>
+</div>
