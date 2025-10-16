@@ -6,7 +6,7 @@
 window.apply_mqc_renamesamples = function () {
   let valid_from_texts = [];
   let valid_to_texts = [];
-  let regex_mode = $("#mqc_renamesamples .mqc_regex_mode .re_mode").hasClass("on");
+  let regex_mode = $("#mqc_renamesamples .mqc_regex_mode input").prop("checked");
   let num_errors = 0;
   // Collect filters
   $("#mqc_renamesamples_filters > li").each(function () {
@@ -57,7 +57,7 @@ window.initRename = function () {
     $("#mqc_sname_switches button").removeClass("active");
     $(this).addClass("active");
     // Clear previous bulk renaming entries
-    $(".mqc_sname_switches_li").remove();
+    $("#mqc_renamesamples_filters li").remove();
     // Build new renaming entries and apply
     var j = $(this).data("index");
     if (j == 0) {
@@ -66,23 +66,13 @@ window.initRename = function () {
       for (i = 0; i < mqc_config["sample_names_rename"].length; i++) {
         var ft = mqc_config["sample_names_rename"][i][0];
         var tt = mqc_config["sample_names_rename"][i][j];
-        $("#mqc_renamesamples_filters").append(
-          '<li class="mqc_sname_switches_li"> \
-          <input class="f_text from_text" value="' +
-            ft +
-            '" /><small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
-            tt +
-            '" /> \
-          <button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
-        </li>',
-        );
+        $("#mqc_renamesamples_filters").append(window.make_renamesamples_filter(ft, tt));
       }
       apply_mqc_renamesamples();
     }
   });
 
   // Rename samples
-  let mqc_renamesamples_idx = 300;
   $("#mqc_renamesamples_form").submit(function (event) {
     event.preventDefault();
 
@@ -96,18 +86,8 @@ window.initRename = function () {
       return false;
     }
 
-    let li =
-      '<li><input class="f_text from_text" value="' + from_text + '" tabindex="' + mqc_renamesamples_idx + '" />';
-    li +=
-      '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
-      to_text +
-      '" tabindex="' +
-      (mqc_renamesamples_idx + 1) +
-      '" />';
-    li +=
-      '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>';
-    $("#mqc_renamesamples_filters").append(li);
-    $("#mqc_rename_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
+    $("#mqc_renamesamples_filters").append(window.make_renamesamples_filter(from_text, to_text));
+    $("#mqc_renamesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
 
     // Reset form
     mqc_renamesamples_from.val("");
@@ -116,7 +96,7 @@ window.initRename = function () {
     $("#mqc_renamesamples_form input:first").focus();
   });
 
-  $("#mqc_rename_apply").click(function (e) {
+  $("#mqc_renamesamples_apply").click(function (e) {
     if (apply_mqc_renamesamples()) {
       $(this).attr("disabled", true).removeClass("btn-primary").addClass("btn-default");
       mqc_auto_save_config();
@@ -141,19 +121,9 @@ window.initRename = function () {
       if (from_text.length == 0) {
         return true;
       }
-      var li =
-        '<li><input class="f_text from_text" value="' + from_text + '" tabindex="' + mqc_renamesamples_idx + '" />';
-      li +=
-        '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
-        to_text +
-        '" tabindex="' +
-        (mqc_renamesamples_idx + 1) +
-        '" />';
-      li +=
-        '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>';
-      $("#mqc_renamesamples_filters").append(li);
+      $("#mqc_renamesamples_filters").append(window.make_renamesamples_filter(from_text, to_text));
     });
-    $("#mqc_rename_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
+    $("#mqc_renamesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     $(this).find("textarea").val("");
     $("#mqc_renamesamples_bulk_collapse").collapse("hide");
   });
@@ -172,24 +142,23 @@ window.initRename = function () {
       const to_text = pattern[1];
 
       // Add to the filters list
-      $("#mqc_renamesamples_filters").append(
-        '<li><input class="f_text from_text" value="' +
-          from_text +
-          '" tabindex="' +
-          mqc_renamesamples_idx +
-          '" />' +
-          '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
-          to_text +
-          '" tabindex="' +
-          (mqc_renamesamples_idx + 1) +
-          '" />' +
-          '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
-      );
-
-      mqc_renamesamples_idx += 2;
+      $("#mqc_renamesamples_filters").append(window.make_renamesamples_filter(from_text, to_text));
     }
 
     // Apply the renames
     apply_mqc_renamesamples();
   }
+};
+
+window.mqc_renamesamples_idx = 300;
+window.make_renamesamples_filter = function (ft, tt) {
+  let row = `
+  <li class="d-flex justify-content-between align-items-center">
+    <input class="f_text from_text flex-grow-1" value="${ft}" tabindex="${mqc_renamesamples_idx}"  />
+    <span>&raquo;</span>
+    <input class="f_text to_text flex-grow-1" value="${tt}" tabindex="${mqc_renamesamples_idx + 1}"  />
+    <button type="button" class="btn-close py-2 mt-1" aria-label="Remove"></button>
+  </li>`;
+  window.mqc_renamesamples_idx += 2;
+  return row;
 };

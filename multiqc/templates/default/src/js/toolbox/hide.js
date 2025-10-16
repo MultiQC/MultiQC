@@ -8,7 +8,7 @@ window.apply_mqc_hidesamples = function (mode) {
   if (mode === undefined) {
     mode = $(".mqc_hidesamples_showhide:checked").val() === "show" ? "show" : "hide";
   }
-  let regex_mode = $("#mqc_hidesamples .mqc_regex_mode .re_mode").hasClass("on");
+  let regex_mode = $("#mqc_hidesamples .mqc_regex_mode input").prop("checked");
   let f_texts = [];
   let num_errors = 0;
   $("#mqc_hidesamples_filters li").each(function () {
@@ -106,16 +106,16 @@ window.initHideSamples = function () {
         mqc_hidesamples_idx +
         '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
     );
-    $("#mqc_hide_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
+    $("#mqc_hidesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     $("#mqc_hidesamples_filter").val("");
     mqc_hidesamples_idx += 1;
   });
 
   $(".mqc_hidesamples_showhide").change(function (e) {
-    $("#mqc_hide_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
+    $("#mqc_hidesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
   });
 
-  $("#mqc_hide_apply").click(function (e) {
+  $("#mqc_hidesamples_apply").click(function (e) {
     if (apply_mqc_hidesamples()) {
       $(this).attr("disabled", true).removeClass("btn-primary").addClass("btn-default");
       mqc_auto_save_config();
@@ -139,7 +139,7 @@ window.initHideSamples = function () {
     // Set regex mode if specified for the first non-empty pattern
     for (let i = 1; i < mqc_config.show_hide_regex.length; i++) {
       if (mqc_config.show_hide_regex[i]) {
-        $("#mqc_hidesamples .mqc_regex_mode .re_mode").removeClass("off").addClass("on").text("on");
+        $("#mqc_hidesamples .mqc_regex_mode input").prop("checked", true);
         break;
       }
     }

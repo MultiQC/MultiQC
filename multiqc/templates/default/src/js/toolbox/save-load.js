@@ -199,7 +199,7 @@ function load_mqc_config(name, config_obj) {
   // Apply config - rename samples
   if (notEmptyObj(config["rename_regex"])) {
     if (config["rename_regex"] === true) {
-      $("#mqc_renamesamples .mqc_regex_mode .re_mode").removeClass("off").addClass("on").text("on");
+      $("#mqc_renamesamples .mqc_regex_mode input").prop("checked", true);
       window.mqc_rename_regex_mode = true;
     }
   }
@@ -211,16 +211,9 @@ function load_mqc_config(name, config_obj) {
       if (from_text.length === 0) {
         return true;
       }
-      var li = '<li><input class="f_text from_text" value="' + from_text + '" />';
-      li +=
-        '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
-        to_text +
-        '" />';
-      li +=
-        '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>';
       window.mqc_rename_f_texts.push(from_text);
       window.mqc_rename_t_texts.push(to_text);
-      $("#mqc_renamesamples_filters").append(li);
+      $("#mqc_renamesamples_filters").append(window.make_renamesamples_filter(from_text, to_text));
     });
     $(document).trigger("mqc_renamesamples", [
       window.mqc_rename_f_texts,
@@ -232,7 +225,7 @@ function load_mqc_config(name, config_obj) {
   // Apply config - highlights
   if (notEmptyObj(config["highlight_regex"])) {
     if (config["highlight_regex"] === true) {
-      $("#mqc_cols .mqc_regex_mode .re_mode").removeClass("off").addClass("on").text("on");
+      $("#mqc_cols .mqc_regex_mode input").prop("checked", true);
       window.mqc_highlight_regex_mode = true;
     }
   }
@@ -240,22 +233,16 @@ function load_mqc_config(name, config_obj) {
     window.mqc_highlight_f_texts = [];
     window.mqc_highlight_f_cols = [];
     $.each(config["highlights_f_texts"], function (idx, f_text) {
+      if (f_text.length === 0) {
+        return true;
+      }
       var f_col = config["highlights_f_cols"][idx];
       $("#" + hashCode(f_text + f_col)).remove();
-      $("#mqc_col_filters").append(
-        '<li style="color:' +
-          f_col +
-          ';" id="' +
-          hashCode(f_text + f_col) +
-          '"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="' +
-          f_text +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
-      );
+      $("#mqc_col_filters").append(window.make_colorsamples_filter(f_text, f_col));
       window.mqc_highlight_f_texts.push(f_text);
       window.mqc_highlight_f_cols.push(f_col);
-      mqc_colours_idx += 1;
     });
-    $("#mqc_colour_filter_color").val(mqc_colours[mqc_colours_idx]);
+    $("#mqc_colour_filter_color").val(mqc_colours[window.mqc_colours_idx % mqc_colours.length]);
     $(document).trigger("mqc_highlights", [
       window.mqc_highlight_f_texts,
       window.mqc_highlight_f_cols,
@@ -266,7 +253,7 @@ function load_mqc_config(name, config_obj) {
   // Apply config - hide samples
   if (notEmptyObj(config["hidesamples_regex"])) {
     if (config["hidesamples_regex"] == true) {
-      $("#mqc_hidesamples .mqc_regex_mode .re_mode").removeClass("off").addClass("on").text("on");
+      $("#mqc_hidesamples .mqc_regex_mode input").prop("checked", true);
       window.mqc_hide_regex_mode = true;
     }
   }
@@ -280,7 +267,7 @@ function load_mqc_config(name, config_obj) {
   if (notEmptyObj(config["hidesamples_f_texts"])) {
     window.mqc_hide_f_texts = [];
     $.each(config["hidesamples_f_texts"], function (idx, f_text) {
-      if (f_text.length == 0) {
+      if (f_text.length === 0) {
         return true;
       }
       $("#mqc_hidesamples_filters").append(

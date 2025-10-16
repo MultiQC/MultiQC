@@ -352,23 +352,13 @@ function fastqc_module(module_element, module_key) {
     // Add sample names to the toolbox
     for (i = 0; i < samples.length; i++) {
       var f_text = samples[i];
-      $("#mqc_col_filters").append(
-        '<li style="color:' +
-          f_col +
-          ';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="' +
-          f_text +
-          '"/><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
-      );
+      $("#mqc_col_filters").append(window.make_colorsamples_filter(f_text, f_col));
     }
     // Apply highlights and open toolbox
     apply_mqc_highlights();
     mqc_toolbox_openclose("#mqc_cols", true);
     // Update next highlight colour
-    mqc_colours_idx += 1;
-    if (mqc_colours_idx >= mqc_colours.length) {
-      mqc_colours_idx = 0;
-    }
-    $("#mqc_colour_filter_color").val(mqc_colours[mqc_colours_idx]);
+    $("#mqc_colour_filter_color").val(mqc_colours[window.mqc_colours_idx % mqc_colours.length]);
     // Hide the popover
     $(this).closest(".popover").popover("hide");
   });
@@ -388,7 +378,7 @@ function fastqc_module(module_element, module_key) {
     }
     // Set to "show only" and disable regex
     $('.mqc_hidesamples_showhide[value="show"]').prop("checked", true);
-    $("#mqc_hidesamples .mqc_regex_mode .re_mode").removeClass("on").addClass("off").text("off");
+    $("#mqc_hidesamples .mqc_regex_mode input").prop("checked", false);
     // Add sample names to the toolbox
     for (i = 0; i < samples.length; i++) {
       var f_text = samples[i];

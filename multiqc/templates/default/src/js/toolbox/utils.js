@@ -56,14 +56,14 @@ window.mqc_toolbox_confirmapply = function () {
       "warning",
     );
   }
-  if ($("#mqc_rename_apply").is(":enabled") && $("#mqc_renamesamples").is(":visible")) {
+  if ($("#mqc_renamesamples_apply").is(":enabled") && $("#mqc_renamesamples").is(":visible")) {
     showToast(
       "Rename Patterns Not Applied",
       "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",
       "warning",
     );
   }
-  if ($("#mqc_hide_apply").is(":enabled") && $("#mqc_hidesamples").is(":visible")) {
+  if ($("#mqc_hidesamples_apply").is(":enabled") && $("#mqc_hidesamples").is(":visible")) {
     showToast(
       "Hide Samples Not Applied",
       "Careful - your changes haven't been applied yet! Click the <em>Apply</em> button in the toolbox to set your changes.",

@@ -460,7 +460,7 @@ $(function () {
       // Replace * character with regex
       sampleName = sampleName.replace(/\*/g, ".*");
       // Turn on regex mode
-      $(".mqc_regex_mode").find(".re_mode").removeClass("off").addClass("on").text("on");
+      $(".mqc_regex_mode input").prop("checked", true);
     }
 
     let color = $(this).css("color");

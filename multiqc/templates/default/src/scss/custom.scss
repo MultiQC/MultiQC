@@ -198,6 +198,34 @@
    Footer
    ========================================================================== */
 
+// Back-to-top link
+.mqc-toplink,
+.mqc-toplink:visited {
+  position: fixed;
+  bottom: $spacer * 1.1;
+  right: $spacer * 0.8;
+  padding: 2px 1px;
+  z-index: 900;
+  background-color: var(--#{$prefix}tertiary-bg);
+  color: var(--#{$prefix}tertiary-color);
+  text-decoration: none;
+
+  span {
+    display: none;
+    padding-left: 0.5rem;
+  }
+
+  &:hover {
+    background-color: var(--#{$prefix}secondary-bg);
+    color: var(--#{$prefix}body-color);
+
+    span {
+      display: inline;
+      color: var(--#{$prefix}tertiary-color);
+    }
+  }
+}
+
 .footer {
   color: var(--#{$prefix}tertiary-color);
   background-color: var(--#{$prefix}tertiary-bg);
@@ -265,34 +293,7 @@
 }
 
 /* ==========================================================================
-   Interactive UI Elements
-   ========================================================================== */
-
-// Color input for sample highlighting
-input.form-control[type="color"] {
-  padding: 5px;
-  width: 30px;
-  cursor: pointer;
-}
-
-// Drag handle for resizing
-.hc_handle {
-  display: inline-block;
-  padding: 9px 4px;
-  height: 28px;
-  cursor: pointer;
-
-  span {
-    display: inline-block;
-    height: 100%;
-    width: 1px;
-    margin: 0 1px;
-    background-color: var(--#{$prefix}tertiary-color);
-  }
-}
-
-/* ==========================================================================
-   Toolbox
+   Toolbox Menu
    ========================================================================== */
 
 #mqc-toolbox {
@@ -300,7 +301,6 @@ input.form-control[type="color"] {
     margin-left: -5px;
     transform: rotate(270deg) translateX(-20px);
   }
-
   .mqc-toolbox-buttons {
     position: absolute;
     left: -2.5rem;
@@ -358,34 +358,6 @@ input.form-control[type="color"] {
   }
 }
 
-// Back-to-top link
-.mqc-toplink,
-.mqc-toplink:visited {
-  position: fixed;
-  bottom: $spacer * 1.1;
-  right: $spacer * 0.8;
-  padding: 2px 1px;
-  z-index: 900;
-  background-color: var(--#{$prefix}tertiary-bg);
-  color: var(--#{$prefix}tertiary-color);
-  text-decoration: none;
-
-  span {
-    display: none;
-    padding-left: 0.5rem;
-  }
-
-  &:hover {
-    background-color: var(--#{$prefix}secondary-bg);
-    color: var(--#{$prefix}body-color);
-
-    span {
-      display: inline;
-      color: var(--#{$prefix}tertiary-color);
-    }
-  }
-}
-
 /* ==========================================================================
    Toolbox Filters & Sample Controls
    ========================================================================== */
@@ -395,22 +367,29 @@ input.form-control[type="color"] {
   margin: 10px 0;
   padding: 0;
   list-style-type: none;
-  font-size: 0.9em;
-
-  button {
-    padding: 7px 10px 0;
-  }
-
+  font-size: $font-size-base * 0.9;
   li {
-    padding: 0;
-    clear: both;
-
-    .close {
-      margin-top: -3px;
+    // Drag handle for resizing filters
+    .hc_handle {
+      padding: 9px 4px;
+      cursor: pointer;
+      color: var(--#{$prefix}secondary);
+    }
+    &:hover,
+    &:focus,
+    &:has(:focus) {
+      background-color: var(--#{$prefix}tertiary-bg);
     }
 
-    &:hover {
-      background-color: var(--#{$prefix}tertiary-bg);
+    // Filter text inputs
+    .f_text {
+      border: 0;
+      border-bottom: $border-width $border-style var(--#{$prefix}border-color);
+      padding: 5px 0 5px 10px;
+      margin: 0;
+      background-color: transparent;
+      outline: none;
+      color: inherit;
     }
   }
 }
@@ -453,34 +432,15 @@ input.form-control[type="color"] {
 }
 
 // Rename samples bulk edit
-#mqc_renamesamples_bulk_collapse {
-  border-top: $border-width $border-style var(--#{$prefix}border-color);
-}
-
-#mqc_renamesamples_bulk_update {
-  margin-top: 5px;
-}
-
 #mqc_renamesamples_bulk_form textarea {
   font-size: 8px;
-  color: var(--#{$prefix}tertiary-color);
 }
 
-// Filter text inputs
-.f_text {
-  border: 0;
-  border-bottom: $border-width $border-style var(--#{$prefix}border-color);
-  padding: 5px 0 5px 10px;
-  margin: 0;
-  background-color: transparent;
-  outline: none;
-  width: -moz-calc(100% - 55px);
-  width: -webkit-calc(100% - 55px);
-  width: calc(100% - 55px);
-
-  &:focus {
-    background-color: var(--#{$prefix}tertiary-bg);
-  }
+// Color input for sample highlighting
+input.form-control[type="color"] {
+  padding: 5px;
+  width: 30px;
+  cursor: pointer;
 }
 
 .from_text,

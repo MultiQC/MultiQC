@@ -16,10 +16,10 @@ window.initFilters = function () {
       $("#mqc_cols_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     }
     if (target == "mqc_renamesamples_filters") {
-      $("#mqc_rename_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
+      $("#mqc_renamesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     }
     if (target == "mqc_hidesamples_filters") {
-      $("#mqc_hide_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
+      $("#mqc_hidesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     }
   });
 
@@ -40,10 +40,10 @@ window.initFilters = function () {
       $("#mqc_cols_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     }
     if (target == "mqc_hidesamples_filters") {
-      $("#mqc_hide_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
+      $("#mqc_hidesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     }
     if (target == "mqc_renamesamples_filters") {
-      $("#mqc_rename_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
+      $("#mqc_renamesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     }
   });
 
@@ -55,29 +55,18 @@ window.initFilters = function () {
       $("#mqc_cols_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     }
     if (target == "mqc_hidesamples_filters") {
-      $("#mqc_hide_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
+      $("#mqc_hidesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     }
     if (target == "mqc_renamesamples_filters") {
-      $("#mqc_rename_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
+      $("#mqc_renamesamples_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
     }
   });
 
   // Regex mode text
-  $(".mqc_regex_mode").click(function () {
-    var rswitch = $(this).find(".re_mode");
-    if (rswitch.text() == "off") {
-      rswitch.removeClass("off").addClass("on").text("on");
-    } else {
-      rswitch.removeClass("on").addClass("off").text("off");
-    }
-    if ($(this).data("target") == "mqc_cols") {
-      $("#mqc_cols_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
-    }
-    if ($(this).data("target") == "mqc_renamesamples") {
-      $("#mqc_rename_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
-    }
-    if ($(this).data("target") == "mqc_hidesamples") {
-      $("#mqc_hide_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
-    }
+  $(".mqc_regex_mode input").on("change", function () {
+    $(`#${$(this).data("bs-target")}_apply`)
+      .attr("disabled", false)
+      .removeClass("btn-default")
+      .addClass("btn-primary");
   });
 };

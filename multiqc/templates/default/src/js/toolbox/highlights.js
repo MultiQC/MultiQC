@@ -7,7 +7,7 @@ window.apply_mqc_highlights = function () {
   // Collect the filters into an array
   var f_texts = [];
   var f_cols = [];
-  var regex_mode = $("#mqc_cols .mqc_regex_mode .re_mode").hasClass("on");
+  var regex_mode = $("#mqc_cols .mqc_regex_mode input").prop("checked");
   var num_errors = 0;
 
   $("#mqc_col_filters li").each(function () {
@@ -59,28 +59,12 @@ window.initHighlights = function () {
   // Highlight colour filters
   $("#mqc_color_form").submit(function (e) {
     e.preventDefault();
-    let mqc_colour_filter = $("#mqc_colour_filter");
-    let mqc_colour_filter_color = $("#mqc_colour_filter_color");
-    let f_text = mqc_colour_filter.val().trim();
-    let f_col = mqc_colour_filter_color.val().trim();
-    $("#mqc_col_filters").append(
-      '<li style="color:' +
-        f_col +
-        ';" id="' +
-        hashCode(f_text + f_col) +
-        '"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="' +
-        f_text +
-        '" tabindex="' +
-        mqc_colours_idx +
-        '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
-    );
+    let f_text = $("#mqc_colour_filter").val().trim();
+    let f_col = $("#mqc_colour_filter_color").val().trim();
+    $("#mqc_col_filters").append(window.make_colorsamples_filter(f_text, f_col));
     $("#mqc_cols_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
-    mqc_colour_filter.val("");
-    mqc_colours_idx += 1;
-    if (mqc_colours_idx >= mqc_colours.length) {
-      mqc_colours_idx = 0;
-    }
-    mqc_colour_filter_color.val(mqc_colours[mqc_colours_idx]);
+    $("#mqc_colour_filter").val("");
+    $("#mqc_colour_filter_color").val(mqc_colours[window.mqc_colours_idx % mqc_colours.length]);
   });
 
   $("#mqc_cols_apply").click(function (e) {
@@ -101,7 +85,7 @@ window.initHighlights = function () {
   if (!has_highlight_filters && mqc_config.highlight_patterns && mqc_config.highlight_patterns.length > 0) {
     // Set regex mode if specified
     if (mqc_config.highlight_regex) {
-      $("#mqc_cols .mqc_regex_mode .re_mode").removeClass("off").addClass("on").text("on");
+      $("#mqc_cols .mqc_regex_mode input").prop("checked", true);
     }
 
     // Add each pattern with its color
@@ -111,16 +95,22 @@ window.initHighlights = function () {
         mqc_config.highlight_colors && mqc_config.highlight_colors[i] ? mqc_config.highlight_colors[i] : "#e41a1c";
 
       // Add to the filters list
-      $("#mqc_col_filters").append(
-        '<li style="color:' +
-          color +
-          '"><span class="hc_handle"><span></span><span></span><span></span></span><input class="f_text" value="' +
-          pattern +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
-      );
+      $("#mqc_col_filters").append(window.make_colorsamples_filter(pattern, color));
     }
 
     // Apply the highlights
     apply_mqc_highlights();
   }
+};
+
+window.mqc_colours_idx = 99;
+window.make_colorsamples_filter = function (f_text, f_col) {
+  let row = `
+  <li style="color: ${f_col};" id="${hashCode(f_text + f_col)}" class="d-flex justify-content-between">
+    <span class="hc_handle">&boxV;</span>
+    <input class="f_text flex-grow-1" value="${f_text}" tabindex="${mqc_colours_idx}" />
+    <button type="button" class="btn-close py-2 mt-1" aria-label="Remove"></button>
+  </li>`;
+  window.mqc_colours_idx += 1;
+  return row;
 };
