@@ -468,7 +468,8 @@ function renderPlot(plotAnchor) {
   }
 
   // Title color
-  if (plot.layout.title && plot.layout.title.font) {
+  if (plot.layout.title) {
+    plot.layout.title.font ??= {};
     plot.layout.title.font.color = colors.textcolor;
   }
 
@@ -732,6 +733,30 @@ function updatePlotlyTheme() {
 
     // Apply the layout update
     Plotly.relayout(anchor, layoutUpdate);
+
+    // Update violin plot scatter marker colors
+    const isDarkMode = document.documentElement.getAttribute("data-bs-theme") === "dark";
+    const plotDiv = document.getElementById(anchor);
+    if (plotDiv && plotDiv.data) {
+      plotDiv.data.forEach((trace, idx) => {
+        if (trace.type === "scatter" && trace.marker && trace.marker.color) {
+          const color = trace.marker.color;
+          let newColor = null;
+          if (isDarkMode) {
+            // Light mode colors -> dark mode colors
+            if (color === "#000000") newColor = "#ffffff";
+            else if (color === "#0b79e6") newColor = "#5dade2";
+          } else {
+            // Dark mode colors -> light mode colors
+            if (color === "#ffffff") newColor = "#000000";
+            else if (color === "#5dade2") newColor = "#0b79e6";
+          }
+          if (newColor) {
+            Plotly.restyle(anchor, { "marker.color": newColor }, [idx]);
+          }
+        }
+      });
+    }
   });
 }
 

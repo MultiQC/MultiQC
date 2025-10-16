@@ -247,10 +247,34 @@ class ViolinPlot extends Plot {
       let header = headerByMetric[metric];
       let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
 
-      // Set color for each violin individually
-      if (header["color"]) {
-        params["fillcolor"] = "rgb(" + header["color"] + ")";
-        params["line"]["color"] = "rgb(" + header["color"] + ")";
+      // Helper function to normalize color to "r,g,b" format
+      const normalizeColorToRGB = (color) => {
+        if (!color) return null;
+        // Check if already in "r,g,b" format
+        if (/^\d+,\s*\d+,\s*\d+$/.test(color)) {
+          return color;
+        }
+        // Check if hex format
+        if (color.startsWith("#")) {
+          const hex = color.replace("#", "");
+          if (hex.length === 6) {
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            return `${r},${g},${b}`;
+          }
+        }
+        return null;
+      };
+
+      // Normalize color from either source
+      let colorRGB = normalizeColorToRGB(header["color"]) || normalizeColorToRGB(params["fillcolor"]);
+
+      // Opacity for each violin
+      const isDarkMode = document.documentElement.getAttribute("data-bs-theme") === "dark";
+      const opacity = isDarkMode ? 0.3 : 0.5;
+      if (colorRGB) {
+        params["fillcolor"] = `rgba(${colorRGB},${opacity})`;
       }
 
       // Create violin traces
@@ -324,6 +348,18 @@ class ViolinPlot extends Plot {
 
         let color = params.marker.color;
         let size = params.marker.size;
+
+        // Adjust marker colors for dark mode
+        const isDarkMode = document.documentElement.getAttribute("data-bs-theme") === "dark";
+        if (isDarkMode && !highlightingEnabled) {
+          // Black -> white, blue -> lighter blue
+          if (color === "#000000") {
+            color = "#ffffff";
+          } else if (color === "#0b79e6") {
+            color = "#5dade2";
+          }
+        }
+
         if (highlightingEnabled) {
           color = state.highlight ?? "#ddd";
           size = state.highlight !== null ? 8 : size;

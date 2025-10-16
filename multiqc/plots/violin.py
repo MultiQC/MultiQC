@@ -676,9 +676,9 @@ class Dataset(BaseDataset):
             orientation="h",
             box={"visible": True},
             meanline={"visible": True},
-            fillcolor="#b5b5b5",
-            line={"width": 2, "color": "#b5b5b5"},
-            opacity=0.5,
+            fillcolor="#999999",
+            line={"width": 0},
+            opacity=1,
             points=False,  # Don't show points, we'll add them manually
             # The hover information is useful, but the formatting is ugly and not
             # configurable as far as I can see. Also, it's not possible to disable it,
@@ -689,13 +689,10 @@ class Dataset(BaseDataset):
 
         # If all violins are grey, make the dots blue to make it more clear that it's interactive
         # if some violins are color-coded, make the dots black to make them less distracting
-        marker_color = "black" if any(h.color is not None for h in ds.header_by_metric.values()) else "#0b79e6"
+        marker_color = "#000000" if any(h.color is not None for h in ds.header_by_metric.values()) else "#0b79e6"
         ds.scatter_trace_params = {
             "mode": "markers",
-            "marker": {
-                "size": 4,
-                "color": marker_color,
-            },
+            "marker": {"size": 4, "color": marker_color, "opacity": 1},
             "showlegend": False,
             "hovertemplate": ds.trace_params["hovertemplate"],
             "hoverlabel": {"bgcolor": "white", "font": {"color": "rgba(60,60,60,1)"}},
