@@ -151,18 +151,10 @@ class InterpretationOutput(BaseModel):
         # similarly, find and replace directives :sample[A1001.2003]{.text-red} -> <sample...
         html = re.sub(
             r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<sample data-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
+            r"<sample data-bs-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
             html,
         )
         return html
-
-    # def format_text(self) -> str:
-    #     """
-    #     Format to markdown to display in Seqera AI
-    #     """
-    #     summary = deanonymize_sample_names(self.summary)
-    #     detailed = deanonymize_sample_names(self.detailed_analysis) if self.detailed_analysis else None
-    #     return f"## Analysis\n{summary}" + (f"\n\n{detailed}" if detailed else "")
 
 
 class InterpretationResponse(BaseModel):

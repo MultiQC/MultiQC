@@ -853,6 +853,11 @@ g.annotation {
     font-size: $font-size-base * 0.9;
   }
 
+  // Animate the chevron rotation
+  .ai-summary-expand svg {
+    transition: $transition-base;
+  }
+
   // Highlighted clickable sample names in AI response
   sample {
     cursor: pointer;
@@ -866,10 +871,10 @@ g.annotation {
     &.text-green {
       color: var(--#{$prefix}success-text-emphasis);
       border-color: var(--#{$prefix}success);
-      background: var(--#{$prefix}warning-bg-subtle);
+      background: var(--#{$prefix}success-bg-subtle);
       &:hover {
-        background: var(--#{$prefix}warning);
-        color: var(--#{$prefix}text-white);
+        background: var(--#{$prefix}success);
+        color: var(--#{$prefix}white);
       }
     }
 
@@ -886,10 +891,10 @@ g.annotation {
     &.text-red {
       color: var(--#{$prefix}danger-text-emphasis);
       border-color: var(--#{$prefix}danger);
-      background: var(--#{$prefix}warning-bg-subtle);
+      background: var(--#{$prefix}danger-bg-subtle);
       &:hover {
-        background: var(--#{$prefix}warning);
-        color: var(--#{$prefix}text-white);
+        background: var(--#{$prefix}danger);
+        color: var(--#{$prefix}white);
       }
     }
   }

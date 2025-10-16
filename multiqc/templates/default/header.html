@@ -100,7 +100,7 @@ was generated and the button that launches the welcome tour.
           data-section-anchor="global"
           data-action="{% if report.ai_global_summary %}clear{% else %}generate{% endif %}"
           data-clear-text="Clear summary"
-          data-toggle="tooltip"
+          data-bs-toggle="tooltip"
           type="button"
         >
           {{ include_file('assets/img/Seqera_AI_icon.svg') }}
@@ -113,7 +113,7 @@ was generated and the button that launches the welcome tour.
         <button
           type="button"
           class="btn btn-outline-secondary btn-sm ai-copy-content ai-copy-content-report"
-          data-toggle="tooltip"
+          data-bs-toggle="tooltip"
           data-section-anchor="global"
           title="Copies the report data to the clipboard formatted to discuss with AI chats like ChatGPT or Claude"
         >
@@ -219,16 +219,18 @@ was generated and the button that launches the welcome tour.
         data-clear-text="Clear response"
         type="button"
         style="padding: 2px 8px; margin-right: 10px"
-        data-toggle="tooltip"
+        data-bs-toggle="tooltip"
         title="Generate a more detailed analysis and recommendations"
       >
         More details&hellip;
       </button>
+    {% else %}
+      <!-- "Expand" arrow for when detailed summary is pre-generated with structured output: -->
+      <div id="global_ai_summary_expand" class="ai-summary-expand btn btn-outline-secondary btn-sm">
+        {{ material_icon('mdi:chevron-down', 16) }}
+        <span>View full summary</span>
+      </div>
     {% endif %}
-    <!-- "Expand" arrow for when detailed summary is pre-generated with structured output: -->
-    <div id="global_ai_summary_expand" class="ai-summary-expand btn btn-outline-secondary btn-sm">
-      {{ material_icon('mdi:chevron-down', 16) }} View full summary
-    </div>
     <span
       class="ai-summary-disclaimer flex-grow-1 text-end me-2"
       id="global_ai_summary_disclaimer"

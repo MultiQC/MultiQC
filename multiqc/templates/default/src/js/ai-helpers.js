@@ -310,7 +310,7 @@ window.markdownToHtml = function (text) {
 
   // Convert directives :sample[text]{.text-color} -> <sample... (preserving underscores)
   text = text.replace(/:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
-    return `<sample data-toggle="tooltip" title="Click to highlight in the report" class="text-${p2}">${p1}</sample>`;
+    return `<sample data-bs-toggle="tooltip" title="Click to highlight in the report" class="text-${p2}">${p1}</sample>`;
   });
 
   // Convert markdown to html

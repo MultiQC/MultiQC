@@ -1292,7 +1292,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-module-anchor="{module_anchor}"
                     data-view="plot"
                     type="button"
-                    data-toggle="tooltip"
+                    data-bs-toggle="tooltip"
                     title="Copy plot data for use with AI tools like ChatGPT"
                 >
                     {seqera_ai_icon}
@@ -1312,7 +1312,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-action="generate"
                     data-clear-text="Clear summary"
                     type="button"
-                    data-toggle="tooltip"
+                    data-bs-toggle="tooltip"
                     aria-controls="{section_anchor}_ai_summary_wrapper"
                 >
                     {seqera_ai_icon}

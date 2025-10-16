@@ -77,7 +77,8 @@ window.showToast = function (heading, text, icon = "info", hideAfter = 5000) {
 
 $(function () {
   // Enable the bootstrap tooltip hovers
-  $('[data-toggle="tooltip"]').tooltip();
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  const tooltipList = [...tooltipTriggerList].map((tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl));
 
   // Side nav expansion
   $("#side-nav-handle").click(function (e) {

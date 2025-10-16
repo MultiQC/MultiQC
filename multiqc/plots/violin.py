@@ -1094,7 +1094,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 + '<span title="An interactive table is not available because of the large number of samples. '
                 + "A violin plot is generated instead, showing density of values for each metric, as "
                 + 'well as hoverable points for outlier samples in each metric."'
-                + ' data-toggle="tooltip">'
+                + ' data-bs-toggle="tooltip">'
                 + get_material_icon("mdi:alert", 16, class_name="text-warning")
                 + "</span> Showing {self.n_samples} samples.</p>"
             )
@@ -1105,7 +1105,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 + 'title="An interactive table is not available because of the large number of samples. '
                 + "The violin plot displays hoverable points only for outlier samples in each metric, "
                 + 'and the hiding/highlighting functionality through the toolbox only works for outliers"'
-                + ' data-toggle="tooltip">'
+                + ' data-bs-toggle="tooltip">'
                 + get_material_icon("mdi:alert", 16, class_name="text-warning")
                 + f"</span> Showing {self.n_samples} samples.</p>"
             )

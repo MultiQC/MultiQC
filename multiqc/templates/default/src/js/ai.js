@@ -310,6 +310,12 @@ async function summarizeWithAi(button) {
         if (threadId) {
           continueInChatButton.attr("href", `${seqeraWebsite}/ask-ai/?messages=${threadId}`).show();
         }
+        // Enable tooltips in the new content
+        const tooltipTriggerList = responseDiv.find('[data-bs-toggle="tooltip"]');
+        tooltipTriggerList.each(function () {
+          new bootstrap.Tooltip(this);
+        });
+
         // Save response to localStorage
         const elementId = button.data("plot-anchor") || "global";
         localStorage.setItem(
@@ -366,23 +372,22 @@ $(function () {
     const isLocalContent = responseDiv.hasClass("ai-local-content");
 
     const expandBtn = $("#global_ai_summary_expand");
-    const expandBtnGlyphicon = expandBtn.find(".glyphicon");
+    const expandBtnSvg = expandBtn.find("svg");
+    const expandBtnText = expandBtn.find("span");
 
-    let isExpanded = $(this).hasClass("ai-summary-expand-expanded");
+    let isExpanded = responseDiv.is(":visible");
     const storedState = localStorage.getItem("mqc_ai_global_summary_expanded");
     if (storedState === "expanded") isExpanded = true;
     if (storedState === "collapsed") isExpanded = false;
 
     if (isExpanded && !isLocalContent) {
       responseDiv.show();
-      expandBtn.addClass("ai-summary-expand-expanded");
-      expandBtnGlyphicon.addClass("glyphicon-chevron-up");
-      expandBtnGlyphicon.removeClass("glyphicon-chevron-down");
+      expandBtnSvg.css("transform", "rotate(180deg)");
+      expandBtnText.text("Hide full summary");
     } else {
       responseDiv.hide();
-      expandBtn.removeClass("ai-summary-expand-expanded");
-      expandBtnGlyphicon.addClass("glyphicon-chevron-down");
-      expandBtnGlyphicon.removeClass("glyphicon-chevron-up");
+      expandBtnSvg.css("transform", "rotate(0deg)");
+      expandBtnText.text("View full summary");
     }
 
     expandBtn.on("click", (e) => {
@@ -390,10 +395,12 @@ $(function () {
       isExpanded = !isExpanded;
       if (isExpanded) {
         responseDiv.show();
-        expandBtn.addClass("ai-summary-expand-expanded");
+        expandBtnSvg.css("transform", "rotate(180deg)");
+        expandBtnText.text("Hide full summary");
       } else {
         responseDiv.hide();
-        expandBtn.removeClass("ai-summary-expand-expanded");
+        expandBtnSvg.css("transform", "rotate(0deg)");
+        expandBtnText.text("View full summary");
       }
       localStorage.setItem("mqc_ai_global_summary_expanded", isExpanded ? "expanded" : "collapsed");
     });

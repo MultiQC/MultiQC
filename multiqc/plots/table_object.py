@@ -1036,7 +1036,7 @@ def render_html(
 
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_copy_btn btn btn-outline-secondary btn-sm" data-clipboard-target="table#{dt.anchor}" data-toggle="tooltip" title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets">
+        <button type="button" class="mqc_table_copy_btn btn btn-outline-secondary btn-sm" data-clipboard-target="table#{dt.anchor}" data-bs-toggle="tooltip" title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets">
                                     {get_material_icon("mdi:content-copy", 16)} Copy table
         </button>
         """
@@ -1065,7 +1065,7 @@ def render_html(
         buttons.append(
             f"""
             <button type="button" class="mqc_table_sortHighlight btn btn-outline-secondary btn-sm"
-                data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;" data-toggle="tooltip" title="Place highlighted samples on top">
+                data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;" data-bs-toggle="tooltip" title="Place highlighted samples on top">
                                         {get_material_icon("mdi:sort", 16)} Sort by highlight
             </button>
         """
@@ -1086,7 +1086,7 @@ def render_html(
             buttons.append(
                 f"""
                 <button type="button" class="mqc-table-to-violin btn btn-outline-secondary btn-sm"
-                data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle="tooltip" title="View as a violin plot">
+                data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-bs-toggle="tooltip" title="View as a violin plot">
                                             {get_material_icon("mdi:violin", 16)} Violin plot
                 </button>
                 """
@@ -1095,7 +1095,7 @@ def render_html(
         buttons.append(
             f"""
         <button type="button" class="export-plot btn btn-outline-secondary btn-sm"
-            data-plot-anchor="{violin_anchor or dt.anchor}" data-type="table" data-toggle="tooltip" title="Show export options"
+            data-plot-anchor="{violin_anchor or dt.anchor}" data-type="table" data-bs-toggle="tooltip" title="Show export options"
         >Export as CSV...</button>
         """
         )
@@ -1136,7 +1136,7 @@ def render_html(
                     data-module-anchor="{module_anchor}"
                     data-plot-view="table"
                     type="button"
-                    data-toggle="tooltip"
+                    data-bs-toggle="tooltip"
                     title="Copy table data for use with AI tools like ChatGPT"
                 >
                     {seqera_ai_icon}
@@ -1157,7 +1157,7 @@ def render_html(
                     data-action="generate"
                     data-clear-text="Clear summary"
                     type="button"
-                    data-toggle="tooltip"
+                    data-bs-toggle="tooltip"
                     aria-controls="{dt.anchor}_ai_summary_wrapper"
                     title="Dynamically generate AI summary for this table"
                 >
