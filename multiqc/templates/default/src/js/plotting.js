@@ -734,7 +734,7 @@ function updatePlotlyTheme() {
     // Apply the layout update
     Plotly.relayout(anchor, layoutUpdate);
 
-    // Update violin plot scatter marker colors
+    // Update violin plot scatter marker colors and hoverlabels
     const isDarkMode = document.documentElement.getAttribute("data-bs-theme") === "dark";
     const plotDiv = document.getElementById(anchor);
     if (plotDiv && plotDiv.data) {
@@ -754,6 +754,16 @@ function updatePlotlyTheme() {
           if (newColor) {
             Plotly.restyle(anchor, { "marker.color": newColor }, [idx]);
           }
+
+          // Update hoverlabel for scatter traces
+          Plotly.restyle(
+            anchor,
+            {
+              "hoverlabel.bgcolor": isDarkMode ? "rgba(40,40,40,1)" : "rgba(255,255,255,1)",
+              "hoverlabel.font.color": isDarkMode ? "rgba(220,220,220,1)" : "rgba(30,30,30,1)",
+            },
+            [idx],
+          );
         }
       });
     }

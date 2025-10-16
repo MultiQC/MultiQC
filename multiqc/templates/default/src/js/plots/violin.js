@@ -384,6 +384,13 @@ class ViolinPlot extends Plot {
             color: color,
             size: size,
           },
+          hoverlabel: {
+            bgcolor: isDarkMode ? "rgba(40,40,40,1)" : "rgba(255,255,255,1)",
+            bordercolor: "rgba(100,100,100,1)",
+            font: {
+              color: isDarkMode ? "rgba(220,220,220,1)" : "rgba(30,30,30,1)",
+            },
+          },
         });
       });
     });
