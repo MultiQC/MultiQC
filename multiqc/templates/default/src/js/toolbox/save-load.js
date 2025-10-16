@@ -120,9 +120,7 @@ function mqc_clear_default_config() {
         var name = $('#mqc_loadconfig_form select option:contains("default")').text();
         $('#mqc_loadconfig_form select option:contains("default")').remove();
         name = name.replace(" [default]", "");
-        $("#mqc_loadconfig_form select")
-          .append("<option>" + name + "</option>")
-          .val(name);
+        $("#mqc_loadconfig_form select").append(`<option>${name}</option>`).val(name);
       });
   } catch (e) {
     console.log("Could not access localStorage");
@@ -414,7 +412,9 @@ window.initSaveLoad = function () {
   $("#mqc_saveconfig").on("mouseenter", function () {
     if (!fileInputInitialized) {
       // Initialize file input handler only when user interacts with the save section
-      $("#mqc_load_config_file_wrapper").append('<input type="file" id="mqc_load_config_file" accept=".json">');
+      $("#mqc_load_config_file_wrapper").append(
+        '<input type="file" class="form-control" id="mqc_load_config_file" accept=".json">',
+      );
       $("#mqc_load_config_file").on("change", function (e) {
         if (this.files && this.files[0]) {
           loadConfigFromFile(this.files[0]);
