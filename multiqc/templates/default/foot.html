@@ -63,34 +63,46 @@ eg. Modals / other HTML to be hidden out of the way.
         </p>
         <div class="row">
           <div class="col-sm-6 regex_example_buttons">
-            <button class="btn btn-outline-secondary" data-example="^samp_1"><code>^</code> (start of string)</button>
-            <button class="btn btn-outline-secondary" data-example="samp_1$"><code>$</code> (end of string)</button>
-            <button class="btn btn-outline-secondary" data-example="samp_[13]">
+            <button class="btn btn-outline-secondary mb-2" data-example="^samp_1">
+              <code>^</code> (start of string)
+            </button>
+            <button class="btn btn-outline-secondary mb-2" data-example="samp_1$">
+              <code>$</code> (end of string)
+            </button>
+            <button class="btn btn-outline-secondary mb-2" data-example="samp_[13]">
               <code>[]</code> (character choice)
             </button>
-            <button class="btn btn-outline-secondary" data-example="\d$">
+            <button class="btn btn-outline-secondary mb-2" data-example="\d$">
               <code>\d</code> (shorthand for <code>[0-9]</code>)
             </button>
-            <button class="btn btn-outline-secondary" data-example="^\w">
+            <button class="btn btn-outline-secondary mb-2" data-example="^\w">
               <code>\w</code> (shorthand for <code>[0-9a-zA-Z_]</code>)
             </button>
-            <button class="btn btn-outline-secondary" data-example="._samp"><code>.</code> (any character)</button>
-            <button class="btn btn-outline-secondary" data-example="\."><code>\.</code> (literal full stop)</button>
-            <button class="btn btn-outline-secondary" data-example="(tmp|prepended)_samp">
+            <button class="btn btn-outline-secondary mb-2" data-example="._samp"><code>.</code> (any character)</button>
+            <button class="btn btn-outline-secondary mb-2" data-example="\.">
+              <code>\.</code> (literal full stop)
+            </button>
+            <button class="btn btn-outline-secondary mb-2" data-example="(tmp|prepended)_samp">
               <code>()</code> <code>|</code> (group / separator)
             </button>
-            <button class="btn btn-outline-secondary" data-example="tmpp*_">
+            <button class="btn btn-outline-secondary mb-2" data-example="tmpp*_">
               <code>*</code> (prev char 0 or more)
             </button>
-            <button class="btn btn-outline-secondary" data-example="tmpp+_">
+            <button class="btn btn-outline-secondary mb-2" data-example="tmpp+_">
               <code>+</code> (prev char 1 or more)
             </button>
-            <button class="btn btn-outline-secondary" data-example="tmpp?_"><code>?</code> (prev char 0 or 1)</button>
-            <button class="btn btn-outline-secondary" data-example="_1{5}"><code>{}</code> (char num times)</button>
-            <button class="btn btn-outline-secondary" data-example="_1{2,5}"><code>{,}</code> (count range)</button>
+            <button class="btn btn-outline-secondary mb-2" data-example="tmpp?_">
+              <code>?</code> (prev char 0 or 1)
+            </button>
+            <button class="btn btn-outline-secondary mb-2" data-example="_1{5}">
+              <code>{}</code> (char num times)
+            </button>
+            <button class="btn btn-outline-secondary mb-2" data-example="_1{2,5}">
+              <code>{,}</code> (count range)
+            </button>
           </div>
           <div class="col-sm-6 regex_example_demo">
-            <input type="text" class="form-control" />
+            <input type="text" class="form-control mb-2 font-monospace" />
             <pre>
 <span>samp_1</span>
 <span>samp_1_edited</span>

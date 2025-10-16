@@ -20,12 +20,25 @@ window.initHelp = function () {
     var re = $(".regex_example_demo input").val();
     console.log("Testing " + re);
     $(".regex_example_demo pre span").each(function () {
+      // Remove any existing highlighting
       $(this).removeClass();
-      if ($(this).text().match(re)) {
-        console.log("Matches " + $(this).text());
-        $(this).addClass("mark text-success");
+      $(this).find("hl").contents().unwrap();
+
+      var text = $(this).text();
+      var match = text.match(re);
+      if (match) {
+        console.log("Matches " + text);
+        var matchStart = text.indexOf(match[0]);
+        var beforeMatch = text.substring(0, matchStart);
+        var matchText = match[0];
+        var afterMatch = text.substring(matchStart + matchText.length);
+        $(this).html(
+          $("<span>").text(beforeMatch).addClass("text-muted").prop("outerHTML") +
+            $("<hl>").text(matchText).addClass("mark text-success").prop("outerHTML") +
+            $("<span>").text(afterMatch).addClass("text-muted").prop("outerHTML"),
+        );
       } else {
-        console.log("Matches " + $(this).text());
+        console.log("Matches " + text);
         $(this).addClass("text-muted");
       }
     });

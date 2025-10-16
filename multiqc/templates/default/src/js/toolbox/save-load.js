@@ -74,10 +74,10 @@ function mqc_save_config(name, clear, as_default) {
       $("#mqc_loadconfig_form select option:contains('" + name + "')").remove();
       // Add new name to load select box and select it
       $("#mqc_loadconfig_form select")
-        .prepend("<option>" + name + (as_default ? " [default]" : "") + "</option>")
+        .prepend(`<option>${name + as_default ? " [default]" : ""}</option>`)
         .val(name + (as_default ? " [default]" : ""));
       // Success message
-      $('<p class="text-success" id="mqc-save-success">Settings saved.</p>')
+      $('<p class="bg-success-subtle text-success-emphasis p-2" id="mqc-save-success">Settings saved.</p>')
         .hide()
         .insertBefore($("#mqc_saveconfig_form"))
         .slideDown(function () {
@@ -108,7 +108,7 @@ function mqc_clear_default_config() {
       }
     }
     localStorage.setItem("mqc_config", JSON.stringify(config));
-    $('<p class="text-danger" id="mqc-cleared-success">Unset default.</p>')
+    $('<p class="bg-danger-subtle text-danger-emphasis p-2" id="mqc-cleared-success">Unset default.</p>')
       .hide()
       .insertBefore($("#mqc_loadconfig_form .actions"))
       .slideDown(function () {

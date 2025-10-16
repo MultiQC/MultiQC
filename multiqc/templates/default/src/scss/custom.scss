@@ -347,6 +347,11 @@
       }
     }
   }
+
+  // Citation blockquote
+  blockquote {
+    font-size: 0.8rem;
+  }
 }
 
 /* ==========================================================================
@@ -395,106 +400,6 @@ input.form-control[type="color"] {
   padding: 5px;
   width: 30px;
   cursor: pointer;
-}
-
-.from_text,
-.to_text {
-  width: -moz-calc(49% - 20px);
-  width: -webkit-calc(49% - 20px);
-  width: calc(49% - 20px);
-}
-
-// Export plots modal
-#mqc_exportplots {
-  .col-sm-6 {
-    padding: 0 10px 0 0;
-  }
-
-  .checkbox,
-  .data-format {
-    margin: 8px 0 0;
-    font-size: 12px;
-    line-height: normal;
-  }
-
-  .data-format label {
-    font-weight: 400;
-  }
-
-  .checkbox {
-    label {
-      min-height: 0;
-    }
-
-    input {
-      margin-top: 0;
-    }
-  }
-
-  blockquote {
-    font-size: 0.7em;
-    padding: 0 0 0 10px;
-    border-left: map-get($border-widths, 2) $border-style var(--#{$prefix}border-color);
-    color: var(--#{$prefix}secondary);
-
-    a {
-      text-decoration: underline;
-    }
-  }
-
-  .nav-tabs {
-    border-color: var(--#{$prefix}border-color);
-    margin-bottom: 15px;
-
-    li {
-      a {
-        background-color: var(--#{$prefix}secondary-bg);
-        border-color: var(--#{$prefix}border-color);
-        padding: 8px 10px;
-        color: var(--#{$prefix}tertiary-color);
-        font-size: 12px;
-      }
-
-      &.active a {
-        background-color: var(--#{$prefix}tertiary-bg);
-        border-bottom-color: transparent;
-        color: var(--#{$prefix}body-color);
-      }
-    }
-  }
-}
-
-// Config save/clear success messages
-#mqc-save-success {
-  color: var(--#{$prefix}success);
-  background-color: var(--#{$prefix}success-bg-subtle);
-}
-
-#mqc-cleared-success {
-  color: var(--#{$prefix}danger);
-  background-color: var(--#{$prefix}danger-bg-subtle);
-}
-
-// About modal
-#mqc_about {
-  blockquote {
-    font-size: 0.8em;
-    padding: 0 0 0 10px;
-    border-left: map-get($border-widths, 2) $border-style var(--#{$prefix}border-color);
-    color: var(--#{$prefix}secondary);
-  }
-}
-
-// Regex help modal
-.regex_example_buttons button {
-  float: left;
-  clear: left;
-  margin-bottom: 8px;
-}
-
-.regex_example_demo input {
-  margin-bottom: 8px;
-  font-family: $font-family-code;
 }
 
 /* ==========================================================================
