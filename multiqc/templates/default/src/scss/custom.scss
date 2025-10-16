@@ -212,7 +212,6 @@
   .seqera-logo {
     svg {
       width: 120px;
-      height: auto;
     }
   }
 }
@@ -220,12 +219,14 @@
 // Also used for the logo in the toolbox
 .seqera-logo {
   svg {
-    color: $body-emphasis-color;
+    color: var(--#{$prefix}emphasis-color);
     transition:
       margin 0.3s,
       opacity 0.3s;
     opacity: 80%;
     margin-bottom: 0;
+    width: 100%;
+    height: auto;
   }
 
   &:hover svg {
@@ -289,17 +290,27 @@ input.form-control[type="color"] {
 
 #mqc-toolbox {
   .mqc-toolbox-label {
-    margin-left: -21px;
-    transform: rotate(270deg);
+    margin-left: -5px;
+    transform: rotate(270deg) translateX(-20px);
   }
 
   .mqc-toolbox-buttons {
-    left: -1.5rem;
+    position: absolute;
+    left: -2.5rem;
     top: 50px;
+    bottom: 0;
     visibility: visible;
+    overflow-y: auto;
+    // Hide scrollbars if the toolbox overflows
+    scrollbar-width: none;
+    ::-webkit-scrollbar,
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-thumb {
+      display: none !important;
+    }
     .list-group {
       width: 2.5rem;
-      margin-left: -1rem;
+      padding-bottom: 1rem;
       border-right: 0;
       border-top-right-radius: 0;
       border-bottom-right-radius: 0;
