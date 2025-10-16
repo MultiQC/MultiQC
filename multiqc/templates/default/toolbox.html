@@ -16,22 +16,23 @@ of the report.
   aria-labelledby="mqc-toolbox-label"
 >
   {% include('toolbox/buttons.html') %}
-
-  <div class="offcanvas-header">
-    <h4 class="offcanvas-title" id="mqc-toolbox-label">MultiQC Toolbox</h4>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body">
-    <!-- Tab panes -->
-    <div class="tab-content">
-      {% include('toolbox/highlight.html') %}
-      {% include('toolbox/rename.html') %}
-      {% include('toolbox/hide.html') %}
-      {% include('toolbox/ai.html') %}
-      {% include('toolbox/export.html') %}
-      {% include('toolbox/save.html') %}
-      {% include('toolbox/citations.html') %}
-      {% include('toolbox/about.html') %}
+  <div class="h-100 overflow-y-auto">
+    <div class="offcanvas-header">
+      <h4 class="offcanvas-title" id="mqc-toolbox-label">MultiQC Toolbox</h4>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <!-- Tab panes -->
+      <div class="tab-content">
+        {% include('toolbox/highlight.html') %}
+        {% include('toolbox/rename.html') %}
+        {% include('toolbox/hide.html') %}
+        {% include('toolbox/ai.html') %}
+        {% include('toolbox/export.html') %}
+        {% include('toolbox/save.html') %}
+        {% include('toolbox/citations.html') %}
+        {% include('toolbox/about.html') %}
+      </div>
     </div>
   </div>
 

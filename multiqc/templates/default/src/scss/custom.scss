@@ -351,11 +351,6 @@
       }
     }
   }
-
-  .offcanvas-body {
-    overflow-y: auto;
-    height: 100%;
-  }
 }
 
 /* ==========================================================================
@@ -391,43 +386,6 @@
       outline: none;
       color: inherit;
     }
-  }
-}
-
-// Toggle switches
-.mqc_switch_wrapper {
-  cursor: pointer;
-
-  .mqc_switch {
-    display: inline-block;
-    border: $border-width $border-style var(--#{$prefix}tertiary-color);
-    border-radius: $border-radius-sm;
-    padding: 2px 5px;
-    margin-left: 5px;
-    background-color: var(--#{$prefix}secondary-bg);
-  }
-
-  .off::after,
-  .on::before {
-    content: "";
-    display: inline-block;
-    height: 0;
-    width: 0;
-    border-radius: 6px;
-    border: 6px solid var(--#{$prefix}body-bg);
-  }
-
-  .off::after {
-    margin: 0 0 -2px 5px;
-  }
-
-  .on::before {
-    margin: 0 5px -2px 0;
-  }
-
-  .on {
-    background-color: var(--#{$prefix}primary);
-    color: var(--#{$prefix}body-bg);
   }
 }
 
@@ -857,10 +815,6 @@ td.column-hidden {
   float: right;
   font-size: 11px;
   margin-top: -26px;
-
-  .mqc_switch_wrapper {
-    margin-left: 20px;
-  }
 }
 
 // Custom content images

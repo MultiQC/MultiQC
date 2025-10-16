@@ -5,12 +5,12 @@
   <form id="mqc_ai_form">
     <div class="form-group">
       <label for="ai-provider">AI Provider</label>
-      <select class="form-control form-control-sm" id="ai-provider"></select>
-      <div id="ai_provider_logo" style="text-align: center; margin: 1.5rem 0 0;"></div>
-      <p id="ai_provider_info"></p>
+      <select class="form-control" id="ai-provider"></select>
+      <div id="ai_provider_logo" class="text-center mt-3"></div>
+      <div id="ai_provider_info" class="form-text"></div>
     </div>
 
-    <div class="form-group" id="ai_endpoint_group" style="display: none;">
+    <div class="form-group mt-3" id="ai_endpoint_group" style="display: none;">
       <label for="ai-endpoint">Endpoint</label>
       <input
         type="text"
@@ -18,20 +18,20 @@
         id="ai-endpoint"
         placeholder="e.g. https://api.perplexity.ai/chat/completions"
       />
-      <p id="ai_endpoint_info">Use the OpenAI API-style requests with a custom endpoint.</p>
+      <div id="ai_endpoint_info" class="form-text">Use the OpenAI API-style requests with a custom endpoint.</div>
     </div>
 
-    <div class="form-group" id="ai_model_group">
+    <div class="form-group mt-3" id="ai_model_group">
       <label for="ai-model">Model</label>
       <input type="text" class="form-control form-control-sm" id="ai-model" placeholder="Enter model name" />
-      <p id="ai_model_info"></p>
+      <div id="ai_model_info" class="form-text"></div>
     </div>
 
-    <div class="form-group" id="ai_api_key_group">
+    <div class="form-group mt-3" id="ai_api_key_group">
       <label for="ai-api-key">API Key</label>
       <input type="password" class="form-control form-control-sm" id="ai-api-key" placeholder="Enter your API key" />
-      <p id="ai_api_key_info"></p>
-      <p>
+      <div class="form-text">
+        <span id="ai_api_key_info"></span>
         Keys entered here will be stored in your browser's local storage. See
         <a
           href="https://docs.seqera.io/multiqc/ai#configuring-the-ai-provider"
@@ -39,16 +39,18 @@
           target="_blank"
           >the docs</a
         >.
-      </p>
+      </div>
     </div>
 
-    <div class="form-group" id="ai_query_options_group" style="display: none;">
+    <div class="form-group mt-3" id="ai_query_options_group" style="display: none;">
       <label for="ai-query-options">Additional Payload</label>
       <textarea class="form-control form-control-sm" id="ai-query-options" placeholder="{}"></textarea>
-      <p id="ai_query_options_info">Any additional options passed in API request payload. Enter as a JSON object.</p>
+      <div id="ai_query_options_info" class="form-text">
+        Any additional options passed in API request payload. Enter as a JSON object.
+      </div>
     </div>
 
-    <div class="form-group" id="ai_context_window_group" style="display: none;">
+    <div class="form-group mt-3" id="ai_context_window_group" style="display: none;">
       <label for="ai-context-window">Context Window</label>
       <input
         type="number"
@@ -56,13 +58,23 @@
         id="ai-context-window"
         placeholder="Enter context window size"
       />
-      <p id="ai_context_window_info">The maximum number of tokens that can be processed in a single request</p>
+      <div id="ai_context_window_info" class="form-text">
+        The maximum number of tokens that can be processed in a single request
+      </div>
     </div>
   </form>
 
-  <p class="mqc_anonymize_samples_p" id="mqc_anonymize_samples_switch">
-    <span class="mqc_switch_wrapper mqc_anonymize_samples" data-bs-target="mqc_cols"
-      >Anonymize samples <span class="mqc_switch anonymize_samples off">off</span></span
-    >
-  </p>
+  <div id="mqc_anonymize_samples_switch">
+    <div class="form-check form-switch mt-3">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        id="mqc_anonymize_samples"
+        data-bs-target="mqc_renamesamples"
+        switch
+      />
+      <label class="form-check-label" for="mqc_anonymize_samples">Anonymize samples</label>
+    </div>
+    <div class="form-text">Switch out sample names with random identifiers</div>
+  </div>
 </div>

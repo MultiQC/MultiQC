@@ -3,7 +3,6 @@
 ////////////////////////////////////////////////
 
 // Make constants available globally
-window.mqc_colours_idx = 0;
 window.mqc_colours = [
   "#e41a1c",
   "#377eb8",
