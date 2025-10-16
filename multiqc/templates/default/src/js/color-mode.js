@@ -11,8 +11,8 @@
     return;
   }
 
-  const getStoredTheme = () => localStorage.getItem("theme");
-  const setStoredTheme = (theme) => localStorage.setItem("theme", theme);
+  const getStoredTheme = () => localStorage.getItem("mqc-theme");
+  const setStoredTheme = (theme) => localStorage.setItem("mqc-theme", theme);
 
   const getPreferredTheme = () => {
     const storedTheme = getStoredTheme();

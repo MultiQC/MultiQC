@@ -8,6 +8,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
+from pathlib import Path
 
 from natsort import natsorted
 from pydantic import BaseModel, Field
@@ -1122,6 +1123,9 @@ def render_html(
         )
 
         if not config.no_ai:
+            seqera_ai_icon = (
+                Path(__file__).parent.parent / "templates/default/assets/img/Seqera_AI_icon.svg"
+            ).read_text()
             buttons.append(
                 f"""
             <div class="ai-plot-buttons-container" style="float: right">
@@ -1135,10 +1139,7 @@ def render_html(
                     data-toggle="tooltip"
                     title="Copy table data for use with AI tools like ChatGPT"
                 >
-                    <svg width="11" height="10" viewBox="0 0 17 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                    </svg>
+                    {seqera_ai_icon}
                     <span class="button-text">Copy Prompt</span>
                 </button>
                 <button
@@ -1160,10 +1161,7 @@ def render_html(
                     aria-controls="{dt.anchor}_ai_summary_wrapper"
                     title="Dynamically generate AI summary for this table"
                 >
-                    <svg width="11" height="10" viewBox="0 0 17 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                    </svg>
+                    {seqera_ai_icon}
                     <span class="button-text">Summarize table</span>
                 </button>
             </div>

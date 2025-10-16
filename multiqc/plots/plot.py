@@ -1279,6 +1279,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         ai_btn = ""
         if not config.no_ai:
+            seqera_ai_icon = (
+                Path(__file__).parent.parent / "templates/default/assets/img/Seqera_AI_icon.svg"
+            ).read_text()
             ai_btn = f"""
             <div class="ai-plot-buttons-container" style="float: right;">
                 <button
@@ -1292,10 +1295,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-toggle="tooltip"
                     title="Copy plot data for use with AI tools like ChatGPT"
                 >
-                    <svg width="11" height="10" viewBox="0 0 17 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                    </svg>
+                    {seqera_ai_icon}
                     <span class="button-text">Copy prompt</span>
                 </button>
                 <button
@@ -1315,10 +1315,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-toggle="tooltip"
                     aria-controls="{section_anchor}_ai_summary_wrapper"
                 >
-                    <svg width="11" height="10" viewBox="0 0 17 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                    </svg>
+                    {seqera_ai_icon}
                     <span class="button-text">Summarize plot</span>
                 </button>
             </div>
