@@ -373,7 +373,7 @@ Follow up with recommendations for the next steps.
 
 This is the example response:
 
-**Analysis**
+##### Analysis
 
 - :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
 - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
@@ -390,7 +390,7 @@ This is the example response:
 - Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :sample[A1001.2003]{.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
 - HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
 
-**Recommendations**
+##### Recommendations
 
 - Remove :sample[A1001.2003]{.text-red} and :sample[A1200.2004]{.text-red} from further analysis due to severe quality issues.
 - Investigate the cause of low valid pairs and passed Di-Tags in :sample[A1002-1007]{.text-yellow}. Consider removing it if the issue cannot be resolved.

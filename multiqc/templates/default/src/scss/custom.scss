@@ -839,124 +839,59 @@ g.annotation {
    Utility Classes
    ========================================================================== */
 
-// Status colors
-.text-green {
-  color: var(--#{$prefix}success);
-}
-
-.text-yellow {
-  color: var(--#{$prefix}warning);
-}
-
-.text-red {
-  color: var(--#{$prefix}danger);
-}
-
 /* ==========================================================================
    AI Summary Components
    ========================================================================== */
 
 .ai-summary {
-  position: relative;
-  padding: 8px 4px 0px 10px;
-  border: $border-width $border-style var(--#{$prefix}border-color);
-  border-radius: $border-radius-sm;
-  color: var(--#{$prefix}body-color);
-
-  summary {
-    padding-bottom: 8px;
-    position: relative;
-    list-style: none; // Removes default marker in some browsers
-
-    // Hide the default triangle in Safari
-    &::-webkit-details-marker {
-      display: none;
-    }
-  }
-
-  .ai-summary-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
+  li p:last-of-type {
+    margin-bottom: 0;
   }
 
   .ai-summary-disclaimer {
     color: var(--#{$prefix}tertiary-color);
-    font-size: 12px;
-    margin-right: 4px;
+    font-size: $font-size-base * 0.9;
   }
 
-  .ai-summary-response {
-    padding-right: 4px;
-  }
-
-  ul,
-  ol {
-    margin: 0;
-    margin-top: -5px;
-    margin-bottom: 10px;
-    list-style: disc outside;
-  }
-
-  li {
-    margin: 0;
-    margin-left: -9px;
-    margin-top: 5px;
-    padding: 0;
-  }
-
-  .ai-summary-more-button {
-    padding: 2px 8px;
-  }
-
-  .ai-continue-in-chat {
-    padding: 2px 8px 2px 6px;
-    border: $border-width $border-style var(--#{$prefix}border-color);
-    color: var(--#{$prefix}secondary);
-
-    &:hover,
-    &:focus {
-      background-color: var(--#{$prefix}tertiary-bg);
-    }
-  }
-
-  .ai-summary-expand {
-    margin-left: -11px;
-    margin-right: -4px;
-    border-radius: 0 0 4px 4px;
-    background-color: rgba(0, 0, 0, 0.04);
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.08);
-    }
-  }
-
-  .ai-summary-expand-expanded {
-    // margin-top: -5px;
-  }
-
+  // Highlighted clickable sample names in AI response
   sample {
     cursor: pointer;
-    -webkit-text-decoration: underline dashed; // Safari support
-    text-decoration-line: underline;
-    text-decoration-style: dashed;
-
+    border-bottom: 2px dashed var(--#{$prefix}secondary);
+    padding: 1px 3px;
+    transition: $transition-base;
     &:hover {
       opacity: 0.9;
     }
-  }
+    // Status colors
+    &.text-green {
+      color: var(--#{$prefix}success-text-emphasis);
+      border-color: var(--#{$prefix}success);
+      background: var(--#{$prefix}warning-bg-subtle);
+      &:hover {
+        background: var(--#{$prefix}warning);
+        color: var(--#{$prefix}text-white);
+      }
+    }
 
-  .ai-generate-more {
-    padding: 2px 8px;
-    margin-left: -1px;
-    margin-right: 10px;
-  }
+    &.text-yellow {
+      color: var(--#{$prefix}warning-text-emphasis);
+      border-color: var(--#{$prefix}warning);
+      background: var(--#{$prefix}warning-bg-subtle);
+      &:hover {
+        background: var(--#{$prefix}warning);
+        color: var(--#{$prefix}text-dark);
+      }
+    }
 
-  .ai-summary-error {
-    margin: 10px 0;
-    font-style: italic;
-    color: var(--#{$prefix}danger);
+    &.text-red {
+      color: var(--#{$prefix}danger-text-emphasis);
+      border-color: var(--#{$prefix}danger);
+      background: var(--#{$prefix}warning-bg-subtle);
+      &:hover {
+        background: var(--#{$prefix}warning);
+        color: var(--#{$prefix}text-white);
+      }
+    }
   }
 }
 
@@ -988,20 +923,6 @@ g.annotation {
     input {
       width: 100%;
     }
-  }
-}
-
-// AI local content
-.ai-local-content {
-  background-color: var(--#{$prefix}tertiary-bg);
-}
-
-#global_ai_summary_detailed_analysis_response {
-  margin: 0px -4px 4px -10px;
-  padding: 10px 10px 0 10px;
-
-  &.ai-local-content {
-    padding-bottom: 1px;
   }
 }
 
