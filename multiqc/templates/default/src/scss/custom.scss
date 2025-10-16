@@ -407,7 +407,7 @@ input.form-control[type="color"] {
    ========================================================================== */
 
 .table tr td {
-  font-size: 0.9em;
+  font-size: $font-size-base * 0.9;
   height: 30px;
 }
 
@@ -444,6 +444,7 @@ input.form-control[type="color"] {
 
 // Table structure
 .mqc_table {
+  margin-top: $spacer * 0.5;
   tr,
   td {
     height: 100%;
@@ -480,8 +481,6 @@ input.form-control[type="color"] {
       cursor: pointer;
       // Border doesn't scroll with the CSS transform, so just a box-shadow instead.
       border-bottom: 0;
-      -webkit-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
-      -moz-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
       box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
 
       .tablesorter-header-inner:after {
@@ -633,7 +632,7 @@ td.column-hidden {
   }
 }
 
-// Interactive plots (Highcharts/Plotly)
+// Interactive plots
 .hc-plot {
   height: 500px;
   width: 100%;
@@ -741,10 +740,6 @@ g.annotation {
 }
 
 /* ==========================================================================
-   Utility Classes
-   ========================================================================== */
-
-/* ==========================================================================
    AI Summary Components
    ========================================================================== */
 
@@ -817,57 +812,13 @@ g.annotation {
   vertical-align: baseline;
 }
 
-// AI settings modal
-.ai-provider-setting {
-  margin-bottom: 20px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
-#aiSettingsModal {
-  .input-group {
-    width: 100%;
-
-    input {
-      width: 100%;
-    }
-  }
-}
-
-// AI model suggestion
-.ai-model-suggestion {
-  &:hover {
-    opacity: 0.8;
-
-    code {
-      color: var(--#{$prefix}body-color);
-    }
-  }
-
-  code {
-    background-color: var(--#{$prefix}tertiary-bg);
-    padding: 2px 4px;
-    border-radius: $border-radius-sm;
-  }
-}
-
-// Spinner/loading indicator
-.spinner {
-  // background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M304 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zm0 416a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM48 304a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm464-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM142.9 437A48 48 0 1 0 75 369.1 48 48 0 1 0 142.9 437zm0-294.2A48 48 0 1 0 75 75a48 48 0 1 0 67.9 67.9zM369.1 437A48 48 0 1 0 437 369.1 48 48 0 1 0 369.1 437z"/></svg>');
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-}
-
 /* ==========================================================================
    Button Sizes
    ========================================================================== */
 
 .btn-xs {
-  padding: $btn-padding-y-xs $btn-padding-x-xs;
-  font-size: $btn-font-size-xs;
+  padding: 2px 6px;
+  font-size: $font-size-base * 0.75;
 }
 
 /* ==========================================================================
@@ -912,14 +863,22 @@ g.annotation {
    ========================================================================== */
 
 @media print {
-  // Hide the side-navigation and toolbox
   .side-nav-wrapper,
-  .mqc-toolbox {
+  .mqc-toolbox,
+  .mqc_table_control_buttons,
+  .mqc-table-expand,
+  .mqc-table-expand,
+  .mqc-section-plot .text-info,
+  button,
+  .btn {
     display: none;
   }
 
   .mainpage {
     padding: 20px;
+  }
+  .footer {
+    background-color: transparent;
   }
 
   // Don't limit the height of the sources
@@ -928,10 +887,6 @@ g.annotation {
   }
 
   // Expand long tables
-  .mqc-table-expand {
-    display: none;
-  }
-
   .mqc-table-responsive.mqc-table-collapse {
     max-height: none !important;
   }
@@ -949,15 +904,6 @@ g.annotation {
   // make sure table cell contents show up
   .mqc_table .wrapper {
     z-index: 0;
-  }
-
-  // no use printing a useless expand button
-  .mqc-table-expand {
-    display: none;
-  }
-
-  .mqc-section-plot .text-info {
-    display: none;
   }
 
   // make sure logos aren't dominantly huge
@@ -989,11 +935,6 @@ g.annotation {
       flex: 1 0 34%; // let the val grow to fill the space
       margin-left: 0;
     }
-  }
-
-  // no need to print buttons
-  button {
-    display: none;
   }
 
   // printed link text is fairly ugly

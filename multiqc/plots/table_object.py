@@ -1036,8 +1036,14 @@ def render_html(
 
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_copy_btn btn btn-outline-secondary btn-sm" data-clipboard-target="table#{dt.anchor}" data-bs-toggle="tooltip" title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets">
-                                    {get_material_icon("mdi:content-copy", 16)} Copy table
+        <button
+            type="button"
+            class="mqc_table_copy_btn btn btn-outline-secondary btn-sm"
+            data-clipboard-target="table#{dt.anchor}"
+            data-bs-toggle="tooltip"
+            title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets"
+        >
+            {get_material_icon("mdi:content-copy", 16)} Copy table
         </button>
         """
         )
@@ -1170,7 +1176,7 @@ def render_html(
 
         panel = "\n".join(buttons)
         html += f"""
-        <div class='row'>\n<div class='col-12'>\n{panel}\n</div>\n</div>
+        <div class='row mqc_table_control_buttons'>\n<div class='col-12'>\n{panel}\n</div>\n</div>
         """
 
     # Build the table itself
