@@ -164,14 +164,12 @@ was generated and the button that launches the welcome tour.
   id="mqc_welcome"
   style="display: none;"
 >
-  <div>
-    {{ material_icon('mdi:information', 16) }}
-    <strong>Welcome!</strong> Not sure where to start?
-    <a href="https://www.youtube.com/watch?v=qPbIlO_KWN0" target="_blank" class="btn btn-outline-secondary btn-sm mx-2">
-      Watch a tutorial video
-    </a>
-    <small><em>(6:06)</em></small>
-  </div>
+  {{ material_icon('mdi:information', 16) }}
+  <strong>Welcome!</strong> Not sure where to start?
+  <a href="https://www.youtube.com/watch?v=qPbIlO_KWN0" target="_blank" class="btn btn-outline-secondary btn-sm mx-2">
+    Watch a tutorial video
+  </a>
+  <small class="flex-grow-1"><em>(6:06)</em></small>
   <button type="button" data-bs-dismiss="alert" class="btn btn-link btn-sm" id="mqc_hide_welcome_btn">
     don't show again
   </button>

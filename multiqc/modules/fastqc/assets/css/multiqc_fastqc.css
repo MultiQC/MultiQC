@@ -24,19 +24,6 @@
   background-color: var(--bs-danger-bg-subtle);
   color: var(--bs-danger-text-emphasis);
 }
-.fastqc-popover-intro {
-  margin: 5px 5px 0;
-  padding: 3px 5px;
-  border: 1px dashed #ccc;
-  border-radius: 5px;
-  font-size: 10px;
-  color: #999;
-  background-color: #fafafa;
-}
-.fastqc-popover-intro a {
-  color: #999;
-  text-decoration: underline;
-}
 
 /* Other stuff */
 .showhide_orig {

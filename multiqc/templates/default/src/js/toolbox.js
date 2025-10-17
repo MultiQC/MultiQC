@@ -5,6 +5,33 @@
 //////////////////////////////////////////////////////
 // TOOLBOX LISTENERS
 //////////////////////////////////////////////////////
+// Helper function to open/close toolbox with optional tab
+window.mqc_toolbox_openclose = function (tabSelector, forceOpen = false) {
+  const toolboxOffcanvasDiv = document.getElementById("mqc-toolbox");
+  const toolboxOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(toolboxOffcanvasDiv);
+  const isShowing = toolboxOffcanvasDiv.classList.contains("show");
+
+  if (forceOpen && !isShowing) {
+    toolboxOffcanvas.show();
+  } else if (!forceOpen && isShowing) {
+    toolboxOffcanvas.hide();
+    return;
+  } else if (!forceOpen && !isShowing) {
+    toolboxOffcanvas.show();
+  }
+
+  // If a tab selector is provided, show that tab
+  if (tabSelector) {
+    setTimeout(() => {
+      const tabTrigger = $(`.mqc-toolbox-buttons a[href="${tabSelector}"]`)[0];
+      if (tabTrigger) {
+        const tab = new bootstrap.Tab(tabTrigger);
+        tab.show();
+      }
+    }, 100);
+  }
+};
+
 $(function () {
   const toolboxOffcanvasDiv = document.getElementById("mqc-toolbox");
   const toolboxOffcanvas = new bootstrap.Offcanvas("#mqc-toolbox");

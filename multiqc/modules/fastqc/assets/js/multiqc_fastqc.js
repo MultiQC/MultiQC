@@ -273,6 +273,9 @@ function fastqc_module(module_element, module_key) {
   });
 
   // Create popovers on mouseover and click
+  let fastqcHoverTimeout = null;
+  let fastqcHideTimeout = null;
+
   module_element.find(".fastqc_passfail_progress > .progress").each(function () {
     const element = this;
     const $progressStacked = $(this).parent(".fastqc_passfail_progress");
@@ -307,18 +310,32 @@ function fastqc_module(module_element, module_key) {
     });
 
     const popoverContent = `
-      <div class="fastqc-popover-intro">
-        Click bar to fix in place <br>
-        <a href="#" class="fastqc-status-highlight">Highlight these samples</a><br>
-        <a href="#" class="fastqc-status-hideothers">Show only these samples</a>
+      <div class="fastqc-popover-intro mb-2">
+        <p class="mb-1 text-center">Click bar to fix in place</p>
+        <div class="row">
+          <div class="col">
+            <button class="fastqc-status-highlight btn btn-sm btn-outline-secondary w-100">
+              Highlight
+            </button>
+          </div>
+          <div class="col">
+            <button class="fastqc-status-hideothers btn btn-sm btn-outline-secondary w-100">
+              Filter
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="popover-content">${samples.sort().join("<br>")}</div>`;
+      <ul class="list-unstyled mb-0">${samples
+        .sort()
+        .map((s) => `<li>${s}</li>`)
+        .join("")}</ul>`;
 
     // Create popover with manual trigger
     const popover = new bootstrap.Popover(element, {
       title: $(this).attr("aria-label"),
       content: popoverContent,
       html: true,
+      sanitize: false,
       trigger: "manual",
       placement: "bottom",
       customClass: `popover-fastqc-status popover-${pclass}`,
@@ -329,37 +346,106 @@ function fastqc_module(module_element, module_key) {
 
     // Show on mouseover (if not pinned)
     $(element).on("mouseenter", function () {
-      if (!$(this).data("popover-pinned")) {
+      const el = this;
+      if (fastqcHideTimeout) {
+        clearTimeout(fastqcHideTimeout);
+        fastqcHideTimeout = null;
+      }
+      if (!$(el).data("popover-pinned")) {
         popover.show();
+        // Attach hover handlers to popover
+        setTimeout(function () {
+          const popoverEl = document.querySelector(".popover-fastqc-status");
+          if (popoverEl) {
+            $(popoverEl)
+              .off("mouseenter mouseleave")
+              .on("mouseenter", function () {
+                if (fastqcHideTimeout) {
+                  clearTimeout(fastqcHideTimeout);
+                  fastqcHideTimeout = null;
+                }
+              })
+              .on("mouseleave", function () {
+                if (!$(el).data("popover-pinned")) {
+                  fastqcHideTimeout = setTimeout(function () {
+                    if (!$(el).data("popover-pinned")) {
+                      popover.hide();
+                    }
+                  }, 200);
+                }
+              });
+          }
+        }, 50);
       }
     });
 
     // Hide on mouseout (if not pinned)
     $(element).on("mouseleave", function () {
-      if (!$(this).data("popover-pinned")) {
-        popover.hide();
+      const el = this;
+      if (!$(el).data("popover-pinned")) {
+        // Check if cursor moved to the popover
+        setTimeout(function () {
+          if (!$(".popover-fastqc-status:hover").length) {
+            fastqcHideTimeout = setTimeout(function () {
+              if (!$(el).data("popover-pinned")) {
+                popover.hide();
+              }
+            }, 200);
+          }
+        }, 50);
       }
     });
 
-    // Toggle pin on click
+    // Pin on click
     $(element).on("click", function (e) {
       e.stopPropagation();
-      const isPinned = $(this).data("popover-pinned");
-      if (isPinned) {
-        $(this).data("popover-pinned", false);
-        popover.hide();
-      } else {
-        $(this).data("popover-pinned", true);
-        popover.show();
+      if (fastqcHideTimeout) {
+        clearTimeout(fastqcHideTimeout);
+        fastqcHideTimeout = null;
       }
+      $(this).data("popover-pinned", true);
+      popover.show();
     });
   });
 
+  // Close pinned popovers when clicking outside
+  $(document).on("click", function (e) {
+    if (!$(e.target).closest(".fastqc_passfail_progress .progress, .popover").length) {
+      module_element.find(".fastqc_passfail_progress > .progress").each(function () {
+        const popover = bootstrap.Popover.getInstance(this);
+        if (popover) {
+          popover.hide();
+          $(this).data("popover-pinned", false);
+        }
+      });
+    }
+  });
+
   // Listener for Status highlight click
-  module_element.find(".fastqc_passfail_progress").on("click", ".fastqc-status-highlight", function (e) {
+  $(document).on("click", ".fastqc-status-highlight", function (e) {
     e.preventDefault();
-    // Get sample names and highlight colour
-    let samples = $(this).parent().parent().find(".popover-content").html().split("<br>");
+    // Get sample names from list items
+    let samples = $(this)
+      .closest(".popover-body")
+      .find("ul li")
+      .map(function () {
+        return $(this).text();
+      })
+      .get();
+
+    // Hide the popover first
+    const popoverEl = $(this).closest(".popover-fastqc-status");
+    if (popoverEl.length) {
+      const progressBars = module_element.find(".fastqc_passfail_progress > .progress");
+      progressBars.each(function () {
+        const popoverInstance = bootstrap.Popover.getInstance(this);
+        if (popoverInstance) {
+          popoverInstance.hide();
+          $(this).data("popover-pinned", false);
+        }
+      });
+    }
+
     let f_col = $("#mqc_colour_filter_color").val();
     // Add sample names to the toolbox
     for (let i = 0; i < samples.length; i++) {
@@ -369,21 +455,36 @@ function fastqc_module(module_element, module_key) {
     // Apply highlights and open toolbox
     apply_mqc_highlights();
     mqc_toolbox_openclose("#mqc_cols", true);
-    // Update next highlight colour
+    // Increment color index and update next highlight colour
+    window.mqc_colours_idx += 1;
     $("#mqc_colour_filter_color").val(mqc_colours[window.mqc_colours_idx % mqc_colours.length]);
-    // Hide the popover
-    const popoverEl = $(this).closest(".progress")[0];
-    const popoverInstance = bootstrap.Popover.getInstance(popoverEl);
-    if (popoverInstance) {
-      popoverInstance.hide();
-    }
   });
 
   // Listener for Status hide others click
-  module_element.find(".fastqc_passfail_progress").on("click", ".fastqc-status-hideothers", function (e) {
+  $(document).on("click", ".fastqc-status-hideothers", function (e) {
     e.preventDefault();
-    // Get sample names
-    let samples = $(this).parent().parent().find(".popover-content").html().split("<br>");
+    // Get sample names from list items
+    let samples = $(this)
+      .closest(".popover-body")
+      .find("ul li")
+      .map(function () {
+        return $(this).text();
+      })
+      .get();
+
+    // Hide the popover first
+    const popoverEl = $(this).closest(".popover-fastqc-status");
+    if (popoverEl.length) {
+      const progressBars = module_element.find(".fastqc_passfail_progress > .progress");
+      progressBars.each(function () {
+        const popoverInstance = bootstrap.Popover.getInstance(this);
+        if (popoverInstance) {
+          popoverInstance.hide();
+          $(this).data("popover-pinned", false);
+        }
+      });
+    }
+
     // Check if we're already hiding anything, remove after confirm if so
     if ($("#mqc_hidesamples_filters li").length > 0) {
       if (!confirm($("#mqc_hidesamples_filters li").length + " Hide filters already exist - discard?")) {
@@ -403,12 +504,6 @@ function fastqc_module(module_element, module_key) {
     // Apply highlights and open toolbox
     apply_mqc_hidesamples();
     mqc_toolbox_openclose("#mqc_hidesamples", true);
-    // Hide the popover
-    const popoverEl = $(this).closest(".progress")[0];
-    const popoverInstance = bootstrap.Popover.getInstance(popoverEl);
-    if (popoverInstance) {
-      popoverInstance.hide();
-    }
   });
 
   /////////

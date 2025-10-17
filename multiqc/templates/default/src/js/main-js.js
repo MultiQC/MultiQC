@@ -11,6 +11,7 @@ import "./multiqc.js";
 import "./flat.js";
 import "./plotting.js";
 import "./tables.js";
+import "./doi.js";
 
 // Color mode toggle functionality
 import "./color-mode.js";
