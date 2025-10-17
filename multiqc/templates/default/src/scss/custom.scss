@@ -955,3 +955,40 @@ g.annotation {
     vertical-align: top; // looks better when all the table-headers are top-aligned, especially when some wrap
   }
 }
+
+/* ==========================================================================
+   Module Status Bars
+   ========================================================================== */
+
+.mqc-status-progress-wrapper {
+  display: inline-block;
+  margin-left: $spacer;
+  width: 150px;
+  .progress {
+    cursor: pointer;
+  }
+}
+
+// Popover styling
+.popover-mqc-status {
+  .popover-body {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  // Status-specific colors
+  &.popover-success {
+    --#{$prefix}popover-header-bg: var(--#{$prefix}success-bg-subtle);
+    --#{$prefix}popover-header-color: var(--#{$prefix}success-text-emphasis);
+  }
+
+  &.popover-warning {
+    --#{$prefix}popover-header-bg: var(--#{$prefix}warning-bg-subtle);
+    --#{$prefix}popover-header-color: var(--#{$prefix}warning-text-emphasis);
+  }
+
+  &.popover-danger {
+    --#{$prefix}popover-header-bg: var(--#{$prefix}danger-bg-subtle);
+    --#{$prefix}popover-header-color: var(--#{$prefix}danger-text-emphasis);
+  }
+}

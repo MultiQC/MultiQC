@@ -12,6 +12,7 @@ import "./flat.js";
 import "./plotting.js";
 import "./tables.js";
 import "./doi.js";
+import "./statuses.js";
 
 // Color mode toggle functionality
 import "./color-mode.js";

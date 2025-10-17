@@ -5,7 +5,7 @@
 // Make functions available globally
 window.initExport = function () {
   // Change text on download button
-  $('#mqc_exportplots a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
+  $('#mqc_exportplots a[data-bs-toggle="tab"]').on("shown.bs.tab", function (e) {
     if ($(e.target).attr("href") === "#mqc_data_download") {
       $("#mqc-dl-plot-txt").text("Data");
     } else {

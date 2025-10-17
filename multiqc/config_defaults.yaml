@@ -143,6 +143,7 @@ decimalPoint_format: null
 thousandsSep_format: null
 remove_sections: []
 section_comments: {}
+section_status_checks: {}
 lint: False # Deprecated since v1.17
 strict: False
 development: False

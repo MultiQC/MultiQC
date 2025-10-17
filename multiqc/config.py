@@ -159,6 +159,7 @@ decimalPoint_format: str
 thousandsSep_format: str
 remove_sections: List[str]
 section_comments: Dict[str, str]
+section_status_checks: Dict[str, Union[bool, Dict[str, bool]]]
 lint: bool  # Deprecated since v1.17
 strict: bool
 development: bool

@@ -50,6 +50,9 @@ the output from each module and print it in sections.
       {% if s['name'] is not none and s['name'] | length > 0 %}
         {{ s['name'] }}
       {% endif %}
+      {% if s['status_bar_html'] is not none and s['status_bar_html'] | length > 0 %}
+        {{ s['status_bar_html'] }}
+      {% endif %}
       {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
         <button
           class="btn btn-outline-secondary btn-sm float-end btn-help"
