@@ -5,17 +5,6 @@
   cursor: pointer;
   -webkit-print-color-adjust: exact !important;
   color-adjust: exact !important;
-  color: #fff !important;
-}
-/* Set colours to !important so that they print */
-.progress-bar-success {
-  background-color: #5cb85c !important;
-}
-.progress-bar-warning {
-  background-color: #f0ad4e !important;
-}
-.progress-bar-succedangerss {
-  background-color: #d9534f !important;
 }
 .popover-fastqc-status .popover-content {
   font-size: 11px;
@@ -23,17 +12,17 @@
   white-space: nowrap;
   overflow: auto;
 }
-.popover-success .popover-title {
-  background-color: #dff0d8;
-  color: #3c763d;
+.popover-success .popover-header {
+  background-color: var(--bs-success-bg-subtle);
+  color: var(--bs-success-text-emphasis);
 }
-.popover-warning .popover-title {
-  background-color: #fcf8e3;
-  color: #8a6d3b;
+.popover-warning .popover-header {
+  background-color: var(--bs-warning-bg-subtle);
+  color: var(--bs-warning-text-emphasis);
 }
-.popover-danger .popover-title {
-  background-color: #f2dede;
-  color: #a94442;
+.popover-danger .popover-header {
+  background-color: var(--bs-danger-bg-subtle);
+  color: var(--bs-danger-text-emphasis);
 }
 .fastqc-popover-intro {
   margin: 5px 5px 0;
@@ -67,9 +56,9 @@
   cursor: pointer;
 }
 
-.fastqc_passfail_progress {
-  width: 100px;
+.fastqc_passfail_progress_wrapper {
   display: inline-block;
+  width: 100px;
   margin: 0 0 -2px 20px;
 }
 

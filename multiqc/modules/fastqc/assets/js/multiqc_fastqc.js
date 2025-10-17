@@ -249,58 +249,41 @@ function fastqc_module(module_element, module_key) {
       total += 1;
       v[status] += 1;
     });
-    var p_bar =
-      '<div class="progress fastqc_passfail_progress"> \
-            <div class="progress-bar progress-bar-success" style="width: ' +
-      (v["pass"] / total) * 100 +
-      '%" title="' +
-      v["pass"] +
-      "&nbsp;/&nbsp;" +
-      total +
-      ' samples passed">' +
-      v["pass"] +
-      '</div> \
-            <div class="progress-bar progress-bar-warning" style="width: ' +
-      (v["warn"] / total) * 100 +
-      '%" title="' +
-      v["warn"] +
-      "&nbsp;/&nbsp;" +
-      total +
-      ' samples with warnings">' +
-      v["warn"] +
-      '</div> \
-            <div class="progress-bar progress-bar-danger" style="width: ' +
-      (v["fail"] / total) * 100 +
-      '%" title="' +
-      v["fail"] +
-      "&nbsp;/&nbsp;" +
-      total +
-      ' samples failed">' +
-      v["fail"] +
-      "</div> \
-        </div>";
+
+    // prettier-ignore
+    var p_bar = `
+    <div class="fastqc_passfail_progress_wrapper">
+        <div class="progress-stacked fastqc_passfail_progress" data-section-key="${k}">
+            <div class="progress" role="progressbar" aria-label="${v["pass"]} / ${total} samples passed" aria-valuenow="${v["pass"]}" aria-valuemin="0" aria-valuemax="${total}" style="width: ${(v["pass"] / total) * 100}%" title="${v["pass"]}&nbsp;/&nbsp;${total} samples passed">
+                <div class="progress-bar bg-success">${v["pass"]}</div>
+            </div>
+            <div class="progress" role="progressbar" aria-label="${v["warn"]} / ${total} samples with warnings" aria-valuenow="${v["warn"]}" aria-valuemin="0" aria-valuemax="${total}" style="width: ${(v["warn"] / total) * 100}%" title="${v["warn"]}&nbsp;/&nbsp;${total} samples with warnings">
+                <div class="progress-bar bg-warning">${v["warn"]}</div>
+            </div>
+            <div class="progress" role="progressbar" aria-label="${v["fail"]} / ${total} samples failed" aria-valuenow="${v["fail"]}" aria-valuemin="0" aria-valuemax="${total}" style="width: ${(v["fail"] / total) * 100}%" title="${v["fail"]}&nbsp;/&nbsp;${total} samples failed">
+                <div class="progress-bar bg-danger">${v["fail"]}</div>
+            </div>
+        </div>
+    </div>`;
+
     module_element
       .find("h3[id*=fastqc_" + k + "]")
       .first()
       .append(p_bar);
   });
 
-  // Create popovers on click
-  module_element.find(".fastqc_passfail_progress .progress-bar").mouseover(function () {
-    // Does this element already have a popover?
-    if ($(this).attr("data-original-title")) {
-      return false;
-    }
-    // Create it
-    let pid = $(this).closest(".mqc-module-section").data("module-anchor");
-    let k = pid.substr(7);
-    // Remove suffix when there are multiple fastqc sections
-    let n = k.indexOf("-");
-    k = k.substring(0, n !== -1 ? n : k.length);
-    let vals = fastqc_passfails[module_key][k];
-    let passes = $(this).hasClass("progress-bar-success") ? true : false;
-    let warns = $(this).hasClass("progress-bar-warning") ? true : false;
-    let fails = $(this).hasClass("progress-bar-danger") ? true : false;
+  // Create popovers on mouseover and click
+  module_element.find(".fastqc_passfail_progress > .progress").each(function () {
+    const element = this;
+    const $progressStacked = $(this).parent(".fastqc_passfail_progress");
+    const k = $progressStacked.data("section-key");
+    const vals = fastqc_passfails[module_key][k];
+
+    const $progressBar = $(this).find(".progress-bar");
+    const passes = $progressBar.hasClass("bg-success");
+    const warns = $progressBar.hasClass("bg-warning");
+    const fails = $progressBar.hasClass("bg-danger");
+
     let pclass = "";
     if (passes) {
       pclass = "success";
@@ -311,6 +294,7 @@ function fastqc_module(module_element, module_key) {
     if (fails) {
       pclass = "danger";
     }
+
     let samples = Array();
     $.each(vals, function (s_name, status) {
       if (status === "pass" && passes) {
@@ -321,28 +305,54 @@ function fastqc_module(module_element, module_key) {
         samples.push(s_name);
       }
     });
-    $(this)
-      .popover({
-        title: $(this).attr("title"),
-        content: samples.sort().join("<br>"),
-        html: true,
-        trigger: "hover click focus",
-        placement: "bottom auto",
-        template:
-          '<div class="popover popover-fastqc-status popover-' +
-          pclass +
-          '" role="tooltip"> \
-                <div class="arrow"></div>\
-                <h3 class="popover-title"></h3>\
-                <div class="fastqc-popover-intro">\
-                    Click bar to fix in place <br>\
-                    <a href="#" class="fastqc-status-highlight"><span class="glyphicon glyphicon-pushpin"></span> Highlight these samples</a><br>\
-                    <a href="#" class="fastqc-status-hideothers"><span class="glyphicon glyphicon-eye-close"></span> Show only these samples</a>\
-                </div>\
-                <div class="popover-content"></div>\
-            </div>',
-      })
-      .popover("show");
+
+    const popoverContent = `
+      <div class="fastqc-popover-intro">
+        Click bar to fix in place <br>
+        <a href="#" class="fastqc-status-highlight">Highlight these samples</a><br>
+        <a href="#" class="fastqc-status-hideothers">Show only these samples</a>
+      </div>
+      <div class="popover-content">${samples.sort().join("<br>")}</div>`;
+
+    // Create popover with manual trigger
+    const popover = new bootstrap.Popover(element, {
+      title: $(this).attr("aria-label"),
+      content: popoverContent,
+      html: true,
+      trigger: "manual",
+      placement: "bottom",
+      customClass: `popover-fastqc-status popover-${pclass}`,
+    });
+
+    // Track if popover is pinned
+    $(element).data("popover-pinned", false);
+
+    // Show on mouseover (if not pinned)
+    $(element).on("mouseenter", function () {
+      if (!$(this).data("popover-pinned")) {
+        popover.show();
+      }
+    });
+
+    // Hide on mouseout (if not pinned)
+    $(element).on("mouseleave", function () {
+      if (!$(this).data("popover-pinned")) {
+        popover.hide();
+      }
+    });
+
+    // Toggle pin on click
+    $(element).on("click", function (e) {
+      e.stopPropagation();
+      const isPinned = $(this).data("popover-pinned");
+      if (isPinned) {
+        $(this).data("popover-pinned", false);
+        popover.hide();
+      } else {
+        $(this).data("popover-pinned", true);
+        popover.show();
+      }
+    });
   });
 
   // Listener for Status highlight click
@@ -362,7 +372,11 @@ function fastqc_module(module_element, module_key) {
     // Update next highlight colour
     $("#mqc_colour_filter_color").val(mqc_colours[window.mqc_colours_idx % mqc_colours.length]);
     // Hide the popover
-    $(this).closest(".popover").popover("hide");
+    const popoverEl = $(this).closest(".progress")[0];
+    const popoverInstance = bootstrap.Popover.getInstance(popoverEl);
+    if (popoverInstance) {
+      popoverInstance.hide();
+    }
   });
 
   // Listener for Status hide others click
@@ -390,7 +404,11 @@ function fastqc_module(module_element, module_key) {
     apply_mqc_hidesamples();
     mqc_toolbox_openclose("#mqc_hidesamples", true);
     // Hide the popover
-    $(this).closest(".popover").popover("hide");
+    const popoverEl = $(this).closest(".progress")[0];
+    const popoverInstance = bootstrap.Popover.getInstance(popoverEl);
+    if (popoverInstance) {
+      popoverInstance.hide();
+    }
   });
 
   /////////
