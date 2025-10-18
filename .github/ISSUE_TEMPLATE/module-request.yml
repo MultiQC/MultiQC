@@ -2,6 +2,19 @@ name: New module
 description: Request support for a new bioinformatics tool in MultiQC
 labels: ["module: new"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📋 Module Request Guidelines
+
+        Thank you for requesting a new MultiQC module! To help us prioritize and evaluate your request:
+
+        1. **Fill all required fields completely** - incomplete requests may be closed
+        2. **Upload actual example files** - these are essential for module development
+        3. **Check if a similar module already exists** in the [modules list](https://multiqc.info/modules/)
+        4. **Consider tool popularity and community need** - this affects prioritization
+
+        ✨ **Automated help**: This request will be automatically analyzed and added to our Module Triage project board. Comment `@claude analyze-module` anytime for detailed feedback!
   - type: input
     id: name
     attributes:
@@ -13,8 +26,9 @@ body:
   - type: input
     id: homepage
     attributes:
-      label: Tool homepage
-      placeholder: eg. http://www.github/me/mytool
+      label: Tool homepage / repository
+      description: "Provide the main homepage or GitHub/GitLab repository URL. This helps us assess tool popularity and maintenance status."
+      placeholder: eg. https://github.com/user/mytool or https://mytool.readthedocs.io
     validations:
       required: true
 
@@ -30,13 +44,18 @@ body:
   - type: textarea
     id: example-files
     attributes:
-      label: Tool output
+      label: Tool output example files
       description: |
-        Please drag and drop (and upload to the GitHub issue) some example files that can be used to write the module.
-        ***Please do not copy and paste log contents***, as important whitespace can change.
-        If the file type is not allowed, please compress into a `.zip` file.
-        If the file is many MBs then it's ok to truncate it, though please leave a few lines of data in so that it's clear what the format is.
-      placeholder: "[ Drag and drop some example files here to upload ]"
+        **📁 REQUIRED: Upload actual example files** - This is the most critical part of your request!
+        
+        - Drag and drop example files that show typical tool output
+        - **Do NOT copy/paste file contents** - formatting and whitespace matter
+        - Use `.zip` files if GitHub doesn't support the file type
+        - Include both small and representative examples
+        - Truncate large files but keep enough data to show the format
+        
+        💡 **Quality examples = Higher priority!** Complete, clear examples help us evaluate feasibility and prioritize your request.
+      placeholder: "[ Drag and drop example files here to upload - this field is required ]"
     validations:
       required: true
 
@@ -63,6 +82,18 @@ body:
       label: Most interesting data for the General Stats table
       description: Is there 1-3 values that would be helpful to have in the _General Statistics_ table, alongside results from other tools?
 
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context and justification
+      description: |
+        Help us understand why this module would be valuable to the MultiQC community:
+        - How widely is this tool used in your field?
+        - Are there existing alternatives or similar tools already supported?
+        - What unique value would this module provide?
+        - Is this request related to a published workflow or pipeline?
+      placeholder: "This tool is widely used in the genomics community for... It would complement existing modules by..."
+
   - type: checkboxes
     id: checklist
     attributes:
@@ -71,5 +102,14 @@ body:
         Please ensure your module request fulfills all of the following requirements.
       options:
         - label: >-
-            I have included example data (zipped, not pasted) that can be used to write the module.
+            I have included example data files (uploaded/zipped, not copy-pasted) that can be used to write the module.
+          required: true
+        - label: >-
+            I have checked that no similar module already exists in the MultiQC modules list.
+          required: true
+        - label: >-
+            I have provided the tool's homepage or repository URL for popularity assessment.
+          required: true
+        - label: >-
+            I understand this request will be prioritized based on tool popularity, community need, and request quality.
           required: true
