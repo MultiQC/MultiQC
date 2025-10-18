@@ -1,0 +1,201 @@
+name: Automated Module Generation
+
+on:
+  # Weekly generation after triage
+  schedule:
+    - cron: "0 10 * * 1" # Mondays at 10 AM UTC (after triage at 9 AM)
+
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      issue_numbers:
+        description: "Comma-separated issue numbers to process (leave empty for auto-detection)"
+        required: false
+        type: string
+      dry_run:
+        description: "Dry run mode - analyze but don't create PRs"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  issues: write
+  contents: write
+  pull-requests: write
+  projects: write
+
+jobs:
+  generate-modules:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find High-Priority Module Requests
+        id: find-high-priority
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const manualIssues = '${{ inputs.issue_numbers }}';
+            let candidateIssues = [];
+
+            if (manualIssues && manualIssues.trim()) {
+              // Manual mode - process specific issues
+              const issueNumbers = manualIssues.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+              
+              for (const issueNum of issueNumbers) {
+                try {
+                  const { data: issue } = await github.rest.issues.get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNum
+                  });
+                  
+                  const hasModuleLabel = issue.labels?.some(label => label.name === 'module: new');
+                  if (hasModuleLabel) {
+                    candidateIssues.push({
+                      number: issue.number,
+                      title: issue.title,
+                      url: issue.html_url
+                    });
+                  }
+                } catch (error) {
+                  console.log(`❌ Could not fetch issue #${issueNum}: ${error.message}`);
+                }
+              }
+            } else {
+              // Auto mode - find high-priority issues
+              const { data: issues } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: 'module: new,priority: high',
+                state: 'open',
+                per_page: 100
+              });
+
+              for (const issue of issues) {
+                // Check if module generation has already been attempted
+                const hasGenerationLabel = issue.labels.some(label => 
+                  label.name === 'module-generation-attempted'
+                );
+                
+                if (!hasGenerationLabel) {
+                  // Check if issue has example files (look for attachments in body)
+                  const issueBody = issue.body || '';
+                  const hasExampleFiles = issueBody.includes('github.com') && 
+                                         (issueBody.includes('/files/') || issueBody.includes('.txt') || 
+                                          issueBody.includes('.log') || issueBody.includes('.json') ||
+                                          issueBody.includes('.csv') || issueBody.includes('.tsv'));
+                  
+                  if (hasExampleFiles) {
+                    candidateIssues.push({
+                      number: issue.number,
+                      title: issue.title,
+                      url: issue.html_url
+                    });
+                  }
+                }
+              }
+            }
+
+            // Limit to 3 issues max for manageable processing
+            if (candidateIssues.length > 3) {
+              console.log(`Found ${candidateIssues.length} candidates, limiting to first 3`);
+              candidateIssues = candidateIssues.slice(0, 3);
+            }
+
+            console.log(`Selected ${candidateIssues.length} issues for module generation:`);
+            candidateIssues.forEach(issue => {
+              console.log(`- Issue #${issue.number}: ${issue.title}`);
+            });
+
+            return candidateIssues;
+
+      - name: Generate Modules
+        if: fromJSON(steps.find-high-priority.outputs.result).length > 0
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            # Automated MultiQC Module Generation
+
+            **High-Priority Module Requests Found**: ${{ fromJSON(steps.find-high-priority.outputs.result).length }}
+            **Dry Run Mode**: ${{ inputs.dry_run }}
+
+            ## Your Task
+            Generate MultiQC modules for the following high-priority issues that have complete information and example files:
+
+            ${{ steps.find-high-priority.outputs.result }}
+
+            ## Instructions
+            For each issue in the list above:
+
+            1. **Use the `/new-module` command** on each issue
+            2. **Process issues sequentially** - complete one fully before starting the next
+            3. **Mark each issue as attempted** by adding the `module-generation-attempted` label (unless dry run)
+            4. **Create separate branches** for each module (format: `add-{toolname}-module`)
+            5. **Generate comprehensive implementations** following all patterns in the `/new-module` command
+            6. **Create pull requests** linking back to the original issues (unless dry run)
+
+            ## Success Criteria
+            - All issues should have module generation attempted
+            - Each successful generation should result in a working pull request (unless dry run)
+            - Failed attempts should be documented with reasons why
+            - Issues should be labeled appropriately to track progress
+
+            ## Important Notes
+            - If dry run mode is enabled, analyze and create code but don't commit or create PRs
+            - Use the comprehensive `/new-module` command instructions in `.claude/commands/`
+            - Focus on creating high-quality, working modules that follow MultiQC patterns
+            - Include comprehensive tests and proper documentation
+
+          claude_args: |
+            --max-turns 25
+            --model claude-sonnet-4-20250514
+
+      - name: Report Generation Results
+        if: always() && fromJSON(steps.find-high-priority.outputs.result).length > 0
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const candidateCount = JSON.parse('${{ steps.find-high-priority.outputs.result }}').length;
+            const dryRun = '${{ inputs.dry_run }}' === 'true';
+            
+            const comment = `## 🤖 Automated Module Generation Report
+            
+            **Date**: ${new Date().toISOString().split('T')[0]}
+            **Issues Processed**: ${candidateCount}
+            **Mode**: ${dryRun ? 'Dry Run (no PRs created)' : 'Full Generation'}
+            
+            ### Processing Summary
+            The automated module generation system processed ${candidateCount} high-priority module requests.
+            
+            ${dryRun ? 
+              'Dry run mode was enabled - modules were analyzed and code generated but no commits or PRs were created.' :
+              'Each issue was processed with the `/new-module` command to attempt automatic module implementation.'
+            }
+            
+            ### Processed Issues
+            ${{ steps.find-high-priority.outputs.result }}
+            
+            ### Next Steps
+            ${dryRun ? 
+              '- Review the analysis results and run again without dry-run if ready' :
+              '- Review generated pull requests for code quality and completeness\n- Merge successful implementations after testing\n- Provide feedback on failed attempts to improve the generation system'
+            }
+            
+            ${dryRun ? '' : '### Generated Modules\nCheck recent pull requests with the prefix "Add * module" for automated implementations.'}
+            
+            ---
+            *This report was generated automatically by the Automated Module Generation system.*`;
+
+            // Post comment on the main triage tracking issue
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 3219,
+              body: comment
+            });
