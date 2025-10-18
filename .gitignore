@@ -58,6 +58,8 @@ package-lock.json
 package.json
 
 .env
-.claude
+
+# Claude Code - keep personal settings private but share skills
+.claude/*.json
 
 Pipfile
