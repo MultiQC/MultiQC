@@ -468,7 +468,8 @@ function renderPlot(plotAnchor) {
   }
 
   // Legend color
-  if (plot.layout.legend && plot.layout.legend.font) {
+  if (plot.layout.legend) {
+    plot.layout.legend.font ??= {};
     plot.layout.legend.font.color = colors.textcolor;
   }
 
@@ -496,9 +497,8 @@ function renderPlot(plotAnchor) {
       plot.layout[xaxis].gridcolor = colors.gridcolor;
       plot.layout[xaxis].zerolinecolor = colors.zerolinecolor;
       plot.layout[xaxis].color = colors.axiscolor;
-      if (plot.layout[xaxis].tickfont) {
-        plot.layout[xaxis].tickfont.color = colors.tickcolor;
-      }
+      plot.layout[xaxis].tickfont ??= {};
+      plot.layout[xaxis].tickfont.color = colors.tickcolor;
       if (plot.layout[xaxis].showspikes === true) {
         plot.layout[xaxis].spikecolor = colors.spike_color;
       }
@@ -508,9 +508,8 @@ function renderPlot(plotAnchor) {
       plot.layout[yaxis].gridcolor = colors.gridcolor;
       plot.layout[yaxis].zerolinecolor = colors.zerolinecolor;
       plot.layout[yaxis].color = colors.axiscolor;
-      if (plot.layout[yaxis].tickfont) {
-        plot.layout[yaxis].tickfont.color = colors.tickcolor;
-      }
+      plot.layout[yaxis].tickfont ??= {};
+      plot.layout[yaxis].tickfont.color = colors.tickcolor;
       if (plot.layout[yaxis].showspikes === true) {
         plot.layout[yaxis].spikecolor = colors.spike_color;
       }
