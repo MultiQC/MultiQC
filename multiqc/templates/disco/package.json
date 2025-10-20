@@ -1,7 +1,7 @@
 {
-  "name": "multiqc-crazy-template",
+  "name": "multiqc-disco-template",
   "version": "1.0",
-  "description": "Loopy theme for MultiQC reports",
+  "description": "90s Disco theme for MultiQC reports",
   "private": true,
   "type": "module",
   "scripts": {
