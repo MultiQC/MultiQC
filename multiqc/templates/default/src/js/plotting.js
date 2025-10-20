@@ -406,14 +406,11 @@ function applyToolboxSettings(samples, plotAnchor) {
     // Some series hidden. Show a warning text string.
     let nHidden = objects.filter((obj) => obj.hidden).length;
     if (nHidden > 0) {
-      const alert =
-        '<div class="samples-hidden-warning alert alert-warning">' +
-        '<span class="glyphicon glyphicon-info-sign"></span>' +
-        "<strong>Warning:</strong> " +
-        nHidden +
-        " samples hidden. " +
-        '<a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a>' +
-        "</div>";
+      const alert = `
+      <div class="samples-hidden-warning alert alert-warning">
+        ⚠ <strong>Warning:</strong> ${nHidden} samples hidden.
+        <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose('#mqc_hidesamples', true); return false;">See toolbox.</a>
+      </div>`;
       groupDiv.before(alert);
     }
     // All series hidden. Hide the graph.

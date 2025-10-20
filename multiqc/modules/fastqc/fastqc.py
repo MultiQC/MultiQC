@@ -22,6 +22,7 @@ from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.table_object import ColumnKey, InputRow, SampleName
 from multiqc.types import Anchor, LoadedFileDict
+from multiqc.utils.material_icons import get_material_icon
 
 log = logging.getLogger(__name__)
 
@@ -743,10 +744,10 @@ class MultiqcModule(BaseMultiqcModule):
         dump = json.dumps([self.anchor, data_by_sample])
         html = f"""<div id="fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">
-               <span class="glyphicon glyphicon-hand-up"></span>
+               ${get_material_icon("mdi:hand-pointing-up", 16)}
                Click a sample row to see a line plot for that dataset.
             </div>
-            <h5><span class="s_name text-primary"><span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name</span></h5>
+            <h5><span class="s_name text-primary">Rollover for sample name</span></h5>
             <div class="fastqc_seq_heatmap_key">
                 Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
                 <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>

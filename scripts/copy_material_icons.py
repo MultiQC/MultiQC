@@ -92,6 +92,7 @@ REQUIRED_ICONS: List[str] = [
     "mdi:minus",
     "mdi:magnify-plus",
     "mdi:magnify-minus",
+    "mdi:hand-pointing-up",
     # Additional icons found in current usage
     "mdi:image",
     "mdi:checkbox-marked",

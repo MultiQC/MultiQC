@@ -107,8 +107,7 @@ function fastqc_module(module_element, module_key) {
     if (hidden_samples > 0) {
       module_element.find("#fastqc_seq_heatmap_div").prepend(
         '<div class="samples-hidden-warning alert alert-warning"> \
-                <span class="glyphicon glyphicon-info-sign"></span> \
-                <strong>Warning:</strong> ' +
+                ⚠ <strong>Warning:</strong> ' +
           hidden_samples +
           ' samples hidden in toolbox. \
                 <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a>\
@@ -262,7 +261,7 @@ function fastqc_module(module_element, module_key) {
     }
 
     // Show the sample name
-    let sampleLabel = '<span class="glyphicon glyphicon-info-sign"></span> ' + s_name;
+    let sampleLabel = s_name;
     module_element.find("#fastqc_per_base_sequence_content_plot_div .s_name").html(sampleLabel);
 
     // Update the key with the raw data for this position
@@ -294,9 +293,7 @@ function fastqc_module(module_element, module_key) {
 
   // Remove sample name again when mouse leaves
   module_element.find("#fastqc_seq_heatmap").mouseout(function (e) {
-    module_element
-      .find("#fastqc_per_base_sequence_content_plot_div .s_name")
-      .html('<span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name');
+    module_element.find("#fastqc_per_base_sequence_content_plot_div .s_name").html("Rollover for sample name");
     module_element.find("#fastqc_seq_heatmap_key_pos").text("-");
     module_element.find("#fastqc_seq_heatmap_key_t span").text("-");
     module_element.find("#fastqc_seq_heatmap_key_c span").text("-");
