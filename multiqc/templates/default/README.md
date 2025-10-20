@@ -67,6 +67,19 @@ Assets are automatically built when:
 - You have `npm run watch` running
 - You commit changes (via pre-commit hook)
 
+### Plotly bundle
+
+The Plotly bundle is created by cloning the Plotly repository and running the following:
+
+```bash
+npm run custom-bundle -- --traces bar,scatter,table,violin,heatmap,box
+```
+
+This generates a minified JavaScript file using [Custom Bundling](https://github.com/plotly/plotly.js/blob/master/CUSTOM_BUNDLE.md).
+The resulting file is much bigger than importing all of Plotly, as we don't use very many different plot types.
+
+For now it seems that tree-shaking does not work well for Plotly. See https://github.com/MultiQC/MultiQC/pull/3364 for implementation and discussion.
+
 ## Important Notes
 
 - **Never edit files in `compiled/`** - they are automatically generated
