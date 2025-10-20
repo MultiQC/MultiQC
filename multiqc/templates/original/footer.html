@@ -1,0 +1,25 @@
+{# #######################
+  footer.html
+##########################
+
+Content for the report footer.
+
+#}
+
+<p>
+    <a href="https://seqera.io/" target="_blank" class="pull-right seqera-logo">
+        <img src="data:image/png;base64,{{ include_file('assets/img/seqera_logo.png', b64=True) }}">
+    </a>
+    <strong>
+        <a href="http://multiqc.info" target="_blank">MultiQC v{{ config.version }}</a>
+    </strong>
+    - Written by <a href="http://phil.ewels.co.uk" target="_blank">Phil Ewels</a>,
+    available on <a href="https://github.com/MultiQC/MultiQC" target="_blank">GitHub</a>.
+</p>
+<p>
+    This report uses <a href="https://www.plotly.com/" target="_blank">Plotly</a>,
+    <a href="https://jquery.com/" target="_blank">jQuery</a>,
+    <a href="https://jqueryui.com/" target="_blank">jQuery UI</a>,
+    <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> and
+    <a href="https://github.com/eligrey/FileSaver.js" target="_blank">FileSaver.js</a>.
+</p>

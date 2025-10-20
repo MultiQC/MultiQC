@@ -12,7 +12,7 @@ import os
 import importlib
 
 template_dir = os.path.dirname(__file__)
-template_parent = "default"
+template_parent = "original"
 base_fn = "base.html"
 
 # Import template functions from parent
