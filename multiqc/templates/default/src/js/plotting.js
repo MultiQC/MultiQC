@@ -571,32 +571,6 @@ function renderPlot(plotAnchor) {
 // Make renderPlot available globally
 window.renderPlot = renderPlot;
 
-// Highlight text with a fadeout background colour highlight
-function highlight_fade_text(obj) {
-  let orig_col = $(obj).css("color");
-  obj.css({
-    display: "inline-block",
-    "background-color": "#5bc0de",
-    color: "#FFFFFF",
-    WebkitTransition: "background-color 0s, color 0s",
-    MozTransition: "background-color 0s, color 0s",
-    MsTransition: "background-color 0s, color 0s",
-    OTransition: "background-color 0s, color 0s",
-    transition: "background-color 0s, color 0s",
-  });
-  setTimeout(function () {
-    obj.css({
-      "background-color": "#FFFFFF",
-      color: orig_col,
-      WebkitTransition: "background-color 0.5s, color 0.5s",
-      MozTransition: "background-color 0.5s, color 0.5s",
-      MsTransition: "background-color 0.5s, color 0.5s",
-      OTransition: "background-color 0.5s, color 0.5s",
-      transition: "background-color 0.5s, color 0.5s",
-    });
-  }, 500);
-}
-
 function updateObject(target, source, nullOnly = false) {
   // Iterate through all keys in the source object
   for (const key in source) {

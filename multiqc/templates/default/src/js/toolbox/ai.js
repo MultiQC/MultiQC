@@ -148,9 +148,6 @@ function storeSampleAnonymizationEnabled(value) {
 function getStoredContextWindow() {
   return getFromLocalStorage(`mqc_ai_context_window`);
 }
-function storeContextWindow(value) {
-  saveToLocalStorage(`mqc_ai_context_window`, value.toString());
-}
 
 // Make function available globally
 window.getStoredSampleAnonymizationEnabled = getStoredSampleAnonymizationEnabled;
