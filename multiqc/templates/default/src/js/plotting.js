@@ -766,23 +766,19 @@ function updatePlotlyTheme() {
   }
 }
 
-// Set up a MutationObserver to watch for theme changes
-const themeObserver = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    if (mutation.type === "attributes" && mutation.attributeName === "data-bs-theme") {
-      updatePlotlyTheme();
-    }
-  });
-});
-
-// Start observing when DOM is ready
+// Set up theme change observer when DOM is ready
 $(function () {
+  const themeObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === "attributes" && mutation.attributeName === "data-bs-theme") {
+        updatePlotlyTheme();
+      }
+    });
+  });
+
   // Observe the html element for data-bs-theme attribute changes
   themeObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ["data-bs-theme"],
   });
-
-  // Apply initial theme colors
-  setTimeout(updatePlotlyTheme, 100);
 });
