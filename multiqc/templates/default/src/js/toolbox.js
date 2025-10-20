@@ -75,7 +75,7 @@ $(function () {
     mqc_toolbox_confirmapply();
     // Remove active class from all tabs
     $(".mqc-toolbox-buttons .list-group-item").removeClass("active");
-    $("#mqc-toolbox .tab-pane").removeClass("active show");
+    $("#mqc-toolbox > .offcanvas-body > .tab-content > .tab-pane").removeClass("active show");
   });
 
   // Hide toolbox when a modal is shown

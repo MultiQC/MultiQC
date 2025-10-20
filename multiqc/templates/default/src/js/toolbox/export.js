@@ -60,7 +60,7 @@ window.initExport = function () {
       let zip = new JSZip();
       let promises = [];
       //////
-      ////// EXPORT PLOT IMAGES
+      // EXPORT PLOT IMAGES
       //////
       if ($("#mqc_image_download").is(":visible")) {
         let mime = $("#mqc_export_ft").val();
@@ -124,7 +124,7 @@ window.initExport = function () {
         }
       }
       //////
-      ////// EXPORT PLOT DATA
+      // EXPORT PLOT DATA
       //////
       else if ($("#mqc_data_download").is(":visible")) {
         const format = $("#mqc_export_data_ft").val();
