@@ -973,7 +973,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             buttons.append(
                 self._btn(
                     cls="mqc-violin-to-table",
-                    label=f"${get_material_icon('mdi:table', 16)} Table",
+                    label=f"{get_material_icon('mdi:table', 16)} Table",
                     data_attrs={"table-anchor": self.datasets[0].dt.anchor, "violin-anchor": self.anchor},
                 )
             )
