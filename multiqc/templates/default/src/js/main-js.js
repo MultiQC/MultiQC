@@ -1,4 +1,5 @@
 // Import Bootstrap 5 JavaScript
+// Tree-shaking should remove unused JS
 import * as bootstrap from "bootstrap";
 
 // Make Bootstrap available globally for compatibility
@@ -17,7 +18,7 @@ import "./statuses.js";
 // Color mode toggle functionality
 import "./color-mode.js";
 
-// Toolbox modules (separated for better maintainability)
+// Toolbox modules
 import "./toolbox/constants.js";
 import "./toolbox/utils.js";
 import "./toolbox/filters.js";
