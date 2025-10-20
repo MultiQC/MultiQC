@@ -665,6 +665,9 @@ function getPlotlyThemeColors() {
   }
 }
 
+// Make getPlotlyThemeColors globally available
+window.getPlotlyThemeColors = getPlotlyThemeColors;
+
 // Function to update all rendered Plotly graphs with new theme colors
 function updatePlotlyTheme() {
   const colors = getPlotlyThemeColors();
@@ -762,6 +765,31 @@ function updatePlotlyTheme() {
       });
     }
   });
+
+  // Update table scatter plot if it exists and is rendered
+  const tableScatterPlot = document.getElementById("table_scatter_plot");
+  if (tableScatterPlot && !$(tableScatterPlot).hasClass("not_rendered")) {
+    const layoutUpdate = {
+      paper_bgcolor: colors.paper_bgcolor,
+      plot_bgcolor: colors.plot_bgcolor,
+      "font.color": colors.textcolor,
+      "title.font.color": colors.textcolor,
+      "xaxis.gridcolor": colors.gridcolor,
+      "xaxis.zerolinecolor": colors.zerolinecolor,
+      "xaxis.color": colors.axiscolor,
+      "xaxis.tickfont.color": colors.tickcolor,
+      "xaxis.title.font.color": colors.textcolor,
+      "yaxis.gridcolor": colors.gridcolor,
+      "yaxis.zerolinecolor": colors.zerolinecolor,
+      "yaxis.color": colors.axiscolor,
+      "yaxis.tickfont.color": colors.tickcolor,
+      "yaxis.title.font.color": colors.textcolor,
+      "hoverlabel.bgcolor": colors.hoverlabel_bgcolor,
+      "hoverlabel.bordercolor": colors.hoverlabel_bordercolor,
+      "hoverlabel.font.color": colors.hoverlabel_fontcolor,
+    };
+    Plotly.relayout("table_scatter_plot", layoutUpdate);
+  }
 }
 
 // Set up a MutationObserver to watch for theme changes

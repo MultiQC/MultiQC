@@ -401,17 +401,38 @@ $(function () {
           }
           return trace;
         });
+        // Get theme-aware colors
+        const colors = getPlotlyThemeColors();
+
         let layout = {
           title: plotTitle,
+          paper_bgcolor: colors.paper_bgcolor,
+          plot_bgcolor: colors.plot_bgcolor,
+          font: {
+            color: colors.textcolor,
+          },
           xaxis: {
             title: col1_name,
             range: [col1_min, col1_max],
+            gridcolor: colors.gridcolor,
+            zerolinecolor: colors.zerolinecolor,
+            color: colors.axiscolor,
+            tickfont: { color: colors.tickcolor },
           },
           yaxis: {
             title: col2_name,
             range: [col2_min, col2_max],
+            gridcolor: colors.gridcolor,
+            zerolinecolor: colors.zerolinecolor,
+            color: colors.axiscolor,
+            tickfont: { color: colors.tickcolor },
           },
           showlegend: false,
+          hoverlabel: {
+            bgcolor: colors.hoverlabel_bgcolor,
+            bordercolor: colors.hoverlabel_bordercolor,
+            font: { color: colors.hoverlabel_fontcolor },
+          },
         };
         let config = {
           responsive: true,
