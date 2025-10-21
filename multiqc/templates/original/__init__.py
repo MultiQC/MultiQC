@@ -1,10 +1,9 @@
 """
-=========
- default
-=========
+===========
+ original
+===========
 
-The main MultiQC report template, lovingly known to its admirers
-simply as "default"
+The artist formerly known as "default", now renamed to be the OG: "original".
 
 Note, this is where most of the MultiQC report interactive functionality
 is based and will be developed. Unless you want to do some really radical

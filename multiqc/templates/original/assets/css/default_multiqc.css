@@ -1,5 +1,20 @@
 /* CSS Styles for Default MultiQC Report Template */
 
+/* NEW: Maintain approximate visual parity post Bootstrap 5 upgrade in main MultiQC codebase */
+
+.btn-outline-secondary {
+  color: #333;
+  background-color: #fff;
+  border-color: #ccc;
+}
+.btn-sm {
+  padding: 5px 10px 5px 8px;
+}
+.col-12 {
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
 /* General Styles */
 code {
   background-color: #f3f3f3;
