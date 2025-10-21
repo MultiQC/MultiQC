@@ -205,7 +205,7 @@
   bottom: $spacer * 1.1;
   right: $spacer * 0.8;
   padding: 2px 1px;
-  z-index: 900;
+  z-index: 99999;
   background-color: var(--#{$prefix}tertiary-bg);
   color: var(--#{$prefix}tertiary-color);
   text-decoration: none;
