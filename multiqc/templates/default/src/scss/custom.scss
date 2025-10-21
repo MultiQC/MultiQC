@@ -758,6 +758,28 @@ g.annotation {
    AI Summary Components
    ========================================================================== */
 
+// Highlighted text (not sample IDs)
+.text-green {
+  color: rgb(18, 106, 50);
+}
+.text-yellow {
+  color: rgb(178, 122, 3);
+}
+.text-red {
+  color: rgb(184, 31, 31);
+}
+[data-bs-theme="dark"] {
+  .text-green {
+    color: var(--#{$prefix}success-text-emphasis);
+  }
+  .text-yellow {
+    color: var(--#{$prefix}warning-text-emphasis);
+  }
+  .text-red {
+    color: var(--#{$prefix}danger-text-emphasis);
+  }
+}
+
 .ai-summary {
   li p:last-of-type {
     margin-bottom: 0;
@@ -771,17 +793,6 @@ g.annotation {
   // Animate the chevron rotation
   .ai-summary-expand svg {
     transition: $transition-base;
-  }
-
-  // Highlighted text (not sample IDs)
-  .text-green {
-    color: var(--#{$prefix}success-text-emphasis);
-  }
-  .text-yellow {
-    color: var(--#{$prefix}warning-text-emphasis);
-  }
-  .text-red {
-    color: var(--#{$prefix}danger-text-emphasis);
   }
 
   // Highlighted clickable sample names in AI response
