@@ -773,6 +773,17 @@ g.annotation {
     transition: $transition-base;
   }
 
+  // Highlighted text (not sample IDs)
+  .text-green {
+    color: var(--#{$prefix}success-text-emphasis);
+  }
+  .text-yellow {
+    color: var(--#{$prefix}warning-text-emphasis);
+  }
+  .text-red {
+    color: var(--#{$prefix}danger-text-emphasis);
+  }
+
   // Highlighted clickable sample names in AI response
   sample {
     cursor: pointer;
