@@ -94,10 +94,10 @@ the output from each module and print it in sections.
               {{ '<hr>' if not loop.last }}
             </div>
           {% endif %}
-      {% if loop.first %}
-      </div> <!-- end mqc-module-section-first -->
-      {% endif %}
-    {% endfor %}
+        {% if loop.first %}
+        </div> <!-- end mqc-module-section-first -->
+        {% endif %}
+      {% endfor %}
     </div>
     {{ '<hr>' if not loop.last }}
     {% endif %}
