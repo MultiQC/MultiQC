@@ -428,12 +428,23 @@ input.form-control[type="color"] {
   cursor: pointer;
   background-color: var(--#{$prefix}secondary-bg);
   transition: background-color 0.2s;
+  border-bottom-left-radius: $border-radius;
+  border-bottom-right-radius: $border-radius;
+
+  svg {
+    transition: transform 0.6s;
+  }
 
   &:hover,
   &:focus,
   &:active {
     background-color: var(--#{$prefix}tertiary-bg);
   }
+}
+
+// Rotate chevron when table is expanded
+.mqc-table-responsive[data-collapsed="false"] + .mqc-table-expand svg {
+  transform: rotate(180deg);
 }
 
 .mqc_table_numrows_text {

@@ -96,12 +96,18 @@ $(function () {
 
     // Expand tables to full height
     $(".mqc-table-expand").click(function () {
-      if ($(this).find("span").hasClass("glyphicon-chevron-down")) {
-        $(this).parent().find(".mqc-table-responsive").css("max-height", "none");
-        $(this).find("span").removeClass("glyphicon-chevron-down").addClass("glyphicon-chevron-up");
+      let btn = $(this);
+      let wrapper = btn.parent().find(".mqc-table-responsive");
+      let isCollapsed = wrapper.attr("data-collapsed") === "true";
+
+      if (isCollapsed) {
+        // Expand the table
+        wrapper.removeClass("mqc-table-collapse").attr("data-collapsed", "false");
+        btn.find("span").text("Collapse table");
       } else {
-        $(this).parent().find(".mqc-table-responsive").css("max-height", "400px");
-        $(this).find("span").removeClass("glyphicon-chevron-down").addClass("glyphicon-chevron-down");
+        // Collapse the table
+        wrapper.addClass("mqc-table-collapse").attr("data-collapsed", "true");
+        btn.find("span").text("Expand table");
       }
     });
 

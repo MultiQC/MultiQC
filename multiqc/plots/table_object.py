@@ -1185,7 +1185,7 @@ def render_html(
     )
     html += f"""
         <div id="{dt.anchor}_container" class="mqc_table_container">
-            <div class="table-responsive mqc-table-responsive {collapse_class}">
+            <div class="table-responsive mqc-table-responsive {collapse_class}" data-collapsed="{str(collapse_class != "").lower()}">
                 <table id="{dt.anchor}" class="table table-sm mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist_js(dt)}">
         """
 
@@ -1239,7 +1239,9 @@ def render_html(
             html += "</tr>"
     html += "</tbody></table></div>"
     if len(group_to_sample_to_anchor_to_td) > 10 and config.collapse_tables:
-        html += f'<div class="mqc-table-expand">{get_material_icon("mdi:chevron-down", 16)}</div>'
+        html += (
+            f'<div class="mqc-table-expand"><span>Expand table</span> {get_material_icon("mdi:chevron-down", 20)}</div>'
+        )
     html += "</div>"
 
     # Save the raw values to a file if requested
