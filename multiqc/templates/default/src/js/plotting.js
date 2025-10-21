@@ -542,6 +542,17 @@ function renderPlot(plotAnchor) {
     return;
   }
 
+  // Set colorbar colors for heatmaps
+  traces.forEach((trace) => {
+    if (trace.type === "heatmap" && trace.showscale) {
+      trace.colorbar = trace.colorbar || {};
+      trace.colorbar.tickfont = trace.colorbar.tickfont || {};
+      trace.colorbar.tickfont.color = colors.tickcolor;
+      trace.colorbar.titlefont = trace.colorbar.titlefont || {};
+      trace.colorbar.titlefont.color = colors.textcolor;
+    }
+  });
+
   container.show();
   func(plotAnchor, traces, plot.layout, {
     responsive: true,
@@ -701,11 +712,23 @@ function updatePlotlyTheme() {
     // Apply the layout update
     Plotly.relayout(anchor, layoutUpdate);
 
-    // Update violin plot scatter marker colors and hoverlabels
+    // Update heatmap colorbar colors and violin plot scatter marker colors
     const isDarkMode = document.documentElement.getAttribute("data-bs-theme") === "dark";
     const plotDiv = document.getElementById(anchor);
     if (plotDiv && plotDiv.data) {
       plotDiv.data.forEach((trace, idx) => {
+        // Update heatmap colorbar colors
+        if (trace.type === "heatmap" && trace.showscale) {
+          Plotly.restyle(
+            anchor,
+            {
+              "colorbar.tickfont.color": colors.tickcolor,
+              "colorbar.titlefont.color": colors.textcolor,
+            },
+            [idx],
+          );
+        }
+        // Update violin plot scatter marker colors
         if (trace.type === "scatter" && trace.marker && trace.marker.color) {
           const color = trace.marker.color;
           let newColor = null;
