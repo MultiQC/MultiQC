@@ -1413,7 +1413,7 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 1,
             "square": False,
             "colstops": [
-                [0, "#ffffff"],
+                [0, "#ffffff00"],
                 [0.25, "#d9534f"],
                 [0.5, "#fee391"],
                 [1, "#5cb85c"],

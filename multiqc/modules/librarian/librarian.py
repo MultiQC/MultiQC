@@ -34,11 +34,11 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/DesmondWillowbrook/Librarian",
             info="Predicts the sequencing library type from the base composition of a FastQ file.",
             extra="""
-            Librarian reads from high throughput sequencing experiments show base compositions that are 
-            characteristic for their library type. For example, data from RNA-seq and WGBS-seq libraries show markedly 
+            Librarian reads from high throughput sequencing experiments show base compositions that are
+            characteristic for their library type. For example, data from RNA-seq and WGBS-seq libraries show markedly
             different distributions of G, A, C and T across the reads.
-            
-            Librarian makes use of different composition signatures for library quality control: Test library 
+
+            Librarian makes use of different composition signatures for library quality control: Test library
             compositions are extracted and compared against previously published data sets from mouse and human.
             """,
             doi="10.12688/f1000research.125325.1",
@@ -118,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
             "square": False,
             "xcats_samples": False,
             "ycats_samples": True,
-            "colstops": [[0, "#FFFFFF"], [1, "#FF0000"]],
+            "colstops": [[0, "#FFFFFF00"], [1, "#FF0000"]],
             "tt_decimals": 0,
         }
 
