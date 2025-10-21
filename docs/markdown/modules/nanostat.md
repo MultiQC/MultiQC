@@ -2,7 +2,7 @@
 title: NanoStat
 displayed_sidebar: multiqcSidebar
 description: >
-  Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp)
+  <p>Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp).</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/nanostat/nanostat.py
 -->
 
 :::note
-Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp)
+
+<p>Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp).</p>
 
 [https://github.com/wdecoster/nanostat/](https://github.com/wdecoster/nanostat/), [https://github.com/wdecoster/nanoplot/](https://github.com/wdecoster/nanoplot/)
 :::

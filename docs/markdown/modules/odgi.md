@@ -2,7 +2,7 @@
 title: ODGI
 displayed_sidebar: multiqcSidebar
 description: >
-  Analysis and manipulation of pangenome graphs structured in the variation graph model
+  <p>Analysis and manipulation of pangenome graphs structured in the variation graph model.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/odgi/odgi.py
 -->
 
 :::note
-Analysis and manipulation of pangenome graphs structured in the variation graph model
+
+<p>Analysis and manipulation of pangenome graphs structured in the variation graph model.</p>
 
 [https://github.com/pangenome/odgi](https://github.com/pangenome/odgi)
 :::

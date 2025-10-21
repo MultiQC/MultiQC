@@ -2,7 +2,7 @@
 title: phantompeakqualtools
 displayed_sidebar: multiqcSidebar
 description: >
-  Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data
+  <p>Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/phantompeakqualtools/p
 -->
 
 :::note
-Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data
+
+<p>Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.</p>
 
 [https://www.encodeproject.org/software/phantompeakqualtools](https://www.encodeproject.org/software/phantompeakqualtools)
 :::

@@ -2,7 +2,7 @@
 title: PRINSEQ++
 displayed_sidebar: multiqcSidebar
 description: >
-  C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and metagenomic reads
+  <p>C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and metagenomic reads.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/prinseqplusplus/prinse
 -->
 
 :::note
-C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and metagenomic reads
+
+<p>C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and metagenomic reads.</p>
 
 [https://github.com/Adrian-Cantu/PRINSEQ-plus-plus](https://github.com/Adrian-Cantu/PRINSEQ-plus-plus)
 :::

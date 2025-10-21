@@ -2,7 +2,7 @@
 title: Tophat
 displayed_sidebar: multiqcSidebar
 description: >
-  Splice junction RNA-Seq reads mapper for mammalian-sized genomes
+  <p>Splice junction RNA-Seq reads mapper for mammalian-sized genomes.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/tophat/tophat.py
 -->
 
 :::note
-Splice junction RNA-Seq reads mapper for mammalian-sized genomes
+
+<p>Splice junction RNA-Seq reads mapper for mammalian-sized genomes.</p>
 
 [https://ccb.jhu.edu/software/tophat/](https://ccb.jhu.edu/software/tophat/)
 :::

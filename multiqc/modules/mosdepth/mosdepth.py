@@ -313,7 +313,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "tt_suffix": "x",
                             "smooth_points": 500,
                             "logswitch": True,
-                            "hide_empty": False,
+                            "hide_zero_cats": False,
                             "categories": True,
                         },
                     )
@@ -326,7 +326,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "xlab": "Sample",
                             "ylab": "Average Coverage",
                             "tt_suffix": "x",
-                            "hide_empty": False,
+                            "hide_zero_cats": False,
                             "categories": True,
                         },
                     )

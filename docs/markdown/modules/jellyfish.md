@@ -2,7 +2,7 @@
 title: Jellyfish
 displayed_sidebar: multiqcSidebar
 description: >
-  Counting k-mers in DNA
+  <p>Counting k-mers in DNA.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/jellyfish/jellyfish.py
 -->
 
 :::note
-Counting k-mers in DNA
+
+<p>Counting k-mers in DNA.</p>
 
 [https://github.com/gmarcais/Jellyfish](https://github.com/gmarcais/Jellyfish)
 :::

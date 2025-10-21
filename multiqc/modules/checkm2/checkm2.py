@@ -45,6 +45,33 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.mag_quality_table(data_by_sample)
 
+        # Add the important columns to the general stats table
+        headers = {
+            "Completeness": {
+                "title": "Predicted Completeness",
+                "description": "The percentage of MAG length relative to predicted total MAG length.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "Contamination": {
+                "title": "Predicted Contamination",
+                "description": "The length of the contaminating portion relative to the expected (complete, uncontaminated) genome length.",
+                "min": 0,
+                "suffix": "%",
+                "format": "{:,.2f}",
+                "scale": "YlOrRd",
+            },
+            "Genome_Size": {
+                "title": "Genome Size",
+                "description": "The predicted size of the genome",
+                "scale": "YlGn",
+                "hidden": True,
+            },
+        }
+        self.general_stats_addcols(data_by_sample, headers)
+
     def parse_file(self, f, data_by_sample):
         """Parse the quality_report.tsv output."""
         reader = csv.DictReader(StringIO(f["f"]), delimiter="\t")
@@ -74,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlOrRd",
             },
             "Completeness_Model_Used": {
-                "title": "Completness Model Used",
+                "title": "Completeness Model Used",
                 "description": "Which ML model was used to predict completeness.",
                 "hidden": True,
             },
@@ -98,7 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "Average_Gene_Length": {
-                "title": "Average Gene Leght",
+                "title": "Average Gene Length",
                 "description": "The average number of amino acids in predicted genes.",
                 "suffix": "a.a.",
                 "format": "{:,.0f}",

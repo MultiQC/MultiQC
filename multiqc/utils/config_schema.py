@@ -144,6 +144,16 @@ class MultiQCConfig(BaseModel):
     )
     no_ai: Optional[bool] = Field(None, description="Disable AI")
     ai_anonymize_samples: Optional[bool] = Field(None, description="Anonymize samples")
+    ai_reasoning_effort: Optional[str] = Field(
+        None, description="Reasoning effort level for OpenAI reasoning models (low, medium, high)"
+    )
+    ai_max_completion_tokens: Optional[int] = Field(
+        None, description="Maximum completion tokens for OpenAI reasoning models"
+    )
+    ai_extended_thinking: Optional[bool] = Field(
+        None, description="Enable extended thinking for Anthropic Claude 4 models"
+    )
+    ai_thinking_budget_tokens: Optional[int] = Field(None, description="Budget tokens for Anthropic extended thinking")
 
     seqera_api_url: Optional[str] = Field(None, description="Seqera API URL")
     seqera_website: Optional[str] = Field(None, description="Seqera website")
@@ -235,7 +245,7 @@ class MultiQCConfig(BaseModel):
     no_version_check: Optional[bool] = Field(None, description="No version check")
     log_filesize_limit: Optional[int] = Field(None, description="Log filesize limit")
     filesearch_lines_limit: Optional[int] = Field(None, description="Filesearch lines limit")
-    report_readerrors: Optional[int] = Field(None, description="Report read errors")
+    report_readerrors: Optional[bool] = Field(None, description="Report read errors")
     skip_generalstats: Optional[bool] = Field(None, description="Skip generalstats")
     skip_versions_section: Optional[bool] = Field(None, description="Skip versions section")
     disable_version_detection: Optional[bool] = Field(None, description="Disable version detection")

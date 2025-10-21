@@ -73,7 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
     :::
 
     You can customise the patterns used for finding these files in your
-    MultiQC config (see [Module search patterns](#module-search-patterns)).
+    MultiQC config (see [Module search patterns](https://docs.seqera.io/multiqc/getting_started/config#module-search-patterns)).
     The below code shows the default file patterns:
 
     ```yaml
@@ -170,7 +170,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     Remember that it is possible to customise the order in which the different module sections appear
     in the report if you wish.
-    See [the docs](https://docs.seqera.io/multiqc/#order-of-module-and-module-subsection-output) for more information.
+    See [the docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output)
+    for more information.
 
     For example, to show the _Status Checks_ section at the top, use the following config:
 
@@ -1330,6 +1331,7 @@ class MultiqcModule(BaseMultiqcModule):
             if status in status_dict:
                 status_dict[status].append(s_name)
 
+        status_checks = getattr(config, "fastqc_config", {}).get("status_checks", True)
         pconfig: Dict[str, Any] = {
             "id": f"{self.anchor}_adapter_content_plot",
             "title": "FastQC: Adapter Content",
@@ -1340,13 +1342,14 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
-            "series_label": "samples x adapters",
-            "y_bands": [
+            "series_label": "sample-adapter combinations",
+        }
+        if status_checks:
+            pconfig["y_bands"] = [
                 {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},
                 {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},
                 {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},
-            ],
-        }
+            ]
 
         plot = None
         content = ""

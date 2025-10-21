@@ -328,18 +328,40 @@ class MultiqcModule(BaseMultiqcModule):
 The `__init__` variables are used to create the header, URL link,
 analysis module credits and description in the report.
 
+### Markdown support in `info`
+
+The `info` parameter supports rich markdown formatting. For example:
+
+`````python
+super(MultiqcModule, self).__init__(
+    name="My Advanced Module",
+    anchor="myadvancedmodule",
+    href="https://www.awesome_bioinfo.com/myadvancedmodule",
+    info="This module performs **quality assessment** of sequencing data.\n\n"
+         "Features:\n"
+         "- Quality score distribution\n"
+         "- Read length analysis\n"
+         "- *Fast* processing\n\n"
+         "See the [documentation](https://www.awesome_bioinfo.com/docs) for more details.",
+    doi="01.2345/journal/abc123",
+)
+
 The available arguments when initialising a module as follows:
 
 - `name` - Name of your module
 - `anchor` - A HTML-safe anchor that will be used after the `#` in the URL
 - `href` - Link(s) to the homepage for the tool
-- `info` - Very short description text about the tool
+- `info` - Very short description text about the tool. Supports markdown formatting when `autoformat=True` and `autoformat_type="markdown"` (default). Can include **bold** text, *italic* text, [links](https://example.com), lists, and other markdown features.
 - `doi` - One or more publication DOIs (can be a string or a list)
 - `comment` - Additional comment text for module. Usually user-supplied in a config.
 - `extra` - Optional additional description. Will appear in the documentation and in the report, but not on the list of modules on the website.
 - `target` - Name of the module in the description (default: `name`)
 - `autoformat` - (default: `True`)
 - `autoformat_type` - (default: `markdown`)
+
+:::tip
+**Backward Compatibility**: Existing modules with plain text `info` parameters will continue to work as before. The markdown processing only applies when `autoformat=True` (default) and `autoformat_type="markdown"` (default).
+:::
 
 Ok, that should be it! The `__init__()` function will now be executed every
 time MultiQC runs. Try adding a `print("Hello World!")` statement and see
@@ -390,7 +412,7 @@ class MultiqcModule(BaseMultiqcModule):
             ...
         )
         ...
-````
+`````
 
 The consideration can be:
 

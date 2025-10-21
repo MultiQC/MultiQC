@@ -1261,6 +1261,58 @@
       "description": "Anonymize samples",
       "title": "Ai Anonymize Samples"
     },
+    "ai_reasoning_effort": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Reasoning effort level for OpenAI reasoning models (low, medium, high)",
+      "title": "Ai Reasoning Effort"
+    },
+    "ai_max_completion_tokens": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Maximum completion tokens for OpenAI reasoning models",
+      "title": "Ai Max Completion Tokens"
+    },
+    "ai_extended_thinking": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Enable extended thinking for Anthropic Claude 4 models",
+      "title": "Ai Extended Thinking"
+    },
+    "ai_thinking_budget_tokens": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Budget tokens for Anthropic extended thinking",
+      "title": "Ai Thinking Budget Tokens"
+    },
     "seqera_api_url": {
       "anyOf": [
         {
@@ -1351,6 +1403,19 @@
       "default": null,
       "description": "Number of series to defer loading - user will need to press button to render plot",
       "title": "Plots Defer Loading Numseries"
+    },
+    "plot_theme": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Plotly theme template - any registered Plotly theme name (e.g. 'plotly', 'plotly_white', 'plotly_dark', 'ggplot2', 'seaborn', 'simple_white', 'none')",
+      "title": "Plot Theme"
     },
     "lineplot_number_of_points_to_hide_markers": {
       "anyOf": [
@@ -2130,7 +2195,7 @@
     "report_readerrors": {
       "anyOf": [
         {
-          "type": "integer"
+          "type": "boolean"
         },
         {
           "type": "null"

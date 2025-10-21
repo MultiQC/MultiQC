@@ -549,6 +549,32 @@ class mqc_colour_scale(object):
     }
 
 
+def color_to_rgb_string(color: Optional[str]) -> str:
+    """
+    Convert a color to RGB format suitable for Plotly-JS.
+
+    Args:
+        color: Color string - can be RGB format (e.g., "rgb(255,0,0)"),
+               hex format (e.g., "#FF0000"), or named color (e.g., "red")
+
+    Returns:
+        String in format "r,g,b" ready for Plotly-JS (e.g., "rgb(255,0,0)")
+    """
+    if color is None:
+        return "rgb(0,0,0)"
+    # Color is already in rgb format - extract the values
+    if color.startswith("rgb"):
+        return color
+    # Convert other formats to RGB using spectra
+    else:
+        try:
+            spectra_color = spectra.html(color)
+            return "rgb(" + ",".join([f"{int(float(x) * 256)}" for x in spectra_color.rgb]) + ")"
+        except Exception as e:
+            logger.warning(f"Error converting color '{color}' to RGB: {e}")
+            return "rgb(0,0,0)"  # Default to black if conversion fails
+
+
 def deterministic_hash(x: str) -> int:
     """
     Deterministic hash function for strings. This is useful for assigning a unique color

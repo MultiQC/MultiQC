@@ -243,7 +243,7 @@ class DragenContentMetrics(BaseMultiqcModule):
             "y_minrange": 5,
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
-            "hide_empty": True,
+            "hide_zero_cats": True,
             "y_bands": [
                 {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},
                 {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},

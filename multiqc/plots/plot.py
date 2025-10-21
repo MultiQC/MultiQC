@@ -45,6 +45,28 @@ logger = logging.getLogger(__name__)
 check_plotly_version()
 
 
+def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> str:
+    """
+    Get the appropriate series label for a plot type.
+    If series_label is the default "samples", return a plot type-specific label.
+    Otherwise, return the custom series_label as-is.
+    """
+    if series_label != "samples":
+        return str(series_label)
+
+    # Map plot types to their specific series labels
+    plot_type_labels = {
+        PlotType.LINE: "lines",
+        PlotType.BAR: "bars",
+        PlotType.BOX: "boxes",
+        PlotType.SCATTER: "points",
+        PlotType.HEATMAP: "samples",  # heatmaps typically show samples
+        PlotType.VIOLIN: "samples",  # violins keep the default "samples"
+    }
+
+    return plot_type_labels.get(plot_type, "samples")  # fallback for unknown plot types
+
+
 # Create and register MultiQC default Plotly template
 # Uses transparent backgrounds so plots adapt to the page theme in the HTML report
 # JavaScript in plotting.js will override colors for dark mode
@@ -202,7 +224,8 @@ class PConfig(ValidatedConfig):
     y_bands: Optional[List[LineBand]] = None
     x_lines: Optional[List[FlatLine]] = None
     y_lines: Optional[List[FlatLine]] = None
-    series_label: str = "samples"
+    series_label: Union[str, bool] = "samples"
+    flat_if_very_large: bool = True
 
     @classmethod
     def from_pconfig_dict(cls, pconfig: Union[Mapping[str, Any], "PConfig", None]):
@@ -292,7 +315,7 @@ class BaseDataset(BaseModel):
     layout: Dict[str, Any]  # update when a datasets toggle is clicked, or percentage switch is unselected
     trace_params: Dict[str, Any]
     pct_range: Dict[str, Any]
-    n_samples: int
+    n_series: int
 
     def sample_names(self) -> List[SampleName]:
         raise NotImplementedError
@@ -356,7 +379,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
     Represents normalized input data for a plot.
 
     Plot input data is normalized, but enough data is preseverd to merge plots across
-    multiple samples. Plot objects might post-process and re-summarize the data
+    multiple series. Plot objects might post-process and re-summarize the data
     before creating plot datasets.
     """
 
@@ -431,11 +454,17 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         # Try to load previous data (empty or unloadable means no data from previous run)
         old_data = report.plot_input_data.get(new_data.anchor)
+        logger.debug(f"merge_with_previous for {new_data.anchor}: found old_data = {old_data is not None}")
         if old_data is None or old_data.is_empty():
+            logger.debug(f"merge_with_previous for {new_data.anchor}: no old data or empty, using new data only")
             merged_data = new_data
         else:
             # Merge using class-specific implementation
+            logger.debug(
+                f"merge_with_previous for {new_data.anchor}: merging {old_data.__class__.__name__} with {new_data.__class__.__name__}"
+            )
             merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
+            logger.debug(f"merge_with_previous for {new_data.anchor}: merge completed")
         return merged_data
 
     def finalize_df(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -563,26 +592,26 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         plot_type: PlotType,
         pconfig: PConfigT,
         anchor: Anchor,
-        n_samples_per_dataset: List[int],
+        n_series_per_dataset: List[int],
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
-        flat_if_very_large: bool = True,
+        n_samples_per_dataset: Optional[List[int]] = None,
     ) -> "Plot[DatasetT, PConfigT]":
         """
         Initialize a plot model with the given configuration, but without data.
         :param plot_type: plot type
         :param pconfig: plot configuration model
-        :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
+        :param n_series_per_dataset: number of series for each dataset, to pre-initialize the base dataset models
         :param anchor: plot HTML anchor. Unlike ID, must be globally unique
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
         :param defer_render_if_large: whether to defer rendering if the number of data points is large
-        :param flat_if_very_large: whether to render flat if the number of data points is very large
+        :param n_samples_per_dataset: number of actual samples for each dataset (assumes series_label from pconfig are samples)
         """
-        if len(n_samples_per_dataset) == 0:
+        if len(n_series_per_dataset) == 0:
             raise ValueError("No datasets to plot")
 
         # Counts / Percentages / Log10 switch
@@ -606,23 +635,23 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if config.plots_force_flat:
             flat = True
         if (
-            flat_if_very_large
+            pconfig.flat_if_very_large
             and not config.plots_force_interactive
-            and n_samples_per_dataset[0] > config.plots_flat_numseries
+            and n_series_per_dataset[0] > config.plots_flat_numseries
         ):
             logger.debug(
-                f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_flat_numseries={config.plots_flat_numseries}, rendering flat"
+                f"Plot {id} has {n_series_per_dataset[0]} series > config.plots_flat_numseries={config.plots_flat_numseries}, rendering flat"
             )
             flat = True
 
         defer_render = False
         if defer_render_if_large:
             if (
-                n_samples_per_dataset[0] > config.plots_defer_loading_numseries
-                or n_samples_per_dataset[0] > config.num_datasets_plot_limit  # DEPRECATED in v1.24
+                n_series_per_dataset[0] > config.plots_defer_loading_numseries
+                or n_series_per_dataset[0] > config.num_datasets_plot_limit  # DEPRECATED in v1.24
             ):
                 logger.debug(
-                    f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_defer_loading_numseries={config.plots_defer_loading_numseries}, will defer render"
+                    f"Plot {id} has {n_series_per_dataset[0]} series > config.plots_defer_loading_numseries={config.plots_defer_loading_numseries}, will defer render"
                 )
                 defer_render = True
 
@@ -691,7 +720,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 layout[axis].type = "log"
 
         datasets = []
-        for idx, n_samples in enumerate(n_samples_per_dataset):
+        for idx, n_series in enumerate(n_series_per_dataset):
             dataset = BaseDataset(
                 plot_id=id,
                 label=str(idx + 1),
@@ -703,9 +732,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     xaxis=dict(min=0, max=100),
                     yaxis=dict(min=0, max=100),
                 ),
-                n_samples=n_samples,
+                n_series=n_series,
             )
-            if len(n_samples_per_dataset) > 1:
+            if len(n_series_per_dataset) > 1:
                 dataset.uid += f"_{idx + 1}"
 
             data_label: Union[str, Dict[str, Union[str, Dict[str, str]]]] = (
@@ -724,10 +753,19 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 dconfig["title"] = pconfig.title
 
             subtitles = []
-            if len(n_samples_per_dataset) > 1:
+            if len(n_series_per_dataset) > 1:
                 subtitles += [dataset.label]
-            if n_samples > 1:
-                subtitles += [f"{n_samples} {pconfig.series_label}"]
+
+            if n_samples_per_dataset and len(n_samples_per_dataset) > idx:
+                n_samples = n_samples_per_dataset[idx]
+            else:
+                n_samples = 0
+            if n_samples > 1 and pconfig.series_label:
+                series_label = _get_series_label(plot_type, pconfig.series_label)
+                subtitles += [f"{n_samples} {series_label}"]
+            elif n_series > 1 and pconfig.series_label:
+                series_label = _get_series_label(plot_type, pconfig.series_label)
+                subtitles += [f"{n_series} {series_label}"]
             if subtitles:
                 dconfig["subtitle"] = ", ".join(subtitles)
 
@@ -1133,7 +1171,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 '<p class="text-info">',
                 f"<small>{get_material_icon('mdi:image', 16)} ",
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
-                '(see the <a href="https://docs.seqera.io/multiqc/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
+                '(see the <a href="https://docs.seqera.io/multiqc/getting_started/config#flat--interactive-plots" target="_blank">docs</a>).',
                 "</small>",
                 "</p>",
             ]
@@ -1735,7 +1773,7 @@ def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
         conf["yaxis"] = conf.pop("y_ceiling")
     if "xAxis" in conf:
         conf["xaxis"] = conf.pop("xAxis")
-    if "tooltip" in conf:
+    if "tooltip" in conf and "hovertemplate" not in conf:
         conf["hovertemplate"] = conf.pop("tooltip")
     return conf
 

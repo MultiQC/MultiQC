@@ -20,6 +20,16 @@ from multiqc.types import Anchor, ColumnKey, SampleGroup, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
 
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state after each test."""
+    original_strict = config.strict
+    original_run_modules = config.run_modules[:]
+    yield
+    config.strict = original_strict
+    config.run_modules[:] = original_run_modules
+
+
 def test_linegraph_single_sample_txt(data_dir):
     path = data_dir / "custom_content" / "embedded_config" / "linegraph_single_sample_txt_mqc.txt"
     """
@@ -735,7 +745,7 @@ def test_ai_export_rounding(tmp_path):
         cfg=ClConfig(run_modules=["custom_content"], ai_summary=True, development=True),
     )
 
-    summary_path = tmp_path / "multiqc_data" / "multiqc_ai_prompt.txt"
+    summary_path = tmp_path / "multiqc_data" / "llms-full.txt"
     assert summary_path.exists()
     print(summary_path)
     # assert that file contains |0.3802|
@@ -863,7 +873,7 @@ sample2,20
     assert len(modules) == 1
     module = modules[0]
     assert module.name == "My Grouped Data"
-    assert module.info == "This is the parent description"
+    assert module.info == "<p>This is the parent description.</p>"
     assert len(module.sections) == 2
 
     # Debug: print what sections we actually have

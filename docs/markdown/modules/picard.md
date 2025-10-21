@@ -2,7 +2,7 @@
 title: Picard
 displayed_sidebar: multiqcSidebar
 description: >
-  Tools for manipulating high-throughput sequencing data
+  <p>Tools for manipulating high-throughput sequencing data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/picard/picard.py
 -->
 
 :::note
-Tools for manipulating high-throughput sequencing data
+
+<p>Tools for manipulating high-throughput sequencing data.</p>
 
 [http://broadinstitute.github.io/picard/](http://broadinstitute.github.io/picard/)
 :::
@@ -273,6 +274,7 @@ picard/markilluminaadapters:
   contents: MarkIlluminaAdapters
 picard/oxogmetrics:
   - contents: "# picard.analysis.CollectOxoGMetrics"
+  - contents: "# CollectOxoGMetrics"
   - contents_re: "# CollectMultipleMetrics .*OxoGMetrics"
     shared: true
 picard/pcr_metrics:
@@ -308,5 +310,7 @@ picard/sam_file_validation:
 picard/variant_calling_metrics:
   contents_re: "## METRICS CLASS.*VariantCallingDetailMetrics"
 picard/wgs_metrics:
-  contents_re: "## METRICS CLASS.*WgsMetrics"
+  - contents: --algo WgsMetricsAlgo
+  - contents_re: "## METRICS CLASS.*WgsMetrics"
+    shared: true
 ```

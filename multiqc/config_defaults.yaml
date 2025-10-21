@@ -68,7 +68,7 @@ make_pdf: false
 # AI settings:
 ai_summary: false
 ai_summary_full: false
-ai_provider: "seqera"
+ai_provider: seqera
 ai_model: null
 ai_custom_endpoint: null
 ai_auth_type: null
@@ -79,6 +79,10 @@ ai_prompt_short: null
 ai_prompt_full: null
 no_ai: false
 ai_anonymize_samples: false
+ai_reasoning_effort: null # Reasoning effort level for OpenAI reasoning models (low, medium, high)
+ai_max_completion_tokens: null # Maximum completion tokens for OpenAI reasoning models
+ai_extended_thinking: false # Enable extended thinking for Anthropic Claude 4 models
+ai_thinking_budget_tokens: null # Budget tokens for Anthropic extended thinking
 
 # Development settings:
 seqera_api_url: "https://intern.seqera.io"
@@ -407,8 +411,7 @@ fn_clean_trim:
   - ".tar"
   - "runs_"
 
-# Files to ignore when indexing files.
-# Grep file match patterns.
+# Files to ignore when checking content with "content" and "content_re" search patterns.
 fn_ignore_files:
   - ".DS_Store"
   - ".py[cod]"
@@ -576,6 +579,7 @@ module_order:
   - skewer
   - sortmerna
   - biobloomtools
+  - seqfu
   - fastq_screen
   - afterqc
   - fastp

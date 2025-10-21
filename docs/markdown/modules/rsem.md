@@ -2,7 +2,7 @@
 title: RSEM
 displayed_sidebar: multiqcSidebar
 description: >
-  Estimates gene and isoform expression levels from RNA-Seq data
+  <p>Estimates gene and isoform expression levels from RNA-Seq data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/rsem/rsem.py
 -->
 
 :::note
-Estimates gene and isoform expression levels from RNA-Seq data
+
+<p>Estimates gene and isoform expression levels from RNA-Seq data.</p>
 
 [https://deweylab.github.io/RSEM/](https://deweylab.github.io/RSEM/)
 :::

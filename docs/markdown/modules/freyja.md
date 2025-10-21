@@ -2,7 +2,7 @@
 title: Freyja
 displayed_sidebar: multiqcSidebar
 description: >
-  Recovers relative lineage abundances from mixed SARS-CoV-2 samples
+  <p>Recovers relative lineage abundances from mixed SARS-CoV-2 samples.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/freyja/freyja.py
 -->
 
 :::note
-Recovers relative lineage abundances from mixed SARS-CoV-2 samples
+
+<p>Recovers relative lineage abundances from mixed SARS-CoV-2 samples.</p>
 
 [https://github.com/andersen-lab/Freyja](https://github.com/andersen-lab/Freyja)
 :::

@@ -2,7 +2,7 @@
 title: BCL Convert
 displayed_sidebar: multiqcSidebar
 description: >
-  Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
+  <p>Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/bclconvert/bclconvert.
 -->
 
 :::note
-Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
+
+<p>Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.</p>
 
 [https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
 :::
@@ -31,7 +32,7 @@ You can specify a genome size in config
 
 It's often useful to talk about sequencing yield in terms of estimated depth of coverage.
 In order to make MultiQC show the estimated depth for each sample, specify the reference genome/target size in
-your [MultiQC configuration](https://docs.seqera.io/multiqc/getting_started/config):
+your [MultiQC configuration](../getting_started/config):
 
 ```yaml
 bclconvert:

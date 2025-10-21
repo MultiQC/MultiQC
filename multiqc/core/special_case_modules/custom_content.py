@@ -573,7 +573,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Box plot
             elif plot_type == PlotType.BOX:
-                plot = box.plot(plot_datasets, pconfig=box.BoxPlotConfig(**pconfig))
+                from multiqc.plots.box import BoxT
+
+                box_data = cast(Union[Mapping[str, BoxT], List[Mapping[str, BoxT]]], plot_datasets)
+                plot = box.plot(box_data, pconfig=box.BoxPlotConfig(**pconfig))
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
@@ -603,11 +606,17 @@ class MultiqcModule(BaseMultiqcModule):
                     plot.pconfig.save_data_file = False
 
         if plot is not None or content:
+            # Only add description to section if section name is different from module name
+            # to avoid duplication between module intro and section description
+            section_description = ""
+            if section_name and section_name != self.name:
+                section_description = ccdict.config.get("description", "")
+
             self.add_section(
                 name=section_name,
                 anchor=section_anchor,
                 id=section_id,
-                description=ccdict.config.get("description", ""),
+                description=section_description,
                 plot=plot,
                 content=content or "",
             )

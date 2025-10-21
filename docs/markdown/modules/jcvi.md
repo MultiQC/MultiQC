@@ -2,7 +2,7 @@
 title: JCVI Genome Annotation
 displayed_sidebar: multiqcSidebar
 description: >
-  Computes statistics on genome annotation
+  <p>Computes statistics on genome annotation.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/jcvi/jcvi.py
 -->
 
 :::note
-Computes statistics on genome annotation
+
+<p>Computes statistics on genome annotation.</p>
 
 [https://pypi.org/project/jcvi/](https://pypi.org/project/jcvi/)
 :::

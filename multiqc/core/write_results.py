@@ -60,7 +60,7 @@ class OutputPaths:
     report_overwritten: bool = False
 
 
-def write_results() -> None:
+def write_results(return_html: bool = False) -> Optional[str]:
     plugin_hooks.mqc_trigger("before_report_generation")
 
     # Did we find anything?
@@ -93,9 +93,10 @@ def write_results() -> None:
         paths.data_dir = None
         logger.info("Data        : None")
 
+    html_content = None
     if config.make_report:
         # Render report HTML, write to file or stdout
-        _write_html_report(paths.to_stdout, paths.report_path)
+        html_content = _write_html_report(paths.to_stdout, paths.report_path, return_html=return_html)
 
         if paths.report_path and not config.make_pdf:
             logger.info(
@@ -134,6 +135,9 @@ def write_results() -> None:
     # that goes beyond this write_results run.
     if log_and_rich.log_tmp_fn and paths.data_dir:
         shutil.copy2(log_and_rich.log_tmp_fn, str(paths.data_dir))
+
+    # Return HTML content if requested
+    return html_content if return_html else None
 
 
 def _maybe_relative_path(path: Path) -> Path:
@@ -465,7 +469,7 @@ def _move_exported_plots(plots_dir: Path):
         logger.warning(f"Couldn't remove plots tmp dir: {e}")
 
 
-def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
+def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html: bool = False) -> Optional[str]:
     """
     Render and write report HTML to disk
     """
@@ -507,11 +511,18 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
     except AttributeError:
         pass  # Not a child theme
     else:
-        shutil.copytree(parent_template.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True)
+        shutil.copytree(
+            parent_template.template_dir,
+            tmp_dir.get_tmp_dir(),
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns("*.pyc"),
+        )
 
     # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
     # parent template files are overwritten)
-    shutil.copytree(template_mod.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True)
+    shutil.copytree(
+        template_mod.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True, ignore=shutil.ignore_patterns("*.pyc")
+    )
 
     # Function to include file contents in Jinja template
     def include_file(name, fdir=tmp_dir.get_tmp_dir(), b64=False):
@@ -602,6 +613,9 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
         except AttributeError:
             pass  # No files to copy
 
+    # Return HTML content if requested
+    return report_output if return_html else None
+
 
 def _write_pdf(report_path: Path) -> Optional[Path]:
     pdf_path = report_path.with_suffix(".pdf")
@@ -611,13 +625,23 @@ def _write_pdf(report_path: Path) -> Optional[Path]:
         str(report_path),
         "--output",
         str(pdf_path),
-        "--pdf-engine=pdflatex",
+        "--pdf-engine=lualatex",
         "-V",
         "documentclass=article",
         "-V",
         "geometry=margin=1in",
         "-V",
+        "mainfont=DejaVu Sans",
+        "-V",
+        "sansfont=DejaVu Sans",
+        "-V",
+        "monofont=DejaVu Sans Mono",
+        "-V",
+        "fontsize=10pt",
+        "-V",
         "title=",
+        "-V",
+        "tables=true",
     ]
     if config.pandoc_template is not None:
         pandoc_call.append(f"--template={config.pandoc_template}")

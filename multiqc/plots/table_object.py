@@ -38,6 +38,7 @@ class TableConfig(PConfig):
     min: Optional[Union[int, float]] = None
     parse_numeric: bool = True
     rows_are_samples: bool = True
+    flat_if_very_large: bool = False
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("table",), **data)

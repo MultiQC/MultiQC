@@ -2,7 +2,7 @@
 title: RSeQC
 displayed_sidebar: multiqcSidebar
 description: >
-  Evaluates high throughput RNA-seq data
+  <p>Evaluates high throughput RNA-seq data.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/rseqc/rseqc.py
 -->
 
 :::note
-Evaluates high throughput RNA-seq data
+
+<p>Evaluates high throughput RNA-seq data.</p>
 
 [http://rseqc.sourceforge.net/](http://rseqc.sourceforge.net/)
 :::

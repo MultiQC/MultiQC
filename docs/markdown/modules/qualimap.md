@@ -2,7 +2,7 @@
 title: QualiMap
 displayed_sidebar: multiqcSidebar
 description: >
-  Quality control of alignment data and its derivatives like feature counts
+  <p>Quality control of alignment data and its derivatives like feature counts.</p>
 ---
 
 <!--
@@ -15,7 +15,8 @@ File path for the source of this content: multiqc/modules/qualimap/qualimap.py
 -->
 
 :::note
-Quality control of alignment data and its derivatives like feature counts
+
+<p>Quality control of alignment data and its derivatives like feature counts.</p>
 
 [http://qualimap.bioinfo.cipf.es/](http://qualimap.bioinfo.cipf.es/)
 :::
@@ -37,7 +38,7 @@ table_columns_visible:
     median_insert_size: False
 ```
 
-See the [relevant section of the documentation](https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) for more detail.
+See the [relevant section of the documentation](../reports/customisation#hiding-columns) for more detail.
 
 In addition to this, it's possible to customise which coverage thresholds calculated
 by the Qualimap BamQC module _(default: 1, 5, 10, 30, 50)_ and which of these are hidden in the

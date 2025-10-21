@@ -52,7 +52,7 @@ def test_parse_logs_fn_clean_exts(data_dir):
     multiqc.parse_logs(
         data_dir / "modules/fastp/SAMPLE.json",
         data_dir / "modules/fastp/single_end",
-        extra_fn_clean_exts=["_1", "_S10_R1_001"],
+        extra_fn_clean_exts=["_1", "_S10_R1_001", "_S10_R2_001"],
     )
     assert multiqc.list_samples() == ["SRR5442949", "smalltest"]
     assert multiqc.list_modules() == ["fastp"]
@@ -119,7 +119,7 @@ def test_parse_parquet(tmp_path):
     assert multiqc.list_samples() == []
 
     # Load data from the JSON file
-    multiqc.parse_logs(tmp_path / "multiqc_data" / "BETA-multiqc.parquet")
+    multiqc.parse_logs(tmp_path / "multiqc_data" / "multiqc.parquet")
 
     # Verify data was loaded correctly
     assert "sample1" in multiqc.list_samples()
