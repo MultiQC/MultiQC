@@ -561,7 +561,7 @@ myother_module:
     contents: "This is myprogram v1.3"
   - fn: "another.txt"
     contents: ["What are these files anyway?", "End of program"]
-    contents_re: "^Metric: \d+\.\d+"
+    contents_re: '^Metric: \d+\.\d+'
 ```
 <!-- prettier-ignore-end -->
 
