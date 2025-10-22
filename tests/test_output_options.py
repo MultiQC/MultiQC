@@ -44,7 +44,7 @@ def test_write_stdout(stub_modules, tmp_path, capsys):
     write_report(filename="stdout")
 
     captured = capsys.readouterr()
-    assert captured.out.startswith("""<!DOCTYPE html>\n<html lang="en">\n<head>""")
+    assert captured.out.startswith("""<!doctype html>\n<html lang="en">\n  <head>""")
 
     files_after = set(os.listdir(tmp_path))
     assert files_before == files_after

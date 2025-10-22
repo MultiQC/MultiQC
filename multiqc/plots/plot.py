@@ -37,6 +37,7 @@ from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, ColumnKey, PlotType, SampleName
 from multiqc.utils import mqc_colour
+from multiqc.utils.material_icons import get_material_icon
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
@@ -67,32 +68,45 @@ def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> st
 
 
 # Create and register MultiQC default Plotly template
-multiqc_plotly_template = dict(
-    layout=go.Layout(
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
-        colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
-        xaxis=dict(
-            gridcolor="rgba(0,0,0,0.05)",
-            zerolinecolor="rgba(0,0,0,0.05)",
-            color="rgba(0,0,0,0.3)",  # axis labels
-            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
-        ),
-        yaxis=dict(
-            gridcolor="rgba(0,0,0,0.05)",
-            zerolinecolor="rgba(0,0,0,0.05)",
-            color="rgba(0,0,0,0.3)",  # axis labels
-            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
-        ),
-        title=dict(font=dict(size=20)),
-        modebar=dict(
-            bgcolor="rgba(0, 0, 0, 0)",
-            color="rgba(0, 0, 0, 0.5)",
-            activecolor="rgba(0, 0, 0, 1)",
-        ),
+# Uses transparent backgrounds so plots adapt to the page theme in the HTML report
+# JavaScript in plotting.js will override colors for dark mode
+def get_multiqc_plotly_template():
+    """Get the MultiQC Plotly template with runtime config values."""
+    return dict(
+        layout=go.Layout(
+            paper_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
+            plot_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
+            font=dict(
+                family=config.plot_font_family
+                or "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+                color="rgba(60,60,60,1)",
+            ),
+            colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
+            xaxis=dict(
+                gridcolor="rgba(128,128,128,0.15)",
+                zerolinecolor="rgba(128,128,128,0.2)",
+                color="rgba(100,100,100,1)",
+                tickfont=dict(size=10, color="rgba(80,80,80,1)"),
+                spikecolor="rgba(60,60,60,1)",  # Darker spike line for light mode
+                spikethickness=-3,  # Negative value removes white border, absolute value is thickness
+            ),
+            yaxis=dict(
+                gridcolor="rgba(128,128,128,0.15)",
+                zerolinecolor="rgba(128,128,128,0.2)",
+                color="rgba(100,100,100,1)",
+                tickfont=dict(size=10, color="rgba(80,80,80,1)"),
+                spikecolor="rgba(60,60,60,1)",  # Darker spike line for light mode
+                spikethickness=-3,  # Negative value removes white border, absolute value is thickness
+            ),
+            title=dict(font=dict(size=20, color="rgba(60,60,60,1)")),
+            legend=dict(font=dict(color="rgba(60,60,60,1)")),
+            modebar=dict(
+                bgcolor="rgba(0, 0, 0, 0)",
+                color="rgba(100, 100, 100, 0.5)",
+                activecolor="rgba(80, 80, 80, 1)",
+            ),
+        )
     )
-)
 
 
 class FlatLine(ValidatedConfig):
@@ -645,8 +659,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if showlegend is None:
             showlegend = True if flat else False
 
-        # Use the specified template or default to multiqc
-        template = config.plot_theme if config.plot_theme else go.layout.Template(multiqc_plotly_template)
+        # Use the MultiQC template with runtime config values
+        template = go.layout.Template(get_multiqc_plotly_template())
 
         layout: go.Layout = go.Layout(
             template=template,
@@ -1155,7 +1169,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html = "".join(
             [
                 '<p class="text-info">',
-                '<small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
+                f"<small>{get_material_icon('mdi:image', 16)} ",
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
                 '(see the <a href="https://docs.seqera.io/multiqc/getting_started/config#flat--interactive-plots" target="_blank">docs</a>).',
                 "</small>",
@@ -1246,7 +1260,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         style_str = f'style="{style}"' if style else ""
 
-        return f'<button {attrs_str} class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
+        return f'<button {attrs_str} class="btn btn-outline-secondary btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
 
     def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """
@@ -1292,7 +1306,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             export_btn = self._btn(
                 cls="export-plot",
                 style="float: right; margin-left: 5px;",
-                label='<span style="vertical-align: baseline"><svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg></span> Export...',
+                label='<svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg> Export...',
                 attrs={"title": "Show export options"},
                 data_attrs={
                     "plot-anchor": str(self.anchor),
@@ -1303,29 +1317,27 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         ai_btn = ""
         if not config.no_ai:
+            seqera_ai_icon = (
+                Path(__file__).parent.parent / "templates/default/assets/img/Seqera_AI_icon.svg"
+            ).read_text()
             ai_btn = f"""
             <div class="ai-plot-buttons-container" style="float: right;">
                 <button
-                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
                     style="margin-left: 1px;"
                     data-section-anchor="{section_anchor}"
                     data-plot-anchor="{self.anchor}"
                     data-module-anchor="{module_anchor}"
                     data-view="plot"
                     type="button"
-                    data-toggle="tooltip"
+                    data-bs-toggle="tooltip"
                     title="Copy plot data for use with AI tools like ChatGPT"
                 >
-                    <span style="vertical-align: baseline">
-                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                        </svg>
-                    </span>
+                    {seqera_ai_icon}
                     <span class="button-text">Copy prompt</span>
                 </button>
                 <button
-                    class="btn btn-default btn-sm ai-generate-button ai-generate-button-plot ai-generate-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-generate-button ai-generate-button-plot ai-generate-button-wrapper"
                     data-response-div="{section_anchor}_ai_summary_response"
                     data-error-div="{section_anchor}_ai_summary_error"
                     data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
@@ -1338,15 +1350,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-action="generate"
                     data-clear-text="Clear summary"
                     type="button"
-                    data-toggle="tooltip"
+                    data-bs-toggle="tooltip"
                     aria-controls="{section_anchor}_ai_summary_wrapper"
                 >
-                    <span style="vertical-align: baseline">
-                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                        </svg>
-                    </span>
+                    {seqera_ai_icon}
                     <span class="button-text">Summarize plot</span>
                 </button>
             </div>
@@ -1359,7 +1366,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
         buttons = "\n".join(self.buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor))
-        html = f"<div class='row' style='align-items: center;'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
+        html = f"<div class='row' style='align-items: center;'>\n<div class='col-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
 
 
@@ -1461,8 +1468,40 @@ def _batch_export_plots(export_tasks, timeout=None):
     return completed_tasks
 
 
+def _prepare_figure_for_export(fig):
+    """
+    Prepare a figure for export by ensuring it has solid backgrounds.
+    Only modifies transparent backgrounds - preserves custom theme backgrounds.
+
+    Plots use transparent backgrounds by default to adapt to page themes in HTML,
+    but exports need solid backgrounds for readability.
+    """
+    # Create a copy to avoid modifying the original figure used in HTML
+    fig_copy = go.Figure(fig)
+
+    # Helper function to check if a color is transparent
+    def is_transparent(color):
+        if color is None:
+            return True
+        color_str = str(color).lower()
+        # Check for transparent rgba values
+        return color_str.startswith("rgba(") and ",0)" in color_str.replace(" ", "")
+
+    # Only change background if it's transparent
+    if is_transparent(fig_copy.layout.paper_bgcolor):
+        fig_copy.update_layout(paper_bgcolor="white")
+
+    if is_transparent(fig_copy.layout.plot_bgcolor):
+        fig_copy.update_layout(plot_bgcolor="white")
+
+    return fig_copy
+
+
 def _export_plot(fig, plot_path, write_kwargs):
     """Export a plotly figure to a file."""
+
+    # Prepare figure with solid backgrounds for export (only if currently transparent)
+    fig = _prepare_figure_for_export(fig)
 
     # Default timeout of 30 seconds for image export
     timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 30
@@ -1492,6 +1531,9 @@ def _export_plot(fig, plot_path, write_kwargs):
 
 def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
     try:
+        # Prepare figure with solid backgrounds for export (only if currently transparent)
+        fig = _prepare_figure_for_export(fig)
+
         img_buffer = io.BytesIO()
         fig.write_image(img_buffer, **write_kwargs)
         img_buffer = add_logo(img_buffer, format="PNG")
@@ -1579,8 +1621,10 @@ def fig_to_static_html(
 
             # Add to batch if using batch processing
             if batch_processing:
+                # Prepare figure with solid backgrounds for export (only if currently transparent)
+                fig_for_export = _prepare_figure_for_export(fig)
                 task_idx = len(_plot_export_batch)
-                _plot_export_batch.append((fig, plot_path, write_kwargs))
+                _plot_export_batch.append((fig_for_export, plot_path, write_kwargs))
                 tasks_added.append((task_idx, plot_path, file_ext))
 
                 # If we're using batch processing, we'll assume the PNG will be written by the batch process

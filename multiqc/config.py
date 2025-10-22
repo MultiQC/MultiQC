@@ -74,6 +74,8 @@ custom_logo_title: str
 custom_css_files: List[str]
 simple_output: bool
 template: str
+template_dark_mode: bool
+plot_font_family: Optional[str]
 profile_runtime: bool
 profile_memory: bool
 pandoc_template: str
@@ -138,7 +140,6 @@ plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
 plots_defer_loading_numseries: int
-plot_theme: Optional[str]
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
@@ -162,6 +163,7 @@ decimalPoint_format: str
 thousandsSep_format: str
 remove_sections: List[str]
 section_comments: Dict[str, str]
+section_status_checks: Dict[str, Union[bool, Dict[str, bool]]]
 lint: bool  # Deprecated since v1.17
 strict: bool
 development: bool
