@@ -25,6 +25,7 @@ repos:
     hooks:
       - id: prettier
         additional_dependencies:
+          - prettier@3.1.0
           - prettier-plugin-jinja-template
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
