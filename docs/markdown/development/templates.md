@@ -84,7 +84,7 @@ your own `header.html` which will overwrite the default header.
 Files within the default template have comments at the top explaining what
 part of the report they generate.
 
-Child templates also inherit template functions from their parent. For example,
+Child templates can also inherit template functions from their parent. For example,
 the default template provides the `material_icon` function which can be used
 in any child template without additional configuration.
 
@@ -171,13 +171,6 @@ The function takes three parameters:
 The function will try to load the filled variant first, then fall back to the outlined
 variant if the filled version is not found. If the icon cannot be found, it returns an
 empty string. In strict mode (`--strict`), missing icons will be reported as errors.
-
-To make this function available in your custom template (if not inheriting from default),
-you can define it in your template's `__init__.py`:
-
-```python
-template_functions = { 'material_icon': your_icon_function }
-```
 
 ## Appendices
 

@@ -561,7 +561,7 @@ myother_module:
     contents: "This is myprogram v1.3"
   - fn: "another.txt"
     contents: ["What are these files anyway?", "End of program"]
-    contents_re: '^Metric: \d+\.\d+'
+    contents_re: "^Metric: \d+\.\d+"
 ```
 <!-- prettier-ignore-end -->
 
@@ -1126,7 +1126,7 @@ The status bars will automatically:
 - Provide "Highlight" and "Filter" buttons for integration with the MultiQC toolbox
 - Display colored progress bars showing the proportion of samples in each status category
 
-**Usage example:**
+For example:
 
 ```python
 # Collect sample names by status for this section
@@ -1146,7 +1146,7 @@ self.add_section(
 )
 ```
 
-**User configuration:**
+#### Status bar user configuration
 
 Users can control status bar visibility globally or per-module using the `section_status_checks` config:
 
