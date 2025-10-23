@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self,
         name="Sylph",
         anchor="sylph",
-        href="https://github.com/bluenote-1577/sylph",  # update to Sylph repo URL
+        href="https://github.com/bluenote-1577/sylph", 
         info="Taxonomic profiling of metagenomic reads (Sylph .sylphmpa format).",
         doi="10.1038/s41587-024-02412-y",
     ):
