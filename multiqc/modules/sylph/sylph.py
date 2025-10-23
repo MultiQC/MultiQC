@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         anchor="sylph",
         href="https://github.com/bluenote-1577/sylph",  # update to Sylph repo URL
         info="Taxonomic profiling of metagenomic reads (Sylph .sylphmpa format).",
-        doi='10.1038/s41587-024-02412-y',  # update if you have a DOI
+        doi="10.1038/s41587-024-02412-y",
     ):
         super(MultiqcModule, self).__init__(
             name=name,
@@ -173,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
         top_rank_code = None
         top_rank_name = None
         for rank_code, rank_name in self.t_ranks.items():
-            if rank_code != 't':
+            if rank_code != "t":
                 try:
                     sorted_pct = sorted(
                         self.sylph_total_pct[rank_code].items(),
@@ -292,9 +292,8 @@ class MultiqcModule(BaseMultiqcModule):
                     )
                     rank_data[s_name]["other"] = 0
                 # Quick fix to ensure that the "other" category is on end of bar plot
-                rank_data[s_name]["zzz_other"] = rank_data[s_name].pop('other')
+                rank_data[s_name]["zzz_other"] = rank_data[s_name].pop("other")
 
-                
             rank_cats["zzz_other"] = {"name": "Other", "color": "#cccccc"}
 
             cats.append(rank_cats)
