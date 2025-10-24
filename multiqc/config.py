@@ -185,8 +185,8 @@ sample_names_replace_exact: bool
 sample_names_replace_complete: bool
 sample_names_rename: List[List[str]]
 show_hide_buttons: List[str]
-show_hide_patterns: List[List[str]]
-show_hide_regex: List[bool]
+show_hide_patterns: List[Union[str, List[str]]]
+show_hide_regex: List[Union[str, bool]]
 show_hide_mode: List[str]
 highlight_patterns: List[str]
 highlight_colors: List[str]
@@ -632,6 +632,20 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
                         show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether regex is turned on
         except AttributeError as e:
             logger.error(f"Error loading show patterns file: {e}")
+
+    # Normalize show_hide_patterns to be List[List[str]]
+    # When loaded from YAML config, patterns may be strings instead of lists
+    for i in range(len(show_hide_patterns)):
+        pattern = show_hide_patterns[i]
+        if isinstance(pattern, str):
+            show_hide_patterns[i] = [pattern]
+
+    # Normalize show_hide_regex to be List[bool]
+    # When loaded from YAML config, regex flags may be missing or incorrect types
+    for i in range(len(show_hide_regex)):
+        regex_flag = show_hide_regex[i]
+        if not isinstance(regex_flag, bool):
+            show_hide_regex[i] = bool(regex_flag)
 
     # Lists are not of the same length, pad or trim to the length of show_hide_patterns
     for i in range(len(show_hide_buttons), len(show_hide_patterns)):

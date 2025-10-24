@@ -1404,19 +1404,6 @@
       "description": "Number of series to defer loading - user will need to press button to render plot",
       "title": "Plots Defer Loading Numseries"
     },
-    "plot_theme": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Plotly theme template - any registered Plotly theme name (e.g. 'plotly', 'plotly_white', 'plotly_dark', 'ggplot2', 'seaborn', 'simple_white', 'none')",
-      "title": "Plot Theme"
-    },
     "lineplot_number_of_points_to_hide_markers": {
       "anyOf": [
         {
@@ -2064,7 +2051,17 @@
       "anyOf": [
         {
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
           },
           "type": "array"
         },
@@ -2080,7 +2077,14 @@
       "anyOf": [
         {
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
           },
           "type": "array"
         },
