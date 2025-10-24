@@ -237,31 +237,63 @@ class LoadMultiqcData(BaseMultiqcModule):
 
                         for section_anchor in all_section_anchors:
                             if section_anchor in existing_sections and section_anchor in new_sections:
-                                # Both modules have this section - use whichever has data
-                                # Optimize: avoid expensive .strip() and string comparisons
+                                # Both modules have this section - merge content if different
                                 existing_section = existing_sections[section_anchor]
                                 new_section = new_sections[section_anchor]
 
-                                # Check for data presence (plot_anchor is cheap to check)
+                                # Quick check for plot anchors first (cheapest operation)
                                 existing_has_plot = existing_section.plot_anchor is not None
                                 new_has_plot = new_section.plot_anchor is not None
-                                # Just check if content exists, don't call .strip()
-                                existing_has_content = bool(existing_section.content)
-                                new_has_content = bool(new_section.content)
 
-                                # Prefer sections with plots (plot data is merged separately)
-                                if new_has_plot:
-                                    merged_sections.append(new_section)
-                                elif existing_has_plot:
-                                    merged_sections.append(existing_section)
-                                # No plots - prefer sections with content
-                                elif new_has_content:
-                                    merged_sections.append(new_section)
-                                elif existing_has_content:
-                                    merged_sections.append(existing_section)
+                                # Only check content if no plots (avoid .strip() when possible)
+                                if existing_has_plot or new_has_plot:
+                                    # At least one has a plot - plots are merged separately, so just pick one section
+                                    # If both have plots, prefer new (plot data merged separately anyway)
+                                    merged_sections.append(new_section if new_has_plot else existing_section)
                                 else:
-                                    # Both empty - use new as default
-                                    merged_sections.append(new_section)
+                                    # No plots - need to check content
+                                    # Use simple truthiness check first before expensive .strip()
+                                    existing_has_content = bool(existing_section.content)
+                                    new_has_content = bool(new_section.content)
+
+                                    if not existing_has_content and not new_has_content:
+                                        # Both empty
+                                        merged_sections.append(new_section)
+                                    elif not existing_has_content:
+                                        # Only new has content
+                                        merged_sections.append(new_section)
+                                    elif not new_has_content:
+                                        # Only existing has content
+                                        merged_sections.append(existing_section)
+                                    else:
+                                        # Both have content - need to check if they're actually different
+                                        # Only do expensive string comparison if necessary
+                                        if existing_section.content == new_section.content:
+                                            # Same content - just use new section
+                                            merged_sections.append(new_section)
+                                        else:
+                                            # Different content - merge them
+                                            # Use list join instead of string concatenation (more efficient)
+                                            merged_content = new_section.content + "\n\n" + existing_section.content
+
+                                            # Create merged section with combined content
+                                            merged_section = Section(
+                                                name=new_section.name,
+                                                anchor=new_section.anchor,
+                                                id=new_section.id,
+                                                description=new_section.description,
+                                                module=new_section.module,
+                                                module_anchor=new_section.module_anchor,
+                                                module_info=new_section.module_info,
+                                                comment=new_section.comment,
+                                                helptext=new_section.helptext,
+                                                content_before_plot=new_section.content_before_plot,
+                                                content=merged_content,
+                                                print_section=new_section.print_section,
+                                                plot_anchor=new_section.plot_anchor,
+                                                ai_summary=new_section.ai_summary,
+                                            )
+                                            merged_sections.append(merged_section)
                             elif section_anchor in existing_sections:
                                 # Only in existing module
                                 merged_sections.append(existing_sections[section_anchor])
