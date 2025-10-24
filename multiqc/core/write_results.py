@@ -120,6 +120,12 @@ def write_results(return_html: bool = False) -> Optional[str]:
             )
         )
 
+    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
+    # that goes beyond this write_results run.
+    # Do this before zipping the data directory, since zipping will remove the directory.
+    if log_and_rich.log_tmp_fn and paths.data_dir and paths.data_dir.exists():
+        shutil.copy2(log_and_rich.log_tmp_fn, str(paths.data_dir))
+
     # Zip the data directory if requested
     if config.zip_data_dir and paths.data_dir is not None:
         shutil.make_archive(str(paths.data_dir), format="zip", root_dir=str(paths.data_dir))
@@ -130,11 +136,6 @@ def write_results(return_html: bool = False) -> Optional[str]:
 
     if paths.report_path:
         logger.debug(f"Report HTML written to {paths.report_path}")
-
-    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
-    # that goes beyond this write_results run.
-    if log_and_rich.log_tmp_fn and paths.data_dir:
-        shutil.copy2(log_and_rich.log_tmp_fn, str(paths.data_dir))
 
     # Return HTML content if requested
     return html_content if return_html else None
