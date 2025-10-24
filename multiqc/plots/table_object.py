@@ -381,7 +381,7 @@ class DataTable(BaseModel):
         # the table anchor because that's the ID that is shown in the Configure Columns modal
         if table_anchor in config.custom_plot_config:
             for k, v in config.custom_plot_config[table_anchor].items():
-                if isinstance(k, str) and k in pconfig.__dict__:
+                if isinstance(k, str) and k in pconfig.model_fields:
                     setattr(pconfig, k, v)
 
         # Each section to have a list of groups (even if there is just one element in a group)
