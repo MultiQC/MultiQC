@@ -1,46 +1,13 @@
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core import plugin_hooks
 from multiqc.plots.table_object import ColumnDict
 
 log = logging.getLogger(__name__)
-
-
-# Define gene categories for coloring based on Xenium naming conventions
-GENE_CATS = {
-    "Pre-designed": {"color": "rgba(31, 119, 180, 0.8)"},  # Standard gene names - blue with transparency
-    "Custom": {"color": "rgba(255, 127, 14, 0.8)"},  # Orange with transparency
-    "Negative Control Probe": {"color": "rgba(214, 39, 40, 0.8)"},  # Red with transparency
-    "Negative Control Codeword": {"color": "rgba(255, 153, 0, 0.8)"},  # Yellow/Orange with transparency
-    "Genomic Control Probe": {"color": "rgba(227, 119, 194, 0.8)"},  # Pink with transparency
-    "Unassigned Codeword": {"color": "rgba(127, 127, 127, 0.8)"},  # Gray with transparency
-    "Deprecated Codeword": {"color": "rgba(188, 189, 34, 0.8)"},  # Olive with transparency
-}
-
-
-def categorize_feature(feature_name) -> Tuple[str, str]:
-    """Categorize a feature based on its name
-    Splits the feature name into category and feature id"""
-    # Check prefixes directly instead of using regex for better performance
-    category = ""
-    feature_id = feature_name.split("_")[1] if "_" in feature_name else feature_name
-    if feature_name.startswith("Custom_"):
-        category = "Custom"
-    elif feature_name.startswith("NegControlProbe_"):
-        category = "Negative Control Probe"
-    elif feature_name.startswith("NegControlCodeword_"):
-        category = "Negative Control Codeword"
-    elif feature_name.startswith("GenomicControlProbe_"):
-        category = "Genomic Control Probe"
-    elif feature_name.startswith("UnassignedCodeword_"):
-        category = "Unassigned Codeword"
-    else:
-        category = "Pre-designed"  # Default category for standard gene names
-    return category, feature_id
 
 
 class MultiqcModule(BaseMultiqcModule):
