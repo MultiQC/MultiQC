@@ -29,8 +29,9 @@ jobs:
       - name: Get PR number
         id: pr-info
         run: |
-          PR_NUMBER=$(cat pr-info/pr-number.txt)
-          HEAD_SHA=$(cat pr-info/head-sha.txt)
+          ls -la
+          PR_NUMBER=$(cat pr-number.txt)
+          HEAD_SHA=$(cat head-sha.txt)
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
           echo "PR Number: $PR_NUMBER"
