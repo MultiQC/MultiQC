@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Tuple
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -22,7 +22,7 @@ GENE_CATS = {
 }
 
 
-def categorize_feature(feature_name) -> tuple[str, str]:
+def categorize_feature(feature_name) -> Tuple[str, str]:
     """Categorize a feature based on its name
     Splits the feature name into category and feature id"""
     # Check prefixes directly instead of using regex for better performance
