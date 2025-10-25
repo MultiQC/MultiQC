@@ -18,6 +18,9 @@ jobs:
        contains(github.event.comment.body, '/review'))
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Save PR info
         run: |
           mkdir -p pr-info
