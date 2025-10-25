@@ -253,6 +253,7 @@ You can also specify specific versions, eg: `multiqc/multiqc:v1.20`.
 MultiQC provides two Docker image variants to suit different needs:
 
 1. **Standard image** (recommended for most users): `multiqc/multiqc:latest` (~1.5GB)
+
    - Includes all core MultiQC functionality
    - Smaller image size for faster downloads and reduced storage
 
