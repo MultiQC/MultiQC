@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(python test:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(npx prettier:*)",
+      "Bash(git --no-pager show HEAD:.claude/skills/creating-multiqc-modules/SKILL.md)",
+      "Bash(jj git push:*)",
+      "Bash(jj bookmark:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

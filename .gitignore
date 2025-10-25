@@ -57,6 +57,8 @@ venv*
 node_modules/
 
 .env
-.claude
+
+# Claude Code - keep personal settings private but share skills
+.claude/*.json
 
 Pipfile
