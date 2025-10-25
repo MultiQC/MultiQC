@@ -66,6 +66,7 @@ REQUIRED_ICONS: List[str] = [
     # Status indicators
     "mdi:check-circle",
     "mdi:cancel",
+    "mdi:warning",
     "mdi:radiobox-blank",
     "mdi:radiobox-marked",
     "mdi:thumb-up",
