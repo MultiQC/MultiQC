@@ -112,6 +112,8 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("Calling xenium_extend plugin hooks")
             for hook_fn in plugin_hooks.hook_functions["xenium_extend"]:
                 hook_fn(self, data_by_sample)
+        else:
+            log.info("Run 'pip install multiqc-xenium-extra' for additional visualizations")
 
         # Write parsed data to a file
         self.write_data_file(data_by_sample, "multiqc_xenium")
