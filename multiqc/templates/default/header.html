@@ -43,7 +43,7 @@ was generated and the button that launches the welcome tour.
 {% endif %}
 
 {% if config.report_header_info and config.report_header_info | length > 0 %}
-  <div class="card card-body bg-light">
+  <div class="card card-body bg-body-tertiary mb-2">
     <dl class="row" style="margin-bottom:0;">
       {% for d in config.report_header_info %}{% for k, v in d.items() %}
         <dt class="col-sm-3">{{ k }}</dt>
