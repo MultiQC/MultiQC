@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Dict, Tuple
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
-from multiqc.plots.table_object import ColumnDict, TableConfig
+from multiqc.core import plugin_hooks
+from multiqc.plots.table_object import ColumnDict
 
 log = logging.getLogger(__name__)
 
@@ -89,37 +89,37 @@ class MultiqcModule(BaseMultiqcModule):
                     data_by_sample[parent_dir] = parsed_experiment_data
                 self.add_data_source(f, parent_dir)
 
-        data_by_sample = self.ignore_samples(data_by_sample)
+        self.data_by_sample = self.ignore_samples(data_by_sample)
 
-        if len(data_by_sample) == 0:
+        if len(self.data_by_sample) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(data_by_sample)} Xenium reports")
+        log.info(f"Found {len(self.data_by_sample)} Xenium reports")
 
         # Check for QC issues and add warnings
-        self.check_qc_warnings(data_by_sample)
+        self.check_qc_warnings()
 
         # Add software version info (Xenium files don't contain version info)
-        for s_name in data_by_sample.keys():
+        for s_name in self.data_by_sample.keys():
             self.add_software_version(None, s_name)
+
+        # Configure initial headers for general stats table
+        self.setup_general_stats_headers()
 
         # Call plugin hook to allow extensions to add data from parquet/H5 files
         # This must happen BEFORE writing data files so plugins can augment data_by_sample
-        from multiqc.core import plugin_hooks
-
-        # Check if xenium_extend hook is available
-        if "xenium_extend" in plugin_hooks.hook_functions:
-            log.debug("Calling xenium_extend plugin hooks")
-            for hook_fn in plugin_hooks.hook_functions["xenium_extend"]:
-                hook_fn(self, data_by_sample)
+        if "xenium_extra" in plugin_hooks.hook_functions:
+            log.debug("Calling xenium_extra plugin hooks")
+            for hook_fn in plugin_hooks.hook_functions["xenium_extra"]:
+                hook_fn(self)
         else:
             log.info("Run 'pip install multiqc-xenium-extra' for additional visualizations")
 
         # Write parsed data to a file
-        self.write_data_file(data_by_sample, "multiqc_xenium")
+        self.write_data_file(self.data_by_sample, "multiqc_xenium")
 
         # Add key metrics to general stats
-        self.xenium_general_stats_table(data_by_sample)
+        self.xenium_general_stats_table()
 
     def parse_xenium_metrics(self, f) -> Dict:
         """Parse Xenium metrics_summary.csv file"""
@@ -242,24 +242,62 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Could not parse experiment.xenium file {f['fn']}: {e}")
             return {}
 
-    def check_qc_warnings(self, data_by_sample):
+    def check_qc_warnings(self):
         """Check for common QC issues and add warnings to samples"""
-        for s_name, data in data_by_sample.items():
+        for s_name, data in self.data_by_sample.items():
             # Check for low transcript assignment rate
             if data.get("fraction_transcripts_assigned", 1.0) < 0.7:
                 log.warning(
                     f"Sample '{s_name}' has low transcript assignment rate: {data['fraction_transcripts_assigned']:.3f} (< 0.7). Cell segmentation likely needs refinement."
                 )
 
-    def xenium_general_stats_table(self, data_by_sample):
-        """Add key Xenium metrics to the general statistics table"""
-        headers = {}
+    def setup_general_stats_headers(self):
+        self.genstat_headers = {}
 
-        # Columns are PREPENDED (added to the left), so add in REVERSE order
-        # Target order: Total Transcripts, Cells, Transcripts Assigned, Genes/Cell, Q20+ Transcripts, Median Cell, Median Nucleus, Nucleus/Cell
-        # Add in reverse: Nucleus/Cell, Median Nucleus, Median Cell, Q20+ Transcripts, Genes/Cell, Transcripts Assigned, Cells, Total Transcripts
+        # Add basic metrics from metrics_summary.csv (always available)
+        self.genstat_headers["num_transcripts"] = ColumnDict(
+            {
+                "title": "Total Transcripts",
+                "description": "Total number of transcripts detected",
+                "scale": "YlOrRd",
+                "format": "{:,.0f}",
+                "hidden": False,
+            }
+        )
 
-        headers["median_transcripts_per_cell"] = ColumnDict(
+        self.genstat_headers["num_cells_detected"] = ColumnDict(
+            {
+                "title": "Cells",
+                "description": "Number of cells detected",
+                "scale": "Blues",
+                "format": "{:,.0f}",
+                "hidden": False,
+            }
+        )
+
+        self.genstat_headers["fraction_transcripts_assigned"] = ColumnDict(
+            {
+                "title": "Transcripts Assigned",
+                "description": "Fraction of transcripts assigned to cells",
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "modify": lambda x: x * 100.0,
+                "max": 100.0,
+                "hidden": False,
+            }
+        )
+
+        self.genstat_headers["median_genes_per_cell"] = ColumnDict(
+            {
+                "title": "Genes/Cell",
+                "description": "Median number of genes per cell",
+                "scale": "Purples",
+                "format": "{:,.0f}",
+                "hidden": False,
+            }
+        )
+
+        self.genstat_headers["median_transcripts_per_cell"] = ColumnDict(
             {
                 "title": "Transcripts/Cell",
                 "description": "Median transcripts per cell",
@@ -270,7 +308,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         )
 
-        headers["adjusted_negative_control_probe_rate"] = ColumnDict(
+        self.genstat_headers["adjusted_negative_control_probe_rate"] = ColumnDict(
             {
                 "title": "Neg Ctrl Rate",
                 "description": "Adjusted negative control probe rate",
@@ -282,4 +320,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         )
 
-        self.general_stats_addcols(data_by_sample, headers)
+    def xenium_general_stats_table(self):
+        """Add key Xenium metrics to the general statistics table"""
+
+        self.general_stats_addcols(self.data_by_sample, self.genstat_headers)
