@@ -82,9 +82,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Check for QC issues and add warnings
         self.check_qc_warnings()
 
-        # Add software version info (Xenium files don't contain version info)
-        for s_name in self.data_by_sample.keys():
-            self.add_software_version(None, s_name)
+        # Add software version info from experiment.xenium if available
+        for s_name, data in self.data_by_sample.items():
+            version = data.get("analysis_sw_version")
+            self.add_software_version(version, s_name)
 
         # Configure initial headers for general stats table
         self.setup_general_stats_headers()
