@@ -283,22 +283,3 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.general_stats_addcols(data_by_sample, headers)
-
-    def xenium_segmentation_plot(self, data_by_sample):
-        """Create stacked bar chart showing cell segmentation methods"""
-        keys = {
-            "segmented_cell_boundary_frac": {"name": "Boundary", "color": "#c72eba"},
-            "segmented_cell_interior_frac": {"name": "Interior", "color": "#bbbf34"},
-            "segmented_cell_nuc_expansion_frac": {"name": "Nuclear Expansion", "color": "#426cf5"},
-        }
-
-        plot_config = {
-            "id": "xenium_segmentation",
-            "title": "Xenium: Cell Segmentation Method",
-            "ylab": "Fraction",
-            "stacking": "normal",
-            "ymax": 1.0,
-            "cpswitch": False,
-        }
-
-        return bargraph.plot(data_by_sample, keys, plot_config)

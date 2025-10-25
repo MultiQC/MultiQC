@@ -32,8 +32,6 @@ dependencies = [
     "jsonschema",
     "polars-lts-cpu",     # for parquet support. Using LTS version for compatibility with older architectures
     "pyarrow",            # for parquet support
-    "scanpy",             # to parse h5 files for Xenium module
-    "scipy",              # for Xenium module. Though Scanpy depends on scipy anyway.
 ]
 requires-python = ">=3.8"
 authors = [
