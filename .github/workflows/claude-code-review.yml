@@ -19,17 +19,27 @@ jobs:
       id-token: write
 
     steps:
+      - name: Download PR info
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-info
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
       - name: Get PR number
         id: pr-info
         run: |
-          PR_NUMBER=$(echo '${{ toJson(github.event.workflow_run.pull_requests) }}' | jq -r '.[0].number')
+          PR_NUMBER=$(cat pr-info/pr-number.txt)
+          HEAD_SHA=$(cat pr-info/head-sha.txt)
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
           echo "PR Number: $PR_NUMBER"
+          echo "Head SHA: $HEAD_SHA"
 
       - name: Checkout PR
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ steps.pr-info.outputs.head_sha }}
           fetch-depth: 0
 
       - name: Run Claude Code Review
