@@ -2,7 +2,7 @@
 title: ngs-bits
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Calculating statistics from FASTQ, BAM, and VCF.</p>
+    <p>Calculating statistics from FASTQ, BAM, and VCF.</p>
 ---
 
 <!--
@@ -15,32 +15,31 @@ File path for the source of this content: multiqc/modules/ngsbits/ngsbits.py
 -->
 
 :::note
-
 <p>Calculating statistics from FASTQ, BAM, and VCF.</p>
 
 [https://github.com/imgag/ngs-bits](https://github.com/imgag/ngs-bits)
 :::
 
 The ngs-bits module parses XML output generated for several tools in the ngs-bits collection:
-
-- [ReadQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/ReadQC.md) for statistics on FASTQ files,
-- [MappingQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/MappingQC.md) for statistics on BAM files,
-- [SampleGender](https://github.com/imgag/ngs-bits/blob/master/doc/tools/SampleGender.md) for gender prediction based on sequencing data.
+* [ReadQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/ReadQC.md) for statistics on FASTQ files,
+* [MappingQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/MappingQC.md) for statistics on BAM files,
+* [SampleGender](https://github.com/imgag/ngs-bits/blob/master/doc/tools/SampleGender.md) for gender prediction based on sequencing data.
 
 ### File search patterns
 
 ```yaml
 ngsbits/mappingqc:
-  - contents: MappingQC
-    fn: "*.qcML"
-    num_lines: 20
+- contents: MappingQC
+  fn: '*.qcML'
+  num_lines: 20
 ngsbits/readqc:
-  - contents: ReadQC
-    fn: "*.qcML"
-    num_lines: 20
-  - contents: SeqPurge
-    fn: "*.qcML"
-    num_lines: 20
+- contents: ReadQC
+  fn: '*.qcML'
+  num_lines: 20
+- contents: SeqPurge
+  fn: '*.qcML'
+  num_lines: 20
 ngsbits/samplegender:
-  - fn: "*_ngsbits_sex.tsv"
+- fn: '*_ngsbits_sex.tsv'
 ```
+    

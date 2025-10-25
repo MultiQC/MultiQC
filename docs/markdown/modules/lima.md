@@ -2,7 +2,7 @@
 title: Lima
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Demultiplex PacBio single-molecule sequencing reads.</p>
+    <p>Demultiplex PacBio single-molecule sequencing reads.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/lima/lima.py
 -->
 
 :::note
-
 <p>Demultiplex PacBio single-molecule sequencing reads.</p>
 
 [https://github.com/PacificBiosciences/barcoding](https://github.com/PacificBiosciences/barcoding)
@@ -48,3 +47,4 @@ lima/summary:
   max_filesize: 1024
   num_lines: 2
 ```
+    

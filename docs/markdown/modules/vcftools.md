@@ -2,7 +2,7 @@
 title: VCFTools
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Program to analyse and reporting on VCF files.</p>
+    <p>Program to analyse and reporting on VCF files.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/vcftools/vcftools.py
 -->
 
 :::note
-
 <p>Program to analyse and reporting on VCF files.</p>
 
 [https://vcftools.github.io](https://vcftools.github.io)
@@ -63,11 +62,12 @@ or (better still), would like to contribute!
 
 ```yaml
 vcftools/relatedness2:
-  fn: "*.relatedness2"
+  fn: '*.relatedness2'
 vcftools/tstv_by_count:
-  fn: "*.TsTv.count"
+  fn: '*.TsTv.count'
 vcftools/tstv_by_qual:
-  fn: "*.TsTv.qual"
+  fn: '*.TsTv.qual'
 vcftools/tstv_summary:
-  fn: "*.TsTv.summary"
+  fn: '*.TsTv.summary'
 ```
+    

@@ -2,7 +2,7 @@
 title: ClipAndMerge
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Adapter clipping and read merging for ancient DNA data.</p>
+    <p>Adapter clipping and read merging for ancient DNA data.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/clipandmerge/clipandme
 -->
 
 :::note
-
 <p>Adapter clipping and read merging for ancient DNA data.</p>
 
 [http://www.github.com/apeltzer/ClipAndMerge](http://www.github.com/apeltzer/ClipAndMerge)
@@ -31,3 +30,4 @@ clipandmerge:
   contents: ClipAndMerge (
   num_lines: 5
 ```
+    

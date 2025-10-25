@@ -2,7 +2,7 @@
 title: deepTools
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Tools to process and analyze deep sequencing data.</p>
+    <p>Tools to process and analyze deep sequencing data.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/deeptools/deeptools.py
 -->
 
 :::note
-
 <p>Tools to process and analyze deep sequencing data.</p>
 
 [http://deeptools.readthedocs.io](http://deeptools.readthedocs.io)
@@ -43,7 +42,7 @@ Note that sample names are parsed from the text files themselves, they are not d
 
 ```yaml
 deeptools/bamPEFragmentSizeDistribution:
-  contents: "#bamPEFragmentSize"
+  contents: '#bamPEFragmentSize'
   num_lines: 1
 deeptools/bamPEFragmentSizeTable:
   contents: "\tFrag. Sampled\tFrag. Len. Min.\tFrag. Len. 1st. Qu.\tFrag. Len. Mean\t\
@@ -54,10 +53,10 @@ deeptools/estimateReadFiltering:
     Estimated mapped reads"
   num_lines: 1
 deeptools/plotCorrelationData:
-  contents: "#plotCorrelation --outFileCorMatrix"
+  contents: '#plotCorrelation --outFileCorMatrix'
   num_lines: 1
 deeptools/plotCoverageOutRawCounts:
-  contents: "#plotCoverage --outRawCounts"
+  contents: '#plotCoverage --outRawCounts'
   num_lines: 1
 deeptools/plotCoverageStdout:
   contents: "sample\tmean\tstd\tmin\t25%\t50%\t75%\tmax"
@@ -70,12 +69,13 @@ deeptools/plotFingerprintOutQualityMetrics:
     \ Point\tSynthetic Elbow Point"
   num_lines: 1
 deeptools/plotFingerprintOutRawCounts:
-  contents: "#plotFingerprint --outRawCounts"
+  contents: '#plotFingerprint --outRawCounts'
   num_lines: 1
 deeptools/plotPCAData:
-  contents: "#plotPCA --outFileNameData"
+  contents: '#plotPCA --outFileNameData'
   num_lines: 1
 deeptools/plotProfile:
   contents: bin labels
   num_lines: 1
 ```
+    

@@ -2,7 +2,7 @@
 title: DRAGEN
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data.</p>
+    <p>Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/dragen/dragen.py
 -->
 
 :::note
-
 <p>Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data.</p>
 
 [https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
@@ -58,7 +57,7 @@ and alike. This MultiQC module supports some of the output but not all. Contribu
   - Summary table for single-cell ATAC metrics
 
 The code is structured in a way so every mix-in parses one type of QC file that DRAGEN generates
-(e.g. _.mapping_metrics.csv, _.wgs_fine_hist_normal.csv, etc.). If a corresponding file is found, a mix-in adds
+(e.g. *.mapping_metrics.csv, *.wgs_fine_hist_normal.csv, etc.). If a corresponding file is found, a mix-in adds
 a section into the report.
 
 DRAGEN can be treated as a fast aligner with additional features on top, as users will unlikely use any
@@ -71,35 +70,36 @@ place it accordingly in the module_order list, in docs, etc.
 dragen/coverage_metrics:
   fn_re: .*_coverage_metrics.*\.csv
 dragen/fragment_length_hist:
-  fn: "*.fragment_length_hist.csv"
+  fn: '*.fragment_length_hist.csv'
 dragen/gc_metrics:
-  fn: "*.gc_metrics.csv"
+  fn: '*.gc_metrics.csv'
 dragen/gvcf_metrics:
-  fn: "*.gvcf_metrics.csv"
+  fn: '*.gvcf_metrics.csv'
 dragen/mapping_metrics:
   contents: Number of unique reads (excl. duplicate marked reads)
-  fn: "*.mapping_metrics.csv"
+  fn: '*.mapping_metrics.csv'
   num_lines: 50
 dragen/overall_mean_cov_metrics:
   fn_re: .*_overall_mean_cov.*\.csv
 dragen/ploidy_estimation_metrics:
-  fn: "*.ploidy_estimation_metrics.csv"
+  fn: '*.ploidy_estimation_metrics.csv'
 dragen/rna_quant_metrics:
-  fn: "*.quant[._]metrics.csv"
+  fn: '*.quant[._]metrics.csv'
 dragen/rna_transcript_cov:
-  fn: "*.quant.transcript_coverage.txt"
+  fn: '*.quant.transcript_coverage.txt'
 dragen/sc_atac_metrics:
-  fn: "*.scATAC[._]metrics.csv"
+  fn: '*.scATAC[._]metrics.csv'
 dragen/sc_rna_metrics:
-  fn: "*.scRNA[._]metrics.csv"
+  fn: '*.scRNA[._]metrics.csv'
 dragen/time_metrics:
-  fn: "*.time_metrics.csv"
+  fn: '*.time_metrics.csv'
 dragen/trimmer_metrics:
-  fn: "*.trimmer_metrics.csv"
+  fn: '*.trimmer_metrics.csv'
 dragen/vc_metrics:
-  fn: "*.vc_metrics.csv"
+  fn: '*.vc_metrics.csv'
 dragen/wgs_contig_mean_cov:
   fn_re: .*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv
 dragen/wgs_fine_hist:
   fn_re: .*\.wgs_fine_hist_?(tumor|normal)?\.csv
 ```
+    

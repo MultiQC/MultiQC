@@ -2,7 +2,7 @@
 title: SeqyClean
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Filters adapters, vectors, and contaminants while quality trimming.</p>
+    <p>Filters adapters, vectors, and contaminants while quality trimming.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/seqyclean/seqyclean.py
 -->
 
 :::note
-
 <p>Filters adapters, vectors, and contaminants while quality trimming.</p>
 
 [https://github.com/ibest/seqyclean](https://github.com/ibest/seqyclean)
@@ -30,5 +29,6 @@ The module parses the `*SummaryStatistics.tsv` files that results from a SeqyCle
 
 ```yaml
 seqyclean:
-  fn: "*_SummaryStatistics.tsv"
+  fn: '*_SummaryStatistics.tsv'
 ```
+    

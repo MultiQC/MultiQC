@@ -2,7 +2,7 @@
 title: Librarian
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Predicts the sequencing library type from the base composition of a FastQ file.</p>
+    <p>Predicts the sequencing library type from the base composition of a FastQ file.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/librarian/librarian.py
 -->
 
 :::note
-
 <p>Predicts the sequencing library type from the base composition of a FastQ file.</p>
 
 [https://github.com/DesmondWillowbrook/Librarian](https://github.com/DesmondWillowbrook/Librarian)
@@ -48,3 +47,4 @@ librarian:
 librarian:
   fn: librarian_heatmap.txt
 ```
+    

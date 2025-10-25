@@ -2,7 +2,7 @@
 title: Bcftools
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Utilities for variant calling and manipulating VCFs and BCFs.</p>
+    <p>Utilities for variant calling and manipulating VCFs and BCFs.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/bcftools/bcftools.py
 -->
 
 :::note
-
 <p>Utilities for variant calling and manipulating VCFs and BCFs.</p>
 
 [https://samtools.github.io/bcftools/](https://samtools.github.io/bcftools/)
@@ -44,3 +43,4 @@ in the resulting plot.
 bcftools/stats:
   contents: This file was produced by bcftools stats
 ```
+    

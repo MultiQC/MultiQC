@@ -2,7 +2,7 @@
 title: Slamdunk
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Tool to analyze SLAM-Seq data.</p>
+    <p>Tool to analyze SLAM-Seq data.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/slamdunk/slamdunk.py
 -->
 
 :::note
-
 <p>Tool to analyze SLAM-Seq data.</p>
 
 [http://t-neumann.github.io/slamdunk/](http://t-neumann.github.io/slamdunk/)
@@ -27,21 +26,22 @@ This module should be able to parse logs from v0.2.2-dev onwards.
 
 ```yaml
 slamdunk/PCA:
-  contents: "# slamdunk PCA"
+  contents: '# slamdunk PCA'
   num_lines: 1
 slamdunk/rates:
-  contents: "# slamdunk rates"
+  contents: '# slamdunk rates'
   num_lines: 1
 slamdunk/summary:
-  contents: "# slamdunk summary"
+  contents: '# slamdunk summary'
   num_lines: 1
 slamdunk/tcperreadpos:
-  contents: "# slamdunk tcperreadpos"
+  contents: '# slamdunk tcperreadpos'
   num_lines: 1
 slamdunk/tcperutrpos:
-  contents: "# slamdunk tcperutr"
+  contents: '# slamdunk tcperutr'
   num_lines: 1
 slamdunk/utrrates:
-  contents: "# slamdunk utrrates"
+  contents: '# slamdunk utrrates'
   num_lines: 1
 ```
+    
