@@ -48,9 +48,25 @@ class MultiqcModule(BaseMultiqcModule):
     Xenium is a spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.
 
     :::note
-    This module provides basic quality metrics from the Xenium pipeline. For advanced visualizations
-    including transcript quality distributions, cell area analysis, and field-of-view quality plots,
-    install the `multiqc-xenium-advanced` plugin.
+    This module provides basic quality metrics from the Xenium pipeline (total transcripts, cells detected,
+    transcript assignment rates, and median genes per cell).
+
+    For advanced visualizations including:
+
+    - Transcript quality distributions by gene category
+    - Cell and nucleus area distributions
+    - Field-of-view quality plots
+    - Segmentation method breakdown
+    - Transcripts per gene distributions
+
+    Install the [multiqc-xenium-extra](https://pypi.org/project/multiqc-xenium-extra/) plugin:
+
+    ```bash
+    pip install multiqc multiqc-xenium-extra
+    ```
+
+    The plugin automatically adjusts the log filesize limit to parse large Xenium files (`.parquet` and `.h5`),
+    so you don't need to manually configure `log_filesize_limit` in your MultiQC config when using the plugin.
     :::
 
     The MultiQC module is tested with outputs from xenium-3.x, older versions of xenium output are
