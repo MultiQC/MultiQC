@@ -2,13 +2,7 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    types: [opened]
 
 jobs:
   claude-review:
@@ -41,6 +35,8 @@ jobs:
             - Performance considerations
             - Security concerns
             - Test coverage
+
+            Write a very brief summary at the top, then include the rest of your review within a <details></details> HTML tag.
 
             Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
 
