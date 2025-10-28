@@ -9,16 +9,19 @@ Skills are modular capabilities that Claude automatically invokes based on conte
 ## Available Skills
 
 ### 1. Triaging Module Requests
+
 **Location**: `triaging-module-requests/`
 
 **Purpose**: Systematically evaluate and prioritize MultiQC module requests from GitHub issues.
 
 **Automatically invoked when**:
+
 - Analyzing issues with `module: new` label
 - Responding to `@claude analyze-module` comments
 - Asked to prioritize module requests
 
 **Key capabilities**:
+
 - Fetches tool popularity metrics from GitHub, PyPI, Conda
 - Evaluates community engagement (reactions, comments, duplicates)
 - Assesses request quality and completeness
@@ -27,9 +30,11 @@ Skills are modular capabilities that Claude automatically invokes based on conte
 - Recommends appropriate priority labels
 
 **Supporting files**:
+
 - `scoring-rubric.md` - Detailed breakdown of scoring system
 
 **Example usage**:
+
 ```
 You: "Can you analyze issue #1234 which is a module request?"
 Claude: [Automatically uses triaging skill]
@@ -43,17 +48,20 @@ Claude: [Automatically uses triaging skill]
 ---
 
 ### 2. Creating MultiQC Modules
+
 **Location**: `creating-multiqc-modules/`
 
 **Purpose**: Generate complete, standards-compliant MultiQC module implementations from issue specifications.
 
 **Automatically invoked when**:
+
 - Creating new MultiQC modules
 - Converting example log files into code
 - Asked to implement module requests
 - Need to follow MultiQC coding standards
 
 **Key capabilities**:
+
 - Downloads and analyzes example log files
 - Identifies data structures and parsing strategies
 - Generates complete module implementation
@@ -63,11 +71,13 @@ Claude: [Automatically uses triaging skill]
 - Creates pull requests with proper formatting
 
 **Supporting files**:
+
 - `templates/module_template.py` - Production-ready module template
 - `examples/simple-module.md` - Example of simple TSV-based module
 - `examples/complex-module.md` - Example of complex JSON-based module with multiple plots
 
 **Example usage**:
+
 ```
 You: "Create a module for the tool in issue #5678"
 Claude: [Automatically uses module creation skill]
@@ -82,17 +92,20 @@ Claude: [Automatically uses module creation skill]
 ---
 
 ### 3. Analyzing Bioinformatics Log Files
+
 **Location**: `analyzing-log-files/`
 
 **Purpose**: Examine unfamiliar log file formats to understand structure and design parsing strategies.
 
 **Automatically invoked when**:
+
 - Encountering new/unfamiliar log formats
 - Designing parsing logic for modules
 - Analyzing example files from issues
 - Troubleshooting parsing problems
 
 **Key capabilities**:
+
 - Identifies file format (JSON, TSV, key-value, mixed, etc.)
 - Detects section structure and markers
 - Locates sample name extraction points
@@ -102,9 +115,11 @@ Claude: [Automatically uses module creation skill]
 - Plans general statistics metrics
 
 **Supporting files**:
+
 - `common-patterns.md` - Reference for frequently encountered formats
 
 **Example usage**:
+
 ```
 You: "I'm not sure how to parse this log file format"
 Claude: [Automatically uses log analysis skill]
@@ -120,6 +135,7 @@ Claude: [Automatically uses log analysis skill]
 ### Automatic Invocation
 
 Skills are **automatically discovered and used** by Claude based on:
+
 1. **Context**: Keywords in conversation ("module request", "parse log file")
 2. **Descriptions**: Each skill has a detailed description Claude matches against tasks
 3. **File patterns**: Working with specific files or directories
@@ -129,6 +145,7 @@ You don't need to explicitly call skills - Claude invokes them when appropriate.
 ### Skill Structure
 
 Each skill follows this pattern:
+
 ```
 skill-name/
 ├── SKILL.md              # Main skill definition with YAML frontmatter
@@ -144,7 +161,7 @@ skill-name/
 ---
 name: Skill Name in Gerund Form
 description: What the skill does and when to use it
-allowed-tools: [Read, Write, Edit, Bash]  # Optional
+allowed-tools: [Read, Write, Edit, Bash] # Optional
 ---
 
 # Instructions
@@ -152,30 +169,36 @@ allowed-tools: [Read, Write, Edit, Bash]  # Optional
 [Detailed instructions for Claude]
 
 ## Examples
+
 [Usage examples]
 
 ## Related Resources
+
 [Links to supporting files]
 ```
 
 ## Benefits Over GitHub Actions
 
 ### ✅ Local Execution
+
 - Works in CLI and CI/CD
 - No GitHub API rate limits
 - Faster iteration
 
 ### ✅ More Flexible
+
 - Automatic invocation based on context
 - No manual workflow triggers
 - Adapts to conversation flow
 
 ### ✅ Better Maintained
+
 - Single source of truth
 - Version controlled with code
 - Easy to update and test
 
 ### ✅ Composable
+
 - Skills work together
 - Progressive disclosure of information
 - Modular capabilities
@@ -183,6 +206,7 @@ allowed-tools: [Read, Write, Edit, Bash]  # Optional
 ## Migrating from GitHub Actions
 
 ### Old Workflow (GitHub Actions)
+
 ```yaml
 # .github/workflows/module-requests.yml
 on:
@@ -192,12 +216,14 @@ on:
 ```
 
 ### New Approach (Skills)
+
 ```
 You: "@claude analyze this module request"
 Claude: [Uses triaging skill automatically]
 ```
 
 The skills replace these workflows:
+
 - ❌ `.github/workflows/module-requests.yml` → ✅ `triaging-module-requests/`
 - ❌ `.github/workflows/module-generation.yml` → ✅ `creating-multiqc-modules/`
 - ❌ `.claude/commands/new-module.md` → ✅ `creating-multiqc-modules/` (automatic)
@@ -281,6 +307,7 @@ Claude should automatically use the appropriate skill.
 ### Adding Project-Specific Context
 
 Edit `CLAUDE.md` in project root to add:
+
 - Project-specific patterns
 - Common module types
 - Team preferences
@@ -291,11 +318,13 @@ Edit `CLAUDE.md` in project root to add:
 To add new capabilities:
 
 1. Create new skill directory:
+
    ```bash
    mkdir -p .claude/skills/new-skill-name
    ```
 
 2. Create SKILL.md with frontmatter:
+
    ```markdown
    ---
    name: New Skill Name
@@ -303,6 +332,7 @@ To add new capabilities:
    ---
 
    # Instructions
+
    [Your instructions]
    ```
 
@@ -317,6 +347,7 @@ To add new capabilities:
 **Problem**: Claude doesn't use a skill when expected
 
 **Solutions**:
+
 1. Make description more specific in YAML frontmatter
 2. Use keywords from description in your prompt
 3. Explicitly mention the task type
@@ -327,6 +358,7 @@ To add new capabilities:
 **Problem**: Wrong skill activates
 
 **Solutions**:
+
 1. Make descriptions mutually exclusive
 2. Add domain-specific keywords
 3. Be more specific in prompt
@@ -336,6 +368,7 @@ To add new capabilities:
 **Problem**: Claude struggles with skill instructions
 
 **Solutions**:
+
 1. Break into multiple simpler skills
 2. Move details to supporting files
 3. Add more concrete examples
@@ -369,6 +402,7 @@ When improving skills:
 ## Future Enhancements
 
 Potential additions:
+
 - **Module Testing** skill - Automated test generation and validation
 - **Documentation Generation** skill - Auto-generate module documentation
 - **Performance Analysis** skill - Profile and optimize module code
@@ -377,6 +411,7 @@ Potential additions:
 ## Support
 
 If you encounter issues:
+
 1. Check skill YAML frontmatter is valid
 2. Verify file paths in supporting files
 3. Test with explicit skill mention

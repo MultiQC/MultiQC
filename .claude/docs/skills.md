@@ -53,11 +53,13 @@ description: Extracts text and metadata from PDF files using pdfplumber. Use whe
 ### Description Best Practices
 
 Write clear, specific descriptions that help Claude understand:
+
 - **What** the skill does
 - **When** to use it
 - **What domain** it applies to
 
 Examples:
+
 - ✅ "Analyzes Python codebases to identify performance bottlenecks using profiling tools"
 - ❌ "Helps with code" (too vague)
 
@@ -71,17 +73,20 @@ Examples:
 ## Skill Types
 
 ### Personal Skills
+
 - Location: `~/.claude/skills/`
 - Scope: Available to you across all projects
 - Use for: Personal workflows, preferences, common patterns
 
 ### Project Skills
+
 - Location: `.claude/skills/` (project root)
 - Scope: Available to all project contributors
 - Use for: Project-specific patterns, team workflows
 - Version control: Check into git
 
 ### Plugin Skills
+
 - Distribution: NPM packages
 - Scope: Shareable across organizations
 - Use for: Standardized capabilities, company-wide patterns
@@ -89,32 +94,40 @@ Examples:
 ## Best Practices
 
 ### 1. Keep Skills Focused
+
 Each skill should handle one specific capability. Break complex tasks into multiple skills.
 
 ### 2. Use Progressive Disclosure
+
 - Keep main SKILL.md under 500 lines
 - Move detailed reference material to separate files
 - Reference additional files using relative links
 
 ### 3. Write Concise Instructions
+
 - Only include information Claude doesn't already know
 - Challenge each sentence: "Does Claude really need this?"
 - Remove redundant explanations
 
 ### 4. Include Examples
+
 Show Claude concrete examples of:
+
 - Input/output formats
 - Common usage patterns
 - Edge cases to handle
 
 ### 5. Create Clear Workflows
+
 For multi-step processes:
+
 - Number the steps
 - Use checklists for tracking
 - Create feedback loops
 - Include validation steps
 
 ### 6. Handle Errors Explicitly
+
 - Provide error handling scripts
 - Define fallback behaviors
 - Create verifiable outputs
@@ -148,11 +161,15 @@ Create utility scripts to handle complex operations:
 ```
 
 Reference in SKILL.md:
-```markdown
+
+````markdown
 Run the processing script:
+
 ```bash
 python .claude/skills/data-analysis/scripts/process_csv.py input.csv
 ```
+````
+
 ```
 
 ### Code Templates
@@ -160,12 +177,14 @@ python .claude/skills/data-analysis/scripts/process_csv.py input.csv
 Provide templates for code generation:
 
 ```
+
 .claude/skills/api-client/
 ├── SKILL.md
 └── templates/
-    ├── client.py.template
-    └── test.py.template
-```
+├── client.py.template
+└── test.py.template
+
+````
 
 ### Reference Documentation
 
@@ -173,7 +192,7 @@ Link to additional context:
 
 ```markdown
 For detailed API specifications, see [api-reference.md](./api-reference.md)
-```
+````
 
 ## Troubleshooting
 
@@ -182,6 +201,7 @@ For detailed API specifications, see [api-reference.md](./api-reference.md)
 **Problem**: Claude doesn't invoke your skill when expected
 
 **Solutions**:
+
 1. Make description more specific
 2. Add domain keywords to description
 3. Include example trigger scenarios
@@ -192,6 +212,7 @@ For detailed API specifications, see [api-reference.md](./api-reference.md)
 **Problem**: Two skills trigger for the same task
 
 **Solutions**:
+
 1. Make descriptions mutually exclusive
 2. Define clear boundaries in descriptions
 3. Merge related skills
@@ -201,6 +222,7 @@ For detailed API specifications, see [api-reference.md](./api-reference.md)
 **Problem**: Claude struggles to follow skill instructions
 
 **Solutions**:
+
 1. Break into multiple simpler skills
 2. Use progressive disclosure for details
 3. Add more examples
@@ -221,6 +243,7 @@ description: Formats git commit messages following conventional commits specific
 Format: `<type>(<scope>): <subject>`
 
 Types:
+
 - feat: New feature
 - fix: Bug fix
 - docs: Documentation
@@ -247,14 +270,18 @@ Example: `feat(auth): add OAuth2 support`
 ## Sharing Skills
 
 ### Via Git
+
 Commit project skills to repository:
+
 ```bash
 git add .claude/skills/
 git commit -m "Add project skills"
 ```
 
 ### Via NPM Plugin
+
 Package skills for distribution:
+
 ```json
 {
   "name": "@company/claude-skills",

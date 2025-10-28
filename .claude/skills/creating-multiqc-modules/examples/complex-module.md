@@ -7,6 +7,7 @@ This example shows a more sophisticated module with multiple sections, plots, an
 **Tool**: `variantqc` - A tool that analyzes variant calling quality
 
 **Output Format** (`variantqc_report.json`):
+
 ```json
 {
   "version": "2.1.0",
@@ -251,14 +252,16 @@ class MultiqcModule(BaseMultiqcModule):
 ### 2. Search Pattern
 
 Add to `multiqc/search_patterns.yaml`:
+
 ```yaml
 variantqc:
-    fn: "*variantqc_report.json"
+  fn: "*variantqc_report.json"
 ```
 
 ### 3. Entry Point
 
 Add to `pyproject.toml`:
+
 ```toml
 [project.entry-points."multiqc.modules.v1"]
 variantqc = "multiqc.modules.variantqc.variantqc"

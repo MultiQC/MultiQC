@@ -32,6 +32,7 @@ tail -20 example_log.txt
 ```
 
 **Identify**:
+
 - Total lines
 - File type (text, JSON, XML, binary)
 - Obvious structure patterns
@@ -42,17 +43,20 @@ tail -20 example_log.txt
 Determine primary format:
 
 **Structured Formats**:
+
 - JSON: `{` and `}`, key-value pairs
 - XML/HTML: `<tags>` and `</tags>`
 - YAML: Indented key-value with `:`
 - CSV/TSV: Comma or tab-delimited columns
 
 **Semi-Structured Formats**:
+
 - Key-value pairs: `Key: Value`
 - INI-style sections: `[Section]`
 - Property files: `key=value`
 
 **Unstructured Formats**:
+
 - Free-form text with patterns
 - Mixed formats
 - Custom delimiters
@@ -62,6 +66,7 @@ Determine primary format:
 #### 2.1 Identify Sections
 
 Look for section markers:
+
 ```bash
 # Common section patterns
 grep -n "^##" example_log.txt      # Double hash headers
@@ -71,18 +76,22 @@ grep -n "^===" example_log.txt     # Separator lines
 ```
 
 Document sections found:
+
 ```markdown
 ## File Structure
 
 ### Section 1: Header (lines 1-5)
+
 - Format: Key-value pairs
 - Contains: Version, timestamp, input file
 
 ### Section 2: Statistics (lines 7-15)
+
 - Format: Tab-separated
 - Contains: Numeric metrics
 
 ### Section 3: Results (lines 17-end)
+
 - Format: Table with headers
 - Contains: Per-feature results
 ```
@@ -90,6 +99,7 @@ Document sections found:
 #### 2.2 Sample Name Detection
 
 Identify where sample name appears:
+
 ```bash
 # Search for common sample name patterns
 grep -i "sample" example_log.txt
@@ -98,12 +108,14 @@ grep -i "input" example_log.txt
 ```
 
 **Common locations**:
+
 - In filename itself (`sample1_tool_output.txt`)
 - First line of file
 - JSON/YAML key: `"sample": "name"`
 - Command line in header
 
 **Extraction strategy**:
+
 ```python
 # From filename
 s_name = filename.replace("_tool_output.txt", "")
@@ -123,6 +135,7 @@ s_name = data.get("sample", "unknown")
 #### 3.1 Locate Key Metrics
 
 Search for numeric values:
+
 ```bash
 # Find lines with numbers
 grep -E "[0-9]+" example_log.txt | head -20
@@ -139,25 +152,30 @@ grep -E "[0-9]+\.[0-9]+e[+-][0-9]+" example_log.txt
 Group by type:
 
 **Count Metrics** (integers):
+
 - Total reads, passed reads, failed reads
 - Number of features, variants, alignments
 - Best for: Bar charts, general stats
 
 **Rate Metrics** (percentages):
+
 - Pass rate, error rate, coverage
 - Best for: General stats (colored by threshold)
 
 **Distribution Metrics** (position → value):
+
 - Quality by position
 - Coverage by chromosome
 - Best for: Line graphs
 
 **Categorical Metrics** (category → count):
+
 - Read length distribution
 - Base composition
 - Best for: Bar charts, stacked bar charts
 
 **Continuous Metrics** (x → y):
+
 - GC content distribution
 - Insert size distribution
 - Best for: Line graphs, density plots
@@ -169,6 +187,7 @@ Group by type:
 Based on format classification:
 
 **For JSON**:
+
 ```python
 import json
 
@@ -181,6 +200,7 @@ def parse_json_log(f):
 ```
 
 **For TSV**:
+
 ```python
 def parse_tsv_log(f):
     data = {}
@@ -192,6 +212,7 @@ def parse_tsv_log(f):
 ```
 
 **For Key-Value**:
+
 ```python
 import re
 
@@ -207,6 +228,7 @@ def parse_keyvalue_log(f):
 ```
 
 **For Multi-Section**:
+
 ```python
 def parse_multisection_log(f):
     data = {}
@@ -226,6 +248,7 @@ def parse_multisection_log(f):
 ```
 
 **For Mixed Formats**:
+
 ```python
 def parse_mixed_log(f):
     lines = f.splitlines()
@@ -248,6 +271,7 @@ def parse_mixed_log(f):
 #### 4.2 Handle Edge Cases
 
 Consider:
+
 - Empty files
 - Missing sections
 - Malformed data
@@ -278,11 +302,13 @@ def parse_robust(f):
 Based on metrics identified:
 
 **Bar Chart** - Best for:
+
 - Category counts (read types, feature classes)
 - Pass/fail results
 - Comparison across categories
 
 Example:
+
 ```python
 bargraph.plot(
     {"sample1": {"passed": 1000, "failed": 50}},
@@ -291,11 +317,13 @@ bargraph.plot(
 ```
 
 **Line Graph** - Best for:
+
 - Distributions over position
 - Quality scores over read length
 - Coverage across genome
 
 Example:
+
 ```python
 linegraph.plot(
     {"sample1": {1: 30, 2: 32, 3: 35}},  # position: value
@@ -304,11 +332,13 @@ linegraph.plot(
 ```
 
 **Table** - Best for:
+
 - Detailed per-sample statistics
 - Many metrics to display
 - Sortable data
 
 Example:
+
 ```python
 table.plot(
     data_by_sample,
@@ -317,6 +347,7 @@ table.plot(
 ```
 
 **Heatmap** - Best for:
+
 - Matrix data (samples × features)
 - Correlation matrices
 - Presence/absence across samples
@@ -324,17 +355,20 @@ table.plot(
 #### 5.2 General Stats Selection
 
 Choose 3-5 most important metrics:
+
 - Represent overall quality/success
 - Enable cross-sample comparison
 - Include at least one pass/fail metric
 
 **Good choices**:
+
 - Total count (e.g., total reads)
 - Success rate (e.g., pass percentage)
 - Quality metric (e.g., average quality)
 - Key result (e.g., features detected)
 
 **Avoid**:
+
 - Too many metrics (clutters table)
 - Redundant metrics (total vs percentage)
 - Internal/debug values
@@ -357,11 +391,13 @@ Before implementing module:
 ### Pattern 1: FastQC-Style
 
 **Characteristics**:
+
 - Multiple `>>Section` markers
 - Mix of table and key-value data
 - Pass/Fail indicators
 
 **Example**:
+
 ```
 >>Basic Statistics  pass
 Total Sequences  1000000
@@ -371,6 +407,7 @@ Sequence Length  150
 ```
 
 **Parsing**:
+
 ```python
 sections = {}
 current_section = None
@@ -390,11 +427,13 @@ for line in f.splitlines():
 ### Pattern 2: SAMtools-Style
 
 **Characteristics**:
+
 - Simple TSV or key-value
 - One metric per line
 - No sections
 
 **Example**:
+
 ```
 reads mapped: 950000
 reads unmapped: 50000
@@ -402,6 +441,7 @@ average quality: 35.2
 ```
 
 **Parsing**:
+
 ```python
 data = {}
 for line in f.splitlines():
@@ -415,11 +455,13 @@ for line in f.splitlines():
 ### Pattern 3: Structured JSON/YAML
 
 **Characteristics**:
+
 - Hierarchical data
 - Well-defined schema
 - Easy to parse
 
 **Example**:
+
 ```json
 {
   "sample": "sample1",
@@ -432,6 +474,7 @@ for line in f.splitlines():
 ```
 
 **Parsing**:
+
 ```python
 import json
 data = json.loads(f)

@@ -5,12 +5,14 @@ This guide helps you get started with the new MultiQC Claude skills system.
 ## What Changed?
 
 ### Before (GitHub Actions)
+
 - Module triage workflow: `.github/workflows/module-requests.yml`
 - Module generation workflow: `.github/workflows/module-generation.yml`
 - Slash command: `.claude/commands/new-module.md`
 - Manual triggers and workflow dispatch
 
 ### After (Claude Skills)
+
 - Automatic skill invocation based on context
 - Works locally in Claude Code CLI
 - Simpler, more flexible workflow
@@ -21,12 +23,14 @@ This guide helps you get started with the new MultiQC Claude skills system.
 ### 1. Triage a Module Request
 
 **Old way**:
+
 ```
 Comment on issue: "@claude analyze-module"
 Wait for GitHub Actions to run
 ```
 
 **New way**:
+
 ```
 You: "Can you analyze issue #1234 for priority?"
 Claude: [Automatically uses triaging skill and responds immediately]
@@ -35,6 +39,7 @@ Claude: [Automatically uses triaging skill and responds immediately]
 ### 2. Create a Module
 
 **Old way**:
+
 ```
 Manually trigger workflow
 Provide issue number
@@ -42,6 +47,7 @@ Wait for Actions to complete
 ```
 
 **New way**:
+
 ```
 You: "Create a module for the tool in issue #5678"
 Claude: [Automatically downloads files, analyzes, and creates module]
@@ -50,6 +56,7 @@ Claude: [Automatically downloads files, analyzes, and creates module]
 ### 3. Understand a Log File
 
 **New capability** (wasn't possible before):
+
 ```
 You: "Help me understand how to parse this log file"
 Claude: [Analyzes format and suggests parsing strategy]
@@ -58,23 +65,28 @@ Claude: [Analyzes format and suggests parsing strategy]
 ## Available Skills
 
 ### 🎯 Triaging Module Requests
+
 **Trigger words**: "triage", "prioritize", "analyze module request", "evaluate issue"
 
 **What it does**:
+
 - Fetches tool popularity metrics
 - Evaluates community engagement
 - Calculates priority score (0-100)
 - Generates analysis report
 
 **Example**:
+
 ```
 "What's the priority of issue #3456?"
 ```
 
 ### 🔨 Creating MultiQC Modules
+
 **Trigger words**: "create module", "implement module", "new module", "generate module"
 
 **What it does**:
+
 - Downloads example files
 - Analyzes log format
 - Generates complete module code
@@ -82,20 +94,24 @@ Claude: [Analyzes format and suggests parsing strategy]
 - Submits PR
 
 **Example**:
+
 ```
 "Implement the samtools stats module from issue #7890"
 ```
 
 ### 🔍 Analyzing Log Files
+
 **Trigger words**: "parse", "understand format", "log file", "analyze output"
 
 **What it does**:
+
 - Identifies file format
 - Suggests parsing strategy
 - Recommends visualizations
 - Plans general stats
 
 **Example**:
+
 ```
 "How should I parse this tool's output?"
 ```
@@ -118,6 +134,7 @@ ls .claude/skills/
 ### Test Skill Discovery
 
 Ask Claude:
+
 ```
 "What skills do you have available for MultiQC?"
 ```
@@ -137,6 +154,7 @@ Try each skill with a natural prompt:
 ### Workflow 1: New Module Request Comes In
 
 **Steps**:
+
 1. New issue created with `module: new` label
 2. Ask Claude: "Can you triage issue #XXXX?"
 3. Claude automatically:
@@ -148,6 +166,7 @@ Try each skill with a natural prompt:
 ### Workflow 2: Implement High-Priority Module
 
 **Steps**:
+
 1. High-priority module identified
 2. Ask Claude: "Create the module for issue #XXXX"
 3. Claude automatically:
@@ -160,6 +179,7 @@ Try each skill with a natural prompt:
 ### Workflow 3: Debug Parsing Issue
 
 **Steps**:
+
 1. Module not parsing correctly
 2. Ask Claude: "Help me fix the parsing in this module"
 3. Claude automatically:
@@ -173,14 +193,17 @@ Try each skill with a natural prompt:
 ### ✅ Do
 
 1. **Be specific about what you want**
+
    - Good: "Analyze issue #1234 for module priority"
    - Bad: "Look at this issue"
 
 2. **Provide context**
+
    - Good: "Create a module for samtools stats from issue #5678"
    - Bad: "Make a module"
 
 3. **Reference files directly**
+
    - Good: "Parse the example file at path/to/file.txt"
    - Bad: "Parse that file"
 
@@ -191,10 +214,12 @@ Try each skill with a natural prompt:
 ### ❌ Don't
 
 1. **Don't try to manually invoke skills**
+
    - Let Claude choose automatically
    - Trust the automatic discovery
 
 2. **Don't combine too many tasks**
+
    - Break complex work into steps
    - Let Claude use multiple skills
 
@@ -209,11 +234,13 @@ Try each skill with a natural prompt:
 **Symptom**: Claude doesn't seem to use a skill
 
 **Solutions**:
+
 1. Use keywords from skill descriptions
 2. Be more specific about the task
 3. Mention "module request" or "log file" explicitly
 
 **Example**:
+
 ```
 ❌ "What about this?"
 ✅ "Analyze this module request for priority"
@@ -224,11 +251,13 @@ Try each skill with a natural prompt:
 **Symptom**: Claude uses unexpected skill
 
 **Solutions**:
+
 1. Be more specific about your intent
 2. Mention the specific task type
 3. Provide more context
 
 **Example**:
+
 ```
 ❌ "Check this file"
 ✅ "Parse this samtools log file and extract metrics"
@@ -237,6 +266,7 @@ Try each skill with a natural prompt:
 ### Need to See What's Happening
 
 **Check**:
+
 ```bash
 # View skill instructions
 cat .claude/skills/triaging-module-requests/SKILL.md
@@ -266,6 +296,7 @@ These files remain useful:
 ### Clean Up
 
 If you have old branches with Actions:
+
 ```bash
 # These workflows are replaced by skills
 # You can clean them up or leave them as reference
@@ -289,6 +320,7 @@ Claude:
 ### Customizing Skills
 
 Edit SKILL.md files to:
+
 - Add project-specific patterns
 - Include team preferences
 - Add new examples
@@ -297,6 +329,7 @@ Edit SKILL.md files to:
 ### Creating New Skills
 
 Follow the template:
+
 ```bash
 mkdir .claude/skills/new-skill-name
 cat > .claude/skills/new-skill-name/SKILL.md << 'EOF'

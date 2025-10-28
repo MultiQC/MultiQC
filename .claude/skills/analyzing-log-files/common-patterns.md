@@ -9,6 +9,7 @@ Quick reference for frequently encountered log file formats in bioinformatics to
 **Pattern**: `Key: Value` or `Key = Value`
 
 **Example**:
+
 ```
 Total reads: 1000000
 Mapped reads: 950000
@@ -18,6 +19,7 @@ Average quality: 35.2
 **Regex**: `r"(.+?)[:=]\s*(.+)"`
 
 **Python Parsing**:
+
 ```python
 data = {}
 for line in f.splitlines():
@@ -36,6 +38,7 @@ for line in f.splitlines():
 **Pattern**: Columns separated by tabs
 
 **Example**:
+
 ```
 Feature	Count	Percentage
 Mapped	950000	95.0
@@ -43,6 +46,7 @@ Unmapped	50000	5.0
 ```
 
 **Python Parsing**:
+
 ```python
 data = {}
 lines = f.splitlines()
@@ -61,6 +65,7 @@ for line in lines[1:]:
 **Pattern**: Sections marked by headers (`##`, `>`, `[Section]`)
 
 **Example**:
+
 ```
 ##Basic Statistics
 Total Sequences: 1000000
@@ -73,6 +78,7 @@ Position	Mean	Median
 ```
 
 **Python Parsing**:
+
 ```python
 sections = {}
 current_section = None
@@ -93,6 +99,7 @@ for line in f.splitlines():
 **Pattern**: Hierarchical JSON structure
 
 **Example**:
+
 ```json
 {
   "sample": "sample1",
@@ -105,6 +112,7 @@ for line in f.splitlines():
 ```
 
 **Python Parsing**:
+
 ```python
 import json
 
@@ -122,6 +130,7 @@ return stats
 **Pattern**: Indented key-value pairs
 
 **Example**:
+
 ```yaml
 sample: sample1
 version: 1.0.0
@@ -131,6 +140,7 @@ stats:
 ```
 
 **Python Parsing**:
+
 ```python
 import yaml
 
@@ -147,6 +157,7 @@ return stats
 **Pattern**: Columns separated by spaces
 
 **Example**:
+
 ```
 Chr  Start    End      Coverage
 chr1 1000     2000     45.2
@@ -154,6 +165,7 @@ chr1 2000     3000     52.1
 ```
 
 **Python Parsing**:
+
 ```python
 data = []
 lines = f.splitlines()
@@ -172,6 +184,7 @@ for line in lines[1:]:
 **Pattern**: Timestamp/level followed by message
 
 **Example**:
+
 ```
 [2024-01-15 10:30:15] INFO: Processing sample1
 [2024-01-15 10:30:16] INFO: Total reads: 1000000
@@ -179,6 +192,7 @@ for line in lines[1:]:
 ```
 
 **Python Parsing**:
+
 ```python
 import re
 
@@ -198,6 +212,7 @@ for line in f.splitlines():
 **Pattern**: `>header` followed by data
 
 **Example**:
+
 ```
 >sample1
 Total=1000000
@@ -208,6 +223,7 @@ Mapped=750000
 ```
 
 **Python Parsing**:
+
 ```python
 data = {}
 current_sample = None
@@ -228,6 +244,7 @@ for line in f.splitlines():
 **Pattern**: XML/HTML tags
 
 **Example**:
+
 ```xml
 <sample name="sample1">
   <stats>
@@ -238,6 +255,7 @@ for line in f.splitlines():
 ```
 
 **Python Parsing**:
+
 ```python
 import xml.etree.ElementTree as ET
 
@@ -259,6 +277,7 @@ return stats
 **Pattern**: Columns at fixed positions
 
 **Example**:
+
 ```
 Feature     Count      Percentage
 Mapped      950000     95.0
@@ -266,6 +285,7 @@ Unmapped    50000      5.0
 ```
 
 **Python Parsing**:
+
 ```python
 # Define column positions
 columns = [
@@ -288,6 +308,7 @@ for line in lines[1:]:  # Skip header
 ### Version Extraction
 
 Common locations:
+
 ```python
 # First line
 version = lines[0].split()[-1]

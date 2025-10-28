@@ -163,32 +163,32 @@ jobs:
           script: |
             const candidateCount = JSON.parse('${{ steps.find-high-priority.outputs.result }}').length;
             const dryRun = '${{ inputs.dry_run }}' === 'true';
-            
+
             const comment = `## 🤖 Automated Module Generation Report
-            
+
             **Date**: ${new Date().toISOString().split('T')[0]}
             **Issues Processed**: ${candidateCount}
             **Mode**: ${dryRun ? 'Dry Run (no PRs created)' : 'Full Generation'}
-            
+
             ### Processing Summary
             The automated module generation system processed ${candidateCount} high-priority module requests.
-            
+
             ${dryRun ? 
               'Dry run mode was enabled - modules were analyzed and code generated but no commits or PRs were created.' :
               'Each issue was processed with the `/new-module` command to attempt automatic module implementation.'
             }
-            
+
             ### Processed Issues
             ${{ steps.find-high-priority.outputs.result }}
-            
+
             ### Next Steps
             ${dryRun ? 
               '- Review the analysis results and run again without dry-run if ready' :
               '- Review generated pull requests for code quality and completeness\n- Merge successful implementations after testing\n- Provide feedback on failed attempts to improve the generation system'
             }
-            
+
             ${dryRun ? '' : '### Generated Modules\nCheck recent pull requests with the prefix "Add * module" for automated implementations.'}
-            
+
             ---
             *This report was generated automatically by the Automated Module Generation system.*`;
 

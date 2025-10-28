@@ -5,6 +5,7 @@ This command generates a complete MultiQC module implementation from a GitHub is
 ## Overview
 
 When invoked, this command will:
+
 1. Analyze the GitHub issue for module details and example files
 2. Generate a complete module implementation following MultiQC patterns
 3. Create all necessary configuration updates
@@ -14,6 +15,7 @@ When invoked, this command will:
 ## Prerequisites
 
 The target issue must:
+
 - Have the `module: new` label
 - Have `priority: high` label (score ≥ 70)
 - Include uploaded example files (not copy-pasted text)
@@ -24,6 +26,7 @@ The target issue must:
 ### Step 1: Issue Analysis
 
 Extract the following information from the issue:
+
 - **Tool Name**: From the "Name of the tool" field
 - **Tool Homepage**: Repository URL for popularity/maintenance assessment
 - **Tool Description**: Short description for module info
@@ -35,6 +38,7 @@ Extract the following information from the issue:
 ### Step 2: Example File Analysis
 
 For each uploaded example file:
+
 1. **Download and examine** the file contents
 2. **Identify data structure** (tab-separated, JSON, key-value pairs, etc.)
 3. **Extract sample data** to understand metrics available
@@ -45,6 +49,7 @@ For each uploaded example file:
 ### Step 3: Module Structure Creation
 
 Create the following directory structure:
+
 ```
 multiqc/modules/{toolname}/
 ├── __init__.py
@@ -72,7 +77,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """
     [Tool-specific documentation based on analysis]
-    
+
     [Include any special usage notes, supported versions, etc.]
     """
 
@@ -141,16 +146,18 @@ class MultiqcModule(BaseMultiqcModule):
 ### Step 5: Search Pattern Configuration
 
 Add to `multiqc/search_patterns.yaml`:
+
 ```yaml
 [toolname]:
-  fn: "[filename_pattern]"  # Only if tool has standard naming
+  fn: "[filename_pattern]" # Only if tool has standard naming
   contents: "[unique_string_from_logs]"
-  num_lines: [appropriate_limit]  # Keep as low as possible for performance
+  num_lines: [appropriate_limit] # Keep as low as possible for performance
 ```
 
 ### Step 6: Module Registration
 
 Add to `pyproject.toml` in the `[project.entry-points."multiqc.modules.v1"]` section:
+
 ```toml
 [toolname] = "multiqc.modules.[toolname]:MultiqcModule"
 ```
@@ -162,6 +169,7 @@ Add to `multiqc/config_defaults.yaml` in the `module_order` list in appropriate 
 ### Step 8: Test Implementation
 
 Create `tests/test_{toolname}.py`:
+
 ```python
 import pytest
 from multiqc.modules.[toolname] import MultiqcModule
@@ -177,6 +185,7 @@ def test_[toolname]():
 ### Step 9: Quality Validation
 
 Ensure the generated module:
+
 - **Follows naming conventions**: lowercase module name, proper class name
 - **Has proper error handling**: Raises ModuleNoSamplesFound when appropriate
 - **Includes logging**: Uses log.info, log.debug appropriately
@@ -200,6 +209,7 @@ Ensure the generated module:
 ## Code Quality Standards
 
 ### Required Patterns
+
 - Always call `self.add_software_version()` even if version not found
 - Always call `self.write_data_file()` at the very end
 - Always raise `ModuleNoSamplesFound` when no samples found (NOT UserWarning)
@@ -207,6 +217,7 @@ Ensure the generated module:
 - Always add proper entry point in pyproject.toml
 
 ### Plotting Guidelines
+
 - Use appropriate plot types for data:
   - **Bar charts**: For counts, categorical data
   - **Line plots**: For distributions, trends over positions
@@ -217,14 +228,16 @@ Ensure the generated module:
 - Make plots interactive when possible
 
 ### Performance Considerations
+
 - Set `num_lines` in search patterns as low as possible
-- Use efficient parsing (avoid complex regex where possible)  
+- Use efficient parsing (avoid complex regex where possible)
 - Don't load large files unnecessarily
 - Consider memory usage with many samples
 
 ## Example Analysis Patterns
 
 ### Tab-separated Data
+
 ```python
 def parse_log(self, log_content):
     data = {}
@@ -238,6 +251,7 @@ def parse_log(self, log_content):
 ```
 
 ### Key-Value Format
+
 ```python
 def parse_log(self, log_content):
     data = {}
@@ -252,6 +266,7 @@ def parse_log(self, log_content):
 ```
 
 ### JSON Format
+
 ```python
 import json
 
@@ -266,6 +281,7 @@ def parse_log(self, log_content):
 ## Success Criteria
 
 A successful module implementation should:
+
 - Parse all provided example files correctly
 - Extract meaningful metrics for general stats
 - Generate appropriate visualizations

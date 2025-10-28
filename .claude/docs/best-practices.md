@@ -9,19 +9,24 @@ This guide provides comprehensive best practices for authoring effective Claude 
 **Only add context Claude doesn't already know**
 
 ❌ Bad:
+
 ```markdown
 Python is a programming language. To create a virtual environment,
 which is an isolated Python environment that helps manage dependencies...
 ```
 
 ✅ Good:
-```markdown
+
+````markdown
 Create virtual environment:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # macOS/Linux
 ```
-```
+````
+
+````
 
 **Challenge every sentence**: "Does Claude really need this?"
 
@@ -42,9 +47,10 @@ Examples:
 ✅ Good:
 ```yaml
 description: Analyzes MultiQC module requests from GitHub issues, evaluates tool popularity via GitHub API, and generates priority scores. Use when triaging module request issues.
-```
+````
 
 ❌ Bad:
+
 ```yaml
 description: Helps with issues
 ```
@@ -64,6 +70,7 @@ description: Helps with issues
 ```
 
 **In SKILL.md, reference additional files**:
+
 ```markdown
 For detailed API specifications, see [api-details.md](./reference/api-details.md)
 ```
@@ -75,20 +82,24 @@ For detailed API specifications, see [api-details.md](./reference/api-details.md
 #### Clear Sequential Steps
 
 ✅ Good:
+
 ```markdown
 ## Implementation Process
 
 1. **Analyze Issue**
+
    - Extract tool name and homepage
    - Download example files
    - Identify data patterns
 
 2. **Generate Module**
+
    - Create directory structure
    - Write parsing code
    - Generate visualizations
 
 3. **Create Tests**
+
    - Write unit tests
    - Verify output format
    - Run test suite
@@ -115,6 +126,7 @@ For detailed API specifications, see [api-details.md](./reference/api-details.md
 
 ```markdown
 After generating code:
+
 1. Run linters and fix issues
 2. Run tests
 3. If tests fail, analyze failures and regenerate
@@ -126,6 +138,7 @@ After generating code:
 #### Handle Errors Explicitly
 
 ❌ Bad:
+
 ```python
 def parse_file(path):
     with open(path) as f:
@@ -133,6 +146,7 @@ def parse_file(path):
 ```
 
 ✅ Good:
+
 ```python
 def parse_file(path):
     try:
@@ -148,13 +162,15 @@ def parse_file(path):
 
 #### Provide Utility Scripts
 
-```markdown
+````markdown
 Use this validation script to verify output:
 
 ```bash
 python .claude/skills/module-creation/scripts/validate_module.py multiqc/modules/newtool/
 ```
-```
+````
+
+````
 
 #### Create Verifiable Intermediate Outputs
 
@@ -163,10 +179,11 @@ After parsing, write intermediate JSON:
 ```python
 with open('parsed_data.json', 'w') as f:
     json.dump(data, f, indent=2)
-```
+````
 
 Verify the structure matches expected schema before proceeding.
-```
+
+````
 
 #### Package Dependencies
 
@@ -174,8 +191,9 @@ Verify the structure matches expected schema before proceeding.
 Required dependencies:
 ```bash
 pip install requests beautifulsoup4 pydantic
-```
-```
+````
+
+````
 
 ### 6. Examples and Documentation
 
@@ -185,12 +203,15 @@ pip install requests beautifulsoup4 pydantic
 ## Example: Parsing FastQC Output
 
 Input file (`fastqc_data.txt`):
-```
-##FastQC	0.11.9
->>Basic Statistics	pass
-Filename	sample1.fastq
-Total Sequences	1000000
-```
+````
+
+##FastQC 0.11.9
+
+> > Basic Statistics pass
+> > Filename sample1.fastq
+> > Total Sequences 1000000
+
+````
 
 Expected output:
 ```python
@@ -199,8 +220,9 @@ Expected output:
     "total_sequences": 1000000,
     "version": "0.11.9"
 }
-```
-```
+````
+
+````
 
 #### Show Edge Cases
 
@@ -211,21 +233,24 @@ Expected output:
 2. **Duplicate samples**: Append suffix `_1`, `_2`
 3. **Empty files**: Skip with warning
 4. **Malformed data**: Log error and continue
-```
+````
 
 ## Anti-Patterns to Avoid
 
 ### 1. ❌ Offering Too Many Options
 
 Bad:
+
 ```markdown
 You can either:
+
 - Option A: Do this...
 - Option B: Or do that...
 - Option C: Or maybe this...
 ```
 
 Good:
+
 ```markdown
 Do this:
 [Single clear instruction]
@@ -234,11 +259,13 @@ Do this:
 ### 2. ❌ Using Windows-Style Paths
 
 Bad:
+
 ```markdown
 Read `C:\Users\...\file.txt`
 ```
 
 Good:
+
 ```markdown
 Read `/path/to/file.txt`
 Use forward slashes on all platforms
@@ -247,11 +274,13 @@ Use forward slashes on all platforms
 ### 3. ❌ Including Time-Sensitive Information
 
 Bad:
+
 ```markdown
 As of January 2024, use Python 3.12...
 ```
 
 Good:
+
 ```markdown
 Use Python 3.9+
 ```
@@ -259,13 +288,16 @@ Use Python 3.9+
 ### 4. ❌ Punting Error Handling to Claude
 
 Bad:
+
 ```markdown
 If something goes wrong, figure it out
 ```
 
 Good:
+
 ```markdown
 If parsing fails:
+
 1. Check file format matches expected pattern
 2. Try alternate parsing strategy (see fallback.md)
 3. If still failing, skip file and log warning
@@ -274,18 +306,23 @@ If parsing fails:
 ### 5. ❌ Over-Explaining Basic Concepts
 
 Bad:
+
 ```markdown
 GitHub is a platform for hosting code repositories. A repository,
 or "repo" for short, is a collection of files...
 ```
 
 Good:
-```markdown
+
+````markdown
 Clone the repository:
+
 ```bash
 git clone <url>
 ```
-```
+````
+
+````
 
 ## Workflow for Creating Skills
 
@@ -358,11 +395,12 @@ If available, test with different Claude models to ensure compatibility.
 - Issue: #789 (no example files)
 - Expected: Request more info
 - Verify: Helpful guidance provided
-```
+````
 
 ### Observe Navigation Patterns
 
 Watch how Claude:
+
 - Discovers the skill
 - Navigates supporting files
 - Uses provided scripts
@@ -373,15 +411,18 @@ Watch how Claude:
 ### Version History
 
 Track changes in SKILL.md:
+
 ```markdown
 ## Changelog
 
 ### 2024-01-15
+
 - Added support for JSON log formats
 - Improved error messages
 - Updated examples
 
 ### 2024-01-01
+
 - Initial version
 ```
 
@@ -400,6 +441,7 @@ Last verified: 2024-01-15
 ### Regular Review
 
 Schedule periodic reviews:
+
 - Are instructions still current?
 - Have patterns changed?
 - Is skill still being used?
@@ -409,7 +451,7 @@ Schedule periodic reviews:
 
 ### Example 1: Simple, Focused Skill
 
-```markdown
+````markdown
 ---
 name: Formatting Docstrings
 description: Formats Python docstrings using Google style guide. Use when writing or updating Python documentation.
@@ -418,6 +460,7 @@ description: Formats Python docstrings using Google style guide. Use when writin
 # Google Style Docstrings
 
 Format:
+
 ```python
 def function(arg1: str, arg2: int) -> bool:
     """Short description.
@@ -435,25 +478,29 @@ def function(arg1: str, arg2: int) -> bool:
         ValueError: When validation fails
     """
 ```
+````
 
 Follow PEP 257 conventions.
+
 ```
 
 ### Example 2: Complex Skill with Structure
 
 ```
+
 .claude/skills/api-testing/
-├── SKILL.md                    # Main workflow (<300 lines)
+├── SKILL.md # Main workflow (<300 lines)
 ├── reference/
-│   ├── http-methods.md         # HTTP verb reference
-│   ├── status-codes.md         # Status code meanings
-│   └── auth-patterns.md        # Authentication patterns
+│ ├── http-methods.md # HTTP verb reference
+│ ├── status-codes.md # Status code meanings
+│ └── auth-patterns.md # Authentication patterns
 ├── templates/
-│   ├── test-case.py           # Test template
-│   └── mock-response.json     # Mock data template
+│ ├── test-case.py # Test template
+│ └── mock-response.json # Mock data template
 └── scripts/
-    ├── run-tests.sh           # Test runner
-    └── validate-spec.py       # OpenAPI validator
+├── run-tests.sh # Test runner
+└── validate-spec.py # OpenAPI validator
+
 ```
 
 ## Related Resources
@@ -461,3 +508,4 @@ Follow PEP 257 conventions.
 - [Skills Documentation](./skills.md)
 - [Claude Code Tools Reference](https://docs.claude.com/en/docs/claude-code/tools)
 - [Example Skills Repository](https://github.com/anthropics/claude-code-examples)
+```

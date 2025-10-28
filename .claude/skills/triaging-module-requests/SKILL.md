@@ -19,6 +19,7 @@ This skill helps evaluate and prioritize MultiQC module requests systematically.
 ### 1. Extract Request Information
 
 From the issue, identify:
+
 - **Tool name**: Primary identifier
 - **Tool homepage**: GitHub/GitLab/Bitbucket repository or project page
 - **Description**: What the tool does
@@ -29,6 +30,7 @@ From the issue, identify:
 ### 2. Evaluate Tool Popularity
 
 **GitHub Repository Metrics** (if available):
+
 ```python
 # Use GitHub API
 api_url = f"https://api.github.com/repos/{owner}/{repo}"
@@ -41,6 +43,7 @@ metrics = {
 ```
 
 Scoring:
+
 - ⭐⭐⭐⭐⭐ 1000+ stars (25 points)
 - ⭐⭐⭐⭐ 500-999 stars (20 points)
 - ⭐⭐⭐ 100-499 stars (15 points)
@@ -48,11 +51,13 @@ Scoring:
 - ⭐ <50 stars (5 points)
 
 **Package Manager Metrics**:
+
 - Check PyPI: `https://pypi.org/pypi/{package}/json`
 - Check Conda: `https://api.anaconda.org/package/bioconda/{package}`
 - Check Bioconductor: For R packages
 
 Download metrics (if available):
+
 - High usage (15 points): >10K downloads/month
 - Medium usage (10 points): 1K-10K downloads/month
 - Low usage (5 points): <1K downloads/month
@@ -60,6 +65,7 @@ Download metrics (if available):
 ### 3. Assess Community Engagement
 
 **Issue Metrics**:
+
 - 👍 reactions on issue (1 point each, max 10)
 - Comments from unique users (2 points each, max 10)
 - Linked duplicate issues (5 points each, max 15)
@@ -68,6 +74,7 @@ Download metrics (if available):
 ### 4. Evaluate Request Quality
 
 **Completeness** (max 20 points):
+
 - [ ] Tool name provided (2 points)
 - [ ] Tool homepage/repo URL (3 points)
 - [ ] Clear description (2 points)
@@ -76,6 +83,7 @@ Download metrics (if available):
 - [ ] Expected visualizations suggested (3 points)
 
 **Technical Feasibility** (max 15 points):
+
 - Example files parseable (10 points)
 - Clear metrics identified (5 points)
 
@@ -93,6 +101,7 @@ Total Score =
 ```
 
 **Priority Bands**:
+
 - 🔴 **High Priority** (70-100): Urgent, high-value module
 - 🟡 **Medium Priority** (40-69): Valuable, queue for development
 - 🟢 **Low Priority** (20-39): Consider if time permits
@@ -106,12 +115,14 @@ Post analysis as GitHub comment:
 ## 📊 Module Request Analysis
 
 ### Tool Information
+
 - **Name**: {tool_name}
 - **Repository**: {repo_url}
 - **Stars**: ⭐ {stars}
 - **Downloads**: {downloads}/month
 
 ### Priority Score: {total}/100
+
 - Tool Popularity: {popularity_score}/25
 - Package Downloads: {downloads_score}/15
 - Community Engagement: {engagement_score}/35
@@ -127,13 +138,15 @@ Post analysis as GitHub comment:
 ### Next Steps
 
 {Specific actions:
+
 - For high priority: assign to developer, estimate timeline
 - For medium priority: add to roadmap
 - For low priority: label and defer
 - For hold: request more information}
 
 ---
-*🤖 Automated analysis via Claude Code*
+
+_🤖 Automated analysis via Claude Code_
 ```
 
 ## Bulk Triage Mode
@@ -152,22 +165,27 @@ When processing multiple issues:
 Analyzed {N} pending requests:
 
 ### High Priority ({count})
+
 - #{issue_num} {tool_name} - Score: {score}/100
 - ...
 
 ### Medium Priority ({count})
+
 - ...
 
 ### Low Priority ({count})
+
 - ...
 
 ### Needs Info ({count})
+
 - ...
 ```
 
 ## Label Recommendations
 
 Based on priority score, suggest labels:
+
 - `priority: high` (score ≥ 70)
 - `priority: medium` (score 40-69)
 - `priority: low` (score 20-39)
@@ -177,6 +195,7 @@ Based on priority score, suggest labels:
 ## Rate Limiting
 
 When using APIs:
+
 - GitHub: 60 requests/hour (unauthenticated), 5000/hour (authenticated)
 - PyPI: No strict limits, be respectful
 - Conda: No strict limits

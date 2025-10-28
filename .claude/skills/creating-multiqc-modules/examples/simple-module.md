@@ -7,6 +7,7 @@ This example shows a straightforward module implementation for a tool with simpl
 **Tool**: `readstats` - A simple tool that counts reads in FASTQ files
 
 **Output Format** (`readstats_output.txt`):
+
 ```
 Total Reads: 1000000
 Passed QC: 950000
@@ -111,14 +112,16 @@ class MultiqcModule(BaseMultiqcModule):
 ### 2. Search Pattern
 
 Add to `multiqc/search_patterns.yaml`:
+
 ```yaml
 readstats:
-    fn: "*readstats_output.txt"
+  fn: "*readstats_output.txt"
 ```
 
 ### 3. Entry Point
 
 Add to `pyproject.toml`:
+
 ```toml
 [project.entry-points."multiqc.modules.v1"]
 readstats = "multiqc.modules.readstats.readstats"
