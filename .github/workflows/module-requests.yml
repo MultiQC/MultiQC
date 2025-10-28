@@ -57,46 +57,32 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const eventName = context.eventName;
-            const action = context.payload.action;
+            const { eventName, payload } = context;
 
-            // For scheduled and manual runs, always proceed
+            // Always proceed for scheduled and manual runs
             if (eventName === 'schedule' || eventName === 'workflow_dispatch') {
-              console.log(`✅ ${eventName} event - proceeding with bulk operations`);
               return { isModuleRequest: true };
             }
 
-            // For issue events, verify it's a module request
-            if (eventName === 'issues' || eventName === 'issue_comment') {
-              const issue = context.payload.issue;
-              const hasModuleLabel = issue.labels?.some(label => label.name === 'module: new');
+            // For issue events, check for module request
+            const issue = payload.issue;
+            if (!issue) return { isModuleRequest: false };
 
-              // Additional check: look for module request template indicators
-              const issueBody = issue.body || '';
-              const hasModuleContent = issueBody.includes('Name of the tool') ||
-                                     issueBody.includes('Tool homepage') ||
-                                     issueBody.includes('example files');
+            const hasModuleLabel = issue.labels?.some(l => l.name === 'module: new');
 
-              if (hasModuleLabel) {
-                console.log(`✅ Issue #${issue.number} has 'module: new' label`);
-                return { isModuleRequest: true, issueNumber: issue.number };
-              } else if (hasModuleContent && action === 'opened') {
-                console.log(`⚠️  Issue #${issue.number} appears to be module request but missing label`);
-                console.log(`Adding 'module: new' label and proceeding...`);
+            if (hasModuleLabel) {
+              return { isModuleRequest: true, issueNumber: issue.number };
+            }
 
-                // Add the missing label
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: issue.number,
-                  labels: ['module: new']
-                });
-
-                return { isModuleRequest: true, issueNumber: issue.number };
-              } else {
-                console.log(`❌ Issue #${issue.number} is not a module request`);
-                return { isModuleRequest: false };
-              }
+            // Auto-add label if this looks like a module request
+            if (payload.action === 'opened' && issue.body?.includes('Name of the tool')) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ['module: new']
+              });
+              return { isModuleRequest: true, issueNumber: issue.number };
             }
 
             return { isModuleRequest: false };
@@ -112,23 +98,30 @@ jobs:
       - name: Determine Operation Mode
         id: mode
         if: fromJSON(steps.verify.outputs.result).isModuleRequest == true
-        run: |
-          if [[ "${{ github.event_name }}" == "schedule" ]]; then
-            echo "mode=triage-all" >> $GITHUB_OUTPUT
-            echo "Running scheduled weekly triage"
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "mode=${{ inputs.mode }}" >> $GITHUB_OUTPUT
-            echo "issue_number=${{ inputs.issue_number }}" >> $GITHUB_OUTPUT
-            echo "Running manual workflow: ${{ inputs.mode }}"
-          elif [[ "${{ github.event_name }}" == "issues" && "${{ github.event.action }}" == "opened" ]]; then
-            echo "mode=analyze-single" >> $GITHUB_OUTPUT
-            echo "issue_number=$(echo '${{ steps.verify.outputs.result }}' | jq -r '.issueNumber')" >> $GITHUB_OUTPUT
-            echo "Running analysis for new issue #$(echo '${{ steps.verify.outputs.result }}' | jq -r '.issueNumber')"
-          elif [[ "${{ github.event_name }}" == "issue_comment" ]]; then
-            echo "mode=analyze-single" >> $GITHUB_OUTPUT
-            echo "issue_number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
-            echo "Running on-demand analysis for issue #${{ github.event.issue.number }}"
-          fi
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { eventName, payload } = context;
+            const inputs = context.payload.inputs || {};
+
+            // Determine mode based on trigger
+            let mode, issueNumber;
+
+            if (eventName === 'schedule') {
+              mode = 'triage-all';
+            } else if (eventName === 'workflow_dispatch') {
+              mode = inputs.mode || 'triage-all';
+              issueNumber = inputs.issue_number;
+            } else if (eventName === 'issues' || eventName === 'issue_comment') {
+              mode = 'analyze-single';
+              issueNumber = payload.issue?.number;
+            }
+
+            core.setOutput('mode', mode);
+            core.setOutput('issue_number', issueNumber || '');
+
+            console.log(`Mode: ${mode}${issueNumber ? ` | Issue: #${issueNumber}` : ''}`);
+            return { mode, issueNumber }
 
       - name: Run Module Triage
         if: fromJSON(steps.verify.outputs.result).isModuleRequest == true
@@ -136,40 +129,10 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
-            # Module Request Triage
+            Use the `triaging-module-requests` skill to analyze module requests.
 
-            **Mode**: ${{ steps.mode.outputs.mode }}
-            **Issue Number**: ${{ steps.mode.outputs.issue_number }}
-
-            ## Task
-
-            You have access to the `triaging-module-requests` skill which implements the complete triage system.
-
-            Based on the mode:
-
-            ### analyze-single
-            Analyze issue #${{ steps.mode.outputs.issue_number }} using the triage skill:
-            - Evaluate tool popularity (GitHub stars, downloads)
-            - Assess request quality (completeness, example files)
-            - Calculate priority score (0-100)
-            - Add appropriate labels (priority: high/medium/low, needs-examples, etc.)
-            - Post detailed analysis comment with recommendations
-
-            ### triage-all
-            Perform bulk triage of all open module requests:
-            - Find all issues with "module: new" label
-            - Skip already-triaged issues (those with priority labels)
-            - Analyze each pending request
-            - Add labels and post analysis comments
-            - Generate summary report on issue #3219
-
-            ### dry-run
-            Same as triage-all but:
-            - Don't add labels
-            - Don't post comments
-            - Only output analysis to workflow logs
-
-            Use the `triaging-module-requests` skill to perform the analysis following the documented scoring rubric and workflow.
+            Mode: ${{ steps.mode.outputs.mode }}
+            Issue: #${{ steps.mode.outputs.issue_number || 'all pending' }}
 
           claude_args: |
             --max-turns 15
