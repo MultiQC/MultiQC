@@ -1,0 +1,51 @@
+{
+  "name": "multiqc-dev-tools",
+  "owner": {
+    "name": "MultiQC",
+    "url": "https://github.com/MultiQC/MultiQC"
+  },
+  "metadata": {
+    "description": "Development tools and skills for bioinformatics tool developers working with MultiQC and similar projects"
+  },
+  "plugins": [
+    {
+      "name": "creating-multiqc-modules",
+      "source": "./.claude/skills/creating-multiqc-modules",
+      "description": "Generate complete MultiQC module implementations from GitHub issue specifications, including parsing code, visualizations, tests, and configuration. Use when creating new bioinformatics tool modules or responding to module requests.",
+      "version": "1.0.0",
+      "author": {
+        "name": "MultiQC Team",
+        "url": "https://github.com/MultiQC/MultiQC"
+      },
+      "license": "MIT",
+      "keywords": ["multiqc", "bioinformatics", "module-generation", "code-generation"],
+      "category": "bioinformatics"
+    },
+    {
+      "name": "analyzing-log-files",
+      "source": "./.claude/skills/analyzing-log-files",
+      "description": "Examines unfamiliar bioinformatics tool log files to identify structure, data format, parsing strategies, and visualization opportunities. Use when encountering new log formats or designing module parsing logic.",
+      "version": "1.0.0",
+      "author": {
+        "name": "MultiQC Team",
+        "url": "https://github.com/MultiQC/MultiQC"
+      },
+      "license": "MIT",
+      "keywords": ["bioinformatics", "log-parsing", "data-analysis", "file-formats"],
+      "category": "bioinformatics"
+    },
+    {
+      "name": "creating-multiqc-template",
+      "source": "./.claude/skills/creating-multiqc-template",
+      "description": "Guide for developing custom MultiQC report templates to customize report appearance, branding, and visualization. Covers Python package structure, Jinja2 templates, asset management, custom plotting functions, and child template inheritance.",
+      "version": "1.0.0",
+      "author": {
+        "name": "MultiQC Team",
+        "url": "https://github.com/MultiQC/MultiQC"
+      },
+      "license": "MIT",
+      "keywords": ["multiqc", "templates", "customization", "reporting", "jinja2"],
+      "category": "bioinformatics"
+    }
+  ]
+}
