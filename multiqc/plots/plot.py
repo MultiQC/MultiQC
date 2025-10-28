@@ -1263,6 +1263,36 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         return f'<button {attrs_str} class="btn btn-outline-secondary btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
 
+    def _switch(
+        self,
+        cls: str,
+        label: str,
+        switch_id: str,
+        data_attrs: Optional[Dict[str, str]] = None,
+        attrs: Optional[Dict[str, str]] = None,
+        checked: bool = False,
+        style: Optional[str] = None,
+    ) -> str:
+        """
+        Build a Bootstrap form-switch for the plot.
+        """
+        attrs = attrs.copy() if attrs else {}
+        attrs_str = " ".join([f'{k}="{v}"' for k, v in attrs.items()])
+
+        data_attrs = data_attrs.copy() if data_attrs else {}
+        if "plot-anchor" not in data_attrs:
+            data_attrs["plot-anchor"] = self.anchor
+        data_attrs_str = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
+
+        style_str = f'style="{style}"' if style else ""
+        checked_str = "checked" if checked else ""
+
+        return f'''<div class="form-check form-switch" {style_str}>
+  <input class="form-check-input {cls}" type="checkbox" role="switch" id="{switch_id}" {checked_str} {data_attrs_str} {attrs_str}>
+  <label class="form-check-label" for="{switch_id}">{label}</label>
+</div>
+'''
+
     def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """
         Build buttons for control panel
@@ -1272,16 +1302,18 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         # Counts / percentages / log10 switches
         if self.add_pct_tab or self.add_log_tab:
             if self.add_pct_tab:
-                switch_buttons += self._btn(
+                switch_buttons += self._switch(
                     cls=f"{cls} percent-switch",
                     label=self.pconfig.cpswitch_percent_label,
-                    pressed=self.p_active,
+                    switch_id=f"{self.anchor}_percent_switch",
+                    checked=self.p_active,
                 )
             if self.add_log_tab:
-                switch_buttons += self._btn(
+                switch_buttons += self._switch(
                     cls=f"{cls} log10-switch",
                     label=self.pconfig.logswitch_label,
-                    pressed=self.l_active,
+                    switch_id=f"{self.anchor}_log10_switch",
+                    checked=self.l_active,
                 )
 
         # Buttons to cycle through different datasets

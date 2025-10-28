@@ -230,28 +230,24 @@ window.callAfterDecompressed.push(function (mqc_plotdata) {
     });
   });
 
-  // A "Percentages" button above a plot is clicked
-  $("button.interactive-switch-group.percent-switch").click(function (e) {
-    e.preventDefault();
+  // A "Percentages" switch above a plot is toggled
+  $("input.interactive-switch-group.percent-switch").change(function () {
     let plotAnchor = $(this).data("plot-anchor");
 
     // Toggling flags
-    mqc_plots[plotAnchor].pActive = !$(this).hasClass("active");
-    $(this).toggleClass("active");
+    mqc_plots[plotAnchor].pActive = $(this).is(":checked");
 
     if (mqc_plots[plotAnchor].rendered) {
       renderPlot(plotAnchor); // re-render
     }
   });
 
-  // A "Log" button above a plot is clicked
-  $("button.interactive-switch-group.log10-switch").click(function (e) {
-    e.preventDefault();
+  // A "Log" switch above a plot is toggled
+  $("input.interactive-switch-group.log10-switch").change(function () {
     let plotAnchor = $(this).data("plot-anchor");
 
     // Toggling flags
-    mqc_plots[plotAnchor].lActive = !$(this).hasClass("active");
-    $(this).toggleClass("active");
+    mqc_plots[plotAnchor].lActive = $(this).is(":checked");
 
     if (mqc_plots[plotAnchor].rendered) {
       renderPlot(plotAnchor); // re-render
