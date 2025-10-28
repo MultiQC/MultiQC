@@ -521,7 +521,6 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             n_series_per_dataset=[max_n_rows],
             n_samples_per_dataset=[n_samples],
             defer_render_if_large=False,  # We hide samples on large heatmaps, so no need to defer render
-            flat_if_very_large=True,  # However, the data is still embedded into the HTML, and we don't want the report size to inflate
         )
 
         model.layout.update(
@@ -612,16 +611,18 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             width = MAX_WIDTH
             x_px_per_elem = width / num_cols
 
-        if height > MAX_HEIGHT or width > MAX_WIDTH:
+        if height >= MAX_HEIGHT or width >= MAX_WIDTH:
             # logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
             if model.square:
                 px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
                 width = height = int(num_rows * px_per_elem)
             else:
-                x_px_per_elem = MAX_WIDTH / num_cols
-                y_px_per_elem = MAX_HEIGHT / num_rows
-                width = int(num_cols * x_px_per_elem)
-                height = int(num_rows * y_px_per_elem)
+                if height >= MAX_HEIGHT:
+                    x_px_per_elem = MAX_WIDTH / num_cols
+                    height = int(num_rows * y_px_per_elem)
+                if width >= MAX_WIDTH:
+                    y_px_per_elem = MAX_HEIGHT / num_rows
+                    width = int(num_cols * x_px_per_elem)
 
         # logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
 
@@ -726,7 +727,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                 <div class="btn-group" role="group">
                     <button
                         type="button"
-                        class="btn btn-default btn-sm {"" if self.pconfig.cluster_switch_clustered_active else "active"}"
+                        class="btn btn-outline-secondary btn-sm {"" if self.pconfig.cluster_switch_clustered_active else "active"}"
                         data-action="unclustered"
                         data-plot-anchor="{self.anchor}"
                     >
@@ -734,7 +735,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                     </button>
                     <button
                         type="button"
-                        class="btn btn-default btn-sm {"active" if self.pconfig.cluster_switch_clustered_active else ""}"
+                        class="btn btn-outline-secondary btn-sm {"active" if self.pconfig.cluster_switch_clustered_active else ""}"
                         data-action="clustered"
                         data-plot-anchor="{self.anchor}"
                     >

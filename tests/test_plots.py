@@ -1,6 +1,6 @@
 import sys
 import tempfile
-from typing import Dict
+from typing import Dict, List, Union
 from unittest.mock import patch
 
 import pytest
@@ -13,6 +13,29 @@ from multiqc.plots.plot import Plot, process_batch_exports
 from multiqc.plots.table_object import ColumnDict
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
+
+
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state during tests that modify global config."""
+    original_boxplot_boxpoints = config.boxplot_boxpoints
+    original_box_min_threshold_no_points = config.box_min_threshold_no_points
+    original_box_min_threshold_outliers = config.box_min_threshold_outliers
+    original_development = config.development
+    original_export_plots = config.export_plots
+    original_export_plot_formats = getattr(config, "export_plot_formats", None)
+    original_strict = config.strict
+    yield
+    config.boxplot_boxpoints = original_boxplot_boxpoints
+    config.box_min_threshold_no_points = original_box_min_threshold_no_points
+    config.box_min_threshold_outliers = original_box_min_threshold_outliers
+    config.development = original_development
+    config.export_plots = original_export_plots
+    if original_export_plot_formats is not None:
+        config.export_plot_formats = original_export_plot_formats
+    elif hasattr(config, "export_plot_formats"):
+        delattr(config, "export_plot_formats")
+    config.strict = original_strict
 
 
 def _verify_rendered(plot) -> Plot:
@@ -164,7 +187,7 @@ def test_boxplot_dynamic_boxpoints():
     config.box_min_threshold_no_points = 10
     config.box_min_threshold_outliers = 5
 
-    data_few = {
+    data_few: Dict[str, List[Union[int, float]]] = {
         "Sample1": [1.0, 2.0, 3.0, 4.0, 5.0],
         "Sample2": [2.0, 3.0, 4.0, 5.0, 6.0],
     }
@@ -183,7 +206,7 @@ def test_boxplot_dynamic_boxpoints():
     report.reset()
 
     # Test with many samples (should show only outliers)
-    data_many = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(10)}
+    data_many: Dict[str, List[Union[int, float]]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(10)}
 
     plot_many = _verify_rendered(
         box.plot(
@@ -199,7 +222,7 @@ def test_boxplot_dynamic_boxpoints():
     report.reset()
 
     # Test with very many samples (should show no points)
-    data_very_many = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(15)}
+    data_very_many: Dict[str, List[Union[int, float]]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(15)}
 
     plot_very_many = _verify_rendered(
         box.plot(
@@ -621,3 +644,158 @@ def test_table_default_sort():
     assert isinstance(p, Plot)
     sort_string = _get_sortlist_js(p.datasets[0].dt)
     assert sort_string == "[[2, 1], [1, 0]]"
+
+
+def test_table_custom_plot_config_hidden(reset):
+    """
+    Test that custom_plot_config can set column properties at the table level.
+    When 'hidden: true' is set at the table level, all columns should be hidden.
+    """
+    table_id = "test_table_hidden"
+
+    # Set custom_plot_config for this table
+    config.custom_plot_config = {
+        table_id: {
+            "hidden": True,  # Should apply to all columns
+        }
+    }
+
+    headers: Dict[str, ColumnDict] = {
+        "x": {"title": "Metric X"},
+        "y": {"title": "Metric Y"},
+        "z": {"title": "Metric Z"},
+    }
+
+    p = table.plot(
+        data={
+            "sample1": {"x": 1, "y": 2, "z": 3},
+            "sample2": {"x": 4, "y": 5, "z": 6},
+        },
+        headers=headers,
+        pconfig=table.TableConfig(id=table_id, title="Test Table"),
+    )
+
+    assert isinstance(p, Plot)
+
+    # Check that all columns are hidden
+    dt = p.datasets[0].dt
+    for section in dt.section_by_id.values():
+        for col_key, col_meta in section.column_by_key.items():
+            assert col_meta.hidden is True, f"Column {col_key} should be hidden"
+
+
+def test_table_custom_plot_config_scale(reset):
+    """
+    Test that custom_plot_config can set the color scale at the table level.
+    When 'scale: RdYlGn' is set at the table level, all columns should use that scale.
+    """
+    table_id = "test_table_scale"
+
+    # Set custom_plot_config for this table
+    config.custom_plot_config = {
+        table_id: {
+            "scale": "RdYlGn",  # Should apply to all columns
+        }
+    }
+
+    headers: Dict[str, ColumnDict] = {
+        "x": {"title": "Metric X", "scale": "Blues"},  # This should be overridden
+        "y": {"title": "Metric Y", "scale": "Reds"},  # This should be overridden
+        "z": {"title": "Metric Z"},  # This should get RdYlGn
+    }
+
+    p = table.plot(
+        data={
+            "sample1": {"x": 1, "y": 2, "z": 3},
+            "sample2": {"x": 4, "y": 5, "z": 6},
+        },
+        headers=headers,
+        pconfig=table.TableConfig(id=table_id, title="Test Table"),
+    )
+
+    assert isinstance(p, Plot)
+
+    # Check that all columns have the RdYlGn scale
+    dt = p.datasets[0].dt
+    for section in dt.section_by_id.values():
+        for col_key, col_meta in section.column_by_key.items():
+            assert col_meta.scale == "RdYlGn", f"Column {col_key} should have scale 'RdYlGn', got '{col_meta.scale}'"
+
+
+def test_table_custom_plot_config_multiple_properties(reset):
+    """
+    Test that custom_plot_config can set multiple column properties at once.
+    """
+    table_id = "test_table_multi"
+
+    # Set multiple properties at the table level
+    config.custom_plot_config = {
+        table_id: {
+            "hidden": False,
+            "scale": "Purples",
+            "suffix": " units",
+        }
+    }
+
+    headers: Dict[str, ColumnDict] = {
+        "x": {"title": "Metric X", "hidden": True},  # Should be overridden to False
+        "y": {"title": "Metric Y"},
+    }
+
+    p = table.plot(
+        data={
+            "sample1": {"x": 1, "y": 2},
+            "sample2": {"x": 3, "y": 4},
+        },
+        headers=headers,
+        pconfig=table.TableConfig(id=table_id, title="Test Table"),
+    )
+
+    assert isinstance(p, Plot)
+
+    # Check that all properties are applied
+    dt = p.datasets[0].dt
+    for section in dt.section_by_id.values():
+        for col_key, col_meta in section.column_by_key.items():
+            assert col_meta.hidden is False, f"Column {col_key} should not be hidden"
+            assert col_meta.scale == "Purples", f"Column {col_key} should have scale 'Purples'"
+            assert col_meta.suffix == " units", f"Column {col_key} should have suffix ' units'"
+
+
+def test_table_custom_plot_config_invalid_field(reset):
+    """
+    Test that invalid fields in custom_plot_config are silently ignored.
+    This should not crash when a table-level property doesn't exist on TableConfig.
+    """
+    table_id = "test_table_invalid"
+
+    # Set invalid properties - 'hidden' is not a TableConfig field, only a ColumnMeta field
+    config.custom_plot_config = {
+        table_id: {
+            "hidden": True,  # Valid ColumnMeta field, should apply to columns
+            "invalid_field": "value",  # Invalid field, should be ignored
+        }
+    }
+
+    headers: Dict[str, ColumnDict] = {
+        "x": {"title": "Metric X"},
+        "y": {"title": "Metric Y"},
+    }
+
+    # This should not raise an error
+    p = table.plot(
+        data={
+            "sample1": {"x": 1, "y": 2},
+            "sample2": {"x": 3, "y": 4},
+        },
+        headers=headers,
+        pconfig=table.TableConfig(id=table_id, title="Test Table"),
+    )
+
+    assert isinstance(p, Plot)
+
+    # Check that the valid field (hidden) was applied
+    dt = p.datasets[0].dt
+    for section in dt.section_by_id.values():
+        for col_key, col_meta in section.column_by_key.items():
+            assert col_meta.hidden is True, f"Column {col_key} should be hidden"

@@ -2,7 +2,7 @@
 title: SexDetErrmine
 displayed_sidebar: multiqcSidebar
 description: >
-  Calculates relative coverage of X and Y chromosomes and their associated error bars from the depth of coverage at specified SNPs.
+    <p>Calculates relative coverage of X and Y chromosomes and their associated error bars from the depth of coverage at specified SNPs.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/sexdeterrmine/sexdeter
 -->
 
 :::note
-Calculates relative coverage of X and Y chromosomes and their associated error bars from the depth of coverage at specified SNPs.
+<p>Calculates relative coverage of X and Y chromosomes and their associated error bars from the depth of coverage at specified SNPs.</p>
 
 [https://github.com/TCLamnidis/Sex.DetERRmine](https://github.com/TCLamnidis/Sex.DetERRmine)
 :::
@@ -26,3 +26,4 @@ Calculates relative coverage of X and Y chromosomes and their associated error b
 sexdeterrmine:
   fn: sexdeterrmine.json
 ```
+    

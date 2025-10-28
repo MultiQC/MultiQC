@@ -2,7 +2,7 @@
 title: ATAQV
 displayed_sidebar: multiqcSidebar
 description: >
-  Toolkit for quality control and visualization of ATAC-seq data
+    <p>Toolkit for quality control and visualization of ATAC-seq data.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/ataqv/ataqv.py
 -->
 
 :::note
-Toolkit for quality control and visualization of ATAC-seq data
+<p>Toolkit for quality control and visualization of ATAC-seq data.</p>
 
 [https://github.com/ParkerLab/ataqv/](https://github.com/ParkerLab/ataqv/)
 :::
@@ -25,6 +25,7 @@ Toolkit for quality control and visualization of ATAC-seq data
 ```yaml
 ataqv:
   contents: ataqv_version
-  fn: "*.json"
+  fn: '*.json'
   num_lines: 10
 ```
+    

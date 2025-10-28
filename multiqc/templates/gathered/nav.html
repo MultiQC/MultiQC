@@ -16,8 +16,8 @@ The side navigation for the report.
         <span class="icon-bar"></span>
       </button>
       <a href="#">
-        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
-        <br class="hidden-xs">
+        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC" />
+        <br class="hidden-xs" />
         <small class="hidden-xs">v{{ config.version }}</small>
       </a>
     </h1>
@@ -27,25 +27,25 @@ The side navigation for the report.
     <p class="mqc_loading_warning">Loading report..</p>
     <ul class="mqc-nav collapse navbar-collapse">
       {% if not config.skip_generalstats %}
-      <li>
-        <a href="#general_stats" class="nav-l1">General Stats</a>
-      </li>
+        <li>
+          <a href="#general_stats" class="nav-l1">General Stats</a>
+        </li>
       {% endif -%}
       <li>
         <a href="#detailed_stats" class="nav-l1">Detailed Stats</a>
-		<ul>
-      {% for m in report.modules %}
-      {% if m.sections | length > 0 %}
-	  {% for s in m.sections -%}
-		{% if s['name'] is not none and s['name'] | length > 0 %}
-		<li>
-		  <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
-		</li>
-		{% endif %}
-	  {%- endfor %}
-      {% endif %}
-      {% endfor %}
-		</ul>
+        <ul>
+          {% for m in report.modules %}
+            {% if m.sections | length > 0 %}
+              {% for s in m.sections -%}
+                {% if s['name'] is not none and s['name'] | length > 0 %}
+                  <li>
+                    <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
+                  </li>
+                {% endif %}
+              {%- endfor %}
+            {% endif %}
+          {% endfor %}
+        </ul>
       </li>
     </ul>
   </div>

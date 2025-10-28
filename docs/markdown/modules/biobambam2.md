@@ -2,7 +2,7 @@
 title: biobambam2
 displayed_sidebar: multiqcSidebar
 description: >
-  Tools for early stage alignment file processing
+    <p>Tools for early stage alignment file processing.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/biobambam2/biobambam2.
 -->
 
 :::note
-Tools for early stage alignment file processing
+<p>Tools for early stage alignment file processing.</p>
 
 [https://gitlab.com/german.tischler/biobambam2](https://gitlab.com/german.tischler/biobambam2)
 :::
@@ -32,6 +32,7 @@ as all other MultiQC modules.
 
 ```yaml
 biobambam2/bamsormadup:
-  contents: "# bamsormadup"
+  contents: '# bamsormadup'
   num_lines: 2
 ```
+    
