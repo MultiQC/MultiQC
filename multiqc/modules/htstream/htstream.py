@@ -187,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.overview_stats[app_name] = section_dict["Overview"]
 
                 try:
-                    notes = stats_dict[list(stats_dict.keys())[1]]["Program_details"]["options"]["notes"]
+                    notes = stats_dict[list(stats_dict.keys())[0]]["Program_details"]["options"]["notes"]
                 except:
                     notes = ""
                     raise
