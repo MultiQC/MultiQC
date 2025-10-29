@@ -1,92 +1,19 @@
-# Analysis Comment Templates
+# Analysis Comment Template
 
-This document provides templates for analysis comments posted to module request issues. Customize based on priority score and specific circumstances.
+This document provides a unified template for analysis comments posted to module request issues.
 
-## General Template Structure
+## Main Template
 
-```markdown
-## 📊 Module Request Analysis
-
-**Tool:** [Tool Name]
-**Repository:** [GitHub URL]
-**Priority Score:** [Score]/100 [Priority Band Emoji and Label]
-
-### Score Breakdown
-
-| Category              | Score | Max          | Notes |
-| --------------------- | ----- | ------------ | ----- |
-| Tool Popularity       | XX/25 | [Brief note] |
-| Package Downloads     | XX/15 | [Brief note] |
-| Community Engagement  | XX/35 | [Brief note] |
-| Request Quality       | XX/20 | [Brief note] |
-| Technical Feasibility | XX/15 | [Brief note] |
-
-### [Priority Band]: Recommendation
-
-[Specific feedback paragraph]
-
-### Next Steps
-
-[Specific actionable items]
-
----
-
-_This analysis was performed automatically. For questions or to request re-analysis, comment `@claude analyze-module`._
-```
-
-## High Priority Template (≥70)
+Keep all language succinct, technical and to the point. Avoid being overly effusive.
 
 ```markdown
-## 📊 Module Request Analysis
+Thanks for requesting a new MultiQC module! This is an automated triage review to help prioritise development work.
 
 **Tool:** [Tool Name]
-**Repository:** [GitHub URL] (⭐ [Stars])
-**Priority Score:** [Score]/100 🔴 **High Priority**
+**Repository:** [GitHub URL] (⭐ [Stars if available])
+**Priority Score:** [Score]/100 [Priority Band: 🔴 High ≥70 | 🟡 Medium 40-69 | 🟢 Low 20-39 | ⚪ Hold <20]
 
-### Score Breakdown
-
-| Category                 | Score | Notes                             |
-| ------------------------ | ----- | --------------------------------- |
-| 🌟 Tool Popularity       | XX/25 | [Stars count, active maintenance] |
-| 📦 Package Downloads     | XX/15 | [Download count/month]            |
-| 💬 Community Engagement  | XX/35 | [Reactions, comments, duplicates] |
-| ✅ Request Quality       | XX/20 | [Completeness, examples]          |
-| ⚙️ Technical Feasibility | XX/15 | [Output format, metrics clarity]  |
-
-**Total: [Score]/100**
-
-### 🔴 High Priority: Ready for Development
-
-This is an excellent module request! The tool is popular, actively maintained, and your request is complete with example files. This module would add significant value to MultiQC.
-
-**What's great:**
-
-- ✨ [Specific positive point 1]
-- ✨ [Specific positive point 2]
-- ✨ [Specific positive point 3]
-
-### Next Steps
-
-1. This request has been added to the **High Priority** development queue
-2. [Any specific next action: maintainer review, contributor assignment, etc.]
-3. Follow issue updates for progress
-
-Thank you for this well-prepared request!
-
----
-
-_This analysis was performed automatically. For questions, comment `@claude analyze-module`._
-_Learn more: [Module Triage System Guide](https://github.com/MultiQC/MultiQC/blob/main/.claude/docs/module-triage-system.md)_
-```
-
-## Medium Priority Template (40-69)
-
-```markdown
-## 📊 Module Request Analysis
-
-**Tool:** [Tool Name]
-**Repository:** [GitHub URL] (⭐ [Stars])
-**Priority Score:** [Score]/100 🟡 **Medium Priority**
+<details>
 
 ### Score Breakdown
 
@@ -100,152 +27,102 @@ _Learn more: [Module Triage System Guide](https://github.com/MultiQC/MultiQC/blo
 
 **Total: [Score]/100**
 
-### 🟡 Medium Priority: Good Candidate
+### [Priority Band]: [Status Message]
 
-This is a solid module request with [positive aspect]. With some improvements, this could move to high priority.
+[Customized feedback paragraph, mentioning any missing information from the issue]
 
-**Strengths:**
+**[Strengths/What's great:]**
 
-- ✨ [What's already good]
-- ✨ [Another strong point]
+- ✨ [Positive point 1]
+- ✨ [Positive point 2]
 
-**Quick ways to increase priority:**
+**[Areas for improvement/Required actions:]**
 
-- 💡 [Specific improvement 1] (+X points)
-- 💡 [Specific improvement 2] (+X points)
-- 💡 [Specific improvement 3] (+X points)
-
-### Next Steps
-
-1. Consider making the suggested improvements above
-2. Share this request with colleagues who use [Tool] to gather more community support (each 👍 adds 1 point)
-3. The request will be re-evaluated during weekly triage
-
----
-
-_This analysis was performed automatically. Comment `@claude analyze-module` after making improvements for re-evaluation._
-_Learn more: [Module Triage System Guide](https://github.com/MultiQC/MultiQC/blob/main/.claude/docs/module-triage-system.md)_
-```
-
-## Low Priority Template (20-39)
-
-```markdown
-## 📊 Module Request Analysis
-
-**Tool:** [Tool Name]
-**Repository:** [GitHub URL if available]
-**Priority Score:** [Score]/100 🟢 **Low Priority**
-
-### Score Breakdown
-
-| Category                 | Score | Notes        |
-| ------------------------ | ----- | ------------ |
-| 🌟 Tool Popularity       | XX/25 | [Brief note] |
-| 📦 Package Downloads     | XX/15 | [Brief note] |
-| 💬 Community Engagement  | XX/35 | [Brief note] |
-| ✅ Request Quality       | XX/20 | [Brief note] |
-| ⚙️ Technical Feasibility | XX/15 | [Brief note] |
-
-**Total: [Score]/100**
-
-### 🟢 Low Priority: Needs Improvement
-
-This request has potential but needs more information or community interest to prioritize for development.
-
-**Areas for improvement:**
-
-- ⚠️ [Critical missing item 1]
-- ⚠️ [Critical missing item 2]
-- ℹ️ [Optional improvement]
-
-**How to increase priority:**
-
-The most impactful improvements:
-
-1. 📁 **Upload example files** (not pasted text) → +8 points
-2. 🔗 **Provide tool homepage/repository** → +3 points (+ enables popularity scoring)
-3. 👍 **Gather community support** → +1 point per reaction
+- [Icon: 💡 for suggestions, ⚠️ for important, 🚫 for blocking] [Improvement 1] [(+X points) if applicable]
+- [Icon] [Improvement 2]
 
 ### Next Steps
 
-1. Add the missing information described above
-2. Edit your original request (don't add comments) to include example files
-3. Comment `@claude analyze-module` when ready for re-evaluation
+[Customized action items based on priority:
 
-We're here to help! Feel free to ask questions if you need clarification.
+- High: No action needed, follow issue for updates
+- Medium: Suggestions for improvement, re-evaluation process
+- Low: How to add missing information and increase priority
+- Hold: Required actions to move forward with examples]
+
+[Closing sentiment: appreciation/encouragement]
 
 ---
 
-_This analysis was performed automatically. Comment `@claude analyze-module` after making improvements._
-_Learn more: [Module Triage System Guide](https://github.com/MultiQC/MultiQC/blob/main/.claude/docs/module-triage-system.md)_
+<sup>
+
+This analysis was performed automatically. Comment `@claude analyze-module` [after making improvements] for re-evaluation.\_
+\_Learn more: [Module Triage System Guide](https://github.com/MultiQC/MultiQC/blob/main/.claude/docs/module-triage-system.md)
+
+</sup>
+
+</details>
 ```
 
-## Hold Priority Template (<20)
+## Customization Guidelines
+
+When using this template, adapt these sections based on priority:
+
+### High Priority (≥70)
+
+- **Status:** "Ready for Development" or "Excellent Request"
+- **Tone:** Enthusiastic, welcoming, appreciative
+- **Focus:** Acknowledge strengths, thank requester
+- **Next Steps:** Added to development queue, follow for updates
+
+### Medium Priority (40-69)
+
+- **Status:** "Good Candidate" or "Solid Request"
+- **Tone:** Positive, helpful, collaborative
+- **Focus:** Balance strengths with improvement suggestions
+- **Next Steps:** How improvements can increase priority, re-evaluation process
+
+### Low Priority (20-39)
+
+- **Status:** "Needs Improvement" or "Has Potential"
+- **Tone:** Encouraging, educational, supportive
+- **Focus:** What's missing, how to improve
+- **Next Steps:** Specific actions to provide missing info, re-evaluation instructions
+
+### Hold Priority (<20)
+
+- **Status:** "Critical Information Needed" or "On Hold"
+- **Tone:** Patient, instructive, clear
+- **Focus:** Blocking issues, required actions with examples
+- **Next Steps:** Step-by-step instructions, offer help
+
+## Re-Analysis Template
+
+For subsequent analyses after improvements:
 
 ```markdown
-## 📊 Module Request Analysis
+## 🔄 Re-Analysis Results
 
-**Tool:** [Tool Name if provided]
-**Priority Score:** [Score]/100 ⚪ **On Hold**
+**Previous Score:** [Old Score]/100 ([Old Priority])
+**Current Score:** [New Score]/100 ([New Priority]) [Trend: ↗️ Improved | ↘️ Decreased | → Unchanged]
 
-### Score Breakdown
+### What Changed
 
-| Category                 | Score | Notes   |
-| ------------------------ | ----- | ------- |
-| 🌟 Tool Popularity       | XX/25 | [Issue] |
-| 📦 Package Downloads     | XX/15 | [Issue] |
-| 💬 Community Engagement  | XX/35 | [Issue] |
-| ✅ Request Quality       | XX/20 | [Issue] |
-| ⚙️ Technical Feasibility | XX/15 | [Issue] |
+- [Improvement 1]: +X points
+- [Improvement 2]: +X points
+- [Change 3]: ±X points
 
-**Total: [Score]/100**
+### Progress
 
-### ⚪ On Hold: Critical Information Needed
-
-This request cannot be prioritized yet due to missing critical information.
-
-**Required actions:**
-
-- 🚫 [Blocking issue 1]
-- 🚫 [Blocking issue 2]
-
-### How to Move Forward
-
-To get this request prioritized, you need to:
-
-1. **[Most critical item]** - This is essential for any module development
-
-   - How: [Specific instructions]
-   - Why: [Brief explanation]
-
-2. **[Second critical item]**
-
-   - How: [Specific instructions]
-
-3. **[Third item if applicable]**
-
-### Example of a High-Quality Request
-
-Check out [link to example request] to see what a complete, high-priority request looks like.
-
-### Need Help?
-
-If you're unsure how to provide this information:
-
-- See the [Contributing Guide](https://github.com/MultiQC/MultiQC/blob/main/.github/CONTRIBUTING.md)
-- Review the [Module Triage System Guide](https://github.com/MultiQC/MultiQC/blob/main/.claude/docs/module-triage-system.md)
-- Ask questions here and we'll guide you!
-
----
-
-_This analysis was performed automatically. Comment `@claude analyze-module` after adding the required information._
+[Specific praise for improvements made]
+[Remaining suggestions if not yet high priority]
 ```
 
 ## Special Case Templates
 
-### Missing Example Files
+Add these sections when applicable:
 
-Add this section to any priority level:
+### Missing Example Files
 
 ```markdown
 ### 📁 Missing Example Files
@@ -276,7 +153,7 @@ The repository URL provided could not be accessed. This may be because:
 **Action needed:** Please provide a valid, public repository URL or tool homepage. This is required for assessing tool popularity and maintenance status.
 ```
 
-### Duplicate Request
+### Related Requests
 
 ```markdown
 ### 🔄 Related Requests Found
@@ -285,13 +162,7 @@ This request is related to:
 
 - #[ISSUE_NUMBER]: [Similar tool/request]
 
-Consider coordinating with these requesters to:
-
-- Combine efforts and examples
-- Increase community engagement
-- Share use cases
-
-Related requests increase this request's priority (+5 points each).
+Consider coordinating with these requesters to combine efforts, increase community engagement, and share use cases. Related requests increase this request's priority (+5 points each).
 ```
 
 ### Already Implemented
@@ -307,33 +178,9 @@ Our records show that [Tool Name] might already have a MultiQC module:
 Please check the [list of existing modules](https://multiqc.info/modules/) before proceeding. If the existing module doesn't meet your needs, please explain what additional functionality you require.
 ```
 
-## Re-Analysis Template
+## General Guidelines
 
-For subsequent analyses (e.g., after improvements):
-
-```markdown
-## 🔄 Re-Analysis Results
-
-**Previous Score:** [Old Score]/100 ([Old Priority])
-**Current Score:** [New Score]/100 ([New Priority]) [Trend: ↗️/↘️/→]
-
-### What Changed
-
-- [Improvement 1]: +X points
-- [Improvement 2]: +X points
-- [Change 3]: ±X points
-
-[Rest of standard template for current priority level]
-
-### Progress
-
-Great work! [Specific praise for improvements made]
-[Remaining suggestions if not yet high priority]
-```
-
-## Customization Guidelines
-
-When using these templates:
+When using this template:
 
 1. **Be specific:** Replace all [placeholders] with actual data
 2. **Be encouraging:** Always acknowledge what's good first
@@ -341,12 +188,5 @@ When using these templates:
 4. **Be concise:** Remove sections that aren't relevant
 5. **Be accurate:** Double-check all score calculations
 6. **Be helpful:** Anticipate questions and provide guidance
-
-### Tone Guidelines
-
-- **High Priority:** Enthusiastic, welcoming, appreciative
-- **Medium Priority:** Positive, helpful, collaborative
-- **Low Priority:** Encouraging, educational, supportive
-- **Hold:** Patient, instructive, clear about requirements
 
 Always end on a constructive note and invite questions.
