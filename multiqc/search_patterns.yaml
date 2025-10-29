@@ -1013,7 +1013,7 @@ supernova/kmers:
   fn: "histogram_kmer_count.json"
   num_lines: 10
   contents: '"description": "kmer_count",'
-sylph:
+sylphtax:
   fn: "*.sylphmpa"
 telseq:
   num_lines: 3

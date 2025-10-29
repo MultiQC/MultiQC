@@ -26,15 +26,15 @@ class MultiqcModule(BaseMultiqcModule):
     The number of top categories to plot can be customized in the config file:
 
     ```yaml
-    sylph:
+    sylphtax:
       top_n: 10
     ```
     """
 
     def __init__(
         self,
-        name="Sylph",
-        anchor="sylph",
+        name="Sylph-tax",
+        anchor="sylphtax",
         href="https://github.com/bluenote-1577/sylph",
         info="Taxonomic profiling of metagenomic reads (Sylph .sylphmpa format).",
         doi="10.1038/s41587-024-02412-y",
@@ -61,10 +61,10 @@ class MultiqcModule(BaseMultiqcModule):
             "u": "No Taxonomy",
         }
 
-        self.top_n = getattr(config, "sylph", {}).get("top_n", 10)
+        self.top_n = getattr(config, "sylphtax", {}).get("top_n", 10)
 
         self.sylph_raw_data = dict()
-        for f in self.find_log_files("sylph", filehandles=True):
+        for f in self.find_log_files("sylphtax", filehandles=True):
             f["f"].seek(0)
             self.parse_logs(f)
             self.add_data_source(f)
