@@ -7,9 +7,9 @@ on:
   issues:
     types: [opened]
 
-  # Weekly bulk triage
-  schedule:
-    - cron: "0 9 * * 1" # Mondays at 9 AM UTC
+  # Weekly bulk triage (commented out until tested via workflow_dispatch)
+  # schedule:
+  #   - cron: "0 9 * * 1" # Mondays at 9 AM UTC
 
   # Manual trigger
   workflow_dispatch:
@@ -52,59 +52,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify Module Request Context
-        id: verify
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { eventName, payload } = context;
-
-            // Always proceed for scheduled and manual runs
-            if (eventName === 'schedule' || eventName === 'workflow_dispatch') {
-              return { isModuleRequest: true };
-            }
-
-            // For issue events, check for module request
-            const issue = payload.issue;
-            if (!issue) return { isModuleRequest: false };
-
-            const hasModuleLabel = issue.labels?.some(l => l.name === 'module: new');
-
-            if (hasModuleLabel) {
-              return { isModuleRequest: true, issueNumber: issue.number };
-            }
-
-            // Auto-add label if this looks like a module request
-            if (payload.action === 'opened' && issue.body?.includes('Name of the tool')) {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issue.number,
-                labels: ['module: new']
-              });
-              return { isModuleRequest: true, issueNumber: issue.number };
-            }
-
-            return { isModuleRequest: false };
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Exit if Not Module Request
-        if: fromJSON(steps.verify.outputs.result).isModuleRequest == false
-        run: |
-          echo "❌ Not a module request - exiting workflow"
-          exit 0
-
       - name: Determine Operation Mode
         id: mode
-        if: fromJSON(steps.verify.outputs.result).isModuleRequest == true
         uses: actions/github-script@v7
         with:
           script: |
             const { eventName, payload } = context;
             const inputs = context.payload.inputs || {};
 
-            // Determine mode based on trigger
+            // Determine mode based on trigger:
+            // - analyze-single: Skill analyzes one specific issue
+            // - triage-all: Skill loops over all open issues with 'module: new' label
+            // - dry-run: Same as triage-all but without making changes
             let mode, issueNumber;
 
             if (eventName === 'schedule') {
@@ -124,7 +83,6 @@ jobs:
             return { mode, issueNumber }
 
       - name: Run Module Triage
-        if: fromJSON(steps.verify.outputs.result).isModuleRequest == true
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -139,7 +97,7 @@ jobs:
             --model claude-sonnet-4-20250514
 
       - name: Report Workflow Status
-        if: always() && fromJSON(steps.verify.outputs.result).isModuleRequest == true
+        if: always()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
