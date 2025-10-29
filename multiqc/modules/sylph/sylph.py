@@ -58,6 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
             "k": "Kingdom",
             "d": "Domain",
             "r": "Realm",
+            "u": "No Taxonomy"
         }
 
         self.top_n = getattr(config, "sylph", {}).get("top_n", 10)
@@ -102,7 +103,6 @@ class MultiqcModule(BaseMultiqcModule):
         2. The last clade name (taxonomy)
         3. Relative abundance of this clade (percentage)
         """
-
         regex_clade_rel = re.compile(
             r"^(?P<clade>[^\t#]+)\t(?P<rel_abundance>[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:[Ee][+-]?\d+)?)"
         )
@@ -122,6 +122,15 @@ class MultiqcModule(BaseMultiqcModule):
 
             clade = m.group("clade")
             rel = float(m.group("rel_abundance"))
+
+            # Handle bare NO_TAXONOMY rows (no rank code present)
+            if clade == "NO_TAXONOMY":
+                data.append({
+                    "tax_rank": "u",
+                    "taxonomy": "No Taxonomy",
+                    "rel_abundance": rel,
+                })
+                continue
 
             # Extract last rank and taxonomy from clade path
             match_last_rank = regex_last_tax_rank.search(clade)
@@ -166,35 +175,60 @@ class MultiqcModule(BaseMultiqcModule):
                 self.sylph_total_pct[tax_rank][taxonomy] += row["rel_abundance"]
 
     def general_stats_cols(self):
-        """Add a couple of columns to the General Statistics table"""
-
-        # Get top taxa in most specific taxa rank that we have, exlcuding strains for clarity
+        # Find top taxa in the most specific non-strain rank available
         top_taxa = []
         top_rank_code = None
         top_rank_name = None
+
         for rank_code, rank_name in self.t_ranks.items():
-            if rank_code != "t":
-                try:
-                    sorted_pct = sorted(
-                        self.sylph_total_pct[rank_code].items(),
-                        key=lambda x: x[1],
-                        reverse=True,
-                    )
-                    for taxonomy, pct_sum in sorted_pct[: self.top_n]:
-                        top_taxa.append(taxonomy)
+            if rank_code == "t" or rank_code == "u":
+                continue
+            try:
+                sorted_pct = sorted(
+                    self.sylph_total_pct[rank_code].items(),
+                    key=lambda x: x[1],
+                    reverse=True,
+                )
+                if sorted_pct:
+                    top_taxa = [taxonomy for taxonomy, _ in sorted_pct[: self.top_n]]
                     top_rank_code = rank_code
                     top_rank_name = rank_name
                     break
-                except KeyError:
-                    # No species-level data found etc
-                    pass
+            except KeyError:
+                # Rank not present; try next
+                pass
+
+        # Fallbacks: strain first, then no taxonomy
+        if not top_taxa:
+            if "t" in self.sylph_total_pct:
+                sorted_pct = sorted(
+                    self.sylph_total_pct["t"].items(),
+                    key=lambda x: x[1],
+                    reverse=True,
+                )
+                if sorted_pct:
+                    top_taxa = [taxonomy for taxonomy, _ in sorted_pct[: self.top_n]]
+                    top_rank_code = "t"
+                    top_rank_name = self.t_ranks["t"]
+            elif "u" in self.sylph_total_pct:
+                sorted_pct = sorted(
+                    self.sylph_total_pct["u"].items(),
+                    key=lambda x: x[1],
+                    reverse=True,
+                )
+                if sorted_pct:
+                    top_taxa = [taxonomy for taxonomy, _ in sorted_pct[: self.top_n]]
+                    top_rank_code = "u"
+                    top_rank_name = self.t_ranks["u"]
+
+        # If still no taxa found, skip adding columns
+        if not top_taxa or top_rank_code is None:
+            log.warning("Sylph: No taxa found to populate General Stats")
+            return
 
         # Column headers
         headers = dict()
-
-        top_one_hkey = None
-
-        top_one_hkey = "% {}".format(top_taxa[0])
+        top_one_hkey = f"% {top_taxa[0]}"
         headers[top_one_hkey] = {
             "title": top_one_hkey,
             "description": "Percentage of reads that were the top {} over all samples - {}".format(
@@ -211,7 +245,8 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "scale": "PuBu",
         }
-        # Get table data
+
+        # Populate table data
         tdata = {}
         for s_name, d in self.sylph_raw_data.items():
             tdata[s_name] = {}
@@ -222,7 +257,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if row["tax_rank"] == top_rank_code and row["taxonomy"] == top_taxa[0]:
                     tdata[s_name][top_one_hkey] = percent
 
-            if top_one_hkey is not None and top_one_hkey not in tdata[s_name]:
+            # Ensure presence of the single-top key even if absent in sample
+            if top_one_hkey not in tdata[s_name]:
                 tdata[s_name][top_one_hkey] = 0
 
         self.general_stats_addcols(tdata, headers)
