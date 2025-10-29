@@ -60,7 +60,7 @@ gh issue list \
 
 ## Parsing Issue Body
 
-Issue bodies follow the template in `.github/ISSUE_TEMPLATE/module-request.yml`. Extract fields:
+Issue bodies usually follow the template in `.github/ISSUE_TEMPLATE/module-request.yml`. Extract fields:
 
 ```bash
 # Full body text
@@ -76,19 +76,24 @@ DESCRIPTION=$(echo "$BODY" | sed -n '/### Tool description/,/###/p' | sed '1d;$d
 
 ## Checking for Example Files
 
-GitHub issue attachments appear as markdown images or links in the body:
+Example files can be provided in multiple ways:
 
-````bash
-# Check for uploaded files
+1. Uploaded directly to the issue (attachments)
+2. Linked to or submitted in the MultiQC/test-data repository
+
+```bash
+# Check for uploaded files (attachments)
 if echo "$BODY" | grep -q "!\[.*\](.*)" || echo "$BODY" | grep -q "\[.*\..*\](.*)" ; then
   echo "Has uploaded files"
 fi
 
-# Check for code blocks (pasted content)
-if echo "$BODY" | grep -q '```'; then
-  echo "Has pasted content (not as good as uploads)"
+# Check for references to test-data repository
+if echo "$BODY" | grep -q "github.com/MultiQC/test-data"; then
+  echo "References test-data repository"
 fi
-````
+```
+
+**Scoring guideline:** Files uploaded to the issue or properly linked to the test-data repository should receive full points.
 
 ## Managing Labels
 
@@ -160,23 +165,50 @@ EOF
 
 ```bash
 ANALYSIS=$(cat <<'EOF'
-## 📊 Module Request Analysis
+Thanks for requesting a new MultiQC module! This is an automated triage review to help prioritise development work.
 
-**Priority Score: 75/100** 🔴 High Priority
+**Tool:** FastQC
+**Repository:** https://github.com/s-andrews/FastQC (⭐ 450)
+**Priority Score:** 75/100 🔴 **High Priority**
+
+<details>
 
 ### Score Breakdown
-- Tool Popularity: 20/25
-- Package Downloads: 12/15
-- Community Engagement: 18/35
-- Request Quality: 20/20
-- Technical Feasibility: 5/15
 
-### Recommendations
-- Great job providing complete information and example files!
-- Consider sharing this request to gather more community support
+| Category                 | Score | Notes                             |
+| ------------------------ | ----- | --------------------------------- |
+| 🌟 Tool Popularity       | 20/25 | 450 stars, actively maintained    |
+| 📦 Package Downloads     | 12/15 | 50K downloads/month on Bioconda   |
+| 💬 Community Engagement  | 18/35 | 8 👍 reactions, 3 comments         |
+| ✅ Request Quality       | 20/20 | Complete info, example files      |
+| ⚙️ Technical Feasibility | 5/15  | Complex output format             |
+
+**Total: 75/100**
+
+### 🔴 High Priority: Ready for Development
+
+This is an excellent module request. The tool is popular, actively maintained, and the request is complete with example files.
+
+**What's great:**
+
+- ✨ Comprehensive example files provided
+- ✨ Clear description of expected metrics
+- ✨ Widely used tool in the community
 
 ### Next Steps
-This is a high-priority request and will be added to the development queue.
+
+No action needed. Follow this issue for progress updates.
+
+---
+
+<sup>
+
+This analysis was performed automatically. Comment `@claude analyze-module` for re-evaluation.
+Learn more: [Module Triage System Guide](https://github.com/MultiQC/MultiQC/blob/main/.claude/docs/module-triage-system.md)
+
+</sup>
+
+</details>
 EOF
 )
 

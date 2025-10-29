@@ -8,13 +8,13 @@ This document provides the detailed rubric for calculating priority scores (0-10
 
 **GitHub Stars** (primary metric):
 
-- ≥10,000 stars: 25 points
-- 5,000-9,999 stars: 20 points
-- 1,000-4,999 stars: 15 points
-- 500-999 stars: 12 points
-- 100-499 stars: 8 points
-- 10-99 stars: 5 points
-- <10 stars: 2 points
+- ≥200 stars: 25 points
+- 100-199 stars: 20 points
+- 50-99 stars: 15 points
+- 25-49 stars: 12 points
+- 10-24 stars: 8 points
+- 5-9 stars: 5 points
+- <5 stars: 2 points
 
 **Bonus factors** (add up to 3 points):
 
@@ -23,7 +23,7 @@ This document provides the detailed rubric for calculating priority scores (0-10
 
 **Example calculation:**
 
-- Tool with 3,500 stars, recent commit, 400 forks: 15 + 2 + 1 = 18/25
+- Tool with 75 stars, recent commit, 10 forks: 15 + 2 + 1 = 18/25
 
 ### 2. Package Downloads (15 points max)
 
@@ -211,25 +211,25 @@ node scripts/fetch-tool-metrics.js pypistats PACKAGE_NAME
 
 ## Scoring Examples
 
-### Example 1: High Priority Request (Score: 78)
+### Example 1: High Priority Request (Score: 88)
 
-- **Tool:** STAR aligner (GitHub: 1,800 stars, active)
-- **Tool Popularity:** 15 + 2 = 17/25
+- **Tool:** STAR aligner (GitHub: 250 stars, active)
+- **Tool Popularity:** 25 + 2 = 27/25 (capped at 25)
 - **Downloads:** 150K/month PyPI = 11/15
 - **Community:** 12 👍, 4 comments, 1 duplicate = 12 + 8 + 5 = 25/35
 - **Quality:** All fields + uploaded files = 20/20
 - **Feasibility:** TSV output, clear metrics = 15/15
-- **Total:** 88/100 → 🔴 High Priority
+- **Total:** 96/100 (capped at 25 for popularity) = 88/100 → 🔴 High Priority
 
 ### Example 2: Medium Priority Request (Score: 52)
 
-- **Tool:** NewTool (GitHub: 300 stars, recent activity)
-- **Tool Popularity:** 8 + 2 = 10/25
+- **Tool:** NewTool (GitHub: 30 stars, recent activity)
+- **Tool Popularity:** 12 + 2 = 14/25
 - **Downloads:** 5K/month Conda = 5/15
 - **Community:** 3 👍, 1 comment, 0 duplicates = 3 + 2 = 5/35
 - **Quality:** All fields + uploaded files = 20/20
 - **Feasibility:** JSON output, clear metrics = 12/15
-- **Total:** 52/100 → 🟡 Medium Priority
+- **Total:** 56/100 → 🟡 Medium Priority
 
 ### Example 3: Low Priority Request (Score: 28)
 

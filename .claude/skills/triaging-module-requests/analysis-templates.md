@@ -129,11 +129,16 @@ Add these sections when applicable:
 
 **Important:** Example files are the most critical component of a module request (+8 points).
 
-**Please:**
+**Please provide example files in one of these ways:**
 
 - ✅ Drag and drop actual files from the tool into this issue
 - ✅ Use `.zip` if GitHub doesn't support the file type
-- ✅ Include 2-3 representative examples (typical output)
+- ✅ Submit a PR to the [MultiQC/test-data](https://github.com/MultiQC/test-data) repository
+- ✅ Link to files already in the test-data repository
+
+**Requirements:**
+
+- Include 2-3 representative examples (typical output)
 - ❌ Do NOT copy/paste file contents (formatting and whitespace matter!)
 
 Without example files, module development is very difficult. This is the #1 way to increase your request's priority.
