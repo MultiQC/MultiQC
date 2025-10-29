@@ -1,11 +1,11 @@
 name: Module Request Management
 
 on:
-  # Individual request analysis
-  issue_comment:
-    types: [created]
-  issues:
-    types: [opened]
+#  # Individual request analysis
+#  issue_comment:
+#    types: [created]
+#  issues:
+#    types: [opened]
 
   # Weekly bulk triage (commented out until tested via workflow_dispatch)
   # schedule:
