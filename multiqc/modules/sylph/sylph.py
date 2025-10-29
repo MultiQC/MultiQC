@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self,
         name="Sylph",
         anchor="sylph",
-        href="https://github.com/bluenote-1577/sylph", 
+        href="https://github.com/bluenote-1577/sylph",
         info="Taxonomic profiling of metagenomic reads (Sylph .sylphmpa format).",
         doi="10.1038/s41587-024-02412-y",
     ):
@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
             "k": "Kingdom",
             "d": "Domain",
             "r": "Realm",
-            "u": "No Taxonomy"
+            "u": "No Taxonomy",
         }
 
         self.top_n = getattr(config, "sylph", {}).get("top_n", 10)
@@ -125,11 +125,13 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Handle bare NO_TAXONOMY rows (no rank code present)
             if clade == "NO_TAXONOMY":
-                data.append({
-                    "tax_rank": "u",
-                    "taxonomy": "No Taxonomy",
-                    "rel_abundance": rel,
-                })
+                data.append(
+                    {
+                        "tax_rank": "u",
+                        "taxonomy": "No Taxonomy",
+                        "rel_abundance": rel,
+                    }
+                )
                 continue
 
             # Extract last rank and taxonomy from clade path
