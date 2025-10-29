@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Sum percentages across all samples, so that we can pick top species
         self.sylph_total_pct = dict()
-        self.sum_sample_counts()
+        self.sum_sample_abundances()
 
         self.general_stats_cols()
         self.top_taxa_barplot()
@@ -157,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.sylph_raw_data[f["s_name"]] = data
 
-    def sum_sample_counts(self):
+    def sum_sample_abundances(self):
         """Sum relative abundance across all samples for sylph data"""
 
         # Sum the percentages for each taxa across all samples
@@ -286,7 +286,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Taxa rank not found in this sample
                 continue
             i = 0
-            counts_shown = {}
+            abundances_shown = {}
             for taxonomy, pct_sum in sorted_pct:
                 # Add top n taxa for each rank
                 i += 1
@@ -294,12 +294,12 @@ class MultiqcModule(BaseMultiqcModule):
                     # After top 5, keep looping to sum up unclassified
                     continue
                 rank_cats[taxonomy] = {"name": taxonomy}
-                # Pull out counts for this rank + classif from each sample
+                # Pull out abundances for this rank + classif from each sample
                 for s_name, d in self.sylph_raw_data.items():
                     if s_name not in rank_data:
                         rank_data[s_name] = dict()
-                    if s_name not in counts_shown:
-                        counts_shown[s_name] = 0
+                    if s_name not in abundances_shown:
+                        abundances_shown[s_name] = 0
 
                     for row in d:
                         if row["tax_rank"] == rank_code:
@@ -308,21 +308,21 @@ class MultiqcModule(BaseMultiqcModule):
                                 if taxonomy not in rank_data[s_name]:
                                     rank_data[s_name][taxonomy] = 0
                                 rank_data[s_name][taxonomy] += row["rel_abundance"]
-                                counts_shown[s_name] += row["rel_abundance"]
-                                rank_data[s_name]["other"] = 100 - counts_shown[s_name]
+                                abundances_shown[s_name] += row["rel_abundance"]
+                                rank_data[s_name]["other"] = 100 - abundances_shown[s_name]
             # Add in other - we presume from other species etc.
             for s_name, d in self.sylph_raw_data.items():
                 # In case none of the top_n were in some sample:
                 if s_name not in rank_data:
                     rank_data[s_name] = dict()
-                if s_name not in counts_shown:
-                    counts_shown[s_name] = 0
-                rank_data[s_name]["other"] = 100 - counts_shown[s_name]
+                if s_name not in abundances_shown:
+                    abundances_shown[s_name] = 0
+                rank_data[s_name]["other"] = 100 - abundances_shown[s_name]
 
-                # This should never happen... But it does sometimes if the total read count is a bit off
+                # This should never happen... But it does in Metaphlan at least if the total abundance is a bit off
                 if rank_data[s_name]["other"] < 0:
                     log.debug(
-                        "Found negative 'other' count for {} ({}): {}".format(
+                        "Found negative 'other' abundance for {} ({}): {}".format(
                             s_name, self.t_ranks[rank_code], rank_data[s_name]["other"]
                         )
                     )
@@ -338,7 +338,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": f"{self.anchor}-top-n-plot",
             "title": f"{self.name}: Top taxa",
-            "ylab": "Number of fragments",
+            "ylab": "Relative Abundance",
             "data_labels": [v for k, v in self.t_ranks.items() if k in found_rank_codes],
             "cpswitch": False,
         }
@@ -349,7 +349,7 @@ class MultiqcModule(BaseMultiqcModule):
             description=f"The relative abundance of reads falling into the top {self.top_n} taxa across different ranks.",
             helptext=f"""
                 To make this plot, the percentage of each sample assigned to a given taxa is summed across all samples.
-                The counts for these top {self.top_n} taxa are then plotted for each of the 8 different taxa ranks.
+                The relative abundance for these top {self.top_n} taxa are then plotted for each of the 8 different taxa ranks.
 
                 The category _"Other"_ shows the difference between 100% and the sum of the percent
                 in the top {self.top_n} taxa shown. This should cover all taxa _not_ in the top {self.top_n}, +/- any rounding errors. 
