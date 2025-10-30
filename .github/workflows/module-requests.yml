@@ -31,7 +31,6 @@ on:
 permissions:
   issues: write
   contents: read
-  projects: write
 
 jobs:
   module-request-handler:
