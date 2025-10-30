@@ -93,24 +93,9 @@ jobs:
             Issue: #${{ steps.mode.outputs.issue_number || 'all pending' }}
 
           claude_args: |
-            --max-turns 15
             --model claude-sonnet-4-20250514
-            --allow-tool Skill
-            --allow-tool WebSearch
-            --allow-tool WebFetch
-            --allow-bash-pattern "gh issue view *"
-            --allow-bash-pattern "gh issue list *"
-            --allow-bash-pattern "gh issue edit *"
-            --allow-bash-pattern "gh issue comment *"
-            --allow-bash-pattern "gh api *"
-            --allow-bash-pattern "node *fetch-tool-metrics.js*"
-            --allow-bash-pattern "curl *"
-            --allow-bash-pattern "jq *"
-            --allow-bash-pattern "echo *"
-            --allow-bash-pattern "cat *"
-            --allow-bash-pattern "grep *"
-            --allow-bash-pattern "sed *"
-            --allow-bash-pattern "find *"
+            --permission-mode bypassPermissions
+            --allowed-tools "Skill WebSearch WebFetch Bash(gh:*) Bash(node:*) Bash(curl:*) Bash(jq:*) Bash(echo:*) Bash(cat:*) Bash(grep:*) Bash(sed:*) Bash(find:*)"
 
       - name: Report Workflow Status
         if: always()
