@@ -22,13 +22,13 @@ When you submit a module request or comment `@claude analyze-module` on an exist
 
 Your request receives a score based on:
 
-| Category | Max Points | What's Evaluated |
-|----------|-----------|------------------|
-| **Tool Popularity** | 25 | GitHub stars, forks, recent activity |
-| **Package Downloads** | 15 | PyPI, Conda, or Bioconductor download metrics |
-| **Community Engagement** | 35 | 👍 reactions, comments, duplicate requests |
-| **Request Quality** | 20 | Complete information, example files |
-| **Technical Feasibility** | 15 | Parseable output, clear metrics |
+| Category                  | Max Points | What's Evaluated                              |
+| ------------------------- | ---------- | --------------------------------------------- |
+| **Tool Popularity**       | 25         | GitHub stars, forks, recent activity          |
+| **Package Downloads**     | 15         | PyPI, Conda, or Bioconductor download metrics |
+| **Community Engagement**  | 35         | 👍 reactions, comments, duplicate requests    |
+| **Request Quality**       | 20         | Complete information, example files           |
+| **Technical Feasibility** | 15         | Parseable output, clear metrics               |
 
 **Priority Bands:**
 
@@ -44,15 +44,18 @@ Your request receives a score based on:
 The fastest ways to increase your priority score:
 
 1. **Upload example files** (+8 points) - Most critical factor!
+
    - Drag and drop actual files (don't copy/paste)
    - Include typical tool output
    - Use `.zip` for unsupported file types
 
 2. **Choose popular tools** (+25 points)
+
    - Tools with >1000 GitHub stars get maximum points
    - Active maintenance and recent releases help
 
 3. **Provide complete information** (+20 points)
+
    - Tool name and homepage
    - Clear description
    - Expected visualizations
@@ -72,6 +75,7 @@ Get instant feedback on your request:
 ```
 
 This triggers a detailed analysis showing:
+
 - Current priority score breakdown
 - Specific recommendations for improvement
 - Comparison to similar requests
@@ -81,22 +85,23 @@ This triggers a detailed analysis showing:
 
 Module requests flow through a structured project board:
 
-| Column | Description | How to Get Here |
-|--------|-------------|----------------|
-| **Needs Analysis** | New requests awaiting triage | Automatic when issue created |
-| **Needs Examples** | Missing example files | Any request without uploaded files |
-| **Low Priority** | Score < 40 | Incomplete or niche requests |
-| **Medium Priority** | Score 40-69 | Good candidates needing refinement |
-| **High Priority** | Score ≥ 70 | Ready for development |
-| **Ready for Development** | Maintainer-approved | Manual promotion after review |
-| **In Development** | Active work | When implementation begins |
-| **Complete** | Module merged | When PR is merged |
+| Column                    | Description                  | How to Get Here                    |
+| ------------------------- | ---------------------------- | ---------------------------------- |
+| **Needs Analysis**        | New requests awaiting triage | Automatic when issue created       |
+| **Needs Examples**        | Missing example files        | Any request without uploaded files |
+| **Low Priority**          | Score < 40                   | Incomplete or niche requests       |
+| **Medium Priority**       | Score 40-69                  | Good candidates needing refinement |
+| **High Priority**         | Score ≥ 70                   | Ready for development              |
+| **Ready for Development** | Maintainer-approved          | Manual promotion after review      |
+| **In Development**        | Active work                  | When implementation begins         |
+| **Complete**              | Module merged                | When PR is merged                  |
 
 ## Automated Actions
 
 ### New Request Analysis
 
 When you open a module request:
+
 - Instant analysis and priority scoring
 - Automatic label assignment
 - Project board placement
@@ -105,6 +110,7 @@ When you open a module request:
 ### Weekly Bulk Triage
 
 Every Monday at 9 AM UTC:
+
 - All open module requests are re-analyzed
 - Priority scores are updated
 - Stale requests are identified
@@ -113,6 +119,7 @@ Every Monday at 9 AM UTC:
 ### On-Demand Analysis
 
 Comment `@claude analyze-module` anytime to:
+
 - Get current priority score
 - Receive specific recommendations
 - Understand blocking issues
@@ -123,6 +130,7 @@ Comment `@claude analyze-module` anytime to:
 ### What Makes a Great Request
 
 ✅ **Do:**
+
 - Upload actual example files from the tool
 - Provide the tool's GitHub/GitLab repository URL
 - Explain why this module would be valuable
@@ -130,6 +138,7 @@ Comment `@claude analyze-module` anytime to:
 - Describe expected visualizations
 
 ❌ **Don't:**
+
 - Copy/paste file contents (formatting matters!)
 - Request modules for unpopular or unmaintained tools
 - Submit duplicate requests (search first!)
@@ -153,6 +162,7 @@ When your request is analyzed, you'll receive a comment like:
 ## 📊 Module Request Analysis
 
 ### Tool Information
+
 - **Name**: FastQC
 - **Repository**: https://github.com/s-andrews/FastQC
 - **Stars**: ⭐ 500
@@ -169,11 +179,13 @@ When your request is analyzed, you'll receive a comment like:
 ### Priority Band: 🔴 High Priority
 
 ### Recommendation
+
 This is a high-priority request with strong tool popularity and
 excellent package usage. The request quality is very good with
 complete information and example files.
 
 ### Next Steps
+
 - Assign to developer for implementation
 - Estimated timeline: 2-3 weeks
 ```
