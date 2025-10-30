@@ -44,10 +44,10 @@ Check in order of preference: PyPI → Conda → Bioconda → Docker pulls
 
 ```bash
 # PyPI stats (use scripts/fetch-tool-metrics.js)
-node scripts/fetch-tool-metrics.js pypistats PACKAGE_NAME
+node scripts/fetch-tool-metrics.js pypi PACKAGE_NAME
 
 # Conda downloads (from anaconda.org)
-# Bioconda downloads (from bioconda GitHub stats)
+node scripts/fetch-tool-metrics.js conda PACKAGE_NAME
 ```
 
 **Example calculation:**
