@@ -158,9 +158,11 @@ EOF
 ANALYSIS=$(cat <<'EOF'
 Thanks for requesting a new MultiQC module! This is an automated triage review to help prioritise development work.
 
-**Tool:** FastQC
-**Repository:** https://github.com/s-andrews/FastQC (⭐ 450)
-**Priority Score:** 75/100 🔴 **High Priority**
+| Item               | Details                                      |
+| ------------------ | -------------------------------------------- |
+| **Tool**           | FastQC                                       |
+| **Repository**     | https://github.com/s-andrews/FastQC (⭐ 450) |
+| **Priority Score** | 75/100 🔴 **High Priority**                  |
 
 <details>
 

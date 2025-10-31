@@ -97,7 +97,6 @@ jobs:
             IMPORTANT: After posting the comment, you MUST assign a triage label (module: prio-LEVEL)
 
           claude_args: |
-            --model claude-sonnet-4-20250514
             --permission-mode bypassPermissions
             --allowed-tools "Skill WebSearch WebFetch Bash(gh:*) Bash(node:*) Bash(curl:*) Bash(jq:*) Bash(echo:*) Bash(cat:*) Bash(grep:*) Bash(sed:*) Bash(find:*)"
 

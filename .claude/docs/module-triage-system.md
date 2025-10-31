@@ -159,35 +159,52 @@ Example files are the most critical component:
 When your request is analyzed, you'll receive a comment like:
 
 ```markdown
-## 📊 Module Request Analysis
+Thanks for requesting a new MultiQC module! This is an automated triage review to help prioritise development work.
 
-### Tool Information
+| Item               | Details                                      |
+| ------------------ | -------------------------------------------- |
+| **Tool**           | FastQC                                       |
+| **Repository**     | https://github.com/s-andrews/FastQC (⭐ 450) |
+| **Priority Score** | 75/100 🔴 **High Priority**                  |
 
-- **Name**: FastQC
-- **Repository**: https://github.com/s-andrews/FastQC
-- **Stars**: ⭐ 500
-- **Downloads**: 50K/month
+<details>
 
-### Priority Score: 75/100
+### Score Breakdown
 
-- Tool Popularity: 20/25
-- Package Downloads: 15/15
-- Community Engagement: 15/35
-- Request Quality: 18/20
-- Technical Feasibility: 7/15
+| Category                 | Score | Notes                           |
+| ------------------------ | ----- | ------------------------------- |
+| 🌟 Tool Popularity       | 20/25 | 450 stars, actively maintained  |
+| 📦 Package Downloads     | 12/15 | 50K downloads/month on Bioconda |
+| 💬 Community Engagement  | 18/35 | 8 👍 reactions, 3 comments      |
+| ✅ Request Quality       | 20/20 | Complete info, example files    |
+| ⚙️ Technical Feasibility | 5/15  | Complex output format           |
 
-### Priority Band: 🔴 High Priority
+**Total: 75/100**
 
-### Recommendation
+### 🔴 High Priority: Ready for Development
 
-This is a high-priority request with strong tool popularity and
-excellent package usage. The request quality is very good with
-complete information and example files.
+This is an excellent module request. The tool is popular, actively maintained, and the request is complete with example files.
+
+**What's great:**
+
+- ✨ Comprehensive example files provided
+- ✨ Clear description of expected metrics
+- ✨ Widely used tool in the community
 
 ### Next Steps
 
-- Assign to developer for implementation
-- Estimated timeline: 2-3 weeks
+No action needed. Follow this issue for progress updates.
+
+---
+
+<sup>
+
+This analysis was performed automatically. Comment `@claude analyze-module` for re-evaluation.
+Learn more: [Module Triage System Guide](https://github.com/MultiQC/MultiQC/blob/main/.claude/docs/module-triage-system.md)
+
+</sup>
+
+</details>
 ```
 
 ## For Contributors
