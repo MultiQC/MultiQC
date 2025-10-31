@@ -99,53 +99,44 @@ fi
 
 ### Add Priority Labels
 
-```bash
-# Add priority label (removes old priority labels automatically)
-gh issue edit ISSUE_NUMBER --add-label "priority: high"
+**IMPORTANT: Always remove existing priority labels before adding new ones to avoid label conflicts.**
 
-# Remove old priority labels first (safer)
+```bash
+# Step 1: Remove ALL existing priority labels first
 gh issue edit ISSUE_NUMBER \
-  --remove-label "priority: low" \
-  --remove-label "priority: medium" \
-  --remove-label "priority: high"
+  --remove-label "waiting: example data" \
+  --remove-label "module: prio-hold" \
+  --remove-label "module: prio-low" \
+  --remove-label "module: prio-medium" \
+  --remove-label "module: prio-high" 2>/dev/null || true
 
-gh issue edit ISSUE_NUMBER --add-label "priority: high"
+# Step 2: Add the appropriate new priority label
+gh issue edit ISSUE_NUMBER --add-label "module: prio-high"
 ```
 
-### Add Status Labels
-
-```bash
-# Mark as needing examples
-gh issue edit ISSUE_NUMBER --add-label "needs-examples"
-
-# Mark as ready for development
-gh issue edit ISSUE_NUMBER --add-label "ready-for-dev"
-
-# Add quality indicators
-gh issue edit ISSUE_NUMBER --add-label "good-first-module"
-gh issue edit ISSUE_NUMBER --add-label "popular-tool"
-```
+**Note:** The `2>/dev/null || true` suppresses errors if a label doesn't exist on the issue.
 
 ### Label Reference
 
 **Priority labels:**
 
-- `priority: high` - Score ≥ 70
-- `priority: medium` - Score 40-69
-- `priority: low` - Score 20-39
+- `module: prio-high` - Score ≥ 70
+- `module: prio-medium` - Score 40-69
+- `module: prio-low` - Score 20-39
+- `module: prio-hold` - Score <= 20
 
 **Status labels:**
 
-- `needs-triage` - Awaiting analysis
-- `needs-examples` - Missing example files
-- `ready-for-dev` - Complete and verified
-- `stale` - No activity for 6+ months
+- `waiting: example data` - Missing example files
 
-**Quality labels:**
+### Add Status Labels
 
-- `good-first-module` - Good for new contributors
-- `complex-module` - Requires advanced implementation
-- `popular-tool` - Tool has high GitHub stars (≥1000)
+```bash
+# Mark as needing examples
+gh issue edit ISSUE_NUMBER --add-label "waiting: example data"
+# Add priority label
+gh issue edit ISSUE_NUMBER --add-label "module: prio-medium"
+```
 
 ## Posting Comments
 

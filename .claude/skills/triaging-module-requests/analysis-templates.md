@@ -9,9 +9,11 @@ Keep all language succinct, technical and to the point. Avoid being overly effus
 ```markdown
 Thanks for requesting a new MultiQC module! This is an automated triage review to help prioritise development work.
 
-**Tool:** [Tool Name]
-**Repository:** [GitHub URL] (⭐ [Stars if available])
-**Priority Score:** [Score]/100 [Priority Band: 🔴 High ≥70 | 🟡 Medium 40-69 | 🟢 Low 20-39 | ⚪ Hold <20]
+| Item               | Details                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------ |
+| **Tool**           | [Tool Name]                                                                                |
+| **Repository**     | [GitHub URL] (⭐ [Stars if available])                                                     |
+| **Priority Score** | [Score]/100 [Priority Band: 🔴 High ≥70 \| 🟡 Medium 40-69 \| 🟢 Low 20-39 \| ⚪ Hold <20] |
 
 <details>
 
@@ -55,10 +57,8 @@ Thanks for requesting a new MultiQC module! This is an automated triage review t
 ---
 
 <sup>
-
-This analysis was performed automatically. Comment `@claude analyze-module` [after making improvements] for re-evaluation.\_
-\_Learn more: [Module Triage System Guide](https://github.com/MultiQC/MultiQC/blob/main/.claude/docs/module-triage-system.md)
-
+This analysis was performed automatically. Comment <code>@claude analyze-module</code> after making improvements for re-evaluation.
+Learn more: <a href="https://github.com/MultiQC/MultiQC/blob/main/.claude/docs/module-triage-system.md">Module Triage System Guide</a>
 </sup>
 
 </details>

@@ -94,6 +94,7 @@ jobs:
             Issue: #${{ steps.mode.outputs.issue_number || 'all pending' }}
 
             IMPORTANT: After generating the analysis, you MUST post it as a comment to the GitHub issue using the `gh issue comment` command. Do not just display the analysis - actually post it to the issue!
+            IMPORTANT: After posting the comment, you MUST assign a triage label (module: prio-LEVEL)
 
           claude_args: |
             --model claude-sonnet-4-20250514
