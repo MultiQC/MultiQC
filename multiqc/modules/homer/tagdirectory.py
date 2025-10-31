@@ -342,13 +342,13 @@ class TagDirReportMixin:
                 if any(x in key for x in remove):
                     continue
             try:
-                vT = float(s[1].strip())
-                vU = float(s[2].strip())
+                vU = float(s[1].strip())
+                vT = float(s[2].strip())
             except ValueError:
                 continue
 
-            parsed_data_total[key] = vT
             parsed_data_uniq[key] = vU
+            parsed_data_total[key] = vT
 
         return [parsed_data_total, parsed_data_uniq]
 
