@@ -186,7 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_all_base = self.ignore_samples(covdist_all_base)
         self.biscuit_data["covdist_all_base"] = covdist_all_base
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_all_base)
 
         # Coverage distribution - all bases, top GC-content
         covdist_all_base_topgc = {}
@@ -204,7 +204,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_all_base_topgc = self.ignore_samples(covdist_all_base_topgc)
         self.biscuit_data["covdist_all_base_topgc"] = covdist_all_base_topgc
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_all_base_topgc)
 
         # Coverage distribution - q40 bases, bottom GC-content
         covdist_q40_base_botgc = {}
@@ -222,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_q40_base_botgc = self.ignore_samples(covdist_q40_base_botgc)
         self.biscuit_data["covdist_q40_base_botgc"] = covdist_q40_base_botgc
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_q40_base_botgc)
 
         # Coverage distribution - q40 bases
         covdist_q40_base = {}
@@ -240,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_q40_base = self.ignore_samples(covdist_q40_base)
         self.biscuit_data["covdist_q40_base"] = covdist_q40_base
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_q40_base)
 
         # Coverage distribution - q40 bases, top GC-content
         covdist_q40_base_topgc = {}
@@ -258,7 +258,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_q40_base_topgc = self.ignore_samples(covdist_q40_base_topgc)
         self.biscuit_data["covdist_q40_base_topgc"] = covdist_q40_base_topgc
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_q40_base_topgc)
 
         # Coverage distribution - all cpgs, bottom GC-content
         covdist_all_cpg_botgc = {}
@@ -276,7 +276,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_all_cpg_botgc = self.ignore_samples(covdist_all_cpg_botgc)
         self.biscuit_data["covdist_all_cpg_botgc"] = covdist_all_cpg_botgc
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_all_cpg_botgc)
 
         # Coverage distribution - all cpgs
         covdist_all_cpg = {}
@@ -294,7 +294,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_all_cpg = self.ignore_samples(covdist_all_cpg)
         self.biscuit_data["covdist_all_cpg"] = covdist_all_cpg
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_all_cpg)
 
         # Coverage distribution - all cpgs, top GC-content
         covdist_all_cpg_topgc = {}
@@ -312,7 +312,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_all_cpg_topgc = self.ignore_samples(covdist_all_cpg_topgc)
         self.biscuit_data["covdist_all_cpg_topgc"] = covdist_all_cpg_topgc
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_all_cpg_topgc)
 
         # Coverage distribution - q40 cpgs, bottom GC-content
         covdist_q40_cpg_botgc = {}
@@ -330,7 +330,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_q40_cpg_botgc = self.ignore_samples(covdist_q40_cpg_botgc)
         self.biscuit_data["covdist_q40_cpg_botgc"] = covdist_q40_cpg_botgc
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_q40_cpg_botgc)
 
         # Coverage distribution - q40 cpgs
         covdist_q40_cpg = {}
@@ -348,7 +348,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_q40_cpg = self.ignore_samples(covdist_q40_cpg)
         self.biscuit_data["covdist_q40_cpg"] = covdist_q40_cpg
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_q40_cpg)
 
         # Coverage distribution - q40 cpgs, top GC-content
         covdist_q40_cpg_topgc = {}
@@ -366,7 +366,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         covdist_q40_cpg_topgc = self.ignore_samples(covdist_q40_cpg_topgc)
         self.biscuit_data["covdist_q40_cpg_topgc"] = covdist_q40_cpg_topgc
-        n_covdist_samples += len(covdist_all_base_botgc)
+        n_covdist_samples += len(covdist_q40_cpg_topgc)
 
         # CpG Retention by Position in Read
         cpg_retention_readpos = {}
