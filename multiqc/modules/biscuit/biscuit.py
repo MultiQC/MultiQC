@@ -66,377 +66,86 @@ class MultiqcModule(BaseMultiqcModule):
             "read_avg_retention_rate": {},
         }
 
-        # Mapping quality distribution
-        align_mapq = {}
-        for f in self.find_log_files("biscuit/align_mapq"):
-            parsed_data = parse_align_mapq(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
+        file_types = [
+            # Mapping quality distribution
+            ("align_mapq", parse_align_mapq),
+            # Bisulfite strand (OT/CTOT + OB/CTOB) distribution
+            ("align_strand", parse_align_strand),
+            # Insert size distribution
+            ("align_isize", parse_align_isize),
+            # Duplicate rates
+            ("dup_report", parse_dup_report),
+            # Coefficient of variation table
+            ("qc_cv", parse_qc_cv),
+            # Coverage distribution - all bases, bottom GC-content
+            ("covdist_all_base_botgc", parse_covdist),
+            # Coverage distribution - all bases
+            ("covdist_all_base", parse_covdist),
+            # Coverage distribution - all bases, top GC-content
+            ("covdist_all_base_topgc", parse_covdist),
+            # Coverage distribution - q40 bases, bottom GC-content
+            ("covdist_q40_base_botgc", parse_covdist),
+            # Coverage distribution - q40 bases
+            ("covdist_q40_base", parse_covdist),
+            # Coverage distribution - q40 bases, top GC-content
+            ("covdist_q40_base_topgc", parse_covdist),
+            # Coverage distribution - all cpgs, bottom GC-content
+            ("covdist_all_cpg_botgc", parse_covdist),
+            # Coverage distribution - all cpgs
+            ("covdist_all_cpg", parse_covdist),
+            # Coverage distribution - all cpgs, top GC-content
+            ("covdist_all_cpg_topgc", parse_covdist),
+            # Coverage distribution - q40 cpgs, bottom GC-content
+            ("covdist_q40_cpg_botgc", parse_covdist),
+            # Coverage distribution - q40 cpgs
+            ("covdist_q40_cpg", parse_covdist),
+            # Coverage distribution - q40 cpgs, top GC-content
+            ("covdist_q40_cpg_topgc", parse_covdist),
+            # CpG Retention by Position in Read
+            ("cpg_retention_readpos", parse_retention_readpos),
+            # CpH Retention by Position in Read
+            ("cph_retention_readpos", parse_retention_readpos),
+            # Base-averaged cytosine retention rate
+            ("base_avg_retention_rate", parse_avg_retention),
+            # Read-averaged cytosine retention rate
+            ("read_avg_retention_rate", parse_avg_retention),
+        ]
 
-                if s_name in align_mapq:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="align_mapq")
-                align_mapq[s_name] = parsed_data
-
-        align_mapq = self.ignore_samples(align_mapq)
-        self.biscuit_data["align_mapq"] = align_mapq
-
-        # Bisulfite strand (OT/CTOT + OB/CTOB) distribution
-        align_strand = {}
-        for f in self.find_log_files("biscuit/align_strand"):
-            parsed_data = parse_align_strand(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in align_strand:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="align_strand")
-                align_strand[s_name] = parsed_data
-
-        align_strand = self.ignore_samples(align_strand)
-        self.biscuit_data["align_strand"] = align_strand
-
-        # Insert size distribution
-        align_isize = {}
-        for f in self.find_log_files("biscuit/align_isize"):
-            parsed_data = parse_align_isize(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in align_isize:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="align_isize")
-                align_isize[s_name] = parsed_data
-
-        align_isize = self.ignore_samples(align_isize)
-        self.biscuit_data["align_isize"] = align_isize
-
-        # Insert size distribution
-        dup_report = {}
-        for f in self.find_log_files("biscuit/dup_report"):
-            parsed_data = parse_dup_report(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in dup_report:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="dup_report")
-                dup_report[s_name] = parsed_data
-
-        dup_report = self.ignore_samples(dup_report)
-        self.biscuit_data["dup_report"] = dup_report
-
-        # Coefficient of variation table
-        qc_cv = {}
-        for f in self.find_log_files("biscuit/qc_cv"):
-            parsed_data = parse_qc_cv(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in qc_cv:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="qc_cv")
-                qc_cv[s_name] = parsed_data
-
-        qc_cv = self.ignore_samples(qc_cv)
-        self.biscuit_data["qc_cv"] = qc_cv
-
-        # Coverage distribution - all bases, bottom GC-content
         n_covdist_samples = 0
-        covdist_all_base_botgc = {}
-        for f in self.find_log_files("biscuit/covdist_all_base_botgc"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
+        for file_type, parser_func in file_types:
+            collected_data = {}
+            for f in self.find_log_files(f"biscuit/{file_type}"):
+                parsed_data = parser_func(f["f"], f["fn"])
+                if parsed_data is not None:
+                    s_name = self.clean_s_name(f["s_name"], f)
 
-                if s_name in covdist_all_base_botgc:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                    if s_name in collected_data:
+                        log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_all_base_botgc")
-                covdist_all_base_botgc[s_name] = parsed_data
+                    # Add source file to multiqc_sources.txt
+                    self.add_data_source(f, s_name=s_name, section=file_type)
+                    collected_data[s_name] = parsed_data
 
-        covdist_all_base_botgc = self.ignore_samples(covdist_all_base_botgc)
-        self.biscuit_data["covdist_all_base_botgc"] = covdist_all_base_botgc
-        n_covdist_samples += len(covdist_all_base_botgc)
+            collected_data = self.ignore_samples(collected_data)
+            self.biscuit_data[file_type] = collected_data
 
-        # Coverage distribution - all bases
-        covdist_all_base = {}
-        for f in self.find_log_files("biscuit/covdist_all_base"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
+            # Count the number of coverage distribution samples (denoted by "covdist_*")
+            #
+            # Perform counting here to reduce having to add 12 values together from the biscuit_data
+            # dictionary later
+            #
+            # Short-circuit search at position = 10 (longer than "covdist_", but will ensure that it
+            # is caught if it occurs at the start of the string)
+            if file_type.startswith("covdist_", 0, 10):
+                n_covdist_samples += len(collected_data)
 
-                if s_name in covdist_all_base:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_all_base")
-                covdist_all_base[s_name] = parsed_data
-
-        covdist_all_base = self.ignore_samples(covdist_all_base)
-        self.biscuit_data["covdist_all_base"] = covdist_all_base
-        n_covdist_samples += len(covdist_all_base)
-
-        # Coverage distribution - all bases, top GC-content
-        covdist_all_base_topgc = {}
-        for f in self.find_log_files("biscuit/covdist_all_base_topgc"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in covdist_all_base_topgc:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_all_base_topgc")
-                covdist_all_base_topgc[s_name] = parsed_data
-
-        covdist_all_base_topgc = self.ignore_samples(covdist_all_base_topgc)
-        self.biscuit_data["covdist_all_base_topgc"] = covdist_all_base_topgc
-        n_covdist_samples += len(covdist_all_base_topgc)
-
-        # Coverage distribution - q40 bases, bottom GC-content
-        covdist_q40_base_botgc = {}
-        for f in self.find_log_files("biscuit/covdist_q40_base_botgc"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in covdist_q40_base_botgc:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_q40_base_botgc")
-                covdist_q40_base_botgc[s_name] = parsed_data
-
-        covdist_q40_base_botgc = self.ignore_samples(covdist_q40_base_botgc)
-        self.biscuit_data["covdist_q40_base_botgc"] = covdist_q40_base_botgc
-        n_covdist_samples += len(covdist_q40_base_botgc)
-
-        # Coverage distribution - q40 bases
-        covdist_q40_base = {}
-        for f in self.find_log_files("biscuit/covdist_q40_base"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in covdist_q40_base:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_q40_base")
-                covdist_q40_base[s_name] = parsed_data
-
-        covdist_q40_base = self.ignore_samples(covdist_q40_base)
-        self.biscuit_data["covdist_q40_base"] = covdist_q40_base
-        n_covdist_samples += len(covdist_q40_base)
-
-        # Coverage distribution - q40 bases, top GC-content
-        covdist_q40_base_topgc = {}
-        for f in self.find_log_files("biscuit/covdist_q40_base_topgc"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in covdist_q40_base_topgc:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_q40_base_topgc")
-                covdist_q40_base_topgc[s_name] = parsed_data
-
-        covdist_q40_base_topgc = self.ignore_samples(covdist_q40_base_topgc)
-        self.biscuit_data["covdist_q40_base_topgc"] = covdist_q40_base_topgc
-        n_covdist_samples += len(covdist_q40_base_topgc)
-
-        # Coverage distribution - all cpgs, bottom GC-content
-        covdist_all_cpg_botgc = {}
-        for f in self.find_log_files("biscuit/covdist_all_cpg_botgc"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in covdist_all_cpg_botgc:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_all_cpg_botgc")
-                covdist_all_cpg_botgc[s_name] = parsed_data
-
-        covdist_all_cpg_botgc = self.ignore_samples(covdist_all_cpg_botgc)
-        self.biscuit_data["covdist_all_cpg_botgc"] = covdist_all_cpg_botgc
-        n_covdist_samples += len(covdist_all_cpg_botgc)
-
-        # Coverage distribution - all cpgs
-        covdist_all_cpg = {}
-        for f in self.find_log_files("biscuit/covdist_all_cpg"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in covdist_all_cpg:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_all_cpg")
-                covdist_all_cpg[s_name] = parsed_data
-
-        covdist_all_cpg = self.ignore_samples(covdist_all_cpg)
-        self.biscuit_data["covdist_all_cpg"] = covdist_all_cpg
-        n_covdist_samples += len(covdist_all_cpg)
-
-        # Coverage distribution - all cpgs, top GC-content
-        covdist_all_cpg_topgc = {}
-        for f in self.find_log_files("biscuit/covdist_all_cpg_topgc"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in covdist_all_cpg_topgc:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_all_cpg_topgc")
-                covdist_all_cpg_topgc[s_name] = parsed_data
-
-        covdist_all_cpg_topgc = self.ignore_samples(covdist_all_cpg_topgc)
-        self.biscuit_data["covdist_all_cpg_topgc"] = covdist_all_cpg_topgc
-        n_covdist_samples += len(covdist_all_cpg_topgc)
-
-        # Coverage distribution - q40 cpgs, bottom GC-content
-        covdist_q40_cpg_botgc = {}
-        for f in self.find_log_files("biscuit/covdist_q40_cpg_botgc"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in covdist_q40_cpg_botgc:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_q40_cpg_botgc")
-                covdist_q40_cpg_botgc[s_name] = parsed_data
-
-        covdist_q40_cpg_botgc = self.ignore_samples(covdist_q40_cpg_botgc)
-        self.biscuit_data["covdist_q40_cpg_botgc"] = covdist_q40_cpg_botgc
-        n_covdist_samples += len(covdist_q40_cpg_botgc)
-
-        # Coverage distribution - q40 cpgs
-        covdist_q40_cpg = {}
-        for f in self.find_log_files("biscuit/covdist_q40_cpg"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in covdist_q40_cpg:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_q40_cpg")
-                covdist_q40_cpg[s_name] = parsed_data
-
-        covdist_q40_cpg = self.ignore_samples(covdist_q40_cpg)
-        self.biscuit_data["covdist_q40_cpg"] = covdist_q40_cpg
-        n_covdist_samples += len(covdist_q40_cpg)
-
-        # Coverage distribution - q40 cpgs, top GC-content
-        covdist_q40_cpg_topgc = {}
-        for f in self.find_log_files("biscuit/covdist_q40_cpg_topgc"):
-            parsed_data = parse_covdist(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in covdist_q40_cpg_topgc:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="covdist_q40_cpg_topgc")
-                covdist_q40_cpg_topgc[s_name] = parsed_data
-
-        covdist_q40_cpg_topgc = self.ignore_samples(covdist_q40_cpg_topgc)
-        self.biscuit_data["covdist_q40_cpg_topgc"] = covdist_q40_cpg_topgc
-        n_covdist_samples += len(covdist_q40_cpg_topgc)
-
-        # CpG Retention by Position in Read
-        cpg_retention_readpos = {}
-        for f in self.find_log_files("biscuit/cpg_retention_readpos"):
-            parsed_data = parse_retention_readpos(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in cpg_retention_readpos:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="cpg_retention_readpos")
-                cpg_retention_readpos[s_name] = parsed_data
-
-        cpg_retention_readpos = self.ignore_samples(cpg_retention_readpos)
-        self.biscuit_data["cpg_retention_readpos"] = cpg_retention_readpos
-
-        # CpH Retention by Position in Read
-        cph_retention_readpos = {}
-        for f in self.find_log_files("biscuit/cph_retention_readpos"):
-            parsed_data = parse_retention_readpos(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in cph_retention_readpos:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="cph_retention_readpos")
-                cph_retention_readpos[s_name] = parsed_data
-
-        cph_retention_readpos = self.ignore_samples(cph_retention_readpos)
-        self.biscuit_data["cph_retention_readpos"] = cph_retention_readpos
-        n_retention_readpos = len(cpg_retention_readpos) + len(cph_retention_readpos)
-
-        # Base-averaged cytosine retention rate
-        base_avg_retention_rate = {}
-        for f in self.find_log_files("biscuit/base_avg_retention_rate"):
-            parsed_data = parse_avg_retention(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in base_avg_retention_rate:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="base_avg_retention_rate")
-                base_avg_retention_rate[s_name] = parsed_data
-
-        base_avg_retention_rate = self.ignore_samples(base_avg_retention_rate)
-        self.biscuit_data["base_avg_retention_rate"] = base_avg_retention_rate
-
-        # Read-averaged cytosine retention rate
-        read_avg_retention_rate = {}
-        for f in self.find_log_files("biscuit/read_avg_retention_rate"):
-            parsed_data = parse_avg_retention(f["f"], f["fn"])
-            if parsed_data is not None:
-                s_name = self.clean_s_name(f["s_name"], f)
-
-                if s_name in read_avg_retention_rate:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-
-                # Add source file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name, section="read_avg_retention_rate")
-                read_avg_retention_rate[s_name] = parsed_data
-
-        read_avg_retention_rate = self.ignore_samples(read_avg_retention_rate)
-        self.biscuit_data["read_avg_retention_rate"] = read_avg_retention_rate
-        n_avg_retention = len(base_avg_retention_rate) + len(read_avg_retention_rate)
+        # Retention report counts (retention by read position and average retention rates)
+        n_retention_readpos = len(self.biscuit_data["cpg_retention_readpos"]) + len(
+            self.biscuit_data["cph_retention_readpos"]
+        )
+        n_avg_retention = len(self.biscuit_data["base_avg_retention_rate"]) + len(
+            self.biscuit_data["read_avg_retention_rate"]
+        )
 
         n_samples = max([len(self.biscuit_data[k]) for k in self.biscuit_data.keys()])
         if n_samples == 0:
