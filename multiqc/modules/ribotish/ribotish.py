@@ -128,62 +128,62 @@ class MultiqcModule(BaseMultiqcModule):
     def add_frame_proportion_bargraph(self):
         """
         Create a stacked bar graph showing frame proportions for all read lengths.
-        Each sample gets multiple bars (one per read length).
+        All read lengths are shown side-by-side in a single plot for visual comparison.
+        Each sample-length combination gets its own bar.
         """
-        # Prepare data for bargraph
-        # Format: {sample_name: {category: value}}
-        # We'll create categories like "25nt_Frame0", "25nt_Frame1", etc.
-
         # First, collect all read lengths across all samples
         all_lengths = set()
         for sample_data in self.frame_proportions.values():
             all_lengths.update(sample_data.keys())
         all_lengths = sorted(all_lengths)
 
-        # Create separate plot data for each read length
-        # Each dataset must have unique sample keys to avoid merging
-        plot_data = []
-        data_labels = []
-        for length in all_lengths:
-            length_data = {}
-            for sample_name, length_props in self.frame_proportions.items():
-                if length in length_props:
-                    props = length_props[length]
-                    # Add length suffix to make sample keys unique across datasets
-                    # This prevents MultiQC from merging datasets
-                    unique_sample_key = f"{sample_name}||{length}nt"
-                    length_data[unique_sample_key] = {
+        # Create a single dataset with all sample-length combinations
+        # Group by read length first (like the original notebook)
+        # Add spacing between groups by inserting empty "spacer" samples
+        plot_data = {}
+        for i, length in enumerate(all_lengths):
+            # Add spacer before each group (except first) for visual separation
+            if i > 0:
+                # Use spaces to create unique but minimal spacer keys
+                spacer_key = " " * i
+                plot_data[spacer_key] = {
+                    "Frame 0": 0,
+                    "Frame 1": 0,
+                    "Frame 2": 0,
+                }
+
+            for sample_name in sorted(self.frame_proportions.keys()):
+                if length in self.frame_proportions[sample_name]:
+                    props = self.frame_proportions[sample_name][length]
+                    # Create a combined key showing sample and read length (bolded)
+                    combined_key = f"{sample_name} [<b>{length}nt</b>]"
+                    plot_data[combined_key] = {
                         "Frame 0": props["f0_prop"] * 100,  # Convert to percentage
                         "Frame 1": props["f1_prop"] * 100,
                         "Frame 2": props["f2_prop"] * 100,
                     }
-            plot_data.append(length_data)
-            data_labels.append({"name": f"{length}nt", "ylab": "Proportion of Reads (%)"})
-            log.debug(f"Length {length}nt: {len(length_data)} samples")
 
         # Create configuration
         pconfig = {
             "id": "ribotish_frame_proportions",
-            "title": "RiboTish: Reading Frame Proportions",
+            "title": "RiboTish: Reading Frame Proportions by Read Length",
             "ylab": "Proportion of Reads (%)",
             "cpswitch_counts_label": "Counts",
             "stacking": "normal",
             "hide_zero_cats": False,
             "ymax": 100,
             "use_legend": True,
-            "data_labels": data_labels,
+            "sort_samples": False,  # Keep samples in original order (grouped by length)
         }
 
         # Define category colors (Frame 0, 1, 2) matching viridis-like colors
-        # Need to provide the same categories for each dataset
         cats = {
             "Frame 0": {"name": "Frame 0", "color": "#440154"},
             "Frame 1": {"name": "Frame 1", "color": "#31688e"},
             "Frame 2": {"name": "Frame 2", "color": "#35b779"},
         }
-        cats_list = [cats] * len(all_lengths)  # Same categories for each read length
 
-        plot_html = bargraph.plot(plot_data, cats_list, pconfig)
+        plot_html = bargraph.plot(plot_data, cats, pconfig)
 
         self.add_section(
             name="Reading Frame Proportions",
