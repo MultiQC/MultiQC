@@ -74,9 +74,7 @@ def test_ribotish_multiple_samples(data_dir):
     m = MultiqcModule()
 
     # Should have parsed all samples
-    assert len(m.ribotish_data) == len(qual_files), (
-        f"Expected {len(qual_files)} samples, got {len(m.ribotish_data)}"
-    )
+    assert len(m.ribotish_data) == len(qual_files), f"Expected {len(qual_files)} samples, got {len(m.ribotish_data)}"
 
     # Check that all samples have frame proportions calculated
     assert len(m.frame_proportions) == len(qual_files)
