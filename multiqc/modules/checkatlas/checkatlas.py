@@ -310,7 +310,10 @@ def parse_qc_logs(f):
             dict_qc_genes[rank_genes] = genes
         if index_mito != -1:
             rank_mito = float(line[index_rank_mito])
-            mito = float(line[index_mito])
+            if line[index_mito] != '':
+                mito = float(line[index_mito])
+            else:
+                mito = 0
             dict_qc_mito[rank_mito] = mito
 
     # reorder by rank
