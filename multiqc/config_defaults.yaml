@@ -470,6 +470,7 @@ module_order:
   - rockhopper
   - rsem
   - rseqc
+  - ribotish
   - busco
   - checkm
   - bustools

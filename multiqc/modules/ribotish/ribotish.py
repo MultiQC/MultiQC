@@ -1,7 +1,7 @@
 import ast
 import logging
 import re
-from typing import Dict, List
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap
@@ -48,6 +48,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         if not self.ribotish_data:
             raise ModuleNoSamplesFound
+
+        log.info(f"Found {len(self.ribotish_data)} RiboTish reports")
 
         # Calculate frame proportions for all samples
         self.calculate_frame_proportions()
@@ -138,8 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
         all_lengths = sorted(all_lengths)
 
         # Create a single dataset with all sample-length combinations
-        # Group by read length first (like the original notebook)
-        # Add spacing between groups by inserting empty "spacer" samples
+        # Group by read length first, then by sample within each length
         plot_data = {}
         for i, length in enumerate(all_lengths):
             # Add spacer before each group (except first) for visual separation
@@ -173,7 +174,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hide_zero_cats": False,
             "ymax": 100,
             "use_legend": True,
-            "sort_samples": False,  # Keep samples in original order (grouped by length)
+            "sort_samples": False,
         }
 
         # Define category colors (Frame 0, 1, 2) matching viridis-like colors
@@ -271,7 +272,44 @@ class MultiqcModule(BaseMultiqcModule):
         """Add key metrics to the general statistics table."""
         headers = {}
 
-        # Add columns for best frame 0 proportion
+        # Weighted average Frame 0 proportion (most important metric)
+        headers["weighted_f0_prop"] = ColumnDict(
+            {
+                "title": "Weighted F0 %",
+                "description": "Frame 0 proportion weighted by read counts across all lengths - primary quality metric",
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "format": "{:,.1f}",
+                "min": 33,
+                "max": 100,
+            }
+        )
+
+        # Percentage of reads in optimal range
+        headers["optimal_range_pct"] = ColumnDict(
+            {
+                "title": "% in 28-30nt",
+                "description": "Percentage of reads in optimal ribosome footprint range (28-30nt)",
+                "suffix": "%",
+                "scale": "Blues",
+                "format": "{:,.1f}",
+                "max": 100,
+            }
+        )
+
+        # Best Frame 0 proportion and length
+        headers["best_f0_prop"] = ColumnDict(
+            {
+                "title": "Best F0 %",
+                "description": "Highest Frame 0 proportion achieved at any read length",
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "format": "{:,.1f}",
+                "min": 33,
+                "max": 100,
+            }
+        )
+
         headers["best_f0_length"] = ColumnDict(
             {
                 "title": "Best F0 Length",
@@ -282,18 +320,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         )
 
-        headers["best_f0_prop"] = ColumnDict(
-            {
-                "title": "Best F0 %",
-                "description": "Highest Frame 0 proportion across all read lengths",
-                "suffix": "%",
-                "scale": "RdYlGn",
-                "format": "{:,.1f}",
-                "min": 33,
-                "max": 100,
-            }
-        )
-
+        # Peak length
         headers["peak_length"] = ColumnDict(
             {
                 "title": "Peak Length",
@@ -304,6 +331,16 @@ class MultiqcModule(BaseMultiqcModule):
             }
         )
 
+        # Read length range
+        headers["length_range"] = ColumnDict(
+            {
+                "title": "Length Range",
+                "description": "Range of read lengths detected (min-max)",
+                "scale": "Greys",
+            }
+        )
+
+        # Total reads (hidden by default)
         headers["total_reads"] = ColumnDict(
             {
                 "title": "Total Reads",
@@ -317,6 +354,25 @@ class MultiqcModule(BaseMultiqcModule):
         # Calculate statistics for general stats
         stats_data = {}
         for sample_name, length_props in self.frame_proportions.items():
+            # Calculate total reads and weighted Frame 0
+            total_reads = 0
+            weighted_f0_sum = 0
+            for length, props in length_props.items():
+                count = props["total"]
+                total_reads += count
+                weighted_f0_sum += props["f0_prop"] * count
+
+            weighted_f0_prop = (weighted_f0_sum / total_reads * 100) if total_reads > 0 else 0
+
+            # Calculate percentage of reads in optimal range (28-30nt)
+            optimal_lengths = [28, 29, 30]
+            optimal_reads = 0
+            for length in optimal_lengths:
+                if length in length_props:
+                    optimal_reads += length_props[length]["total"]
+
+            optimal_range_pct = (optimal_reads / total_reads * 100) if total_reads > 0 else 0
+
             # Find length with best frame 0 proportion
             best_f0_length = max(length_props.keys(), key=lambda k: length_props[k]["f0_prop"])
             best_f0_prop = length_props[best_f0_length]["f0_prop"] * 100
@@ -324,13 +380,18 @@ class MultiqcModule(BaseMultiqcModule):
             # Find length with highest total count
             peak_length = max(length_props.keys(), key=lambda k: length_props[k]["total"])
 
-            # Calculate total reads
-            total_reads = sum(props["total"] for props in length_props.values())
+            # Calculate read length range
+            min_length = min(length_props.keys())
+            max_length = max(length_props.keys())
+            length_range = f"{min_length}-{max_length}nt"
 
             stats_data[sample_name] = {
-                "best_f0_length": best_f0_length,
+                "weighted_f0_prop": weighted_f0_prop,
+                "optimal_range_pct": optimal_range_pct,
                 "best_f0_prop": best_f0_prop,
+                "best_f0_length": best_f0_length,
                 "peak_length": peak_length,
+                "length_range": length_range,
                 "total_reads": total_reads,
             }
 
