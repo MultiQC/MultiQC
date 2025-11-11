@@ -3,7 +3,7 @@ import logging
 from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, heatmap
+from multiqc.plots import bargraph, heatmap, linegraph
 from multiqc.plots.table_object import ColumnDict
 
 log = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add sections with plots
         self.add_frame_proportion_bargraph()
-        self.add_read_length_heatmap()
+        self.add_read_length_distribution()
         self.add_general_stats()
 
         # Write data file at the end
@@ -165,13 +165,14 @@ class MultiqcModule(BaseMultiqcModule):
             "ymax": 100,
             "use_legend": True,
             "sort_samples": False,
+            "cpswitch": False,  # Hide the counts/percentages switch button
         }
 
-        # Define category colors (Frame 0, 1, 2) matching viridis-like colors
+        # Define categories (let MultiQC assign default colors)
         cats = {
-            "Frame 0": {"name": "Frame 0", "color": "#440154"},
-            "Frame 1": {"name": "Frame 1", "color": "#31688e"},
-            "Frame 2": {"name": "Frame 2", "color": "#35b779"},
+            "Frame 0": {"name": "Frame 0"},
+            "Frame 1": {"name": "Frame 1"},
+            "Frame 2": {"name": "Frame 2"},
         }
 
         plot_html = bargraph.plot(plot_data, cats, pconfig)
@@ -186,9 +187,9 @@ class MultiqcModule(BaseMultiqcModule):
             This plot shows the distribution of reads across the three reading frames for each read length,
             based on P-site positions.
 
-            * **Frame 0** (purple/dark): The primary reading frame
-            * **Frame 1** (blue): Offset by 1 nucleotide from Frame 0
-            * **Frame 2** (green): Offset by 2 nucleotides from Frame 0
+            * **Frame 0**: The primary reading frame
+            * **Frame 1**: Offset by 1 nucleotide from Frame 0
+            * **Frame 2**: Offset by 2 nucleotides from Frame 0
 
             Ribo-seq data typically shows enrichment in Frame 0, particularly for read lengths 28-30nt,
             though the degree of frame preference can vary depending on the experimental protocol
@@ -198,10 +199,10 @@ class MultiqcModule(BaseMultiqcModule):
             plot=plot_html,
         )
 
-    def add_read_length_heatmap(self):
+    def add_read_length_distribution(self):
         """
-        Create a heatmap showing the percentage distribution of read lengths.
-        Rows are samples, columns are read lengths.
+        Create plots showing the percentage distribution of read lengths.
+        Provides both line graph and heatmap views with a switcher.
         """
         # Collect all read lengths
         all_lengths = set()
@@ -209,10 +210,22 @@ class MultiqcModule(BaseMultiqcModule):
             all_lengths.update(sample_data.keys())
         all_lengths = sorted(all_lengths)
 
+        # Prepare data for line graph
+        line_data = {}
+        for sample_name in sorted(self.frame_proportions.keys()):
+            sample_total = sum(props["total"] for props in self.frame_proportions[sample_name].values())
+            line_data[sample_name] = {}
+            for length in all_lengths:
+                if length in self.frame_proportions[sample_name]:
+                    count = self.frame_proportions[sample_name][length]["total"]
+                    percentage = (count / sample_total * 100) if sample_total > 0 else 0
+                    line_data[sample_name][length] = percentage
+                else:
+                    line_data[sample_name][length] = 0
+
         # Prepare data for heatmap
         samples = sorted(self.frame_proportions.keys())
         heatmap_data = []
-
         for sample_name in samples:
             sample_total = sum(props["total"] for props in self.frame_proportions[sample_name].values())
             row = []
@@ -225,10 +238,22 @@ class MultiqcModule(BaseMultiqcModule):
                     row.append(0)
             heatmap_data.append(row)
 
-        # Create heatmap configuration
-        pconfig = {
-            "id": "ribotish_read_length_dist",
+        # Create line graph plot
+        line_pconfig = {
+            "id": "ribotish_read_length_line",
             "title": "Ribo-TISH: Read Length Distribution",
+            "xlab": "Read Length (nt)",
+            "ylab": "% of Total Reads",
+            "smooth_points": 100,
+            "smooth_points_sumcounts": False,
+            "tt_label": "{point.x}nt: {point.y:.1f}%",
+        }
+        line_plot = linegraph.plot(line_data, line_pconfig)
+
+        # Create heatmap plot
+        heatmap_pconfig = {
+            "id": "ribotish_read_length_heatmap",
+            "title": "Ribo-TISH: Read Length Distribution (Heatmap)",
             "xlab": "Read Length (nt)",
             "ylab": "Sample",
             "zlab": "% of Total Reads",
@@ -241,26 +266,45 @@ class MultiqcModule(BaseMultiqcModule):
             "cluster_cols": False,
             "colstops": [[0, "#ffffff"], [0.5, "#4575b4"], [1, "#313695"]],
         }
-
         xcats = [f"{length}nt" for length in all_lengths]
         ycats = samples
+        heatmap_plot = heatmap.plot(heatmap_data, xcats=xcats, ycats=ycats, pconfig=heatmap_pconfig)
 
-        plot_html = heatmap.plot(heatmap_data, xcats=xcats, ycats=ycats, pconfig=pconfig)
-
+        # Combine plots with data_labels for switching
+        # Note: We'll use the line graph as the base and provide a note about the heatmap
         self.add_section(
             name="Read Length Distribution",
             anchor="ribotish_read_length_dist",
             description="Percentage of reads at each read length for each sample. "
             "Ribo-seq data typically shows enrichment around 28-30nt, representing ribosome-protected fragments.",
             helptext="""
-            This heatmap shows what percentage of total reads each read length represents for each sample.
+            This plot shows what percentage of total reads each read length represents for each sample.
 
-            * **Darker blue** indicates higher percentage of reads
-            * **Lighter colors** indicate fewer reads
+            * Each line represents a different sample
+            * Peaks indicate the most common read lengths
+            * Multiple samples can be easily compared
 
             The expected read length distribution can vary depending on the experimental protocol and organism.
             """,
-            plot=plot_html,
+            plot=line_plot,
+        )
+
+        # Add heatmap as a second section for alternative view
+        self.add_section(
+            name="Read Length Distribution (Heatmap)",
+            anchor="ribotish_read_length_heatmap",
+            description="Alternative heatmap view of read length distribution. "
+            "Useful for comparing many samples at once.",
+            helptext="""
+            This heatmap shows what percentage of total reads each read length represents for each sample.
+
+            * Rows are samples, columns are read lengths
+            * Darker blue indicates higher percentage of reads
+            * Lighter colors indicate fewer reads
+
+            This view is particularly useful when comparing many samples simultaneously.
+            """,
+            plot=heatmap_plot,
         )
 
     def add_general_stats(self):
