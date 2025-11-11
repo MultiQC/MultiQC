@@ -1,6 +1,5 @@
 import ast
 import logging
-import re
 from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -69,8 +68,10 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Parse RiboTish *_qual.txt file.
 
-        The relevant information is on line 4 (0-indexed line 3) in the format:
-        $ {25: [frame0_count, frame1_count, frame2_count], 26: [...], ...}
+        The relevant information is on line 4 (0-indexed line 3) in Python dict format:
+        {25: [frame0_count, frame1_count, frame2_count], 26: [...], ...}
+
+        See: https://github.com/zhpn1024/ribotish#offset-parameter-file
 
         Returns a dict with read lengths as keys and [f0, f1, f2] counts as values.
         """
@@ -82,24 +83,14 @@ class MultiqcModule(BaseMultiqcModule):
 
             input_string = lines[3].strip()
 
-            # Clean up the input string
-            input_string = input_string.strip()
+            # Remove optional $ prefix if present
             if input_string.startswith("$"):
                 input_string = input_string[1:].strip()
 
-            # Convert to valid Python dictionary format
-            input_string = input_string.replace("{", "").replace("}", "")
-            input_string = re.sub(r"(\d+):\s*\[", r'"\1": [', input_string)
-            input_string = re.sub(r"\s+", " ", input_string)
-            input_string = "{" + input_string.strip() + "}"
-
-            # Parse the dictionary
-            input_string = input_string.replace("'", '"')
-            input_string = re.sub(r"(\d+),\s*(?=\d)", r"\1, ", input_string)
+            # Parse Python dict literal safely with ast.literal_eval
             ribo_seq_counts = ast.literal_eval(input_string)
 
-            # Convert keys to integers for consistent handling
-            return {int(k): v for k, v in ribo_seq_counts.items()}
+            return ribo_seq_counts
 
         except (SyntaxError, ValueError, IndexError) as e:
             log.warning(f"Error parsing {f['fn']}: {e}")
@@ -114,9 +105,9 @@ class MultiqcModule(BaseMultiqcModule):
                 total = sum(counts)
                 if total > 0:
                     self.frame_proportions[sample_name][length] = {
-                        "f0_prop": counts[0] / total,
-                        "f1_prop": counts[1] / total,
-                        "f2_prop": counts[2] / total,
+                        "f0_prop": counts[0] / float(total),
+                        "f1_prop": counts[1] / float(total),
+                        "f2_prop": counts[2] / float(total),
                         "total": total,
                     }
                 else:
@@ -159,9 +150,9 @@ class MultiqcModule(BaseMultiqcModule):
                     # Create a combined key showing sample and read length (bolded)
                     combined_key = f"{sample_name} [<b>{length}nt</b>]"
                     plot_data[combined_key] = {
-                        "Frame 0": props["f0_prop"] * 100,  # Convert to percentage
-                        "Frame 1": props["f1_prop"] * 100,
-                        "Frame 2": props["f2_prop"] * 100,
+                        "Frame 0": props["f0_prop"] * 100.0,
+                        "Frame 1": props["f1_prop"] * 100.0,
+                        "Frame 2": props["f2_prop"] * 100.0,
                     }
 
         # Create configuration
@@ -169,7 +160,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "ribotish_frame_proportions",
             "title": "RiboTish: Reading Frame Proportions by Read Length",
             "ylab": "Proportion of Reads (%)",
-            "cpswitch_counts_label": "Counts",
             "stacking": "normal",
             "hide_zero_cats": False,
             "ymax": 100,
@@ -245,6 +235,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ycats_samples": False,
             "cluster_rows": False,
             "cluster_cols": False,
+            "colstops": [[0, "#ffffff"], [0.5, "#4575b4"], [1, "#313695"]],
         }
 
         xcats = [f"{length}nt" for length in all_lengths]
@@ -312,29 +303,25 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers["best_f0_length"] = ColumnDict(
             {
-                "title": "Best F0 Length",
+                "title": "Best F0 Length (nt)",
                 "description": "Read length with highest Frame 0 proportion",
-                "suffix": "nt",
                 "scale": "Greens",
                 "format": "{:,.0f}",
             }
         )
 
-        # Peak length
         headers["peak_length"] = ColumnDict(
             {
-                "title": "Peak Length",
+                "title": "Peak Length (nt)",
                 "description": "Read length with highest total read count",
-                "suffix": "nt",
                 "scale": "Blues",
                 "format": "{:,.0f}",
             }
         )
 
-        # Read length range
         headers["length_range"] = ColumnDict(
             {
-                "title": "Length Range",
+                "title": "Length Range (nt)",
                 "description": "Range of read lengths detected (min-max)",
                 "scale": "Greys",
             }
@@ -383,7 +370,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Calculate read length range
             min_length = min(length_props.keys())
             max_length = max(length_props.keys())
-            length_range = f"{min_length}-{max_length}nt"
+            length_range = f"{min_length}-{max_length}"
 
             stats_data[sample_name] = {
                 "weighted_f0_prop": weighted_f0_prop,
