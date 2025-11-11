@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    RiboTish is a tool for identifying translated ORFs from Ribo-seq data.
+    Ribo-TISH is a tool for identifying translated ORFs from Ribo-seq data.
     This module parses the `*_qual.txt` output files to visualize reading frame
     quality metrics across different read lengths.
 
@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
-            name="RiboTish",
+            name="Ribo-TISH",
             anchor="ribotish",
             href="https://github.com/zhpn1024/ribotish",
             info="Identifies translated ORFs from Ribo-seq data and reports reading frame quality metrics.",
@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         if not self.ribotish_data:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.ribotish_data)} RiboTish reports")
+        log.info(f"Found {len(self.ribotish_data)} Ribo-TISH reports")
 
         # Calculate frame proportions for all samples
         self.calculate_frame_proportions()
@@ -66,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_ribotish_qual(self, f) -> Dict:
         """
-        Parse RiboTish *_qual.txt file.
+        Parse Ribo-TISH *_qual.txt file.
 
         The relevant information is on line 4 (0-indexed line 3) in Python dict format:
         {25: [frame0_count, frame1_count, frame2_count], 26: [...], ...}
@@ -158,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Create configuration
         pconfig = {
             "id": "ribotish_frame_proportions",
-            "title": "RiboTish: Reading Frame Proportions by Read Length",
+            "title": "Ribo-TISH: Reading Frame Proportions by Read Length",
             "ylab": "Proportion of Reads (%)",
             "stacking": "normal",
             "hide_zero_cats": False,
@@ -180,15 +180,19 @@ class MultiqcModule(BaseMultiqcModule):
             name="Reading Frame Proportions",
             anchor="ribotish_frame_proportions",
             description="Proportion of reads in each reading frame (Frame 0, 1, 2) for different read lengths (25-34nt). "
-            "High Frame 0 enrichment (>70%) indicates good quality Ribo-seq data.",
+            "Frame assignment is based on P-site positions as determined by Ribo-TISH. "
+            "Some degree of frame preference (enrichment in Frame 0) is typically expected in Ribo-seq data.",
             helptext="""
-            This plot shows the distribution of reads across the three reading frames for each read length.
+            This plot shows the distribution of reads across the three reading frames for each read length,
+            based on P-site positions.
 
-            * **Frame 0** (purple/dark): The correct reading frame - high values indicate good data quality
-            * **Frame 1** (blue): Off by 1 nucleotide
-            * **Frame 2** (green): Off by 2 nucleotides
+            * **Frame 0** (purple/dark): The primary reading frame
+            * **Frame 1** (blue): Offset by 1 nucleotide from Frame 0
+            * **Frame 2** (green): Offset by 2 nucleotides from Frame 0
 
-            For high-quality Ribo-seq data, Frame 0 should typically be >70% for read lengths 28-30nt.
+            Ribo-seq data typically shows enrichment in Frame 0, particularly for read lengths 28-30nt,
+            though the degree of frame preference can vary depending on the experimental protocol
+            (e.g., RNase I vs. MNase treatment).
             Read lengths are shown as separate bars for each sample.
             """,
             plot=plot_html,
@@ -224,7 +228,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Create heatmap configuration
         pconfig = {
             "id": "ribotish_read_length_dist",
-            "title": "RiboTish: Read Length Distribution",
+            "title": "Ribo-TISH: Read Length Distribution",
             "xlab": "Read Length (nt)",
             "ylab": "Sample",
             "zlab": "% of Total Reads",
@@ -247,14 +251,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="Read Length Distribution",
             anchor="ribotish_read_length_dist",
             description="Percentage of reads at each read length for each sample. "
-            "Good Ribo-seq data typically shows enrichment at 28-30nt.",
+            "Ribo-seq data typically shows enrichment around 28-30nt, representing ribosome-protected fragments.",
             helptext="""
             This heatmap shows what percentage of total reads each read length represents for each sample.
 
             * **Darker blue** indicates higher percentage of reads
             * **Lighter colors** indicate fewer reads
 
-            Typical Ribo-seq data shows strong enrichment around 28-30nt, which represents ribosome-protected fragments.
+            The expected read length distribution can vary depending on the experimental protocol and organism.
             """,
             plot=plot_html,
         )
