@@ -191,7 +191,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Reading Frame Proportions",
-            anchor="ribotish_frame_proportions",
+            anchor="ribotish_frame_proportions_section",
             description="Proportion of reads in each reading frame (Frame 0, 1, 2) for different read lengths (25-34nt). "
             "Frame assignment is based on P-site positions as determined by Ribo-TISH. "
             "Some degree of frame preference (enrichment in Frame 0) is typically expected in Ribo-seq data.",
@@ -291,7 +291,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Note: We'll use the line graph as the base and provide a note about the heatmap
         self.add_section(
             name="Read Length Distribution",
-            anchor="ribotish_read_length_dist",
+            anchor="ribotish_read_length_dist_section",
             description="Percentage of reads at each read length for each sample. "
             "Ribo-seq data typically shows enrichment around 28-30nt, representing ribosome-protected fragments.",
             helptext="""
@@ -309,7 +309,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add heatmap as a second section for alternative view
         self.add_section(
             name="Read Length Distribution (Heatmap)",
-            anchor="ribotish_read_length_heatmap",
+            anchor="ribotish_read_length_heatmap_section",
             description="Alternative heatmap view of read length distribution. "
             "Useful for comparing many samples at once.",
             helptext="""
