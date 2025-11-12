@@ -175,13 +175,14 @@ def _insert_spacers_from_groups(
         spacer_idx = 1
         for group_idx, group in enumerate(sample_groups):
             # Add all samples in this group
-            for sample_name in group:
+            for sample_name_str in group:
+                sample_name = SampleName(sample_name_str)
                 if sample_name in dataset:
                     new_dataset[sample_name] = dataset[sample_name]
 
             # Add spacer after each group except the last
             if group_idx < len(sample_groups) - 1:
-                spacer_name = f"__SPACER_{spacer_idx}__"
+                spacer_name = SampleName(f"__SPACER_{spacer_idx}__")
                 # Create spacer entry with 0 values for all categories
                 new_dataset[spacer_name] = {cat_id: 0 for cat_id in categories.keys()}
                 spacer_idx += 1
