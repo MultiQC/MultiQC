@@ -135,9 +135,9 @@ class MultiqcModule(BaseMultiqcModule):
         plot_data = {}
         for i, length in enumerate(all_lengths):
             # Add spacer before each group (except first) for visual separation
+            # Using explicit __SPACER__ marker that can be filtered from data exports
             if i > 0:
-                # Use spaces to create unique but minimal spacer keys
-                spacer_key = " " * i
+                spacer_key = f"__SPACER_{i}__"
                 plot_data[spacer_key] = {
                     "Frame 0": 0,
                     "Frame 1": 0,
