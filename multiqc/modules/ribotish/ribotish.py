@@ -231,15 +231,20 @@ class MultiqcModule(BaseMultiqcModule):
             all_lengths.update(sample_data.keys())
         all_lengths = sorted(all_lengths)
 
+        # Calculate sample totals once for efficiency
+        sample_totals = {}
+        for sample_name in self.frame_proportions.keys():
+            sample_totals[sample_name] = sum(props["total"] for props in self.frame_proportions[sample_name].values())
+
         # Prepare data for line graph
         line_data = {}
         for sample_name in sorted(self.frame_proportions.keys()):
-            sample_total = sum(props["total"] for props in self.frame_proportions[sample_name].values())
+            sample_total = sample_totals[sample_name]
             line_data[sample_name] = {}
             for length in all_lengths:
                 if length in self.frame_proportions[sample_name]:
                     count = self.frame_proportions[sample_name][length]["total"]
-                    percentage = (count / sample_total * 100) if sample_total > 0 else 0
+                    percentage = (count / sample_total * 100.0) if sample_total > 0 else 0
                     line_data[sample_name][length] = percentage
                 else:
                     line_data[sample_name][length] = 0
@@ -248,12 +253,12 @@ class MultiqcModule(BaseMultiqcModule):
         samples = sorted(self.frame_proportions.keys())
         heatmap_data = []
         for sample_name in samples:
-            sample_total = sum(props["total"] for props in self.frame_proportions[sample_name].values())
+            sample_total = sample_totals[sample_name]
             row = []
             for length in all_lengths:
                 if length in self.frame_proportions[sample_name]:
                     count = self.frame_proportions[sample_name][length]["total"]
-                    percentage = (count / sample_total * 100) if sample_total > 0 else 0
+                    percentage = (count / sample_total * 100.0) if sample_total > 0 else 0
                     row.append(percentage)
                 else:
                     row.append(0)
@@ -265,7 +270,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Ribo-TISH: Read Length Distribution",
             "xlab": "Read Length (nt)",
             "ylab": "% of Total Reads",
-            "smooth_points": 100,
+            "smooth_points": 50,
             "smooth_points_sumcounts": False,
             "tt_label": "{point.x}nt: {point.y:.1f}%",
         }
@@ -410,6 +415,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Calculate statistics for general stats
         stats_data = {}
         for sample_name, length_props in self.frame_proportions.items():
+            # Skip samples with no data
+            if not length_props:
+                continue
+
             # Calculate total reads and weighted Frame 0
             total_reads = 0
             weighted_f0_sum = 0
@@ -418,7 +427,7 @@ class MultiqcModule(BaseMultiqcModule):
                 total_reads += count
                 weighted_f0_sum += props["f0_prop"] * count
 
-            weighted_f0_prop = (weighted_f0_sum / total_reads * 100) if total_reads > 0 else 0
+            weighted_f0_prop = (weighted_f0_sum / total_reads * 100.0) if total_reads > 0 else 0
 
             # Calculate percentage of reads in optimal range (28-30nt)
             optimal_lengths = [28, 29, 30]
@@ -427,11 +436,11 @@ class MultiqcModule(BaseMultiqcModule):
                 if length in length_props:
                     optimal_reads += length_props[length]["total"]
 
-            optimal_range_pct = (optimal_reads / total_reads * 100) if total_reads > 0 else 0
+            optimal_range_pct = (optimal_reads / total_reads * 100.0) if total_reads > 0 else 0
 
             # Find length with best frame 0 proportion
             best_f0_length = max(length_props.keys(), key=lambda k: length_props[k]["f0_prop"])
-            best_f0_prop = length_props[best_f0_length]["f0_prop"] * 100
+            best_f0_prop = length_props[best_f0_length]["f0_prop"] * 100.0
 
             # Find length with highest total count
             peak_length = max(length_props.keys(), key=lambda k: length_props[k]["total"])
