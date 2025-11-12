@@ -163,6 +163,9 @@ def _insert_spacers_from_groups(
 
     Returns:
         Updated datasets with spacers inserted
+
+    Note:
+        Samples not included in any group will be added at the end after a spacer.
     """
     new_datasets: List[DatasetT] = []
 
@@ -170,21 +173,37 @@ def _insert_spacers_from_groups(
         new_dataset: DatasetT = {}
         categories = categories_per_ds[ds_idx]
 
+        # Track which samples have been added to groups
+        grouped_samples: set[SampleName] = set()
+
         # Build dataset with spacers in original order
         # (samples will be reversed later by Dataset.create())
         spacer_idx = 1
         for group_idx, group in enumerate(sample_groups):
             # Add all samples in this group
-            for sample_name in group:
+            for sample_name_str in group:
+                sample_name = SampleName(sample_name_str)
                 if sample_name in dataset:
                     new_dataset[sample_name] = dataset[sample_name]
+                    grouped_samples.add(sample_name)
 
             # Add spacer after each group except the last
             if group_idx < len(sample_groups) - 1:
-                spacer_name = f"__SPACER_{spacer_idx}__"
+                spacer_name = SampleName(f"__SPACER_{spacer_idx}__")
                 # Create spacer entry with 0 values for all categories
                 new_dataset[spacer_name] = {cat_id: 0 for cat_id in categories.keys()}
                 spacer_idx += 1
+
+        # Add any ungrouped samples at the end
+        ungrouped_samples = [s for s in dataset.keys() if s not in grouped_samples]
+        if ungrouped_samples:
+            # Add spacer before ungrouped samples
+            spacer_name = SampleName(f"__SPACER_{spacer_idx}__")
+            new_dataset[spacer_name] = {cat_id: 0 for cat_id in categories.keys()}
+
+            # Add ungrouped samples
+            for sample_name in ungrouped_samples:
+                new_dataset[sample_name] = dataset[sample_name]
 
         new_datasets.append(new_dataset)
 
