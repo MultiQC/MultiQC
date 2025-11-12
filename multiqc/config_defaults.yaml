@@ -260,6 +260,7 @@ fn_clean_exts:
   - ".counts"
   - "_counts"
   - ".txt"
+  - "_qual"
   - ".tsv"
   - ".csv"
   - ".aligned"
