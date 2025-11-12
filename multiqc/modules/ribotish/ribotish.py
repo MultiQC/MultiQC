@@ -166,6 +166,22 @@ class MultiqcModule(BaseMultiqcModule):
             "use_legend": True,
             "sort_samples": False,
             "cpswitch": False,  # Hide the counts/percentages switch button
+            "x_lines": [
+                {
+                    "color": "#ff0000",
+                    "dash": "dash",
+                    "value": 33.33,
+                    "width": 1,
+                    "label": "Random distribution (1/3)",
+                },
+                {
+                    "color": "#ff0000",
+                    "dash": "dash",
+                    "value": 66.67,
+                    "width": 1,
+                    "label": "Random distribution (2/3)",
+                },
+            ],
         }
 
         # Define categories (let MultiQC assign default colors)
