@@ -67,6 +67,7 @@ class BarPlotConfig(PConfig):
     use_legend: Optional[bool] = None
     suffix: Optional[str] = None
     lab_format: Optional[str] = None
+    sample_groups: Optional[List[List[str]]] = None  # List of sample groups for visual spacing
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         if "suffix" in data:
@@ -147,6 +148,49 @@ def _cluster_samples(data: DatasetT, cats: Dict[CatName, Any], method: str = "co
         return sample_names
 
 
+def _insert_spacers_from_groups(
+    datasets: List[DatasetT],
+    categories_per_ds: List[Dict[CatName, CatConf]],
+    sample_groups: List[List[str]],
+) -> List[DatasetT]:
+    """
+    Insert spacer samples between groups for visual separation.
+
+    Args:
+        datasets: List of datasets (one per button)
+        categories_per_ds: Categories for each dataset
+        sample_groups: List of sample groups, e.g. [['sample1', 'sample2'], ['sample3', 'sample4']]
+
+    Returns:
+        Updated datasets with spacers inserted
+    """
+    new_datasets: List[DatasetT] = []
+
+    for ds_idx, dataset in enumerate(datasets):
+        new_dataset: DatasetT = {}
+        categories = categories_per_ds[ds_idx]
+
+        # Build dataset with spacers in original order
+        # (samples will be reversed later by Dataset.create())
+        spacer_idx = 1
+        for group_idx, group in enumerate(sample_groups):
+            # Add all samples in this group
+            for sample_name in group:
+                if sample_name in dataset:
+                    new_dataset[sample_name] = dataset[sample_name]
+
+            # Add spacer after each group except the last
+            if group_idx < len(sample_groups) - 1:
+                spacer_name = f"__SPACER_{spacer_idx}__"
+                # Create spacer entry with 0 values for all categories
+                new_dataset[spacer_name] = {cat_id: 0 for cat_id in categories.keys()}
+                spacer_idx += 1
+
+        new_datasets.append(new_dataset)
+
+    return new_datasets
+
+
 class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
     data: List[DatasetT]
     cats: List[Dict[CatName, CatConf]]
@@ -166,6 +210,10 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         to normalize the input data before we save it to intermediate format and plot.
         """
         pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
+
+        # If sample_groups is provided, disable sort_samples to preserve group order
+        if pconf.sample_groups is not None:
+            pconf.sort_samples = False
 
         # Given one dataset - turn it into a list
         raw_datasets: List[DatasetT]
@@ -263,6 +311,10 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                 if all(math.isnan(v) for v in filtered_val_by_cat.values()):
                     continue
                 filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
+
+        # Insert spacers based on sample_groups configuration
+        if pconf.sample_groups:
+            filtered_datasets = _insert_spacers_from_groups(filtered_datasets, categories_per_ds, pconf.sample_groups)
 
         return BarPlotInputData(
             anchor=plot_anchor(pconf),
@@ -466,16 +518,24 @@ def plot(
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
 
-    Visual Spacers:
-    Sample names starting with '__SPACER_' will be treated as visual spacers for grouping.
-    They will appear as gaps in the plot but will NOT be included in data exports.
+    Visual Grouping:
+    You can add visual spacing between groups of samples using the `sample_groups` configuration.
+    Spacers will appear as gaps in the plot but will NOT be included in data exports.
+
     Example:
         plot_data = {
             'sample1': {'cat1': 10, 'cat2': 20},
-            '__SPACER_1__': {'cat1': 0, 'cat2': 0},  # Visual separator
-            'sample2': {'cat1': 15, 'cat2': 25}
+            'sample2': {'cat1': 15, 'cat2': 25},
+            'sample3': {'cat1': 12, 'cat2': 22},
+            'sample4': {'cat1': 18, 'cat2': 28}
         }
-    The number in __SPACER_N__ determines the spacing (N spaces) to avoid Plotly deduplication.
+        pconfig = {
+            'sample_groups': [
+                ['sample1', 'sample2'],  # Group 1
+                ['sample3', 'sample4']   # Group 2
+            ]
+        }
+        bargraph.plot(plot_data, cats, pconfig)
     """
     # We want to be permissive to user inputs - but normalizing them now to simplify further processing
     inputs = BarPlotInputData.create(data, cats, pconfig)
