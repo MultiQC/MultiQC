@@ -884,18 +884,12 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                     title=None,
                     hoverformat=dataset.layout["xaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
-                    autorangeoptions=dataset.layout["xaxis"].get(
-                        "autorangeoptions",
-                        dict(clipmin=None, clipmax=None, minallowed=None, maxallowed=None),
-                    ),
                 ),
                 xaxis=dict(
                     title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
                     hoverformat=dataset.layout["yaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["yaxis"]["ticksuffix"],
                     autorangeoptions=dict(
-                        clipmin=dataset.layout["yaxis"]["autorangeoptions"].get("clipmin"),
-                        clipmax=dataset.layout["yaxis"]["autorangeoptions"].get("clipmax"),
                         minallowed=minallowed,
                         maxallowed=maxallowed,
                     ),

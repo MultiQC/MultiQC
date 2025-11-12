@@ -166,22 +166,6 @@ class MultiqcModule(BaseMultiqcModule):
             "use_legend": True,
             "sort_samples": False,
             "cpswitch": False,  # Hide the counts/percentages switch button
-            "x_lines": [
-                {
-                    "color": "#ff0000",
-                    "dash": "dash",
-                    "value": 33.33,
-                    "width": 1,
-                    "label": "Random distribution (1/3)",
-                },
-                {
-                    "color": "#ff0000",
-                    "dash": "dash",
-                    "value": 66.67,
-                    "width": 1,
-                    "label": "Random distribution (2/3)",
-                },
-            ],
         }
 
         # Define categories (let MultiQC assign default colors)
@@ -210,11 +194,6 @@ class MultiqcModule(BaseMultiqcModule):
             Ribo-seq data typically shows enrichment in Frame 0, particularly for read lengths 28-30nt,
             though the degree of frame preference can vary depending on the experimental protocol
             (e.g., RNase I vs. MNase treatment).
-
-            **Red dashed reference lines** mark the expected proportions (33.3% and 66.7%) if reads were
-            randomly distributed across frames. Good quality Ribo-seq data should show Frame 0 proportions
-            well above the 33.3% threshold.
-
             Read lengths are shown as separate bars for each sample.
             """,
             plot=plot_html,
