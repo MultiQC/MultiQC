@@ -90,6 +90,29 @@ class MultiqcModule(BaseMultiqcModule):
             # Parse Python dict literal safely with ast.literal_eval
             ribo_seq_counts = ast.literal_eval(input_string)
 
+            # Validate the parsed data structure
+            if not isinstance(ribo_seq_counts, dict):
+                log.warning(f"File {f['fn']}: expected dict, got {type(ribo_seq_counts).__name__}")
+                return {}
+
+            # Validate that all values are lists with exactly 3 elements
+            for read_length, counts in ribo_seq_counts.items():
+                if not isinstance(counts, list):
+                    log.warning(
+                        f"File {f['fn']}: expected list for read length {read_length}, got {type(counts).__name__}"
+                    )
+                    return {}
+                if len(counts) != 3:
+                    log.warning(
+                        f"File {f['fn']}: expected 3 frame counts for read length {read_length}, got {len(counts)}"
+                    )
+                    return {}
+                # Validate that all counts are numeric
+                if not all(isinstance(c, (int, float)) for c in counts):
+                    log.warning(f"File {f['fn']}: non-numeric counts found for read length {read_length}")
+                    return {}
+
+            log.debug(f"Successfully parsed {f['fn']} with {len(ribo_seq_counts)} read lengths")
             return ribo_seq_counts
 
         except (SyntaxError, ValueError, IndexError) as e:
