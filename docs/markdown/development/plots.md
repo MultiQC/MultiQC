@@ -226,6 +226,34 @@ html = bargraph.plot([data, data], cats, pconfig=...)
 
 Note that, as in this example, the plot data can be the same dictionary supplied twice.
 
+### Visual grouping
+
+You can add visual spacing between groups of bars to improve readability without affecting data exports. Use the `sample_groups` configuration option:
+
+```python
+from multiqc.plots import bargraph
+
+data = {
+    'sample1': {'aligned': 100, 'unaligned': 10},
+    'sample2': {'aligned': 200, 'unaligned': 20},
+    'sample3': {'aligned': 150, 'unaligned': 15},
+    'sample4': {'aligned': 180, 'unaligned': 18},
+}
+
+pconfig = {
+    'id': 'my_bargraph',
+    'title': 'My Bar Graph',
+    'sample_groups': [
+        ['sample1', 'sample2'],  # Group 1
+        ['sample3', 'sample4']   # Group 2
+    ]
+}
+
+html = bargraph.plot(data, cats, pconfig=pconfig)
+```
+
+The groups will appear with visual gaps between them in the plot, but spacers will **not** be included in data exports (CSV, JSON, etc.).
+
 ## Line graphs
 
 This base function works much like the above, but for two-dimensional
