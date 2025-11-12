@@ -133,17 +133,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Create a single dataset with all sample-length combinations
         # Group by read length first, then by sample within each length
         plot_data = {}
-        for i, length in enumerate(all_lengths):
-            # Add spacer before each group (except first) for visual separation
-            # Using explicit __SPACER__ marker that can be filtered from data exports
-            if i > 0:
-                spacer_key = f"__SPACER_{i}__"
-                plot_data[spacer_key] = {
-                    "Frame 0": 0,
-                    "Frame 1": 0,
-                    "Frame 2": 0,
-                }
+        sample_groups = []  # For visual grouping by read length
 
+        for length in all_lengths:
+            length_group = []  # Samples for this read length
             for sample_name in sorted(self.frame_proportions.keys()):
                 if length in self.frame_proportions[sample_name]:
                     props = self.frame_proportions[sample_name][length]
@@ -154,6 +147,9 @@ class MultiqcModule(BaseMultiqcModule):
                         "Frame 1": props["f1_prop"] * 100.0,
                         "Frame 2": props["f2_prop"] * 100.0,
                     }
+                    length_group.append(combined_key)
+            if length_group:
+                sample_groups.append(length_group)
 
         # Create configuration
         pconfig = {
@@ -164,8 +160,8 @@ class MultiqcModule(BaseMultiqcModule):
             "hide_zero_cats": False,
             "ymax": 100,
             "use_legend": True,
-            "sort_samples": False,
             "cpswitch": False,  # Hide the counts/percentages switch button
+            "sample_groups": sample_groups,  # Visual grouping by read length
             "x_lines": [
                 {
                     "color": "#ff0000",
