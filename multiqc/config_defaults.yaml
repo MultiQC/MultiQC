@@ -260,6 +260,7 @@ fn_clean_exts:
   - ".counts"
   - "_counts"
   - ".txt"
+  - "_qual"
   - ".tsv"
   - ".csv"
   - ".aligned"
@@ -470,6 +471,7 @@ module_order:
   - rockhopper
   - rsem
   - rseqc
+  - ribotish
   - busco
   - checkm
   - bustools

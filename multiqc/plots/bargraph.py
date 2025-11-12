@@ -67,6 +67,7 @@ class BarPlotConfig(PConfig):
     use_legend: Optional[bool] = None
     suffix: Optional[str] = None
     lab_format: Optional[str] = None
+    sample_groups: Optional[List[List[str]]] = None  # List of sample groups for visual spacing
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         if "suffix" in data:
@@ -147,6 +148,57 @@ def _cluster_samples(data: DatasetT, cats: Dict[CatName, Any], method: str = "co
         return sample_names
 
 
+def _insert_spacers_from_groups(
+    datasets: List[DatasetT],
+    categories_per_ds: List[Dict[CatName, CatConf]],
+    sample_groups: List[List[str]],
+) -> List[DatasetT]:
+    """
+    Insert spacer samples between groups for visual separation.
+
+    Args:
+        datasets: List of datasets (one per button)
+        categories_per_ds: Categories for each dataset
+        sample_groups: List of sample groups, e.g. [['sample1', 'sample2'], ['sample3', 'sample4']]
+
+    Returns:
+        Updated datasets with spacers inserted
+
+    Note:
+        Samples not included in any group will be added at the end after a spacer.
+    """
+    new_datasets: List[DatasetT] = []
+
+    for ds_idx, dataset in enumerate(datasets):
+        new_dataset: DatasetT = {}
+        categories = categories_per_ds[ds_idx]
+        grouped_samples: set[SampleName] = set()
+
+        def add_spacer(idx: int) -> None:
+            new_dataset[SampleName(f"__SPACER_{idx}__")] = {cat_id: 0 for cat_id in categories.keys()}
+
+        spacer_idx = 1
+        for group_idx, group in enumerate(sample_groups):
+            for sample_name_str in group:
+                sample_name = SampleName(sample_name_str)
+                if sample_name in dataset:
+                    new_dataset[sample_name] = dataset[sample_name]
+                    grouped_samples.add(sample_name)
+
+            if group_idx < len(sample_groups) - 1:
+                add_spacer(spacer_idx)
+                spacer_idx += 1
+
+        ungrouped = [s for s in dataset.keys() if s not in grouped_samples]
+        if ungrouped:
+            add_spacer(spacer_idx)
+            new_dataset.update({s: dataset[s] for s in ungrouped})
+
+        new_datasets.append(new_dataset)
+
+    return new_datasets
+
+
 class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
     data: List[DatasetT]
     cats: List[Dict[CatName, CatConf]]
@@ -166,6 +218,10 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         to normalize the input data before we save it to intermediate format and plot.
         """
         pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
+
+        # If sample_groups is provided, disable sort_samples to preserve group order
+        if pconf.sample_groups is not None:
+            pconf.sort_samples = False
 
         # Given one dataset - turn it into a list
         raw_datasets: List[DatasetT]
@@ -263,6 +319,10 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                 if all(math.isnan(v) for v in filtered_val_by_cat.values()):
                     continue
                 filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
+
+        # Insert spacers based on sample_groups configuration
+        if pconf.sample_groups:
+            filtered_datasets = _insert_spacers_from_groups(filtered_datasets, categories_per_ds, pconf.sample_groups)
 
         return BarPlotInputData(
             anchor=plot_anchor(pconf),
@@ -465,6 +525,25 @@ def plot(
     :param cats: optional list or dict with plot categories
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
+
+    Visual Grouping:
+    You can add visual spacing between groups of samples using the `sample_groups` configuration.
+    Spacers will appear as gaps in the plot but will NOT be included in data exports.
+
+    Example:
+        plot_data = {
+            'sample1': {'cat1': 10, 'cat2': 20},
+            'sample2': {'cat1': 15, 'cat2': 25},
+            'sample3': {'cat1': 12, 'cat2': 22},
+            'sample4': {'cat1': 18, 'cat2': 28}
+        }
+        pconfig = {
+            'sample_groups': [
+                ['sample1', 'sample2'],  # Group 1
+                ['sample3', 'sample4']   # Group 2
+            ]
+        }
+        bargraph.plot(plot_data, cats, pconfig)
     """
     # We want to be permissive to user inputs - but normalizing them now to simplify further processing
     inputs = BarPlotInputData.create(data, cats, pconfig)
@@ -640,6 +719,9 @@ class Dataset(BaseDataset):
         for cat in self.cats:
             for d_idx, d_val in enumerate(cat.data):
                 s_name = self.samples[d_idx]
+                # Skip spacer samples from data exports
+                if s_name.startswith("__SPACER_") or (s_name.strip() == ""):
+                    continue
                 val_by_cat_by_sample[s_name][cat.name] = str(d_val)
         report.write_data_file(val_by_cat_by_sample, self.uid)
 
@@ -775,17 +857,27 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             defer_render_if_large=False,  # We hide samples on large bar plots, so no need to defer render
         )
 
+        # Transform __SPACER_N__ markers to N spaces for display
+        def transform_spacer(s: str) -> str:
+            if s.startswith("__SPACER_"):
+                parts = s.replace("__", "").replace("_", " ").split()
+                num = int(parts[1]) if len(parts) > 1 else 1
+                return " " * num
+            return s
+
+        display_samples_lists = [[transform_spacer(s) for s in samples] for samples in samples_lists]
+
         model.datasets = [
             Dataset.create(
                 d,
                 cats=cats,
-                samples=samples,
+                samples=display_samples,
                 cluster_samples=pconfig.cluster_samples,
                 cluster_method=pconfig.cluster_method,
                 original_data=original_data[idx] if original_data and idx < len(original_data) else None,
                 original_cats=original_cats[idx] if original_cats and idx < len(original_cats) else None,
             )
-            for idx, (d, cats, samples) in enumerate(zip(model.datasets, cats_lists, samples_lists))
+            for idx, (d, cats, display_samples) in enumerate(zip(model.datasets, cats_lists, display_samples_lists))
         ]
 
         # Set the barmode
