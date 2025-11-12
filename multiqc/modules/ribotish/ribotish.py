@@ -125,10 +125,10 @@ class MultiqcModule(BaseMultiqcModule):
         Each sample-length combination gets its own bar.
         """
         # First, collect all read lengths across all samples
-        all_lengths = set()
+        all_lengths_set: set[int] = set()
         for sample_data in self.frame_proportions.values():
-            all_lengths.update(sample_data.keys())
-        all_lengths = sorted(all_lengths)
+            all_lengths_set.update(sample_data.keys())
+        all_lengths = sorted(all_lengths_set)
 
         # Create a single dataset with all sample-length combinations
         # Group by read length first, then by sample within each length
@@ -221,10 +221,10 @@ class MultiqcModule(BaseMultiqcModule):
         Provides both line graph and heatmap views with a switcher.
         """
         # Collect all read lengths
-        all_lengths = set()
+        all_lengths_set: set[int] = set()
         for sample_data in self.frame_proportions.values():
-            all_lengths.update(sample_data.keys())
-        all_lengths = sorted(all_lengths)
+            all_lengths_set.update(sample_data.keys())
+        all_lengths = sorted(all_lengths_set)
 
         # Calculate sample totals once for efficiency
         sample_totals = {}
@@ -232,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
             sample_totals[sample_name] = sum(props["total"] for props in self.frame_proportions[sample_name].values())
 
         # Prepare data for line graph
-        line_data = {}
+        line_data: dict[str, dict[int, float]] = {}
         for sample_name in sorted(self.frame_proportions.keys()):
             sample_total = sample_totals[sample_name]
             line_data[sample_name] = {}
