@@ -465,6 +465,17 @@ def plot(
     :param cats: optional list or dict with plot categories
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
+
+    Visual Spacers:
+    Sample names starting with '__SPACER_' will be treated as visual spacers for grouping.
+    They will appear as gaps in the plot but will NOT be included in data exports.
+    Example:
+        plot_data = {
+            'sample1': {'cat1': 10, 'cat2': 20},
+            '__SPACER_1__': {'cat1': 0, 'cat2': 0},  # Visual separator
+            'sample2': {'cat1': 15, 'cat2': 25}
+        }
+    The number in __SPACER_N__ determines the spacing (N spaces) to avoid Plotly deduplication.
     """
     # We want to be permissive to user inputs - but normalizing them now to simplify further processing
     inputs = BarPlotInputData.create(data, cats, pconfig)
@@ -640,6 +651,9 @@ class Dataset(BaseDataset):
         for cat in self.cats:
             for d_idx, d_val in enumerate(cat.data):
                 s_name = self.samples[d_idx]
+                # Skip spacer samples from data exports
+                if s_name.startswith("__SPACER_") or (s_name.strip() == ""):
+                    continue
                 val_by_cat_by_sample[s_name][cat.name] = str(d_val)
         report.write_data_file(val_by_cat_by_sample, self.uid)
 
@@ -775,17 +789,27 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             defer_render_if_large=False,  # We hide samples on large bar plots, so no need to defer render
         )
 
+        # Transform __SPACER_N__ markers to N spaces for display
+        def transform_spacer(s: str) -> str:
+            if s.startswith("__SPACER_"):
+                parts = s.replace("__", "").replace("_", " ").split()
+                num = int(parts[1]) if len(parts) > 1 else 1
+                return " " * num
+            return s
+
+        display_samples_lists = [[transform_spacer(s) for s in samples] for samples in samples_lists]
+
         model.datasets = [
             Dataset.create(
                 d,
                 cats=cats,
-                samples=samples,
+                samples=display_samples,
                 cluster_samples=pconfig.cluster_samples,
                 cluster_method=pconfig.cluster_method,
                 original_data=original_data[idx] if original_data and idx < len(original_data) else None,
                 original_cats=original_cats[idx] if original_cats and idx < len(original_cats) else None,
             )
-            for idx, (d, cats, samples) in enumerate(zip(model.datasets, cats_lists, samples_lists))
+            for idx, (d, cats, display_samples) in enumerate(zip(model.datasets, cats_lists, display_samples_lists))
         ]
 
         # Set the barmode
