@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Print results and create sections
         if len(self.data_summary) > 0:
             log.info("Found {} summary tables".format(len(self.data_summary)))
-            # self.add_summary_section()
+            self.add_summary_section()
         if len(self.data_qc_counts) > 0:
             log.info("Found {} QC counts tables".format(len(self.data_qc_counts)))
             self.add_qc_counts_section()
@@ -157,11 +157,15 @@ class MultiqcModule(BaseMultiqcModule):
             log.info("Found {} adata tables".format(len(self.data_adata)))
             self.add_adata_section()
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Save parsed table
         self.write_data_file(self.data_summary, "multiqc_checkatlas_summary")
 
     def add_summary_section(self):
-        print(self.data_summary)
+        pconfig_summary = {"namespace": "summary_table", "id": "summary", "title": "Summary of checkatlas results"}
         self.add_section(
             name="Atlas overview",
             anchor="checkatlas-summary",
@@ -169,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
                 Test
                 """,
-            plot=table.plot(data=self.data_summary),
+            plot=table.plot(data=self.data_summary, pconfig=pconfig_summary),
         )
 
     def add_adata_section(self):
