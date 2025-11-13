@@ -2,7 +2,7 @@
 title: GoPeaks
 displayed_sidebar: multiqcSidebar
 description: >
-  Calls peaks in CUT&TAG/CUT&RUN datasets.
+    <p>Calls peaks in CUT&amp;TAG/CUT&amp;RUN datasets.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/gopeaks/gopeaks.py
 -->
 
 :::note
-Calls peaks in CUT&TAG/CUT&RUN datasets.
+<p>Calls peaks in CUT&amp;TAG/CUT&amp;RUN datasets.</p>
 
 [https://github.com/maxsonBraunLab/gopeaks](https://github.com/maxsonBraunLab/gopeaks)
 :::
@@ -30,5 +30,6 @@ the number of peaks called per sample via the general table and the bar plot.
 
 ```yaml
 gopeaks:
-  fn: "*_gopeaks.json"
+  fn: '*_gopeaks.json'
 ```
+    

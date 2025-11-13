@@ -43,6 +43,30 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.closest_taxa_table(data_by_sample)
 
+        # Add important columns to the general stats table
+        headers = {
+            "classification": {
+                "title": "Classification",
+                "description": "GTDB taxonomy string inferred by the GTDB-Tk.",
+            },
+            "ANI": {
+                "title": "ANI to closest genome",
+                "description": "Depending on the classification method, either the 'closest_genome_ani' or 'closest_placement_ani'.",
+                "min": 0,
+                "max": 100,
+                "hidden": True,
+            },
+            "AF": {
+                "title": "AF to closest genome",
+                "description": "Depending on the classification method, either the 'closest_genome_af' or 'closest_placement_af'.",
+                "min": 0,
+                "max": 1,
+                "scale": "Purples",
+                "hidden": True,
+            },
+        }
+        self.general_stats_addcols(data_by_sample, headers)
+
     def parse_file(self, f, data_by_sample):
         """Parse the summary.tsv outputs."""
         column_names = (

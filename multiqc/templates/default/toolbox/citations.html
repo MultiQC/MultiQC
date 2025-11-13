@@ -1,0 +1,24 @@
+<!-- Citations -->
+<div class="tab-pane" id="mqc_citations" role="tabpanel">
+  <h5 class="mb-3">Tool Citations</h5>
+  <p>Please remember to cite <em>all of the tools</em> that you use in your analysis.</p>
+  <div class="d-flex justify-content-around gap-2 mb-3">
+    <button
+      class="download-citations-btn btn btn-sm btn-outline-secondary flex-grow-1"
+      data-format="doi"
+      title="Download file with list of DOIs"
+      data-bs-toggle="tooltip"
+    >
+      {{ material_icon('mdi:qrcode', 16) }} List of DOIs
+    </button>
+    <button
+      class="download-citations-btn btn btn-sm btn-outline-secondary flex-grow-1"
+      data-format="bibtex"
+      title="Download BibTeX file"
+      data-bs-toggle="tooltip"
+    >
+      {{ material_icon('mdi:format-bold', 16) }} BibTeX file
+    </button>
+  </div>
+  <table id="mqc_citations_list" class="table"></table>
+</div>

@@ -41,6 +41,7 @@ Thumbs.db
 .idea
 .vscode
 runTest.sh
+CLAUDE.local.md
 
 # Prevent direnv from cluttering the repo
 .envrc
@@ -54,7 +55,8 @@ venv*
 /seqeralabs-docs
 
 node_modules/
-package-lock.json
-package.json
 
 .env
+.claude/settings.local.json
+
+Pipfile

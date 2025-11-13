@@ -102,12 +102,12 @@ multiqc.parse_logs(
 )
 ```
 
-MultiQC v1.29 and higher generates `BETA-multiqc.parquet` file in `multiqc_data` output directory. You can pass that file to `parse_logs`, and it will load that previous MultiQC run into memory.
+MultiQC v1.29 and higher generates `multiqc.parquet` file in `multiqc_data` output directory. You can pass that file to `parse_logs`, and it will load that previous MultiQC run into memory.
 
 Example:
 
 ```python
-multiqc.parse_logs('multiqc_data/BETA-multiqc.parquet')
+multiqc.parse_logs('multiqc_data/multiqc.parquet')
 ```
 
 ## List what's loaded
@@ -377,7 +377,7 @@ Parameters:
 - `plots_force_flat`: Use only flat plots (static images)
 - `plots_force_interactive`: Use only interactive plots (in-browser Javascript)
 - `strict`: Don't catch exceptions, run additional code checks to help development
-- `development`: Development mode. Do not compress and minimise JS, export uncompressed plot data
+- `development`: Development mode. Do not inline JS and CSS, export uncompressed plot data
 - `make_pdf`: Create PDF report. Requires Pandoc to be installed
 - `no_megaqc_upload`: Don't upload generated report to MegaQC, even if MegaQC options are found
 - `quiet`: Only show log warnings

@@ -7,12 +7,115 @@ description: How to use MultiQC raw data outputs
 
 Whilst MultiQC is typically used as a final reporting step in an analysis, it can also be used as an intermediate in your analysis.
 
-MultiQC saves a directory of machine-readable outputs called `multiqc_data/`. In here there are files from each module and table, as well as a verbose `multiqc.log` file and, a `BETA-multiqc.parquet` file that contains all the intermediate data and metadata needed to regenereate a report.
+MultiQC saves a directory of machine-readable outputs called `multiqc_data/`. In here there are files from each module and table, as well as a verbose `multiqc.log` file and, a `multiqc.parquet` file that contains all the intermediate data and metadata needed to regenereate a report.
 
 Most of these files are tab-separated `.tsv` files by default, but you can choose to have them as JSON, YAML if you prefer with the `-k`/`--data-format` flag or the `data_format` option in a config file.
 
 These files can be useful as MultiQC essentially standardises the outputs from a lot of different tools.
 Typical usage of MultiQC outputs could be filtering of large datasets (eg. single-cell analysis) or trend-monitoring of repeated runs.
+
+## Programmatic HTML Report Access
+
+MultiQC provides clean programmatic access to HTML report content, making it easy to integrate MultiQC into web applications, Jupyter notebooks, Streamlit dashboards, and other interactive environments.
+
+### Method 1: Using `multiqc.run()` with `return_html=True`
+
+```python
+import multiqc
+from multiqc.core.update_config import ClConfig
+
+result = multiqc.run(
+    "./analysis_data",
+    cfg=ClConfig(quiet=True, no_data_dir=True),
+    return_html=True
+)
+
+if result.sys_exit_code == 0 and result.html_content:
+    html_content = result.html_content
+    print(f"Generated {len(html_content)} characters of HTML")
+    # Use html_content in your application
+else:
+    print(f"MultiQC failed: {result.message}")
+```
+
+### Method 2: Using `multiqc.write_report()` with `return_html=True`
+
+```python
+import multiqc
+
+# Parse the analysis files first
+multiqc.parse_logs("./analysis_data", quiet=True)
+
+# Generate HTML report
+html_content = multiqc.write_report(
+    title="My Quality Control Report",
+    quiet=True,
+    return_html=True
+)
+
+if html_content:
+    # Use html_content in Streamlit, Jupyter, Flask, etc.
+    pass
+```
+
+### Integration Examples
+
+#### Streamlit Dashboard
+
+```python
+import streamlit as st
+import multiqc
+from multiqc.core.update_config import ClConfig
+
+st.title("Quality Control Dashboard")
+uploaded_files = st.file_uploader("Upload analysis files", accept_multiple_files=True)
+
+if uploaded_files:
+    # Process files and generate report
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Save uploaded files to temp directory
+        for file in uploaded_files:
+            with open(os.path.join(temp_dir, file.name), "wb") as f:
+                f.write(file.read())
+
+        # Generate MultiQC report
+        result = multiqc.run(temp_dir, cfg=ClConfig(quiet=True), return_html=True)
+
+        if result.html_content:
+            st.components.v1.html(result.html_content, height=800, scrolling=True)
+```
+
+#### Jupyter Notebook
+
+```python
+from IPython.display import HTML
+import multiqc
+
+result = multiqc.run("./experiment_data", return_html=True)
+if result.html_content:
+    display(HTML(result.html_content))
+```
+
+#### Flask Web Application
+
+```python
+from flask import Flask
+import multiqc
+
+app = Flask(__name__)
+
+@app.route('/qc-report/<path:analysis_path>')
+def generate_qc_report(analysis_path):
+    result = multiqc.run(analysis_path, return_html=True)
+    return result.html_content if result.html_content else "Error generating report"
+```
+
+### Notes
+
+- The HTML content is fully self-contained with all CSS and JavaScript
+- Use `quiet=True` and `no_data_dir=True` for cleaner programmatic usage
+- Always check `result.sys_exit_code` and `result.html_content` before using the HTML
+- The returned HTML can be several MB in size for large datasets
 
 Below are a few tools that are specifically designed to work with MultiQC.
 They are not created by or endorsed by the MultiQC author but may be helpful for your research.
@@ -25,6 +128,173 @@ They are not created by or endorsed by the MultiQC author but may be helpful for
 Provides the means to convert `multiqc_data.json` files into `tidy` data frames for downstream analysis in R.
 
 This analysis might involve cohort analysis, quality control visualisation, change-point detection, statistical process control, clustering, or any other type of quality analysis.
+
+## Programmatic HTML Report Capture
+
+MultiQC supports capturing the HTML report content programmatically, which is useful for integrating MultiQC into web applications, Jupyter notebooks, or other interactive environments like Streamlit dashboards.
+
+### Method 1: Using filename='stdout' with Python API
+
+```python
+import sys
+from io import StringIO
+import multiqc
+from multiqc.core.update_config import ClConfig
+
+def get_multiqc_html(analysis_dir):
+    """Capture MultiQC HTML report as a string variable"""
+    # Save the original stdout
+    original_stdout = sys.stdout
+    captured_output = StringIO()
+
+    try:
+        # Redirect stdout to capture the HTML
+        sys.stdout = captured_output
+
+        # Configure MultiQC to output HTML to stdout
+        cfg = ClConfig(
+            filename="stdout",
+            quiet=True,          # Suppress log messages
+            no_data_dir=True     # Don't create data directory
+        )
+
+        # Run MultiQC
+        result = multiqc.run(analysis_dir, cfg=cfg)
+
+        if result.sys_exit_code == 0:
+            return captured_output.getvalue()
+        return None
+
+    finally:
+        # Always restore stdout
+        sys.stdout = original_stdout
+        captured_output.close()
+
+# Usage example
+html_content = get_multiqc_html("./analysis_data")
+if html_content:
+    print(f"Captured {len(html_content)} characters of HTML content")
+    # Use html_content in your application
+```
+
+### Method 2: Using CLI with subprocess
+
+```python
+import subprocess
+import sys
+
+def get_multiqc_html_cli(analysis_dir):
+    """Capture MultiQC HTML using CLI interface"""
+    result = subprocess.run([
+        sys.executable, "-m", "multiqc",
+        analysis_dir,
+        "--filename", "stdout",
+        "--quiet",
+        "--no-data-dir"
+    ], capture_output=True, text=True)
+
+    if result.returncode == 0:
+        return result.stdout
+    return None
+
+# Usage
+html_content = get_multiqc_html_cli("./data")
+```
+
+### Integration Examples
+
+#### Streamlit Dashboard
+
+```python
+import streamlit as st
+
+def generate_multiqc_report(data_dir):
+    # Use Method 1 from above
+    return get_multiqc_html(data_dir)
+
+st.title("Quality Control Dashboard")
+
+# File uploader
+uploaded_files = st.file_uploader(
+    "Upload analysis files",
+    accept_multiple_files=True
+)
+
+if uploaded_files:
+    # Process uploaded files and generate report
+    html_report = generate_multiqc_report("./temp_data")
+
+    if html_report:
+        # Display the HTML report directly in Streamlit
+        st.components.v1.html(html_report, height=800, scrolling=True)
+    else:
+        st.error("Failed to generate MultiQC report")
+```
+
+#### Jupyter Notebook
+
+```python
+from IPython.display import HTML
+
+# Generate and display MultiQC report inline
+html_content = get_multiqc_html("./experiment_data")
+if html_content:
+    display(HTML(html_content))
+```
+
+#### Flask Web Application
+
+```python
+from flask import Flask, render_template_string
+
+app = Flask(__name__)
+
+@app.route('/qc/<path:analysis_path>')
+def quality_control_report(analysis_path):
+    """Serve MultiQC report dynamically"""
+    html_content = get_multiqc_html(analysis_path)
+
+    if html_content:
+        return html_content  # Return HTML directly
+    else:
+        return "Error generating report", 500
+
+@app.route('/dashboard/<path:analysis_path>')
+def embedded_dashboard(analysis_path):
+    """Embed MultiQC report in a larger dashboard"""
+    html_content = get_multiqc_html(analysis_path)
+
+    dashboard_template = """
+    <html>
+    <head><title>Analysis Dashboard</title></head>
+    <body>
+        <div class="header">
+            <h1>Lab Quality Control Dashboard</h1>
+            <nav><!-- Navigation links --></nav>
+        </div>
+        <div class="multiqc-container">
+            {{ multiqc_html|safe }}
+        </div>
+        <div class="footer">
+            <p>Generated with MultiQC</p>
+        </div>
+    </body>
+    </html>
+    """
+
+    return render_template_string(
+        dashboard_template,
+        multiqc_html=html_content
+    )
+```
+
+### Notes
+
+- The HTML content includes all CSS and JavaScript needed for interactive plots
+- Use `quiet=True` to suppress log messages when capturing HTML
+- Consider using `no_data_dir=True` if you don't need the raw data files
+- The captured HTML is fully self-contained and can be saved, served, or embedded as needed
+- This approach works with all MultiQC modules and configurations
 
 ## MegaQC
 
@@ -46,7 +316,7 @@ ChronQC is a quality control (QC) tracking system for clinical implementation of
 
 ## MultiQC Parquet Output (BETA)
 
-Starting from version 1.29, MultiQC writes out all plot and table data in a standardized Apache Parquet file format (`BETA-multiqc.parquet`) in the `multiqc_data` directory. This feature provides several significant benefits:
+Starting from version 1.29, MultiQC writes out all plot and table data in a standardized Apache Parquet file format (`multiqc.parquet`) in the `multiqc_data` directory. This feature provides several significant benefits:
 
 - **Persistence**: The parquet file contains all the data necessary to regenerate MultiQC reports without needing access to the original analysis files
 - **Reusability**: The data is structured in a way that's optimized for cross-run analysis and data warehousing
@@ -58,7 +328,7 @@ Note that the format is unstable as of 1.29 may change in 1.30, where it will be
 
 ### Parquet File Structure
 
-The `BETA-multiqc.parquet` file contains several different types of rows that can be distinguished by the `type` column:
+The `multiqc.parquet` file contains several different types of rows that can be distinguished by the `type` column:
 
 1. **`run_metadata`**: Contains metadata about the MultiQC run, including:
 
@@ -115,7 +385,7 @@ To explore the structure programmatically:
 import polars as pl
 
 # Load the parquet file
-df = pl.read_parquet("multiqc_data/BETA-multiqc.parquet")
+df = pl.read_parquet("multiqc_data/multiqc.parquet")
 
 # Get unique row types
 print(df.select("type").unique())
@@ -149,7 +419,7 @@ Developers can use these relationships to reconstruct the full structure of the 
 One of the key benefits of the parquet output is the ability to regenerate MultiQC reports without needing the original data files:
 
 ```bash
-multiqc multiqc_data/BETA-multiqc.parquet
+multiqc multiqc_data/multiqc.parquet
 ```
 
 This will load all the data from the parquet file and generate a new report.
@@ -165,7 +435,7 @@ The parquet output enables easy aggregation of data from multiple MultiQC runs:
 multiqc /path/to/analysis1/ -o run1_output
 
 # Run MultiQC on both the second set of data and the parquet from the first run
-multiqc /path/to/analysis2/ run1_output/multiqc_data/BETA-multiqc.parquet -o combined_output
+multiqc /path/to/analysis2/ run1_output/multiqc_data/multiqc.parquet -o combined_output
 ```
 
 This will generate a report containing data from both runs. You can combine any number of parquet files with new data in a single command.
@@ -178,7 +448,7 @@ For programmatic access to MultiQC data, you can use the Python API to load parq
 import multiqc
 
 # Load data from a parquet file
-multiqc.parse_logs('multiqc_data/BETA-multiqc.parquet')
+multiqc.parse_logs('multiqc_data/multiqc.parquet')
 
 # List loaded modules and access data
 modules = multiqc.list_modules()
@@ -195,7 +465,7 @@ import polars as pl
 from pyiceberg.catalog import load_catalog
 
 # Load the MultiQC parquet file
-multiqc_df = pl.read_parquet("multiqc_data/BETA-multiqc.parquet")
+multiqc_df = pl.read_parquet("multiqc_data/multiqc.parquet")
 
 # Configure and load Iceberg catalog
 catalog = load_catalog(

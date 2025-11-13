@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class ScatterConfig(PConfig):
-    categories: Optional[List[str]] = None
+    categories: Optional[List[str]] = None  # x-axis labels
+    groups: Optional[List[str]] = None  # color groups
     extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
     marker_size: Optional[int] = None
     marker_line_width: Optional[int] = None
@@ -88,6 +89,8 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
             schema_overrides={
                 "data_label": pl.Utf8,
                 "sample": pl.Utf8,
+                "dataset_idx": pl.Int64,
+                "point_idx": pl.Int64,
             },
         )
         return self.finalize_df(df)
@@ -332,7 +335,7 @@ class Dataset(BaseDataset):
             x = el["x"]
             name = el["name"]
             group = el.get("group")
-            color = mqc_colour.color_to_rgb_string(cast(Optional[str], el.get("color")))
+            color = el.get("color")
             annotation = el.get("annotation")
 
             show_in_legend = False
@@ -353,7 +356,7 @@ class Dataset(BaseDataset):
             params = copy.deepcopy(self.trace_params)
             marker = params.pop("marker")
             if color:
-                marker["color"] = color
+                marker["color"] = mqc_colour.color_to_rgb_string(cast(Optional[str], el.get("color")))
 
             if "marker_line_width" in el:
                 marker["line"]["width"] = el["marker_line_width"]
@@ -512,9 +515,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
                             continue
                         if series_config.ymin is not None and float(point["y"]) < float(series_config.ymin):
                             continue
-                    if "name" in point:
-                        point["name"] = f"{s_name}: {point['name']}"
-                    else:
+                    if "name" not in point:
                         point["name"] = s_name
 
                     for k in ["color", "opacity", "marker_size", "marker_line_width", "marker_symbol"]:

@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Som.py output not currently supported.
+    Som.py output supported in separate sompy module.
     """
 
     def __init__(self):

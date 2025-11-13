@@ -12,7 +12,7 @@ http://code.divshot.com/geo-bootstrap/
 
 import os
 
-template_parent = "default"
+template_parent = "original"
 
 template_dir = os.path.dirname(__file__)
 base_fn = "base.html"
