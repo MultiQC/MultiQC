@@ -607,6 +607,7 @@ module_order:
   - xenome
   - xengsort
   - metaphlan
+  - sylphtax
   - seqwho
   - telseq
   - ataqv
