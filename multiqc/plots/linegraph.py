@@ -1,614 +1,770 @@
-#!/usr/bin/env python
+"""MultiQC functions to plot a linegraph"""
 
-""" MultiQC functions to plot a linegraph """
-
-import base64
-import inspect
 import io
+import json
 import logging
+import math
 import os
 import random
-import re
-import sys
-from collections import OrderedDict
+from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
 
-from multiqc.utils import config, report, util_functions
+import plotly.graph_objects as go  # type: ignore
+import polars as pl
+from natsort import natsorted
+from pydantic import Field
+
+from multiqc import config, report
+from multiqc.core.plot_data_store import parse_value
+from multiqc.plots.plot import (
+    BaseDataset,
+    NormalizedPlotInputData,
+    PConfig,
+    Plot,
+    PlotType,
+    convert_dash_style,
+    plot_anchor,
+)
+from multiqc.types import Anchor, SampleName
+from multiqc.utils import mqc_colour
+from multiqc.utils.util_functions import update_dict
+from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
 
-try:
-    # Import matplot lib but avoid default X environment
-    import matplotlib
 
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    logger.debug("Using matplotlib version {}".format(matplotlib.__version__))
-except Exception as e:
-    # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
-    # The lack of the library will be handled when plots are attempted
-    print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
-    print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
-    print(e)
-
-letters = "abcdefghijklmnopqrstuvwxyz"
-
-# Load the template so that we can access its configuration
-# Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+KeyT = TypeVar("KeyT", int, str, float)
+ValT = TypeVar("ValT", int, str, float, None)
+XToYDictT = Mapping[KeyT, ValT]
+DatasetT = Mapping[Union[str, SampleName], XToYDictT[KeyT, ValT]]
 
 
-def get_template_mod():
-    global _template_mod
-    if not _template_mod:
-        _template_mod = config.avail_templates[config.template].load()
-    return _template_mod
+class Marker(ValidatedConfig):
+    symbol: Optional[str] = None
+    color: Optional[str] = None
+    line_color: Optional[str] = None
+    fill_color: Optional[str] = None
+    width: int = 1
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("Marker",), **data)
 
 
-def plot(data, pconfig=None):
-    """Plot a line graph with X,Y data.
+class Series(ValidatedConfig, Generic[KeyT, ValT]):
+    name: str = Field(default_factory=lambda: f"series-{random.randint(1000000, 9999999)}")
+    pairs: List[Tuple[KeyT, ValT]]
+    color: Optional[str] = None
+    width: int = 2
+    dash: Optional[str] = None
+    showlegend: bool = True
+    marker: Optional[Marker] = None
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        path_in_cfg = path_in_cfg or ("Series",)
+
+        if "dashStyle" in data:
+            add_validation_warning(path_in_cfg, "'dashStyle' field is deprecated. Please use 'dash' instead")
+            data["dash"] = data.pop("dashStyle")
+
+        tuples: List[Tuple[KeyT, ValT]] = []
+        if "data" in data:
+            add_validation_warning(path_in_cfg + ("data",), "'data' field is deprecated. Please use 'pairs' instead")
+        for p in data.pop("data") if "data" in data else data.get("pairs", []):
+            if isinstance(p, list):
+                tuples.append(tuple(p))
+            else:
+                tuples.append(p)
+        data["pairs"] = tuples
+
+        super().__init__(**data, path_in_cfg=path_in_cfg)
+
+        if self.dash is not None:
+            self.dash = convert_dash_style(self.dash, path_in_cfg=path_in_cfg + ("dash",))
+
+    def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+        xs = [x[0] for x in self.pairs]
+        if len(xs) > 0:
+            return min(xs), max(xs)  # type: ignore
+        return None, None
+
+    def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+        ys = [x[1] for x in self.pairs if x[1] is not None]
+        if len(ys) > 0:
+            return min(ys), max(ys)  # type: ignore
+        return None, None
+
+
+SeriesT = Union[Series, Dict[str, Any]]
+
+
+class LinePlotConfig(PConfig):
+    xlab: Optional[str] = None
+    ylab: Optional[str] = None
+    categories: bool = False
+    smooth_points: Optional[int] = 500
+    smooth_points_sumcounts: Union[bool, List[bool], None] = None
+    extra_series: Optional[Union[Series, List[Series], List[List[Series]]]] = None
+    style: Optional[Literal["lines", "lines+markers"]] = None
+    hide_empty: bool = Field(True, deprecated="hide_empty")
+    colors: Dict[str, str] = {}
+
+    @classmethod
+    def parse_extra_series(
+        cls,
+        data: Union[SeriesT, List[SeriesT], List[List[SeriesT]]],
+        path_in_cfg: Tuple[str, ...],
+    ) -> Union[Series, List[Series], List[List[Series]]]:
+        if isinstance(data, list):
+            if isinstance(data[0], list):
+                return [[Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in ds] for ds in data]  # type: ignore
+            return [Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in data]  # type: ignore
+        return Series(path_in_cfg=path_in_cfg, **data) if isinstance(data, dict) else data  # type: ignore
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("lineplot",), **data)
+
+
+class Dataset(BaseDataset, Generic[KeyT, ValT]):
+    lines: List[Series[KeyT, ValT]]
+
+    def sample_names(self) -> List[SampleName]:
+        return [SampleName(line.name) for line in self.lines]
+
+    def get_x_range(self) -> Tuple[Optional[KeyT], Optional[KeyT]]:
+        if not self.lines:
+            return None, None
+        xmax, xmin = None, None
+        for line in self.lines:
+            _xmin, _xmax = line.get_x_range()
+            if _xmin is not None:
+                xmin = min(xmin, _xmin) if xmin is not None else _xmin  # type: ignore
+            if _xmax is not None:
+                xmax = max(xmax, _xmax) if xmax is not None else _xmax  # type: ignore
+        return xmin, xmax
+
+    def get_y_range(self) -> Tuple[Optional[ValT], Optional[ValT]]:
+        if not self.lines:
+            return None, None
+        ymax, ymin = None, None
+        for line in self.lines:
+            _ymin, _ymax = line.get_y_range()
+            if _ymin is not None:
+                ymin = min(ymin, _ymin) if ymin is not None else _ymin  # type: ignore
+            if _ymax is not None:
+                ymax = max(ymax, _ymax) if ymax is not None else _ymax  # type: ignore
+        return ymin, ymax
+
+    @staticmethod
+    def create(
+        base_dataset: BaseDataset,
+        lines: List[Series[KeyT, ValT]],
+        pconfig: LinePlotConfig,
+    ) -> "Dataset[KeyT, ValT]":
+        dataset: Dataset[KeyT, ValT] = Dataset(**base_dataset.model_dump(), lines=lines)
+
+        # Prevent Plotly-JS from parsing strings as numbers
+        if pconfig.categories or dataset.dconfig.get("categories"):
+            dataset.layout["xaxis"]["type"] = "category"
+
+        if pconfig.style is not None:
+            mode = pconfig.style
+        else:
+            num_data_points = sum(len(x.pairs) for x in lines)
+            if num_data_points < config.lineplot_number_of_points_to_hide_markers:
+                mode = "lines+markers"
+            else:
+                mode = "lines"
+
+        dataset.trace_params.update(
+            mode=mode,
+            line={"width": 2},
+        )
+        if mode == "lines+markers":
+            dataset.trace_params.update(
+                line={"width": 0.6},
+                marker={"size": 5},
+            )
+        return dataset
+
+    def create_figure(
+        self,
+        layout: go.Layout,
+        is_log: bool = False,
+        is_pct: bool = False,
+        **kwargs,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        if layout.showlegend is True:
+            # Extra space for legend
+            if hasattr(layout, "height") and isinstance(layout.height, int):
+                layout.height += len(self.lines) * 5
+
+        fig = go.Figure(layout=layout)
+        for series in self.lines:
+            xs = [x[0] for x in series.pairs]
+            ys = [x[1] for x in series.pairs]
+            params: Dict[str, Any] = {
+                "showlegend": series.showlegend,
+                "line": {
+                    "color": series.color,
+                    "dash": series.dash,
+                    "width": series.width,
+                },
+            }
+            if series.marker:
+                params["mode"] = "lines+markers"
+                params["marker"] = {
+                    "symbol": series.marker.symbol,
+                    "color": series.marker.fill_color or series.marker.color or series.color,
+                    "line": {
+                        "width": series.marker.width,
+                        "color": series.marker.line_color or series.marker.color or "black",
+                    },
+                }
+            params = update_dict(params, self.trace_params, none_only=True)
+            if len(series.pairs) == 1:
+                params["mode"] = "lines+markers"  # otherwise it's invisible
+
+            fig.add_trace(
+                go.Scatter(
+                    x=xs,
+                    y=ys,
+                    name=series.name,
+                    text=[series.name] * len(xs),
+                    **params,
+                )
+            )
+        return fig
+
+    def save_data_file(self) -> None:
+        y_by_x_by_sample: Dict[str, Dict[Union[float, str], Any]] = dict()
+        last_cats = None
+        shared_cats = True
+        for series in self.lines:
+            y_by_x_by_sample[series.name] = dict()
+
+            # Check to see if all categories are the same
+            if len(series.pairs) > 0 and isinstance(series.pairs[0], list):
+                if last_cats is None:
+                    last_cats = [x[0] for x in series.pairs]
+                elif last_cats != [x[0] for x in series.pairs]:
+                    shared_cats = False
+
+            for i, x in enumerate(series.pairs):
+                if isinstance(x, list):
+                    y_by_x_by_sample[series.name][x[0]] = x[1]
+                else:
+                    try:
+                        y_by_x_by_sample[series.name][self.dconfig["categories"][i]] = x
+                    except (ValueError, KeyError, IndexError):
+                        y_by_x_by_sample[series.name][str(i)] = x
+
+        # Custom tsv output if the x-axis varies
+        if not shared_cats and config.data_format in ["tsv", "csv"]:
+            sep = "\t" if config.data_format == "tsv" else ","
+            fout = ""
+            for series in self.lines:
+                fout += series.name + sep + "X" + sep + sep.join([str(x[0]) for x in series.pairs]) + "\n"
+                fout += series.name + sep + "Y" + sep + sep.join([str(x[1]) for x in series.pairs]) + "\n"
+
+            fn = f"{self.uid}.{config.data_format_extensions[config.data_format]}"
+            fpath = os.path.join(report.data_tmp_dir(), fn)
+            with io.open(fpath, "w", encoding="utf-8") as f:
+                f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
+        else:
+            report.write_data_file(y_by_x_by_sample, self.uid)
+
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
+        xsuffix = self.layout.get("xaxis", {}).get("ticksuffix", "")
+        ysuffix = self.layout.get("yaxis", {}).get("ticksuffix", "")
+
+        # Use pseudonyms for sample names if available
+        pseudonyms = [report.anonymize_sample_name(series.name) for series in self.lines]
+
+        # Create header with axis information and common suffixes
+        result = "Samples: " + ", ".join(pseudonyms) + "\n\n"
+
+        # If all y-values have the same suffix (like %), mention it in the header
+        if ysuffix:
+            result += f"Y values are in {ysuffix}\n\n"
+        if xsuffix:
+            result += f"X values are in {xsuffix}\n\n"
+
+        for pseudonym, series in zip(pseudonyms, self.lines):
+            # For other plots or fewer points, use the original format but without redundant suffixes
+            pairs = [f"{self.fmt_value_for_llm(x[0])}: {self.fmt_value_for_llm(x[1])}" for x in series.pairs]
+
+            result += f"{pseudonym} {', '.join(pairs)}\n\n"
+
+        return result
+
+
+class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Generic[KeyT, ValT]):
+    """
+    Represents normalized input data for a line plot.
+
+    We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
+    allow optional categories, categories as strings or as dicts or as objects. We want
+    to normalize the input data to dump it to parequet, before we use it to plot.
+    """
+
+    data: List[List[Series[KeyT, ValT]]]
+    sample_names: List[SampleName]
+
+    def is_empty(self) -> bool:
+        return len(self.data) == 0 or all(len(ds) == 0 for ds in self.data)
+
+    def to_df(self) -> pl.DataFrame:
+        """
+        Save plot data to a parquet file using a tabular representation that's
+        optimized for cross-run analysis.
+
+        Instead of serializing complex nested structures, we create a structured
+        table with explicit columns for series data.
+        """
+        records = []
+        # Create a record for each data point in each series
+        for ds_idx, dataset in enumerate(self.data):
+            for series in dataset:
+                for x, y in series.pairs:
+                    # Convert NaN values to string marker for safe serialization
+                    x_val = "__NAN__MARKER__" if isinstance(x, float) and math.isnan(x) else str(x)
+                    y_val = "__NAN__MARKER__" if isinstance(y, float) and math.isnan(y) else str(y)
+
+                    record = {
+                        "dataset_idx": ds_idx,
+                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx]) if self.pconfig.data_labels else "",
+                        "sample": series.name,
+                        # values can be be different types (int, float, str...), especially across
+                        # plots. parquet requires values of the same type. so we cast them to str
+                        "x_val": x_val,
+                        "y_val": y_val,
+                        "x_val_type": type(x).__name__,
+                        "y_val_type": type(y).__name__,
+                        "series": {k: v for k, v in series.model_dump().items() if k not in ["pairs", "name"]},
+                    }
+                    records.append(record)
+
+        # Create DataFrame from records
+        df = pl.DataFrame(
+            records,
+            schema_overrides={
+                "data_label": pl.Utf8,
+                "sample": pl.Utf8,
+                "x_val": pl.Utf8,
+                "y_val": pl.Utf8,
+                "x_val_type": pl.Utf8,
+                "y_val_type": pl.Utf8,
+            },
+        )
+        return self.finalize_df(df)
+
+    @classmethod
+    def from_df(
+        cls, df: pl.DataFrame, pconfig: Union[Dict, LinePlotConfig], anchor: Anchor
+    ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
+        pconf: LinePlotConfig
+        if cls.df_is_empty(df):
+            pconf = (
+                pconfig
+                if isinstance(pconfig, LinePlotConfig)
+                else cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
+            )
+            return cls(
+                anchor=anchor,
+                plot_type=PlotType.LINE,
+                data=[],
+                pconfig=pconf,
+                sample_names=[],
+                creation_date=cls.creation_date_from_df(df),
+            )
+        pconf = cast(LinePlotConfig, LinePlotConfig.from_df(df))
+
+        # Reconstruct data structure
+        datasets = []
+        data_labels = []
+        sample_names = []
+
+        dataset_indices = sorted(df.select("dataset_idx").unique().to_series()) if not df.is_empty() else []
+
+        for ds_idx in dataset_indices:
+            ds_group = df.filter(pl.col("dataset_idx") == ds_idx) if not df.is_empty() else pl.DataFrame()
+
+            data_label = ds_group.select("data_label").item(0, 0) if not ds_group.is_empty() else None
+            data_labels.append(json.loads(data_label) if data_label else {})
+
+            dataset = []
+
+            # Get list of unique sample names in this dataset to preserve order
+            unique_samples: pl.Series = (
+                ds_group.select("sample").unique().to_series() if not ds_group.is_empty() else pl.Series([])
+            )
+            # Group by sample_name within each dataset
+            for sample_name in natsorted(unique_samples):
+                sample_group = ds_group.filter(pl.col("sample") == sample_name)
+
+                # Extract series properties
+                if not sample_group.is_empty():
+                    first_row = sample_group.row(0, named=True)
+                    series_dict = first_row.get("series", {})
+
+                    # Extract x,y pairs and sort by x value for proper display
+                    pairs = []
+                    for row in sample_group.iter_rows(named=True):
+                        x_val = parse_value(row["x_val"], row["x_val_type"])
+                        y_val = parse_value(row["y_val"], row["y_val_type"])
+                        pairs.append((x_val, y_val))
+
+                    # Create Series object
+                    series = Series(
+                        name=str(sample_name),
+                        pairs=pairs,
+                        path_in_cfg=("lineplot", "data"),
+                        **series_dict,
+                    )
+                    dataset.append(series)
+
+                    # Add sample name if not already in the list
+                    if sample_name not in sample_names:
+                        sample_names.append(SampleName(str(sample_name)))
+
+            datasets.append(dataset)
+
+        if any(d for d in data_labels if d):
+            pconf.data_labels = data_labels
+        return cls(
+            anchor=anchor,
+            plot_type=PlotType.LINE,
+            data=datasets,
+            pconfig=pconf,
+            sample_names=sample_names,
+            creation_date=cls.creation_date_from_df(df),
+        )
+
+    @staticmethod
+    def create(
+        data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
+        pconfig: Union[Dict[str, Any], LinePlotConfig, None] = None,
+    ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
+        pconf: LinePlotConfig = cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
+
+        # Given one dataset - turn it into a list
+        raw_dataset_list: List[DatasetT]
+        if isinstance(data, Sequence):
+            raw_dataset_list = list(data)
+        else:
+            raw_dataset_list = [data]
+        del data
+
+        # Normalise data labels
+        if pconf.data_labels:
+            if len(pconf.data_labels) != len(raw_dataset_list):
+                raise ValueError(
+                    f"Length of data_labels does not match the number of datasets. "
+                    f"Please check your module code and ensure that the data_labels "
+                    f"list is the same length as the data list: "
+                    f"{len(pconf.data_labels)} != {len(raw_dataset_list)}. pconfig={pconf}"
+                )
+
+        sample_names = []
+
+        datasets: List[List[Series[Any, Any]]] = []
+        for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
+            list_of_series: List[Series[Any, Any]] = []
+            for s in natsorted(raw_data_by_sample.keys()):
+                if s not in sample_names:
+                    sample_names.append(SampleName(s))
+                x_to_y = raw_data_by_sample[s]
+                if not isinstance(x_to_y, dict) and isinstance(x_to_y, Sequence):
+                    if isinstance(x_to_y[0], tuple) or (isinstance(x_to_y[0], list) and len(x_to_y[0]) == 2):
+                        x_to_y = dict(x_to_y)
+                    else:
+                        x_to_y = {i: y for i, y in enumerate(x_to_y)}
+                dl = pconf.data_labels[ds_idx] if pconf.data_labels else None
+                series: Series[Any, Any] = _make_series_dict(pconf, dl, s, x_to_y)
+                if not series.pairs:
+                    continue
+                list_of_series.append(series)
+            if list_of_series:
+                datasets.append(list_of_series)
+
+        # Return normalized data and config
+        return LinePlotNormalizedInputData(
+            anchor=plot_anchor(pconf),
+            plot_type=PlotType.LINE,
+            data=datasets,
+            pconfig=pconf,
+            sample_names=sample_names,
+            creation_date=report.creation_date,
+        )
+
+    @classmethod
+    def merge(
+        cls,
+        old_data: "LinePlotNormalizedInputData[KeyT, ValT]",
+        new_data: "LinePlotNormalizedInputData[KeyT, ValT]",
+    ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
+        """
+        Merge normalized data from old run and new run, leveraging our tabular representation
+        for more efficient and reliable merging.
+        """
+        logger.debug(f"LinePlot merge called for anchor {new_data.anchor}")
+        new_df = new_data.to_df()
+        if new_df.is_empty():
+            logger.debug("LinePlot merge: new_df is empty, returning old_data")
+            return old_data
+
+        old_df = old_data.to_df()
+
+        # If we have both old and new data, merge them
+        merged_df = new_df
+        if old_df is not None and not old_df.is_empty():
+            logger.debug(
+                f"LinePlot merge: both old and new data present, merging. Old: {old_df.shape}, New: {new_df.shape}"
+            )
+            # Get the list of samples that exist in both old and new data, for each dataset
+            new_keys = new_df.select(["data_label", "sample"]).unique()
+            logger.debug(f"LinePlot merge: new_keys shape: {new_keys.shape}")
+
+            # Keep only the rows in old_df whose (data_label, sample) pair
+            # does *not* appear in new_keys. An anti-join is the cleanest way to express this.
+            old_df_filtered = old_df.join(
+                new_keys,
+                on=["data_label", "sample"],
+                how="anti",  # anti-join = "rows in left not matched in right"
+            )
+            logger.debug(f"LinePlot merge: old_df_filtered shape: {old_df_filtered.shape}")
+
+            # Combine the filtered old data with new data
+            merged_df = pl.concat([old_df_filtered, new_df], how="diagonal")
+            logger.debug(f"LinePlot merge: merged_df shape: {merged_df.shape}")
+        else:
+            logger.debug("LinePlot merge: no old data or old data is empty, using new data only")
+
+        result = cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
+        logger.debug(
+            f"LinePlot merge: created result with {len(result.data)} datasets, {len(result.sample_names)} samples"
+        )
+        return result
+
+
+class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
+    datasets: List[Dataset[KeyT, ValT]]
+    sample_names: List[SampleName]
+
+    def all_sample_names(self) -> List[SampleName]:
+        return self.sample_names
+
+    def _plot_ai_header(self) -> str:
+        result = super()._plot_ai_header()
+        if self.pconfig.xlab:
+            result += f"X axis: {self.pconfig.xlab}\n"
+        if self.pconfig.ylab:
+            result += f"Y axis: {self.pconfig.ylab}\n"
+        return result
+
+    @staticmethod
+    def create(
+        lists_of_lines: List[List[Series[KeyT, ValT]]],
+        pconfig: LinePlotConfig,
+        anchor: Anchor,
+        sample_names: List[SampleName],
+    ) -> "LinePlot[KeyT, ValT]":
+        lists_of_lines = [x for x in lists_of_lines if x]
+        n_samples_per_dataset = [len(x) for x in lists_of_lines]
+
+        model: Plot[Dataset[KeyT, ValT], LinePlotConfig] = Plot.initialize(
+            plot_type=PlotType.LINE,
+            pconfig=pconfig,
+            anchor=anchor,
+            n_series_per_dataset=n_samples_per_dataset,
+            axis_controlled_by_switches=["yaxis"],
+            default_tt_label="<br>%{x}: %{y}",
+        )
+
+        # Very large legend for automatically enabled flat plot mode is not very helpful
+        max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
+        if pconfig.showlegend is None and max_n_samples > 250:
+            model.layout.showlegend = False
+
+        model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
+
+        # Make a tooltip always show on hover over any point on plot
+        model.layout.hoverdistance = -1
+
+        return LinePlot(**model.__dict__, sample_names=sample_names)
+
+    @staticmethod
+    def from_inputs(inputs: LinePlotNormalizedInputData[KeyT, ValT]) -> Union["LinePlot", str, None]:
+        pconf = inputs.pconfig
+        datasets = inputs.data
+        sample_names = inputs.sample_names
+
+        # Add extra annotation data series
+        if pconf.extra_series:
+            ess: Union[Series[Any, Any], List[Series[Any, Any]], List[List[Series[Any, Any]]]] = pconf.extra_series
+            list_of_list_of_series: List[List[Series[Any, Any]]]
+            if isinstance(ess, list):
+                if isinstance(ess[0], list):
+                    list_of_list_of_series = cast(List[List[Series[Any, Any]]], ess)
+                else:
+                    list_of_list_of_series = [cast(List[Series[Any, Any]], ess) for _ in datasets]
+            else:
+                list_of_list_of_series = [[ess] for _ in datasets]
+
+            for i, list_of_raw_series in enumerate(list_of_list_of_series):
+                assert isinstance(list_of_raw_series, list)
+                for series in list_of_raw_series:
+                    if i < len(datasets):
+                        datasets[i].append(series)
+
+        # Process categories
+        for ds_idx, series_by_sample in enumerate(datasets):
+            if pconf.categories and series_by_sample:
+                if isinstance(pconf.categories, list):
+                    categories = pconf.categories
+                else:
+                    categories = [pair[0] for pair in series_by_sample[0].pairs]
+                for si, series in enumerate(series_by_sample):
+                    if si != 0:
+                        # If categories come in different order in different samples, reorder them
+                        xs = [p[0] for p in series.pairs]
+                        xs_set = set(xs)
+                        xs_in_categories = [c for c in categories if c in xs_set]
+                        categories_set = set(categories)
+                        xs_not_in_categories = [x for x in xs if x not in categories_set]
+                        xs = xs_in_categories + xs_not_in_categories
+                        pairs = dict(series.pairs)
+                        series.pairs = [(x, pairs[x]) for x in xs]
+
+        inputs.save_to_parquet()
+
+        scale = mqc_colour.mqc_colour_scale("plot_defaults")
+        for _, series_by_sample in enumerate(datasets):
+            for si, series in enumerate(series_by_sample):
+                if not series.color:
+                    series.color = scale.get_colour(si, lighten=1)
+
+        plot = LinePlot.create(
+            lists_of_lines=inputs.data,
+            pconfig=inputs.pconfig,
+            anchor=inputs.anchor,
+            sample_names=sample_names,
+        )
+        return plot
+
+
+def plot(
+    data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
+    pconfig: Union[Dict[str, Any], LinePlotConfig, None] = None,
+) -> Union["LinePlot", str, None]:
+    """
+    Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
+
+    Function effectively only returns a wrapper around parquet file path.
     """
-    # Don't just use {} as the default argument as it's mutable. See:
-    # http://python-guide-pt-br.readthedocs.io/en/latest/writing/gotchas/
-    if pconfig is None:
-        pconfig = {}
+    inputs: LinePlotNormalizedInputData[KeyT, ValT] = LinePlotNormalizedInputData.create(data, pconfig)
+    inputs = LinePlotNormalizedInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
+    return LinePlot.from_inputs(inputs)
 
-    # Allow user to overwrite any given config for this plot
-    if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
-            pconfig[k] = v
 
-    # Given one dataset - turn it into a list
-    if type(data) is not list:
-        data = [data]
+def remove_nones_and_empty_dicts(d: Mapping[Any, Any]) -> Dict[Any, Any]:
+    """Remove None and empty dicts from a dict recursively."""
+    return {k: remove_nones_and_empty_dicts(v) for k, v in d.items() if v is not None and v != {}}
 
-    # Validate config if linting
-    if config.lint:
-        # Get module name
-        modname = ""
-        callstack = inspect.stack()
-        for n in callstack:
-            if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
-                callpath = n[1].split("multiqc/modules/", 1)[-1]
-                modname = ">{}< ".format(callpath)
-                break
-        # Look for essential missing pconfig keys
-        for k in ["id", "title", "ylab"]:
-            if k not in pconfig:
-                errmsg = "LINT: {}Linegraph pconfig was missing key '{}'".format(modname, k)
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
-        # Check plot title format
-        if not re.match(r"^[^:]*\S: \S[^:]*$", pconfig.get("title", "")):
-            errmsg = "LINT: {} Linegraph title did not match format 'Module: Plot Name' (found '{}')".format(
-                modname, pconfig.get("title", "")
-            )
-            logger.error(errmsg)
-            report.lint_errors.append(errmsg)
+
+def _make_series_dict(
+    pconfig: LinePlotConfig,
+    data_label: Union[Dict[str, Any], str, None],
+    s: str,
+    y_by_x: XToYDictT[KeyT, ValT],
+) -> Series[KeyT, ValT]:
+    pairs: List[Tuple[KeyT, ValT]] = []
+
+    x_are_categories = pconfig.categories
+    ymax = pconfig.ymax
+    ymin = pconfig.ymin
+    xmax = pconfig.xmax
+    xmin = pconfig.xmin
+    colors = pconfig.colors
+    if data_label:
+        if isinstance(data_label, dict):
+            _x_are_categories = data_label.get("categories", x_are_categories)
+            assert isinstance(_x_are_categories, bool)
+            x_are_categories = _x_are_categories
+            _ymax = data_label.get("ymax", ymax)
+            _ymin = data_label.get("ymin", ymin)
+            _xmax = data_label.get("xmax", xmax)
+            _xmin = data_label.get("xmin", xmin)
+            assert isinstance(_ymax, (int, float, type(None)))
+            assert isinstance(_ymin, (int, float, type(None)))
+            assert isinstance(_xmax, (int, float, type(None)))
+            assert isinstance(_xmin, (int, float, type(None)))
+            ymax = _ymax
+            ymin = _ymin
+            xmax = _xmax
+            xmin = _xmin
+            _colors = data_label.get("colors")
+            if _colors and isinstance(_colors, dict):
+                colors = {**colors, **cast(Dict[str, str], _colors)}
+
+    xs = [x for x in y_by_x.keys()]
+    if not x_are_categories:
+        xs = sorted(xs)
+
+    # Discard > ymax or just hide?
+    # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
+    discard_ymax = None
+    discard_ymin = None
+    for x in xs:
+        if not x_are_categories:
+            if xmax is not None and float(x) > float(xmax):
+                continue
+            if xmin is not None and float(x) < float(xmin):
+                continue
+        y = y_by_x[x]
+        if y is not None:
+            if ymax is not None:
+                if float(y) > float(ymax):
+                    discard_ymax = True
+                elif discard_ymax is True:
+                    discard_ymax = False
+            if ymin is not None:
+                if float(y) > float(ymin):
+                    discard_ymin = True
+                elif discard_ymin is True:
+                    discard_ymin = False
+
+    # Build the plot data structure
+    for x in xs:
+        if not x_are_categories and x is not None:
+            if xmax is not None and float(x) > float(xmax):
+                continue
+            if xmin is not None and float(x) < float(xmin):
+                continue
+
+        y = y_by_x[x]
+        if y is not None:
+            if ymax is not None and float(y) > float(ymax) and discard_ymax is not False:
+                continue
+            if ymin is not None and float(y) < float(ymin) and discard_ymin is not False:
+                continue
+        pairs.append((x, y))
 
     # Smooth dataset if requested in config
-    if pconfig.get("smooth_points", None) is not None:
-        sumcounts = pconfig.get("smooth_points_sumcounts", True)
-        for i, d in enumerate(data):
-            if type(sumcounts) is list:
-                sumc = sumcounts[i]
-            else:
-                sumc = sumcounts
-            data[i] = smooth_line_data(d, pconfig["smooth_points"], sumc)
+    if pconfig.smooth_points is not None:
+        pairs = smooth_array(pairs, pconfig.smooth_points)
 
-    # Add sane plotting config defaults
-    for idx, yp in enumerate(pconfig.get("yPlotLines", [])):
-        pconfig["yPlotLines"][idx]["width"] = pconfig["yPlotLines"][idx].get("width", 2)
-
-    # Add initial axis labels if defined in `data_labels` but not main config
-    if pconfig.get("ylab") is None:
-        try:
-            pconfig["ylab"] = pconfig["data_labels"][0]["ylab"]
-        except (KeyError, IndexError):
-            pass
-    if pconfig.get("xlab") is None:
-        try:
-            pconfig["xlab"] = pconfig["data_labels"][0]["xlab"]
-        except (KeyError, IndexError):
-            pass
-
-    # Generate the data dict structure expected by HighCharts series
-    plotdata = list()
-    for data_index, d in enumerate(data):
-        thisplotdata = list()
-
-        for s in sorted(d.keys()):
-            # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
-            series_config = pconfig.copy()
-            if (
-                "data_labels" in pconfig and type(pconfig["data_labels"][data_index]) is dict
-            ):  # if not a dict: only dataset name is provided
-                series_config.update(pconfig["data_labels"][data_index])
-
-            pairs = list()
-            maxval = 0
-            if "categories" in series_config:
-                if "categories" not in pconfig or type(pconfig["categories"]) is not list:
-                    pconfig["categories"] = list()
-                # Add any new categories
-                for k in d[s].keys():
-                    if k not in pconfig["categories"]:
-                        pconfig["categories"].append(k)
-                # Go through categories and add either data or a blank
-                for k in pconfig["categories"]:
-                    try:
-                        pairs.append(d[s][k])
-                        maxval = max(maxval, d[s][k])
-                    except KeyError:
-                        pairs.append(None)
-            else:
-                # Discard > ymax or just hide?
-                # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
-                discard_ymax = None
-                discard_ymin = None
-                for k in sorted(d[s].keys()):
-                    if "xmax" in series_config and float(k) > float(series_config["xmax"]):
-                        continue
-                    if "xmin" in series_config and float(k) < float(series_config["xmin"]):
-                        continue
-                    if d[s][k] is not None and "ymax" in series_config:
-                        if float(d[s][k]) > float(series_config["ymax"]):
-                            discard_ymax = True
-                        elif discard_ymax is True:
-                            discard_ymax = False
-                    if d[s][k] is not None and "ymin" in series_config:
-                        if float(d[s][k]) > float(series_config["ymin"]):
-                            discard_ymin = True
-                        elif discard_ymin is True:
-                            discard_ymin = False
-
-                # Build the plot data structure
-                for k in sorted(d[s].keys()):
-                    if k is not None:
-                        if "xmax" in series_config and float(k) > float(series_config["xmax"]):
-                            continue
-                        if "xmin" in series_config and float(k) < float(series_config["xmin"]):
-                            continue
-                    if d[s][k] is not None:
-                        if (
-                            "ymax" in series_config
-                            and float(d[s][k]) > float(series_config["ymax"])
-                            and discard_ymax is not False
-                        ):
-                            continue
-                        if (
-                            "ymin" in series_config
-                            and float(d[s][k]) < float(series_config["ymin"])
-                            and discard_ymin is not False
-                        ):
-                            continue
-                    pairs.append([k, d[s][k]])
-                    try:
-                        maxval = max(maxval, d[s][k])
-                    except TypeError:
-                        pass
-            if maxval > 0 or series_config.get("hide_empty") is not True:
-                this_series = {"name": s, "data": pairs}
-                try:
-                    this_series["color"] = series_config["colors"][s]
-                except:
-                    pass
-                thisplotdata.append(this_series)
-        plotdata.append(thisplotdata)
-
-    # Add on annotation data series
-    try:
-        if pconfig.get("extra_series"):
-            extra_series = pconfig["extra_series"]
-            if type(pconfig["extra_series"]) == dict:
-                extra_series = [[pconfig["extra_series"]]]
-            elif type(pconfig["extra_series"]) == list and type(pconfig["extra_series"][0]) == dict:
-                extra_series = [pconfig["extra_series"]]
-            for i, es in enumerate(extra_series):
-                for s in es:
-                    plotdata[i].append(s)
-    except (KeyError, IndexError):
-        pass
-
-    # Make a plot - template custom, or interactive or flat
-    try:
-        return get_template_mod().linegraph(plotdata, pconfig)
-    except (AttributeError, TypeError):
-        if config.plots_force_flat or (
-            not config.plots_force_interactive and plotdata and len(plotdata[0]) > config.plots_flat_numseries
-        ):
-            try:
-                report.num_mpl_plots += 1
-                return matplotlib_linegraph(plotdata, pconfig)
-            except Exception as e:
-                logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
-                logger.debug(e, exc_info=True)
-                return highcharts_linegraph(plotdata, pconfig)
-        else:
-            # Use MatPlotLib to generate static plots if requested
-            if config.export_plots:
-                matplotlib_linegraph(plotdata, pconfig)
-            # Return HTML for HighCharts dynamic plot
-            return highcharts_linegraph(plotdata, pconfig)
+    return Series(name=s, pairs=pairs, color=colors.get(s), path_in_cfg=("lineplot", "pconfig", "pairs"))
 
 
-def highcharts_linegraph(plotdata, pconfig=None):
-    """
-    Build the HTML needed for a HighCharts line graph. Should be
-    called by linegraph.plot(), which properly formats input data.
-    """
-    if pconfig is None:
-        pconfig = {}
-
-    # Get the plot ID
-    if pconfig.get("id") is None:
-        pconfig["id"] = "mqc_hcplot_" + "".join(random.sample(letters, 10))
-
-    # Sanitise plot ID and check for duplicates
-    pconfig["id"] = report.save_htmlid(pconfig["id"])
-
-    # Build the HTML for the page
-    html = '<div class="mqc_hcplot_plotgroup">'
-
-    # Log Switch
-    if pconfig.get("logswitch") is True:
-        c_active = "active"
-        l_active = ""
-        if pconfig.get("logswitch_active") is True:
-            c_active = ""
-            l_active = "active"
-        c_label = pconfig.get("cpswitch_counts_label", "Counts")
-        l_label = pconfig.get("logswitch_label", "Log10")
-        html += '<div class="btn-group hc_switch_group"> \n'
-        html += '<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}" data-ylab="{c_l}">{c_l}</button> \n'.format(
-            id=pconfig["id"], c_a=c_active, c_l=c_label
-        )
-        if pconfig.get("logswitch") is True:
-            html += '<button class="btn btn-default btn-sm {l_a}" data-action="set_log" data-target="{id}" data-ylab="{l_l}">{l_l}</button> \n'.format(
-                id=pconfig["id"], l_a=l_active, l_l=l_label
-            )
-        html += "</div> "
-        if len(plotdata) > 1:
-            html += " &nbsp; &nbsp; "
-
-    # Buttons to cycle through different datasets
-    if len(plotdata) > 1:
-        html += '<div class="btn-group hc_switch_group">\n'
-        for k, p in enumerate(plotdata):
-            active = "active" if k == 0 else ""
-            try:
-                name = pconfig["data_labels"][k]["name"]
-            except:
-                name = k + 1
-            try:
-                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except:
-                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
-            try:
-                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except:
-                ymax = ""
-            try:
-                xlab = 'data-xlab="{}"'.format(pconfig["data_labels"][k]["xlab"])
-            except:
-                xlab = ""
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {x} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
-                a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, x=xlab, k=k
-            )
-        html += "</div>\n\n"
-
-    # The plot div
-    html += '<div class="hc-plot-wrapper"{height}><div id="{id}" class="hc-plot not_rendered hc-line-plot"><small>loading..</small></div></div></div> \n'.format(
-        id=pconfig["id"],
-        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
-    )
-
-    report.num_hc_plots += 1
-
-    report.plot_data[pconfig["id"]] = {"plot_type": "xy_line", "datasets": plotdata, "config": pconfig}
-
-    return html
-
-
-def matplotlib_linegraph(plotdata, pconfig=None):
-    """
-    Plot a line graph with Matplot lib and return a HTML string. Either embeds a base64
-    encoded image within HTML or writes the plot and links to it. Should be called by
-    plot_bargraph, which properly formats the input data.
-    """
-    if pconfig is None:
-        pconfig = {}
-
-    # Plot group ID
-    if pconfig.get("id") is None:
-        pconfig["id"] = "mqc_mplplot_" + "".join(random.sample(letters, 10))
-
-    # Sanitise plot ID and check for duplicates
-    pconfig["id"] = report.save_htmlid(pconfig["id"])
-
-    # Individual plot IDs
-    pids = []
-    for k in range(len(plotdata)):
-        try:
-            name = pconfig["data_labels"][k]["name"]
-        except:
-            name = k + 1
-        pid = "mqc_{}_{}".format(pconfig["id"], name)
-        pid = report.save_htmlid(pid, skiplint=True)
-        pids.append(pid)
-
-    html = (
-        '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> '
-        + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
-        + '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
-    )
-    html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
-
-    # Same defaults as HighCharts for consistency
-    default_colors = [
-        "#7cb5ec",
-        "#434348",
-        "#90ed7d",
-        "#f7a35c",
-        "#8085e9",
-        "#f15c80",
-        "#e4d354",
-        "#2b908f",
-        "#f45b5b",
-        "#91e8e1",
-    ]
-
-    # Buttons to cycle through different datasets
-    if len(plotdata) > 1 and not config.simple_output:
-        html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
-        for k, p in enumerate(plotdata):
-            pid = pids[k]
-            active = "active" if k == 0 else ""
-            try:
-                name = pconfig["data_labels"][k]["name"]
-            except:
-                name = k + 1
-            html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
-                a=active, pid=pid, n=name
-            )
-        html += "</div>\n\n"
-
-    # Go through datasets creating plots
-    for pidx, pdata in enumerate(plotdata):
-        # Plot ID
-        pid = pids[pidx]
-
-        # Save plot data to file
-        if pconfig.get("save_data_file", True):
-            fdata = OrderedDict()
-            lastcats = None
-            sharedcats = True
-            for d in pdata:
-                fdata[d["name"]] = OrderedDict()
-
-                # Check to see if all categories are the same
-                if len(d["data"]) > 0 and type(d["data"][0]) is list:
-                    if lastcats is None:
-                        lastcats = [x[0] for x in d["data"]]
-                    elif lastcats != [x[0] for x in d["data"]]:
-                        sharedcats = False
-
-                for i, x in enumerate(d["data"]):
-                    if type(x) is list:
-                        fdata[d["name"]][str(x[0])] = x[1]
-                    else:
-                        try:
-                            fdata[d["name"]][pconfig["categories"][i]] = x
-                        except (KeyError, IndexError):
-                            fdata[d["name"]][str(i)] = x
-
-            # Custom tsv output if the x axis varies
-            if not sharedcats and config.data_format == "tsv":
-                fout = ""
-                for d in pdata:
-                    fout += "\t" + "\t".join([str(x[0]) for x in d["data"]])
-                    fout += "\n{}\t".format(d["name"])
-                    fout += "\t".join([str(x[1]) for x in d["data"]])
-                    fout += "\n"
-                with io.open(os.path.join(config.data_dir, "{}.txt".format(pid)), "w", encoding="utf-8") as f:
-                    print(fout.encode("utf-8", "ignore").decode("utf-8"), file=f)
-            else:
-                util_functions.write_data_file(fdata, pid)
-
-        plt_height = 6
-        # Use fixed height if pconfig['height'] is set (convert pixels -> inches)
-        if "height" in pconfig:
-            # Default interactive height in pixels = 512
-            # Not perfect replication, but good enough
-            plt_height = 6 * (pconfig["height"] / 512)
-
-        # Set up figure
-        fig = plt.figure(figsize=(14, plt_height), frameon=False)
-        axes = fig.add_subplot(111)
-
-        # Go through data series
-        for idx, d in enumerate(pdata):
-            # Default colour index
-            cidx = idx
-            while cidx >= len(default_colors):
-                cidx -= len(default_colors)
-
-            # Line style
-            linestyle = "solid"
-            if d.get("dashStyle", None) == "Dash":
-                linestyle = "dashed"
-
-            # Reformat data (again)
-            try:
-                axes.plot(
-                    [x[0] for x in d["data"]],
-                    [x[1] for x in d["data"]],
-                    label=d["name"],
-                    color=d.get("color", default_colors[cidx]),
-                    linestyle=linestyle,
-                    linewidth=1,
-                    marker=None,
-                )
-            except TypeError:
-                # Categorical data on x axis
-                axes.plot(
-                    d["data"], label=d["name"], color=d.get("color", default_colors[cidx]), linewidth=1, marker=None
-                )
-
-        # Tidy up axes
-        axes.tick_params(
-            labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
-        )
-        axes.set_xlabel(pconfig.get("xlab", ""))
-        axes.set_ylabel(pconfig.get("ylab", ""))
-
-        # Dataset specific y label
-        try:
-            axes.set_ylabel(pconfig["data_labels"][pidx]["ylab"])
-        except:
-            pass
-
-        # Axis limits
-        default_ylimits = axes.get_ylim()
-        ymin = default_ylimits[0]
-        if "ymin" in pconfig:
-            ymin = pconfig["ymin"]
-        elif "yFloor" in pconfig:
-            ymin = max(pconfig["yFloor"], default_ylimits[0])
-        ymax = default_ylimits[1]
-        if "ymax" in pconfig:
-            ymax = pconfig["ymax"]
-        elif "yCeiling" in pconfig:
-            ymax = min(pconfig["yCeiling"], default_ylimits[1])
-        if (ymax - ymin) < pconfig.get("yMinRange", 0):
-            ymax = ymin + pconfig["yMinRange"]
-        axes.set_ylim((ymin, ymax))
-
-        # Dataset specific ymax
-        try:
-            axes.set_ylim((ymin, pconfig["data_labels"][pidx]["ymax"]))
-        except:
-            pass
-
-        default_xlimits = axes.get_xlim()
-        xmin = default_xlimits[0]
-        if "xmin" in pconfig:
-            xmin = pconfig["xmin"]
-        elif "xFloor" in pconfig:
-            xmin = max(pconfig["xFloor"], default_xlimits[0])
-        xmax = default_xlimits[1]
-        if "xmax" in pconfig:
-            xmax = pconfig["xmax"]
-        elif "xCeiling" in pconfig:
-            xmax = min(pconfig["xCeiling"], default_xlimits[1])
-        if (xmax - xmin) < pconfig.get("xMinRange", 0):
-            xmax = xmin + pconfig["xMinRange"]
-        axes.set_xlim((xmin, xmax))
-
-        # Plot title
-        if "title" in pconfig:
-            plt.text(0.5, 1.05, pconfig["title"], horizontalalignment="center", fontsize=16, transform=axes.transAxes)
-        axes.grid(True, zorder=10, which="both", axis="y", linestyle="-", color="#dedede", linewidth=1)
-
-        # X axis categories, if specified
-        if "categories" in pconfig:
-            axes.set_xticks([i for i, v in enumerate(pconfig["categories"])])
-            axes.set_xticklabels(pconfig["categories"])
-
-        # Axis lines
-        xlim = axes.get_xlim()
-        axes.plot([xlim[0], xlim[1]], [0, 0], linestyle="-", color="#dedede", linewidth=2)
-        axes.set_axisbelow(True)
-        axes.spines["right"].set_visible(False)
-        axes.spines["top"].set_visible(False)
-        axes.spines["bottom"].set_visible(False)
-        axes.spines["left"].set_visible(False)
-
-        # Background colours, if specified
-        if "yPlotBands" in pconfig:
-            xlim = axes.get_xlim()
-            for pb in pconfig["yPlotBands"]:
-                axes.barh(
-                    pb["from"],
-                    xlim[1],
-                    height=pb["to"] - pb["from"],
-                    left=xlim[0],
-                    color=pb["color"],
-                    linewidth=0,
-                    zorder=0,
-                    align="edge",
-                )
-        if "xPlotBands" in pconfig:
-            ylim = axes.get_ylim()
-            for pb in pconfig["xPlotBands"]:
-                axes.bar(
-                    pb["from"],
-                    ylim[1],
-                    width=pb["to"] - pb["from"],
-                    bottom=ylim[0],
-                    color=pb["color"],
-                    linewidth=0,
-                    zorder=0,
-                    align="edge",
-                )
-
-        # Tight layout - makes sure that legend fits in and stuff
-        if len(pdata) <= 15:
-            axes.legend(
-                loc="lower center",
-                bbox_to_anchor=(0, -0.22, 1, 0.102),
-                ncol=5,
-                mode="expand",
-                fontsize=pconfig.get("labelSize", 8),
-                frameon=False,
-            )
-            plt.tight_layout(rect=[0, 0.08, 1, 0.92])
-        else:
-            plt.tight_layout(rect=[0, 0, 1, 0.92])
-
-        # Should this plot be hidden on report load?
-        hidediv = ""
-        if pidx > 0:
-            hidediv = ' style="display:none;"'
-
-        # Save the plot to the data directory if export is requests
-        if config.export_plots:
-            for fformat in config.export_plot_formats:
-                # Make the directory if it doesn't already exist
-                plot_dir = os.path.join(config.plots_dir, fformat)
-                if not os.path.exists(plot_dir):
-                    os.makedirs(plot_dir)
-                # Save the plot
-                plot_fn = os.path.join(plot_dir, "{}.{}".format(pid, fformat))
-                fig.savefig(plot_fn, format=fformat, bbox_inches="tight")
-
-        # Output the figure to a base64 encoded string
-        if getattr(get_template_mod(), "base64_plots", True) is True:
-            img_buffer = io.BytesIO()
-            fig.savefig(img_buffer, format="png", bbox_inches="tight")
-            b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-            img_buffer.close()
-            html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(
-                pid, hidediv, b64_img
-            )
-
-        # Save to a file and link <img>
-        else:
-            plot_relpath = os.path.join(config.plots_dir_name, "png", "{}.png".format(pid))
-            html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
-
-        plt.close(fig)
-
-    # Close wrapping div
-    html += "</div>"
-
-    return html
-
-
-def smooth_line_data(data, numpoints, sumcounts=True):
+def smooth_line_data(data_by_sample: DatasetT[KeyT, ValT], numpoints: int) -> Dict[SampleName, Dict[KeyT, ValT]]:
     """
     Function to take an x-y dataset and use binning to smooth to a maximum number of datapoints.
     Each datapoint in a smoothed dataset corresponds to the first point in a bin.
@@ -629,19 +785,32 @@ def smooth_line_data(data, numpoints, sumcounts=True):
 
     d=[0 1 2 3 4 5 6 7 8 9], numpoints=3
     binsize = len(d)/numpoints = 9/2 = 4.5
-    incides: [0.0, 4.5, 9] -> [0, 5, 9]
+    indices: [0.0, 4.5, 9] -> [0, 5, 9]
     picking up the elements: [0 _ _ _ _ 5 _ _ _ 9]
     """
-    smoothed_data = dict()
-    for s_name, d in data.items():
-        # Check that we need to smooth this data
-        if len(d) <= numpoints or len(d) == 0:
-            smoothed_data[s_name] = d
-            continue
-
-        binsize = (len(d) - 1) / (numpoints - 1)
-        first_element_indices = [round(binsize * i) for i in range(numpoints)]
-        smoothed_d = OrderedDict(xy for i, xy in enumerate(d.items()) if i in first_element_indices)
-        smoothed_data[s_name] = smoothed_d
+    smoothed_data: Dict[SampleName, Dict[KeyT, ValT]] = dict()
+    for s_name, d in data_by_sample.items():
+        smoothed_data[SampleName(s_name)] = dict(smooth_array(list(d.items()), numpoints))
 
     return smoothed_data
+
+
+T = TypeVar("T")
+
+
+def smooth_array(items: List[T], numpoints: int) -> List[T]:
+    """
+    Function to take an array and use binning to smooth to a maximum number of datapoints.
+    Each datapoint in a smoothed dataset corresponds to the first point in a bin.
+    """
+    # Check that we need to smooth this data
+    if len(items) <= numpoints or len(items) == 0:
+        return items
+
+    result: List[T] = []
+    binsize = (len(items) - 1) / (numpoints - 1)
+    first_element_indices = {round(binsize * i) for i in range(numpoints)}
+    for i, y in enumerate(items):
+        if i in first_element_indices:
+            result.append(y)
+    return result

@@ -1,11 +1,8 @@
 import logging
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
-from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
-from multiqc.utils import report
+from multiqc.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph
 
 from .util import average_from_range, percentage_from_content_metric
 
@@ -39,7 +36,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         GC_GROUP = "READ GC CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
 
                 # First figure out the baseline
                 max_len = 0
@@ -49,7 +46,6 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                         max_len = max(pos, max_len)
 
                 data[r_name] = defaultdict(float)
-                group_data = self.dragen_fastqc_data[s_name][mate][GC_GROUP]
                 for metric, value in self.dragen_fastqc_data[s_name][mate][GC_GROUP].items():
                     pct = percentage_from_content_metric(metric)
                     data[r_name][pct] = value
@@ -68,12 +64,12 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             "id": "dragenqc_per_sequence_gc_content_plot",
             "title": "DRAGEN-QC: Per-Sequence GC Content",
             "xlab": "% GC",
-            "ylab": "Count",
+            "ylab": "Percentage",
             "ymin": 0,
             "xmax": 100,
             "xmin": 0,
-            "yDecimals": False,
-            "tt_label": "<b>{point.x}% GC</b>: {point.y}",
+            "y_decimals": False,
+            "tt_label": "<b>{point.x}% GC</b>: {point.y:.2f}",
             # 'colors': self.get_status_cols('per_sequence_gc_content'),
             "data_labels": [{"name": "Percentages", "ylab": "Percentage"}, {"name": "Counts", "ylab": "Count"}],
         }
@@ -109,7 +105,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         data = dict()
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = dict()
 
                 for key, value in self.dragen_fastqc_data[s_name][mate][GROUP].items():
@@ -117,7 +113,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                     pct = int(parts[0][:-1])
                     try:
                         data[r_name][pct] = float(value)
-                    except:
+                    except Exception:
                         continue
 
         pconfig = {
@@ -126,13 +122,13 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             "ylab": "Phred Quality Score",
             "xlab": "% GC",
             "ymin": 0,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             # 'colors': self.get_status_cols('per_base_sequence_quality'),
-            "yPlotBands": [
-                {"from": 28, "to": 100, "color": "#c3e6c3"},
-                {"from": 20, "to": 28, "color": "#e6dcc3"},
-                {"from": 0, "to": 20, "color": "#e6c3c3"},
+            "y_bands": [
+                {"from": 28, "to": 100, "color": "#009500", "opacity": 0.13},
+                {"from": 20, "to": 28, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
             ],
         }
 
@@ -161,7 +157,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         GC_GROUP = "READ GC CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = defaultdict(float)
                 for metric, value in self.dragen_fastqc_data[s_name][mate][GC_GROUP].items():
                     pct = percentage_from_content_metric(metric)
@@ -177,14 +173,15 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             avg_gc_content_data[s_name] = {"avg_gc_content_percent": (reads_by_gc_sum * 100) / total_reads_sum}
 
         # Add Avg. GC Content to header
-        headers = OrderedDict()
-        headers["avg_gc_content_percent"] = {
-            "title": "% GC",
-            "description": "Average % GC Content",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "Set1",
-            "format": "{:,.0f}",
+        headers = {
+            "avg_gc_content_percent": {
+                "title": "% GC",
+                "description": "Average % GC Content",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "PuRd",
+                "format": "{:,.0f}",
+            }
         }
-        self.general_stats_addcols(avg_gc_content_data, headers, namespace="DRAGEN FastQC")
+        self.general_stats_addcols(avg_gc_content_data, headers, namespace="FastQC")

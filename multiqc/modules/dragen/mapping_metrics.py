@@ -3,10 +3,9 @@
 
 import itertools
 import logging
-import re
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
 
 from .utils import Metric, exist_and_number, make_headers
@@ -15,7 +14,7 @@ from .utils import Metric, exist_and_number, make_headers
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "DRAGEN mapping"
+NAMESPACE = "Mapping"
 
 
 class DragenMappingMetics(BaseMultiqcModule):
@@ -24,12 +23,11 @@ class DragenMappingMetics(BaseMultiqcModule):
         data_by_phenotype_by_sample = defaultdict(dict)
 
         for f in self.find_log_files("dragen/mapping_metrics"):
-            s_name, data_by_readgroup, data_by_phenotype = parse_mapping_metrics_file(f)
-            s_name = self.clean_s_name(s_name, f)
-
+            data_by_readgroup, data_by_phenotype = parse_mapping_metrics_file(f)
+            s_name = f["s_name"]
             if s_name in data_by_rg_by_sample:
                 log.debug(f"Duplicate DRAGEN output prefix found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="mapping_metrics")
             data_by_phenotype_by_sample[s_name].update(data_by_phenotype)
 
             for phenotype, phenotype_d in data_by_readgroup.items():
@@ -37,6 +35,10 @@ class DragenMappingMetics(BaseMultiqcModule):
                     if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
                         log.debug(f"Duplicate read group name {rg} found for output prefix {s_name}! Overwriting")
             data_by_rg_by_sample[s_name].update(data_by_readgroup)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # filter to strip out ignored sample names:
         data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)
@@ -107,7 +109,15 @@ class DragenMappingMetics(BaseMultiqcModule):
             Shown on per read group level. To see per-sample level metrics, refer to the general
             stats table.
             """,
-            plot=table.plot(data_by_rg, own_tabl_headers, pconfig={"namespace": NAMESPACE}),
+            plot=table.plot(
+                data_by_rg,
+                own_tabl_headers,
+                pconfig={
+                    "id": "dragen-mapping-metrics-table",
+                    "namespace": NAMESPACE,
+                    "title": "DRAGEN: Mapping metrics",
+                },
+            ),
         )
 
         # Skip adding the barplot if it's not informative, such as if all
@@ -149,9 +159,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 data.get(rrna_filtered_reads_key, 0)
                 if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
                 else 0
-            ) != data.get(
-                "Total reads in RG", 0
-            ):
+            ) != data.get("Total reads in RG", 0):
                 log.warning(
                     "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
                     "skipping mapping/paired percentages plot for: {}".format(sample_id)
@@ -166,9 +174,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 data.get(rrna_filtered_reads_key, 0)
                 if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
                 else 0
-            ) != data.get(
-                "Total reads in RG", 0
-            ):
+            ) != data.get("Total reads in RG", 0):
                 log.warning(
                     "sum of unique/duplicate/unmapped reads not matching total, "
                     "skipping mapping/duplicates percentages plot for: {}".format(sample_id)
@@ -362,8 +368,6 @@ def parse_mapping_metrics_file(f):
     We are reporting summary metrics in the general stats table, and per-read-group in a separate table.
     """
 
-    s_name = re.search(r"(.*)\.mapping_metrics.csv", f["fn"]).group(1)
-
     data_by_readgroup = defaultdict(dict)
     data_by_phenotype = defaultdict(dict)
 
@@ -435,7 +439,7 @@ def parse_mapping_metrics_file(f):
                 if exist_and_number(data, m):
                     data[m + " pct"] = data[m] / data["Total bases"] * 100.0
 
-    return s_name, data_by_readgroup, data_by_phenotype
+    return data_by_readgroup, data_by_phenotype
 
 
 MAPPING_METRICS = [

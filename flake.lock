@@ -19,9 +19,7 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
-        "pypi-deps-db": [
-          "pypi"
-        ]
+        "pypi-deps-db": ["pypi"]
       },
       "locked": {
         "lastModified": 1657089034,

@@ -1,23 +1,32 @@
-""" MultiQC module to parse output from DIAMOND """
-
 import logging
-from collections import OrderedDict
+import re
 
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"diamond v([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module takes summary statistics from the `diamond.log` file (`--log` option). It parses and reports
+    the number of sequences aligned and displays them in the General Stats table.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="DIAMOND",
             anchor="diamond",
             href="https://github.com/bbuchfink/diamond",
-            info="a sequence aligner for protein and translated DNA searches, designed for high performance analysis of big sequence data.",
+            info="Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST",
+            extra="""
+            Key features are:
+            - Pairwise alignment of proteins and translated DNA at 100x-10,000x speed of BLAST.
+            - Frameshift alignments for long read analysis.
+            - Low resource requirements and suitable for running on standard desktops or laptops.
+            - Various output formats, including BLAST pairwise, tabular and XML, as well as taxonomic classification.
+            """,
             doi="10.1038/s41592-021-01101-x",
         )
 
@@ -31,9 +40,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.diamond_data = self.ignore_samples(self.diamond_data)
 
         if len(self.diamond_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.diamond_data)))
+        log.info(f"Found {len(self.diamond_data)} reports")
 
         # Write parsed report data to file
         self.write_data_file(self.diamond_data, "diamond")
@@ -42,27 +51,34 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_logs(self, f):
         """Parsing logs"""
         s_name = self.clean_s_name(f["root"], f)
-        for l in f["f"]:
+        for line in f["f"]:
             # Try to get the sample name from --out, otherwise --query, fallback to directory name
-            if "diamond blastx" in l and "--out" in l:
-                s_name = l.split("--out ")[1].split(" ")[0]
+            if "diamond blastx" in line and "--out" in line:
+                s_name = line.split("--out ")[1].split(" ")[0]
                 s_name = self.clean_s_name(s_name, f)
-            elif "diamond blastx" in l and "--query" in l:
-                s_name = l.split("--query ")[1].split(" ")[0]
+            elif "diamond blastx" in line and "--query" in line:
+                s_name = line.split("--query ")[1].split(" ")[0]
                 s_name = self.clean_s_name(s_name, f)
-            if "queries aligned" in l:
+
+            # Get version
+            version_match = re.search(VERSION_REGEX, line)
+            if version_match:
+                self.add_software_version(version_match.group(1), s_name)
+
+            if "queries aligned" in line:
                 self.add_data_source(f)
                 if s_name in self.diamond_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                self.diamond_data[s_name] = {"queries_aligned": int(l.split(" ")[0])}
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                self.diamond_data[s_name] = {"queries_aligned": int(line.split(" ")[0])}
 
     def diamond_general_stats(self):
         """Diamond General Stats Table"""
-        headers = OrderedDict()
-        headers["queries_aligned"] = {
-            "title": "Queries aligned",
-            "description": "number of queries aligned",
-            "scale": "YlGn",
-            "format": "{:,.0f}",
+        headers = {
+            "queries_aligned": {
+                "title": "Queries aligned",
+                "description": "number of queries aligned",
+                "scale": "YlGn",
+                "format": "{:,.0f}",
+            }
         }
         self.general_stats_addcols(self.diamond_data, headers)

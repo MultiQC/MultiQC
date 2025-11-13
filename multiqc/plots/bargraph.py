@@ -1,576 +1,821 @@
-#!/usr/bin/env python
+"""MultiQC functions to plot a bargraph"""
 
-""" MultiQC functions to plot a bargraph """
-
-
-import base64
-import inspect
-import io
+import copy
+import json
 import logging
 import math
-import os
-import random
-import re
-import sys
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
+from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Tuple, TypedDict, Union, cast
 
-from multiqc.utils import config, report, util_functions
+import plotly.graph_objects as go  # type: ignore
+import polars as pl
+from natsort import natsorted
+from pydantic import BaseModel, Field
+
+from multiqc import config, report
+from multiqc.core.exceptions import RunError
+from multiqc.plots.plot import (
+    BaseDataset,
+    NormalizedPlotInputData,
+    PConfig,
+    Plot,
+    PlotType,
+    plot_anchor,
+    split_long_string,
+)
+from multiqc.plots.utils import determine_barplot_height
+from multiqc.types import Anchor, SampleName
+from multiqc.utils import mqc_colour
+from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
-try:
-    # Import matplot lib but avoid default X environment
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    logger.debug("Using matplotlib version {}".format(matplotlib.__version__))
-except Exception as e:
-    # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
-    # The lack of the library will be handled when plots are attempted
-    print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
-    print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
-    print(e)
-
-letters = "abcdefghijklmnopqrstuvwxyz"
-
-# Load the template so that we can access its configuration
-# Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+SampleNameT = Union[SampleName, str]
+CatName = NewType("CatName", str)
+CatNameT = Union[CatName, str]
+InputDatasetT = Union[Mapping[SampleName, Mapping[CatName, Any]], Mapping[str, Mapping[str, Any]]]
 
 
-def get_template_mod():
-    global _template_mod
-    if not _template_mod:
-        _template_mod = config.avail_templates[config.template].load()
-    return _template_mod
+class CatConf(ValidatedConfig):
+    name: str
+    color: Optional[str] = None
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        super().__init__(path_in_cfg=path_in_cfg or ("cats",), **data)
 
 
-def plot(data, cats=None, pconfig=None):
-    """Plot a horizontal bar graph. Expects a 2D dict of sample
-    data. Also can take info about categories. There are quite a
-    few variants of how to use this function, see the docs for details.
+# Either a list of strings, or a cat conf - a mapping from category names to their properties dicts or objects
+InputCategoriesT = Union[
+    Sequence[str],
+    Mapping[CatName, Mapping[str, Any]],
+    Sequence[CatName],
+    Mapping[str, Mapping[str, Any]],
+    Sequence[str],
+]
+
+
+class BarPlotConfig(PConfig):
+    stacking: Union[Literal["group", "overlay", "relative", "normal"], None] = "relative"
+    hide_empty: Optional[bool] = Field(None, deprecated="hide_zero_cats")
+    hide_zero_cats: bool = True
+    sort_samples: bool = True
+    use_legend: Optional[bool] = None
+    suffix: Optional[str] = None
+    lab_format: Optional[str] = None
+
+    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+        if "suffix" in data:
+            data["ysuffix"] = data["suffix"]
+            del data["suffix"]
+        if "lab_format" in data:
+            data["ylab_format"] = data["lab_format"]
+            del data["lab_format"]
+
+        super().__init__(path_in_cfg=path_in_cfg or ("barplot",), **data)
+
+
+class CatDataDict(TypedDict):
+    """
+    The way data is prepared and serialized for plotting
+    """
+
+    name: str
+    color: str
+    data: List[float]
+    data_pct: List[float]
+
+
+DatasetT = Dict[SampleName, Dict[CatName, Union[int, float]]]
+
+
+class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
+    data: List[DatasetT]
+    cats: List[Dict[CatName, CatConf]]
+
+    def is_empty(self) -> bool:
+        return len(self.data) == 0 or all(len(ds) == 0 for ds in self.data)
+
+    @staticmethod
+    def create(
+        data: Union[InputDatasetT, Sequence[InputDatasetT]],
+        cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
+        pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
+    ) -> "BarPlotInputData":
+        """
+        We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
+        allow optional categories, categories as strings or as dicts or as objects. We want
+        to normalize the input data before we save it to intermediate format and plot.
+        """
+        pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
+
+        # Given one dataset - turn it into a list
+        raw_datasets: List[DatasetT]
+        if isinstance(data, Sequence):
+            raw_datasets = cast(List[DatasetT], data)
+        else:
+            raw_datasets = [cast(DatasetT, data)]
+        del data
+
+        # Make list of cats from different inputs
+        raw_cats_per_ds: List[InputCategoriesT]
+        if not cats:
+            # Not supplied, generate default categories
+            raw_cats_per_ds = []
+            for val_by_cat_by_sample in raw_datasets:
+                ds_cats: List[CatName] = []
+                for sample_name, val_by_cat in val_by_cat_by_sample.items():
+                    for _cat_name in val_by_cat.keys():
+                        if _cat_name not in raw_cats_per_ds:
+                            ds_cats.append(CatName(_cat_name))
+                raw_cats_per_ds.append(ds_cats)
+        elif isinstance(cats, List) and isinstance(cats[0], str):
+            # ["Cat1", "Cat2"] - list of strings for one dataset
+            raw_cats_per_ds = [[CatName(cat_name) for cat_name in cast(List[str], cats)]]
+        elif isinstance(cats, Sequence):
+            # [["Cat1", "Cat2"], {"Cat3": {}, "Cat4": {}}] - list of lists or dicts for multiple datasets
+            raw_cats_per_ds = [ds_cats for ds_cats in cast(List[Dict], cats)]
+        else:
+            raw_cats_per_ds = [cats]
+
+        if len(raw_datasets) > 1 and len(raw_cats_per_ds) == 1:
+            raw_cats_per_ds = raw_cats_per_ds * len(raw_datasets)
+        elif len(raw_datasets) == 0 and len(raw_cats_per_ds) == 1:
+            raw_cats_per_ds = []
+        elif len(raw_datasets) != len(raw_cats_per_ds):
+            raise RunError(
+                f"Bar graph: number of dataset and category lists must match, got {len(raw_datasets)} "
+                f"datasets and {len(raw_cats_per_ds)} category lists: {raw_cats_per_ds}"
+            )
+
+        # Parse the categories into pydantic objects
+        categories_per_ds: List[Dict[CatName, CatConf]] = []
+        for raw_ds_cats in raw_cats_per_ds:
+            ds_categories: Dict[CatName, CatConf] = dict()
+            if isinstance(raw_ds_cats, list):
+                for cat_name in raw_ds_cats:
+                    ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), name=cat_name)
+            elif isinstance(raw_ds_cats, dict):
+                for cat_name, cat_props in raw_ds_cats.items():
+                    if isinstance(cat_props, CatConf):
+                        ds_categories[CatName(cat_name)] = cat_props
+                    else:
+                        if "name" not in cat_props:
+                            cat_props = {"name": cat_name, **cat_props}
+                        ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), **cat_props)
+            else:
+                raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
+            categories_per_ds.append(ds_categories)
+
+        # Allow user to overwrite a given category config for this plot
+        if pconf.id and pconf.id in config.custom_plot_config:
+            for cat_name, user_cat_props in config.custom_plot_config[pconf.id].items():
+                for ds_idx in range(len(categories_per_ds)):
+                    if cat_name in categories_per_ds[ds_idx].keys():
+                        for prop_name, prop_val in user_cat_props.items():
+                            setattr(categories_per_ds[ds_idx][CatName(cat_name)], prop_name, prop_val)
+
+        # Filter data to keep only numerals, remove unknown categories and fill missing with NaNs
+        filtered_datasets: List[DatasetT] = []
+        for ds_idx, raw_ds in enumerate(raw_datasets):
+            filtered_ds: DatasetT = {}
+            filtered_datasets.append(filtered_ds)
+            for sample_name in list(raw_ds.keys()):
+                raw_val_by_cat = raw_ds[sample_name]
+                filtered_val_by_cat = {}
+                for cat_id, _ in categories_per_ds[ds_idx].items():
+                    # Remove categories that are not in the categories_per_ds, and fill missing with NaNs
+                    val = raw_val_by_cat.get(cat_id, None)
+                    if val is not None and not isinstance(val, (float, int)):
+                        # Try to parse
+                        try:
+                            val = int(val)
+                        except ValueError:
+                            try:
+                                val = float(val)
+                            except ValueError:
+                                val = None
+                    if val is None:
+                        val = float("nan")
+                    elif isinstance(val, float):
+                        if math.floor(val) == val:
+                            val = int(val)
+                    filtered_val_by_cat[cat_id] = val
+                # Remove samples with no data
+                if all(math.isnan(v) for v in filtered_val_by_cat.values()):
+                    continue
+                filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
+
+        return BarPlotInputData(
+            anchor=plot_anchor(pconf),
+            plot_type=PlotType.BAR,
+            pconfig=pconf,
+            data=filtered_datasets,
+            cats=categories_per_ds,
+            creation_date=report.creation_date,
+        )
+
+    def to_df(self) -> pl.DataFrame:
+        """
+        Save plot data to a parquet file using a tabular representation that's
+        optimized for cross-run analysis.
+        """
+        # Create a list of records for each sample/category pair
+        records = []
+        for ds_idx, dataset in enumerate(self.data):
+            for sample_name, sample_data in dataset.items():
+                for category_name, value in sample_data.items():
+                    # Get category configuration if available
+                    cat_conf = None
+                    if ds_idx < len(self.cats):
+                        cat_conf = self.cats[ds_idx].get(category_name)
+
+                    record = {
+                        "dataset_idx": ds_idx,
+                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx]) if self.pconfig.data_labels else "",
+                        "sample": str(sample_name),
+                        "category": str(category_name),
+                        "bar_value": float(value) if value is not None else float("nan"),
+                    }
+
+                    # Store category configuration as JSON if available
+                    if cat_conf:
+                        record["cat_meta"] = cat_conf.model_dump_json()
+
+                    # Add plot configuration metadata
+                    if hasattr(self.pconfig, "title") and self.pconfig.title:
+                        record["plot_title"] = self.pconfig.title
+                    if hasattr(self.pconfig, "xlab") and self.pconfig.xlab:
+                        record["x_label"] = self.pconfig.xlab
+                    if hasattr(self.pconfig, "ylab") and self.pconfig.ylab:
+                        record["y_label"] = self.pconfig.ylab
+
+                    records.append(record)
+
+        df = pl.DataFrame(
+            records,
+            schema_overrides={
+                "data_label": pl.Utf8,
+                "bar_value": pl.Float64,
+            },
+        )
+        return self.finalize_df(df)
+
+    @classmethod
+    def from_df(cls, df: pl.DataFrame, pconfig: Union[Dict, BarPlotConfig], anchor: Anchor) -> "BarPlotInputData":
+        """
+        Load plot data from a parquet file.
+        """
+        # Handle None case
+        creation_date = cls.creation_date_from_df(df)
+        if cls.df_is_empty(df):
+            pconf = (
+                pconfig
+                if isinstance(pconfig, BarPlotConfig)
+                else cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
+            )
+            return cls(
+                anchor=anchor,
+                plot_type=PlotType.BAR,
+                pconfig=pconf,
+                data=[],
+                cats=[],
+                creation_date=creation_date,
+            )
+
+        pconf = cast(BarPlotConfig, BarPlotConfig.from_df(df))
+
+        # Reconstruct data structure
+        datasets: List[DatasetT] = []
+        data_labels = []
+        cats_per_dataset: List[Dict[CatName, CatConf]] = []
+
+        # Group by dataset_idx
+        max_dataset_idx = df.select(pl.col("dataset_idx").max()).item() if not df.is_empty() else 0
+        for ds_idx in range(int(max_dataset_idx) + 1):
+            ds_group = df.filter(pl.col("dataset_idx") == ds_idx) if not df.is_empty() else pl.DataFrame()
+
+            data_label = ds_group.select("data_label").item(0, 0) if not ds_group.is_empty() else None
+            data_labels.append(json.loads(data_label) if data_label else {})
+
+            dataset = {}
+            cats_meta = {}
+
+            # Get list of unique sample names in this dataset to preserve order
+            unique_samples: pl.Series = (
+                ds_group.select("sample").unique().to_series() if not ds_group.is_empty() else pl.Series([])
+            )
+            # Group by sample_name within each dataset
+            for sample_name in unique_samples:
+                # Get data for this sample
+                sample_group = ds_group.filter(pl.col("sample") == sample_name)
+                data_by_cat = {}
+
+                # Process each category for this sample
+                for row in sample_group.iter_rows(named=True):
+                    category_name = row["category"]
+                    value = row["bar_value"]
+                    data_by_cat[CatName(str(category_name))] = value
+
+                    # Process category metadata if available
+                    if "cat_meta" in row and row["cat_meta"] is not None:
+                        try:
+                            cat_meta = json.loads(row["cat_meta"])
+                            # Use CatConf to ensure proper validation
+                            if category_name not in cats_meta:
+                                cats_meta[category_name] = CatConf(
+                                    name=cat_meta.get("name", category_name),
+                                    color=cat_meta.get("color"),
+                                    path_in_cfg=("cats",),
+                                )
+                        except (json.JSONDecodeError, TypeError):
+                            # Fallback if JSON parsing fails
+                            if category_name not in cats_meta:
+                                cats_meta[category_name] = CatConf(name=category_name, path_in_cfg=("cats",))
+
+                # Add sample data if not empty
+                if data_by_cat:
+                    dataset[SampleName(str(sample_name))] = data_by_cat
+
+            datasets.append(dataset)
+            cats_per_dataset.append(cats_meta)
+
+        if any(d for d in data_labels if d):
+            pconf.data_labels = data_labels
+        return cls(
+            anchor=anchor,
+            plot_type=PlotType.BAR,
+            pconfig=pconf,
+            data=datasets,
+            cats=cats_per_dataset,
+            creation_date=creation_date,
+        )
+
+    @classmethod
+    def merge(
+        cls,
+        old_data: "BarPlotInputData",
+        new_data: "BarPlotInputData",
+    ) -> "BarPlotInputData":
+        """
+        Merge data from a previous run with the current run.
+
+        This allows for comparing bar plot data across multiple runs.
+        """
+        # Create dataframe for new data
+        new_df = new_data.to_df()
+        if new_df.is_empty():
+            return old_data
+
+        old_df = old_data.to_df()
+
+        # If we have both old and new data, merge them
+        merged_df = new_df
+        if old_df is not None and not old_df.is_empty():
+            # Get the list of samples that exist in both old and new data, for each dataset
+            new_keys = new_df.select(["data_label", "sample"]).unique()
+
+            # Keep only the rows in old_df whose (data_label, sample) pair
+            # does *not* appear in new_keys. An anti-join is the cleanest way to express this.
+            old_df_filtered = old_df.join(
+                new_keys,
+                on=["data_label", "sample"],
+                how="anti",  # anti-join = "rows in left not matched in right"
+            )
+
+            # Combine the dataframes, keeping all rows
+            merged_df = pl.concat([old_df_filtered, new_df], how="diagonal")
+
+            # Sort by timestamp (newest last) - using creation_date column
+            merged_df = merged_df.sort("creation_date")
+
+        return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
+
+
+def plot(
+    data: Union[InputDatasetT, Sequence[InputDatasetT]],
+    cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
+    pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
+) -> Union["BarPlot", str, None]:
+    """
+    Create a horizontal bar graph. Also save data to intermediate format.
+
+    Expects a 2D dict of sample data. Also, can take info about categories. There are quite a
+    few options of how to use this function, see the docs for details.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
                  Can supply a list of dicts and will have buttons to switch
-    :param cats: optional list, dict or OrderedDict with plot categories
+    :param cats: optional list or dict with plot categories
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
     """
+    # We want to be permissive to user inputs - but normalizing them now to simplify further processing
+    inputs = BarPlotInputData.create(data, cats, pconfig)
+    inputs = BarPlotInputData.merge_with_previous(inputs)
+    if inputs.is_empty():
+        return None
 
-    if pconfig is None:
-        pconfig = {}
+    plot = BarPlot.from_inputs(inputs)
+    inputs.save_to_parquet()
+    return plot
 
-    # Allow user to overwrite any given config for this plot
-    if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
-            pconfig[k] = v
 
-    # Validate config if linting
-    if config.lint:
-        # Get module name
-        modname = ""
-        callstack = inspect.stack()
-        for n in callstack:
-            if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
-                callpath = n[1].split("multiqc/modules/", 1)[-1]
-                modname = ">{}< ".format(callpath)
-                break
-        # Look for essential missing pconfig keys
-        for k in ["id", "title", "ylab"]:
-            if k not in pconfig:
-                errmsg = "LINT: {}Bargraph pconfig was missing key '{}'".format(modname, k)
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
-        # Check plot title format
-        if not re.match(r"^[^:]*\S: \S[^:]*$", pconfig.get("title", "")):
-            errmsg = "LINT: {} Bargraph title did not match format 'Module: Plot Name' (found '{}')".format(
-                modname, pconfig.get("title", "")
+class Category(BaseModel):
+    name: str
+    color: str
+    data: List[float]
+    data_pct: List[float]
+
+
+class Dataset(BaseDataset):
+    cats: List[Category]
+    samples: List[str]
+
+    def sample_names(self) -> List[SampleName]:
+        return [SampleName(sample) for sample in self.samples]
+
+    @staticmethod
+    def create(
+        dataset: BaseDataset,
+        cats: Sequence[CatDataDict],
+        samples: Sequence[str],
+    ) -> "Dataset":
+        # Need to reverse samples as the bar plot will show them reversed
+        samples = list(reversed(samples))
+        fixed_cats: List[Category] = []
+        for input_cat in cats:
+            if "name" not in input_cat:
+                raise ValueError(f"Bar plot {dataset.plot_id}: missing 'name' key in category")
+
+            # Split long category names
+            name = "<br>".join(split_long_string(input_cat["name"]))
+
+            # Convert color to RGB format using the generalized function
+            color_str = mqc_colour.color_to_rgb_string(input_cat["color"])
+
+            # Reverse the data to match the reversed samples
+            cat: Category = Category(
+                name=name,
+                color=color_str,
+                data=list(reversed(input_cat["data"])),
+                data_pct=list(reversed(input_cat["data_pct"])) if "data_pct" in input_cat else [],
             )
-            logger.error(errmsg)
-            report.lint_errors.append(errmsg)
 
-    # Given one dataset - turn it into a list
-    if type(data) is not list:
-        data = [data]
+            # Check that the number of samples is the same for all categories
+            assert len(samples) == len(cat.data)
+            if cat.data_pct:
+                assert len(samples) == len(cat.data_pct)
 
-    # Make list of cats from different inputs
-    if cats is None:
-        cats = list()
-    elif type(cats) is not list:
-        cats = [cats]
-    else:
-        try:  # Py2
-            if type(cats[0]) is str or type(cats[0]) is unicode:
-                cats = [cats]
-        except NameError:  # Py3
-            if type(cats[0]) is str:
-                cats = [cats]
-        except IndexError:  # Given empty list
-            pass
-    # Generate default categories if not supplied
-    for idx in range(len(data)):
-        try:
-            cats[idx]
-        except IndexError:
-            cats.append(list())
-            for s in data[idx].keys():
-                for k in data[idx][s].keys():
-                    if k not in cats[idx]:
-                        cats[idx].append(k)
+            fixed_cats.append(cat)
 
-    # If we have cats in lists, turn them into dicts
-    for idx, cat in enumerate(cats):
-        if type(cat) is list:
-            newcats = OrderedDict()
-            for c in cat:
-                newcats[c] = {"name": c}
-            cats[idx] = newcats
-        else:
-            for c in cat:
-                if "name" not in cat[c]:
-                    cats[idx][c]["name"] = c
-
-    # Allow user to overwrite a given category config for this plot
-    if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
-            if k in cats[idx].keys():
-                for kk, vv in v.items():
-                    cats[idx][k][kk] = vv
-
-    # Parse the data into a chart friendly format
-    plotsamples = list()
-    plotdata = list()
-    for idx, d in enumerate(data):
-        if isinstance(d, OrderedDict):
-            hc_samples = list(d.keys())
-        else:
-            hc_samples = sorted(list(d.keys()))
-        hc_data = list()
-        sample_dcount = dict()
-        for c in cats[idx].keys():
-            thisdata = list()
-            catcount = 0
-            for s in hc_samples:
-                if s not in sample_dcount:
-                    sample_dcount[s] = 0
-                try:
-                    thisdata.append(float(d[s][c]))
-                    catcount += 1
-                    sample_dcount[s] += 1
-                except (KeyError, ValueError):
-                    # Pad with NaNs when we have missing categories in a sample
-                    thisdata.append(float("nan"))
-            if catcount > 0:
-                if pconfig.get("hide_zero_cats", True) is False or max(x for x in thisdata if not math.isnan(x)) > 0:
-                    thisdict = {"name": cats[idx][c]["name"], "data": thisdata}
-                    if "color" in cats[idx][c]:
-                        thisdict["color"] = cats[idx][c]["color"]
-                    hc_data.append(thisdict)
-
-        # Remove empty samples
-        for s, c in sample_dcount.items():
-            if c == 0:
-                idx = hc_samples.index(s)
-                del hc_samples[idx]
-                for j, d in enumerate(hc_data):
-                    del hc_data[j]["data"][idx]
-        if len(hc_data) > 0:
-            plotsamples.append(hc_samples)
-            plotdata.append(hc_data)
-
-    if len(plotdata) == 0:
-        logger.warning(f"Tried to make bar plot, but had no data: {pconfig.get('id')}")
-        return '<p class="text-danger">Error - was not able to plot data.</p>'
-
-    # Make a plot - custom, interactive or flat
-    try:
-        return get_template_mod().bargraph(plotdata, plotsamples, pconfig)
-    except (AttributeError, TypeError):
-        if config.plots_force_flat or (
-            not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries
-        ):
-            try:
-                report.num_mpl_plots += 1
-                return matplotlib_bargraph(plotdata, plotsamples, pconfig)
-            except Exception as e:
-                logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
-                logger.debug(e, exc_info=True)
-                return highcharts_bargraph(plotdata, plotsamples, pconfig)
-        else:
-            # Use MatPlotLib to generate static plots if requested
-            if config.export_plots:
-                try:
-                    matplotlib_bargraph(plotdata, plotsamples, pconfig)
-                except Exception as e:
-                    logger.error("############### Error making MatPlotLib figure! Plot not exported.")
-                    logger.debug(e, exc_info=True)
-            # Return HTML for HighCharts dynamic plot
-            return highcharts_bargraph(plotdata, plotsamples, pconfig)
-
-
-def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
-    """
-    Build the HTML needed for a HighCharts bar graph. Should be
-    called by plot_bargraph, which properly formats input data.
-    """
-    if pconfig is None:
-        pconfig = {}
-    if pconfig.get("id") is None:
-        pconfig["id"] = "mqc_hcplot_" + "".join(random.sample(letters, 10))
-
-    # Sanitise plot ID and check for duplicates
-    pconfig["id"] = report.save_htmlid(pconfig["id"])
-
-    html = '<div class="mqc_hcplot_plotgroup">'
-
-    # Counts / Percentages / Log Switches
-    if pconfig.get("cpswitch") is not False or pconfig.get("logswitch") is True:
-        if pconfig.get("logswitch_active") is True:
-            c_active = ""
-            p_active = ""
-            l_active = "active"
-        elif pconfig.get("cpswitch_c_active", True) is True:
-            c_active = "active"
-            p_active = ""
-            l_active = ""
-        else:
-            c_active = ""
-            p_active = "active"
-            l_active = ""
-            pconfig["stacking"] = "percent"
-        c_label = pconfig.get("cpswitch_counts_label", "Counts")
-        p_label = pconfig.get("cpswitch_percent_label", "Percentages")
-        l_label = pconfig.get("logswitch_label", "Log10")
-        html += '<div class="btn-group hc_switch_group"> \n'
-        html += '<button class="btn btn-default btn-sm {c_a}" data-action="set_numbers" data-target="{id}" data-ylab="{c_l}">{c_l}</button> \n'.format(
-            id=pconfig["id"], c_a=c_active, c_l=c_label
+        dataset = Dataset(
+            **dataset.model_dump(),
+            cats=fixed_cats,
+            samples=samples,
         )
-        if pconfig.get("cpswitch", True) is True:
-            html += '<button class="btn btn-default btn-sm {p_a}" data-action="set_percent" data-target="{id}" data-ylab="{p_l}">{p_l}</button> \n'.format(
-                id=pconfig["id"], p_a=p_active, p_l=p_label
+
+        return dataset
+
+    def create_figure(
+        self,
+        layout: go.Layout,
+        is_log=False,
+        is_pct=False,
+        **kwargs,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        fig = go.Figure(layout=layout)
+
+        for cat in self.cats:
+            data = cat.data_pct if is_pct else cat.data
+
+            params = copy.deepcopy(self.trace_params)
+            assert cat.color is not None
+            params["marker"]["color"] = cat.color
+            fig.add_trace(
+                go.Bar(
+                    y=self.samples,
+                    x=data,
+                    name=cat.name,
+                    meta=cat.name,
+                    **params,
+                ),
             )
-        if pconfig.get("logswitch") is True:
-            html += '<button class="btn btn-default btn-sm {l_a}" data-action="set_log" data-target="{id}" data-ylab="{l_l}">{l_l}</button> \n'.format(
-                id=pconfig["id"], l_a=l_active, l_l=l_label
-            )
-            pconfig["reversedStacks"] = True
-        html += "</div> "
-        if len(plotdata) > 1:
-            html += " &nbsp; &nbsp; "
+        return fig
 
-    # Buttons to cycle through different datasets
-    if len(plotdata) > 1:
-        html += '<div class="btn-group hc_switch_group">\n'
-        for k, p in enumerate(plotdata):
-            active = "active" if k == 0 else ""
-            try:
-                name = pconfig["data_labels"][k]["name"]
-            except:
-                try:
-                    name = pconfig["data_labels"][k]
-                except:
-                    name = k + 1
-            try:
-                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except:
-                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
-            try:
-                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except:
-                ymax = ""
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
-                a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, k=k
-            )
-        html += "</div>\n\n"
+    def save_data_file(self) -> None:
+        val_by_cat_by_sample: Dict[str, Dict[str, str]] = defaultdict(dict)
+        for cat in self.cats:
+            for d_idx, d_val in enumerate(cat.data):
+                s_name = self.samples[d_idx]
+                val_by_cat_by_sample[s_name][cat.name] = str(d_val)
+        report.write_data_file(val_by_cat_by_sample, self.uid)
 
-    # Plot HTML
-    html += """<div class="hc-plot-wrapper"{height}>
-        <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>
-    </div></div>""".format(
-        id=pconfig["id"],
-        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
-    )
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
+        """Format dataset as a markdown table"""
+        prompt = ""
+        prompt += "|Sample|" + "|".join(cat.name for cat in self.cats) + "|\n"
+        prompt += "|---|" + "|".join("---" for _ in self.cats) + "|\n"
 
-    report.num_hc_plots += 1
-
-    report.plot_data[pconfig["id"]] = {
-        "plot_type": "bar_graph",
-        "samples": plotsamples,
-        "datasets": plotdata,
-        "config": pconfig,
-    }
-
-    return html
-
-
-def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
-    """
-    Plot a bargraph with Matplot lib and return a HTML string. Either embeds a base64
-    encoded image within HTML or writes the plot and links to it. Should be called by
-    plot_bargraph, which properly formats the input data.
-    """
-
-    if pconfig is None:
-        pconfig = {}
-
-    # Plot group ID
-    if pconfig.get("id") is None:
-        pconfig["id"] = "mqc_mplplot_" + "".join(random.sample(letters, 10))
-
-    # Sanitise plot ID and check for duplicates
-    pconfig["id"] = report.save_htmlid(pconfig["id"])
-
-    # Individual plot IDs
-    pids = []
-    for k in range(len(plotdata)):
-        try:
-            name = pconfig["data_labels"][k]
-        except:
-            name = k + 1
-        pid = "mqc_{}_{}".format(pconfig["id"], name)
-        pid = report.save_htmlid(pid, skiplint=True)
-        pids.append(pid)
-
-    html = (
-        '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> '
-        + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
-        + '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
-    )
-    html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
-
-    # Same defaults as HighCharts for consistency
-    default_colors = [
-        "#7cb5ec",
-        "#434348",
-        "#90ed7d",
-        "#f7a35c",
-        "#8085e9",
-        "#f15c80",
-        "#e4d354",
-        "#2b908f",
-        "#f45b5b",
-        "#91e8e1",
-    ]
-
-    # Counts / Percentages Switch
-    if pconfig.get("cpswitch") is not False and not config.simple_output:
-        if pconfig.get("cpswitch_c_active", True) is True:
-            c_active = "active"
-            p_active = ""
+        suffix = ""
+        if not pconfig.cpswitch_c_active:
+            suffix += "%"
+            if self.layout["xaxis"]["ticksuffix"] and self.layout["xaxis"]["ticksuffix"] != "%":
+                suffix += " " + self.layout["xaxis"]["ticksuffix"]
         else:
-            c_active = ""
-            p_active = "active"
-            pconfig["stacking"] = "percent"
-        c_label = pconfig.get("cpswitch_counts_label", "Counts")
-        p_label = pconfig.get("cpswitch_percent_label", "Percentages")
-        html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_setcountspcnt"> \n\
-            <button class="btn btn-default btn-sm {c_a} counts">{c_l}</button> \n\
-            <button class="btn btn-default btn-sm {p_a} pcnt">{p_l}</button> \n\
-        </div> '.format(
-            c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label
-        )
-        if len(plotdata) > 1:
-            html += " &nbsp; &nbsp; "
+            if self.layout["xaxis"]["ticksuffix"]:
+                suffix += " " + self.layout["xaxis"]["ticksuffix"]
 
-    # Buttons to cycle through different datasets
-    if len(plotdata) > 1 and not config.simple_output:
-        html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_switchds">\n'
-        for k, p in enumerate(plotdata):
-            pid = pids[k]
-            active = "active" if k == 0 else ""
-            try:
-                name = pconfig["data_labels"][k]
-            except:
-                name = k + 1
-            html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
-                a=active, pid=pid, n=name
+        for sidx, sample in enumerate(self.samples):
+            presudonym = report.anonymize_sample_name(sample)
+            prompt += (
+                f"|{presudonym}|"
+                + "|".join(
+                    self.fmt_value_for_llm(
+                        (cat.data if not pconfig.cpswitch or pconfig.cpswitch_c_active else cat.data_pct)[sidx]
+                    )
+                    + suffix
+                    for cat in self.cats
+                )
+                + "|\n"
             )
-        html += "</div>\n\n"
+        return prompt
 
-    # Go through datasets creating plots
-    for pidx, pdata in enumerate(plotdata):
-        # Save plot data to file
-        fdata = {}
-        for d in pdata:
-            for didx, dval in enumerate(d["data"]):
-                s_name = plotsamples[pidx][didx]
-                if s_name not in fdata:
-                    fdata[s_name] = dict()
-                fdata[s_name][d["name"]] = dval
-        if pconfig.get("save_data_file", True):
-            util_functions.write_data_file(fdata, pids[pidx])
 
-        # Plot percentage as well as counts
-        plot_pcts = [False]
-        if pconfig.get("cpswitch") is not False:
-            plot_pcts = [False, True]
+class BarPlot(Plot[Dataset, BarPlotConfig]):
+    datasets: List[Dataset]
 
-        # Switch out NaN for 0s so that MatPlotLib doesn't ignore stuff
-        for idx, d in enumerate(pdata):
-            pdata[idx]["data"] = [x if not math.isnan(x) else 0 for x in d["data"]]
+    def sample_names(self) -> List[SampleName]:
+        names: List[SampleName] = []
+        for ds in self.datasets:
+            names.extend(SampleName(sample) for sample in ds.samples)
+        return names
 
-        for plot_pct in plot_pcts:
-            # Plot ID
-            pid = pids[pidx]
-            hide_plot = False
-            if plot_pct is True:
-                pid = "{}_pc".format(pid)
-                if pconfig.get("cpswitch_c_active", True) is True:
-                    hide_plot = True
+    @staticmethod
+    def from_inputs(inputs: BarPlotInputData) -> Union["BarPlot", str, None]:
+        # Parse the data into a chart friendly format
+        scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set
+        plot_samples: List[List[SampleName]] = list()
+        plot_data: List[List[CatDataDict]] = list()
+        for ds_idx, d in enumerate(inputs.data):
+            ordered_samples_names: List[SampleName] = [SampleName(s) for s in d.keys()]
+            if isinstance(d, OrderedDict):
+                # Legacy: users assumed that passing an OrderedDict indicates that we
+                # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
+                pass
+            elif inputs.pconfig.sort_samples:
+                ordered_samples_names = natsorted([SampleName(s) for s in d.keys()])
+            cat_data_dicts: List[CatDataDict] = list()
+            sample_d_count: Dict[SampleName, int] = dict()
+            for cat_idx, cat_name in enumerate(inputs.cats[ds_idx].keys()):
+                cat_data: List[Union[int, float]] = list()
+                cat_count = 0
+                for s in ordered_samples_names:
+                    if cat_name in d[SampleName(s)]:
+                        cat_data.append(d[SampleName(s)][cat_name])
+                    else:
+                        cat_data.append(0)
+                    if s not in sample_d_count:
+                        sample_d_count[s] = 0
+                    cat_count += 1
+                    sample_d_count[s] += 1
+                if cat_count > 0:
+                    if inputs.pconfig.hide_zero_cats is False or not all(x == 0 for x in cat_data if not math.isnan(x)):
+                        color: str = inputs.cats[ds_idx][cat_name].color or scale.get_colour(cat_idx, lighten=1)
+                        this_dict: CatDataDict = {
+                            "name": inputs.cats[ds_idx][cat_name].name,
+                            "color": color,
+                            "data": cat_data,
+                            "data_pct": [],
+                        }
+                        cat_data_dicts.append(this_dict)
+
+            # Remove empty samples
+            for sample_name, cnt in sample_d_count.items():
+                if cnt == 0:
+                    sample_idx = ordered_samples_names.index(sample_name)
+                    del ordered_samples_names[sample_idx]
+                    for cat_data_idx, _ in enumerate(cat_data_dicts):
+                        del cat_data_dicts[cat_data_idx]["data"][sample_idx]
+            if len(cat_data_dicts) > 0:
+                plot_samples.append(ordered_samples_names)
+                plot_data.append(cat_data_dicts)
+
+        return BarPlot.create(
+            cats_lists=plot_data,
+            samples_lists=plot_samples,
+            pconfig=inputs.pconfig,
+            anchor=inputs.anchor,
+        )
+
+    @staticmethod
+    def create(
+        cats_lists: Sequence[Sequence[CatDataDict]],
+        samples_lists: Sequence[Sequence[SampleNameT]],
+        pconfig: BarPlotConfig,
+        anchor: Anchor,
+    ) -> "BarPlot":
+        """
+        :param cats_lists: each dataset is a list of dicts with the keys: {name, color, data},
+            where `name` is the category name, `color` is the color of the bar,
+            and `data` is a list of values for each sample. Each outer list will
+            correspond a separate tab.
+        :param samples_lists: list of lists of bar names (that is, sample names). Similarly,
+            each outer list will correspond to a separate tab.
+        :param pconfig: Plot configuration dictionary
+        """
+        if len(cats_lists) != len(samples_lists):
+            raise ValueError("Number of datasets and samples lists do not match")
+
+        model: Plot[Dataset, BarPlotConfig] = Plot.initialize(
+            plot_type=PlotType.BAR,
+            pconfig=pconfig,
+            anchor=anchor,
+            n_series_per_dataset=[len(x) for x in samples_lists],
+            axis_controlled_by_switches=["xaxis"],
+            default_tt_label="%{meta}: <b>%{x}</b>",
+            defer_render_if_large=False,  # We hide samples on large bar plots, so no need to defer render
+            flat_if_very_large=True,  # However, the data is still embedded into the HTML, and we don't want the report size to inflate
+        )
+
+        model.datasets = [
+            Dataset.create(d, cats=cats, samples=samples)
+            for d, cats, samples in zip(model.datasets, cats_lists, samples_lists)
+        ]
+
+        # Set the barmode
+        barmode = pconfig.stacking  # stacking, but drawing negative values below zero
+        if barmode is None:  # For legacy reasons, interpreting non-default None as "group"
+            barmode = "group"  # side by side
+        if barmode == "normal":  # Legacy
+            barmode = "relative"
+
+        max_n_cats = max([len(dataset.cats) for dataset in model.datasets])
+
+        # Set height to also be proportional to the number of cats to fit a legend
+        HEIGHT_PER_LEGEND_ITEM = 19
+        legend_height = HEIGHT_PER_LEGEND_ITEM * max_n_cats
+
+        max_n_samples = max(len(x) for x in samples_lists) if len(samples_lists) > 0 else 0
+        height = determine_barplot_height(
+            max_n_samples=max_n_samples,
+            # Group mode puts each category in a separate bar, so need to multiply by the number of categories
+            max_bars_in_group=max_n_cats if barmode == "group" else 1,
+            legend_height=legend_height,
+        )
+
+        model.layout.update(
+            height=height,
+            barmode=barmode,
+            bargroupgap=0,
+            bargap=0.2,
+            yaxis=dict(
+                showgrid=False,
+                categoryorder="trace",  # keep sample order
+                automargin=True,  # to make sure there is enough space for ticks labels
+                title=None,
+                hoverformat=model.layout.xaxis.hoverformat,
+                ticksuffix=model.layout.xaxis.ticksuffix,
+                # Prevent JavaScript from automatically parsing categorical values as numbers:
+                type="category",
+            ),
+            xaxis=dict(
+                title=dict(text=model.layout.yaxis.title.text),
+                hoverformat=model.layout.yaxis.hoverformat,
+                ticksuffix=model.layout.yaxis.ticksuffix,
+            ),
+            # Re-initiate legend to reset to default legend location on the top right
+            legend=go.layout.Legend(
+                # We use legend groups with subplots to simulate standard legend interactivity
+                # like we had a standard bar graph without subplots. We need to remove the space
+                # between the legend groups to make it look like a single legend.
+                tracegroupgap=0,
+                # Plotly plots the grouped bar graph in a reversed order in respect to
+                # the legend, so reversing the legend to match it:
+                traceorder="normal" if barmode != "group" else "reversed",
+            ),
+            hovermode="y unified",
+            hoverlabel=dict(
+                bgcolor="rgba(255, 255, 255, 0.8)",
+                font=dict(color="black"),
+            ),
+            showlegend=pconfig.use_legend if pconfig.use_legend is not None else True,
+        )
+
+        if getattr(config, "barplot_legend_on_bottom", False):
+            model.layout.update(
+                legend=go.layout.Legend(
+                    orientation="h",
+                    x=0.5,
+                    xanchor="center",
+                    y=-0.5,
+                    yanchor="top",
+                ),
+            )
+
+        for dataset in model.datasets:
+            if barmode == "group":
+                # max category
+                xmax_cnt = max(max(cat.data[i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+                xmin_cnt = min(min(cat.data[i] for cat in dataset.cats) for i in range(len(dataset.samples)))
             else:
-                if pconfig.get("cpswitch_c_active", True) is not True:
-                    hide_plot = True
+                # max sum of all categories across all samples
+                xmax_cnt = max(
+                    sum(cat.data[i] if cat.data[i] > 0 else 0 for cat in dataset.cats)
+                    for i in range(len(dataset.samples))
+                )
+                xmin_cnt = min(
+                    sum(cat.data[i] if cat.data[i] < 0 else 0 for cat in dataset.cats)
+                    for i in range(len(dataset.samples))
+                )
 
-            # Set up figure
+            minallowed = 0 if xmin_cnt > 0 else xmin_cnt  # allow bar to start below zero
+            maxallowed = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
+            if maxallowed is None:
+                maxallowed = xmax_cnt
 
-            # Height has a default, then adjusted by the number of samples
-            plt_height = len(plotsamples[pidx]) / 2.3  # Default in inches, empirically determined
-            plt_height = max(6, plt_height)  # At least 6" tall
-            plt_height = min(30, plt_height)  # Cap at 30" tall
+            dataset.layout.update(
+                yaxis=dict(
+                    title=None,
+                    hoverformat=dataset.layout["xaxis"]["hoverformat"],
+                    ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
+                ),
+                xaxis=dict(
+                    title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
+                    hoverformat=dataset.layout["yaxis"]["hoverformat"],
+                    ticksuffix=dataset.layout["yaxis"]["ticksuffix"],
+                    autorangeoptions=dict(
+                        minallowed=minallowed,
+                        maxallowed=maxallowed,
+                    ),
+                ),
+                showlegend=len(dataset.cats) > 1 if pconfig.use_legend is None else pconfig.use_legend,
+            )
+            dataset.trace_params.update(
+                orientation="h",
+                marker=dict(line=dict(width=0)),
+                textposition="inside",
+                insidetextanchor="start",
+            )
+            if "hovertemplate" in dataset.trace_params:
+                # %{text} doesn't work for unified hovermode:
+                dataset.trace_params["hovertemplate"] = dataset.trace_params["hovertemplate"].replace("%{text}", "")
 
-            # Use fixed height if pconfig['height'] is set (convert pixels -> inches)
-            if "height" in pconfig:
-                # Default interactive height in pixels = 512
-                # Not perfect replication, but good enough
-                plt_height = 6 * (pconfig["height"] / 512)
+            if dataset.layout["xaxis"]["hoverformat"] is None:
+                if all(all(isinstance(x, float) or math.isnan(x) for x in cat.data) for cat in dataset.cats):
+                    dataset.layout["xaxis"]["hoverformat"] = ",.2f"
+                elif all(all(isinstance(x, int) or math.isnan(x) for x in cat.data) for cat in dataset.cats):
+                    dataset.layout["xaxis"]["hoverformat"] = ",.0f"
 
-            bar_width = 0.8
+        # Expand data with zeroes if there are fewer values than samples
+        for dataset in model.datasets:
+            for cat in dataset.cats:
+                if len(cat.data) < len(dataset.samples):
+                    cat.data.extend([0] * (len(dataset.samples) - len(cat.data)))
 
-            fig = plt.figure(figsize=(14, plt_height), frameon=False)
-            axes = fig.add_subplot(111)
-            y_ind = range(len(plotsamples[pidx]))
+        # Calculate and save percentages
+        if model.add_pct_tab:
+            for _, dataset in enumerate(model.datasets):
+                # Count totals for each category
+                sums: List[float] = [0 for _ in dataset.cats[0].data]
+                for cat in dataset.cats:
+                    for sample_idx, val in enumerate(cat.data):
+                        if not math.isnan(val):
+                            sums[sample_idx] += abs(val)
 
-            # Count totals for each sample
-            if plot_pct is True:
-                s_totals = [0 for _ in pdata[0]["data"]]
-                for series_idx, d in enumerate(pdata):
-                    for sample_idx, v in enumerate(d["data"]):
-                        s_totals[sample_idx] += v
-
-            # Plot bars
-            dlabels = []
-            prev_values = None
-            for idx, d in enumerate(pdata):
-                # Plot percentages
-                values = [x for x in d["data"]]
-                if len(values) < len(y_ind):
-                    values.extend([0] * (len(y_ind) - len(values)))
-                if plot_pct is True:
-                    for key, var in enumerate(values):
-                        s_total = s_totals[key]
-                        if s_total == 0:
-                            values[key] = 0
+                # Now, calculate percentages for each category
+                for cat in dataset.cats:
+                    values = [x for x in cat.data]
+                    for sample_idx, val in enumerate(values):
+                        sum_for_sample = sums[sample_idx]
+                        if sum_for_sample == 0:
+                            values[sample_idx] = 0
                         else:
-                            values[key] = (float(var + 0.0) / float(s_total)) * 100
+                            values[sample_idx] = float(val + 0.0) / float(sum_for_sample) * 100.0
+                    cat.data_pct = values
 
-                # Get offset for stacked bars
-                if idx == 0:
-                    prevdata = [0] * len(plotsamples[pidx])
+                if barmode == "group":
+                    # calculating the min percentage range as well because it will be negative for negative values
+                    dataset.pct_range["xaxis"]["min"] = min(
+                        min(cat.data_pct[i] for cat in dataset.cats) for i in range(len(dataset.samples))
+                    )
                 else:
-                    for i, p in enumerate(prevdata):
-                        prevdata[i] += prev_values[i]
-                # Default colour index
-                cidx = idx
-                while cidx >= len(default_colors):
-                    cidx -= len(default_colors)
-                # Save the name of this series
-                dlabels.append(d["name"])
-                # Add the series of bars to the plot
-                axes.barh(
-                    y_ind,
-                    values,
-                    bar_width,
-                    left=prevdata,
-                    color=d.get("color", default_colors[cidx]),
-                    align="center",
-                    linewidth=pconfig.get("borderWidth", 0),
-                )
-                prev_values = values
+                    dataset.pct_range["xaxis"]["min"] = min(
+                        sum(cat.data_pct[i] if cat.data_pct[i] < 0 else 0 for cat in dataset.cats)
+                        for i in range(len(dataset.samples))
+                    )
 
-            # Tidy up axes
-            axes.tick_params(
-                labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
-            )
-            axes.set_xlabel(pconfig.get("ylab", ""))  # I know, I should fix the fact that the config is switched
-            axes.set_ylabel(pconfig.get("xlab", ""))
-            axes.set_yticks(y_ind)  # Specify where to put the labels
-            axes.set_yticklabels(plotsamples[pidx])  # Set y axis sample name labels
-            axes.set_ylim((-0.5, len(y_ind) - 0.5))  # Reduce padding around plot area
-            if plot_pct is True:
-                axes.set_xlim((0, 100))
-                # Add percent symbols
-                vals = axes.get_xticks()
-                axes.set_xticks(axes.get_xticks())
-                axes.set_xticklabels(["{:.0f}%".format(x) for x in vals])
-            else:
-                default_xlimits = axes.get_xlim()
-                axes.set_xlim((pconfig.get("ymin", default_xlimits[0]), pconfig.get("ymax", default_xlimits[1])))
-            if "title" in pconfig:
-                top_gap = 1 + (0.5 / plt_height)
-                plt.text(
-                    0.5, top_gap, pconfig["title"], horizontalalignment="center", fontsize=16, transform=axes.transAxes
-                )
-            axes.grid(True, zorder=0, which="both", axis="x", linestyle="-", color="#dedede", linewidth=1)
-            axes.set_axisbelow(True)
-            axes.spines["right"].set_visible(False)
-            axes.spines["top"].set_visible(False)
-            axes.spines["bottom"].set_visible(False)
-            axes.spines["left"].set_visible(False)
-            plt.gca().invert_yaxis()  # y axis is reverse sorted otherwise
+        if model.add_log_tab:
+            # Sorting from small to large so the log switch makes sense
+            for dataset in model.datasets:
+                dataset.cats.sort(key=lambda cat: sum(cat.data))
+                # But reversing the legend so the largest bars are still on the top
+                model.layout.legend.traceorder = "reversed"
 
-            # Hide some labels if we have a lot of samples
-            show_nth = max(1, math.ceil(len(pdata[0]["data"]) / 150))
-            for idx, label in enumerate(axes.get_yticklabels()):
-                if idx % show_nth != 0:
-                    label.set_visible(False)
+        return BarPlot(**model.__dict__)
 
-            # Legend
-            bottom_gap = -1 * (1 - ((plt_height - 1.5) / plt_height))
-            lgd = axes.legend(
-                dlabels,
-                loc="lower center",
-                bbox_to_anchor=(0, bottom_gap, 1, 0.102),
-                ncol=5,
-                mode="expand",
-                fontsize=pconfig.get("labelSize", 8),
-                frameon=False,
-            )
-
-            # Should this plot be hidden on report load?
-            hidediv = ""
-            if pidx > 0 or hide_plot:
-                hidediv = ' style="display:none;"'
-
-            # Save the plot to the data directory if export is requested
-            if config.export_plots:
-                for fformat in config.export_plot_formats:
-                    # Make the directory if it doesn't already exist
-                    plot_dir = os.path.join(config.plots_dir, fformat)
-                    if not os.path.exists(plot_dir):
-                        os.makedirs(plot_dir)
-                    # Save the plot
-                    plot_fn = os.path.join(plot_dir, "{}.{}".format(pid, fformat))
-                    fig.savefig(plot_fn, format=fformat, bbox_extra_artists=(lgd,), bbox_inches="tight")
-
-            # Output the figure to a base64 encoded string
-            if getattr(get_template_mod(), "base64_plots", True) is True:
-                img_buffer = io.BytesIO()
-                fig.savefig(img_buffer, format="png", bbox_inches="tight")
-                b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-                img_buffer.close()
-                html += '<div class="mqc_mplplot" id="{}"{}><img src="data:image/png;base64,{}" /></div>'.format(
-                    pid, hidediv, b64_img
-                )
-
-            # Link to the saved image
-            else:
-                plot_relpath = os.path.join(config.plots_dir_name, "png", "{}.png".format(pid))
-                html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
-
-            plt.close(fig)
-
-    # Close wrapping div
-    html += "</div>"
-
-    return html
+    def _plot_ai_header(self) -> str:
+        result = super()._plot_ai_header()
+        if self.pconfig.ylab:
+            result += f"Values: {self.pconfig.ylab}\n"
+        return result

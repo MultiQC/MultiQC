@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools plotPCA """
+"""MultiQC submodule to parse output from deepTools plotPCA"""
 
 import logging
 
@@ -16,10 +16,14 @@ class plotPCAMixin:
             parsed_data = self.parsePlotPCAData(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotPCAData:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_plotPCAData[k] = v
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotPCA")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         self.deeptools_plotPCAData = self.ignore_samples(self.deeptools_plotPCAData)
 

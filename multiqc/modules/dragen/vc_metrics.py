@@ -1,7 +1,6 @@
 import logging
-import re
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
 from .utils import Metric, exist_and_number, make_headers
@@ -10,51 +9,93 @@ from .utils import Metric, exist_and_number, make_headers
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "DRAGEN variant calling"
+NAMESPACE = "Variant calling"
 
 
 class DragenVCMetrics(BaseMultiqcModule):
     def add_vc_metrics(self):
-        data_by_sample = dict()
-
+        vc_data_by_sample = dict()
         for f in self.find_log_files("dragen/vc_metrics"):
-            s_name, data = parse_vc_metrics_file(f)
-            s_name = self.clean_s_name(s_name, f)
-            if s_name in data_by_sample:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
-            data_by_sample[s_name] = data
+            data = parse_vc_metrics_file(f)
+            s_name = f["s_name"]
+            if s_name in vc_data_by_sample:
+                log.debug(f"Duplicate DRAGEN vc_metrics file was found! Overwriting sample {s_name}")
+            self.add_data_source(f, s_name=s_name, section="vc_metrics")
+            vc_data_by_sample[s_name] = data
+
+        gvcf_data_by_sample = dict()
+        for f in self.find_log_files("dragen/gvcf_metrics"):
+            data = parse_vc_metrics_file(f)
+            s_name = f["s_name"]
+            if s_name in gvcf_data_by_sample:
+                log.debug(f"Duplicate DRAGEN gvcf_metrics file was found! Overwriting sample {s_name}")
+            self.add_data_source(f, s_name=s_name, section="gvcf_metrics")
+            gvcf_data_by_sample[s_name] = data
 
         # Filter to strip out ignored sample names:
-        data_by_sample = self.ignore_samples(data_by_sample)
-        if not data_by_sample:
+        vc_data_by_sample = self.ignore_samples(vc_data_by_sample)
+        gvcf_data_by_sample = self.ignore_samples(gvcf_data_by_sample)
+        if not vc_data_by_sample:
             return set()
 
         # Write data to file
-        self.write_data_file(data_by_sample, "dragen_vc_metrics")
+        self.write_data_file(vc_data_by_sample, "dragen_vc_metrics")
+        if gvcf_data_by_sample:
+            self.write_data_file(gvcf_data_by_sample, "dragen_gvcf_metrics")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         all_metric_names = set()
-        for sn, sdata in data_by_sample.items():
+        for sn, sdata in vc_data_by_sample.items():
             for m in sdata.keys():
                 all_metric_names.add(m)
 
-        gen_stats_headers, vc_table_headers = make_headers(all_metric_names, VC_METRICS)
+        gen_stats_headers, table_headers = make_headers(all_metric_names, VC_METRICS)
 
-        self.general_stats_addcols(data_by_sample, gen_stats_headers, namespace=NAMESPACE)
+        self.general_stats_addcols(vc_data_by_sample, gen_stats_headers, namespace=NAMESPACE)
 
         self.add_section(
             name="Variant calling",
             anchor="dragen-vc-metrics",
             description="""
-            Variant calling metrics. Metrics are reported for each sample in multi sample VCF
-            and gVCF files. Based on the run case, metrics are reported either as standard
+            Metrics are reported for each sample in multi-sample VCF
+            files. Based on the run case, metrics are reported either as standard
             VARIANT CALLER or JOINT CALLER. All metrics are reported for post-filter VCFs,
             except for the "Filtered" metrics which represent how many variants were filtered out
             from pre-filter VCF to generate the post-filter VCF.
             """,
-            plot=table.plot(data_by_sample, vc_table_headers, pconfig={"namespace": NAMESPACE}),
+            plot=table.plot(
+                vc_data_by_sample,
+                table_headers,
+                pconfig={
+                    "id": "dragen-vc-metrics-table",
+                    "namespace": NAMESPACE,
+                    "title": "DRAGEN: Variant calling metrics",
+                },
+            ),
         )
-        return data_by_sample.keys()
+
+        if gvcf_data_by_sample:
+            self.add_section(
+                name="GVCF metrics",
+                anchor="dragen-gvcf-metrics",
+                description="""
+                Metrics are calculated for each sample in a corresponding GVCF file.
+                """,
+                plot=table.plot(
+                    gvcf_data_by_sample,
+                    table_headers,
+                    pconfig={
+                        "id": "dragen-gvcf-metrics-table",
+                        "namespace": NAMESPACE,
+                        "title": "DRAGEN: GVCF metrics",
+                    },
+                ),
+            )
+
+        return vc_data_by_sample.keys()
 
 
 VC_METRICS = [
@@ -157,7 +198,7 @@ VC_METRICS = [
             None,
             None,
             "",
-            "Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region). " "",
+            "Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region). ",
             "If there was no alignment to either chromosome X, this metric shows as NA",
         ),
         Metric(
@@ -166,7 +207,7 @@ VC_METRICS = [
             None,
             None,
             "",
-            "Number of SNPs in chromosome Y (or in the intersection of chromosome Y with the target region). " "",
+            "Number of SNPs in chromosome Y (or in the intersection of chromosome Y with the target region). ",
             "If there was no alignment to either chromosome Y, this metric shows as NA",
         ),
         Metric(
@@ -175,9 +216,9 @@ VC_METRICS = [
             None,
             "hid",
             "",
-            "Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region) " "",
-            "divided by the number of SNPs in chromosome Y (or in the intersection of chromosome Y with the " "",
-            "target region). If there was no alignment to either chromosome X or chromosome Y, this metric " "",
+            "Number of SNPs in chromosome X (or in the intersection of chromosome X with the target region) ",
+            "divided by the number of SNPs in chromosome Y (or in the intersection of chromosome Y with the ",
+            "target region). If there was no alignment to either chromosome X or chromosome Y, this metric ",
             "shows as NA",
         ),
         Metric(
@@ -206,7 +247,7 @@ VC_METRICS = [
             None,
             None,
             "",
-            "Number of variants detected that are present in the dbsnp reference file. If no dbsnp file " "",
+            "Number of variants detected that are present in the dbsnp reference file. If no dbsnp file ",
             "is provided via the --bsnp option, then both the In dbSNP and Novel metrics show as NA.",
             the_higher_the_worse=True,
         ),
@@ -216,7 +257,7 @@ VC_METRICS = [
             None,
             None,
             "",
-            "Number of all variants minus number of variants in dbSNP. If no dbsnp file " "",
+            "Number of all variants minus number of variants in dbSNP. If no dbsnp file ",
             "is provided via the --bsnp option, then both the In dbSNP and Novel metrics show as NA.",
         ),
         Metric(
@@ -225,9 +266,9 @@ VC_METRICS = [
             None,
             "#",
             "",
-            "Available only in germline mode with gVCF output. The percentage of non-N reference " "",
-            "positions having a PASSing genotype call. Multi-allelic variants are not counted. " "",
-            "Deletions are counted for all the deleted reference positions only for homozygous calls. " "",
+            "Available only in germline mode with gVCF output. The percentage of non-N reference ",
+            "positions having a PASSing genotype call. Multi-allelic variants are not counted. ",
+            "Deletions are counted for all the deleted reference positions only for homozygous calls. ",
             "Only autosomes and chromosomes X, Y and M are considered.",
         ),
         Metric(
@@ -236,9 +277,9 @@ VC_METRICS = [
             None,
             "hid",
             "",
-            "Available only in germline mode with gVCF output. The percentage of non-N reference " "",
-            "positions having a PASSing genotype call. Multi-allelic variants are not counted. " "",
-            "Deletions are counted for all the deleted reference positions only for homozygous calls. " "",
+            "Available only in germline mode with gVCF output. The percentage of non-N reference ",
+            "positions having a PASSing genotype call. Multi-allelic variants are not counted. ",
+            "Deletions are counted for all the deleted reference positions only for homozygous calls. ",
             "Only autosomes are considered (for all chromosomes, see the Callability metric).",
         ),
         Metric(
@@ -282,7 +323,7 @@ VC_METRICS = [
 
 def parse_vc_metrics_file(f):
     """
-    T_SRR7890936_50pc.vc_metrics.csv
+    T_SRR7890936_50pc.vc_metrics.csv or T_SRR7890936_50pc.gvcf_metrics.csv
 
     VARIANT CALLER SUMMARY,,Number of samples,1
     VARIANT CALLER SUMMARY,,Reads Processed,2721782043
@@ -331,8 +372,6 @@ def parse_vc_metrics_file(f):
     VARIANT CALLER POSTFILTER,T_SRR7890936_50pc,Percent Autosome Callability,NA
     """
 
-    s_name = re.search(r"(.*)\.vc_metrics.csv", f["fn"]).group(1)
-
     summary_data = dict()
     prefilter_data = dict()
     postfilter_data = dict()
@@ -366,7 +405,7 @@ def parse_vc_metrics_file(f):
         if analysis == "VARIANT CALLER PREFILTER":
             prefilter_data[metric] = value
 
-        if analysis == "VARIANT CALLER POSTFILTER":
+        if analysis in ["VARIANT CALLER POSTFILTER", "VARIANT CALLER POSTFILTER GVCF"]:
             postfilter_data[metric] = value
             if percentage is not None:
                 postfilter_data[metric + " pct"] = percentage
@@ -396,13 +435,18 @@ def parse_vc_metrics_file(f):
     # we are not really interested in all the details of pre-filtered variants, however
     # it would be nice to report how much we filtered out
     if exist_and_number(data, "Total") and exist_and_number(prefilter_data, "Total"):
-        data["Filtered vars"] = prefilter_data["Total"] - data["Total"]
+        # prefilter numbers can be zero (see https://github.com/MultiQC/MultiQC/issues/2611), so only reporting
+        # if they are non-zero, otherwise will get negative number for "Filtered vars"
+        if prefilter_data["Total"] > 0:
+            data["Filtered vars"] = prefilter_data["Total"] - data["Total"]
 
     if exist_and_number(data, "SNPs") and exist_and_number(prefilter_data, "SNPs"):
-        data["Filtered SNPs"] = prefilter_data["SNPs"] - data["SNPs"]
+        if prefilter_data["SNPs"] > 0:
+            data["Filtered SNPs"] = prefilter_data["SNPs"] - data["SNPs"]
 
     if exist_and_number(data, "Indels") and exist_and_number(prefilter_data, "Indels"):
-        data["Filtered indels"] = prefilter_data["Indels"] - data["Indels"]
+        if prefilter_data["Indels"] > 0:
+            data["Filtered indels"] = prefilter_data["Indels"] - data["Indels"]
 
     if (
         exist_and_number(prefilter_data, "Total")
@@ -425,4 +469,4 @@ def parse_vc_metrics_file(f):
     ):
         data["Filtered indels pct"] = data["Filtered indels"] / prefilter_data["Indels"] * 100.0
 
-    return s_name, data
+    return data

@@ -15,9 +15,10 @@ displaying one piece of the report at a time, the report
 is easier to use.
 
 """
+
 import os
 
-from multiqc.utils import config
+from multiqc import config
 
 template_parent = "default"
 template_dir = os.path.dirname(__file__)

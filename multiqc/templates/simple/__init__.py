@@ -9,9 +9,10 @@ report is hopefully suitable for e-mailing, converting to PDF
 and printing.
 
 """
+
 import os
 
-from multiqc.utils import config
+from multiqc import config
 
 template_parent = "default"
 

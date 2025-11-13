@@ -1,18 +1,15 @@
-""" MultiQC module to parse output from pbmarkdup"""
-
 import logging
 import re
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    pbmarkdup module class, parses pbmarkdup output.
+    The module adds the **% Unique Molecules** and **%Duplicate Reads** (hidden) to the General Statistics
+    table.
     """
 
     def __init__(self):
@@ -20,12 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="pbmarkdup",
             anchor="pbmarkdup",
             href="https://github.com/PacificBiosciences/pbmarkdup",
-            info=(
-                """
-                 takes one or multiple sequencing chips of an amplified libray
-                 as HiFi reads and marks or removes duplicates.
-                 """
-            ),
+            info="Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or "
+            "removes duplicates.",
             # Can't find a DOI // doi=
         )
 
@@ -39,12 +32,16 @@ class MultiqcModule(BaseMultiqcModule):
                 self.pbmarkdup[s_name] = data
                 self.add_data_source(logfile)
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
+
         # Filter to strip out ignored sample names
         self.pbmarkdup = self.ignore_samples(self.pbmarkdup)
 
-        # Raise UserWarning if we did not find any data
+        # Raise ModuleNoSamplesFound if we did not find any data
         if not self.pbmarkdup:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write the parsed data to file
         self.write_data_file(self.pbmarkdup, "multiqc_pbmarkdup")
@@ -77,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Log an error if the header doesn't match the expected pattern
         if not re.match(pattern, file_header):
             fname = logfile["fn"]
-            log.error(f"Can't parse file '{fname}', unknown header: '{header}'")
+            log.error(f"Can't parse file '{fname}', unknown header: '{file_header}'")
             return False
 
         data = dict()
@@ -105,37 +102,27 @@ class MultiqcModule(BaseMultiqcModule):
     def pbmarkdup_add_general_stats(self):
         """Add pbmarkdup duplicates to the general stats table"""
 
-        general_stats_headers = OrderedDict(
-            [
-                (
-                    "unique_molecules",
-                    {
-                        "id": "unique_molecules",
-                        "title": "% Unique Molecules",
-                        "description": "Percentage of unique molecules",
-                        "suffix": "%",
-                        "min": 0,
-                        "max": 100,
-                        "modify": lambda x: x * 100,
-                        "scale": "RdYlGn",
-                    },
-                ),
-                (
-                    "duplicate_reads",
-                    {
-                        "id": "duplicate_erads",
-                        "title": "% Duplicate Reads",
-                        "description": "Percentage of duplicate reads",
-                        "suffix": "%",
-                        "min": 0,
-                        "max": 100,
-                        "modify": lambda x: x * 100,
-                        "scale": "RdYlGn-rev",
-                        "hidden": True,
-                    },
-                ),
-            ]
-        )
+        general_stats_headers = {
+            "unique_molecules": {
+                "title": "% Unique Molecules",
+                "description": "Percentage of unique molecules",
+                "suffix": "%",
+                "min": 0,
+                "max": 100,
+                "modify": lambda x: x * 100,
+                "scale": "RdYlGn",
+            },
+            "duplicate_reads": {
+                "title": "% Duplicate Reads",
+                "description": "Percentage of duplicate reads",
+                "suffix": "%",
+                "min": 0,
+                "max": 100,
+                "modify": lambda x: x * 100,
+                "scale": "RdYlGn-rev",
+                "hidden": True,
+            },
+        }
 
         general = dict()
 

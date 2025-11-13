@@ -1,9 +1,10 @@
 import logging
-import re
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, table
+from multiqc.plots.linegraph import LinePlotConfig
+from multiqc.plots.table_object import TableConfig
 
 log = logging.getLogger(__name__)
 
@@ -11,17 +12,22 @@ log = logging.getLogger(__name__)
 class DragenGcMetrics(BaseMultiqcModule):
     """Not to be confused with DragenFastqcGcMetrics"""
 
-    NAMESPACE = "Dragen GC Metrics"
+    NAMESPACE = "GC Metrics"
 
     def add_gc_metrics_hist(self):
         data_by_sample = dict()
 
         for f in self.find_log_files("dragen/gc_metrics"):
             data = parse_gc_metrics_file(f)
-            if f["s_name"] in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
-            self.add_data_source(f, section="stats")
-            data_by_sample[f["s_name"]] = data
+            s_name = f["s_name"]
+            if s_name in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            self.add_data_source(f, section="gc_metrics")
+            data_by_sample[s_name] = data
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -44,17 +50,16 @@ class DragenGcMetrics(BaseMultiqcModule):
                 """,
             plot=linegraph.plot(
                 hist_data,
-                {
-                    "id": "gc-bias-hist",
-                    "title": "Dragen: GC Bias Histogram",
-                    "ylab": "Normalized Coverage",
-                    "xlab": "% GC",
-                    "ymin": 0,
-                    "xmin": 0,
-                    "tt_label": "<b>{point.x} % GC</b>: {point.y} Normalized coverage",
-                    "smooth_points": smooth_points,
-                    "namespace": DragenGcMetrics.NAMESPACE,
-                },
+                LinePlotConfig(
+                    id="gc-bias-hist",
+                    title="Dragen: GC Bias Histogram",
+                    ylab="Normalized Coverage",
+                    xlab="% GC",
+                    ymin=0,
+                    xmin=0,
+                    tt_label="<b>{point.x} % GC</b>: {point.y} Normalized coverage",
+                    smooth_points=smooth_points,
+                ),
             ),
         )
 
@@ -65,7 +70,14 @@ class DragenGcMetrics(BaseMultiqcModule):
             description="""
             Summary GC metrics shown on the sample level.
             """,
-            plot=table.plot(table_data, pconfig={"namespace": DragenGcMetrics.NAMESPACE}),
+            plot=table.plot(
+                table_data,
+                pconfig=TableConfig(
+                    id="dragen-gc-metrics-summary-table",
+                    namespace=DragenGcMetrics.NAMESPACE,
+                    title="Dragen: GC Metrics Summary",
+                ),
+            ),
         )
 
         return data_by_sample.keys()
@@ -118,8 +130,6 @@ def parse_gc_metrics_file(f):
     GC METRICS SUMMARY,,AT Dropout,0.58
     GC METRICS SUMMARY,,GC Dropout,2.01
     """
-
-    f["s_name"] = re.search(r"(.*).gc_metrics.csv", f["fn"]).group(1)
 
     data = defaultdict(dict)
     for line in f["f"].splitlines():

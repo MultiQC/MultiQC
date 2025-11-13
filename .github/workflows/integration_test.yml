@@ -1,0 +1,42 @@
+name: "Integration test"
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "multiqc/modules/**"
+      - "pyproject.toml"
+  pull_request:
+    paths:
+      - "multiqc/modules/**"
+      - "pyproject.toml"
+
+jobs:
+  integration_test_linux:
+    name: "Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.13"] # Oldest and newest supported Python versions
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Set up Python ${{ matrix.python-version }}"
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+
+      - name: "Install MultiQC"
+        run: pip install .
+
+      - name: "Download test data"
+        uses: actions/checkout@v4
+        with:
+          repository: MultiQC/test-data
+          path: test-data
+
+      - name: "Run multiqc on all modules"
+        run: multiqc -fv --strict test-data/data/modules

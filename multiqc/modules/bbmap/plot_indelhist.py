@@ -27,9 +27,7 @@ def plot_indelhist(samples, file_type, **plot_args):
     for column_type in columns_to_plot:
         plot_data.append(
             {
-                sample
-                + "."
-                + column_name: {
+                sample + "." + column_name: {
                     x: samples[sample]["data"][x][column] if x in samples[sample]["data"] else 0 for x in all_x
                 }
                 for sample in samples
@@ -41,6 +39,7 @@ def plot_indelhist(samples, file_type, **plot_args):
         "id": "bbmap-" + file_type + "_plot",
         "title": "BBTools: " + plot_args["plot_title"],
         "xlab": "Indel size",
+        "xsuffix": " bp",
         "ylab": "Insertion count",
         "data_labels": [
             {"name": "Insertions", "ylab": "Insertion count"},

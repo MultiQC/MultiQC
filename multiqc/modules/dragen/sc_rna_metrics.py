@@ -1,7 +1,6 @@
 import logging
-import re
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.dragen.utils import Metric, make_headers
 from multiqc.plots import table
 
@@ -35,10 +34,15 @@ class DragenScRnaMetrics(BaseMultiqcModule):
 
         for f in self.find_log_files("dragen/sc_rna_metrics"):
             data = parse_scrna_metrics_file(f)
-            if f["s_name"] in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
-            self.add_data_source(f, section="stats")
-            data_by_sample[f["s_name"]] = data
+            s_name = f["s_name"]
+            if s_name in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            self.add_data_source(f, section="sc_rna_metrics")
+            data_by_sample[s_name] = data
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -66,6 +70,10 @@ class DragenScRnaMetrics(BaseMultiqcModule):
                     for sample_name, metric in data_by_sample.items()
                 },
                 table_headers,
+                pconfig={
+                    "namespace": "Single-Cell RNA Metrics",
+                    "id": "dragen-sc-rna-metrics-table",
+                },
             ),
         )
 
@@ -82,8 +90,6 @@ def parse_scrna_metrics_file(f):
     RUN TIME,,Time sorting and marking duplicates,00:00:07.368,7.37
     RUN TIME,,Time DRAGStr calibration,00:00:07.069,7.07
     """
-    f["s_name"] = re.search(r"(.*)\.scRNA[_\.]metrics\.csv", f["fn"]).group(1)
-
     data = {}
     for line in f["f"].splitlines():
         tokens = line.split(",")

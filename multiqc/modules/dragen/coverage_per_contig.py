@@ -1,8 +1,9 @@
 import logging
 import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
+from typing import Dict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -11,21 +12,25 @@ log = logging.getLogger(__name__)
 
 class DragenCoveragePerContig(BaseMultiqcModule):
     def add_coverage_per_contig(self):
-        perchrom_data_by_phenotype_by_sample = defaultdict(dict)
+        perchrom_data_by_phenotype_by_sample: Dict[str, Dict] = defaultdict(dict)
 
         for f in self.find_log_files("dragen/wgs_contig_mean_cov"):
-            s_name, perchrom_data_by_phenotype = parse_wgs_contig_mean_cov(f)
-            s_name = self.clean_s_name(s_name, f)
+            perchrom_data_by_phenotype = parse_wgs_contig_mean_cov(f)
+            s_name = f["s_name"]
             if s_name in perchrom_data_by_phenotype_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="wgs_contig_mean_cov")
             perchrom_data_by_phenotype_by_sample[s_name].update(perchrom_data_by_phenotype)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Filter to strip out ignored sample names:
         perchrom_data_by_phenotype_by_sample = self.ignore_samples(perchrom_data_by_phenotype_by_sample)
 
         # Merge tumor and normal data:
-        perchrom_data_by_sample = defaultdict(dict)
+        perchrom_data_by_sample: Dict[str, Dict] = defaultdict(dict)
         for sn in perchrom_data_by_phenotype_by_sample:
             for phenotype in perchrom_data_by_phenotype_by_sample[sn]:
                 new_sn = sn
@@ -150,19 +155,22 @@ def parse_wgs_contig_mean_cov(f):
             # sex and other chromosomes go in the end
             return 1
 
-    main_contig_perchrom_data = OrderedDict(
+    main_contig_perchrom_data = dict(
         sorted(
             main_contig_perchrom_data.items(),
             key=lambda key_val: chrom_order(key_val[0]),
         )
     )
-    other_contig_perchrom_data = OrderedDict(
+    other_contig_perchrom_data = dict(
         sorted(
             other_contig_perchrom_data.items(),
             key=lambda key_val: chrom_order(key_val[0]),
         )
     )
 
-    m = re.search(r"(.*).wgs_contig_mean_cov_?(tumor|normal)?.csv", f["fn"])
-    sample, phenotype = m.group(1), m.group(2)
-    return sample, {phenotype: [main_contig_perchrom_data, other_contig_perchrom_data]}
+    m = re.search(r"(tumor|normal).csv", f["fn"])
+    if m:
+        phenotype = m.group(1)
+    else:
+        phenotype = "unknown"
+    return {phenotype: [main_contig_perchrom_data, other_contig_perchrom_data]}

@@ -1,28 +1,21 @@
-""" MultiQC module to parse output from Tophat """
-
-
 import logging
 import os
 import re
-from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Tophat",
             anchor="tophat",
             href="https://ccb.jhu.edu/software/tophat/",
-            info="is a fast splice junction mapper for RNA-Seq reads. "
-            "It aligns RNA-Seq reads to mammalian-sized genomes.",
+            info="Splice junction RNA-Seq reads mapper for mammalian-sized genomes.",
             doi=["10.1186/gb-2013-14-4-r36", "10.1093/bioinformatics/btp120"],
         )
 
@@ -37,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = f["s_name"].split("align_summary.txt", 1)[0]
                 s_name = self.clean_s_name(s_name, f)
                 if s_name in self.tophat_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name)
                 self.tophat_data[s_name] = parsed_data
 
@@ -45,9 +38,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.tophat_data = self.ignore_samples(self.tophat_data)
 
         if len(self.tophat_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.tophat_data)))
+        log.info(f"Found {len(self.tophat_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.tophat_data, "multiqc_tophat.txt")
@@ -105,34 +102,34 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the Tophat report and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["overall_aligned_percent"] = {
-            "title": "% Aligned",
-            "description": "overall read mapping rate",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["aligned_not_multimapped_discordant"] = {
-            "title": "{} Aligned".format(config.read_count_prefix),
-            "description": "Aligned reads, not multimapped or discordant ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "overall_aligned_percent": {
+                "title": "% Aligned",
+                "description": "overall read mapping rate",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "aligned_not_multimapped_discordant": {
+                "title": f"{config.read_count_prefix} Aligned",
+                "description": f"Aligned reads, not multimapped or discordant ({config.read_count_desc})",
+                "min": 0,
+                "scale": "PuRd",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.tophat_data, headers)
 
     def tophat_alignment_plot(self):
-        """Make the HighCharts HTML to plot the alignment rates"""
-
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["aligned_not_multimapped_discordant"] = {"color": "#437bb1", "name": "Aligned"}
-        keys["aligned_multimap"] = {"color": "#f7a35c", "name": "Multimapped"}
-        keys["aligned_discordant"] = {"color": "#e63491", "name": "Discordant mappings"}
-        keys["unaligned_total"] = {"color": "#7f0000", "name": "Not aligned"}
+        keys = {
+            "aligned_not_multimapped_discordant": {"color": "#437bb1", "name": "Aligned"},
+            "aligned_multimap": {"color": "#f7a35c", "name": "Multimapped"},
+            "aligned_discordant": {"color": "#e63491", "name": "Discordant mappings"},
+            "unaligned_total": {"color": "#7f0000", "name": "Not aligned"},
+        }
 
         # Config for the plot
         config = {

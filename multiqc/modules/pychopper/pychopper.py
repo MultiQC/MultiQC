@@ -1,24 +1,28 @@
-""" MultiQC module to parse output from pychopper """
-
-
 import logging
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, linegraph
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module parses the pychopper stats file. Pychopper needs to be run with the `-S stats_output` option to create the file. The name of the output file defines the sample name.
+
+    The stats file is a three column `tsv` file with the format `category name value`.
+
+    Currently only two stats are displayed in MultiQC. Two bargraphs are created for the read classication and the strand orientation of the identified full length transcripts. Additional stats could be included on further request.
+
+    The general stats table contains a value that displays the percentage of full length transcripts. This value is calculated from the cumulative length of reads where Pychopper found primers at both ends.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Pychopper",
             anchor="pychopper",
             href="https://github.com/nanoporetech/pychopper",
-            info="is a tool to identify, orient, trim and rescue full length Nanopore cDNA reads.",
+            info="Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads.",
             # Can't find a DOI // doi=
         )
 
@@ -40,9 +44,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise user warning if no data found
         if len(self.pychopper_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.pychopper_data)))
+        log.info(f"Found {len(self.pychopper_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Add to general statistics table:
         # Percentage of full length transcripts
@@ -53,13 +61,14 @@ class MultiqcModule(BaseMultiqcModule):
             ftp = c["Primers_found"] * 100 / (c["Primers_found"] + c["Rescue"] + c["Unusable"])
             data_general_stats[sample]["ftp"] = ftp
 
-        headers = OrderedDict()
-        headers["ftp"] = {
-            "title": "Full-Length cDNA",
-            "description": "Percentage of full length cDNA reads with correct primers at both ends",
-            "suffix": "%",
-            "max": 100,
-            "min": 0,
+        headers = {
+            "ftp": {
+                "title": "Full-Length cDNA",
+                "description": "Percentage of full length cDNA reads with correct primers at both ends",
+                "suffix": "%",
+                "max": 100,
+                "min": 0,
+            }
         }
 
         self.general_stats_addcols(data_general_stats, headers)
@@ -104,6 +113,19 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.plot_orientation(),
         )
 
+        # Add new UMI detection section
+        self.add_section(
+            name="UMI Detection",
+            description="This plot shows the proportion of reads with detected UMIs",
+            helptext="""
+            Unique Molecular Identifiers (UMIs) are integrated during library preparation in some library kits.
+            This plot shows the number of reads where UMIs were successfully detected versus those where UMIs
+            could not be identified.
+            """,
+            anchor="pychopper_umi",
+            plot=self.plot_umi_detection(),
+        )
+
     # Plotting functions
     def plot_classification(self):
         """Generate the cDNA read classification plot"""
@@ -112,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "pychopper_classification_plot",
             "title": "Pychopper: Read classification",
             "ylab": "",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
         }
 
@@ -132,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Pychopper: Strand Orientation",
             "ylab": "",
             "cpswitch_c_active": False,
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
         }
 
@@ -143,3 +165,34 @@ class MultiqcModule(BaseMultiqcModule):
 
         cats = ["+", "-"]
         return bargraph.plot(data_orientation, cats, pconfig)
+
+    def plot_umi_detection(self):
+        """Generate the UMI detection plot"""
+
+        pconfig = {
+            "id": "pychopper_umi_plot",
+            "title": "Pychopper: UMI Detection",
+            "ylab": "Number of reads",
+            "cpswitch_c_active": False,
+            "x_decimals": False,
+            "ymin": 0,
+        }
+
+        data_umi = {}
+        for sample in self.pychopper_data.keys():
+            data_umi[sample] = {}
+
+            # Get total reads (Primers_found + Rescue + Unusable)
+            total_reads = sum(self.pychopper_data[sample]["Classification"].values())
+
+            # Get UMI detected reads
+            umi_detected = self.pychopper_data[sample]["ReadStats"].get("Umi_detected_final", 0)
+
+            # Calculate unknown UMIs
+            unknown_umis = total_reads - umi_detected
+
+            data_umi[sample]["UMI detected"] = umi_detected
+            data_umi[sample]["Unknown UMI"] = unknown_umis
+
+        cats = ["UMI detected", "Unknown UMI"]
+        return bargraph.plot(data_umi, cats, pconfig)
