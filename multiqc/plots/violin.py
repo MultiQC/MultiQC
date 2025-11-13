@@ -17,6 +17,7 @@ from multiqc import config, report
 from multiqc.core.plot_data_store import parse_value
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
+from multiqc.utils import mqc_colour
 from multiqc.plots.table_object import (
     Cell,
     ColumnAnchor,
@@ -31,6 +32,7 @@ from multiqc.plots.table_object import (
     render_html,
 )
 from multiqc.types import Anchor, ColumnKey, SampleName, SectionKey
+from multiqc.utils.material_icons import get_material_icon
 
 logger = logging.getLogger(__name__)
 
@@ -385,7 +387,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                     metric_order[metric] = idx
 
             merged_df = merged_df.with_columns(
-                pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                pl.col("metric")
+                .map_elements(lambda x: metric_order.get(x, 99999), return_dtype=pl.Int64)
+                .alias("__metric_order")
             )
 
             # First ensure the DataFrame is sorted by creation_date (newest last)
@@ -418,7 +422,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                 # Add a temporary column to sort by the original metric order
                 deduped_df = deduped_df.with_columns(
-                    pl.col("metric").map_elements(lambda x: metric_order.get(x, 99999)).alias("__metric_order")
+                    pl.col("metric")
+                    .map_elements(lambda x: metric_order.get(x, 99999), return_dtype=pl.Int64)
+                    .alias("__metric_order")
                 )
 
                 # Sort by the order column to preserve metric ordering
@@ -675,9 +681,9 @@ class Dataset(BaseDataset):
             orientation="h",
             box={"visible": True},
             meanline={"visible": True},
-            fillcolor="#b5b5b5",
-            line={"width": 2, "color": "#b5b5b5"},
-            opacity=0.5,
+            fillcolor="#999999",
+            line={"width": 0},
+            opacity=1,
             points=False,  # Don't show points, we'll add them manually
             # The hover information is useful, but the formatting is ugly and not
             # configurable as far as I can see. Also, it's not possible to disable it,
@@ -688,16 +694,13 @@ class Dataset(BaseDataset):
 
         # If all violins are grey, make the dots blue to make it more clear that it's interactive
         # if some violins are color-coded, make the dots black to make them less distracting
-        marker_color = "black" if any(h.color is not None for h in ds.header_by_metric.values()) else "#0b79e6"
+        marker_color = "#000000" if any(h.color is not None for h in ds.header_by_metric.values()) else "#0b79e6"
         ds.scatter_trace_params = {
             "mode": "markers",
-            "marker": {
-                "size": 4,
-                "color": marker_color,
-            },
+            "marker": {"size": 4, "color": marker_color, "opacity": 1},
             "showlegend": False,
             "hovertemplate": ds.trace_params["hovertemplate"],
-            "hoverlabel": {"bgcolor": "white"},
+            "hoverlabel": {"bgcolor": "white", "font": {"color": "rgba(60,60,60,1)"}},
         }
         return ds
 
@@ -759,7 +762,7 @@ class Dataset(BaseDataset):
 
             if header.color:
                 layout[f"yaxis{metric_idx + 1}"]["tickfont"] = {
-                    "color": f"rgb({header.color})",
+                    "color": mqc_colour.color_to_rgb_string(header.color),
                 }
 
         layout["xaxis"] = layout["xaxis1"]
@@ -773,8 +776,8 @@ class Dataset(BaseDataset):
             header = self.header_by_metric[metric]
             params = copy.deepcopy(self.trace_params)
             if header.color:
-                params["fillcolor"] = f"rgb({header.color})"
-                params["line"]["color"] = f"rgb({header.color})"
+                params["fillcolor"] = mqc_colour.color_to_rgb_string(header.color)
+                params["line"]["color"] = mqc_colour.color_to_rgb_string(header.color)
 
             violin_values_by_sample = violin_values_by_sample_by_metric[metric]
             axis_key = "" if metric_idx == 0 else str(metric_idx + 1)
@@ -868,7 +871,7 @@ class Dataset(BaseDataset):
                         try:
                             value = fmt.format(value)
                         except (ValueError, KeyError):
-                            logger.info(f"Value {value} failed to format with {fmt=}")
+                            pass
                 row.append(str(value))
             result += f"|{pseudonym}|" + "|".join(row) + "|\n"
 
@@ -910,7 +913,6 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             default_tt_label=": %{x}",
             # Violins scale well, so can always keep them interactive and visible:
             defer_render_if_large=False,
-            flat_if_very_large=False,
         )
 
         no_violin: bool = model.pconfig.no_violin
@@ -975,7 +977,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             buttons.append(
                 self._btn(
                     cls="mqc-violin-to-table",
-                    label="<span class='glyphicon glyphicon-th-list'></span> Table",
+                    label=f"{get_material_icon('mdi:table', 16)} Table",
                     data_attrs={"table-anchor": self.datasets[0].dt.anchor, "violin-anchor": self.anchor},
                 )
             )
@@ -1093,20 +1095,23 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         if self.show_table_by_default and not self.show_table:
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
-                + '<span class="glyphicon glyphicon-exclamation-sign" '
-                + 'title="An interactive table is not available because of the large number of samples. '
+                + '<span title="An interactive table is not available because of the large number of samples. '
                 + "A violin plot is generated instead, showing density of values for each metric, as "
                 + 'well as hoverable points for outlier samples in each metric."'
-                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+                + ' data-bs-toggle="tooltip">'
+                + get_material_icon("mdi:alert", 16, class_name="text-warning")
+                + f"</span> Showing {self.n_samples} samples.</p>"
             )
         elif not self.show_table:
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
-                + '<span class="glyphicon glyphicon-exclamation-sign" '
+                + "<span "
                 + 'title="An interactive table is not available because of the large number of samples. '
                 + "The violin plot displays hoverable points only for outlier samples in each metric, "
                 + 'and the hiding/highlighting functionality through the toolbox only works for outliers"'
-                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+                + ' data-bs-toggle="tooltip">'
+                + get_material_icon("mdi:alert", 16, class_name="text-warning")
+                + f"</span> Showing {self.n_samples} samples.</p>"
             )
 
         assert self.datasets[0].dt is not None

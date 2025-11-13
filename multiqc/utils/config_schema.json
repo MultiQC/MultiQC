@@ -584,6 +584,32 @@
       "description": "Report template to use",
       "title": "Template"
     },
+    "template_dark_mode": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Enable dark mode toggle and JavaScript for the report template",
+      "title": "Template Dark Mode"
+    },
+    "plot_font_family": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custom font family for plots (defaults to system font stack)",
+      "title": "Plot Font Family"
+    },
     "profile_runtime": {
       "anyOf": [
         {
@@ -1234,6 +1260,58 @@
       "default": null,
       "description": "Anonymize samples",
       "title": "Ai Anonymize Samples"
+    },
+    "ai_reasoning_effort": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Reasoning effort level for OpenAI reasoning models (low, medium, high)",
+      "title": "Ai Reasoning Effort"
+    },
+    "ai_max_completion_tokens": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Maximum completion tokens for OpenAI reasoning models",
+      "title": "Ai Max Completion Tokens"
+    },
+    "ai_extended_thinking": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Enable extended thinking for Anthropic Claude 4 models",
+      "title": "Ai Extended Thinking"
+    },
+    "ai_thinking_budget_tokens": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Budget tokens for Anthropic extended thinking",
+      "title": "Ai Thinking Budget Tokens"
     },
     "seqera_api_url": {
       "anyOf": [
@@ -1973,7 +2051,17 @@
       "anyOf": [
         {
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
           },
           "type": "array"
         },
@@ -1989,7 +2077,14 @@
       "anyOf": [
         {
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
           },
           "type": "array"
         },
@@ -2104,7 +2199,7 @@
     "report_readerrors": {
       "anyOf": [
         {
-          "type": "integer"
+          "type": "boolean"
         },
         {
           "type": "null"
@@ -2374,7 +2469,7 @@
         }
       ],
       "default": null,
-      "description": "Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw', \n        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast, \n        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to \n        for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as\n        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column \n        to have a single type).\n        ",
+      "description": "Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw',\n        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast,\n        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to\n        for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as\n        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column\n        to have a single type).\n        ",
       "title": "Parquet Format"
     }
   },

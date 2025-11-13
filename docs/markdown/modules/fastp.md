@@ -2,7 +2,7 @@
 title: fastp
 displayed_sidebar: multiqcSidebar
 description: >
-  All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
+    <p>All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...).</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/fastp/fastp.py
 -->
 
 :::note
-All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
+<p>All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...).</p>
 
 [https://github.com/OpenGene/fastp](https://github.com/OpenGene/fastp)
 :::
@@ -40,6 +40,7 @@ fastp:
 ```yaml
 fastp:
   contents: '"before_filtering": {'
-  fn: "*.json"
+  fn: '*.json'
   num_lines: 50
 ```
+    

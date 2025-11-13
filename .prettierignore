@@ -1,4 +1,15 @@
-*.html
+docs/markdown/modules/
 multiqc/templates/*/assets/js/packages
-bootstrap.min.css
+multiqc/templates/*/compiled
 jquery.toast.css
+bootstrap.min.css
+
+# The Jinja {% raw %} block crashes on these files
+multiqc/templates/default/head.html
+multiqc/templates/original/head.html
+
+# Templates have intentional Jinja structure that prettier can't understand
+multiqc/templates/original/content.html
+multiqc/templates/original/includes.html
+multiqc/templates/simple/header.html
+multiqc/templates/simple/includes.html

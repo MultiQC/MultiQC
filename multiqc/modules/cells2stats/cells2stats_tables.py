@@ -11,6 +11,10 @@ from .queries import (
     get_percent_nucleated_cells,
     get_total_counts,
     get_total_density,
+    get_percent_assigned_target_polony,
+    get_percent_mismatch_target_polony,
+    get_target_cell_metric_by_key,
+    get_batch_extracellularratio,
 )
 
 
@@ -63,9 +67,10 @@ def tabulate_wells(c2s_run_data):
         "title": "# Cells",
         "description": "The number of cells in the well",
         "min": 0,
+        "format": "{:d}",
         "scale": "GnBu",
-        "format": "{d}",
     }
+
     headers["percent_confluency"] = {
         "title": "% Confluency",
         "scale": "GnBu",
@@ -75,7 +80,7 @@ def tabulate_wells(c2s_run_data):
     }
     headers["percent_nucleated_cells"] = {
         "title": "% Nucleated Cells",
-        "description": "The percentage of cells with a segmented nucleus",
+        "description": "The percent of cells with a segmented nucleus",
         "scale": "GnBu",
         "max": 100,
         "min": 0,
@@ -87,32 +92,160 @@ def tabulate_wells(c2s_run_data):
         "min": 0,
         "scale": "GnBu",
         "suffix": "um",
+        "format": "{:.1f}",
     }
     headers["total_density"] = {
         "title": "Assigned Counts K / mm2",
-        "description": "Total density of assigned counts per mm2 of cell area across all batches",
+        "description": "Total density of assigned counts per mm2 of cell area across all barcoding batches",
         "min": 0,
         "scale": "GnBu",
     }
     headers["total_count"] = {
         "title": "Assigned Counts / Cell",
-        "description": "Total average counts per cell across all batches",
+        "description": "Total average counts per cell across all barcoding batches",
         "min": 0,
         "scale": "GnBu",
     }
 
     pconfig = {
-        "title": "cells2stats: Well QC metrics",
+        "title": "cells2stats: Well cell paint and barcoding QC metrics",
         "col1_header": "Run / Well",
         "id": "well_metrics_table",
         "ylab": "QC",
     }
 
-    plot_name = "Well QC metrics table"
+    plot_name = "Well Cell Paint and Barcoding QC Metrics Table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
     anchor = "well_metrics"
-    description = "Table of general well QC metrics"
-    helptext = """Provides overall metrics summarizing the performance of each well"""
+    description = "Table of cell paint and barocoding well QC metrics"
+    helptext = """Provides cell paint and barocding metrics summarizing the performance of each well"""
+    return plot_html, plot_name, anchor, description, helptext, plot_content
+
+
+def tabulate_target_wells(c2s_run_data, target_site_name):
+    """
+    Generate a table of target well metrics from the cells2stats report
+    """
+    plot_content = merge_well_dictionaries(
+        [
+            get_percent_assigned_target_polony(c2s_run_data, target_site_name),
+            get_percent_mismatch_target_polony(c2s_run_data, target_site_name),
+            get_target_cell_metric_by_key(c2s_run_data, target_site_name, "PercentAssignedPureCells"),
+            get_target_cell_metric_by_key(c2s_run_data, target_site_name, "PercentAssignedMixedCells"),
+            get_target_cell_metric_by_key(c2s_run_data, target_site_name, "PercentUnassignedMixedCells"),
+            get_target_cell_metric_by_key(c2s_run_data, target_site_name, "PercentUnassignedLowCountCells"),
+            get_target_cell_metric_by_key(c2s_run_data, target_site_name, "AssignedCountsPerMM2", 1000),
+            get_target_cell_metric_by_key(c2s_run_data, target_site_name, "MeanAssignedCountPerCell"),
+            get_target_cell_metric_by_key(c2s_run_data, target_site_name, "MedianAbundantTargetCount"),
+            get_target_cell_metric_by_key(c2s_run_data, target_site_name, "MeanUniqueTargetsPerCell"),
+            get_target_cell_metric_by_key(c2s_run_data, target_site_name, "ExtraCellularRatio"),
+            get_target_cell_metric_by_key(c2s_run_data, target_site_name, "PercentTargetDropout"),
+        ]
+    )
+    headers = {}
+    headers["percent_assigned"] = {
+        "title": "% Assigned",
+        "scale": "GnBu",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+    }
+    headers["percent_mismatch"] = {
+        "title": "% Mismatch",
+        "scale": "GnBu",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+    }
+    headers["PercentAssignedPureCells"] = {
+        "title": "% Assigned Pure Cells",
+        "description": "Percent of cells assigned to a target with one target present",
+        "scale": "GnBu",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+    }
+    headers["PercentAssignedMixedCells"] = {
+        "title": "% Assigned Mixed Cells",
+        "description": "Percent of cells assigned to a target with greater than one target present",
+        "scale": "GnBu",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+    }
+    headers["PercentUnassignedMixedCells"] = {
+        "title": "% Unassigned Mixed Cells",
+        "description": "Percent of cells not assigned to a target with greater than one target present",
+        "scale": "GnBu",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+    }
+    headers["PercentUnassignedLowCountCells"] = {
+        "title": "% Unassigned Low Count Cells",
+        "description": "Percent of cells not assigned to a target with zero or one targets present",
+        "scale": "GnBu",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+    }
+    headers["AssignedCountsPerMM2"] = {
+        "title": "Assigned Counts K / mm2",
+        "description": "Total density of assigned target counts per mm2 of cell area",
+        "min": 0,
+        "scale": "GnBu",
+        "suffix": "K",
+    }
+    headers["MeanAssignedCountPerCell"] = {
+        "title": "Assigned Counts / Cell",
+        "description": "Average assigned target counts per cell",
+        "min": 0,
+        "scale": "GnBu",
+        "suffix": "",
+    }
+    headers["MedianAbundantTargetCount"] = {
+        "title": "Median Abundant Target Count",
+        "description": "Median most abundant target count for cells in the well",
+        "min": 0,
+        "scale": "GnBu",
+        "suffix": "",
+    }
+    headers["MeanUniqueTargetsPerCell"] = {
+        "title": "Mean Unique Targets / Cell",
+        "description": "Mean number of unique targets per cell in the well",
+        "min": 0,
+        "scale": "GnBu",
+        "suffix": "",
+    }
+    headers["ExtraCellularRatio"] = {
+        "title": "Extracellular Ratio",
+        "description": "Ratio of density of extra-cellular counts to density of intra-cellular counts",
+        "min": 0,
+        "scale": "GnBu",
+        "suffix": "",
+        "format": "{:.2f}",
+    }
+    headers["PercentTargetDropout"] = {
+        "title": "% Target Dropout",
+        "description": "Percent of targets not assigned to any cell",
+        "scale": "GnBu",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+    }
+
+    pconfig = {
+        "title": f"cells2stats: {target_site_name} target site well QC metrics",
+        "col1_header": "Target Group / Well",
+        "id": f"{target_site_name}_target_metrics_table",
+        "ylab": "QC",
+    }
+
+    plot_name = f"{target_site_name} Target Site Well QC Metrics Table"
+    plot_html = table.plot(plot_content, headers, pconfig=pconfig)
+    anchor = f"{target_site_name}_target_well_metrics"
+    description = f"Table of well QC metrics for target site {target_site_name}"
+    helptext = f"Provides metrics summarizing the performance of each well for target site {target_site_name}"
     return plot_html, plot_name, anchor, description, helptext, plot_content
 
 
@@ -150,7 +283,7 @@ def merge_batch_dictionaries(dict_list, metric_names):
 
 def tabulate_batches(c2s_run_data):
     """
-    Generate a table of batch metrics from the cells2stats report
+    Generate a table of barcoding batch metrics from the cells2stats report
     """
     plot_content = merge_batch_dictionaries(
         [
@@ -158,20 +291,21 @@ def tabulate_batches(c2s_run_data):
             get_batch_counts(c2s_run_data),
             get_percent_assigned(c2s_run_data),
             get_percent_mismatch(c2s_run_data),
+            get_batch_extracellularratio(c2s_run_data),
         ],
-        ["batch_density", "batch_count", "percent_assigned", "percent_mismatch"],
+        ["batch_density", "batch_count", "percent_assigned", "percent_mismatch", "extracellular_ratio"],
     )
 
     headers = {}
     headers["batch_density"] = {
         "title": "Assigned Counts K / mm2",
-        "description": "Assigned counts per mm2 for each batch in the well",
+        "description": "Assigned counts per mm2 for each barcoding batch in the well",
         "min": 0,
         "scale": "GnBu",
     }
     headers["batch_count"] = {
         "title": "Assigned Counts / Cell",
-        "description": "Average assigned counts per cell for each batch in the well",
+        "description": "Average assigned counts per cell for each barcoding batch in the well",
         "scale": "GnBu",
         "min": 0,
     }
@@ -188,17 +322,24 @@ def tabulate_batches(c2s_run_data):
         "scale": "GnBu",
         "min": 0,
     }
+    headers["extracellular_ratio"] = {
+        "title": "Extracellular Ratio",
+        "description": "Ratio of density of extra-cellular counts to density of intra-cellular counts",
+        "min": 0,
+        "scale": "GnBu",
+        "format": "{:.2f}",
+    }
 
     pconfig = {
-        "title": "cells2stats: Batch QC metrics",
+        "title": "cells2stats: Barcodin batch QC metrics",
         "col1_header": "Run / Well / Batch",
         "id": "batch_metrics_table",
         "ylab": "QC",
     }
 
-    plot_name = "Batch QC metrics table"
+    plot_name = "Barcoding Batch QC Metrics Table"
     plot_html = table.plot(plot_content, headers, pconfig=pconfig)
     anchor = "batch_metrics"
-    description = "Table of general batch QC metrics"
-    helptext = """Provides overall metrics summarizing the performance of each batch per well"""
+    description = "Table of barcoding batch QC metrics"
+    helptext = """Provides overall metrics summarizing the performance of each barcoding batch per well"""
     return plot_html, plot_name, anchor, description, helptext, plot_content

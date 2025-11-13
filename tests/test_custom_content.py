@@ -20,6 +20,16 @@ from multiqc.types import Anchor, ColumnKey, SampleGroup, SectionKey
 from multiqc.validation import ModuleConfigValidationError
 
 
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state after each test."""
+    original_strict = config.strict
+    original_run_modules = config.run_modules[:]
+    yield
+    config.strict = original_strict
+    config.run_modules[:] = original_run_modules
+
+
 def test_linegraph_single_sample_txt(data_dir):
     path = data_dir / "custom_content" / "embedded_config" / "linegraph_single_sample_txt_mqc.txt"
     """
@@ -262,7 +272,7 @@ def test_full_run_with_config(data_dir, capsys):
     )
 
     out = capsys.readouterr().out
-    assert '<h2 class="mqc-module-title" id="concordance">Concordance Rates</h2>' in out
+    assert '<h2 class="mb-0" id="concordance">Concordance Rates</h2>' in out
     assert '<div class="mqc-section mqc-section-concordance"' in out
 
     assert len(report.plot_by_id) == 1
@@ -306,7 +316,7 @@ target___test2	2
         custom_data:
           last_o2o:
             plot_type: "table"
-        
+
         sp:
           last_o2o:
             fn: "target__*tsv"

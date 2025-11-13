@@ -548,7 +548,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.qc3c_data["bam"], categories, config)
 
     def bam_signal_table(self):
-        config = {"id": "qc3C_bam_signal_table", "namespace": "qc3C", "hide_empty": False, "col1_header": "Sample"}
+        config = {"id": "qc3C_bam_signal_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
 
         headers = {
             "b_unobs_fraction": {
@@ -571,7 +571,7 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.qc3c_data["bam"], headers, config)
 
     def bam_hicpro_table(self):
-        config = {"id": "qc3C_bam_hicpro_table", "namespace": "qc3C", "hide_empty": False, "col1_header": "Sample"}
+        config = {"id": "qc3C_bam_hicpro_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
 
         headers = {
             "b_p_informative_fr": {"title": "Valid FR", "min": 0, "max": 100, "suffix": "%", "scale": "Greens"},
@@ -800,7 +800,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "qc3C_kmer_signal_plot",
             "title": "qc3C: K-mer mode signal content",
             "ylab": "Number of Reads",
-            "hide_empty": False,
+            "hide_zero_cats": False,
             "stacking": None,
             "cpswitch": False,
             "cpswitch_c_active": False,
