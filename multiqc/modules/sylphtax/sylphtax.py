@@ -76,17 +76,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(self.sylph_raw_data)} reports")
 
-        # Replace None with actual version if it is available
         self.add_software_version(None)
-
-        self.write_data_file(self.sylph_raw_data, f"multiqc_{self.anchor}")
 
         # Sum percentages across all samples, so that we can pick top species
         self.sylph_total_pct = dict()
         self.sum_sample_abundances()
-
         self.general_stats_cols()
         self.top_taxa_barplot()
+        self.write_data_file(self.sylph_raw_data, f"multiqc_{self.anchor}")
 
     def parse_logs(self, f):
         """
@@ -125,13 +122,14 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Handle bare NO_TAXONOMY rows (no rank code present)
             if clade == "NO_TAXONOMY":
-                data.append(
-                    {
-                        "tax_rank": "u",
-                        "taxonomy": "No Taxonomy",
-                        "rel_abundance": rel,
-                    }
-                )
+                for rank in list("kcpofgsd"):
+                    data.append(
+                        {
+                            "tax_rank": rank,
+                            "taxonomy": "No Taxonomy (see strain)",
+                            "rel_abundance": 100,
+                        }
+                    )
                 continue
 
             # Extract last rank and taxonomy from clade path
@@ -293,7 +291,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Add top n taxa for each rank
                 i += 1
                 if i > self.top_n:
-                    # After top 5, keep looping to sum up unclassified
+                    # After top N, keep looping to sum up unclassified
                     continue
                 rank_cats[taxonomy] = {"name": taxonomy}
                 # Pull out abundances for this rank + classif from each sample
@@ -351,7 +349,7 @@ class MultiqcModule(BaseMultiqcModule):
             description=f"The relative abundance of reads falling into the top {self.top_n} taxa across different ranks.",
             helptext=f"""
                 To make this plot, the percentage of each sample assigned to a given taxa is summed across all samples.
-                The relative abundance for these top {self.top_n} taxa are then plotted for each of the 8 different taxa ranks.
+                The relative abundance for these top {self.top_n} taxa are then plotted for each of the different taxa ranks.
 
                 The category _"Other"_ shows the difference between 100% and the sum of the percent
                 in the top {self.top_n} taxa shown. This should cover all taxa _not_ in the top {self.top_n}, +/- any rounding errors. 
