@@ -7,28 +7,12 @@ LABEL author="Phil Ewels & Vlad Savelyev" \
 # Optional pandoc installation for PDF support
 ARG INSTALL_PANDOC=false
 
-RUN mkdir /usr/src/multiqc
+# Copy uv from the official image for faster dependency resolution
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Add the MultiQC source files to the container
-COPY LICENSE /usr/src/multiqc/
-COPY README.md /usr/src/multiqc/
-COPY docs /usr/src/multiqc/docs
-COPY multiqc /usr/src/multiqc/multiqc
-COPY pyproject.toml /usr/src/multiqc/
-COPY MANIFEST.in /usr/src/multiqc/
-COPY scripts /usr/src/multiqc/scripts
-COPY setup.py /usr/src/multiqc/
-COPY tests /usr/src/multiqc/tests
-
-# - Install `ps` for Nextflow
-# - Install MultiQC through pip
-# - Delete unnecessary Python files
-# - Remove MultiQC source directory
-# - Add custom group and user
-RUN \
-    echo "Docker build log: Run apt-get update" 1>&2 && \
-    apt-get update -y -qq \
-    && \
+# Install system dependencies
+RUN echo "Docker build log: Run apt-get update" 1>&2 && \
+    apt-get update -y -qq && \
     echo "Docker build log: Install procps" 1>&2 && \
     apt-get install -y -qq procps && \
     if [ "$INSTALL_PANDOC" = "true" ]; then \
@@ -37,18 +21,39 @@ RUN \
     fi && \
     echo "Docker build log: Clean apt cache" 1>&2 && \
     rm -rf /var/lib/apt/lists/* && \
-    apt-get clean -y && \
-    echo "Docker build log: Upgrade pip and install multiqc" 1>&2 && \
-    pip install --quiet --upgrade pip && \
-    #################
-    # Install MultiQC
-    pip install --verbose --no-cache-dir /usr/src/multiqc && \
-    echo "Docker build log: Delete python cache directories" 1>&2 && \
+    apt-get clean -y
+
+# Set up working directory
+RUN mkdir /usr/src/multiqc
+WORKDIR /usr/src/multiqc
+
+# Copy dependency files first for better layer caching
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies using uv (cached layer if dependencies don't change)
+RUN echo "Docker build log: Install dependencies with uv" 1>&2 && \
+    uv pip install --system --no-cache -r pyproject.toml
+
+# Copy the MultiQC source files to the container
+COPY LICENSE README.md MANIFEST.in setup.py ./
+COPY docs ./docs
+COPY multiqc ./multiqc
+COPY scripts ./scripts
+COPY tests ./tests
+
+# Install MultiQC package using uv
+RUN echo "Docker build log: Install MultiQC with uv" 1>&2 && \
+    uv pip install --system --no-cache .
+
+# Clean up build artifacts and Python cache
+RUN echo "Docker build log: Delete python cache directories" 1>&2 && \
     find /usr/local/lib/python3.13 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \) -printf "\"%p\" " | \
     xargs rm -rf {} && \
     echo "Docker build log: Delete /usr/src/multiqc" 1>&2 && \
-    rm -rf "/usr/src/multiqc/" && \
-    echo "Docker build log: Add multiqc user and group" 1>&2 && \
+    rm -rf "/usr/src/multiqc/"
+
+# Add custom group and user
+RUN echo "Docker build log: Add multiqc user and group" 1>&2 && \
     groupadd --gid 1000 multiqc && \
     useradd -ms /bin/bash --create-home --gid multiqc --uid 1000 multiqc
 
