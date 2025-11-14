@@ -33,8 +33,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
 
+      - name: "Install uv"
+        uses: astral-sh/setup-uv@v5
+
       - name: "Install MultiQC"
-        run: pip install -e '.[dev]'
+        run: uv sync --all-extras
 
       - name: "Download test data"
         uses: actions/checkout@v4
@@ -43,7 +46,7 @@ jobs:
           path: test-data
 
       - name: "Run unit tests"
-        run: pytest -vv -n ${{ env.worker_cores }} --cov=multiqc --cov-report=xml
+        run: uv run pytest -vv -n ${{ env.worker_cores }} --cov=multiqc --cov-report=xml
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v4
