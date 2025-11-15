@@ -59,9 +59,9 @@ window.initHideSamples = function () {
 
     // Get requested pattern and whether to show or hide the pattern
     var j = $(this).data("index");
-    var pattern = mqc_config["show_hide_patterns"][j];
-    var show_hide_mode = mqc_config["show_hide_mode"][j];
-    var regex = mqc_config["show_hide_regex"][j];
+    var pattern = window.mqc_config["show_hide_patterns"][j];
+    var show_hide_mode = window.mqc_config["show_hide_mode"][j];
+    var regex = window.mqc_config["show_hide_regex"][j];
     if (!Array.isArray(pattern)) {
       pattern = [pattern];
     }
@@ -112,25 +112,25 @@ window.initHideSamples = function () {
 
   // Apply pre-configured hide samples from config only if no local storage values
   let has_hide_filters = $("#mqc_hidesamples_filters").children().length > 0;
-  if (!has_hide_filters && mqc_config.show_hide_patterns && mqc_config.show_hide_patterns.length > 0) {
+  if (!has_hide_filters && window.mqc_config.show_hide_patterns && window.mqc_config.show_hide_patterns.length > 0) {
     // Add each pattern
-    for (let i = 1; i < mqc_config.show_hide_patterns.length; i++) {
+    for (let i = 1; i < window.mqc_config.show_hide_patterns.length; i++) {
       // Skip first (Show all)
-      const pattern = mqc_config.show_hide_patterns[i];
+      const pattern = window.mqc_config.show_hide_patterns[i];
       $("#mqc_hidesamples_filters").append(window.make_hidesamples_filter(pattern));
     }
 
     // Set regex mode if specified for the first non-empty pattern
-    for (let i = 1; i < mqc_config.show_hide_regex.length; i++) {
-      if (mqc_config.show_hide_regex[i]) {
+    for (let i = 1; i < window.mqc_config.show_hide_regex.length; i++) {
+      if (window.mqc_config.show_hide_regex[i]) {
         $("#mqc_hidesamples .mqc_regex_mode input").prop("checked", true);
         break;
       }
     }
 
     // Set show/hide mode based on the first non-empty pattern
-    for (let i = 1; i < mqc_config.show_hide_mode.length; i++) {
-      if (mqc_config.show_hide_mode[i] === "show") {
+    for (let i = 1; i < window.mqc_config.show_hide_mode.length; i++) {
+      if (window.mqc_config.show_hide_mode[i] === "show") {
         $(".mqc_hidesamples_showhide[value=show]").prop("checked", true);
         break;
       }

@@ -72,9 +72,9 @@ $(function () {
     if (j == 0) {
       apply_mqc_renamesamples();
     } else {
-      for (i = 0; i < mqc_config["sample_names_rename"].length; i++) {
-        var ft = mqc_config["sample_names_rename"][i][0];
-        var tt = mqc_config["sample_names_rename"][i][j];
+      for (i = 0; i < window.mqc_config["sample_names_rename"].length; i++) {
+        var ft = window.mqc_config["sample_names_rename"][i][0];
+        var tt = window.mqc_config["sample_names_rename"][i][j];
         $("#mqc_renamesamples_filters").append(
           '<li class="mqc_sname_switches_li"> \
           <input class="f_text from_text" value="' +
@@ -104,9 +104,9 @@ $(function () {
 
     // Get requested pattern and whether to show or hide the pattern
     var j = $(this).data("index");
-    var pattern = mqc_config["show_hide_patterns"][j];
-    var show_hide_mode = mqc_config["show_hide_mode"][j];
-    var regex = mqc_config["show_hide_regex"][j];
+    var pattern = window.mqc_config["show_hide_patterns"][j];
+    var show_hide_mode = window.mqc_config["show_hide_mode"][j];
+    var regex = window.mqc_config["show_hide_regex"][j];
     if (!Array.isArray(pattern)) {
       pattern = [pattern];
     }

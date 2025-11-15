@@ -63,9 +63,9 @@ window.initRename = function () {
     if (j == 0) {
       apply_mqc_renamesamples();
     } else {
-      for (i = 0; i < mqc_config["sample_names_rename"].length; i++) {
-        var ft = mqc_config["sample_names_rename"][i][0];
-        var tt = mqc_config["sample_names_rename"][i][j];
+      for (i = 0; i < window.mqc_config["sample_names_rename"].length; i++) {
+        var ft = window.mqc_config["sample_names_rename"][i][0];
+        var tt = window.mqc_config["sample_names_rename"][i][j];
         $("#mqc_renamesamples_filters").append(window.make_renamesamples_filter(ft, tt));
       }
       apply_mqc_renamesamples();
@@ -130,12 +130,12 @@ window.initRename = function () {
 
   // Apply pre-configured sample renaming patterns from config only if no local storage values
   let has_rename_filters = $("#mqc_renamesamples_filters").children().length > 0;
-  if (!has_rename_filters && mqc_config.sample_names_rename && mqc_config.sample_names_rename.length > 0) {
+  if (!has_rename_filters && window.mqc_config.sample_names_rename && window.mqc_config.sample_names_rename.length > 0) {
     let mqc_renamesamples_idx = 300;
 
     // Add each pattern
-    for (let i = 0; i < mqc_config.sample_names_rename.length; i++) {
-      const pattern = mqc_config.sample_names_rename[i];
+    for (let i = 0; i < window.mqc_config.sample_names_rename.length; i++) {
+      const pattern = window.mqc_config.sample_names_rename[i];
       if (!Array.isArray(pattern) || pattern.length < 2) continue;
 
       const from_text = pattern[0];
