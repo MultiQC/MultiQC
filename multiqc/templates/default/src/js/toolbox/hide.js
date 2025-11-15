@@ -70,11 +70,11 @@ window.initHideSamples = function () {
     }
 
     // click the regex button if we want it turned on/off
-    var button = document.getElementsByClassName("mqc_switch re_mode")[2];
-    if (button.className.includes(" on") && !regex) {
+    var button = document.getElementById("re_mode_mqc_hidesamples");
+    if (button && button.checked && !regex) {
       button.click();
     }
-    if (button.className.includes(" off") && regex) {
+    if (button && !button.checked && regex) {
       button.click();
     }
 
