@@ -130,7 +130,11 @@ window.initRename = function () {
 
   // Apply pre-configured sample renaming patterns from config only if no local storage values
   let has_rename_filters = $("#mqc_renamesamples_filters").children().length > 0;
-  if (!has_rename_filters && window.mqc_config.sample_names_rename && window.mqc_config.sample_names_rename.length > 0) {
+  if (
+    !has_rename_filters &&
+    window.mqc_config.sample_names_rename &&
+    window.mqc_config.sample_names_rename.length > 0
+  ) {
     let mqc_renamesamples_idx = 300;
 
     // Add each pattern
