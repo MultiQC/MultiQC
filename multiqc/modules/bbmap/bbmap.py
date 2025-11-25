@@ -139,6 +139,39 @@ class MultiqcModule(BaseMultiqcModule):
             }
             self.general_stats_addcols(data, headers)
 
+        # BBSplit metrics in General Stats
+        if "bbsplit" in self.mod_data and len(self.mod_data["bbsplit"]) > 0:
+            bbsplit_headers = {}
+            bbsplit_data = {}
+            
+            # Process each sample
+            for s_name in self.mod_data["bbsplit"]:
+                if s_name not in bbsplit_data:
+                    bbsplit_data[s_name] = {}
+                
+                # Get data for this sample
+                sample_data = self.mod_data["bbsplit"][s_name]["data"]
+                
+                # Create columns for each reference genome found
+                for ref_name, values in sample_data.items():
+                    # Use percentage of unambiguous reads for each reference
+                    pct_unambig = values[0]  # First value is %unambiguousReads
+                    bbsplit_data[s_name][f"{ref_name}_pct"] = pct_unambig
+                    
+                    # Create header for this reference if not exists
+                    if f"{ref_name}_pct" not in bbsplit_headers:
+                        bbsplit_headers[f"{ref_name}_pct"] = {
+                            "title": f"{ref_name} %",
+                            "description": f"Percentage of reads unambiguously aligned to {ref_name}",
+                            "suffix": "%",
+                            "scale": "YlGn",
+                            "format": "{:,.2f}",
+                            "min": 0,
+                            "max": 100,
+                        }
+            
+            self.general_stats_addcols(bbsplit_data, bbsplit_headers)
+
     def parse_logs(self, file_type, root, s_name, fn, f, **kw):
         if self.is_ignore_sample(s_name):
             return False

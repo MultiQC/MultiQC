@@ -37,6 +37,7 @@ section_order = [
     "rpkm",
     "statsfile_machine",
     "statsfile",
+    "bbsplit"
 ]
 file_types: Dict = {
     "stats": {
@@ -420,6 +421,24 @@ file_types: Dict = {
         "plot_func": plot_basic_hist,
         "not_implemented": "",
     },
+    "bbsplit": {
+    "title": "BBSplit alignment statistics",
+    "descr": "Statistics on how many reads mapped to which reference genome.",
+    "help_text": "Shows the percentage and count of reads aligned to each reference genome.",
+    "cols": {
+        "name": str,
+        "%unambiguousReads": float,
+        "unambiguousMB": float,
+        "%ambiguousReads": float,
+        "ambiguousMB": float,
+        "unambiguousReads": int,
+        "ambiguousReads": int,
+        "assignedReads": int,
+        "assignedBases": int,
+    },
+    "plot_func": None,  # No plot needed if adding to general stats only
+    "plot_params": {},
+},
 }
 
 statsfile_machine_keys = [
