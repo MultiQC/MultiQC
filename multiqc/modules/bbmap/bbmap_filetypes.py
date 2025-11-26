@@ -4,6 +4,7 @@ from multiqc import config
 
 from .plot_aqhist import plot_aqhist
 from .plot_basic_hist import plot_basic_hist
+from .plot_bbsplit import plot_bbsplit
 from .plot_bhist import plot_bhist
 from .plot_bqhist import plot_bqhist
 from .plot_covhist import plot_covhist
@@ -436,7 +437,7 @@ file_types: Dict = {
         "assignedReads": int,
         "assignedBases": int,
     },
-    "plot_func": None,  # No plot needed if adding to general stats only
+    "plot_func": plot_bbsplit,
     "plot_params": {},
 },
 }
