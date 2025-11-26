@@ -25,12 +25,13 @@ def plot_bbsplit(samples, file_type, plot_title, plot_params):
     
     # Configure the plot
     pconfig = {
-        "id": "bbsplit_assigned_reads_plot",
-        "title": "BBSplit: Assigned Reads Distribution",
+        "id": "bbmap-" + file_type + "_plot",
+        "title": "BBTools: " + plot_title,
         "ylab": "Number of Reads",
         "cpswitch_counts_label": "Number of Reads",
         "cpswitch_c_active": False,  # Start with percentage view
     }
-    pconfig.update(plot_params)
+    for key, value in plot_params.items():
+        setattr(pconfig, key, value)
     
     return bargraph.plot(data, cats, pconfig)
