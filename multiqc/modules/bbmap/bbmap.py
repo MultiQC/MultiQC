@@ -143,34 +143,34 @@ class MultiqcModule(BaseMultiqcModule):
         if "bbsplit" in self.mod_data and len(self.mod_data["bbsplit"]) > 0:
             bbsplit_headers = {}
             bbsplit_data = {}
-            
+
             # Process each sample
             for s_name in self.mod_data["bbsplit"]:
                 if s_name not in bbsplit_data:
                     bbsplit_data[s_name] = {}
-                
+
                 # Get data for this sample
                 sample_data = self.mod_data["bbsplit"][s_name]["data"]
-                
+
                 # Create columns for each reference genome found
                 for ref_name, values in sample_data.items():
                     # Values correspond to columns in stats file:
                     # [0]=%unambiguousReads, [1]=unambiguousMB, [2]=%ambiguousReads, [3]=ambiguousMB,
                     # [4]=unambiguousReads, [5]=ambiguousReads, [6]=assignedReads, [7]=assignedBases
-                    
+
                     pct_unambig = values[0]  # %unambiguousReads
                     pct_ambig = values[2]  # %ambiguousReads
                     unambig_reads = values[4]  # unambiguousReads
                     ambig_reads = values[5]  # ambiguousReads
                     assigned_reads = values[6]  # assignedReads
-                    
+
                     # Namespace will add bbsplit- prefix
                     bbsplit_data[s_name][f"{ref_name}_assigned_reads"] = assigned_reads
                     bbsplit_data[s_name][f"{ref_name}_pct_unambig"] = pct_unambig
                     bbsplit_data[s_name][f"{ref_name}_pct_ambig"] = pct_ambig
                     bbsplit_data[s_name][f"{ref_name}_unambig_reads"] = unambig_reads
                     bbsplit_data[s_name][f"{ref_name}_ambig_reads"] = ambig_reads
-                    
+
                     # Create headers for this reference if not exists
                     if f"{ref_name}_assigned_reads" not in bbsplit_headers:
                         bbsplit_headers[f"{ref_name}_assigned_reads"] = {
@@ -216,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "shared_key": "read_count",
                             "hidden": True,
                         }
-            
+
             self.general_stats_addcols(bbsplit_data, bbsplit_headers, namespace="bbsplit")
 
     def parse_logs(self, file_type, root, s_name, fn, f, **kw):

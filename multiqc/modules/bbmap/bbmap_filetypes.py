@@ -38,7 +38,7 @@ section_order = [
     "rpkm",
     "statsfile_machine",
     "statsfile",
-    "bbsplit"
+    "bbsplit",
 ]
 file_types: Dict = {
     "stats": {
@@ -423,23 +423,23 @@ file_types: Dict = {
         "not_implemented": "",
     },
     "bbsplit": {
-    "title": "BBSplit alignment statistics",
-    "descr": "Statistics on how many reads mapped to which reference genome.",
-    "help_text": "Shows the percentage and count of reads aligned to each reference genome.",
-    "cols": {
-        "name": str,
-        "%unambiguousReads": float,
-        "unambiguousMB": float,
-        "%ambiguousReads": float,
-        "ambiguousMB": float,
-        "unambiguousReads": int,
-        "ambiguousReads": int,
-        "assignedReads": int,
-        "assignedBases": int,
-    },
+        "title": "BBSplit alignment statistics",
+        "descr": "Statistics on how many reads mapped to which reference genome.",
+        "help_text": "Shows the percentage and count of reads aligned to each reference genome.",
+        "cols": {
+            "name": str,
+            "%unambiguousReads": float,
+            "unambiguousMB": float,
+            "%ambiguousReads": float,
+            "ambiguousMB": float,
+            "unambiguousReads": int,
+            "ambiguousReads": int,
+            "assignedReads": int,
+            "assignedBases": int,
+        },
         "plot_params": {},
         "plot_func": plot_bbsplit,
-},
+    },
 }
 
 statsfile_machine_keys = [
