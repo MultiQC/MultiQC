@@ -437,8 +437,8 @@ file_types: Dict = {
         "assignedReads": int,
         "assignedBases": int,
     },
-    "plot_func": plot_bbsplit,
-    "plot_params": {},
+        "plot_params": {},
+        "plot_func": plot_bbsplit,
 },
 }
 

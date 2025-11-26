@@ -31,7 +31,6 @@ def plot_bbsplit(samples, file_type, plot_title, plot_params):
         "cpswitch_counts_label": "Number of Reads",
         "cpswitch_c_active": False,  # Start with percentage view
     }
-    for key, value in plot_params.items():
-        setattr(pconfig, key, value)
+    pconfig.update(plot_params)
     
     return bargraph.plot(data, cats, pconfig)
