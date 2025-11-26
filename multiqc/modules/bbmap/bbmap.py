@@ -29,8 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
       - Print binned coverage per location (one line per X bases).
     - `scafstats` _(not yet implemented)_
       - Statistics on how many reads mapped to which scaffold.
-    - `refstats`
-      - Statistics on how many reads mapped to which reference file; only for BBSplit.
+    - `bbsplit`
+      - Statistics on how many reads mapped to which reference genome; BBSplit alignment statistics.
     - `bhist`
       - Base composition histogram by position.
     - `qhist`
