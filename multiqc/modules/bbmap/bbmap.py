@@ -85,7 +85,8 @@ class MultiqcModule(BaseMultiqcModule):
             log.info(f"Found {num_samples} reports")
 
         # Write data to file
-        self.write_data_file(self.mod_data, "bbmap")
+        for section in self.mod_data.keys():
+            self.write_data_file(self.mod_data[section], f"multiqc_bbtools_{section}")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
