@@ -3,7 +3,7 @@ from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
-from .bbmap_filetypes import file_types, section_order
+from .bbtools_filetypes import file_types, section_order
 
 log = logging.getLogger(__name__)
 
@@ -11,11 +11,11 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """
     The module produces summary statistics from the
-    [BBMap](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.
-    The module can summarise data from the following BBMap output files
+    [BBTools](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.
+    The module can summarise data from the following BBTools output files
     (descriptions from command line help output):
 
-    - `stats`
+    - `bbdukstats`
       - BBDuk filtering statistics.
     - `covstats` _(not yet implemented)_
       - Per-scaffold coverage info.
@@ -52,14 +52,14 @@ class MultiqcModule(BaseMultiqcModule):
     - `statsfile` _(not yet implemented)_
       - Mapping statistics are printed here.
 
-    Additional information on the BBMap tools is available on
+    Additional information on BBTools is available on
     [SeqAnswers](http://seqanswers.com/forums/showthread.php?t=41057).
     """
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="BBTools",
-            anchor="bbmap",
+            anchor="bbtools",
             href="http://jgi.doe.gov/data-and-tools/bbtools/",
             info="Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads",
             # One publication, but only for the merge tool:
@@ -70,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.mod_data: Dict = {key: {} for key in file_types}
 
         # Find output files
-        module_filetypes = [("bbmap/" + ft, ft) for ft in file_types]
+        module_filetypes = [("bbtools/" + ft, ft) for ft in file_types]
         data_found = False
         for module_filetype, file_type in module_filetypes:
             for f in self.find_log_files(module_filetype, filehandles=True):
@@ -99,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if file_types[file_type]["plot_func"]:
                     self.add_section(
                         name=file_types[file_type]["title"],
-                        anchor="bbmap-" + file_type,
+                        anchor="bbtools-" + file_type,
                         description=file_types[file_type]["descr"],
                         helptext=file_types[file_type]["help_text"],
                         plot=self.plot(file_type),
@@ -111,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
             ):
                 self.add_section(
                     name=file_types[file_type]["title"] + " summary table",
-                    anchor="bbmap-" + file_type + "-table",
+                    anchor="bbtools-" + file_type + "-table",
                     description=file_types[file_type]["descr"],
                     helptext=file_types[file_type]["help_text"],
                     plot=self.make_basic_table(file_type),
@@ -130,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
             headers = {
                 "pct_q30": {
                     "title": "% Q30 bases",
-                    "description": "BBMap qchist - Percentage of bases with phred quality score >= 30",
+                    "description": "BBTools qchist - Percentage of bases with phred quality score >= 30",
                     "suffix": " %",
                     "scale": "RdYlGn",
                     "format": "{:,.2f}",

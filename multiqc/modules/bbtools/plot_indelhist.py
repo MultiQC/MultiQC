@@ -3,11 +3,11 @@ from itertools import chain
 from multiqc.plots import linegraph
 
 
-def plot_mhist(samples, file_type, **plot_args):
-    """Create line graph plot of histogram data for BBMap 'mhist' output.
+def plot_indelhist(samples, file_type, **plot_args):
+    """Create line graph plot of histogram data for BBMap 'indelhist' output.
 
-    The 'samples' parameter could be from the bbmap mod_data dictionary:
-    samples = bbmap.MultiqcModule.mod_data[file_type]
+    The 'samples' parameter could be from the bbtools mod_data dictionary:
+    samples = bbtools.MultiqcModule.mod_data[file_type]
     """
 
     all_x = set()
@@ -15,21 +15,11 @@ def plot_mhist(samples, file_type, **plot_args):
         all_x.add(item[0])
 
     columns_to_plot = {
-        "Read 1": {
-            0: "Match",
-            1: "Sub",
-            2: "Del",
-            3: "Ins",
-            4: "N1",
-            5: "Other1",
+        "Deletions": {
+            0: "Count",
         },
-        "Read 2": {
-            6: "Match",
-            7: "Sub",
-            8: "Del",
-            9: "Ins",
-            10: "N2",
-            11: "Other2",
+        "Insertions": {
+            1: "Count",
         },
     }
 
@@ -46,17 +36,16 @@ def plot_mhist(samples, file_type, **plot_args):
         )
 
     plot_params = {
-        "id": "bbmap-" + file_type + "_plot",
+        "id": "bbtools-" + file_type + "_plot",
         "title": "BBTools: " + plot_args["plot_title"],
-        "xlab": "Location in read",
+        "xlab": "Indel size",
         "xsuffix": " bp",
-        "ylab": "Proportion",
+        "ylab": "Insertion count",
         "data_labels": [
-            {"name": "Read 1", "ylab": "Proportion"},
-            {"name": "Read 2", "ylab": "Proportion"},
+            {"name": "Insertions", "ylab": "Insertion count"},
+            {"name": "Deletions", "ylab": "Deletion count"},
         ],
     }
-
     plot_params.update(plot_args["plot_params"])
     plot = linegraph.plot(plot_data, plot_params)
 

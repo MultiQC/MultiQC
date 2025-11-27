@@ -42,64 +42,64 @@ bases2fastq/project:
 bbduk:
   contents: "Executing jgi.BBDuk"
   num_lines: 2
-bbmap/stats:
+bbtools/bbdukstats:
   contents: ["#File", "#Total", "#Matched", "#Name	Reads	ReadsPct"]
   num_lines: 10
-bbmap/aqhist:
+bbtools/aqhist:
   contents: "#Quality	count1	fraction1	count2	fraction2"
   num_lines: 10
-bbmap/bhist:
+bbtools/bhist:
   contents: "#Pos	A	C	G	T	N"
   num_lines: 10
-bbmap/bincov:
+bbtools/bincov:
   contents: "#RefName	Cov	Pos	RunningPos"
   num_lines: 10
-bbmap/bqhist:
+bbtools/bqhist:
   contents: "#BaseNum	count_1	min_1	max_1	mean_1	Q1_1	med_1	Q3_1	LW_1	RW_1	count_2	min_2	max_2	mean_2	Q1_2	med_2	Q3_2	LW_2	RW_2"
   num_lines: 10
-bbmap/covhist:
+bbtools/covhist:
   contents: "#Coverage	numBases"
   num_lines: 10
-bbmap/covstats:
+bbtools/covstats:
   contents: "#ID	Avg_fold"
   num_lines: 10
-bbmap/ehist:
+bbtools/ehist:
   contents: "#Errors	Count"
   num_lines: 10
-bbmap/gchist:
+bbtools/gchist:
   contents: ["#Mean	", "#GC	Count"]
   num_lines: 10
-bbmap/idhist:
+bbtools/idhist:
   contents: ["#Mean_reads", "#Identity	Reads	Bases"]
   num_lines: 10
-bbmap/ihist:
+bbtools/ihist:
   contents: ["#Mean	", "#InsertSize	Count"]
   num_lines: 10
-bbmap/indelhist:
+bbtools/indelhist:
   contents: "#Length	Deletions	Insertions"
   num_lines: 10
-bbmap/lhist:
+bbtools/lhist:
   contents: "#Length	Count"
   num_lines: 10
-bbmap/mhist:
+bbtools/mhist:
   contents: "#BaseNum	Match1	Sub1	Del1	Ins1	N1	Other1	Match2	Sub2	Del2	Ins2	N2	Other2"
   num_lines: 10
-bbmap/qahist:
+bbtools/qahist:
   contents: "#Quality	Match	Sub	Ins	Del"
   num_lines: 10
-bbmap/qchist:
+bbtools/qchist:
   contents_re: "#Quality	count1	fraction1$"
   num_lines: 10
-bbmap/qhist:
+bbtools/qhist:
   contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured"
   num_lines: 10
-bbmap/rpkm:
+bbtools/rpkm:
   contents: ["#File	", "#Reads	", "#Mapped	", "#RefSequences	", "#Name Length"]
   num_lines: 10
-bbmap/statsfile_machine:
+bbtools/statsfile_machine:
   contents: "Reads Used="
   num_lines: 10
-bbmap/statsfile:
+bbtools/statsfile:
   contents: ["Reads Used:", "Mapping:", "Reads/sec:", "kBases/sec:"]
   num_lines: 10
 bcftools/stats:
