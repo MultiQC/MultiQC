@@ -2,7 +2,7 @@
 title: MACS2
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Identifies transcription factor binding sites in ChIP-seq data.</p>
+    <p>Identifies transcription factor binding sites in ChIP-seq data.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/macs2/macs2.py
 -->
 
 :::note
-
 <p>Identifies transcription factor binding sites in ChIP-seq data.</p>
 
 [https://macs3-project.github.io/MACS/](https://macs3-project.github.io/MACS/)
@@ -33,5 +32,6 @@ found in the General Statistics table. Numerous additional values are parsed and
 
 ```yaml
 macs2:
-  fn: "*_peaks.xls"
+  fn: '*_peaks.xls'
 ```
+    

@@ -2,7 +2,7 @@
 title: HUMID
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs.</p>
+    <p>Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/humid/humid.py
 -->
 
 :::note
-
 <p>Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs.</p>
 
 [https://github.com/jfjlaros/HUMID](https://github.com/jfjlaros/HUMID)
@@ -25,19 +24,20 @@ File path for the source of this content: multiqc/modules/humid/humid.py
 
 ```yaml
 humid/clusters:
-  contents_re: "[0-9]+ [0-9]+"
+  contents_re: '[0-9]+ [0-9]+'
   fn: clusters.dat
   num_lines: 1
 humid/counts:
-  contents_re: "[0-9]+ [0-9]+"
+  contents_re: '[0-9]+ [0-9]+'
   fn: counts.dat
   num_lines: 1
 humid/neighbours:
-  contents_re: "[0-9]+ [0-9]+"
+  contents_re: '[0-9]+ [0-9]+'
   fn: neigh.dat
   num_lines: 1
 humid/stats:
-  contents: "total: "
+  contents: 'total: '
   fn: stats.dat
   num_lines: 1
 ```
+    

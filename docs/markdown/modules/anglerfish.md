@@ -2,7 +2,7 @@
 title: Anglerfish
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells.</p>
+    <p>Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/anglerfish/anglerfish.
 -->
 
 :::note
-
 <p>Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells.</p>
 
 [https://github.com/remiolsen/anglerfish](https://github.com/remiolsen/anglerfish)
@@ -28,5 +27,6 @@ Assessment of pool balancing, contamination, and insert sizes are currently supp
 ```yaml
 anglerfish:
   contents: anglerfish_version
-  fn: "*.json"
+  fn: '*.json'
 ```
+    

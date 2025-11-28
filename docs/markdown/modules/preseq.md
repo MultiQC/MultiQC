@@ -2,7 +2,7 @@
 title: Preseq
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count.</p>
+    <p>Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/preseq/preseq.py
 -->
 
 :::note
-
 <p>Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count.</p>
 
 [http://smithlabresearch.org/software/preseq/](http://smithlabresearch.org/software/preseq/)
@@ -90,10 +89,11 @@ echo "Sample_1.preseq.txt "$(samtools view -c -F 4 Sample_1.bam)" "$(samtools vi
 
 ```yaml
 preseq:
-  - contents: EXPECTED_DISTINCT
-    num_lines: 2
-  - contents: distinct_reads
-    num_lines: 2
+- contents: EXPECTED_DISTINCT
+  num_lines: 2
+- contents: distinct_reads
+  num_lines: 2
 preseq/real_counts:
-  fn: "*preseq_real_counts*"
+  fn: '*preseq_real_counts*'
 ```
+    

@@ -265,7 +265,8 @@ class PConfig(ValidatedConfig):
         # Allow user to overwrite any given config for this plot
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
-                setattr(self, k, v)
+                if k in self.model_fields:
+                    setattr(self, k, v)
 
         # Normalize data labels to ensure they are unique and consistent.
         if self.data_labels and len(self.data_labels) > 1:

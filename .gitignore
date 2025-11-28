@@ -57,6 +57,6 @@ venv*
 node_modules/
 
 .env
-.claude
+.claude/settings.local.json
 
 Pipfile

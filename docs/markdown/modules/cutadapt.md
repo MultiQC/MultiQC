@@ -2,7 +2,7 @@
 title: Cutadapt
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.</p>
+    <p>Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/cutadapt/cutadapt.py
 -->
 
 :::note
-
 <p>Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.</p>
 
 [https://cutadapt.readthedocs.io/](https://cutadapt.readthedocs.io/)
@@ -43,8 +42,9 @@ The module also understands logs saved by Trim Galore, which contain cutadapt lo
 
 ```yaml
 cutadapt:
-  - contents: This is cutadapt
-    num_lines: 100
-  - contents: Cutadapt report
-    fn: "*.json"
+- contents: This is cutadapt
+  num_lines: 100
+- contents: Cutadapt report
+  fn: '*.json'
 ```
+    

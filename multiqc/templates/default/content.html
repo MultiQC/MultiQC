@@ -74,7 +74,7 @@ the output from each module and print it in sections.
     {% endif %}
     {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
       <div class="collapse mqc-section-helptext " id="{{ s['anchor'] }}_helptext">
-        <div class="card card-body bg-light">{{ s['helptext'] }}</div>
+        <div class="card card-body bg-body-tertiary mb-2">{{ s['helptext'] }}</div>
       </div>
     {% endif %}
     <div

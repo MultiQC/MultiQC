@@ -2,7 +2,7 @@
 title: Nonpareil
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Estimates metagenomic coverage and sequence diversity.</p>
+    <p>Estimates metagenomic coverage and sequence diversity.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/nonpareil/nonpareil.py
 -->
 
 :::note
-
 <p>Estimates metagenomic coverage and sequence diversity.</p>
 
 [https://github.com/lmrodriguezr/nonpareil](https://github.com/lmrodriguezr/nonpareil)
@@ -27,7 +26,6 @@ to achieve "nearly complete coverage", defined as ≥95% or ≥99% average cover
 
 Since Nonpareil main output has no model information, it is necessary extract the `curves` object as a `JSON` file.
 From version `v3.5.5` this can be done with an auxiliary `R` script, briefly:
-
 ```bash
 NonpareilCurves.R --json out.json model.npo
 ```
@@ -47,8 +45,9 @@ nonpareil:
 
 ```yaml
 nonpareil:
-  - contents: LRstar
-    fn: "*.json"
-    max_filesize: 1048576
-    num_lines: 50
+- contents: LRstar
+  fn: '*.json'
+  max_filesize: 1048576
+  num_lines: 50
 ```
+    

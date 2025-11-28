@@ -2,7 +2,7 @@
 title: Picard
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Tools for manipulating high-throughput sequencing data.</p>
+    <p>Tools for manipulating high-throughput sequencing data.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/picard/picard.py
 -->
 
 :::note
-
 <p>Tools for manipulating high-throughput sequencing data.</p>
 
 [http://broadinstitute.github.io/picard/](http://broadinstitute.github.io/picard/)
@@ -240,8 +239,8 @@ picard_config:
 
 ```yaml
 picard/alignment_metrics:
-  - contents: picard.analysis.AlignmentSummaryMetrics
-  - contents: --algo AlignmentStat
+- contents: picard.analysis.AlignmentSummaryMetrics
+- contents: --algo AlignmentStat
 picard/basedistributionbycycle:
   contents: BaseDistributionByCycleMetrics
 picard/collectilluminabasecallingmetrics:
@@ -253,64 +252,65 @@ picard/crosscheckfingerprints:
 picard/extractilluminabarcodes:
   contents: ExtractIlluminaBarcodes
 picard/gcbias:
-  - contents: GcBiasDetailMetrics
-  - contents: GcBiasSummaryMetrics
-  - contents: --algo GCBias
+- contents: GcBiasDetailMetrics
+- contents: GcBiasSummaryMetrics
+- contents: --algo GCBias
 picard/hsmetrics:
-  - contents: HsMetrics
-  - contents: --algo HsMetricAlgo
+- contents: HsMetrics
+- contents: --algo HsMetricAlgo
 picard/insertsize:
-  - contents: picard.analysis.InsertSizeMetrics
-  - contents: --algo InsertSizeMetricAlgo
+- contents: picard.analysis.InsertSizeMetrics
+- contents: --algo InsertSizeMetricAlgo
 picard/markdups:
-  - contents: picard.sam.MarkDuplicates
-  - contents: picard.sam.DuplicationMetrics
-  - contents: picard.sam.markduplicates.MarkDuplicates
-  - contents: markduplicates.DuplicationMetrics
-  - contents: MarkDuplicatesSpark
-  - contents: markduplicates.GATKDuplicationMetrics
-  - contents: --algo Dedup
+- contents: picard.sam.MarkDuplicates
+- contents: picard.sam.DuplicationMetrics
+- contents: picard.sam.markduplicates.MarkDuplicates
+- contents: markduplicates.DuplicationMetrics
+- contents: MarkDuplicatesSpark
+- contents: markduplicates.GATKDuplicationMetrics
+- contents: --algo Dedup
 picard/markilluminaadapters:
   contents: MarkIlluminaAdapters
 picard/oxogmetrics:
-  - contents: "# picard.analysis.CollectOxoGMetrics"
-  - contents: "# CollectOxoGMetrics"
-  - contents_re: "# CollectMultipleMetrics .*OxoGMetrics"
-    shared: true
+- contents: '# picard.analysis.CollectOxoGMetrics'
+- contents: '# CollectOxoGMetrics'
+- contents_re: '# CollectMultipleMetrics .*OxoGMetrics'
+  shared: true
 picard/pcr_metrics:
-  - contents: "# picard.analysis.directed.CollectTargetedPcrMetrics"
-  - contents_re: "# CollectMultipleMetrics .*TargetedPcrMetrics"
-    shared: true
+- contents: '# picard.analysis.directed.CollectTargetedPcrMetrics'
+- contents_re: '# CollectMultipleMetrics .*TargetedPcrMetrics'
+  shared: true
 picard/quality_by_cycle:
-  - contents: "# MeanQualityByCycle"
-  - contents: --algo MeanQualityByCycle
-  - contents_re: .*CollectMultipleMetrics.*MeanQualityByCycle
-    shared: true
+- contents: '# MeanQualityByCycle'
+- contents: --algo MeanQualityByCycle
+- contents_re: .*CollectMultipleMetrics.*MeanQualityByCycle
+  shared: true
 picard/quality_score_distribution:
-  - contents: "# QualityScoreDistribution"
-  - contents: --algo QualDistribution
-  - contents_re: .*CollectMultipleMetrics.*QualityScoreDistribution
-    shared: true
+- contents: '# QualityScoreDistribution'
+- contents: --algo QualDistribution
+- contents_re: .*CollectMultipleMetrics.*QualityScoreDistribution
+  shared: true
 picard/quality_yield_metrics:
-  - contents: "# CollectQualityYieldMetrics"
-  - contents_re: .*CollectMultipleMetrics.*QualityYieldMetrics
-    shared: true
+- contents: '# CollectQualityYieldMetrics'
+- contents_re: .*CollectMultipleMetrics.*QualityYieldMetrics
+  shared: true
 picard/rnaseqmetrics:
-  - contents: "# picard.analysis.Collectrnaseqmetrics"
-  - contents: "# picard.analysis.CollectRnaSeqMetrics"
-  - contents: "# CollectRnaSeqMetrics"
-  - contents_re: "# CollectMultipleMetrics .*RnaSeqMetrics"
-    shared: true
+- contents: '# picard.analysis.Collectrnaseqmetrics'
+- contents: '# picard.analysis.CollectRnaSeqMetrics'
+- contents: '# CollectRnaSeqMetrics'
+- contents_re: '# CollectMultipleMetrics .*RnaSeqMetrics'
+  shared: true
 picard/rrbs_metrics:
-  - contents: "# picard.analysis.CollectRrbsMetrics"
-  - contents_re: "# CollectMultipleMetrics .*RrbsMetrics"
-    shared: true
+- contents: '# picard.analysis.CollectRrbsMetrics'
+- contents_re: '# CollectMultipleMetrics .*RrbsMetrics'
+  shared: true
 picard/sam_file_validation:
-  fn: "*[Vv]alidate[Ss]am[Ff]ile*"
+  fn: '*[Vv]alidate[Ss]am[Ff]ile*'
 picard/variant_calling_metrics:
-  contents_re: "## METRICS CLASS.*VariantCallingDetailMetrics"
+  contents_re: '## METRICS CLASS.*VariantCallingDetailMetrics'
 picard/wgs_metrics:
-  - contents: --algo WgsMetricsAlgo
-  - contents_re: "## METRICS CLASS.*WgsMetrics"
-    shared: true
+- contents: --algo WgsMetricsAlgo
+- contents_re: '## METRICS CLASS.*WgsMetrics'
+  shared: true
 ```
+    

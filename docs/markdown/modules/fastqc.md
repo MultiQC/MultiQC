@@ -2,7 +2,7 @@
 title: FastQC
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Quality control tool for high throughput sequencing data.</p>
+    <p>Quality control tool for high throughput sequencing data.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/fastqc/fastqc.py
 -->
 
 :::note
-
 <p>Quality control tool for high throughput sequencing data.</p>
 
 [http://www.bioinformatics.babraham.ac.uk/projects/fastqc/](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
@@ -148,7 +147,8 @@ fastqc_config:
 
 Remember that it is possible to customise the order in which the different module sections appear
 in the report if you wish.
-See [the docs](../reports/customisation#order-of-module-and-module-subsection-output) for more information.
+See [the docs](../reports/customisation#order-of-module-and-module-subsection-output)
+for more information.
 
 For example, to show the _Status Checks_ section at the top, use the following config:
 
@@ -175,7 +175,8 @@ fastqc_config:
 fastqc/data:
   fn: fastqc_data.txt
 fastqc/theoretical_gc:
-  fn: "*fastqc_theoretical_gc*"
+  fn: '*fastqc_theoretical_gc*'
 fastqc/zip:
-  fn: "*_fastqc.zip"
+  fn: '*_fastqc.zip'
 ```
+    
