@@ -28,6 +28,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
 
-      - run: pip install '.[dev]'
-      - run: mypy multiqc
-      - run: mypy tests
+      - name: "Install uv"
+        uses: astral-sh/setup-uv@v5
+
+      - run: uv sync --all-extras
+      - run: uv run mypy multiqc
+      - run: uv run mypy tests

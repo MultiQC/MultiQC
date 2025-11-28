@@ -32,23 +32,43 @@ More modules are being written all the time. Please suggest any ideas as a new
 
 ## Installation
 
-You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/)
-using `pip` as follows:
+### Using uv (recommended)
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package installer and resolver. Install MultiQC with:
+
+```bash
+# Install uv if you don't have it
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install MultiQC
+uv pip install multiqc
+```
+
+### Using pip
+
+You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/) using `pip`:
 
 ```bash
 pip install multiqc
 ```
 
-Alternatively, you can install using [Conda](http://anaconda.org/)
-from [Bioconda](https://bioconda.github.io/) ([set up your channels](https://bioconda.github.io/#usage) first):
+### Using Conda
+
+Install using [Conda](http://anaconda.org/) from [Bioconda](https://bioconda.github.io/) ([set up your channels](https://bioconda.github.io/#usage) first):
 
 ```bash
 conda install multiqc
 ```
 
-If you would like the development version from GitHub instead, you can install it with `pip`:
+### Development version
+
+If you would like the development version from GitHub instead:
 
 ```bash
+# Using uv (faster)
+uv pip install git+https://github.com/MultiQC/MultiQC.git
+
+# Using pip
 pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
 ```
 
