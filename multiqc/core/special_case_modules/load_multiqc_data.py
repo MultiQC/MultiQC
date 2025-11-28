@@ -136,6 +136,9 @@ class LoadMultiqcData(BaseMultiqcModule):
             # After loading all files, process and deduplicate software versions
             self._process_collected_software_versions()
 
+            # After all files are loaded and merged, create plot objects once
+            self._create_plot_objects()
+
     def load_parquet_file(self, path: Union[str, Path]):
         """
         Load a multiqc.parquet file containing all report data.
@@ -396,22 +399,13 @@ class LoadMultiqcData(BaseMultiqcModule):
                             merged_plot_input = existing_plot_input.__class__.merge(existing_plot_input, plot_input)
                             report.plot_input_data[anchor] = merged_plot_input
                             log.debug(f"Successfully merged plot input data for {anchor}")
-
-                            # Create the plot object from the merged data (this ensures proper color assignment)
-                            merged_plot: Union[Plot, str, None] = create_plot_from_input_data(merged_plot_input)
-                            if merged_plot is not None:
-                                report.plot_by_id[anchor] = merged_plot
-                                log.debug(f"Updated plot object for {anchor} with merged data")
+                            # Note: Plot object creation is deferred until all files are loaded
 
                         else:
-                            # No existing data, just add the new data and create plot object
+                            # No existing data, just store the input data
                             log.debug(f"No existing plot input data for {anchor}, adding new data")
                             report.plot_input_data[anchor] = plot_input
-
-                            # Create the plot object from the input data
-                            plot = create_plot_from_input_data(plot_input)
-                            if plot is not None:
-                                report.plot_by_id[anchor] = plot
+                            # Note: Plot object creation is deferred until all files are loaded
                     except Exception as e:
                         log.error(f"Error loading plot input data {anchor}: {e}")
                         if config.strict:
@@ -447,3 +441,22 @@ class LoadMultiqcData(BaseMultiqcModule):
                 report.software_versions[software_name][software_name].extend(final_versions)
 
                 log.debug(f"Processed {len(final_versions)} versions for {software_name}: {', '.join(final_versions)}")
+
+    def _create_plot_objects(self):
+        """
+        Create plot objects from all loaded plot input data.
+
+        This is called once after all parquet files have been loaded and merged,
+        rather than creating plot objects after each file. This avoids expensive
+        repeated calls to save_to_parquet() during the merge process.
+        """
+        for anchor, plot_input in report.plot_input_data.items():
+            try:
+                plot = create_plot_from_input_data(plot_input)
+                if plot is not None:
+                    report.plot_by_id[anchor] = plot
+                    log.debug(f"Created plot object for {anchor}")
+            except Exception as e:
+                log.error(f"Error creating plot object for {anchor}: {e}")
+                if config.strict:
+                    raise e
