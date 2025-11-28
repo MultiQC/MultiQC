@@ -371,6 +371,7 @@ fn_clean_exts:
   - ".error.spl"
   - ".error.grp"
   - ".vgstats"
+  - ".sylphmpa"
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
 # Affects all modules that support it (e.g. fastqc, cutadapt)
@@ -609,6 +610,7 @@ module_order:
   - xenome
   - xengsort
   - metaphlan
+  - sylphtax
   - seqwho
   - telseq
   - ataqv
