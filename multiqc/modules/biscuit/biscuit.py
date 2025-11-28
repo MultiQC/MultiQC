@@ -413,7 +413,7 @@ class MultiqcModule(BaseMultiqcModule):
             "dup_rate": {"color": "#a50f15", "name": "Duplicate Rate"},
         }
         pconfig = {
-            "id": "biscuit_dup_report",
+            "id": "biscuit-dup-report-plot",
             "cpswitch": False,
             "cpswitch_c_active": False,
             "title": "BISCUIT: Percentage of Duplicate Reads",
@@ -611,7 +611,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         pconfig = {
-            "id": "biscuit_seq_depth",
+            "id": "biscuit-seq-depth-plot",
             "title": "BISCUIT: Sequencing Depth",
             "sort_rows": False,
         }
@@ -656,7 +656,7 @@ class MultiqcModule(BaseMultiqcModule):
         ]
 
         pconfig = {
-            "id": "biscuit_cumulative_coverage",
+            "id": "biscuit-cumulative-coverage-plot",
             "title": "BISCUIT: Cumulative Coverage",
             "ymin": 0,
             "tt_label": "<strong>{point.x}X:</strong> {point.y:.2f}M",
@@ -701,7 +701,7 @@ class MultiqcModule(BaseMultiqcModule):
         ]
 
         pconfig = {
-            "id": "biscuit_retention_cytosine",
+            "id": "biscuit-retention-cytosine-plot",
             "title": "BISCUIT: Retention vs. Base Position in Read",
             "xlab": "Position in Read",
             "xsuffix": "bp",
@@ -739,7 +739,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         pconfig = {
-            "id": "biscuit_retention",
+            "id": "biscuit-retention-plot",
             "cpswitch": False,
             "cpswitch_c_active": False,
             "title": "BISCUIT: Cytosine Retention",
