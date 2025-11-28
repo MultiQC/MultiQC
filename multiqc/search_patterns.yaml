@@ -918,6 +918,9 @@ sargasso:
 seqfu/stats:
   contents: "File	#Seq	Total bp	Avg	N50	N75	N90	auN	Min	Max"
   num_lines: 1
+seqkit/stats:
+  contents: "file	format	type	num_seqs	sum_len	min_len	avg_len	max_len"
+  num_lines: 1
 seqwho:
   contents: '  "Per Base Seq": ['
   num_lines: 10
