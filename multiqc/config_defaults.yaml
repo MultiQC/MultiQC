@@ -371,6 +371,17 @@ fn_clean_exts:
   - ".error.spl"
   - ".error.grp"
   - ".vgstats"
+  - "_mapq_table"
+  - "_strand_table"
+  - "_isize_table"
+  - "_dup_report"
+  - "_cv_table"
+  - "_covdist_all"
+  - "_covdist_q40"
+  - "_CpGRetention"
+  - "_CpHRetentionByReadPos"
+  - "_totalBaseConversionRate"
+  - "_totalReadConversionRate"
   - ".sylphmpa"
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
