@@ -401,10 +401,11 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             )
         pconf = cast(LinePlotConfig, LinePlotConfig.from_df(df))
 
-        # Reconstruct data structure
-        datasets = []
-        data_labels = []
-        sample_names = []
+        # Reconstruct data structure using efficient grouping
+        datasets: List[List[Series[KeyT, ValT]]] = []
+        data_labels: List[Dict[str, Any]] = []
+        sample_names: List[SampleName] = []
+        sample_names_set: set = set()
 
         dataset_indices = sorted(df.select("dataset_idx").unique().to_series()) if not df.is_empty() else []
 
@@ -414,40 +415,61 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             data_label = ds_group.select("data_label").item(0, 0) if not ds_group.is_empty() else None
             data_labels.append(json.loads(data_label) if data_label else {})
 
-            dataset = []
+            dataset: List[Series[KeyT, ValT]] = []
 
-            # Get list of unique sample names in this dataset to preserve order
-            unique_samples: pl.Series = (
-                ds_group.select("sample").unique().to_series() if not ds_group.is_empty() else pl.Series([])
-            )
-            # Group by sample_name within each dataset
-            for sample_name in natsorted(unique_samples):
-                sample_group = ds_group.filter(pl.col("sample") == sample_name)
+            if ds_group.is_empty():
+                datasets.append(dataset)
+                continue
 
-                # Extract series properties
-                if not sample_group.is_empty():
-                    first_row = sample_group.row(0, named=True)
-                    series_dict = first_row.get("series", {})
+            # Get unique sample names and sort them using natsort
+            unique_samples_list = ds_group.select("sample").unique().to_series().to_list()
+            sorted_samples = natsorted(unique_samples_list)
 
-                    # Extract x,y pairs and sort by x value for proper display
-                    pairs = []
-                    for row in sample_group.iter_rows(named=True):
-                        x_val = parse_value(row["x_val"], row["x_val_type"])
-                        y_val = parse_value(row["y_val"], row["y_val_type"])
-                        pairs.append((x_val, y_val))
+            # Build a lookup of sample -> rows using partition_by for efficiency
+            # First, get all relevant columns as lists for faster access
+            all_samples = ds_group.get_column("sample").to_list()
+            all_x_vals = ds_group.get_column("x_val").to_list()
+            all_y_vals = ds_group.get_column("y_val").to_list()
+            all_x_types = ds_group.get_column("x_val_type").to_list()
+            all_y_types = ds_group.get_column("y_val_type").to_list()
+            all_series = ds_group.get_column("series").to_list()
 
-                    # Create Series object
-                    series = Series(
-                        name=str(sample_name),
-                        pairs=pairs,
-                        path_in_cfg=("lineplot", "data"),
-                        **series_dict,
-                    )
-                    dataset.append(series)
+            # Group data by sample name using a dictionary
+            sample_data: Dict[str, List[Tuple[int, Any]]] = {}
+            for i, sample in enumerate(all_samples):
+                if sample not in sample_data:
+                    sample_data[sample] = []
+                sample_data[sample].append(i)
 
-                    # Add sample name if not already in the list
-                    if sample_name not in sample_names:
-                        sample_names.append(SampleName(str(sample_name)))
+            for sample_name in sorted_samples:
+                row_indices = sample_data.get(sample_name, [])
+                if not row_indices:
+                    continue
+
+                # Get series properties from first row
+                first_idx = row_indices[0]
+                series_dict = all_series[first_idx]
+
+                # Extract x,y pairs
+                pairs: List[Tuple[KeyT, ValT]] = []
+                for idx in row_indices:
+                    x_val = parse_value(all_x_vals[idx], all_x_types[idx])
+                    y_val = parse_value(all_y_vals[idx], all_y_types[idx])
+                    pairs.append((x_val, y_val))
+
+                # Create Series object
+                series: Series[KeyT, ValT] = Series(
+                    name=str(sample_name),
+                    pairs=pairs,
+                    path_in_cfg=("lineplot", "data"),
+                    **series_dict,
+                )
+                dataset.append(series)
+
+                # Add sample name if not already in the set
+                if sample_name not in sample_names_set:
+                    sample_names_set.add(sample_name)
+                    sample_names.append(SampleName(str(sample_name)))
 
             datasets.append(dataset)
 
