@@ -236,14 +236,6 @@ class LoadMultiqcData(BaseMultiqcModule):
                         # Merge the existing module into the new one
                         mod.merge(existing_mod)  # This only merges versions
 
-                        # Debug: Log sections before merging
-                        log.debug(f"Before merging - Existing module has {len(existing_mod.sections)} sections:")
-                        for s in existing_mod.sections:
-                            log.debug(f"  - Existing: {s.name} (anchor: {s.anchor})")
-                        log.debug(f"Before merging - New module has {len(mod.sections)} sections:")
-                        for s in mod.sections:
-                            log.debug(f"  - New: {s.name} (anchor: {s.anchor})")
-
                         # Merge sections based on anchor - keep all unique sections from both modules
                         existing_sections = {s.anchor: s for s in existing_mod.sections}
                         new_sections = {s.anchor: s for s in mod.sections}
@@ -251,12 +243,9 @@ class LoadMultiqcData(BaseMultiqcModule):
                         merged_sections = []
                         all_section_anchors = set(existing_sections.keys()) | set(new_sections.keys())
 
-                        log.debug(f"All section anchors to process: {sorted(all_section_anchors)}")
-
                         for section_anchor in all_section_anchors:
                             if section_anchor in existing_sections and section_anchor in new_sections:
                                 # Both modules have this section - merge content if different
-                                log.debug(f"Merging content for section: {section_anchor}")
                                 existing_section = existing_sections[section_anchor]
                                 new_section = new_sections[section_anchor]
 
@@ -269,21 +258,13 @@ class LoadMultiqcData(BaseMultiqcModule):
                                 )
 
                                 if existing_has_data and not new_has_data:
-                                    # Existing section has data, new section is empty - use existing as base
-                                    log.debug(
-                                        f"Using existing section as base (new section is empty): {section_anchor}"
-                                    )
+                                    # Existing section has data, new section is empty - use existing
                                     merged_sections.append(existing_section)
                                 elif new_has_data and not existing_has_data:
-                                    # New section has data, existing section is empty - use new as base
-                                    log.debug(
-                                        f"Using new section as base (existing section is empty): {section_anchor}"
-                                    )
+                                    # New section has data, existing section is empty - use new
                                     merged_sections.append(new_section)
                                 elif existing_has_data and new_has_data:
                                     # Both sections have data - perform proper merging
-                                    log.debug(f"Both sections have data, merging content: {section_anchor}")
-
                                     # Combine content if it's different
                                     merged_content = new_section.content
                                     if existing_section.content and existing_section.content != new_section.content:
@@ -310,30 +291,21 @@ class LoadMultiqcData(BaseMultiqcModule):
                                         content_before_plot=new_section.content_before_plot,
                                         content=merged_content,
                                         print_section=new_section.print_section,
-                                        plot_anchor=merged_plot_anchor,  # Use merged plot_anchor
+                                        plot_anchor=merged_plot_anchor,
                                         ai_summary=new_section.ai_summary,
                                     )
                                     merged_sections.append(merged_section)
                                 else:
                                     # Both sections are empty - use new section as default
-                                    log.debug(f"Both sections are empty, using new section: {section_anchor}")
                                     merged_sections.append(new_section)
                             elif section_anchor in existing_sections:
                                 # Only in existing module
-                                log.debug(f"Preserving section from existing module: {section_anchor}")
                                 merged_sections.append(existing_sections[section_anchor])
                             else:
                                 # Only in new module
-                                log.debug(f"Adding section from new module: {section_anchor}")
                                 merged_sections.append(new_sections[section_anchor])
 
                         mod.sections = merged_sections
-
-                        # Debug: Log sections after merging
-                        log.debug(f"After merging - Final module has {len(mod.sections)} sections:")
-                        for s in mod.sections:
-                            log.debug(f"  - Final: {s.name} (anchor: {s.anchor})")
-
                         log.debug(f'Updating module "{existing_mod.name}" with data from parquet')
                         report.modules.remove(existing_mod)
                     else:
