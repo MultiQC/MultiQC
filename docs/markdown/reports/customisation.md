@@ -52,13 +52,16 @@ three lines to your MultiQC configuration file:
 
 ```yaml
 custom_logo: "/abs/path/to/logo.png"
+custom_logo_dark: "/abs/path/to/logo-for-dark-mode.png"
 custom_logo_url: "https://www.example.com"
 custom_logo_title: "Our Institute Name"
+custom_logo_width: 200 # Width in pixels
 ```
 
 Only `custom_logo` is needed. The URL will make the logo open up
 a new web browser tab with your address and the title sets the mouse
-hover title text.
+hover title text. Width allows you to adjust the logo size and dark
+lets you have an alternate variant shown when the report is in dark mode.
 
 ## Project level information
 
