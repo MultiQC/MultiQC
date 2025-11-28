@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = {}
             for s_name in self.mod_data["qchist"]:
                 fraction_gt_q30 = []
-                for qual, d in self.mod_data["qchist"][s_name]["data"].items():
+                for qual, d in self.mod_data["qchist"][s_name]["header"].items():
                     if int(qual) >= 30:
                         fraction_gt_q30.append(d[1])
                 data[s_name] = {"pct_q30": sum(fraction_gt_q30) * 100.0}
@@ -157,8 +157,8 @@ class MultiqcModule(BaseMultiqcModule):
         if isinstance(cols, dict):
             cols = list(cols.keys())
 
-        kv = {}
-        data = {}
+        kv_data = {}
+        table_data = {}
         for line_number, line in enumerate(f, start=1):
             line = line.strip().split("\t")
             try:
@@ -178,8 +178,8 @@ class MultiqcModule(BaseMultiqcModule):
                         # The third line is always three columns, which is what we really want.
                         if line[0] == "File":
                             continue
-                        kv["Percent filtered"] = float(line[2].strip("%"))
-                        kv[line[0]] = line[1]
+                        kv_data["Percent filtered"] = float(line[2].strip("%"))
+                        kv_data[line[0]] = line[1]
                     elif len(line) != 2:
                         # Not two items? Wrong!
                         log.error(
@@ -188,7 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
                         log.error("Table header should begin with '%s'", cols[0])
                     else:
                         # save key value pair
-                        kv[line[0]] = line[1]
+                        kv_data[line[0]] = line[1]
                 else:
                     # It should be the table header. Verify:
                     if line != cols:
@@ -200,17 +200,17 @@ class MultiqcModule(BaseMultiqcModule):
                     line = [value_type(value) for value_type, value in zip(log_descr["cols"].values(), line)]
                 else:
                     line = list(map(int, line))
-                data[line[0]] = line[1:]
+                table_data[line[0]] = line[1:]
 
-        if not data:
+        if not table_data:
             log.warning("File %s appears to contain no data for plotting, ignoring...", fn)
             return False
 
         if s_name in self.mod_data[file_type]:
             log.debug("Duplicate sample name found! Overwriting: %s", s_name)
 
-        self.mod_data[file_type][s_name] = {"data": data, "kv": kv}
-        log.debug("Found %s output for sample %s with %d rows", file_type, s_name, len(data))
+        self.mod_data[file_type][s_name] = {"table": table_data, "kv": kv_data}
+        log.debug("Found %s output for sample %s with %d rows", file_type, s_name, len(table_data))
 
         return True
 
