@@ -2,7 +2,7 @@
 title: BBTools
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads.</p>
+    <p>Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/bbmap/bbmap.py
 -->
 
 :::note
-
 <p>Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads.</p>
 
 [http://jgi.doe.gov/data-and-tools/bbtools/](http://jgi.doe.gov/data-and-tools/bbtools/)
@@ -93,18 +92,18 @@ bbmap/ehist:
   num_lines: 10
 bbmap/gchist:
   contents:
-    - "#Mean\t"
-    - "#GC\tCount"
+  - "#Mean\t"
+  - "#GC\tCount"
   num_lines: 10
 bbmap/idhist:
   contents:
-    - "#Mean_reads"
-    - "#Identity\tReads\tBases"
+  - '#Mean_reads'
+  - "#Identity\tReads\tBases"
   num_lines: 10
 bbmap/ihist:
   contents:
-    - "#Mean\t"
-    - "#InsertSize\tCount"
+  - "#Mean\t"
+  - "#InsertSize\tCount"
   num_lines: 10
 bbmap/indelhist:
   contents: "#Length\tDeletions\tInsertions"
@@ -127,27 +126,28 @@ bbmap/qhist:
   num_lines: 10
 bbmap/rpkm:
   contents:
-    - "#File\t"
-    - "#Reads\t"
-    - "#Mapped\t"
-    - "#RefSequences\t"
-    - "#Name Length"
+  - "#File\t"
+  - "#Reads\t"
+  - "#Mapped\t"
+  - "#RefSequences\t"
+  - '#Name Length'
   num_lines: 10
 bbmap/stats:
   contents:
-    - "#File"
-    - "#Total"
-    - "#Matched"
-    - "#Name\tReads\tReadsPct"
+  - '#File'
+  - '#Total'
+  - '#Matched'
+  - "#Name\tReads\tReadsPct"
   num_lines: 10
 bbmap/statsfile:
   contents:
-    - "Reads Used:"
-    - "Mapping:"
-    - "Reads/sec:"
-    - "kBases/sec:"
+  - 'Reads Used:'
+  - 'Mapping:'
+  - 'Reads/sec:'
+  - 'kBases/sec:'
   num_lines: 10
 bbmap/statsfile_machine:
   contents: Reads Used=
   num_lines: 10
 ```
+    

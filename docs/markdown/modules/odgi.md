@@ -2,7 +2,7 @@
 title: ODGI
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Analysis and manipulation of pangenome graphs structured in the variation graph model.</p>
+    <p>Analysis and manipulation of pangenome graphs structured in the variation graph model.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/odgi/odgi.py
 -->
 
 :::note
-
 <p>Analysis and manipulation of pangenome graphs structured in the variation graph model.</p>
 
 [https://github.com/pangenome/odgi](https://github.com/pangenome/odgi)
@@ -72,10 +71,10 @@ sum_of_path_node_distances:
 For the odgi module to discover the [odgi stats](https://odgi.readthedocs.io/en/latest/rst/commands/odgi_stats.html)
 reports, the file must match one of the following patterns:
 
-- "\*.og.stats.yaml"
-- "\*.og.stats.yml"
-- "\*.odgi.stats.yaml"
-- "\*.odgi.stats.yml"
+- "*.og.stats.yaml"
+- "*.og.stats.yml"
+- "*.odgi.stats.yaml"
+- "*.odgi.stats.yml"
 
 A bar graph is generated, which shows the length, number of nodes, edges and paths for each sample. Additionally,
 a second bar graph is generated visualizing the `in_node_space` and `in_nucleotide_space` for every sample.
@@ -89,8 +88,9 @@ Ensure that the names of the PNGs match `*_odgi_viz_mqc.png`.
 
 ```yaml
 odgi:
-  - fn: "*.og.stats.yaml"
-  - fn: "*.og.stats.yml"
-  - fn: "*.odgi.stats.yaml"
-  - fn: "*.odgi.stats.yml"
+- fn: '*.og.stats.yaml'
+- fn: '*.og.stats.yml'
+- fn: '*.odgi.stats.yaml'
+- fn: '*.odgi.stats.yml'
 ```
+    

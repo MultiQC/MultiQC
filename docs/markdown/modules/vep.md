@@ -2,7 +2,7 @@
 title: VEP
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions.</p>
+    <p>Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/vep/vep.py
 -->
 
 :::note
-
 <p>Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions.</p>
 
 [https://www.ensembl.org/info/docs/tools/vep/index.html](https://www.ensembl.org/info/docs/tools/vep/index.html)
@@ -39,11 +38,12 @@ documentation for more information.
 ```yaml
 vep/vep_html:
   contents: VEP summary
-  fn: "*.html"
+  fn: '*.html'
   max_filesize: 1000000
   num_lines: 10
 vep/vep_txt:
-  contents: "[VEP run statistics]"
+  contents: '[VEP run statistics]'
   max_filesize: 100000
   num_lines: 1
 ```
+    

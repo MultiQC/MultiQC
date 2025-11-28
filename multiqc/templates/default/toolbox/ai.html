@@ -1,0 +1,88 @@
+<!-- AI -->
+<div class="tab-pane" id="mqc_ai" role="tabpanel">
+  <h5 class="mb-3">Explain with AI</h5>
+  <p>Configure AI settings to get explanations of plots and data in this report.</p>
+  <form id="mqc_ai_form">
+    <div>
+      <label for="ai-provider">AI Provider</label>
+      <select class="form-control" id="ai-provider"></select>
+      <div id="ai_provider_logo_seqera" class="ai_provider_logos text-center mt-3 mx-5 px-5">
+        {% include('assets/img/Seqera_logo.svg') %}
+      </div>
+      <div id="ai_provider_logo_openai" class="ai_provider_logos text-center mt-3">
+        {% include('assets/img/OpenAI_logo.svg') %}
+      </div>
+      <div id="ai_provider_logo_anthropic" class="ai_provider_logos text-center mt-3">
+        {% include('assets/img/Anthropic_logo.svg') %}
+      </div>
+      <div id="ai_provider_info" class="form-text"></div>
+    </div>
+
+    <div class="mt-3" id="ai_endpoint_group" style="display: none;">
+      <label for="ai-endpoint">Endpoint</label>
+      <input
+        type="text"
+        class="form-control form-control-sm"
+        id="ai-endpoint"
+        placeholder="e.g. https://api.perplexity.ai/chat/completions"
+      />
+      <div id="ai_endpoint_info" class="form-text">Use the OpenAI API-style requests with a custom endpoint.</div>
+    </div>
+
+    <div class="mt-3" id="ai_model_group">
+      <label for="ai-model">Model</label>
+      <input type="text" class="form-control form-control-sm" id="ai-model" placeholder="Enter model name" />
+      <div id="ai_model_info" class="form-text"></div>
+    </div>
+
+    <div class="mt-3" id="ai_api_key_group">
+      <label for="ai-api-key">API Key</label>
+      <input type="password" class="form-control form-control-sm" id="ai-api-key" placeholder="Enter your API key" />
+      <div class="form-text">
+        <span id="ai_api_key_info"></span>
+        Keys entered here will be stored in your browser's local storage. See
+        <a
+          href="https://docs.seqera.io/multiqc/ai#configuring-the-ai-provider"
+          style="text-decoration: underline;"
+          target="_blank"
+          >the docs</a
+        >.
+      </div>
+    </div>
+
+    <div class="mt-3" id="ai_query_options_group" style="display: none;">
+      <label for="ai-query-options">Additional Payload</label>
+      <textarea class="form-control form-control-sm" id="ai-query-options" placeholder="{}"></textarea>
+      <div id="ai_query_options_info" class="form-text">
+        Any additional options passed in API request payload. Enter as a JSON object.
+      </div>
+    </div>
+
+    <div class="mt-3" id="ai_context_window_group" style="display: none;">
+      <label for="ai-context-window">Context Window</label>
+      <input
+        type="number"
+        class="form-control form-control-sm"
+        id="ai-context-window"
+        placeholder="Enter context window size"
+      />
+      <div id="ai_context_window_info" class="form-text">
+        The maximum number of tokens that can be processed in a single request
+      </div>
+    </div>
+  </form>
+
+  <div id="mqc_anonymize_samples_switch">
+    <div class="form-check form-switch mt-3">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        id="mqc_anonymize_samples"
+        data-bs-target="mqc_renamesamples"
+        switch
+      />
+      <label class="form-check-label" for="mqc_anonymize_samples">Anonymize samples</label>
+    </div>
+    <div class="form-text">Switch out sample names with random identifiers</div>
+  </div>
+</div>

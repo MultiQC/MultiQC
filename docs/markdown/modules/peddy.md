@@ -2,7 +2,7 @@
 title: Peddy
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF.</p>
+    <p>Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/peddy/peddy.py
 -->
 
 :::note
-
 <p>Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF.</p>
 
 [https://github.com/brentp/peddy](https://github.com/brentp/peddy)
@@ -28,13 +27,14 @@ It does this very quickly by sampling, by using C for computationally intensive 
 
 ```yaml
 peddy/background_pca:
-  fn: "*.background_pca.json"
+  fn: '*.background_pca.json'
 peddy/het_check:
-  fn: "*.het_check.csv"
+  fn: '*.het_check.csv'
 peddy/ped_check:
-  fn: "*.ped_check.csv"
+  fn: '*.ped_check.csv'
 peddy/sex_check:
-  fn: "*.sex_check.csv"
+  fn: '*.sex_check.csv'
 peddy/summary_table:
-  fn: "*.peddy.ped"
+  fn: '*.peddy.ped'
 ```
+    

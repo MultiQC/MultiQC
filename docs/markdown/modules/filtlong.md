@@ -2,7 +2,7 @@
 title: Filtlong
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Filters long reads by quality.</p>
+    <p>Filters long reads by quality.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/filtlong/filtlong.py
 -->
 
 :::note
-
 <p>Filters long reads by quality.</p>
 
 [https://github.com/rrwick/Filtlong](https://github.com/rrwick/Filtlong)
@@ -48,3 +47,4 @@ filtlong:
   contents_re: .*Filtering long reads.*
   num_lines: 5
 ```
+    

@@ -2,7 +2,7 @@
 title: RSeQC
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Evaluates high throughput RNA-seq data.</p>
+    <p>Evaluates high throughput RNA-seq data.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/rseqc/rseqc.py
 -->
 
 :::note
-
 <p>Evaluates high throughput RNA-seq data.</p>
 
 [http://rseqc.sourceforge.net/](http://rseqc.sourceforge.net/)
@@ -63,30 +62,31 @@ parable by MultiQC, redirect the stderr to a file using `2> mysample.log`.
 
 ```yaml
 rseqc/bam_stat:
-  contents: "Proper-paired reads map to different chrom:"
+  contents: 'Proper-paired reads map to different chrom:'
   max_filesize: 500000
 rseqc/gene_body_coverage:
-  fn: "*.geneBodyCoverage.txt"
+  fn: '*.geneBodyCoverage.txt'
 rseqc/infer_experiment:
-  - fn: "*infer_experiment.txt"
-  - contents: Fraction of reads explained by
-    max_filesize: 500000
+- fn: '*infer_experiment.txt'
+- contents: Fraction of reads explained by
+  max_filesize: 500000
 rseqc/inner_distance:
-  fn: "*.inner_distance_freq.txt"
+  fn: '*.inner_distance_freq.txt'
 rseqc/junction_annotation:
-  contents: "Partial Novel Splicing Junctions:"
+  contents: 'Partial Novel Splicing Junctions:'
   max_filesize: 500000
 rseqc/junction_saturation:
-  fn: "*.junctionSaturation_plot.r"
+  fn: '*.junctionSaturation_plot.r'
 rseqc/read_distribution:
   contents: Group               Total_bases         Tag_count           Tags/Kb
   max_filesize: 500000
 rseqc/read_duplication_pos:
-  fn: "*.pos.DupRate.xls"
+  fn: '*.pos.DupRate.xls'
 rseqc/read_gc:
-  fn: "*.GC.xls"
+  fn: '*.GC.xls'
 rseqc/tin:
   contents: TIN(median)
-  fn: "*.summary.txt"
+  fn: '*.summary.txt'
   num_lines: 1
 ```
+    

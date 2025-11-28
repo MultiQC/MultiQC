@@ -1,0 +1,60 @@
+{# #######################
+  theme_toggle.html
+##########################
+
+Theme toggle dropdown component.
+
+#}
+
+<!-- Color mode toggle -->
+<div class="dropdown">
+  <button
+    class="btn btn-xs btn-outline-secondary border-0 dropdown-toggle"
+    type="button"
+    id="bd-theme"
+    data-bs-toggle="dropdown"
+    aria-expanded="false"
+    aria-label="Toggle theme (auto)"
+  >
+    <span class="theme-icon-active align-text-bottom">{{ material_icon('mdi:circle-half-full', 16) }}</span>
+    <span id="bd-theme-text" class="visually-hidden">Theme</span>
+  </button>
+  <ul class="dropdown-menu" aria-labelledby="bd-theme">
+    <li>
+      <button
+        type="button"
+        class="dropdown-item d-flex align-items-center"
+        data-bs-theme-value="light"
+        aria-pressed="false"
+      >
+        <span class="me-2">{{ material_icon('mdi:weather-sunny', 16) }}</span>
+        Light
+        <span class="ms-auto check-icon d-none">{{ material_icon('mdi:check', 16) }}</span>
+      </button>
+    </li>
+    <li>
+      <button
+        type="button"
+        class="dropdown-item d-flex align-items-center"
+        data-bs-theme-value="dark"
+        aria-pressed="false"
+      >
+        <span class="me-2">{{ material_icon('mdi:weather-night', 16) }}</span>
+        Dark
+        <span class="ms-auto check-icon d-none">{{ material_icon('mdi:check', 16) }}</span>
+      </button>
+    </li>
+    <li>
+      <button
+        type="button"
+        class="dropdown-item d-flex align-items-center active"
+        data-bs-theme-value="auto"
+        aria-pressed="true"
+      >
+        <span class="me-2">{{ material_icon('mdi:circle-half-full', 16) }}</span>
+        Auto
+        <span class="ms-auto check-icon d-none">{{ material_icon('mdi:check', 16) }}</span>
+      </button>
+    </li>
+  </ul>
+</div>

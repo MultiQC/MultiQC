@@ -2,7 +2,7 @@
 title: Hostile
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz].</p>
+    <p>Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz].</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/hostile/hostile.py
 -->
 
 :::note
-
 <p>Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz].</p>
 
 [https://github.com/bede/hostile](https://github.com/bede/hostile)
@@ -64,6 +63,7 @@ as host-reads vs cleaned-reads (non-host reads).
 ```yaml
 hostile:
   contents: '"reads_removed_proportion"'
-  fn: "*.json"
+  fn: '*.json'
   num_lines: 100
 ```
+    

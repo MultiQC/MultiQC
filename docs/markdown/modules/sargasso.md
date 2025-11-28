@@ -2,7 +2,7 @@
 title: Sargasso
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Separates mixed-species RNA-seq reads according to their species of origin.</p>
+    <p>Separates mixed-species RNA-seq reads according to their species of origin.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/sargasso/sargasso.py
 -->
 
 :::note
-
 <p>Separates mixed-species RNA-seq reads according to their species of origin.</p>
 
 [http://biomedicalinformaticsgroup.github.io/Sargasso/](http://biomedicalinformaticsgroup.github.io/Sargasso/)
@@ -27,3 +26,4 @@ File path for the source of this content: multiqc/modules/sargasso/sargasso.py
 sargasso:
   fn: overall_filtering_summary.txt
 ```
+    
