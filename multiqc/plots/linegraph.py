@@ -342,7 +342,11 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
         records = []
         # Create a record for each data point in each series
         for ds_idx, dataset in enumerate(self.data):
+            data_label = json.dumps(self.pconfig.data_labels[ds_idx]) if self.pconfig.data_labels else ""
             for series in dataset:
+                # Extract series properties once per series, not per data point
+                series_props = {k: v for k, v in series.model_dump().items() if k not in ["pairs", "name"]}
+                sample_name = series.name
                 for x, y in series.pairs:
                     # Convert NaN values to string marker for safe serialization
                     x_val = "__NAN__MARKER__" if isinstance(x, float) and math.isnan(x) else str(x)
@@ -350,15 +354,15 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
                     record = {
                         "dataset_idx": ds_idx,
-                        "data_label": json.dumps(self.pconfig.data_labels[ds_idx]) if self.pconfig.data_labels else "",
-                        "sample": series.name,
+                        "data_label": data_label,
+                        "sample": sample_name,
                         # values can be be different types (int, float, str...), especially across
                         # plots. parquet requires values of the same type. so we cast them to str
                         "x_val": x_val,
                         "y_val": y_val,
                         "x_val_type": type(x).__name__,
                         "y_val_type": type(y).__name__,
-                        "series": {k: v for k, v in series.model_dump().items() if k not in ["pairs", "name"]},
+                        "series": series_props,
                     }
                     records.append(record)
 
