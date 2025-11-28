@@ -973,10 +973,10 @@ tbody .sorthandle {
     display: none;
   }
 
-  /* make sure logos aren't dominantly huge */
+  /* make sure logos aren't excessively huge - can be overwritten with config.custom_logo_width */
   .multiqc_logo,
   .custom_logo {
-    width: 200px;
+    max-width: 200px;
   }
 
   /* print cell background colors in table */

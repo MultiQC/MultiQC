@@ -895,6 +895,24 @@ g.annotation {
   color: #ffffff; // White in dark mode
 }
 
+// Default width - can be overwritten with config.custom_logo_width
+.custom_logo {
+  width: 320px;
+}
+// Custom logo theme switching (show/hide based on theme)
+.custom_logo_dark {
+  display: none;
+}
+
+[data-bs-theme="dark"] {
+  .custom_logo_light {
+    display: none;
+  }
+  .custom_logo_dark {
+    display: inline;
+  }
+}
+
 /* ==========================================================================
    Print Styles
    ========================================================================== */
