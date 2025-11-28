@@ -516,6 +516,19 @@
       "description": "Path to custom logo image",
       "title": "Custom Logo"
     },
+    "custom_logo_dark": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Path to custom logo image for dark mode",
+      "title": "Custom Logo Dark"
+    },
     "custom_logo_url": {
       "anyOf": [
         {
@@ -541,6 +554,19 @@
       "default": null,
       "description": "Title for custom logo",
       "title": "Custom Logo Title"
+    },
+    "custom_logo_width": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Width in pixels for the custom logo",
+      "title": "Custom Logo Width"
     },
     "custom_css_files": {
       "anyOf": [
@@ -583,6 +609,32 @@
       "default": null,
       "description": "Report template to use",
       "title": "Template"
+    },
+    "template_dark_mode": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Enable dark mode toggle and JavaScript for the report template",
+      "title": "Template Dark Mode"
+    },
+    "plot_font_family": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custom font family for plots (defaults to system font stack)",
+      "title": "Plot Font Family"
     },
     "profile_runtime": {
       "anyOf": [
@@ -1235,6 +1287,58 @@
       "description": "Anonymize samples",
       "title": "Ai Anonymize Samples"
     },
+    "ai_reasoning_effort": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Reasoning effort level for OpenAI reasoning models (low, medium, high)",
+      "title": "Ai Reasoning Effort"
+    },
+    "ai_max_completion_tokens": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Maximum completion tokens for OpenAI reasoning models",
+      "title": "Ai Max Completion Tokens"
+    },
+    "ai_extended_thinking": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Enable extended thinking for Anthropic Claude 4 models",
+      "title": "Ai Extended Thinking"
+    },
+    "ai_thinking_budget_tokens": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Budget tokens for Anthropic extended thinking",
+      "title": "Ai Thinking Budget Tokens"
+    },
     "seqera_api_url": {
       "anyOf": [
         {
@@ -1351,6 +1455,48 @@
       "default": null,
       "description": "Place bar plot legend at the bottom (not recommended)",
       "title": "Barplot Legend On Bottom"
+    },
+    "boxplot_boxpoints": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Boxplot boxpoints setting",
+      "title": "Boxplot Boxpoints"
+    },
+    "box_min_threshold_outliers": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "For more than this number of samples, show only outliers",
+      "title": "Box Min Threshold Outliers"
+    },
+    "box_min_threshold_no_points": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "For more than this number of samples, show no points",
+      "title": "Box Min Threshold No Points"
     },
     "violin_downsample_after": {
       "anyOf": [
@@ -1931,7 +2077,17 @@
       "anyOf": [
         {
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
           },
           "type": "array"
         },
@@ -1947,7 +2103,14 @@
       "anyOf": [
         {
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
           },
           "type": "array"
         },
@@ -2062,7 +2225,7 @@
     "report_readerrors": {
       "anyOf": [
         {
-          "type": "integer"
+          "type": "boolean"
         },
         {
           "type": "null"
@@ -2204,11 +2367,17 @@
           "type": "boolean"
         },
         {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
           "type": "null"
         }
       ],
-      "default": null,
-      "description": "Use filename as sample name",
+      "default": false,
+      "description": "Use filename as sample name (can be bool for all modules or list for specific modules/patterns)",
       "title": "Use Filename As Sample Name"
     },
     "fn_clean_exts": {
@@ -2326,7 +2495,7 @@
         }
       ],
       "default": null,
-      "description": "Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw', \n        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast, \n        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to \n        for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as\n        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column \n        to have a single type).\n        ",
+      "description": "Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw',\n        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast,\n        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to\n        for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as\n        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column\n        to have a single type).\n        ",
       "title": "Parquet Format"
     }
   },

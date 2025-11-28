@@ -57,7 +57,7 @@ Remember: Treat your API keys like passwords and do not share them.
 
 Seqera AI is free to use.[^seqera-ai-usage-limits]
 Use of other third-party APIs are billed by their respective providers based on consumption.
-Seqera AI uses the latest AI provider models under the hood, at the time of writing that is Anthropic Claude sonnet 3.5.
+Seqera AI uses the latest AI provider models under the hood, at the time of writing that is Anthropic Claude Sonnet 4.0.
 
 ### Choosing a model
 
@@ -65,14 +65,144 @@ If you're using OpenAI, Anthropic or AWS Bedrock you can choose the exact model 
 This is done by setting `ai_model` in the MultiQC config.
 
 - Anthropic model names must begin with `claude`
-  - Default: `claude-3-5-sonnet-latest`.
-  - Tested with Sonnet 3.5 and Haiku 3.5. See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
+  - Default: `claude-sonnet-4-0`.
+  - See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
 - OpenAI model names must being with `gpt`
   - Default: `gpt-4o`.
-  - Tested with GPT-4o and GPT-4o-mini. See the [OpenAI docs](https://platform.openai.com/docs/models).
+  - See the [OpenAI docs](https://platform.openai.com/docs/models).
 - Bedrock model names must be valid inputs to the `modelId` parameter of the `InvokeModel` API ([docs](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html#API_runtime_InvokeModel_RequestSyntax)).
 
 This model is used during report generation and also set as the default toolbox panel setting for browser report summaries.
+
+## Reasoning Models
+
+MultiQC supports reasoning models from multiple providers which provide enhanced reasoning capabilities for complex bioinformatics analysis interpretation. These models "think" before responding, using internal reasoning to provide more accurate and thorough analysis.
+
+### Supported Reasoning Models
+
+- OpenAI: `o1`, `o3`, `o3-mini`, `o4-mini`
+- Anthropic Claude 4 series: `claude-sonnet-4-0`
+
+### Configuration
+
+Simply set your AI model to a reasoning model:
+
+```yaml
+# multiqc_config.yaml
+ai_summary: true
+ai_provider: openai # or Anthropic for Claude 4
+ai_model: o3-mini # or claude-sonnet-4-0, o4-mini, etc.
+```
+
+Reasoning models support additional configuration parameters:
+
+**OpenAI reasoning models:**
+
+```yaml
+# multiqc_config.yaml
+ai_summary: true
+ai_provider: openai
+ai_model: o3-mini
+ai_reasoning_effort: high # low, medium, or high
+ai_max_completion_tokens: 8000 # adjust based on needs
+```
+
+**Anthropic Claude 4 extended thinking:**
+
+```yaml
+# multiqc_config.yaml
+ai_summary: true
+ai_provider: anthropic
+ai_model: claude-sonnet-4-0
+ai_extended_thinking: true # enable extended thinking
+ai_thinking_budget_tokens: 15000 # budget for extended thinking
+```
+
+### Configuration Options
+
+**OpenAI reasoning models:**
+
+- **`ai_reasoning_effort`**: Controls how much time the model spends reasoning
+  - `low`: Faster responses, less thorough reasoning
+  - `medium`: Balanced speed and reasoning depth (default)
+  - `high`: Slower but most thorough reasoning
+- **`ai_max_completion_tokens`**: Maximum tokens for model output (default: 4000)
+  - Higher values allow longer, more detailed summaries
+
+**Anthropic extended thinking:**
+
+- **`ai_extended_thinking`**: Enable extended thinking for Claude 4 models (default: false)
+  - Must be set to `true` to enable extended thinking capabilities
+  - When disabled, Claude 4 models run as regular models without extended thinking
+- **`ai_thinking_budget_tokens`**: Maximum tokens for internal reasoning process (default: 10000)
+  - Only applies when `ai_extended_thinking` is enabled
+  - Controls how much "thinking" the model can do before responding
+  - Higher budgets enable more thorough analysis for complex problems
+  - The model may not use the entire budget allocated
+
+### Key Differences from Regular Models
+
+1. **Internal Reasoning**: Reasoning models "think" before responding, using hidden reasoning tokens
+2. **Enhanced Accuracy**: Better performance on complex analytical tasks
+3. **Different Parameters**: Use `max_completion_tokens` and `reasoning_effort`
+4. **Developer Messages**: Use developer messages instead of system messages for better performance
+
+### Usage Examples
+
+**Basic Configuration for o1-mini:**
+
+```yaml
+ai_summary: true
+ai_provider: openai
+ai_model: o1-mini
+```
+
+**High-Quality Analysis with o3:**
+
+```yaml
+ai_summary: true
+ai_summary_full: true
+ai_provider: openai
+ai_model: o3
+ai_reasoning_effort: high
+ai_max_completion_tokens: 6000
+```
+
+**Cost-Optimized Setup with o4-mini:**
+
+```yaml
+ai_summary: true
+ai_provider: openai
+ai_model: o4-mini
+ai_reasoning_effort: low
+ai_max_completion_tokens: 3000
+```
+
+**Anthropic Claude 4 Extended Thinking:**
+
+```yaml
+ai_summary: true
+ai_provider: anthropic
+ai_model: claude-sonnet-4-0
+ai_extended_thinking: true # enable extended thinking
+ai_thinking_budget_tokens: 12000 # budget for thinking process
+```
+
+### Model Recommendations
+
+- **`o4-mini`**: Most cost-effective, good for routine analysis
+- **`o3-mini`**: Balanced performance and cost
+- **`o3`**: Best reasoning capabilities for complex reports
+- **`o1-mini`**: Good for coding-heavy bioinformatics analysis
+
+### Notes
+
+- **Performance**: Both OpenAI reasoning models and Anthropic extended thinking may take longer to respond due to internal reasoning
+- **Billing**: Reasoning/thinking tokens are charged but internal reasoning is not visible in the output
+- **Context windows**: o1 series (128k), o3/o4 series (200k), Claude 4 series (200k+)
+- **OpenAI reasoning models**: Don't support parameters like `temperature`, use `reasoning_effort` and `max_completion_tokens`
+- **Anthropic extended thinking**: Uses standard Anthropic API with `thinking.budget_tokens` parameter, supports regular parameters like `temperature`
+- **Different approaches**: OpenAI uses specialized reasoning models, while Anthropic adds extended thinking capabilities to their regular models
 
 ## Summaries during report generation
 
@@ -210,6 +340,14 @@ This is done at user level and will be stored in the browser's local storage and
 MultiQC reports that you open.
 You can also use `--no-ai` when generating reports, which removes this functionality from the HTML for all users.
 
+## Using `llms-full.txt`
+
+MultiQC always saves the full prompt and response to `multiqc_data/llms-full.txt` file,
+regardless of whether the summary was generated during report generation or in the browser.
+
+This file can be used to debug or further analyse the AI summary generation process.
+It can be used to directly copy the prompt into your clipboard and use it with external services, e.g. ones with a larger context window.
+
 ## Continue chat
 
 If using Seqera AI as a provider, you can click the **Chat with Seqera AI** button to open the Seqera AI
@@ -245,7 +383,7 @@ If you're unable to generate an AI summary, you can try the following:
 - Hide General statistics data in the browser, and request the AI summary dynamically:
   - Hide columns with the **Configure columns** button
   - Filter shown samples dynamically with the toolbox
-- Copy the prompt from `multiqc_data/multiqc_ai_prompt.txt` into clipboard with the **Copy prompt** button in the toolbox, and use it with external services with a larger context window.
+- Copy the prompt from `multiqc_data/llms-full.txt` into clipboard with the **Copy prompt** button in the toolbox, and use it with external services with a larger context window.
 
 ## Using custom OpenAI-compatible endpoints
 

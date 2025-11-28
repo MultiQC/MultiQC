@@ -59,6 +59,15 @@ a filename when exporting plots, and all plots should have a title when exported
 Plot titles should use the format _Module name: Plot name_ (this is partly for
 ease of use within MegaQC and other downstream tools).
 
+### Plotly themes
+
+MultiQC plots use Plotly for visualization. You can customize the appearance of all plots by setting a Plotly theme using the `plot_theme` configuration option. This option accepts any [registered Plotly theme](https://plotly.com/python/templates/#view-available-themes)
+name as a string.
+
+```yaml
+plot_theme: "plotly_dark"
+```
+
 ## Bar graphs
 
 Simple data can be plotted in bar graphs. Many MultiQC modules make use
@@ -373,6 +382,59 @@ pconfig = {
 html = linegraph.plot(..., pconfig)
 ```
 
+### Background bands and lines
+
+Line graphs can include background bands and reference lines to highlight specific regions or thresholds. These are configured using the `x_bands`, `y_bands`, `x_lines`, and `y_lines` options.
+
+#### Background bands
+
+Background bands are colored rectangular regions that span across the plot. They can be used to highlight acceptable ranges, warning zones, or other meaningful regions in your data.
+
+```python
+from multiqc.plots import linegraph
+pconfig = {
+    "y_bands": [
+        {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},           # Good range (green)
+        {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},          # Warning range (yellow)
+        {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},        # Bad range (red)
+    ],
+    "x_bands": [
+        {"from": 10, "to": 50, "color": "#f0f0f0", "opacity": 0.3},   # Highlighted region
+    ]
+}
+html = linegraph.plot(data, pconfig)
+```
+
+Each band definition supports the following options:
+
+- `from`: Start value for the band
+- `to`: End value for the band
+- `color`: Background color (any valid CSS color)
+- `opacity`: Transparency level from 0.0 (fully transparent) to 1.0 (fully opaque). Defaults to 1.0 if not specified.
+
+#### Reference lines
+
+Reference lines are single horizontal or vertical lines that can mark specific thresholds or reference points.
+
+```python
+pconfig = {
+    "y_lines": [
+        {"value": 30, "color": "#ff0000", "width": 2, "dash": "dash", "label": "Threshold"}
+    ],
+    "x_lines": [
+        {"value": 25, "color": "#0000ff", "width": 1, "dash": "solid"}
+    ]
+}
+```
+
+Each line definition supports:
+
+- `value`: Position of the line on the respective axis
+- `color`: Line color (any valid CSS color)
+- `width`: Line thickness in pixels (default: 2)
+- `dash`: Line style - "solid", "dash", "dot", "dashdot", etc. (default: "solid")
+- `label`: Optional text label for the line
+
 ## Box plots
 
 Box plots take similar data structure as line plots, but better visualize the
@@ -392,6 +454,42 @@ html = box.plot(data, pconfig=...)
 
 Similarly to other plot types, multiple datasets can be passed as `data`, along with
 dataset-specific configurations provided with the `pconfig["data_labels"]` option.
+
+### Box plot outlier display
+
+Box plots now dynamically control outlier display based on the number of samples, similar to violin plots. The behavior is determined by two configuration thresholds:
+
+```yaml
+box_min_threshold_outliers: 100 # For more than this number of samples, show only outliers
+box_min_threshold_no_points: 1000 # For more than this number of samples, show no points
+```
+
+**Dynamic behavior:**
+
+- **≤ 100 samples**: Show all data points (`"all"`)
+- **101-1000 samples**: Show only outliers (`"outliers"`)
+- **> 1000 samples**: Show no points (`false`)
+
+**Manual override:**
+You can still manually control the behavior using the `boxplot_boxpoints` configuration option, which will override the dynamic logic:
+
+```yaml
+boxplot_boxpoints: "outliers" # Override dynamic behavior
+```
+
+Available options (as defined by [Plotly's box trace reference](https://plotly.com/python/reference/box/#box-boxpoints)):
+
+- `"outliers"`: Show only outlier points beyond the whiskers
+- `"all"`: Show all data points
+- `"suspectedoutliers"`: Show only suspected outliers (points beyond 1.5 × IQR but within 3 × IQR)
+- `false`: Hide all data points, showing only the box and whiskers
+
+This dynamic approach helps to:
+
+- Reduce visual clutter when dealing with many samples
+- Maintain interactivity for smaller datasets
+- Automatically optimize performance for large datasets
+- Highlight specific outlier patterns when appropriate
 
 ## Scatter plots
 

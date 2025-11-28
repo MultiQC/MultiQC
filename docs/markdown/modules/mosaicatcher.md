@@ -2,7 +2,7 @@
 title: MosaiCatcher
 displayed_sidebar: multiqcSidebar
 description: >
-  Counts strand-seq reads and classifies strand states of each chromosome in each cell using a Hidden Markov Model
+    <p>Counts strand-seq reads and classifies strand states of each chromosome in each cell using a Hidden Markov Model.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/mosaicatcher/mosaicatc
 -->
 
 :::note
-Counts strand-seq reads and classifies strand states of each chromosome in each cell using a Hidden Markov Model
+<p>Counts strand-seq reads and classifies strand states of each chromosome in each cell using a Hidden Markov Model.</p>
 
 [https://github.com/friendsofstrandseq/mosaicatcher](https://github.com/friendsofstrandseq/mosaicatcher)
 :::
@@ -24,5 +24,6 @@ Counts strand-seq reads and classifies strand states of each chromosome in each 
 
 ```yaml
 mosaicatcher:
-  fn: "*.mosaicatcher_info_raw.txt"
+  fn: '*.mosaicatcher_info_raw.txt'
 ```
+    

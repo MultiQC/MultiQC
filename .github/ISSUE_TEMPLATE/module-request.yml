@@ -2,19 +2,39 @@ name: New module
 description: Request support for a new bioinformatics tool in MultiQC
 labels: ["module: new"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📋 Module Request Guidelines
+
+        Thank you for requesting a new MultiQC module! Your request will be automatically analyzed and prioritized based on:
+        - **Tool popularity** (GitHub stars, downloads)
+        - **Request quality** (completeness, example files)
+        - **Community need** (reactions, comments)
+
+        💡 **Tips for higher priority:**
+        - Upload actual example files (most important!)
+        - Provide complete information
+        - Use a popular, actively maintained tool
+
+        ✨ **Get instant feedback:** Comment `@claude analyze-module` anytime for detailed analysis!
+
+        📖 [Learn more about the triage system](https://github.com/MultiQC/MultiQC/blob/main/.claude/docs/module-triage-system.md)
+
   - type: input
     id: name
     attributes:
       label: Name of the tool
-      placeholder: eg. My Tool
+      placeholder: eg. FastQC
     validations:
       required: true
 
   - type: input
     id: homepage
     attributes:
-      label: Tool homepage
-      placeholder: eg. http://www.github/me/mytool
+      label: Tool homepage or repository
+      description: "Provide the main homepage or GitHub/GitLab repository URL. This helps us assess tool popularity and maintenance status."
+      placeholder: eg. https://github.com/user/mytool or https://mytool.readthedocs.io
     validations:
       required: true
 
@@ -23,20 +43,25 @@ body:
     attributes:
       label: Tool description
       description: A short single-sentence description that will be used in the modules listing on the MultiQC homepage.
-      placeholder: eg. My Tool is a really excellent tool that does what no other tool can do
+      placeholder: eg. FastQC is a quality control tool for high throughput sequence data
     validations:
       required: true
 
   - type: textarea
     id: example-files
     attributes:
-      label: Tool output
+      label: Tool output example files
       description: |
-        Please drag and drop (and upload to the GitHub issue) some example files that can be used to write the module.
-        ***Please do not copy and paste log contents***, as important whitespace can change.
-        If the file type is not allowed, please compress into a `.zip` file.
-        If the file is many MBs then it's ok to truncate it, though please leave a few lines of data in so that it's clear what the format is.
-      placeholder: "[ Drag and drop some example files here to upload ]"
+        **📁 Example files are critical for module development!**
+
+        - Drag and drop example files showing typical tool output
+        - **Do NOT copy/paste file contents** - formatting and whitespace matter
+        - Use `.zip` files if GitHub doesn't support the file type
+        - Include both small and representative examples
+        - Truncate large files but keep enough data to show the format
+
+        💡 **Quality examples significantly increase your request's priority!**
+      placeholder: "[ Drag and drop example files here to upload ]"
     validations:
       required: true
 
@@ -52,24 +77,44 @@ body:
   - type: textarea
     id: plots
     attributes:
-      label: Data suitable for MultiQC plot(s)
+      label: Data suitable for MultiQC plots
       description: |
         What data in the tool output is most important - what would you like to see in a plot or dedicated table?
         Remember that MultiQC should just highlight the important bits - enough to spot outlier samples for further examination.
+      placeholder: |
+        - Distribution of quality scores across reads
+        - Pass/fail counts by sample
+        - Summary metrics comparison
 
   - type: textarea
     id: general-stats
     attributes:
       label: Most interesting data for the General Stats table
-      description: Is there 1-3 values that would be helpful to have in the _General Statistics_ table, alongside results from other tools?
+      description: Suggest 1-3 key values that would be helpful in the General Statistics table, alongside results from other tools.
+      placeholder: |
+        - Total reads processed
+        - Percentage passed filters
+        - Average quality score
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: |
+        Help us understand why this module would be valuable:
+        - How widely is this tool used in your field?
+        - Are there existing alternatives in MultiQC?
+        - What unique value would this module provide?
+        - Is this related to a published workflow or pipeline?
+      placeholder: "This tool is widely used in genomics for... It would complement existing modules by..."
 
   - type: checkboxes
     id: checklist
     attributes:
-      label: Before submitting
-      description: >-
-        Please ensure your module request fulfills all of the following requirements.
+      label: Checklist
+      description: These help improve your request's priority, but aren't strictly required. We're here to help!
       options:
-        - label: >-
-            I have included example data (zipped, not pasted) that can be used to write the module.
-          required: true
+        - label: I have included example data files (uploaded/zipped, not copy-pasted)
+        - label: I have checked that no similar module already exists in the [MultiQC modules list](https://multiqc.info/modules/)
+        - label: I have provided the tool's homepage or repository URL
+        - label: I understand this request will be prioritized based on tool popularity, community need, and request quality

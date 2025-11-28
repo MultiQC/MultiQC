@@ -120,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "id": "bcl2fastq_sample_counts",
                     "title": "bcl2fastq: Clusters by sample",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ylab": "Number of clusters",
                     "data_labels": ["Index mismatches", "Counts per lane"],
                 },

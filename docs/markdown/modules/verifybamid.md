@@ -2,7 +2,7 @@
 title: VerifyBAMID
 displayed_sidebar: multiqcSidebar
 description: >
-  Detects sample contamination and/or sample swaps
+    <p>Detects sample contamination and/or sample swaps.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/verifybamid/verifybami
 -->
 
 :::note
-Detects sample contamination and/or sample swaps
+<p>Detects sample contamination and/or sample swaps.</p>
 
 [https://genome.sph.umich.edu/wiki/VerifyBamID](https://genome.sph.umich.edu/wiki/VerifyBamID)
 :::
@@ -36,6 +36,16 @@ A verifyBAMID section is then added, with a table containing the entire selfSM f
 
 If no chip data was parsed, these columns will not be added to the MultiQC report.
 
+By default, the module extracts sample names from the first column of the `.selfSM` file.
+If you prefer to use the filename as the sample name instead, you can set the global
+`use_filename_as_sample_name` option:
+
+```yaml
+use_filename_as_sample_name:
+  - verifybamid
+  - verifybamid/selfsm
+```
+
 Should you wish to remove one of these columns from the general statistics table add the below lines to the table_columns_visible section of your config file
 
     table_columns_visible:
@@ -49,5 +59,6 @@ This was designed to work with verifyBamID 1.1.3 January 2018
 
 ```yaml
 verifybamid/selfsm:
-  fn: "*.selfSM"
+  fn: '*.selfSM'
 ```
+    

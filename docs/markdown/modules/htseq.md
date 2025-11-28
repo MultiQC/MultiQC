@@ -2,7 +2,7 @@
 title: HTSeq Count
 displayed_sidebar: multiqcSidebar
 description: >
-  Part of the HTSeq package: counts reads covering specified genomic features
+    <p>Part of the HTSeq package: counts reads covering specified genomic features.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/htseq/htseq.py
 -->
 
 :::note
-Part of the HTSeq package: counts reads covering specified genomic features
+<p>Part of the HTSeq package: counts reads covering specified genomic features.</p>
 
 [https://htseq.readthedocs.io/en/master/htseqcount.html](https://htseq.readthedocs.io/en/master/htseqcount.html)
 :::
@@ -29,10 +29,11 @@ reads, plus a list of genomic features and counts how many reads map to each fea
 
 ```yaml
 htseq:
-  - contents_re: ^feature\tcount$
-    num_lines: 1
-    shared: true
-  - contents_re: ^\w+.*\t\d+$
-    num_lines: 1
-    shared: true
+- contents_re: ^feature\tcount$
+  num_lines: 1
+  shared: true
+- contents_re: ^\w+.*\t\d+$
+  num_lines: 1
+  shared: true
 ```
+    

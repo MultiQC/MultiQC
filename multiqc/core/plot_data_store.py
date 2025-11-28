@@ -113,6 +113,10 @@ def get_report_metadata(df: pl.DataFrame) -> Optional[Dict[str, Any]]:
         if "config" in metadata_df.columns and not metadata_df.get_column("config").is_empty():
             result["config"] = json.loads(metadata_df.get_column("config")[0])
 
+        # Read software versions
+        if "software_versions" in metadata_df.columns and not metadata_df.get_column("software_versions").is_empty():
+            result["software_versions"] = json.loads(metadata_df.get_column("software_versions")[0])
+
         return result
     except Exception as e:
         logger.error(f"Error extracting report metadata from parquet: {e}")
@@ -191,6 +195,7 @@ def save_report_metadata() -> None:
             "data_sources": [json.dumps(data_sources_dict)],
             "multiqc_version": [config.version if hasattr(config, "version") else ""],
             "modules": [json.dumps(modules_data)],
+            "software_versions": [json.dumps(dict(report.software_versions))],
         }
     )
 
@@ -205,6 +210,11 @@ def _write_parquet(df: pl.DataFrame) -> None:
     # Write to file
     try:
         df.write_parquet(parquet_file, compression="gzip")
+    except AttributeError:  # 'builtins.PyDataFrame' object has no attribute 'write_parquet'
+        # Pyodide polars doesn't support write_parquet, fall back to CSV
+        csv_file = parquet_file.with_suffix(".csv")
+        logger.debug(f"Parquet writing not supported in Pyodide, falling back to CSV: {csv_file}")
+        df.write_csv(csv_file)
     except Exception as e:
         logger.error(f"Error writing parquet file: {e}")
         raise
@@ -212,14 +222,25 @@ def _write_parquet(df: pl.DataFrame) -> None:
 
 def _read_or_create_df() -> pl.DataFrame:
     parquet_file = tmp_dir.parquet_file()
+    csv_file = parquet_file.with_suffix(".csv")
 
-    # Update existing file or create new one
+    # Try to read parquet first, then fall back to CSV
     if parquet_file.exists():
         try:
             return pl.read_parquet(parquet_file)
-
         except Exception as e:
-            logger.error(f"Error updating parquet file with metadata: {e}")
+            logger.error(f"Error reading parquet file: {e}")
+            if config.strict:
+                raise e
+    elif csv_file.exists():
+        try:
+            # Read CSV and convert creation_date back to datetime
+            df = pl.read_csv(csv_file)
+            if "creation_date" in df.columns:
+                df = df.with_columns(pl.col("creation_date").str.to_datetime())
+            return df
+        except Exception as e:
+            logger.error(f"Error reading CSV file: {e}")
             if config.strict:
                 raise e
     else:

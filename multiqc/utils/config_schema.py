@@ -5,7 +5,7 @@ Generated from the config defaults and type hints.
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 AiProviderLiteral = Literal["seqera", "openai", "anthropic", "aws_bedrock", "custom"]
 
@@ -77,11 +77,19 @@ class MultiQCConfig(BaseModel):
     show_analysis_paths: Optional[bool] = Field(None, description="Show analysis paths in the report")
     show_analysis_time: Optional[bool] = Field(None, description="Show analysis time in the report")
     custom_logo: Optional[str] = Field(None, description="Path to custom logo image")
+    custom_logo_dark: Optional[str] = Field(None, description="Path to custom logo image for dark mode")
     custom_logo_url: Optional[str] = Field(None, description="URL for custom logo")
     custom_logo_title: Optional[str] = Field(None, description="Title for custom logo")
+    custom_logo_width: Optional[int] = Field(None, description="Width in pixels for the custom logo")
     custom_css_files: Optional[List[str]] = Field(None, description="Custom CSS files to include")
     simple_output: Optional[bool] = Field(None, description="Simple output")
     template: Optional[str] = Field(None, description="Report template to use")
+    template_dark_mode: Optional[bool] = Field(
+        None, description="Enable dark mode toggle and JavaScript for the report template"
+    )
+    plot_font_family: Optional[str] = Field(
+        None, description="Custom font family for plots (defaults to system font stack)"
+    )
     profile_runtime: Optional[bool] = Field(None, description="Profile runtime")
     profile_memory: Optional[bool] = Field(None, description="Profile memory")
     pandoc_template: Optional[str] = Field(None, description="Pandoc template")
@@ -138,6 +146,16 @@ class MultiQCConfig(BaseModel):
     )
     no_ai: Optional[bool] = Field(None, description="Disable AI")
     ai_anonymize_samples: Optional[bool] = Field(None, description="Anonymize samples")
+    ai_reasoning_effort: Optional[str] = Field(
+        None, description="Reasoning effort level for OpenAI reasoning models (low, medium, high)"
+    )
+    ai_max_completion_tokens: Optional[int] = Field(
+        None, description="Maximum completion tokens for OpenAI reasoning models"
+    )
+    ai_extended_thinking: Optional[bool] = Field(
+        None, description="Enable extended thinking for Anthropic Claude 4 models"
+    )
+    ai_thinking_budget_tokens: Optional[int] = Field(None, description="Budget tokens for Anthropic extended thinking")
 
     seqera_api_url: Optional[str] = Field(None, description="Seqera API URL")
     seqera_website: Optional[str] = Field(None, description="Seqera website")
@@ -154,6 +172,13 @@ class MultiQCConfig(BaseModel):
     )
     barplot_legend_on_bottom: Optional[bool] = Field(
         None, description="Place bar plot legend at the bottom (not recommended)"
+    )
+    boxplot_boxpoints: Optional[Union[str, bool]] = Field(None, description="Boxplot boxpoints setting")
+    box_min_threshold_outliers: Optional[int] = Field(
+        None, description="For more than this number of samples, show only outliers"
+    )
+    box_min_threshold_no_points: Optional[int] = Field(
+        None, description="For more than this number of samples, show no points"
     )
     violin_downsample_after: Optional[int] = Field(
         None, description="Downsample data for violin plot starting from this number os samples"
@@ -213,8 +238,8 @@ class MultiQCConfig(BaseModel):
     sample_names_replace_complete: Optional[bool] = Field(None, description="Sample names to replace (complete)")
     sample_names_rename: Optional[List[List[str]]] = Field(None, description="Sample names to rename")
     show_hide_buttons: Optional[List[str]] = Field(None, description="Show/hide buttons")
-    show_hide_patterns: Optional[List[str]] = Field(None, description="Show/hide patterns")
-    show_hide_regex: Optional[List[str]] = Field(None, description="Show/hide regex")
+    show_hide_patterns: Optional[List[Union[str, List[str]]]] = Field(None, description="Show/hide patterns")
+    show_hide_regex: Optional[List[Union[str, bool]]] = Field(None, description="Show/hide regex")
     show_hide_mode: Optional[List[str]] = Field(None, description="Show/hide mode")
     highlight_patterns: Optional[List[str]] = Field(None, description="Patterns for highlighting samples")
     highlight_colors: Optional[List[str]] = Field(None, description="Colors to use for highlighting patterns")
@@ -222,7 +247,7 @@ class MultiQCConfig(BaseModel):
     no_version_check: Optional[bool] = Field(None, description="No version check")
     log_filesize_limit: Optional[int] = Field(None, description="Log filesize limit")
     filesearch_lines_limit: Optional[int] = Field(None, description="Filesearch lines limit")
-    report_readerrors: Optional[int] = Field(None, description="Report read errors")
+    report_readerrors: Optional[bool] = Field(None, description="Report read errors")
     skip_generalstats: Optional[bool] = Field(None, description="Skip generalstats")
     skip_versions_section: Optional[bool] = Field(None, description="Skip versions section")
     disable_version_detection: Optional[bool] = Field(None, description="Disable version detection")
@@ -232,7 +257,10 @@ class MultiQCConfig(BaseModel):
     filesearch_file_shared: Optional[List[str]] = Field(None, description="Filesearch file shared")
     custom_content: Optional[Dict[str, Any]] = Field(None, description="Custom content settings")
     fn_clean_sample_names: Optional[bool] = Field(None, description="Clean sample names")
-    use_filename_as_sample_name: Optional[bool] = Field(None, description="Use filename as sample name")
+    use_filename_as_sample_name: Optional[Union[bool, List[str]]] = Field(
+        False,
+        description="Use filename as sample name (can be bool for all modules or list for specific modules/patterns)",
+    )
     fn_clean_exts: Optional[List[Union[str, CleanPattern]]] = Field(
         None, description="Extensions to clean from sample names"
     )
@@ -249,16 +277,15 @@ class MultiQCConfig(BaseModel):
         None, description="Search patterns for finding tool outputs"
     )
 
-    class Config:
-        extra = "allow"  # Allow additional fields that aren't in the schema
+    model_config = ConfigDict(extra="allow")  # Allow additional fields that aren't in the schema
 
     parquet_format: Optional[Literal["long", "wide"]] = Field(
         None,
-        description="""Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw', 
-        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast, 
-        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to 
+        description="""Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw',
+        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast,
+        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to
         for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as
-        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column 
+        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column
         to have a single type).
         """,
     )

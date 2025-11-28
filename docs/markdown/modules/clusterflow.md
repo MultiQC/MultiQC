@@ -2,7 +2,7 @@
 title: Cluster Flow
 displayed_sidebar: multiqcSidebar
 description: >
-  Simple and flexible bioinformatics pipeline tool
+    <p>Simple and flexible bioinformatics pipeline tool.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/clusterflow/clusterflo
 -->
 
 :::note
-Simple and flexible bioinformatics pipeline tool
+<p>Simple and flexible bioinformatics pipeline tool.</p>
 
 [http://clusterflow.io](http://clusterflow.io)
 :::
@@ -30,10 +30,11 @@ shown (some basic statistics plus the pipeline steps / params used).
 
 ```yaml
 clusterflow/logs:
-  fn: "*_clusterFlow.txt"
+  fn: '*_clusterFlow.txt'
   shared: true
 clusterflow/runfiles:
   contents: Cluster Flow Run File
-  fn: "*.run"
+  fn: '*.run'
   num_lines: 2
 ```
+    

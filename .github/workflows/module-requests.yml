@@ -1,0 +1,116 @@
+name: Module Request Management
+
+on:
+  #  # Individual request analysis
+  #  issue_comment:
+  #    types: [created]
+  #  issues:
+  #    types: [opened]
+
+  # Weekly bulk triage (commented out until tested via workflow_dispatch)
+  # schedule:
+  #   - cron: "0 9 * * 1" # Mondays at 9 AM UTC
+
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Mode: analyze-single, triage-all, or dry-run"
+        required: false
+        default: "triage-all"
+        type: choice
+        options:
+          - analyze-single
+          - triage-all
+          - dry-run
+      issue_number:
+        description: "Issue number for analyze-single mode"
+        required: false
+        type: string
+
+permissions:
+  issues: write
+  contents: read
+  id-token: write
+
+jobs:
+  module-request-handler:
+    runs-on: ubuntu-latest
+
+    # Only run for module requests or scheduled/manual triggers
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' &&
+       contains(github.event.issue.labels.*.name, 'module: new') &&
+       contains(github.event.comment.body, '@claude analyze-module')) ||
+      (github.event_name == 'issues' &&
+       github.event.action == 'opened' &&
+       contains(github.event.issue.labels.*.name, 'module: new'))
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine Operation Mode
+        id: mode
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { eventName, payload } = context;
+            const inputs = context.payload.inputs || {};
+
+            // Determine mode based on trigger:
+            // - analyze-single: Skill analyzes one specific issue
+            // - triage-all: Skill loops over all open issues with 'module: new' label
+            // - dry-run: Same as triage-all but without making changes
+            let mode, issueNumber;
+
+            if (eventName === 'schedule') {
+              mode = 'triage-all';
+            } else if (eventName === 'workflow_dispatch') {
+              mode = inputs.mode || 'triage-all';
+              issueNumber = inputs.issue_number;
+            } else if (eventName === 'issues' || eventName === 'issue_comment') {
+              mode = 'analyze-single';
+              issueNumber = payload.issue?.number;
+            }
+
+            core.setOutput('mode', mode);
+            core.setOutput('issue_number', issueNumber || '');
+
+            console.log(`Mode: ${mode}${issueNumber ? ` | Issue: #${issueNumber}` : ''}`);
+            return { mode, issueNumber }
+
+      - name: Run Module Triage
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          show_full_output: true
+          prompt: |
+            Use the `triaging-module-requests` skill to analyze module requests.
+
+            Mode: ${{ steps.mode.outputs.mode }}
+            Issue: #${{ steps.mode.outputs.issue_number || 'all pending' }}
+
+            IMPORTANT: After generating the analysis, you MUST post it as a comment to the GitHub issue using the `gh issue comment` command. Do not just display the analysis - actually post it to the issue!
+            IMPORTANT: After posting the comment, you MUST assign a triage label (module: prio-LEVEL)
+
+          claude_args: |
+            --permission-mode bypassPermissions
+            --allowed-tools "Skill WebSearch WebFetch Bash(gh:*) Bash(node:*) Bash(curl:*) Bash(jq:*) Bash(echo:*) Bash(cat:*) Bash(grep:*) Bash(sed:*) Bash(find:*)"
+
+      - name: Report Workflow Status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const mode = '${{ steps.mode.outputs.mode }}';
+            const issueNumber = '${{ steps.mode.outputs.issue_number }}';
+
+            console.log(`✅ Module triage workflow completed`);
+            console.log(`Mode: ${mode}`);
+            if (issueNumber) {
+              console.log(`Issue: #${issueNumber}`);
+            }
