@@ -118,6 +118,8 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data = parser_func(f["f"], f["fn"])
                 if parsed_data is not None:
                     s_name = self.clean_s_name(f["s_name"], f)
+                    if self.is_ignore_sample(s_name):
+                        continue
 
                     if s_name in collected_data:
                         log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
@@ -126,17 +128,13 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_data_source(f, s_name=s_name, section=file_type)
                     collected_data[s_name] = parsed_data
 
-            collected_data = self.ignore_samples(collected_data)
             self.biscuit_data[file_type] = collected_data
 
             # Count the number of coverage distribution samples (denoted by "covdist_*")
             #
             # Perform counting here to reduce having to add 12 values together from the biscuit_data
             # dictionary later
-            #
-            # Short-circuit search at position = 10 (longer than "covdist_", but will ensure that it
-            # is caught if it occurs at the start of the string)
-            if file_type.startswith("covdist_", 0, 10):
+            if file_type.startswith("covdist_"):
                 n_covdist_samples += len(collected_data)
 
         # Retention report counts (retention by read position and average retention rates)
@@ -214,7 +212,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlGn",
                 "suffix": "%",
                 "format": "{:,.2f}",
-                "hidden": False,
             },
             "dup_q40": {
                 "title": "Dup. % for Q40 Reads",
@@ -234,7 +231,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "Reds",
                 "suffix": "%",
                 "format": "{:,.2f}",
-                "hidden": False,
             },
         }
 
@@ -265,7 +261,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         pconfig1 = {
-            "id": "biscuit_mapping_overview",
+            "id": "biscuit-mapping-overview-plot",
             "title": "BISCUIT: Mapping Overview",
             "ylab": "Number of Reads",
             "cpswitch_counts_label": "# Reads",
@@ -289,7 +285,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Mapping Quality Distribution line graph
         pconfig2 = {
-            "id": "biscuit_mapq",
+            "id": "biscuit-mapq-plot",
             "title": "BISCUIT: Distribution of Mapping Qualities",
             "ymin": 0,
             "xmin": 0,
@@ -330,7 +326,7 @@ class MultiqcModule(BaseMultiqcModule):
             "rr": {"color": "#324D5C", "name": "OB: Original Bottom strand"},
         }
         pconfig = {
-            "id": "biscuit_strand",
+            "id": "biscuit-strand-plot",
             "title": "BISCUIT: Mapping Strand Distribution",
             "ylab": "Number of Reads",
             "cpswitch_counts_label": "# Reads",
@@ -364,7 +360,7 @@ class MultiqcModule(BaseMultiqcModule):
             pd2[s_name] = d["readcnt"]
 
         pconfig = {
-            "id": "biscuit_isize",
+            "id": "biscuit-isize-plot",
             "title": "BISCUIT: Insert Size Distribution",
             "ymin": 0,
             "xmin": 0,
