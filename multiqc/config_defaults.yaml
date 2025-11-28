@@ -376,9 +376,9 @@ fn_clean_exts:
   - "_isize_table"
   - "_dup_report"
   - "_cv_table"
-  - "_covdist_all
-  - "_covdist_q40
-  - "_CpGRetention
+  - "_covdist_all"
+  - "_covdist_q40"
+  - "_CpGRetention"
   - "_CpHRetentionByReadPos"
   - "_totalBaseConversionRate"
   - "_totalReadConversionRate"
