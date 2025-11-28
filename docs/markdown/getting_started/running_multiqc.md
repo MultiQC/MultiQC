@@ -237,6 +237,10 @@ for example if the lualatex dependency is not installed you will see the followi
 lualatex not found. Please select a different --pdf-engine or install lualatex
 ```
 
+:::tip{title="Using Docker for PDF generation"}
+If you're using Docker, a PDF-enabled image is available that includes all required dependencies (Pandoc and LaTeX). See the [Docker installation documentation](installation.md#docker-image-variants) for details on using `multiqc/multiqc:pdf-latest`.
+:::
+
 Note that not all plots have flat image equivalents, so
 some will be missing (at time of writing: FastQC sequence content plot,
 beeswarm dot plots, heatmaps).

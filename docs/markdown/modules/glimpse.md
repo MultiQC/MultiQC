@@ -2,7 +2,7 @@
 title: GLIMPSE
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Low-coverage whole genome sequencing imputation.</p>
+    <p>Low-coverage whole genome sequencing imputation.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/glimpse/glimpse.py
 -->
 
 :::note
-
 <p>Low-coverage whole genome sequencing imputation.</p>
 
 [https://odelaneau.github.io/GLIMPSE/](https://odelaneau.github.io/GLIMPSE/)
@@ -35,9 +34,10 @@ The supported files are generated from the `GLIMPSE2_concordance` command. The f
 
 ```yaml
 glimpse/err_grp:
-  fn: "*.error.grp.txt.gz"
+  fn: '*.error.grp.txt.gz'
   num_lines: 1
 glimpse/err_spl:
-  fn: "*.error.spl.txt.gz"
+  fn: '*.error.spl.txt.gz'
   num_lines: 1
 ```
+    

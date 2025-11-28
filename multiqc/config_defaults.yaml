@@ -18,11 +18,15 @@ report_header_info: null
 show_analysis_paths: True
 show_analysis_time: True
 custom_logo: null
+custom_logo_dark: null
 custom_logo_url: null
 custom_logo_title: null
+custom_logo_width: null
 custom_css_files: []
 simple_output: false
 template: "default"
+template_dark_mode: true
+plot_font_family: null # Custom font family for plots (defaults to system font stack)
 profile_runtime: false
 profile_memory: false
 pandoc_template: null
@@ -91,7 +95,6 @@ plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false
 plots_flat_numseries: 2000
 plots_defer_loading_numseries: 100 # plot will require user to press button to render plot
-plot_theme: null # Plotly theme template - any registered Plotly theme name (e.g. "plotly", "plotly_white", "plotly_dark", "ggplot2", "seaborn", "simple_white", "none")
 num_datasets_plot_limit: 100 # DEPRECATED in favour of plots_defer_loading_numseries
 lineplot_number_of_points_to_hide_markers: 50 # sum of data points in all samples
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
@@ -146,6 +149,7 @@ decimalPoint_format: null
 thousandsSep_format: null
 remove_sections: []
 section_comments: {}
+section_status_checks: {}
 lint: False # Deprecated since v1.17
 strict: False
 development: False

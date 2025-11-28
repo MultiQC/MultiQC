@@ -2,7 +2,7 @@
 title: Xenium
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.</p>
+    <p>Spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/xenium/xenium.py
 -->
 
 :::note
-
 <p>Spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.</p>
 
 [https://www.10xgenomics.com/platforms/xenium](https://www.10xgenomics.com/platforms/xenium)
@@ -24,13 +23,25 @@ File path for the source of this content: multiqc/modules/xenium/xenium.py
 Xenium is a spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.
 
 :::note
-Parsing huge files is not an intended MultiQC usage. By default, MultiQC will ignore the `*.parquet` files
-as they are gigabyte-sized. To enable parsing those, make sure to have this line in your config:
+This module provides basic quality metrics from the Xenium pipeline (total transcripts, cells detected,
+transcript assignment rates, and median genes per cell).
 
-```
-log_filesize_limit: 5000000000 # 5GB
+For advanced visualizations including:
+
+- Transcript quality distributions by gene category
+- Cell and nucleus area distributions
+- Field-of-view quality plots
+- Segmentation method breakdown
+- Transcripts per gene distributions
+
+Install the [multiqc-xenium-extra](https://pypi.org/project/multiqc-xenium-extra/) plugin:
+
+```bash
+pip install multiqc multiqc-xenium-extra
 ```
 
+The plugin automatically adjusts the log filesize limit to parse large Xenium files (`.parquet` and `.h5`),
+so you don't need to manually configure `log_filesize_limit` in your MultiQC config when using the plugin.
 :::
 
 The MultiQC module is tested with outputs from xenium-3.x, older versions of xenium output are
@@ -39,10 +50,6 @@ not supported and may even cause MultiQC to crash (see https://github.com/MultiQ
 ### File search patterns
 
 ```yaml
-xenium/cell_feature_matrix:
-  fn: cell_feature_matrix.h5
-xenium/cells:
-  fn: cells.parquet
 xenium/experiment:
   fn: experiment.xenium
   num_lines: 50
@@ -50,6 +57,5 @@ xenium/metrics:
   contents: num_cells_detected
   fn: metrics_summary.csv
   num_lines: 5
-xenium/transcripts:
-  fn: transcripts.parquet
 ```
+    

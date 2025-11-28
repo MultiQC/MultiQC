@@ -69,11 +69,15 @@ report_header_info: List[Dict[str, str]]
 show_analysis_paths: bool
 show_analysis_time: bool
 custom_logo: str
+custom_logo_dark: str
 custom_logo_url: str
 custom_logo_title: str
+custom_logo_width: int
 custom_css_files: List[str]
 simple_output: bool
 template: str
+template_dark_mode: bool
+plot_font_family: Optional[str]
 profile_runtime: bool
 profile_memory: bool
 pandoc_template: str
@@ -138,7 +142,6 @@ plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
 plots_defer_loading_numseries: int
-plot_theme: Optional[str]
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
@@ -162,6 +165,7 @@ decimalPoint_format: str
 thousandsSep_format: str
 remove_sections: List[str]
 section_comments: Dict[str, str]
+section_status_checks: Dict[str, Union[bool, Dict[str, bool]]]
 lint: bool  # Deprecated since v1.17
 strict: bool
 development: bool
@@ -183,8 +187,8 @@ sample_names_replace_exact: bool
 sample_names_replace_complete: bool
 sample_names_rename: List[List[str]]
 show_hide_buttons: List[str]
-show_hide_patterns: List[List[str]]
-show_hide_regex: List[bool]
+show_hide_patterns: List[Union[str, List[str]]]
+show_hide_regex: List[Union[str, bool]]
 show_hide_mode: List[str]
 highlight_patterns: List[str]
 highlight_colors: List[str]
@@ -517,7 +521,7 @@ def _add_config(conf: Dict, conf_path=None):
             log_filename_clean_extensions.append(v)
         elif c == "extra_fn_clean_trim":
             log_filename_clean_trimmings.append(v)
-        elif c in ["custom_logo"] and v:
+        elif c in ["custom_logo", "custom_logo_dark"] and v:
             # Resolve file paths - absolute or cwd, or relative to config file
             fpath = v
             if os.path.exists(v):
@@ -630,6 +634,20 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
                         show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether regex is turned on
         except AttributeError as e:
             logger.error(f"Error loading show patterns file: {e}")
+
+    # Normalize show_hide_patterns to be List[List[str]]
+    # When loaded from YAML config, patterns may be strings instead of lists
+    for i in range(len(show_hide_patterns)):
+        pattern = show_hide_patterns[i]
+        if isinstance(pattern, str):
+            show_hide_patterns[i] = [pattern]
+
+    # Normalize show_hide_regex to be List[bool]
+    # When loaded from YAML config, regex flags may be missing or incorrect types
+    for i in range(len(show_hide_regex)):
+        regex_flag = show_hide_regex[i]
+        if not isinstance(regex_flag, bool):
+            show_hide_regex[i] = bool(regex_flag)
 
     # Lists are not of the same length, pad or trim to the length of show_hide_patterns
     for i in range(len(show_hide_buttons), len(show_hide_patterns)):

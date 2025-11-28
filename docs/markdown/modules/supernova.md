@@ -2,7 +2,7 @@
 title: Supernova
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>De novo genome assembler of 10X Genomics linked-reads.</p>
+    <p>De novo genome assembler of 10X Genomics linked-reads.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/supernova/supernova.py
 -->
 
 :::note
-
 <p>De novo genome assembler of 10X Genomics linked-reads.</p>
 
 [https://www.10xgenomics.com/](https://www.10xgenomics.com/)
@@ -58,11 +57,12 @@ supernova/molecules:
   fn: histogram_molecules.json
   num_lines: 10
 supernova/report:
-  contents: "- assembly checksum ="
-  fn: "*report*.txt"
+  contents: '- assembly checksum ='
+  fn: '*report*.txt'
   num_lines: 100
 supernova/summary:
   contents: '"lw_mean_mol_len":'
   fn: summary.json
   num_lines: 120
 ```
+    

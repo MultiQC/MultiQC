@@ -2,7 +2,7 @@
 title: hap.py
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Benchmarks variant calls against gold standard truth datasets.</p>
+    <p>Benchmarks variant calls against gold standard truth datasets.</p>
 ---
 
 <!--
@@ -15,18 +15,18 @@ File path for the source of this content: multiqc/modules/happy/happy.py
 -->
 
 :::note
-
 <p>Benchmarks variant calls against gold standard truth datasets.</p>
 
 [https://github.com/Illumina/hap.py](https://github.com/Illumina/hap.py)
 :::
 
-Som.py output not currently supported.
+Som.py output supported in separate sompy module.
 
 ### File search patterns
 
 ```yaml
 happy:
   contents: Type,Filter,TRUTH
-  fn: "*.summary.csv"
+  fn: '*.summary.csv'
 ```
+    

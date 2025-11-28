@@ -2,7 +2,7 @@
 title: Adapter Removal
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Removes adapter sequences, trims low quality bases from 3' ends, or merges overlapping pairs into consensus.</p>
+    <p>Removes adapter sequences, trims low quality bases from 3' ends, or merges overlapping pairs into consensus.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/adapterremoval/adapter
 -->
 
 :::note
-
 <p>Removes adapter sequences, trims low quality bases from 3' ends, or merges overlapping pairs into consensus.</p>
 
 [https://github.com/mikkelschubert/adapterremoval](https://github.com/mikkelschubert/adapterremoval)
@@ -36,6 +35,7 @@ Supported setting file results:
 ```yaml
 adapterremoval:
   contents: AdapterRemoval
-  fn: "*.settings"
+  fn: '*.settings'
   num_lines: 1
 ```
+    

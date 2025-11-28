@@ -2,7 +2,7 @@
 title: BCL Convert
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.</p>
+    <p>Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/bclconvert/bclconvert.
 -->
 
 :::note
-
 <p>Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.</p>
 
 [https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
@@ -73,3 +72,4 @@ bclconvert/runinfo:
 bclconvert/unknown_barcodes:
   fn: Top_Unknown_Barcodes.csv
 ```
+    

@@ -2,7 +2,7 @@
 title: qc3C
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Reference-free and BAM based quality control for Hi-C data.</p>
+    <p>Reference-free and BAM based quality control for Hi-C data.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/qc3C/qc3C.py
 -->
 
 :::note
-
 <p>Reference-free and BAM based quality control for Hi-C data.</p>
 
 [http://github.com/cerebis/qc3C](http://github.com/cerebis/qc3C)
@@ -32,5 +31,6 @@ their experimental aims.
 
 ```yaml
 qc3C:
-  fn: "*.qc3C.json"
+  fn: '*.qc3C.json'
 ```
+    

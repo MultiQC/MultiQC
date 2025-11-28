@@ -2,7 +2,7 @@
 title: MEGAHIT
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>NGS read assembler.</p>
+    <p>NGS read assembler.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/megahit/megahit.py
 -->
 
 :::note
-
 <p>NGS read assembler.</p>
 
 [https://github.com/voutcn/megahit](https://github.com/voutcn/megahit)
@@ -28,6 +27,7 @@ name (e.g. `sample1.log` will yield a sample name of `sample1`).
 
 ```yaml
 megahit:
-  contents: " - MEGAHIT v"
+  contents: ' - MEGAHIT v'
   num_lines: 5
 ```
+    

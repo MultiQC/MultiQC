@@ -2,7 +2,7 @@
 title: QUAST
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Quality assessment tool for genome assemblies.</p>
+    <p>Quality assessment tool for genome assemblies.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/quast/quast.py
 -->
 
 :::note
-
 <p>Quality assessment tool for genome assemblies.</p>
 
 [http://quast.bioinf.spbau.ru/](http://quast.bioinf.spbau.ru/)
@@ -72,3 +71,4 @@ quast:
   fn: report.tsv
   num_lines: 2
 ```
+    

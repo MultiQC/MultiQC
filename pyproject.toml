@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.31"
+version = "1.33dev"
 dependencies = [
     "boto3",              # for aws bedrock ai support
     "click",
@@ -32,8 +32,6 @@ dependencies = [
     "jsonschema",
     "polars-lts-cpu",     # for parquet support. Using LTS version for compatibility with older architectures
     "pyarrow",            # for parquet support
-    "scanpy",             # to parse h5 files for Xenium module
-    "scipy",              # for Xenium module. Though Scanpy depends on scipy anyway.
 ]
 requires-python = ">=3.8"
 authors = [
@@ -275,10 +273,12 @@ xenome = "multiqc.modules.xenome:MultiqcModule"
 
 [project.entry-points."multiqc.templates.v1"]
 default = "multiqc.templates.default"
+original = "multiqc.templates.original"
 sections = "multiqc.templates.sections"
 simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
 geo = "multiqc.templates.geo"
+disco = "multiqc.templates.disco"
 
 ### See https://docs.seqera.io/multiqc/development/plugins for documentation
 #[project.entry-points."multiqc.cli_options.v1"]

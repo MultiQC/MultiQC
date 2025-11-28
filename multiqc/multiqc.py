@@ -371,7 +371,7 @@ click.rich_click.OPTION_GROUPS = {
     "development",
     is_flag=True,
     default=None,
-    help="Development mode. Do not compress and minimise JS, export uncompressed plot data",
+    help="Development mode. Do not inline JS and CSS, export uncompressed plot data",
 )
 @click.option(
     "--pdf",
@@ -611,6 +611,13 @@ def run(
             "Strict mode specified. Will exit early if a module or a template crashed, and will "
             "give warnings if anything is not optimally configured in a module or a template."
         )
+
+    # Load template early to apply config overrides before modules run
+    template_mod = config.avail_templates[config.template].load()
+    if hasattr(template_mod, "template_dark_mode"):
+        config.template_dark_mode = template_mod.template_dark_mode
+    if hasattr(template_mod, "plot_font_family"):
+        config.plot_font_family = template_mod.plot_font_family
 
     report.multiqc_command = " ".join(sys.argv)
     logger.debug(f"Command used: {report.multiqc_command}")
