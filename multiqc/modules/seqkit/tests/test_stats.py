@@ -116,6 +116,14 @@ class TestParseStatsReport:
         assert "stdin" in result
         assert result["stdin"]["num_seqs"] == 5000
 
+    def test_parse_stdin_with_fallback_name(self):
+        """Test parsing uses fallback sample name for stdin input"""
+        result = parse_stats_report(SAMPLE_STATS_STDIN, fallback_sample_name="my_sample")
+
+        assert len(result) == 1
+        assert "my_sample" in result
+        assert result["my_sample"]["num_seqs"] == 5000
+
     def test_parse_empty_file(self):
         """Test parsing empty file returns empty dict"""
         result = parse_stats_report(SAMPLE_STATS_EMPTY)

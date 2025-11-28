@@ -1,7 +1,7 @@
 """MultiQC submodule to parse output from seqkit stats"""
 
 import logging
-from typing import Dict
+from typing import Dict, Optional
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import bargraph, table
@@ -15,7 +15,7 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
     seqkit_stats: Dict[str, Dict] = {}
 
     for f in module.find_log_files("seqkit/stats"):
-        parsed_data = parse_stats_report(f["f"])
+        parsed_data = parse_stats_report(f["f"], f["s_name"])
         if parsed_data:
             for s_name, data in parsed_data.items():
                 s_name = module.clean_s_name(s_name, f)
@@ -24,25 +24,20 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
                 module.add_data_source(f, s_name=s_name, section="stats")
                 seqkit_stats[s_name] = data
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                module.add_software_version(None, s_name)
+
     # Filter to strip out ignored sample names
     seqkit_stats = module.ignore_samples(seqkit_stats)
 
     if len(seqkit_stats) == 0:
         return 0
 
-    # Superfluous function call to confirm that it is used in this module
-    # Replace None with actual version if it is available
-    module.add_software_version(None)
-
-    # Check which columns are present in the data
-    has_quality_metrics = any("Q20_pct" in d for d in seqkit_stats.values())
-    has_n50 = any("N50" in d for d in seqkit_stats.values())
-    has_gaps = any("sum_gap" in d for d in seqkit_stats.values())
-
-    # General Stats Table
+    # General Stats Table - MultiQC automatically filters missing columns
     general_stats_headers: Dict = {
         "num_seqs": {
-            "title": "Sequences",
+            "title": "# Seqs",
             "description": "Number of sequences",
             "scale": "Blues",
             "format": "{:,.0f}",
@@ -68,37 +63,33 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
             "description": "GC content percentage",
             "min": 0,
             "max": 100,
-            "scale": "RdYlGn",
+            "scale": "Greens",
             "suffix": "%",
             "hidden": True,
         },
-    }
-
-    if has_quality_metrics:
-        general_stats_headers["Q30_pct"] = {
+        "Q30_pct": {
             "title": "Q30%",
             "description": "Percentage of bases with quality score >= 30",
             "min": 0,
             "max": 100,
             "scale": "RdYlGn",
             "suffix": "%",
-        }
-        general_stats_headers["AvgQual"] = {
+        },
+        "AvgQual": {
             "title": "Avg Qual",
             "description": "Average quality score",
             "scale": "RdYlGn",
             "hidden": True,
-        }
-
-    if has_n50:
-        general_stats_headers["N50"] = {
+        },
+        "N50": {
             "title": "N50",
             "description": "N50 sequence length",
             "scale": "Oranges",
             "format": "{:,.0f}",
             "suffix": " bp",
             "hidden": True,
-        }
+        },
+    }
 
     # Get general stats headers using the utility function
     stats_headers = module.get_general_stats_headers(all_headers=general_stats_headers)
@@ -123,7 +114,7 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
             "description": "Sequence type (DNA, RNA, Protein)",
         },
         "num_seqs": {
-            "title": "Sequences",
+            "title": "# Seqs",
             "description": "Number of sequences",
             "format": "{:,.0f}",
             "shared_key": "seq_count",
@@ -149,81 +140,67 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
             "description": "Maximum sequence length",
             "format": "{:,.0f}",
         },
-    }
-
-    # Add extended columns if present
-    if any("Q1" in d for d in seqkit_stats.values()):
-        table_headers["Q1"] = {
+        "Q1": {
             "title": "Q1",
             "description": "First quartile of sequence length",
             "format": "{:,.0f}",
-        }
-        table_headers["Q2"] = {
+        },
+        "Q2": {
             "title": "Q2 (Median)",
             "description": "Median sequence length",
             "format": "{:,.0f}",
-        }
-        table_headers["Q3"] = {
+        },
+        "Q3": {
             "title": "Q3",
             "description": "Third quartile of sequence length",
             "format": "{:,.0f}",
-        }
-
-    if has_gaps:
-        table_headers["sum_gap"] = {
+        },
+        "sum_gap": {
             "title": "Gaps",
             "description": "Total number of gaps",
             "format": "{:,.0f}",
-        }
-
-    if has_n50:
-        table_headers["N50"] = {
+        },
+        "N50": {
             "title": "N50",
             "description": "N50 sequence length",
             "format": "{:,.0f}",
-        }
-        if any("N50_num" in d for d in seqkit_stats.values()):
-            table_headers["N50_num"] = {
-                "title": "N50 Count",
-                "description": "Number of sequences >= N50",
-                "format": "{:,.0f}",
-            }
-
-    if has_quality_metrics:
-        table_headers["Q20_pct"] = {
+        },
+        "N50_num": {
+            "title": "N50 Count",
+            "description": "Number of sequences >= N50",
+            "format": "{:,.0f}",
+        },
+        "Q20_pct": {
             "title": "Q20%",
             "description": "Percentage of bases with quality score >= 20",
             "min": 0,
             "max": 100,
             "suffix": "%",
-        }
-        table_headers["Q30_pct"] = {
+        },
+        "Q30_pct": {
             "title": "Q30%",
             "description": "Percentage of bases with quality score >= 30",
             "min": 0,
             "max": 100,
             "suffix": "%",
-        }
-        table_headers["AvgQual"] = {
+        },
+        "AvgQual": {
             "title": "Avg Quality",
             "description": "Average quality score",
-        }
-
-    if any("GC_pct" in d for d in seqkit_stats.values()):
-        table_headers["GC_pct"] = {
+        },
+        "GC_pct": {
             "title": "GC%",
             "description": "GC content percentage",
             "min": 0,
             "max": 100,
             "suffix": "%",
-        }
-
-    if any("sum_n" in d for d in seqkit_stats.values()):
-        table_headers["sum_n"] = {
+        },
+        "sum_n": {
             "title": "N Bases",
             "description": "Total number of N bases",
             "format": "{:,.0f}",
-        }
+        },
+    }
 
     # Add table section
     module.add_section(
@@ -280,9 +257,9 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
     return len(seqkit_stats)
 
 
-def parse_stats_report(file_content: str) -> Dict[str, Dict]:
+def parse_stats_report(file_content: str, fallback_sample_name: Optional[str] = None) -> Dict[str, Dict]:
     """
-    Parse seqkit stats output file
+    Parse seqkit stats output file.
 
     Returns a dictionary with sample names as keys and parsed data as values.
     Handles both tab-separated (--tabular flag) and space-separated (default) output.
@@ -293,98 +270,66 @@ def parse_stats_report(file_content: str) -> Dict[str, Dict]:
     if len(lines) < 2:
         return {}
 
-    # Parse header line - try tab-separated first, then space-separated
+    # Determine delimiter: tab-separated or space-separated
     header_line = lines[0]
-    if "\t" in header_line:
-        headers = [h.strip() for h in header_line.split("\t")]
-        use_tabs = True
-    else:
-        headers = header_line.split()
-        use_tabs = False
+    delimiter = "\t" if "\t" in header_line else None
+    headers = header_line.split(delimiter)
+    headers = [h.strip() for h in headers]
 
     # Check if this looks like seqkit stats output
     expected_headers = ["file", "format", "type", "num_seqs", "sum_len", "min_len", "avg_len", "max_len"]
     if not all(h in headers for h in expected_headers):
         return {}
 
+    # Define column types for parsing
+    int_columns = {"num_seqs", "sum_len", "min_len", "max_len", "Q1", "Q2", "Q3", "sum_gap", "N50", "N50_num", "sum_n"}
+    float_columns = {"avg_len", "Q20(%)", "Q30(%)", "AvgQual", "GC(%)"}
+    # Mapping for columns with special characters in names
+    column_renames = {"Q20(%)": "Q20_pct", "Q30(%)": "Q30_pct", "GC(%)": "GC_pct"}
+
     # Parse data lines
     for line in lines[1:]:
         if not line.strip():
             continue
 
-        if use_tabs:
-            values = line.split("\t")
-        else:
-            values = line.split()
+        values = line.split(delimiter)
         if len(values) < len(headers):
             continue
 
+        row = dict(zip(headers, [v.strip() for v in values]))
         data: Dict = {}
-        sample_name = None
 
-        for i, header in enumerate(headers):
-            value = values[i].strip() if i < len(values) else ""
+        # Get sample name from file column
+        file_value = row.get("file", "")
+        if file_value == "-":
+            # Use fallback sample name for stdin input
+            sample_name = fallback_sample_name if fallback_sample_name else "stdin"
+        else:
+            # Handle both Unix and Windows path separators
+            sample_name = file_value.replace("\\", "/").split("/")[-1]
+            # Remove common sequence file extensions
+            for ext in [".fq.gz", ".fastq.gz", ".fq", ".fastq", ".fa.gz", ".fasta.gz", ".fa", ".fasta"]:
+                if sample_name.endswith(ext):
+                    sample_name = sample_name[: -len(ext)]
+                    break
 
+        data["file"] = file_value
+
+        # Parse remaining columns
+        for header, value in row.items():
             if header == "file":
-                # Use file name as sample name, strip path and extension
-                if value == "-":
-                    sample_name = "stdin"
-                else:
-                    # Handle both Unix and Windows path separators
-                    sample_name = value.replace("\\", "/").split("/")[-1]
-                # Remove common sequence file extensions
-                for ext in [".fq.gz", ".fastq.gz", ".fq", ".fastq", ".fa.gz", ".fasta.gz", ".fa", ".fasta"]:
-                    if sample_name.endswith(ext):
-                        sample_name = sample_name[: -len(ext)]
-                        break
-                data["file"] = value
-            elif header == "format":
-                data["format"] = value
-            elif header == "type":
-                data["type"] = value
-            elif header in [
-                "num_seqs",
-                "sum_len",
-                "min_len",
-                "max_len",
-                "Q1",
-                "Q2",
-                "Q3",
-                "sum_gap",
-                "N50",
-                "N50_num",
-                "sum_n",
-            ]:
-                # Integer fields - handle comma-separated numbers
+                continue
+            elif header in ("format", "type"):
+                data[header] = value
+            elif header in int_columns:
                 try:
                     data[header] = int(value.replace(",", ""))
                 except (ValueError, AttributeError):
                     pass
-            elif header == "avg_len":
-                # Float field
+            elif header in float_columns:
                 try:
-                    data[header] = float(value.replace(",", ""))
-                except (ValueError, AttributeError):
-                    pass
-            elif header == "Q20(%)":
-                # Quality percentage - rename for cleaner key
-                try:
-                    data["Q20_pct"] = float(value)
-                except (ValueError, AttributeError):
-                    pass
-            elif header == "Q30(%)":
-                try:
-                    data["Q30_pct"] = float(value)
-                except (ValueError, AttributeError):
-                    pass
-            elif header == "AvgQual":
-                try:
-                    data["AvgQual"] = float(value)
-                except (ValueError, AttributeError):
-                    pass
-            elif header == "GC(%)":
-                try:
-                    data["GC_pct"] = float(value)
+                    key = column_renames.get(header, header)
+                    data[key] = float(value.replace(",", ""))
                 except (ValueError, AttributeError):
                     pass
 
