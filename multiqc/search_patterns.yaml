@@ -840,6 +840,9 @@ rna_seqc/coverage:
   fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
   fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
+ribotish/qual:
+  fn: "*_qual.txt"
+  num_lines: 10
 rockhopper:
   fn: "summary.txt"
   contents: "Number of gene-pairs predicted to be part of the same operon"

@@ -15,11 +15,21 @@ class BarPlot extends Plot {
     dataset = dataset ?? this.datasets[this.activeDatasetIdx];
     let cats = dataset["cats"];
     let samples = dataset["samples"];
+    let groupLabels = dataset["group_labels"] || null;
+    let offsetGroups = dataset["offset_groups"] || null;
 
     let samplesSettings = applyToolboxSettings(samples);
 
     // Rename and filter samples:
     this.filteredSettings = samplesSettings.filter((s) => !s.hidden);
+
+    // Filter group labels to match visible samples
+    let filteredGroupLabels = null;
+    if (groupLabels) {
+      filteredGroupLabels = groupLabels.filter((_, si) => !samplesSettings[si].hidden);
+    }
+    this.filteredGroupLabels = filteredGroupLabels;
+    this.offsetGroups = offsetGroups;
 
     cats = cats.map((cat) => {
       let data = this.pActive ? cat["data_pct"] : cat.data;
@@ -89,8 +99,12 @@ class BarPlot extends Plot {
   resize(newHeight) {
     this.layout.height = newHeight;
 
-    const maxTicks = (this.layout.height - 140) / 12;
-    this.recalculateTicks(this.filteredSettings, this.layout.yaxis, maxTicks);
+    // Only recalculate ticks for non-multicategory axes
+    let useMulticategory = this.filteredGroupLabels && this.filteredGroupLabels.length > 0;
+    if (!useMulticategory) {
+      const maxTicks = (this.layout.height - 140) / 12;
+      this.recalculateTicks(this.filteredSettings, this.layout.yaxis, maxTicks);
+    }
 
     super.resize(newHeight);
   }
@@ -100,12 +114,119 @@ class BarPlot extends Plot {
     let [cats] = this.prepData();
     if (cats.length === 0 || this.filteredSettings.length === 0) return [];
 
-    const maxTicks = (this.layout.height - 140) / 12;
-    this.recalculateTicks(this.filteredSettings, this.layout.yaxis, maxTicks);
+    // Check if we have group labels for multicategory axis
+    let useMulticategory = this.filteredGroupLabels && this.filteredGroupLabels.length > 0;
+
+    // Only recalculate ticks for non-multicategory axes
+    // (multicategory axes have their own tick handling that conflicts with tickvals/ticktext)
+    if (!useMulticategory) {
+      const maxTicks = (this.layout.height - 140) / 12;
+      this.recalculateTicks(this.filteredSettings, this.layout.yaxis, maxTicks);
+    }
 
     let highlighted = this.filteredSettings.filter((s) => s.highlight);
     let firstHighlightedSample = this.firstHighlightedSample(this.filteredSettings);
     let traceParams = this.datasets[this.activeDatasetIdx]["trace_params"];
+
+    // When using sample groups with offsetgroup, create traces per (category, sample) combination
+    // This creates natural gaps between groups using Plotly's offsetgroup feature
+    // y-axis shows group labels (e.g., read lengths), offsetgroup creates sample sub-groups
+    if (useMulticategory) {
+      // Single pass: build all data structures we need
+      let uniqueSamples = [];
+      let seenSamples = new Set();
+      let sampleGroupData = {}; // sampleName -> groupLabel -> [{name, value}, ...]
+      let sampleHighlightStatus = {}; // sampleName -> boolean (is any entry highlighted?)
+      let sampleGroupEntries = {}; // sampleName -> [{groupLabel, dataIdx}, ...]
+
+      this.filteredSettings.forEach((sample, idx) => {
+        let displayName = sample.name;
+        let groupLabel = this.filteredGroupLabels[idx];
+
+        // Track unique samples
+        if (!seenSamples.has(displayName)) {
+          seenSamples.add(displayName);
+          uniqueSamples.push(displayName);
+          sampleGroupData[displayName] = {};
+          sampleHighlightStatus[displayName] = false;
+          sampleGroupEntries[displayName] = [];
+        }
+
+        // Track highlight status
+        if (sample.highlight) {
+          sampleHighlightStatus[displayName] = true;
+        }
+
+        // Store group entry for this sample
+        sampleGroupEntries[displayName].push({ groupLabel, dataIdx: idx });
+
+        // Build category data for this sample+group combination
+        if (!sampleGroupData[displayName][groupLabel]) {
+          sampleGroupData[displayName][groupLabel] = cats.map((cat) => ({
+            name: cat.name,
+            value: cat.data[idx],
+          }));
+        }
+      });
+
+      // Get hover format from dataset layout, fallback to .2f
+      let hoverFormat = this.layout.xaxis?.hoverformat || ".2f";
+
+      // Build hovertemplate once per category (reusable across samples)
+      let hoverTemplates = {};
+      cats.forEach((cat) => {
+        let hoverLines = ["<b>%{customdata.sampleName}</b>"];
+        cats.forEach((c, ci) => {
+          let prefix = c.name === cat.name ? "► <b>" : "   ";
+          let suffix = c.name === cat.name ? "</b>" : "";
+          hoverLines.push(prefix + c.name + ": %{customdata.catData[" + ci + "].value:" + hoverFormat + "}" + suffix);
+        });
+        hoverTemplates[cat.name] = hoverLines.join("<br>") + "<extra></extra>";
+      });
+
+      // Create traces
+      let traces = [];
+      uniqueSamples.forEach((sampleName, sampleIdx) => {
+        // Determine alpha once per sample
+        let sampleHighlighted = sampleHighlightStatus[sampleName];
+        let alpha = highlighted.length > 0 && !sampleHighlighted ? 0.1 : 1;
+
+        cats.forEach((cat) => {
+          // Collect data for this sample across all its groups
+          let groupLabels = [];
+          let groupData = [];
+          let customData = [];
+
+          sampleGroupEntries[sampleName].forEach(({ groupLabel, dataIdx }) => {
+            groupLabels.push(groupLabel);
+            groupData.push(cat.data[dataIdx]);
+            customData.push({
+              sampleName: sampleName,
+              catData: sampleGroupData[sampleName][groupLabel],
+            });
+          });
+
+          if (groupLabels.length > 0) {
+            traces.push({
+              type: "bar",
+              x: groupData,
+              y: groupLabels,
+              customdata: customData,
+              name: cat.name,
+              meta: cat.name,
+              offsetgroup: this.offsetGroups ? this.offsetGroups[sampleName] : sampleName,
+              legendgroup: cat.name,
+              showlegend: sampleIdx === 0,
+              ...traceParams,
+              marker: { ...traceParams.marker, color: "rgba(" + cat.color + "," + alpha + ")" },
+              hovertemplate: hoverTemplates[cat.name],
+            });
+          }
+        });
+      });
+
+      return traces;
+    }
 
     return cats.map((cat) => {
       if (this.layout.barmode !== "group") {
