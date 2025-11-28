@@ -12,7 +12,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
     The module supports outputs from sylphtax, that look like the following:
 
-    ```sylphmpa
+    ```tsv
     clade_name	relative_abundance	sequence_abundance	ANI (if strain-level)
     d__Bacteria	100.00010000000002	99.99999999999999	NA
     d__Bacteria|p__Bacillota	24.640800000000002	18.712699999999998	NA
@@ -35,8 +35,8 @@ class MultiqcModule(BaseMultiqcModule):
         self,
         name="Sylph-tax",
         anchor="sylphtax",
-        href="https://github.com/bluenote-1577/sylph",
-        info="Taxonomic profiling of metagenomic reads (Sylph .sylphmpa format).",
+        href=["https://sylph-docs.github.io/", "https://sylph-docs.github.io/sylph-tax/"],
+        info="Taxonomic profiling of metagenomic reads.",
         doi="10.1038/s41587-024-02412-y",
     ):
         super(MultiqcModule, self).__init__(
@@ -65,7 +65,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.sylph_raw_data = dict()
         for f in self.find_log_files("sylphtax", filehandles=True):
-            f["f"].seek(0)
             self.parse_logs(f)
             self.add_data_source(f)
 
@@ -352,7 +351,7 @@ class MultiqcModule(BaseMultiqcModule):
                 The relative abundance for these top {self.top_n} taxa are then plotted for each of the different taxa ranks.
 
                 The category _"Other"_ shows the difference between 100% and the sum of the percent
-                in the top {self.top_n} taxa shown. This should cover all taxa _not_ in the top {self.top_n}, +/- any rounding errors. 
+                in the top {self.top_n} taxa shown. This should cover all taxa _not_ in the top {self.top_n}, +/- any rounding errors.
                 Note that Sylph does not estimate the percent of unclassified reads, see [here](https://github.com/bluenote-1577/sylph/issues/49).
             """,
             plot=bargraph.plot(pd, cats, pconfig),
