@@ -17,7 +17,7 @@ from .plot_qhist import plot_qhist
 
 
 section_order = [
-    "stats",
+    "bbdukstats",
     "covhist",
     "covstats",
     "bincov",
@@ -39,7 +39,7 @@ section_order = [
     "statsfile",
 ]
 file_types: Dict = {
-    "stats": {
+    "bbdukstats": {
         "title": "BBDuk filtering statistics",
         "descr": "Proportion of reads that matched adapters/contaminants.",
         "help_text": "",

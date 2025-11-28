@@ -165,13 +165,14 @@ class MultiqcModule(BaseMultiqcModule):
                 header_row = line[0][0] == "#"
             except IndexError:
                 continue  # The table is probably empty
+
             if header_row:
                 line[0] = line[0][1:]  # remove leading '#'
 
                 if line[0] != cols[0]:
                     # It's not the table header, it must be a key-value row
-                    if len(line) == 3 and file_type == "stats":
-                        # This is a special case for the 'stats' file type:
+                    if len(line) == 3 and file_type == "bbdukstats":
+                        # This is a special case for the 'bbdukstats' file type:
                         # The first line _might_ have three columns if processing paired-end reads,
                         # but we don't care about the first line.
                         # The third line is always three columns, which is what we really want.
