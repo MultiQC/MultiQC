@@ -48,7 +48,7 @@ file_types: Dict = {
             "Total": (
                 "Total number of reads processed",
                 {
-                    "description": f"Aligned Reads ({config.read_count_desc})",
+                    "description": f"Processed Reads ({config.read_count_desc})",
                     "shared_key": "read_count",
                     "modify": lambda x: x * config.read_count_multiplier,
                     "scale": "PuBu",
@@ -58,7 +58,7 @@ file_types: Dict = {
             "Matched": (
                 "Total number of reads matching adapters/contaminants",
                 {
-                    "description": f"Aligned Reads ({config.read_count_desc})",
+                    "description": f"Reads matching adapters/contaminants ({config.read_count_desc})",
                     "shared_key": "read_count",
                     "modify": lambda x: x * config.read_count_multiplier,
                     "scale": "Reds",
