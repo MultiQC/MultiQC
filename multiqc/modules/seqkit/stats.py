@@ -105,7 +105,7 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
 
     # Add headers to general stats table
     if stats_headers:
-        module.general_stats_addcols(seqkit_stats, stats_headers, namespace="stats")
+        module.general_stats_addcols(seqkit_stats, stats_headers, namespace="seqkit")
 
     # Create detailed table with all columns
     table_headers: Dict = {
@@ -318,7 +318,11 @@ def parse_stats_report(file_content: str) -> Dict[str, Dict]:
 
             if header == "file":
                 # Use file name as sample name, strip path and extension
-                sample_name = value.split("/")[-1]
+                if value == "-":
+                    sample_name = "stdin"
+                else:
+                    # Handle both Unix and Windows path separators
+                    sample_name = value.replace("\\", "/").split("/")[-1]
                 # Remove common sequence file extensions
                 for ext in [".fq.gz", ".fastq.gz", ".fq", ".fastq", ".fa.gz", ".fasta.gz", ".fa", ".fasta"]:
                     if sample_name.endswith(ext):
@@ -329,7 +333,19 @@ def parse_stats_report(file_content: str) -> Dict[str, Dict]:
                 data["format"] = value
             elif header == "type":
                 data["type"] = value
-            elif header in ["num_seqs", "sum_len", "min_len", "max_len", "Q1", "Q2", "Q3", "sum_gap", "N50", "N50_num", "sum_n"]:
+            elif header in [
+                "num_seqs",
+                "sum_len",
+                "min_len",
+                "max_len",
+                "Q1",
+                "Q2",
+                "Q3",
+                "sum_gap",
+                "N50",
+                "N50_num",
+                "sum_n",
+            ]:
                 # Integer fields - handle comma-separated numbers
                 try:
                     data[header] = int(value.replace(",", ""))
