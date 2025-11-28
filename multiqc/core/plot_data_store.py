@@ -24,38 +24,23 @@ logger = logging.getLogger(__name__)
 _saved_anchors: Set[Anchor] = set()
 # Keep track of metric column names
 _metric_col_names: Set[ColumnKey] = set()
+# Buffer for batched parquet writes to avoid O(n²) read-concat-write behavior
+_pending_dataframes: List[pl.DataFrame] = []
+# Buffer for wide table dataframes (need special merging by sample)
+_pending_wide_tables: List[pl.DataFrame] = []
 
 
 def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKey]) -> None:
     """
-    Merge wide-format table data with existing sample-based tables.
+    Buffer wide-format table data for later merging and writing.
 
-    This function extracts table rows from the dataframe and merges them with
-    the existing global cache of wide-format table data. This ensures all tables
-    that have the same samples get combined into a single row per sample.
-
-    The resulting table must have single row per sample.
+    This function buffers table data instead of immediately writing to avoid
+    O(n²) read-concat-write behavior. The actual merging by sample happens
+    in flush_to_parquet().
     """
-    # Fix creation date
+    global _pending_wide_tables
     table_df = fix_creation_date(table_df)
-
-    existing_df = _read_or_create_df()
-
-    # Get all rows that are table_row
-    existing_table_rows = existing_df.filter(pl.col("type") == "table_row")
-
-    # Merge existing and new tables, keeping one row per sample (defined by join_cols)
-    if existing_table_rows.height > 0 and table_df.height > 0:
-        new_df = existing_table_rows.join(table_df, on=["sample", "creation_date"], how="outer")
-        all_cols = existing_table_rows.columns + [c for c in table_df.columns if c not in existing_table_rows.columns]
-        new_df = new_df.select(all_cols)
-    else:
-        # If one of the dataframes is empty, just use diagonal concat
-        new_df = pl.concat([existing_table_rows, table_df], how="diagonal")
-
-    existing_other_rows_df = existing_df.filter(pl.col("type") != "table_row")
-    new_df = pl.concat([existing_other_rows_df, new_df], how="diagonal")
-    _write_parquet(new_df)
+    _pending_wide_tables.append(table_df)
 
 
 def fix_creation_date(df: pl.DataFrame) -> pl.DataFrame:
@@ -68,14 +53,80 @@ def fix_creation_date(df: pl.DataFrame) -> pl.DataFrame:
 
 def append_to_parquet(df: pl.DataFrame) -> None:
     """
-    Save plot data to the parquet file.
+    Buffer plot data for later writing to the parquet file.
 
-    This function adds/updates data for a specific plot in the file.
+    This function buffers data instead of immediately writing to avoid
+    O(n²) read-concat-write behavior when many plots are saved.
+    Call flush_to_parquet() to write all buffered data at once.
     """
+    global _pending_dataframes
     df = fix_creation_date(df)
+    _pending_dataframes.append(df)
+
+
+def flush_to_parquet() -> None:
+    """
+    Write all buffered dataframes to the parquet file at once.
+
+    This should be called at the end of report generation to efficiently
+    write all accumulated plot data in a single operation.
+    """
+    global _pending_dataframes, _pending_wide_tables
+
+    if not _pending_dataframes and not _pending_wide_tables:
+        return
+
+    # Read existing data from file (if any)
     existing_df = _read_or_create_df()
-    df = pl.concat([existing_df, df], how="diagonal")
-    _write_parquet(df)
+
+    # Start with existing non-table rows
+    existing_other_rows = existing_df.filter(pl.col("type") != "table_row") if not existing_df.is_empty() else None
+
+    # Process wide tables - merge all buffered wide tables by sample
+    merged_wide_tables: Optional[pl.DataFrame] = None
+    if _pending_wide_tables:
+        # Get existing table rows
+        existing_table_rows = existing_df.filter(pl.col("type") == "table_row") if not existing_df.is_empty() else None
+
+        # Start with existing table rows or first pending table
+        if existing_table_rows is not None and not existing_table_rows.is_empty():
+            merged_wide_tables = existing_table_rows
+        else:
+            merged_wide_tables = None
+
+        # Merge all pending wide tables
+        for table_df in _pending_wide_tables:
+            if merged_wide_tables is None:
+                merged_wide_tables = table_df
+            elif table_df.height > 0:
+                # Merge by joining on sample and creation_date
+                merged_wide_tables = merged_wide_tables.join(table_df, on=["sample", "creation_date"], how="outer")
+                # Ensure all columns are present
+                all_cols = merged_wide_tables.columns
+                for col in table_df.columns:
+                    if col not in all_cols:
+                        all_cols.append(col)
+                merged_wide_tables = merged_wide_tables.select([c for c in all_cols if c in merged_wide_tables.columns])
+
+    # Build list of dataframes to concatenate
+    all_dfs: List[pl.DataFrame] = []
+
+    if existing_other_rows is not None and not existing_other_rows.is_empty():
+        all_dfs.append(existing_other_rows)
+
+    all_dfs.extend(_pending_dataframes)
+
+    if merged_wide_tables is not None and not merged_wide_tables.is_empty():
+        all_dfs.append(merged_wide_tables)
+
+    # Write combined data
+    if all_dfs:
+        combined_df = pl.concat(all_dfs, how="diagonal")
+        _write_parquet(combined_df)
+
+    # Clear buffers
+    _pending_dataframes = []
+    _pending_wide_tables = []
 
 
 def get_report_metadata(df: pl.DataFrame) -> Optional[Dict[str, Any]]:
@@ -201,6 +252,9 @@ def save_report_metadata() -> None:
 
     append_to_parquet(metadata_df)
 
+    # Flush all buffered data to the parquet file
+    flush_to_parquet()
+
 
 def _write_parquet(df: pl.DataFrame) -> None:
     parquet_file = tmp_dir.parquet_file()
@@ -310,9 +364,11 @@ def reset():
     """
     Reset the module state.
     """
-    global _saved_anchors, _metric_col_names
+    global _saved_anchors, _metric_col_names, _pending_dataframes, _pending_wide_tables
     _saved_anchors = set()
     _metric_col_names = set()
+    _pending_dataframes = []
+    _pending_wide_tables = []
 
 
 def parse_value(value: Any, value_type: str) -> Any:
