@@ -36,6 +36,12 @@ SAMPLE_STATS_INVALID = """name	count	length
 sample1	1000	100000
 """
 
+# Space-separated format (default seqkit stats output without --tabular)
+SAMPLE_STATS_SPACE_SEPARATED = """file                format  type  num_seqs   sum_len      min_len  avg_len  max_len
+sample1.fq.gz       FASTQ   DNA   1000000    100000000    100      100.0    100
+sample2.fq.gz       FASTQ   DNA   2000000    200000000    100      100.0    100
+"""
+
 
 class TestParseStatsReport:
     """Tests for parse_stats_report function"""
@@ -143,3 +149,19 @@ class TestParseStatsReport:
             data = f"file\tformat\ttype\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len\n{filename}\tFASTQ\tDNA\t100\t10000\t100\t100.0\t100"
             result = parse_stats_report(data)
             assert expected_name in result, f"Expected {expected_name} for {filename}"
+
+    def test_parse_space_separated(self):
+        """Test parsing space-separated output (default seqkit stats format)"""
+        result = parse_stats_report(SAMPLE_STATS_SPACE_SEPARATED)
+
+        assert len(result) == 2
+        assert "sample1" in result
+        assert "sample2" in result
+
+        # Check sample1 data
+        s1 = result["sample1"]
+        assert s1["format"] == "FASTQ"
+        assert s1["type"] == "DNA"
+        assert s1["num_seqs"] == 1000000
+        assert s1["sum_len"] == 100000000
+        assert s1["avg_len"] == 100.0

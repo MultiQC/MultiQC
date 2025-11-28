@@ -284,7 +284,8 @@ def parse_stats_report(file_content: str) -> Dict[str, Dict]:
     """
     Parse seqkit stats output file
 
-    Returns a dictionary with sample names as keys and parsed data as values
+    Returns a dictionary with sample names as keys and parsed data as values.
+    Handles both tab-separated (--tabular flag) and space-separated (default) output.
     """
     parsed_data: Dict[str, Dict] = {}
     lines = file_content.strip().split("\n")
@@ -292,9 +293,14 @@ def parse_stats_report(file_content: str) -> Dict[str, Dict]:
     if len(lines) < 2:
         return {}
 
-    # Parse header line
+    # Parse header line - try tab-separated first, then space-separated
     header_line = lines[0]
-    headers = [h.strip() for h in header_line.split("\t")]
+    if "\t" in header_line:
+        headers = [h.strip() for h in header_line.split("\t")]
+        use_tabs = True
+    else:
+        headers = header_line.split()
+        use_tabs = False
 
     # Check if this looks like seqkit stats output
     expected_headers = ["file", "format", "type", "num_seqs", "sum_len", "min_len", "avg_len", "max_len"]
@@ -306,7 +312,10 @@ def parse_stats_report(file_content: str) -> Dict[str, Dict]:
         if not line.strip():
             continue
 
-        values = line.split("\t")
+        if use_tabs:
+            values = line.split("\t")
+        else:
+            values = line.split()
         if len(values) < len(headers):
             continue
 
