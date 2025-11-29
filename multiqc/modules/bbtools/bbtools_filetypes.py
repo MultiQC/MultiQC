@@ -16,28 +16,6 @@ from .plot_qchist import plot_qchist
 from .plot_qhist import plot_qhist
 
 
-section_order = [
-    "bbdukstats",
-    "covhist",
-    "covstats",
-    "bincov",
-    "bqhist",
-    "idhist",
-    "indelhist",
-    "mhist",
-    "qahist",
-    "qchist",
-    "qhist",
-    "aqhist",
-    "ehist",
-    "lhist",
-    "ihist",
-    "gchist",
-    "bhist",
-    "rpkm",
-    "statsfile_machine",
-    "statsfile",
-]
 file_types: Dict = {
     "bbdukstats": {
         "title": "BBDuk filtering statistics",

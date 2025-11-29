@@ -3,7 +3,7 @@ from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
-from .bbtools_filetypes import file_types, section_order
+from .bbtools_filetypes import file_types
 
 log = logging.getLogger(__name__)
 
@@ -92,28 +92,28 @@ class MultiqcModule(BaseMultiqcModule):
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
-        for file_type in section_order:
+        for file_type, file_type_cfg in file_types.items():
             if len(self.mod_data[file_type]) > 0:
                 log.debug("section %s has %d entries", file_type, len(self.mod_data[file_type]))
 
-                if file_types[file_type]["plot_func"]:
+                if file_type_cfg["plot_func"]:
                     self.add_section(
-                        name=file_types[file_type]["title"],
+                        name=file_type_cfg["title"],
                         anchor="bbtools-" + file_type,
-                        description=file_types[file_type]["descr"],
-                        helptext=file_types[file_type]["help_text"],
+                        description=file_type_cfg["descr"],
+                        helptext=file_type_cfg["help_text"],
                         plot=self.plot(file_type),
                     )
 
             if (
                 any(self.mod_data[file_type][sample]["kv"] for sample in self.mod_data[file_type])
-                and "kv_descriptions" in file_types[file_type]
+                and "kv_descriptions" in file_type_cfg
             ):
                 self.add_section(
-                    name=file_types[file_type]["title"] + " summary table",
+                    name=file_type_cfg["title"] + " summary table",
                     anchor="bbtools-" + file_type + "-table",
-                    description=file_types[file_type]["descr"],
-                    helptext=file_types[file_type]["help_text"],
+                    description=file_type_cfg["descr"],
+                    helptext=file_type_cfg["help_text"],
                     plot=self.make_basic_table(file_type),
                 )
 
