@@ -403,7 +403,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
         # Reconstruct data structure using efficient grouping
         datasets: List[List[Series[KeyT, ValT]]] = []
-        data_labels: List[Dict[str, Any]] = []
+        data_labels: List[Union[str, Dict[str, Any]]] = []
         sample_names: List[SampleName] = []
         sample_names_set: set = set()
 
@@ -435,7 +435,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
             all_series = ds_group.get_column("series").to_list()
 
             # Group data by sample name using a dictionary
-            sample_data: Dict[str, List[Tuple[int, Any]]] = {}
+            sample_data: Dict[str, List[int]] = {}
             for i, sample in enumerate(all_samples):
                 if sample not in sample_data:
                     sample_data[sample] = []
