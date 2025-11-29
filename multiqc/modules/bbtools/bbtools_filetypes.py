@@ -16,30 +16,8 @@ from .plot_qchist import plot_qchist
 from .plot_qhist import plot_qhist
 
 
-section_order = [
-    "stats",
-    "covhist",
-    "covstats",
-    "bincov",
-    "bqhist",
-    "idhist",
-    "indelhist",
-    "mhist",
-    "qahist",
-    "qchist",
-    "qhist",
-    "aqhist",
-    "ehist",
-    "lhist",
-    "ihist",
-    "gchist",
-    "bhist",
-    "rpkm",
-    "statsfile_machine",
-    "statsfile",
-]
 file_types: Dict = {
-    "stats": {
+    "bbdukstats": {
         "title": "BBDuk filtering statistics",
         "descr": "Proportion of reads that matched adapters/contaminants.",
         "help_text": "",
@@ -48,7 +26,7 @@ file_types: Dict = {
             "Total": (
                 "Total number of reads processed",
                 {
-                    "description": f"Aligned Reads ({config.read_count_desc})",
+                    "description": f"Processed Reads ({config.read_count_desc})",
                     "shared_key": "read_count",
                     "modify": lambda x: x * config.read_count_multiplier,
                     "scale": "PuBu",
@@ -58,7 +36,7 @@ file_types: Dict = {
             "Matched": (
                 "Total number of reads matching adapters/contaminants",
                 {
-                    "description": f"Aligned Reads ({config.read_count_desc})",
+                    "description": f"Reads matching adapters/contaminants ({config.read_count_desc})",
                     "shared_key": "read_count",
                     "modify": lambda x: x * config.read_count_multiplier,
                     "scale": "Reds",

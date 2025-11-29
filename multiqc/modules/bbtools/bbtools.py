@@ -3,7 +3,7 @@ from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
-from .bbmap_filetypes import file_types, section_order
+from .bbtools_filetypes import file_types
 
 log = logging.getLogger(__name__)
 
@@ -11,11 +11,11 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """
     The module produces summary statistics from the
-    [BBMap](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.
-    The module can summarise data from the following BBMap output files
+    [BBTools](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.
+    The module can summarise data from the following BBTools output files
     (descriptions from command line help output):
 
-    - `stats`
+    - `bbdukstats`
       - BBDuk filtering statistics.
     - `covstats` _(not yet implemented)_
       - Per-scaffold coverage info.
@@ -52,14 +52,14 @@ class MultiqcModule(BaseMultiqcModule):
     - `statsfile` _(not yet implemented)_
       - Mapping statistics are printed here.
 
-    Additional information on the BBMap tools is available on
+    Additional information on BBTools is available on
     [SeqAnswers](http://seqanswers.com/forums/showthread.php?t=41057).
     """
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="BBTools",
-            anchor="bbmap",
+            anchor="bbtools",
             href="http://jgi.doe.gov/data-and-tools/bbtools/",
             info="Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads",
             # One publication, but only for the merge tool:
@@ -70,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.mod_data: Dict = {key: {} for key in file_types}
 
         # Find output files
-        module_filetypes = [("bbmap/" + ft, ft) for ft in file_types]
+        module_filetypes = [("bbtools/" + ft, ft) for ft in file_types]
         data_found = False
         for module_filetype, file_type in module_filetypes:
             for f in self.find_log_files(module_filetype, filehandles=True):
@@ -85,34 +85,35 @@ class MultiqcModule(BaseMultiqcModule):
             log.info(f"Found {num_samples} reports")
 
         # Write data to file
-        self.write_data_file(self.mod_data, "bbmap")
+        for section in self.mod_data.keys():
+            self.write_data_file(self.mod_data[section], f"multiqc_bbtools_{section}")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
-        for file_type in section_order:
+        for file_type, file_type_cfg in file_types.items():
             if len(self.mod_data[file_type]) > 0:
                 log.debug("section %s has %d entries", file_type, len(self.mod_data[file_type]))
 
-                if file_types[file_type]["plot_func"]:
+                if file_type_cfg["plot_func"]:
                     self.add_section(
-                        name=file_types[file_type]["title"],
-                        anchor="bbmap-" + file_type,
-                        description=file_types[file_type]["descr"],
-                        helptext=file_types[file_type]["help_text"],
+                        name=file_type_cfg["title"],
+                        anchor="bbtools-" + file_type,
+                        description=file_type_cfg["descr"],
+                        helptext=file_type_cfg["help_text"],
                         plot=self.plot(file_type),
                     )
 
             if (
                 any(self.mod_data[file_type][sample]["kv"] for sample in self.mod_data[file_type])
-                and "kv_descriptions" in file_types[file_type]
+                and "kv_descriptions" in file_type_cfg
             ):
                 self.add_section(
-                    name=file_types[file_type]["title"] + " summary table",
-                    anchor="bbmap-" + file_type + "-table",
-                    description=file_types[file_type]["descr"],
-                    helptext=file_types[file_type]["help_text"],
+                    name=file_type_cfg["title"] + " summary table",
+                    anchor="bbtools-" + file_type + "-table",
+                    description=file_type_cfg["descr"],
+                    helptext=file_type_cfg["help_text"],
                     plot=self.make_basic_table(file_type),
                 )
 
@@ -121,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = {}
             for s_name in self.mod_data["qchist"]:
                 fraction_gt_q30 = []
-                for qual, d in self.mod_data["qchist"][s_name]["data"].items():
+                for qual, d in self.mod_data["qchist"][s_name]["header"].items():
                     if int(qual) >= 30:
                         fraction_gt_q30.append(d[1])
                 data[s_name] = {"pct_q30": sum(fraction_gt_q30) * 100.0}
@@ -129,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
             headers = {
                 "pct_q30": {
                     "title": "% Q30 bases",
-                    "description": "BBMap qchist - Percentage of bases with phred quality score >= 30",
+                    "description": "BBTools qchist - Percentage of bases with phred quality score >= 30",
                     "suffix": " %",
                     "scale": "RdYlGn",
                     "format": "{:,.2f}",
@@ -156,28 +157,29 @@ class MultiqcModule(BaseMultiqcModule):
         if isinstance(cols, dict):
             cols = list(cols.keys())
 
-        kv = {}
-        data = {}
+        kv_data = {}
+        table_data = {}
         for line_number, line in enumerate(f, start=1):
             line = line.strip().split("\t")
             try:
                 header_row = line[0][0] == "#"
             except IndexError:
                 continue  # The table is probably empty
+
             if header_row:
                 line[0] = line[0][1:]  # remove leading '#'
 
                 if line[0] != cols[0]:
                     # It's not the table header, it must be a key-value row
-                    if len(line) == 3 and file_type == "stats":
-                        # This is a special case for the 'stats' file type:
+                    if len(line) == 3 and file_type == "bbdukstats":
+                        # This is a special case for the 'bbdukstats' file type:
                         # The first line _might_ have three columns if processing paired-end reads,
                         # but we don't care about the first line.
                         # The third line is always three columns, which is what we really want.
                         if line[0] == "File":
                             continue
-                        kv["Percent filtered"] = float(line[2].strip("%"))
-                        kv[line[0]] = line[1]
+                        kv_data["Percent filtered"] = float(line[2].strip("%"))
+                        kv_data[line[0]] = line[1]
                     elif len(line) != 2:
                         # Not two items? Wrong!
                         log.error(
@@ -186,7 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
                         log.error("Table header should begin with '%s'", cols[0])
                     else:
                         # save key value pair
-                        kv[line[0]] = line[1]
+                        kv_data[line[0]] = line[1]
                 else:
                     # It should be the table header. Verify:
                     if line != cols:
@@ -198,17 +200,17 @@ class MultiqcModule(BaseMultiqcModule):
                     line = [value_type(value) for value_type, value in zip(log_descr["cols"].values(), line)]
                 else:
                     line = list(map(int, line))
-                data[line[0]] = line[1:]
+                table_data[line[0]] = line[1:]
 
-        if not data:
+        if not table_data:
             log.warning("File %s appears to contain no data for plotting, ignoring...", fn)
             return False
 
         if s_name in self.mod_data[file_type]:
             log.debug("Duplicate sample name found! Overwriting: %s", s_name)
 
-        self.mod_data[file_type][s_name] = {"data": data, "kv": kv}
-        log.debug("Found %s output for sample %s with %d rows", file_type, s_name, len(data))
+        self.mod_data[file_type][s_name] = {"table": table_data, "kv": kv_data}
+        log.debug("Found %s output for sample %s with %d rows", file_type, s_name, len(table_data))
 
         return True
 

@@ -8,8 +8,8 @@ def plot_qahist(data_by_sample: Dict[str, Dict[str, Dict]], file_type, **plot_ar
     """
     Create line graph plot of histogram data for BBMap 'qahist' output.
 
-    The 'samples' parameter could be from the bbmap mod_data dictionary:
-    samples = bbmap.MultiqcModule.mod_data[file_type]
+    The 'samples' parameter could be from the bbtools mod_data dictionary:
+    samples = bbtools.MultiqcModule.mod_data[file_type]
 
     samples:
         sample1:
@@ -69,7 +69,7 @@ def plot_qahist(data_by_sample: Dict[str, Dict[str, Dict]], file_type, **plot_ar
 
         plot_data.append(y_by_x_by_sample)
     plot_params = {
-        "id": "bbmap-" + file_type + "_plot",
+        "id": "bbtools-" + file_type + "_plot",
         "title": "BBTools: " + plot_args["plot_title"],
         "xlab": "Quality score",
         "ylab": "Match count",

@@ -6,8 +6,8 @@ from multiqc.plots import linegraph
 def plot_bqhist(samples, file_type, **plot_args):
     """Create line graph plot of histogram data for BBMap 'bqhist' output.
 
-    The 'samples' parameter could be from the bbmap mod_data dictionary:
-    samples = bbmap.MultiqcModule.mod_data[file_type]
+    The 'samples' parameter could be from the bbtools mod_data dictionary:
+    samples = bbtools.MultiqcModule.mod_data[file_type]
     """
 
     all_x = set()
@@ -54,7 +54,7 @@ def plot_bqhist(samples, file_type, **plot_args):
         )
 
     plot_params = {
-        "id": "bbmap-" + file_type + "_plot",
+        "id": "bbtools-" + file_type + "_plot",
         "title": "BBTools: " + plot_args["plot_title"],
         "xlab": "Read position",
         "ylab": "Average quality score",

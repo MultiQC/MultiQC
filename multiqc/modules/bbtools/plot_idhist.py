@@ -3,11 +3,11 @@ from itertools import chain
 from multiqc.plots import linegraph
 
 
-def plot_indelhist(samples, file_type, **plot_args):
-    """Create line graph plot of histogram data for BBMap 'indelhist' output.
+def plot_idhist(samples, file_type, **plot_args):
+    """Create line graph plot of histogram data for BBMap 'idhist' output.
 
-    The 'samples' parameter could be from the bbmap mod_data dictionary:
-    samples = bbmap.MultiqcModule.mod_data[file_type]
+    The 'samples' parameter could be from the bbtools mod_data dictionary:
+    samples = bbtools.MultiqcModule.mod_data[file_type]
     """
 
     all_x = set()
@@ -15,10 +15,10 @@ def plot_indelhist(samples, file_type, **plot_args):
         all_x.add(item[0])
 
     columns_to_plot = {
-        "Deletions": {
+        "Reads": {
             0: "Count",
         },
-        "Insertions": {
+        "Bases": {
             1: "Count",
         },
     }
@@ -36,14 +36,14 @@ def plot_indelhist(samples, file_type, **plot_args):
         )
 
     plot_params = {
-        "id": "bbmap-" + file_type + "_plot",
+        "id": "bbtools-" + file_type + "_plot",
         "title": "BBTools: " + plot_args["plot_title"],
-        "xlab": "Indel size",
-        "xsuffix": " bp",
-        "ylab": "Insertion count",
+        "xlab": "Percent identity",
+        "xsuffix": "%",
+        "ylab": "Read count",
         "data_labels": [
-            {"name": "Insertions", "ylab": "Insertion count"},
-            {"name": "Deletions", "ylab": "Deletion count"},
+            {"name": "Reads", "ylab": "Read count"},
+            {"name": "Bases", "ylab": "Number of bases"},
         ],
     }
     plot_params.update(plot_args["plot_params"])
