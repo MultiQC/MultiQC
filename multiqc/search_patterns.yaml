@@ -1085,3 +1085,9 @@ ataqv:
   num_lines: 10
 mosaicatcher:
   fn: "*.mosaicatcher_info_raw.txt"
+wittyer:
+  fn: "*.json"
+  contents: "EventPrecision"
+  contents: "EventRecall"
+  contents: "PerSampleStats"
+  num_lines: 50
