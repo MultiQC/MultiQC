@@ -45,6 +45,9 @@ bbduk:
 bbmap/stats:
   contents: ["#File", "#Total", "#Matched", "#Name	Reads	ReadsPct"]
   num_lines: 10
+bbmap/bbsplit:
+  contents: "#name	%unambiguousReads	unambiguousMB	%ambiguousReads"
+  num_lines: 5
 bbmap/aqhist:
   contents: "#Quality	count1	fraction1	count2	fraction2"
   num_lines: 10
