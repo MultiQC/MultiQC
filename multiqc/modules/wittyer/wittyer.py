@@ -54,7 +54,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.wittyer_data, "multiqc_wittyer")
 
         # Add sections to the report
-        self.add_overall_stats_section()
         self.add_variant_type_section()
 
     def parse_wittyer_json(self, data: Dict, f: Dict) -> None:
@@ -84,159 +83,6 @@ class MultiqcModule(BaseMultiqcModule):
             "overall_stats": sample_stats.get("OverallStats", []),
             "detailed_stats": sample_stats.get("DetailedStats", [])
         }
-
-    def add_overall_stats_section(self) -> None:
-        """Add section showing overall performance metrics"""
-        
-        # Prepare data for general stats table
-        general_stats_data = {}
-        general_stats_headers = {}
-        
-        for s_name, data in self.wittyer_data.items():
-            general_stats_data[s_name] = {
-                "event_precision": data["event_precision"] * 100,
-                "event_recall": data["event_recall"] * 100,
-                "event_fscore": data["event_fscore"] * 100,
-            }
-        
-        general_stats_headers["event_precision"] = {
-            "title": "Precision",
-            "description": "Event-level precision (%)",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn",
-            "format": "{:,.2f}",
-        }
-        general_stats_headers["event_recall"] = {
-            "title": "Recall",
-            "description": "Event-level recall (%)",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn",
-            "format": "{:,.2f}",
-        }
-        general_stats_headers["event_fscore"] = {
-            "title": "F-score",
-            "description": "Event-level F-score (%)",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn",
-            "format": "{:,.2f}",
-        }
-        
-        self.general_stats_addcols(general_stats_data, general_stats_headers)
-        
-        # Create detailed stats table
-        table_data = {}
-        for s_name, data in self.wittyer_data.items():
-            table_data[s_name] = {}
-            for stat in data["overall_stats"]:
-                stats_type = stat.get("StatsType", "")
-                prefix = f"{stats_type}_"
-                
-                table_data[s_name][f"{prefix}tp"] = stat.get("TruthTpCount", 0)
-                table_data[s_name][f"{prefix}fn"] = stat.get("TruthFnCount", 0)
-                table_data[s_name][f"{prefix}fp"] = stat.get("QueryFpCount", 0)
-                table_data[s_name][f"{prefix}recall"] = stat.get("Recall", 0) * 100
-                table_data[s_name][f"{prefix}precision"] = stat.get("Precision", 0) * 100
-                table_data[s_name][f"{prefix}fscore"] = stat.get("Fscore", 0) * 100
-        
-        table_headers = {
-            "Event_tp": {
-                "title": "Event TP",
-                "description": "True Positive events",
-                "scale": "Greens",
-                "format": "{:,.0f}",
-            },
-            "Event_fn": {
-                "title": "Event FN",
-                "description": "False Negative events",
-                "scale": "Reds",
-                "format": "{:,.0f}",
-            },
-            "Event_fp": {
-                "title": "Event FP",
-                "description": "False Positive events",
-                "scale": "Reds",
-                "format": "{:,.0f}",
-            },
-            "Event_recall": {
-                "title": "Event Recall",
-                "description": "Event recall (%)",
-                "suffix": "%",
-                "scale": "RdYlGn",
-                "format": "{:,.2f}",
-                "max": 100,
-            },
-            "Event_precision": {
-                "title": "Event Precision",
-                "description": "Event precision (%)",
-                "suffix": "%",
-                "scale": "RdYlGn",
-                "format": "{:,.2f}",
-                "max": 100,
-            },
-            "Event_fscore": {
-                "title": "Event F-score",
-                "description": "Event F-score (%)",
-                "suffix": "%",
-                "scale": "RdYlGn",
-                "format": "{:,.2f}",
-                "max": 100,
-            },
-            "Base_tp": {
-                "title": "Base TP",
-                "description": "True Positive bases",
-                "scale": "Greens",
-                "format": "{:,.0f}",
-            },
-            "Base_fn": {
-                "title": "Base FN",
-                "description": "False Negative bases",
-                "scale": "Reds",
-                "format": "{:,.0f}",
-            },
-            "Base_fp": {
-                "title": "Base FP",
-                "description": "False Positive bases",
-                "scale": "Reds",
-                "format": "{:,.0f}",
-            },
-            "Base_recall": {
-                "title": "Base Recall",
-                "description": "Base-level recall (%)",
-                "suffix": "%",
-                "scale": "RdYlGn",
-                "format": "{:,.2f}",
-                "max": 100,
-            },
-            "Base_precision": {
-                "title": "Base Precision",
-                "description": "Base-level precision (%)",
-                "suffix": "%",
-                "scale": "RdYlGn",
-                "format": "{:,.2f}",
-                "max": 100,
-            },
-            "Base_fscore": {
-                "title": "Base F-score",
-                "description": "Base-level F-score (%)",
-                "suffix": "%",
-                "scale": "RdYlGn",
-                "format": "{:,.2f}",
-                "max": 100,
-            },
-        }
-        
-        self.add_section(
-            name="Overall Statistics",
-            anchor="wittyer-overall",
-            description="Overall event and base-level statistics for structural variant benchmarking",
-            plot=table.plot(table_data, table_headers),
-        )
 
     def add_variant_type_section(self) -> None:
         """Add separate table sections for each main variant type"""
@@ -291,12 +137,15 @@ class MultiqcModule(BaseMultiqcModule):
                             fscore = float(fscore) * 100
                         
                         variant_data[variant_type][s_name] = {
-                            "tp": stat.get("TruthTpCount", 0),
-                            "fn": stat.get("TruthFnCount", 0),
-                            "fp": stat.get("QueryFpCount", 0),
-                            "recall": recall,
                             "precision": precision,
+                            "recall": recall,
                             "fscore": fscore,
+                            "ttp": stat.get("TruthTpCount", 0),
+                            "tfn": stat.get("TruthFnCount", 0),
+                            "total_truth": stat.get("TruthTotalCount", 0),
+                            "qtp": stat.get("QueryTpCount", 0),
+                            "qfp": stat.get("QueryFpCount", 0),
+                            "total_query": stat.get("QueryTotalCount", 0),
                         }
                         break
         
@@ -311,53 +160,65 @@ class MultiqcModule(BaseMultiqcModule):
             
             # Define headers
             table_headers = {
-                "tp": {
-                    "title": "True Positives",
+                "precision": {
+                    "title": "Precision (%)",
+                    "description": f"Precision for {display_name.lower()}",
+                    "scale": "Blues",
+                    "format": "{:.2f}",
+                },
+                "recall": {
+                    "title": "Recall (%)",
+                    "description": f"Recall for {display_name.lower()}",
+                    "scale": "Blues",
+                    "format": "{:.2f}",
+                },
+                "fscore": {
+                    "title": "F1-score (%)",
+                    "description": f"F-score for {display_name.lower()}",
+                    "scale": "Blues",
+                    "format": "{:.2f}",
+                },
+                "ttp": {
+                    "title": "True Positives - Truth",
                     "description": f"Number of correctly identified {display_name.lower()}",
                     "scale": "Greens",
                     "format": "{:,.0f}",
                 },
-                "fn": {
-                    "title": "False Negatives",
+                "tfn": {
+                    "title": "False Negatives - Truth",
                     "description": f"Number of missed {display_name.lower()}",
                     "scale": "Reds",
                     "format": "{:,.0f}",
                 },
-                "fp": {
-                    "title": "False Positives",
+                "total_truth": {
+                    "title": "Total Truth Events",
+                    "description": f"Total number of {display_name.lower()} in truth set",
+                    "scale": "Greys",
+                    "format": "{:,.0f}",
+                },
+                "qtp": {
+                    "title": "True Positives - Query",
+                    "description": f"Number of correctly called {display_name.lower()}",
+                    "scale": "Greens",
+                    "format": "{:,.0f}",
+                },
+                "qfp": {
+                    "title": "False Positives - Query",
                     "description": f"Number of incorrectly called {display_name.lower()}",
                     "scale": "Reds",
                     "format": "{:,.0f}",
                 },
-                "recall": {
-                    "title": "Recall",
-                    "description": f"Percentage of true {display_name.lower()} that were detected",
-                    "suffix": "%",
-                    "scale": "RdYlGn",
-                    "format": "{:,.2f}",
-                    "max": 100,
-                },
-                "precision": {
-                    "title": "Precision",
-                    "description": f"Percentage of called {display_name.lower()} that are correct",
-                    "suffix": "%",
-                    "scale": "RdYlGn",
-                    "format": "{:,.2f}",
-                    "max": 100,
-                },
-                "fscore": {
-                    "title": "F-score",
-                    "description": f"Harmonic mean of precision and recall for {display_name.lower()}",
-                    "suffix": "%",
-                    "scale": "RdYlGn",
-                    "format": "{:,.2f}",
-                    "max": 100,
+                "total_query": {
+                    "title": "Total Query Events",
+                    "description": f"Total number of {display_name.lower()} called in query set",
+                    "scale": "Greys",
+                    "format": "{:,.0f}",
                 },
             }
             
             # Add section for this variant type
             self.add_section(
-                name=f"{display_name} Performance",
+                name=f"{display_name}",
                 anchor=f"wittyer-{variant_type.lower()}",
                 description=f"Event-level benchmarking metrics for {display_name.lower()}",
                 plot=table.plot(table_data, table_headers),
