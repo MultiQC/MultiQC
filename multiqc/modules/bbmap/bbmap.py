@@ -7,6 +7,20 @@ from .bbmap_filetypes import file_types, section_order
 
 log = logging.getLogger(__name__)
 
+# BBSplit stats file column indices
+# Columns: %unambiguousReads, unambiguousMB, %ambiguousReads, ambiguousMB,
+#          unambiguousReads, ambiguousReads, assignedReads, assignedBases
+BBSPLIT_COLS = {
+    "pct_unambiguous": 0,
+    "unambiguous_mb": 1,
+    "pct_ambiguous": 2,
+    "ambiguous_mb": 3,
+    "unambiguous_reads": 4,
+    "ambiguous_reads": 5,
+    "assigned_reads": 6,
+    "assigned_bases": 7,
+}
+
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -141,81 +155,87 @@ class MultiqcModule(BaseMultiqcModule):
 
         # BBSplit metrics in General Stats
         if "bbsplit" in self.mod_data and len(self.mod_data["bbsplit"]) > 0:
-            bbsplit_headers = {}
             bbsplit_data = {}
+            all_ref_names = set()
 
-            # Process each sample
+            # First pass: collect all reference names and validate data
             for s_name in self.mod_data["bbsplit"]:
-                if s_name not in bbsplit_data:
-                    bbsplit_data[s_name] = {}
+                sample_data = self.mod_data["bbsplit"][s_name]["data"]
+                for ref_name, values in sample_data.items():
+                    # Validate array length before accessing indices
+                    if len(values) < len(BBSPLIT_COLS):
+                        log.warning(
+                            f"BBSplit data for sample '{s_name}', reference '{ref_name}' has {len(values)} columns, "
+                            f"expected {len(BBSPLIT_COLS)}. Skipping this entry."
+                        )
+                        continue
+                    all_ref_names.add(ref_name)
 
-                # Get data for this sample
+            # Create headers once for all reference genomes found
+            # Using shorter column names: assigned, unambig_pct, ambig_pct, unambig, ambig
+            # Color scales chosen for visual distinction and semantic meaning
+            bbsplit_headers = {}
+            for ref_name in sorted(all_ref_names):
+                bbsplit_headers[f"{ref_name}_assigned"] = {
+                    "title": f"{ref_name} Assigned",
+                    "description": f"Total number of reads assigned to {ref_name}",
+                    "scale": "Purples",  # Purple for total/combined
+                    "format": "{:,.0f}",
+                    "shared_key": "read_count",
+                }
+                bbsplit_headers[f"{ref_name}_unambig_pct"] = {
+                    "title": f"{ref_name} % Unambig",
+                    "description": f"Percentage of reads unambiguously aligned to {ref_name}",
+                    "suffix": "%",
+                    "scale": "Greens",  # Green for good/clear alignments
+                    "format": "{:,.2f}",
+                    "min": 0,
+                    "max": 100,
+                    "hidden": True,
+                }
+                bbsplit_headers[f"{ref_name}_ambig_pct"] = {
+                    "title": f"{ref_name} % Ambig",
+                    "description": f"Percentage of reads ambiguously aligned to {ref_name}",
+                    "suffix": "%",
+                    "scale": "Oranges",  # Orange for ambiguous/caution
+                    "format": "{:,.2f}",
+                    "min": 0,
+                    "max": 100,
+                    "hidden": True,
+                }
+                bbsplit_headers[f"{ref_name}_unambig"] = {
+                    "title": f"{ref_name} Unambig",
+                    "description": f"Number of reads unambiguously aligned to {ref_name}",
+                    "scale": "Blues",  # Blue for unambiguous counts
+                    "format": "{:,.0f}",
+                    "shared_key": "read_count",
+                    "hidden": True,
+                }
+                bbsplit_headers[f"{ref_name}_ambig"] = {
+                    "title": f"{ref_name} Ambig",
+                    "description": f"Number of reads ambiguously aligned to {ref_name}",
+                    "scale": "Reds",  # Red for ambiguous counts (potential concern)
+                    "format": "{:,.0f}",
+                    "shared_key": "read_count",
+                    "hidden": True,
+                }
+
+            # Second pass: populate data using BBSPLIT_COLS dictionary
+            for s_name in self.mod_data["bbsplit"]:
+                bbsplit_data[s_name] = {}
                 sample_data = self.mod_data["bbsplit"][s_name]["data"]
 
-                # Create columns for each reference genome found
                 for ref_name, values in sample_data.items():
-                    # Values correspond to columns in stats file:
-                    # [0]=%unambiguousReads, [1]=unambiguousMB, [2]=%ambiguousReads, [3]=ambiguousMB,
-                    # [4]=unambiguousReads, [5]=ambiguousReads, [6]=assignedReads, [7]=assignedBases
+                    # Skip entries that failed validation
+                    if len(values) < len(BBSPLIT_COLS):
+                        continue
 
-                    pct_unambig = values[0]  # %unambiguousReads
-                    pct_ambig = values[2]  # %ambiguousReads
-                    unambig_reads = values[4]  # unambiguousReads
-                    ambig_reads = values[5]  # ambiguousReads
-                    assigned_reads = values[6]  # assignedReads
-
-                    # Namespace will add bbsplit- prefix
-                    bbsplit_data[s_name][f"{ref_name}_assigned_reads"] = assigned_reads
-                    bbsplit_data[s_name][f"{ref_name}_pct_unambig"] = pct_unambig
-                    bbsplit_data[s_name][f"{ref_name}_pct_ambig"] = pct_ambig
-                    bbsplit_data[s_name][f"{ref_name}_unambig_reads"] = unambig_reads
-                    bbsplit_data[s_name][f"{ref_name}_ambig_reads"] = ambig_reads
-
-                    # Create headers for this reference if not exists
-                    if f"{ref_name}_assigned_reads" not in bbsplit_headers:
-                        bbsplit_headers[f"{ref_name}_assigned_reads"] = {
-                            "title": f"{ref_name} Assigned",
-                            "description": f"Total number of reads assigned to {ref_name}",
-                            "scale": "Blues",
-                            "format": "{:,.0f}",
-                            "shared_key": "read_count",
-                        }
-                        bbsplit_headers[f"{ref_name}_pct_unambig"] = {
-                            "title": f"{ref_name} % Unambig",
-                            "description": f"Percentage of reads unambiguously aligned to {ref_name}",
-                            "suffix": "%",
-                            "scale": "YlGn",
-                            "format": "{:,.2f}",
-                            "min": 0,
-                            "max": 100,
-                            "hidden": True,
-                        }
-                        bbsplit_headers[f"{ref_name}_pct_ambig"] = {
-                            "title": f"{ref_name} % Ambig",
-                            "description": f"Percentage of reads ambiguously aligned to {ref_name}",
-                            "suffix": "%",
-                            "scale": "OrRd",
-                            "format": "{:,.2f}",
-                            "min": 0,
-                            "max": 100,
-                            "hidden": True,
-                        }
-                        bbsplit_headers[f"{ref_name}_unambig_reads"] = {
-                            "title": f"{ref_name} Unambig",
-                            "description": f"Number of reads unambiguously aligned to {ref_name}",
-                            "scale": "PuBu",
-                            "format": "{:,.0f}",
-                            "shared_key": "read_count",
-                            "hidden": True,
-                        }
-                        bbsplit_headers[f"{ref_name}_ambig_reads"] = {
-                            "title": f"{ref_name} Ambig",
-                            "description": f"Number of reads ambiguously aligned to {ref_name}",
-                            "scale": "Reds",
-                            "format": "{:,.0f}",
-                            "shared_key": "read_count",
-                            "hidden": True,
-                        }
+                    # Extract values using BBSPLIT_COLS dictionary and populate general stats
+                    bbsplit_data[s_name][f"{ref_name}_assigned"] = values[BBSPLIT_COLS["assigned_reads"]]
+                    bbsplit_data[s_name][f"{ref_name}_unambig_pct"] = values[BBSPLIT_COLS["pct_unambiguous"]]
+                    bbsplit_data[s_name][f"{ref_name}_ambig_pct"] = values[BBSPLIT_COLS["pct_ambiguous"]]
+                    bbsplit_data[s_name][f"{ref_name}_unambig"] = values[BBSPLIT_COLS["unambiguous_reads"]]
+                    bbsplit_data[s_name][f"{ref_name}_ambig"] = values[BBSPLIT_COLS["ambiguous_reads"]]
 
             self.general_stats_addcols(bbsplit_data, bbsplit_headers, namespace="bbsplit")
 
