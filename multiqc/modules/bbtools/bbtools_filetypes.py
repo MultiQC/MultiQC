@@ -14,11 +14,12 @@ from .plot_mhist import plot_mhist
 from .plot_qahist import plot_qahist
 from .plot_qchist import plot_qchist
 from .plot_qhist import plot_qhist
+from .plot_bargraph import plot_bargraph
 
 
 file_types: Dict = {
     "bbdukstats": {
-        "title": "BBDuk filtering statistics",
+        "title": "BBDuk",
         "descr": "Proportion of reads that matched adapters/contaminants.",
         "help_text": "",
         "kvrows": ["Total", "Matched"],
@@ -45,7 +46,14 @@ file_types: Dict = {
             ),
             "Percent filtered": (
                 "Proportion of reads filtered, matching adapters/contaminants",
-                {"max": 100, "min": 0, "scale": "OrRd", "suffix": "%", "hidden": False},
+                {
+                    "max": 100,
+                    "min": 0,
+                    "scale": "OrRd",
+                    "suffix": "%",
+                    "hidden": False,
+                    "format": "{:,.5f}",
+                },
             ),
         },
         "cols": {
@@ -57,15 +65,21 @@ file_types: Dict = {
             "Bases": int,
             "BasesPct": float,
         },
-        "plot_func": None,  # Plotting for 'stats' not implemented
-        "plot_params": {},
+        "plot_func": plot_bargraph,
+        "plot_params": {"cpswitch": False, "hide_zero_cats": False},
     },
     "aqhist": {
         "title": "Read quality",
         "descr": "Histogram of average read qualities (`aqhist`). "
         "Plot shows the number of reads at each quality score.",
         "help_text": "",
-        "cols": {"Quality": int, "count1": int, "fraction1": float, "count2": int, "fraction2": float},
+        "cols": {
+            "Quality": int,
+            "count1": int,
+            "fraction1": float,
+            "count2": int,
+            "fraction2": float,
+        },
         "plot_func": plot_aqhist,
         "plot_params": {
             "x_bands": [
@@ -85,7 +99,14 @@ file_types: Dict = {
         "The plot shows the percentage of `G+C`, `A+T`, and `N` bases "
         "for each position in the reads.",
         "help_text": "Relative composition",
-        "cols": {"Pos": int, "A": float, "C": float, "G": float, "T": float, "N": float},
+        "cols": {
+            "Pos": int,
+            "A": float,
+            "C": float,
+            "G": float,
+            "T": float,
+            "N": float,
+        },
         "plot_func": plot_bhist,
         "plot_params": {},
     },
@@ -177,7 +198,10 @@ file_types: Dict = {
         "kv_descriptions": {
             "Mean": ("Average GC content", {}),
             "Median": ("Median GC content", {}),
-            "Mode": ("The most commonly occuring value of the GC content distribution", {}),
+            "Mode": (
+                "The most commonly occuring value of the GC content distribution",
+                {},
+            ),
             "STDev": ("Standard deviation of average GC content", {}),
         },
         "cols": {"GC": float, "Count": int},
@@ -268,7 +292,11 @@ file_types: Dict = {
         "help_text": "",
         "cols": {"Length": int, "Count": int},
         "plot_func": plot_basic_hist,
-        "plot_params": {"xlab": "Read length (base pairs)", "xsuffix": "bp", "ylab": "# Reads"},
+        "plot_params": {
+            "xlab": "Read length (base pairs)",
+            "xsuffix": "bp",
+            "ylab": "# Reads",
+        },
     },
     "mhist": {
         "title": "Match, substitution, deletion, and insertion rates",

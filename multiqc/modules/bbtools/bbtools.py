@@ -93,20 +93,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         for file_type, file_type_cfg in file_types.items():
-            if len(self.mod_data[file_type]) > 0:
-                log.debug("section %s has %d entries", file_type, len(self.mod_data[file_type]))
-
-                if file_type_cfg["plot_func"]:
-                    self.add_section(
-                        name=file_type_cfg["title"],
-                        anchor="bbtools-" + file_type,
-                        description=file_type_cfg["descr"],
-                        helptext=file_type_cfg["help_text"],
-                        plot=self.plot(file_type),
-                    )
-
             if (
-                any(self.mod_data[file_type][sample]["kv"] for sample in self.mod_data[file_type])
+                any(
+                    self.mod_data[file_type][sample]["kv"]
+                    for sample in self.mod_data[file_type]
+                )
                 and "kv_descriptions" in file_type_cfg
             ):
                 self.add_section(
@@ -116,6 +107,22 @@ class MultiqcModule(BaseMultiqcModule):
                     helptext=file_type_cfg["help_text"],
                     plot=self.make_basic_table(file_type),
                 )
+
+            if len(self.mod_data[file_type]) > 0:
+                log.debug(
+                    "section %s has %d entries",
+                    file_type,
+                    len(self.mod_data[file_type]),
+                )
+
+                if file_type_cfg["plot_func"]:
+                    self.add_section(
+                        name=file_type_cfg["title"],
+                        anchor="bbtools-" + file_type,
+                        description=file_type_cfg["descr"],
+                        helptext=file_type_cfg["help_text"],
+                        plot=self.plot(file_type),
+                    )
 
         # Special case - qchist metric in General Stats
         if "qchist" in self.mod_data:
@@ -161,13 +168,16 @@ class MultiqcModule(BaseMultiqcModule):
         table_data = {}
         for line_number, line in enumerate(f, start=1):
             line = line.strip().split("\t")
-            try:
-                header_row = line[0][0] == "#"
-            except IndexError:
-                continue  # The table is probably empty
+
+            # Check if table empty
+            if line == "":
+                continue
+            # Is line header?
+            header_row = line[0].startswith("#")
 
             if header_row:
-                line[0] = line[0][1:]  # remove leading '#'
+                # Remove leading '#'
+                line[0] = line[0][1:]
 
                 if line[0] != cols[0]:
                     # It's not the table header, it must be a key-value row
@@ -183,7 +193,11 @@ class MultiqcModule(BaseMultiqcModule):
                     elif len(line) != 2:
                         # Not two items? Wrong!
                         log.error(
-                            "Expected key value pair in %s/%s:%d but found '%s'", root, s_name, line_number, repr(line)
+                            "Expected key value pair in %s/%s:%d but found '%s'",
+                            root,
+                            s_name,
+                            line_number,
+                            repr(line),
                         )
                         log.error("Table header should begin with '%s'", cols[0])
                     else:
@@ -193,24 +207,38 @@ class MultiqcModule(BaseMultiqcModule):
                     # It should be the table header. Verify:
                     if line != cols:
                         if line != cols + list(log_descr.get("extracols", {}).keys()):
-                            log.error("Table headers do not match those 'on file'. %s != %s", repr(line), repr(cols))
+                            log.error(
+                                "Table headers do not match those 'on file'. %s != %s",
+                                repr(line),
+                                repr(cols),
+                            )
                             return False
             else:
                 if isinstance(log_descr["cols"], dict):
-                    line = [value_type(value) for value_type, value in zip(log_descr["cols"].values(), line)]
+                    line = [
+                        value_type(value)
+                        for value_type, value in zip(log_descr["cols"].values(), line)
+                    ]
                 else:
                     line = list(map(int, line))
                 table_data[line[0]] = line[1:]
 
         if not table_data:
-            log.warning("File %s appears to contain no data for plotting, ignoring...", fn)
+            log.warning(
+                "File %s appears to contain no data for plotting, ignoring...", fn
+            )
             return False
 
         if s_name in self.mod_data[file_type]:
             log.debug("Duplicate sample name found! Overwriting: %s", s_name)
 
-        self.mod_data[file_type][s_name] = {"table": table_data, "kv": kv_data}
-        log.debug("Found %s output for sample %s with %d rows", file_type, s_name, len(table_data))
+        self.mod_data[file_type][s_name] = {"data": table_data, "kv": kv_data}
+        log.debug(
+            "Found %s output for sample %s with %d rows",
+            file_type,
+            s_name,
+            len(table_data),
+        )
 
         return True
 
@@ -221,14 +249,20 @@ class MultiqcModule(BaseMultiqcModule):
         plot_title = file_types[file_type]["title"]
         plot_func = file_types[file_type]["plot_func"]
         plot_params = file_types[file_type]["plot_params"]
-        return plot_func(samples, file_type, plot_title=plot_title, plot_params=plot_params)
+        return plot_func(
+            samples, file_type, plot_title=plot_title, plot_params=plot_params
+        )
 
     def make_basic_table(self, file_type):
         """Create table of key-value items in 'file_type'."""
 
-        table_data = {sample: items["kv"] for sample, items in self.mod_data[file_type].items()}
+        table_data = {
+            sample: items["kv"] for sample, items in self.mod_data[file_type].items()
+        }
         table_headers = {}
-        for column_header, (description, header_options) in file_types[file_type]["kv_descriptions"].items():
+        for column_header, (description, header_options) in file_types[file_type][
+            "kv_descriptions"
+        ].items():
             table_headers[column_header] = {
                 "rid": f"{file_type}_{column_header}_bbmstheader",
                 "title": column_header,
@@ -236,7 +270,11 @@ class MultiqcModule(BaseMultiqcModule):
             }
             table_headers[column_header].update(header_options)
 
-        tconfig = {"id": file_type + "_bbm_table", "namespace": "BBTools", "title": "BBTools " + file_type}
+        tconfig = {
+            "id": file_type + "_bbm_table",
+            "namespace": "BBTools",
+            "title": "BBTools " + file_type,
+        }
         for sample in table_data:
             for key, value in table_data[sample].items():
                 try:
