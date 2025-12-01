@@ -239,24 +239,37 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_variant_type_section(self) -> None:
-        """Add section showing per-variant-type statistics"""
+        """Add separate table sections for each main variant type"""
         
-        # Prepare data for table - showing all metrics by variant type
-        table_data = {}
+        # Define the main variant types to show (6 most common/important)
+        main_variant_types = [
+            ("Deletion", "Deletions"),
+            ("Insertion", "Insertions"),
+            ("Duplication", "Duplications"),
+            ("Inversion", "Inversions"),
+            ("CopyNumberGain", "Copy Number Gains"),
+            ("CopyNumberLoss", "Copy Number Losses"),
+        ]
         
+        # Organize data by variant type
+        variant_data = {}
+        for variant_type, _ in main_variant_types:
+            variant_data[variant_type] = {}
+        
+        # Parse data from all samples
         for s_name, data in self.wittyer_data.items():
-            table_data[s_name] = {}
-            
             for variant_stat in data["detailed_stats"]:
                 variant_type = variant_stat.get("VariantType", "Unknown")
+                
+                # Only process main variant types
+                if variant_type not in variant_data:
+                    continue
+                    
                 overall_stats = variant_stat.get("OverallStats", [])
                 
                 # Get event-level stats
                 for stat in overall_stats:
                     if stat.get("StatsType") == "Event":
-                        # Create prefixed keys for this variant type
-                        prefix = variant_type
-                        
                         # Handle NaN values
                         recall = stat.get("Recall", 0)
                         precision = stat.get("Precision", 0)
@@ -277,83 +290,75 @@ class MultiqcModule(BaseMultiqcModule):
                         else:
                             fscore = float(fscore) * 100
                         
-                        table_data[s_name][f"{prefix}_tp"] = stat.get("TruthTpCount", 0)
-                        table_data[s_name][f"{prefix}_fn"] = stat.get("TruthFnCount", 0)
-                        table_data[s_name][f"{prefix}_fp"] = stat.get("QueryFpCount", 0)
-                        table_data[s_name][f"{prefix}_recall"] = recall
-                        table_data[s_name][f"{prefix}_precision"] = precision
-                        table_data[s_name][f"{prefix}_fscore"] = fscore
+                        variant_data[variant_type][s_name] = {
+                            "tp": stat.get("TruthTpCount", 0),
+                            "fn": stat.get("TruthFnCount", 0),
+                            "fp": stat.get("QueryFpCount", 0),
+                            "recall": recall,
+                            "precision": precision,
+                            "fscore": fscore,
+                        }
                         break
         
-        # Define headers for all variant types
-        variant_types = [
-            "Deletion",
-            "Insertion", 
-            "Duplication",
-            "Inversion",
-            "CopyNumberGain",
-            "CopyNumberLoss",
-            "CopyNumberReference",
-            "CopyNumberTandemRepeat",
-            "IntraChromosomeBreakend",
-            "TranslocationBreakend"
-        ]
-        
-        table_headers = {}
-        
-        for variant_type in variant_types:
-            # Add headers for this variant type
-            table_headers[f"{variant_type}_tp"] = {
-                "title": f"{variant_type} TP",
-                "description": f"True Positive {variant_type} events",
-                "scale": "Greens",
-                "format": "{:,.0f}",
-                "hidden": True,  # Hide by default, can be shown
+        # Create a separate table for each variant type
+        for variant_type, display_name in main_variant_types:
+            if variant_type not in variant_data or not variant_data[variant_type]:
+                # Skip if no data for this variant type
+                continue
+            
+            # Prepare table data for this variant type
+            table_data = variant_data[variant_type]
+            
+            # Define headers
+            table_headers = {
+                "tp": {
+                    "title": "True Positives",
+                    "description": f"Number of correctly identified {display_name.lower()}",
+                    "scale": "Greens",
+                    "format": "{:,.0f}",
+                },
+                "fn": {
+                    "title": "False Negatives",
+                    "description": f"Number of missed {display_name.lower()}",
+                    "scale": "Reds",
+                    "format": "{:,.0f}",
+                },
+                "fp": {
+                    "title": "False Positives",
+                    "description": f"Number of incorrectly called {display_name.lower()}",
+                    "scale": "Reds",
+                    "format": "{:,.0f}",
+                },
+                "recall": {
+                    "title": "Recall",
+                    "description": f"Percentage of true {display_name.lower()} that were detected",
+                    "suffix": "%",
+                    "scale": "RdYlGn",
+                    "format": "{:,.2f}",
+                    "max": 100,
+                },
+                "precision": {
+                    "title": "Precision",
+                    "description": f"Percentage of called {display_name.lower()} that are correct",
+                    "suffix": "%",
+                    "scale": "RdYlGn",
+                    "format": "{:,.2f}",
+                    "max": 100,
+                },
+                "fscore": {
+                    "title": "F-score",
+                    "description": f"Harmonic mean of precision and recall for {display_name.lower()}",
+                    "suffix": "%",
+                    "scale": "RdYlGn",
+                    "format": "{:,.2f}",
+                    "max": 100,
+                },
             }
-            table_headers[f"{variant_type}_fn"] = {
-                "title": f"{variant_type} FN",
-                "description": f"False Negative {variant_type} events",
-                "scale": "Reds",
-                "format": "{:,.0f}",
-                "hidden": True,
-            }
-            table_headers[f"{variant_type}_fp"] = {
-                "title": f"{variant_type} FP",
-                "description": f"False Positive {variant_type} events",
-                "scale": "Reds",
-                "format": "{:,.0f}",
-                "hidden": True,
-            }
-            table_headers[f"{variant_type}_recall"] = {
-                "title": f"{variant_type} Recall",
-                "description": f"{variant_type} recall (%)",
-                "suffix": "%",
-                "scale": "RdYlGn",
-                "format": "{:,.2f}",
-                "max": 100,
-            }
-            table_headers[f"{variant_type}_precision"] = {
-                "title": f"{variant_type} Precision",
-                "description": f"{variant_type} precision (%)",
-                "suffix": "%",
-                "scale": "RdYlGn",
-                "format": "{:,.2f}",
-                "max": 100,
-            }
-            table_headers[f"{variant_type}_fscore"] = {
-                "title": f"{variant_type} F-score",
-                "description": f"{variant_type} F-score (%)",
-                "suffix": "%",
-                "scale": "RdYlGn",
-                "format": "{:,.2f}",
-                "max": 100,
-            }
-        
-        # Only create the table if we have data
-        if table_data:
+            
+            # Add section for this variant type
             self.add_section(
-                name="Variant Type Performance",
-                anchor="wittyer-variant-types",
-                description="Event-level metrics by structural variant type. TP/FN/FP columns are hidden by default but can be shown using 'Configure Columns'.",
+                name=f"{display_name} Performance",
+                anchor=f"wittyer-{variant_type.lower()}",
+                description=f"Event-level benchmarking metrics for {display_name.lower()}",
                 plot=table.plot(table_data, table_headers),
             )

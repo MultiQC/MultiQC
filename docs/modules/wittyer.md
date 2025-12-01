@@ -32,25 +32,30 @@ A detailed table showing both event-level and base-level statistics:
 
 ### 3. Variant Type Performance
 
-A comprehensive table showing all metrics for each structural variant type:
+Separate tables for each of the six main structural variant types:
 
-**For each variant type:**
-- True Positives (TP) - hidden by default
-- False Negatives (FN) - hidden by default  
-- False Positives (FP) - hidden by default
-- Recall (%)
-- Precision (%)
-- F-score (%)
+1. **Deletions** - Deletion variants
+2. **Insertions** - Insertion variants
+3. **Duplications** - Duplication variants
+4. **Inversions** - Inversion variants
+5. **Copy Number Gains** - Copy number gain events
+6. **Copy Number Losses** - Copy number loss events
 
-**Variant types included:**
-- Deletions
-- Insertions
-- Duplications
-- Inversions
-- Copy Number Variations (Gain, Loss, Reference, Tandem Repeat)
-- Breakends (Intra-chromosome, Translocation)
+**Each table shows:**
+- True Positives (TP) - Number of correctly identified variants
+- False Negatives (FN) - Number of missed true variants
+- False Positives (FP) - Number of incorrectly called variants
+- Recall (%) - Percentage of true variants detected
+- Precision (%) - Percentage of called variants that are correct
+- F-score (%) - Harmonic mean of precision and recall
 
-The TP/FN/FP columns are hidden by default to keep the table readable, but can be shown using the "Configure Columns" button.
+**Benefits of separate tables:**
+- Clear focus on each variant type's performance
+- Easy comparison across samples for specific variant classes
+- Better readability than a single large table
+- Simplified analysis and troubleshooting
+
+**Note**: Only tables with available data will be displayed. If a variant type is not present in your Wittyer output, its table will be automatically omitted.
 
 ## File Search Pattern
 
