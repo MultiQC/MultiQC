@@ -5,7 +5,7 @@ import logging
 from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, table
+from multiqc.plots import table
 
 log = logging.getLogger(__name__)
 
@@ -241,11 +241,12 @@ class MultiqcModule(BaseMultiqcModule):
     def add_variant_type_section(self) -> None:
         """Add section showing per-variant-type statistics"""
         
-        # Prepare data for bar graph - showing F-scores by variant type
-        plot_data = {}
+        # Prepare data for table - showing all metrics by variant type
+        table_data = {}
         
         for s_name, data in self.wittyer_data.items():
-            plot_data[s_name] = {}
+            table_data[s_name] = {}
+            
             for variant_stat in data["detailed_stats"]:
                 variant_type = variant_stat.get("VariantType", "Unknown")
                 overall_stats = variant_stat.get("OverallStats", [])
@@ -253,30 +254,106 @@ class MultiqcModule(BaseMultiqcModule):
                 # Get event-level stats
                 for stat in overall_stats:
                     if stat.get("StatsType") == "Event":
+                        # Create prefixed keys for this variant type
+                        prefix = variant_type
+                        
+                        # Handle NaN values
+                        recall = stat.get("Recall", 0)
+                        precision = stat.get("Precision", 0)
                         fscore = stat.get("Fscore", 0)
-                        # Convert NaN to 0
+                        
+                        if recall == "NaN" or recall is None:
+                            recall = 0
+                        else:
+                            recall = float(recall) * 100
+                            
+                        if precision == "NaN" or precision is None:
+                            precision = 0
+                        else:
+                            precision = float(precision) * 100
+                            
                         if fscore == "NaN" or fscore is None:
                             fscore = 0
                         else:
                             fscore = float(fscore) * 100
-                        plot_data[s_name][variant_type] = fscore
+                        
+                        table_data[s_name][f"{prefix}_tp"] = stat.get("TruthTpCount", 0)
+                        table_data[s_name][f"{prefix}_fn"] = stat.get("TruthFnCount", 0)
+                        table_data[s_name][f"{prefix}_fp"] = stat.get("QueryFpCount", 0)
+                        table_data[s_name][f"{prefix}_recall"] = recall
+                        table_data[s_name][f"{prefix}_precision"] = precision
+                        table_data[s_name][f"{prefix}_fscore"] = fscore
                         break
         
-        # Only create the plot if we have data
-        if plot_data and any(plot_data.values()):
+        # Define headers for all variant types
+        variant_types = [
+            "Deletion",
+            "Insertion", 
+            "Duplication",
+            "Inversion",
+            "CopyNumberGain",
+            "CopyNumberLoss",
+            "CopyNumberReference",
+            "CopyNumberTandemRepeat",
+            "IntraChromosomeBreakend",
+            "TranslocationBreakend"
+        ]
+        
+        table_headers = {}
+        
+        for variant_type in variant_types:
+            # Add headers for this variant type
+            table_headers[f"{variant_type}_tp"] = {
+                "title": f"{variant_type} TP",
+                "description": f"True Positive {variant_type} events",
+                "scale": "Greens",
+                "format": "{:,.0f}",
+                "hidden": True,  # Hide by default, can be shown
+            }
+            table_headers[f"{variant_type}_fn"] = {
+                "title": f"{variant_type} FN",
+                "description": f"False Negative {variant_type} events",
+                "scale": "Reds",
+                "format": "{:,.0f}",
+                "hidden": True,
+            }
+            table_headers[f"{variant_type}_fp"] = {
+                "title": f"{variant_type} FP",
+                "description": f"False Positive {variant_type} events",
+                "scale": "Reds",
+                "format": "{:,.0f}",
+                "hidden": True,
+            }
+            table_headers[f"{variant_type}_recall"] = {
+                "title": f"{variant_type} Recall",
+                "description": f"{variant_type} recall (%)",
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "format": "{:,.2f}",
+                "max": 100,
+            }
+            table_headers[f"{variant_type}_precision"] = {
+                "title": f"{variant_type} Precision",
+                "description": f"{variant_type} precision (%)",
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "format": "{:,.2f}",
+                "max": 100,
+            }
+            table_headers[f"{variant_type}_fscore"] = {
+                "title": f"{variant_type} F-score",
+                "description": f"{variant_type} F-score (%)",
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "format": "{:,.2f}",
+                "max": 100,
+            }
+        
+        # Only create the table if we have data
+        if table_data:
             self.add_section(
                 name="Variant Type Performance",
                 anchor="wittyer-variant-types",
-                description="Event-level F-scores by structural variant type",
-                plot=bargraph.plot(
-                    plot_data,
-                    pconfig={
-                        "id": "wittyer_variant_types",
-                        "title": "Wittyer: F-score by Variant Type",
-                        "ylab": "F-score (%)",
-                        "cpswitch": False,
-                        "ymax": 100,
-                        "ymin": 0,
-                    },
-                ),
+                description="Event-level metrics by structural variant type. TP/FN/FP columns are hidden by default but can be shown using 'Configure Columns'.",
+                plot=table.plot(table_data, table_headers),
             )

@@ -32,15 +32,25 @@ A detailed table showing both event-level and base-level statistics:
 
 ### 3. Variant Type Performance
 
-A bar graph showing the F-score for each structural variant type:
+A comprehensive table showing all metrics for each structural variant type:
 
+**For each variant type:**
+- True Positives (TP) - hidden by default
+- False Negatives (FN) - hidden by default  
+- False Positives (FP) - hidden by default
+- Recall (%)
+- Precision (%)
+- F-score (%)
+
+**Variant types included:**
 - Deletions
 - Insertions
 - Duplications
 - Inversions
-- Copy Number Variations (Gain, Loss, Reference)
+- Copy Number Variations (Gain, Loss, Reference, Tandem Repeat)
 - Breakends (Intra-chromosome, Translocation)
-- Tandem Repeats
+
+The TP/FN/FP columns are hidden by default to keep the table readable, but can be shown using the "Configure Columns" button.
 
 ## File Search Pattern
 
