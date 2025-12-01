@@ -51,11 +51,11 @@ class TestParseStatsReport:
         result = parse_stats_report(SAMPLE_STATS_ALL)
 
         assert len(result) == 2
-        assert "sample1" in result
-        assert "sample2" in result
+        assert "sample1.fq.gz" in result
+        assert "sample2.fq.gz" in result
 
         # Check sample1 data
-        s1 = result["sample1"]
+        s1 = result["sample1.fq.gz"]
         assert s1["file"] == "sample1.fq.gz"
         assert s1["format"] == "FASTQ"
         assert s1["type"] == "DNA"
@@ -81,17 +81,17 @@ class TestParseStatsReport:
         result = parse_stats_report(SAMPLE_STATS_BASIC)
 
         assert len(result) == 2
-        assert "reads" in result
-        assert "assembly" in result
+        assert "reads.fastq" in result
+        assert "assembly.fasta" in result
 
         # Check reads data
-        reads = result["reads"]
+        reads = result["reads.fastq"]
         assert reads["format"] == "FASTQ"
         assert reads["num_seqs"] == 50000
         assert reads["avg_len"] == 100.0
 
         # Check assembly data
-        assembly = result["assembly"]
+        assembly = result["assembly.fasta"]
         assert assembly["format"] == "FASTA"
         assert assembly["num_seqs"] == 1000
         assert assembly["avg_len"] == 10000.0
@@ -105,16 +105,8 @@ class TestParseStatsReport:
         result = parse_stats_report(SAMPLE_STATS_WINDOWS_PATH)
 
         assert len(result) == 1
-        # os.path.basename should handle Windows paths
-        assert "reads" in result
-
-    def test_parse_stdin_input(self):
-        """Test parsing handles stdin input (file = '-')"""
-        result = parse_stats_report(SAMPLE_STATS_STDIN)
-
-        assert len(result) == 1
-        assert "stdin" in result
-        assert result["stdin"]["num_seqs"] == 5000
+        # parse_stats_report returns raw file value; path cleanup is done by clean_s_name later
+        assert "C:\\data\\reads.fq.gz" in result
 
     def test_parse_stdin_with_fallback_name(self):
         """Test parsing uses fallback sample name for stdin input"""
@@ -139,35 +131,16 @@ class TestParseStatsReport:
         result = parse_stats_report("file\tformat\ttype\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len")
         assert result == {}
 
-    def test_sample_name_extension_stripping(self):
-        """Test that various sequence file extensions are properly stripped"""
-        test_cases = [
-            ("sample.fq.gz", "sample"),
-            ("sample.fastq.gz", "sample"),
-            ("sample.fq", "sample"),
-            ("sample.fastq", "sample"),
-            ("sample.fa.gz", "sample"),
-            ("sample.fasta.gz", "sample"),
-            ("sample.fa", "sample"),
-            ("sample.fasta", "sample"),
-            ("sample.txt", "sample.txt"),  # Unknown extension not stripped
-        ]
-
-        for filename, expected_name in test_cases:
-            data = f"file\tformat\ttype\tnum_seqs\tsum_len\tmin_len\tavg_len\tmax_len\n{filename}\tFASTQ\tDNA\t100\t10000\t100\t100.0\t100"
-            result = parse_stats_report(data)
-            assert expected_name in result, f"Expected {expected_name} for {filename}"
-
     def test_parse_space_separated(self):
         """Test parsing space-separated output (default seqkit stats format)"""
         result = parse_stats_report(SAMPLE_STATS_SPACE_SEPARATED)
 
         assert len(result) == 2
-        assert "sample1" in result
-        assert "sample2" in result
+        assert "sample1.fq.gz" in result
+        assert "sample2.fq.gz" in result
 
         # Check sample1 data
-        s1 = result["sample1"]
+        s1 = result["sample1.fq.gz"]
         assert s1["format"] == "FASTQ"
         assert s1["type"] == "DNA"
         assert s1["num_seqs"] == 1000000
