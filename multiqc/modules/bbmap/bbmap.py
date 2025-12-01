@@ -7,20 +7,6 @@ from .bbmap_filetypes import file_types, section_order
 
 log = logging.getLogger(__name__)
 
-# BBSplit stats file column indices
-# Columns: %unambiguousReads, unambiguousMB, %ambiguousReads, ambiguousMB,
-#          unambiguousReads, ambiguousReads, assignedReads, assignedBases
-BBSPLIT_COLS = {
-    "pct_unambiguous": 0,
-    "unambiguous_mb": 1,
-    "pct_ambiguous": 2,
-    "ambiguous_mb": 3,
-    "unambiguous_reads": 4,
-    "ambiguous_reads": 5,
-    "assigned_reads": 6,
-    "assigned_bases": 7,
-}
-
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -44,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
     - `scafstats` _(not yet implemented)_
       - Statistics on how many reads mapped to which scaffold.
     - `bbsplit`
-      - Statistics on how many reads mapped to which reference genome; BBSplit alignment statistics.
+      - Statistics on how many reads mapped to which reference genome.
     - `bhist`
       - Base composition histogram by position.
     - `qhist`
@@ -157,6 +143,17 @@ class MultiqcModule(BaseMultiqcModule):
         if "bbsplit" in self.mod_data and len(self.mod_data["bbsplit"]) > 0:
             bbsplit_data = {}
             all_ref_names = set()
+            # BBSplit stats file column indices
+            BBSPLIT_COLS = [
+                "pct_unambiguous",
+                "unambiguous_mb",
+                "pct_ambiguous",
+                "ambiguous_mb",
+                "unambiguous_reads",
+                "ambiguous_reads",
+                "assigned_reads",
+                "assigned_bases",
+            ]
 
             # First pass: collect all reference names and validate data
             for s_name in self.mod_data["bbsplit"]:
@@ -170,25 +167,28 @@ class MultiqcModule(BaseMultiqcModule):
                         )
                         continue
                     all_ref_names.add(ref_name)
+                    if s_name not in bbsplit_data:
+                        bbsplit_data[s_name] = {}
+                    bbsplit_data[s_name][f"{ref_name}_assigned"] = values[BBSPLIT_COLS.index("assigned_reads")]
+                    bbsplit_data[s_name][f"{ref_name}_unambig_pct"] = values[BBSPLIT_COLS.index("pct_unambiguous")]
+                    bbsplit_data[s_name][f"{ref_name}_ambig_pct"] = values[BBSPLIT_COLS.index("pct_ambiguous")]
+                    bbsplit_data[s_name][f"{ref_name}_unambig"] = values[BBSPLIT_COLS.index("unambiguous_reads")]
+                    bbsplit_data[s_name][f"{ref_name}_ambig"] = values[BBSPLIT_COLS.index("ambiguous_reads")]
 
             # Create headers once for all reference genomes found
-            # Using shorter column names: assigned, unambig_pct, ambig_pct, unambig, ambig
-            # Color scales chosen for visual distinction and semantic meaning
             bbsplit_headers = {}
             for ref_name in sorted(all_ref_names):
                 bbsplit_headers[f"{ref_name}_assigned"] = {
                     "title": f"{ref_name} Assigned",
                     "description": f"Total number of reads assigned to {ref_name}",
-                    "scale": "Purples",  # Purple for total/combined
-                    "format": "{:,.0f}",
+                    "scale": "Purples",
                     "shared_key": "read_count",
                 }
                 bbsplit_headers[f"{ref_name}_unambig_pct"] = {
                     "title": f"{ref_name} % Unambig",
                     "description": f"Percentage of reads unambiguously aligned to {ref_name}",
                     "suffix": "%",
-                    "scale": "Greens",  # Green for good/clear alignments
-                    "format": "{:,.2f}",
+                    "scale": "Greens",
                     "min": 0,
                     "max": 100,
                     "hidden": True,
@@ -197,8 +197,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": f"{ref_name} % Ambig",
                     "description": f"Percentage of reads ambiguously aligned to {ref_name}",
                     "suffix": "%",
-                    "scale": "Oranges",  # Orange for ambiguous/caution
-                    "format": "{:,.2f}",
+                    "scale": "Oranges",
                     "min": 0,
                     "max": 100,
                     "hidden": True,
@@ -206,37 +205,17 @@ class MultiqcModule(BaseMultiqcModule):
                 bbsplit_headers[f"{ref_name}_unambig"] = {
                     "title": f"{ref_name} Unambig",
                     "description": f"Number of reads unambiguously aligned to {ref_name}",
-                    "scale": "Blues",  # Blue for unambiguous counts
-                    "format": "{:,.0f}",
+                    "scale": "Blues",
                     "shared_key": "read_count",
                     "hidden": True,
                 }
                 bbsplit_headers[f"{ref_name}_ambig"] = {
                     "title": f"{ref_name} Ambig",
                     "description": f"Number of reads ambiguously aligned to {ref_name}",
-                    "scale": "Reds",  # Red for ambiguous counts (potential concern)
-                    "format": "{:,.0f}",
+                    "scale": "Reds",
                     "shared_key": "read_count",
                     "hidden": True,
                 }
-
-            # Second pass: populate data using BBSPLIT_COLS dictionary
-            for s_name in self.mod_data["bbsplit"]:
-                bbsplit_data[s_name] = {}
-                sample_data = self.mod_data["bbsplit"][s_name]["data"]
-
-                for ref_name, values in sample_data.items():
-                    # Skip entries that failed validation
-                    if len(values) < len(BBSPLIT_COLS):
-                        continue
-
-                    # Extract values using BBSPLIT_COLS dictionary and populate general stats
-                    bbsplit_data[s_name][f"{ref_name}_assigned"] = values[BBSPLIT_COLS["assigned_reads"]]
-                    bbsplit_data[s_name][f"{ref_name}_unambig_pct"] = values[BBSPLIT_COLS["pct_unambiguous"]]
-                    bbsplit_data[s_name][f"{ref_name}_ambig_pct"] = values[BBSPLIT_COLS["pct_ambiguous"]]
-                    bbsplit_data[s_name][f"{ref_name}_unambig"] = values[BBSPLIT_COLS["unambiguous_reads"]]
-                    bbsplit_data[s_name][f"{ref_name}_ambig"] = values[BBSPLIT_COLS["ambiguous_reads"]]
-
             self.general_stats_addcols(bbsplit_data, bbsplit_headers, namespace="bbsplit")
 
     def parse_logs(self, file_type, root, s_name, fn, f, **kw):
