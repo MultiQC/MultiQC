@@ -1073,6 +1073,10 @@ vg/stats:
 whatshap/stats:
   contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
   num_lines: 1
+wittyer:
+  fn: "*.json"
+  contents_re: ".*Wittyer.*"
+  num_lines: 2
 xenome:
   contents: "B	G	H	M	count	percent	class"
   num_lines: 2
@@ -1085,9 +1089,3 @@ ataqv:
   num_lines: 10
 mosaicatcher:
   fn: "*.mosaicatcher_info_raw.txt"
-wittyer:
-  fn: "*.json"
-  contents: "EventPrecision"
-  contents: "EventRecall"
-  contents: "PerSampleStats"
-  num_lines: 50
