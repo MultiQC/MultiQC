@@ -3,7 +3,7 @@
 import logging
 from typing import Dict, Optional
 
-from multiqc import BaseMultiqcModule
+from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
@@ -37,16 +37,14 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
     general_stats_headers: Dict = {
         "num_seqs": {
             "title": "# Sequences",
-            "description": "Number of sequences",
+            "description": f"Number of sequences ({config.read_count_desc})",
             "scale": "Blues",
-            "format": "{:,.0f}",
             "shared_key": "read_count",
         },
         "sum_len": {
             "title": "Total bp",
-            "description": "Total number of bases",
+            "description": f"Total number of bases ({config.base_count_desc})",
             "scale": "Greens",
-            "format": "{:,.0f}",
             "shared_key": "base_count",
             "hidden": True,
         },
@@ -54,7 +52,6 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
             "title": "Avg Length",
             "description": "Average sequence length",
             "scale": "Purples",
-            "format": "{:,.1f}",
             "suffix": " bp",
         },
         "GC_pct": {
@@ -108,60 +105,72 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
         },
         "num_seqs": {
             "title": "# Seqs",
-            "description": "Number of sequences",
-            "format": "{:,.0f}",
+            "description": f"Number of sequences ({config.read_count_desc})",
             "shared_key": "read_count",
+            "scale": "Blues",
         },
         "sum_len": {
             "title": "Total Length",
-            "description": "Total number of bases/residues",
-            "format": "{:,.0f}",
+            "description": f"Total number of bases/residues ({config.base_count_desc})",
             "shared_key": "base_count",
+            "scale": "Greens",
         },
         "min_len": {
             "title": "Min Length",
             "description": "Minimum sequence length",
             "format": "{:,.0f}",
+            "scale": "Purples",
+            "hidden": True,
         },
         "avg_len": {
             "title": "Avg Length",
             "description": "Average sequence length",
-            "format": "{:,.1f}",
+            "scale": "Purples",
+        },
+        "Q1": {
+            "title": "Q1 Length",
+            "description": "First quartile of sequence length",
+            "format": "{:,.0f}",
+            "scale": "Purples",
+            "hidden": True,
+        },
+        "Q2": {
+            "title": "Median Length",
+            "description": "Second quartile (Median) sequence length",
+            "format": "{:,.0f}",
+            "scale": "Purples",
+        },
+        "Q3": {
+            "title": "Q3 Length",
+            "description": "Third quartile of sequence length",
+            "format": "{:,.0f}",
+            "scale": "Purples",
+            "hidden": True,
         },
         "max_len": {
             "title": "Max Length",
             "description": "Maximum sequence length",
             "format": "{:,.0f}",
-        },
-        "Q1": {
-            "title": "Q1",
-            "description": "First quartile of sequence length",
-            "format": "{:,.0f}",
-        },
-        "Q2": {
-            "title": "Q2 (Median)",
-            "description": "Median sequence length",
-            "format": "{:,.0f}",
-        },
-        "Q3": {
-            "title": "Q3",
-            "description": "Third quartile of sequence length",
-            "format": "{:,.0f}",
+            "scale": "Purples",
+            "hidden": True,
         },
         "sum_gap": {
             "title": "Gaps",
             "description": "Total number of gaps",
             "format": "{:,.0f}",
+            "scale": "OrRd",
         },
         "N50": {
             "title": "N50",
             "description": "N50 sequence length",
             "format": "{:,.0f}",
+            "scale": "Oranges",
         },
         "N50_num": {
             "title": "N50 Count",
             "description": "Number of sequences >= N50",
             "format": "{:,.0f}",
+            "scale": "PuBuGn",
         },
         "Q20_pct": {
             "title": "Q20%",
@@ -169,6 +178,7 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
             "min": 0,
             "max": 100,
             "suffix": "%",
+            "scale": "RdYlGn",
         },
         "Q30_pct": {
             "title": "Q30%",
@@ -176,10 +186,12 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
             "min": 0,
             "max": 100,
             "suffix": "%",
+            "scale": "RdYlGn",
         },
         "AvgQual": {
             "title": "Avg Quality",
             "description": "Average quality score",
+            "scale": "RdYlGn",
         },
         "GC_pct": {
             "title": "GC%",
@@ -187,11 +199,14 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
             "min": 0,
             "max": 100,
             "suffix": "%",
+            "scale": "RdYlBu",
         },
         "sum_n": {
-            "title": "N Bases",
-            "description": "Total number of N bases",
-            "format": "{:,.0f}",
+            "title": "# N Bases",
+            "description": f"Total number of N bases ({config.base_count_desc})",
+            "modify": lambda x: x * config.base_count_multiplier,
+            "format": "{:,.2f} " + config.base_count_prefix,
+            "scale": "Reds",
         },
     }
 
