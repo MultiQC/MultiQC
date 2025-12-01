@@ -16,6 +16,7 @@ was generated and the button that launches the welcome tour.
         src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}"
         title="{{ config.custom_logo_title if config.custom_logo_title is not none }}"
         class="custom_logo"
+        {% if config.custom_logo_width is not none %}style="width: {{ config.custom_logo_width }}px;"{% endif %}
       />
       {{ '</a>' if config.custom_logo_url is not none }}
     </div>

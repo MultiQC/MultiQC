@@ -69,8 +69,10 @@ report_header_info: List[Dict[str, str]]
 show_analysis_paths: bool
 show_analysis_time: bool
 custom_logo: str
+custom_logo_dark: str
 custom_logo_url: str
 custom_logo_title: str
+custom_logo_width: int
 custom_css_files: List[str]
 simple_output: bool
 template: str
@@ -519,7 +521,7 @@ def _add_config(conf: Dict, conf_path=None):
             log_filename_clean_extensions.append(v)
         elif c == "extra_fn_clean_trim":
             log_filename_clean_trimmings.append(v)
-        elif c in ["custom_logo"] and v:
+        elif c in ["custom_logo", "custom_logo_dark"] and v:
             # Resolve file paths - absolute or cwd, or relative to config file
             fpath = v
             if os.path.exists(v):
