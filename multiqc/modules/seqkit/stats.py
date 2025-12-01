@@ -16,17 +16,16 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
 
     for f in module.find_log_files("seqkit/stats"):
         parsed_data = parse_stats_report(f["f"], f["s_name"])
-        if parsed_data:
-            for s_name, data in parsed_data.items():
-                s_name = module.clean_s_name(s_name, f)
-                if s_name in seqkit_stats:
-                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-                module.add_data_source(f, s_name=s_name, section="stats")
-                seqkit_stats[s_name] = data
+        for s_name, data in parsed_data.items():
+            s_name = module.clean_s_name(s_name, f)
+            if s_name in seqkit_stats:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            module.add_data_source(f, s_name=s_name, section="stats")
+            seqkit_stats[s_name] = data
 
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                module.add_software_version(None, s_name)
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            module.add_software_version(None, s_name)
 
     # Filter to strip out ignored sample names
     seqkit_stats = module.ignore_samples(seqkit_stats)
@@ -37,11 +36,11 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
     # General Stats Table - MultiQC automatically filters missing columns
     general_stats_headers: Dict = {
         "num_seqs": {
-            "title": "# Seqs",
+            "title": "# Sequences",
             "description": "Number of sequences",
             "scale": "Blues",
             "format": "{:,.0f}",
-            "shared_key": "seq_count",
+            "shared_key": "read_count",
         },
         "sum_len": {
             "title": "Total bp",
@@ -63,9 +62,8 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
             "description": "GC content percentage",
             "min": 0,
             "max": 100,
-            "scale": "Greens",
+            "scale": "RdYlBu",
             "suffix": "%",
-            "hidden": True,
         },
         "Q30_pct": {
             "title": "Q30%",
@@ -100,11 +98,6 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
 
     # Create detailed table with all columns
     table_headers: Dict = {
-        "file": {
-            "title": "File",
-            "description": "Input file name",
-            "hidden": True,
-        },
         "format": {
             "title": "Format",
             "description": "File format (FASTA or FASTQ)",
@@ -117,7 +110,7 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
             "title": "# Seqs",
             "description": "Number of sequences",
             "format": "{:,.0f}",
-            "shared_key": "seq_count",
+            "shared_key": "read_count",
         },
         "sum_len": {
             "title": "Total Length",
@@ -221,8 +214,6 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
     # Create bar plot for sequence counts and lengths
     bargraph_data_seqs = {s_name: {"Sequences": d.get("num_seqs", 0)} for s_name, d in seqkit_stats.items()}
 
-    bargraph_data_bases = {s_name: {"Total Bases": d.get("sum_len", 0)} for s_name, d in seqkit_stats.items()}
-
     module.add_section(
         name="Sequence Counts",
         anchor="seqkit-stats-seqcounts",
@@ -230,23 +221,10 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
         plot=bargraph.plot(
             bargraph_data_seqs,
             pconfig={
-                "id": "seqkit-stats-seq-counts",
+                "id": "seqkit-stats-seqcounts-plot",
                 "title": "SeqKit: Sequence Counts",
                 "ylab": "Number of Sequences",
-            },
-        ),
-    )
-
-    module.add_section(
-        name="Total Bases",
-        anchor="seqkit-stats-bases",
-        description="Total number of bases per sample.",
-        plot=bargraph.plot(
-            bargraph_data_bases,
-            pconfig={
-                "id": "seqkit-stats-total-bases",
-                "title": "SeqKit: Total Bases",
-                "ylab": "Number of Bases",
+                "cpswitch": False,
             },
         ),
     )
@@ -279,13 +257,15 @@ def parse_stats_report(file_content: str, fallback_sample_name: Optional[str] = 
     # Check if this looks like seqkit stats output
     expected_headers = ["file", "format", "type", "num_seqs", "sum_len", "min_len", "avg_len", "max_len"]
     if not all(h in headers for h in expected_headers):
+        log.debug(f"Skipping '{fallback_sample_name}' as didn't have expected headers")
         return {}
 
-    # Define column types for parsing
-    int_columns = {"num_seqs", "sum_len", "min_len", "max_len", "Q1", "Q2", "Q3", "sum_gap", "N50", "N50_num", "sum_n"}
-    float_columns = {"avg_len", "Q20(%)", "Q30(%)", "AvgQual", "GC(%)"}
     # Mapping for columns with special characters in names
-    column_renames = {"Q20(%)": "Q20_pct", "Q30(%)": "Q30_pct", "GC(%)": "GC_pct"}
+    column_renames = {
+        "Q20(%)": "Q20_pct",
+        "Q30(%)": "Q30_pct",
+        "GC(%)": "GC_pct",
+    }
 
     # Parse data lines
     for line in lines[1:]:
@@ -300,40 +280,22 @@ def parse_stats_report(file_content: str, fallback_sample_name: Optional[str] = 
         data: Dict = {}
 
         # Get sample name from file column
-        file_value = row.get("file", "")
-        if file_value == "-":
-            # Use fallback sample name for stdin input
-            sample_name = fallback_sample_name if fallback_sample_name else "stdin"
+        file_value = row.get("file")
+        if file_value is None or file_value == "-":
+            # Use sample name from filename for stdin input
+            sample_name = str(fallback_sample_name)
         else:
-            # Handle both Unix and Windows path separators
-            sample_name = file_value.replace("\\", "/").split("/")[-1]
-            # Remove common sequence file extensions
-            for ext in [".fq.gz", ".fastq.gz", ".fq", ".fastq", ".fa.gz", ".fasta.gz", ".fa", ".fasta"]:
-                if sample_name.endswith(ext):
-                    sample_name = sample_name[: -len(ext)]
-                    break
-
-        data["file"] = file_value
+            # Will clean sample name in main function
+            sample_name = str(file_value)
 
         # Parse remaining columns
         for header, value in row.items():
-            if header == "file":
-                continue
-            elif header in ("format", "type"):
+            key = column_renames.get(header, header)
+            try:
+                data[key] = float(value.replace(",", ""))
+            except (ValueError, AttributeError):
                 data[header] = value
-            elif header in int_columns:
-                try:
-                    data[header] = int(value.replace(",", ""))
-                except (ValueError, AttributeError):
-                    pass
-            elif header in float_columns:
-                try:
-                    key = column_renames.get(header, header)
-                    data[key] = float(value.replace(",", ""))
-                except (ValueError, AttributeError):
-                    pass
 
-        if sample_name and data:
-            parsed_data[sample_name] = data
+        parsed_data[sample_name] = data
 
     return parsed_data
