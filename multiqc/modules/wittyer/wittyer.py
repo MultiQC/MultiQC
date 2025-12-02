@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and parse JSON files
         self.wittyer_data = dict()
-        
+
         for f in self.find_log_files("wittyer", filehandles=True):
             try:
                 data = json.load(f["f"])
@@ -54,21 +54,21 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_wittyer_json(self, data: Dict, f: Dict) -> None:
         """Parse Wittyer JSON output"""
-        
+
         # Get sample name from PerSampleStats
         if "PerSampleStats" not in data or len(data["PerSampleStats"]) == 0:
             return
-            
+
         sample_stats = data["PerSampleStats"][0]
         query_sample = sample_stats.get("QuerySampleName", f["s_name"])
         truth_sample = sample_stats.get("TruthSampleName", "unknown")
-        
+
         # Use query sample name as the main identifier
         s_name = self.clean_s_name(query_sample, f)
-        
+
         if s_name in self.wittyer_data:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            
+
         # Store the parsed data
         self.wittyer_data[s_name] = {
             "command": data.get("Command", ""),
@@ -77,12 +77,12 @@ class MultiqcModule(BaseMultiqcModule):
             "event_recall": data.get("EventRecall", 0),
             "event_fscore": data.get("EventFscore", 0),
             "overall_stats": sample_stats.get("OverallStats", []),
-            "detailed_stats": sample_stats.get("DetailedStats", [])
+            "detailed_stats": sample_stats.get("DetailedStats", []),
         }
 
     def add_variant_type_section(self) -> None:
         """Add separate table sections for each main variant type"""
-        
+
         # Define the main variant types to show (6 most common/important)
         main_variant_types = [
             ("Deletion", "Deletions"),
@@ -92,23 +92,23 @@ class MultiqcModule(BaseMultiqcModule):
             ("CopyNumberGain", "Copy Number Gains"),
             ("CopyNumberLoss", "Copy Number Losses"),
         ]
-        
+
         # Organize data by variant type
         variant_data = {}
         for variant_type, _ in main_variant_types:
             variant_data[variant_type] = {}
-        
+
         # Parse data from all samples
         for s_name, data in self.wittyer_data.items():
             for variant_stat in data["detailed_stats"]:
                 variant_type = variant_stat.get("VariantType", "Unknown")
-                
+
                 # Only process main variant types
                 if variant_type not in variant_data:
                     continue
-                    
+
                 overall_stats = variant_stat.get("OverallStats", [])
-                
+
                 # Get event-level stats
                 for stat in overall_stats:
                     if stat.get("StatsType") == "Event":
@@ -116,22 +116,22 @@ class MultiqcModule(BaseMultiqcModule):
                         recall = stat.get("Recall", 0)
                         precision = stat.get("Precision", 0)
                         fscore = stat.get("Fscore", 0)
-                        
+
                         if recall == "NaN" or recall is None:
                             recall = 0
                         else:
                             recall = float(recall) * 100
-                            
+
                         if precision == "NaN" or precision is None:
                             precision = 0
                         else:
                             precision = float(precision) * 100
-                            
+
                         if fscore == "NaN" or fscore is None:
                             fscore = 0
                         else:
                             fscore = float(fscore) * 100
-                        
+
                         variant_data[variant_type][s_name] = {
                             "precision": precision,
                             "recall": recall,
@@ -144,16 +144,16 @@ class MultiqcModule(BaseMultiqcModule):
                             "total_query": stat.get("QueryTotalCount", 0),
                         }
                         break
-        
+
         # Create a separate table for each variant type
         for variant_type, display_name in main_variant_types:
             if variant_type not in variant_data or not variant_data[variant_type]:
                 # Skip if no data for this variant type
                 continue
-            
+
             # Prepare table data for this variant type
             table_data = variant_data[variant_type]
-            
+
             # Define headers
             table_headers = {
                 "precision": {
@@ -209,20 +209,17 @@ class MultiqcModule(BaseMultiqcModule):
                     "description": f"Total number of {display_name.lower()} called in query set",
                     "scale": "Greys",
                     "format": "{:,.0f}",
-                }
+                },
             }
-            
+
             # Add section for this variant type
             self.add_section(
                 name=f"{display_name}",
                 anchor=f"wittyer-{variant_type.lower()}",
                 description=f"Event-level benchmarking metrics for {display_name.lower()}",
                 plot=table.plot(
-                    table_data, 
+                    table_data,
                     table_headers,
-                    pconfig={
-                        "id": f"wittyer-{variant_type.lower()}-plot",
-                        "title": f"wittyer: {variant_type.lower()}"
-                    }
-                )
+                    pconfig={"id": f"wittyer-{variant_type.lower()}-plot", "title": f"wittyer: {variant_type.lower()}"},
+                ),
             )
