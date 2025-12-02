@@ -34,6 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 data = json.load(f["f"])
                 self.parse_wittyer_json(data, f)
+                self.add_data_source(f)
             except json.JSONDecodeError:
                 log.debug(f"Could not parse Wittyer JSON: {f['fn']}")
                 continue
