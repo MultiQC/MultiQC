@@ -209,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "description": f"Total number of {display_name.lower()} called in query set",
                     "scale": "Greys",
                     "format": "{:,.0f}",
-                },
+                }
             }
             
             # Add section for this variant type
@@ -217,5 +217,12 @@ class MultiqcModule(BaseMultiqcModule):
                 name=f"{display_name}",
                 anchor=f"wittyer-{variant_type.lower()}",
                 description=f"Event-level benchmarking metrics for {display_name.lower()}",
-                plot=table.plot(table_data, table_headers),
+                plot=table.plot(
+                    table_data, 
+                    table_headers,
+                    pconfig={
+                        "id": f"wittyer-{variant_type.lower()}-plot",
+                        "title": f"wittyer: {variant_type.lower()}"
+                    }
+                )
             )
