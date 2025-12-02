@@ -13,11 +13,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """
     Wittyer is a tool for benchmarking structural variant (SV) calls against a truth set.
-    This module parses the JSON stats output from Wittyer to provide:
-    - Overall precision, recall, and F-score metrics
-    - Per-variant-type statistics (deletions, insertions, duplications, etc.)
-    - Event and base-level statistics
-    - Size-binned performance metrics
+    This module parses the JSON stats output from Wittyer to provide event-level statistics different variant types.
     """
 
     def __init__(self):
