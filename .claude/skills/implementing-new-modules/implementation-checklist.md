@@ -70,9 +70,8 @@ touch multiqc/modules/toolname/tests/test_subtool.py
 
 ### Sample Name Handling
 
-- [ ] Use `module.clean_s_name(s_name, f)` for cleanup
-- [ ] Handle stdin input (`-`) using `f["s_name"]` as fallback
-- [ ] Handle both Unix and Windows paths
+- [ ] Use `module.clean_s_name(s_name, f)` for cleanup if not using `f["s_name"]` (ie. coming from file contents)
+- [ ] Add to `fn_clean_exts` in `config_defaults.yaml` if tool has a standard extension that needs removing
 
 ### Required Calls
 
@@ -85,13 +84,14 @@ touch multiqc/modules/toolname/tests/test_subtool.py
 
 - [ ] Raise `ModuleNoSamplesFound` when no samples found (NOT `UserWarning`)
 - [ ] Use `log.debug()` for skipped files
-- [ ] Handle malformed input gracefully
+- [ ] Handle malformed input gracefully, with `log.debug()` messages
 
 ## Phase 4: Visualizations
 
 ### General Stats Table
 
 - [ ] Define headers dict with appropriate keys
+- [ ] Ensure number of headers is apprpriate (not too many)
 - [ ] Include for each column:
   - [ ] `title` - Short display title
   - [ ] `description` - Tooltip text (use `config.read_count_desc` etc. where appropriate)
@@ -100,6 +100,7 @@ touch multiqc/modules/toolname/tests/test_subtool.py
   - [ ] `hidden` - True for less important columns
   - [ ] `min`/`max` - For percentage columns
   - [ ] `suffix` - Units (e.g., `"%"`, `" bp"`)
+- [ ] Check that only keys with non-default values are included
 - [ ] Use `module.get_general_stats_headers()` for config integration
 - [ ] Call `module.general_stats_addcols(data, headers, namespace="toolname")`
 
@@ -107,7 +108,7 @@ touch multiqc/modules/toolname/tests/test_subtool.py
 
 - [ ] Add table with `table.plot()` for detailed metrics
 - [ ] Add bar graphs with `bargraph.plot()` for counts/lengths
-- [ ] Add line plots if applicable
+- [ ] Add line plots if applicable, or heatmaps, violin, box, scatter plots
 - [ ] Use `module.add_section()` with:
   - [ ] `name` - Section title
   - [ ] `anchor` - Unique anchor ID
@@ -115,6 +116,17 @@ touch multiqc/modules/toolname/tests/test_subtool.py
   - [ ] `plot` - Plot object
 
 ### Color Scale Guidelines
+
+Use scales from ColorBrewer:
+
+- [ ] Sequential
+  - [ ] OrRd, PuBu, BuPu, Oranges, BuGn, YlOrBr, YlGn, Reds, RdPu, Greens, YlGnBu, Purples, GnBu, Greys, YlOrRd, PuRd, Blues, PuBuGn
+- [ ] Diverging
+  - [ ] Spectral, RdYlGn, RdBu, PiYG, PRGn, RdYlBu, BrBG, RdGy, PuOr
+- [ ] Qualitative
+  - [ ] Set2, Accent, Set1, Set3, Dark2, Paired, Pastel2, Pastel1
+
+Use with semantic meaning. For example:
 
 - [ ] `RdYlGn` - For quality metrics (higher is better)
 - [ ] `Blues`, `Greens`, `Purples`, `Oranges` - For neutral counts
@@ -131,6 +143,7 @@ toolname/subtool:
   num_lines: 1
 ```
 
+- [ ] Use `fn` file filename matching where possible
 - [ ] Use `contents` for exact match or `contents_re` for regex
 - [ ] Set appropriate `num_lines` to check
 - [ ] Place alphabetically in file
@@ -153,6 +166,11 @@ __all__ = ["MultiqcModule"]
 
 ## Phase 6: Testing
 
+### Running MultiQC
+
+- [ ] Run MultiQC on the test data provided, from the MultiQC/test-data repository
+- [ ] Use the `--strict` flag in the MultiQC command to find internal linting errors
+
 ### Unit Tests
 
 - [ ] Create test file with sample data as string constants
@@ -172,6 +190,12 @@ __all__ = ["MultiqcModule"]
 - [ ] Verify both `test_all_modules` and `test_ignore_samples` pass
 
 ## Phase 7: Quality Checks
+
+### Pre-commit
+
+```bash
+pre-commit run --files multiqc/modules/toolname/*
+```
 
 ### Linting
 

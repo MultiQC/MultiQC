@@ -23,7 +23,7 @@ __all__ = ["MultiqcModule"]
 
 ### toolname.py Template
 
-````python
+```python
 """MultiQC module to parse output from ToolName"""
 
 import logging
@@ -42,12 +42,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     The module parses [output type] from `toolname [command]`.
 
-    To generate compatible output:
-
-    ```bash
-    toolname [options] input > output.txt
-    ```
-
     Supported output formats:
     - Format 1
     - Format 2 (with `--option`)
@@ -65,9 +59,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.toolname_data: Dict[str, Dict] = {}
 
         for f in self.find_log_files("toolname"):
-            parsed = self._parse_log(f["f"], f["s_name"])
+            parsed = self._parse_log(f)
             for s_name, data in parsed.items():
-                s_name = self.clean_s_name(s_name, f)
+                s_name = self.clean_s_name(s_name, f) # If needed
                 if s_name in self.toolname_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name=s_name)
@@ -84,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(self.toolname_data, "multiqc_toolname")
 
-    def _parse_log(self, file_content: str, fallback_name: str) -> Dict[str, Dict]:
+    def _parse_log(self, f):
         """Parse toolname output file."""
         # Implementation here
         pass
@@ -117,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig={"id": "toolname-table", "title": "ToolName: Stats"},
             ),
         )
-````
+```
 
 ---
 

@@ -4,7 +4,7 @@
 
 ### Single-Tool Module
 
-````python
+```python
 """MultiQC module to parse output from ToolName"""
 
 import logging
@@ -19,11 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     The module parses output from `toolname command` which produces
     [description of output].
-
-    To generate compatible output:
-    ```bash
-    toolname --option input.file > output.txt
-    ```
     """
 
     def __init__(self):
@@ -38,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse data
         self.toolname_data = {}
         for f in self.find_log_files("toolname"):
-            parsed = self.parse_log(f["f"], f["s_name"])
+            parsed = self.parse_log(f)
             # ... process parsed data
 
         # Filter ignored samples
@@ -53,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write data file (MUST be at the end)
         self.write_data_file(self.toolname_data, "multiqc_toolname")
-````
+```
 
 ### Multi-Subtool Module Orchestrator
 
@@ -120,9 +115,9 @@ def parse_toolname_subtool(module: BaseMultiqcModule) -> int:
     data: Dict[str, Dict] = {}
 
     for f in module.find_log_files("toolname/subtool"):
-        parsed = parse_report(f["f"], f["s_name"])
+        parsed = parse_report()
         for s_name, sample_data in parsed.items():
-            s_name = module.clean_s_name(s_name, f)
+            s_name = module.clean_s_name(s_name, f)  # Only needed if not using f['s_name']
             if s_name in data:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             module.add_data_source(f, s_name=s_name, section="subtool")
@@ -150,62 +145,6 @@ def parse_toolname_subtool(module: BaseMultiqcModule) -> int:
 ```
 
 ## Parsing Patterns
-
-### Tab/Space-Separated File Parsing
-
-```python
-def parse_report(file_content: str, fallback_sample_name: str) -> Dict[str, Dict]:
-    """Parse tool output, handling both tab and space-separated formats."""
-    parsed_data: Dict[str, Dict] = {}
-    lines = file_content.strip().split("\n")
-
-    if len(lines) < 2:
-        return {}
-
-    # Determine delimiter
-    header_line = lines[0]
-    delimiter = "\t" if "\t" in header_line else None
-    headers = [h.strip() for h in header_line.split(delimiter)]
-
-    # Validate format
-    expected = ["col1", "col2", "col3"]
-    if not all(h in headers for h in expected):
-        return {}
-
-    # Column renames for cleaner keys
-    column_renames = {"Column(%)": "column_pct"}
-
-    # Parse data lines
-    for line in lines[1:]:
-        if not line.strip():
-            continue
-
-        values = line.split(delimiter)
-        if len(values) < len(headers):
-            continue
-
-        row = dict(zip(headers, [v.strip() for v in values]))
-
-        # Get sample name
-        file_value = row.get("file")
-        if file_value is None or file_value == "-":
-            sample_name = str(fallback_sample_name)
-        else:
-            sample_name = str(file_value)
-
-        # Parse values
-        data = {}
-        for header, value in row.items():
-            key = column_renames.get(header, header)
-            try:
-                data[key] = float(value.replace(",", ""))
-            except (ValueError, AttributeError):
-                data[key] = value
-
-        parsed_data[sample_name] = data
-
-    return parsed_data
-```
 
 ### Key-Value Pair Parsing
 
@@ -294,10 +233,11 @@ table_headers = {
     "column1": {
         "title": "Column 1",
         "description": "Description",
-        "format": "{:,.0f}",
+        "format": "{:,.0f}", # Only needed for integers
         "scale": "Blues",
     },
     # ... more columns
+    # Headers without data, or data without headers, will be ignored - no conditionals required
 }
 
 module.add_section(
@@ -321,8 +261,12 @@ module.add_section(
 ```python
 from multiqc.plots import bargraph
 
+# Only needed if data needs to be reshaped.
 bargraph_data = {
-    s_name: {"Category1": d.get("count1", 0), "Category2": d.get("count2", 0)}
+    s_name: {
+        "Category1": d.get("count1", 0),
+        "Category2": d.get("count2", 0),
+    }
     for s_name, d in data.items()
 }
 
@@ -367,24 +311,6 @@ module.add_section(
         },
     ),
 )
-```
-
-## Sample Name Handling
-
-### Clean Sample Name with Path Handling
-
-```python
-# In parse function - handle file paths
-file_value = row.get("file", "")
-if file_value == "-":
-    # Stdin - use fallback from filename
-    sample_name = fallback_sample_name
-else:
-    # Handle both Unix and Windows paths
-    sample_name = file_value.replace("\\", "/").split("/")[-1]
-
-# In main loop - use MultiQC's cleaning
-s_name = module.clean_s_name(s_name, f)
 ```
 
 ## **init**.py Pattern
