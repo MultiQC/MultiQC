@@ -109,8 +109,24 @@ def _parse_bqhist_file(f) -> Dict:
             lw_2 = int(parts[17])
             rw_2 = int(parts[18]) if len(parts) > 18 else 0
             parsed_data[base_num] = [
-                count_1, min_1, max_1, mean_1, q1_1, med_1, q3_1, lw_1, rw_1,
-                count_2, min_2, max_2, mean_2, q1_2, med_2, q3_2, lw_2, rw_2,
+                count_1,
+                min_1,
+                max_1,
+                mean_1,
+                q1_1,
+                med_1,
+                q3_1,
+                lw_1,
+                rw_1,
+                count_2,
+                min_2,
+                max_2,
+                mean_2,
+                q1_2,
+                med_2,
+                q3_2,
+                lw_2,
+                rw_2,
             ]
         except (ValueError, IndexError):
             continue

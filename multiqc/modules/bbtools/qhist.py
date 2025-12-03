@@ -138,8 +138,12 @@ def _parse_qhist_file(f) -> Dict:
                 read2_log = float(parts[5]) if len(parts) > 5 else 0.0
                 read2_measured = float(parts[6]) if len(parts) > 6 else 0.0
                 parsed_data["data"][base_num] = [
-                    read1_linear, read1_log, read1_measured,
-                    read2_linear, read2_log, read2_measured,
+                    read1_linear,
+                    read1_log,
+                    read1_measured,
+                    read2_linear,
+                    read2_log,
+                    read2_measured,
                 ]
             except (ValueError, IndexError):
                 continue

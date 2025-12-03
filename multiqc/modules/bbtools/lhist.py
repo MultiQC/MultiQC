@@ -93,9 +93,7 @@ def _parse_lhist_file(f) -> Dict:
 def _prepare_plot_data(data_by_sample: Dict) -> Dict:
     """Prepare data for line graph plotting."""
     # Calculate xmax based on 99.9% of data
-    sumy = sum(
-        int(data_by_sample[sample][x][0]) for sample in data_by_sample for x in data_by_sample[sample]
-    )
+    sumy = sum(int(data_by_sample[sample][x][0]) for sample in data_by_sample for x in data_by_sample[sample])
 
     cutoff = sumy * 0.999
     all_x = set()

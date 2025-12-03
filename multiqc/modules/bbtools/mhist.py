@@ -102,8 +102,18 @@ def _parse_mhist_file(f) -> Dict:
             n2 = float(parts[11])
             other2 = float(parts[12])
             parsed_data[base_num] = [
-                match1, sub1, del1, ins1, n1, other1,
-                match2, sub2, del2, ins2, n2, other2,
+                match1,
+                sub1,
+                del1,
+                ins1,
+                n1,
+                other1,
+                match2,
+                sub2,
+                del2,
+                ins2,
+                n2,
+                other2,
             ]
         except (ValueError, IndexError):
             continue

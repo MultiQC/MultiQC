@@ -127,8 +127,14 @@ def _parse_idhist_file(f) -> Dict:
     """
     parsed_data: Dict = {"data": {}, "kv": {}}
     kv_keys = [
-        "Mean_reads", "Mean_bases", "Median_reads", "Median_bases",
-        "Mode_reads", "Mode_bases", "STDev_reads", "STDev_bases",
+        "Mean_reads",
+        "Mean_bases",
+        "Median_reads",
+        "Median_bases",
+        "Mode_reads",
+        "Mode_bases",
+        "STDev_reads",
+        "STDev_bases",
     ]
 
     for line in f:
