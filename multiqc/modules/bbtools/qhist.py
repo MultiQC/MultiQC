@@ -54,7 +54,7 @@ def parse_bbtools_qhist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Sequence Quality Histograms",
+        name="BBMap Sequence Quality Histograms",
         anchor="bbtools-qhist",
         description="Quality histogram by position (`qhist`). "
         "The plots show the average quality for each position in the reads, "
@@ -74,7 +74,7 @@ def parse_bbtools_qhist(module: BaseMultiqcModule) -> int:
         }
 
         module.add_section(
-            name="Quality by Position Summary",
+            name="BBMap Quality by Position Summary",
             anchor="bbtools-qhist-table",
             description="Quality by position statistics summary.",
             plot=table.plot(

@@ -51,7 +51,7 @@ def parse_bbtools_covhist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Coverage Histogram",
+        name="BBMap Coverage Histogram",
         anchor="bbtools-covhist",
         description="Histogram of number of occurrences of each coverage depth level (`covhist`). "
         "Note that lines have been smoothed to 400 points; "

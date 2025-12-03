@@ -56,7 +56,7 @@ def parse_bbtools_bhist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Base Composition",
+        name="BBMap Base Composition",
         anchor="bbtools-bhist",
         description="Base composition histogram by position (`bhist`). "
         "The plot shows the percentage of `G+C`, `A+T`, and `N` bases "

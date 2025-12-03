@@ -47,7 +47,7 @@ def parse_bbtools_lhist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Read Lengths",
+        name="BBMap Read Lengths",
         anchor="bbtools-lhist",
         description="Read length histogram (`lhist`).",
         plot=linegraph.plot(plot_data, pconfig),

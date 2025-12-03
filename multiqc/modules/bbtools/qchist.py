@@ -88,7 +88,7 @@ def parse_bbtools_qchist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Count of Bases with Each Quality Value",
+        name="BBMap Base Quality Counts",
         anchor="bbtools-qchist",
         description="Histogram of base qualities (`qchist`). "
         "Plot shows the number of bases at each quality score. Zero counts are shown as `0.1` due to log axis.",

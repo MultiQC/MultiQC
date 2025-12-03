@@ -105,7 +105,7 @@ def parse_bbtools_duk(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="BBDuk: Filtered Reads",
+        name="BBDuk Filtered Reads",
         anchor="bbtools-duk",
         description="The number of reads removed by various BBDuk filters.",
         plot=bargraph.plot(

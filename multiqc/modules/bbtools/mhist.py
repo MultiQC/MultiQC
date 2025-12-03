@@ -53,7 +53,7 @@ def parse_bbtools_mhist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Match, Substitution, Deletion, and Insertion Rates",
+        name="BBMap Match/Substitution/Deletion/Insertion Rates",
         anchor="bbtools-mhist",
         description="Histogram of match, substitution, deletion, and insertion rates by read location (`mhist`).",
         plot=linegraph.plot(plot_data, pconfig),

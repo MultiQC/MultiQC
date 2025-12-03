@@ -46,7 +46,7 @@ def parse_bbtools_ehist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Errors-per-Read",
+        name="BBMap Errors per Read",
         anchor="bbtools-ehist",
         description="Errors-per-read histogram (`ehist`).",
         plot=linegraph.plot(plot_data, pconfig),

@@ -58,7 +58,7 @@ def parse_bbtools_qahist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Quality Accuracy",
+        name="BBMap Quality Accuracy",
         anchor="bbtools-qahist",
         description="Base quality accuracy histogram of error rates versus quality score (`qahist`). "
         "The plots show the observed count of each type of alignment by base quality score.",
@@ -80,7 +80,7 @@ def parse_bbtools_qahist(module: BaseMultiqcModule) -> int:
         }
 
         module.add_section(
-            name="Quality Accuracy Summary",
+            name="BBMap Quality Accuracy Summary",
             anchor="bbtools-qahist-table",
             description="Quality accuracy statistics summary.",
             plot=table.plot(

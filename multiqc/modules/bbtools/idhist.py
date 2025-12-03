@@ -53,7 +53,7 @@ def parse_bbtools_idhist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Identity Histogram",
+        name="BBMap Identity Histogram",
         anchor="bbtools-idhist",
         description="Histogram of read count versus percent base pair identity of aligned reads (`idhist`).",
         plot=linegraph.plot(plot_data, pconfig),
@@ -98,7 +98,7 @@ def parse_bbtools_idhist(module: BaseMultiqcModule) -> int:
         }
 
         module.add_section(
-            name="Identity Histogram Summary",
+            name="BBMap Identity Summary",
             anchor="bbtools-idhist-table",
             description="Identity statistics summary.",
             plot=table.plot(

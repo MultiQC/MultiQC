@@ -52,7 +52,7 @@ def parse_bbtools_bqhist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Base Quality",
+        name="BBMap Base Quality",
         anchor="bbtools-bqhist",
         description="Quality histogram designed for box plots (`bqhist`). "
         "Refer to original source files for complete boxplot data. "

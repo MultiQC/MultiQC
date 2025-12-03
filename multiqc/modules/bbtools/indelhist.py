@@ -53,7 +53,7 @@ def parse_bbtools_indelhist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Indel Lengths",
+        name="BBMap Indel Lengths",
         anchor="bbtools-indelhist",
         description="Indel length histogram (`indelhist`). "
         "The plots show the number of observed insertions and deletions, "

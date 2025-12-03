@@ -49,7 +49,7 @@ def parse_bbtools_ihist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Insert Sizes",
+        name="BBMap Insert Sizes",
         anchor="bbtools-ihist",
         description="Histogram of computed insert sizes, for paired reads (`ihist`). "
         "Plotted data has been cut off at 99% to prevent long tails; "
@@ -86,7 +86,7 @@ def parse_bbtools_ihist(module: BaseMultiqcModule) -> int:
         }
 
         module.add_section(
-            name="Insert Sizes Summary",
+            name="BBMap Insert Size Summary",
             anchor="bbtools-ihist-table",
             description="Insert size statistics summary.",
             plot=table.plot(

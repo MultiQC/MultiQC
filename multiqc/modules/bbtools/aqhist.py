@@ -58,7 +58,7 @@ def parse_bbtools_aqhist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="Read Quality",
+        name="BBMap Read Quality",
         anchor="bbtools-aqhist",
         description="Histogram of average read qualities (`aqhist`). "
         "Plot shows the number of reads at each quality score.",

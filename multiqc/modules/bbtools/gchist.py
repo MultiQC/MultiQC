@@ -49,7 +49,7 @@ def parse_bbtools_gchist(module: BaseMultiqcModule) -> int:
     }
 
     module.add_section(
-        name="GC Content",
+        name="BBMap GC Content",
         anchor="bbtools-gchist",
         description="Read GC content histogram (`gchist`).",
         plot=linegraph.plot(plot_data, pconfig),
@@ -78,7 +78,7 @@ def parse_bbtools_gchist(module: BaseMultiqcModule) -> int:
         }
 
         module.add_section(
-            name="GC Content Summary",
+            name="BBMap GC Content Summary",
             anchor="bbtools-gchist-table",
             description="Read GC content statistics.",
             plot=table.plot(
