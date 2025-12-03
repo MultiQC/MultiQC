@@ -14,7 +14,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
-          cache: "pip"
+
+      - name: "Install uv"
+        uses: astral-sh/setup-uv@v5
 
       - uses: pre-commit/action@v3.0.1
 
@@ -27,9 +29,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
-          cache: "pip"
 
-      - run: pip install rich
+      - name: "Install uv"
+        uses: astral-sh/setup-uv@v5
+
+      - run: uv pip install --system rich
 
       - name: "Run manual code style checks"
         run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py

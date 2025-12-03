@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.14"] # Oldest and newest supported Python versions
+        python-version: ["3.9", "3.14"] # Oldest and newest supported Python versions
     timeout-minutes: 10
 
     steps:
@@ -29,8 +29,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
 
+      - name: "Install uv"
+        uses: astral-sh/setup-uv@v5
+
       - name: "Install MultiQC"
-        run: pip install .
+        run: uv pip install --system .
 
       - name: "Download test data"
         uses: actions/checkout@v4

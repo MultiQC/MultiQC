@@ -8,7 +8,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+### Installation and Development Setup
+
+#### Using uv (recommended - 10-100x faster)
+
+```bash
+# Install uv if you don't have it
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install MultiQC in development mode with all dependencies
+uv sync --all-extras
+
+# Install just the package (no dev dependencies)
+uv sync
+```
+
+#### Using pip (traditional method)
+
+```bash
+# Install MultiQC in development mode with all dependencies
+pip install -e '.[dev]'
+
+# Install just the package
+pip install -e .
+```
+
 ### Testing
+
+#### Using uv
+
+```bash
+# Run all tests with coverage
+uv run pytest -vv --cov=multiqc --cov-report=xml
+
+# Run tests in parallel (faster)
+uv run pytest -vv -n 4 --cov=multiqc --cov-report=xml
+
+# Run single test file
+uv run pytest tests/test_modules_run.py -v
+
+# Run specific test
+uv run pytest tests/test_modules_run.py::test_module_run -v
+```
+
+#### Using pip/traditional
 
 ```bash
 # Run all tests with coverage
@@ -26,6 +69,25 @@ pytest tests/test_modules_run.py::test_module_run -v
 
 ### Linting and Type Checking
 
+#### Using uv
+
+```bash
+# Run pre-commit hooks (includes ruff, mypy, etc.)
+uv run pre-commit run --all-files
+
+# Run ruff linting
+uv run ruff check multiqc/
+
+# Run mypy type checking
+uv run mypy multiqc
+uv run mypy tests
+
+# Run custom code style checks
+uv run python .github/workflows/code_checks.py
+```
+
+#### Using pip/traditional
+
 ```bash
 # Run pre-commit hooks (includes ruff, mypy, etc.)
 pre-commit run --all-files
@@ -41,17 +103,22 @@ mypy tests
 python .github/workflows/code_checks.py
 ```
 
-### Installation and Development Setup
+### Running MultiQC
+
+#### Using uv
 
 ```bash
-# Install MultiQC in development mode with all dependencies
-pip install -e '.[dev]'
+# Basic usage
+uv run multiqc .
 
-# Install just the package
-pip install -e .
+# Run with specific modules
+uv run multiqc . --module fastqc --module samtools
+
+# Run with custom config
+uv run multiqc . --config custom_config.yaml
 ```
 
-### Running MultiQC
+#### Using pip/traditional
 
 ```bash
 # Basic usage
