@@ -67,7 +67,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         n = dict()
 
-        # Call submodule functions
+        # Call submodule functions (ordered alphabetically by section name)
+        # BBDuk sections
         n["duk"] = parse_bbtools_duk(self)
         if n["duk"] > 0:
             log.info(f"Found {n['duk']} BBDuk reports")
@@ -76,18 +77,12 @@ class MultiqcModule(BaseMultiqcModule):
         if n["stats"] > 0:
             log.info(f"Found {n['stats']} stats reports")
 
+        # BBSplit sections
         n["bbsplit"] = parse_bbtools_bbsplit(self)
         if n["bbsplit"] > 0:
             log.info(f"Found {n['bbsplit']} BBSplit reports")
 
-        n["qchist"] = parse_bbtools_qchist(self)
-        if n["qchist"] > 0:
-            log.info(f"Found {n['qchist']} qchist reports")
-
-        n["aqhist"] = parse_bbtools_aqhist(self)
-        if n["aqhist"] > 0:
-            log.info(f"Found {n['aqhist']} aqhist reports")
-
+        # BBMap sections
         n["bhist"] = parse_bbtools_bhist(self)
         if n["bhist"] > 0:
             log.info(f"Found {n['bhist']} bhist reports")
@@ -95,6 +90,10 @@ class MultiqcModule(BaseMultiqcModule):
         n["bqhist"] = parse_bbtools_bqhist(self)
         if n["bqhist"] > 0:
             log.info(f"Found {n['bqhist']} bqhist reports")
+
+        n["qchist"] = parse_bbtools_qchist(self)
+        if n["qchist"] > 0:
+            log.info(f"Found {n['qchist']} qchist reports")
 
         n["covhist"] = parse_bbtools_covhist(self)
         if n["covhist"] > 0:
@@ -112,17 +111,13 @@ class MultiqcModule(BaseMultiqcModule):
         if n["idhist"] > 0:
             log.info(f"Found {n['idhist']} idhist reports")
 
-        n["ihist"] = parse_bbtools_ihist(self)
-        if n["ihist"] > 0:
-            log.info(f"Found {n['ihist']} ihist reports")
-
         n["indelhist"] = parse_bbtools_indelhist(self)
         if n["indelhist"] > 0:
             log.info(f"Found {n['indelhist']} indelhist reports")
 
-        n["lhist"] = parse_bbtools_lhist(self)
-        if n["lhist"] > 0:
-            log.info(f"Found {n['lhist']} lhist reports")
+        n["ihist"] = parse_bbtools_ihist(self)
+        if n["ihist"] > 0:
+            log.info(f"Found {n['ihist']} ihist reports")
 
         n["mhist"] = parse_bbtools_mhist(self)
         if n["mhist"] > 0:
@@ -135,6 +130,14 @@ class MultiqcModule(BaseMultiqcModule):
         n["qhist"] = parse_bbtools_qhist(self)
         if n["qhist"] > 0:
             log.info(f"Found {n['qhist']} qhist reports")
+
+        n["lhist"] = parse_bbtools_lhist(self)
+        if n["lhist"] > 0:
+            log.info(f"Found {n['lhist']} lhist reports")
+
+        n["aqhist"] = parse_bbtools_aqhist(self)
+        if n["aqhist"] > 0:
+            log.info(f"Found {n['aqhist']} aqhist reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
