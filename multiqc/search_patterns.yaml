@@ -369,6 +369,8 @@ fastqc/zip:
   fn: "*_fastqc.zip"
 fastqc/theoretical_gc:
   fn: "*fastqc_theoretical_gc*"
+fastqe:
+  fn: "*_fastqe.tsv"
 featurecounts:
   fn: "*.summary"
   shared: true
