@@ -9,7 +9,7 @@ repos:
       - id: check-hooks-apply
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v5.0.0"
+    rev: "v6.0.0"
     hooks:
       - id: check-added-large-files
       - id: check-merge-conflict
@@ -25,19 +25,17 @@ repos:
     hooks:
       - id: prettier
         additional_dependencies:
-          - "prettier@3.1.0"
-          - "prettier-plugin-jinja-template@1.5.0"
+          - prettier@3.6.2
+          - prettier-plugin-jinja-template@2.1.0
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.9.1"
+    rev: "v0.14.8"
     hooks:
+      # Run the linter.
+      - id: ruff-check
+        args: [ --fix ]
+      # Run the formatter.
       - id: ruff-format
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.9.1"
-    hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
 
   - repo: local
     hooks:
