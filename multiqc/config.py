@@ -69,11 +69,15 @@ report_header_info: List[Dict[str, str]]
 show_analysis_paths: bool
 show_analysis_time: bool
 custom_logo: str
+custom_logo_dark: str
 custom_logo_url: str
 custom_logo_title: str
+custom_logo_width: int
 custom_css_files: List[str]
 simple_output: bool
 template: str
+template_dark_mode: bool
+plot_font_family: Optional[str]
 profile_runtime: bool
 profile_memory: bool
 pandoc_template: str
@@ -125,6 +129,10 @@ ai_prompt_short: Optional[str]
 ai_prompt_full: Optional[str]
 no_ai: bool
 ai_anonymize_samples: bool
+ai_reasoning_effort: Optional[str]
+ai_max_completion_tokens: Optional[int]
+ai_extended_thinking: bool
+ai_thinking_budget_tokens: Optional[int]
 
 seqera_api_url: str
 seqera_website: str
@@ -137,6 +145,9 @@ plots_defer_loading_numseries: int
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
+boxplot_boxpoints: Union[str, bool, None]
+box_min_threshold_outliers: int
+box_min_threshold_no_points: int
 violin_downsample_after: Optional[int]
 violin_min_threshold_outliers: int
 violin_min_threshold_no_points: int
@@ -145,6 +156,7 @@ collapse_tables: bool
 max_table_rows: int
 max_configurable_table_columns: int
 general_stats_columns: Dict[str, Dict]
+general_stats_helptext: str
 table_columns_visible: Dict[str, Union[bool, Dict[str, bool]]]
 table_columns_placement: Dict[str, Dict[str, float]]
 table_columns_name: Dict[str, Union[str, Dict[str, str]]]
@@ -154,6 +166,7 @@ decimalPoint_format: str
 thousandsSep_format: str
 remove_sections: List[str]
 section_comments: Dict[str, str]
+section_status_checks: Dict[str, Union[bool, Dict[str, bool]]]
 lint: bool  # Deprecated since v1.17
 strict: bool
 development: bool
@@ -175,8 +188,8 @@ sample_names_replace_exact: bool
 sample_names_replace_complete: bool
 sample_names_rename: List[List[str]]
 show_hide_buttons: List[str]
-show_hide_patterns: List[List[str]]
-show_hide_regex: List[bool]
+show_hide_patterns: List[Union[str, List[str]]]
+show_hide_regex: List[Union[str, bool]]
 show_hide_mode: List[str]
 highlight_patterns: List[str]
 highlight_colors: List[str]
@@ -184,17 +197,17 @@ highlight_regex: bool
 no_version_check: bool
 log_filesize_limit: int
 filesearch_lines_limit: int
-report_readerrors: int
-skip_generalstats: int
-skip_versions_section: int
-disable_version_detection: int
+report_readerrors: bool
+skip_generalstats: bool
+skip_versions_section: bool
+disable_version_detection: bool
 versions_table_group_header: str
 data_format_extensions: Dict[str, str]
 export_plot_formats: List[str]
 filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
-use_filename_as_sample_name: bool
+use_filename_as_sample_name: Union[bool, List[str]]
 fn_clean_exts: List[CleanPatternT]
 fn_clean_trim: List[str]
 fn_ignore_files: List[str]
@@ -509,7 +522,7 @@ def _add_config(conf: Dict, conf_path=None):
             log_filename_clean_extensions.append(v)
         elif c == "extra_fn_clean_trim":
             log_filename_clean_trimmings.append(v)
-        elif c in ["custom_logo"] and v:
+        elif c in ["custom_logo", "custom_logo_dark"] and v:
             # Resolve file paths - absolute or cwd, or relative to config file
             fpath = v
             if os.path.exists(v):
@@ -622,6 +635,20 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
                         show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether regex is turned on
         except AttributeError as e:
             logger.error(f"Error loading show patterns file: {e}")
+
+    # Normalize show_hide_patterns to be List[List[str]]
+    # When loaded from YAML config, patterns may be strings instead of lists
+    for i in range(len(show_hide_patterns)):
+        pattern = show_hide_patterns[i]
+        if isinstance(pattern, str):
+            show_hide_patterns[i] = [pattern]
+
+    # Normalize show_hide_regex to be List[bool]
+    # When loaded from YAML config, regex flags may be missing or incorrect types
+    for i in range(len(show_hide_regex)):
+        regex_flag = show_hide_regex[i]
+        if not isinstance(regex_flag, bool):
+            show_hide_regex[i] = bool(regex_flag)
 
     # Lists are not of the same length, pad or trim to the length of show_hide_patterns
     for i in range(len(show_hide_buttons), len(show_hide_patterns)):

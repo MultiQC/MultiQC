@@ -52,13 +52,16 @@ three lines to your MultiQC configuration file:
 
 ```yaml
 custom_logo: "/abs/path/to/logo.png"
+custom_logo_dark: "/abs/path/to/logo-for-dark-mode.png"
 custom_logo_url: "https://www.example.com"
 custom_logo_title: "Our Institute Name"
+custom_logo_width: 200 # Width in pixels
 ```
 
 Only `custom_logo` is needed. The URL will make the logo open up
 a new web browser tab with your address and the title sets the mouse
-hover title text.
+hover title text. Width allows you to adjust the logo size and dark
+lets you have an alternate variant shown when the report is in dark mode.
 
 ## Project level information
 
@@ -509,6 +512,17 @@ Alternatively, you can set the following config flag in your MultiQC config:
 skip_generalstats: true
 ```
 
+#### General Statistics Help Text
+
+You can add a help button with collapsible explanatory text to the General Statistics table
+using the `general_stats_helptext` config option:
+
+```yaml
+general_stats_helptext: "This table shows key metrics for all samples. Click column headers to sort."
+```
+
+When set, a "Help" button will appear that users can click to expand a help text box.
+
 ## Order of modules
 
 By default, modules are included in the report as in the order specified in `config.module_order`.
@@ -910,7 +924,7 @@ Note that the formatting is done in a specific order - `pass`/`warn`/`fail` by d
 
 To find the unique ID for your table / column, right click it in a report and inspect it's HTML (_Inpsect_ in Chrome).
 
-- Tables should look something like `<table id="general_stats_table" class="table table-condensed mqc_table" data-title="General Statistics">`, where `general_stats_table` is the ID.
+- Tables should look something like `<table id="general_stats_table" class="table table-sm mqc_table" data-title="General Statistics">`, where `general_stats_table` is the ID.
 - Table cells should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
 
 :::note

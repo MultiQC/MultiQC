@@ -341,7 +341,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         else:
             # Is this file asking to be a sub-section under a parent section?
             mod_id = cast(ModuleId, ccdict.config.get("parent_id", ccdict.config.get("id", mod_id)))
-            section_id: SectionId = cast(SectionId, ccdict.config.get("section_id", mod_id))
+            section_id: SectionId = cast(SectionId, ccdict.config.get("section_id", ccdict.config.get("id", mod_id)))
 
             mod_anchor: Optional[Anchor] = None
             if "parent_anchor" in ccdict.config:
@@ -521,9 +521,17 @@ class MultiqcModule(BaseMultiqcModule):
             # Try to coerce x-axis to numeric
             if plot_type in [PlotType.LINE, PlotType.SCATTER]:
                 try:
+                    # a series is represented by a dict
                     ccdict.data = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in plot_datasets]
-                except ValueError:
-                    pass
+                except (ValueError, TypeError):
+                    try:
+                        # a series is represented by a list of paris
+                        ccdict.data = [
+                            {_sname: {float(x): float(y) for x, y in _sdata} for _sname, _sdata in ds.items()}
+                            for ds in plot_datasets
+                        ]
+                    except ValueError:
+                        pass
 
             # Table
             if plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
@@ -565,7 +573,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Box plot
             elif plot_type == PlotType.BOX:
-                plot = box.plot(plot_datasets, pconfig=box.BoxPlotConfig(**pconfig))
+                from multiqc.plots.box import BoxT
+
+                box_data = cast(Union[Mapping[str, BoxT], List[Mapping[str, BoxT]]], plot_datasets)
+                plot = box.plot(box_data, pconfig=box.BoxPlotConfig(**pconfig))
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
@@ -595,12 +606,20 @@ class MultiqcModule(BaseMultiqcModule):
                     plot.pconfig.save_data_file = False
 
         if plot is not None or content:
+            # Only add description to section if section name is different from module name
+            # to avoid duplication between module intro and section description
+            section_description = ""
+            if section_name and section_name != self.name:
+                section_description = ccdict.config.get("description", "")
+
             self.add_section(
                 name=section_name,
                 anchor=section_anchor,
                 id=section_id,
+                description=section_description,
                 plot=plot,
                 content=content or "",
+                helptext=ccdict.config.get("helptext", ""),
             )
 
 

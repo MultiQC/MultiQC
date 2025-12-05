@@ -17,6 +17,16 @@ def multiqc_reset():
     reset()
 
 
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state after each test."""
+    original_strict = config.strict
+    original_sample_names_ignore = config.sample_names_ignore[:]
+    yield
+    config.strict = original_strict
+    config.sample_names_ignore[:] = original_sample_names_ignore
+
+
 @pytest.mark.parametrize("module_id,entry_point", modules)
 def test_all_modules(module_id, entry_point, data_dir):
     """
@@ -94,6 +104,8 @@ def test_write_data_file(monkeypatch, tmp_path, config_options, expected_to_writ
         (True, False, None, "SAMPLE_FROM_FILENAME.stderr"),
         (None, None, True, "subdir | SAMPLE_FROM_CONTENTS"),
         (True, None, True, "subdir | SAMPLE_FROM_FILENAME"),
+        (["trimmomatic"], None, None, "SAMPLE_FROM_FILENAME"),
+        (["other_module"], None, None, "SAMPLE_FROM_CONTENTS"),  # Should not affect trimmomatic
     ],
 )
 def test_use_filename_as_sample_name(

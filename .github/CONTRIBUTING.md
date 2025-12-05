@@ -4,6 +4,12 @@ Hi there! Many thanks for taking an interest in improving MultiQC.
 
 I try to manage the required tasks for MultiQC using GitHub issues, you probably came to this page when creating one. Most issues come in two flavours - either reporting a problem or requesting a feature. Please use the template prefilled into new issues when this is the case as it saves time. The most common reason for long-running issues is module requests without any example log files for example.
 
+## Module Requests
+
+We use an automated triage system to prioritize module requests based on tool popularity, community need, and request quality. When you submit a module request, it will be automatically analyzed and prioritized. For best results, include example files and complete information about the tool.
+
+Learn more about how the system works and how to get your request prioritized in the [Module Triage System Guide](../.claude/docs/module-triage-system.md).
+
 However, don't be put off by this template - other more general issues and suggestions are welcome! Contributions to the code are even more welcome ;)
 
 > _If you need help using MultiQC then the best place to go is the Seqera community forum where you can questions in the MultiQC category: [https://community.seqera.io](https://community.seqera.io/c/multiqc/6)_

@@ -37,11 +37,76 @@ from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, ColumnKey, PlotType, SampleName
 from multiqc.utils import mqc_colour
+from multiqc.utils.material_icons import get_material_icon
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
 
 check_plotly_version()
+
+
+def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> str:
+    """
+    Get the appropriate series label for a plot type.
+    If series_label is the default "samples", return a plot type-specific label.
+    Otherwise, return the custom series_label as-is.
+    """
+    if series_label != "samples":
+        return str(series_label)
+
+    # Map plot types to their specific series labels
+    plot_type_labels = {
+        PlotType.LINE: "lines",
+        PlotType.BAR: "bars",
+        PlotType.BOX: "boxes",
+        PlotType.SCATTER: "points",
+        PlotType.HEATMAP: "samples",  # heatmaps typically show samples
+        PlotType.VIOLIN: "samples",  # violins keep the default "samples"
+    }
+
+    return plot_type_labels.get(plot_type, "samples")  # fallback for unknown plot types
+
+
+# Create and register MultiQC default Plotly template
+# Uses transparent backgrounds so plots adapt to the page theme in the HTML report
+# JavaScript in plotting.js will override colors for dark mode
+def get_multiqc_plotly_template():
+    """Get the MultiQC Plotly template with runtime config values."""
+    return dict(
+        layout=go.Layout(
+            paper_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
+            plot_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
+            font=dict(
+                family=config.plot_font_family
+                or "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+                color="rgba(60,60,60,1)",
+            ),
+            colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
+            xaxis=dict(
+                gridcolor="rgba(128,128,128,0.15)",
+                zerolinecolor="rgba(128,128,128,0.2)",
+                color="rgba(100,100,100,1)",
+                tickfont=dict(size=10, color="rgba(80,80,80,1)"),
+                spikecolor="rgba(60,60,60,1)",  # Darker spike line for light mode
+                spikethickness=-3,  # Negative value removes white border, absolute value is thickness
+            ),
+            yaxis=dict(
+                gridcolor="rgba(128,128,128,0.15)",
+                zerolinecolor="rgba(128,128,128,0.2)",
+                color="rgba(100,100,100,1)",
+                tickfont=dict(size=10, color="rgba(80,80,80,1)"),
+                spikecolor="rgba(60,60,60,1)",  # Darker spike line for light mode
+                spikethickness=-3,  # Negative value removes white border, absolute value is thickness
+            ),
+            title=dict(font=dict(size=20, color="rgba(60,60,60,1)")),
+            legend=dict(font=dict(color="rgba(60,60,60,1)")),
+            modebar=dict(
+                bgcolor="rgba(0, 0, 0, 0)",
+                color="rgba(100, 100, 100, 0.5)",
+                activecolor="rgba(80, 80, 80, 1)",
+            ),
+        )
+    )
 
 
 class FlatLine(ValidatedConfig):
@@ -85,6 +150,7 @@ class LineBand(ValidatedConfig):
     from_: Union[float, int]
     to: Union[float, int]
     color: Optional[str] = None
+    opacity: float = Field(1.0, ge=0.0, le=1.0)
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data: Any):
         path_in_cfg = path_in_cfg or ("LineBand",)
@@ -158,7 +224,8 @@ class PConfig(ValidatedConfig):
     y_bands: Optional[List[LineBand]] = None
     x_lines: Optional[List[FlatLine]] = None
     y_lines: Optional[List[FlatLine]] = None
-    series_label: str = "samples"
+    series_label: Union[str, bool] = "samples"
+    flat_if_very_large: bool = True
 
     @classmethod
     def from_pconfig_dict(cls, pconfig: Union[Mapping[str, Any], "PConfig", None]):
@@ -198,7 +265,8 @@ class PConfig(ValidatedConfig):
         # Allow user to overwrite any given config for this plot
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
-                setattr(self, k, v)
+                if k in self.model_fields:
+                    setattr(self, k, v)
 
         # Normalize data labels to ensure they are unique and consistent.
         if self.data_labels and len(self.data_labels) > 1:
@@ -248,7 +316,7 @@ class BaseDataset(BaseModel):
     layout: Dict[str, Any]  # update when a datasets toggle is clicked, or percentage switch is unselected
     trace_params: Dict[str, Any]
     pct_range: Dict[str, Any]
-    n_samples: int
+    n_series: int
 
     def sample_names(self) -> List[SampleName]:
         raise NotImplementedError
@@ -312,7 +380,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
     Represents normalized input data for a plot.
 
     Plot input data is normalized, but enough data is preseverd to merge plots across
-    multiple samples. Plot objects might post-process and re-summarize the data
+    multiple series. Plot objects might post-process and re-summarize the data
     before creating plot datasets.
     """
 
@@ -387,11 +455,17 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         # Try to load previous data (empty or unloadable means no data from previous run)
         old_data = report.plot_input_data.get(new_data.anchor)
+        logger.debug(f"merge_with_previous for {new_data.anchor}: found old_data = {old_data is not None}")
         if old_data is None or old_data.is_empty():
+            logger.debug(f"merge_with_previous for {new_data.anchor}: no old data or empty, using new data only")
             merged_data = new_data
         else:
             # Merge using class-specific implementation
+            logger.debug(
+                f"merge_with_previous for {new_data.anchor}: merging {old_data.__class__.__name__} with {new_data.__class__.__name__}"
+            )
             merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
+            logger.debug(f"merge_with_previous for {new_data.anchor}: merge completed")
         return merged_data
 
     def finalize_df(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -519,26 +593,26 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         plot_type: PlotType,
         pconfig: PConfigT,
         anchor: Anchor,
-        n_samples_per_dataset: List[int],
+        n_series_per_dataset: List[int],
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
-        flat_if_very_large: bool = True,
+        n_samples_per_dataset: Optional[List[int]] = None,
     ) -> "Plot[DatasetT, PConfigT]":
         """
         Initialize a plot model with the given configuration, but without data.
         :param plot_type: plot type
         :param pconfig: plot configuration model
-        :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
+        :param n_series_per_dataset: number of series for each dataset, to pre-initialize the base dataset models
         :param anchor: plot HTML anchor. Unlike ID, must be globally unique
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
         :param defer_render_if_large: whether to defer rendering if the number of data points is large
-        :param flat_if_very_large: whether to render flat if the number of data points is very large
+        :param n_samples_per_dataset: number of actual samples for each dataset (assumes series_label from pconfig are samples)
         """
-        if len(n_samples_per_dataset) == 0:
+        if len(n_series_per_dataset) == 0:
             raise ValueError("No datasets to plot")
 
         # Counts / Percentages / Log10 switch
@@ -562,23 +636,23 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if config.plots_force_flat:
             flat = True
         if (
-            flat_if_very_large
+            pconfig.flat_if_very_large
             and not config.plots_force_interactive
-            and n_samples_per_dataset[0] > config.plots_flat_numseries
+            and n_series_per_dataset[0] > config.plots_flat_numseries
         ):
             logger.debug(
-                f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_flat_numseries={config.plots_flat_numseries}, rendering flat"
+                f"Plot {id} has {n_series_per_dataset[0]} series > config.plots_flat_numseries={config.plots_flat_numseries}, rendering flat"
             )
             flat = True
 
         defer_render = False
         if defer_render_if_large:
             if (
-                n_samples_per_dataset[0] > config.plots_defer_loading_numseries
-                or n_samples_per_dataset[0] > config.num_datasets_plot_limit  # DEPRECATED in v1.24
+                n_series_per_dataset[0] > config.plots_defer_loading_numseries
+                or n_series_per_dataset[0] > config.num_datasets_plot_limit  # DEPRECATED in v1.24
             ):
                 logger.debug(
-                    f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_defer_loading_numseries={config.plots_defer_loading_numseries}, will defer render"
+                    f"Plot {id} has {n_series_per_dataset[0]} series > config.plots_defer_loading_numseries={config.plots_defer_loading_numseries}, will defer render"
                 )
                 defer_render = True
 
@@ -586,33 +660,24 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if showlegend is None:
             showlegend = True if flat else False
 
+        # Use the MultiQC template with runtime config values
+        template = go.layout.Template(get_multiqc_plotly_template())
+
         layout: go.Layout = go.Layout(
+            template=template,
             title=go.layout.Title(
                 text=pconfig.title,
                 xanchor="center",
                 x=0.5,
-                font=dict(size=20),
             ),
             xaxis=go.layout.XAxis(
-                gridcolor="rgba(0,0,0,0.05)",
-                zerolinecolor="rgba(0,0,0,0.05)",
-                color="rgba(0,0,0,0.3)",  # axis labels
-                tickfont=dict(size=10, color="rgba(0,0,0,1)"),
                 automargin=True,  # auto-expand axis to fit the tick labels
             ),
             yaxis=go.layout.YAxis(
-                gridcolor="rgba(0,0,0,0.05)",
-                zerolinecolor="rgba(0,0,0,0.05)",
-                color="rgba(0,0,0,0.3)",  # axis labels
-                tickfont=dict(size=10, color="rgba(0,0,0,1)"),
                 automargin=True,  # auto-expand axis to fit the tick labels
             ),
             height=height,
             width=width,
-            paper_bgcolor="white",
-            plot_bgcolor="white",
-            font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
-            colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
             margin=go.layout.Margin(
                 pad=5,  # pad sample names in a bar graph a bit
@@ -623,11 +688,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             ),
             hoverlabel=go.layout.Hoverlabel(
                 namelength=-1,  # do not crop sample names inside hover label <extra></extra>
-            ),
-            modebar=go.layout.Modebar(
-                bgcolor="rgba(0, 0, 0, 0)",
-                color="rgba(0, 0, 0, 0.5)",
-                activecolor="rgba(0, 0, 0, 1)",
             ),
             showlegend=showlegend,
             legend=go.layout.Legend(
@@ -640,6 +700,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             if flat
             else None,
         )
+
         # Layout update for the counts/percentage switch
         pct_axis_update = dict(
             ticksuffix="%",
@@ -660,7 +721,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 layout[axis].type = "log"
 
         datasets = []
-        for idx, n_samples in enumerate(n_samples_per_dataset):
+        for idx, n_series in enumerate(n_series_per_dataset):
             dataset = BaseDataset(
                 plot_id=id,
                 label=str(idx + 1),
@@ -672,9 +733,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     xaxis=dict(min=0, max=100),
                     yaxis=dict(min=0, max=100),
                 ),
-                n_samples=n_samples,
+                n_series=n_series,
             )
-            if len(n_samples_per_dataset) > 1:
+            if len(n_series_per_dataset) > 1:
                 dataset.uid += f"_{idx + 1}"
 
             data_label: Union[str, Dict[str, Union[str, Dict[str, str]]]] = (
@@ -693,10 +754,19 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 dconfig["title"] = pconfig.title
 
             subtitles = []
-            if len(n_samples_per_dataset) > 1:
+            if len(n_series_per_dataset) > 1:
                 subtitles += [dataset.label]
-            if n_samples > 1:
-                subtitles += [f"{n_samples} {pconfig.series_label}"]
+
+            if n_samples_per_dataset and len(n_samples_per_dataset) > idx:
+                n_samples = n_samples_per_dataset[idx]
+            else:
+                n_samples = 0
+            if n_samples > 1 and pconfig.series_label:
+                series_label = _get_series_label(plot_type, pconfig.series_label)
+                subtitles += [f"{n_samples} {series_label}"]
+            elif n_series > 1 and pconfig.series_label:
+                series_label = _get_series_label(plot_type, pconfig.series_label)
+                subtitles += [f"{n_series} {series_label}"]
             if subtitles:
                 dconfig["subtitle"] = ", ".join(subtitles)
 
@@ -769,6 +839,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     y1=1,
                     yref="paper",  # make y coords are relative to the plot paper [0,1]
                     fillcolor=band.color,
+                    opacity=band.opacity,
                     line={
                         "width": 0,
                     },
@@ -840,6 +911,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     x1=1,
                     xref="paper",  # make x coords are relative to the plot paper [0,1]
                     fillcolor=band.color,
+                    opacity=band.opacity,
                     line={
                         "width": 0,
                     },
@@ -1098,9 +1170,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html = "".join(
             [
                 '<p class="text-info">',
-                '<small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
+                f"<small>{get_material_icon('mdi:image', 16)} ",
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
-                '(see the <a href="https://docs.seqera.io/multiqc/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
+                '(see the <a href="https://docs.seqera.io/multiqc/getting_started/config#flat--interactive-plots" target="_blank">docs</a>).',
                 "</small>",
                 "</p>",
             ]
@@ -1189,7 +1261,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         style_str = f'style="{style}"' if style else ""
 
-        return f'<button {attrs_str} class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
+        return f'<button {attrs_str} class="btn btn-outline-secondary btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
 
     def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """
@@ -1235,7 +1307,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             export_btn = self._btn(
                 cls="export-plot",
                 style="float: right; margin-left: 5px;",
-                label='<span style="vertical-align: baseline"><svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg></span> Export...',
+                label='<svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg> Export...',
                 attrs={"title": "Show export options"},
                 data_attrs={
                     "plot-anchor": str(self.anchor),
@@ -1246,29 +1318,27 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         ai_btn = ""
         if not config.no_ai:
+            seqera_ai_icon = (
+                Path(__file__).parent.parent / "templates/default/assets/img/Seqera_AI_icon.svg"
+            ).read_text()
             ai_btn = f"""
             <div class="ai-plot-buttons-container" style="float: right;">
-                <button 
-                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
+                <button
+                    class="btn btn-outline-secondary btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
                     style="margin-left: 1px;"
                     data-section-anchor="{section_anchor}"
                     data-plot-anchor="{self.anchor}"
                     data-module-anchor="{module_anchor}"
                     data-view="plot"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-bs-toggle="tooltip"
                     title="Copy plot data for use with AI tools like ChatGPT"
                 >
-                    <span style="vertical-align: baseline">
-                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                        </svg>
-                    </span>
+                    {seqera_ai_icon}
                     <span class="button-text">Copy prompt</span>
                 </button>
                 <button
-                    class="btn btn-default btn-sm ai-generate-button ai-generate-button-plot ai-generate-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-generate-button ai-generate-button-plot ai-generate-button-wrapper"
                     data-response-div="{section_anchor}_ai_summary_response"
                     data-error-div="{section_anchor}_ai_summary_error"
                     data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
@@ -1281,15 +1351,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-action="generate"
                     data-clear-text="Clear summary"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-bs-toggle="tooltip"
                     aria-controls="{section_anchor}_ai_summary_wrapper"
                 >
-                    <span style="vertical-align: baseline">
-                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                        </svg>
-                    </span>
+                    {seqera_ai_icon}
                     <span class="button-text">Summarize plot</span>
                 </button>
             </div>
@@ -1302,7 +1367,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
         buttons = "\n".join(self.buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor))
-        html = f"<div class='row' style='align-items: center;'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
+        html = f"<div class='row' style='align-items: center;'>\n<div class='col-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
 
 
@@ -1404,8 +1469,40 @@ def _batch_export_plots(export_tasks, timeout=None):
     return completed_tasks
 
 
+def _prepare_figure_for_export(fig):
+    """
+    Prepare a figure for export by ensuring it has solid backgrounds.
+    Only modifies transparent backgrounds - preserves custom theme backgrounds.
+
+    Plots use transparent backgrounds by default to adapt to page themes in HTML,
+    but exports need solid backgrounds for readability.
+    """
+    # Create a copy to avoid modifying the original figure used in HTML
+    fig_copy = go.Figure(fig)
+
+    # Helper function to check if a color is transparent
+    def is_transparent(color):
+        if color is None:
+            return True
+        color_str = str(color).lower()
+        # Check for transparent rgba values
+        return color_str.startswith("rgba(") and ",0)" in color_str.replace(" ", "")
+
+    # Only change background if it's transparent
+    if is_transparent(fig_copy.layout.paper_bgcolor):
+        fig_copy.update_layout(paper_bgcolor="white")
+
+    if is_transparent(fig_copy.layout.plot_bgcolor):
+        fig_copy.update_layout(plot_bgcolor="white")
+
+    return fig_copy
+
+
 def _export_plot(fig, plot_path, write_kwargs):
     """Export a plotly figure to a file."""
+
+    # Prepare figure with solid backgrounds for export (only if currently transparent)
+    fig = _prepare_figure_for_export(fig)
 
     # Default timeout of 30 seconds for image export
     timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 30
@@ -1435,6 +1532,9 @@ def _export_plot(fig, plot_path, write_kwargs):
 
 def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
     try:
+        # Prepare figure with solid backgrounds for export (only if currently transparent)
+        fig = _prepare_figure_for_export(fig)
+
         img_buffer = io.BytesIO()
         fig.write_image(img_buffer, **write_kwargs)
         img_buffer = add_logo(img_buffer, format="PNG")
@@ -1522,8 +1622,10 @@ def fig_to_static_html(
 
             # Add to batch if using batch processing
             if batch_processing:
+                # Prepare figure with solid backgrounds for export (only if currently transparent)
+                fig_for_export = _prepare_figure_for_export(fig)
                 task_idx = len(_plot_export_batch)
-                _plot_export_batch.append((fig, plot_path, write_kwargs))
+                _plot_export_batch.append((fig_for_export, plot_path, write_kwargs))
                 tasks_added.append((task_idx, plot_path, file_ext))
 
                 # If we're using batch processing, we'll assume the PNG will be written by the batch process
@@ -1672,7 +1774,7 @@ def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
         conf["yaxis"] = conf.pop("y_ceiling")
     if "xAxis" in conf:
         conf["xaxis"] = conf.pop("xAxis")
-    if "tooltip" in conf:
+    if "tooltip" in conf and "hovertemplate" not in conf:
         conf["hovertemplate"] = conf.pop("tooltip")
     return conf
 

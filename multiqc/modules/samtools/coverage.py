@@ -235,7 +235,7 @@ def lineplot_per_region(module, data_by_sample: Dict):
                 "categories": True,
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_empty": False,
+                "hide_zero_cats": False,
                 "data_labels": data_labels,
             },
         ),

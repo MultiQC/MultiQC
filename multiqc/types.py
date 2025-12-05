@@ -114,3 +114,4 @@ class Section(BaseModel):
     print_section: bool = True
     plot_anchor: Optional[Anchor] = None
     ai_summary: str = ""
+    status_bar_html: str = ""

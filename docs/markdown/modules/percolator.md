@@ -2,7 +2,7 @@
 title: Percolator
 displayed_sidebar: multiqcSidebar
 description: >
-  Semi-supervised learning for peptide identification from shotgun proteomics datasets
+    <p>Semi-supervised learning for peptide identification from shotgun proteomics datasets.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/percolator/percolator.
 -->
 
 :::note
-Semi-supervised learning for peptide identification from shotgun proteomics datasets
+<p>Semi-supervised learning for peptide identification from shotgun proteomics datasets.</p>
 
 [https://github.com/percolator/percolator](https://github.com/percolator/percolator)
 :::
@@ -28,8 +28,7 @@ percolator ... > samples.percolator_feature_weights.tsv
 ```
 
 The module accepts one configuration option:
-
-- `group_to_feature`: A dictionary mapping group names to feature names (empty per default), e.g. in `multiqc_config.yaml`:
+ - `group_to_feature`: A dictionary mapping group names to feature names (empty per default), e.g. in `multiqc_config.yaml`:
 
 ```yaml
 percolator:
@@ -43,5 +42,6 @@ percolator:
 
 ```yaml
 percolator:
-  fn: "*percolator_feature_weights.tsv"
+  fn: '*percolator_feature_weights.tsv'
 ```
+    

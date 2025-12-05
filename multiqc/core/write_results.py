@@ -27,6 +27,7 @@ from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor
 from multiqc.utils import util_functions
 from multiqc.utils.util_functions import rmtree_with_retries
+from multiqc.utils.material_icons import get_material_icon
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ class OutputPaths:
     report_overwritten: bool = False
 
 
-def write_results() -> None:
+def write_results(return_html: bool = False) -> Optional[str]:
     plugin_hooks.mqc_trigger("before_report_generation")
 
     # Did we find anything?
@@ -92,9 +93,10 @@ def write_results() -> None:
         paths.data_dir = None
         logger.info("Data        : None")
 
+    html_content = None
     if config.make_report:
         # Render report HTML, write to file or stdout
-        _write_html_report(paths.to_stdout, paths.report_path)
+        html_content = _write_html_report(paths.to_stdout, paths.report_path, return_html=return_html)
 
         if paths.report_path and not config.make_pdf:
             logger.info(
@@ -118,6 +120,12 @@ def write_results() -> None:
             )
         )
 
+    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
+    # that goes beyond this write_results run.
+    # Do this before zipping the data directory, since zipping will remove the directory.
+    if log_and_rich.log_tmp_fn and paths.data_dir and paths.data_dir.exists():
+        shutil.copy2(log_and_rich.log_tmp_fn, str(paths.data_dir))
+
     # Zip the data directory if requested
     if config.zip_data_dir and paths.data_dir is not None:
         shutil.make_archive(str(paths.data_dir), format="zip", root_dir=str(paths.data_dir))
@@ -129,10 +137,8 @@ def write_results() -> None:
     if paths.report_path:
         logger.debug(f"Report HTML written to {paths.report_path}")
 
-    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
-    # that goes beyond this write_results run.
-    if log_and_rich.log_tmp_fn and paths.data_dir:
-        shutil.copy2(log_and_rich.log_tmp_fn, str(paths.data_dir))
+    # Return HTML content if requested
+    return html_content if return_html else None
 
 
 def _maybe_relative_path(path: Path) -> Path:
@@ -464,7 +470,7 @@ def _move_exported_plots(plots_dir: Path):
         logger.warning(f"Couldn't remove plots tmp dir: {e}")
 
 
-def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
+def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html: bool = False) -> Optional[str]:
     """
     Render and write report HTML to disk
     """
@@ -506,11 +512,18 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
     except AttributeError:
         pass  # Not a child theme
     else:
-        shutil.copytree(parent_template.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True)
+        shutil.copytree(
+            parent_template.template_dir,
+            tmp_dir.get_tmp_dir(),
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns("*.pyc"),
+        )
 
     # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
     # parent template files are overwritten)
-    shutil.copytree(template_mod.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True)
+    shutil.copytree(
+        template_mod.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True, ignore=shutil.ignore_patterns("*.pyc")
+    )
 
     # Function to include file contents in Jinja template
     def include_file(name, fdir=tmp_dir.get_tmp_dir(), b64=False):
@@ -552,6 +565,15 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir.get_tmp_dir()))
         env.globals["include_file"] = include_file
+
+        # Add Material Design Icons function to all templates
+        env.globals["material_icon"] = get_material_icon
+
+        # Add template functions if available
+        if hasattr(template_mod, "template_functions"):
+            for func_name, func in template_mod.template_functions.items():
+                env.globals[func_name] = func
+
         j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
     except:  # noqa: E722
         raise IOError(f"Could not load {config.template} template file '{template_mod.base_fn}'")
@@ -565,6 +587,13 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
     # Use jinja2 to render the template and overwrite
     report.analysis_files = [os.path.realpath(d) for d in report.analysis_files]
     report.report_uuid = str(uuid.uuid4())
+
+    # Allow templates to override config settings
+    if hasattr(template_mod, "template_dark_mode"):
+        config.template_dark_mode = template_mod.template_dark_mode
+    if hasattr(template_mod, "plot_font_family"):
+        config.plot_font_family = template_mod.plot_font_family
+
     report_output = j_template.render(report=report, config=config)
     if to_stdout:
         print(report_output, file=sys.stdout)
@@ -585,6 +614,9 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
         except AttributeError:
             pass  # No files to copy
 
+    # Return HTML content if requested
+    return report_output if return_html else None
+
 
 def _write_pdf(report_path: Path) -> Optional[Path]:
     pdf_path = report_path.with_suffix(".pdf")
@@ -594,13 +626,23 @@ def _write_pdf(report_path: Path) -> Optional[Path]:
         str(report_path),
         "--output",
         str(pdf_path),
-        "--pdf-engine=pdflatex",
+        "--pdf-engine=lualatex",
         "-V",
         "documentclass=article",
         "-V",
         "geometry=margin=1in",
         "-V",
+        "mainfont=DejaVu Sans",
+        "-V",
+        "sansfont=DejaVu Sans",
+        "-V",
+        "monofont=DejaVu Sans Mono",
+        "-V",
+        "fontsize=10pt",
+        "-V",
         "title=",
+        "-V",
+        "tables=true",
     ]
     if config.pandoc_template is not None:
         pandoc_call.append(f"--template={config.pandoc_template}")

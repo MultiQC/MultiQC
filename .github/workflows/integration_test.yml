@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.13"] # Oldest and newest supported Python versions
+        python-version: ["3.8", "3.14.0"] # Oldest and newest supported Python versions (3.14.1 has upstream bug)
     timeout-minutes: 10
 
     steps:

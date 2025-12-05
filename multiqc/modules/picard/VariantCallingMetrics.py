@@ -130,7 +130,7 @@ def collect_data(module):
         s_name = None
         for header, value in table_in(f["f"], pre_header_string="## METRICS CLASS"):
             if header == "SAMPLE_ALIAS":
-                s_name = value
+                s_name = module.clean_s_name(value, f)
                 if s_name in data:
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                 data[s_name] = dict()
