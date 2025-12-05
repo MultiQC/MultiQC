@@ -16,13 +16,17 @@ class MultiqcModule(BaseMultiqcModule):
     """
     By default, the module generates the sample names based on the `--report_title` / `-R`
     option in the fastp command line (if present), or the input FastQ file names if not.
+
     If you prefer, you can tell the module to use the filenames as sample names instead.
     To do so, use the following config option:
 
     ```yaml
-    fastp:
-      s_name_filenames: true
+    use_filename_as_sample_name:
+        - fastp
     ```
+
+    See [Using log filenames as sample names](https://docs.seqera.io/multiqc/getting_started/config#using-log-filenames-as-sample-names)
+    for more details.
     """
 
     def __init__(self):
@@ -32,10 +36,10 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/OpenGene/fastp",
             info="All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)",
             extra="""
-            Fastp goes through fastq files in a folder and perform a series of quality control and filtering. 
-            Quality control and reporting are displayed both before and after filtering, allowing for a clear 
-            depiction of the consequences of the filtering process. Notably, the latter can be conducted on a 
-            variety of parameters including quality scores, length, as well as the presence of adapters, polyG, 
+            Fastp goes through fastq files in a folder and perform a series of quality control and filtering.
+            Quality control and reporting are displayed both before and after filtering, allowing for a clear
+            depiction of the consequences of the filtering process. Notably, the latter can be conducted on a
+            variety of parameters including quality scores, length, as well as the presence of adapters, polyG,
             or polyX tailing.""",
             doi="10.1093/bioinformatics/bty560",
         )
