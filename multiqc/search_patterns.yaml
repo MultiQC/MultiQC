@@ -831,10 +831,18 @@ qualimap/bamqc/genome_fraction:
   fn: "genome_fraction_coverage.txt"
 qualimap/bamqc/gc_dist:
   fn: "mapped_reads_gc-content_distribution.txt"
+qualimap/bamqc/html:
+  fn: "qualimapReport.html"
+  contents: "Qualimap report: BAM QC"
+  num_lines: 10
 qualimap/rnaseq/rnaseq_results:
   fn: "rnaseq_qc_results.txt"
 qualimap/rnaseq/coverage:
   fn: "coverage_profile_along_genes_(total).txt"
+qualimap/rnaseq/html:
+  fn: "qualimapReport.html"
+  contents: "Qualimap report: RNA Seq QC"
+  num_lines: 10
 quast:
   fn: "report.tsv"
   contents: "Assembly	"

@@ -6,7 +6,7 @@ import math
 import re
 
 from multiqc import config, BaseMultiqcModule
-from multiqc.modules.qualimap import parse_numerals, get_s_name
+from multiqc.modules.qualimap import parse_numerals, get_s_name, parse_version
 from multiqc.plots import linegraph
 from multiqc.utils.util_functions import update_dict
 
@@ -46,9 +46,16 @@ def parse_reports(module: BaseMultiqcModule):
     if num_parsed == 0:
         return 0
 
-    # Superfluous function call to confirm that it is used in this module
-    # Replace None with actual version if it is available
-    module.add_software_version(None)
+    # Parse version from HTML reports
+    for f in module.find_log_files("qualimap/bamqc/html"):
+        version = parse_version(f)
+        if version:
+            module.add_software_version(version)
+            break  # Only need one version
+
+    # If no version found, still call add_software_version to satisfy the linter
+    if not module.versions:
+        module.add_software_version(None)
 
     threshs, hidden_threshs = config.get_cov_thresholds("qualimap_config")
 
