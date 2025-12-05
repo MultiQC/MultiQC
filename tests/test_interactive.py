@@ -52,7 +52,7 @@ def test_parse_logs_fn_clean_exts(data_dir):
     multiqc.parse_logs(
         data_dir / "modules/fastp/SAMPLE.json",
         data_dir / "modules/fastp/single_end",
-        extra_fn_clean_exts=["_1", "_S10_R1_001"],
+        extra_fn_clean_exts=["_1", "_S10_R1_001", "_S10_R2_001"],
     )
     assert multiqc.list_samples() == ["SRR5442949", "smalltest"]
     assert multiqc.list_modules() == ["fastp"]
@@ -87,6 +87,51 @@ def test_custom_module(tmp_path):
     report.modules = [module]
     # Should not error:
     multiqc.write_report(force=True, output_dir=str(tmp_path), make_data_dir=False, make_report=False)
+
+
+def test_parse_parquet(tmp_path):
+    """
+    Verify parse_data_json correctly loads data and list functions work
+    """
+    # First generate a report with data to load
+    multiqc.parse_logs(tmp_path, run_modules=["custom_content"])
+
+    # Create a simple custom section with a plot
+    module = multiqc.BaseMultiqcModule(name="test-module", anchor=Anchor("test_module"))
+    module.add_section(
+        name="Test Plot Section",
+        plot=table.plot(
+            data={"sample1": {"metric1": 10, "metric2": 20}, "sample2": {"metric1": 30, "metric2": 40}},
+            headers={"metric1": {"title": "Metric 1"}, "metric2": {"title": "Metric 2"}},
+            pconfig={"id": "test_table", "title": "Test Module: Test Table"},
+        ),
+    )
+    report.modules = [module]
+    assert multiqc.list_modules() == ["test_module"]
+    assert multiqc.list_samples() == ["sample1", "sample2"]
+
+    # Write the report to create multiqc_data.json
+    multiqc.write_report(force=True, output_dir=str(tmp_path))
+
+    # Reset
+    multiqc.reset()
+    assert multiqc.list_modules() == []
+    assert multiqc.list_samples() == []
+
+    # Load data from the JSON file
+    multiqc.parse_logs(tmp_path / "multiqc_data" / "multiqc.parquet")
+
+    # Verify data was loaded correctly
+    assert "sample1" in multiqc.list_samples()
+    assert "sample2" in multiqc.list_samples()
+    assert "test_module" in multiqc.list_modules()
+
+    # Verify plots were loaded
+    plots = multiqc.list_plots()
+    assert "test_module" in plots
+    assert "Test Plot Section" in plots["test_module"] or any(
+        isinstance(item, dict) and "Test Plot Section" in item for item in plots["test_module"]
+    )
 
 
 def test_software_versions_section(data_dir, tmp_path, capsys):

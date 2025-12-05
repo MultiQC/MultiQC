@@ -4,11 +4,14 @@ import logging
 from collections import defaultdict
 
 import re
-from typing import Dict
+from typing import Any, Dict, List, Optional, Set, cast
 
 from multiqc import config
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.picard import util
 from multiqc.plots import linegraph, table
+from multiqc.plots.table_object import ColumnDict, TableConfig
+from multiqc.types import ColumnKey
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -61,19 +64,20 @@ FIELD_DESCRIPTIONS = {
 }
 
 
-def parse_reports(module):
+def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     """Find Picard HsMetrics reports and parse their data"""
 
-    data_by_bait_by_sample: Dict[str, Dict[str, Dict]] = dict()
+    data_by_bait_by_sample: Dict[str, Dict[str, Dict[str, Any]]] = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/hsmetrics", filehandles=True):
-        s_name = f["s_name"]
-        keys = None
-        commadecimal = None
+        s_name: Optional[str] = f["s_name"]
+        keys: Optional[List[str]] = None
+        commadecimal: Optional[bool] = None
+        baits: Set[str] = set()
 
         for line in f["f"]:
-            maybe_s_name = util.extract_sample_name(
+            maybe_s_name: Optional[str] = util.extract_sample_name(
                 module,
                 line,
                 f,
@@ -84,11 +88,8 @@ def parse_reports(module):
                 s_name = maybe_s_name
                 keys = None
 
-            if s_name is None:
-                continue
-
             if util.is_line_right_before_table(line, picard_class="HsMetrics", sentieon_algo="HsMetricAlgo"):
-                keys = f["f"].readline().strip("\n").split("\t")
+                keys = cast(List[str], f["f"].readline().strip("\n").split("\t"))
                 if s_name in data_by_bait_by_sample:
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                 data_by_bait_by_sample[s_name] = dict()
@@ -103,6 +104,7 @@ def parse_reports(module):
                 if keys[0] == "BAIT_SET":
                     bait = vals[0]
                 data_by_bait_by_sample[s_name][bait] = dict()
+                baits.add(bait)
                 # Check that we're not using commas for decimal places
                 if commadecimal is None:
                     commadecimal = False
@@ -120,6 +122,10 @@ def parse_reports(module):
                     except ValueError:
                         data_by_bait_by_sample[s_name][bait][k] = vals[i]
 
+        for bait in baits:
+            s_bait_name = f"{s_name}: {bait}"
+            module.add_data_source(f, s_bait_name, section="HsMetrics")
+
     # Remove empty dictionaries
     for s_name in data_by_bait_by_sample:
         for bait in data_by_bait_by_sample[s_name]:
@@ -128,7 +134,7 @@ def parse_reports(module):
         if len(data_by_bait_by_sample[s_name]) == 0:
             data_by_bait_by_sample.pop(s_name, None)
 
-    data_by_sample = dict()
+    data_by_sample: Dict[str, Dict[str, Any]] = dict()
     # Manipulate sample names if multiple baits found
     for s_name in data_by_bait_by_sample:
         for bait in data_by_bait_by_sample[s_name]:
@@ -139,7 +145,6 @@ def parse_reports(module):
             if s_bait_name in data_by_sample:
                 log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_bait_name}")
             data_by_sample[s_bait_name] = data_by_bait_by_sample[s_name][bait]
-            module.add_data_source(f, s_bait_name, section="HsMetrics")
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
@@ -163,18 +168,19 @@ def parse_reports(module):
 
     # Add report section
     module.add_section(
-        name="HSMetrics",
+        name="Hybrid-selection metrics",
         anchor=f"{module.id}_hsmetrics",
+        description="Parsed from Picard HsMetrics tool that takes a SAM/BAM file input and collects metrics that are specific for sequence datasets generated through hybrid-selection. Hybrid-selection (HS) is the most commonly used technique to capture exon-specific sequences for targeted sequencing experiments such as exome sequencing.",
         plot=table.plot(
             data_by_sample,
             _get_table_headers(),
-            {
-                "id": f"{module.id}_hsmetrics_table",
-                "namespace": "HsMetrics",
-                "scale": "RdYlGn",
-                "min": 0,
-                "title": "Picard HsMetrics",
-            },
+            pconfig=TableConfig(
+                id=f"{module.id}_hsmetrics_table",
+                namespace="HsMetrics",
+                scale="RdYlGn",
+                min=0,
+                title="Picard HsMetrics",
+            ),
         ),
     )
     tbases = _add_target_bases(module, data_by_sample)
@@ -187,7 +193,7 @@ def parse_reports(module):
     hs_pen_plot = hs_penalty_plot(module, data_by_sample)
     if hs_pen_plot is not None:
         module.add_section(
-            name="HS Penalty",
+            name="Hybrid-selection penalty",
             anchor=f"{module.id}_hsmetrics_hs_penalty",
             description='The "hybrid selection penalty" incurred to get 80% of target bases to a given coverage.',
             helptext="""
@@ -201,10 +207,10 @@ def parse_reports(module):
         )
 
     # Return the number of detected samples to the parent module
-    return data_by_sample.keys()
+    return set(data_by_sample.keys())
 
 
-def _general_stats_table(module, data):
+def _general_stats_table(module: BaseMultiqcModule, data: Dict[str, Any]):
     """
     Generate table header configs for the General Stats table,
     add config and data to the base module.
@@ -214,7 +220,7 @@ def _general_stats_table(module, data):
     genstats_table_cols = picard_config.get("HsMetrics_genstats_table_cols", [])
     genstats_table_cols_hidden = picard_config.get("HsMetrics_genstats_table_cols_hidden", [])
 
-    headers = {}
+    headers: Dict[str, ColumnDict] = {}
     # Custom general stats columns
     if len(genstats_table_cols) or len(genstats_table_cols_hidden):
         for k, v in _generate_table_header_config(genstats_table_cols, genstats_table_cols_hidden).items():
@@ -259,7 +265,7 @@ def _general_stats_table(module, data):
     module.general_stats_addcols(data, headers, namespace="HsMetrics")
 
 
-def _get_table_headers():
+def _get_table_headers() -> Dict[ColumnKey, ColumnDict]:
     # Look for a user config of which table columns we should use
     picard_config = getattr(config, "picard_config", {})
     HsMetrics_table_cols = picard_config.get("HsMetrics_table_cols")
@@ -310,7 +316,7 @@ def _get_table_headers():
     return _generate_table_header_config(HsMetrics_table_cols, HsMetrics_table_cols_hidden)
 
 
-def _generate_table_header_config(table_cols, hidden_table_cols):
+def _generate_table_header_config(table_cols: List[str], hidden_table_cols: List[str]) -> Dict[ColumnKey, ColumnDict]:
     """
     Automatically generate some nice table header configs based on what we know about
     the different types of Picard data fields.
@@ -330,7 +336,7 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
         if c not in FIELD_DESCRIPTIONS and c[:17] != "PCT_TARGET_BASES_":
             log.error(f"Field '{c}' not found in expected Picard fields. Please check your config.")
 
-    headers = dict()
+    headers: Dict[ColumnKey, ColumnDict] = dict()
     for h in table_cols + hidden_table_cols:
         # Set up the configuration for each column
         if h not in headers:
@@ -350,35 +356,35 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
                 log.warning(f"Field '{h}' not found in FIELD_DESCRIPTIONS, no column description available.")
                 descr = ""
 
-            headers[h] = {
+            headers[ColumnKey(h)] = {
                 "title": h_title.strip().lower().capitalize(),
                 "description": descr,
             }
             if h.find("PCT") > -1:
-                headers[h]["title"] = headers[h]["title"]
-                headers[h]["modify"] = util.multiply_hundred
-                headers[h]["max"] = 100
-                headers[h]["suffix"] = "%"
+                headers[ColumnKey(h)]["title"] = headers[ColumnKey(h)]["title"]
+                headers[ColumnKey(h)]["modify"] = util.multiply_hundred
+                headers[ColumnKey(h)]["max"] = 100
+                headers[ColumnKey(h)]["suffix"] = "%"
 
             elif h.find("READS") > -1:
-                headers[h]["title"] = f"{config.read_count_prefix} {headers[h]['title']}"
-                headers[h]["shared_key"] = "read_count"
+                headers[ColumnKey(h)]["title"] = f"{headers[ColumnKey(h)]['title']}"
+                headers[ColumnKey(h)]["shared_key"] = "read_count"
 
             elif h.find("BASES") > -1:
-                headers[h]["title"] = f"{config.base_count_prefix} {headers[h]['title']}"
-                headers[h]["shared_key"] = "base_count"
+                headers[ColumnKey(h)]["title"] = f"{headers[ColumnKey(h)]['title']}"
+                headers[ColumnKey(h)]["shared_key"] = "base_count"
 
             # Manual capitilisation for some strings
-            headers[h]["title"] = headers[h]["title"].replace("Pf", "PF").replace("snp", "SNP")
+            headers[ColumnKey(h)]["title"] = headers[ColumnKey(h)]["title"].replace("Pf", "PF").replace("snp", "SNP")
 
             if h in hidden_table_cols:
-                headers[h]["hidden"] = True
+                headers[ColumnKey(h)]["hidden"] = True
 
     return headers
 
 
-def _add_target_bases(self, data):
-    data_clean: Dict[str, Dict] = defaultdict(dict)
+def _add_target_bases(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    data_clean: Dict[str, Dict[int, float]] = defaultdict(dict)
     max_non_zero_cov = 0
     for s in data:
         for h in data[s]:
@@ -390,10 +396,10 @@ def _add_target_bases(self, data):
                     max_non_zero_cov = cov
 
     pconfig = {
-        "id": f"{self.anchor}_percentage_target_bases",
-        "title": f"{self.name}: Percentage of target bases",
-        "xlab": "Fold Coverage",
-        "ylab": "Pct of bases",
+        "id": f"{module.anchor}_percentage_target_bases",
+        "title": f"{module.name} HSMetrics: percentage of target base pairs",
+        "xlab": "Fold coverage",
+        "ylab": "Percentage of base pairs",
         "ymax": 100,
         "ymin": 0,
         "xmin": 0,
@@ -401,15 +407,15 @@ def _add_target_bases(self, data):
         "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
     }
     return {
-        "name": "Target Region Coverage",
-        "anchor": f"{self.anchor}_hsmetrics_target_bases",
+        "name": "Hybrid-selection target coverage",
+        "anchor": f"{module.anchor}_hsmetrics_target_bases",
         "description": "The percentage of all target bases with at least <code>x</code> fold coverage.",
         "plot": linegraph.plot(data_clean, pconfig),
     }
 
 
-def hs_penalty_plot(self, data):
-    data_clean: Dict[str, Dict] = defaultdict(dict)
+def hs_penalty_plot(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]):
+    data_clean: Dict[str, Dict[int, float]] = defaultdict(dict)
     any_non_zero = False
     for s in data:
         for h in data[s]:
@@ -419,9 +425,9 @@ def hs_penalty_plot(self, data):
                     any_non_zero = True
 
     pconfig = {
-        "id": f"{self.anchor}_hybrid_selection_penalty",
-        "title": f"{self.name}: Hybrid Selection Penalty",
-        "xlab": "Fold Coverage",
+        "id": f"{module.anchor}_hybrid_selection_penalty",
+        "title": f"{module.name}: Hybrid-selection penalty",
+        "xlab": "Fold coverage",
         "ylab": "Penalty",
         "ymin": 0,
         "xmin": 0,

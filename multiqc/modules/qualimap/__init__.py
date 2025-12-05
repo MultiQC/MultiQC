@@ -86,6 +86,8 @@ def parse_numerals(
             if decimalcomma is True:
                 v = v.replace(".", "").replace(",", ".")
             v = v.replace(",", "")
+            if v == "∞":
+                v = "inf"
             if k in int_metrics:
                 d[int_metrics[k]] = int(v)
             elif k in float_metrics:

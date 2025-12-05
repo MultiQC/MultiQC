@@ -6,6 +6,7 @@ import dataclasses
 import fnmatch
 import io
 import itertools
+import json
 import logging
 import mimetypes
 import os
@@ -20,7 +21,9 @@ from typing import (
     Iterable,
     List,
     Literal,
+    Mapping,
     Optional,
+    Sequence,
     Set,
     Tuple,
     TypeVar,
@@ -31,12 +34,13 @@ from typing import (
 
 import markdown
 import packaging.version
+from natsort import natsorted
 
-from multiqc import config, report
+from multiqc import config, report, validation
 from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
 from multiqc.core.strict_helpers import lint_error
-from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.plot import Plot
 from multiqc.plots.table_object import (
     ColumnDict,
     ColumnKey,
@@ -44,9 +48,8 @@ from multiqc.plots.table_object import (
     SampleGroup,
     SampleName,
     ValueT,
-    is_valid_value,
 )
-from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SampleNameMeta, Section, SectionId, SectionKey
 
 logger = logging.getLogger(__name__)
 
@@ -55,33 +58,7 @@ class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
 
 
-@dataclasses.dataclass
-class SampleNameMeta:
-    original_name: SampleName
-    trimmed_name: Optional[SampleName] = None
-    trimmed_suffixes: List[str] = dataclasses.field(default_factory=list)
-    group: Optional[SampleGroup] = None
-    labels: List[str] = dataclasses.field(default_factory=list)
-
-
-@dataclasses.dataclass
-class Section:
-    name: str
-    anchor: Anchor
-    id: SectionId  # unlike anchor, doesn't have to be different from the module or plot ids
-    description: str
-    module: str
-    comment: str = ""
-    helptext: str = ""
-    content_before_plot: str = ""
-    content: str = ""
-    plot: str = ""
-    print_section: bool = True
-    plot_anchor: Optional[Anchor] = None
-
-
 ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleName, SampleName]]], None]
-
 
 DataT = TypeVar("DataT")
 SampleNameT = TypeVar("SampleNameT", str, SampleName)
@@ -113,6 +90,8 @@ class BaseMultiqcModule:
         autoformat_type: str = "markdown",
         doi: Optional[Union[str, List[str]]] = None,
     ):
+        validation.reset()
+
         # Custom options from user config that can overwrite base module values
         self.name: str = name
         _cust_name = self.mod_cust_config.get("name")
@@ -166,18 +145,16 @@ class BaseMultiqcModule:
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})
 
-        # Sanitise anchor ID and check for duplicates
-        self.anchor = Anchor(report.save_htmlid(str(self.anchor)))
-
         # See if we have a user comment in the config
-        _config_section_comment = config.section_comments.get(str(self.anchor))
-        if _config_section_comment:
+        if _config_section_comment := config.section_comments.get(str(self.anchor)):
             self.comment = _config_section_comment
 
         self.info = self.info.strip().strip(".")
         # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
         if self.info and self.info[0].islower():
             self.info = f"{self.name} {self.info}"
+        if self.info and not self.info.endswith("."):
+            self.info += "."
 
         if isinstance(self.href, str):
             self.href = [self.href]
@@ -190,6 +167,11 @@ class BaseMultiqcModule:
         self.intro = self._get_intro()
 
         # Format the markdown strings
+        if autoformat and self.info:
+            self.info = textwrap.dedent(self.info)
+            if autoformat_type == "markdown":
+                self.info = markdown.markdown(self.info)
+
         if autoformat and self.comment:
             self.comment = textwrap.dedent(self.comment)
             if autoformat_type == "markdown":
@@ -199,15 +181,14 @@ class BaseMultiqcModule:
 
         self.hidden = False
 
-        self.__saved_raw_data: Dict[str, Dict[str, Any]] = dict()  # Saved raw data. Identical to report.saved_raw_data
+        # Saved raw data. Written only if `preserve_module_raw_data` is set to `True`
+        self.__saved_raw_data: Optional[Dict[str, Dict[str, Any]]] = None
 
         self.css: Dict[str, str] = dict()
         self.js: Dict[str, str] = dict()
 
         # Get list of all base attributes, so we clean up any added by child modules
         self._base_attributes = [k for k in dir(self)]
-
-        self.sample_names: List[SampleNameMeta] = []
 
     def _get_intro(self):
         doi_html = ""
@@ -216,23 +197,23 @@ class BaseMultiqcModule:
             for doi in self.doi:
                 # Build the HTML link for the DOI
                 doi_links.append(
-                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                    f' <a class="module-doi text-muted" data-doi="{doi}" data-bs-toggle="popover"'
+                    f' href="https://doi.org/{doi}" target="_blank">{doi}</a>'
                 )
-            doi_html = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}</em>'.format(
-                "; ".join(doi_links)
-            )
+            doi_html = '<span class="text-muted small ms-2">DOI: {}</span>'.format("; ".join(doi_links))
 
         url_link = ""
         if len(self.href) > 0:
             url_links: List[str] = []
             for url in self.href:
-                url_links.append(f'<a href="{url}" target="_blank">{url.strip("/")}</a>')
-            url_link = '<em class="text-muted small" style="margin-left: 1rem;">URL: {}</em>'.format(
-                "; ".join(url_links)
-            )
+                url_links.append(f'<a href="{url}" class="text-muted ms-2 small" target="_blank">{url.strip("/")}</a>')
+            url_link = "; ".join(url_links)
 
-        info = (self.info + ".") if self.info else ""
-        return f"<p>{info}{url_link}{doi_html}</p>{self.extra}"
+        info_html = f"{self.info}{url_link}{doi_html}"
+        if not info_html.startswith("<"):  # Assume markdown, convert to HTML
+            info_html = markdown.markdown(info_html)
+
+        return f"{info_html}{self.extra}"
 
     def clean_child_attributes(self):
         """
@@ -245,7 +226,7 @@ class BaseMultiqcModule:
                 delattr(self, key)
 
     @property
-    def saved_raw_data(self):
+    def saved_raw_data(self) -> Optional[Dict[str, Dict[str, Any]]]:
         """
         Wrapper to give access to private __saved_raw_data. We could have just called __saved_raw_data without the
         underscore: saved_raw_data, and that would work just fine. But users might override saved_raw_data in
@@ -261,7 +242,7 @@ class BaseMultiqcModule:
     @overload
     def find_log_files(
         self, sp_key: str, filecontents: Literal[False] = False, filehandles: Literal[True] = True
-    ) -> Iterable[LoadedFileDict[io.BufferedReader]]: ...
+    ) -> Union[Iterable[LoadedFileDict[io.TextIOWrapper]], Iterable[LoadedFileDict[io.BufferedReader]]]: ...
 
     @overload
     def find_log_files(
@@ -272,8 +253,8 @@ class BaseMultiqcModule:
         self, sp_key: str, filecontents: bool = True, filehandles: bool = False
     ) -> Union[
         Iterable[LoadedFileDict[str]],
-        Iterable[LoadedFileDict[io.BufferedReader]],
-        Iterable[LoadedFileDict[io.TextIOWrapper]],
+        Iterable[LoadedFileDict[io.BufferedReader]],  # image file
+        Iterable[LoadedFileDict[io.TextIOWrapper]],  # text file
         Iterable[LoadedFileDict[None]],
     ]:
         """
@@ -303,7 +284,14 @@ class BaseMultiqcModule:
         path_filters: List[str] = get_path_filters("path_filters")
         path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
 
-        for f in report.files.get(ModuleId(sp_key), []):
+        # Get files and sort them by their clean sample names
+        module_files = list(report.files.get(ModuleId(sp_key), []))
+
+        # Sort files naturally by their clean sample names
+        module_files = natsorted(module_files, key=lambda f: self.clean_s_name(f["fn"], f))
+
+        # Process the sorted files
+        for f in module_files:
             # Make a note of the filename so that we can report it if something crashes
             last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file
@@ -323,7 +311,8 @@ class BaseMultiqcModule:
                 )
                 if any(exclusion_hits):
                     logger.debug(
-                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for "
+                        f"'{self.name}'"
                     )
                     continue
 
@@ -339,16 +328,18 @@ class BaseMultiqcModule:
                 )
                 if not any(inclusion_hits):
                     logger.debug(
-                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '"
+                        f"{self.name}'"
                     )
                     continue
                 else:
                     logger.debug(
-                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '{self.name}'"
+                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '"
+                        f"{self.name}'"
                     )
 
             # Make a sample name from the filename
-            s_name = self.clean_s_name(f["fn"])
+            s_name = self.clean_s_name(f["fn"], f)
 
             if filehandles or filecontents:
                 try:
@@ -369,7 +360,8 @@ class BaseMultiqcModule:
                                     contents = fh.read()
                                 except UnicodeDecodeError as e:
                                     logger.debug(
-                                        f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode characters\n{e}"
+                                        f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode "
+                                        f"characters\n{e}"
                                     )
                                     try:
                                         with io.open(
@@ -405,8 +397,26 @@ class BaseMultiqcModule:
         content: str = "",
         autoformat: bool = True,
         autoformat_type: str = "markdown",
+        statuses: Optional[Dict[Literal["pass", "warn", "fail"], List[str]]] = None,
     ):
-        """Add a section to the module report output"""
+        """Add a section to the module report output
+
+        Args:
+            name: Title of the section. If not specified, the section will be untitled.
+            anchor: HTML anchor ID for the section. Auto-generated from `id` if not specified.
+            id: Section identifier for configuration. Auto-generated from `name` or module anchor if not specified.
+            description: Descriptive text shown at the top of the section, below the title.
+            comment: User-configurable comment text (can be set in MultiQC config).
+            helptext: Additional help text shown in a collapsible panel.
+            content_before_plot: HTML content to insert before any plot.
+            plot: A plot object or HTML string to display in the section.
+            content: HTML content to display in the section (shown after plot if both are provided).
+            autoformat: If True, format description/comment/helptext as markdown (default: True).
+            autoformat_type: Format type for autoformat, either "markdown" or "html" (default: "markdown").
+            statuses: Optional dict with keys "pass", "warn", "fail" containing lists of sample names.
+                      When provided, displays a status progress bar showing sample pass/warn/fail counts.
+                      Can be disabled globally or per-section via `section_status_checks` config.
+        """
         if id is None and anchor is not None:
             id = str(anchor)
 
@@ -445,11 +455,13 @@ class BaseMultiqcModule:
             logger.debug(f"Skipping section with id '{id}' because specified in user config")
             return
 
-        # See if we have a user comment in the config
-        if str(id) in config.section_comments:
-            comment = config.section_comments[str(id)]
-        elif str(anchor) in config.section_comments:
-            comment = config.section_comments[str(anchor)]
+        # See if we have a user comment in the config, but only if the section ID is different from the module ID
+        # (otherwise it's a duplicate comment)
+        if self.anchor != id and self.anchor != anchor:
+            if str(id) in config.section_comments:
+                comment = config.section_comments[str(id)]
+            elif str(anchor) in config.section_comments:
+                comment = config.section_comments[str(anchor)]
 
         # Format the content
         if autoformat:
@@ -471,17 +483,25 @@ class BaseMultiqcModule:
         comment = comment.strip()
         helptext = helptext.strip()
 
+        # Generate status bar HTML if status data is provided
+        status_bar_html = ""
+        if statuses is not None and self._should_add_status_bar(str(id)):
+            status_bar_html = self._generate_status_bar_html(statuses, str(anchor))
+
         section = Section(
             name=name or "",
             anchor=Anchor(anchor),
             id=SectionId(id),
             description=description,
             module=self.name,
+            module_anchor=self.anchor,
+            module_info=self.info,
             comment=comment,
             helptext=helptext,
             content_before_plot=content_before_plot,
             content=content,
-            print_section=any([description, comment, helptext, content_before_plot, plot, content]),
+            print_section=any([content_before_plot, plot, content]),
+            status_bar_html=status_bar_html,
         )
 
         if plot is not None:
@@ -494,6 +514,101 @@ class BaseMultiqcModule:
 
         # self.sections is passed into Jinja template:
         self.sections.append(section)
+
+    def _should_add_status_bar(self, section_id: str) -> bool:
+        """
+        Check if status bar should be added based on config.section_status_checks.
+
+        Returns True if enabled (default), False if disabled.
+        """
+        # Check if there's a config for this module
+        module_config = config.section_status_checks.get(self.anchor)
+
+        if module_config is None:
+            # No config = enabled by default
+            return True
+
+        if isinstance(module_config, bool):
+            # Boolean config applies to all sections
+            return module_config
+
+        # Dict config - check for this specific section
+        return module_config.get(section_id, True)  # Default True if section not specified
+
+    def _generate_status_bar_html(
+        self, status: Dict[Literal["pass", "warn", "fail"], List[str]], section_anchor: str
+    ) -> str:
+        """
+        Generate HTML for status bar with pass/warn/fail counts.
+
+        Args:
+            status: Dict with keys "pass", "warn", "fail" containing lists of sample names
+            section_anchor: The anchor ID for this section
+
+        Returns:
+            HTML string containing progress bar and embedded JSON data
+        """
+        # Count samples per status
+        pass_samples = status.get("pass", [])
+        warn_samples = status.get("warn", [])
+        fail_samples = status.get("fail", [])
+
+        total = len(pass_samples) + len(warn_samples) + len(fail_samples)
+        if total == 0:
+            return ""
+
+        # Calculate percentages
+        pass_pct = (len(pass_samples) / total) * 100
+        warn_pct = (len(warn_samples) / total) * 100
+        fail_pct = (len(fail_samples) / total) * 100
+
+        # Build sample status dict for JavaScript
+        sample_statuses = {}
+        for sample in pass_samples:
+            sample_statuses[sample] = "pass"
+        for sample in warn_samples:
+            sample_statuses[sample] = "warn"
+        for sample in fail_samples:
+            sample_statuses[sample] = "fail"
+
+        # Generate progress bar HTML
+        html = f'''
+    <div class="mqc-status-progress-wrapper" data-module-key="{self.anchor.replace("-", "_")}" data-section-key="{section_anchor}">
+        <div class="progress-stacked mqc-status-progress">'''
+
+        if len(pass_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(pass_samples)} / {total} samples passed"
+                 aria-valuenow="{len(pass_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {pass_pct}%" title="{len(pass_samples)}&nbsp;/&nbsp;{total} samples passed">
+                <div class="progress-bar bg-success">{len(pass_samples)}</div>
+            </div>'''
+
+        if len(warn_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(warn_samples)} / {total} samples with warnings"
+                 aria-valuenow="{len(warn_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {warn_pct}%" title="{len(warn_samples)}&nbsp;/&nbsp;{total} samples with warnings">
+                <div class="progress-bar bg-warning">{len(warn_samples)}</div>
+            </div>'''
+
+        if len(fail_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(fail_samples)} / {total} samples failed"
+                 aria-valuenow="{len(fail_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {fail_pct}%" title="{len(fail_samples)}&nbsp;/&nbsp;{total} samples failed">
+                <div class="progress-bar bg-danger">{len(fail_samples)}</div>
+            </div>'''
+
+        html += """
+        </div>
+    </div>"""
+
+        # Add embedded JSON data for JavaScript
+        json_data = json.dumps([self.anchor.replace("-", "_"), section_anchor, sample_statuses])
+        html += f'\n    <script type="application/json" class="mqc-status-data">{json_data}</script>'
+
+        return html
 
     @staticmethod
     def _clean_fastq_pair(r1: str, r2: str) -> Optional[str]:
@@ -538,12 +653,24 @@ class BaseMultiqcModule:
                 grouping_exts = [grouping_exts]
             if grouping_exts:
                 s_name_without_ext = SampleName(
-                    self.clean_s_name(s_name, fn_clean_exts=grouping_exts, fn_clean_trim=[], prepend_dirs=False)
+                    self._clean_s_name(
+                        s_name,
+                        fn_clean_exts=grouping_exts,
+                        fn_clean_trim=[],
+                        prepend_dirs=False,
+                    )
                 )
                 if s_name_without_ext != s_name:  # matched the label
                     matched_label = label
                     # Clean the rest of the name
-                    group_name = SampleGroup(self.clean_s_name(s_name_without_ext))
+                    group_name = SampleGroup(
+                        # Leaving out fn_clean_exts and fn_clean_trim, so the default values are used, to make sure
+                        # all default extentions are trimmed after we trimmed the groupping pattern.
+                        self._clean_s_name(
+                            s_name_without_ext,
+                            prepend_dirs=False,
+                        )
+                    )
                     break
 
         return group_name, matched_label
@@ -587,7 +714,8 @@ class BaseMultiqcModule:
         grouping_config: SampleGroupingConfig,
     ) -> Dict[SampleGroup, List[InputRow]]:
         """
-        Group samples and merges numeric metrics by averaging them, optionally normalizing using `normalization_metric_name`
+        Group samples and merges numeric metrics by averaging them, optionally normalizing using
+        `normalization_metric_name`
         """
 
         rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
@@ -691,7 +819,32 @@ class BaseMultiqcModule:
     def clean_s_name(
         self,
         s_name: Union[str, List[str]],
-        f: Optional[Union[LoadedFileDict[Any], str]] = None,
+        f: Union[LoadedFileDict[Any], FileDict],
+        root: Optional[str] = None,
+        filename: Optional[str] = None,
+    ) -> str:
+        """
+        Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
+        This is a user-facing version of _clean_s_name and the one that should be called in modules on raw sample names,
+        because it gurantees the config options like config.prepend_dirs, config.fn_clean_exts, config.fn_clean_trim.
+
+        search_pattern_key: the search pattern key that this file matched
+        """
+        cleaned_name = self._clean_s_name(
+            s_name=s_name,
+            f=f,
+            root=root or f["root"],
+            filename=filename or f["fn"],
+            search_pattern_key=f["sp_key"],
+        )
+        # Add to the list of all used sample names in the report, to support anonymization for AI requests
+        report.sample_names.append(SampleName(cleaned_name))
+        return cleaned_name
+
+    def _clean_s_name(
+        self,
+        s_name: Union[str, List[str]],
+        f: Optional[Union[LoadedFileDict[Any], FileDict]] = None,
         root: Optional[str] = None,
         filename: Optional[str] = None,
         search_pattern_key: Optional[str] = None,
@@ -705,7 +858,8 @@ class BaseMultiqcModule:
         search_pattern_key: the search pattern key that this file matched
         fn_clean_exts: patterns to use for cleaning (default: config.fn_clean_exts)
         fn_clean_trim: patterns to use for trimming (default: config.fn_clean_trim)
-        prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs)
+        prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs).
+            requires `f` to be set.
         """
         if isinstance(s_name, list):
             if len(s_name) == 0:
@@ -714,7 +868,7 @@ class BaseMultiqcModule:
             # Extract a sample name from a list of file names (for example, FASTQ pairs).
             # Each name is cleaned separately first:
             clean_names = [
-                self.clean_s_name(
+                self._clean_s_name(
                     sn,
                     f=f,
                     root=root,
@@ -742,35 +896,34 @@ class BaseMultiqcModule:
         sn = SampleNameMeta(original_name=SampleName(s_name))
         trimmed_name: SampleName = sn.original_name
 
-        # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
-        if isinstance(f, str):
-            root = f
-            f = None
-
         # Set string variables from f if it was a dict from find_log_files()
-        elif f is not None:
+        if f is not None:
             if "root" in f and root is None:
                 root = f["root"]
             if "fn" in f and filename is None:
                 filename = f["fn"]
             if "sp_key" in f and search_pattern_key is None:
                 search_pattern_key = f["sp_key"]
-        else:
-            root = None
-            filename = None
-            search_pattern_key = None
 
         # For modules setting s_name from file contents, set s_name back to the filename
         # (if wanted in the config)
-        if filename is not None and (
-            config.use_filename_as_sample_name is True
-            or (
-                isinstance(config.use_filename_as_sample_name, list)
-                and search_pattern_key is not None
-                and search_pattern_key in config.use_filename_as_sample_name
-            )
-        ):
-            trimmed_name = SampleName(filename)
+        if filename is not None:
+            should_use_filename = False
+
+            # Check if we should use filename for this specific module/pattern
+            if isinstance(config.use_filename_as_sample_name, list):
+                # Check for module anchor (e.g., "verifybamid")
+                if self.anchor in config.use_filename_as_sample_name:
+                    should_use_filename = True
+                # Check for search pattern key (e.g., "verifybamid/selfsm")
+                elif search_pattern_key is not None and search_pattern_key in config.use_filename_as_sample_name:
+                    should_use_filename = True
+            # Check if we should use filename for all modules
+            elif config.use_filename_as_sample_name is True:
+                should_use_filename = True
+
+            if should_use_filename:
+                trimmed_name = SampleName(filename)
 
         # if s_name comes from file contents, it may have a file path
         # For consistency with other modules, we keep just the basename
@@ -906,6 +1059,18 @@ class BaseMultiqcModule:
         """Should a sample name be ignored?"""
         sample_names_ignore = sample_names_ignore or config.sample_names_ignore
         sample_names_ignore_re = sample_names_ignore_re or config.sample_names_ignore_re
+        sample_names_only_include = config.sample_names_only_include
+        sample_names_only_include_re = config.sample_names_only_include_re
+
+        if sample_names_only_include:
+            glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in sample_names_only_include)
+            if not glob_match:
+                return True
+        if sample_names_only_include_re:
+            re_match = any(re.match(sn, s_name) for sn in sample_names_only_include_re)
+            if not re_match:
+                return True
+
         glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in sample_names_ignore)
         re_match = any(re.match(sn, s_name) for sn in sample_names_ignore_re)
         return glob_match or re_match
@@ -913,7 +1078,14 @@ class BaseMultiqcModule:
     def general_stats_addcols(
         self,
         data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
-        headers: Optional[Dict[Union[ColumnKey, str], ColumnDict]] = None,
+        headers: Optional[
+            Union[
+                Mapping[ColumnKey, ColumnDict],
+                Mapping[ColumnKey, Dict[str, Any]],
+                Mapping[str, ColumnDict],
+                Mapping[str, Dict[str, Any]],
+            ]
+        ] = None,
         namespace: Optional[str] = None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
     ):
@@ -958,7 +1130,7 @@ class BaseMultiqcModule:
                 _headers[col_id] = {}
         else:
             # Make a copy
-            _headers = {ColumnKey(col_id): col_dict.copy() for col_id, col_dict in headers.items()}
+            _headers = {ColumnKey(col_id): cast(ColumnDict, col_dict.copy()) for col_id, col_dict in headers.items()}
 
         # Add the module name to the description if not already done
         for col_id in _headers.keys():
@@ -971,9 +1143,29 @@ class BaseMultiqcModule:
             if "description" not in _headers[col_id]:
                 _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
 
+            # Add grouping information to description if table_sample_merge is enabled
+            if config.table_sample_merge:
+                desc = _headers[col_id].get("description", "")
+                if group_samples_config.cols_to_weighted_average and any(
+                    col_id == c for c, _ in group_samples_config.cols_to_weighted_average
+                ):
+                    desc += " (weighted average for grouped samples)"
+                elif group_samples_config.cols_to_average and col_id in group_samples_config.cols_to_average:
+                    desc += " (averaged for grouped samples)"
+                elif group_samples_config.cols_to_sum and col_id in group_samples_config.cols_to_sum:
+                    desc += " (summed for grouped samples)"
+                _headers[col_id]["description"] = desc
+
+        # Add incremental suffix to SectionKey(self.anchor) until it's unique
+        anchor = SectionKey(self.anchor)
+        suffix = 2
+        while anchor in report.general_stats_data:
+            suffix += 1
+            anchor = SectionKey(f"{self.anchor}_{suffix}")
+
         # Append to report.general_stats for later assembly into table
-        report.general_stats_data.append(rows_by_group)
-        report.general_stats_headers.append(_headers)  # type: ignore
+        report.general_stats_data[anchor] = rows_by_group
+        report.general_stats_headers[anchor] = _headers  # type: ignore
 
     def add_data_source(
         self,
@@ -1052,14 +1244,93 @@ class BaseMultiqcModule:
         # Generate a unique filename if the file already exists (running module multiple times)
         i = 1
         base_fn = fn
-        while fn in report.saved_raw_data:
+        while fn in report.saved_raw_data_keys:
             fn = f"{base_fn}_{i}"
             i += 1
 
-        if config.preserve_module_raw_data:
-            report.saved_raw_data[fn] = data
-            # Keep also in the module instance, so it's possible to map back data to specific module
-            self.__saved_raw_data[fn] = data
+        # To map back keys data to specific module
+        report.saved_raw_data_keys[fn] = None
 
-        # Save the file
+        # Save the file (usualy TSV)
         report.write_data_file(data, fn, sort_cols, data_format)
+
+        # Also write data to JSON to later load into multiqc_data.json
+        if config.data_dump_file_write_raw:
+            report.write_data_file(data, fn, sort_cols, "json")
+
+        # Also save the data to the module instance to enable `get_module_data()` in interactive sessions
+        if config.preserve_module_raw_data:
+            if self.__saved_raw_data is None:
+                self.__saved_raw_data = dict()
+            self.__saved_raw_data[fn] = data
+            report.saved_raw_data[fn] = data
+
+    def merge(self, m: "BaseMultiqcModule"):
+        """
+        Running module on a new set of input.
+        Merging versions.
+        Plots in sections will be merged in the plotting code.
+        TODO: handle saved_raw_data if it makes sence at all. Maybe should be a breaking change.
+        """
+        if m.versions is not None:
+            if self.versions is not None:
+                self.versions.update(m.versions)
+            else:
+                self.versions = m.versions
+
+    def get_general_stats_headers(
+        self,
+        all_headers: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
+        default_shown: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+        default_hidden: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+        sp_key: Optional[str] = None,
+    ) -> Dict[ColumnKey, ColumnDict]:
+        """
+        Get general stats columns for a module based on user configuration.
+
+        This function checks if the module has configuration in config.general_stats_columns
+        and returns the columns accordingly. It supports custom column settings
+        and an exclusion list.
+
+        Args:
+            default_headers: Default dictionary of headers the module can add
+            all_headers: Dictionary of other possible headers the module can add
+            default_hidden_keys: Dictionary with keys and boolean values for default
+                            visibility settings. If not provided, all columns
+                            are shown by default.
+
+        Returns:
+            Dictionary of headers to add to general stats
+        """
+        # Get general stats config for this module
+        module_config: Dict[ColumnKey, ColumnDict] = {}
+        for k, v in config.general_stats_columns.items():
+            if (sp_key and k == sp_key) or k.split("/")[0] in [self.id, self.name]:
+                module_config = cast(Dict[ColumnKey, ColumnDict], v.get("columns", {}))
+                break
+        general_stats_headers: Dict[ColumnKey, ColumnDict] = {}
+
+        # Check if we have a valid config for this module
+        if module_config:
+            # Update default columns with custom config
+            for k in all_headers:
+                if k in module_config:
+                    h = all_headers[ColumnKey(k)].copy()
+                    h.update(module_config[ColumnKey(k)] or {})
+                    general_stats_headers[ColumnKey(k)] = h
+            # Add custom columns that are not in default headers
+            for sp_key, col_conf in module_config.items():
+                if sp_key not in all_headers:
+                    general_stats_headers[ColumnKey(sp_key)] = col_conf
+
+        elif all_headers:
+            # Default behavior - use all headers
+            default_shown = default_shown or [k for k, v in all_headers.items() if not v.get("hidden", False)]
+            default_hidden = default_hidden or list(set(all_headers.keys()) - set(default_shown))
+            for k in all_headers:
+                if k in default_hidden or k in default_shown:
+                    general_stats_headers[ColumnKey(k)] = all_headers[ColumnKey(k)].copy()
+                    general_stats_headers[ColumnKey(k)]["hidden"] = k in default_hidden
+
+        # Cast to satisfy mypy - this is safe as the structure is identical
+        return general_stats_headers

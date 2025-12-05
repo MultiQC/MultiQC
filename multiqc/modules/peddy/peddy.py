@@ -134,20 +134,20 @@ class MultiqcModule(BaseMultiqcModule):
                     except ValueError:
                         log.warning(f"Could not find sample name in Peddy output: {f['fn']}")
                         return None
-            else:
-                s_name = "-".join([s[idx] for idx in s_name_idx])
-                s_name = self.clean_s_name(s_name, f)
-                parsed_data[s_name] = dict()
-                for i, v in enumerate(s):
-                    if i not in s_name_idx:
-                        if headers[i] == "error" and pattern == "sex_check":
-                            v = "True" if v == "False" else "False"
-                        try:
-                            # add the pattern as a suffix to key
-                            parsed_data[s_name][headers[i] + "_" + pattern] = float(v)
-                        except ValueError:
-                            # add the pattern as a suffix to key
-                            parsed_data[s_name][headers[i] + "_" + pattern] = v
+                continue
+            assert s_name_idx is not None
+            s_name = "-".join([self.clean_s_name(s[idx], f) for idx in s_name_idx])
+            parsed_data[s_name] = dict()
+            for i, v in enumerate(s):
+                if i not in s_name_idx:
+                    if headers[i] == "error" and pattern == "sex_check":
+                        v = "True" if v == "False" else "False"
+                    try:
+                        # add the pattern as a suffix to key
+                        parsed_data[s_name][headers[i] + "_" + pattern] = float(v)
+                    except ValueError:
+                        # add the pattern as a suffix to key
+                        parsed_data[s_name][headers[i] + "_" + pattern] = v
         if len(parsed_data) == 0:
             return None
         return parsed_data

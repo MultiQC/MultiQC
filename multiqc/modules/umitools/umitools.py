@@ -16,12 +16,13 @@ class MultiqcModule(BaseMultiqcModule):
     Sample names are extracted from log files if possible. In logs, input and output file paths are printed.
     However, either can be redirected from stdin/stdout:
 
-    ```
+    ```bash
     $ umi_tools extract -I input.fastq > result.fastq
     stdin : <_io.TextIOWrapper name='input.fastq' mode='r' encoding='UTF-8'>
     stdout : <_io.TextIOWrapper name='<stdout>' encoding='ascii'>
     ```
 
+    ```bash
     $ cat input.fastq | umi_tools extract -S output.fastq
     stdin : <_io.TextIOWrapper name='<stdin>' mode='r' encoding='UTF-8'>
     stdout : <_io.TextIOWrapper name='result.fastq' encoding='ascii'>
@@ -119,13 +120,13 @@ class MultiqcModule(BaseMultiqcModule):
         if out_m:
             out_name = out_m.group(1)
             if out_name != "<stdout>":
-                return self.clean_s_name(out_name)
+                return self.clean_s_name(out_name, f)
 
         in_m = re.search(r"stdin\s+:\s+<_io\.TextIOWrapper name='([^\']+)'", f["f"])
         if in_m:
             in_name = in_m.group(1)
             if in_name != "<stdin>":
-                return self.clean_s_name(in_name)
+                return self.clean_s_name(in_name, f)
 
         return f["s_name"]
 

@@ -17,9 +17,12 @@ from github.PullRequest import PullRequest
 
 REPO_ID = "MultiQC/MultiQC"
 REPO_URL = f"https://github.com/{REPO_ID}"
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 WORKSPACE_PATH = Path(os.environ.get("GITHUB_WORKSPACE", "."))
 MODULES_SUBDIR = Path("multiqc/modules")
+
+if not GITHUB_TOKEN:
+    raise ValueError("Please set the GITHUB_TOKEN environment variable")
 
 
 def run_cmd(cmd):
@@ -30,23 +33,44 @@ def run_cmd(cmd):
     return result
 
 
-def get_milestone_prs(repo, current_tag: str, previous_tag: str, limit=100) -> List[PullRequest]:
-    all_pulls: List[PullRequest] = []
+def get_milestone_prs(repo, current_tag: str, limit=100) -> List[PullRequest]:
+    """
+    Get PRs for the current milestone using direct milestone filtering.
 
-    page = repo.get_pulls(state="closed", sort="updated", direction="desc")
-    for p in page:
-        if not p.milestone:
-            print(f"PR does not have a milestone: {p.number} {p.title}")
-        elif p.milestone.title == previous_tag:
-            return all_pulls
-        elif p.milestone.title == current_tag:
-            all_pulls.append(p)
-            if len(all_pulls) >= limit:
-                print(f"Reached limit of {limit} PRs")
-                return all_pulls
-        else:
-            print(f"PR not in milestone '{p.milestone.title}': {p.number} {p.title}")
+    This version directly queries PRs by milestone, ensuring completeness
+    and accuracy while minimizing API calls by using the Issue API.
+    """
+    # Find the milestone object for the current tag
+    milestones = {m.title: m for m in repo.get_milestones(state="all")}
 
+    current_milestone = milestones.get(current_tag)
+    if not current_milestone:
+        raise ValueError(f"Current milestone '{current_tag}' not found")
+
+    print(
+        f"Found milestone '{current_tag}' with {current_milestone.open_issues + current_milestone.closed_issues} total issues/PRs"
+    )
+
+    # Get issues/PRs for this specific milestone (GitHub API treats PRs as issues)
+    # This is more reliable than iterating through all PRs
+    issues = repo.get_issues(state="closed", milestone=current_milestone, sort="updated", direction="desc")
+
+    # Filter to merged PRs only
+    all_pulls = []
+    for issue in issues:
+        if issue.pull_request is not None:  # This is a PR
+            try:
+                pr = repo.get_pull(issue.number)
+                if pr.merged:  # Only include merged PRs
+                    all_pulls.append(pr)
+                    if len(all_pulls) >= limit:
+                        print(f"Reached limit of {limit} PRs")
+                        break
+            except Exception as e:
+                print(f"Error fetching PR #{issue.number}: {e}")
+                continue
+
+    print(f"Found {len(all_pulls)} merged PRs for milestone '{current_tag}'")
     return all_pulls
 
 
@@ -65,7 +89,7 @@ def get_version_from_tag() -> str:
         for line in f:
             if line.startswith("version ="):
                 version = line.split(" = ")[1].strip().strip('"')
-                return version
+                return version.removesuffix("dev")
     raise ValueError("Could not find version in pyproject.toml")
 
 
@@ -78,26 +102,27 @@ def main():
     milestones = repo.get_milestones(state="all")
     assert_milestone_exists(milestones, current_tag)
     assert_milestone_exists(milestones, previous_minor_tag)
-    prs: List[PullRequest] = get_milestone_prs(repo, current_tag, previous_minor_tag)
+    prs: List[PullRequest] = get_milestone_prs(repo, current_tag)
 
     label_to_section: Dict[str, str] = {
         "module: new": "New modules",
         "bug: module": "Module fixes",
         "module: enhancement": "Module updates",
-        "module: change": "Updates",
+        "module: change": "Module updates",
         "bug: core": "Fixes",
         "core: infrastructure": "Infrastructure and packaging",
-        "core: refactoring": "Refactoring and typing",
+        "core: refactoring": "Optimization, refactoring and typing",
         "documentation": "Chores",
     }
     sections_to_prs: Dict[str, List[PullRequest]] = {
         "New modules": [],
-        "Updates": [],
+        "Feature updates and improvements": [],
         "Module updates": [],
         "Fixes": [],
         "Module fixes": [],
-        "Refactoring": [],
-        "Infrastructure": [],
+        "Refactoring and typing": [],
+        "Infrastructure and packaging": [],
+        "Optimization, refactoring and typing": [],
         "Chores": [],
     }
     for pr in prs:
@@ -105,10 +130,10 @@ def main():
             continue
         if pr.labels:
             for label in pr.labels:
-                section_name = label_to_section.get(label.name, "Updates")
+                section_name = label_to_section.get(label.name, "Feature updates and improvements")
                 sections_to_prs[section_name].append(pr)
         else:
-            sections_to_prs["Updates"].append(pr)
+            sections_to_prs["Feature updates and improvements"].append(pr)
 
     print("")
     print(f"## [MultiQC {current_tag}]({REPO_URL}/releases/tag/{current_tag}) - {datetime.date.today().isoformat()}")

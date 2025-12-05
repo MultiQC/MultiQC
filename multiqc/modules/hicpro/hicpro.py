@@ -165,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_hicpro_stats(self, f, rsection):
         """Parse a HiC-Pro stat file"""
-        s_name = self.clean_s_name(os.path.basename(f["root"]), root=os.path.dirname(f["root"]))
+        s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
         if s_name not in self.hicpro_data.keys():
             self.hicpro_data[s_name] = {}
 

@@ -5,10 +5,9 @@ import logging
 import re
 from typing import Dict, Optional
 
-from multiqc import config, BaseMultiqcModule
-from multiqc.modules.cellranger.utils import set_hidden_cols, update_dict, parse_bcknee_data, transform_data
+from multiqc import BaseMultiqcModule, config
+from multiqc.modules.cellranger.utils import parse_bcknee_data, set_hidden_cols, transform_data, update_dict
 from multiqc.plots import bargraph, linegraph, table
-
 
 log = logging.getLogger(__name__)
 

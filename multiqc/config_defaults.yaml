@@ -18,11 +18,15 @@ report_header_info: null
 show_analysis_paths: True
 show_analysis_time: True
 custom_logo: null
+custom_logo_dark: null
 custom_logo_url: null
 custom_logo_title: null
+custom_logo_width: null
 custom_css_files: []
 simple_output: false
 template: "default"
+template_dark_mode: true
+plot_font_family: null # Custom font family for plots (defaults to system font stack)
 profile_runtime: false
 profile_memory: false
 pandoc_template: null
@@ -53,27 +57,59 @@ version_check_url: https://api.multiqc.info/version
 make_data_dir: true
 zip_data_dir: false
 data_dump_file: true
-megaqc_url: false
+data_dump_file_write_raw: true # Write the `saved_raw_data` section in multiqc_data.json - useful to set to
+# false for large datasets as the raw data can be prohibitively large
+megaqc_url: null
 megaqc_access_token: null
 megaqc_timeout: 30
 export_plots: false
+export_plots_timeout: 30
 make_report: true
 make_pdf: false
+
+# AI settings:
+ai_summary: false
+ai_summary_full: false
+ai_provider: seqera
+ai_model: null
+ai_custom_endpoint: null
+ai_auth_type: null
+ai_retries: 3
+ai_extra_query_options: null
+ai_custom_context_window: null
+ai_prompt_short: null
+ai_prompt_full: null
+no_ai: false
+ai_anonymize_samples: false
+ai_reasoning_effort: null # Reasoning effort level for OpenAI reasoning models (low, medium, high)
+ai_max_completion_tokens: null # Maximum completion tokens for OpenAI reasoning models
+ai_extended_thinking: false # Enable extended thinking for Anthropic Claude 4 models
+ai_thinking_budget_tokens: null # Budget tokens for Anthropic extended thinking
+
+# Development settings:
+seqera_api_url: "https://intern.seqera.io"
+seqera_website: "https://seqera.io"
 
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false
 plots_flat_numseries: 2000
-plots_defer_loading_numseries: 100 # lot will require user to press button to render plot
+plots_defer_loading_numseries: 100 # plot will require user to press button to render plot
 num_datasets_plot_limit: 100 # DEPRECATED in favour of plots_defer_loading_numseries
 lineplot_number_of_points_to_hide_markers: 50 # sum of data points in all samples
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
+boxplot_boxpoints: "outliers" # box plot outlier display: "outliers", "all", "suspectedoutliers", or false
+box_min_threshold_outliers: 100 # for more than this number of samples, show only outliers
+box_min_threshold_no_points: 1000 # for more than this number of samples, show no points
 violin_downsample_after: 2000 # downsample data for violin plot starting from this number os samples
 violin_min_threshold_outliers: 100 # for more than this number of samples, show only outliers
 violin_min_threshold_no_points: 1000 # for more than this number of samples, show no points
 
 collapse_tables: true
 max_table_rows: 500
+max_configurable_table_columns: 200
+general_stats_columns: {}
+general_stats_helptext: null
 table_columns_visible: {}
 table_columns_placement: {}
 table_columns_name: {}
@@ -83,6 +119,8 @@ table_cond_formatting_colours:
   - pass: "#5cb85c"
   - warn: "#f0ad4e"
   - fail: "#d9534f"
+  - male: "#5bc0de"
+  - female: "#d9534f"
 table_cond_formatting_rules:
   all_columns:
     pass:
@@ -97,6 +135,12 @@ table_cond_formatting_rules:
       - s_eq: "fail"
       - s_eq: "false"
       - s_eq: "no"
+    male:
+      - s_eq: "male"
+      - s_eq: "M"
+    female:
+      - s_eq: "female"
+      - s_eq: "F"
   # PURPLE module - QC Status column
   # TODO: Should update the table plotting code so that this can go in pconfig
   QCStatus:
@@ -106,6 +150,7 @@ decimalPoint_format: null
 thousandsSep_format: null
 remove_sections: []
 section_comments: {}
+section_status_checks: {}
 lint: False # Deprecated since v1.17
 strict: False
 development: False
@@ -131,16 +176,21 @@ fn_ignore_paths:
   - "*/site-packages/multiqc" # MultiQC installation directory
 sample_names_ignore: []
 sample_names_ignore_re: []
+sample_names_only_include: []
+sample_names_only_include_re: []
 sample_names_rename_buttons: []
 sample_names_replace: {}
-sample_names_replace_regex: False
-sample_names_replace_exact: False
-sample_names_replace_complete: False
+sample_names_replace_regex: false
+sample_names_replace_exact: false
+sample_names_replace_complete: false
 sample_names_rename: []
 show_hide_buttons: []
 show_hide_patterns: []
 show_hide_regex: []
 show_hide_mode: []
+highlight_patterns: []
+highlight_colors: []
+highlight_regex: false
 no_version_check: false
 log_filesize_limit: 50000000
 filesearch_lines_limit: 1000
@@ -168,7 +218,16 @@ custom_content:
 fn_clean_sample_names: true
 
 # Option to use the filename as the sample name if desired
-# Set to True to apply for all modules. Define a list of search pattern keys to be specific.
+# Set to True to apply for all modules. Define a list of module/search pattern keys to be specific.
+# Examples:
+# use_filename_as_sample_name: true  # Apply to all modules
+# use_filename_as_sample_name:       # Apply to specific modules/patterns
+#   - verifybamid
+#   - verifybamid/selfsm
+#   - prokka
+#   - trimmomatic
+#   - fastp
+#   - picard
 use_filename_as_sample_name: false
 
 # Used for cleaning sample names. Should be strings.
@@ -313,6 +372,18 @@ fn_clean_exts:
   - ".error.spl"
   - ".error.grp"
   - ".vgstats"
+  - "_mapq_table"
+  - "_strand_table"
+  - "_isize_table"
+  - "_dup_report"
+  - "_cv_table"
+  - "_covdist_all"
+  - "_covdist_q40"
+  - "_CpGRetention"
+  - "_CpHRetentionByReadPos"
+  - "_totalBaseConversionRate"
+  - "_totalReadConversionRate"
+  - ".sylphmpa"
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
 # Affects all modules that support it (e.g. fastqc, cutadapt)
@@ -355,8 +426,7 @@ fn_clean_trim:
   - ".tar"
   - "runs_"
 
-# Files to ignore when indexing files.
-# Grep file match patterns.
+# Files to ignore when checking content with "content" and "content_re" search patterns.
 fn_ignore_files:
   - ".DS_Store"
   - ".py[cod]"
@@ -380,6 +450,7 @@ fn_ignore_files:
   - "multiqc_data.json"
   - "*.gam"
   - "*.gamp"
+  - "*.jar"
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -398,6 +469,8 @@ module_order:
   - isoseq
   - lima
   - peddy
+  - percolator
+  - haplocheck
   - somalier
   - methylqa
   - mosdepth
@@ -413,6 +486,7 @@ module_order:
   - rsem
   - rseqc
   - busco
+  - checkm
   - bustools
   - goleft_indexcov
   - gffcompare
@@ -450,6 +524,7 @@ module_order:
   - vep
   - bakta
   - prokka
+  - checkm2
   - qc3C
   - nanoq
   - nanostat
@@ -473,6 +548,7 @@ module_order:
   - truvari
   - megahit
   - ganon
+  - gtdbtk
   # Alignment tool stats
   - bbmap
   - bismark
@@ -510,7 +586,6 @@ module_order:
   - flexbar
   - sourmash
   - kaiju
-  - bracken
   - kraken
   - malt
   - motus
@@ -519,6 +594,7 @@ module_order:
   - skewer
   - sortmerna
   - biobloomtools
+  - seqfu
   - fastq_screen
   - afterqc
   - fastp
@@ -546,7 +622,14 @@ module_order:
   - xenome
   - xengsort
   - metaphlan
+  - sylphtax
   - seqwho
+  - telseq
+  - ataqv
+  - mgikit
+  - mosaicatcher
 
-# Set to "false" to trade the `saved_raw_data` section in multiqc_data.json for memory
-preserve_module_raw_data: true
+# Preserves `saved_raw_data` section in modules - default for interactive runs
+preserve_module_raw_data: false
+
+parquet_format: "long" # or wide

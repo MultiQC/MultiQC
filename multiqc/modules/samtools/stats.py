@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Dict
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, violin
 
 log = logging.getLogger(__name__)
@@ -66,9 +66,6 @@ def parse_samtools_stats(module: BaseMultiqcModule):
     if len(samtools_stats) == 0:
         return 0
 
-    # Write parsed report data to a file
-    module.write_data_file(samtools_stats, "multiqc_samtools_stats")
-
     # General Stats Table
     stats_headers = {
         "error_rate": {
@@ -123,8 +120,22 @@ def parse_samtools_stats(module: BaseMultiqcModule):
             "description": f"Total sequences in the bam file ({config.read_count_desc})",
             "shared_key": "read_count",
         },
+        "insert_size_average": {
+            "title": "Mean insert",
+            "description": "Average insert size",
+            "suffix": "bp",
+            "format": "{:,.1f}",
+            "scale": "Oranges",
+            "hidden": True,
+        },
     }
-    module.general_stats_addcols(samtools_stats, stats_headers, namespace="stats")
+
+    # Get general stats headers using the utility function, will read config.general_stats_columns
+    general_stats_headers = module.get_general_stats_headers(all_headers=stats_headers)
+
+    # Add headers to general stats table
+    if general_stats_headers:
+        module.general_stats_addcols(samtools_stats, general_stats_headers, namespace="stats")
 
     # Make bargraph plot of mapped/unmapped reads
     alignment_section(module, samtools_stats)
@@ -182,6 +193,9 @@ def parse_samtools_stats(module: BaseMultiqcModule):
         ),
     )
 
+    # Write parsed report data to a file
+    module.write_data_file(samtools_stats, "multiqc_samtools_stats")
+
     # Return the number of logs that were found
     return len(samtools_stats)
 
@@ -198,7 +212,7 @@ def alignment_section(module, samples_data):
             bedgraph_data[sample_id] = data
         else:
             log.warning(
-                "sum of mapped/unmapped/filtered reads not matching total, " "skipping samtools plot for: {}".format(
+                "sum of mapped/unmapped/filtered reads not matching total, skipping samtools plot for: {}".format(
                     sample_id
                 )
             )

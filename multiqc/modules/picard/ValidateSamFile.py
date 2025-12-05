@@ -4,14 +4,14 @@ import logging
 from typing import List, Tuple, Union
 
 from multiqc.plots import table
-from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.plot import Plot
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 # Possible warnings and descriptions
 WARNING_DESCRIPTIONS = {
-    "ADJACENT_INDEL_IN_CIGAR": "CIGAR string contains an insertion (I) followed by " "deletion (D), or vice versa",
+    "ADJACENT_INDEL_IN_CIGAR": "CIGAR string contains an insertion (I) followed by deletion (D), or vice versa",
     "BAM_FILE_MISSING_TERMINATOR_BLOCK": "BAM appears to be healthy, but is an older "
     "file so doesn't have terminator block",
     "E2_BASE_EQUALS_PRIMARY_BASE": "Secondary base calls should not be the same as "
@@ -21,52 +21,51 @@ WARNING_DESCRIPTIONS = {
     "Illumina when Phred expected. Avoid exception being "
     "thrown as a result of no qualities being read.",
     "MISSING_TAG_NM": "The NM tag (nucleotide differences) is missing",
-    "PAIRED_READ_NOT_MARKED_AS_FIRST_OR_SECOND": "Pair flag set but not marked as " "first or second of pair",
+    "PAIRED_READ_NOT_MARKED_AS_FIRST_OR_SECOND": "Pair flag set but not marked as first or second of pair",
     "RECORD_MISSING_READ_GROUP": "A SAMRecord is found with no read group id",
 }
 
 # All possible errors and descriptions
 ERROR_DESCRIPTIONS = {
-    "CIGAR_MAPS_OFF_REFERENCE": "Bases corresponding to M operator in CIGAR extend " "beyond reference",
+    "CIGAR_MAPS_OFF_REFERENCE": "Bases corresponding to M operator in CIGAR extend beyond reference",
     "DUPLICATE_PROGRAM_GROUP_ID": "Same program group id appears more than once",
     "DUPLICATE_READ_GROUP_ID": "Same read group id appears more than once",
     "EMPTY_READ": "Indicates that a read corresponding to the first strand has a "
     "length of zero and/or lacks flow signal intensities (FZ)",
     "HEADER_RECORD_MISSING_REQUIRED_TAG": "Header tag missing in header line",
-    "HEADER_TAG_MULTIPLY_DEFINED": "Header tag appears more than once in header line " "" "" "with different value",
+    "HEADER_TAG_MULTIPLY_DEFINED": "Header tag appears more than once in header line with different value",
     "INVALID_ALIGNMENT_START": "Alignment start position is incorrect",
     "INVALID_CIGAR": "CIGAR string error for either read or mate",
     "INVALID_FLAG_FIRST_OF_PAIR": "First of pair flag set for unpaired read",
     "INVALID_FLAG_MATE_NEG_STRAND": "Mate negative strand flag set for unpaired read",
     "INVALID_FLAG_MATE_UNMAPPED": "Mate unmapped flag is incorrectly set",
-    "INVALID_FLAG_NOT_PRIM_ALIGNMENT": "Not primary alignment flag set for unmapped " "read",
+    "INVALID_FLAG_NOT_PRIM_ALIGNMENT": "Not primary alignment flag set for unmapped read",
     "INVALID_FLAG_PROPER_PAIR": "Proper pair flag set for unpaired read",
     "INVALID_FLAG_READ_UNMAPPED": "Mapped read flat not set for mapped read",
     "INVALID_FLAG_SECOND_OF_PAIR": "Second of pair flag set for unpaired read",
-    "INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT": "Supplementary alignment flag set for " "unmapped read",
+    "INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT": "Supplementary alignment flag set for unmapped read",
     "INVALID_INDEX_FILE_POINTER": "Invalid virtualFilePointer in index",
-    "INVALID_INDEXING_BIN": "Indexing bin set on SAMRecord does not agree with " "computed value",
+    "INVALID_INDEXING_BIN": "Indexing bin set on SAMRecord does not agree with computed value",
     "INVALID_INSERT_SIZE": "Inferred insert size is out of range",
     "INVALID_MAPPING_QUALITY": "Mapping quality set for unmapped read or is >= 256",
     "INVALID_MATE_REF_INDEX": "Mate reference index (MRNM) set for unpaired read",
-    "INVALID_PLATFORM_VALUE": "The read group has an invalid value set for its PL " "field",
+    "INVALID_PLATFORM_VALUE": "The read group has an invalid value set for its PL field",
     "INVALID_PREDICTED_MEDIAN_INSERT_SIZE": "PI tag value is not numeric",
     "INVALID_REFERENCE_INDEX": "Reference index not found in sequence dictionary",
     "INVALID_TAG_NM": "The NM tag (nucleotide differences) is incorrect",
     "INVALID_VERSION_NUMBER": "Does not match any of the acceptable versions",
-    "MATE_CIGAR_STRING_INVALID_PRESENCE": "A cigar string for a read whose mate is " "NOT mapped",
+    "MATE_CIGAR_STRING_INVALID_PRESENCE": "A cigar string for a read whose mate is NOT mapped",
     "MATE_FIELD_MISMATCH": "Read alignment fields do not match its mate",
     "MATE_NOT_FOUND": "Read is marked as paired, but its pair was not found",
-    "MATES_ARE_SAME_END": "Both mates of a pair are marked either as first or second " "" "" "mates",
-    "MISMATCH_FLAG_MATE_NEG_STRAND": "Mate negative strand flag does not match read " "strand flag",
-    "MISMATCH_FLAG_MATE_UNMAPPED": "Mate unmapped flag does not match read unmapped " "flag of mate",
-    "MISMATCH_MATE_ALIGNMENT_START": "Mate alignment does not match alignment start " "of mate",
-    "MISMATCH_MATE_CIGAR_STRING": "The mate cigar tag does not match its mate's cigar " "" "" "string",
-    "MISMATCH_MATE_REF_INDEX": "Mate reference index (MRNM) does not match reference " "" "" "index of mate",
-    "MISMATCH_READ_LENGTH_AND_E2_LENGTH": "Lengths of secondary base calls tag " "values" " and read should match",
-    "MISMATCH_READ_LENGTH_AND_QUALS_LENGTH": "Length of sequence string and length of"
-    " base quality string do not match",
-    "MISMATCH_READ_LENGTH_AND_U2_LENGTH": "Secondary base quals tag values should " "match read length",
+    "MATES_ARE_SAME_END": "Both mates of a pair are marked either as first or second mates",
+    "MISMATCH_FLAG_MATE_NEG_STRAND": "Mate negative strand flag does not match read strand flag",
+    "MISMATCH_FLAG_MATE_UNMAPPED": "Mate unmapped flag does not match read unmapped flag of mate",
+    "MISMATCH_MATE_ALIGNMENT_START": "Mate alignment does not match alignment start of mate",
+    "MISMATCH_MATE_CIGAR_STRING": "The mate cigar tag does not match its mate's cigar string",
+    "MISMATCH_MATE_REF_INDEX": "Mate reference index (MRNM) does not match reference index of mate",
+    "MISMATCH_READ_LENGTH_AND_E2_LENGTH": "Lengths of secondary base calls tag values and read should match",
+    "MISMATCH_READ_LENGTH_AND_QUALS_LENGTH": "Length of sequence string and length of base quality string do not match",
+    "MISMATCH_READ_LENGTH_AND_U2_LENGTH": "Secondary base quals tag values should match read length",
     "MISSING_HEADER": "The SAM/BAM file is missing the header",
     "MISSING_PLATFORM_VALUE": "The read group is missing its PL (platform unit) field",
     "MISSING_READ_GROUP": "The header is missing read group information",
@@ -75,7 +74,7 @@ ERROR_DESCRIPTIONS = {
     "POORLY_FORMATTED_HEADER_TAG": "Header tag does not have colon",
     "READ_GROUP_NOT_FOUND": "A read group ID on a SAMRecord is not found in the header",
     "RECORD_OUT_OF_ORDER": "The record is out of order",
-    "TAG_VALUE_TOO_LARGE": "Unsigned integer tag value is deprecated in BAM. Template " "" "" "length",
+    "TAG_VALUE_TOO_LARGE": "Unsigned integer tag value is deprecated in BAM. Template length",
     "TRUNCATED_FILE": "BAM file does not have terminator block",
     "UNRECOGNIZED_HEADER_TYPE": "Header record is not one of the standard types",
 }
@@ -201,9 +200,7 @@ def _histogram_data(iterator):
                     problem_type, name = values[0].split(":")
                 except ValueError:
                     log.warning(
-                        "Line did not look like normal picard 'ERROR:NAME' format, " "" "" "ignoring: {}".format(
-                            values[0]
-                        )
+                        "Line did not look like normal picard 'ERROR:NAME' format, ignoring: {}".format(values[0])
                     )
                     continue
                 yield problem_type, name, int(values[1])
@@ -241,14 +238,14 @@ def _add_section_to_report(module, data):
         name="SAM/BAM File Validation",
         anchor="picard_validatesamfile",
         description=(
-            "This tool reports on the validity of a SAM or BAM " "file relative to " "the SAM-format specification."
+            "This tool reports on the validity of a SAM or BAM file relative to the SAM-format specification."
         ),
         helptext="""
-            A detailed table is only shown if errors or warnings are found. Details 
-            about the errors and warnings are only shown if a `SUMMARY` report was 
+            A detailed table is only shown if errors or warnings are found. Details
+            about the errors and warnings are only shown if a `SUMMARY` report was
             parsed.
 
-            For more information on the warnings, errors and possible fixes please 
+            For more information on the warnings, errors and possible fixes please
             read [this broadinstitute article](
             https://software.broadinstitute.org/gatk/documentation/article.php?id
             =7571).""",
@@ -303,7 +300,7 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
         if b[0]:
             note_html.append(
                 f'<div class="progress-bar progress-bar-{b[1]}" style="width: {(b[0] / float(total_count)) * 100.0}%" '
-                f'data-toggle="tooltip" title="{int(b[0])} {"samples" if b[0] > 1 else "sample"} {b[2]}">{int(b[0])}</div>'
+                f'data-bs-toggle="tooltip" title="{int(b[0])} {"samples" if b[0] > 1 else "sample"} {b[2]}">{int(b[0])}</div>'
             )
     note_html.append("</div>")
 

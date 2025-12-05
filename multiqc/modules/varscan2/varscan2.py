@@ -230,7 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "VarScan2: Variants detected",
             "ylab": "Number of SNPs",
             "cpswitch_counts_label": "Number of Variants",
-            "hide_empty": False,
+            "hide_zero_cats": False,
             "data_labels": [{"name": "SNPs", "ylab": "Number of SNPs"}, {"name": "INDELs", "ylab": "Number of INDELs"}],
         }
 

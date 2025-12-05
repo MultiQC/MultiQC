@@ -1,13 +1,10 @@
 # MultiQC results
 multiqc_config.yaml
-multiqc_report.html
-multiqc_data/
-multiqc_plots/
-/examples/
-/result
-/benchmarks
-/tmp
-/playground
+*multiqc_report*.html
+multiqc_data*/
+multiqc_plots*/
+*multiqc_report_data/
+*multiqc_report_plots/
 
 # CI tooling
 .ruff_cache
@@ -30,6 +27,7 @@ eggs/
 *.egg
 build/
 dist/
+.mypy_cache
 
 # OS generated files
 .DS_Store
@@ -43,19 +41,22 @@ Thumbs.db
 .idea
 .vscode
 runTest.sh
+CLAUDE.local.md
 
 # Prevent direnv from cluttering the repo
 .envrc
 .direnv/*
 
 # Typical name for virtualenv
-venv/
+venv*
 
 # Related repos
-/test-data/
-/website/
-/usage/
+/test-data
+/seqeralabs-docs
 
 node_modules/
-package-lock.json
-package.json
+
+.env
+.claude/settings.local.json
+
+Pipfile

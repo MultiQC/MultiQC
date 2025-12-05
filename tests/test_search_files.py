@@ -14,6 +14,23 @@ from multiqc.core.exceptions import RunError
 from multiqc.core.file_search import file_search
 
 
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state after each test."""
+    original_sp = getattr(config, "sp", None)
+    original_run_modules = config.run_modules[:]
+    original_avail_modules = config.avail_modules.copy()
+    original_analysis_dir = config.analysis_dir[:]
+    yield
+    if original_sp is not None:
+        config.sp = original_sp
+    elif hasattr(config, "sp"):
+        delattr(config, "sp")
+    config.run_modules[:] = original_run_modules
+    config.avail_modules = original_avail_modules
+    config.analysis_dir[:] = original_analysis_dir
+
+
 def _test_search_files(
     search_patterns: Dict,
     analysis_dir: Path,

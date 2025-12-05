@@ -1,16 +1,72 @@
 import logging
 from collections import defaultdict
-from typing import List
+from typing import Any, Dict, List
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
+from multiqc.plots.table_object import ColumnDict
 from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    NanoStat module for parsing statistics from Oxford Nanopore sequencing data.
+
+    By default, only the Read N50 metric is shown in the General Statistics table, with all other metrics hidden.
+    You can customize which metrics appear in the General Statistics table using the `general_stats_columns`
+    configuration option in your MultiQC config file.
+
+    For example, to show number of reads, mean read length and median quality for FASTQ data:
+
+    ```yaml
+    general_stats_columns:
+        nanostat:
+            columns:
+                Number of reads_fastq:
+                    title: "# Reads"
+                    description: "Number of reads"
+                    hidden: false
+                Mean read length_fastq:
+                    title: "Mean Length"
+                    description: "Mean read length"
+                    hidden: false
+                Median read quality_fastq:
+                    title: "Median Quality"
+                    description: "Median read quality"
+                    hidden: false
+    ```
+
+    Available metrics that can be added to General Statistics (append `_fastq`, `_aligned`, `_fasta` or `_seq summary`
+    depending on the data type):
+
+    * `Active channels` - Number of active channels
+    * `Median read length` - Median read length (bp)
+    * `Mean read length` - Mean read length (bp)
+    * `Read length N50` - Read length N50
+    * `Median read quality` - Median read quality (Phred scale)
+    * `Mean read quality` - Mean read quality (Phred scale)
+    * `Median percent identity` - Median percent identity
+    * `Average percent identity` - Average percent identity
+    * `Number of reads` - Number of reads
+    * `Total bases` - Total number of bases
+    * `Total bases aligned` - Total number of aligned bases
+
+    Each metric can be customized with the following options:
+
+    * `title` - Column title
+    * `description` - Column description
+    * `hidden` - Whether to hide the column by default
+    * `scale` - Color scale for the column
+    * `format` - Number format
+    * `min` - Minimum value for the color scale
+    * `max` - Maximum value for the color scale
+    * `suffix` - Suffix to add to values
+    * `shared_key` - Share color scale with other columns
+    """
+
     _KEYS_MAPPING = {
         "number_of_reads": "Number of reads",
         "number_of_bases": "Total bases",
@@ -48,6 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.has_seq_summary = False
         self.has_fastq = False
         self.has_fasta = False
+        self.general_stats_added = False
         for f in self.find_log_files("nanostat", filehandles=True):
             nano_stats_by_sample = self.parse_nanostat_log(f)
             for s_name, nano_stats in nano_stats_by_sample.items():
@@ -93,28 +150,33 @@ class MultiqcModule(BaseMultiqcModule):
         Note: Tool can be run in two different modes, giving two variants to the output.
         To avoid overwriting keys from different modes, keys are given a suffix.
         """
-        snames = [f["s_name"]]
-        nano_stats_by_sname = defaultdict(dict)
+        sname = f["s_name"]
+        nano_stats_by_sname = {sname: dict()}
         for line in f["f"]:
+            if line.strip() == "":
+                continue
             parts = line.strip().split("\t")
             if len(parts) < 2:
+                log.warning(f"Expected at least 2 parts in line, got: {len(parts)}: {parts} - in {f['root']}/{f['fn']}")
+                continue
+            if len(parts) > 2:
+                log.warning(f"Expected at most 2 parts in line, got: {len(parts)}: {parts} - in {f['root']}/{f['fn']}")
                 continue
 
-            key = parts[0]
+            key, val = parts
             if key == "Metrics":
-                snames = parts[1:]
+                # A static header line "Metrics dataset", ignore.
+                pass
 
             elif key in self._KEYS_MAPPING.keys():
                 key = self._KEYS_MAPPING.get(key)
                 if key:
-                    for sname, val in zip(snames, parts[1:]):
-                        nano_stats_by_sname[sname][key] = float(val)
+                    nano_stats_by_sname[sname][key] = float(val)
             else:
                 key = key.replace("Reads ", "").strip(":")
                 if key.startswith(">Q"):
-                    for sname, val in zip(snames, parts[1:]):
-                        # Number of reads above Q score cutoff
-                        nano_stats_by_sname[sname][key] = int(val.split()[0])
+                    # Number of reads above Q score cutoff
+                    nano_stats_by_sname[sname][key] = int(val.split()[0])
         return nano_stats_by_sname
 
     def parse_legacy_nanostat_log(self, f):
@@ -282,7 +344,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Add the stat_type suffix
-        headers = {}
+        headers: Dict[str, ColumnDict] = {}
         for k in headers_base:
             key = f"{k}_{stat_type}"
             headers[key] = headers_base.get(k, dict()).copy()
@@ -300,6 +362,23 @@ class MultiqcModule(BaseMultiqcModule):
             anchor=f"nanostat_{stat_type.replace(' ', '_')}_stats",
             plot=table.plot(self.nanostat_data, headers, table_config),
         )
+
+        if not self.general_stats_added:
+            # Get general stats headers using utility function - reads the config.general_stats_columns
+            general_stats_headers = self.get_general_stats_headers(
+                all_headers=headers,
+                default_shown=[f"Read length N50_{stat_type}"],
+            )
+
+            # Add stat title to descriptions
+            for k, header in general_stats_headers.items():
+                header["description"] = (
+                    header.get("description", headers.get(k, {}).get("description", "")) + f" ({stat_title})"
+                )
+
+            if general_stats_headers:
+                self.general_stats_addcols(self.nanostat_data, general_stats_headers)
+                self.general_stats_added = True
 
     def reads_by_quality_plot(self):
         def _get_total_reads(_data_dict):
@@ -384,8 +463,8 @@ class MultiqcModule(BaseMultiqcModule):
             )
             content_before_plot = (
                 f'<div class="alert alert-warning">Different quality score cutoffs used across different logs. '
-                f'Using ones from the first met sample, and hiding samples '
-                f'{", ".join("<code>" + s + "</code>" for s in samples_with_other_q_values)}.</div>'
+                f"Using ones from the first met sample, and hiding samples "
+                f"{', '.join('<code>' + s + '</code>' for s in samples_with_other_q_values)}.</div>"
             )
 
         # Add the report section
