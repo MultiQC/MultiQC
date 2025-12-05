@@ -1,10 +1,13 @@
 import logging
+import re
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"HiCUP.*?\((\d+\.\d+[\.\d]*)\)"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -30,9 +33,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(self.hicup_data)} reports")
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None)
+        # Parse version from HTML reports
+        for f in self.find_log_files("hicup/html"):
+            self.parse_hicup_html(f)
+
+        # If no version found, still call add_software_version to satisfy the linter
+        if not self.versions:
+            self.add_software_version(None)
 
         # Write parsed data to a file
         self.write_data_file(self.hicup_data, "multiqc_hicup")
@@ -262,3 +269,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return bargraph.plot(self.hicup_data, keys, config)
+
+    def parse_hicup_html(self, f):
+        """Parse HiCUP HTML reports to extract version information."""
+        match = re.search(VERSION_REGEX, f["f"])
+        if match:
+            self.add_software_version(match.group(1))

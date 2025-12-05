@@ -445,6 +445,8 @@ hicexplorer:
   num_lines: 26
 hicup:
   fn: "HiCUP_summary_report*"
+hicup/html:
+  fn: "*HiCUP_summary_report*.html"
 hicpro/mmapstat:
   fn: "*mapstat"
   contents: "total_R"
