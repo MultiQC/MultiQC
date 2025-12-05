@@ -512,6 +512,17 @@ Alternatively, you can set the following config flag in your MultiQC config:
 skip_generalstats: true
 ```
 
+#### General Statistics Help Text
+
+You can add a help button with collapsible explanatory text to the General Statistics table
+using the `general_stats_helptext` config option:
+
+```yaml
+general_stats_helptext: "This table shows key metrics for all samples. Click column headers to sort."
+```
+
+When set, a "Help" button will appear that users can click to expand a help text box.
+
 ## Order of modules
 
 By default, modules are included in the report as in the order specified in `config.module_order`.
