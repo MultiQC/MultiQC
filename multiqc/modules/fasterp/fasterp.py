@@ -264,7 +264,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse before_filtering
         try:
             for k in parsed_json["summary"]["before_filtering"]:
-                self.fasterp_data[s_name][f"before_filtering_{k}"] = float(parsed_json["summary"]["before_filtering"][k])
+                self.fasterp_data[s_name][f"before_filtering_{k}"] = float(
+                    parsed_json["summary"]["before_filtering"][k]
+                )
         except KeyError:
             log.debug(f"fasterp JSON did not have a 'summary'-'before_filtering' keys: '{s_name}'")
 
