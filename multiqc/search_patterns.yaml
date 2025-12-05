@@ -817,6 +817,10 @@ qc3C:
 qorts:
   contents: "BENCHMARK_MinutesOnSamIteration"
   num_lines: 100
+qorts/log:
+  fn: "QC.*.log"
+  contents: "Starting QoRTs"
+  num_lines: 2
 qualimap/bamqc/genome_results:
   fn: "genome_results.txt"
 qualimap/bamqc/coverage:
