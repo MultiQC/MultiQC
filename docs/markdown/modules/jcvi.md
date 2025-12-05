@@ -2,7 +2,7 @@
 title: JCVI Genome Annotation
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Computes statistics on genome annotation.</p>
+    <p>Computes statistics on genome annotation.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/jcvi/jcvi.py
 -->
 
 :::note
-
 <p>Computes statistics on genome annotation.</p>
 
 [https://pypi.org/project/jcvi/](https://pypi.org/project/jcvi/)
@@ -52,6 +51,7 @@ The JCVI module has been tested with output from JCVI v1.0.9.
 
 ```yaml
 jcvi:
-  contents: "     o    % GC    % of genome    Average size (bp)    Median size (bp)    Number    Total
-    length (Mb)"
+  contents: '     o    % GC    % of genome    Average size (bp)    Median size (bp)    Number    Total
+    length (Mb)'
 ```
+    

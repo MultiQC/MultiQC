@@ -2,7 +2,7 @@
 title: Seqfu
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Manipulate FASTA/FASTQ files.</p>
+    <p>Manipulate FASTA/FASTQ files.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/seqfu/seqfu.py
 -->
 
 :::note
-
 <p>Manipulate FASTA/FASTQ files.</p>
 
 [https://telatin.github.io/seqfu2](https://telatin.github.io/seqfu2)
@@ -46,3 +45,4 @@ seqfu/stats:
   contents: "File\t#Seq\tTotal bp\tAvg\tN50\tN75\tN90\tauN\tMin\tMax"
   num_lines: 1
 ```
+    

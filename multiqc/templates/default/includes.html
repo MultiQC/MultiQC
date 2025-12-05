@@ -11,26 +11,17 @@ it prints the contents of these files into the report.
 #}
 
 <!-- Favicon includes -->
-<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,{{ include_file('assets/img/favicon-32x32.png', b64=True) }}">
-<link rel="icon" type="image/png" sizes="96x96" href="data:image/png;base64,{{ include_file('assets/img/favicon-96x96.png', b64=True) }}">
-<link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,{{ include_file('assets/img/favicon-16x16.png', b64=True) }}">
+<link
+  rel="icon"
+  type="image/svg"
+  href="data:image/svg+xml;base64,{{ include_file('assets/img/MultiQC_icon.svg', b64=True) }}"
+/>
+
+{# prettier-ignore-start #}
 
 <!-- Include CSS -->
 <style type="text/css">
-@font-face{
-  font-family:'Glyphicons Halflings';
-  src:url(data:font/eot;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.eot', b64=True) }});
-  src:url(data:font/eot;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.eot', b64=True) }}) format('embedded-opentype'),
-      url(data:x-font-woff/woff2;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.woff2', b64=True) }}) format('woff2'),
-      url(data:x-font-woff/woff;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.woff', b64=True) }}) format('woff'),
-      url(data:font/ttf;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.ttf', b64=True) }}) format('truetype'),
-      url(data:image/svg;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.svg', b64=True) }}) format('svg');
-}
-</style>
-<style type="text/css">
-    {{ include_file('assets/css/bootstrap.min.css') }}
-    {{ include_file('assets/css/default_multiqc.css') }}
-    {{ include_file('assets/css/jquery.toast.css') }}
+    {{ include_file('compiled/css/multiqc.min.css') }}
 </style>
 {% for css_href in config.custom_css_files %}
 <style type="text/css">{{ include_file(css_href, None) }}</style>
@@ -44,38 +35,47 @@ it prints the contents of these files into the report.
 {%- endfor %}{% endif %}{% endfor %}
 
 <!-- Include javascript files -->
-<script type="text/javascript">{{ include_file('assets/js/packages/jquery-3.1.1.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/jquery-ui.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/bootstrap.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/jquery.tablesorter.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/FileSaver.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/jquery.toast.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/jszip.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/plotly-2.27.0.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/pako_inflate.min.js') }}</script>
-  <script type="text/javascript">{{ include_file('assets/js/packages/showdown.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/decompress.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/multiqc.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/flat.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/plotting.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/tables.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/toolbox.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/plots/bar.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/plots/box.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/plots/line.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/plots/scatter.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/plots/heatmap.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/plots/violin.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/ai-helpers.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/ai.js') }}</script>
+<!-- Third-party libraries (kept separate) -->
+<script type="text/javascript">
+  {{ include_file("assets/js/packages/jquery-3.1.1.min.js") }}
+</script>
+<script type="text/javascript">
+  {{ include_file("assets/js/packages/jquery-ui.min.js") }}
+</script>
+<script type="text/javascript">
+  {{ include_file("assets/js/packages/jquery.tablesorter.min.js") }}
+</script>
+<script type="text/javascript">
+  {{ include_file("assets/js/packages/FileSaver.min.js") }}
+</script>
+<script type="text/javascript">
+  {{ include_file("assets/js/packages/jszip.min.js") }}
+</script>
+<script type="text/javascript">
+  {{ include_file("assets/js/packages/plotly-3.1.2.custom.min.js") }}
+</script>
+<script type="text/javascript">
+  {{ include_file("assets/js/packages/pako_inflate.min.js") }}
+</script>
+<script type="text/javascript">
+  {{ include_file("assets/js/packages/showdown.min.js") }}
+</script>
+<!-- Bundled Bootstrap 5 + MultiQC JavaScript -->
+<script type="text/javascript">
+  {{ include_file("compiled/js/multiqc.min.js") }}
+</script>
 {% set included_js = [] %}
 {%- for m in report.modules %}
   {% if m.js and m.js|length > 0 -%}
     {% for js_href in m.js.values() %}
-      {% if js_href not in included_js -%}{{ '' if included_js.append( js_href ) }}
-<script type="text/javascript">{{ include_file( js_href, None ) }}</script>
+      {% if js_href not in included_js -%}
+        {{ '' if included_js.append( js_href ) }}
+        <script type="text/javascript">
+          {{ include_file(js_href, None) }}
+        </script>
       {% endif %}
     {%- endfor %}
   {% endif %}
 {% endfor %}
-<script type="text/javascript">{{ include_file('assets/js/render.js') }}</script>
+
+{# prettier-ignore-end #}

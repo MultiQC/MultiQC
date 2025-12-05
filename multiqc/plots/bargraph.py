@@ -841,8 +841,8 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             ),
             hovermode="y unified",
             hoverlabel=dict(
-                bgcolor="rgba(255, 255, 255, 0.8)",
-                font=dict(color="black"),
+                bgcolor="white",
+                font=dict(color="rgba(60,60,60,1)"),
             ),
             showlegend=pconfig.use_legend if pconfig.use_legend is not None else True,
         )
@@ -884,12 +884,18 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                     title=None,
                     hoverformat=dataset.layout["xaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
+                    autorangeoptions=dataset.layout["xaxis"].get(
+                        "autorangeoptions",
+                        dict(clipmin=None, clipmax=None, minallowed=None, maxallowed=None),
+                    ),
                 ),
                 xaxis=dict(
                     title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
                     hoverformat=dataset.layout["yaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["yaxis"]["ticksuffix"],
                     autorangeoptions=dict(
+                        clipmin=dataset.layout["yaxis"].get("autorangeoptions", {}).get("clipmin"),
+                        clipmax=dataset.layout["yaxis"].get("autorangeoptions", {}).get("clipmax"),
                         minallowed=minallowed,
                         maxallowed=maxallowed,
                     ),

@@ -2,7 +2,7 @@
 title: BioBloom Tools
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Assigns reads to different references using bloom filters. This is faster than alignment and can be used for contamination detection.</p>
+    <p>Assigns reads to different references using bloom filters. This is faster than alignment and can be used for contamination detection.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/biobloomtools/biobloom
 -->
 
 :::note
-
 <p>Assigns reads to different references using bloom filters. This is faster than alignment and can be used for contamination detection.</p>
 
 [https://github.com/bcgsc/biobloom/](https://github.com/bcgsc/biobloom/)
@@ -33,3 +32,4 @@ biobloomtools:
   contents: "filter_id\thits\tmisses\tshared\trate_hit\trate_miss\trate_shared"
   num_lines: 2
 ```
+    

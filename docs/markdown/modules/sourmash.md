@@ -2,7 +2,7 @@
 title: Sourmash
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Quickly searches, compares, and analyzes genomic and metagenomic data sets.</p>
+    <p>Quickly searches, compares, and analyzes genomic and metagenomic data sets.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/sourmash/sourmash.py
 -->
 
 :::note
-
 <p>Quickly searches, compares, and analyzes genomic and metagenomic data sets.</p>
 
 [https://github.com/sourmash-bio/sourmash](https://github.com/sourmash-bio/sourmash)
@@ -46,8 +45,9 @@ sourmash:
 
 ```yaml
 sourmash/compare:
-  fn: "*.labels.txt"
+  fn: '*.labels.txt'
 sourmash/gather:
   contents: intersect_bp,f_orig_query,f_match,f_unique_to_query,f_unique_weighted,
   num_lines: 1
 ```
+    

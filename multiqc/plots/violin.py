@@ -32,6 +32,7 @@ from multiqc.plots.table_object import (
     render_html,
 )
 from multiqc.types import Anchor, ColumnKey, SampleName, SectionKey
+from multiqc.utils.material_icons import get_material_icon
 
 logger = logging.getLogger(__name__)
 
@@ -215,58 +216,66 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         data_dict: Dict[SectionKey, Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]]] = {}
         headers_dict: Dict[SectionKey, Dict[ColumnKey, ColumnDict]] = {}
 
-        # Track metrics and their order
-        ordered_metrics = {}
+        # Extract all columns as lists for efficient access (avoiding repeated iter_rows)
+        all_section_keys = df.get_column("section_key").to_list()
+        all_samples = df.get_column("sample").to_list()
+        all_metrics = df.get_column("metric").to_list()
+        all_val_raw = df.get_column("val_raw").to_list()
+        all_val_raw_type = df.get_column("val_raw_type").to_list()
+        all_val_mod = df.get_column("val_mod").to_list()
+        all_val_mod_type = df.get_column("val_mod_type").to_list()
+        all_val_fmt = df.get_column("val_fmt").to_list()
+        all_column_meta = df.get_column("column_meta").to_list()
+        has_section_order = "section_order" in df.columns
+        all_section_order = df.get_column("section_order").to_list() if has_section_order else None
 
-        # Group by section
-        for section_key in df.select("section_key").unique().to_series():
-            section_group = df.filter(pl.col("section_key") == section_key)
+        # Build index for grouping: section_key -> sample -> list of row indices
+        section_sample_indices: Dict[str, Dict[str, List[int]]] = {}
+        for i, (section_key, sample) in enumerate(zip(all_section_keys, all_samples)):
+            if section_key not in section_sample_indices:
+                section_sample_indices[section_key] = {}
+            if sample not in section_sample_indices[section_key]:
+                section_sample_indices[section_key][sample] = []
+            section_sample_indices[section_key][sample].append(i)
+
+        # Process each section
+        for section_key, sample_indices in section_sample_indices.items():
             val_by_sample_by_metric: Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]] = {}
             section_headers: Dict[ColumnKey, ColumnDict] = {}
 
-            # Sort metrics by their original index if available
-            if "section_order" in section_group.columns:
-                # Create ordered dict of metrics for this section
-                metrics_info = section_group.select(["metric", "section_order"]).unique()
-                for metric_row in metrics_info.iter_rows(named=True):
-                    ordered_metrics[metric_row["metric"]] = metric_row["section_order"]
+            for sample_name, row_indices in sample_indices.items():
+                # Sort indices by section_order if available
+                if has_section_order and all_section_order is not None:
+                    row_indices = sorted(row_indices, key=lambda idx: all_section_order[idx])
 
-            # Process samples
-            for sample_name in section_group.select("sample").unique().to_series():
-                sample_group = section_group.filter(pl.col("sample") == sample_name)
                 val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
 
-                # If we have section_order, sort by that first
-                if "section_order" in sample_group.columns:
-                    sample_group = sample_group.sort("section_order")
-
-                # Process metrics/columns
-                for row in sample_group.iter_rows(named=True):
-                    metric_name = row["metric"]
+                for idx in row_indices:
+                    metric_name = all_metrics[idx]
 
                     # Convert string values back to their original types
-                    val_raw: float = row["val_raw"]
+                    val_raw: Any = all_val_raw[idx]
                     if not math.isnan(val_raw):
-                        if row["val_raw_type"] == "int":
+                        if all_val_raw_type[idx] == "int":
                             val_raw = int(val_raw)
-                        elif row["val_raw_type"] == "bool":
+                        elif all_val_raw_type[idx] == "bool":
                             val_raw = bool(val_raw)
-                    val_mod: float = row["val_mod"]
+                    val_mod: Any = all_val_mod[idx]
                     if not math.isnan(val_mod):
-                        if row["val_mod_type"] == "int":
+                        if all_val_mod_type[idx] == "int":
                             val_mod = int(val_mod)
-                        elif row["val_mod_type"] == "bool":
+                        elif all_val_mod_type[idx] == "bool":
                             val_mod = bool(val_mod)
                     val_by_metric[ColumnKey(str(metric_name))] = Cell(
                         raw=val_raw,
                         mod=val_mod,
-                        fmt=row["val_fmt"],
+                        fmt=all_val_fmt[idx],
                     )
 
                     # Create header if it doesn't exist
                     if metric_name not in section_headers:
                         # Parse column metadata from JSON
-                        section_headers[metric_name] = json.loads(row["column_meta"])
+                        section_headers[metric_name] = json.loads(all_column_meta[idx])
 
                 # Add sample data to section
                 if val_by_metric:
@@ -378,58 +387,29 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             # Combine the dataframes, keeping all rows
             merged_df = pl.concat([old_df, new_df], how="vertical")
 
-            # Get original order of metrics
-            # We need to preserve metric_name order, which is important for visualization
-            metric_order = {}
-            for idx, metric in enumerate(merged_df.select("metric").to_series()):
+            # Get original order of metrics using a more efficient approach
+            # Create a mapping from metric to its first occurrence index
+            metric_list = merged_df.get_column("metric").to_list()
+            metric_order: Dict[str, int] = {}
+            for idx, metric in enumerate(metric_list):
                 if metric not in metric_order:
                     metric_order[metric] = idx
 
-            merged_df = merged_df.with_columns(
-                pl.col("metric")
-                .map_elements(lambda x: metric_order.get(x, 99999), return_dtype=pl.Int64)
-                .alias("__metric_order")
+            # Create a mapping series for efficient lookup
+            metric_order_map = pl.Series("__metric_order", [metric_order.get(m, 99999) for m in metric_list])
+            merged_df = merged_df.with_columns(metric_order_map)
+
+            # Sort by creation_date (newest last), then use unique with keep="last" to deduplicate
+            # This is O(n log n) instead of O(n²) from the previous implementation
+            key_columns = ["dt_anchor", "section_key", "sample", "metric"]
+            merged_df = merged_df.sort("creation_date").unique(
+                subset=key_columns,
+                keep="last",
+                maintain_order=True,
             )
 
-            # First ensure the DataFrame is sorted by creation_date (newest last)
-            merged_df = merged_df.sort("creation_date")
-
-            # Get all unique combinations of the key columns
-            key_columns = ["dt_anchor", "section_key", "sample", "metric"]
-            unique_keys = merged_df.select(key_columns).unique()
-
-            # For each unique key combination, find the newest entry
-            latest_records = []
-            for key_row in unique_keys.iter_rows(named=True):
-                # Build filter expression for this key combination
-                filter_expr = pl.lit(True)
-                for col, val in key_row.items():
-                    filter_expr = filter_expr & (pl.col(col) == val)
-
-                # Get matching rows (should be sorted by creation_date already)
-                matches = merged_df.filter(filter_expr)
-                if not matches.is_empty():
-                    # Get the last/newest record for this key combination
-                    row: Tuple[Any, ...] = matches.row(-1)
-                    entry = {k: v for k, v in zip(merged_df.columns, row)}
-                    latest_records.append(entry)
-
-            # Create a new DataFrame from the latest records
-            if latest_records:
-                # Create DataFrame with same schema as merged_df
-                deduped_df = pl.DataFrame(latest_records, schema=merged_df.schema)
-
-                # Add a temporary column to sort by the original metric order
-                deduped_df = deduped_df.with_columns(
-                    pl.col("metric")
-                    .map_elements(lambda x: metric_order.get(x, 99999), return_dtype=pl.Int64)
-                    .alias("__metric_order")
-                )
-
-                # Sort by the order column to preserve metric ordering
-                merged_df = deduped_df.sort("__metric_order").drop("__metric_order")
-            else:
-                merged_df = pl.DataFrame(schema=merged_df.schema)
+            # Sort by the order column to preserve metric ordering, then drop it
+            merged_df = merged_df.sort("__metric_order").drop("__metric_order")
         else:
             merged_df = new_df
 
@@ -680,9 +660,9 @@ class Dataset(BaseDataset):
             orientation="h",
             box={"visible": True},
             meanline={"visible": True},
-            fillcolor="#b5b5b5",
-            line={"width": 2, "color": "#b5b5b5"},
-            opacity=0.5,
+            fillcolor="#999999",
+            line={"width": 0},
+            opacity=1,
             points=False,  # Don't show points, we'll add them manually
             # The hover information is useful, but the formatting is ugly and not
             # configurable as far as I can see. Also, it's not possible to disable it,
@@ -693,16 +673,13 @@ class Dataset(BaseDataset):
 
         # If all violins are grey, make the dots blue to make it more clear that it's interactive
         # if some violins are color-coded, make the dots black to make them less distracting
-        marker_color = "black" if any(h.color is not None for h in ds.header_by_metric.values()) else "#0b79e6"
+        marker_color = "#000000" if any(h.color is not None for h in ds.header_by_metric.values()) else "#0b79e6"
         ds.scatter_trace_params = {
             "mode": "markers",
-            "marker": {
-                "size": 4,
-                "color": marker_color,
-            },
+            "marker": {"size": 4, "color": marker_color, "opacity": 1},
             "showlegend": False,
             "hovertemplate": ds.trace_params["hovertemplate"],
-            "hoverlabel": {"bgcolor": "white"},
+            "hoverlabel": {"bgcolor": "white", "font": {"color": "rgba(60,60,60,1)"}},
         }
         return ds
 
@@ -873,7 +850,7 @@ class Dataset(BaseDataset):
                         try:
                             value = fmt.format(value)
                         except (ValueError, KeyError):
-                            logger.info(f"Value {value} failed to format with {fmt=}")
+                            pass
                 row.append(str(value))
             result += f"|{pseudonym}|" + "|".join(row) + "|\n"
 
@@ -979,7 +956,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             buttons.append(
                 self._btn(
                     cls="mqc-violin-to-table",
-                    label="<span class='glyphicon glyphicon-th-list'></span> Table",
+                    label=f"{get_material_icon('mdi:table', 16)} Table",
                     data_attrs={"table-anchor": self.datasets[0].dt.anchor, "violin-anchor": self.anchor},
                 )
             )
@@ -1097,20 +1074,23 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         if self.show_table_by_default and not self.show_table:
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
-                + '<span class="glyphicon glyphicon-exclamation-sign" '
-                + 'title="An interactive table is not available because of the large number of rows. '
+                + '<span title="An interactive table is not available because of the large number of samples. '
                 + "A violin plot is generated instead, showing density of values for each metric, as "
-                + 'well as hoverable points for outliers in each metric."'
-                + f' data-toggle="tooltip"></span> Showing violin plots for {self.n_samples} data points.</p>'
+                + 'well as hoverable points for outlier samples in each metric."'
+                + ' data-bs-toggle="tooltip">'
+                + get_material_icon("mdi:alert", 16, class_name="text-warning")
+                + f"</span> Showing {self.n_samples} samples.</p>"
             )
         elif not self.show_table:
             warning = (
                 f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
-                + '<span class="glyphicon glyphicon-exclamation-sign" '
-                + 'title="An interactive table is not available because of the large number of rows. '
-                + "The violin plot displays hoverable points only for outliers in each metric, "
+                + "<span "
+                + 'title="An interactive table is not available because of the large number of samples. '
+                + "The violin plot displays hoverable points only for outlier samples in each metric, "
                 + 'and the hiding/highlighting functionality through the toolbox only works for outliers"'
-                + f' data-toggle="tooltip"></span> Showing violin plots for {self.n_samples} data points.</p>'
+                + ' data-bs-toggle="tooltip">'
+                + get_material_icon("mdi:alert", 16, class_name="text-warning")
+                + f"</span> Showing {self.n_samples} samples.</p>"
             )
 
         assert self.datasets[0].dt is not None

@@ -272,7 +272,7 @@ def test_full_run_with_config(data_dir, capsys):
     )
 
     out = capsys.readouterr().out
-    assert '<h2 class="mqc-module-title" id="concordance">Concordance Rates</h2>' in out
+    assert '<h2 class="mb-0" id="concordance">Concordance Rates</h2>' in out
     assert '<div class="mqc-section mqc-section-concordance"' in out
 
     assert len(report.plot_by_id) == 1
@@ -316,7 +316,7 @@ target___test2	2
         custom_data:
           last_o2o:
             plot_type: "table"
-        
+
         sp:
           last_o2o:
             fn: "target__*tsv"

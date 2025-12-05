@@ -2,7 +2,7 @@
 title: QUAST
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Quality assessment tool for genome assemblies.</p>
+    <p>Quality assessment tool for genome assemblies.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/quast/quast.py
 -->
 
 :::note
-
 <p>Quality assessment tool for genome assemblies.</p>
 
 [http://quast.bioinf.spbau.ru/](http://quast.bioinf.spbau.ru/)
@@ -43,7 +42,7 @@ quast_config:
 ```
 
 The default module values are shown above. See the
-[main MultiQC documentation](https://docs.seqera.io/multiqc/getting_started/config)
+[main MultiQC documentation](../getting_started/config)
 for more information about how to configure MultiQC.
 
 #### MetaQUAST
@@ -72,3 +71,4 @@ quast:
   fn: report.tsv
   num_lines: 2
 ```
+    

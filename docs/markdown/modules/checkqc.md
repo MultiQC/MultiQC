@@ -2,7 +2,7 @@
 title: CheckQC
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Checks a set of quality criteria against an Illumina runfolder.</p>
+    <p>Checks a set of quality criteria against an Illumina runfolder.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/checkqc/checkqc.py
 -->
 
 :::note
-
 <p>Checks a set of quality criteria against an Illumina runfolder.</p>
 
 [https://github.com/Molmed/checkQC](https://github.com/Molmed/checkQC)
@@ -28,5 +27,6 @@ The module parses a CheckQC JSON file, so make sure to use CheckQC with the `--j
 ```yaml
 checkqc:
   contents: instrument_and_reagent_type
-  fn: "*.json"
+  fn: '*.json'
 ```
+    

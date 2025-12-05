@@ -8,6 +8,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
+from pathlib import Path
 
 from natsort import natsorted
 from pydantic import BaseModel, Field
@@ -16,6 +17,7 @@ from multiqc import config, report
 from multiqc.plots.plot import PConfig
 from multiqc.types import Anchor, ColumnKey, SampleGroup, SampleName, SectionKey
 from multiqc.utils import mqc_colour
+from multiqc.utils.material_icons import get_material_icon
 from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
@@ -379,7 +381,7 @@ class DataTable(BaseModel):
         # the table anchor because that's the ID that is shown in the Configure Columns modal
         if table_anchor in config.custom_plot_config:
             for k, v in config.custom_plot_config[table_anchor].items():
-                if isinstance(k, str) and k in pconfig.__dict__:
+                if isinstance(k, str) and k in pconfig.model_fields:
                     setattr(pconfig, k, v)
 
         # Each section to have a list of groups (even if there is just one element in a group)
@@ -1035,8 +1037,14 @@ def render_html(
 
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.anchor}" data-toggle="tooltip" title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets">
-            <span class="glyphicon glyphicon-copy"></span> Copy table
+        <button
+            type="button"
+            class="mqc_table_copy_btn btn btn-outline-secondary btn-sm"
+            data-clipboard-target="table#{dt.anchor}"
+            data-bs-toggle="tooltip"
+            title="Copy table into clipboard suitable to be pasted into Excel or Google Sheets"
+        >
+            {get_material_icon("mdi:content-copy", 16)} Copy table
         </button>
         """
         )
@@ -1053,9 +1061,9 @@ def render_html(
 
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_config_modal_btn btn btn-default btn-sm {disabled_class}" data-toggle="modal"
-                data-target="#{dt.anchor}_config_modal" {disabled_attrs} title="Configure visibility and ordering of columns">
-            <span class="glyphicon glyphicon-th"></span> Configure columns
+            <button type="button" class="mqc_table_config_modal_btn btn btn-outline-secondary btn-sm {disabled_class}" data-bs-toggle="modal"
+                data-bs-target="#{dt.anchor}_config_modal" {disabled_attrs} title="Configure visibility and ordering of columns">
+                                    {get_material_icon("mdi:view-column", 16)} Configure columns
             </button>
             """
             )
@@ -1063,10 +1071,10 @@ def render_html(
         # Sort By Highlight button
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm"
-            data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;" data-toggle="tooltip" title="Place highlighted samples on top">
-        <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
-        </button>
+            <button type="button" class="mqc_table_sortHighlight btn btn-outline-secondary btn-sm"
+                data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;" data-bs-toggle="tooltip" title="Place highlighted samples on top">
+                                        {get_material_icon("mdi:sort", 16)} Sort by highlight
+            </button>
         """
         )
 
@@ -1074,27 +1082,27 @@ def render_html(
         if len(col_to_th) > 1:
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_make_scatter btn btn-default btn-sm"
-data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.anchor}" title="Visualize pairs of values on a scatter plot">
-                                <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
-            </button>
-            """
+                <button type="button" class="mqc_table_make_scatter btn btn-outline-secondary btn-sm"
+                data-bs-toggle="modal" data-bs-target="#table_scatter_modal" data-table-anchor="{dt.anchor}" title="Visualize pairs of values on a scatter plot">
+                                            {get_material_icon("mdi:chart-scatter-plot", 16)} Scatter plot
+                </button>
+                """
             )
 
         if violin_anchor is not None:
             buttons.append(
                 f"""
-            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm"
-data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle="tooltip" title="View as a violin plot">
-                                <span class="glyphicon glyphicon-align-left"></span> Violin plot
-            </button>
-            """
+                <button type="button" class="mqc-table-to-violin btn btn-outline-secondary btn-sm"
+                data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-bs-toggle="tooltip" title="View as a violin plot">
+                                            {get_material_icon("mdi:violin", 16)} Violin plot
+                </button>
+                """
             )
 
         buttons.append(
             f"""
-        <button type="button" class="export-plot btn btn-default btn-sm"
-            data-plot-anchor="{violin_anchor or dt.anchor}" data-type="table" data-toggle="tooltip" title="Show export options"
+        <button type="button" class="export-plot btn btn-outline-secondary btn-sm"
+            data-plot-anchor="{violin_anchor or dt.anchor}" data-type="table" data-bs-toggle="tooltip" title="Show export options"
         >Export as CSV...</button>
         """
         )
@@ -1122,29 +1130,27 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
         )
 
         if not config.no_ai:
+            seqera_ai_icon = (
+                Path(__file__).parent.parent / "templates/default/assets/img/Seqera_AI_icon.svg"
+            ).read_text()
             buttons.append(
                 f"""
             <div class="ai-plot-buttons-container" style="float: right">
                 <button
-                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-table ai-copy-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-copy-content ai-copy-content-table ai-copy-button-wrapper"
                     data-section-anchor="{section_anchor}"
                     data-plot-anchor="{violin_anchor}"
                     data-module-anchor="{module_anchor}"
                     data-plot-view="table"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-bs-toggle="tooltip"
                     title="Copy table data for use with AI tools like ChatGPT"
                 >
-                    <span style="vertical-align: baseline">
-                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                        </svg>
-                    </span>
+                    {seqera_ai_icon}
                     <span class="button-text">Copy Prompt</span>
                 </button>
                 <button
-                    class="btn btn-default btn-sm ai-generate-button ai-generate-button-table ai-generate-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-generate-button ai-generate-button-table ai-generate-button-wrapper"
                     data-response-div="{section_anchor}_ai_summary_response"
                     data-error-div="{section_anchor}_ai_summary_error"
                     data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
@@ -1158,16 +1164,11 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
                     data-action="generate"
                     data-clear-text="Clear summary"
                     type="button"
-                    data-toggle="tooltip" 
+                    data-bs-toggle="tooltip"
                     aria-controls="{dt.anchor}_ai_summary_wrapper"
                     title="Dynamically generate AI summary for this table"
                 >
-                    <span style="vertical-align: baseline">
-                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                        </svg>
-                    </span>
+                    {seqera_ai_icon}
                     <span class="button-text">Summarize table</span>
                 </button>
             </div>
@@ -1176,7 +1177,7 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
 
         panel = "\n".join(buttons)
         html += f"""
-        <div class='row'>\n<div class='col-xs-12'>\n{panel}\n</div>\n</div>
+        <div class='row mqc_table_control_buttons'>\n<div class='col-12'>\n{panel}\n</div>\n</div>
         """
 
     # Build the table itself
@@ -1185,8 +1186,8 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
     )
     html += f"""
         <div id="{dt.anchor}_container" class="mqc_table_container">
-            <div class="table-responsive mqc-table-responsive {collapse_class}">
-                <table id="{dt.anchor}" class="table table-condensed mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist_js(dt)}">
+            <div class="table-responsive mqc-table-responsive {collapse_class}" data-collapsed="{str(collapse_class != "").lower()}">
+                <table id="{dt.anchor}" class="table table-sm mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist_js(dt)}">
         """
 
     # Build the header row
@@ -1239,7 +1240,9 @@ data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}" data-toggle
             html += "</tr>"
     html += "</tbody></table></div>"
     if len(group_to_sample_to_anchor_to_td) > 10 and config.collapse_tables:
-        html += '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>'
+        html += (
+            f'<div class="mqc-table-expand"><span>Expand table</span> {get_material_icon("mdi:chevron-down", 20)}</div>'
+        )
     html += "</div>"
 
     # Save the raw values to a file if requested
@@ -1274,17 +1277,17 @@ def _configuration_modal(table_anchor: str, title: str, trows: str, violin_ancho
     return f"""
     <!-- MultiQC Table Columns Modal -->
     <div class="modal fade mqc_config_modal" id="{table_anchor}_config_modal" tabindex="-1">
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title">{title}: Columns</h4>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order. Table ID: <code>{table_anchor}</code></p>
             <p>
-                <button class="btn btn-default btn-sm mqc_config_modal_bulk_visible" {data} data-action="showAll">Show All</button>
-                <button class="btn btn-default btn-sm mqc_config_modal_bulk_visible" {data} data-action="showNone">Show None</button>
+                <button class="btn btn-outline-secondary btn-sm mqc_config_modal_bulk_visible" {data} data-action="showAll">Show All</button>
+                <button class="btn btn-outline-secondary btn-sm mqc_config_modal_bulk_visible" {data} data-action="showNone">Show None</button>
             </p>
             <table class="table mqc_table mqc_sortable mqc_config_modal_table" id="{table_anchor}_config_modal_table" data-title="{title}">
               <thead>
@@ -1303,7 +1306,7 @@ def _configuration_modal(table_anchor: str, title: str, trows: str, violin_ancho
               </tbody>
             </table>
         </div>
-        <div class="modal-footer"> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button> </div>
     </div> </div> </div>"""
 
 

@@ -2,7 +2,7 @@
 title: Kaiju
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Taxonomic classification for metagenomics.</p>
+    <p>Taxonomic classification for metagenomics.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/kaiju/kaiju.py
 -->
 
 :::note
-
 <p>Taxonomic classification for metagenomics.</p>
 
 [http://kaiju.binf.ku.dk/](http://kaiju.binf.ku.dk/)
@@ -36,3 +35,4 @@ kaiju:
   contents_re: file\tpercent\treads\ttaxon_id\ttaxon_name
   num_lines: 1
 ```
+    

@@ -77,11 +77,19 @@ class MultiQCConfig(BaseModel):
     show_analysis_paths: Optional[bool] = Field(None, description="Show analysis paths in the report")
     show_analysis_time: Optional[bool] = Field(None, description="Show analysis time in the report")
     custom_logo: Optional[str] = Field(None, description="Path to custom logo image")
+    custom_logo_dark: Optional[str] = Field(None, description="Path to custom logo image for dark mode")
     custom_logo_url: Optional[str] = Field(None, description="URL for custom logo")
     custom_logo_title: Optional[str] = Field(None, description="Title for custom logo")
+    custom_logo_width: Optional[int] = Field(None, description="Width in pixels for the custom logo")
     custom_css_files: Optional[List[str]] = Field(None, description="Custom CSS files to include")
     simple_output: Optional[bool] = Field(None, description="Simple output")
     template: Optional[str] = Field(None, description="Report template to use")
+    template_dark_mode: Optional[bool] = Field(
+        None, description="Enable dark mode toggle and JavaScript for the report template"
+    )
+    plot_font_family: Optional[str] = Field(
+        None, description="Custom font family for plots (defaults to system font stack)"
+    )
     profile_runtime: Optional[bool] = Field(None, description="Profile runtime")
     profile_memory: Optional[bool] = Field(None, description="Profile memory")
     pandoc_template: Optional[str] = Field(None, description="Pandoc template")
@@ -159,11 +167,6 @@ class MultiQCConfig(BaseModel):
     plots_defer_loading_numseries: Optional[int] = Field(
         None, description="Number of series to defer loading - user will need to press button to render plot"
     )
-    plot_theme: Optional[str] = Field(
-        None,
-        description="Plotly theme template - any registered Plotly theme name "
-        "(e.g. 'plotly', 'plotly_white', 'plotly_dark', 'ggplot2', 'seaborn', 'simple_white', 'none')",
-    )
     lineplot_number_of_points_to_hide_markers: Optional[int] = Field(
         None, description="Number of points to hide markers - sum of data points in all samples"
     )
@@ -238,8 +241,8 @@ class MultiQCConfig(BaseModel):
     sample_names_replace_complete: Optional[bool] = Field(None, description="Sample names to replace (complete)")
     sample_names_rename: Optional[List[List[str]]] = Field(None, description="Sample names to rename")
     show_hide_buttons: Optional[List[str]] = Field(None, description="Show/hide buttons")
-    show_hide_patterns: Optional[List[str]] = Field(None, description="Show/hide patterns")
-    show_hide_regex: Optional[List[str]] = Field(None, description="Show/hide regex")
+    show_hide_patterns: Optional[List[Union[str, List[str]]]] = Field(None, description="Show/hide patterns")
+    show_hide_regex: Optional[List[Union[str, bool]]] = Field(None, description="Show/hide regex")
     show_hide_mode: Optional[List[str]] = Field(None, description="Show/hide mode")
     highlight_patterns: Optional[List[str]] = Field(None, description="Patterns for highlighting samples")
     highlight_colors: Optional[List[str]] = Field(None, description="Colors to use for highlighting patterns")

@@ -2,7 +2,7 @@
 title: HiC-Pro
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Pipeline for Hi-C data processing.</p>
+    <p>Pipeline for Hi-C data processing.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/hicpro/hicpro.py
 -->
 
 :::note
-
 <p>Pipeline for Hi-C data processing.</p>
 
 [https://github.com/nservant/HiC-Pro](https://github.com/nservant/HiC-Pro)
@@ -30,20 +29,21 @@ The MultiQC module is supported since HiC-Pro v2.11.0.
 
 ```yaml
 hicpro/assplit:
-  fn: "*assplit.stat"
+  fn: '*assplit.stat'
 hicpro/mRSstat:
   contents: Valid_interaction_pairs
-  fn: "*RSstat"
+  fn: '*RSstat'
 hicpro/mergestat:
   contents: valid_interaction
-  fn: "*.mergestat"
+  fn: '*.mergestat'
   num_lines: 10
 hicpro/mmapstat:
   contents: total_R
-  fn: "*mapstat"
+  fn: '*mapstat'
   num_lines: 10
 hicpro/mpairstat:
   contents: Total_pairs_processed
-  fn: "*pairstat"
+  fn: '*pairstat'
   num_lines: 10
 ```
+    

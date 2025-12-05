@@ -2,7 +2,7 @@
 title: SNPsplit
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions.</p>
+    <p>Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/snpsplit/snpsplit.py
 -->
 
 :::note
-
 <p>Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions.</p>
 
 [https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/](https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/)
@@ -33,8 +32,9 @@ Conversely, if the mates in a pair are tagged as arising from different genomes,
 
 ```yaml
 snpsplit/new:
-  fn: "*SNPsplit_report.yaml"
+  fn: '*SNPsplit_report.yaml'
 snpsplit/old:
-  contents: "Writing allele-flagged output file to:"
+  contents: 'Writing allele-flagged output file to:'
   num_lines: 2
 ```
+    

@@ -2,7 +2,7 @@
 title: methylQA
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Methylation sequencing data quality assessment tool.</p>
+    <p>Methylation sequencing data quality assessment tool.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/methylqa/methylqa.py
 -->
 
 :::note
-
 <p>Methylation sequencing data quality assessment tool.</p>
 
 [http://methylqa.sourceforge.net/](http://methylqa.sourceforge.net/)
@@ -25,6 +24,7 @@ File path for the source of this content: multiqc/modules/methylqa/methylqa.py
 
 ```yaml
 methylqa:
-  fn: "*.report"
+  fn: '*.report'
   shared: true
 ```
+    

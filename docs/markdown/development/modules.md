@@ -179,7 +179,6 @@ plugins for [Prettier](https://github.com/prettier/prettier-vscode).
 ## Other style considerations
 
 1. We use modern Python 3, thus:
-
    - Always use f-strings (e.g. `f"{var}"`) over the legacy `"{var}".format()` calls.
    - Use double quotes for strings.
    - Built-in `dict` preserve order, thus most of the time you don't need to use `OrderedDict`.
@@ -551,6 +550,7 @@ mymodule:
 
 You can use _AND_ logic by specifying keys within a single list item. For example:
 
+<!-- prettier-ignore-start -->
 ```yaml
 mymodule:
   fn: "mylog.txt"
@@ -560,8 +560,9 @@ myother_module:
     contents: "This is myprogram v1.3"
   - fn: "another.txt"
     contents: ["What are these files anyway?", "End of program"]
-    contents_re: "^Metric: \d+\.\d+"
+    contents_re: '^Metric: \d+\.\d+'
 ```
+<!-- prettier-ignore-end -->
 
 For `mymodule`, a file must have the filename `mylog.txt` _and_ contain the string `mystring`.
 
@@ -1111,6 +1112,51 @@ This supports the following arguments:
 - `content`: Any custom HTML
 - `autoformat`: Default `True`. Automatically format the `description`, `comment` and `helptext` strings.
 - `autoformat_type`: Default `markdown`. Autoformat text type. Currently only `markdown` supported.
+- `statuses`: Optional dictionary with keys `"pass"`, `"warn"`, and `"fail"`, each containing lists of sample names. When provided, adds an interactive status progress bar to the section header showing pass/warn/fail counts.
+
+### Section status bars
+
+If your tool generates pass/warn/fail metrics for different QC checks, you can add interactive status bars to section headers using the `statuses` parameter in `add_section()`.
+
+The status bars will automatically:
+
+- Show sample lists on hover (after 0.5s delay)
+- Pin the popover on click
+- Provide "Highlight" and "Filter" buttons for integration with the MultiQC toolbox
+- Display colored progress bars showing the proportion of samples in each status category
+
+For example:
+
+```python
+# Collect sample names by status for this section
+status_data = {
+    "pass": ["sample1", "sample2", "sample3"],
+    "warn": ["sample4"],
+    "fail": ["sample5"]
+}
+
+# Add section with status bar
+self.add_section(
+    name="Quality Check",
+    anchor="quality_check",
+    description="Results from quality control analysis",
+    plot=my_plot,
+    statuses=status_data
+)
+```
+
+#### Status bar user configuration
+
+Users can control status bar visibility globally or per-module using the `section_status_checks` config:
+
+```yaml
+section_status_checks:
+  fastqc: false # Disable all FastQC status bars
+  mymodule:
+    section1: false # Disable specific section status bar
+```
+
+By default, all status bars are enabled. Configuration can be set at the module level (boolean) or per-section level (nested dictionary).
 
 For example:
 

@@ -6,6 +6,7 @@ import dataclasses
 import fnmatch
 import io
 import itertools
+import json
 import logging
 import mimetypes
 import os
@@ -196,21 +197,17 @@ class BaseMultiqcModule:
             for doi in self.doi:
                 # Build the HTML link for the DOI
                 doi_links.append(
-                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" '
-                    f'target="_blank">{doi}</a>'
+                    f' <a class="module-doi text-muted" data-doi="{doi}" data-bs-toggle="popover"'
+                    f' href="https://doi.org/{doi}" target="_blank">{doi}</a>'
                 )
-            doi_html = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}</em>'.format(
-                "; ".join(doi_links)
-            )
+            doi_html = '<span class="text-muted small ms-2">DOI: {}</span>'.format("; ".join(doi_links))
 
         url_link = ""
         if len(self.href) > 0:
             url_links: List[str] = []
             for url in self.href:
-                url_links.append(f'<a href="{url}" target="_blank">{url.strip("/")}</a>')
-            url_link = '<em class="text-muted small" style="margin-left: 1rem;">URL: {}</em>'.format(
-                "; ".join(url_links)
-            )
+                url_links.append(f'<a href="{url}" class="text-muted ms-2 small" target="_blank">{url.strip("/")}</a>')
+            url_link = "; ".join(url_links)
 
         info_html = f"{self.info}{url_link}{doi_html}"
         if not info_html.startswith("<"):  # Assume markdown, convert to HTML
@@ -400,8 +397,26 @@ class BaseMultiqcModule:
         content: str = "",
         autoformat: bool = True,
         autoformat_type: str = "markdown",
+        statuses: Optional[Dict[Literal["pass", "warn", "fail"], List[str]]] = None,
     ):
-        """Add a section to the module report output"""
+        """Add a section to the module report output
+
+        Args:
+            name: Title of the section. If not specified, the section will be untitled.
+            anchor: HTML anchor ID for the section. Auto-generated from `id` if not specified.
+            id: Section identifier for configuration. Auto-generated from `name` or module anchor if not specified.
+            description: Descriptive text shown at the top of the section, below the title.
+            comment: User-configurable comment text (can be set in MultiQC config).
+            helptext: Additional help text shown in a collapsible panel.
+            content_before_plot: HTML content to insert before any plot.
+            plot: A plot object or HTML string to display in the section.
+            content: HTML content to display in the section (shown after plot if both are provided).
+            autoformat: If True, format description/comment/helptext as markdown (default: True).
+            autoformat_type: Format type for autoformat, either "markdown" or "html" (default: "markdown").
+            statuses: Optional dict with keys "pass", "warn", "fail" containing lists of sample names.
+                      When provided, displays a status progress bar showing sample pass/warn/fail counts.
+                      Can be disabled globally or per-section via `section_status_checks` config.
+        """
         if id is None and anchor is not None:
             id = str(anchor)
 
@@ -468,6 +483,11 @@ class BaseMultiqcModule:
         comment = comment.strip()
         helptext = helptext.strip()
 
+        # Generate status bar HTML if status data is provided
+        status_bar_html = ""
+        if statuses is not None and self._should_add_status_bar(str(id)):
+            status_bar_html = self._generate_status_bar_html(statuses, str(anchor))
+
         section = Section(
             name=name or "",
             anchor=Anchor(anchor),
@@ -481,6 +501,7 @@ class BaseMultiqcModule:
             content_before_plot=content_before_plot,
             content=content,
             print_section=any([content_before_plot, plot, content]),
+            status_bar_html=status_bar_html,
         )
 
         if plot is not None:
@@ -493,6 +514,101 @@ class BaseMultiqcModule:
 
         # self.sections is passed into Jinja template:
         self.sections.append(section)
+
+    def _should_add_status_bar(self, section_id: str) -> bool:
+        """
+        Check if status bar should be added based on config.section_status_checks.
+
+        Returns True if enabled (default), False if disabled.
+        """
+        # Check if there's a config for this module
+        module_config = config.section_status_checks.get(self.anchor)
+
+        if module_config is None:
+            # No config = enabled by default
+            return True
+
+        if isinstance(module_config, bool):
+            # Boolean config applies to all sections
+            return module_config
+
+        # Dict config - check for this specific section
+        return module_config.get(section_id, True)  # Default True if section not specified
+
+    def _generate_status_bar_html(
+        self, status: Dict[Literal["pass", "warn", "fail"], List[str]], section_anchor: str
+    ) -> str:
+        """
+        Generate HTML for status bar with pass/warn/fail counts.
+
+        Args:
+            status: Dict with keys "pass", "warn", "fail" containing lists of sample names
+            section_anchor: The anchor ID for this section
+
+        Returns:
+            HTML string containing progress bar and embedded JSON data
+        """
+        # Count samples per status
+        pass_samples = status.get("pass", [])
+        warn_samples = status.get("warn", [])
+        fail_samples = status.get("fail", [])
+
+        total = len(pass_samples) + len(warn_samples) + len(fail_samples)
+        if total == 0:
+            return ""
+
+        # Calculate percentages
+        pass_pct = (len(pass_samples) / total) * 100
+        warn_pct = (len(warn_samples) / total) * 100
+        fail_pct = (len(fail_samples) / total) * 100
+
+        # Build sample status dict for JavaScript
+        sample_statuses = {}
+        for sample in pass_samples:
+            sample_statuses[sample] = "pass"
+        for sample in warn_samples:
+            sample_statuses[sample] = "warn"
+        for sample in fail_samples:
+            sample_statuses[sample] = "fail"
+
+        # Generate progress bar HTML
+        html = f'''
+    <div class="mqc-status-progress-wrapper" data-module-key="{self.anchor.replace("-", "_")}" data-section-key="{section_anchor}">
+        <div class="progress-stacked mqc-status-progress">'''
+
+        if len(pass_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(pass_samples)} / {total} samples passed"
+                 aria-valuenow="{len(pass_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {pass_pct}%" title="{len(pass_samples)}&nbsp;/&nbsp;{total} samples passed">
+                <div class="progress-bar bg-success">{len(pass_samples)}</div>
+            </div>'''
+
+        if len(warn_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(warn_samples)} / {total} samples with warnings"
+                 aria-valuenow="{len(warn_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {warn_pct}%" title="{len(warn_samples)}&nbsp;/&nbsp;{total} samples with warnings">
+                <div class="progress-bar bg-warning">{len(warn_samples)}</div>
+            </div>'''
+
+        if len(fail_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(fail_samples)} / {total} samples failed"
+                 aria-valuenow="{len(fail_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {fail_pct}%" title="{len(fail_samples)}&nbsp;/&nbsp;{total} samples failed">
+                <div class="progress-bar bg-danger">{len(fail_samples)}</div>
+            </div>'''
+
+        html += """
+        </div>
+    </div>"""
+
+        # Add embedded JSON data for JavaScript
+        json_data = json.dumps([self.anchor.replace("-", "_"), section_anchor, sample_statuses])
+        html += f'\n    <script type="application/json" class="mqc-status-data">{json_data}</script>'
+
+        return html
 
     @staticmethod
     def _clean_fastq_pair(r1: str, r2: str) -> Optional[str]:
