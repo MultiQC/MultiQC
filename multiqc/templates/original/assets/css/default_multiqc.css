@@ -250,6 +250,11 @@ h2.mqc-module-title {
   margin: 0;
 }
 
+/* help button is floated, ensure it is still bounded/contained */
+h3.mqc-section-name-helpbutton {
+  overflow: auto;
+}
+
 #analysis_dirs_wrapper {
   max-height: 80px;
   overflow: auto;
