@@ -13,7 +13,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14.0" # 3.14.1 has upstream bug
           cache: "pip"
 
       - uses: pre-commit/action@v3.0.1
@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14.0" # 3.14.1 has upstream bug
           cache: "pip"
 
       - run: pip install rich

@@ -1,5 +1,33 @@
 # MultiQC Version History
 
+## [MultiQC v1.32](https://github.com/MultiQC/MultiQC/releases/tag/v1.32) - 2025-10-26
+
+This release really has one really major change in it:
+
+- Bootstrap upgrade and DARK MODE ([#3264](https://github.com/MultiQC/MultiQC/pull/3264))
+
+This has been brewing for a long time, and is a large rewrite of how MultiQC HTML / CSS and JS is written and packaged.
+
+MultiQC now supports simple theming with [Bootstrap colour modes](https://getbootstrap.com/docs/5.3/customize/color-modes/), and the updated `default` template ships with both light- and dark-mode by default 😎
+
+The old template is still available, but has been renamed to `original`.
+
+### New modules
+
+- New module: sompy ([#3186](https://github.com/MultiQC/MultiQC/pull/3186))
+
+### Module updates
+
+- Move most of Xenium code into a [plugin](https://github.com/MultiQC/xenium-extra) ([#3376](https://github.com/MultiQC/MultiQC/pull/3376))
+
+### Fixes
+
+- Docs: Fix a bunch of links ([#3314](https://github.com/MultiQC/MultiQC/pull/3314))
+- Fix flag typo in `running_multiqc.md` ([#3347](https://github.com/MultiQC/MultiQC/pull/3347))
+- Update Dockerfile to optionally include all LaTeX requirements for `--pdf` ([#3349](https://github.com/MultiQC/MultiQC/pull/3349))
+- Update Claude Code GitHub Workflow ([#3353](https://github.com/MultiQC/MultiQC/pull/3353))
+- Remove bedrock availability check when creating client ([#3352](https://github.com/MultiQC/MultiQC/pull/3352))
+
 ## [MultiQC v1.31](https://github.com/MultiQC/MultiQC/releases/tag/v1.31) - 2025-09-05
 
 Adding new module for [Xenium analysis](https://www.10xgenomics.com/products/xenium-analysis), 10x Genomics Xenium spatial transcriptomics quality control report.
@@ -212,7 +240,6 @@ Few fixes and improvements in AI summaries:
 ### Feature updates and improvements
 
 - AI summaries:
-
   - Add "Chat with Seqera AI" buttons to all summaries ([#3067](https://github.com/MultiQC/MultiQC/pull/3067))
   - Add options to configure custom OpenAI endpoint ([#3083](https://github.com/MultiQC/MultiQC/pull/3083))
   - Support anonymizing sample names ([#3074](https://github.com/MultiQC/MultiQC/pull/3074))
@@ -224,7 +251,6 @@ Few fixes and improvements in AI summaries:
   - Make token count warning a debug ([#3071](https://github.com/MultiQC/MultiQC/pull/3071))
 
 - Improving table small scatter plots:
-
   - Support hide, rename, highlight ([#3082](https://github.com/MultiQC/MultiQC/pull/3082))
   - Remove legend to make more space ([#3081](https://github.com/MultiQC/MultiQC/pull/3081))
 

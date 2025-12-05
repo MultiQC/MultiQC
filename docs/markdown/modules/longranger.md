@@ -2,7 +2,7 @@
 title: Long Ranger
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.</p>
+    <p>Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/longranger/longranger.
 -->
 
 :::note
-
 <p>Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.</p>
 
 [https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger)
@@ -45,6 +44,7 @@ longranger/invocation:
   max_filesize: 2048
 longranger/summary:
   contents: longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule
-  fn: "*summary.csv"
+  fn: '*summary.csv'
   num_lines: 2
 ```
+    

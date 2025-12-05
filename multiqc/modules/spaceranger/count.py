@@ -174,7 +174,7 @@ def parse_count_html(module: BaseMultiqcModule):
             warnings_headers[alarm["id"]] = {
                 "title": alarm["id"].replace("_", " ").title(),
                 "description": alarm["title"],
-                "bgcols": {"FAIL": "#f7dddc"},
+                "bgcols": {"FAIL": "#e5001336"},
             }
 
         # Extract data for plots

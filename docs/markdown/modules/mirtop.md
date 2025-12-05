@@ -2,7 +2,7 @@
 title: mirtop
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format.</p>
+    <p>Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/mirtop/mirtop.py
 -->
 
 :::note
-
 <p>Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format.</p>
 
 [https://github.com/miRTop/mirtop/](https://github.com/miRTop/mirtop/)
@@ -31,5 +30,6 @@ isomiR-SEA, sRNAbench, Prost! as well as BAM files.
 
 ```yaml
 mirtop:
-  fn: "*_mirtop_stats.log"
+  fn: '*_mirtop_stats.log'
 ```
+    

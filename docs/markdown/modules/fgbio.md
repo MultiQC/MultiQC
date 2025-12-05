@@ -2,7 +2,7 @@
 title: fgbio
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Processing and evaluating data containing UMIs.</p>
+    <p>Processing and evaluating data containing UMIs.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/fgbio/fgbio.py
 -->
 
 :::note
-
 <p>Processing and evaluating data containing UMIs.</p>
 
 [http://fulcrumgenomics.github.io/fgbio/](http://fulcrumgenomics.github.io/fgbio/)
@@ -37,3 +36,4 @@ fgbio/groupreadsbyumi:
   contents: fraction_gt_or_eq_family_size
   num_lines: 3
 ```
+    

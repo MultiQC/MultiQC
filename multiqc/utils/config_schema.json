@@ -516,6 +516,19 @@
       "description": "Path to custom logo image",
       "title": "Custom Logo"
     },
+    "custom_logo_dark": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Path to custom logo image for dark mode",
+      "title": "Custom Logo Dark"
+    },
     "custom_logo_url": {
       "anyOf": [
         {
@@ -541,6 +554,19 @@
       "default": null,
       "description": "Title for custom logo",
       "title": "Custom Logo Title"
+    },
+    "custom_logo_width": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Width in pixels for the custom logo",
+      "title": "Custom Logo Width"
     },
     "custom_css_files": {
       "anyOf": [
@@ -583,6 +609,32 @@
       "default": null,
       "description": "Report template to use",
       "title": "Template"
+    },
+    "template_dark_mode": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Enable dark mode toggle and JavaScript for the report template",
+      "title": "Template Dark Mode"
+    },
+    "plot_font_family": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custom font family for plots (defaults to system font stack)",
+      "title": "Plot Font Family"
     },
     "profile_runtime": {
       "anyOf": [
@@ -1378,19 +1430,6 @@
       "description": "Number of series to defer loading - user will need to press button to render plot",
       "title": "Plots Defer Loading Numseries"
     },
-    "plot_theme": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Plotly theme template - any registered Plotly theme name (e.g. 'plotly', 'plotly_white', 'plotly_dark', 'ggplot2', 'seaborn', 'simple_white', 'none')",
-      "title": "Plot Theme"
-    },
     "lineplot_number_of_points_to_hide_markers": {
       "anyOf": [
         {
@@ -2038,7 +2077,17 @@
       "anyOf": [
         {
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
           },
           "type": "array"
         },
@@ -2054,7 +2103,14 @@
       "anyOf": [
         {
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
           },
           "type": "array"
         },

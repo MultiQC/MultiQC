@@ -2,7 +2,7 @@
 title: Bowtie 2 / HiSAT2
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome.</p>
+    <p>Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/bowtie2/bowtie2.py
 -->
 
 :::note
-
 <p>Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome.</p>
 
 [http://bowtie-bio.sourceforge.net/bowtie2/](http://bowtie-bio.sourceforge.net/bowtie2/), [https://ccb.jhu.edu/software/hisat2/](https://ccb.jhu.edu/software/hisat2/)
@@ -58,9 +57,10 @@ Bowtie 2 and HISAT2 are used by other tools too, so if your log file contains th
 
 ```yaml
 bowtie2:
-  contents: "reads; of these:"
+  contents: 'reads; of these:'
   exclude_contents:
-    - bisulfite
-    - HiC-Pro
+  - bisulfite
+  - HiC-Pro
   shared: true
 ```
+    

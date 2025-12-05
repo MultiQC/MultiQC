@@ -1,6 +1,7 @@
 """MultiQC functions to plot a heatmap"""
 
 import logging
+import re
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
@@ -23,6 +24,21 @@ from multiqc.types import Anchor, SampleName
 from multiqc.utils.util_functions import scipy_hierarchy_leaves_list, scipy_hierarchy_linkage, scipy_pdist
 
 logger = logging.getLogger(__name__)
+
+
+def _convert_hex8_to_rgba(color: str) -> str:
+    """
+    Convert 8-digit hex color (with alpha) to rgba format for Plotly compatibility.
+    Plotly colorscales don't accept #RRGGBBAA format, but do accept rgba().
+    """
+    # Match 8-digit hex colors like #ffffff00 or #FFFFFF00
+    match = re.match(r"^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$", color)
+    if match:
+        r, g, b, a = [int(x, 16) for x in match.groups()]
+        # Convert alpha from 0-255 to 0-1
+        alpha = round(a / 255, 3)
+        return f"rgba({r}, {g}, {b}, {alpha})"
+    return color
 
 
 # Define element types for the heatmap
@@ -658,7 +674,8 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             # normalized color level value (starting at 0 and ending at 1),
             # and the second item is a valid color string.
             try:
-                colorscale = [(float(x), color) for x, color in pconfig.colstops]
+                # Convert 8-digit hex colors to rgba for Plotly compatibility
+                colorscale = [(float(x), _convert_hex8_to_rgba(color)) for x, color in pconfig.colstops]
             except ValueError:
                 pass
             else:
@@ -727,7 +744,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                 <div class="btn-group" role="group">
                     <button
                         type="button"
-                        class="btn btn-default btn-sm {"" if self.pconfig.cluster_switch_clustered_active else "active"}"
+                        class="btn btn-outline-secondary btn-sm {"" if self.pconfig.cluster_switch_clustered_active else "active"}"
                         data-action="unclustered"
                         data-plot-anchor="{self.anchor}"
                     >
@@ -735,7 +752,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                     </button>
                     <button
                         type="button"
-                        class="btn btn-default btn-sm {"active" if self.pconfig.cluster_switch_clustered_active else ""}"
+                        class="btn btn-outline-secondary btn-sm {"active" if self.pconfig.cluster_switch_clustered_active else ""}"
                         data-action="clustered"
                         data-plot-anchor="{self.anchor}"
                     >

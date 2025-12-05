@@ -2,7 +2,7 @@
 title: HOMER
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Motif discovery and next-gen sequencing analysis.</p>
+    <p>Motif discovery and next-gen sequencing analysis.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/homer/homer.py
 -->
 
 :::note
-
 <p>Motif discovery and next-gen sequencing analysis.</p>
 
 [http://homer.ucsd.edu/homer/](http://homer.ucsd.edu/homer/)
@@ -50,10 +49,11 @@ homer/LengthDistribution:
 homer/RestrictionDistribution:
   fn: petagRestrictionDistribution.*.txt
 homer/findpeaks:
-  contents: "# HOMER Peaks"
+  contents: '# HOMER Peaks'
   num_lines: 3
 homer/genomeGCcontent:
   fn: genomeGCcontent.txt
 homer/tagInfo:
   fn: tagInfo.txt
 ```
+    

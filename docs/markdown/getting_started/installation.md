@@ -226,7 +226,7 @@ with required dependencies. To build MultiQC, run `nix build`.
 ### Docker
 
 A Docker container is provided on Docker Hub called [`multiqc/multiqc`](https://hub.docker.com/r/multiqc/multiqc/).
-It's based on an `python-slim` base image to give the smallest image size possible.
+It's based on a `python-slim` base image to give the smallest image size possible.
 
 To use, call the `docker run` with your current working directory mounted as a volume and working directory. Then just specify the MultiQC command at the end as usual:
 
@@ -247,6 +247,27 @@ docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc . --title "My amaz
 By default, docker will use the `:latest` tag. For MultiQC, this is set to be the most recent release.
 To use the most recent development code, use `multiqc/multiqc:dev`.
 You can also specify specific versions, eg: `multiqc/multiqc:v1.20`.
+
+#### Docker image variants
+
+MultiQC provides two Docker image variants to suit different needs:
+
+1. **Standard image** (recommended for most users): `multiqc/multiqc:latest` (~1.5GB)
+   - Includes all core MultiQC functionality
+   - Smaller image size for faster downloads and reduced storage
+
+2. **PDF-enabled image**: `multiqc/multiqc:pdf-latest` (~3.2GB)
+   - Includes Pandoc and LaTeX (LuaLaTeX) for PDF report generation
+   - Required if you need to use the `--pdf` flag
+   - Significantly larger due to LaTeX dependencies
+
+To use the PDF-enabled image:
+
+```bash
+docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc:pdf-latest multiqc . --pdf
+```
+
+Both variants are also available with the `:dev` tag for the latest development version (e.g., `multiqc/multiqc:pdf-dev`), and with specific version tags (e.g., `multiqc/multiqc:pdf-v1.20`).
 
 Note that all files on the command line (eg. config files) must also be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/).
@@ -284,11 +305,12 @@ docker pull --platform linux/arm64 multiqc/multiqc:latest
 
 ### GitHub Packages
 
-If you prefer, the Docker image above is also available from [GitHub packages](https://github.com/MultiQC/MultiQC/pkgs/container/multiqc).
+If you prefer, the Docker images above are also available from [GitHub packages](https://github.com/MultiQC/MultiQC/pkgs/container/multiqc).
 Usage is identical, the only difference is that the URI has a `ghcr.io/` prefix:
 
 ```bash
 docker pull ghcr.io/multiqc/multiqc
+docker pull ghcr.io/multiqc/multiqc:pdf-latest
 ```
 
 This image was also renamed, versions up to v1.19 can be found at [`ghcr.io/ewels/multiqc`](https://github.com/users/ewels/packages/container/package/multiqc).

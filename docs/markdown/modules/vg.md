@@ -2,7 +2,7 @@
 title: VG
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Toolkit to manipulate and analyze graphical genomes, including read alignment.</p>
+    <p>Toolkit to manipulate and analyze graphical genomes, including read alignment.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/vg/vg.py
 -->
 
 :::note
-
 <p>Toolkit to manipulate and analyze graphical genomes, including read alignment.</p>
 
 [https://github.com/vgteam/vg](https://github.com/vgteam/vg)
@@ -65,9 +64,10 @@ The graphical reports are designed to mimic a samtools stats report, including:
 ```yaml
 vg/stats:
   contents:
-    - "Total perfect:"
-    - "Total gapless (softclips allowed):"
-    - "Total time:"
-    - "Speed:"
+  - 'Total perfect:'
+  - 'Total gapless (softclips allowed):'
+  - 'Total time:'
+  - 'Speed:'
   num_lines: 30
 ```
+    

@@ -9,7 +9,7 @@ repos:
       - id: check-hooks-apply
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v5.0.0"
+    rev: "v6.0.0"
     hooks:
       - id: check-added-large-files
       - id: check-merge-conflict
@@ -24,14 +24,23 @@ repos:
     rev: "v3.1.0"
     hooks:
       - id: prettier
+        additional_dependencies:
+          - prettier@3.7.4
+          - prettier-plugin-jinja-template@2.1.0
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.9.1"
+    rev: "v0.14.8"
     hooks:
+      # Run the linter.
+      - id: ruff-check
+        args: [--fix]
+      # Run the formatter.
       - id: ruff-format
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.9.1"
+  - repo: local
     hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+      - id: build-assets
+        name: Build assets with Vite
+        language: script
+        entry: scripts/build-assets.sh
+        files: ^multiqc/templates/default/src/.*\.(scss|js)$

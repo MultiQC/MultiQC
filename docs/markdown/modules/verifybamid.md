@@ -2,7 +2,7 @@
 title: VerifyBAMID
 displayed_sidebar: multiqcSidebar
 description: >
-  <p>Detects sample contamination and/or sample swaps.</p>
+    <p>Detects sample contamination and/or sample swaps.</p>
 ---
 
 <!--
@@ -15,7 +15,6 @@ File path for the source of this content: multiqc/modules/verifybamid/verifybami
 -->
 
 :::note
-
 <p>Detects sample contamination and/or sample swaps.</p>
 
 [https://genome.sph.umich.edu/wiki/VerifyBamID](https://genome.sph.umich.edu/wiki/VerifyBamID)
@@ -60,5 +59,6 @@ This was designed to work with verifyBamID 1.1.3 January 2018
 
 ```yaml
 verifybamid/selfsm:
-  fn: "*.selfSM"
+  fn: '*.selfSM'
 ```
+    

@@ -5,6 +5,7 @@ from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph, linegraph
+from multiqc.utils.material_icons import get_material_icon
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -142,7 +143,7 @@ def parse_reports(module):
             missing_samples = f"<strong>{len(rrna_missing)} samples</strong>"
         warn_rrna = f"""
         <div class="alert alert-warning">
-          <span class="glyphicon glyphicon-warning-sign"></span>
+          ${get_material_icon("mdi:warning", 16)}
           Picard was run without an rRNA annotation file {missing_samples}, therefore the ribosomal assignment is not available. To correct, rerun with the <code>RIBOSOMAL_INTERVALS</code> parameter, as documented <a href="https://broadinstitute.github.io/picard/command-line-overview.html#CollectRnaSeqMetrics" target="_blank">here</a>.
         </div>
         """
