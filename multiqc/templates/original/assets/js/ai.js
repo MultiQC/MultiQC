@@ -10,7 +10,7 @@ window.continueInSeqeraChatHandler = function (event) {
   let threadId = el.data("thread-id");
 
   let url = seqeraWebsite + "/ask-ai/";
-  if (threadId) url += "?messages=" + threadId;
+  if (threadId) url += "/chat/=" + threadId;
 
   window.open(url, "_blank");
 };
