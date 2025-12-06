@@ -226,6 +226,38 @@ html = bargraph.plot([data, data], cats, pconfig=...)
 
 Note that, as in this example, the plot data can be the same dictionary supplied twice.
 
+### Grouped stacked bar charts
+
+Use `sample_groups` to create grouped stacked bar charts where bars are organized into visual groups on the y-axis. The config is a dict mapping group labels to lists of `(sample_name, offset_group)` tuples:
+
+- **Group label** (dict key): Displayed on the y-axis (e.g., read lengths like "25nt", "26nt")
+- **sample_name**: The key in the data dict identifying this sample
+- **offset_group**: Determines the visual "lane" within each group. Samples with the same `offset_group` are aligned vertically across different group labels, making it easy to compare the same sample across conditions.
+
+```python
+from multiqc.plots import bargraph
+
+data = {
+    'sample1_25nt': {'Frame0': 50, 'Frame1': 30, 'Frame2': 20},
+    'sample1_26nt': {'Frame0': 60, 'Frame1': 25, 'Frame2': 15},
+    'sample2_25nt': {'Frame0': 55, 'Frame1': 28, 'Frame2': 17},
+    'sample2_26nt': {'Frame0': 65, 'Frame1': 22, 'Frame2': 13},
+}
+
+pconfig = {
+    'id': 'my_bargraph',
+    'title': 'My Bar Graph',
+    'sample_groups': {
+        '25nt': [('sample1_25nt', 'sample1'), ('sample2_25nt', 'sample2')],
+        '26nt': [('sample1_26nt', 'sample1'), ('sample2_26nt', 'sample2')],
+    }
+}
+
+html = bargraph.plot(data, cats, pconfig=pconfig)
+```
+
+In this example, for each read length group (`25nt`, `26nt`), bars with the same `offset_group` (`sample1` or `sample2`) are aligned at the same horizontal position, allowing direct visual comparison of sample1 vs sample2 across read lengths.
+
 ## Line graphs
 
 This base function works much like the above, but for two-dimensional
