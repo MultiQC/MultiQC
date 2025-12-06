@@ -274,4 +274,19 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse HiCUP HTML reports to extract version information."""
         match = re.search(VERSION_REGEX, f["f"])
         if match:
-            self.add_software_version(match.group(1))
+            version = match.group(1)
+            # Try to derive sample name from HTML filename
+            # HTML files are named like: Sample-1.A002.C8DRAANXX.s_2.r_1_2.HiCUP_summary_report.html
+            s_name = None
+            if f["fn"].endswith("_summary_report.html"):
+                # Extract base name and clean it
+                base_name = re.sub(r"[._]HiCUP_summary_report\.html$", "", f["fn"])
+                s_name = self.clean_s_name(base_name, f)
+                # Check if this sample exists in our data (possibly with .hicup suffix)
+                if s_name not in self.hicup_data:
+                    # Try with .hicup suffix
+                    if s_name + ".hicup" in self.hicup_data:
+                        s_name = s_name + ".hicup"
+                    else:
+                        s_name = None
+            self.add_software_version(version, s_name)

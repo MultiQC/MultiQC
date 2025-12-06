@@ -311,4 +311,9 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse QoRTs log files to extract version information."""
         match = re.search(VERSION_REGEX, f["f"])
         if match:
-            self.add_software_version(match.group(1))
+            # Derive sample name from directory (same logic as parse_qorts for single-sample)
+            s_name = self.clean_s_name(os.path.basename(os.path.normpath(f["root"])), f)
+            # Only associate with sample if it exists in our data
+            if s_name not in self.qorts_data:
+                s_name = None
+            self.add_software_version(match.group(1), s_name)

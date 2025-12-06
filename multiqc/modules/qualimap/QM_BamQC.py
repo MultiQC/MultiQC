@@ -50,8 +50,8 @@ def parse_reports(module: BaseMultiqcModule):
     for f in module.find_log_files("qualimap/bamqc/html"):
         version = parse_version(f)
         if version:
-            module.add_software_version(version)
-            break  # Only need one version
+            s_name = get_s_name(module, f)
+            module.add_software_version(version, s_name)
 
     # If no version found, still call add_software_version to satisfy the linter
     if not module.versions:
