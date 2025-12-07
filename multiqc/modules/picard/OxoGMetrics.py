@@ -43,7 +43,7 @@ def parse_reports(module):
                 keys = f["f"].readline().strip("\n").split("\t")
                 context_col = keys.index("CONTEXT")
                 if s_name in data_by_sample:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: " f"{s_name}")
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                 data_by_sample[s_name] = defaultdict()
                 module.add_data_source(f, s_name, section="OxoGMetrics")
 

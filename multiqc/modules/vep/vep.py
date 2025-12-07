@@ -168,7 +168,12 @@ class MultiqcModule(BaseMultiqcModule):
                 title = line.replace("[", "").replace("]", "")
                 txt_data[title] = {}
                 continue
-            key, value = line.split("\t")
+            try:
+                key, value = line.split("\t")
+            except ValueError:
+                # Splitting has failed, line contains something about
+                # information not available
+                continue
             if value == "-":
                 continue
             if key == "Novel / existing variants":
@@ -177,8 +182,12 @@ class MultiqcModule(BaseMultiqcModule):
                 existing = values[1].split("(")[0].replace(" ", "")
                 txt_data[title]["Novel variants"] = int(novel)
                 txt_data[title]["Existing variants"] = int(existing)
-            elif title != "VEP run statistics":
-                txt_data[title][key] = int(value)
+            elif title not in ["VEP run statistics", "Data version"]:
+                # Only convert to int if possible, else store as string
+                try:
+                    txt_data[title][key] = int(value)
+                except ValueError:
+                    txt_data[title][key] = value
             else:
                 txt_data[title][key] = value
 

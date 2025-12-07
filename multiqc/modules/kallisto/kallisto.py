@@ -6,7 +6,7 @@ from typing import Dict, Optional
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.bargraph import BarPlotConfig
 
 log = logging.getLogger(__name__)
 

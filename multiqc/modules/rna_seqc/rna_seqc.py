@@ -2,7 +2,7 @@ import logging
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, violin, heatmap, linegraph
+from multiqc.plots import bargraph, heatmap, linegraph, violin
 
 log = logging.getLogger(__name__)
 
@@ -214,6 +214,56 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": "%",
                 "scale": "Reds",
                 "modify": lambda x: float(x) * 100.0,
+            },
+            "Mapping Rate": {
+                "title": "% Mapping",
+                "description": "Percentage of reads mapped to the reference",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "modify": lambda x: float(x) * 100.0,
+                "hidden": True,
+            },
+            "Exonic Rate": {
+                "title": "% Exonic",
+                "description": "Percentage of reads mapped to exons",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlOrRd",
+                "modify": lambda x: float(x) * 100.0,
+                "hidden": True,
+            },
+            "Intronic Rate": {
+                "title": "% Intronic",
+                "description": "Percentage of reads mapped to introns",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlOrRd",
+                "modify": lambda x: float(x) * 100.0,
+                "hidden": True,
+            },
+            "Intergenic Rate": {
+                "title": "% Intergenic",
+                "description": "Percentage of reads mapped between genes",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlOrRd",
+                "modify": lambda x: float(x) * 100.0,
+                "hidden": True,
+            },
+            "Intragenic Rate": {
+                "title": "% Intragenic",
+                "description": "Percentage of reads mapped within genes",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlOrRd",
+                "modify": lambda x: float(x) * 100.0,
+                "hidden": True,
             },
         }
         self.general_stats_addcols(self.rna_seqc_metrics, headers)

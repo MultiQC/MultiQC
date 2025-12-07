@@ -1,8 +1,8 @@
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
+from .ampliconclip import parse_samtools_ampliconclip
 from .coverage import parse_samtools_coverage
 from .flagstat import parse_samtools_flagstat
 from .idxstats import parse_samtools_idxstats
@@ -17,12 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
     """
     Supported commands:
 
-    - `stats`
+    - `ampliconclip`
+    - `coverage`
     - `flagstats`
     - `idxstats`
-    - `rmdup`
-    - `coverage`
     - `markdup`
+    - `rmdup`
+    - `stats`
 
     #### idxstats
 
@@ -83,6 +84,42 @@ class MultiqcModule(BaseMultiqcModule):
     samtools_coverage:
       show_excluded_debug_logs: True
     ```
+
+    ### General Statistics Columns
+
+    You can customize which metrics from samtools modules appear in the General Statistics table.
+    For example, to show reads mapped percentage and error rate from stats module, and
+    add reads mapped from flagstat module:
+
+    ```yaml
+    general_stats_columns:
+      samtools/stats:
+        columns:
+          reads_mapped_percent:
+            title: "% Mapped"
+            description: "% Mapped reads from samtools stats"
+            hidden: false
+          error_rate:
+            title: "Error rate"
+            description: "Error rate from samtools stats"
+            hidden: false
+      samtools/flagstat:
+        columns:
+          mapped_passed:
+            title: "Flagstat Mapped"
+            description: "Reads mapped from samtools flagstat"
+            hidden: false
+    ```
+
+    Each samtools submodule has its own namespace in the configuration
+    - `samtools/ampliconclip`
+    - `samtools/coverage`
+    - `samtools/flagstats`
+    - `samtools/idxstats`
+    - `samtools/markdup`
+    - `samtools/rmdup`
+    - `samtools/stats`
+
     """
 
     def __init__(self):
@@ -98,6 +135,10 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
 
         # Call submodule functions
+        n["ampliconclip"] = parse_samtools_ampliconclip(self)
+        if n["ampliconclip"] > 0:
+            log.info(f"Found {n['ampliconclip']} stats reports")
+
         n["stats"] = parse_samtools_stats(self)
         if n["stats"] > 0:
             log.info(f"Found {n['stats']} stats reports")

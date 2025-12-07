@@ -2,10 +2,19 @@
 # Default configurations for how modules can find their log files.
 # Loaded by the config module so that these patterns can be overwritten in user config files.
 
+multiqc_data:
+  fn: "*multiqc.parquet"
 adapterremoval:
   fn: "*.settings"
   contents: "AdapterRemoval"
   num_lines: 1
+xenium/metrics:
+  fn: "metrics_summary.csv"
+  contents: "num_cells_detected"
+  num_lines: 5
+xenium/experiment:
+  fn: "experiment.xenium"
+  num_lines: 50
 afterqc:
   fn: "*.json"
   contents: "allow_mismatch_in_poly"
@@ -22,72 +31,80 @@ bamdst/coverage:
 bamtools/stats:
   contents: "Stats for BAM file(s):"
   num_lines: 10
+bases2fastq/run:
+  fn: "RunStats.json"
+  contents: "SampleStats"
+  num_lines: 100
+bases2fastq/project:
+  fn: "*_RunStats.json"
+  contents: "SampleStats"
+  num_lines: 100
 bbduk:
   contents: "Executing jgi.BBDuk"
   num_lines: 2
 bbmap/stats:
-  contents: "#Name	Reads	ReadsPct"
-  num_lines: 4
+  contents: ["#File", "#Total", "#Matched", "#Name	Reads	ReadsPct"]
+  num_lines: 10
+bbmap/bbsplit:
+  contents: "#name	%unambiguousReads	unambiguousMB	%ambiguousReads"
+  num_lines: 5
 bbmap/aqhist:
   contents: "#Quality	count1	fraction1	count2	fraction2"
-  num_lines: 1
+  num_lines: 10
 bbmap/bhist:
   contents: "#Pos	A	C	G	T	N"
-  num_lines: 1
+  num_lines: 10
 bbmap/bincov:
-  # 3rd line (1st is #Mean)
   contents: "#RefName	Cov	Pos	RunningPos"
-  num_lines: 3
+  num_lines: 10
 bbmap/bqhist:
   contents: "#BaseNum	count_1	min_1	max_1	mean_1	Q1_1	med_1	Q3_1	LW_1	RW_1	count_2	min_2	max_2	mean_2	Q1_2	med_2	Q3_2	LW_2	RW_2"
-  num_lines: 1
+  num_lines: 10
 bbmap/covhist:
   contents: "#Coverage	numBases"
-  num_lines: 1
+  num_lines: 10
 bbmap/covstats:
   contents: "#ID	Avg_fold"
-  num_lines: 1
+  num_lines: 10
 bbmap/ehist:
   contents: "#Errors	Count"
-  num_lines: 1
+  num_lines: 10
 bbmap/gchist:
-  # 5th line (1st is #Mean)
-  contents: "#GC	Count"
-  num_lines: 5
+  contents: ["#Mean	", "#GC	Count"]
+  num_lines: 10
 bbmap/idhist:
-  contents: "#Mean_reads"
-  num_lines: 1
+  contents: ["#Mean_reads", "#Identity	Reads	Bases"]
+  num_lines: 10
 bbmap/ihist:
-  # 6th line (first is #Mean)
-  contents: "#InsertSize	Count"
-  num_lines: 6
+  contents: ["#Mean	", "#InsertSize	Count"]
+  num_lines: 10
 bbmap/indelhist:
   contents: "#Length	Deletions	Insertions"
-  num_lines: 1
+  num_lines: 10
 bbmap/lhist:
   contents: "#Length	Count"
-  num_lines: 1
+  num_lines: 10
 bbmap/mhist:
   contents: "#BaseNum	Match1	Sub1	Del1	Ins1	N1	Other1	Match2	Sub2	Del2	Ins2	N2	Other2"
-  num_lines: 1
+  num_lines: 10
 bbmap/qahist:
-  contents: "#Deviation"
-  num_lines: 1
+  contents: "#Quality	Match	Sub	Ins	Del"
+  num_lines: 10
 bbmap/qchist:
   contents_re: "#Quality	count1	fraction1$"
-  num_lines: 1
+  num_lines: 10
 bbmap/qhist:
-  contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured"
-  num_lines: 1
+  contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured"
+  num_lines: 10
 bbmap/rpkm:
-  contents: "#File	"
-  num_lines: 1
+  contents: ["#File	", "#Reads	", "#Mapped	", "#RefSequences	", "#Name Length"]
+  num_lines: 10
 bbmap/statsfile_machine:
   contents: "Reads Used="
-  num_lines: 1
+  num_lines: 10
 bbmap/statsfile:
-  contents: "Reads Used:"
-  num_lines: 1
+  contents: ["Reads Used:", "Mapping:", "Reads/sec:", "kBases/sec:"]
+  num_lines: 10
 bcftools/stats:
   contents: "This file was produced by bcftools stats"
 bcl2fastq:
@@ -191,9 +208,6 @@ bowtie2:
     - "bisulfite"
     - "HiC-Pro"
   shared: true
-bracken:
-  contents_re: '^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)root'
-  num_lines: 1
 busco:
   fn: "short_summary*"
   contents: "BUSCO version is:"
@@ -217,11 +231,25 @@ cellranger/count_html:
 cellranger/vdj_html:
   - fn: "*.html"
     contents_re: '.*"command": ?"Cell Ranger", ?"subcommand": ?"vdj".*'
+cellranger_arc:
+  - fn: "*.html"
+    contents: "Cell Ranger ARC"
+    num_lines: 250
+cells2stats/run:
+  fn: "RunStats.json"
+  contents: '"AnalysisID": "c2s.'
+  num_lines: 100
+checkm:
+  - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})# markers(?:\t| {3,})# marker sets.*"
+    num_lines: 10
+checkm2:
+  contents: "Name	Completeness	Contamination	Completeness_Model_Used	Translation_Table_Used"
+  num_lines: 10
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"
 custom_content:
-  fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
+  fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|gif|webp|tiff|html|md)'
 clipandmerge:
   contents: "ClipAndMerge ("
   num_lines: 5
@@ -246,7 +274,9 @@ cutadapt:
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
-  fn: "*dedup.json"
+  fn: "*.json"
+  contents: '"tool_name": "DeDup"'
+  num_lines: 20
 deeptools/bamPEFragmentSizeTable:
   contents: "	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu."
   num_lines: 1
@@ -364,8 +394,10 @@ ganon:
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
 gatk/base_recalibrator:
-  contents: "#:GATKTable:Arguments:Recalibration"
-  num_lines: 3
+  - contents: "#:GATKTable:Arguments:Recalibration"
+    num_lines: 3
+  - contents: "#:SENTIEON_QCAL_TABLE:Arguments:Recalibration"
+    num_lines: 3
 gatk/analyze_saturation_mutagenesis:
   fn: "*.readCounts"
   contents: ">>Reads in disjoint pairs evaluated separately:"
@@ -386,6 +418,12 @@ goleft_indexcov/ped:
   fn: "*-indexcov.ped"
 gopeaks:
   fn: "*_gopeaks.json"
+gtdbtk:
+  contents: "user_genome	classification	closest_genome_reference	closest_genome_reference_radius	closest_genome_taxonomy	closest_genome_ani"
+  num_lines: 10
+haplocheck:
+  contents: '"Sample"	"Contamination Status"	"Contamination Level"	"Distance"	"Sample Coverage"'
+  num_lines: 10
 happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
@@ -491,8 +529,8 @@ kallisto:
 kat:
   fn: "*.dist_analysis.json"
 kraken:
-  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)unclassified'
-  num_lines: 1
+  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)[root|unclassified]'
+  num_lines: 2
 librarian:
   fn: "librarian_heatmap.txt"
 leehom:
@@ -531,6 +569,16 @@ metaphlan:
 methylqa:
   fn: "*.report"
   shared: true
+mgikit/mgi_ambiguous_barcode:
+  fn: "*.mgikit.ambiguous_barcode"
+mgikit/mgi_sample_stats:
+  fn: "*.mgikit.sample_stats"
+mgikit/mgi_general_info:
+  fn: "*.mgikit.general"
+mgikit/mgi_sample_reads:
+  fn: "*.mgikit.info"
+mgikit/mgi_undetermined_barcode:
+  fn: "*.mgikit.undetermined_barcode"
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
@@ -582,6 +630,8 @@ ngsbits/mappingqc:
   - fn: "*.qcML"
     contents: "MappingQC"
     num_lines: 20
+ngsbits/samplegender:
+  - fn: "*_ngsbits_sex.tsv"
 ngsderive/strandedness:
   contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1
@@ -626,6 +676,8 @@ peddy/sex_check:
   fn: "*.sex_check.csv"
 peddy/background_pca:
   fn: "*.background_pca.json"
+percolator:
+  fn: "*percolator_feature_weights.tsv"
 seqera_cli/run_dump:
   fn: "runs_*.tar.gz"
 seqera_cli/json:
@@ -681,6 +733,7 @@ picard/markdups:
   - contents: "--algo Dedup"
 picard/oxogmetrics:
   - contents: "# picard.analysis.CollectOxoGMetrics"
+  - contents: "# CollectOxoGMetrics"
   - contents_re: "# CollectMultipleMetrics .*OxoGMetrics"
     shared: true
 picard/pcr_metrics:
@@ -716,7 +769,9 @@ picard/sam_file_validation:
 picard/variant_calling_metrics:
   contents_re: "## METRICS CLASS.*VariantCallingDetailMetrics"
 picard/wgs_metrics:
-  contents_re: "## METRICS CLASS.*WgsMetrics"
+  - contents: "--algo WgsMetricsAlgo"
+  - contents_re: "## METRICS CLASS.*WgsMetrics"
+    shared: true
 picard/collectilluminabasecallingmetrics:
   contents: "CollectIlluminaBasecallingMetrics"
 picard/collectilluminalanemetrics:
@@ -839,17 +894,32 @@ samtools/idxstats:
   fn: "*idxstat*"
 samtools/rmdup:
   contents: "[bam_rmdup"
+samtools/ampliconclip:
+  contents:
+    - "COMMAND:"
+    - "samtools ampliconclip"
+  num_lines: 11
 samtools/coverage:
   contents: "#rname	startpos	endpos	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq"
   num_lines: 10
 samtools/markdup_txt:
-  contents: "COMMAND: samtools markdup"
+  contents:
+    - "^COMMAND:"
+    - "samtools markdup"
   num_lines: 2
 samtools/markdup_json:
-  contents: '"COMMAND": "samtools markdup'
+  contents:
+    - '"COMMAND":'
+    - "samtools markdup"
   num_lines: 10
 sargasso:
   fn: "overall_filtering_summary.txt"
+seqfu/stats:
+  contents: "File	#Seq	Total bp	Avg	N50	N75	N90	auN	Min	Max"
+  num_lines: 1
+seqkit/stats:
+  contents_re: "^file\\s+format\\s+type\\s+num_seqs\\s+sum_len"
+  num_lines: 1
 seqwho:
   contents: '  "Per Base Seq": ['
   num_lines: 10
@@ -896,6 +966,10 @@ snpsplit/new:
   fn: "*SNPsplit_report.yaml"
 software_versions:
   fn_re: ".+_mqc_versions\\.(yaml|yml)"
+sompy:
+  fn: "*.stats.csv"
+  contents: ",sompyversion,sompycmd"
+  num_lines: 2
 sortmerna:
   contents: "Minimal SW score based on E-value"
 spaceranger/count_html:
@@ -935,36 +1009,41 @@ supernova/kmers:
   fn: "histogram_kmer_count.json"
   num_lines: 10
   contents: '"description": "kmer_count",'
+sylphtax:
+  fn: "*.sylphmpa"
+telseq:
+  num_lines: 3
+  contents: "ReadGroup	Library	Sample	Total	Mapped	Duplicates	LENGTH_ESTIMATE"
 theta2:
   fn: "*.BEST.results"
 tophat:
   fn: "*align_summary.txt"
   shared: true
 trimmomatic:
-  contents: "Trimmomatic"
+  contents_re: "^Trimmomatic"
 truvari/bench:
   contents_re: ".*truvari.* bench.*"
   fn: "log.txt"
-  num_lines: 2
+  num_lines: 10
 umicollapse:
   fn: "*_UMICollapse.log"
   num_lines: 100
   contents: "UMI collapsing finished in "
 umitools/extract:
   contents: "# output generated by extract"
-  num_lines: 3
+  num_lines: 100
 umitools/dedup:
   contents: "# output generated by dedup"
-  num_lines: 3
+  num_lines: 100
 varscan2/mpileup2snp:
   contents: "Only SNPs will be reported"
-  num_lines: 3
+  num_lines: 10
 varscan2/mpileup2indel:
   contents: "Only indels will be reported"
-  num_lines: 3
+  num_lines: 10
 varscan2/mpileup2cns:
   contents: "Only variants will be reported"
-  num_lines: 3
+  num_lines: 10
 vcftools/relatedness2:
   fn: "*.relatedness2"
 vcftools/tstv_by_count:
@@ -1000,3 +1079,9 @@ xenome:
 xengsort:
   contents: "# Xengsort classify"
   num_lines: 2
+ataqv:
+  fn: "*.json"
+  contents: "ataqv_version"
+  num_lines: 10
+mosaicatcher:
+  fn: "*.mosaicatcher_info_raw.txt"

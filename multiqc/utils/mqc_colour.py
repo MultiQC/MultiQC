@@ -46,111 +46,21 @@ class mqc_colour_scale(object):
         "OrRd": ["#fff7ec", "#fee8c8", "#fdd49e", "#fdbb84", "#fc8d59", "#ef6548", "#d7301f", "#b30000", "#7f0000"],
         "PuBu": ["#fff7fb", "#ece7f2", "#d0d1e6", "#a6bddb", "#74a9cf", "#3690c0", "#0570b0", "#045a8d", "#023858"],
         "BuPu": ["#f7fcfd", "#e0ecf4", "#bfd3e6", "#9ebcda", "#8c96c6", "#8c6bb1", "#88419d", "#810f7c", "#4d004b"],
-        "Oranges": [
-            "#fff5eb",
-            "#fee6ce",
-            "#fdd0a2",
-            "#fdae6b",
-            "#fd8d3c",
-            "#f16913",
-            "#d94801",
-            "#a63603",
-            "#7f2704",
-        ],
+        "Oranges": ["#fff5eb", "#fee6ce", "#fdd0a2", "#fdae6b", "#fd8d3c", "#f16913", "#d94801", "#a63603", "#7f2704"],
         "BuGn": ["#f7fcfd", "#e5f5f9", "#ccece6", "#99d8c9", "#66c2a4", "#41ae76", "#238b45", "#006d2c", "#00441b"],
-        "YlOrBr": [
-            "#ffffe5",
-            "#fff7bc",
-            "#fee391",
-            "#fec44f",
-            "#fe9929",
-            "#ec7014",
-            "#cc4c02",
-            "#993404",
-            "#662506",
-        ],
+        "YlOrBr": ["#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506"],
         "YlGn": ["#ffffe5", "#f7fcb9", "#d9f0a3", "#addd8e", "#78c679", "#41ab5d", "#238443", "#006837", "#004529"],
         "Reds": ["#fff5f0", "#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d", "#a50f15", "#67000d"],
         "RdPu": ["#fff7f3", "#fde0dd", "#fcc5c0", "#fa9fb5", "#f768a1", "#dd3497", "#ae017e", "#7a0177", "#49006a"],
-        "Greens": [
-            "#f7fcf5",
-            "#e5f5e0",
-            "#c7e9c0",
-            "#a1d99b",
-            "#74c476",
-            "#41ab5d",
-            "#238b45",
-            "#006d2c",
-            "#00441b",
-        ],
-        "YlGnBu": [
-            "#ffffd9",
-            "#edf8b1",
-            "#c7e9b4",
-            "#7fcdbb",
-            "#41b6c4",
-            "#1d91c0",
-            "#225ea8",
-            "#253494",
-            "#081d58",
-        ],
-        "Purples": [
-            "#fcfbfd",
-            "#efedf5",
-            "#dadaeb",
-            "#bcbddc",
-            "#9e9ac8",
-            "#807dba",
-            "#6a51a3",
-            "#54278f",
-            "#3f007d",
-        ],
+        "Greens": ["#f7fcf5", "#e5f5e0", "#c7e9c0", "#a1d99b", "#74c476", "#41ab5d", "#238b45", "#006d2c", "#00441b"],
+        "YlGnBu": ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"],
+        "Purples": ["#fcfbfd", "#efedf5", "#dadaeb", "#bcbddc", "#9e9ac8", "#807dba", "#6a51a3", "#54278f", "#3f007d"],
         "GnBu": ["#f7fcf0", "#e0f3db", "#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cbe", "#0868ac", "#084081"],
-        "Greys": [
-            "#ffffff",
-            "#f0f0f0",
-            "#d9d9d9",
-            "#bdbdbd",
-            "#969696",
-            "#737373",
-            "#525252",
-            "#252525",
-            "#000000",
-        ],
-        "YlOrRd": [
-            "#ffffcc",
-            "#ffeda0",
-            "#fed976",
-            "#feb24c",
-            "#fd8d3c",
-            "#fc4e2a",
-            "#e31a1c",
-            "#bd0026",
-            "#800026",
-        ],
+        "Greys": ["#ffffff", "#f0f0f0", "#d9d9d9", "#bdbdbd", "#969696", "#737373", "#525252", "#252525", "#000000"],
+        "YlOrRd": ["#ffffcc", "#ffeda0", "#fed976", "#feb24c", "#fd8d3c", "#fc4e2a", "#e31a1c", "#bd0026", "#800026"],
         "PuRd": ["#f7f4f9", "#e7e1ef", "#d4b9da", "#c994c7", "#df65b0", "#e7298a", "#ce1256", "#980043", "#67001f"],
-        "Blues": [
-            "#f7fbff",
-            "#deebf7",
-            "#c6dbef",
-            "#9ecae1",
-            "#6baed6",
-            "#4292c6",
-            "#2171b5",
-            "#08519c",
-            "#08306b",
-        ],
-        "PuBuGn": [
-            "#fff7fb",
-            "#ece2f0",
-            "#d0d1e6",
-            "#a6bddb",
-            "#67a9cf",
-            "#3690c0",
-            "#02818a",
-            "#016c59",
-            "#014636",
-        ],
+        "Blues": ["#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#08519c", "#08306b"],
+        "PuBuGn": ["#fff7fb", "#ece2f0", "#d0d1e6", "#a6bddb", "#67a9cf", "#3690c0", "#02818a", "#016c59", "#014636"],
         # diverging
         "Spectral": [
             "#9e0142",
@@ -303,17 +213,7 @@ class mqc_colour_scale(object):
             "#b15928",
         ],
         "Pastel2": ["#b3e2cd", "#fdcdac", "#cbd5e8", "#f4cae4", "#e6f5c9", "#fff2ae", "#f1e2cc", "#cccccc"],
-        "Pastel1": [
-            "#fbb4ae",
-            "#b3cde3",
-            "#ccebc5",
-            "#decbe4",
-            "#fed9a6",
-            "#ffffcc",
-            "#e5d8bd",
-            "#fddaec",
-            "#f2f2f2",
-        ],
+        "Pastel1": ["#fbb4ae", "#b3cde3", "#ccebc5", "#decbe4", "#fed9a6", "#ffffcc", "#e5d8bd", "#fddaec", "#f2f2f2"],
         # Originally from Highcharts
         "plot_defaults": [
             "#7cb5ec",
@@ -367,6 +267,21 @@ class mqc_colour_scale(object):
             self.minval = float(minval)
             self.maxval = float(maxval)
 
+    def lighten_colour(self, thecolour: spectra.Color, lighten: float) -> str:
+        """Given a spectra Color, create an rgba string with alpha transparency"""
+        alpha_values = []
+        for x in thecolour.rgb:
+            if abs(x - 1.0) < 1e-6:
+                alpha_values.append(1.0)
+            else:
+                lightened = max(0, min(1, 1 + ((x - 1) * lighten)))
+                alpha = (1 - lightened) / (1 - x)
+                alpha_values.append(max(0, min(1, alpha)))
+
+        rgb_values = list(thecolour.rgb)
+        r, g, b = rgb_values[0], rgb_values[1], rgb_values[2]
+        return f"rgba({int(r * 255)},{int(g * 255)},{int(b * 255)},{min(alpha_values)})"
+
     def get_colour(
         self,
         val: Optional[Union[float, str]],
@@ -379,11 +294,6 @@ class mqc_colour_scale(object):
         if val is None:
             return ""
         assert val is not None
-
-        # Ported from the original JavaScript for continuity
-        # Seems to work better than adjusting brightness / saturation / luminosity
-        def rgb_converter(x: float) -> float:
-            return max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
             thecolour: spectra.Color
@@ -407,13 +317,15 @@ class mqc_colour_scale(object):
                     # a unique color for each possible enumeration value.
                     val = deterministic_hash(str(val))
                 thecolour = spectra.html(self.colours[val % len(self.colours)])
-                thecolour = spectra.rgb(*[rgb_converter(float(v)) for v in thecolour.rgb])
+                if lighten > 0:
+                    return self.lighten_colour(thecolour, lighten)
                 return thecolour.hexcode
 
             # When there is only 1 color in scale, spectra.scale() will crash with DivisionByZero
             elif len(self.colours) == 1:
                 thecolour = spectra.html(self.colours[0])
-                thecolour = spectra.rgb(*[rgb_converter(float(v)) for v in thecolour.rgb])
+                if lighten > 0:
+                    return self.lighten_colour(thecolour, lighten)
                 return thecolour.hexcode
 
             else:
@@ -435,8 +347,12 @@ class mqc_colour_scale(object):
                 my_spectra_scale = cached_spectra_colour_scale(tuple(self.colours))
                 my_scale = my_spectra_scale.domain(domain_nums)
 
-                # Lighten colours
-                thecolour = spectra.rgb(*[rgb_converter(float(v)) for v in my_scale(val_float).rgb])
+                # Get the color from the scale
+                thecolour = my_scale(val_float)  # type: ignore
+
+                # Apply lightening with alpha
+                if lighten > 0:
+                    return self.lighten_colour(thecolour, lighten)
 
                 return thecolour.hexcode
 
@@ -631,6 +547,32 @@ class mqc_colour_scale(object):
         "lightyellow": "#FFFFE0",
         "ivory": "#FFFFF0",
     }
+
+
+def color_to_rgb_string(color: Optional[str]) -> str:
+    """
+    Convert a color to RGB format suitable for Plotly-JS.
+
+    Args:
+        color: Color string - can be RGB format (e.g., "rgb(255,0,0)"),
+               hex format (e.g., "#FF0000"), or named color (e.g., "red")
+
+    Returns:
+        String in format "r,g,b" ready for Plotly-JS (e.g., "rgb(255,0,0)")
+    """
+    if color is None:
+        return "rgb(0,0,0)"
+    # Color is already in rgb format - extract the values
+    if color.startswith("rgb"):
+        return color
+    # Convert other formats to RGB using spectra
+    else:
+        try:
+            spectra_color = spectra.html(color)
+            return "rgb(" + ",".join([f"{int(float(x) * 256)}" for x in spectra_color.rgb]) + ")"
+        except Exception as e:
+            logger.warning(f"Error converting color '{color}' to RGB: {e}")
+            return "rgb(0,0,0)"  # Default to black if conversion fails
 
 
 def deterministic_hash(x: str) -> int:

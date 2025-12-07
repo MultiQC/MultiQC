@@ -2,10 +2,9 @@ import logging
 import re
 from typing import Dict
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import BaseMultiqcModule, config
 from multiqc.plots import violin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -31,9 +30,6 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
     # Replace None with actual version if it is available
     module.add_software_version(None)
 
-    # Write parsed report data to a file (restructure first)
-    module.write_data_file(samtools_flagstat, "multiqc_samtools_flagstat")
-
     # General Stats Table
     flagstat_headers = {
         "flagstat_total": {
@@ -57,7 +53,13 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
             "hidden": True,
         },
     }
-    module.general_stats_addcols(samtools_flagstat, flagstat_headers, namespace="flagstat")
+
+    # Get general stats headers using the utility function, will read config.general_stats_columns
+    general_stats_headers = module.get_general_stats_headers(all_headers=flagstat_headers)
+
+    # Add headers to general stats table
+    if general_stats_headers:
+        module.general_stats_addcols(samtools_flagstat, general_stats_headers, namespace="flagstat")
 
     # Make a violin plot
     reads = {
@@ -114,18 +116,31 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
         anchor="samtools-flagstat",
         description="This module parses the output from <code>samtools flagstat</code>",
         plot=violin.plot(
-            [samtools_flagstat, data_pct],
-            headers=[keys_counts, keys_pct],
+            samtools_flagstat,
+            headers=keys_counts,
             pconfig={
-                "id": "samtools-flagstat-dp",
+                "id": "samtools-flagstat-table",
                 "title": "Samtools: flagstat: read count",
-                "data_labels": [
-                    {"name": "Read counts", "title": "Samtools flagstat: read count"},
-                    {"name": "Percentage of total", "title": "Samtools flagstat: percentage of total"},
-                ],
             },
         ),
     )
+
+    module.add_section(
+        name="Flagstat: Percentage of total",
+        anchor="samtools-flagstat-pct",
+        description="This module parses the output from <code>samtools flagstat</code>",
+        plot=violin.plot(
+            data_pct,
+            headers=keys_pct,
+            pconfig={
+                "id": "samtools-flagstat-pct-table",
+                "title": "Samtools: flagstat: percentage of total",
+            },
+        ),
+    )
+
+    # Write parsed report data to a file (restructure first)
+    module.write_data_file(samtools_flagstat, "multiqc_samtools_flagstat")
 
     # Return the number of logs that were found
     return len(samtools_flagstat)

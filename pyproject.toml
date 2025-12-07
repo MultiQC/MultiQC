@@ -4,37 +4,52 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.26dev"
+version = "1.33dev"
 dependencies = [
+    "boto3",              # for aws bedrock ai support
     "click",
     "humanize",
     "importlib_metadata",
     "jinja2>=3.0.0",
-    "kaleido",  # for flat plot export
+    "kaleido==0.2.1",     # for flat plot export
     "markdown",
     "numpy",
     "packaging",
     "requests",
-    "Pillow>=10",  # to add a logo into flat plots
+    "Pillow>=10",         # to add a logo into flat plots
     "plotly>=5.18",
     "pyyaml>=4",
     "rich>=10",
     "rich-click",
-    "coloredlogs",  # logging in notebooks
+    "coloredlogs",        # logging in notebooks
     "spectra>=0.0.10",
     "pydantic>=2.7.0",
     "typeguard",
-    "tqdm",  # progress bar in notebooks
+    "tqdm",               # progress bar in notebooks
+    "python-dotenv",
+    "natsort",
+    "tiktoken",
+    "jsonschema",
+    "polars-lts-cpu",     # for parquet support. Using LTS version for compatibility with older architectures
+    "pyarrow",            # for parquet support
 ]
-requires-python = ">=3.9"
+# Avoid cPython bug in 3.14.1 - https://github.com/python/cpython/issues/142214
+requires-python = ">=3.8, !=3.14.1"
 authors = [
-    {name = "Phil Ewels", email = "phil.ewels@seqera.io"},
-    {name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io"},
+    { name = "Phil Ewels", email = "phil.ewels@seqera.io" },
+    { name = "Vlad Savelyev", email = "vladislav.sav@gmail.com" },
 ]
 description = "Create aggregate bioinformatics analysis reports across many samples and tools"
 readme = "README.md"
-license = {file = "LICENSE"}
-keywords = ["bioinformatics", "biology", "sequencing", "NGS", "next generation sequencing", "quality control"]
+license = { file = "LICENSE" }
+keywords = [
+    "bioinformatics",
+    "biology",
+    "sequencing",
+    "NGS",
+    "next generation sequencing",
+    "quality control",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
@@ -55,13 +70,14 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "pre-commit",
-    "ruff",
+    "ruff>=0.8.3",
     "pdoc3",
     "pytest",
     "pytest-cov",
-    "pytest-xdist",  # for parallel testing with `pytest -n`
-    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that 
+    "pytest-xdist", # for parallel testing with `pytest -n`
+    "syrupy",       # to compare html snpashots, alternative to pytest-snapshot that
     # does work better with parametrized tests
+    "pygithub",             # to generate changelog
     "mypy",
     "types-PyYAML",
     "types-tqdm",
@@ -69,25 +85,32 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+    "types-jsonschema",
+    "types-boto3",
+    "beautifulsoup4",
+    "jupyter",              # for jupyter notebook example
 ]
 
 [project.urls]
 Homepage = "https://multiqc.info"
 Repository = "https://github.com/MultiQC/MultiQC"
 Issues = "https://github.com/MultiQC/MultiQC/issues"
-Documentation = "https://multiqc.info/docs"
+Documentation = "https://docs.seqera.io/multiqc"
 Changelog = "https://github.com/MultiQC/MultiQC/blob/main/CHANGELOG.md"
 
 [project.entry-points.console_scripts]
 multiqc = "multiqc.__main__:run_multiqc"
 
 [project.entry-points."multiqc.modules.v1"]
+custom_content = "multiqc.core.special_case_modules.custom_content:custom_module_classes"  # special case
 adapterremoval = "multiqc.modules.adapterremoval:MultiqcModule"
 afterqc = "multiqc.modules.afterqc:MultiqcModule"
 anglerfish = "multiqc.modules.anglerfish:MultiqcModule"
+ataqv = "multiqc.modules.ataqv:MultiqcModule"
 bakta = "multiqc.modules.bakta:MultiqcModule"
 bamdst = "multiqc.modules.bamdst:MultiqcModule"
 bamtools = "multiqc.modules.bamtools:MultiqcModule"
+bases2fastq = "multiqc.modules.bases2fastq:MultiqcModule"
 bbduk = "multiqc.modules.bbduk:MultiqcModule"
 bbmap = "multiqc.modules.bbmap:MultiqcModule"
 bcftools = "multiqc.modules.bcftools:MultiqcModule"
@@ -99,16 +122,18 @@ biscuit = "multiqc.modules.biscuit:MultiqcModule"
 bismark = "multiqc.modules.bismark:MultiqcModule"
 bowtie1 = "multiqc.modules.bowtie1:MultiqcModule"
 bowtie2 = "multiqc.modules.bowtie2:MultiqcModule"
-bracken = "multiqc.modules.bracken:MultiqcModule"
 busco = "multiqc.modules.busco:MultiqcModule"
 bustools = "multiqc.modules.bustools:MultiqcModule"
 ccs = "multiqc.modules.ccs:MultiqcModule"
 cellranger = "multiqc.modules.cellranger:MultiqcModule"
+cellranger_arc = "multiqc.modules.cellranger_arc:MultiqcModule"
+cells2stats = "multiqc.modules.cells2stats:MultiqcModule"
+checkm = "multiqc.modules.checkm:MultiqcModule"
+checkm2 = "multiqc.modules.checkm2:MultiqcModule"
 checkqc = "multiqc.modules.checkqc:MultiqcModule"
 clipandmerge = "multiqc.modules.clipandmerge:MultiqcModule"
 clusterflow = "multiqc.modules.clusterflow:MultiqcModule"
 conpair = "multiqc.modules.conpair:MultiqcModule"
-custom_content = "multiqc.modules.custom_content:custom_module_classes"  # special case
 cutadapt = "multiqc.modules.cutadapt:MultiqcModule"
 damageprofiler = "multiqc.modules.damageprofiler:MultiqcModule"
 dedup = "multiqc.modules.dedup:MultiqcModule"
@@ -123,16 +148,18 @@ fastq_screen = "multiqc.modules.fastq_screen:MultiqcModule"
 fastqc = "multiqc.modules.fastqc:MultiqcModule"
 featurecounts = "multiqc.modules.featurecounts:MultiqcModule"
 fgbio = "multiqc.modules.fgbio:MultiqcModule"
+filtlong = "multiqc.modules.filtlong:MultiqcModule"
 flash = "multiqc.modules.flash:MultiqcModule"
 flexbar = "multiqc.modules.flexbar:MultiqcModule"
-filtlong = "multiqc.modules.filtlong:MultiqcModule"
 freyja = "multiqc.modules.freyja:MultiqcModule"
-gffcompare = "multiqc.modules.gffcompare:MultiqcModule"
 ganon = "multiqc.modules.ganon:MultiqcModule"
 gatk = "multiqc.modules.gatk:MultiqcModule"
+gffcompare = "multiqc.modules.gffcompare:MultiqcModule"
 glimpse = "multiqc.modules.glimpse:MultiqcModule"
 goleft_indexcov = "multiqc.modules.goleft_indexcov:MultiqcModule"
 gopeaks = "multiqc.modules.gopeaks:MultiqcModule"
+gtdbtk = "multiqc.modules.gtdbtk:MultiqcModule"
+haplocheck = "multiqc.modules.haplocheck:MultiqcModule"
 happy = "multiqc.modules.happy:MultiqcModule"
 hicexplorer = "multiqc.modules.hicexplorer:MultiqcModule"
 hicpro = "multiqc.modules.hicpro:MultiqcModule"
@@ -163,25 +190,28 @@ mapdamage = "multiqc.modules.mapdamage:MultiqcModule"
 megahit = "multiqc.modules.megahit:MultiqcModule"
 metaphlan = "multiqc.modules.metaphlan:MultiqcModule"
 methylqa = "multiqc.modules.methylqa:MultiqcModule"
+mgikit = "multiqc.modules.mgikit:MultiqcModule"
 minionqc = "multiqc.modules.minionqc:MultiqcModule"
 mirtop = "multiqc.modules.mirtop:MultiqcModule"
 mirtrace = "multiqc.modules.mirtrace:MultiqcModule"
+mosaicatcher = "multiqc.modules.mosaicatcher:MultiqcModule"
 mosdepth = "multiqc.modules.mosdepth:MultiqcModule"
 motus = "multiqc.modules.motus:MultiqcModule"
 mtnucratio = "multiqc.modules.mtnucratio:MultiqcModule"
 multivcfanalyzer = "multiqc.modules.multivcfanalyzer:MultiqcModule"
 nanoq = "multiqc.modules.nanoq:MultiqcModule"
 nanostat = "multiqc.modules.nanostat:MultiqcModule"
-ngsbits = "multiqc.modules.ngsbits:MultiqcModule"
 nextclade = "multiqc.modules.nextclade:MultiqcModule"
+ngsbits = "multiqc.modules.ngsbits:MultiqcModule"
 ngsderive = "multiqc.modules.ngsderive:MultiqcModule"
 nonpareil = "multiqc.modules.nonpareil:MultiqcModule"
 odgi = "multiqc.modules.odgi:MultiqcModule"
 optitype = "multiqc.modules.optitype:MultiqcModule"
-pangolin = "multiqc.modules.pangolin:MultiqcModule"
 pairtools = "multiqc.modules.pairtools:MultiqcModule"
+pangolin = "multiqc.modules.pangolin:MultiqcModule"
 pbmarkdup = "multiqc.modules.pbmarkdup:MultiqcModule"
 peddy = "multiqc.modules.peddy:MultiqcModule"
+percolator = "multiqc.modules.percolator:MultiqcModule"
 phantompeakqualtools = "multiqc.modules.phantompeakqualtools:MultiqcModule"
 picard = "multiqc.modules.picard:MultiqcModule"
 porechop = "multiqc.modules.porechop:MultiqcModule"
@@ -199,15 +229,17 @@ rna_seqc = "multiqc.modules.rna_seqc:MultiqcModule"
 rockhopper = "multiqc.modules.rockhopper:MultiqcModule"
 rsem = "multiqc.modules.rsem:MultiqcModule"
 rseqc = "multiqc.modules.rseqc:MultiqcModule"
-seqera_cli = "multiqc.modules.seqera_cli:MultiqcModule"
-sequali = "multiqc.modules.sequali:MultiqcModule"
 salmon = "multiqc.modules.salmon:MultiqcModule"
 sambamba = "multiqc.modules.sambamba:MultiqcModule"
 samblaster = "multiqc.modules.samblaster:MultiqcModule"
 samtools = "multiqc.modules.samtools:MultiqcModule"
 sargasso = "multiqc.modules.sargasso:MultiqcModule"
-seqyclean = "multiqc.modules.seqyclean:MultiqcModule"
+seqera_cli = "multiqc.modules.seqera_cli:MultiqcModule"
+seqfu = "multiqc.modules.seqfu:MultiqcModule"
+seqkit = "multiqc.modules.seqkit:MultiqcModule"
+sequali = "multiqc.modules.sequali:MultiqcModule"
 seqwho = "multiqc.modules.seqwho:MultiqcModule"
+seqyclean = "multiqc.modules.seqyclean:MultiqcModule"
 sexdeterrmine = "multiqc.modules.sexdeterrmine:MultiqcModule"
 sickle = "multiqc.modules.sickle:MultiqcModule"
 skewer = "multiqc.modules.skewer:MultiqcModule"
@@ -216,12 +248,15 @@ snippy = "multiqc.modules.snippy:MultiqcModule"
 snpeff = "multiqc.modules.snpeff:MultiqcModule"
 snpsplit = "multiqc.modules.snpsplit:MultiqcModule"
 somalier = "multiqc.modules.somalier:MultiqcModule"
+sompy = "multiqc.modules.sompy:MultiqcModule"
 sortmerna = "multiqc.modules.sortmerna:MultiqcModule"
 sourmash = "multiqc.modules.sourmash:MultiqcModule"
 spaceranger = "multiqc.modules.spaceranger:MultiqcModule"
 stacks = "multiqc.modules.stacks:MultiqcModule"
 star = "multiqc.modules.star:MultiqcModule"
 supernova = "multiqc.modules.supernova:MultiqcModule"
+sylphtax = "multiqc.modules.sylphtax:MultiqcModule"
+telseq = "multiqc.modules.telseq:MultiqcModule"
 theta2 = "multiqc.modules.theta2:MultiqcModule"
 tophat = "multiqc.modules.tophat:MultiqcModule"
 trimmomatic = "multiqc.modules.trimmomatic:MultiqcModule"
@@ -234,17 +269,20 @@ vep = "multiqc.modules.vep:MultiqcModule"
 verifybamid = "multiqc.modules.verifybamid:MultiqcModule"
 vg = "multiqc.modules.vg:MultiqcModule"
 whatshap = "multiqc.modules.whatshap:MultiqcModule"
-xenome = "multiqc.modules.xenome:MultiqcModule"
 xengsort = "multiqc.modules.xengsort:MultiqcModule"
+xenium = "multiqc.modules.xenium:MultiqcModule"
+xenome = "multiqc.modules.xenome:MultiqcModule"
 
 [project.entry-points."multiqc.templates.v1"]
 default = "multiqc.templates.default"
+original = "multiqc.templates.original"
 sections = "multiqc.templates.sections"
 simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
 geo = "multiqc.templates.geo"
+disco = "multiqc.templates.disco"
 
-### See https://multiqc.info/docs/#multiqc-plugins for documentation
+### See https://docs.seqera.io/multiqc/development/plugins for documentation
 #[project.entry-points."multiqc.cli_options.v1"]
 #my-new-option = "myplugin.cli:new_option"
 #
@@ -259,12 +297,12 @@ geo = "multiqc.templates.geo"
 
 [tool.setuptools]
 packages = ["multiqc"]
-package-data = {multiqc = ["py.typed"]}
+package-data = { multiqc = ["py.typed"] }
 
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-lint.ignore = ["F401"]  # unused-import
+lint.ignore = ["F401"]   # unused-import
 
 [tool.mypy]
 check_untyped_defs = true
@@ -272,3 +310,11 @@ plugins = ["pydantic.mypy"]
 # exclude all files in multiqc/modules
 files = ["multiqc", "tests"]
 exclude = "multiqc/modules/*"
+
+[tool.pyright]
+include = ["multiqc", "scripts", "tests"]
+ignore = ["**/build", "**/dist", "**/venv*"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests", "multiqc/modules"]

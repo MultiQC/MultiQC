@@ -4,9 +4,10 @@ from typing import Callable, List, Union
 
 import pytest
 
-from multiqc import BaseMultiqcModule, config, report, reset, parse_logs
+from multiqc import BaseMultiqcModule, config, parse_logs, report, reset
 from multiqc.base_module import ModuleNoSamplesFound
-from multiqc.core.update_config import update_config, ClConfig
+from multiqc.core.update_config import ClConfig, update_config
+from multiqc.types import SectionKey
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
 
@@ -14,6 +15,16 @@ modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() i
 @pytest.fixture(scope="module")
 def multiqc_reset():
     reset()
+
+
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state after each test."""
+    original_strict = config.strict
+    original_sample_names_ignore = config.sample_names_ignore[:]
+    yield
+    config.strict = original_strict
+    config.sample_names_ignore[:] = original_sample_names_ignore
 
 
 @pytest.mark.parametrize("module_id,entry_point", modules)
@@ -93,6 +104,8 @@ def test_write_data_file(monkeypatch, tmp_path, config_options, expected_to_writ
         (True, False, None, "SAMPLE_FROM_FILENAME.stderr"),
         (None, None, True, "subdir | SAMPLE_FROM_CONTENTS"),
         (True, None, True, "subdir | SAMPLE_FROM_FILENAME"),
+        (["trimmomatic"], None, None, "SAMPLE_FROM_FILENAME"),
+        (["other_module"], None, None, "SAMPLE_FROM_CONTENTS"),  # Should not affect trimmomatic
     ],
 )
 def test_use_filename_as_sample_name(
@@ -118,6 +131,7 @@ TrimmomaticSE: Completed successfully""")
             fn_clean_sample_names=fn_clean_sample_names,
             prepend_dirs=prepend_dirs,
             dirs_depth=1 if prepend_dirs else None,
+            preserve_module_raw_data=True,
         )
     )
 
@@ -128,10 +142,24 @@ TrimmomaticSE: Completed successfully""")
 
     m = MultiqcModule()
 
+    assert m.saved_raw_data is not None
     assert expected_sample_name in m.saved_raw_data[f"multiqc_{MODULE_NAME}"]
 
 
-def test_path_filters(multiqc_reset, tmp_path, data_dir):
+@pytest.mark.parametrize(
+    # Custom anchors are used to suffix the write_data_file fn (= saved_raw_data key)
+    # If custom anchor is not provided for a repeated module, it is added for the second occurent
+    # by sanitising the module id (e.g. adapterremoval -> adapterremoval-1
+    "anchors,expected_raw_data_keys",
+    [
+        (
+            ["my_anchor_se", "my_anchor_pe"],
+            ["multiqc_adapter_removal_my_anchor_se", "multiqc_adapter_removal_my_anchor_pe"],
+        ),
+        ([None, None], ["multiqc_adapter_removal", "multiqc_adapter_removal_adapterremoval-1"]),
+    ],
+)
+def test_path_filters(multiqc_reset, tmp_path, data_dir, anchors, expected_raw_data_keys):
     search_path = data_dir / "modules" / "adapterremoval"
     assert search_path.exists() and search_path.is_dir()
 
@@ -154,29 +182,37 @@ def test_path_filters(multiqc_reset, tmp_path, data_dir):
             {
                 "adapterremoval": {
                     "name": "adapterremoval (single end)",
-                    "anchor": "my_anchor_se",
+                    "anchor": anchors[0],
                     "path_filters": ["*/se.*"],
                 },
             },
             {
                 "adapterremoval": {
                     "name": "adapterremoval (paired end)",
-                    "anchor": "my_anchor_pe",
+                    "anchor": anchors[1],
                     "path_filters": ["*/pec?.*", "*/penc?.*"],
                 },
             },
         ],
+        preserve_module_raw_data=True,
+        strict=True,
     )
 
     assert len(report.modules) == 2
     assert len(report.general_stats_data) == 2
     assert report.modules[0].name == "adapterremoval (single end)"
     assert report.modules[1].name == "adapterremoval (paired end)"
-    assert report.modules[0].saved_raw_data["multiqc_adapter_removal_my_anchor_se"].keys() == {
+    assert report.modules[0].saved_raw_data is not None
+    assert report.modules[1].saved_raw_data is not None
+    assert report.modules[0].saved_raw_data[expected_raw_data_keys[0]].keys() == {
         Path(fn).name for fn in expected_se_files
     }
-    assert report.modules[1].saved_raw_data["multiqc_adapter_removal_my_anchor_pe"].keys() == {
+    assert report.modules[1].saved_raw_data[expected_raw_data_keys[1]].keys() == {
         Path(fn).name for fn in expected_pe_files
     }
-    assert report.general_stats_data[0].keys() == {Path(fn).name for fn in expected_se_files}
-    assert report.general_stats_data[1].keys() == {Path(fn).name for fn in expected_pe_files}
+    assert set(report.general_stats_data[SectionKey(anchors[0] or "adapterremoval")].keys()) == {
+        Path(fn).name for fn in expected_se_files
+    }
+    assert set(report.general_stats_data[SectionKey(anchors[1] or "adapterremoval-1")].keys()) == {
+        Path(fn).name for fn in expected_pe_files
+    }

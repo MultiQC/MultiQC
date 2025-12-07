@@ -4,7 +4,7 @@ import logging
 from collections import defaultdict
 from itertools import islice
 from pathlib import Path
-from typing import List, Mapping, Set, Tuple, Dict, Optional, TypedDict, Union
+from typing import Dict, List, Mapping, Optional, Set, Tuple, TypedDict, Union
 from xml.etree import ElementTree
 
 from pydantic import BaseModel
@@ -12,8 +12,8 @@ from pydantic import BaseModel
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, ValueT
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import ColumnKey, LoadedFileDict, SampleGroup, SampleName
 
 log = logging.getLogger(__name__)
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     It's often useful to talk about sequencing yield in terms of estimated depth of coverage.
     In order to make MultiQC show the estimated depth for each sample, specify the reference genome/target size in
-    your [MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
+    your [MultiQC configuration](https://docs.seqera.io/multiqc/getting_started/config):
 
     ```yaml
     bclconvert:
@@ -238,23 +238,26 @@ class MultiqcModule(BaseMultiqcModule):
 
         self._clusters_by_sample_barplot(data_by_sample)
 
+        TOP_N_UNDETERMINED_BARCODES = 40
+
         # Add section with undetermined barcodes
         if len(data_by_run) == 1:
-            undetermined_data = self.get_bar_data_from_undetermined(data_by_run)
+            undetermined_data = self.get_bar_data_from_undetermined(data_by_run, top_n=TOP_N_UNDETERMINED_BARCODES)
             if undetermined_data:
                 self.add_section(
-                    name="Undetermined barcodes by lane",
+                    name="Undetermined barcodes",
                     anchor="undetermine_by_lane",
-                    description="Undetermined barcodes by lanes",
+                    description=f"Top {TOP_N_UNDETERMINED_BARCODES} undetermined barcodes",
                     plot=bargraph.plot(
                         undetermined_data,
                         None,
                         {
                             "id": "bclconvert_undetermined",
-                            "title": "bclconvert: Undetermined barcodes by lane",
+                            "title": f"bclconvert: top {TOP_N_UNDETERMINED_BARCODES} undetermined barcodes",
                             "ylab": "Count",
                             "use_legend": True,
                             "tt_suffix": "reads",
+                            "sort_samples": False,
                         },
                     ),
                 )
@@ -295,7 +298,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "id": "bclconvert_lane_counts",
                     "title": "bclconvert: Clusters by lane",
                     "ylab": "Number of clusters",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                 },
             ),
         )
@@ -338,7 +341,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig={
                     "id": "bclconvert_sample_counts",
                     "title": "bclconvert: Clusters by sample",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ylab": "Number of clusters",
                     "data_labels": ["Index mismatches", "Counts per lane"],
                 },
@@ -687,7 +690,7 @@ class MultiqcModule(BaseMultiqcModule):
                         f"{chunk.sample_project} != {sample.sample_project}, overriding"
                     )
                     sample.sample_project = chunk.sample_project
-                if sample.index is not None and chunk.index != sample.index:
+                if chunk.index != sample.index:
                     log.warning(
                         f"Sample {sname} has different indices on different lanes: "
                         f"{chunk.index} != {sample.index}, overriding"
@@ -897,7 +900,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["mean_quality"] = {
-            "title": "Mean quality sscore",
+            "title": "Mean quality score",
             "description": "Mean quality score of bases",
             "min": 0,
             "max": 40,
@@ -1073,7 +1076,9 @@ class MultiqcModule(BaseMultiqcModule):
         return bar_data
 
     @staticmethod
-    def get_bar_data_from_undetermined(data_by_run: Dict[str, RunSummary]) -> Dict[str, Dict[str, int]]:
+    def get_bar_data_from_undetermined(
+        data_by_run: Dict[str, RunSummary], top_n: int = 20
+    ) -> Dict[str, Dict[str, int]]:
         """
         Get data to plot for undetermined barcodes.
         """
@@ -1083,11 +1088,13 @@ class MultiqcModule(BaseMultiqcModule):
         for _, run in data_by_run.items():
             for lane_id, lane in run.lanes.items():
                 try:
-                    for barcode, count in islice(lane.top_unknown_barcodes.items(), 20):
+                    for barcode, count in islice(lane.top_unknown_barcodes.items(), top_n):
                         bar_data[barcode][lane_id] = count
                 except AttributeError:
                     pass
                 except KeyError:
                     pass
 
-        return {key: value for key, value in islice(bar_data.items(), 20)}
+        # Sort by value
+        bar_data = dict(sorted(bar_data.items(), key=lambda item: sum(item[1].values()), reverse=True))
+        return {key: value for key, value in islice(bar_data.items(), top_n)}

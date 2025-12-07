@@ -7,24 +7,24 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 import itertools
-
-# Default logger will be replaced by caller
 import logging
 import os
 import subprocess
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import importlib_metadata
 import yaml
 from importlib_metadata import EntryPoint
+from jsonschema import validate as validate_json_schema
 
 from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.utils import pyaml_env
+from multiqc.utils.config_schema import config_to_schema
 from multiqc.utils.util_functions import strtobool, update_dict
 
+# Default logger will be replaced by caller
 logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
@@ -69,11 +69,15 @@ report_header_info: List[Dict[str, str]]
 show_analysis_paths: bool
 show_analysis_time: bool
 custom_logo: str
+custom_logo_dark: str
 custom_logo_url: str
 custom_logo_title: str
+custom_logo_width: int
 custom_css_files: List[str]
 simple_output: bool
 template: str
+template_dark_mode: bool
+plot_font_family: Optional[str]
 profile_runtime: bool
 profile_memory: bool
 pandoc_template: str
@@ -104,12 +108,34 @@ version_check_url: str
 make_data_dir: bool
 zip_data_dir: bool
 data_dump_file: bool
+data_dump_file_write_raw: Optional[bool]
 megaqc_url: str
 megaqc_access_token: Optional[str]
 megaqc_timeout: float
 export_plots: bool
 make_report: bool
 make_pdf: bool
+
+ai_summary: bool
+ai_summary_full: bool
+ai_provider: str
+ai_model: str
+ai_custom_endpoint: Optional[str]
+ai_auth_type: Optional[str]
+ai_retries: int
+ai_extra_query_options: Optional[Dict[str, Any]]
+ai_custom_context_window: Optional[int]
+ai_prompt_short: Optional[str]
+ai_prompt_full: Optional[str]
+no_ai: bool
+ai_anonymize_samples: bool
+ai_reasoning_effort: Optional[str]
+ai_max_completion_tokens: Optional[int]
+ai_extended_thinking: bool
+ai_thinking_budget_tokens: Optional[int]
+
+seqera_api_url: str
+seqera_website: str
 
 plots_force_flat: bool
 plots_export_font_scale: float
@@ -119,57 +145,69 @@ plots_defer_loading_numseries: int
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
+boxplot_boxpoints: Union[str, bool, None]
+box_min_threshold_outliers: int
+box_min_threshold_no_points: int
 violin_downsample_after: Optional[int]
 violin_min_threshold_outliers: int
 violin_min_threshold_no_points: int
 
 collapse_tables: bool
 max_table_rows: int
+max_configurable_table_columns: int
+general_stats_columns: Dict[str, Dict]
+general_stats_helptext: str
 table_columns_visible: Dict[str, Union[bool, Dict[str, bool]]]
 table_columns_placement: Dict[str, Dict[str, float]]
 table_columns_name: Dict[str, Union[str, Dict[str, str]]]
 table_cond_formatting_colours: List[Dict[str, str]]
-table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]]
+table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, Union[str, int, float]]]]]
 decimalPoint_format: str
 thousandsSep_format: str
 remove_sections: List[str]
 section_comments: Dict[str, str]
+section_status_checks: Dict[str, Union[bool, Dict[str, bool]]]
 lint: bool  # Deprecated since v1.17
 strict: bool
 development: bool
 custom_plot_config: Dict
 custom_table_header_config: Dict
-software_versions: Dict
+software_versions: Dict[str, Dict[str, List[str]]]
 ignore_symlinks: bool
 ignore_images: bool
 fn_ignore_dirs: List[str]
 fn_ignore_paths: List[str]
 sample_names_ignore: List[str]
 sample_names_ignore_re: List[str]
+sample_names_only_include: List[str]
+sample_names_only_include_re: List[str]
 sample_names_rename_buttons: List[str]
 sample_names_replace: Dict[str, str]
 sample_names_replace_regex: bool
 sample_names_replace_exact: bool
 sample_names_replace_complete: bool
-sample_names_rename: List
-show_hide_buttons: List
-show_hide_patterns: List
-show_hide_regex: List
-show_hide_mode: List
+sample_names_rename: List[List[str]]
+show_hide_buttons: List[str]
+show_hide_patterns: List[Union[str, List[str]]]
+show_hide_regex: List[Union[str, bool]]
+show_hide_mode: List[str]
+highlight_patterns: List[str]
+highlight_colors: List[str]
+highlight_regex: bool
 no_version_check: bool
 log_filesize_limit: int
 filesearch_lines_limit: int
-report_readerrors: int
-skip_generalstats: int
-skip_versions_section: int
-disable_version_detection: int
+report_readerrors: bool
+skip_generalstats: bool
+skip_versions_section: bool
+disable_version_detection: bool
 versions_table_group_header: str
 data_format_extensions: Dict[str, str]
 export_plot_formats: List[str]
 filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
-use_filename_as_sample_name: bool
+use_filename_as_sample_name: Union[bool, List[str]]
 fn_clean_exts: List[CleanPatternT]
 fn_clean_trim: List[str]
 fn_ignore_files: List[str]
@@ -183,7 +221,6 @@ sp: Dict = {}
 
 # Other defaults that can't be set in YAML
 modules_dir: str
-creation_date: str
 working_dir: str
 analysis_dir: List[str]
 output_dir: str
@@ -206,6 +243,10 @@ megaqc_upload: bool
 avail_modules: Dict[str, EntryPoint]
 avail_templates: Dict[str, EntryPoint]
 
+export_plots_timeout: int
+
+parquet_format: Literal["long", "wide"]
+
 
 def load_defaults():
     """
@@ -223,9 +264,8 @@ def load_defaults():
         sp = yaml.safe_load(f)
 
     # Other defaults that can't be set in defaults YAML
-    global modules_dir, creation_date, working_dir, analysis_dir, output_dir, megaqc_access_token, kwargs
+    global modules_dir, working_dir, analysis_dir, output_dir, megaqc_access_token, kwargs
     modules_dir = str(Path(MODULE_DIR) / "modules")
-    creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
     working_dir = os.getcwd()
     analysis_dir = [os.getcwd()]
     output_dir = os.path.realpath(os.getcwd())
@@ -345,12 +385,17 @@ def find_user_files():
     _load_found_file("multiqc_config.yaml")
 
 
-def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_config=True) -> Optional[Path]:
+def load_config_file(
+    yaml_config_path: Union[str, Path, None], is_explicit_config=True, validate_schema=True
+) -> Optional[Path]:
     """
     Load and parse a config file if we find it.
 
-    `is_explicit_config` config means the function was called directly or through multiqc.load_config(),
-    which means we need to keep track of to restore the config update update_defaults.
+    Args:
+        yaml_config_path: path to config file
+        is_explicit_config: means the function was called directly or through multiqc.load_config(),
+    which means we need to keep track of to restore the config update update_defaults
+        validate_schema: whether to validate the config against the JSON schema
     """
     if not yaml_config_path:
         return None
@@ -373,12 +418,20 @@ def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_confi
         # new_config can be None if the file is empty
         new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
         if new_config:
+            if validate_schema:
+                try:
+                    # Validate against JSON schema
+                    schema = config_to_schema()
+                    validate_json_schema(instance=new_config, schema=schema)
+                except Exception as e:
+                    logger.warning(f"Config validation warning for {path}: {str(e)}")
+
             logger.info(f"Loading config settings from: {path}")
             _add_config(new_config, str(path))
     except (IOError, AttributeError) as e:
         logger.warning(f"Error loading config {path}: {e}")
         return None
-    except yaml.scanner.ScannerError as e:
+    except yaml.YAMLError as e:
         logger.error(f"Error parsing config YAML: {e}")
         raise
 
@@ -395,7 +448,7 @@ def load_cl_config(cl_config: List[str]):
                 clc_str = ": ".join(clc_str.split(":"))
                 parsed_clc = yaml.safe_load(clc_str)
             assert isinstance(parsed_clc, dict)
-        except yaml.scanner.ScannerError as e:
+        except yaml.YAMLError as e:
             logger.error(f"Could not parse command line config: {clc_str}\n{e}")
         except AssertionError:
             logger.error(f"Could not parse command line config: {clc_str}")
@@ -412,6 +465,8 @@ def _env_vars_config() -> Dict:
     PREFIX = "MULTIQC_"  # Prefix for environment variables
     env_config: Dict[str, Union[str, int, float, bool]] = {}
     for k, v in os.environ.items():
+        if v.strip() == "":
+            continue
         if k.startswith(PREFIX) and k not in RESERVED_NAMES:
             conf_key = k[len(PREFIX) :].lower()
             if conf_key not in globals():
@@ -434,12 +489,15 @@ def _env_vars_config() -> Dict:
                 except ValueError:
                     logger.warning(f"Could not parse a float value from the environment variable ${k}={v}")
                     continue
-            elif not isinstance(globals()[conf_key], str) and globals()[conf_key] is not None:
+            elif globals()[conf_key] is None:
+                pass
+            elif not isinstance(globals()[conf_key], str):
                 logger.warning(
                     f"Can only set scalar config entries (str, int, float, bool) with environment variable, "
                     f"but config.{conf_key} expects a type '{type(globals()[conf_key]).__name__}'. Ignoring ${k}"
                 )
                 continue
+            env_config[conf_key] = v
             logger.debug(f"Setting config.{conf_key} from the environment variable ${k}")
     return env_config
 
@@ -464,7 +522,7 @@ def _add_config(conf: Dict, conf_path=None):
             log_filename_clean_extensions.append(v)
         elif c == "extra_fn_clean_trim":
             log_filename_clean_trimmings.append(v)
-        elif c in ["custom_logo"] and v:
+        elif c in ["custom_logo", "custom_logo_dark"] and v:
             # Resolve file paths - absolute or cwd, or relative to config file
             fpath = v
             if os.path.exists(v):
@@ -577,6 +635,30 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
                         show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether regex is turned on
         except AttributeError as e:
             logger.error(f"Error loading show patterns file: {e}")
+
+    # Normalize show_hide_patterns to be List[List[str]]
+    # When loaded from YAML config, patterns may be strings instead of lists
+    for i in range(len(show_hide_patterns)):
+        pattern = show_hide_patterns[i]
+        if isinstance(pattern, str):
+            show_hide_patterns[i] = [pattern]
+
+    # Normalize show_hide_regex to be List[bool]
+    # When loaded from YAML config, regex flags may be missing or incorrect types
+    for i in range(len(show_hide_regex)):
+        regex_flag = show_hide_regex[i]
+        if not isinstance(regex_flag, bool):
+            show_hide_regex[i] = bool(regex_flag)
+
+    # Lists are not of the same length, pad or trim to the length of show_hide_patterns
+    for i in range(len(show_hide_buttons), len(show_hide_patterns)):
+        show_hide_buttons.append(
+            show_hide_patterns[i][0]
+            if i < len(show_hide_patterns) and show_hide_patterns[i] and show_hide_patterns[i][0]
+            else ""
+        )
+        show_hide_mode.append("hide")
+        show_hide_regex.append(False)
 
     # Prepend a "Show all" button if we have anything
     # Do this outside of the file load block in case it was set in the config

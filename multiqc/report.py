@@ -14,13 +14,14 @@ import logging
 import mimetypes
 import os
 import re
+import shutil
 import sys
 import time
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
+from datetime import datetime
 from pathlib import Path, PosixPath
 from typing import (
     Any,
-    Callable,
     Dict,
     Iterator,
     List,
@@ -30,11 +31,11 @@ from typing import (
     Set,
     TextIO,
     Tuple,
-    TypedDict,
     Union,
 )
 
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from multiqc import config
@@ -42,22 +43,24 @@ from multiqc import config
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core import log_and_rich, tmp_dir
+from multiqc.core import ai, log_and_rich, plot_data_store, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
-from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import ColumnDict, InputRow, SampleName
-from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup
+from multiqc.plots.plot import NormalizedPlotInputData, Plot
+from multiqc.plots.table_object import Cell, ColumnDict, InputRow, SampleName, ValueT
+from multiqc.plots.violin import ViolinPlot
+from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section, SectionKey
+from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
     dump_json,
     replace_defaultdicts,
     rmtree_with_retries,
 )
 
-logger = logging.getLogger(__name__)
+load_dotenv()
 
-initialized = False
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -70,88 +73,161 @@ class Runtimes:
     mods: Dict[str, float] = dataclasses.field(default_factory=lambda: defaultdict())
 
 
-# Uninitialised global variables for static typing
+initialized = False
+###########
+### Below are uninitialised global variables for static typing
+# Fields below are reset between interactive runs
 multiqc_command: str
+creation_date: datetime
 top_modules: List[Dict[str, Dict[str, str]]]
 module_order: List[Dict[str, Dict[str, Union[str, List[str]]]]]
-analysis_files: List[str]  # input files to search
 modules: List["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
+general_stats_plot: Optional[ViolinPlot]
 general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
 some_plots_are_deferred: bool
-saved_raw_data: Dict[str, Dict[str, Any]]  # indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
-file_search_stats: Dict[str, Set[Path]]
-files: Dict[ModuleId, List[FileDict]]
+report_uuid: str
 
-# Fields below are kept between interactive runs
+# File search state - also reset between interactive runs
+analysis_files: List[str]  # input files to search
+files: Dict[ModuleId, List[FileDict]]  # files found by each module
+file_search_stats: Dict[str, Set[Path]]
+
+# AI stuff, set dynamically in ai.py to be used in content.html and ai.js
+ai_global_summary: str = ""
+ai_global_detailed_analysis: str = ""
+ai_thread_id: str = ""
+ai_provider_id: str = ""
+ai_provider_title: str = ""
+ai_model: str = ""
+ai_model_resolved: str = ""
+ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
+ai_extra_query_options_base64: str = ""
+sample_names: List[SampleName] = []  # all sample names in the report to construct ai_pseudonym_map
+ai_pseudonym_map: Dict[str, str] = {}
+ai_pseudonym_map_base64: str = ""
+
+# Following fields are preserved between interactive runs
 data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
-plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
-plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
-general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
-general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
+
+# relative paths to parquet files to combine data from previous runs
+plot_input_data: Dict[Anchor, NormalizedPlotInputData] = dict()
+# plot objects to retried when plots are rendered, for ai, and for interactive use
+plot_by_id: Dict[Anchor, Union[Plot[Any, Any], str]] = dict()
+# plot dumps to embed in html and load with js
+plot_data: Dict[Anchor, Dict[str, Any]] = dict()
+
+general_stats_data: Dict[SectionKey, Dict[SampleGroup, List[InputRow]]]
+general_stats_headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
+# to make sure write_data_file don't overwrite for repeated modules. OrderedDict for fast lookup and to preserve insertion order:
+saved_raw_data_keys: Dict[str, None]
+saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
 
 
 def reset():
     # Set up global variables shared across modules. Inside a function so that the global
     # vars are reset if MultiQC is run more than once within a single session / environment.
     global initialized
+
     global multiqc_command
+    global creation_date
     global top_modules
     global module_order
     global analysis_files
     global modules
+    global general_stats_plot
     global general_stats_html
     global lint_errors
     global num_flat_plots
     global some_plots_are_deferred
-    global saved_raw_data
     global last_found_file
     global runtimes
     global peak_memory_bytes_per_module
     global diff_memory_bytes_per_module
+    global file_search_stats
+    global files
+    global report_uuid
+
     global data_sources
     global html_ids_by_scope
     global plot_data
     global plot_by_id
+    global plot_input_data
     global general_stats_data
     global general_stats_headers
     global software_versions
     global plot_compressed_json
+    global saved_raw_data_keys
+    global saved_raw_data
+
+    global ai_global_summary
+    global ai_global_detailed_analysis
+    global ai_thread_id
+    global ai_provider_id
+    global ai_provider_title
+    global ai_model
+    global ai_model_resolved
+    global ai_report_metadata_base64
+    global ai_extra_query_options_base64
+    global sample_names
+    global ai_pseudonym_map
+    global ai_pseudonym_map_base64
 
     # Create new temporary directory for module data exports
     initialized = True
+
     multiqc_command = ""
+    creation_date = datetime.now().astimezone()
     top_modules = []
     module_order = []
-    analysis_files = []
     modules = []
+    general_stats_plot = None
     general_stats_html = ""
     lint_errors = []
     num_flat_plots = 0
     some_plots_are_deferred = False
-    saved_raw_data = dict()
     last_found_file = None
     runtimes = Runtimes()
     peak_memory_bytes_per_module = dict()
     diff_memory_bytes_per_module = dict()
+    report_uuid = ""
+
+    reset_file_search()
+
+    ai_global_summary = ""
+    ai_global_detailed_analysis = ""
+    ai_thread_id = ""
+    ai_provider_id = ""
+    ai_provider_title = ""
+    ai_model = ""
+    ai_model_resolved = ""
+    ai_report_metadata_base64 = ""
+    ai_extra_query_options_base64 = ""
+    sample_names = []
+    ai_pseudonym_map = {}
+    ai_pseudonym_map_base64 = ""
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
     html_ids_by_scope = defaultdict(set)
     plot_data = dict()
     plot_by_id = dict()
-    general_stats_data = []
-    general_stats_headers = []
+    plot_input_data = dict()
+    general_stats_data = dict()
+    general_stats_headers = dict()
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
+    saved_raw_data_keys = OrderedDict()
+    saved_raw_data = dict()
 
-    reset_file_search()
+    plot_data_store.reset()
+
     tmp_dir.new_tmp_dir()
 
 
@@ -204,7 +280,7 @@ def file_line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tup
         if number_of_newlines == 0:
             # Use readline function so only one call is needed to complete the
             # block.
-            block = fp.readline()
+            block += fp.readline()
             number_of_newlines = 1
             block_end = len(block)
         else:
@@ -365,7 +441,7 @@ def is_searching_in_source_dir(path: Path) -> bool:
 
     if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
         logger.error(f"Error: MultiQC is running in source code directory! {path}")
-        logger.warning("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
+        logger.warning("Please see the docs for how to use MultiQC: https://docs.seqera.io/multiqc/#running-multiqc")
         return True
     else:
         return False
@@ -396,7 +472,7 @@ class SearchPattern(BaseModel):
             return None
 
         # Convert the values that can be lists/sets or str into sets
-        for k in ["contents", "contents_re", "exclude_fn", "exclude_fn_re" "exclude_contents", "exclude_contents_re"]:
+        for k in ["contents", "contents_re", "exclude_fn", "exclude_fn_re", "exclude_contents", "exclude_contents_re"]:
             val = d.get(k, [])
             if val:
                 strs = [val] if isinstance(val, str) else val
@@ -504,7 +580,15 @@ def prep_ordered_search_files_list(
 
     # Sort patterns for faster access. File searches with fewer lines or
     # smaller file sizes go first.
-    sorted_spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+    ]
     sorted_spatterns[0] = spatterns[0]  # Only filename matching
     sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
     sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
@@ -553,7 +637,7 @@ def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searc
             return False
 
         # Use mimetypes to exclude binary files where possible
-        if not re.match(r".+_mqc\.(png|jpg|jpeg)", search_f.filename) and config.ignore_images:
+        if not re.match(r".+_mqc\.(png|jpg|jpeg|gif|webp|tiff)", search_f.filename) and config.ignore_images:
             (ftype, encoding) = mimetypes.guess_type(str(path))
             if encoding is not None and encoding != "gzip":
                 return False
@@ -565,6 +649,7 @@ def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searc
         for ignore_pat in config.fn_ignore_files:
             if fnmatch.fnmatch(search_f.filename, ignore_pat):
                 is_ignore_file = True
+                break
 
         # Test file for each search pattern
         file_matched = False
@@ -628,7 +713,12 @@ def search_files(sp_keys: List[str]):
     run_search_files(spatterns, searchfiles)
 
 
-def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleId, is_ignore_file: bool = False):
+def search_file(
+    pattern: SearchPattern,
+    f: SearchFile,
+    module_key: ModuleId,
+    is_ignore_file: bool = False,
+):
     """
     Function to search a single file for a single search pattern.
     """
@@ -668,6 +758,7 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleId, is_
     query_re_patterns = pattern.contents_re
     match_strings: Set[str] = set()
     match_re_patterns: Set[re.Pattern] = set()
+
     try:
         for line_count, block in f.line_block_iterator():
             for q_string in query_strings:
@@ -721,15 +812,16 @@ def exclude_file(sp, f: SearchFile):
             return True
 
     # Search the contents of the file
-    for num_lines, line_block in f.line_block_iterator():
-        if sp.exclude_contents:
-            for pat in sp.exclude_contents:
-                if pat and pat in line_block:
-                    return True
-        if sp.exclude_contents_re:
-            for pat in sp.exclude_contents_re:
-                if pat and re.search(pat, line_block):
-                    return True
+    if sp.exclude_contents or sp.exclude_contents_re:
+        for _, line_block in f.line_block_iterator():
+            if sp.exclude_contents:
+                for pat in sp.exclude_contents:
+                    if pat and pat in line_block:
+                        return True
+            if sp.exclude_contents_re:
+                for pat in sp.exclude_contents_re:
+                    if pat and re.search(pat, line_block):
+                        return True
     return False
 
 
@@ -740,8 +832,10 @@ def data_sources_tofile(data_dir: Path):
             json.dump(data_sources, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
             # Unlike JSON, YAML represents defaultdicts as objects, so need to convert
-            # them to normal dicts
-            yaml.dump(replace_defaultdicts(data_sources), f, default_flow_style=False)
+            # them to normal dicts.
+            # Use CSafeDumper for 3-4x faster serialization when libyaml is available
+            Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+            yaml.dump(replace_defaultdicts(data_sources), f, default_flow_style=False, Dumper=Dumper)
         else:
             lines = [["Module", "Section", "Sample Name", "Source"]]
             for mod in data_sources:
@@ -766,8 +860,10 @@ def dois_tofile(data_dir: Path, module_list: List["BaseMultiqcModule"]):
             json.dump(dois, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
             # Unlike JSON, YAML represents defaultdicts as objects, so need to convert
-            # them to normal dicts
-            yaml.dump(replace_defaultdicts(dois), f, default_flow_style=False)
+            # them to normal dicts.
+            # Use CSafeDumper for 3-4x faster serialization when libyaml is available
+            Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+            yaml.dump(replace_defaultdicts(dois), f, default_flow_style=False, Dumper=Dumper)
         else:
             body = ""
             for mod_name, dois_strings in dois.items():
@@ -913,7 +1009,7 @@ def write_data_file(
                 rows.append(sep.join(headers_str))
 
             # The rest of the rows
-            for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):
+            for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):  # type: ignore
                 # Make a list starting with the sample name, then each field in order of the header cols
                 if headers:
                     assert isinstance(d, dict)
@@ -943,32 +1039,33 @@ def write_data_file(
         if data_format == "json":
             dump_json(data, f, indent=4, ensure_ascii=False)
         elif data_format == "yaml":
-            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False)
+            # Use CSafeDumper for 3-4x faster serialization when libyaml is available
+            Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False, Dumper=Dumper)
         elif body:
             # Default - tab separated output
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
     logger.debug(f"Wrote data file {fn}")
 
 
-def multiqc_dump_json():
+def multiqc_dump_json(data_dir: Path):
     """
-    Export the parsed data in memory to a JSON file.
-    Used for MegaQC and other data export.
+    Export the parsed data in memory to a JSON file and parquet file.
+    Upload to MegaQC if requested.
     WARNING: May be depreciated and removed in future versions.
     """
-    exported_data = dict()
+    exported_data: Dict[str, Any] = dict()
     export_vars = {
         "report": [
+            "multiqc_command",
             "data_sources",
             "general_stats_data",
             "general_stats_headers",
-            "multiqc_command",
+            "creation_date",
             "plot_data",
-            "saved_raw_data",
         ],
         "config": [
             "analysis_dir",
-            "creation_date",
             "git_hash",
             "intro_text",
             "report_comment",
@@ -979,6 +1076,8 @@ def multiqc_dump_json():
             "title",
             "version",
             "output_dir",
+            "sample_names_rename",
+            "sample_names_rename_buttons",
         ],
     }
     for pymod, names in export_vars.items():
@@ -986,13 +1085,50 @@ def multiqc_dump_json():
             try:
                 d = None
                 if pymod == "config":
-                    v = getattr(config, name)
-                    v = str(v) if isinstance(v, PosixPath) else v
-                    if isinstance(v, list):
-                        v = [str(el) if isinstance(el, PosixPath) else el for el in v]
-                    d = {f"{pymod}_{name}": v}
+                    val: Any = getattr(config, name)
+                    val = str(val) if isinstance(val, PosixPath) else val
+                    if isinstance(val, list):
+                        val = [str(el) if isinstance(el, PosixPath) else el for el in val]
+                    d = {f"{pymod}_{name}": val}
                 elif pymod == "report":
-                    d = {f"{pymod}_{name}": getattr(sys.modules[__name__], name)}
+                    val = getattr(sys.modules[__name__], name)
+                    if name == "general_stats_data":
+                        # Flattening sample groups for export
+                        flattened_sections: Dict[SectionKey, Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = {}
+                        for section_key, section in general_stats_data.items():
+                            fl_sec = dict()
+                            for _, rows in section.items():
+                                if isinstance(rows, list):
+                                    for row in rows:
+                                        vals = {k: v.raw if isinstance(v, Cell) else v for k, v in row.data.items()}
+                                        fl_sec[row.sample] = vals
+                                else:
+                                    fl_sec = rows  # old format without grouping, in case if user plugins override it
+                            flattened_sections[section_key] = fl_sec
+                        val = flattened_sections
+                    elif name == "modules":
+                        val = [
+                            {
+                                "name": mod.name,
+                                "anchor": mod.anchor,
+                                "versions": {
+                                    software_name: [version for _, version in versions_tuples]
+                                    for software_name, versions_tuples in mod.versions.items()
+                                },
+                                "info": mod.info,
+                                "intro": mod.intro,
+                                "comment": mod.comment,
+                                "sections": [s.__dict__ for s in mod.sections],
+                            }
+                            for mod in modules
+                        ]
+                    elif name == "creation_date":
+                        try:
+                            val = creation_date.strftime("%Y-%m-%d, %H:%M %Z")
+                        except UnicodeEncodeError:
+                            # Fall back to a format without timezone if we encounter encoding issues
+                            val = creation_date.strftime("%Y-%m-%d, %H:%M")
+                    d = {f"{pymod}_{name}": val}
                 if d:
                     with open(os.devnull, "wt") as f:
                         # Test that exporting to JSON works. Write to
@@ -1001,17 +1137,75 @@ def multiqc_dump_json():
                     exported_data.update(d)
             except (TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"Couldn't export data key '{pymod}.{name}': {e}")
-        # Get the absolute paths of analysis directories
-        exported_data["config_analysis_dir_abs"] = list()
-        for config_analysis_dir in exported_data.get("config_analysis_dir", []):
-            try:
-                exported_data["config_analysis_dir_abs"].append(str(os.path.abspath(config_analysis_dir)))
-            except Exception:
-                pass
-    return exported_data
+
+    # Get the absolute paths of analysis directories
+    config_analysis_dir_abs: List[str] = list()
+    for config_analysis_dir in exported_data.get("config_analysis_dir", []):
+        try:
+            config_analysis_dir_abs.append(str(os.path.abspath(config_analysis_dir)))
+        except Exception:
+            pass
+    exported_data["config_analysis_dir_abs"] = config_analysis_dir_abs
+
+    # Write to file
+    out_path = data_dir / "multiqc_data.json"
+    if config.data_dump_file:
+        with out_path.open("w") as f:
+            dump_json(exported_data, f, indent=4, ensure_ascii=False)
+
+    # Add raw data - but instead of all in one, write key by key to avoid loading all in memory
+    if config.data_dump_file_write_raw or config.megaqc_url:
+        try:
+            # Instead of storing in exported_data, write directly to file
+            with open(out_path, "rb+") as fh:
+                # Move cursor to end of file
+                fh.seek(0, 2)
+                # Move back until we find the last }
+                pos = fh.tell()
+                while pos > 0:
+                    pos -= 1
+                    fh.seek(pos)
+                    char = fh.read(1)
+                    if char == b"}":
+                        fh.seek(pos - 1)
+                        fh.truncate()
+                        break
+
+            # Now append the new data
+            with open(out_path, "a", encoding="utf-8") as fh:
+                fh.write(',\n    "report_saved_raw_data": {\n')
+
+                # Write each key's data individually
+                for i, key in enumerate(saved_raw_data_keys.keys()):
+                    if (json_path := data_dir / f"{key}.json").exists():
+                        fh.write(f'        "{key}": ')
+                        # Stream the contents of the individual JSON file
+                        with open(json_path, "r", encoding="utf-8") as single_fh:
+                            content = single_fh.read().strip()
+                            # Indent the content
+                            content = content.replace("\n", "\n        ")
+                            # Write the content
+                            fh.write(content)
+                        # Add comma if not last item
+                        if i < len(saved_raw_data_keys) - 1:
+                            fh.write(",\n")
+                        else:
+                            fh.write("\n")
+
+                        # Clean up individual JSON file if no longer needed
+                        json_path.unlink()
+
+                # Close the JSON object
+                fh.write("    }\n")
+                fh.write("}")
+        except Exception as e:
+            logger.warning(f"Couldn't write raw data to JSON file: {e}")
+
+        if config.megaqc_url:
+            megaqc.multiqc_api_post(out_path)
 
 
-def get_all_sections() -> List:
+def get_all_sections() -> List[Section]:
     return [s for mod in modules for s in mod.sections if not mod.hidden]
 
 
@@ -1020,7 +1214,10 @@ def remove_tmp_dir():
     Completely remove tmp dir
     """
     log_and_rich.remove_file_handler()
-    rmtree_with_retries(tmp_dir.get_tmp_dir())
+    try:
+        rmtree_with_retries(tmp_dir.get_tmp_dir())
+    except Exception as e:
+        logger.warning(f"Couldn't remove tmp dir: {e}")
     tmp_dir.new_tmp_dir()
 
 
@@ -1030,3 +1227,28 @@ def reset_tmp_dir():
     """
     remove_tmp_dir()
     tmp_dir.get_tmp_dir()
+
+
+def add_ai_summary():
+    ai.add_ai_summary_to_report()
+
+
+def anonymize_sample_name(sample: str) -> str:
+    """
+    Anonymise sample name - sample can be any key in a plot, like SAMPLE1, SAMPLE1-SAMPLE2, etc.
+    Method will attempt to replace SAMPLE1 exactly, and more complex cases with text-replace
+    which can be inacurate.
+    """
+    if not config.ai_anonymize_samples or not ai_pseudonym_map:
+        return sample
+
+    # Exact match
+    if SampleName(sample) in ai_pseudonym_map:
+        return ai_pseudonym_map[SampleName(sample)]
+
+    # Try replacing partial matches for cases like sample="SAMPLE1-SAMPLE2"
+    # Start with the longest original name ro avoid situations when one sample is a prefix of another
+    for original, pseudonym in sorted(ai_pseudonym_map.items(), key=lambda x: len(x[1]), reverse=True):
+        if original in sample:
+            sample = sample.replace(original, pseudonym)
+    return sample

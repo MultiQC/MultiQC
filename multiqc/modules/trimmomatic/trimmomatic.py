@@ -23,9 +23,10 @@ class MultiqcModule(BaseMultiqcModule):
     the filenames as sample names instead. To do so, use the following config option:
 
     ```yaml
-    trimmomatic:
-      s_name_filenames: true
+    use_filename_as_sample_name: true
     ```
+
+    Note: The old `trimmomatic.s_name_filenames` option is deprecated and will be removed in a future version.
     """
 
     def __init__(self):
@@ -75,7 +76,21 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_trimmomatic(self, f):
         s_name = None
-        if getattr(config, "trimmomatic", {}).get("s_name_filenames", False):
+        should_use_filename = False
+        if isinstance(config.use_filename_as_sample_name, list):
+            # Check for module anchor
+            if self.anchor in config.use_filename_as_sample_name:
+                should_use_filename = True
+        elif config.use_filename_as_sample_name is True:
+            should_use_filename = True
+        elif getattr(config, "trimmomatic", {}).get("s_name_filenames", False):
+            # Deprecated option - warn user
+            log.warning(
+                "The 'trimmomatic.s_name_filenames' config option is deprecated. Use the global 'use_filename_as_sample_name' option instead."
+            )
+            should_use_filename = True
+
+        if should_use_filename:
             s_name = f["s_name"]
         for line in f["f"]:
             # Get the sample name

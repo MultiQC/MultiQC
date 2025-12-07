@@ -61,9 +61,9 @@ class DragenReadMetrics(BaseMultiqcModule):
             # 'colors': self.get_status_cols('per_sequence_quality_scores'),
             "tt_label": "<b>Phred {point.x}</b>: {point.y} reads",
             "x_bands": [
-                {"from": 28, "to": 100, "color": "#c3e6c3"},
-                {"from": 20, "to": 28, "color": "#e6dcc3"},
-                {"from": 0, "to": 20, "color": "#e6c3c3"},
+                {"from": 28, "to": 100, "color": "#009500", "opacity": 0.13},
+                {"from": 20, "to": 28, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
             ],
         }
         self.add_section(

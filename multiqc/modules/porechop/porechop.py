@@ -277,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
                 description="The following samples did not have any adapters found - output reads were unchanged from input reads:",
                 content=f"""
                     <ul>
-                        <li><code>{'</code></li><li><code>'.join(no_adapters)}</code></li>
+                        <li><code>{"</code></li><li><code>".join(no_adapters)}</code></li>
                     </ul>
                 """,
             )

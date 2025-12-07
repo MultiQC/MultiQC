@@ -8,7 +8,7 @@ from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
-from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.bargraph import BarPlotConfig
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ def parse_reports(module):
                 line, picard_class="AlignmentSummaryMetrics", sentieon_algo="AlignmentStat"
             ):
                 if s_name in data_by_sample:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: " f"{s_name}")
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                 data_by_sample[s_name] = dict()
                 module.add_data_source(f, s_name, section="AlignmentSummaryMetrics")
                 keys = f["f"].readline().strip("\n").split("\t")

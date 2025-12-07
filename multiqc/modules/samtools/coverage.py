@@ -31,14 +31,14 @@ def parse_samtools_coverage(module: BaseMultiqcModule):
     # Replace None with actual version if it is available
     module.add_software_version(None)
 
-    # Write parsed report data to a file (restructure first)
-    module.write_data_file(data_by_sample, "multiqc_samtools_coverage")
-
     # Make a table/violin summarising the stats across all regions (mean or sum)
     summary_table(module, data_by_sample)
 
     # Make a line plot showing coverage stats per region, with a tab switch between stats
     lineplot_per_region(module, data_by_sample)
+
+    # Write parsed report data to a file (restructure first)
+    module.write_data_file(data_by_sample, "multiqc_samtools_coverage")
 
     # Return the number of logs that were found
     return len(data_by_sample)
@@ -119,10 +119,15 @@ def summary_table(module, data_by_sample):
         ),
     )
 
-    for h in headers:
-        headers[h]["hidden"] = True
-    headers["meandepth"]["hidden"] = False
-    module.general_stats_addcols(table_data, headers, namespace="coverage")
+    # Get general stats headers using the utility function, will read config.general_stats_columns
+    general_stats_headers = module.get_general_stats_headers(
+        all_headers=headers,
+        default_shown=["meandepth"],
+    )
+
+    # Add headers to general stats table
+    if general_stats_headers:
+        module.general_stats_addcols(table_data, general_stats_headers, namespace="coverage")
 
 
 def lineplot_per_region(module, data_by_sample: Dict):
@@ -230,7 +235,7 @@ def lineplot_per_region(module, data_by_sample: Dict):
                 "categories": True,
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_empty": False,
+                "hide_zero_cats": False,
                 "data_labels": data_labels,
             },
         ),

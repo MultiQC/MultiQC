@@ -2,9 +2,9 @@ import json
 import logging
 import os
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc import config
 
 log = logging.getLogger(__name__)
 
@@ -41,6 +41,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.bustools_data = dict()
         for f in self.find_log_files("bustools", filehandles=True):
             content = json.load(f["f"])
+            # In https://github.com/MultiQC/MultiQC/issues/3049 Bustools was changed to "Onlist" instead of "OnWhitelist"
+            for k in list(content.keys()):
+                if "Onlist" in k:
+                    content[k.replace("Onlist", "Whitelist")] = content.pop(k)
             s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
             self.bustools_data[s_name] = content
             self.add_data_source(f)

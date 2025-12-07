@@ -2,7 +2,7 @@ import logging
 from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import violin, bargraph
+from multiqc.plots import bargraph, violin
 
 log = logging.getLogger(__name__)
 
