@@ -349,8 +349,8 @@ def test_bar_plot_sample_groups():
                 "id": "test_bar_plot_sample_groups",
                 "title": "Test: Bar Graph with Sample Groups",
                 "sample_groups": {
-                    "Group 1": [("Sample1", "Sample1"), ("Sample2", "Sample2")],
-                    "Group 2": [("Sample3", "Sample3"), ("Sample4", "Sample4")],
+                    "Group 1": [["Sample1", "Sample1"], ["Sample2", "Sample2"]],
+                    "Group 2": [["Sample3", "Sample3"], ["Sample4", "Sample4"]],
                 },
             },
         )
@@ -378,8 +378,8 @@ def test_bar_plot_sample_groups_with_names():
                 "id": "test_bar_plot_sample_groups_with_names",
                 "title": "Test: Bar Graph with Named Groups",
                 "sample_groups": {
-                    "Condition A": [("Sample1", "Sample1")],
-                    "Condition B": [("Sample2", "Sample2")],
+                    "Condition A": [["Sample1", "Sample1"]],
+                    "Condition B": [["Sample2", "Sample2"]],
                 },
             },
         )
@@ -405,7 +405,7 @@ def test_bar_plot_sample_groups_ungrouped():
             {
                 "id": "test_bar_plot_sample_groups_ungrouped",
                 "title": "Test: Bar Graph with Ungrouped Samples",
-                "sample_groups": {"Group 1": [("Sample1", "Sample1")]},  # Sample2 and Sample3 not in any group
+                "sample_groups": {"Group 1": [["Sample1", "Sample1"]]},  # Sample2 and Sample3 not in any group
             },
         )
     )
@@ -427,7 +427,7 @@ def test_bar_plot_sample_groups_disables_sort():
         {
             "id": "test_bar_plot_sample_groups_disables_sort",
             "title": "Test",
-            "sample_groups": {"Group 1": [("Sample1", "Sample1")], "Group 2": [("Sample2", "Sample2")]},
+            "sample_groups": {"Group 1": [["Sample1", "Sample1"]], "Group 2": [["Sample2", "Sample2"]]},
             "sort_samples": True,  # Should be overridden
         },
     )
@@ -445,7 +445,7 @@ def test_bar_plot_sample_groups_disables_clustering():
         {
             "id": "test_bar_plot_sample_groups_disables_clustering",
             "title": "Test",
-            "sample_groups": {"Group 1": [("Sample1", "Sample1")], "Group 2": [("Sample2", "Sample2")]},
+            "sample_groups": {"Group 1": [["Sample1", "Sample1"]], "Group 2": [["Sample2", "Sample2"]]},
             "cluster_samples": True,  # Should be overridden
         },
     )
@@ -468,9 +468,9 @@ def test_bar_plot_sample_groups_empty_group():
                 "id": "test_bar_plot_sample_groups_empty_group",
                 "title": "Test: Bar Graph with Empty Group",
                 "sample_groups": {
-                    "Group A": [("Sample1", "Sample1")],
-                    "Empty Group": [("NonExistentSample", "NonExistent")],  # This group has no matching samples
-                    "Group B": [("Sample2", "Sample2")],
+                    "Group A": [["Sample1", "Sample1"]],
+                    "Empty Group": [["NonExistentSample", "NonExistent"]],  # This group has no matching samples
+                    "Group B": [["Sample2", "Sample2"]],
                 },
             },
         )
@@ -487,7 +487,7 @@ def test_bar_plot_sample_groups_empty_group():
 
 def test_bar_plot_sample_groups_multiple_entries():
     """
-    Test same sample appearing in multiple groups with tuples for offset alignment
+    Test same sample appearing in multiple groups with lists for offset alignment
     """
     plot = _verify_rendered(
         bargraph.plot(
@@ -502,8 +502,8 @@ def test_bar_plot_sample_groups_multiple_entries():
                 "id": "test_bar_plot_sample_groups_multiple_entries",
                 "title": "Test: Bar Graph with Multiple Entries Per Sample",
                 "sample_groups": {
-                    "25nt": [("Sample1_25nt", "Sample1"), ("Sample2_25nt", "Sample2")],
-                    "26nt": [("Sample1_26nt", "Sample1"), ("Sample2_26nt", "Sample2")],
+                    "25nt": [["Sample1_25nt", "Sample1"], ["Sample2_25nt", "Sample2"]],
+                    "26nt": [["Sample1_26nt", "Sample1"], ["Sample2_26nt", "Sample2"]],
                 },
             },
         )

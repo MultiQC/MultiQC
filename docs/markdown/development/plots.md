@@ -228,7 +228,7 @@ Note that, as in this example, the plot data can be the same dictionary supplied
 
 ### Grouped stacked bar charts
 
-Use `sample_groups` to create grouped stacked bar charts where bars are organized into visual groups on the y-axis. The config is a dict mapping group labels to lists of `(sample_name, offset_group)` tuples:
+Use `sample_groups` to create grouped stacked bar charts where bars are organized into visual groups on the y-axis. The config is a dict mapping group labels to lists of `[sample_name, offset_group]` pairs:
 
 - **Group label** (dict key): Displayed on the y-axis (e.g., read lengths like "25nt", "26nt")
 - **sample_name**: The key in the data dict identifying this sample
@@ -248,8 +248,8 @@ pconfig = {
     'id': 'my_bargraph',
     'title': 'My Bar Graph',
     'sample_groups': {
-        '25nt': [('sample1_25nt', 'sample1'), ('sample2_25nt', 'sample2')],
-        '26nt': [('sample1_26nt', 'sample1'), ('sample2_26nt', 'sample2')],
+        '25nt': [['sample1_25nt', 'sample1'], ['sample2_25nt', 'sample2']],
+        '26nt': [['sample1_26nt', 'sample1'], ['sample2_26nt', 'sample2']],
     }
 }
 

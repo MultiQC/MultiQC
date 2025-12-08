@@ -36,7 +36,7 @@ SampleNameT = Union[SampleName, str]
 CatName = NewType("CatName", str)
 CatNameT = Union[CatName, str]
 InputDatasetT = Union[Mapping[SampleName, Mapping[CatName, Any]], Mapping[str, Mapping[str, Any]]]
-SampleGroupEntry = Tuple[str, str]  # (sample_name, offset_group)
+SampleGroupEntry = List[str]  # [sample_name, offset_group]
 
 
 class CatConf(ValidatedConfig):
@@ -82,9 +82,9 @@ class BarPlotConfig(PConfig):
         if "sample_groups" in data and data["sample_groups"] is not None:
             for group_name, entries in data["sample_groups"].items():
                 for entry in entries:
-                    if not isinstance(entry, (tuple, list)) or len(entry) != 2:
+                    if not isinstance(entry, list) or len(entry) != 2:
                         raise ValueError(
-                            f"sample_groups['{group_name}'] entries must be (sample_name, offset_group) tuples, "
+                            f"sample_groups['{group_name}'] entries must be [sample_name, offset_group] lists, "
                             f"got: {entry!r}"
                         )
 
@@ -161,7 +161,7 @@ def _cluster_samples(data: DatasetT, cats: Dict[CatName, Any], method: str = "co
 
 def _reorder_by_groups(
     datasets: List[DatasetT],
-    sample_groups: Dict[str, List[Tuple[str, str]]],
+    sample_groups: Dict[str, List[List[str]]],
 ) -> Tuple[List[DatasetT], List[List[str]], List[Dict[str, str]]]:
     """
     Reorder samples according to groups and generate group labels for multicategory axis.
