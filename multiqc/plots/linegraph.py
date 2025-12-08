@@ -107,6 +107,9 @@ class Series(ValidatedConfig, Generic[KeyT, ValT]):
 SeriesT = Union[Series, Dict[str, Any]]
 
 
+AxisStr = Literal["xaxis", "yaxis"]
+
+
 class LinePlotConfig(PConfig):
     xlab: Optional[str] = None
     ylab: Optional[str] = None
@@ -120,7 +123,7 @@ class LinePlotConfig(PConfig):
     dash_styles: Dict[str, str] = {}
     hovertemplates: Dict[str, str] = {}
     legend_groups: Dict[str, str] = {}
-    axis_controlled_by_switches: Optional[List[str]] = None
+    axis_controlled_by_switches: Optional[List[AxisStr]] = None
 
     @classmethod
     def parse_extra_series(
@@ -624,7 +627,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
             pconfig=pconfig,
             anchor=anchor,
             n_series_per_dataset=n_samples_per_dataset,
-            axis_controlled_by_switches=axis_controlled_by_switches,
+            axis_controlled_by_switches=list(axis_controlled_by_switches),
             default_tt_label="<br>%{x}: %{y}",
         )
 
