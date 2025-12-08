@@ -384,6 +384,7 @@ fn_clean_exts:
   - "_totalBaseConversionRate"
   - "_totalReadConversionRate"
   - ".sylphmpa"
+  - "_qual"
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
 # Affects all modules that support it (e.g. fastqc, cutadapt)

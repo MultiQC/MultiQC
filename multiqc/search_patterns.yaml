@@ -861,6 +861,9 @@ rna_seqc/html:
   fn: "index.html"
   contents: "RNA-SeQC</a> v"
   num_lines: 200
+ribotish/qual:
+  fn: "*_qual.txt"
+  num_lines: 10
 rockhopper:
   fn: "summary.txt"
   contents: "Number of gene-pairs predicted to be part of the same operon"

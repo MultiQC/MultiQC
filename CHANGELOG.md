@@ -19,6 +19,7 @@ The old template is still available, but has been renamed to `original`.
 ### Module updates
 
 - Move most of Xenium code into a [plugin](https://github.com/MultiQC/xenium-extra) ([#3376](https://github.com/MultiQC/MultiQC/pull/3376))
+- Add more decimal to general table stats for glimpse module ([#3423](https://github.com/MultiQC/MultiQC/pull/3423))
 
 ### Fixes
 
@@ -27,6 +28,7 @@ The old template is still available, but has been renamed to `original`.
 - Update Dockerfile to optionally include all LaTeX requirements for `--pdf` ([#3349](https://github.com/MultiQC/MultiQC/pull/3349))
 - Update Claude Code GitHub Workflow ([#3353](https://github.com/MultiQC/MultiQC/pull/3353))
 - Remove bedrock availability check when creating client ([#3352](https://github.com/MultiQC/MultiQC/pull/3352))
+- Add new flag "axis_controlled_by_switches" to pconfig that allow control of which axis to apply logarithmic scale ([#3423](https://github.com/MultiQC/MultiQC/pull/3423))
 
 ## [MultiQC v1.31](https://github.com/MultiQC/MultiQC/releases/tag/v1.31) - 2025-09-05
 
