@@ -8,8 +8,6 @@ from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
-VERSION_REGEX = r"Starting QoRTs v(\d+\.\d+[\.\d]*)"
-
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
@@ -46,10 +44,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse version from log files
         for f in self.find_log_files("qorts/log"):
             self.parse_qorts_log(f)
-
-        # If no version found, still call add_software_version to satisfy the linter
-        if not self.versions:
-            self.add_software_version(None)
 
         self.write_data_file(self.qorts_data, "multiqc_qorts")
 
@@ -309,7 +303,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_qorts_log(self, f):
         """Parse QoRTs log files to extract version information."""
-        match = re.search(VERSION_REGEX, f["f"])
+        match = re.search(r"Starting QoRTs v(\d+\.\d+[\.\d]*)", f["f"])
         if match:
             # Derive sample name from directory (same logic as parse_qorts for single-sample)
             s_name = self.clean_s_name(os.path.basename(os.path.normpath(f["root"])), f)
