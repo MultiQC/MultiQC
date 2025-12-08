@@ -129,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
         # A dictionary to store the results
         lima_counts = dict()
         for line in file_content:
-            spline = line.strip().split()
+            spline = line.strip().split("\t")
             data = {field: value for field, value in zip(header, spline)}
 
             first_barcode = data["IdxFirstNamed"]

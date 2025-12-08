@@ -109,6 +109,7 @@ collapse_tables: true
 max_table_rows: 500
 max_configurable_table_columns: 200
 general_stats_columns: {}
+general_stats_helptext: null
 table_columns_visible: {}
 table_columns_placement: {}
 table_columns_name: {}
@@ -383,6 +384,7 @@ fn_clean_exts:
   - "_totalBaseConversionRate"
   - "_totalReadConversionRate"
   - ".sylphmpa"
+  - "_qual"
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
 # Affects all modules that support it (e.g. fastqc, cutadapt)
