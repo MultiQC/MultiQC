@@ -258,6 +258,48 @@ window.callAfterDecompressed.push(function (mqc_plotdata) {
     }
   });
 
+  // A "Heatmap" toggle button above a line plot is clicked
+  $("button.interactive-switch-group.heatmap-switch").click(function (e) {
+    e.preventDefault();
+    let plotAnchor = $(this).data("plot-anchor");
+    let plot = mqc_plots[plotAnchor];
+    if (!plot) return;
+
+    plot.heatmapMode = !$(this).hasClass("active");
+    $(this).toggleClass("active");
+
+    // Show/hide sort buttons based on heatmap mode
+    let sortGroup = $(this).siblings(".heatmap-sort-group");
+    if (plot.heatmapMode) {
+      sortGroup.show();
+    } else {
+      sortGroup.hide();
+    }
+
+    if (plot.rendered) {
+      renderPlot(plotAnchor);
+    }
+  });
+
+  // Heatmap sort buttons clicked
+  $("button.heatmap-sort-btn").click(function (e) {
+    e.preventDefault();
+    let $btn = $(this);
+    let plotAnchor = $btn.data("plot-anchor");
+    let sortMode = $btn.data("sort-mode");
+    let plot = mqc_plots[plotAnchor];
+    if (!plot) return;
+
+    // Update button states
+    $btn.addClass("active").siblings(".heatmap-sort-btn").removeClass("active");
+
+    plot.heatmapSortMode = sortMode;
+
+    if (plot.rendered) {
+      renderPlot(plotAnchor);
+    }
+  });
+
   // Switch data source
   $(".interactive-switch-group.dataset-switch-group button").click(function (e) {
     e.preventDefault();
