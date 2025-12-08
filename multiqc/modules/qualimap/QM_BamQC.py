@@ -53,10 +53,6 @@ def parse_reports(module: BaseMultiqcModule):
             s_name = get_s_name(module, f)
             module.add_software_version(version, s_name)
 
-    # If no version found, still call add_software_version to satisfy the linter
-    if not module.versions:
-        module.add_software_version(None)
-
     threshs, hidden_threshs = config.get_cov_thresholds("qualimap_config")
 
     # Make the plots for the report

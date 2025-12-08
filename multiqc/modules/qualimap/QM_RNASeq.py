@@ -157,10 +157,6 @@ def parse_reports(module: BaseMultiqcModule) -> int:
             s_name = get_s_name(module, f)
             module.add_software_version(version, s_name)
 
-    # If no version found, still call add_software_version to satisfy the linter
-    if not module.versions:
-        module.add_software_version(None)
-
     # Filter to strip out ignored sample names
     genome_results = module.ignore_samples(genome_results)
     cov_hist = module.ignore_samples(cov_hist)
