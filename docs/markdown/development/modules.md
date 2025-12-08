@@ -179,7 +179,6 @@ plugins for [Prettier](https://github.com/prettier/prettier-vscode).
 ## Other style considerations
 
 1. We use modern Python 3, thus:
-
    - Always use f-strings (e.g. `f"{var}"`) over the legacy `"{var}".format()` calls.
    - Use double quotes for strings.
    - Built-in `dict` preserve order, thus most of the time you don't need to use `OrderedDict`.

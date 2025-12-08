@@ -276,6 +276,7 @@ def parse_single_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
         fields = line.strip().split("\t")
         if len(fields) != len(EXPECTED_COLUMNS):
             logging.warning(f"Skipping line with {len(fields)} fields, expected {len(EXPECTED_COLUMNS)}: {line}")
+            continue
         rname, startpos, endpos, numreads, covbases, coverage, meandepth, meanbaseq, meanmapq = fields
         if rname in parsed_data:
             logging.warning(f"Duplicate region found in '{f['s_name']}': {rname}")

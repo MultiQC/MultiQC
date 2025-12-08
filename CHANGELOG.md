@@ -240,7 +240,6 @@ Few fixes and improvements in AI summaries:
 ### Feature updates and improvements
 
 - AI summaries:
-
   - Add "Chat with Seqera AI" buttons to all summaries ([#3067](https://github.com/MultiQC/MultiQC/pull/3067))
   - Add options to configure custom OpenAI endpoint ([#3083](https://github.com/MultiQC/MultiQC/pull/3083))
   - Support anonymizing sample names ([#3074](https://github.com/MultiQC/MultiQC/pull/3074))
@@ -252,7 +251,6 @@ Few fixes and improvements in AI summaries:
   - Make token count warning a debug ([#3071](https://github.com/MultiQC/MultiQC/pull/3071))
 
 - Improving table small scatter plots:
-
   - Support hide, rename, highlight ([#3082](https://github.com/MultiQC/MultiQC/pull/3082))
   - Remove legend to make more space ([#3081](https://github.com/MultiQC/MultiQC/pull/3081))
 

@@ -33,10 +33,11 @@ dependencies = [
     "polars-lts-cpu",     # for parquet support. Using LTS version for compatibility with older architectures
     "pyarrow",            # for parquet support
 ]
-requires-python = ">=3.8"
+# Avoid cPython bug in 3.14.1 - https://github.com/python/cpython/issues/142214
+requires-python = ">=3.8, !=3.14.1"
 authors = [
     { name = "Phil Ewels", email = "phil.ewels@seqera.io" },
-    { name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io" },
+    { name = "Vlad Savelyev", email = "vladislav.sav@gmail.com" },
 ]
 description = "Create aggregate bioinformatics analysis reports across many samples and tools"
 readme = "README.md"
@@ -236,6 +237,7 @@ samtools = "multiqc.modules.samtools:MultiqcModule"
 sargasso = "multiqc.modules.sargasso:MultiqcModule"
 seqera_cli = "multiqc.modules.seqera_cli:MultiqcModule"
 seqfu = "multiqc.modules.seqfu:MultiqcModule"
+seqkit = "multiqc.modules.seqkit:MultiqcModule"
 sequali = "multiqc.modules.sequali:MultiqcModule"
 seqwho = "multiqc.modules.seqwho:MultiqcModule"
 seqyclean = "multiqc.modules.seqyclean:MultiqcModule"
