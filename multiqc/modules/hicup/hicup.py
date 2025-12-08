@@ -271,6 +271,7 @@ class MultiqcModule(BaseMultiqcModule):
             version = match.group(1)
             # Try to derive sample name from HTML filename
             # HTML files are named like: Sample-1.A002.C8DRAANXX.s_2.r_1_2.HiCUP_summary_report.html
-            base_name = f["fn"].removesuffix(".HiCUP_summary_report.html")
+            suffix = ".HiCUP_summary_report.html"
+            base_name = f["fn"][: -len(suffix)] if f["fn"].endswith(suffix) else f["fn"]
             s_name = self.clean_s_name(base_name, f)
             self.add_software_version(version, s_name)
