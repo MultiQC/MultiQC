@@ -113,6 +113,7 @@ bcl2fastq:
   num_lines: 300
 bclconvert/runinfo:
   fn: "RunInfo.xml"
+  shared: true
 bclconvert/demux:
   fn: "Demultiplex_Stats.csv"
 bclconvert/quality_metrics:
@@ -918,6 +919,14 @@ samtools/markdup_json:
   num_lines: 10
 sargasso:
   fn: "overall_filtering_summary.txt"
+sav/runinfo:
+  fn: "RunInfo.xml"
+  contents: "<Run "
+  num_lines: 5
+  shared: true
+sav/runparameters:
+  fn_re: "[Rr]un[Pp]arameters\\.xml"
+  num_lines: 50
 seqfu/stats:
   contents: "File	#Seq	Total bp	Avg	N50	N75	N90	auN	Min	Max"
   num_lines: 1
