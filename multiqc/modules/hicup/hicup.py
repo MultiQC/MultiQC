@@ -7,8 +7,6 @@ from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
-VERSION_REGEX = r"HiCUP.*?\((\d+\.\d+[\.\d]*)\)"
-
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
@@ -268,7 +266,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_hicup_html(self, f):
         """Parse HiCUP HTML reports to extract version information."""
-        match = re.search(VERSION_REGEX, f["f"])
+        match = re.search(r"HiCUP.*?\((\d+\.\d+[\.\d]*)\)", f["f"])
         if match:
             version = match.group(1)
             # Try to derive sample name from HTML filename
