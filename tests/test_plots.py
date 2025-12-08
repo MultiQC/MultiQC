@@ -332,6 +332,196 @@ def test_bar_plot_no_cats():
     assert len(report.plot_data[plot.anchor]["datasets"][0]["cats"]) == 3
 
 
+def test_bar_plot_sample_groups():
+    """
+    Test sample_groups configuration for visual grouping
+    """
+    plot = _verify_rendered(
+        bargraph.plot(
+            {
+                "Sample1": {"Cat1": 10, "Cat2": 20},
+                "Sample2": {"Cat1": 15, "Cat2": 25},
+                "Sample3": {"Cat1": 12, "Cat2": 22},
+                "Sample4": {"Cat1": 18, "Cat2": 28},
+            },
+            ["Cat1", "Cat2"],
+            {
+                "id": "test_bar_plot_sample_groups",
+                "title": "Test: Bar Graph with Sample Groups",
+                "sample_groups": {
+                    "Group 1": [["Sample1", "Sample1"], ["Sample2", "Sample2"]],
+                    "Group 2": [["Sample3", "Sample3"], ["Sample4", "Sample4"]],
+                },
+            },
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    # Samples should be reordered according to groups
+    assert ds["samples"] == ["Sample4", "Sample3", "Sample2", "Sample1"]  # reversed for display
+    # Group labels should be present
+    assert ds["group_labels"] == ["Group 2", "Group 2", "Group 1", "Group 1"]  # reversed
+
+
+def test_bar_plot_sample_groups_with_names():
+    """
+    Test sample_groups with custom group names (now directly in dict keys)
+    """
+    plot = _verify_rendered(
+        bargraph.plot(
+            {
+                "Sample1": {"Cat1": 10},
+                "Sample2": {"Cat1": 15},
+            },
+            ["Cat1"],
+            {
+                "id": "test_bar_plot_sample_groups_with_names",
+                "title": "Test: Bar Graph with Named Groups",
+                "sample_groups": {
+                    "Condition A": [["Sample1", "Sample1"]],
+                    "Condition B": [["Sample2", "Sample2"]],
+                },
+            },
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    # Custom group names should be used
+    assert ds["group_labels"] == ["Condition B", "Condition A"]  # reversed
+
+
+def test_bar_plot_sample_groups_ungrouped():
+    """
+    Test that samples not in any group get added to 'Other'
+    """
+    plot = _verify_rendered(
+        bargraph.plot(
+            {
+                "Sample1": {"Cat1": 10},
+                "Sample2": {"Cat1": 15},
+                "Sample3": {"Cat1": 20},
+            },
+            ["Cat1"],
+            {
+                "id": "test_bar_plot_sample_groups_ungrouped",
+                "title": "Test: Bar Graph with Ungrouped Samples",
+                "sample_groups": {"Group 1": [["Sample1", "Sample1"]]},  # Sample2 and Sample3 not in any group
+            },
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    # Sample1 should be in Group 1, others in Other
+    # Order: grouped samples first (Sample1), then ungrouped (Sample2, Sample3)
+    assert "Other" in ds["group_labels"]
+    assert "Group 1" in ds["group_labels"]
+
+
+def test_bar_plot_sample_groups_disables_sort():
+    """
+    Test that sample_groups disables sort_samples
+    """
+    inputs = bargraph.BarPlotInputData.create(
+        {"Sample1": {"Cat1": 10}, "Sample2": {"Cat1": 15}},
+        ["Cat1"],
+        {
+            "id": "test_bar_plot_sample_groups_disables_sort",
+            "title": "Test",
+            "sample_groups": {"Group 1": [["Sample1", "Sample1"]], "Group 2": [["Sample2", "Sample2"]]},
+            "sort_samples": True,  # Should be overridden
+        },
+    )
+
+    assert inputs.pconfig.sort_samples is False
+
+
+def test_bar_plot_sample_groups_disables_clustering():
+    """
+    Test that sample_groups disables cluster_samples
+    """
+    inputs = bargraph.BarPlotInputData.create(
+        {"Sample1": {"Cat1": 10}, "Sample2": {"Cat1": 15}},
+        ["Cat1"],
+        {
+            "id": "test_bar_plot_sample_groups_disables_clustering",
+            "title": "Test",
+            "sample_groups": {"Group 1": [["Sample1", "Sample1"]], "Group 2": [["Sample2", "Sample2"]]},
+            "cluster_samples": True,  # Should be overridden
+        },
+    )
+
+    assert inputs.pconfig.cluster_samples is False
+
+
+def test_bar_plot_sample_groups_empty_group():
+    """
+    Test that empty groups (groups with no matching samples) are handled gracefully
+    """
+    plot = _verify_rendered(
+        bargraph.plot(
+            {
+                "Sample1": {"Cat1": 10},
+                "Sample2": {"Cat1": 15},
+            },
+            ["Cat1"],
+            {
+                "id": "test_bar_plot_sample_groups_empty_group",
+                "title": "Test: Bar Graph with Empty Group",
+                "sample_groups": {
+                    "Group A": [["Sample1", "Sample1"]],
+                    "Empty Group": [["NonExistentSample", "NonExistent"]],  # This group has no matching samples
+                    "Group B": [["Sample2", "Sample2"]],
+                },
+            },
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    # Only samples that exist should be in the output
+    # Empty group should not contribute any samples or labels
+    assert len(ds["samples"]) == 2
+    assert len(ds["group_labels"]) == 2
+    # Group labels should be "Group A" and "Group B" (no "Empty Group")
+    assert "Empty Group" not in ds["group_labels"]
+
+
+def test_bar_plot_sample_groups_multiple_entries():
+    """
+    Test same sample appearing in multiple groups with lists for offset alignment
+    """
+    plot = _verify_rendered(
+        bargraph.plot(
+            {
+                "Sample1_25nt": {"Frame0": 50, "Frame1": 30, "Frame2": 20},
+                "Sample1_26nt": {"Frame0": 60, "Frame1": 25, "Frame2": 15},
+                "Sample2_25nt": {"Frame0": 55, "Frame1": 28, "Frame2": 17},
+                "Sample2_26nt": {"Frame0": 65, "Frame1": 22, "Frame2": 13},
+            },
+            ["Frame0", "Frame1", "Frame2"],
+            {
+                "id": "test_bar_plot_sample_groups_multiple_entries",
+                "title": "Test: Bar Graph with Multiple Entries Per Sample",
+                "sample_groups": {
+                    "25nt": [["Sample1_25nt", "Sample1"], ["Sample2_25nt", "Sample2"]],
+                    "26nt": [["Sample1_26nt", "Sample1"], ["Sample2_26nt", "Sample2"]],
+                },
+            },
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    # All 4 samples should be present
+    assert len(ds["samples"]) == 4
+    # Group labels should have 2 of each type
+    assert ds["group_labels"].count("25nt") == 2
+    assert ds["group_labels"].count("26nt") == 2
+    # Offset groups should map sample keys to their base sample names
+    assert ds["offset_groups"]["Sample1_25nt"] == "Sample1"
+    assert ds["offset_groups"]["Sample1_26nt"] == "Sample1"
+    assert ds["offset_groups"]["Sample2_25nt"] == "Sample2"
+    assert ds["offset_groups"]["Sample2_26nt"] == "Sample2"
+
+
 def test_linegraph_smooth():
     SMOOTH_TO = 2
     dataset = {"Smoothed": {0: 1, 1: 1, 2: 1}, "Unsmoothed": {0: 1, 1: 1}}
