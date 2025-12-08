@@ -8,7 +8,6 @@ from typing import Dict, Tuple, List
 from multiqc import BaseMultiqcModule
 from multiqc.plots import table, linegraph
 from multiqc.modules.cellranger.utils import (
-    resolve_dict,
     set_hidden_cols,
     SectionData,
     update_data_and_header,
@@ -185,7 +184,7 @@ def parse_multi_html(module: BaseMultiqcModule):
                     pconfig={
                         "namespace": "Multi-VDJ-B",
                         "id": "cellranger-multi-vdj-b-expression-table",
-                        "title": "CellRanger Multi: VDJ-B Exppression Metrics",
+                        "title": "CellRanger Multi: VDJ-B Expression Metrics",
                     },
                 ),
             )
@@ -245,7 +244,7 @@ def parse_multi_html(module: BaseMultiqcModule):
                     pconfig={
                         "namespace": "Multi-Antibody",
                         "id": "cellranger-multi-antibody-expression-mapping-table",
-                        "title": "CellRanger Multi: VDJ-B alerts",
+                        "title": "CellRanger Multi: Antibody Expression and Mapping metrics",
                     },
                 ),
             )
@@ -451,6 +450,7 @@ def parse_multi_html(module: BaseMultiqcModule):
         gex_library_metrics_summary,
         gex_bc_plot,
         gex_genes_plot,
+        gex_sequencing_plot,
         vdj_t_alerts,
         vdj_t_expression_metrics,
         vdj_t_annotation_metrics,
@@ -473,10 +473,10 @@ def parse_multi_html(module: BaseMultiqcModule):
 
 
 def _get_column_colors(tab: str, section: str, version: str) -> Dict:
-    is_v7 = re.match(re.compile(r"7\.[0-9]\.[0-9]"), version)
-    is_v8 = re.match(re.compile(r"8\.[0-9]\.[0-9]"), version)
+    is_v7 = re.match(r"7\.[0-9]\.[0-9]", version)
+    is_v8 = re.match(r"8\.[0-9]\.[0-9]", version)
     if not (is_v7 or is_v8):
-        log.warn(f"Version {version} did not match to a known version")
+        log.warning(f"Version {version} did not match a supported CellRanger version")
 
     if tab == "gex":
         if section == "hero_metrics":
@@ -530,7 +530,7 @@ def _get_column_colors(tab: str, section: str, version: str) -> Dict:
                 "Confidently mapped reads in cells": "Greys",
                 "Mean reads per cell": "Greys",
             }
-        log.critical(f"Section {section} not recognized in tab {tab}")
+        log.warning(f"Section {section} not recognized in tab {tab}")
         return {}
     if tab == "vdj-t":
         if section == "hero_metrics":
@@ -548,7 +548,7 @@ def _get_column_colors(tab: str, section: str, version: str) -> Dict:
                 "Cells with productive TRB contig": "Greens",
                 "Paired clonotype diversity": "Purples",
             }
-        log.critical(f"Section {section} not recognized in tab {tab}")
+        log.warning(f"Section {section} not recognized in tab {tab}")
         return {}
     if tab == "vdj-b":
         if section == "hero_metrics":
@@ -568,7 +568,7 @@ def _get_column_colors(tab: str, section: str, version: str) -> Dict:
                 "Cells with productive IGL contig": "Blues",
                 "Paired clonotype diversity": "Purples",
             }
-        log.critical(f"Section {section} not recognized in tab {tab}")
+        log.warning(f"Section {section} not recognized in tab {tab}")
         return {}
     if tab == "antibody":
         if section == "hero_metrics":
@@ -591,9 +591,9 @@ def _get_column_colors(tab: str, section: str, version: str) -> Dict:
                 "Mean antibody reads usable per cell": "Blues",
                 "Antibody reads in cells": "Greens",
             }
-        log.critical(f"Section {section} not recognized in tab {tab}")
+        log.warning(f"Section {section} not recognized in tab {tab}")
         return {}
-    log.critical(f"Tab {tab} not recognized")
+    log.warning(f"Tab {tab} not recognized")
     return {}
 
 
@@ -604,7 +604,7 @@ def _parse_table(
         return {}, {}
 
     if len(table_root["table"]["rows"]) > 1:
-        log.critical(f'Multiple rows for table: {table_root["help"].get("title", "UNDEFINED TABLE TITLE")}')
+        log.error(f"Multiple rows for table: {table_root['help'].get('title', 'UNDEFINED TABLE TITLE')}")
 
     table_keys = table_root["table"]["header"]
     table_data = table_root["table"]["rows"][0]
@@ -654,12 +654,9 @@ def _parse_all_alerts(sample_alert_list: List, library_alert_list: List):
         else:
             # ERROR > WARN > INFO
             remap = {"ERROR": 2, "WARN": 1, "INFO": 0}
-            sample_alert_value = sample_alerts[sample_alert_key]
-            library_alert_value = total_alerts[sample_alert_key]
-
-            if remap.get(sample_alert_value, 3) > remap.get(library_alert_value, 3):
-                total_alerts[sample_alert_key] = library_alert_value
-                total_alerts[sample_alert_key] = library_headers[sample_alert_key]
+            if remap.get(sample_alerts[sample_alert_key], 3) > remap.get(total_alerts[sample_alert_key], 3):
+                total_alerts[sample_alert_key] = sample_alerts[sample_alert_key]
+                total_headers[sample_alert_key] = sample_headers[sample_alert_key]
     return total_alerts, total_headers
 
 
@@ -692,11 +689,11 @@ def _build_gex_data(
     sample_websummary = data.get("sample_websummary", {}).get("gex_tab", {})
     library_websummary = data.get("library_websummary", {}).get("gex_tab", {})
 
-    if not sample_websummary or not library_websummary:
-        log.debug("No Gene-Expression data found")
-        return
     if not sample_websummary and not library_websummary:
         log.debug("Gene-Expression data incomplete")
+        return
+    if not sample_websummary or not library_websummary:
+        log.debug("No Gene-Expression data found")
         return
 
     parsed_alerts, parsed_alert_headers = _parse_all_alerts(sample_websummary["alerts"], library_websummary["alerts"])

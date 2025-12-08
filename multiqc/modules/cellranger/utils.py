@@ -112,16 +112,6 @@ def transform_data(data: Dict[str, List]) -> Dict[str, Union[int, str, float]]:
     return value_dict
 
 
-def resolve_dict(data: dict, path: list):
-    """Return the contents of a dictionary after traversing the path provided"""
-
-    cdata = data
-    for entry in path:
-        cdata = cdata[entry]
-
-    return cdata
-
-
 def update_data_and_header(data: Dict, header: Dict, color_dict: Dict, logger: logging.Logger):
     """Transform data and headers of a table"""
     for key in data:
