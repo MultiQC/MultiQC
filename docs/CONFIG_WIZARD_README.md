@@ -26,14 +26,12 @@ The MultiQC Configuration Wizard is a web-based tool that helps you create custo
    ```
 
 2. **Configure MultiQC**
-
    - Navigate through different configuration sections using the sidebar
    - Fill in the fields you want to customize
    - See descriptions and default values for each option
    - Track your progress with the progress bar
 
 3. **Generate Configuration**
-
    - Click "Preview YAML" to see your configuration
    - Click "Download Config" to save the `multiqc_config.yaml` file
 
