@@ -211,7 +211,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "scale": "YlGn",
                 "suffix": "%",
-                "format": "{:,.2f}",
             },
             "dup_q40": {
                 "title": "Dup. % for Q40 Reads",
@@ -220,7 +219,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "scale": "Reds",
                 "suffix": "%",
-                "format": "{:,.2f}",
                 "hidden": True,
             },
             "dup_all": {
@@ -230,7 +228,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "scale": "Reds",
                 "suffix": "%",
-                "format": "{:,.2f}",
             },
         }
 
@@ -404,6 +401,9 @@ class MultiqcModule(BaseMultiqcModule):
         pd1 = {}
         pd2 = {}
         for s_name, d in self.biscuit_data["dup_report"].items():
+            # Duplicate rates of zero are more likely to be missing data than a
+            # real value of zero. These are included in the general stats table
+            # above, so they are at least retained in part for the user.
             if "all" in d and d["all"] > 0:
                 pd1[s_name] = {"dup_rate": d["all"]}
             if "q40" in d and d["q40"] > 0:
@@ -435,7 +435,11 @@ class MultiqcModule(BaseMultiqcModule):
                 helptext="""
                     `MAPQ >= 40` shows the duplicate rate for just the reads
                     with a mapping quality score of `MAPQ >= 40`. `All` shows
-                    the overall duplicate rate.
+                    the overall duplicate rate. Samples with a duplicate rate of
+                    zero are excluded from the plot, though they are retained in
+                    the general stats table. These are likely due to missing data
+                    rather than a true duplicate rate of zero and are excluded
+                    for this reason.
                 """,
                 plot=bargraph.plot([pd1, pd2], [pheader, pheader], pconfig),
             )
