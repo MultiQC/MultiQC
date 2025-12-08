@@ -228,11 +228,11 @@ Note that, as in this example, the plot data can be the same dictionary supplied
 
 ### Grouped stacked bar charts
 
-Use `sample_groups` to create grouped stacked bar charts where bars are organized into visual groups on the y-axis. The config is a dict mapping group labels to lists of `[sample_name, offset_group]` pairs:
+Use `sample_groups` to create grouped stacked bar charts where bars are organized into visual groups on the y-axis. The config is a dict mapping group labels to lists of `[sample name, group ID]` pairs:
 
-- **Group label** (dict key): Displayed on the y-axis (e.g., read lengths like "25nt", "26nt")
-- **sample_name**: The key in the data dict identifying this sample
-- **offset_group**: Determines the visual "lane" within each group. Samples with the same `offset_group` are aligned vertically across different group labels, making it easy to compare the same sample across conditions.
+- **Group label** (dict key): Displayed on the y-axis
+- **Sample name**: The key in the data dict identifying this sample
+- **Group ID**: Determines the visual "lane" within each group. Samples with the same ID are aligned vertically across different group labels.
 
 ```python
 from multiqc.plots import bargraph
@@ -257,6 +257,10 @@ html = bargraph.plot(data, cats, pconfig=pconfig)
 ```
 
 In this example, for each read length group (`25nt`, `26nt`), bars with the same `offset_group` (`sample1` or `sample2`) are aligned at the same horizontal position, allowing direct visual comparison of sample1 vs sample2 across read lengths.
+
+![bargraph sample groups](../../../docs/images/bargraph_sample_groups.png)
+
+See the [custom content example file](https://github.com/MultiQC/test-data/blob/main/data/custom_content/embedded_config/frame_bargraph_mqc.csv) to reproduce this plot.
 
 ## Line graphs
 
