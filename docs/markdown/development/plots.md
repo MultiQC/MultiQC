@@ -298,6 +298,7 @@ pconfig = {
     "logswitch": False,          # Show the 'Log10' switch?
     "logswitch_active": False,   # Initial display with 'Log10' active?
     "logswitch_label": "Log10",  # Label for 'Log10' button
+    "axis_controlled_by_switches": ["yaxis"], # Which axes should be impacted by the switch button (one or both of xaxis, yaxis)
     "extra_series": None,        # See section below
     # Plot configuration
     "title": None,               # Plot title - should be in format "Module Name: Plot Title"
