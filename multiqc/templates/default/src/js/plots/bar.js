@@ -2,6 +2,7 @@ class BarPlot extends Plot {
   constructor(dump) {
     super(dump);
     this.filteredSettings = [];
+    this.groupSettingsMap = null; // For multicategory: maps original group name -> toolbox settings
   }
 
   activeDatasetSize() {
@@ -20,15 +21,48 @@ class BarPlot extends Plot {
 
     let samplesSettings = applyToolboxSettings(samples);
 
+    // Process group labels through toolbox if present (for hiding/renaming/highlighting groups)
+    if (groupLabels && groupLabels.length > 0) {
+      let uniqueGroups = [...new Set(groupLabels)];
+      let groupSettings = applyToolboxSettings(uniqueGroups);
+      this.groupSettingsMap = Object.fromEntries(uniqueGroups.map((g, i) => [g, groupSettings[i]]));
+
+      // Determine which rows to keep based on group visibility only (not sample visibility)
+      let keepRow = groupLabels.map((gl) => {
+        let groupSetting = this.groupSettingsMap[gl];
+        return !(groupSetting && groupSetting.hidden);
+      });
+
+      // For multicategory, filteredSettings just tracks the samples (no toolbox ops on samples)
+      this.filteredSettings = samples.filter((_, si) => keepRow[si]).map((name) => ({ name }));
+
+      // Store original group labels (for data indexing) and renamed labels (for display)
+      this.originalGroupLabels = groupLabels.filter((_, si) => keepRow[si]);
+      this.filteredGroupLabels = this.originalGroupLabels.map((gl) => this.groupSettingsMap[gl]?.name || gl);
+
+      this.offsetGroups = offsetGroups;
+
+      cats = cats.map((cat) => {
+        let data = this.pActive ? cat["data_pct"] : cat.data;
+        return {
+          data: data.filter((_, si) => keepRow[si]),
+          color: cat.color,
+          name: cat.name,
+        };
+      });
+
+      return [cats];
+    }
+
+    // Non-multicategory: existing logic with full sample toolbox support
+    this.groupSettingsMap = null;
+    this.originalGroupLabels = null;
+
     // Rename and filter samples:
     this.filteredSettings = samplesSettings.filter((s) => !s.hidden);
 
     // Filter group labels to match visible samples
-    let filteredGroupLabels = null;
-    if (groupLabels) {
-      filteredGroupLabels = groupLabels.filter((_, si) => !samplesSettings[si].hidden);
-    }
-    this.filteredGroupLabels = filteredGroupLabels;
+    this.filteredGroupLabels = null;
     this.offsetGroups = offsetGroups;
 
     cats = cats.map((cat) => {
@@ -132,37 +166,34 @@ class BarPlot extends Plot {
     // This creates natural gaps between groups using Plotly's offsetgroup feature
     // y-axis shows group labels (e.g., read lengths), offsetgroup creates sample sub-groups
     if (useMulticategory) {
-      // Single pass: build all data structures we need
+      // Check if any group highlights are active
+      let anyGroupHighlights = Object.values(this.groupSettingsMap || {}).some((g) => g.highlight);
+
+      // Build data structures using ORIGINAL group labels as keys (not renamed)
       let uniqueSamples = [];
       let seenSamples = new Set();
-      let sampleGroupData = {}; // sampleName -> groupLabel -> [{name, value}, ...]
-      let sampleHighlightStatus = {}; // sampleName -> boolean (is any entry highlighted?)
-      let sampleGroupEntries = {}; // sampleName -> [{groupLabel, dataIdx}, ...]
+      let sampleGroupData = {}; // sampleName -> originalGroupLabel -> [{name, value}, ...]
+      let sampleGroupEntries = {}; // sampleName -> [{originalGroupLabel, displayGroupLabel, dataIdx}, ...]
 
       this.filteredSettings.forEach((sample, idx) => {
-        let displayName = sample.name;
-        let groupLabel = this.filteredGroupLabels[idx];
+        let sampleName = sample.name;
+        let originalGroupLabel = this.originalGroupLabels[idx];
+        let displayGroupLabel = this.filteredGroupLabels[idx];
 
         // Track unique samples
-        if (!seenSamples.has(displayName)) {
-          seenSamples.add(displayName);
-          uniqueSamples.push(displayName);
-          sampleGroupData[displayName] = {};
-          sampleHighlightStatus[displayName] = false;
-          sampleGroupEntries[displayName] = [];
+        if (!seenSamples.has(sampleName)) {
+          seenSamples.add(sampleName);
+          uniqueSamples.push(sampleName);
+          sampleGroupData[sampleName] = {};
+          sampleGroupEntries[sampleName] = [];
         }
 
-        // Track highlight status
-        if (sample.highlight) {
-          sampleHighlightStatus[displayName] = true;
-        }
+        // Store group entry for this sample (use original label as key)
+        sampleGroupEntries[sampleName].push({ originalGroupLabel, displayGroupLabel, dataIdx: idx });
 
-        // Store group entry for this sample
-        sampleGroupEntries[displayName].push({ groupLabel, dataIdx: idx });
-
-        // Build category data for this sample+group combination
-        if (!sampleGroupData[displayName][groupLabel]) {
-          sampleGroupData[displayName][groupLabel] = cats.map((cat) => ({
+        // Build category data for this sample+group combination (use original label as key)
+        if (!sampleGroupData[sampleName][originalGroupLabel]) {
+          sampleGroupData[sampleName][originalGroupLabel] = cats.map((cat) => ({
             name: cat.name,
             value: cat.data[idx],
           }));
@@ -187,30 +218,35 @@ class BarPlot extends Plot {
       // Create traces
       let traces = [];
       uniqueSamples.forEach((sampleName, sampleIdx) => {
-        // Determine alpha once per sample
-        let sampleHighlighted = sampleHighlightStatus[sampleName];
-        let alpha = highlighted.length > 0 && !sampleHighlighted ? 0.1 : 1;
-
         cats.forEach((cat) => {
           // Collect data for this sample across all its groups
-          let groupLabels = [];
+          let displayGroupLabels = [];
           let groupData = [];
           let customData = [];
 
-          sampleGroupEntries[sampleName].forEach(({ groupLabel, dataIdx }) => {
-            groupLabels.push(groupLabel);
+          sampleGroupEntries[sampleName].forEach(({ originalGroupLabel, displayGroupLabel, dataIdx }) => {
+            // Check if this group is highlighted
+            let groupHighlight = this.groupSettingsMap[originalGroupLabel]?.highlight;
+            let alpha = anyGroupHighlights && !groupHighlight ? 0.1 : 1;
+
+            displayGroupLabels.push(displayGroupLabel);
             groupData.push(cat.data[dataIdx]);
             customData.push({
               sampleName: sampleName,
-              catData: sampleGroupData[sampleName][groupLabel],
+              catData: sampleGroupData[sampleName][originalGroupLabel],
+              alpha: alpha,
             });
           });
 
-          if (groupLabels.length > 0) {
+          if (displayGroupLabels.length > 0) {
+            // Calculate alpha per bar based on group highlight
+            let alphas = customData.map((d) => d.alpha);
+            let colors = alphas.map((a) => "rgba(" + cat.color + "," + a + ")");
+
             traces.push({
               type: "bar",
               x: groupData,
-              y: groupLabels,
+              y: displayGroupLabels,
               customdata: customData,
               name: cat.name,
               meta: cat.name,
@@ -218,7 +254,7 @@ class BarPlot extends Plot {
               legendgroup: cat.name,
               showlegend: sampleIdx === 0,
               ...traceParams,
-              marker: { ...traceParams.marker, color: "rgba(" + cat.color + "," + alpha + ")" },
+              marker: { ...traceParams.marker, color: colors },
               hovertemplate: hoverTemplates[cat.name],
             });
           }
@@ -270,11 +306,51 @@ class BarPlot extends Plot {
     });
   }
 
+  afterPlotCreated() {
+    super.afterPlotCreated();
+
+    // Only apply in multicategory mode with group highlights
+    if (!this.groupSettingsMap) return;
+
+    const plotDiv = document.getElementById(this.anchor);
+    if (!plotDiv) return;
+
+    // Style Y-axis tick labels for highlighted groups
+    plotDiv.querySelectorAll(".yaxislayer-above .ytick text, .yaxislayer-above .ytick tspan").forEach((tick) => {
+      const groupName = tick.textContent;
+      // Find by renamed name, get original's highlight
+      let origGroup = Object.keys(this.groupSettingsMap).find((k) => this.groupSettingsMap[k].name === groupName);
+      let setting = this.groupSettingsMap[origGroup];
+      if (setting?.highlight) {
+        tick.style.fill = setting.highlight;
+        tick.style.fontWeight = "bold";
+      }
+    });
+  }
+
   exportData(format) {
     let [cats] = this.prepData();
 
     let delim = format === "tsv" ? "\t" : ",";
 
+    // For multicategory, include group column (use display labels which may be renamed)
+    let useMulticategory = this.filteredGroupLabels && this.filteredGroupLabels.length > 0;
+
+    if (useMulticategory) {
+      let csv = "Group" + delim + "Sample" + delim + cats.map((c) => c.name).join(delim) + "\n";
+      for (let i = 0; i < this.filteredSettings.length; i++) {
+        csv +=
+          this.filteredGroupLabels[i] +
+          delim +
+          this.filteredSettings[i].name +
+          delim +
+          cats.map((c) => c.data[i]).join(delim) +
+          "\n";
+      }
+      return csv;
+    }
+
+    // Non-multicategory export
     let csv = "Sample" + delim + cats.map((cat) => cat.name).join(delim) + "\n";
     for (let i = 0; i < this.filteredSettings.length; i++) {
       csv += this.filteredSettings[i].name + delim + cats.map((cat) => cat.data[i]).join(delim) + "\n";
