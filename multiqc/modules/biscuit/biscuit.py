@@ -211,7 +211,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "scale": "YlGn",
                 "suffix": "%",
-                "format": "{:,.2f}",
             },
             "dup_q40": {
                 "title": "Dup. % for Q40 Reads",
@@ -220,7 +219,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "scale": "Reds",
                 "suffix": "%",
-                "format": "{:,.2f}",
                 "hidden": True,
             },
             "dup_all": {
@@ -230,7 +228,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "scale": "Reds",
                 "suffix": "%",
-                "format": "{:,.2f}",
             },
         }
 
