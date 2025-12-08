@@ -786,7 +786,7 @@ def _parse_txt(
     row_str: List[str]
     for line in non_header_lines:
         if line.rstrip():
-            row_str = line.rstrip("\n").split(sep)
+            row_str = [cell.strip() for cell in line.rstrip("\n").split(sep)]
             matrix_str.append(row_str)
             if ncols is None:
                 ncols = len(row_str)
