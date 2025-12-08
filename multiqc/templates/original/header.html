@@ -278,7 +278,7 @@ was generated and the button that launches the welcome tour.
         style="display: {% if report.ai_thread_id %}block{% else %}none{% endif %};"
         data-thread-id="{{ report.ai_thread_id }}"
         data-seqera-website="{{ config.seqera_website }}"
-        href="{{ config.seqera_website }}/ask-ai/?messages={{ report.ai_thread_id }}"
+        href="{{ config.seqera_website }}/ask-ai/chat/{{ report.ai_thread_id }}"
         target="_blank"
         data-toggle="tooltip"
       >
