@@ -45,6 +45,9 @@ bbduk:
 bbmap/stats:
   contents: ["#File", "#Total", "#Matched", "#Name	Reads	ReadsPct"]
   num_lines: 10
+bbmap/bbsplit:
+  contents: "#name	%unambiguousReads	unambiguousMB	%ambiguousReads"
+  num_lines: 5
 bbmap/aqhist:
   contents: "#Quality	count1	fraction1	count2	fraction2"
   num_lines: 10
@@ -840,6 +843,9 @@ rna_seqc/coverage:
   fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
   fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
+ribotish/qual:
+  fn: "*_qual.txt"
+  num_lines: 10
 rockhopper:
   fn: "summary.txt"
   contents: "Number of gene-pairs predicted to be part of the same operon"
@@ -917,6 +923,9 @@ sargasso:
   fn: "overall_filtering_summary.txt"
 seqfu/stats:
   contents: "File	#Seq	Total bp	Avg	N50	N75	N90	auN	Min	Max"
+  num_lines: 1
+seqkit/stats:
+  contents_re: "^file\\s+format\\s+type\\s+num_seqs\\s+sum_len"
   num_lines: 1
 seqwho:
   contents: '  "Per Base Seq": ['

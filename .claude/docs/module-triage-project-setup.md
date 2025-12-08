@@ -7,7 +7,6 @@ This guide explains how to set up a GitHub project to track and manage module re
 ### Recommended Project Setup
 
 1. **Create a new GitHub Project** in the MultiQC organization
-
    - Name: "Module Request Triage"
    - Description: "Automated tracking and prioritization of MultiQC module requests"
    - Template: "Board" view
@@ -162,13 +161,11 @@ env:
 ### Common Issues
 
 1. **Items not auto-adding to project**
-
    - Check automation rules are enabled
    - Verify label filters match exactly
    - Ensure workflow has `projects: write` permission
 
 2. **Cards not moving between columns**
-
    - Verify automation rules for label-based moves
    - Check that labels are being added correctly by workflows
    - Manual moves may be needed initially

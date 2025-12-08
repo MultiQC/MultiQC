@@ -216,7 +216,6 @@ AI summaries are disabled by default when running MultiQC.
 To generate them, you must enable them either on the command line or via a MultiQC config file.
 
 - Command line flags:
-
   - `--ai` / `--ai-summary`: Generate a short report summary and put it on top of the report (fast)
   - `--ai-summary-full`: Generate a detailed version of the summary with analysis and recommendations (slower)
   - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai`, `anthropic` or `aws_bedrock`. Default `seqera`

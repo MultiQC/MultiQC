@@ -14,14 +14,19 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    By default, the module generates the sample names based on the input FastQ file names in
-    the command line used by fastp. If you prefer, you can tell the module to use
-    the filenames as sample names instead. To do so, use the following config option:
+    By default, the module generates the sample names based on the `--report_title` / `-R`
+    option in the fastp command line (if present), or the input FastQ file names if not.
+
+    If you prefer, you can tell the module to use the filenames as sample names instead.
+    To do so, use the following config option:
 
     ```yaml
-    fastp:
-      s_name_filenames: true
+    use_filename_as_sample_name:
+        - fastp
     ```
+
+    See [Using log filenames as sample names](https://docs.seqera.io/multiqc/getting_started/config#using-log-filenames-as-sample-names)
+    for more details.
     """
 
     def __init__(self):
@@ -31,10 +36,10 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/OpenGene/fastp",
             info="All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)",
             extra="""
-            Fastp goes through fastq files in a folder and perform a series of quality control and filtering. 
-            Quality control and reporting are displayed both before and after filtering, allowing for a clear 
-            depiction of the consequences of the filtering process. Notably, the latter can be conducted on a 
-            variety of parameters including quality scores, length, as well as the presence of adapters, polyG, 
+            Fastp goes through fastq files in a folder and perform a series of quality control and filtering.
+            Quality control and reporting are displayed both before and after filtering, allowing for a clear
+            depiction of the consequences of the filtering process. Notably, the latter can be conducted on a
+            variety of parameters including quality scores, length, as well as the presence of adapters, polyG,
             or polyX tailing.""",
             doi="10.1093/bioinformatics/bty560",
         )
@@ -193,35 +198,43 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = f["s_name"]
 
         if s_name is None:
-            # Parse the "command" line usually found in the JSON, and use the first input
-            # FastQ file name to fetch the sample name.
+            # Parse the "command" line usually found in the JSON, and use the report title
+            # if present, otherwise fall back to the input FastQ file names.
             cmd = parsed_json["command"].strip()
-            # On caveat is that the command won't have file names escaped properly,
-            # so we need some special logic to account for names with spaces:
-            # "fastp -c -g -y -i Sample 1 1.fastq.gz -o ..."
-            # "fastp -c -g -y --in1 Sample 1 1.fastq.gz --out1 ..."
-            # "fastp -c -g -y --in1 Sample 1 1.fastq.gz --in2 Sample 1_2.fastq.gz --out1 ..."
-            #
-            # Using a regex that extracts everything between "-i " or "--in1 " and " -".
-            # It still won't work exactly right for file names with dashes following a
-            # space, but that's a pretty rare case, and will still extract something
-            # meaningful.
-            s_names = []
-            m = re.search(r"(-i|--in1)\s(.+?)(?:\s-|$)", cmd)
+
+            # First, try to extract --report_title / -R if present
+            # The value can contain spaces and should be everything until the next option or end
+            m = re.search(r"(-R|--report_title)\s(.+?)(?:\s-|$)", cmd)
             if m:
-                s_names.append(m.group(2))
-                # Second input for paired end?
-                m = re.search(r"(-I|--in2)\s(.+?)(?:\s-|$)", cmd)
+                s_name = self.clean_s_name(m.group(2), f)
+            else:
+                # Fall back to input file names
+                # On caveat is that the command won't have file names escaped properly,
+                # so we need some special logic to account for names with spaces:
+                # "fastp -c -g -y -i Sample 1 1.fastq.gz -o ..."
+                # "fastp -c -g -y --in1 Sample 1 1.fastq.gz --out1 ..."
+                # "fastp -c -g -y --in1 Sample 1 1.fastq.gz --in2 Sample 1_2.fastq.gz --out1 ..."
+                #
+                # Using a regex that extracts everything between "-i " or "--in1 " and " -".
+                # It still won't work exactly right for file names with dashes following a
+                # space, but that's a pretty rare case, and will still extract something
+                # meaningful.
+                s_names = []
+                m = re.search(r"(-i|--in1)\s(.+?)(?:\s-|$)", cmd)
                 if m:
                     s_names.append(m.group(2))
-                s_name = self.clean_s_name(s_names, f)
-            else:
-                s_name = f["s_name"]
-                log.warning(
-                    f"Could not parse sample name from the fastp command:\n{cmd}\n"
-                    f"Falling back to extracting it from the file name: "
-                    f'"{f["fn"]}" -> "{s_name}"'
-                )
+                    # Second input for paired end?
+                    m = re.search(r"(-I|--in2)\s(.+?)(?:\s-|$)", cmd)
+                    if m:
+                        s_names.append(m.group(2))
+                    s_name = self.clean_s_name(s_names, f)
+                else:
+                    s_name = f["s_name"]
+                    log.warning(
+                        f"Could not parse sample name from the fastp command:\n{cmd}\n"
+                        f"Falling back to extracting it from the file name: "
+                        f'"{f["fn"]}" -> "{s_name}"'
+                    )
 
         self.add_data_source(f, s_name)
         return s_name, parsed_json
