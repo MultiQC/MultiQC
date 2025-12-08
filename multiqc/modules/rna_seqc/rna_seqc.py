@@ -7,8 +7,6 @@ from multiqc.plots import bargraph, heatmap, linegraph, violin
 
 log = logging.getLogger(__name__)
 
-VERSION_REGEX = r"RNA-SeQC</a>\s*v(\d+\.\d+[\.\d]*)"
-
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -83,10 +81,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse version from HTML reports
         for f in self.find_log_files("rna_seqc/html"):
             self.parse_rnaseqc_html(f)
-
-        # If no version found, still call add_software_version to satisfy the linter
-        if not self.versions:
-            self.add_software_version(None)
 
         # Write metrics to a file
         self.write_data_file(self.rna_seqc_metrics, "multiqc_rna_seqc")
@@ -430,6 +424,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_rnaseqc_html(self, f):
         """Parse RNA-SeQC HTML reports to extract version information."""
-        match = re.search(VERSION_REGEX, f["f"])
+        match = re.search(r"RNA-SeQC</a>\s*v(\d+\.\d+[\.\d]*)", f["f"])
         if match:
             self.add_software_version(match.group(1))
