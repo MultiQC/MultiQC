@@ -139,6 +139,7 @@ def accuracy_plot(module, data):
                 "xmax": 0.5,
                 "ymin": 0,
                 "ymax": 1.1,
+                "axis_controlled_by_switches": ["xaxis", "yaxis"],
                 "title": "Glimpse concordance by allele frequency bins",
             },
         ),

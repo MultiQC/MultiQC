@@ -179,7 +179,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
             "min": 0,
             "max": 1,
             "scale": "YlGn",
-            "format": "{:,.6f}",
+            "format": "{:,.4f}",
         },
         "imputed_ds_rsquared": {
             "title": "Imputed dosage r-squared",
@@ -187,7 +187,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
             "min": 0,
             "max": 1,
             "scale": "YlGn",
-            "format": "{:,.6f}",
+            "format": "{:,.4f}",
         },
     }
 
