@@ -1284,6 +1284,35 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     pressed=self.l_active,
                 )
 
+        # Heatmap toggle for line plots (interactive only)
+        if self.plot_type in (PlotType.LINE, PlotType.LINE.value) and not flat:
+            switch_buttons += self._btn(
+                cls=f"{cls} heatmap-switch",
+                label="Heatmap",
+                pressed=False,
+            )
+            # Sort buttons for heatmap mode (hidden by default)
+            switch_buttons += f'<div class="btn-group heatmap-sort-group" style="display:none; margin-left: 5px;">\n'
+            switch_buttons += self._btn(
+                cls="heatmap-sort-btn",
+                label="Original",
+                data_attrs={"sort-mode": "original"},
+                pressed=True,
+            )
+            switch_buttons += self._btn(
+                cls="heatmap-sort-btn",
+                label="Alphabetical",
+                data_attrs={"sort-mode": "alphabetical"},
+                pressed=False,
+            )
+            switch_buttons += self._btn(
+                cls="heatmap-sort-btn",
+                label="Cluster",
+                data_attrs={"sort-mode": "clustered"},
+                pressed=False,
+            )
+            switch_buttons += "</div>\n"
+
         # Buttons to cycle through different datasets
         if len(self.datasets) > 1:
             switch_buttons += f'<div class="btn-group {cls} dataset-switch-group">\n'
