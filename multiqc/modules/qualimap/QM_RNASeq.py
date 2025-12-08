@@ -155,7 +155,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         version = parse_version(f)
         if version:
             s_name = get_s_name(module, f)
-            module.add_software_version(version, s_name)
+            module.add_software_version(version, s_name, "RNASeq")
 
     # Filter to strip out ignored sample names
     genome_results = module.ignore_samples(genome_results)

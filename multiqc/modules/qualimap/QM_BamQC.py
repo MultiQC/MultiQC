@@ -51,7 +51,7 @@ def parse_reports(module: BaseMultiqcModule):
         version = parse_version(f)
         if version:
             s_name = get_s_name(module, f)
-            module.add_software_version(version, s_name)
+            module.add_software_version(version, s_name, "BamQC")
 
     threshs, hidden_threshs = config.get_cov_thresholds("qualimap_config")
 
