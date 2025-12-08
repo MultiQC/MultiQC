@@ -612,7 +612,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
         lists_of_lines: List[List[Series[KeyT, ValT]]],
         pconfig: LinePlotConfig,
         anchor: Anchor,
-        sample_names: List[SampleName]
+        sample_names: List[SampleName],
     ) -> "LinePlot[KeyT, ValT]":
         lists_of_lines = [x for x in lists_of_lines if x]
         n_samples_per_dataset = [len(x) for x in lists_of_lines]
