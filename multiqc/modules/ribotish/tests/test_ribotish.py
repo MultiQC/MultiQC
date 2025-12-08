@@ -110,8 +110,8 @@ class TestRibotishParsing:
         """Test parsing a valid qual file."""
         module = run_ribotish_module(VALID_QUAL_BASIC)
 
-        assert "test_qual" in module.ribotish_data
-        data = module.ribotish_data["test_qual"]
+        assert "test" in module.ribotish_data
+        data = module.ribotish_data["test"]
 
         assert 28 in data
         assert 29 in data
@@ -124,17 +124,17 @@ class TestRibotishParsing:
         """Test that $ prefix on line 4 is properly stripped."""
         module = run_ribotish_module(VALID_QUAL_WITH_DOLLAR)
 
-        assert "test_qual" in module.ribotish_data
-        assert 28 in module.ribotish_data["test_qual"]
-        assert 29 in module.ribotish_data["test_qual"]
+        assert "test" in module.ribotish_data
+        assert 28 in module.ribotish_data["test"]
+        assert 29 in module.ribotish_data["test"]
 
     def test_single_read_length(self, run_ribotish_module):
         """Test handling of single read length."""
         module = run_ribotish_module(VALID_QUAL_SINGLE_LENGTH)
 
-        assert "test_qual" in module.ribotish_data
-        assert len(module.ribotish_data["test_qual"]) == 1
-        assert 28 in module.ribotish_data["test_qual"]
+        assert "test" in module.ribotish_data
+        assert len(module.ribotish_data["test"]) == 1
+        assert 28 in module.ribotish_data["test"]
 
 
 class TestRibotishMalformedFiles:
@@ -183,7 +183,7 @@ class TestRibotishFrameCalculations:
         """Test that frame proportions sum to 1.0 for each length."""
         module = run_ribotish_module(VALID_QUAL_BASIC)
 
-        sample_name = "test_qual"
+        sample_name = "test"
         for length, props in module.frame_proportions[sample_name].items():
             total_prop = props["f0_prop"] + props["f1_prop"] + props["f2_prop"]
             assert abs(total_prop - 1.0) < 0.001, f"Proportions don't sum to 1.0 for length {length}"
@@ -192,7 +192,7 @@ class TestRibotishFrameCalculations:
         """Test that frame proportions are calculated correctly."""
         module = run_ribotish_module(VALID_QUAL_SINGLE_LENGTH)
 
-        sample_name = "test_qual"
+        sample_name = "test"
         props = module.frame_proportions[sample_name][28]
 
         # counts are [100, 20, 30], total = 150
@@ -205,7 +205,7 @@ class TestRibotishFrameCalculations:
         """Test handling of all zeros in counts."""
         module = run_ribotish_module(VALID_QUAL_ALL_ZEROS)
 
-        sample_name = "test_qual"
+        sample_name = "test"
         for length in [25, 26, 27]:
             props = module.frame_proportions[sample_name][length]
             assert props["f0_prop"] == 0
