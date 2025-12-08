@@ -727,10 +727,6 @@ class Dataset(BaseDataset):
         for cat in self.cats:
             for d_idx, d_val in enumerate(cat.data):
                 s_name = self.samples[d_idx]
-                # Defensive check: skip any empty sample names
-                if not s_name.strip():
-                    logger.debug(f"Skipping empty sample name at index {d_idx} in bar plot data export")
-                    continue
                 val_by_cat_by_sample[s_name][cat.name] = str(d_val)
         report.write_data_file(val_by_cat_by_sample, self.uid)
 

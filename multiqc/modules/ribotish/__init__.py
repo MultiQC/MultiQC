@@ -1,1 +1,3 @@
-from multiqc.modules.ribotish.ribotish import MultiqcModule
+from .ribotish import MultiqcModule
+
+__all__ = ["MultiqcModule"]
