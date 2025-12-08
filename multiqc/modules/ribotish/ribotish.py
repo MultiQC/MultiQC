@@ -168,7 +168,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "Frame 1": props["f1_prop"] * 100.0,
                         "Frame 2": props["f2_prop"] * 100.0,
                     }
-                    length_group.append((sample_key, sample_name))
+                    length_group.append([sample_key, sample_name])
             if length_group:
                 sample_groups[group_name] = length_group
 
