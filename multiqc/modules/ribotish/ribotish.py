@@ -1,7 +1,8 @@
 import ast
 import logging
-from typing import Dict, Set
+from typing import Dict
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, linegraph
 from multiqc.plots.table_object import ColumnDict
@@ -15,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     This module parses the `*_qual.txt` output files to visualize reading frame
     quality metrics across different read lengths.
 
-    The module creates two visualizations:
+    The module creates one of two visualizations:
     1. A stacked bar chart showing the proportion of reads in each reading frame
        (Frame 0, 1, 2) for read lengths 25-34nt
     2. A heatmap showing the percentage distribution of read lengths within each sample
@@ -135,10 +136,10 @@ class MultiqcModule(BaseMultiqcModule):
                     }
                 else:
                     self.frame_proportions[sample_name][length] = {
-                        "f0_prop": 0,
-                        "f1_prop": 0,
-                        "f2_prop": 0,
-                        "total": 0,
+                        "f0_prop": 0.0,
+                        "f1_prop": 0.0,
+                        "f2_prop": 0.0,
+                        "total": 0.0,
                     }
 
     def add_frame_proportion_bargraph(self):
@@ -184,17 +185,17 @@ class MultiqcModule(BaseMultiqcModule):
             "sample_groups": sample_groups,
             "x_lines": [
                 {
-                    "color": "#ff0000",
+                    "color": "#0000ff",
                     "dash": "dash",
                     "value": 33.33,
-                    "width": 1,
+                    "width": 2,
                     "label": "Random distribution (1/3)",
                 },
                 {
-                    "color": "#ff0000",
+                    "color": "#0000ff",
                     "dash": "dash",
                     "value": 66.67,
-                    "width": 1,
+                    "width": 2,
                     "label": "Random distribution (2/3)",
                 },
             ],
@@ -418,10 +419,10 @@ class MultiqcModule(BaseMultiqcModule):
         headers["total_reads"] = ColumnDict(
             {
                 "title": "Total Reads",
-                "description": "Total number of reads across all lengths",
+                "description": f"Total number of reads across all lengths ({config.read_count_desc})",
                 "scale": "Purples",
-                "format": "{:,.0f}",
                 "hidden": True,
+                "shared_key": "read_count",
             }
         )
 
