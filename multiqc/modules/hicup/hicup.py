@@ -37,10 +37,6 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("hicup/html"):
             self.parse_hicup_html(f)
 
-        # If no version found, still call add_software_version to satisfy the linter
-        if not self.versions:
-            self.add_software_version(None)
-
         # Write parsed data to a file
         self.write_data_file(self.hicup_data, "multiqc_hicup")
 
@@ -277,16 +273,6 @@ class MultiqcModule(BaseMultiqcModule):
             version = match.group(1)
             # Try to derive sample name from HTML filename
             # HTML files are named like: Sample-1.A002.C8DRAANXX.s_2.r_1_2.HiCUP_summary_report.html
-            s_name = None
-            if f["fn"].endswith("_summary_report.html"):
-                # Extract base name and clean it
-                base_name = re.sub(r"[._]HiCUP_summary_report\.html$", "", f["fn"])
-                s_name = self.clean_s_name(base_name, f)
-                # Check if this sample exists in our data (possibly with .hicup suffix)
-                if s_name not in self.hicup_data:
-                    # Try with .hicup suffix
-                    if s_name + ".hicup" in self.hicup_data:
-                        s_name = s_name + ".hicup"
-                    else:
-                        s_name = None
+            base_name = f["fn"].removesuffix(".HiCUP_summary_report.html")
+            s_name = self.clean_s_name(base_name, f)
             self.add_software_version(version, s_name)
