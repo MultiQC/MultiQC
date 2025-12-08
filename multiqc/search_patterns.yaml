@@ -445,6 +445,8 @@ hicexplorer:
   num_lines: 26
 hicup:
   fn: "HiCUP_summary_report*"
+hicup/html:
+  fn: "*HiCUP_summary_report*.html"
 hicpro/mmapstat:
   fn: "*mapstat"
   contents: "total_R"
@@ -815,6 +817,10 @@ qc3C:
 qorts:
   contents: "BENCHMARK_MinutesOnSamIteration"
   num_lines: 100
+qorts/log:
+  fn: "QC.*.log"
+  contents: "Starting QoRTs"
+  num_lines: 2
 qualimap/bamqc/genome_results:
   fn: "genome_results.txt"
 qualimap/bamqc/coverage:
@@ -825,10 +831,18 @@ qualimap/bamqc/genome_fraction:
   fn: "genome_fraction_coverage.txt"
 qualimap/bamqc/gc_dist:
   fn: "mapped_reads_gc-content_distribution.txt"
+qualimap/bamqc/html:
+  fn: "qualimapReport.html"
+  contents: "Qualimap report: BAM QC"
+  num_lines: 10
 qualimap/rnaseq/rnaseq_results:
   fn: "rnaseq_qc_results.txt"
 qualimap/rnaseq/coverage:
   fn: "coverage_profile_along_genes_(total).txt"
+qualimap/rnaseq/html:
+  fn: "qualimapReport.html"
+  contents: "Qualimap report: RNA Seq QC"
+  num_lines: 10
 quast:
   fn: "report.tsv"
   contents: "Assembly	"
@@ -843,6 +857,10 @@ rna_seqc/coverage:
   fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
   fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
+rna_seqc/html:
+  fn: "index.html"
+  contents: "RNA-SeQC</a> v"
+  num_lines: 200
 ribotish/qual:
   fn: "*_qual.txt"
   num_lines: 10
