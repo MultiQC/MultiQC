@@ -247,102 +247,104 @@ class MultiqcModule(BaseMultiqcModule):
         for sample_name in self.frame_proportions.keys():
             sample_totals[sample_name] = sum(props["total"] for props in self.frame_proportions[sample_name].values())
 
-        # Prepare data for line graph
-        line_data: dict[str, dict[int, float]] = {}
-        for sample_name in sorted(self.frame_proportions.keys()):
-            sample_total = sample_totals[sample_name]
-            line_data[sample_name] = {}
-            for length in all_lengths:
-                if length in self.frame_proportions[sample_name]:
-                    count = self.frame_proportions[sample_name][length]["total"]
-                    percentage = (count / sample_total * 100.0) if sample_total > 0 else 0
-                    line_data[sample_name][length] = percentage
-                else:
-                    line_data[sample_name][length] = 0
+        if len(sample_totals) <= 30:
+            # Prepare data for line graph
+            line_data: dict[str, dict[int, float]] = {}
+            for sample_name in sorted(self.frame_proportions.keys()):
+                sample_total = sample_totals[sample_name]
+                line_data[sample_name] = {}
+                for length in all_lengths:
+                    if length in self.frame_proportions[sample_name]:
+                        count = self.frame_proportions[sample_name][length]["total"]
+                        percentage = (count / sample_total * 100.0) if sample_total > 0 else 0
+                        line_data[sample_name][length] = percentage
+                    else:
+                        line_data[sample_name][length] = 0
 
-        # Prepare data for heatmap
-        samples = sorted(self.frame_proportions.keys())
-        heatmap_data = []
-        for sample_name in samples:
-            sample_total = sample_totals[sample_name]
-            row = []
-            for length in all_lengths:
-                if length in self.frame_proportions[sample_name]:
-                    count = self.frame_proportions[sample_name][length]["total"]
-                    percentage = (count / sample_total * 100.0) if sample_total > 0 else 0
-                    row.append(percentage)
-                else:
-                    row.append(0)
-            heatmap_data.append(row)
+            # Create line graph plot
+            line_pconfig = {
+                "id": "ribotish_read_length_line",
+                "title": "Ribo-TISH: Read Length Distribution",
+                "xlab": "Read Length (nt)",
+                "ylab": "% of Total Reads",
+                "smooth_points": 50,
+                "smooth_points_sumcounts": False,
+                "tt_label": "{point.x}nt: {point.y:.1f}%",
+            }
+            line_plot = linegraph.plot(line_data, line_pconfig)
 
-        # Create line graph plot
-        line_pconfig = {
-            "id": "ribotish_read_length_line",
-            "title": "Ribo-TISH: Read Length Distribution",
-            "xlab": "Read Length (nt)",
-            "ylab": "% of Total Reads",
-            "smooth_points": 50,
-            "smooth_points_sumcounts": False,
-            "tt_label": "{point.x}nt: {point.y:.1f}%",
-        }
-        line_plot = linegraph.plot(line_data, line_pconfig)
+            # Combine plots with data_labels for switching
+            self.add_section(
+                name="Read Length Distribution",
+                anchor="ribotish_read_length_dist_section",
+                description="Percentage of reads at each read length for each sample. "
+                "Ribo-seq data typically shows enrichment around 28-30nt, representing ribosome-protected fragments.",
+                helptext="""
+                This plot shows what percentage of total reads each read length represents for each sample.
 
-        # Create heatmap plot
-        heatmap_pconfig = {
-            "id": "ribotish_read_length_heatmap",
-            "title": "Ribo-TISH: Read Length Distribution (Heatmap)",
-            "xlab": "Read Length (nt)",
-            "ylab": "Sample",
-            "zlab": "% of Total Reads",
-            "square": False,
-            "tt_decimals": 1,
-            "legend": True,
-            "xcats_samples": False,
-            "ycats_samples": False,
-            "cluster_rows": False,
-            "cluster_cols": False,
-            "colstops": [[0, "#ffffff"], [0.5, "#4575b4"], [1, "#313695"]],
-        }
-        xcats = [f"{length}nt" for length in all_lengths]
-        ycats = samples
-        heatmap_plot = heatmap.plot(heatmap_data, xcats=xcats, ycats=ycats, pconfig=heatmap_pconfig)
+                * Each line represents a different sample
+                * Peaks indicate the most common read lengths
+                * Multiple samples can be easily compared
 
-        # Combine plots with data_labels for switching
-        # Note: We'll use the line graph as the base and provide a note about the heatmap
-        self.add_section(
-            name="Read Length Distribution",
-            anchor="ribotish_read_length_dist_section",
-            description="Percentage of reads at each read length for each sample. "
-            "Ribo-seq data typically shows enrichment around 28-30nt, representing ribosome-protected fragments.",
-            helptext="""
-            This plot shows what percentage of total reads each read length represents for each sample.
+                The expected read length distribution can vary depending on the experimental protocol and organism.
+                """,
+                plot=line_plot,
+            )
 
-            * Each line represents a different sample
-            * Peaks indicate the most common read lengths
-            * Multiple samples can be easily compared
+        else:
+            # Prepare data for heatmap
+            samples = sorted(self.frame_proportions.keys())
+            heatmap_data = []
+            for sample_name in samples:
+                sample_total = sample_totals[sample_name]
+                row = []
+                for length in all_lengths:
+                    if length in self.frame_proportions[sample_name]:
+                        count = self.frame_proportions[sample_name][length]["total"]
+                        percentage = (count / sample_total * 100.0) if sample_total > 0 else 0
+                        row.append(percentage)
+                    else:
+                        row.append(0)
+                heatmap_data.append(row)
 
-            The expected read length distribution can vary depending on the experimental protocol and organism.
-            """,
-            plot=line_plot,
-        )
+            # Create heatmap plot
+            heatmap_pconfig = {
+                "id": "ribotish_read_length_heatmap",
+                "title": "Ribo-TISH: Read Length Distribution (Heatmap)",
+                "xlab": "Read Length (nt)",
+                "ylab": "Sample",
+                "zlab": "% of Total Reads",
+                "square": False,
+                "tt_decimals": 1,
+                "legend": True,
+                "xcats_samples": False,
+                "ycats_samples": False,
+                "cluster_rows": False,
+                "cluster_cols": False,
+                "display_values": False,
+                "colstops": [[0, "#ffffff"], [0.5, "#4575b4"], [1, "#313695"]],
+            }
+            xcats = [f"{length}nt" for length in all_lengths]
+            ycats = samples
+            heatmap_plot = heatmap.plot(heatmap_data, xcats=xcats, ycats=ycats, pconfig=heatmap_pconfig)
 
-        # Add heatmap as a second section for alternative view
-        self.add_section(
-            name="Read Length Distribution (Heatmap)",
-            anchor="ribotish_read_length_heatmap_section",
-            description="Alternative heatmap view of read length distribution. "
-            "Useful for comparing many samples at once.",
-            helptext="""
-            This heatmap shows what percentage of total reads each read length represents for each sample.
+            # Add heatmap as a second section for alternative view
+            self.add_section(
+                name="Read Length Distribution (Heatmap)",
+                anchor="ribotish_read_length_heatmap_section",
+                description="Alternative heatmap view of read length distribution. "
+                "Useful for comparing many samples at once.",
+                helptext="""
+                This heatmap shows what percentage of total reads each read length represents for each sample.
 
-            * Rows are samples, columns are read lengths
-            * Darker blue indicates higher percentage of reads
-            * Lighter colors indicate fewer reads
+                * Rows are samples, columns are read lengths
+                * Darker blue indicates higher percentage of reads
+                * Lighter colors indicate fewer reads
 
-            This view is particularly useful when comparing many samples simultaneously.
-            """,
-            plot=heatmap_plot,
-        )
+                This view is particularly useful when comparing many samples simultaneously.
+                """,
+                plot=heatmap_plot,
+            )
 
     def add_general_stats(self):
         """Add key metrics to the general statistics table."""
