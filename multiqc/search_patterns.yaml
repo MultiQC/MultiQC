@@ -45,6 +45,9 @@ bbduk:
 bbmap/stats:
   contents: ["#File", "#Total", "#Matched", "#Name	Reads	ReadsPct"]
   num_lines: 10
+bbmap/bbsplit:
+  contents: "#name	%unambiguousReads	unambiguousMB	%ambiguousReads"
+  num_lines: 5
 bbmap/aqhist:
   contents: "#Quality	count1	fraction1	count2	fraction2"
   num_lines: 10
@@ -918,6 +921,9 @@ sargasso:
 seqfu/stats:
   contents: "File	#Seq	Total bp	Avg	N50	N75	N90	auN	Min	Max"
   num_lines: 1
+seqkit/stats:
+  contents_re: "^file\\s+format\\s+type\\s+num_seqs\\s+sum_len"
+  num_lines: 1
 seqwho:
   contents: '  "Per Base Seq": ['
   num_lines: 10
@@ -1007,6 +1013,8 @@ supernova/kmers:
   fn: "histogram_kmer_count.json"
   num_lines: 10
   contents: '"description": "kmer_count",'
+sylphtax:
+  fn: "*.sylphmpa"
 telseq:
   num_lines: 3
   contents: "ReadGroup	Library	Sample	Total	Mapped	Duplicates	LENGTH_ESTIMATE"
