@@ -114,6 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
                 overall_stats = variant_stat.get("OverallStats", [])
 
                 # Get event-level stats
+                # The module replaces empty values with "NaN"
                 for stat in overall_stats:
                     if stat.get("StatsType") == "Event":
                         # Handle NaN values
@@ -121,17 +122,17 @@ class MultiqcModule(BaseMultiqcModule):
                         precision = stat.get("Precision", 0)
                         fscore = stat.get("Fscore", 0)
 
-                        if recall == "NaN" or recall is None:
+                        if recall == "NaN":
                             recall = 0
                         else:
                             recall = float(recall) * 100
 
-                        if precision == "NaN" or precision is None:
+                        if precision == "NaN":
                             precision = 0
                         else:
                             precision = float(precision) * 100
 
-                        if fscore == "NaN" or fscore is None:
+                        if fscore == "NaN":
                             fscore = 0
                         else:
                             fscore = float(fscore) * 100
