@@ -1584,6 +1584,19 @@
       "title": "General Stats Columns",
       "type": "object"
     },
+    "general_stats_helptext": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Help text for general statistics table.",
+      "title": "General Stats Helptext"
+    },
     "table_columns_visible": {
       "anyOf": [
         {
