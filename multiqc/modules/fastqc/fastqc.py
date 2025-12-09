@@ -1346,20 +1346,23 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_content_plot(self, section_statuses: Dict[SampleName, str]):
         """Create the HTML for the FastQC adapter plot"""
 
-        pct_by_pos_by_sample: Dict[str, Dict[str, Dict[int, int]]] = dict()
+        pct_by_pos_by_sample: Dict[str, Dict[str, Dict[int, float]]] = {"Total": {}}
         for s_name, data_by_sample in self.fastqc_data.items():
             if data_by_sample.get("adapter_content") is None:
                 continue
             for adapters in data_by_sample["adapter_content"]:
                 adapter_list = list(adapters.keys())
                 adapter_list.remove("position")
-                pos = int(
-                    _range_bp_to_num(adapters["position"], method="start")
-                )  # split ranges like "10-15", take start
+                # split ranges like "10-15", take start
+                pos = int(_range_bp_to_num(adapters["position"], method="start"))
                 for adapter_name in adapter_list:
                     pct_by_pos_by_sample.setdefault(adapter_name, {}).setdefault(s_name, {})[pos] = adapters[
                         adapter_name
                     ]
+                    # Add totals
+                    pct_by_pos_by_sample["Total"].setdefault(s_name, {}).setdefault(pos, 0)
+                    pct_by_pos_by_sample["Total"][s_name][pos] += pct_by_pos_by_sample[adapter_name][s_name][pos]
+
         if len(pct_by_pos_by_sample) == 0:
             log.debug("adapter_content not found in FastQC reports")
             return None
