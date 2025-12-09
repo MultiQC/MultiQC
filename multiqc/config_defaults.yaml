@@ -463,6 +463,7 @@ top_modules: []
 module_order:
   # MultiQC general module for catching output from custom scripts
   - custom_content
+
   # Post-alignment QC
   - ccs
   - ngsderive
@@ -630,7 +631,7 @@ module_order:
   - ataqv
   - mgikit
   - mosaicatcher
-
+  - custom_csv
 # Preserves `saved_raw_data` section in modules - default for interactive runs
 preserve_module_raw_data: false
 
