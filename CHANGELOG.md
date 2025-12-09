@@ -38,6 +38,9 @@
 
 ### Module fixes
 
+- Fix validation errors in strict mode for invalid plot config options ([#3428](https://github.com/MultiQC/MultiQC/pull/3428))
+  - Remove invalid `hide_zero_cats` from line plot configs (mosdepth, bamdst, samtools/coverage, humid, dragen_fastqc)
+  - Fix bar plot category configs using invalid fields (picard/IlluminaBasecallingMetrics, motus)
 - Samtools coverage: Don't crash if incorrect number of columns found ([#3419](https://github.com/MultiQC/MultiQC/pull/3419))
 - Lima: split delimiter is a tab, not any whitespace. ([#3395](https://github.com/MultiQC/MultiQC/pull/3395))
 - Homer: Fix unique / total count swap in `homer/tagdirectory` ([#3381](https://github.com/MultiQC/MultiQC/pull/3381))
