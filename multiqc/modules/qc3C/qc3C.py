@@ -950,7 +950,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if parsed[k] is None:
                         parsed[k] = "Error - adjusted value would exceed 100"
                     else:
-                        parsed[k] = np.array(parsed[k]).mean() * 100
+                        parsed[k] = float(np.array(parsed[k]).mean() * 100)
 
                 self.qc3c_data["kmer"][s_name] = {
                     "k_qc3C_version": parsed["runtime_info"]["qc3C_version"],
