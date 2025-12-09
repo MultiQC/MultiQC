@@ -73,6 +73,10 @@ class MultiqcModule(BaseMultiqcModule):
         if s_name in self.wittyer_data:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
 
+        # Tool version not available.
+        # Superfluous function call just to confirm that it is used in this module.
+        self.add_software_version(None,s_name)
+
         # Store the parsed data
         self.wittyer_data[s_name] = {
             "command": data.get("Command", ""),
