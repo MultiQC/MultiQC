@@ -32,8 +32,11 @@ REASONING_MODELS = {
     "o4-mini",
     # Anthropic Claude 4 series (extended thinking models)
     "claude-3-7-sonnet-latest",
+    "claude-sonnet-4-5",
     "claude-sonnet-4-0",
+    "claude-haiku-4-5",
     "claude-haiku-4-0",
+    "claude-opus-4-5",
     "claude-opus-4-0",
 }
 
@@ -442,7 +445,7 @@ class AnthropicClient(Client):
     def __init__(self, api_key: str):
         super().__init__(api_key)
         self.model = (
-            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-sonnet-4-0"
+            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-sonnet-4-5"
         )
         self.name = "anthropic"
         self.title = "Anthropic"
@@ -526,7 +529,8 @@ class SeqeraClient(Client):
         creation_date = report.creation_date.strftime("%d %b %Y, %H:%M %Z")
         self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, created on {creation_date}"
         self.tags = ["multiqc", f"multiqc_version:{config.version}"]
-        self.model = config.ai_model or "claude-sonnet-4-0"
+        # Model is determined by Seqera endpoint, not specified in request
+        self.model = "seqera"
 
     def max_tokens(self) -> int:
         return 200000
@@ -1060,7 +1064,13 @@ def add_ai_summary_to_report():
         return
 
     # get_llm_client() will raise an exception if configuration is invalid when ai_summary=True
-    client = get_llm_client()
+    try:
+        client = get_llm_client()
+    except RuntimeError as e:
+        logger.error(f"Failed to initialize AI client: {e}")
+        if config.strict:
+            raise
+        return
     assert client is not None, "get_llm_client() should not return None when config.ai_summary is True"
 
     report.ai_provider_id = client.name
