@@ -1067,7 +1067,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
         else:
             pconfig = LinePlotConfig(
-                id="fastqc_sequence_length_distribution_plot",
+                id=f"{self.anchor}_sequence_length_distribution_plot",
                 title="FastQC: Sequence Length Distribution",
                 ylab="Read Count",
                 xlab="Sequence Length (bp)",
