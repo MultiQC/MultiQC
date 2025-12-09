@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Wittyer"""
-
 import json
 import logging
 from typing import Dict
@@ -12,17 +10,22 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Wittyer is a tool for benchmarking structural variant (SV) calls against a truth set.
-    This module parses the JSON stats output from Wittyer to provide event-level statistics different variant types.
+    This module parses the JSON stats output from witty.er to provide event-level statistics 6 different variant types.
+     - Deletions
+     - Insertions
+     - Duplications
+     - Inversions
+     - Copy Number Gains
+     - Copy Number Losses
     """
 
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="Wittyer",
+            name="witty.er",
             anchor="wittyer",
-            target="Wittyer",
-            href="https://github.com/Illumina/Wittyer",
+            target="wittyer",
+            href="https://github.com/Illumina/witty.er",
             info="A tool for benchmarking structural variant calls against a truth set.",
             doi="10.1093/bioinformatics/btaa397",
         )
@@ -36,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.parse_wittyer_json(data, f)
                 self.add_data_source(f)
             except json.JSONDecodeError:
-                log.debug(f"Could not parse Wittyer JSON: {f['fn']}")
+                log.debug(f"Could not parse witty.er JSON: {f['fn']}")
                 continue
 
         # Filter to strip out ignored sample names
@@ -45,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.wittyer_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.wittyer_data)} Wittyer reports")
+        log.info(f"Found {len(self.wittyer_data)} witty.er reports")
 
         # Write parsed data to a file
         self.write_data_file(self.wittyer_data, "multiqc_wittyer")
@@ -54,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_variant_type_section()
 
     def parse_wittyer_json(self, data: Dict, f: Dict) -> None:
-        """Parse Wittyer JSON output"""
+        """Parse witty.er JSON output"""
 
         # Get sample name from PerSampleStats
         if "PerSampleStats" not in data or len(data["PerSampleStats"]) == 0:
