@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Tool version not available.
         # Superfluous function call just to confirm that it is used in this module.
-        self.add_software_version(None,s_name)
+        self.add_software_version(None, s_name)
 
         # Store the parsed data
         self.wittyer_data[s_name] = {
@@ -129,17 +129,17 @@ class MultiqcModule(BaseMultiqcModule):
                         if recall == "NaN":
                             recall = 0
                         else:
-                            recall = float(recall) * 100
+                            recall = float(recall)
 
                         if precision == "NaN":
                             precision = 0
                         else:
-                            precision = float(precision) * 100
+                            precision = float(precision)
 
                         if fscore == "NaN":
                             fscore = 0
                         else:
-                            fscore = float(fscore) * 100
+                            fscore = float(fscore)
 
                         variant_data[variant_type][s_name] = {
                             "precision": precision,
@@ -166,19 +166,19 @@ class MultiqcModule(BaseMultiqcModule):
             # Define headers
             table_headers = {
                 "precision": {
-                    "title": "Precision (%)",
+                    "title": "Precision",
                     "description": f"Precision for {display_name.lower()}",
                     "scale": "Blues",
                     "format": "{:.2f}",
                 },
                 "recall": {
-                    "title": "Recall (%)",
+                    "title": "Recall",
                     "description": f"Recall for {display_name.lower()}",
                     "scale": "Blues",
                     "format": "{:.2f}",
                 },
                 "fscore": {
-                    "title": "F1-score (%)",
+                    "title": "F1-score",
                     "description": f"F-score for {display_name.lower()}",
                     "scale": "Blues",
                     "format": "{:.2f}",
