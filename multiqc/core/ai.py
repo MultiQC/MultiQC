@@ -1064,7 +1064,13 @@ def add_ai_summary_to_report():
         return
 
     # get_llm_client() will raise an exception if configuration is invalid when ai_summary=True
-    client = get_llm_client()
+    try:
+        client = get_llm_client()
+    except RuntimeError as e:
+        logger.error(f"Failed to initialize AI client: {e}")
+        if config.strict:
+            raise
+        return
     assert client is not None, "get_llm_client() should not return None when config.ai_summary is True"
 
     report.ai_provider_id = client.name
