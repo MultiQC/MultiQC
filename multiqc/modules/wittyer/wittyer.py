@@ -168,20 +168,23 @@ class MultiqcModule(BaseMultiqcModule):
                 "precision": {
                     "title": "Precision",
                     "description": f"Precision for {display_name.lower()}",
-                    "scale": "Blues",
-                    "format": "{:.2f}",
+                    "min": 0,
+                    "max": 1,
+                    "format": "{:.4f}",
                 },
                 "recall": {
                     "title": "Recall",
                     "description": f"Recall for {display_name.lower()}",
-                    "scale": "Blues",
-                    "format": "{:.2f}",
+                    "min": 0,
+                    "max": 1,
+                    "format": "{:.4f}",
                 },
                 "fscore": {
                     "title": "F1-score",
                     "description": f"F-score for {display_name.lower()}",
-                    "scale": "Blues",
-                    "format": "{:.2f}",
+                    "min": 0,
+                    "max": 1,
+                    "format": "{:.4f}",
                 },
                 "ttp": {
                     "title": "True Positives - Truth",
@@ -198,7 +201,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "total_truth": {
                     "title": "Total Truth Events",
                     "description": f"Total number of {display_name.lower()} in truth set",
-                    "scale": "Greys",
                     "format": "{:,.0f}",
                 },
                 "qtp": {
@@ -216,7 +218,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "total_query": {
                     "title": "Total Query Events",
                     "description": f"Total number of {display_name.lower()} called in query set",
-                    "scale": "Greys",
                     "format": "{:,.0f}",
                 },
             }
