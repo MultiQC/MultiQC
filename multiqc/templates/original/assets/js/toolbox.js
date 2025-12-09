@@ -14,8 +14,8 @@ const AI_PROVIDERS = {
   },
   anthropic: {
     name: "Anthropic",
-    defaultModel: "claude-sonnet-4-0",
-    suggestedModels: ["claude-sonnet-4-0"],
+    defaultModel: "claude-sonnet-4-5",
+    suggestedModels: ["claude-sonnet-4-5"],
     apiKeysUrl: "https://console.anthropic.com/settings/keys",
     modelsUrl: "https://docs.anthropic.com/en/docs/intro-to-claude#model-options",
   },
