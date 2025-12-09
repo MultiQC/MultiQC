@@ -256,7 +256,7 @@ class MultiQCConfig(BaseModel):
     data_format_extensions: Optional[Dict[str, str]] = Field(None, description="Data format extensions")
     export_plot_formats: Optional[List[str]] = Field(None, description="Export plot formats")
     filesearch_file_shared: Optional[List[str]] = Field(None, description="Filesearch file shared")
-    custom_content: Optional[Dict[str, Any]] = Field(None, description="Custom content")
+    custom_content: Optional[Dict[str, Any]] = Field(None, description="Custom content settings")
     fn_clean_sample_names: Optional[bool] = Field(None, description="Clean sample names")
     use_filename_as_sample_name: Optional[Union[bool, List[str]]] = Field(
         False,
