@@ -516,6 +516,19 @@
       "description": "Path to custom logo image",
       "title": "Custom Logo"
     },
+    "custom_logo_dark": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Path to custom logo image for dark mode",
+      "title": "Custom Logo Dark"
+    },
     "custom_logo_url": {
       "anyOf": [
         {
@@ -541,6 +554,19 @@
       "default": null,
       "description": "Title for custom logo",
       "title": "Custom Logo Title"
+    },
+    "custom_logo_width": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Width in pixels for the custom logo",
+      "title": "Custom Logo Width"
     },
     "custom_css_files": {
       "anyOf": [
@@ -1557,6 +1583,19 @@
       "description": "Configuration for general stats columns per module. Keys are module IDs.",
       "title": "General Stats Columns",
       "type": "object"
+    },
+    "general_stats_helptext": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Help text for general statistics table.",
+      "title": "General Stats Helptext"
     },
     "table_columns_visible": {
       "anyOf": [

@@ -18,8 +18,10 @@ report_header_info: null
 show_analysis_paths: True
 show_analysis_time: True
 custom_logo: null
+custom_logo_dark: null
 custom_logo_url: null
 custom_logo_title: null
+custom_logo_width: null
 custom_css_files: []
 simple_output: false
 template: "default"
@@ -107,6 +109,7 @@ collapse_tables: true
 max_table_rows: 500
 max_configurable_table_columns: 200
 general_stats_columns: {}
+general_stats_helptext: null
 table_columns_visible: {}
 table_columns_placement: {}
 table_columns_name: {}
@@ -369,6 +372,19 @@ fn_clean_exts:
   - ".error.spl"
   - ".error.grp"
   - ".vgstats"
+  - "_mapq_table"
+  - "_strand_table"
+  - "_isize_table"
+  - "_dup_report"
+  - "_cv_table"
+  - "_covdist_all"
+  - "_covdist_q40"
+  - "_CpGRetention"
+  - "_CpHRetentionByReadPos"
+  - "_totalBaseConversionRate"
+  - "_totalReadConversionRate"
+  - ".sylphmpa"
+  - "_qual"
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
 # Affects all modules that support it (e.g. fastqc, cutadapt)
@@ -410,6 +426,7 @@ fn_clean_trim:
   - ".phased"
   - ".tar"
   - "runs_"
+  - ".qc"
 
 # Files to ignore when checking content with "content" and "content_re" search patterns.
 fn_ignore_files:
@@ -608,6 +625,7 @@ module_order:
   - xenome
   - xengsort
   - metaphlan
+  - sylphtax
   - seqwho
   - telseq
   - ataqv

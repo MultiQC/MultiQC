@@ -57,7 +57,7 @@ Remember: Treat your API keys like passwords and do not share them.
 
 Seqera AI is free to use.[^seqera-ai-usage-limits]
 Use of other third-party APIs are billed by their respective providers based on consumption.
-Seqera AI uses the latest AI provider models under the hood, at the time of writing that is Anthropic Claude Sonnet 4.0.
+Seqera AI uses the latest AI provider models under the hood.
 
 ### Choosing a model
 
@@ -65,7 +65,7 @@ If you're using OpenAI, Anthropic or AWS Bedrock you can choose the exact model 
 This is done by setting `ai_model` in the MultiQC config.
 
 - Anthropic model names must begin with `claude`
-  - Default: `claude-sonnet-4-0`.
+  - Default: `claude-sonnet-4-5`.
   - See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
 - OpenAI model names must being with `gpt`
   - Default: `gpt-4o`.
@@ -81,7 +81,7 @@ MultiQC supports reasoning models from multiple providers which provide enhanced
 ### Supported Reasoning Models
 
 - OpenAI: `o1`, `o3`, `o3-mini`, `o4-mini`
-- Anthropic Claude 4 series: `claude-sonnet-4-0`
+- Anthropic Claude 4 series: `claude-sonnet-4-5`
 
 ### Configuration
 
@@ -91,7 +91,7 @@ Simply set your AI model to a reasoning model:
 # multiqc_config.yaml
 ai_summary: true
 ai_provider: openai # or Anthropic for Claude 4
-ai_model: o3-mini # or claude-sonnet-4-0, o4-mini, etc.
+ai_model: o3-mini # or claude-sonnet-4-5, o4-mini, etc.
 ```
 
 Reasoning models support additional configuration parameters:
@@ -113,7 +113,7 @@ ai_max_completion_tokens: 8000 # adjust based on needs
 # multiqc_config.yaml
 ai_summary: true
 ai_provider: anthropic
-ai_model: claude-sonnet-4-0
+ai_model: claude-sonnet-4-5
 ai_extended_thinking: true # enable extended thinking
 ai_thinking_budget_tokens: 15000 # budget for extended thinking
 ```
@@ -183,7 +183,7 @@ ai_max_completion_tokens: 3000
 ```yaml
 ai_summary: true
 ai_provider: anthropic
-ai_model: claude-sonnet-4-0
+ai_model: claude-sonnet-4-5
 ai_extended_thinking: true # enable extended thinking
 ai_thinking_budget_tokens: 12000 # budget for thinking process
 ```
@@ -216,7 +216,6 @@ AI summaries are disabled by default when running MultiQC.
 To generate them, you must enable them either on the command line or via a MultiQC config file.
 
 - Command line flags:
-
   - `--ai` / `--ai-summary`: Generate a short report summary and put it on top of the report (fast)
   - `--ai-summary-full`: Generate a detailed version of the summary with analysis and recommendations (slower)
   - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai`, `anthropic` or `aws_bedrock`. Default `seqera`
