@@ -67,16 +67,15 @@ class MultiqcModule(BaseMultiqcModule):
             doi="",
         )
 
-                # Set up class objects to hold parsed data
+        # Set up class objects to hold parsed data
         self.general_stats_headers: Dict = dict()
         self.general_stats_data: Dict = dict()
-        
+
         self.data_summary = dict()
         for f in self.find_log_files("checkatlas/summary"):
             s_name = f["s_name"]
             self.data_summary[s_name] = parse_firstline_table_logs(f["f"])
             self.add_data_source(f, s_name)
-            
 
         self.data_adata = dict()
         for f in self.find_log_files("checkatlas/adata"):
@@ -152,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Exit if we didn't find anything
         if len(self.data_summary) == 0:
             raise ModuleNoSamplesFound
-        
+
         # Save parsed table
         self.write_data_file(self.data_summary, "multiqc_checkatlas_summary")
 
