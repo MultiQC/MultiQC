@@ -150,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Exit if we didn't find anything
-        if sum(self.data_summary.values()) == 0:
+        if len(self.data_summary) == 0:
             raise ModuleNoSamplesFound
         
         # Save parsed table
