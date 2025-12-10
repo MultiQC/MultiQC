@@ -57,8 +57,16 @@ def read_config():
 
 def genstats_cov_thresholds(cum_fraction_by_cov: Dict[int, float], threshs: List[int]) -> Dict[str, float]:
     genstats: Dict[str, float] = {}
+    cov_keys_sorted = sorted(cum_fraction_by_cov.keys())
     for t in threshs:
-        genstats[f"{t}_x_pc"] = cum_fraction_by_cov.get(t, 0.0) * 100.0
+        # take next known value
+        # e.g. if only 50x is known but the threshold is 40x, take the 50x value
+        try:
+            next_cov_key = next(c for c in cov_keys_sorted if c >= t)
+            cov_val = cum_fraction_by_cov[next_cov_key]
+        except StopIteration:
+            cov_val = 0.0
+        genstats[f"{t}_x_pc"] = cov_val * 100.0
     return genstats
 
 
