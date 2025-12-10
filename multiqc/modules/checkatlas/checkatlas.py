@@ -149,6 +149,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Exit if we didn't find anything
+        # Filter to strip out ignored sample names
+        self.data_summary = self.ignore_samples(self.data_summary)
+
         if len(self.data_summary) == 0:
             raise ModuleNoSamplesFound
 
