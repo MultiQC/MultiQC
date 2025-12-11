@@ -61,10 +61,8 @@ def genstats_cov_thresholds(cum_fraction_by_cov: Dict[int, float], threshs: List
     for t in threshs:
         # take next known value
         # e.g. if only 50x is known but the threshold is 40x, take the 50x value
-        try:
-            cov_val = next(proportion for cov, proportion in sorted_cum_fraction_by_cov if cov >= t)
-        except StopIteration:
-            cov_val = 0.0
+        # if there is no next threshold, just take 0.0
+        cov_val = next((proportion for cov, proportion in sorted_cum_fraction_by_cov if cov >= t), 0.0)
         genstats[f"{t}_x_pc"] = cov_val * 100.0
     return genstats
 
