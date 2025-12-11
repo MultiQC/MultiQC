@@ -125,7 +125,7 @@ class MultiQCConfig(BaseModel):
     megaqc_access_token: Optional[str] = Field(None, description="MegaQC access token")
     megaqc_timeout: Optional[int] = Field(None, description="MegaQC timeout")
     export_plots: Optional[bool] = Field(None, description="Export plots")
-    export_plots_timeout: Optional[int] = Field(None, description="Timeout in seconds for exporting each plot to a static image (default: 60)")
+    export_plots_timeout: Optional[int] = Field(None, description="Timeout for exporting each plot, in seconds")
     make_report: Optional[bool] = Field(None, description="Make report")
     make_pdf: Optional[bool] = Field(None, description="Make PDF")
 

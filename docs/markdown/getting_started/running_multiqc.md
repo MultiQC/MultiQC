@@ -203,7 +203,7 @@ The default timeout is 60 seconds per plot. You can adjust this with the `export
 config option:
 
 ```yaml
-export_plots_timeout: 60  # seconds
+export_plots_timeout: 60 # seconds
 ```
 
 Or via an environment variable:

@@ -1429,6 +1429,7 @@ def _batch_export_plots(export_tasks, timeout=None):
     Returns:
         Set of indexes for successfully exported plots
     """
+    # Default timeout from config
     if timeout is None:
         timeout = config.export_plots_timeout
 
