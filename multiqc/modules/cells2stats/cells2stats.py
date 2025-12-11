@@ -64,14 +64,16 @@ class MultiqcModule(BaseMultiqcModule):
             plot_controls,
         ]:
             plot_html, plot_name, anchor, description, helptext, plot_content = plotting_function(self.c2s_run_data)
-            self.add_section(
-                anchor=anchor,
-                name=plot_name,
-                helptext=helptext,
-                plot=plot_html,
-                description=description,
-            )
-            self.write_data_file(plot_content, anchor)
+
+            if plot_html is not None:
+                self.add_section(
+                    anchor=anchor,
+                    name=plot_name,
+                    helptext=helptext,
+                    plot=plot_html,
+                    description=description,
+                )
+                self.write_data_file(plot_content, anchor)
 
         for target_site_name in summarize_target_site_names(self.c2s_run_data):
             log.info(f"Found {target_site_name} target group")
