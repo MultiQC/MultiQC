@@ -1088,7 +1088,7 @@
         }
       ],
       "default": null,
-      "description": "Export plots timeout",
+      "description": "Timeout in seconds for exporting each plot to a static image (default: 60)",
       "title": "Export Plots Timeout"
     },
     "make_report": {
@@ -1822,6 +1822,7 @@
     "custom_plot_config": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {
@@ -1835,6 +1836,7 @@
     "custom_table_header_config": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {
@@ -1848,6 +1850,7 @@
     "software_versions": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {
@@ -2351,6 +2354,7 @@
     "custom_content": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {

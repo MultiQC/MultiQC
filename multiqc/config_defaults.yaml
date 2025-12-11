@@ -63,7 +63,7 @@ megaqc_url: null
 megaqc_access_token: null
 megaqc_timeout: 30
 export_plots: false
-export_plots_timeout: 30
+export_plots_timeout: 60
 make_report: true
 make_pdf: false
 
