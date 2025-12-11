@@ -1429,9 +1429,8 @@ def _batch_export_plots(export_tasks, timeout=None):
     Returns:
         Set of indexes for successfully exported plots
     """
-    # Default timeout from config
     if timeout is None:
-        timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 60
+        timeout = config.export_plots_timeout
 
     # Start the export in a separate process
     export_process = BatchExportProcess(export_tasks)
@@ -1504,8 +1503,7 @@ def _export_plot(fig, plot_path, write_kwargs):
     # Prepare figure with solid backgrounds for export (only if currently transparent)
     fig = _prepare_figure_for_export(fig)
 
-    # Default timeout of 60 seconds for image export
-    timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 60
+    timeout = config.export_plots_timeout
 
     # Start the export in a separate process
     export_process = ExportProcess(fig, plot_path, write_kwargs)
