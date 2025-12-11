@@ -192,6 +192,13 @@ The `plots_dir_name` changes the default directory name for plots and the
 `export_plot_formats` specifies what file formats should be created (must be
 supported by Plotly).
 
+Note that not all plot types are yet supported, so you may find some plots are
+missing.
+
+:::note
+You can always save static image versions of plots from within MultiQC reports, using the [Export toolbox](../reports#exporting-plots) in the side bar.
+:::
+
 ### Export timeout
 
 Static plot generation uses [Kaleido](https://github.com/plotly/Kaleido) under the hood,
@@ -200,24 +207,7 @@ MultiQC applies a timeout to each plot export. If the timeout is exceeded, the p
 is skipped and report generation continues.
 
 The default timeout is 60 seconds per plot. You can adjust this with the `export_plots_timeout`
-config option:
-
-```yaml
-export_plots_timeout: 60 # seconds
-```
-
-Or via an environment variable:
-
-```bash
-export MULTIQC_EXPORT_PLOTS_TIMEOUT=60
-```
-
-Note that not all plot types are yet supported, so you may find some plots are
-missing.
-
-:::note
-You can always save static image versions of plots from within MultiQC reports, using the [Export toolbox](../reports#exporting-plots) in the side bar.
-:::
+config option.
 
 ## PDF Reports
 
