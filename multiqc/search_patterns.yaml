@@ -221,20 +221,16 @@ ccs/v4:
 ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
+cellranger/multi_html:
+  - fn: "*.html"
+    num_lines: 20
+    contents_re: '.*"subcommand": ?"multi".*'
 cellranger/count_html:
   - fn: "*.html"
-    contents: '"command":"Cell Ranger","subcommand":"count"'
-    num_lines: 20
-  - fn: "*.html"
-    contents: '"command": "Cell Ranger", "subcommand": "count"'
-    num_lines: 20
+    contents_re: '.*"command": ?"Cell Ranger", ?"subcommand": ?"count".*'
 cellranger/vdj_html:
   - fn: "*.html"
-    contents: '"command":"Cell Ranger","subcommand":"vdj"'
-    num_lines: 20
-  - fn: "*.html"
-    contents: '"command": "Cell Ranger", "subcommand": "vdj"'
-    num_lines: 20
+    contents_re: '.*"command": ?"Cell Ranger", ?"subcommand": ?"vdj".*'
 cellranger_arc:
   - fn: "*.html"
     contents: "Cell Ranger ARC"
@@ -1051,6 +1047,7 @@ truvari/bench:
   fn: "log.txt"
   num_lines: 10
 umicollapse:
+  fn: "*_UMICollapse.log"
   num_lines: 100
   contents: "UMI collapsing finished in "
 umitools/extract:
