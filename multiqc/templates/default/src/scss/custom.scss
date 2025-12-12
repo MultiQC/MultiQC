@@ -453,9 +453,12 @@ input.form-control[type="color"] {
   vertical-align: middle;
 }
 
+.mqc_table_control_buttons {
+  margin-bottom: $spacer * 0.5;
+}
+
 // Table structure
 .mqc_table {
-  margin-top: $spacer * 0.5;
   tr,
   td {
     height: 100%;
