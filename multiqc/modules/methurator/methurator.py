@@ -296,11 +296,13 @@ class MultiqcModule(BaseMultiqcModule):
 
             for min_cov in coverage_levels:
                 datasets.append(plot_data_by_coverage[min_cov])
-                data_labels.append({
-                    "name": f"Min Coverage {min_cov}x",
-                    "ylab": "Saturation (%)",
-                    "xlab": "Sequencing Depth (%)",
-                })
+                data_labels.append(
+                    {
+                        "name": f"Min Coverage {min_cov}x",
+                        "ylab": "Saturation (%)",
+                        "xlab": "Sequencing Depth (%)",
+                    }
+                )
 
             pconfig = LinePlotConfig(
                 id="methurator_saturation_plot",
