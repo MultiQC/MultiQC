@@ -5,7 +5,7 @@ import yaml
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
-from multiqc.plots.linegraph import LinePlotConfig, Series
+from multiqc.plots.linegraph import LinePlotConfig
 
 log = logging.getLogger(__name__)
 
@@ -221,27 +221,29 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(general_stats_data, headers)
 
     def _add_saturation_plot(self):
-        """Add the CpG saturation curve plot."""
+        """Add the CpG saturation curve plot showing CpGs vs reads."""
         # Collect plot data for each sample
         # We'll create one dataset per minimum coverage level found
         plot_data_by_coverage: Dict[int, Dict[str, Dict[float, float]]] = {}
 
         for s_name, data in self.methurator_data.items():
-            saturation_analysis = data.get("saturation_analysis", {})
-            for min_cov, sat_data in saturation_analysis.items():
+            # Build mapping from downsampling percentage to read count
+            reads_by_pct: Dict[float, int] = {}
+            for pct, reads in data.get("reads", []):
+                reads_by_pct[pct] = reads
+
+            # Get CpG data for each minimum coverage level
+            cpgs_data = data.get("cpgs", {})
+            for min_cov, cpg_points in cpgs_data.items():
                 if min_cov not in plot_data_by_coverage:
                     plot_data_by_coverage[min_cov] = {}
 
-                # Extract saturation data points
-                sat_points = sat_data.get("data", [])
+                # Build curve: reads (x) -> cpgs (y)
                 sample_curve: Dict[float, float] = {}
-                for point in sat_points:
-                    # point structure: [downsampling_pct, cpgs, saturation_pct, is_extrapolated]
-                    if len(point) >= 3:
-                        pct = point[0]
-                        sat_value = point[2]
-                        if sat_value is not None:
-                            sample_curve[pct * 100] = sat_value  # Convert to percentage
+                for pct, cpgs in cpg_points:
+                    if pct in reads_by_pct:
+                        reads = reads_by_pct[pct]
+                        sample_curve[float(reads)] = float(cpgs)
 
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
@@ -261,32 +263,19 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig = LinePlotConfig(
                 id="methurator_saturation_plot",
                 title="Methurator: CpG Saturation Curve",
-                xlab="Sequencing Depth (%)",
-                ylab="Saturation (%)",
+                xlab="Number of Reads",
+                ylab="Number of CpGs",
                 xmin=0,
                 ymin=0,
-                ymax=100,
-                tt_label="<b>{point.x:.0f}%</b> depth: {point.y:.1f}% saturation",
+                tt_label="<b>{point.x:,.0f}</b> reads: {point.y:,.0f} CpGs",
             )
-
-            # Add 100% saturation reference line
-            pconfig.extra_series = [
-                Series(
-                    name="100% Saturation",
-                    pairs=[(0, 100), (200, 100)],
-                    dash="dash",
-                    width=1,
-                    color="#cccccc",
-                    showlegend=False,
-                )
-            ]
 
             self.add_section(
                 name="CpG Saturation Curve",
                 anchor="methurator_saturation",
-                description=f"Sequencing saturation curves showing the percentage of theoretical maximum "
-                f"CpG sites detected at each sequencing depth (minimum coverage: {min_cov}x). "
-                f"Higher saturation indicates more complete coverage of detectable CpG sites.",
+                description=f"Saturation curves showing the number of CpG sites detected at each "
+                f"sequencing depth (minimum coverage: {min_cov}x). A flattening curve indicates "
+                f"saturation, where additional sequencing yields diminishing returns.",
                 plot=linegraph.plot(plot_data, pconfig),
             )
         else:
@@ -299,41 +288,28 @@ class MultiqcModule(BaseMultiqcModule):
                 data_labels.append(
                     {
                         "name": f"Min Coverage {min_cov}x",
-                        "ylab": "Saturation (%)",
-                        "xlab": "Sequencing Depth (%)",
+                        "ylab": "Number of CpGs",
+                        "xlab": "Number of Reads",
                     }
                 )
 
             pconfig = LinePlotConfig(
                 id="methurator_saturation_plot",
                 title="Methurator: CpG Saturation Curve",
-                xlab="Sequencing Depth (%)",
-                ylab="Saturation (%)",
+                xlab="Number of Reads",
+                ylab="Number of CpGs",
                 xmin=0,
                 ymin=0,
-                ymax=100,
-                tt_label="<b>{point.x:.0f}%</b> depth: {point.y:.1f}% saturation",
+                tt_label="<b>{point.x:,.0f}</b> reads: {point.y:,.0f} CpGs",
                 data_labels=data_labels,
             )
-
-            # Add 100% saturation reference line
-            pconfig.extra_series = [
-                Series(
-                    name="100% Saturation",
-                    pairs=[(0, 100), (200, 100)],
-                    dash="dash",
-                    width=1,
-                    color="#cccccc",
-                    showlegend=False,
-                )
-            ]
 
             self.add_section(
                 name="CpG Saturation Curve",
                 anchor="methurator_saturation",
-                description="Sequencing saturation curves showing the percentage of theoretical maximum "
-                "CpG sites detected at each sequencing depth. Use the buttons to switch between "
-                "different minimum coverage thresholds. Higher saturation indicates more complete "
-                "coverage of detectable CpG sites.",
+                description="Saturation curves showing the number of CpG sites detected at each "
+                "sequencing depth. Use the buttons to switch between different minimum coverage "
+                "thresholds. A flattening curve indicates saturation, where additional sequencing "
+                "yields diminishing returns.",
                 plot=linegraph.plot(datasets, pconfig),
             )
