@@ -221,6 +221,27 @@ ccs/v4:
 ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
+checkatlas/summary:
+  fn: "*.tsv"
+  contents_re: "^AtlasFileType"
+checkatlas/adata:
+  fn: "*.tsv"
+  contents_re: "^atlas_obs"
+checkatlas/qc:
+  fn: "*.tsv"
+  contents_re: "(n_genes_by_counts|total_counts)"
+checkatlas/cluster:
+  fn: "*.tsv"
+  contents_re: "^Clust_Sample"
+checkatlas/annotation:
+  fn: "*.tsv"
+  contents_re: "^Annot_Sample"
+checkatlas/dimred:
+  fn: "*.tsv"
+  contents_re: "^Dimred_Sample"
+checkatlas/specificity:
+  fn: "*.tsv"
+  contents_re: "^Spec_Sample"
 cellranger/count_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"count"'
