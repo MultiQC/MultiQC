@@ -572,6 +572,10 @@ megahit:
 metaphlan:
   fn: "*.txt"
   contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
+methurator:
+  fn: "*methurator_summary.yml"
+  contents: "methurator_summary:"
+  num_lines: 2
 methylqa:
   fn: "*.report"
   shared: true
