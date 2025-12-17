@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 import yaml
 
@@ -40,8 +40,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and parse methurator summary files
         for f in self.find_log_files("methurator"):
-            parsed = self._parse_yaml(f["f"])
-            if parsed is None:
+            try:
+                parsed = yaml.load(f["f"], Loader=yaml.SafeLoader)
+            except Exception as e:
+                log.warning(f"Could not parse methurator YAML file '{f['fn']}': {e}")
                 continue
 
             # Extract sample data from the parsed YAML
@@ -78,14 +80,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write data file (must be last)
         self.write_data_file(self.methurator_data, "methurator")
-
-    def _parse_yaml(self, file_contents: str) -> Optional[Dict]:
-        """Parse the methurator YAML file."""
-        try:
-            return yaml.load(file_contents, Loader=yaml.SafeLoader)
-        except Exception as e:
-            log.warning(f"Could not parse methurator YAML: {e}")
-            return None
 
     def _extract_sample_data(self, parsed: Dict) -> Dict[str, Dict[str, Any]]:
         """Extract per-sample data from the parsed YAML structure."""
