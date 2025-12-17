@@ -227,23 +227,28 @@ class MultiqcModule(BaseMultiqcModule):
         plot_data_by_coverage: Dict[int, Dict[str, Dict[float, float]]] = {}
 
         for s_name, data in self.methurator_data.items():
-            # Build mapping from downsampling percentage to read count
-            reads_by_pct: Dict[float, int] = {}
-            for pct, reads in data.get("reads", []):
-                reads_by_pct[pct] = reads
+            # Get total reads at 100% to calculate extrapolated read counts
+            total_reads = data.get("total_reads", 0)
 
-            # Get CpG data for each minimum coverage level
-            cpgs_data = data.get("cpgs", {})
-            for min_cov, cpg_points in cpgs_data.items():
+            # Use saturation_analysis data which includes projected/extrapolated points
+            saturation_analysis = data.get("saturation_analysis", {})
+            for min_cov, sat_data in saturation_analysis.items():
                 if min_cov not in plot_data_by_coverage:
                     plot_data_by_coverage[min_cov] = {}
 
-                # Build curve: reads (x) -> cpgs (y)
+                # Extract data points from saturation analysis
+                # Structure: [downsampling_pct, cpgs, saturation_pct, is_extrapolated]
+                sat_points = sat_data.get("data", [])
                 sample_curve: Dict[float, float] = {}
-                for pct, cpgs in cpg_points:
-                    if pct in reads_by_pct:
-                        reads = reads_by_pct[pct]
-                        sample_curve[float(reads)] = float(cpgs)
+                for point in sat_points:
+                    if len(point) >= 2:
+                        pct = point[0]
+                        cpgs = point[1]
+                        # Calculate reads based on downsampling percentage
+                        # At pct=1.0 we have total_reads, so reads = total_reads * pct
+                        reads = total_reads * pct
+                        if reads > 0 or pct == 0:  # Include origin point
+                            sample_curve[float(reads)] = float(cpgs)
 
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
