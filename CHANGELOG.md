@@ -29,6 +29,7 @@
 - Glimpse: Add more decimal to general table stats ([#3423](https://github.com/MultiQC/MultiQC/pull/3423))
 - Refactor BISCUIT module for better consistency with current MultiQC codebase ([#3345](https://github.com/MultiQC/MultiQC/pull/3345), [#3426](https://github.com/MultiQC/MultiQC/pull/3426))
 - Add version fetching for HiCUP, QoRTs, QualiMap, RNA-SeQC ([#3420](https://github.com/MultiQC/MultiQC/pull/3420))
+- Sequali: Add median read length and mode read quality to general statistics table
 
 ### Fixes
 
