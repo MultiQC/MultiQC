@@ -193,6 +193,7 @@ class MultiqcModule(BaseMultiqcModule):
         general_stats = dict()
         for sample_name, sample_dict in data.items():
             summary = sample_dict["summary"]
+            read_qual_counts = {int(qual):read_count for qual, read_count in zip(sample_dict["per_sequence_quality_scores"]["x_labels"], sample_dict["per_sequence_quality_scores"]["average_quality_counts"])}
             stats_entry = {
                 "sequali_gc_percentage": (
                     100 * summary["total_gc_bases"] / max(summary["total_bases"] - summary["total_n_bases"], 1)
@@ -201,6 +202,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "sequali_total_reads": summary["total_reads"],
                 "sequali_duplication_percentage": (1 - sample_dict["duplication_fractions"]["remaining_fraction"])
                 * 100,
+                "sequali_median_sequence_length": sample_dict["sequence_length_distribution"]["q50"],
+                "sequali_mode_read_quality": max(read_qual_counts, key=read_qual_counts.get)
             }
 
             # Add insert size estimate if available
@@ -237,6 +240,26 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.1f}",
                 # Longer reads is considered better for long-read technologies.
                 # Use green to signal that.
+                "scale": "Greens",
+            },
+            "sequali_median_sequence_length": {
+                "title": "Median length",
+                "description": "Median read length",
+                "min": 0,
+                "suffix": " bp",
+                "format": "{:,}",
+                # Longer reads is considered better for long-read technologies.
+                # Use green to signal that.
+                "scale": "Greens",
+            },
+            "sequali_mode_read_quality": {
+                "title": "Mode quality",
+                "description": "Mode read quality (most common average read quality score)",
+                "min": 0,
+                "max": 93,
+                "suffix": "",
+                "format": "{:,.0f}",
+                # Higher quality is better. Use green to signal that.
                 "scale": "Greens",
             },
             "sequali_total_reads": {
