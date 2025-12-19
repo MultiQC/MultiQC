@@ -195,7 +195,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Theoretical maximum number of CpG sites (model estimate)",
                 "format": "{:,.0f}",
                 "scale": "BuPu",
-                "hidden": True,
             },
             "total_cpgs": {
                 "title": "CpGs",
