@@ -593,6 +593,7 @@ module_order:
   - sickle
   - skewer
   - sortmerna
+  - ribodetector
   - biobloomtools
   - seqfu
   - fastq_screen
