@@ -83,44 +83,44 @@ class MultiqcModule(BaseMultiqcModule):
             # Format: "Processed 49593 sequences in total"
             m = re.search(r"Processed\s+([\d,]+)\s+sequences in total", clean_line, re.IGNORECASE)
             if m:
-                data["total_reads"] = int(m.group(1).replace(",", ""))
+                data["total"] = int(m.group(1).replace(",", ""))
                 continue
 
             # Parse non-rRNA sequences
             # Format: "Detected 49587 non-rRNA sequences"
             m = re.search(r"Detected\s+([\d,]+)\s+non-rRNA sequences", clean_line, re.IGNORECASE)
             if m:
-                data["nonrrna_reads"] = int(m.group(1).replace(",", ""))
+                data["non_rRNA"] = int(m.group(1).replace(",", ""))
                 continue
 
             # Parse rRNA sequences
             # Format: "Detected 6 rRNA sequences"
             m = re.search(r"Detected\s+([\d,]+)\s+rRNA sequences", clean_line, re.IGNORECASE)
             if m:
-                data["rrna_reads"] = int(m.group(1).replace(",", ""))
+                data["rRNA"] = int(m.group(1).replace(",", ""))
                 continue
 
         # Calculate percentages if we have the data
-        if "total_reads" in data and data["total_reads"] > 0:
-            if "rrna_reads" in data:
-                data["percent_rrna"] = (data["rrna_reads"] / data["total_reads"]) * 100
-            if "nonrrna_reads" in data:
-                data["percent_nonrrna"] = (data["nonrrna_reads"] / data["total_reads"]) * 100
+        if "total" in data and data["total"] > 0:
+            if "rRNA" in data:
+                data["rRNA_pct"] = (data["rRNA"] / data["total"]) * 100
+            if "non_rRNA" in data:
+                data["non_rRNA_pct"] = (data["non_rRNA"] / data["total"]) * 100
 
         return data if data else None
 
     def ribodetector_general_stats(self):
         """Add columns to the General Statistics table."""
         headers = {
-            "percent_rrna": {
-                "title": "% rRNA",
+            "rRNA_pct": {
+                "title": "rRNA",
                 "description": "Percentage of reads classified as rRNA",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
                 "scale": "OrRd",
             },
-            "nonrrna_reads": {
+            "non_rRNA": {
                 "title": f"{config.read_count_prefix} Non-rRNA",
                 "description": f"Reads classified as non-rRNA ({config.read_count_desc})",
                 "min": 0,
@@ -129,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "read_count",
                 "hidden": True,
             },
-            "rrna_reads": {
+            "rRNA": {
                 "title": f"{config.read_count_prefix} rRNA",
                 "description": f"Reads classified as rRNA ({config.read_count_desc})",
                 "min": 0,
@@ -144,14 +144,14 @@ class MultiqcModule(BaseMultiqcModule):
     def ribodetector_bargraph(self):
         """Create a bar graph showing rRNA vs non-rRNA reads."""
         keys = {
-            "nonrrna_reads": {"color": "#437bb1", "name": "Non-rRNA"},
-            "rrna_reads": {"color": "#e63946", "name": "rRNA"},
+            "non_rRNA": {"color": "#437bb1", "name": "Non-rRNA"},
+            "rRNA": {"color": "#e63946", "name": "rRNA"},
         }
 
         pconfig = {
             "id": "ribodetector_classification",
             "title": "RiboDetector: Read Classification",
-            "ylab": "# Reads",
+            "ylab": "Reads",
             "cpswitch_counts_label": "Number of Reads",
         }
 
