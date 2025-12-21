@@ -243,8 +243,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
 
-        # Sort coverage levels
-        coverage_levels = sorted(plot_data_by_coverage.keys())
+        # Filter out coverage levels with no valid data and sort
+        coverage_levels = sorted([cov for cov, data in plot_data_by_coverage.items() if data])
 
         # Handle case where no coverage levels have valid data
         if len(coverage_levels) == 0:
@@ -346,8 +346,8 @@ class MultiqcModule(BaseMultiqcModule):
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
 
-        # Sort coverage levels
-        coverage_levels = sorted(plot_data_by_coverage.keys())
+        # Filter out coverage levels with no valid data and sort
+        coverage_levels = sorted([cov for cov, data in plot_data_by_coverage.items() if data])
 
         # Handle case where no coverage levels have valid saturation data
         if len(coverage_levels) == 0:
