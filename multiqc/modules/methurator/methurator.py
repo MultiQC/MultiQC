@@ -243,14 +243,21 @@ class MultiqcModule(BaseMultiqcModule):
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
 
-        # Create plot(s) - one per minimum coverage level
-        if not plot_data_by_coverage:
-            return
-
         # Sort coverage levels
         coverage_levels = sorted(plot_data_by_coverage.keys())
 
-        # Create data labels for multiple datasets
+        # Handle case where no coverage levels have valid data
+        if len(coverage_levels) == 0:
+            self.add_section(
+                name="CpG Saturation Curve",
+                anchor="methurator_saturation",
+                description='<div class="alert alert-info">'
+                "<strong>No CpG saturation data available.</strong> "
+                "No valid saturation analysis data was found for any coverage level."
+                "</div>",
+            )
+            return
+
         if len(coverage_levels) == 1:
             min_cov = coverage_levels[0]
             plot_data = plot_data_by_coverage[min_cov]
