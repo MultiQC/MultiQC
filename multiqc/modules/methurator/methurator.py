@@ -339,12 +339,22 @@ class MultiqcModule(BaseMultiqcModule):
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
 
-        # Create plot(s) - one per minimum coverage level
-        if not plot_data_by_coverage:
-            return
-
         # Sort coverage levels
         coverage_levels = sorted(plot_data_by_coverage.keys())
+
+        # Handle case where no coverage levels have valid saturation data
+        if len(coverage_levels) == 0:
+            self.add_section(
+                name="Saturation Percentage",
+                anchor="methurator_saturation_pct",
+                description='<div class="alert alert-info">'
+                "<strong>No saturation percentage data available.</strong> "
+                "The saturation model failed to fit for all coverage levels, "
+                "so saturation percentages could not be calculated. "
+                "This typically occurs when there are too few CpG sites detected."
+                "</div>",
+            )
+            return
 
         if len(coverage_levels) == 1:
             min_cov = coverage_levels[0]
@@ -365,13 +375,12 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Saturation Percentage",
                 anchor="methurator_saturation_pct",
                 description=f"Saturation percentage curves showing the fraction of theoretical maximum "
-                f"CpG sites detected at each sequencing depth (minimum coverage: {min_cov}x). "
-                f"Only coverage levels with successful model fits are shown.",
+                f"CpG sites detected at each sequencing depth (minimum coverage: {min_cov}x).",
                 helptext="100% on the x-axis represents the actual sequencing depth, with extrapolation beyond. "
                 "100% saturation on the y-axis would mean all detectable CpG sites have been found.",
                 plot=linegraph.plot(plot_data, pconfig),
             )
-        else:
+        elif len(coverage_levels) > 1:
             # Multiple coverage levels - create switchable datasets
             datasets = []
             data_labels = []
