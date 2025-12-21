@@ -217,15 +217,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(general_stats_data, headers)
 
     def _add_saturation_plot(self):
-        """Add the CpG saturation curve plot showing CpGs vs reads."""
+        """Add the CpG saturation curve plot showing CpGs vs percentage of reads."""
         # Collect plot data for each sample
         # We'll create one dataset per minimum coverage level found
         plot_data_by_coverage: Dict[int, Dict[str, Dict[float, float]]] = {}
 
         for s_name, data in self.methurator_data.items():
-            # Get total reads at 100% to calculate extrapolated read counts
-            total_reads = data.get("total_reads", 0)
-
             # Use saturation_analysis data which includes projected/extrapolated points
             saturation_analysis = data.get("saturation_analysis", {})
             for min_cov, sat_data in saturation_analysis.items():
@@ -240,11 +237,8 @@ class MultiqcModule(BaseMultiqcModule):
                     if len(point) >= 2:
                         pct = point[0]
                         cpgs = point[1]
-                        # Calculate reads based on downsampling percentage
-                        # At pct=1.0 we have total_reads, so reads = total_reads * pct
-                        reads = total_reads * pct
-                        if reads > 0 or pct == 0:  # Include origin point
-                            sample_curve[float(reads)] = float(cpgs)
+                        # Use percentage directly (convert to %)
+                        sample_curve[pct * 100] = float(cpgs)
 
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
@@ -264,18 +258,19 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig = LinePlotConfig(
                 id="methurator_saturation_plot",
                 title="Methurator: CpG Saturation Curve",
-                xlab="Number of Reads",
+                xlab="Sequencing Depth (%)",
                 ylab="Number of CpGs",
                 xmin=0,
                 ymin=0,
-                tt_label="<b>{point.x:,.0f}</b> reads: {point.y:,.0f} CpGs",
+                tt_label="<b>{point.x:.0f}%</b> depth: {point.y:,.0f} CpGs",
             )
 
             self.add_section(
                 name="CpG Saturation Curve",
                 anchor="methurator_saturation",
                 description=f"Saturation curves showing the number of CpG sites detected at each "
-                f"sequencing depth (minimum coverage: {min_cov}x). A flattening curve indicates "
+                f"sequencing depth (minimum coverage: {min_cov}x). 100% represents the actual "
+                f"sequencing depth, with extrapolation beyond. A flattening curve indicates "
                 f"saturation, where additional sequencing yields diminishing returns.",
                 plot=linegraph.plot(plot_data, pconfig),
             )
@@ -290,18 +285,18 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "name": f"Min Coverage {min_cov}x",
                         "ylab": "Number of CpGs",
-                        "xlab": "Number of Reads",
+                        "xlab": "Sequencing Depth (%)",
                     }
                 )
 
             pconfig = LinePlotConfig(
                 id="methurator_saturation_plot",
                 title="Methurator: CpG Saturation Curve",
-                xlab="Number of Reads",
+                xlab="Sequencing Depth (%)",
                 ylab="Number of CpGs",
                 xmin=0,
                 ymin=0,
-                tt_label="<b>{point.x:,.0f}</b> reads: {point.y:,.0f} CpGs",
+                tt_label="<b>{point.x:.0f}%</b> depth: {point.y:,.0f} CpGs",
                 data_labels=data_labels,
             )
 
@@ -309,21 +304,19 @@ class MultiqcModule(BaseMultiqcModule):
                 name="CpG Saturation Curve",
                 anchor="methurator_saturation",
                 description="Saturation curves showing the number of CpG sites detected at each "
-                "sequencing depth. Use the buttons to switch between different minimum coverage "
-                "thresholds. A flattening curve indicates saturation, where additional sequencing "
-                "yields diminishing returns.",
+                "sequencing depth. 100% represents the actual sequencing depth, with extrapolation "
+                "beyond. Use the buttons to switch between different minimum coverage thresholds. "
+                "A flattening curve indicates saturation, where additional sequencing yields "
+                "diminishing returns.",
                 plot=linegraph.plot(datasets, pconfig),
             )
 
     def _add_saturation_pct_plot(self):
-        """Add a plot showing saturation percentage vs reads."""
+        """Add a plot showing saturation percentage vs percentage of reads."""
         # Collect plot data for each sample
         plot_data_by_coverage: Dict[int, Dict[str, Dict[float, float]]] = {}
 
         for s_name, data in self.methurator_data.items():
-            # Get total reads at 100% to calculate extrapolated read counts
-            total_reads = data.get("total_reads", 0)
-
             # Use saturation_analysis data which includes projected/extrapolated points
             saturation_analysis = data.get("saturation_analysis", {})
             for min_cov, sat_data in saturation_analysis.items():
@@ -338,10 +331,9 @@ class MultiqcModule(BaseMultiqcModule):
                     if len(point) >= 3:
                         pct = point[0]
                         sat_pct = point[2]
-                        # Calculate reads based on downsampling percentage
-                        reads = total_reads * pct
-                        if sat_pct is not None and (reads > 0 or pct == 0):
-                            sample_curve[float(reads)] = float(sat_pct)
+                        # Use percentage directly (convert to %)
+                        if sat_pct is not None:
+                            sample_curve[pct * 100] = float(sat_pct)
 
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
@@ -360,12 +352,12 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig = LinePlotConfig(
                 id="methurator_saturation_pct_plot",
                 title="Methurator: Saturation Percentage",
-                xlab="Number of Reads",
+                xlab="Sequencing Depth (%)",
                 ylab="Saturation (%)",
                 xmin=0,
                 ymin=0,
                 ymax=100,
-                tt_label="<b>{point.x:,.0f}</b> reads: {point.y:.1f}% saturation",
+                tt_label="<b>{point.x:.0f}%</b> depth: {point.y:.1f}% saturation",
             )
 
             self.add_section(
@@ -373,7 +365,8 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="methurator_saturation_pct",
                 description=f"Saturation percentage curves showing the fraction of theoretical maximum "
                 f"CpG sites detected at each sequencing depth (minimum coverage: {min_cov}x). "
-                f"100% saturation would mean all detectable CpG sites have been found.",
+                f"100% on the x-axis represents the actual sequencing depth, with extrapolation beyond. "
+                f"100% saturation on the y-axis would mean all detectable CpG sites have been found.",
                 plot=linegraph.plot(plot_data, pconfig),
             )
         else:
@@ -387,19 +380,19 @@ class MultiqcModule(BaseMultiqcModule):
                     {
                         "name": f"Min Coverage {min_cov}x",
                         "ylab": "Saturation (%)",
-                        "xlab": "Number of Reads",
+                        "xlab": "Sequencing Depth (%)",
                     }
                 )
 
             pconfig = LinePlotConfig(
                 id="methurator_saturation_pct_plot",
                 title="Methurator: Saturation Percentage",
-                xlab="Number of Reads",
+                xlab="Sequencing Depth (%)",
                 ylab="Saturation (%)",
                 xmin=0,
                 ymin=0,
                 ymax=100,
-                tt_label="<b>{point.x:,.0f}</b> reads: {point.y:.1f}% saturation",
+                tt_label="<b>{point.x:.0f}%</b> depth: {point.y:.1f}% saturation",
                 data_labels=data_labels,
             )
 
@@ -407,8 +400,9 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Saturation Percentage",
                 anchor="methurator_saturation_pct",
                 description="Saturation percentage curves showing the fraction of theoretical maximum "
-                "CpG sites detected at each sequencing depth. Use the buttons to switch between "
-                "different minimum coverage thresholds. 100% saturation would mean all detectable "
-                "CpG sites have been found.",
+                "CpG sites detected at each sequencing depth. 100% on the x-axis represents the actual "
+                "sequencing depth, with extrapolation beyond. Use the buttons to switch between "
+                "different minimum coverage thresholds. 100% saturation on the y-axis would mean all "
+                "detectable CpG sites have been found.",
                 plot=linegraph.plot(datasets, pconfig),
             )
