@@ -10,6 +10,11 @@ from multiqc.plots.linegraph import LinePlotConfig
 log = logging.getLogger(__name__)
 
 
+def _make_alert(message: str, level: str = "info") -> str:
+    """Create an HTML alert div for empty state messages."""
+    return f'<div class="alert alert-{level}"><strong>{message}</strong></div>'
+
+
 class MultiqcModule(BaseMultiqcModule):
     """
     Methurator is a Python package designed to estimate sequencing saturation for
@@ -217,28 +222,30 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(general_stats_data, headers)
 
     def _add_saturation_plot(self):
-        """Add the CpG saturation curve plot showing CpGs vs percentage of reads."""
-        # Collect plot data for each sample
-        # We'll create one dataset per minimum coverage level found
+        """Add the CpG saturation curve plot showing CpGs vs number of reads."""
+        # Collect plot data for each sample, one dataset per minimum coverage level
         plot_data_by_coverage: Dict[int, Dict[str, Dict[float, float]]] = {}
 
         for s_name, data in self.methurator_data.items():
-            # Use saturation_analysis data which includes projected/extrapolated points
             saturation_analysis = data.get("saturation_analysis", {})
+            # Build a lookup from percentage to reads count
+            reads_data = data.get("reads", [])
+            pct_to_reads = {pct: reads for pct, reads in reads_data}
+
             for min_cov, sat_data in saturation_analysis.items():
                 if min_cov not in plot_data_by_coverage:
                     plot_data_by_coverage[min_cov] = {}
 
-                # Extract data points from saturation analysis
-                # Structure: [downsampling_pct, cpgs, saturation_pct, is_extrapolated]
+                # Extract data points: [downsampling_pct, cpgs, saturation_pct, is_extrapolated]
                 sat_points = sat_data.get("data", [])
                 sample_curve: Dict[float, float] = {}
                 for point in sat_points:
                     if len(point) >= 2:
                         pct = point[0]
                         cpgs = point[1]
-                        # Use percentage directly (convert to %)
-                        sample_curve[pct * 100] = float(cpgs)
+                        # Map percentage to reads count if available
+                        if pct in pct_to_reads:
+                            sample_curve[float(pct_to_reads[pct])] = float(cpgs)
 
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
@@ -246,102 +253,65 @@ class MultiqcModule(BaseMultiqcModule):
         # Filter out coverage levels with no valid data and sort
         coverage_levels = sorted([cov for cov, data in plot_data_by_coverage.items() if data])
 
-        # Handle case where no coverage levels have valid data
-        if len(coverage_levels) == 0:
-            self.add_section(
-                name="CpG Saturation Curve",
-                anchor="methurator_saturation",
-                description='<div class="alert alert-info">'
-                "<strong>No CpG saturation data available.</strong> "
-                "No valid saturation analysis data was found for any coverage level."
-                "</div>",
-            )
-            return
-
-        if len(coverage_levels) == 1:
-            min_cov = coverage_levels[0]
-            plot_data = plot_data_by_coverage[min_cov]
-
-            pconfig = LinePlotConfig(
-                id="methurator_saturation_plot",
-                title="Methurator: CpG Saturation Curve",
-                xlab="Sequencing Depth (%)",
-                ylab="Number of CpGs",
-                xmin=0,
-                ymin=0,
-                tt_label="<b>{point.x:.0f}%</b> depth: {point.y:,.0f} CpGs",
-            )
-
-            self.add_section(
-                name="CpG Saturation Curve",
-                anchor="methurator_saturation",
-                description=f"Saturation curves showing the number of CpG sites detected at each "
-                f"sequencing depth (minimum coverage: {min_cov}x).",
-                helptext="100% represents the actual "
-                "sequencing depth, with extrapolation beyond. A flattening curve indicates "
-                "saturation, where additional sequencing yields diminishing returns.",
-                plot=linegraph.plot(plot_data, pconfig),
-            )
-        else:
-            # Multiple coverage levels - create switchable datasets
-            datasets = []
-            data_labels = []
-
-            for min_cov in coverage_levels:
-                datasets.append(plot_data_by_coverage[min_cov])
-                data_labels.append(
-                    {
-                        "name": f"Min Coverage {min_cov}x",
-                        "ylab": "Number of CpGs",
-                        "xlab": "Sequencing Depth (%)",
-                    }
-                )
-
-            pconfig = LinePlotConfig(
-                id="methurator_saturation_plot",
-                title="Methurator: CpG Saturation Curve",
-                xlab="Sequencing Depth (%)",
-                ylab="Number of CpGs",
-                xmin=0,
-                ymin=0,
-                tt_label="<b>{point.x:.0f}%</b> depth: {point.y:,.0f} CpGs",
-                data_labels=data_labels,
-            )
-
+        if not coverage_levels:
             self.add_section(
                 name="CpG Saturation Curve",
                 anchor="methurator_saturation",
                 description="Saturation curves showing the number of CpG sites detected at each sequencing depth.",
-                helptext="100% represents the actual sequencing depth, with extrapolation "
-                "beyond. Use the buttons to switch between different minimum coverage thresholds. "
-                "A flattening curve indicates saturation, where additional sequencing yields "
-                "diminishing returns.",
-                plot=linegraph.plot(datasets, pconfig),
+                content=_make_alert(
+                    "No CpG saturation data available. "
+                    "No valid saturation analysis data was found for any coverage level."
+                ),
             )
+            return
+
+        # Build datasets and labels (works for single or multiple coverage levels)
+        datasets = [plot_data_by_coverage[cov] for cov in coverage_levels]
+        data_labels = [
+            {
+                "name": f"Min Coverage {cov}x",
+                "ylab": "Number of CpGs",
+                "title": f"Methurator: CpG Saturation Curve (min. coverage {cov}x)",
+            }
+            for cov in coverage_levels
+        ]
+
+        pconfig = LinePlotConfig(
+            id="methurator_saturation_plot",
+            title=f"Methurator: CpG Saturation Curve (min. coverage {coverage_levels[0]}x)",
+            xlab="Number of Reads",
+            ylab="Number of CpGs",
+            xmin=0,
+            ymin=0,
+            tt_label="<b>{point.x:,.0f}</b> reads: {point.y:,.0f} CpGs",
+            data_labels=data_labels,
+        )
+
+        self.add_section(
+            name="CpG Saturation Curve",
+            anchor="methurator_saturation",
+            description="Saturation curves showing the number of CpG sites detected at each sequencing depth.",
+            helptext="A flattening curve indicates saturation, where additional sequencing yields diminishing returns.",
+            plot=linegraph.plot(datasets, pconfig),
+        )
 
     def _add_saturation_pct_plot(self):
         """Add a plot showing saturation percentage vs percentage of reads."""
-        # Collect plot data for each sample
+        # Collect plot data for each sample, one dataset per minimum coverage level
         plot_data_by_coverage: Dict[int, Dict[str, Dict[float, float]]] = {}
 
         for s_name, data in self.methurator_data.items():
-            # Use saturation_analysis data which includes projected/extrapolated points
             saturation_analysis = data.get("saturation_analysis", {})
             for min_cov, sat_data in saturation_analysis.items():
                 if min_cov not in plot_data_by_coverage:
                     plot_data_by_coverage[min_cov] = {}
 
-                # Extract data points from saturation analysis
-                # Structure: [downsampling_pct, cpgs, saturation_pct, is_extrapolated]
+                # Extract data points: [downsampling_pct, cpgs, saturation_pct, is_extrapolated]
                 sat_points = sat_data.get("data", [])
                 sample_curve: Dict[float, float] = {}
                 for point in sat_points:
-                    if len(point) >= 3:
-                        pct = point[0]
-                        sat_pct = point[2]
-                        # Use percentage directly (convert to %)
-                        if sat_pct is not None:
-                            sample_curve[pct * 100] = float(sat_pct)
+                    if len(point) >= 3 and point[2] is not None:
+                        sample_curve[point[0] * 100] = float(point[2])
 
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
@@ -349,79 +319,50 @@ class MultiqcModule(BaseMultiqcModule):
         # Filter out coverage levels with no valid data and sort
         coverage_levels = sorted([cov for cov, data in plot_data_by_coverage.items() if data])
 
-        # Handle case where no coverage levels have valid saturation data
-        if len(coverage_levels) == 0:
-            self.add_section(
-                name="Saturation Percentage",
-                anchor="methurator_saturation_pct",
-                description='<div class="alert alert-info">'
-                "<strong>No saturation percentage data available.</strong> "
-                "The saturation model failed to fit for all coverage levels, "
-                "so saturation percentages could not be calculated. "
-                "This typically occurs when there are too few CpG sites detected."
-                "</div>",
-            )
-            return
-
-        if len(coverage_levels) == 1:
-            min_cov = coverage_levels[0]
-            plot_data = plot_data_by_coverage[min_cov]
-
-            pconfig = LinePlotConfig(
-                id="methurator_saturation_pct_plot",
-                title="Methurator: Saturation Percentage",
-                xlab="Sequencing Depth (%)",
-                ylab="Saturation (%)",
-                xmin=0,
-                ymin=0,
-                ymax=100,
-                tt_label="<b>{point.x:.0f}%</b> depth: {point.y:.1f}% saturation",
-            )
-
-            self.add_section(
-                name="Saturation Percentage",
-                anchor="methurator_saturation_pct",
-                description=f"Saturation percentage curves showing the fraction of theoretical maximum "
-                f"CpG sites detected at each sequencing depth (minimum coverage: {min_cov}x).",
-                helptext="100% on the x-axis represents the actual sequencing depth, with extrapolation beyond. "
-                "100% saturation on the y-axis would mean all detectable CpG sites have been found.",
-                plot=linegraph.plot(plot_data, pconfig),
-            )
-        elif len(coverage_levels) > 1:
-            # Multiple coverage levels - create switchable datasets
-            datasets = []
-            data_labels = []
-
-            for min_cov in coverage_levels:
-                datasets.append(plot_data_by_coverage[min_cov])
-                data_labels.append(
-                    {
-                        "name": f"Min Coverage {min_cov}x",
-                        "ylab": "Saturation (%)",
-                        "xlab": "Sequencing Depth (%)",
-                    }
-                )
-
-            pconfig = LinePlotConfig(
-                id="methurator_saturation_pct_plot",
-                title="Methurator: Saturation Percentage",
-                xlab="Sequencing Depth (%)",
-                ylab="Saturation (%)",
-                xmin=0,
-                ymin=0,
-                ymax=100,
-                tt_label="<b>{point.x:.0f}%</b> depth: {point.y:.1f}% saturation",
-                data_labels=data_labels,
-            )
-
+        if not coverage_levels:
             self.add_section(
                 name="Saturation Percentage",
                 anchor="methurator_saturation_pct",
                 description="Saturation percentage curves showing the fraction of theoretical maximum "
-                "CpG sites detected at each sequencing depth. Only coverage levels with successful model fits are shown.",
-                helptext="100% on the x-axis represents the actual "
-                "sequencing depth, with extrapolation beyond. Use the buttons to switch between "
-                "different minimum coverage thresholds. 100% saturation on the y-axis would mean all "
-                "detectable CpG sites have been found.",
-                plot=linegraph.plot(datasets, pconfig),
+                "CpG sites detected at each sequencing depth.",
+                content=_make_alert(
+                    "No saturation percentage data available. "
+                    "The saturation model failed to fit for all coverage levels, "
+                    "so saturation percentages could not be calculated. "
+                    "This typically occurs when there are too few CpG sites detected."
+                ),
             )
+            return
+
+        # Build datasets and labels (works for single or multiple coverage levels)
+        datasets = [plot_data_by_coverage[cov] for cov in coverage_levels]
+        data_labels = [
+            {
+                "name": f"Min Coverage {cov}x",
+                "ylab": "CpG Saturation (%)",
+                "title": f"Methurator: Saturation Percentage (min. coverage {cov}x)",
+            }
+            for cov in coverage_levels
+        ]
+
+        pconfig = LinePlotConfig(
+            id="methurator_saturation_pct_plot",
+            title=f"Methurator: Saturation Percentage (min. coverage {coverage_levels[0]}x)",
+            xlab="% Sequenced Reads",
+            ylab="CpG Saturation (%)",
+            xmin=0,
+            ymin=0,
+            ymax=100,
+            tt_label="<b>{point.x:.0f}%</b> depth: {point.y:.1f}% saturation",
+            data_labels=data_labels,
+        )
+
+        self.add_section(
+            name="Saturation Percentage",
+            anchor="methurator_saturation_pct",
+            description="Saturation percentage curves showing the fraction of theoretical maximum "
+            "CpG sites detected at each sequencing depth. Only coverage levels with successful model fits are shown.",
+            helptext="100% on the x-axis represents the actual sequencing depth, with extrapolation beyond. "
+            "100% saturation on the y-axis would mean all detectable CpG sites have been found.",
+            plot=linegraph.plot(datasets, pconfig),
+        )
