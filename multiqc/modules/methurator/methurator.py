@@ -365,7 +365,8 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Saturation Percentage",
                 anchor="methurator_saturation_pct",
                 description=f"Saturation percentage curves showing the fraction of theoretical maximum "
-                f"CpG sites detected at each sequencing depth (minimum coverage: {min_cov}x). ",
+                f"CpG sites detected at each sequencing depth (minimum coverage: {min_cov}x). "
+                f"Only coverage levels with successful model fits are shown.",
                 helptext="100% on the x-axis represents the actual sequencing depth, with extrapolation beyond. "
                 "100% saturation on the y-axis would mean all detectable CpG sites have been found.",
                 plot=linegraph.plot(plot_data, pconfig),
@@ -401,7 +402,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Saturation Percentage",
                 anchor="methurator_saturation_pct",
                 description="Saturation percentage curves showing the fraction of theoretical maximum "
-                "CpG sites detected at each sequencing depth.",
+                "CpG sites detected at each sequencing depth. Only coverage levels with successful model fits are shown.",
                 helptext="100% on the x-axis represents the actual "
                 "sequencing depth, with extrapolation beyond. Use the buttons to switch between "
                 "different minimum coverage thresholds. 100% saturation on the y-axis would mean all "
