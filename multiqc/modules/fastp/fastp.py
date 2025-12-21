@@ -440,13 +440,17 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "% PF",
                     "description": "Percent reads passing filter",
                     "suffix": "%",
-                    "scale": "BuGn",
+                    "scale": "RdYlGn",
+                    "min": 0,
+                    "max": 100,
                 },
                 "pct_adapter": {
                     "title": "% Adapter",
                     "description": "Percentage adapter-trimmed reads",
                     "suffix": "%",
                     "scale": "RdYlGn-rev",
+                    "min": 0,
+                    "max": 100,
                 },
                 "before_filtering_read1_mean_length": {
                     "title": "Mean R1 Length",
