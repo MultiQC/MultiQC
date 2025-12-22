@@ -265,7 +265,14 @@ class PConfig(ValidatedConfig):
         # Allow user to overwrite any given config for this plot
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
-                if k in self.model_fields:
+                if k in self.__class__.model_fields:
+                    # Check if there's a parse method for this field (e.g., parse_y_bands)
+                    parse_method = getattr(self.__class__, f"parse_{k}", None)
+                    if parse_method is not None and v is not None:
+                        try:
+                            v = parse_method(v, path_in_cfg=path_in_cfg + (k,))
+                        except Exception:
+                            pass  # If parsing fails, use the original value
                     setattr(self, k, v)
 
         # Normalize data labels to ensure they are unique and consistent.
@@ -1788,7 +1795,7 @@ def _dataset_layout(
     """
     pconfig = pconfig.model_copy()
     for k, v in dconfig.items():
-        if k in pconfig.model_fields:
+        if k in pconfig.__class__.model_fields:
             setattr(pconfig, k, v)
 
     ysuffix = pconfig.ysuffix if pconfig.ysuffix is not None else pconfig.tt_suffix
