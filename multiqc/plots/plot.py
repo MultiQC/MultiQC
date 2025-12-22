@@ -28,7 +28,7 @@ from typing import (
 
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator
 
 from multiqc import config, report
 from multiqc.core import plot_data_store, tmp_dir
@@ -272,7 +272,7 @@ class PConfig(ValidatedConfig):
                     if parse_method is not None and v is not None:
                         try:
                             v = parse_method(v, path_in_cfg=path_in_cfg + (k,))
-                        except Exception as e:
+                        except (ValidationError, TypeError, KeyError) as e:
                             logger.warning(f"Failed to parse custom_plot_config['{self.id}']['{k}']: {e}")
                             continue
                     setattr(self, k, v)
