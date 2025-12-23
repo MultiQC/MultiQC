@@ -270,6 +270,9 @@ conpair/concordance:
 conpair/contamination:
   contents: "Tumor sample contamination level: "
   num_lines: 3
+custom_csv:
+  fn: "*.csv"
+  num_lines: 10
 cutadapt:
   - contents: "This is cutadapt"
     num_lines: 100
