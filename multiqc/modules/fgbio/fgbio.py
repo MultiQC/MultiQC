@@ -5,6 +5,7 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.fgbio.error_rate_by_read_position import error_rate_by_read_position
 from multiqc.modules.fgbio.group_reads_by_umi import run_group_reads_by_umi
 
+
 log = logging.getLogger(__name__)
 
 
@@ -17,6 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
+        from . import CollectDuplexSeqMetrics
         super(MultiqcModule, self).__init__(
             name="fgbio",
             anchor="fgbio",
@@ -36,6 +38,11 @@ class MultiqcModule(BaseMultiqcModule):
         n["errorratebyreadposition"] = error_rate_by_read_position(self)
         if n["errorratebyreadposition"] > 0:
             log.info(f"Found {n['errorratebyreadposition']} errorratebyreadposition reports")
+
+        # CollectDuplexSeqMetrics
+        n["collectduplexseqmetrics"] = CollectDuplexSeqMetrics.parse_reports(self)
+        if n["collectduplexseqmetrics"] > 0:
+            log.info("Found {} collectduplexseqmetrics reports".format(n["collectduplexseqmetrics"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
