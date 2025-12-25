@@ -17,7 +17,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypedDict, Union
 
 from multiqc import config, report
-from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
+from multiqc.base_module import (
+    BaseMultiqcModule,
+    ModuleNoSamplesFound,
+    SampleGroupingConfig,
+)
 from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.table_object import ColumnKey, InputRow, SampleName
@@ -272,7 +276,12 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Colours to be used for plotting lines
-        self.status_colours = {"pass": "#5cb85c", "warn": "#f0ad4e", "fail": "#d9534f", "default": "#999"}
+        self.status_colours = {
+            "pass": "#5cb85c",
+            "warn": "#f0ad4e",
+            "fail": "#d9534f",
+            "default": "#999",
+        }
 
         # Add to the general statistics table
         self.fastqc_general_stats()
@@ -352,7 +361,10 @@ class MultiqcModule(BaseMultiqcModule):
                     # Special case: Total Deduplicated Percentage header line
                     if s_headers[0] == "Total Deduplicated Percentage":
                         self.fastqc_data[s_name]["basic_statistics"].append(
-                            {"measure": "total_deduplicated_percentage", "value": float(s_headers[1])}
+                            {
+                                "measure": "total_deduplicated_percentage",
+                                "value": float(s_headers[1]),
+                            }
                         )
                     else:
                         # Special case: Rename dedup header in old versions of FastQC (v10)
@@ -454,7 +466,10 @@ class MultiqcModule(BaseMultiqcModule):
             # Zero reads
             hide_seq_length = True
 
-        def _summarize_statues(merged_row: InputRow, group_s_names: List[Tuple[Optional[str], SampleName, SampleName]]):
+        def _summarize_statues(
+            merged_row: InputRow,
+            group_s_names: List[Tuple[Optional[str], SampleName, SampleName]],
+        ):
             # Add count of fail statuses
             _num_statuses = 0
             _num_fails = 0
@@ -621,7 +636,11 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         # Convert status dict format
-        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
+        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {
+            "pass": [],
+            "warn": [],
+            "fail": [],
+        }
         for s_name, status in section_statuses.items():
             if status in status_dict:
                 status_dict[status].append(s_name)
@@ -677,7 +696,11 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         # Convert status dict format
-        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
+        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {
+            "pass": [],
+            "warn": [],
+            "fail": [],
+        }
         for s_name, status in section_statuses.items():
             if status in status_dict:
                 status_dict[status].append(s_name)
@@ -824,7 +847,11 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         # Convert status dict format
-        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
+        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {
+            "pass": [],
+            "warn": [],
+            "fail": [],
+        }
         for s_name, status in section_statuses.items():
             if status in status_dict:
                 status_dict[status].append(s_name)
@@ -948,7 +975,11 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         # Convert status dict format
-        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
+        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {
+            "pass": [],
+            "warn": [],
+            "fail": [],
+        }
         for s_name, status in section_statuses.items():
             if status in status_dict:
                 status_dict[status].append(s_name)
@@ -1014,7 +1045,11 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         # Convert status dict format
-        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
+        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {
+            "pass": [],
+            "warn": [],
+            "fail": [],
+        }
         for s_name, status in section_statuses.items():
             if status in status_dict:
                 status_dict[status].append(s_name)
@@ -1032,7 +1067,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
         else:
             pconfig = LinePlotConfig(
-                id="fastqc_sequence_length_distribution_plot",
+                id=f"{self.anchor}_sequence_length_distribution_plot",
                 title="FastQC: Sequence Length Distribution",
                 ylab="Read Count",
                 xlab="Sequence Length (bp)",
@@ -1073,7 +1108,11 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         # Convert status dict format
-        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
+        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {
+            "pass": [],
+            "warn": [],
+            "fail": [],
+        }
         for s_name, status in section_statuses.items():
             if status in status_dict:
                 status_dict[status].append(s_name)
@@ -1248,7 +1287,11 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         table_data = dict(
-            sorted(table_data.items(), key=lambda x: (x[1]["total_count"], x[1]["samples"]), reverse=True)
+            sorted(
+                table_data.items(),
+                key=lambda x: (x[1]["total_count"], x[1]["samples"]),
+                reverse=True,
+            )
         )
 
         ranked_by = (
@@ -1303,30 +1346,33 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_content_plot(self, section_statuses: Dict[SampleName, str]):
         """Create the HTML for the FastQC adapter plot"""
 
-        pct_by_pos_by_sample: Dict[str, Dict[int, int]] = dict()
+        pct_by_pos_by_sample: Dict[str, Dict[str, Dict[int, float]]] = {"Total": {}}
         for s_name, data_by_sample in self.fastqc_data.items():
             if data_by_sample.get("adapter_content") is None:
                 continue
             for adapters in data_by_sample["adapter_content"]:
-                pos = int(
-                    _range_bp_to_num(adapters["position"], method="start")
-                )  # split ranges like "10-15", take start
-                for adapter_name, percent in adapters.items():
-                    k = f"{s_name} - {adapter_name}"
-                    if adapter_name != "position":
-                        pct_by_pos_by_sample.setdefault(k, {})[pos] = percent
+                adapter_list = list(adapters.keys())
+                adapter_list.remove("position")
+                # split ranges like "10-15", take start
+                pos = int(_range_bp_to_num(adapters["position"], method="start"))
+                for adapter_name in adapter_list:
+                    pct_by_pos_by_sample.setdefault(adapter_name, {}).setdefault(s_name, {})[pos] = adapters[
+                        adapter_name
+                    ]
+                    # Add totals
+                    pct_by_pos_by_sample["Total"].setdefault(s_name, {}).setdefault(pos, 0)
+                    pct_by_pos_by_sample["Total"][s_name][pos] += pct_by_pos_by_sample[adapter_name][s_name][pos]
+
         if len(pct_by_pos_by_sample) == 0:
             log.debug("adapter_content not found in FastQC reports")
             return None
 
-        # Lots of these datasets will be all zeros.
-        # Only take datasets with > 0.1% adapter contamination
-        pct_by_pos_by_sample = {
-            k: d for k, d in pct_by_pos_by_sample.items() if max(pct_by_pos_by_sample[k].values()) >= 0.1
-        }
-
         # Convert status dict format
-        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
+        status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {
+            "pass": [],
+            "warn": [],
+            "fail": [],
+        }
         for s_name, status in section_statuses.items():
             if status in status_dict:
                 status_dict[status].append(s_name)
@@ -1342,7 +1388,8 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
-            "series_label": "sample-adapter combinations",
+            "series_label": "sample combinations",
+            "data_labels": list(pct_by_pos_by_sample.keys()),
         }
         if status_checks:
             pconfig["y_bands"] = [
@@ -1354,7 +1401,7 @@ class MultiqcModule(BaseMultiqcModule):
         plot = None
         content = ""
         if len(pct_by_pos_by_sample) > 0:
-            plot = linegraph.plot(pct_by_pos_by_sample, pconfig)
+            plot = linegraph.plot(list(pct_by_pos_by_sample.values()), pconfig)
         else:
             content = '<div class="alert alert-info">No samples found with any adapter contamination > 0.1%</div>'
 
