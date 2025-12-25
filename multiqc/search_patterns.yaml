@@ -1099,6 +1099,10 @@ vg/stats:
 whatshap/stats:
   contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
   num_lines: 1
+wittyer:
+  fn: "*.json"
+  contents_re: ".*Wittyer.*"
+  num_lines: 2
 xenome:
   contents: "B	G	H	M	count	percent	class"
   num_lines: 2
