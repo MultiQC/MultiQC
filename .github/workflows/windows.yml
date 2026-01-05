@@ -48,7 +48,7 @@ jobs:
       - name: "Download test data"
         run: |
           curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test-data.zip
-          7z x test-data.zip -y -o"test-data"
+          7z x test-data.zip -y -o "test-data"
 
       # Flat plot export doesn't work on Windows, so forcing modules like somalier and peddy write interactive.
       # Also, forcing selected modules to be run. Some modules don't work when dumping plot json:
