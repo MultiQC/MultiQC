@@ -516,6 +516,19 @@
       "description": "Path to custom logo image",
       "title": "Custom Logo"
     },
+    "custom_logo_dark": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Path to custom logo image for dark mode",
+      "title": "Custom Logo Dark"
+    },
     "custom_logo_url": {
       "anyOf": [
         {
@@ -541,6 +554,19 @@
       "default": null,
       "description": "Title for custom logo",
       "title": "Custom Logo Title"
+    },
+    "custom_logo_width": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Width in pixels for the custom logo",
+      "title": "Custom Logo Width"
     },
     "custom_css_files": {
       "anyOf": [
@@ -1062,7 +1088,7 @@
         }
       ],
       "default": null,
-      "description": "Export plots timeout",
+      "description": "Timeout in seconds for exporting each plot to a static image (default: 60)",
       "title": "Export Plots Timeout"
     },
     "make_report": {
@@ -1558,6 +1584,19 @@
       "title": "General Stats Columns",
       "type": "object"
     },
+    "general_stats_helptext": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Help text for general statistics table.",
+      "title": "General Stats Helptext"
+    },
     "table_columns_visible": {
       "anyOf": [
         {
@@ -1783,6 +1822,7 @@
     "custom_plot_config": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {
@@ -1796,6 +1836,7 @@
     "custom_table_header_config": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {
@@ -1809,6 +1850,7 @@
     "software_versions": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {
@@ -2312,6 +2354,7 @@
     "custom_content": {
       "anyOf": [
         {
+          "additionalProperties": true,
           "type": "object"
         },
         {

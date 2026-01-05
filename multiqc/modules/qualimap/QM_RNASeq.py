@@ -6,7 +6,7 @@ import re
 from typing import Dict
 
 from multiqc import BaseMultiqcModule, config
-from multiqc.modules.qualimap import get_s_name, parse_numerals
+from multiqc.modules.qualimap import get_s_name, parse_numerals, parse_version
 from multiqc.plots import bargraph, linegraph
 
 log = logging.getLogger(__name__)
@@ -150,9 +150,12 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
         cov_hist[s_name] = d
 
-    # Superfluous function call to confirm that it is used in this module
-    # Replace None with actual version if it is available
-    module.add_software_version(None)
+    # Parse version from HTML reports
+    for f in module.find_log_files("qualimap/rnaseq/html"):
+        version = parse_version(f)
+        if version:
+            s_name = get_s_name(module, f)
+            module.add_software_version(version, s_name, "RNASeq")
 
     # Filter to strip out ignored sample names
     genome_results = module.ignore_samples(genome_results)

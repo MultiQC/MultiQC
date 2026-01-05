@@ -30,12 +30,10 @@ This checklist is for my own reference, as I forget the steps every time.
    This removes the commit hash from the version number when MultiQC runs.
 
 6. Run using test data
-
    - Check for any command line or javascript errors
    - Check version numbers are printed correctly
 
 7. Create new demo reports for the website
-
    - Comment out any config in `~/.multiqc_config.yaml`
 
      ```bash

@@ -1,4 +1,5 @@
 import logging
+import re
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -30,9 +31,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(self.hicup_data)} reports")
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None)
+        # Parse version from HTML reports
+        for f in self.find_log_files("hicup/html"):
+            self.parse_hicup_html(f)
 
         # Write parsed data to a file
         self.write_data_file(self.hicup_data, "multiqc_hicup")
@@ -262,3 +263,15 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return bargraph.plot(self.hicup_data, keys, config)
+
+    def parse_hicup_html(self, f):
+        """Parse HiCUP HTML reports to extract version information."""
+        match = re.search(r"HiCUP.*?\((\d+\.\d+[\.\d]*)\)", f["f"])
+        if match:
+            version = match.group(1)
+            # Try to derive sample name from HTML filename
+            # HTML files are named like: Sample-1.A002.C8DRAANXX.s_2.r_1_2.HiCUP_summary_report.html
+            suffix = ".HiCUP_summary_report.html"
+            base_name = f["fn"][: -len(suffix)] if f["fn"].endswith(suffix) else f["fn"]
+            s_name = self.clean_s_name(base_name, f)
+            self.add_software_version(version, s_name)

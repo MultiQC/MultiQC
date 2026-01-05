@@ -25,5 +25,7 @@ File path for the source of this content: multiqc/modules/hicup/hicup.py
 ```yaml
 hicup:
   fn: HiCUP_summary_report*
+hicup/html:
+  fn: '*HiCUP_summary_report*.html'
 ```
     

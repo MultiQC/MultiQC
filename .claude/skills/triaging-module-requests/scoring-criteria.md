@@ -144,7 +144,6 @@ node scripts/fetch-tool-metrics.js conda PACKAGE_NAME
    ```
 
 2. **Parse issue body:**
-
    - Extract tool name, URL, description
    - Check for example files (attachments vs. pasted)
    - Count filled required fields
@@ -157,7 +156,6 @@ node scripts/fetch-tool-metrics.js conda PACKAGE_NAME
    ```
 
 4. **Calculate each category:**
-
    - Tool Popularity: Use GitHub API results
    - Package Downloads: Use PyPI/Conda stats
    - Community Engagement: Sum reactions + comments + duplicates

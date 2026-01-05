@@ -832,8 +832,10 @@ def data_sources_tofile(data_dir: Path):
             json.dump(data_sources, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
             # Unlike JSON, YAML represents defaultdicts as objects, so need to convert
-            # them to normal dicts
-            yaml.dump(replace_defaultdicts(data_sources), f, default_flow_style=False)
+            # them to normal dicts.
+            # Use CSafeDumper for 3-4x faster serialization when libyaml is available
+            Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+            yaml.dump(replace_defaultdicts(data_sources), f, default_flow_style=False, Dumper=Dumper)
         else:
             lines = [["Module", "Section", "Sample Name", "Source"]]
             for mod in data_sources:
@@ -858,8 +860,10 @@ def dois_tofile(data_dir: Path, module_list: List["BaseMultiqcModule"]):
             json.dump(dois, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
             # Unlike JSON, YAML represents defaultdicts as objects, so need to convert
-            # them to normal dicts
-            yaml.dump(replace_defaultdicts(dois), f, default_flow_style=False)
+            # them to normal dicts.
+            # Use CSafeDumper for 3-4x faster serialization when libyaml is available
+            Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+            yaml.dump(replace_defaultdicts(dois), f, default_flow_style=False, Dumper=Dumper)
         else:
             body = ""
             for mod_name, dois_strings in dois.items():
@@ -1035,7 +1039,9 @@ def write_data_file(
         if data_format == "json":
             dump_json(data, f, indent=4, ensure_ascii=False)
         elif data_format == "yaml":
-            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False)
+            # Use CSafeDumper for 3-4x faster serialization when libyaml is available
+            Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False, Dumper=Dumper)
         elif body:
             # Default - tab separated output
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)

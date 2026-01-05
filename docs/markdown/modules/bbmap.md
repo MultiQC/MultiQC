@@ -39,8 +39,8 @@ The module can summarise data from the following BBMap output files
   - Print binned coverage per location (one line per X bases).
 - `scafstats` _(not yet implemented)_
   - Statistics on how many reads mapped to which scaffold.
-- `refstats`
-  - Statistics on how many reads mapped to which reference file; only for BBSplit.
+- `bbsplit`
+  - Statistics on how many reads mapped to which reference genome.
 - `bhist`
   - Base composition histogram by position.
 - `qhist`
@@ -71,6 +71,9 @@ Additional information on the BBMap tools is available on
 bbmap/aqhist:
   contents: "#Quality\tcount1\tfraction1\tcount2\tfraction2"
   num_lines: 10
+bbmap/bbsplit:
+  contents: "#name\t%unambiguousReads\tunambiguousMB\t%ambiguousReads"
+  num_lines: 5
 bbmap/bhist:
   contents: "#Pos\tA\tC\tG\tT\tN"
   num_lines: 10

@@ -54,6 +54,17 @@ mosdepth_config:
     - 30000
 ```
 
+:::info{title="Missing coverage thresholds"}
+
+Mosdepth does omit cumulative coverages at high coverage thresholds. To work around this, MultiQC will
+use the next cumulative coverage available. E.g. if 3301x coverage is present, but 3300x is missing,
+and 3300x is requested, the value of 3301x will be used. This should provide the technically correct value
+because it is a cumulative distribution and mosdepth [only skips values if there are no bases at that coverage
+level](https://github.com/brentp/mosdepth/blob/df8c74a0aabae4ae5e6da1ea0c633b4db829f20a/mosdepth.nim#L439).
+
+For more details, see [this](https://github.com/MultiQC/MultiQC/pull/3432#issuecomment-3672811525) comment.
+:::
+
 You can also specify which columns would be hidden when the report loads (by default, all values are hidden except 30X):
 
 ```yaml

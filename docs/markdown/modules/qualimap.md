@@ -70,10 +70,18 @@ qualimap/bamqc/genome_fraction:
   fn: genome_fraction_coverage.txt
 qualimap/bamqc/genome_results:
   fn: genome_results.txt
+qualimap/bamqc/html:
+  contents: 'Qualimap report: BAM QC'
+  fn: qualimapReport.html
+  num_lines: 10
 qualimap/bamqc/insert_size:
   fn: insert_size_histogram.txt
 qualimap/rnaseq/coverage:
   fn: coverage_profile_along_genes_(total).txt
+qualimap/rnaseq/html:
+  contents: 'Qualimap report: RNA Seq QC'
+  fn: qualimapReport.html
+  num_lines: 10
 qualimap/rnaseq/rnaseq_results:
   fn: rnaseq_qc_results.txt
 ```

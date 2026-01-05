@@ -44,18 +44,15 @@ Your request receives a score based on:
 The fastest ways to increase your priority score:
 
 1. **Upload example files** (+8 points) - Most critical factor!
-
    - Drag and drop actual files (don't copy/paste)
    - Include typical tool output
    - Use `.zip` for unsupported file types
 
 2. **Choose popular tools** (+25 points)
-
    - Tools with >1000 GitHub stars get maximum points
    - Active maintenance and recent releases help
 
 3. **Provide complete information** (+20 points)
-
    - Tool name and homepage
    - Clear description
    - Expected visualizations

@@ -1,4 +1,5 @@
 import logging
+import re
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -77,9 +78,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {num_found} samples")
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None)
+        # Parse version from HTML reports
+        for f in self.find_log_files("rna_seqc/html"):
+            self.parse_rnaseqc_html(f)
 
         # Write metrics to a file
         self.write_data_file(self.rna_seqc_metrics, "multiqc_rna_seqc")
@@ -420,3 +421,9 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="Note that many of these statistics are only available from RNA-SeQC v2.x",
             plot=violin.plot(self.rna_seqc_metrics, keys, pconfig),
         )
+
+    def parse_rnaseqc_html(self, f):
+        """Parse RNA-SeQC HTML reports to extract version information."""
+        match = re.search(r"RNA-SeQC</a>\s*v(\d+\.\d+[\.\d]*)", f["f"])
+        if match:
+            self.add_software_version(match.group(1))
