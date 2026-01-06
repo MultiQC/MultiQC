@@ -1,9 +1,6 @@
 import logging
-import re
-import warnings
-import pickle
-import json
 import numpy as np
+import pandas as pd
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -32,11 +29,11 @@ class MultiqcModule(BaseMultiqcModule):
         - [ESMFold](https://github.com/facebookresearch/esm)
         - [RoseTTaFold-All-Atom](https://github.com/baker-laboratory/RoseTTAFold-All-Atom)
         - [HelixFold3](https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_folding/helixfold3)
-        - [Boltz-1](https://github.com/jwohlwend/boltz)
+        - [Boltz](https://github.com/jwohlwend/boltz)
 
     This is intended to provide a summary of useful metrics for mass 'folding' a large set of proteins, either in terms of fishing for mulitmer interactions or comparing methods across whole proteomes. 
     It provides a visual 'at-a-glance' report of relevant metrics (average pLDDT, ipTM, *etc*) and does not replace the per-protein interactive plot from GENEREATE_REPORT in  nfcore/proteinfold
-
+    
     ```
     Here's what some raw code looks like
 
@@ -67,68 +64,43 @@ class MultiqcModule(BaseMultiqcModule):
         self.proteinfold_data = {}
         # I want to enable sample grouping: https://docs.seqera.io/multiqc/reports/customisation#sample-grouping
 
-        # AF2 has .pkl
-        # HF3 has final_features.pkl look in pkl_obj['feat'].keys() you get IDs but not values
-        # HF3 has all_results.json
-
-        for f in self.find_log_files("proteinfold/metrics_summary"): 
-            self.add_data_source(f, section="metrics_summary")
+        for f in self.find_log_files("proteinfold"):
+            self.add_data_source(f)
             samplename = f["s_name"]
+            if samplename not in self.proteinfold_data:
+                self.proteinfold_data[samplename] = {}
 
-            # should be: If AF2 want to dump pTM and iPTM from .pkl in .json
-            if f["fn"].endswith(".json"):
-                pTM, ipTM, mean_pLDDT, ranking_confidence = self.parse_json_file(f)
+            if f["fn"].endswith("_plddt.tsv"):
+                df = pd.read_csv(f["fn"], sep='\t')
+                    rank_cols = [col for col in df.columns if col.startswith('rank_')]
+                    plddt_data = {col: df.setindex('Postions')[col].to_dict() for col in rank_cols}
+                    rank_means = df[rank_cols].mean().to_dict()
+                self.proteinfold_data[samplename]["plddt"] = plddt_data
+                self.proteinfold_data[samplename]["mean_plddt_rank0"] = rank_means.get("rank_0")
 
-            self.proteinfold_data[samplename] = {
-                "pTM": pTM,
-                "ipTM": ipTM,
-                "mean_pLDDT": mean_pLDDT,  
-                "ranking_confidence": ranking_confidence,
-            }
-        
-        for f in self.find_log_files("proteinfold/metrics_residue-wise"):
-            self.add_data_source(f, section="metrics_residue-wise")
-            filepath = f["root"] + "/" + f["fn"]
-            samplename = f["s_name"]
-           
-            if f["fn"].endswith(".pkl"): # need to set log_filesize_limit to 4GB in ./multiqc/config_defaults.yaml. It's slow so should preferentially use json
-                pLDDT_per_res, PAE_per_res =  parse_pickle_file(f)
+            if f["fn"].endswith("_msa.tsv"):
+                df = pd.read_csv(f["fn"], sep='\t')
+                self.proteinfold_data[samplename]["msa_depth"] = len(df)
 
-            if f["fn"].endswith(".npz"): 
-                npz_data = np.load(filepath) 
-                if f["fn"].startswith("pLDDT_"):
-                    pLDDT_per_res = npz_data['pLDDT']  #numpy ndarray, I think this is also true for pkl etc
-                if f["fn"].startswith("plddt_"): #this is from Boltz
-                    pLDDT_per_res = npz_data['plddt']  
-                if f["fn"].startswith("pae_"):
-                    pae_per_res = npz_data['pae'] 
-                if f["fn"].startswith("pae_"):
-                    pde_per_res = npz_data['pde'] 
-
-
-
-        for f in self.find_log_files("proteinfold/msas"):
-            self.add_data_source(f, section="msas")
-            filepath = f["root"] + "/" + f["fn"]
-            samplename = f["s_name"]
-            if f["fn"].endswith(".sto"):
-                aln = AlignIO.read(filepath, "stockholm")
-                msas = len(aln)
-            if f["fn"].endswith(".m8"): # m8 is a foldseek variant of blast tabular format 8. Number of lines should match numb msas
-                num_lines = sum(1 for _ in open(filepath, "rb"))
-                msas = int(num_lines) 
-            if f["fn"].endswith(".a3m"):
-                num_lines = sum(1 for _ in open(filepath, "rb"))
-                msas = int((num_lines / 2))  # cheap hack but it holds and a3m parsing isn't support - A3MIO breaks of Bio.Alphabet
-            self.proteinfold_data[samplename] = {"msas": msas}
-        # Now I need to nest these msa samples underneath the protein sample names
-
-        for f in self.find_log_files("proteinfold/structs"):
-            samplename = f["s_name"]
-            self.add_data_source(f, section="structs")
-            mean_pLDDT = self.parse_pdb_or_mmcif_file(f)
-            self.proteinfold_data[samplename] = {"mean_pLDDT": mean_pLDDT}
-
+            if f["fn"].endswith("_chainswise_iptm.tsv"):
+                df = pd.read_csv(f["fn"], sep='\t', index_col=0)
+                iptm_values = df.iloc[:, 0]
+                self.proteinfold_data[samplename]["chainwise_iptm"] = iptm_values.to_dict()
+                self.proteinfold_data[samplename]["mean_iptm"] = iptm_values.mean() # TODO double-check for multiple ranks
+            # In cases where chain-wise wasn't generated
+            elif f["fn"].endswith("_iptm.tsv") and not f["fn"].endswith("_chainswise_iptm.tsv"):  
+                df = pd.read_csv(f["fn"], sep='\t', index_col=0)
+                self.proteinfold_data[samplename]["iptm"] = df.iloc[0, 1]  # First entry
+            
+            if f["fn"].endswith("_chainswise_ptm.tsv"):
+                df = pd.read_csv(f["fn"], sep='\t', index_col=0)
+                ptm_values = df.iloc[:, 0]
+                self.proteinfold_data[samplename]["chainwise_ptm"] = ptm_values.to_dict()
+                self.proteinfold_data[samplename]["mean_ptm"] = ptm_values.mean() # TODO double-check for multiple ranks
+            # In cases where chain-wise wasn't generated
+            elif f["fn"].endswith("_ptm.tsv") and not f["fn"].endswith("_chainswise_ptm.tsv"):  
+                df = pd.read_csv(f["fn"], sep='\t', index_col=0)
+                self.proteinfold_data[samplename]["ptm"] = df.iloc[0, 1]  # First entry
 
         self.write_data_file(
             self.proteinfold_data, "proteinfold_data"
@@ -140,13 +112,13 @@ class MultiqcModule(BaseMultiqcModule):
         Put protein structure prediction metrics into a general table for all different Deep Learning methods
         """
         headers = {
-            "msas": {
+            "msa_depth": {
                 "title": "Related Sequence Depth (MSAs)",
                 "description": "The number of related sequences (across the whole protein) that could be retrieved from the MSA (Multiple Sequence Alignment) stage",
             },
-            "mean_pLDDT": {
+            "mean_plddt_rank_0": {
                 "title": "Confidence (average plDDT)",
-                "description": "Structure prediction confidence score across all residues in the protein - from the mean pLDDT (predicted Local Distance Difference Test) value",
+                "description": "Structure prediction confidence score across all residues in the top ranked protein structure - from the mean pLDDT (predicted Local Distance Difference Test) value",
                 "max": 100,
                 "min": 0,
                 "cond_formatting_rules": {
@@ -162,23 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
                     {"very-high": "#014ecc"},
                 ],
             },
-            "max_PAE": {
-                "title": "Max error in relative residue-residue positioning (PAE)",
-                "description": "The maximum confidence in the relatively positioning between different domains - examine to validate pausible interactions - from the PAE (Predicted Align Error) score",
-                "max": 31.75,
-                "min": 0,
-                "format": "{:,.2f}",
-                "scale": "Greens-rev",
-            },
-            "pTM": {
-                "title": "Global accuracy (TM)",
-                "description": "Global accuracy of the protein folded, less sensitive to localised inaccuracies than raw 3D atomic deviations (RMSD) - from the pTM (predicted Template Modelling) score",
-                "max": 1,
-                "min": 0,
-                "format": "{:,.2f}",
-                "scale": "Blues",
-            },
-            "ipTM": {
+            "iptm": {
                 "title": "Interface accuracy (ipTM)",
                 "description": "Accuracy of the relative positions of two protein subunits from a mulitmer calcuation - from the ipTM (interface predicted Template Modelling) score",
                 "max": 1,
@@ -186,13 +142,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.2f}",
                 "scale": "Purples",
             },
-            "ranking_confidence": {
-                "title": "Ranking order confidence",
-                "description": "A combination of varuous metrics that determine the order in which separate structure prediction models are ranked and  returned",
+            "ptm": {
+                "title": "Global accuracy (TM)",
+                "description": "Global accuracy of the protein folded, less sensitive to localised inaccuracies than raw 3D atomic deviations (RMSD) - from the pTM (predicted Template Modelling) score",
                 "max": 1,
                 "min": 0,
                 "format": "{:,.2f}",
-                "scale": "Greys",
+                "scale": "Blues",
             },
         }
         # example of how to summarise columns from FastQC
@@ -206,108 +162,3 @@ class MultiqcModule(BaseMultiqcModule):
     #             (ColumnKey("percent_duplicates"), ColumnKey("total_sequences")),
     #             (ColumnKey("median_sequence_length"), ColumnKey("total_sequences")),
     #         ],
-
-    def parse_pdb_or_mmcif_file(self, f):
-        """
-        Extract any MultiQC relevant info from the PDB files. Currently gets pLDDT via a function
-        """
-        mean_pLDDT = extract_pLDDT_pdb(f)
-        return mean_pLDDT
-
-    def parse_pickle_file(self, f):
-        """
-        Extract metrics from .pkl files. Typically generated from AlphaFold2
-        """
-        filepath = f["root"] + "/" + f["fn"]
-        with open(filepath, "rb") as f:
-            try:
-                pkl_obj = pickle.load(f)
-            except pickle.UnpicklingError:
-                return (None, None, None)
-            #pTM = round(float(pkl_obj["ptm"]), 2)
-            #ipTM = round(float(pkl_obj["iptm"]), 2)
-            pLDDT_per_res = pkl_obj["plddt"]
-            PAE_per_res = pkl_obj["pae"]
-            #ranking_confidence = round(float(pkl_obj["ranking_confidence"]), 2)
-
-        return (pLDDT_per_res, PAE_per_res)
-        #return (pTM, ipTM, mean_pLDDT, ranking_confidence)
-
-    def parse_json_file(self, f):
-        """
-        Extract metrics from .json files. The method type is specified
-        """
-        filepath = f["root"] + "/" + f["fn"]
-        samplename = f["s_name"]
-
-        method_type = None
-        if f["fn"].startswith("confidence_model"):
-            method_type = "AlphaFold2"  #Ignoring PDE for now 
-        elif f["fn"] == "all_results.json":
-            method_type = "HelixFold3"
-        elif f["fn"].startswith("confidence_"):
-            method_type = "Boltz-1"
-            
-            # There's 3 options for Boltz
-            # [prot]_model_0.cif   
-            # confidence_[prot]_model_0.json
-            # plddt_[prot]_model_0.npz   
-
-        with open(filepath, "rb") as f:
-            json_obj = json.load(f)
-            #pTM = round(json_obj["ptm"], 2)
-            #ipTM = round(json_obj["iptm"], 2)
-            if method_type == "HelixFold3":
-                mean_pLDDT = round(json_obj["mean_plddt"], 2)
-                ranking_confidence = float(round(json_obj["ranking_confidence"], 2))
-            elif method_type == "Boltz-1":
-                mean_pLDDT = round(json_obj["complex_plddt"]*100, 2)
-                ranking_confidence = float(round(json_obj["confidence_score"], 2))
-
-        #return (pTM, ipTM, mean_pLDDT, ranking_confidence)  # TO DO - extract other values from Boltz JSON
-        return (mean_pLDDT, ranking_confidence)
-
-
-# Use this if there's no metric summary file available (.pkl, .json)
-def extract_pLDDT_pdb(f) -> float:
-    """
-    Uses the BioPython PDB packaged to extract pLDDT values from the b-factor column. Iterates of PDB objects rather than processes raw file
-    """
-    filepath = f["root"] + "/" + f["fn"]
-    samplename = f["s_name"]
-
-    if f["fn"].endswith(".pdb"):
-        parser = PDB.PDBParser(QUIET=True)
-        structure = parser.get_structure(id=samplename, file=filepath)
-    elif f["fn"].endswith(".cif"):
-        parser = PDB.MMCIFParser(QUIET=True)
-        structure = parser.get_structure(structure_id=samplename, filename=filepath)
-    else:
-        print("Neither a PDB or mmCIF file!")
-
-    res_list = []
-    pLDDT_tot = 0
-
-    for model in structure:
-        for chain in model:
-            chain_res_list = chain.get_unpacked_list()
-            res_list.extend(chain_res_list)
-            for residue in chain:
-                atom_list = residue.get_unpacked_list()
-                num_atoms = len(atom_list)
-                res_pLDDT_tot = 0
-                for atom in residue:  # ESMFold and others have separate atom-wise values
-                    atom_pLDDT = atom.get_bfactor()
-                    res_pLDDT_tot += atom_pLDDT
-                res_pLDDT = res_pLDDT_tot / num_atoms
-                pLDDT_tot += res_pLDDT
-    num_res = len(res_list)
-    pLDDT_mean = pLDDT_tot / num_res
-
-    if (
-        pLDDT_mean < 1
-    ):  # Should really check each program, but <1 pLDDTs are highly improbable, so let's just convert to percentage
-        pLDDT_mean *= 100
-        # BUG - Boltz-1 seems to report .cif confidence < 1 
-
-    return round(pLDDT_mean, 2)
