@@ -71,8 +71,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f)
             
             samplename = f["s_name"].split('_')[0]
-            if samplename not in self.proteinfold_data:
-                self.proteinfold_data[samplename] = {}
+            self.proteinfold_data.setdefault(samplename,  {}) #Set default creates if doesn't already exist
             filepath = Path(f['root']) / f['fn']
 
             if f["fn"].endswith("_plddt.tsv"):
@@ -91,32 +90,42 @@ class MultiqcModule(BaseMultiqcModule):
                     rank_num = rank.split('rank_')[1]
                     subsample = f"{samplename}_rank_{rank_num}"
 
-                    if subsample not in self.proteinfold_data:
-                        self.proteinfold_data[subsample] = {}
+                    self.proteinfold_data.setdefault(subsample, {})
                     self.proteinfold_data[subsample]["mean_plddt"] = rank_means[rank]
 
             if f["fn"].endswith("_msa.tsv"):
                 df = pd.read_csv(filepath, sep='\t')
                 self.proteinfold_data[samplename]["msa_depth"] = len(df)
 
-            if f["fn"].endswith("_chainswise_iptm.tsv"):
+            if f["fn"].endswith("_chainwise_iptm.tsv"):
                 df = pd.read_csv(filepath, sep='\t', index_col=0)
                 iptm_values = df.iloc[:, 0]
                 self.proteinfold_data[samplename]["chainwise_iptm"] = iptm_values.to_dict()
                 self.proteinfold_data[samplename]["mean_iptm"] = iptm_values.mean() # TODO double-check for multiple ranks
-            # In cases where chain-wise wasn't generated
-            elif f["fn"].endswith("_iptm.tsv") and not f["fn"].endswith("_chainswise_iptm.tsv"):  
-                iptm_val = pd.read_csv(filepath, sep='\t', header=None).iat[0,1] # Read value directly rather than deal with df
-                self.proteinfold_data[samplename]["iptm"] = iptm_val 
+            if f["fn"].endswith("_iptm.tsv") and not f["fn"].endswith("_chainwise_iptm.tsv"):  
+                df = pd.read_csv(filepath, sep='\t', header=None, index_col=0).squeeze() # Squeeze makes a series accessible on index label
+                
+                if 0 in df.index: # Since pandas infers the index as an int this is an exact int match not a greedy string match
+                    self.proteinfold_data[samplename]["iptm"] = df.loc[0] # Remember loc is an *int* match on rank 0 index
+                
+                for rank_num in df.index:
+                    subsample = f"{samplename}_rank_{rank_num}"
+                    self.proteinfold_data.setdefault(subsample, {})["iptm"] = df.loc[rank_num]
             
-            if f["fn"].endswith("_chainswise_ptm.tsv"):
+            if f["fn"].endswith("_chainwise_ptm.tsv"):
                 df = pd.read_csv(filepath, sep='\t', index_col=0)
                 ptm_values = df.iloc[:, 0]
                 self.proteinfold_data[samplename]["chainwise_ptm"] = ptm_values.to_dict()
                 self.proteinfold_data[samplename]["mean_ptm"] = ptm_values.mean() # TODO double-check for multiple ranks
-            elif f["fn"].endswith("_ptm.tsv") and not f["fn"].endswith("_chainswise_ptm.tsv"):  
-                ptm_val = pd.read_csv(filepath, sep='\t', header=None).iat[0,1] # Read value directly rather than deal with df
-                self.proteinfold_data[samplename]["ptm"] = ptm_val 
+            if f["fn"].endswith("_ptm.tsv") and not f["fn"].endswith("_chainwise_ptm.tsv"):  
+                df = pd.read_csv(filepath, sep='\t', header=None, index_col=0).squeeze()
+                
+                if 0 in df.index: 
+                    self.proteinfold_data[samplename]["ptm"] = df.loc[0]
+                
+                for rank_num in df.index:
+                    subsample = f"{samplename}_rank_{rank_num}"
+                    self.proteinfold_data.setdefault(subsample, {})["ptm"] = df.loc[rank_num]
 
         self.write_data_file(
             self.proteinfold_data, "proteinfold_data"
@@ -167,14 +176,4 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "Blues",
             },
         }
-        # example of how to summarise columns from FastQC
         self.general_stats_addcols(self.proteinfold_data, headers)
-
-    #  group_samples_config=SampleGroupingConfig(
-    #         cols_to_sum=[ColumnKey("total_sequences")],
-    #         cols_to_weighted_average=[
-    #             (ColumnKey("percent_gc"), ColumnKey("total_sequences")),
-    #             (ColumnKey("avg_sequence_length"), ColumnKey("total_sequences")),
-    #             (ColumnKey("percent_duplicates"), ColumnKey("total_sequences")),
-    #             (ColumnKey("median_sequence_length"), ColumnKey("total_sequences")),
-    #         ],
