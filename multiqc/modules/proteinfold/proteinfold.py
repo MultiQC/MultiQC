@@ -1,24 +1,12 @@
 import logging
-import numpy as np
 import pandas as pd
+from pathlib import Path
+import re
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-from Bio import PDB
-from Bio import AlignIO
-
 log = logging.getLogger(__name__)
-
-#### TODO
-#
-#  * - ESMFold - DONE - just produces a .pdb so parse_pdb_file() suffices
-#  * - AlphaFold2 - PARTIAL -
-# - AlphaFold3 - SKIP - not a priority as the facility is not not publicly releasing for end users  
-# - ColabFold - SKIP - alread does its own reporting 
-# - RosettaFold-All-Atom - TO DO - It's already on KOD
-# - HelixFold3 - 
-# * - Boltz-1 - PRIORITY - add processing of all_results.json and final_features.pkl 
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -66,41 +54,42 @@ class MultiqcModule(BaseMultiqcModule):
 
         for f in self.find_log_files("proteinfold"):
             self.add_data_source(f)
-            samplename = f["s_name"]
+            
+            samplename = f["s_name"].split('_')[0]
             if samplename not in self.proteinfold_data:
                 self.proteinfold_data[samplename] = {}
+            filepath = Path(f['root']) / f['fn']
 
             if f["fn"].endswith("_plddt.tsv"):
-                df = pd.read_csv(f["fn"], sep='\t')
-                    rank_cols = [col for col in df.columns if col.startswith('rank_')]
-                    plddt_data = {col: df.setindex('Postions')[col].to_dict() for col in rank_cols}
-                    rank_means = df[rank_cols].mean().to_dict()
+                df = pd.read_csv(filepath, sep='\t')
+                rank_cols = [col for col in df.columns if col.startswith('rank_')]
+                plddt_data = {col: df.set_index('Positions')[col].to_dict() for col in rank_cols}
+                rank_means = df[rank_cols].mean().to_dict()
                 self.proteinfold_data[samplename]["plddt"] = plddt_data
-                self.proteinfold_data[samplename]["mean_plddt_rank0"] = rank_means.get("rank_0")
+                self.proteinfold_data[samplename]["mean_plddt_rank_0"] = rank_means.get("rank_0")
 
             if f["fn"].endswith("_msa.tsv"):
-                df = pd.read_csv(f["fn"], sep='\t')
+                df = pd.read_csv(filepath, sep='\t')
                 self.proteinfold_data[samplename]["msa_depth"] = len(df)
 
             if f["fn"].endswith("_chainswise_iptm.tsv"):
-                df = pd.read_csv(f["fn"], sep='\t', index_col=0)
+                df = pd.read_csv(filepath, sep='\t', index_col=0)
                 iptm_values = df.iloc[:, 0]
                 self.proteinfold_data[samplename]["chainwise_iptm"] = iptm_values.to_dict()
                 self.proteinfold_data[samplename]["mean_iptm"] = iptm_values.mean() # TODO double-check for multiple ranks
             # In cases where chain-wise wasn't generated
             elif f["fn"].endswith("_iptm.tsv") and not f["fn"].endswith("_chainswise_iptm.tsv"):  
-                df = pd.read_csv(f["fn"], sep='\t', index_col=0)
-                self.proteinfold_data[samplename]["iptm"] = df.iloc[0, 1]  # First entry
+                iptm_val = pd.read_csv(filepath, sep='\t', header=None).iat[0,1] # Read value directly rather than deal with df
+                self.proteinfold_data[samplename]["iptm"] = iptm_val 
             
             if f["fn"].endswith("_chainswise_ptm.tsv"):
-                df = pd.read_csv(f["fn"], sep='\t', index_col=0)
+                df = pd.read_csv(filepath, sep='\t', index_col=0)
                 ptm_values = df.iloc[:, 0]
                 self.proteinfold_data[samplename]["chainwise_ptm"] = ptm_values.to_dict()
                 self.proteinfold_data[samplename]["mean_ptm"] = ptm_values.mean() # TODO double-check for multiple ranks
-            # In cases where chain-wise wasn't generated
             elif f["fn"].endswith("_ptm.tsv") and not f["fn"].endswith("_chainswise_ptm.tsv"):  
-                df = pd.read_csv(f["fn"], sep='\t', index_col=0)
-                self.proteinfold_data[samplename]["ptm"] = df.iloc[0, 1]  # First entry
+                ptm_val = pd.read_csv(filepath, sep='\t', header=None).iat[0,1] # Read value directly rather than deal with df
+                self.proteinfold_data[samplename]["ptm"] = ptm_val 
 
         self.write_data_file(
             self.proteinfold_data, "proteinfold_data"
@@ -117,7 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "The number of related sequences (across the whole protein) that could be retrieved from the MSA (Multiple Sequence Alignment) stage",
             },
             "mean_plddt_rank_0": {
-                "title": "Confidence (average plDDT)",
+                "title": "Structure confidence (average pLDDT)",
                 "description": "Structure prediction confidence score across all residues in the top ranked protein structure - from the mean pLDDT (predicted Local Distance Difference Test) value",
                 "max": 100,
                 "min": 0,
