@@ -744,6 +744,12 @@ prinseqplusplus:
 prokka:
   contents: "contigs:"
   num_lines: 2
+proteinfold:
+  - fn: "*_plddt.tsv"
+  - fn: "*_msa.tsv"
+  - fn: '*_ptm.tsv'
+  - fn: '*_iptm.tsv'
+  - fn: '*_pae.tsv'
 purple/qc:
   fn: "*.purple.qc"
 purple/purity:
@@ -1002,12 +1008,3 @@ xenome:
 xengsort:
   contents: "# Xengsort classify"
   num_lines: 2
-proteinfold/metrics:
-  - fn: "*_plddt.tsv"
-  - fn: "*_msa.tsv"
-  - fn: '*_ptm.tsv'
-  - fn: '*_iptm.tsv'
-  - fn: '*_pae.tsv'
-proteinfold/structures:
-  - fn: "*.pdb" 
-  - fn: "*.cif" 
