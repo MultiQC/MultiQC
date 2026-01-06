@@ -33,6 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "https://github.com/baker-laboratory/RoseTTAFold-All-Atom",
                 "https://github.com/uw-ipd/RoseTTAFold2NA",
                 "https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_folding/helixfold3",
+                "https://github.com/jwohlwend/boltz"
             ],
             info="ProteinFold - protein structure inference methods through a single nextflow pipeline interface",
             doi=[
@@ -40,7 +41,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "10.1038/s41592-022-01488-1",
                 "10.1126/science.ade2574",
                 "10.1126/science.adl2528",
+                "10.1038/s41592-023-02086-5",
                 "10.48550/arXiv.2408.16975",
+                "10.1101/2024.11.19.624167"
             ],
         )
 
