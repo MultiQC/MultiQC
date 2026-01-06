@@ -1,14 +1,9 @@
-import logging
-import pandas as pd
 from pathlib import Path
-import re
+import pandas as pd
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc import config  # I want the ranks to merge by default, not a user problem
-
-log = logging.getLogger(__name__)
-
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -24,10 +19,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     This is intended to provide a summary of useful metrics for mass 'folding' a large set of proteins, either in terms of fishing for mulitmer interactions or comparing methods across whole proteomes.
     It provides a visual 'at-a-glance' report of relevant metrics (average pLDDT, ipTM, *etc*) and does not replace the per-protein interactive plot from GENEREATE_REPORT in  nfcore/proteinfold
-
-    ```
-    Here's what some raw code looks like
-
     """
 
     def __init__(self):
