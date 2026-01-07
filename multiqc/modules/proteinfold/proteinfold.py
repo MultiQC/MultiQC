@@ -4,6 +4,10 @@ import pandas as pd
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 from multiqc import config  # I want the ranks to merge by default, not a user problem
+from multiqc.plots.table_object import ColumnDict 
+
+from typing import Dict, Any, cast
+
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -80,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
             "rank_24": ["_rank_24"],
         }
 
-        self.proteinfold_data = {}
+        self.proteinfold_data: Dict[str, Any] = {}
         # I want to enable sample grouping: https://docs.seqera.io/multiqc/reports/customisation#sample-grouping
 
         for f in self.find_log_files("proteinfold"):
@@ -119,14 +123,13 @@ class MultiqcModule(BaseMultiqcModule):
                 self.proteinfold_data[samplename]["chainwise_iptm"] = iptm_values.to_dict()
                 self.proteinfold_data[samplename]["mean_iptm"] = iptm_values.mean()  # TODO double-check for multiple ranks
             if f["fn"].endswith("_iptm.tsv") and not f["fn"].endswith("_chainwise_iptm.tsv"):
-                df = pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze(axis=1)  # Squeeze makes a series accessible on index label
+                iptm_series = cast(pd.Series, pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze(axis=1)) # Squeeze makes a series accessible on index label
+                if 0 in iptm_series.index:  # Since pandas infers the index as an int this is an exact int match not a greedy string match
+                    self.proteinfold_data[samplename]["iptm"] = iptm_series.loc[0]  # Remember loc is an *int* match on rank 0 index
 
-                if 0 in df.index:  # Since pandas infers the index as an int this is an exact int match not a greedy string match
-                    self.proteinfold_data[samplename]["iptm"] = df.loc[0]  # Remember loc is an *int* match on rank 0 index
-
-                for rank_num in df.index:
+                for rank_num in iptm_series.index:
                     subsample = f"{samplename}_rank_{rank_num}"
-                    self.proteinfold_data.setdefault(subsample, {})["iptm"] = df.loc[rank_num]
+                    self.proteinfold_data.setdefault(subsample, {})["iptm"] = iptm_series.loc[rank_num]
 
             if f["fn"].endswith("_chainwise_ptm.tsv"):
                 df = pd.read_csv(filepath, sep="\t", index_col=0)
@@ -134,14 +137,13 @@ class MultiqcModule(BaseMultiqcModule):
                 self.proteinfold_data[samplename]["chainwise_ptm"] = ptm_values.to_dict()
                 self.proteinfold_data[samplename]["mean_ptm"] = ptm_values.mean()  # TODO double-check for multiple ranks
             if f["fn"].endswith("_ptm.tsv") and not f["fn"].endswith("_chainwise_ptm.tsv"):
-                df = pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze(axis=1)  # Squeeze on axis avoids int conversion for single entries
+                ptm_series = cast(pd.Series, pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze(axis=1)) # Squeeze on axis avoids int conversion for single entries
+                if 0 in ptm_series.index:
+                    self.proteinfold_data[samplename]["ptm"] = ptm_series.loc[0]
 
-                if 0 in df.index:
-                    self.proteinfold_data[samplename]["ptm"] = df.loc[0]
-
-                for rank_num in df.index:
+                for rank_num in ptm_series.index:
                     subsample = f"{samplename}_rank_{rank_num}"
-                    self.proteinfold_data.setdefault(subsample, {})["ptm"] = df.loc[rank_num]
+                    self.proteinfold_data.setdefault(subsample, {})["ptm"] = ptm_series.loc[rank_num]
 
         self.write_data_file(self.proteinfold_data, "proteinfold_data")  # I want to structure and rename from avg_plDDT to summary_stats
         self.general_stats_table()
@@ -163,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
             for sample_data in self.proteinfold_data.values()
         )
 
-        headers = {
+        headers: Dict[str, ColumnDict] = {
             "msa_depth": {
                 "title": "Related sequence depth (MSA)",
                 "description": "The number of related sequences (across the whole protein) that could be retrieved from the MSA (Multiple Sequence Alignment) stage",
