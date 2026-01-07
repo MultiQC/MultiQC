@@ -50,13 +50,34 @@ class MultiqcModule(BaseMultiqcModule):
         # Want to treat the ranked inference runs as 'sub-samples' for grouping logic, even if not separate files
         if not hasattr(config, "table_sample_merge"):
             config.table_sample_merge = {}
-
+        
+        # Some codes generated 5 inferences for 5 models and all 25 are processed. If a user sets more they're an expert and can custom handle
         config.table_sample_merge = {
-            "rank_0": ["_rank_0"],
-            "rank_1": ["_rank_1"],
-            "rank_2": ["_rank_2"],
-            "rank_3": ["_rank_3"],
-            "rank_4": ["_rank_4"],
+            "rank_0":  ["_rank_0"],
+            "rank_1":  ["_rank_1"],
+            "rank_2":  ["_rank_2"],
+            "rank_3":  ["_rank_3"],
+            "rank_4":  ["_rank_4"],
+            "rank_5":  ["_rank_5"],
+            "rank_6":  ["_rank_6"],
+            "rank_7":  ["_rank_7"],
+            "rank_8":  ["_rank_8"],
+            "rank_9":  ["_rank_9"],
+            "rank_10": ["_rank_10"],
+            "rank_11": ["_rank_11"],
+            "rank_12": ["_rank_12"],
+            "rank_13": ["_rank_13"],
+            "rank_14": ["_rank_14"],
+            "rank_15": ["_rank_15"],
+            "rank_16": ["_rank_16"],
+            "rank_17": ["_rank_17"],
+            "rank_18": ["_rank_18"],
+            "rank_19": ["_rank_19"],
+            "rank_20": ["_rank_20"],
+            "rank_21": ["_rank_21"],
+            "rank_22": ["_rank_22"],
+            "rank_23": ["_rank_23"],
+            "rank_24": ["_rank_24"],
         }
 
         self.proteinfold_data = {}
