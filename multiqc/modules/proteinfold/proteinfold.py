@@ -145,11 +145,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(self.proteinfold_data, "proteinfold_data")  # I want to structure and rename from avg_plDDT to summary_stats
         self.general_stats_table()
-
-        # More detailed plots for each protein that don't rely as much on inspecting structure
+        # Togglable plDDT by residue plots of all ranks
         self.plddt_line_plot()
-        self.msa_depth_plot()
-        self.pairwise_iptm_heatmap()
 
     def general_stats_table(self):
         """
@@ -252,10 +249,3 @@ class MultiqcModule(BaseMultiqcModule):
             description='Per-residue confidence scores across all predicted ranks',
             plot=plot_html
         )     
-
-
-    def msa_depth_plot(self):
-        pass    
-
-    def pairwise_iptm_heatmap(self):
-        pass
