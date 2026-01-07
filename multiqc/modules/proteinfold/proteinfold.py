@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "https://github.com/baker-laboratory/RoseTTAFold-All-Atom",
                 "https://github.com/uw-ipd/RoseTTAFold2NA",
                 "https://github.com/PaddlePaddle/PaddleHelix/tree/dev/apps/protein_folding/helixfold3",
-                "https://github.com/jwohlwend/boltz"
+                "https://github.com/jwohlwend/boltz",
             ],
             info="ProteinFold - protein structure inference methods through a single nextflow pipeline interface",
             doi=[
@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "10.1126/science.adl2528",
                 "10.1038/s41592-023-02086-5",
                 "10.48550/arXiv.2408.16975",
-                "10.1101/2024.11.19.624167"
+                "10.1101/2024.11.19.624167",
             ],
         )
 
@@ -66,9 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f)
 
             samplename = f["s_name"].split("_")[0]
-            self.proteinfold_data.setdefault(
-                samplename, {}
-            )  # Set default creates if doesn't already exist
+            self.proteinfold_data.setdefault(samplename, {})  # Set default creates if doesn't already exist
             filepath = Path(f["root"]) / f["fn"]
 
             if f["fn"].endswith("_plddt.tsv"):
@@ -76,16 +74,12 @@ class MultiqcModule(BaseMultiqcModule):
                 rank_cols = [col for col in df.columns if col.startswith("rank_")]
 
                 # Full plddt data frame for plotting purposes
-                plddt_data = {
-                    col: df.set_index("Positions")[col].to_dict() for col in rank_cols
-                }
+                plddt_data = {col: df.set_index("Positions")[col].to_dict() for col in rank_cols}
                 self.proteinfold_data[samplename]["plddt"] = plddt_data
 
                 rank_means = df[rank_cols].mean().to_dict()
                 # Parent sample entry should still have the top ranked value
-                self.proteinfold_data[samplename]["mean_plddt"] = rank_means.get(
-                    "rank_0"
-                )
+                self.proteinfold_data[samplename]["mean_plddt"] = rank_means.get("rank_0")
 
                 for rank in rank_cols:
                     rank_num = rank.split("rank_")[1]
@@ -101,58 +95,34 @@ class MultiqcModule(BaseMultiqcModule):
             if f["fn"].endswith("_chainwise_iptm.tsv"):
                 df = pd.read_csv(filepath, sep="\t", index_col=0)
                 iptm_values = df.iloc[:, 0]
-                self.proteinfold_data[samplename][
-                    "chainwise_iptm"
-                ] = iptm_values.to_dict()
-                self.proteinfold_data[samplename][
-                    "mean_iptm"
-                ] = iptm_values.mean()  # TODO double-check for multiple ranks
-            if f["fn"].endswith("_iptm.tsv") and not f["fn"].endswith(
-                "_chainwise_iptm.tsv"
-            ):
-                df = pd.read_csv(
-                    filepath, sep="\t", header=None, index_col=0
-                ).squeeze()  # Squeeze makes a series accessible on index label
+                self.proteinfold_data[samplename]["chainwise_iptm"] = iptm_values.to_dict()
+                self.proteinfold_data[samplename]["mean_iptm"] = iptm_values.mean()  # TODO double-check for multiple ranks
+            if f["fn"].endswith("_iptm.tsv") and not f["fn"].endswith("_chainwise_iptm.tsv"):
+                df = pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze(axis=1)  # Squeeze makes a series accessible on index label
 
-                if (
-                    0 in df.index
-                ):  # Since pandas infers the index as an int this is an exact int match not a greedy string match
-                    self.proteinfold_data[samplename]["iptm"] = df.loc[
-                        0
-                    ]  # Remember loc is an *int* match on rank 0 index
+                if 0 in df.index:  # Since pandas infers the index as an int this is an exact int match not a greedy string match
+                    self.proteinfold_data[samplename]["iptm"] = df.loc[0]  # Remember loc is an *int* match on rank 0 index
 
                 for rank_num in df.index:
                     subsample = f"{samplename}_rank_{rank_num}"
-                    self.proteinfold_data.setdefault(subsample, {})["iptm"] = df.loc[
-                        rank_num
-                    ]
+                    self.proteinfold_data.setdefault(subsample, {})["iptm"] = df.loc[rank_num]
 
             if f["fn"].endswith("_chainwise_ptm.tsv"):
                 df = pd.read_csv(filepath, sep="\t", index_col=0)
                 ptm_values = df.iloc[:, 0]
-                self.proteinfold_data[samplename][
-                    "chainwise_ptm"
-                ] = ptm_values.to_dict()
-                self.proteinfold_data[samplename][
-                    "mean_ptm"
-                ] = ptm_values.mean()  # TODO double-check for multiple ranks
-            if f["fn"].endswith("_ptm.tsv") and not f["fn"].endswith(
-                "_chainwise_ptm.tsv"
-            ):
-                df = pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze()
+                self.proteinfold_data[samplename]["chainwise_ptm"] = ptm_values.to_dict()
+                self.proteinfold_data[samplename]["mean_ptm"] = ptm_values.mean()  # TODO double-check for multiple ranks
+            if f["fn"].endswith("_ptm.tsv") and not f["fn"].endswith("_chainwise_ptm.tsv"):
+                df = pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze(axis=1)  # Squeeze on axis avoids int conversion for single entries
 
                 if 0 in df.index:
                     self.proteinfold_data[samplename]["ptm"] = df.loc[0]
 
                 for rank_num in df.index:
                     subsample = f"{samplename}_rank_{rank_num}"
-                    self.proteinfold_data.setdefault(subsample, {})["ptm"] = df.loc[
-                        rank_num
-                    ]
+                    self.proteinfold_data.setdefault(subsample, {})["ptm"] = df.loc[rank_num]
 
-        self.write_data_file(
-            self.proteinfold_data, "proteinfold_data"
-        )  # I want to structure and rename from avg_plDDT to summary_stats
+        self.write_data_file(self.proteinfold_data, "proteinfold_data")  # I want to structure and rename from avg_plDDT to summary_stats
         self.general_stats_table()
 
     def general_stats_table(self):
@@ -172,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {
             "msa_depth": {
-                "title": "Related Sequence Depth (MSAs)",
+                "title": "Related sequence depth (MSA)",
                 "description": "The number of related sequences (across the whole protein) that could be retrieved from the MSA (Multiple Sequence Alignment) stage",
             },
             "mean_plddt": {
