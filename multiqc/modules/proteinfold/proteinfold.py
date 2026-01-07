@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, linegraph
 from multiqc import config  # I want the ranks to merge by default, not a user problem
 
 class MultiqcModule(BaseMultiqcModule):
@@ -146,6 +146,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.proteinfold_data, "proteinfold_data")  # I want to structure and rename from avg_plDDT to summary_stats
         self.general_stats_table()
 
+        # More detailed plots for each protein that don't rely as much on inspecting structure
+        self.plddt_line_plot()
+        self.msa_depth_plot()
+        self.pairwise_iptm_heatmap()
+
     def general_stats_table(self):
         """
         Put protein structure prediction metrics into a general table for all different Deep Learning methods
@@ -207,3 +212,50 @@ class MultiqcModule(BaseMultiqcModule):
             }
 
         self.general_stats_addcols(self.proteinfold_data, headers)
+
+    def plddt_line_plot(self):
+        """Line plot showing pLDDT confidence across residue position of selected sample, for all ranks"""
+
+        parent_samples = {}
+
+        for sample, metrics in self.proteinfold_data.items():
+            if "plddt" in metrics:
+                if "_rank_" not in sample: # The parent sample already has the plddt data for all ranks
+                    parent_samples[sample] = metrics["plddt"]
+
+        data_labels = [] # Need a data_labels list for the sample switcher
+        plot_data_list = []
+        
+        # The populated data_labels plot config section is what the switcher uses
+        for parent_sample, rank_data in parent_samples.items():
+            data_labels.append({
+                "name" : parent_sample,
+                "ylab" : "pLDDT score"
+                })
+            plot_data_list.append(rank_data)
+       
+        pconfig = {
+            "id": "proteinfold_plddt_lineplot",
+            "title": "ProteinFold: pLDDT by Position",
+            "xlab": "Residue Position",
+            "ylab": "pLDDT Score",
+            "ymin": 0,
+            "ymax": 100,
+            "data_labels": data_labels
+        }   
+
+        plot_html = linegraph.plot(plot_data_list, pconfig)
+
+        self.add_section(
+            name='pLDDT Confidence by residue',
+            anchor='proteinfold-plddt-per-res',
+            description='Per-residue confidence scores across all predicted ranks',
+            plot=plot_html
+        )     
+
+
+    def msa_depth_plot(self):
+        pass    
+
+    def pairwise_iptm_heatmap(self):
+        pass
