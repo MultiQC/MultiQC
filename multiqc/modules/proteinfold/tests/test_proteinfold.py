@@ -1,11 +1,19 @@
 import pytest
+
 from pathlib import Path
+
 from multiqc import report
 from multiqc.modules.proteinfold import MultiqcModule
+from multiqc.utils import testing
+
 
 # Will fix when I do a PR against the MultiQC test data repo
-# TEST_DATA_DIR = Path(__file__).parent / "test-data"
-TEST_DATA_DIR = Path("/srv/scratch/z3374843/test-data/data/modules/proteinfold")
+test_data_proteinfold = Path("/srv/scratch/z3374843/test-data/data/modules/proteinfold")
+
+
+# @pytest.fixture
+# def data_dir():
+#    return testing.data_dir()
 
 
 @pytest.fixture
@@ -15,8 +23,10 @@ def mod():
     report.analysis_files = []
     report.files = {}
 
+    # test_data_proteinfold = data_dir / "modules" / "proteinfold"
+
     # Set up analysis files from local test data
-    report.analysis_files = list(TEST_DATA_DIR.glob("*"))
+    report.analysis_files = list(test_data_proteinfold.glob("*"))
     report.search_files(["proteinfold"])
 
     return MultiqcModule()
