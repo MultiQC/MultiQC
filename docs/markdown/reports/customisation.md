@@ -52,13 +52,16 @@ three lines to your MultiQC configuration file:
 
 ```yaml
 custom_logo: "/abs/path/to/logo.png"
+custom_logo_dark: "/abs/path/to/logo-for-dark-mode.png"
 custom_logo_url: "https://www.example.com"
 custom_logo_title: "Our Institute Name"
+custom_logo_width: 200 # Width in pixels
 ```
 
 Only `custom_logo` is needed. The URL will make the logo open up
 a new web browser tab with your address and the title sets the mouse
-hover title text.
+hover title text. Width allows you to adjust the logo size and dark
+lets you have an alternate variant shown when the report is in dark mode.
 
 ## Project level information
 
@@ -461,6 +464,44 @@ sp:
 
 The search pattern identifiers can be found in the documentation below for each module.
 
+## Customize General Statistics Table
+
+The General Statistics table is one of the most important features in MultiQC reports. It shows an overview of key metrics from all modules in a single table.
+
+By default, each module decides which columns to show in this table. However, some modules support customizing this using the `general_stats_columns` configuration option.
+
+For example, to customize which columns from the NanoStat and samtools modules appear in the General Statistics table:
+
+```yaml
+general_stats_columns:
+  nanostat:
+    columns:
+      Number of reads_fastq:
+      Mean read length_fastq:
+      Median read quality_fastq:
+  samtools:
+    columns:
+      reads_mapped_percent:
+      reads_properly_paired_percent:
+      flagstat_total:
+        hidden: false
+      pct_dups:
+```
+
+Each module has its own set of available metrics that can be added to the General Statistics table. You can find these in the module's documentation or the code base.
+
+Note that for each column, you can also customize specific fields, like `hidden` above. Other fields you can customize are:
+
+- `title` - Column title
+- `description` - Column description
+- `hidden` - Whether to hide the column by default
+- `scale` - Color scale for the column
+- `format` - Number format
+- `min` - Minimum value for the color scale
+- `max` - Maximum value for the color scale
+- `suffix` - Suffix to add to values
+- `shared_key` - Share color scale with other columns
+
 #### Removing General Statistics
 
 The General Statistics is a bit of a special case in MultiQC, but there is added code to make it
@@ -470,6 +511,17 @@ Alternatively, you can set the following config flag in your MultiQC config:
 ```yaml
 skip_generalstats: true
 ```
+
+#### General Statistics Help Text
+
+You can add a help button with collapsible explanatory text to the General Statistics table
+using the `general_stats_helptext` config option:
+
+```yaml
+general_stats_helptext: "This table shows key metrics for all samples. Click column headers to sort."
+```
+
+When set, a "Help" button will appear that users can click to expand a help text box.
 
 ## Order of modules
 
@@ -872,7 +924,7 @@ Note that the formatting is done in a specific order - `pass`/`warn`/`fail` by d
 
 To find the unique ID for your table / column, right click it in a report and inspect it's HTML (_Inpsect_ in Chrome).
 
-- Tables should look something like `<table id="general_stats_table" class="table table-condensed mqc_table" data-title="General Statistics">`, where `general_stats_table` is the ID.
+- Tables should look something like `<table id="general_stats_table" class="table table-sm mqc_table" data-title="General Statistics">`, where `general_stats_table` is the ID.
 - Table cells should look something like `<td class="data-coloured mqc-generalstats-Assigned">`, where the `mqc-generalstats-Assigned` bit is the unique ID.
 
 :::note
@@ -1010,6 +1062,33 @@ For the modules that have only data for `SAMPLE_R1` and `SAMPLE_R2` - e.g. FastQ
 Clicking on the row header will expand the row to show the individual chunks data:
 
 ![Table: General Statistics table with sample groups expanded](../../../docs/images/genstats_grouping_expanded.png)
+
+You can use multiple patterns. For example, you have FastQC reports not only for each read type, but also for each lane separately:
+
+```
+mySample_S9_L001_R1_001.fastq.gz
+mySample_S9_L001_R2_001.fastq.gz
+mySample_S9_L002_R1_001.fastq.gz
+mySample_S9_L002_R2_001.fastq.gz
+mySample_S9_L003_R1_001.fastq.gz
+mySample_S9_L003_R2_001.fastq.gz
+mySample_S9_L004_R1_001.fastq.gz
+mySample_S9_L004_R2_001.fastq.gz
+```
+
+You can group all reports by sample together using the following config:
+
+```yaml
+table_sample_merge:
+  "Lane 1 R1": "_L001_R1_001"
+  "Lane 1 R2": "_L001_R2_001"
+  "Lane 2 R1": "_L002_R1_001"
+  "Lane 2 R2": "_L002_R2_001"
+  "Lane 3 R1": "_L003_R1_001"
+  "Lane 3 R2": "_L003_R2_001"
+  "Lane 4 R1": "_L004_R1_001"
+  "Lane 4 R2": "_L004_R2_001"
+```
 
 More sophisticated patterns are supported such as listing multiple strings, or using regular expression with `type: regex`:
 

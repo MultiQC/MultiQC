@@ -15,6 +15,16 @@ class MultiqcModule(BaseMultiqcModule):
 
     If no chip data was parsed, these columns will not be added to the MultiQC report.
 
+    By default, the module extracts sample names from the first column of the `.selfSM` file.
+    If you prefer to use the filename as the sample name instead, you can set the global
+    `use_filename_as_sample_name` option:
+
+    ```yaml
+    use_filename_as_sample_name:
+      - verifybamid
+      - verifybamid/selfsm
+    ```
+
     Should you wish to remove one of these columns from the general statistics table add the below lines to the table_columns_visible section of your config file
 
         table_columns_visible:
@@ -120,7 +130,16 @@ class MultiqcModule(BaseMultiqcModule):
             # for all rows after the first
             else:
                 # clean the sample name (first column) and assign to s_name
-                s_name = self.clean_s_name(s[0], f)
+                if config.use_filename_as_sample_name is True or (
+                    isinstance(config.use_filename_as_sample_name, list)
+                    and (
+                        self.anchor in config.use_filename_as_sample_name
+                        or "verifybamid/selfsm" in config.use_filename_as_sample_name
+                    )
+                ):
+                    s_name = self.clean_s_name(f["s_name"], f)
+                else:
+                    s_name = self.clean_s_name(s[0], f)
                 # create a dictionary entry with the first column as a key (sample name) and empty dictionary as a value
                 parsed_data[s_name] = {}
                 # for each item in list of items in the row

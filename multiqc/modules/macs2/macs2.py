@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "MACS2: Filtered Fragments",
             "ylab": "# Fragments",
             "cpswitch_counts_label": "Number of Fragments",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
 
         self.add_section(plot=bargraph.plot(data, keys, pconfig))

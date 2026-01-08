@@ -2,7 +2,7 @@
 title: Conpair
 displayed_sidebar: multiqcSidebar
 description: >
-  Estimates concordance and contamination for tumor–normal pairs
+    <p>Estimates concordance and contamination for tumor–normal pairs.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/conpair/conpair.py
 -->
 
 :::note
-Estimates concordance and contamination for tumor–normal pairs
+<p>Estimates concordance and contamination for tumor–normal pairs.</p>
 
 [https://github.com/nygenome/Conpair](https://github.com/nygenome/Conpair)
 :::
@@ -29,6 +29,7 @@ conpair/concordance:
   contents: markers (coverage per marker threshold
   num_lines: 3
 conpair/contamination:
-  contents: "Tumor sample contamination level: "
+  contents: 'Tumor sample contamination level: '
   num_lines: 3
 ```
+    

@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             sequencing depth and miRNA complexity and also identifies the presence of both
             miRNAs and undesirable sequences derived from tRNAs, rRNAs, or Illumina artifact
             sequences.
-        
+
             miRTrace also profiles clade-specific miRNAs based on a comprehensive catalog
             of clade-specific miRNA families identified previously. With this information,
             miRTrace can detect exogenous miRNAs, which could be contamination derived,
@@ -253,10 +253,10 @@ class MultiqcModule(BaseMultiqcModule):
             "x_decimals": False,
             "tt_label": "<b>Read Length (bp) {point.x}</b>: {point.y} Read Count",
             "x_bands": [
-                {"from": 40, "to": 50, "color": "#ffebd1"},
-                {"from": 26, "to": 40, "color": "#e2f5ff"},
-                {"from": 18, "to": 26, "color": "#e5fce0"},
-                {"from": 0, "to": 18, "color": "#ffffe2"},
+                {"from": 40, "to": 50, "color": "#ff9100", "opacity": 0.1},
+                {"from": 26, "to": 40, "color": "#00a6ff", "opacity": 0.1},
+                {"from": 18, "to": 26, "color": "#23bc00", "opacity": 0.1},
+                {"from": 0, "to": 18, "color": "#e5e500", "opacity": 0.1},
             ],
         }
 

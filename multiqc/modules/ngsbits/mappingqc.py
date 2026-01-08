@@ -21,7 +21,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
         if len(values) > 0:
             if f["s_name"] in mappingqc:
-                log.debug(f'Duplicate sample name found! Overwriting: {f["s_name"]}')
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             module.add_data_source(f, section="mappingqc")
             mappingqc[f["s_name"]] = values
             mappingqc_keys.update(params)

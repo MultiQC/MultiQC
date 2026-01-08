@@ -14,10 +14,10 @@ on:
 jobs:
   mypy:
     name: "Python ${{ matrix.python-version }}"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.13"]
+        python-version: ["3.9", "3.14.0"] # 3.14.1 has upstream bug
 
     steps:
       - uses: actions/checkout@v4

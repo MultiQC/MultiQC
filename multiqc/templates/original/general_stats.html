@@ -1,0 +1,47 @@
+{# #######################
+  general_stats.html
+##########################
+
+This block generates the General Statistics table at the top of the report.
+
+#}
+
+{% if not config.skip_generalstats: %}
+  <div id="general_stats" class="mqc-module-section">
+    <h2>General Statistics</h2>
+
+    {% if config.section_comments.general_stats is not none and config.section_comments.general_stats | length > 0 %}
+      <blockquote class="mqc-section-comment">{{ config.section_comments.general_stats }}</blockquote>
+    {% endif %}
+
+    <div
+      class="ai-summary ai-local-content"
+      id="general_stats_table_ai_summary_wrapper"
+      style="display: none; margin-bottom: 7px; padding-bottom: 4px"
+    >
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <b>AI Summary</b>
+      </div>
+      <div class="ai-summary-response" id="general_stats_table_ai_summary_response" style="margin-bottom: -5px;"></div>
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div class="ai-summary-disclaimer" id="general_stats_table_ai_summary_disclaimer" style="display: none;">
+          Provider: <span class="ai-summary-disclaimer-provider">{{ report.ai_provider_title }}</span>, model:
+          <span class="ai-summary-disclaimer-model">{{ report.ai_model_resolved or report.ai_model }}</span>
+        </div>
+        <a
+          class="btn btn-default btn-sm ai-continue-in-chat"
+          id="general_stats_table_ai_summary_continue_in_chat"
+          data-seqera-website="{{ config.seqera_website }}"
+          style="display: none;"
+          target="_blank"
+          data-toggle="tooltip"
+        >
+          Chat with Seqera AI
+        </a>
+      </div>
+      <div class="ai-summary-error" id="general_stats_table_ai_summary_error" style="display: none;"></div>
+    </div>
+
+    {{ report.general_stats_html }}
+  </div>
+{% endif %}

@@ -9,8 +9,9 @@ import sys
 import time
 from collections import OrderedDict, defaultdict
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
+import numpy as np
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -141,7 +142,18 @@ def dump_json(data, filehandle=None, **kwargs):
             return super().default(o)
 
     if filehandle:
-        json.dump(replace_nan(data), filehandle, cls=JsonEncoderWithArraySupport, **kwargs)
+        try:
+            json.dump(replace_nan(data), filehandle, cls=JsonEncoderWithArraySupport, **kwargs)
+        except UnicodeEncodeError:
+            # If we get an error, try to write the JSON string directly
+            # First convert to a string with proper encoding
+            json_str = json.dumps(replace_nan(data), cls=JsonEncoderWithArraySupport, ensure_ascii=False, **kwargs)
+            # Write the string directly to avoid encoding issues
+            if hasattr(filehandle, "write"):
+                filehandle.write(json_str)
+            else:
+                with open(filehandle, "w", encoding="utf-8") as f:
+                    f.write(json_str)
     else:
         return json.dumps(replace_nan(data), cls=JsonEncoderWithArraySupport, **kwargs)
 
@@ -242,3 +254,140 @@ def update_dict(
                     else:
                         target[key] = src_val
     return target
+
+
+def scipy_pdist(X: np.ndarray) -> np.ndarray:
+    """Calculate pairwise (euclidean) distances between observations in X.
+
+    Reimplements scipy.spatial.distance.pdist to avoid heavy scipy dependency.
+
+    Args:
+        X: Array of shape (m,n) containing m observations in n dimensions
+
+    Returns:
+        Array of shape ((m * (m-1)) // 2,) containing condensed distance matrix
+    """
+    m, n = X.shape
+    # Initialize output array of correct size for condensed distance matrix
+    out = np.zeros((m * (m - 1)) // 2)
+    k = 0
+
+    # Calculate pairwise distances
+    for i in range(m - 1):
+        for j in range(i + 1, m):
+            out[k] = np.sqrt(np.sum((X[i] - X[j]) ** 2))
+            k += 1
+
+    return out
+
+
+def scipy_hierarchy_linkage(distances: np.ndarray, method: str = "complete") -> np.ndarray:
+    """Perform hierarchical clustering using the specified linkage method.
+
+    Reimplements scipy.hierarchy.linkage to avoid heavy scipy dependency.
+
+    Args:
+        distances: Condensed distance matrix from pdist
+        method: Linkage method ('single', 'complete', 'average', 'weighted')
+
+    Returns:
+        Array of shape (n-1, 4) representing the linkage matrix where n is the number of original observations.
+        Each row has format [idx1, idx2, distance, cluster_size]
+    """
+    if method not in ["single", "complete", "average", "weighted"]:
+        raise ValueError(f"Unsupported linkage method: {method}")
+
+    # Convert condensed distance matrix to full matrix for easier manipulation
+    n = int((1 + np.sqrt(1 + 8 * len(distances))) / 2)
+    dist_matrix = np.zeros((n, n))
+    idx = np.triu_indices(n, k=1)
+    dist_matrix[idx] = distances
+    dist_matrix = dist_matrix + dist_matrix.T  # type: ignore
+
+    # Initialize arrays for clustering
+    n_clusters = n
+    active_nodes = list(range(n_clusters))
+    cluster_sizes = np.ones(n_clusters, dtype=int)
+    linkage_matrix = np.zeros((n_clusters - 1, 4))
+
+    for i in range(n_clusters - 1):
+        # Find minimum distance between clusters
+        valid_distances = dist_matrix[np.ix_(active_nodes, active_nodes)]
+        np.fill_diagonal(valid_distances, np.inf)
+        min_idx = np.unravel_index(np.argmin(valid_distances), valid_distances.shape)
+        cluster1, cluster2 = active_nodes[min_idx[0]], active_nodes[min_idx[1]]
+
+        # Record merge in linkage matrix
+        linkage_matrix[i] = [
+            min(cluster1, cluster2),
+            max(cluster1, cluster2),
+            dist_matrix[cluster1, cluster2],
+            cluster_sizes[cluster1] + cluster_sizes[cluster2],
+        ]
+
+        # Create new cluster
+        new_cluster_idx = n_clusters + i
+        cluster_sizes = np.append(cluster_sizes, cluster_sizes[cluster1] + cluster_sizes[cluster2])  # type: ignore
+
+        # Calculate distances to new cluster based on chosen method
+        remaining_clusters = [x for x in active_nodes if x not in (cluster1, cluster2)]
+        new_distances = np.zeros(len(remaining_clusters))
+
+        for j, cluster in enumerate(remaining_clusters):
+            dist1 = dist_matrix[cluster1, cluster]
+            dist2 = dist_matrix[cluster2, cluster]
+
+            if method == "single":
+                new_dist = min(dist1, dist2)
+            elif method == "complete":
+                new_dist = max(dist1, dist2)
+            elif method == "average":
+                new_dist = (dist1 * cluster_sizes[cluster1] + dist2 * cluster_sizes[cluster2]) / (
+                    cluster_sizes[cluster1] + cluster_sizes[cluster2]
+                )
+            else:  # weighted
+                new_dist = (dist1 + dist2) / 2
+
+            new_distances[j] = new_dist
+
+        # Update distance matrix
+        dist_matrix = np.vstack((dist_matrix, np.zeros(dist_matrix.shape[1])))  # type: ignore
+        dist_matrix = np.hstack((dist_matrix, np.zeros((dist_matrix.shape[0], 1))))  # type: ignore
+        dist_matrix[new_cluster_idx, remaining_clusters] = new_distances  # type: ignore
+        dist_matrix[remaining_clusters, new_cluster_idx] = new_distances  # type: ignore
+
+        # Update active nodes
+        active_nodes.remove(cluster1)
+        active_nodes.remove(cluster2)
+        active_nodes.append(new_cluster_idx)
+
+    return linkage_matrix
+
+
+def scipy_hierarchy_leaves_list(Z: np.ndarray) -> List[int]:
+    """Return the leaf nodes in the order they appear in the dendrogram.
+
+    Reimplements scipy.hierarchy.leaves_list to avoid heavy scipy dependency.
+
+    Args:
+        Z: The linkage matrix from scipy_hierarchy_linkage
+
+    Returns:
+        List of original observation indices in the order they appear in the dendrogram
+    """
+    n = int(Z.shape[0] + 1)
+    # Initialize list of current clusters with original observations
+    clusters = [[i] for i in range(n)]
+
+    # Process merges in order
+    for i in range(len(Z)):
+        # Get the clusters being merged
+        cluster1 = int(Z[i, 0])
+        cluster2 = int(Z[i, 1])
+
+        # Merge clusters
+        new_cluster = clusters[cluster1] + clusters[cluster2]
+        clusters.append(new_cluster)
+
+    # Return the final ordering (last cluster created)
+    return clusters[-1]

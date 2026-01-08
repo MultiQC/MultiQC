@@ -4,7 +4,7 @@ import logging
 from collections import defaultdict
 from itertools import islice
 from pathlib import Path
-from typing import List, Mapping, Set, Tuple, Dict, Optional, TypedDict, Union
+from typing import Dict, List, Mapping, Optional, Set, Tuple, TypedDict, Union
 from xml.etree import ElementTree
 
 from pydantic import BaseModel
@@ -12,8 +12,8 @@ from pydantic import BaseModel
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, ValueT
+from multiqc.plots.violin import ViolinPlot
 from multiqc.types import ColumnKey, LoadedFileDict, SampleGroup, SampleName
 
 log = logging.getLogger(__name__)
@@ -298,7 +298,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "id": "bclconvert_lane_counts",
                     "title": "bclconvert: Clusters by lane",
                     "ylab": "Number of clusters",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                 },
             ),
         )
@@ -341,7 +341,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig={
                     "id": "bclconvert_sample_counts",
                     "title": "bclconvert: Clusters by sample",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ylab": "Number of clusters",
                     "data_labels": ["Index mismatches", "Counts per lane"],
                 },
@@ -690,7 +690,7 @@ class MultiqcModule(BaseMultiqcModule):
                         f"{chunk.sample_project} != {sample.sample_project}, overriding"
                     )
                     sample.sample_project = chunk.sample_project
-                if sample.index is not None and chunk.index != sample.index:
+                if chunk.index != sample.index:
                     log.warning(
                         f"Sample {sname} has different indices on different lanes: "
                         f"{chunk.index} != {sample.index}, overriding"
@@ -900,7 +900,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["mean_quality"] = {
-            "title": "Mean quality sscore",
+            "title": "Mean quality score",
             "description": "Mean quality score of bases",
             "min": 0,
             "max": 40,

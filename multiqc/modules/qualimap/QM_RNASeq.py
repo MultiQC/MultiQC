@@ -5,8 +5,8 @@ import os
 import re
 from typing import Dict
 
-from multiqc import config, BaseMultiqcModule
-from multiqc.modules.qualimap import parse_numerals, get_s_name
+from multiqc import BaseMultiqcModule, config
+from multiqc.modules.qualimap import get_s_name, parse_numerals, parse_version
 from multiqc.plots import bargraph, linegraph
 
 log = logging.getLogger(__name__)
@@ -85,6 +85,42 @@ def parse_reports(module: BaseMultiqcModule) -> int:
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
             },
+            "reads_aligned_exonic": {
+                "title": "Exonic",
+                "description": "Reads aligned to exonic regions",
+                "min": 0,
+                "scale": "PuBu",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
+            "reads_aligned_intronic": {
+                "title": "Intronic",
+                "description": "Reads aligned to intronic regions",
+                "min": 0,
+                "scale": "PuBu",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
+            "reads_aligned_intergenic": {
+                "title": "Intergenic",
+                "description": "Reads aligned to intergenic regions",
+                "min": 0,
+                "scale": "PuBu",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
+            "reads_aligned_overlapping_exon": {
+                "title": "Overlapping Exon",
+                "description": "Reads aligned to overlapping exon regions",
+                "min": 0,
+                "scale": "PuBu",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
         },
         namespace="RNASeq",
     )
@@ -114,9 +150,12 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
         cov_hist[s_name] = d
 
-    # Superfluous function call to confirm that it is used in this module
-    # Replace None with actual version if it is available
-    module.add_software_version(None)
+    # Parse version from HTML reports
+    for f in module.find_log_files("qualimap/rnaseq/html"):
+        version = parse_version(f)
+        if version:
+            s_name = get_s_name(module, f)
+            module.add_software_version(version, s_name, "RNASeq")
 
     # Filter to strip out ignored sample names
     genome_results = module.ignore_samples(genome_results)

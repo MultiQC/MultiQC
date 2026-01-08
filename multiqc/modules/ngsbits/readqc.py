@@ -37,7 +37,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
         if len(values) > 0:
             if f["s_name"] in readqc:
-                log.debug(f'Duplicate sample name found! Overwriting: {f["s_name"]}')
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             module.add_data_source(f, section="readqc")
             readqc[f["s_name"]] = values
             readqc_keys.update(params)

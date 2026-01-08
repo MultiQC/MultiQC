@@ -10,10 +10,10 @@ specified in __init__.py, eg:
 
 template_fn = 'base.html'
 
-#}<!DOCTYPE html>
+#}<!doctype html>
 <html lang="en">
-<head>
-<!--
+  <head>
+    <!--
   __  __       _ _   _  ___   ____
  |  \/  |_   _| | |_(_)/ _ \ / ___|
  | |\/| | | | | | __| | | | | |
@@ -24,35 +24,37 @@ Abandon hope all ye who enter here..
 http://multiqc.info
 -->
 
-  {% include 'head.html' %}
+    {% include 'head.html' %}
+    {% include 'includes.html' %}
+  </head>
+  <body>
+    {% include 'nav.html' %}
+    {% include 'toolbox.html' %}
 
-  {% include 'includes.html' %}
+    <div class="mainpage">
+      <div class="p-4 pe-5">
+        {% include 'header.html' %}
+        {% include 'general_stats.html' %}
+        {% include 'content.html' %}
+      </div>
+      <div class="footer border-top py-3 mt-5">
+        <div class="container-fluid">{% include 'footer.html' %}</div>
+      </div>
+    </div>
 
-</head>
-<body>
+    <!-- Bootstrap Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container"></div>
 
-{% include 'nav.html' %}
+    <!-- Toast Template (hidden) -->
+    <div class="toast d-none" id="toast-template" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <span class="me-2 toast-icon"></span>
+        <strong class="me-auto toast-heading"></strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body"></div>
+    </div>
 
-{% include 'toolbox.html' %}
-
-
-<div class="mainpage">
-
-  {% include 'header.html' %}
-
-  {% include 'general_stats.html' %}
-
-  {% include 'content.html' %}
-
-</div>
-
-<div class="footer">
-  <div class="container-fluid">
-    {% include 'footer.html' %}
-  </div>
-</div>
-
-{% include 'foot.html' %}
-
-</body>
+    {% include 'foot.html' %}
+  </body>
 </html>

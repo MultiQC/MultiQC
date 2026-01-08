@@ -2,7 +2,7 @@
 title: WhatsHap
 displayed_sidebar: multiqcSidebar
 description: >
-  Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly)
+    <p>Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly).</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/whatshap/whatshap.py
 -->
 
 :::note
-Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly)
+<p>Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly).</p>
 
 [https://whatshap.readthedocs.io/](https://whatshap.readthedocs.io/)
 :::
@@ -29,3 +29,4 @@ whatshap/stats:
   contents: "#sample\tchromosome\tfile_name\tvariants\tphased\tunphased\tsingletons"
   num_lines: 1
 ```
+    

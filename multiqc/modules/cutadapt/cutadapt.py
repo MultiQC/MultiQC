@@ -123,12 +123,59 @@ class MultiqcModule(BaseMultiqcModule):
                     if pairs_filtered_unexplained > 0:
                         self.cutadapt_data[s_name]["pairs_filtered_unexplained"] = pairs_filtered_unexplained
 
+    def _extract_sample_name_from_json(self, data, f):
+        """Extract sample name from JSON data, handling stdin input cases"""
+        # First try to get sample name from input paths (original method)
+        input_paths = [v for k, v in data["input"].items() if k.startswith("path") and v]
+
+        # Check if all input paths are stdin-like (e.g., /dev/fd/*, -, stdin)
+        stdin_patterns = ["/dev/fd/", "/dev/stdin", "stdin", "-"]
+        is_stdin = (
+            all(any(pattern in str(path) for pattern in stdin_patterns) or str(path) == "-" for path in input_paths)
+            if input_paths
+            else False
+        )
+
+        if not is_stdin and input_paths:
+            # Use original method if we have valid file paths
+            return self.clean_s_name(input_paths, f=f)
+
+        # If input is from stdin, try to extract sample name from output arguments
+        if "command_line_arguments" in data:
+            args = data["command_line_arguments"]
+
+            # Look for output parameters that might contain sample names
+            output_args = ["--output", "-o", "--paired-output", "-p"]
+
+            for i, arg in enumerate(args):
+                if arg in output_args and i + 1 < len(args):
+                    output_path = args[i + 1]
+                    # Extract sample name from output path
+                    sample_name = self.clean_s_name([output_path], f=f)
+                    if sample_name:
+                        return sample_name
+
+        # Fall back to using the JSON filename
+        json_filename = f["fn"]
+        if json_filename.endswith(".json"):
+            # Remove .json extension and clean the name
+            base_name = json_filename[:-5]  # Remove .json
+            # Remove common cutadapt suffixes
+            for suffix in [".cutadapt", "_cutadapt", "-cutadapt"]:
+                if base_name.endswith(suffix):
+                    base_name = base_name[: -len(suffix)]
+                    break
+            return self.clean_s_name([base_name], f=f)
+
+        # Final fallback
+        return f["s_name"]
+
     def parse_json(self, f):
         path = os.path.join(f["root"], f["fn"])
         with open(path, "r") as fh:
             data = json.load(fh)
 
-        s_name = SampleName(self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path") and v], f=f))
+        s_name = SampleName(self._extract_sample_name_from_json(data, f))
         if s_name in self.cutadapt_data:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
 
@@ -248,7 +295,25 @@ class MultiqcModule(BaseMultiqcModule):
                     if (
                         not x.startswith("-")
                         and x.endswith((".fastq", ".fq", ".gz", ".dat"))
-                        and (i == 0 or args[i - 1] not in ["-o", "-p", "--output", "--paired-output"])
+                        and (
+                            i == 0
+                            or args[i - 1]
+                            not in [
+                                "-o",
+                                "-p",
+                                "--output",
+                                "--paired-output",
+                                "--untrimmed-output",
+                                "--untrimmed-paired-output",
+                                "--too-long-output",
+                                "--too-short-output",
+                                "--wildcard-file",
+                                "-r",
+                                "--rest-file",
+                                "--json",
+                                "--info-file",
+                            ]
+                        )
                     ):
                         input_fqs.append(x)
                 if input_fqs:

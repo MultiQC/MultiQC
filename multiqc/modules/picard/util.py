@@ -72,7 +72,7 @@ def read_histogram(module, program_key, headers, formats, picard_tool, sentieon_
     data = module.ignore_samples(all_data)
 
     # Write data to file
-    module.write_data_file(data, f"{module.anchor}_histogram")
+    module.write_data_file(data, f"{module.anchor}_{picard_tool}_histogram")
 
     return data
 
@@ -122,9 +122,23 @@ def extract_sample_name(
     MultiQC needs to take the sample name elsewhere rather than the file name,
     so it tries to parse the command line recorded in the output header.
 
-    This approach can be disabled with `config.picard_config.s_name_filenames`
+    This approach can be disabled with `config.use_filename_as_sample_name`
     """
-    if getattr(config, "picard_config", {}).get("s_name_filenames", False):
+    should_use_filename = False
+    if isinstance(config.use_filename_as_sample_name, list):
+        # Check for module anchor
+        if "picard" in config.use_filename_as_sample_name:
+            should_use_filename = True
+    elif config.use_filename_as_sample_name is True:
+        should_use_filename = True
+    elif getattr(config, "picard_config", {}).get("s_name_filenames", False):
+        # Deprecated option - warn user
+        log.warning(
+            "The 'picard_config.s_name_filenames' config option is deprecated. Use the global 'use_filename_as_sample_name' option instead."
+        )
+        should_use_filename = True
+
+    if should_use_filename:
         return None
 
     # Name of the option that contains the name of the input file to fetch the sample name.

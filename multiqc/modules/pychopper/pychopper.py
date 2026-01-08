@@ -113,6 +113,19 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.plot_orientation(),
         )
 
+        # Add new UMI detection section
+        self.add_section(
+            name="UMI Detection",
+            description="This plot shows the proportion of reads with detected UMIs",
+            helptext="""
+            Unique Molecular Identifiers (UMIs) are integrated during library preparation in some library kits.
+            This plot shows the number of reads where UMIs were successfully detected versus those where UMIs
+            could not be identified.
+            """,
+            anchor="pychopper_umi",
+            plot=self.plot_umi_detection(),
+        )
+
     # Plotting functions
     def plot_classification(self):
         """Generate the cDNA read classification plot"""
@@ -152,3 +165,34 @@ class MultiqcModule(BaseMultiqcModule):
 
         cats = ["+", "-"]
         return bargraph.plot(data_orientation, cats, pconfig)
+
+    def plot_umi_detection(self):
+        """Generate the UMI detection plot"""
+
+        pconfig = {
+            "id": "pychopper_umi_plot",
+            "title": "Pychopper: UMI Detection",
+            "ylab": "Number of reads",
+            "cpswitch_c_active": False,
+            "x_decimals": False,
+            "ymin": 0,
+        }
+
+        data_umi = {}
+        for sample in self.pychopper_data.keys():
+            data_umi[sample] = {}
+
+            # Get total reads (Primers_found + Rescue + Unusable)
+            total_reads = sum(self.pychopper_data[sample]["Classification"].values())
+
+            # Get UMI detected reads
+            umi_detected = self.pychopper_data[sample]["ReadStats"].get("Umi_detected_final", 0)
+
+            # Calculate unknown UMIs
+            unknown_umis = total_reads - umi_detected
+
+            data_umi[sample]["UMI detected"] = umi_detected
+            data_umi[sample]["Unknown UMI"] = unknown_umis
+
+        cats = ["UMI detected", "Unknown UMI"]
+        return bargraph.plot(data_umi, cats, pconfig)

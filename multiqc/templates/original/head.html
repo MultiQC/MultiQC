@@ -1,0 +1,72 @@
+{# #######################
+  head.html
+##########################
+
+This block contains the meta tags for the HTML head. Note, this isn't
+page contents, it's machine-readable tags for browsers and search engines.
+
+#}
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="description" content="MultiQC: A modular tool to aggregate results from bioinformatics analyses across many samples into a single report">
+<meta name="author" content="MultiQC">
+<title>{{ config.title + ': ' if config.title != None }}MultiQC Report</title>
+
+<!-- JSON plot data -->
+<script type="text/plain" id="mqc_compressed_plotdata">{{ report.plot_compressed_json }}</script>
+
+<script type="application/json" id="mqc_config">{{
+{
+    "plots_num_data_points_do_not_automatically_load": config.plots_defer_loading_numseries,
+    "sample_names_rename": config.sample_names_rename,
+    "show_hide_patterns": config.show_hide_patterns,
+    "show_hide_regex": config.show_hide_regex,
+    "show_hide_mode": config.show_hide_mode,
+    "highlight_patterns": config.highlight_patterns,
+    "highlight_colors": config.highlight_colors,
+    "highlight_regex": config.highlight_regex,
+    "decimalPoint_format": config.decimalPoint_format,
+    "thousandsSep_format": config.thousandsSep_format,
+    "boxplot_boxpoints": config.boxplot_boxpoints,
+} | tojson
+}}</script>
+
+<script type="text/javascript">
+reportUuid = "{{ report.report_uuid }}";
+seqeraApiUrl = "{{ config.seqera_api_url }}";
+seqeraWebsite = "{{ config.seqera_website }}";
+
+aiConfigEnabled = "{{ config.ai_summary }}";
+aiConfigProviderId = "{{ report.ai_provider_id or config.ai_provider }}";
+aiConfigModel = "{{ report.ai_model or config.ai_model }}";
+
+aiConfigCustomEndpoint = "{{ config.ai_custom_endpoint }}";
+aiConfigExtraQueryOptions = JSON.parse(atob("{{ report.ai_extra_query_options_base64 }}"));
+
+aiConfigCustomContextWindow = "{{ config.ai_custom_context_window }}";
+
+aiReportMetadataBase64 = "{{ report.ai_report_metadata_base64 }}";
+aiReportMetadata = JSON.parse(atob(aiReportMetadataBase64));
+
+aiAnonymizeSamples = "{{ config.ai_anonymize_samples }}";
+aiPseudonymMap = JSON.parse(atob("{{ report.ai_pseudonym_map_base64 }}"));
+
+configTitle = "{{ config.title }}";
+configCreationDate = "{{ report.creation_date.strftime('%d %b %Y, %H:%M %Z') }}";
+</script>
+
+<!-- Instead of saving data directly into variables in a normal <script>, data is separated into
+     above non-executed script blocks. This way, potential Content Security Policy restrictions
+     only apply to static script blocks, which can be added as sha256 exceptions.
+
+     As a precaution the script is wrapped in raw block to remind developers that data should
+     not be injected directly into it. -->
+{% raw %}
+<script type="text/javascript">
+mqc_compressed_plotdata = document.getElementById('mqc_compressed_plotdata').innerHTML;
+mqc_config = JSON.parse(document.getElementById('mqc_config').innerHTML);
+</script>
+{% endraw %}

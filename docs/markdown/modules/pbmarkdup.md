@@ -2,7 +2,7 @@
 title: pbmarkdup
 displayed_sidebar: multiqcSidebar
 description: >
-  Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or removes duplicates
+    <p>Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or removes duplicates.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/pbmarkdup/pbmarkdup.py
 -->
 
 :::note
-Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or removes duplicates
+<p>Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or removes duplicates.</p>
 
 [https://github.com/PacificBiosciences/pbmarkdup](https://github.com/PacificBiosciences/pbmarkdup)
 :::
@@ -30,3 +30,4 @@ pbmarkdup:
   contents_re: LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS
   num_lines: 5
 ```
+    

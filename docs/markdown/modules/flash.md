@@ -2,7 +2,7 @@
 title: FLASh
 displayed_sidebar: multiqcSidebar
 description: >
-  Merges paired-end reads from next-generation sequencing experiments
+    <p>Merges paired-end reads from next-generation sequencing experiments.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/flash/flash.py
 -->
 
 :::note
-Merges paired-end reads from next-generation sequencing experiments
+<p>Merges paired-end reads from next-generation sequencing experiments.</p>
 
 [https://ccb.jhu.edu/software/FLASH/](https://ccb.jhu.edu/software/FLASH/)
 :::
@@ -49,7 +49,8 @@ sp:
 
 ```yaml
 flash/hist:
-  fn: "*flash*.hist"
+  fn: '*flash*.hist'
 flash/log:
-  contents: "[FLASH]"
+  contents: '[FLASH]'
 ```
+    

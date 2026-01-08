@@ -7,41 +7,33 @@ description: Guides for how to contribute to the MultiQC code base
 
 ## Changelog
 
-Almost all changes deserve an entry in the `CHANGELOG.md` file, so that people
-know what updates are present between versions.
+`CHANGELOG.md` file is populated semi-automatically. To generate an initial state, we use a script:
 
-Whilst you can do this yourself by manually editing the file, we prefer to automate
-the process by using our friendly MultiQC bot, just before merging.
-By doing the changelog entry at the last minute we reduce the risk of having to
-solve changelog merge conflicts.
-
-The MultiQC changelog bot works by using the pull-request title.
-**Your job is to ensure that your pull-request follows one of the following 3 conventions:**
-
-- `New module: XYZ` - adding a new module named `XYZ`
-- `XYZ: Change something in this existing module` - updating module `XYZ`
-- `Some other change` - anything else, e.g. core MultiQC changes
-- `Typo in docs [skip changelog]` - a change so minor that we don't want to log it at all
-
-The MultiQC bot will automatically build a proper changelog entry based on this title
-and (for new modules / module changes) the meta-information in the `MultiqcModule` class.
-
-When a pull request is opened, a GitHub Action script is triggered, that inspects
-the PR, updates the changelog and commits the update back to your PR. If your
-pull request is not worth a change log entry (i.e. a minor documentation update),
-you can append `[skip changelog]` to the PR title.
-
-The action can also be triggered manually by adding the following comment on an open
-pull request:
-
-```md
-@multiqc-bot changelog
+```sh
+python scripts/print_changelog.py
 ```
 
-It will replace the automatically added changelog entry if the pull request title
-was updated after the initial commit. And finally, if you forgot to initially append
-`[skip changelog]` and you did it after the initial commit, triggering the bot with a
-comment will assure that the changelog line is removed.
+It automatically generates the changelog from the merged pull-requests assigned to a milestone (e.g. `v1.26`),
+using titles as changelog entries, and tags (labels) to categorize entries in sections (e.g. `New modules`, `Module fixes`, `Infrastructure`, etc.). We run that script before creating a release.
+
+For that reason, **your job is to ensure that your pull-request has a clean thoughtful title**. The title must
+summarize the changes, and be written in a good English without typos and errors, start with a capital letter,
+and have single spaces between words. Examples of good titles:
+
+- "Prepend plot IDs with `self.anchor` to assure custom anchor is applied"
+- "New module: Percolator (semi-supervised learning framework for peptide identification)"
+- "GATK BQSR: support Sentieon QualCal output"
+
+Add labels to the PR to automatically categorize them in the changelog:
+
+- `module: new` - "New modules"
+- `module: enhancement`, `module: change` - "Module updates"
+- `bug: module` - "Module fixes"
+- `bug: core` - "Fixes"
+- `core: back end`, `core: front end` - "Feature updates and improvements"
+- `core: infrastructure` - "Infrastructure and packaging"
+- `core: refactoring` - "Refactoring and typing"
+- `documentation` - "Chores"
 
 ## Docs - Admonitions
 

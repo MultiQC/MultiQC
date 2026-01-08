@@ -2,7 +2,7 @@
 title: K-mer Analysis Toolkit
 displayed_sidebar: multiqcSidebar
 description: >
-  Analyses sequencing data via its k-mer spectra
+    <p>Analyses sequencing data via its k-mer spectra.</p>
 ---
 
 <!--
@@ -15,7 +15,7 @@ File path for the source of this content: multiqc/modules/kat/kat.py
 -->
 
 :::note
-Analyses sequencing data via its k-mer spectra
+<p>Analyses sequencing data via its k-mer spectra.</p>
 
 [https://github.com/TGAC/KAT](https://github.com/TGAC/KAT)
 :::
@@ -27,5 +27,6 @@ contain information such as estimated genome size and heterozygosity rates from 
 
 ```yaml
 kat:
-  fn: "*.dist_analysis.json"
+  fn: '*.dist_analysis.json'
 ```
+    

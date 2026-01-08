@@ -2,11 +2,11 @@ import logging
 import re
 from collections import defaultdict
 from copy import deepcopy
-from typing import Callable, Dict, List, Any, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import table, bargraph
-from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots import bargraph, table
+from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table_object import TableConfig
 from multiqc.utils import mqc_colour
 
@@ -30,10 +30,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("nanoq", filehandles=True):
             sample_data = parse_nanoq_log(f)
             if sample_data:
-                data_by_sample[f["s_name"]] = sample_data
                 if f["s_name"] in data_by_sample:
-                    log.debug(f"Duplicate sample data found! Overwriting: {f['s_name']}")
-
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                data_by_sample[f["s_name"]] = sample_data
                 self.add_data_source(f)
 
         # Superfluous function call to confirm that it is used in this module
@@ -47,9 +46,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(data_by_sample)} reports")
 
-        # Write parsed report data to a file
-        self.write_data_file(data_by_sample, "multiqc_nanoq")
-
         # Add Nanoq summary to the general stats table
         self.add_table(data_by_sample)
 
@@ -58,6 +54,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Read length distribution Plot
         self.reads_by_length_plot(data_by_sample)
+
+        # Write parsed report data to a file
+        self.write_data_file(data_by_sample, "multiqc_nanoq")
 
     def add_table(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
         headers: Dict[str, Dict] = {
