@@ -4,7 +4,7 @@ import pandas as pd
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 from multiqc import config  # I want the ranks to merge by default, not a user problem
-from multiqc.plots.table_object import ColumnDict 
+from multiqc.plots.table_object import ColumnDict
 
 from typing import Dict, Any, cast
 
@@ -54,19 +54,19 @@ class MultiqcModule(BaseMultiqcModule):
         # Want to treat the ranked inference runs as 'sub-samples' for grouping logic, even if not separate files
         if not hasattr(config, "table_sample_merge"):
             config.table_sample_merge = {}
-        
+
         # Some codes generated 5 inferences for 5 models and all 25 are processed. If a user sets more they're an expert and can custom handle
         config.table_sample_merge = {
-            "rank_0":  ["_rank_0"],
-            "rank_1":  ["_rank_1"],
-            "rank_2":  ["_rank_2"],
-            "rank_3":  ["_rank_3"],
-            "rank_4":  ["_rank_4"],
-            "rank_5":  ["_rank_5"],
-            "rank_6":  ["_rank_6"],
-            "rank_7":  ["_rank_7"],
-            "rank_8":  ["_rank_8"],
-            "rank_9":  ["_rank_9"],
+            "rank_0": ["_rank_0"],
+            "rank_1": ["_rank_1"],
+            "rank_2": ["_rank_2"],
+            "rank_3": ["_rank_3"],
+            "rank_4": ["_rank_4"],
+            "rank_5": ["_rank_5"],
+            "rank_6": ["_rank_6"],
+            "rank_7": ["_rank_7"],
+            "rank_8": ["_rank_8"],
+            "rank_9": ["_rank_9"],
             "rank_10": ["_rank_10"],
             "rank_11": ["_rank_11"],
             "rank_12": ["_rank_12"],
@@ -91,8 +91,12 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f)
 
             samplename = f["s_name"].split("_")[0]
-            self.proteinfold_data.setdefault(samplename, {})  # Set default creates if doesn't already exist
+            clean_samplename = self.clean_s_name(samplename, f)
+            self.proteinfold_data.setdefault(clean_samplename, {})  # Set default creates if doesn't already exist
             filepath = Path(f["root"]) / f["fn"]
+
+            if f["fn"].endswith("_msa.tsv"):
+                self.proteinfold_data[samplename]["msa_depth"] = f["f"].count("\n")
 
             if f["fn"].endswith("_plddt.tsv"):
                 df = pd.read_csv(filepath, sep="\t")
@@ -113,31 +117,25 @@ class MultiqcModule(BaseMultiqcModule):
                     self.proteinfold_data.setdefault(subsample, {})
                     self.proteinfold_data[subsample]["mean_plddt"] = rank_means[rank]
 
-            if f["fn"].endswith("_msa.tsv"):
-                df = pd.read_csv(filepath, sep="\t")
-                self.proteinfold_data[samplename]["msa_depth"] = len(df)
-
-            if f["fn"].endswith("_chainwise_iptm.tsv"):
-                df = pd.read_csv(filepath, sep="\t", index_col=0)
-                iptm_values = df.iloc[:, 0]
-                self.proteinfold_data[samplename]["chainwise_iptm"] = iptm_values.to_dict()
-                self.proteinfold_data[samplename]["mean_iptm"] = iptm_values.mean()  # TODO double-check for multiple ranks
             if f["fn"].endswith("_iptm.tsv") and not f["fn"].endswith("_chainwise_iptm.tsv"):
-                iptm_series = cast(pd.Series, pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze(axis=1)) # Squeeze makes a series accessible on index label
-                if 0 in iptm_series.index:  # Since pandas infers the index as an int this is an exact int match not a greedy string match
-                    self.proteinfold_data[samplename]["iptm"] = iptm_series.loc[0]  # Remember loc is an *int* match on rank 0 index
+                iptm_series = cast(
+                    pd.Series, pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze(axis=1)
+                )  # Squeeze makes a series accessible on index label
+                if (
+                    0 in iptm_series.index
+                ):  # Since pandas infers the index as an int this is an exact int match not a greedy string match
+                    self.proteinfold_data[samplename]["iptm"] = iptm_series.loc[
+                        0
+                    ]  # Remember loc is an *int* match on rank 0 index
 
                 for rank_num in iptm_series.index:
                     subsample = f"{samplename}_rank_{rank_num}"
                     self.proteinfold_data.setdefault(subsample, {})["iptm"] = iptm_series.loc[rank_num]
 
-            if f["fn"].endswith("_chainwise_ptm.tsv"):
-                df = pd.read_csv(filepath, sep="\t", index_col=0)
-                ptm_values = df.iloc[:, 0]
-                self.proteinfold_data[samplename]["chainwise_ptm"] = ptm_values.to_dict()
-                self.proteinfold_data[samplename]["mean_ptm"] = ptm_values.mean()  # TODO double-check for multiple ranks
             if f["fn"].endswith("_ptm.tsv") and not f["fn"].endswith("_chainwise_ptm.tsv"):
-                ptm_series = cast(pd.Series, pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze(axis=1)) # Squeeze on axis avoids int conversion for single entries
+                ptm_series = cast(
+                    pd.Series, pd.read_csv(filepath, sep="\t", header=None, index_col=0).squeeze(axis=1)
+                )  # Squeeze on axis avoids int conversion for single entries
                 if 0 in ptm_series.index:
                     self.proteinfold_data[samplename]["ptm"] = ptm_series.loc[0]
 
@@ -145,7 +143,9 @@ class MultiqcModule(BaseMultiqcModule):
                     subsample = f"{samplename}_rank_{rank_num}"
                     self.proteinfold_data.setdefault(subsample, {})["ptm"] = ptm_series.loc[rank_num]
 
-        self.write_data_file(self.proteinfold_data, "proteinfold_data")  # I want to structure and rename from avg_plDDT to summary_stats
+        self.write_data_file(
+            self.proteinfold_data, "proteinfold_data"
+        )  # I want to structure and rename from avg_plDDT to summary_stats
         self.general_stats_table()
         # Togglable plDDT by residue plots of all ranks
         self.plddt_line_plot()
@@ -157,12 +157,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Check for empy metrics to drop those columns where not appropriate
 
         has_iptm = any(
-            sample_data.get("iptm") and sample_data.get("iptm") != 0.0
-            for sample_data in self.proteinfold_data.values()
+            sample_data.get("iptm") and sample_data.get("iptm") != 0.0 for sample_data in self.proteinfold_data.values()
         )
         has_ptm = any(
-            sample_data.get("ptm") and sample_data.get("ptm") != 0.0
-            for sample_data in self.proteinfold_data.values()
+            sample_data.get("ptm") and sample_data.get("ptm") != 0.0 for sample_data in self.proteinfold_data.values()
         )
 
         headers: Dict[str, ColumnDict] = {
@@ -219,20 +217,17 @@ class MultiqcModule(BaseMultiqcModule):
 
         for sample, metrics in self.proteinfold_data.items():
             if "plddt" in metrics:
-                if "_rank_" not in sample: # The parent sample already has the plddt data for all ranks
+                if "_rank_" not in sample:  # The parent sample already has the plddt data for all ranks
                     parent_samples[sample] = metrics["plddt"]
 
-        data_labels = [] # Need a data_labels list for the sample switcher
+        data_labels = []  # Need a data_labels list for the sample switcher
         plot_data_list = []
-        
+
         # The populated data_labels plot config section is what the switcher uses
         for parent_sample, rank_data in parent_samples.items():
-            data_labels.append({
-                "name" : parent_sample,
-                "ylab" : "pLDDT score"
-                })
+            data_labels.append({"name": parent_sample, "ylab": "pLDDT score"})
             plot_data_list.append(rank_data)
-       
+
         pconfig = {
             "id": "proteinfold_plddt_lineplot",
             "title": "ProteinFold: pLDDT by Position",
@@ -240,14 +235,14 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "pLDDT Score",
             "ymin": 0,
             "ymax": 100,
-            "data_labels": data_labels
-        }   
+            "data_labels": data_labels,
+        }
 
         plot_html = linegraph.plot(plot_data_list, pconfig)
 
         self.add_section(
-            name='pLDDT Confidence by residue',
-            anchor='proteinfold-plddt-per-res',
-            description='Per-residue confidence scores across all predicted ranks',
-            plot=plot_html
-        )     
+            name="pLDDT Confidence by residue",
+            anchor="proteinfold-plddt-per-res",
+            description="Per-residue confidence scores across all predicted ranks",
+            plot=plot_html,
+        )
