@@ -10,8 +10,6 @@
 #  3. <working directory>/multiqc_config.yaml
 #################################################################
 
-# TO DO - fix custom_logo to a permalink
-
 title: null
 subtitle: null
 intro_text: null
@@ -194,7 +192,7 @@ highlight_patterns: []
 highlight_colors: []
 highlight_regex: false
 no_version_check: false
-log_filesize_limit: 4000000000
+log_filesize_limit: 50000000
 filesearch_lines_limit: 1000
 filesearch_file_shared: []
 report_readerrors: false
@@ -390,39 +388,15 @@ fn_clean_exts:
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
 # Affects all modules that support it (e.g. fastqc, cutadapt)
-# should it be model_X then pred_X as the nesting? If double nesting even works?
 table_sample_merge:
-  "pred_0": "_pred_0"
-  "pred_1": "_pred_1"
-  "pred_2": "_pred_2"
-  "pred_3": "_pred_3"
-  "pred_4": "_pred_4"
-  "ranked_0": "ranked_0"
-  "ranked_1": "ranked_1"
-  "ranked_2": "ranked_2"
-  "ranked_3": "ranked_3"
-  "ranked_4": "ranked_4"
-  "ranked_5": "ranked_5"
-  "ranked_6": "ranked_6"
-  "ranked_7": "ranked_7"
-  "ranked_8": "ranked_8"
-  "ranked_9": "ranked_9"
-  "ranked_10": "ranked_10"
-  "ranked_11": "ranked_11"
-  "ranked_12": "ranked_12"
-  "ranked_13": "ranked_13"
-  "ranked_14": "ranked_14"
-  "ranked_15": "ranked_15"
-  "ranked_16": "ranked_16"
-  "ranked_17": "ranked_17"
-  "ranked_18": "ranked_18"
-  "ranked_19": "ranked_19"
-  "ranked_20": "ranked_20"
-  "ranked_21": "ranked_21"
-  "ranked_22": "ranked_22"
-  "ranked_23": "ranked_23"
-  "ranked_24": "ranked_24"
-  "ranked_25": "ranked_25"
+#   "R1":
+#     - "_R1"
+#     - type: regex
+#       pattern: "[_.-][rR]?1$"
+#   "R2":
+#     - "_R2"
+#     - type: regex
+#       pattern: "[_.-][rR]?2$"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
