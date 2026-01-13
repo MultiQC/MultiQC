@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.14.0"] # 3.14.1 has upstream bug
+        python-version: ["3.9", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -28,5 +28,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
 
-      - run: pip install '.[dev]'
-      - run: ty check
+      - name: Create virtual environment and install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install '.[dev]'
+
+      - name: Run ty type checker
+        run: |
+          source .venv/bin/activate
+          ty check

@@ -302,6 +302,14 @@ lint.ignore = ["F401"]   # unused-import
 include = ["multiqc", "tests"]
 exclude = ["multiqc/modules"]
 
+# ty is still in beta - ignore some rules that produce false positives with complex generics
+[tool.ty.rules]
+possibly-missing-attribute = "ignore"  # false positives for submodules like yaml.scanner
+invalid-argument-type = "warn"  # often false positives with generics
+invalid-return-type = "warn"  # often false positives with generics
+invalid-assignment = "warn"  # often false positives with TypedDicts and generics
+unresolved-attribute = "warn"  # false positives with dict comprehensions
+
 [tool.pyright]
 include = ["multiqc", "scripts", "tests"]
 ignore = ["**/build", "**/dist", "**/venv*"]
