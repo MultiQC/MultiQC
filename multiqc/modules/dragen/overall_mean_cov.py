@@ -55,7 +55,7 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
         # Just to pass the linting
         # doi=
 
-        return   self.overall_mean_cov_data.keys()
+        return self.overall_mean_cov_data.keys()
 
 
 '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
