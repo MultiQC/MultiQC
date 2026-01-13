@@ -5,6 +5,8 @@ from typing import Dict, List, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
+from multiqc.plots.bargraph import BarPlotConfig
+from multiqc.plots.linegraph import LinePlotConfig
 
 log = logging.getLogger(__name__)
 
@@ -349,20 +351,19 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add RNA reference as special sample if available
         if self.rna_reference_data:
-            plot_data["<b>RNA-seq reference</b>"] = self.rna_reference_data
+            plot_data["RNA-seq reference"] = self.rna_reference_data
 
         # Define categories (order matters for stacked bar)
         cats = ["5' UTR", "CDS", "3' UTR"]
 
-        # Plot configuration
-        pconfig = {
-            "id": "ribowaltz_psite_regions",
-            "title": "riboWaltz: P-site Region Distribution",
-            "ylab": "% of P-sites",
-            "cpswitch": False,
-            "ymax": 100,
-            "ymin": 0,
-        }
+        pconfig = BarPlotConfig(
+            id="ribowaltz_psite_regions",
+            title="riboWaltz: P-site Region Distribution",
+            ylab="% of P-sites",
+            cpswitch=False,
+            ymax=100,
+            ymin=0,
+        )
 
         self.add_section(
             name="P-site Region Distribution",
@@ -408,7 +409,8 @@ translating ribosomes rather than random RNA fragments.
         # Define frame categories
         cats = ["Frame 0", "Frame 1", "Frame 2"]
 
-        # Build sample groups for visual grouping
+        # Build sample groups for visual grouping by region
+        # Format: {"Group Name": [[sample_key, display_name], ...], ...}
         sample_groups: Dict[str, List[List[str]]] = {}
         for region in regions:
             group_samples: List[List[str]] = []
@@ -419,17 +421,16 @@ translating ribosomes rather than random RNA fragments.
             if group_samples:
                 sample_groups[region] = group_samples
 
-        # Plot configuration
-        pconfig = {
-            "id": "ribowaltz_frames",
-            "title": "riboWaltz: Reading Frame Distribution",
-            "ylab": "% of P-sites",
-            "cpswitch": False,
-            "ymax": 100,
-            "ymin": 0,
-            "sample_groups": sample_groups,
-            "use_legend": True,
-        }
+        pconfig = BarPlotConfig(
+            id="ribowaltz_frames",
+            title="riboWaltz: Reading Frame Distribution",
+            ylab="% of P-sites",
+            cpswitch=False,
+            ymax=100,
+            ymin=0,
+            sample_groups=sample_groups,
+            use_legend=True,
+        )
 
         self.add_section(
             name="Reading Frame Distribution",
@@ -459,13 +460,14 @@ Samples are grouped by region (5' UTR, CDS, 3' UTR) for easy comparison.
     def metaprofile_start_linegraph(self):
         """Create line graph for metaprofile around start codon"""
 
-        pconfig = {
-            "id": "ribowaltz_metaprofile_start",
-            "title": "riboWaltz: Metaprofile (Start Codon)",
-            "xlab": "Distance from start codon (nt)",
-            "ylab": "P-site frequency",
-            "x_decimals": False,
-        }
+        pconfig = LinePlotConfig(
+            id="ribowaltz_metaprofile_start",
+            title="riboWaltz: Metaprofile (Start Codon)",
+            xlab="Distance from start codon (nt)",
+            ylab="P-site frequency",
+            x_decimals=False,
+            ymin=0,
+        )
 
         self.add_section(
             name="Metaprofile (Start Codon)",
@@ -495,13 +497,14 @@ Clear periodicity indicates:
     def metaprofile_stop_linegraph(self):
         """Create line graph for metaprofile around stop codon"""
 
-        pconfig = {
-            "id": "ribowaltz_metaprofile_stop",
-            "title": "riboWaltz: Metaprofile (Stop Codon)",
-            "xlab": "Distance from stop codon (nt)",
-            "ylab": "P-site frequency",
-            "x_decimals": False,
-        }
+        pconfig = LinePlotConfig(
+            id="ribowaltz_metaprofile_stop",
+            title="riboWaltz: Metaprofile (Stop Codon)",
+            xlab="Distance from stop codon (nt)",
+            ylab="P-site frequency",
+            x_decimals=False,
+            ymin=0,
+        )
 
         self.add_section(
             name="Metaprofile (Stop Codon)",
