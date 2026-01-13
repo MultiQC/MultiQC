@@ -76,6 +76,7 @@ class MultiQCConfig(BaseModel):
     report_header_info: Optional[List[Dict[str, str]]] = Field(None, description="Report header dictionary")
     show_analysis_paths: Optional[bool] = Field(None, description="Show analysis paths in the report")
     show_analysis_time: Optional[bool] = Field(None, description="Show analysis time in the report")
+    custom_favicon: Optional[str] = Field(None, description="Path to custom favicon image")
     custom_logo: Optional[str] = Field(None, description="Path to custom logo image")
     custom_logo_dark: Optional[str] = Field(None, description="Path to custom logo image for dark mode")
     custom_logo_url: Optional[str] = Field(None, description="URL for custom logo")
