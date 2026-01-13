@@ -17,24 +17,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.13"]
+        python-version: ["3.9", "3.14"]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: "Set up Python ${{ matrix.python-version }}"
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          allow-prereleases: true
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
-      - name: Create virtual environment and install dependencies
-        run: |
-          python -m venv .venv
-          source .venv/bin/activate
-          pip install '.[dev]'
+      - name: "Set up Python ${{ matrix.python-version }}"
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --dev
 
       - name: Run ty type checker
-        run: |
-          source .venv/bin/activate
-          ty check
+        run: uv run ty check
