@@ -1,5 +1,5 @@
-# This file contains the [pre-commit](https://pre-commit.com/) configuration of this repository.
-# More on which specific pre-commit hooks we use can be found in README.md.
+# This file contains the [prek](https://github.com/j178/prek) configuration of this repository.
+# prek is a faster drop-in replacement for pre-commit.
 ---
 minimum_pre_commit_version: "2.9.2"
 repos:

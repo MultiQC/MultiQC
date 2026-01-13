@@ -65,7 +65,7 @@ Assets are automatically built when:
 
 - You run `npm run build` manually
 - You have `npm run watch` running
-- You commit changes (via pre-commit hook)
+- You commit changes (via prek hook)
 
 ### Plotly bundle
 
@@ -86,5 +86,5 @@ For now it seems that tree-shaking does not work well for Plotly. See https://gi
 - The bundled CSS includes Bootstrap 5.3.7 and all custom styles
 - The bundled JS includes Bootstrap 5 and all MultiQC custom JavaScript
 - Third-party libraries (jQuery, Plotly, etc.) are kept separate in `assets/js/packages/`
-- The pre-commit hook ensures built assets are always up-to-date
+- The prek hook ensures built assets are always up-to-date
 - All assets are base64-encoded into the HTML report to make it standalone
