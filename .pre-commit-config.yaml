@@ -37,6 +37,11 @@ repos:
       # Run the formatter.
       - id: ruff-format
 
+  - repo: https://github.com/JacobCoffee/ty-pre-commit
+    rev: "v0.0.1"
+    hooks:
+      - id: ty
+
   - repo: local
     hooks:
       - id: build-assets

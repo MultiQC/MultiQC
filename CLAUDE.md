@@ -27,15 +27,14 @@ pytest tests/test_modules_run.py::test_module_run -v
 ### Linting and Type Checking
 
 ```bash
-# Run pre-commit hooks (includes ruff, mypy, etc.)
+# Run pre-commit hooks (includes ruff, ty, etc.)
 pre-commit run --all-files
 
 # Run ruff linting
 ruff check multiqc/
 
-# Run mypy type checking
-mypy multiqc
-mypy tests
+# Run ty type checking (fast alternative to mypy)
+ty check
 
 # Run custom code style checks
 python .github/workflows/code_checks.py
@@ -149,7 +148,7 @@ All modules follow a consistent pattern:
 
 - All modules are auto-discovered via entry points in `pyproject.toml`
 - File patterns in `search_patterns.yaml` determine which files each module processes
-- The codebase uses type hints extensively with mypy checking
+- The codebase uses type hints extensively with ty checking
 - Tests are located in `tests/` and use pytest framework
 - Code formatting is enforced with ruff
 - The project supports Python 3.9+
