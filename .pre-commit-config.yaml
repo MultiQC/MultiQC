@@ -36,10 +36,14 @@ repos:
       # Run the formatter.
       - id: ruff-format
 
-  - repo: https://github.com/JacobCoffee/ty-pre-commit
-    rev: "v0.0.1"
+  - repo: local
     hooks:
       - id: ty
+        name: ty type checker
+        entry: ty check
+        language: system
+        types: [python]
+        pass_filenames: false
 
   - repo: local
     hooks:

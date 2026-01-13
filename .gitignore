@@ -61,3 +61,4 @@ node_modules/
 .claude/settings.local.json
 
 Pipfile
+.venv/

@@ -14,6 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14.0"
+          cache: "pip"
+
+      - name: Install dependencies for ty type checker
+        run: pip install -e '.[dev]'
+
       - uses: j178/prek-action@v1
 
   code_checks:
