@@ -7,6 +7,7 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.linegraph import LinePlotConfig
+from multiqc.plots.table_object import ColumnDict
 
 log = logging.getLogger(__name__)
 
@@ -299,8 +300,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def ribowaltz_general_stats_table(self):
         """Add key metrics to the general stats table"""
-        headers = {
-            "cds_pct": {
+        headers = {}
+
+        headers["cds_pct"] = ColumnDict(
+            {
                 "title": "CDS %",
                 "description": "Percentage of P-sites mapping to CDS",
                 "max": 100,
@@ -308,8 +311,11 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": "%",
                 "scale": "RdYlGn",
                 "format": "{:,.1f}",
-            },
-            "frame0_cds_pct": {
+            }
+        )
+
+        headers["frame0_cds_pct"] = ColumnDict(
+            {
                 "title": "Frame 0 %",
                 "description": "Percentage of CDS P-sites in Frame 0",
                 "max": 100,
@@ -317,8 +323,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": "%",
                 "scale": "RdYlGn",
                 "format": "{:,.1f}",
-            },
-        }
+            }
+        )
 
         data: dict = {}
 
