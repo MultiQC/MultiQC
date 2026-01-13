@@ -363,6 +363,15 @@ class MultiqcModule(BaseMultiqcModule):
             cpswitch=False,
             ymax=100,
             ymin=0,
+            x_lines=[
+                {
+                    "color": "#0000ff",
+                    "dash": "dash",
+                    "value": 70,
+                    "width": 2,
+                    "label": "Good CDS enrichment (70%)",
+                },
+            ],
         )
 
         self.add_section(
@@ -430,6 +439,22 @@ translating ribosomes rather than random RNA fragments.
             ymin=0,
             sample_groups=sample_groups,
             use_legend=True,
+            x_lines=[
+                {
+                    "color": "#0000ff",
+                    "dash": "dash",
+                    "value": 33.33,
+                    "width": 2,
+                    "label": "Random distribution (1/3)",
+                },
+                {
+                    "color": "#0000ff",
+                    "dash": "dash",
+                    "value": 50,
+                    "width": 2,
+                    "label": "Good Frame 0 enrichment (50%)",
+                },
+            ],
         )
 
         self.add_section(
