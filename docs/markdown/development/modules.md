@@ -186,19 +186,20 @@ plugins for [Prettier](https://github.com/prettier/prettier-vscode).
 
 2. Unless a Python file is located in the root `scripts` directory, it must NOT have shebang lines like `#!/usr/bin/env python`.
 
-### Pre-commit
+### Prek
 
-MultiQC uses [pre-commit](https://pre-commit.com/) to test your code when you open a pull-request.
+MultiQC uses [prek](https://github.com/j178/prek) to test your code when you open a pull-request.
+Prek is a faster, Rust-based drop-in replacement for pre-commit.
 
 It's recommended that you install it yourself in your MultiQC clone directory:
 
 ```bash
-pip install pre-commit # install the tool
-pre-commit install # set up pre-commit in the MultiQC repository
+pip install prek # install the tool
+prek install # set up prek in the MultiQC repository
 ```
 
 This will then automatically run all code checks on the files you have edited when
-you create a commit. Pre-commit cancels the commit if anything fails - sometimes it will
+you create a commit. Prek cancels the commit if anything fails - sometimes it will
 have fixed files for you, in which case just add them and try to commit again. Sometimes
 you will need to read the logs and fix the problem manually.
 

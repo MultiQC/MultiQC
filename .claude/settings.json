@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pre-commit run --files \"$CLAUDE_FILE_PATH\" || true"
+            "command": "prek run --files \"$CLAUDE_FILE_PATH\" || true"
           }
         ]
       }
