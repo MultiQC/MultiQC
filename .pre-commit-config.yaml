@@ -5,7 +5,6 @@ minimum_pre_commit_version: "2.9.2"
 repos:
   - repo: meta
     hooks:
-      - id: identity
       - id: check-hooks-apply
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
