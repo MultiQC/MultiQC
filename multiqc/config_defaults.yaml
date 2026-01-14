@@ -22,7 +22,7 @@ custom_logo_dark: null
 custom_logo_url: null
 custom_logo_title: null
 custom_logo_width: null
-custom_favicon: null  # Path to custom favicon (SVG recommended for all sizes)
+custom_favicon: null # Path to custom favicon (SVG recommended for all sizes)
 custom_css_files: []
 simple_output: false
 template: "default"
