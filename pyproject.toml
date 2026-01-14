@@ -310,10 +310,6 @@ invalid-return-type = "warn"  # often false positives with generics
 invalid-assignment = "warn"  # often false positives with TypedDicts and generics
 unresolved-attribute = "warn"  # false positives with dict comprehensions
 
-[tool.pyright]
-include = ["multiqc", "scripts", "tests"]
-ignore = ["**/build", "**/dist", "**/venv*"]
-
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = ["tests", "multiqc/modules"]
