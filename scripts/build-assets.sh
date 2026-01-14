@@ -1,5 +1,5 @@
 #!/bin/bash
-# Prek hook to build assets with Vite when source files are modified
+# Pre-commit hook to build assets with Vite when source files are modified
 
 # Check if any source files were passed as arguments (prek filters by the files pattern)
 if [ $# -gt 0 ]; then
