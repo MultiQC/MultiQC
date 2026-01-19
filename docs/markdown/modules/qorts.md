@@ -28,5 +28,9 @@ Aids in the detection and identification of errors, biases, and artifacts produc
 qorts:
   contents: BENCHMARK_MinutesOnSamIteration
   num_lines: 100
+qorts/log:
+  contents: Starting QoRTs
+  fn: QC.*.log
+  num_lines: 2
 ```
     

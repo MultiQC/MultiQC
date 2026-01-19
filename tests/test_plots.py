@@ -522,6 +522,59 @@ def test_bar_plot_sample_groups_multiple_entries():
     assert ds["offset_groups"]["Sample2_26nt"] == "Sample2"
 
 
+def test_linegraph_axis_controlled_by_switches_valid():
+    """Test that valid axis_controlled_by_switches values are accepted."""
+    # Test with yaxis only (default behavior)
+    config1 = LinePlotConfig(id="test1", title="Test", axis_controlled_by_switches=["yaxis"])
+    assert config1.axis_controlled_by_switches == ["yaxis"]
+
+    # Test with xaxis only
+    config2 = LinePlotConfig(id="test2", title="Test", axis_controlled_by_switches=["xaxis"])
+    assert config2.axis_controlled_by_switches == ["xaxis"]
+
+    # Test with both axes
+    config3 = LinePlotConfig(id="test3", title="Test", axis_controlled_by_switches=["xaxis", "yaxis"])
+    assert config3.axis_controlled_by_switches == ["xaxis", "yaxis"]
+
+    # Test with None (default)
+    config4 = LinePlotConfig(id="test4", title="Test")
+    assert config4.axis_controlled_by_switches is None
+
+
+def test_linegraph_axis_controlled_by_switches_invalid():
+    """Test that invalid axis_controlled_by_switches values are rejected with a useful error."""
+    with patch("logging.Logger.error") as err:
+        config = LinePlotConfig(id="test", title="Test", axis_controlled_by_switches=["invalid"])
+        assert config.axis_controlled_by_switches is None
+        errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
+        assert "'axis_controlled_by_switches'" in errs
+        assert "Literal['xaxis', 'yaxis']" in errs
+
+
+def test_linegraph_axis_controlled_by_switches_string_instead_of_list():
+    """Test that a flat string instead of a list is rejected with a useful error."""
+    with patch("logging.Logger.error") as err:
+        config = LinePlotConfig(id="test", title="Test", axis_controlled_by_switches="yaxis")  # type: ignore
+        assert config.axis_controlled_by_switches is None
+        errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
+        assert "'axis_controlled_by_switches'" in errs
+        assert "List" in errs
+
+
+def test_linegraph_axis_controlled_by_switches_in_plot():
+    """Test that axis_controlled_by_switches works in actual plot creation."""
+    dataset = {"Sample1": {0: 1, 1: 2}}
+
+    # Test with xaxis
+    plot = _verify_rendered(
+        linegraph.plot(
+            dataset,
+            LinePlotConfig(id="test_axis_xaxis", title="Test", axis_controlled_by_switches=["xaxis"]),
+        )
+    )
+    assert isinstance(plot, linegraph.LinePlot)
+
+
 def test_linegraph_smooth():
     SMOOTH_TO = 2
     dataset = {"Smoothed": {0: 1, 1: 1, 2: 1}, "Unsmoothed": {0: 1, 1: 1}}

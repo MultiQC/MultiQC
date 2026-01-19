@@ -105,16 +105,16 @@ def lane_metrics_plot(self, data):
 
     plot_cats = [
         {
-            "PF_BASES": {"title": "Passing Filter Bases"},
-            "NPF_BASES": {"title": "Non Passing Filter Bases"},
+            "PF_BASES": {"name": "Passing Filter Bases"},
+            "NPF_BASES": {"name": "Non Passing Filter Bases"},
         },
         {
-            "PF_READS": {"title": "Passing Filter Reads"},
-            "NPF_READS": {"title": "Non Passing Filter Reads"},
+            "PF_READS": {"name": "Passing Filter Reads"},
+            "NPF_READS": {"name": "Non Passing Filter Reads"},
         },
         {
-            "PF_CLUSTERS": {"title": "Passing Filter Clusters"},
-            "NPF_CLUSTERS": {"title": "Non Passing Filter Clusters"},
+            "PF_CLUSTERS": {"name": "Passing Filter Clusters"},
+            "NPF_CLUSTERS": {"name": "Non Passing Filter Clusters"},
         },
     ]
     tdata = {}

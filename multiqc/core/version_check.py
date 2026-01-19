@@ -14,6 +14,20 @@ from multiqc.utils.util_functions import strtobool, is_running_in_notebook
 logger = logging.getLogger(__name__)
 
 
+def _is_uv_installed() -> bool:
+    """Check if MultiQC was installed using uv by checking pyvenv.cfg for uv marker."""
+    pyvenv_cfg = os.path.join(sys.prefix, "pyvenv.cfg")
+    if os.path.exists(pyvenv_cfg):
+        try:
+            with open(pyvenv_cfg) as f:
+                for line in f:
+                    if line.strip().startswith("uv ="):
+                        return True
+        except OSError:
+            pass
+    return False
+
+
 def check_version(interactive_function_name: Optional[str] = None):
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is True:
@@ -28,6 +42,7 @@ def check_version(interactive_function_name: Optional[str] = None):
             "is_docker": os.path.exists("/.dockerenv"),
             "is_singularity": os.path.exists("/.singularity.d"),
             "is_conda": os.path.exists(os.path.join(sys.prefix, "conda-meta")),
+            "is_uv": _is_uv_installed(),
             "is_ci": strtobool(os.getenv("CI", False)),
             "is_notebook": is_running_in_notebook(),
             "interactive_function_name": interactive_function_name,

@@ -41,9 +41,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(self.qorts_data)} logs")
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None)
+        # Parse version from log files
+        for f in self.find_log_files("qorts/log"):
+            self.parse_qorts_log(f)
 
         self.write_data_file(self.qorts_data, "multiqc_qorts")
 
@@ -300,3 +300,14 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=bargraph.plot(self.qorts_data, cats, pconfig),
         )
+
+    def parse_qorts_log(self, f):
+        """Parse QoRTs log files to extract version information."""
+        match = re.search(r"Starting QoRTs v(\d+\.\d+[\.\d]*)", f["f"])
+        if match:
+            # Derive sample name from directory (same logic as parse_qorts for single-sample)
+            s_name = self.clean_s_name(os.path.basename(os.path.normpath(f["root"])), f)
+            # Only associate with sample if it exists in our data
+            if s_name not in self.qorts_data:
+                s_name = None
+            self.add_software_version(match.group(1), s_name)

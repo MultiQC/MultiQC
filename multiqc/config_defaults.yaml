@@ -63,7 +63,7 @@ megaqc_url: null
 megaqc_access_token: null
 megaqc_timeout: 30
 export_plots: false
-export_plots_timeout: 30
+export_plots_timeout: 60
 make_report: true
 make_pdf: false
 
@@ -384,6 +384,7 @@ fn_clean_exts:
   - "_totalBaseConversionRate"
   - "_totalReadConversionRate"
   - ".sylphmpa"
+  - "_qual"
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
 # Affects all modules that support it (e.g. fastqc, cutadapt)
@@ -425,6 +426,7 @@ fn_clean_trim:
   - ".phased"
   - ".tar"
   - "runs_"
+  - ".qc"
 
 # Files to ignore when checking content with "content" and "content_re" search patterns.
 fn_ignore_files:

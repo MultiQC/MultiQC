@@ -450,7 +450,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "x",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_zero_cats": False,
                 "ymin": 0,
             }
             if data_labels:
@@ -470,7 +469,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "%",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_zero_cats": False,
                 "ymax": 100,
                 "ymin": 0,
             }

@@ -157,75 +157,80 @@ class MultiqcModule(BaseMultiqcModule):
 
     def motus_filtering_bargraph_plot(self):
         """mOTUs read counts for general stats"""
-        common = {
-            "min": 0,
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": f"{config.read_count_prefix} reads",
-            "tt_decimals": 0,
-            "shared_key": "read_count",
-        }
         cats = {
-            "Number of reads after filtering": dict(common, **{"name": "Reads after mapping"}),
-            "Discarded reads": dict(common, **{"name": "Unmapped reads"}),
+            "Number of reads after filtering": {"name": "Reads after mapping"},
+            "Discarded reads": {"name": "Unmapped reads"},
         }
+
+        # Apply read count multiplier to data
+        plot_data = {}
+        for s_name, data in self.motus_data.items():
+            plot_data[s_name] = {
+                "Number of reads after filtering": float(data.get("Number of reads after filtering", 0))
+                * config.read_count_multiplier,
+                "Discarded reads": float(data.get("Discarded reads", 0)) * config.read_count_multiplier,
+            }
 
         self.add_section(
             name="mOTUs: Read filtering information",
             anchor="motus-filtering",
             description="Read filtering statistics (i.e. mapping of reads to the mOTUs marker database).",
             plot=bargraph.plot(
-                self.motus_data,
+                plot_data,
                 cats,
                 {
                     "id": "motus-filtering-reads",
                     "title": "Motus: Read filtering information",
                     "ylab": "Reads",
+                    "ysuffix": f" {config.read_count_prefix} reads",
+                    "tt_decimals": 0,
                 },
             ),
         )
 
     def motus_mapping_bargraph_plot(self):
         """mOTUs bar chart of insert types"""
-        common = {
-            "min": 0,
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": f"{config.read_count_prefix} reads",
-            "tt_decimals": 0,
-            "shared_key": "read_count",
-        }
         cats = {
-            "Unique mappers": dict(common, **{"name": "Unique mapped inserts", "color": "#3aba5e"}),
-            "Multiple mappers": dict(common, **{"name": "Multiple mapped inserts", "color": "#ebbe59"}),
-            "Ignored multiple mapper without unique hit": dict(
-                common, **{"name": "Ignored multi-mapped inserts", "color": "#cf5565"}
-            ),
+            "Unique mappers": {"name": "Unique mapped inserts", "color": "#3aba5e"},
+            "Multiple mappers": {"name": "Multiple mapped inserts", "color": "#ebbe59"},
+            "Ignored multiple mapper without unique hit": {"name": "Ignored multi-mapped inserts", "color": "#cf5565"},
         }
+
+        # Apply read count multiplier to data
+        plot_data = {}
+        for s_name, data in self.motus_data.items():
+            plot_data[s_name] = {
+                "Unique mappers": float(data.get("Unique mappers", 0)) * config.read_count_multiplier,
+                "Multiple mappers": float(data.get("Multiple mappers", 0)) * config.read_count_multiplier,
+                "Ignored multiple mapper without unique hit": float(
+                    data.get("Ignored multiple mapper without unique hit", 0)
+                )
+                * config.read_count_multiplier,
+            }
 
         self.add_section(
             name="Motus: Insert mapping information",
             anchor="motus-mapping",
             description="How inserts was classified after alignment to MGCs.",
             plot=bargraph.plot(
-                self.motus_data,
+                plot_data,
                 cats,
                 {
                     "id": "motus-mapping-inserts",
                     "title": "Motus: Insert mapping information",
                     "ylab": "Inserts",
+                    "ysuffix": f" {config.read_count_prefix} reads",
+                    "tt_decimals": 0,
                 },
             ),
         )
 
     def motus_motus_bargraph_plot(self):
         """mOTUs bar chart of mOTU types"""
-        common = {
-            "min": 0,
-            "tt_decimals": 0,
-        }
         cats = {
-            "Number of ref-mOTUs": dict(common, **{"name": "Known mOTUs"}),
-            "Number of meta-mOTUs": dict(common, **{"name": "(Unknown) Metagenome mOTUs"}),
-            "Number of ext-mOTUs": dict(common, **{"name": "(Unknown) MAG mOTUs"}),
+            "Number of ref-mOTUs": {"name": "Known mOTUs"},
+            "Number of meta-mOTUs": {"name": "(Unknown) Metagenome mOTUs"},
+            "Number of ext-mOTUs": {"name": "(Unknown) MAG mOTUs"},
         }
 
         self.add_section(
@@ -239,6 +244,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "id": "motus-identification-types",
                     "title": "Motus: mOTU identification information",
                     "ylab": "Motus",
+                    "tt_decimals": 0,
                 },
             ),
         )
