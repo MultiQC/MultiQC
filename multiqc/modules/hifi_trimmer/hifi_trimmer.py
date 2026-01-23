@@ -234,7 +234,23 @@ class MultiqcModule(BaseMultiqcModule):
     def hifi_trimmer_reads_barplot(self):
         """Generate a horizontal bar plot showing read statistics"""
 
+        # Prepare data with calculated unprocessed reads
+        plot_data = {}
+        for s_name, data in self.hifi_trimmer_data.items():
+            plot_data[s_name] = {
+                "total_reads_kept": data.get("total_reads_kept", 0),
+                "total_reads_trimmed": data.get("total_reads_trimmed", 0),
+                "total_reads_discarded": data.get("total_reads_discarded", 0),
+            }
+            # Add unprocessed reads if we have sample totals from samtools stats
+            if "sample_total_reads" in data:
+                sample_total = data["sample_total_reads"]
+                processed_total = data.get("total_reads_processed", 0)
+                if sample_total > processed_total:
+                    plot_data[s_name]["unprocessed_reads"] = sample_total - processed_total
+
         cats = {
+            "unprocessed_reads": {"name": "Unprocessed Reads", "color": "#95a5a6"},
             "total_reads_kept": {"name": "Reads Kept", "color": "#2ecc71"},
             "total_reads_trimmed": {"name": "Reads Trimmed", "color": "#f39c12"},
             "total_reads_discarded": {"name": "Reads Discarded", "color": "#e74c3c"},
@@ -248,12 +264,27 @@ class MultiqcModule(BaseMultiqcModule):
             "hide_zero_cats": False,
         }
 
-        return bargraph.plot(self.hifi_trimmer_data, cats, config)
+        return bargraph.plot(plot_data, cats, config)
 
     def hifi_trimmer_bases_barplot(self):
         """Generate a horizontal bar plot showing base statistics"""
 
+        # Prepare data with calculated unprocessed bases
+        plot_data = {}
+        for s_name, data in self.hifi_trimmer_data.items():
+            plot_data[s_name] = {
+                "total_bases_kept": data.get("total_bases_kept", 0),
+                "total_bases_removed": data.get("total_bases_removed", 0),
+            }
+            # Add unprocessed bases if we have sample totals from samtools stats
+            if "sample_total_bases" in data:
+                sample_total = data["sample_total_bases"]
+                processed_total = data.get("total_bases_processed", 0)
+                if sample_total > processed_total:
+                    plot_data[s_name]["unprocessed_bases"] = sample_total - processed_total
+
         cats = {
+            "unprocessed_bases": {"name": "Unprocessed Bases", "color": "#95a5a6"},
             "total_bases_kept": {"name": "Bases Kept", "color": "#3498db"},
             "total_bases_removed": {"name": "Bases Removed", "color": "#e74c3c"},
         }
@@ -266,4 +297,4 @@ class MultiqcModule(BaseMultiqcModule):
             "hide_zero_cats": False,
         }
 
-        return bargraph.plot(self.hifi_trimmer_data, cats, config)
+        return bargraph.plot(plot_data, cats, config)
