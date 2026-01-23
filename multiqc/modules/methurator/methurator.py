@@ -232,7 +232,8 @@ class MultiqcModule(BaseMultiqcModule):
                     sample_data["minimum_coverage"] = min_cov
                     for prediction in predictions["data"]:
                         if float(prediction[0]) == 1.0:
-                            sample_data["observed_CpGs"] = prediction[3]
+                            # prediction -> [t, CpGs, CI lower, CI higher]
+                            sample_data["observed_CpGs"] = prediction[1]
                             break
             samples_data[sample_name] = sample_data
         return samples_data
@@ -328,7 +329,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for point in sat_points:
                     if len(point) >= 3:
                         t_val = point[0]  # t-value as x-axis
-                        cpgs = point[3]  # total_cpgs as y-axis
+                        cpgs = point[1]  # total_cpgs as y-axis
                         sample_curve[float(t_val)] = float(cpgs)
 
                 if sample_curve:
