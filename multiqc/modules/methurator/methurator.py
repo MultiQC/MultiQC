@@ -1,5 +1,6 @@
 import logging
 from typing import Dict, Any
+from packaging.version import Version
 
 import yaml
 
@@ -57,8 +58,10 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             # Extract sample data from the parsed YAML
+            samples_data = {}
             command = parsed.get("methurator_summary", {}).get("metadata", {}).get("command")
-            if command == "methurator gt_estimator":
+            version = parsed.get("methurator_summary", {}).get("metadata", {}).get("methurator_version")
+            if command == "methurator gt_estimator" and Version(version) >= Version("2.1.0"):
                 samples_data = self._extract_gtestimator_sample_data(parsed)
             elif command == "methurator downsample":
                 samples_data = self._extract_downsample_sample_data(parsed)
@@ -228,12 +231,14 @@ class MultiqcModule(BaseMultiqcModule):
             # Extract key metrics for general stats (use minimum_coverage=1 as default)
             # Get total CpGs at t = 1
             for min_cov, predictions in sample_data["saturation_analysis"].items():
-                if min_cov == 1:
+                if min_cov == min(sample_data["saturation_analysis"].keys()):
                     sample_data["minimum_coverage"] = min_cov
+                    sample_data["asymptote"] = predictions["asymptote(1000t)"]
                     for prediction in predictions["data"]:
                         if float(prediction[0]) == 1.0:
-                            # prediction -> [t, CpGs, CI lower, CI higher]
-                            sample_data["observed_CpGs"] = prediction[1]
+                            # prediction -> [t, saturation, CpGs, CI lower, CI higher]
+                            sample_data["observed_CpGs"] = prediction[2]
+                            sample_data["saturation"] = prediction[1]
                             break
             samples_data[sample_name] = sample_data
         return samples_data
@@ -289,6 +294,8 @@ class MultiqcModule(BaseMultiqcModule):
             general_stats_data[s_name] = {
                 "minimum_coverage": data.get("minimum_coverage"),
                 "observed_CpGs": data.get("observed_CpGs"),
+                "asymptote": data.get("asymptote"),
+                "saturation": data.get("saturation"),
             }
 
         headers = {
@@ -304,6 +311,20 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.0f}",
                 "scale": "Blues",
             },
+            "asymptote": {
+                "title": "Asymptote",
+                "description": "Theoretical maximum number of CpGs at t = 1000",
+                "format": "{:,.0f}",
+                "scale": "BuPu",
+            },
+            "saturation": {
+                "title": "Saturation",
+                "description": "CpG sequencing saturation (percentage of theoretical maximum CpGs detected)",
+                "suffix": "%",
+                "max": 100,
+                "min": 0,
+                "scale": "RdYlGn",
+            },
         }
 
         self.general_stats_addcols(general_stats_data, headers)
@@ -311,7 +332,7 @@ class MultiqcModule(BaseMultiqcModule):
     def _add_gtestimator_saturation_plot(self):
         """Add the CpG saturation curve plot showing CpGs vs t-values for GT estimator format.
 
-        GT data points are: [t, extrapolated, total_cpgs, ci_low, ci_high]
+        GT data points are: [t, saturation, total_cpgs, ci_low, ci_high]
         """
         # Collect plot data for each sample, one dataset per minimum coverage level
         plot_data_by_coverage: Dict[int, Dict[str, Dict[float, float]]] = {}
@@ -323,13 +344,13 @@ class MultiqcModule(BaseMultiqcModule):
                 if min_cov not in plot_data_by_coverage:
                     plot_data_by_coverage[min_cov] = {}
 
-                # Extract GT data points: [t, extrapolated, total_cpgs, ci_low, ci_high]
+                # Extract GT data points: [t, saturation, total_cpgs, ci_low, ci_high]
                 sat_points = sat_data.get("data", [])
                 sample_curve: Dict[float, float] = {}
                 for point in sat_points:
                     if len(point) >= 3:
                         t_val = point[0]  # t-value as x-axis
-                        cpgs = point[1]  # total_cpgs as y-axis
+                        cpgs = point[2]  # total_cpgs as y-axis
                         sample_curve[float(t_val)] = float(cpgs)
 
                 if sample_curve:
