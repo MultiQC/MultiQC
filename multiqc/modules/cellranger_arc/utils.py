@@ -12,14 +12,14 @@ def table_data_and_headers(
     namespace: Optional[str] = None,
 ) -> Tuple[Dict, Dict]:
     """Update the data dict and headers dict
-    
+
     Args:
         rows_list: List of tuples containing column names and data values
         help: List of tuples containing help text for each column
         namespace: Optional namespace prefix (e.g., "ATAC", "GEX") to prevent key collisions.
                    Keys in the returned dicts will be prefixed with "{namespace}_" if provided,
                    while display titles remain clean (without prefix).
-    
+
     Returns:
         Tuple of (table dict, headers dict) with optionally prefixed keys
     """
@@ -41,7 +41,7 @@ def table_data_and_headers(
 
         # Apply namespace prefix to key if provided
         key = f"{namespace}_{col_name}" if namespace else col_name
-        
+
         table[key] = col_data
 
         # Assign shared/regular keys
@@ -83,7 +83,7 @@ def table_data_and_headers(
 
 def set_hidden_cols(headers, col_names):
     """Set the hidden columns
-    
+
     Note: This function handles both prefixed keys (e.g., "ATAC_Percent duplicates")
     and unprefixed keys. It will try to find the key in headers and set it as hidden.
     """
@@ -99,12 +99,12 @@ def set_hidden_cols(headers, col_names):
 
 def subset_header(data, cols, namespace=None):
     """Subsets the headers to only columns in cols. Adds colour and namespace
-    
+
     Args:
         data: The complete headers dictionary (may contain prefixed keys)
         cols: Dictionary mapping column names to color scales
         namespace: Optional namespace for the plot display
-    
+
     Note: This function handles prefixed keys in the data dict. It looks up keys
     from cols in the data dict, which may have namespace prefixes applied.
     """
@@ -118,7 +118,7 @@ def subset_header(data, cols, namespace=None):
             # If exact match fails, skip this key (it may not exist in this dataset)
             log.debug(f"Key '{key}' not found in headers data")
             continue
-            
+
         headers[key]["scale"] = val
         headers[key]["namespace"] = namespace
 

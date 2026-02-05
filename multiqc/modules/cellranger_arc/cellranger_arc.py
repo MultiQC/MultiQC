@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_html_summary(self, summary):
         """
         Cell Ranger ARC report parser
-        
+
         Parses data in three separate calls to prevent key collisions:
         1. Joint metrics (no namespace) - shared metrics
         2. ATAC metrics (namespace="ATAC") - ATAC-specific metrics
@@ -144,13 +144,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse joint metrics (no namespace prefix)
         joint_data_rows = summary["joint_metrics_table"]["rows"]
         joint_help_text = summary["joint_metrics_helptext"]["data"]
-        
+
         joint_parsed, joint_headers = table_data_and_headers(
             joint_data_rows,
             joint_help_text,
             namespace=None,
         )
-        
+
         # Parse ATAC metrics (with ATAC namespace prefix)
         atac_data_rows = (
             summary["atac_sequencing_table"]["rows"]
@@ -164,13 +164,13 @@ class MultiqcModule(BaseMultiqcModule):
             + summary["atac_mapping_helptext"]["data"]
             + summary["atac_targeting_helptext"]["data"]
         )
-        
+
         atac_parsed, atac_headers = table_data_and_headers(
             atac_data_rows,
             atac_help_text,
             namespace="ATAC",
         )
-        
+
         # Parse GEX metrics (with GEX namespace prefix)
         gex_data_rows = (
             summary["gex_sequencing_table"]["rows"]
@@ -182,13 +182,13 @@ class MultiqcModule(BaseMultiqcModule):
             + summary["gex_cells_helptext"]["data"]
             + summary["gex_mapping_helptext"]["data"]
         )
-        
+
         gex_parsed, gex_headers = table_data_and_headers(
             gex_data_rows,
             gex_help_text,
             namespace="GEX",
         )
-        
+
         # Merge all parsed data and headers
         parsed_data = {**joint_parsed, **atac_parsed, **gex_parsed}
         self.all_headers = {**joint_headers, **atac_headers, **gex_headers}
@@ -215,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
     def general_stats_table(self, data_by_sample, data_headers):
         """
         Takes the entire data by sample, subset and add it to the basic stats table
-        
+
         Note: Uses prefixed keys for ATAC/GEX-specific metrics to avoid collisions.
         Joint metrics (Feature linkages, Linked genes/peaks) remain unprefixed.
         """
