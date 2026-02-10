@@ -321,7 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_removal_retained_chart(self):
         pconfig = {
             "title": "Adapter Removal: Discarded Reads",
-            "id": f"{self.anchor}_plot",
+            "id": f"{self.anchor}_retained_plot",
             "ylab": "# Reads",
             "hide_zero_cats": False,
             "cpswitch_counts_label": "Number of Reads",
@@ -350,7 +350,7 @@ class MultiqcModule(BaseMultiqcModule):
             retained_chart_description = "The number of input sequences that were retained and discarded."
         self.add_section(
             name="Retained and Discarded Reads",
-            anchor="adapter_removal_retained",
+            anchor=f"{self.anchor}_retained",
             description=retained_chart_description,
             plot=bargraph.plot(self.adapter_removal_data, cats_pec, pconfig),
         )
@@ -358,7 +358,7 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_removal_length_dist_plot(self):
         pconfig = {
             "title": "Adapter Removal: Length Distribution",
-            "id": f"{self.anchor}_plot",
+            "id": f"{self.anchor}_length_dist_plot",
             "ylab": "Counts",
             "xlab": "read length",
             "x_decimals": False,
@@ -394,7 +394,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Length Distribution",
-            anchor="adapter_removal_length_dist",
+            anchor=f"{self.anchor}_length_dist",
             description="The length distribution of reads after processing adapter alignment.",
             plot=linegraph.plot(lineplot_data, pconfig),
         )
