@@ -103,8 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Quality Scores",
             anchor="fastqe-quality",
-            description="Per-base quality scores represented as emoji. "
-            "Each emoji maps to a Phred quality score range.",
+            description="Per-base quality scores represented as emoji. Each emoji maps to a Phred quality score range.",
             plot=self._fastqe_emoji_table(fastqe_data),
         )
 

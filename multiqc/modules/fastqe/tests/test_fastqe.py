@@ -45,7 +45,7 @@ class TestFastqeParsing:
         assert len(m.sections) >= 1
 
     def test_general_stats(self, data_dir):
-        m = run_module(data_dir)
+        run_module(data_dir)
         assert len(report.general_stats_data) > 0
 
     def test_numeric_stats(self, data_dir):
