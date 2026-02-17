@@ -39,12 +39,13 @@ general release.
 
 ## Images
 
-As of MultiQC v1.7, you can import custom images into your MultiQC reports.
-Simply add `_mqc` to the end of the filename for `.png`, `.jpg` or `.jpeg` files, for example:
+It is possible to import custom images into your MultiQC reports.
+Simply add `_mqc` to the end of the filename for `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` or `.tiff` files, for example:
 `my_image_file_mqc.png` or `summmary_diagram.jpeg`.
 
 Images will be embedded within the HTML file, so will be self contained.
 Note that this means that it's very possible to make the HTML file very very large if abused!
+Images are base64 encoded in the HTML and the report will often be larger than the binary source images.
 
 The report section name and description will be automatically based on the filename.
 
@@ -91,7 +92,7 @@ This example YAML file is data only, and is not to be confused with a config fil
 See the docs [Data as part of MultiQC config](#data-as-part-of-multiqc-config) for more on that.
 :::
 
-The file format can also be JSON:
+The file format can also be JSON. Note however that JSON doesn't preserve the order of elements in dicts, thus the preferred way to specify the series data points is through a list of tuples. For example:
 
 ```json
 {
@@ -106,8 +107,20 @@ The file format can also be JSON:
     "xDecimals": false
   },
   "data": {
-    "sample_1": { "1": 12, "2": 14, "3": 10, "4": 7, "5": 16 },
-    "sample_2": { "1": 9, "2": 11, "3": 15, "4": 18, "5": 21 }
+    "sample_1": [
+      [1, 12],
+      [2, 14],
+      [3, 10],
+      [4, 7],
+      [5, 16]
+    ],
+    "sample_2": [
+      [1, 9],
+      [2, 11],
+      [3, 15],
+      [4, 18],
+      [5, 21]
+    ]
   }
 }
 ```
@@ -364,6 +377,7 @@ section_anchor: <id> # Used in report section #soft-links
 section_name: <id> # Nice name used for the report section header
 section_href: null # External URL for the data, to find more information
 description: null # Introductory text to be printed under the section header
+helptext: null # Help text to be shown in a collapsible box (toggled with a help button)
 section_extra: null # Custom HTML to add after the section description
 file_format: null # File format of the data (eg. csv / tsv)
 plot_type:
@@ -424,6 +438,17 @@ Alternatively, you can customise the column name by including a 'header row' in 
 or `csv` itself specifying the column names, with the first column with the name of your choice, and
 subsequent columns including the key(s) defined in the header.
 
+### Quoting strings
+
+If you happen to use sample names or other values that appear number-like, and want to prevent MultiQC from attempt to parse them, you can quote them. For example, in this TSV defining a table all values would have been interpreted as numbers if they were not wrapped in quotes `"`:
+
+```
+# plot_type: "table"
+Sample Name,Size,Representative Id
+"01",100,"1446399400_1_131"
+"02",120,"782510898_278_395"
+```
+
 ## Linting
 
 MultiQC has been developed to be as forgiving as possible and will handle lots of
@@ -448,4 +473,4 @@ The MultiQC automated testing runs with a
 which you can look through for inspiration.
 
 For example, to see a file which generates a table in a report by itself, you can
-have a look at `embedded_config/table_headers_mqc.txt` ([link](https://github.com/MultiQC/test-data/blob/main/data/custom_content/embedded_config/table_headers_mqc.txt)).
+have a look at `embedded_config/table_headers_txt_mqc.txt` ([link](https://github.com/MultiQC/test-data/blob/main/data/custom_content/embedded_config/table_headers_txt_mqc.txt)).

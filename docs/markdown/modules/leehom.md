@@ -1,7 +1,8 @@
 ---
 title: leeHom
+displayed_sidebar: multiqcSidebar
 description: >
-  Bayesian reconstruction of ancient DNA
+    <p>Bayesian reconstruction of ancient DNA.</p>
 ---
 
 <!--
@@ -14,7 +15,7 @@ File path for the source of this content: multiqc/modules/leehom/leehom.py
 -->
 
 :::note
-Bayesian reconstruction of ancient DNA
+<p>Bayesian reconstruction of ancient DNA.</p>
 
 [https://github.com/grenaud/leeHom](https://github.com/grenaud/leeHom)
 :::
@@ -31,3 +32,4 @@ leehom:
   contents: Adapter dimers/chimeras
   num_lines: 100
 ```
+    

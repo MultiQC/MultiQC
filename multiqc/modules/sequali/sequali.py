@@ -2,7 +2,7 @@ import json
 import logging
 import textwrap
 from collections import defaultdict
-from typing import Dict, Any
+from typing import Any, Dict, List
 
 import multiqc
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -48,6 +48,31 @@ def avg_x_label(x_label: str):
     return min_x + ((max_x - min_x) // 2)
 
 
+def get_insert_size_estimate(insert_sizes: List[int]) -> int:
+    """
+    Given a list of counts, return the cell index with the median count
+    :param insert_sizes: List of insert size counts where index represents insert size
+    :return: Estimated insert size (index of median count)
+    """
+    # Check if insert_sizes is empty or not a list
+    if not insert_sizes or not isinstance(insert_sizes, list):
+        return 0
+
+    total_insert_size_count = sum(insert_sizes)
+    if total_insert_size_count == 0:
+        return 0
+
+    index_count = 0
+    for i, insert_size_count in enumerate(insert_sizes):
+        if i == 0:
+            continue
+        index_count += insert_size_count
+        if index_count >= total_insert_size_count / 2:
+            # Insert size is represented by the index
+            return i
+    return len(insert_sizes) - 1
+
+
 def prune_sample_dict(sample_dict: Dict[str, Any]):
     """
     Function to remove unused keys from the parsed data. This prevents loading
@@ -91,7 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
             Features adapter search, overrepresented sequence  analysis and duplication analysis and supports
             FASTQ and uBAM inputs.
             """,
-            doi="10.5281/zenodo.10822485",
+            doi="10.1093/bioadv/vbaf010",
         )
 
         versions = set()
@@ -159,6 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.per_sequence_gc_content_plot(data)
         self.sequence_length_distribution_plot(data)
         self.sequence_duplication_levels_plot(data)
+        self.insert_size_distribution_plot(data)
         self.top_overrepresented_sequences_table(data)
         self.adapter_content_plot(data)
         self.adapter_content_from_overlap(data)
@@ -176,6 +202,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "sequali_duplication_percentage": (1 - sample_dict["duplication_fractions"]["remaining_fraction"])
                 * 100,
             }
+
+            # Add insert size estimate if available
+            insert_size_metrics = sample_dict.get("insert_size_metrics")
+            if insert_size_metrics and "insert_sizes" in insert_size_metrics:
+                insert_size_estimate = get_insert_size_estimate(insert_size_metrics["insert_sizes"])
+                if insert_size_estimate > 0:
+                    stats_entry["sequali_insert_size_estimate"] = insert_size_estimate
+
             general_stats[sample_name] = stats_entry
         headers = {
             "sequali_gc_percentage": {
@@ -227,6 +261,16 @@ class MultiqcModule(BaseMultiqcModule):
                 # The more the worse. Use Reds to signal.
                 "scale": "Reds",
             },
+            "sequali_insert_size_estimate": {
+                "title": "Insert Size",
+                "description": "Estimated insert size based on median of histogram",
+                "min": 0,
+                "suffix": " bp",
+                "format": "{:,}",
+                # Larger insert sizes could be good or bad depending on context
+                # Use a neutral color scale
+                "scale": "Blues",
+            },
         }
         self.general_stats_addcols(general_stats, headers)
 
@@ -250,7 +294,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Sequali: Sequence Counts",
                 "ylab": "Number of reads",
                 "cpswitch_counts_label": "Number of reads",
-                "hide_empty": False,
+                "hide_zero_cats": False,
             },
         )
 
@@ -523,6 +567,51 @@ class MultiqcModule(BaseMultiqcModule):
             plot=linegraph.plot(plot_data, plot_config),
         )
 
+    def insert_size_distribution_plot(self, data):
+        """Plot showing insert size distribution from paired-end data"""
+        plot_data = {}
+        has_insert_size_data = False
+
+        for sample_name, sample_dict in data.items():
+            insert_size_metrics = sample_dict.get("insert_size_metrics")
+            if insert_size_metrics and "insert_sizes" in insert_size_metrics:
+                insert_sizes = insert_size_metrics["insert_sizes"]
+
+                # Skip first element (index 0) as it often contains unmapped/invalid data
+                # and only plot data where we have meaningful counts
+                sample_data = {}
+                for i, count in enumerate(insert_sizes):
+                    if i > 0 and count > 0:  # Skip index 0 and zero counts
+                        sample_data[i] = count
+
+                if sample_data:
+                    plot_data[sample_name] = sample_data
+                    has_insert_size_data = True
+
+        if not has_insert_size_data:
+            return
+
+        plot_config = {
+            "id": "sequali_insert_size_distribution_plot",
+            "title": "Sequali: Insert Size Distribution",
+            "ylab": "Number of Read Pairs",
+            "xlab": "Insert Size",
+            "ymin": 0,
+            "xmin": 0,
+        }
+
+        self.add_section(
+            name="Insert Size Distribution",
+            anchor="sequali_insert_size_distribution",
+            description="Distribution of insert sizes for paired-end reads.",
+            helptext="""
+            Insert size is calculated as the distance between the start of read 1 and 
+            the end of read 2 in properly paired reads. The median insert size is 
+            included in the general statistics table.
+            """,
+            plot=linegraph.plot(plot_data, plot_config),
+        )
+
     def top_overrepresented_sequences_table(self, data):
         for read in (1, 2):
             if read == 2 and not self.paired_end:
@@ -719,8 +808,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "most_common_adapter_read1": {
                 "title": "Most common adapter for read 1.",
-                "description": "The most common adapter for read 1 as based on the overlap "
-                "between read 1 and read 2.",
+                "description": "The most common adapter for read 1 as based on the overlap between read 1 and read 2.",
             },
             "adapter_content_read2": {
                 "title": "Read 2: adapter content",
@@ -733,8 +821,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "most_common_adapter_read2": {
                 "title": "Most common adapter for read 2.",
-                "description": "The most common adapter for read 1 as based on the overlap "
-                "between read 1 and read 2.",
+                "description": "The most common adapter for read 1 as based on the overlap between read 1 and read 2.",
             },
         }
         self.add_section(

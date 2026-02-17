@@ -84,6 +84,10 @@ your own `header.html` which will overwrite the default header.
 Files within the default template have comments at the top explaining what
 part of the report they generate.
 
+Child templates can also inherit template functions from their parent. For example,
+the default template provides the `material_icon` function which can be used
+in any child template without additional configuration.
+
 ## Extra init variables
 
 There are a few extra variables that can be added to the `__init__.py` file
@@ -110,6 +114,19 @@ copy_files = ['assets']
 config.plots_force_flat = True
 ```
 
+## Development mode
+
+When developing a template, you can use the `development: true` config option
+or the `--development` command line flag. This instructs MultiQC not to embed source files
+directly into the HTML and instead link to the MultiQC source code files:
+
+- JavaScript and CSS files are loaded directly from the source code template directory instead of being embedded
+- Plot images are linked from external files rather than being embedded as base64 data URIs
+- Plot data is exported as an uncompressed JSON file (`multiqc_plots.js`) in the data directory
+
+This allows you to see changes to your template files immediately without rebuilding or
+recompiling. Simply refresh the report in your browser after making changes.
+
 ## Jinja template variables
 
 There are a number of variables that you can use within your Jinja template.
@@ -132,6 +149,28 @@ function. For example:
 </script>
 <img src="data:image/png;base64,{{ include_file('img/logo.png', b64=True) }}" />
 ```
+
+### Material Design Icons
+
+The default template includes a `material_icon` function that embeds Material Design
+Icons as inline SVG. This function is available to child templates that inherit from
+the default template. Usage:
+
+```jinja
+{{ material_icon('delete') }}
+{{ material_icon('warning', 16) }}
+{{ material_icon('info', 20, '#0066cc') }}
+```
+
+The function takes three parameters:
+
+- `icon_name` (required): Name of the Material Design Icon (e.g., 'delete', 'info', 'warning')
+- `size` (optional, default 24): Size of the icon in pixels
+- `color` (optional, default 'currentColor'): Color of the icon
+
+The function will try to load the filled variant first, then fall back to the outlined
+variant if the filled version is not found. If the icon cannot be found, it returns an
+empty string. In strict mode (`--strict`), missing icons will be reported as errors.
 
 ## Appendices
 

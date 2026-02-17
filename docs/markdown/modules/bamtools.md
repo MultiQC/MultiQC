@@ -1,7 +1,8 @@
 ---
 title: Bamtools
+displayed_sidebar: multiqcSidebar
 description: >
-  Provides both a programmer's API and an end-user's toolkit for handling BAM files
+    <p>Provides both a programmer's API and an end-user's toolkit for handling BAM files.</p>
 ---
 
 <!--
@@ -14,7 +15,7 @@ File path for the source of this content: multiqc/modules/bamtools/bamtools.py
 -->
 
 :::note
-Provides both a programmer's API and an end-user's toolkit for handling BAM files
+<p>Provides both a programmer's API and an end-user's toolkit for handling BAM files.</p>
 
 [https://github.com/pezmaster31/bamtools](https://github.com/pezmaster31/bamtools)
 :::
@@ -27,6 +28,7 @@ Supported commands: `stats`
 
 ```yaml
 bamtools/stats:
-  contents: "Stats for BAM file(s):"
+  contents: 'Stats for BAM file(s):'
   num_lines: 10
 ```
+    

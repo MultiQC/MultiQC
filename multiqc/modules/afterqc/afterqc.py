@@ -148,6 +148,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "AfterQC: Filtered Reads",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
         return bargraph.plot(self.afterqc_data, keys, pconfig)

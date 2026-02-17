@@ -1,7 +1,8 @@
 ---
 title: Bcftools
+displayed_sidebar: multiqcSidebar
 description: >
-  Utilities for variant calling and manipulating VCFs and BCFs
+    <p>Utilities for variant calling and manipulating VCFs and BCFs.</p>
 ---
 
 <!--
@@ -14,7 +15,7 @@ File path for the source of this content: multiqc/modules/bcftools/bcftools.py
 -->
 
 :::note
-Utilities for variant calling and manipulating VCFs and BCFs
+<p>Utilities for variant calling and manipulating VCFs and BCFs.</p>
 
 [https://samtools.github.io/bcftools/](https://samtools.github.io/bcftools/)
 :::
@@ -26,7 +27,7 @@ Supported commands: `stats`
 In non-strand-specific data, reporting the total numbers of occurences for both changes
 in a comlementary pair - like `A>C` and `T>G` - might not bring any additional information.
 To collapse such statistics in the substitutions plot, you can add the following section into
-[your configuration](https://docs.seqera.io/multiqc/getting_started/config):
+[your configuration](../getting_started/config):
 
 ```yaml
 bcftools:
@@ -42,3 +43,4 @@ in the resulting plot.
 bcftools/stats:
   contents: This file was produced by bcftools stats
 ```
+    

@@ -1,7 +1,8 @@
 ---
 title: MetaPhlAn
+displayed_sidebar: multiqcSidebar
 description: >
-  Profiles the composition of microbial communities from metagenomic shotgun sequencing data
+    <p>Profiles the composition of microbial communities from metagenomic shotgun sequencing data.</p>
 ---
 
 <!--
@@ -14,7 +15,7 @@ File path for the source of this content: multiqc/modules/metaphlan/metaphlan.py
 -->
 
 :::note
-Profiles the composition of microbial communities from metagenomic shotgun sequencing data
+<p>Profiles the composition of microbial communities from metagenomic shotgun sequencing data.</p>
 
 [https://github.com/biobakery/MetaPhlAn](https://github.com/biobakery/MetaPhlAn)
 :::
@@ -22,9 +23,9 @@ Profiles the composition of microbial communities from metagenomic shotgun seque
 The module supports outputs from MetaPhlAn, that look like the following:
 
 ```tsv
-k__Bacteria 2       100.0
-k__Bacteria|p__Firmicutes   2|1239  44.30422
-k__Bacteria|p__Bacteroidetes        2|976   34.73101
+k__Bacteria	2	100.0
+k__Bacteria|p__Firmicutes	2|1239	44.30422
+k__Bacteria|p__Bacteroidetes	2|976	34.73101
 ```
 
 A bar graph is generated that shows the relative abundance for each sample that
@@ -45,5 +46,6 @@ metaphlan:
 ```yaml
 metaphlan:
   contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
-  fn: "*.txt"
+  fn: '*.txt'
 ```
+    

@@ -38,7 +38,7 @@ and MultiQC is below.
 See the [nf-core](https://nf-co.re/) pipelines for lots of examples of full nextflow
 pipelines that use MultiQC.
 
-```groovy
+```nextflow
 #!/usr/bin/env nextflow
 
 params.reads = "data/*{1,2}.fastq.gz"
@@ -99,7 +99,7 @@ for MultiQC.
 We get around this by using [dynamic input file names](https://www.nextflow.io/docs/latest/process.html#dynamic-input-file-names)
 with nextflow:
 
-```groovy
+```nextflow
 file ('stringtie/stringtie_log*') from stringtie_log.collect().ifEmpty([])
 ```
 
@@ -117,7 +117,7 @@ MultiQC. It can then be used as the report title and filename.
 
 Here's an example snippet for this:
 
-```groovy
+```nextflow
 custom_runName = params.name
 if( !(workflow.runName ==~ /[a-z]+_[a-z]+/) ){
   custom_runName = workflow.runName
@@ -157,7 +157,7 @@ so that nextflow correctly stages it (especially important when running on the c
 This snippet works with a `params` variable again, so that pipeline users can replace
 the config file with one of their own if they wish.
 
-```groovy
+```nextflow
 params.multiqc_config = "$baseDir/assets/multiqc_config.yaml"
 Channel.fromPath(params.multiqc_config, checkIfExists: true).set { ch_config_for_multiqc }
 

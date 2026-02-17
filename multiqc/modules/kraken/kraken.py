@@ -292,6 +292,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": f"{self.name}: Top taxa",
             "ylab": "Number of fragments",
             "data_labels": [v for k, v in MultiqcModule.T_RANKS.items() if k in found_rank_codes],
+            "tt_decimals": 0,
         }
 
         self.add_section(
@@ -418,7 +419,7 @@ def parse_logs(
     for i, line in enumerate(f["f"]):
         fields = line.split("\t")
         if len(fields) < 6:
-            log.error(f"Error parsing Kraken report: {f['fn']} line {i+1} has less than 6 fields: {line}")
+            log.error(f"Error parsing Kraken report: {f['fn']} line {i + 1} has less than 6 fields: {line}")
             return {}, {}
 
         minimizer: Optional[str] = None

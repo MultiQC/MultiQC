@@ -155,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
                 keys,
                 {
                     "id": "umicollapse_deduplication_barplot",
-                    "title": "UMI-tools: Deduplication Counts",
+                    "title": "UMICollapse: Deduplication Counts",
                     "ylab": "# Reads",
                     "cpswitch_counts_label": "Number of Reads",
                 },

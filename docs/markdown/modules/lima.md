@@ -1,7 +1,8 @@
 ---
 title: Lima
+displayed_sidebar: multiqcSidebar
 description: >
-  Demultiplex PacBio single-molecule sequencing reads
+    <p>Demultiplex PacBio single-molecule sequencing reads.</p>
 ---
 
 <!--
@@ -14,7 +15,7 @@ File path for the source of this content: multiqc/modules/lima/lima.py
 -->
 
 :::note
-Demultiplex PacBio single-molecule sequencing reads
+<p>Demultiplex PacBio single-molecule sequencing reads.</p>
 
 [https://github.com/PacificBiosciences/barcoding](https://github.com/PacificBiosciences/barcoding)
 :::
@@ -31,7 +32,7 @@ results are added to their own section.
 
 If you want to include the Lima results in the General Statistics table, you
 can rename the `barcode1--barcode2` filenames to their apropriate samples using
-the [--replace-names](https://docs.seqera.io/multiqc/#sample-name-replacement)
+the [--replace-names](../reports/customisation#sample-name-replacement)
 option. Each sample that is specified in this way will be moved from the Lima
 section to the General Statistics table.
 
@@ -46,3 +47,4 @@ lima/summary:
   max_filesize: 1024
   num_lines: 2
 ```
+    

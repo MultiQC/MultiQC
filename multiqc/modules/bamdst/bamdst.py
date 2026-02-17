@@ -1,14 +1,14 @@
-import logging
-from collections import defaultdict
-from typing import Dict, Union
 import csv
+import fnmatch
+import logging
 import math
 import os
-import fnmatch
+from collections import defaultdict
+from typing import Dict, Union
 
-from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import table, bargraph, linegraph
 from multiqc import config
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, linegraph, table
 from multiqc.types import LoadedFileDict
 
 log = logging.getLogger(__name__)
@@ -450,7 +450,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "x",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_empty": False,
                 "ymin": 0,
             }
             if data_labels:
@@ -470,7 +469,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "%",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_empty": False,
                 "ymax": 100,
                 "ymin": 0,
             }
@@ -490,7 +488,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "xlab": "Sample",
                     "ylab": "Average depth",
                     "tt_suffix": "x",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ymin": 0,
                     "data_labels": data_labels,
                 },
@@ -503,7 +501,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "xlab": "Sample",
                     "ylab": "Coverage %",
                     "tt_suffix": "%",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ymax": 100,
                     "ymin": 0,
                     "data_labels": data_labels,

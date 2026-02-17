@@ -3,8 +3,6 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from multiqc.utils.util_functions import rmtree_with_retries
-
 logger = logging.getLogger(__name__)
 
 _tmp_dir: Optional[Path] = None
@@ -45,6 +43,13 @@ def plots_tmp_dir(create=True) -> Path:
     if create:
         os.makedirs(path, exist_ok=True)
     return path
+
+
+def parquet_file() -> Path:
+    """
+    Returns the path to the combined parquet file that contains all plot data
+    """
+    return data_tmp_dir() / "multiqc.parquet"
 
 
 def new_tmp_dir():

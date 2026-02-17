@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/stjudecloud/ngsderive",
             info="Forensic tool for by backwards computing library information in sequencing data",
             extra="""
-            Results are provided as a 'best guess' — the tool does not claim 100% accuracy and results 
+            Results are provided as a 'best guess' — the tool does not claim 100% accuracy and results
             should be considered with that understanding. Please see the documentation for more information.
             """,
             # Can't find a DOI // doi=
@@ -189,9 +189,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.instrument, "ngsderive_instrument")
 
         bgcols = {
-            "low confidence": "#f8d7da",
-            "medium confidence": "#fff3cd",
-            "high confidence": "#d1e7dd",
+            "low confidence": "#e5001336",
+            "medium confidence": "#f7bd0052",
+            "high confidence": "#00c36b4a",
         }
         cond_formatting_rules = {
             "pass": [{"s_eq": "high confidence"}],

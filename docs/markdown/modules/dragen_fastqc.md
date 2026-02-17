@@ -1,7 +1,8 @@
 ---
 title: DRAGEN-FastQC
+displayed_sidebar: multiqcSidebar
 description: >
-  Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
+    <p>Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data.</p>
 ---
 
 <!--
@@ -14,7 +15,7 @@ File path for the source of this content: multiqc/modules/dragen_fastqc/dragen_f
 -->
 
 :::note
-Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
+<p>Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data.</p>
 
 [https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
 :::
@@ -59,5 +60,6 @@ dragen_fastqc:
 
 ```yaml
 dragen_fastqc:
-  fn: "*.fastqc_metrics.csv"
+  fn: '*.fastqc_metrics.csv'
 ```
+    

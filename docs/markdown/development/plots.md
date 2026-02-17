@@ -59,6 +59,15 @@ a filename when exporting plots, and all plots should have a title when exported
 Plot titles should use the format _Module name: Plot name_ (this is partly for
 ease of use within MegaQC and other downstream tools).
 
+### Plotly themes
+
+MultiQC plots use Plotly for visualization. You can customize the appearance of all plots by setting a Plotly theme using the `plot_theme` configuration option. This option accepts any [registered Plotly theme](https://plotly.com/python/templates/#view-available-themes)
+name as a string.
+
+```yaml
+plot_theme: "plotly_dark"
+```
+
 ## Bar graphs
 
 Simple data can be plotted in bar graphs. Many MultiQC modules make use
@@ -127,6 +136,7 @@ config = {
     "xsuffix": "%",                           # Suffix for the X-axis values and labels. Parsed from tt_label by default
     "tt_label": "{x}: {y:.2f}%",              # Customise tooltip label, e.g. '{point.x} base pairs'
     "stacking": "relative",                   # Set to "group" to have category bars side by side
+    "sort_samples": True,                     # Sort samples by name
     "tt_decimals": 0,                         # Number of decimal places to use in the tooltip number
     "tt_suffix": "",                          # Suffix to add after tooltip number
     "height": 500                             # The default height of the plot, in pixels
@@ -216,6 +226,42 @@ html = bargraph.plot([data, data], cats, pconfig=...)
 
 Note that, as in this example, the plot data can be the same dictionary supplied twice.
 
+### Grouped stacked bar charts
+
+Use `sample_groups` to create grouped stacked bar charts where bars are organized into visual groups on the y-axis. The config is a dict mapping group labels to lists of `[sample name, group ID]` pairs:
+
+- **Group label** (dict key): Displayed on the y-axis
+- **Sample name**: The key in the data dict identifying this sample
+- **Group ID**: Determines the visual "lane" within each group. Samples with the same ID are aligned vertically across different group labels.
+
+```python
+from multiqc.plots import bargraph
+
+data = {
+    'sample1_25nt': {'Frame0': 50, 'Frame1': 30, 'Frame2': 20},
+    'sample1_26nt': {'Frame0': 60, 'Frame1': 25, 'Frame2': 15},
+    'sample2_25nt': {'Frame0': 55, 'Frame1': 28, 'Frame2': 17},
+    'sample2_26nt': {'Frame0': 65, 'Frame1': 22, 'Frame2': 13},
+}
+
+pconfig = {
+    'id': 'my_bargraph',
+    'title': 'My Bar Graph',
+    'sample_groups': {
+        '25nt': [['sample1_25nt', 'sample1'], ['sample2_25nt', 'sample2']],
+        '26nt': [['sample1_26nt', 'sample1'], ['sample2_26nt', 'sample2']],
+    }
+}
+
+html = bargraph.plot(data, cats, pconfig=pconfig)
+```
+
+In this example, for each read length group (`25nt`, `26nt`), bars with the same `offset_group` (`sample1` or `sample2`) are aligned at the same horizontal position, allowing direct visual comparison of sample1 vs sample2 across read lengths.
+
+![bargraph sample groups](../../../docs/images/bargraph_sample_groups.png)
+
+See the [custom content example file](https://github.com/MultiQC/test-data/blob/main/data/custom_content/embedded_config/frame_bargraph_mqc.csv) to reproduce this plot.
+
 ## Line graphs
 
 This base function works much like the above, but for two-dimensional
@@ -252,6 +298,7 @@ pconfig = {
     "logswitch": False,          # Show the 'Log10' switch?
     "logswitch_active": False,   # Initial display with 'Log10' active?
     "logswitch_label": "Log10",  # Label for 'Log10' button
+    "axis_controlled_by_switches": ["yaxis"], # Which axes should be impacted by the switch button (one or both of xaxis, yaxis)
     "extra_series": None,        # See section below
     # Plot configuration
     "title": None,               # Plot title - should be in format "Module Name: Plot Title"
@@ -372,6 +419,59 @@ pconfig = {
 html = linegraph.plot(..., pconfig)
 ```
 
+### Background bands and lines
+
+Line graphs can include background bands and reference lines to highlight specific regions or thresholds. These are configured using the `x_bands`, `y_bands`, `x_lines`, and `y_lines` options.
+
+#### Background bands
+
+Background bands are colored rectangular regions that span across the plot. They can be used to highlight acceptable ranges, warning zones, or other meaningful regions in your data.
+
+```python
+from multiqc.plots import linegraph
+pconfig = {
+    "y_bands": [
+        {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},           # Good range (green)
+        {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},          # Warning range (yellow)
+        {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},        # Bad range (red)
+    ],
+    "x_bands": [
+        {"from": 10, "to": 50, "color": "#f0f0f0", "opacity": 0.3},   # Highlighted region
+    ]
+}
+html = linegraph.plot(data, pconfig)
+```
+
+Each band definition supports the following options:
+
+- `from`: Start value for the band
+- `to`: End value for the band
+- `color`: Background color (any valid CSS color)
+- `opacity`: Transparency level from 0.0 (fully transparent) to 1.0 (fully opaque). Defaults to 1.0 if not specified.
+
+#### Reference lines
+
+Reference lines are single horizontal or vertical lines that can mark specific thresholds or reference points.
+
+```python
+pconfig = {
+    "y_lines": [
+        {"value": 30, "color": "#ff0000", "width": 2, "dash": "dash", "label": "Threshold"}
+    ],
+    "x_lines": [
+        {"value": 25, "color": "#0000ff", "width": 1, "dash": "solid"}
+    ]
+}
+```
+
+Each line definition supports:
+
+- `value`: Position of the line on the respective axis
+- `color`: Line color (any valid CSS color)
+- `width`: Line thickness in pixels (default: 2)
+- `dash`: Line style - "solid", "dash", "dot", "dashdot", etc. (default: "solid")
+- `label`: Optional text label for the line
+
 ## Box plots
 
 Box plots take similar data structure as line plots, but better visualize the
@@ -391,6 +491,42 @@ html = box.plot(data, pconfig=...)
 
 Similarly to other plot types, multiple datasets can be passed as `data`, along with
 dataset-specific configurations provided with the `pconfig["data_labels"]` option.
+
+### Box plot outlier display
+
+Box plots now dynamically control outlier display based on the number of samples, similar to violin plots. The behavior is determined by two configuration thresholds:
+
+```yaml
+box_min_threshold_outliers: 100 # For more than this number of samples, show only outliers
+box_min_threshold_no_points: 1000 # For more than this number of samples, show no points
+```
+
+**Dynamic behavior:**
+
+- **≤ 100 samples**: Show all data points (`"all"`)
+- **101-1000 samples**: Show only outliers (`"outliers"`)
+- **> 1000 samples**: Show no points (`false`)
+
+**Manual override:**
+You can still manually control the behavior using the `boxplot_boxpoints` configuration option, which will override the dynamic logic:
+
+```yaml
+boxplot_boxpoints: "outliers" # Override dynamic behavior
+```
+
+Available options (as defined by [Plotly's box trace reference](https://plotly.com/python/reference/box/#box-boxpoints)):
+
+- `"outliers"`: Show only outlier points beyond the whiskers
+- `"all"`: Show all data points
+- `"suspectedoutliers"`: Show only suspected outliers (points beyond 1.5 × IQR but within 3 × IQR)
+- `false`: Hide all data points, showing only the box and whiskers
+
+This dynamic approach helps to:
+
+- Reduce visual clutter when dealing with many samples
+- Maintain interactivity for smaller datasets
+- Automatically optimize performance for large datasets
+- Highlight specific outlier patterns when appropriate
 
 ## Scatter plots
 
@@ -710,6 +846,11 @@ In this case, the general stats table will be sorted by "Mean Insert Length" fir
 in ascending order, then by "Starting Amount (ng)", in descending (default) order. The
 table with the ID `quast_table` (which you can find by clicking the "Configure Columns"
 button above the table in the report) will be sorted by "Largest contig".
+
+### Configurable columns
+
+Table columns can be reodered and change visibility using the "Configure Columns" button
+in the report. However, for very wide tables, the performance degrades, so the button is disabled when the number of rows exceeds `config.max_configurable_table_columns` (default is 200). You can adjust this value in the config file.
 
 ## Violin plots
 

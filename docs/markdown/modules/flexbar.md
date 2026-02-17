@@ -1,7 +1,8 @@
 ---
 title: Flexbar
+displayed_sidebar: multiqcSidebar
 description: >
-  Barcode and adapter removal tool
+    <p>Barcode and adapter removal tool.</p>
 ---
 
 <!--
@@ -14,7 +15,7 @@ File path for the source of this content: multiqc/modules/flexbar/flexbar.py
 -->
 
 :::note
-Barcode and adapter removal tool
+<p>Barcode and adapter removal tool.</p>
 
 [https://github.com/seqan/flexbar](https://github.com/seqan/flexbar)
 :::
@@ -29,3 +30,4 @@ Flexbar increases read mapping rates and improves genome as well as transcriptom
 flexbar:
   contents: Flexbar - flexible barcode and adapter removal
 ```
+    

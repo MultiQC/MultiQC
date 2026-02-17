@@ -68,7 +68,7 @@ multiqc .
 That's it! MultiQC will scan the specified directory (`.` is the current dir)
 and produce a report detailing whatever it finds.
 
-<!-- RICH-CODEX fake_command: "multiqc ." -->
+<!-- RICH-CODEX fake_command: "multiqc ." img_paths: "docs/images/screenshots/fastqc-run.svg" -->
 
 ![`cd test-data/data/modules/fastqc/v0.10.1 && multiqc .`](https://github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/fastqc-run.svg)
 

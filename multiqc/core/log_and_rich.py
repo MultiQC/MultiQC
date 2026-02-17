@@ -8,20 +8,18 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Callable, List, Optional, TypeVar
 
 import coloredlogs  # type: ignore
 import rich
 import rich.jupyter
 import rich.progress
-import rich_click
 from rich.logging import RichHandler
 from rich.theme import Theme
 from tqdm import tqdm
 
 from multiqc import config
 from multiqc.core import tmp_dir
-from multiqc.utils import util_functions
 from multiqc.utils.util_functions import is_running_in_notebook
 
 log_tmp_fn: Optional[Path] = None
@@ -47,14 +45,21 @@ def init_log(log_to_file: bool = False):
     # Remove log handlers left from previous calls to multiqc.run. Makes the function idempotent
     logger.handlers.clear()
 
+    # Global level should be the most verbose across all handlers (in our case, file handler is always DEBUG)
+    logger.setLevel(logging.DEBUG)
+
     # Console log level
     log_level = "DEBUG" if config.verbose else "INFO"
     if config.quiet:
         log_level = "WARNING"
-    logger.setLevel(log_level)
 
-    # Remove DEBUG level for the PIL.PngImagePlugin logger
+    # Remove DEBUG level for the PIL.PngImagePlugin and other third-party dependency loggers
     logging.getLogger("PIL").setLevel(logging.INFO)
+    logging.getLogger("httpcore").setLevel(logging.INFO)
+    if not config.verbose:  # to suppress log messages inside rich.progress.Progress
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+    else:
+        logging.getLogger("httpx").setLevel(logging.INFO)
 
     # Automatically set no_ansi if not a tty terminal
     if config.no_ansi is False:
@@ -301,7 +306,16 @@ def _no_unicode() -> bool:
     )
 
 
-def iterate_using_progress_bar(items: List, desc: str, update_fn, item_to_str_fn=str, disable_progress=False):
+T = TypeVar("T")
+
+
+def iterate_using_progress_bar(
+    items: List[T],
+    desc: str,
+    update_fn: Callable[[int, T], None],
+    item_to_str_fn: Callable[[T], str] = str,
+    disable_progress=False,
+) -> None:
     # GitHub actions doesn't understand ansi control codes to move the cursor,
     # so it prints each update ona a new line. Better disable it for CI.
     disable_progress = disable_progress or config.no_ansi or config.quiet or os.getenv("CI") is not None
@@ -360,6 +374,34 @@ def iterate_using_progress_bar(items: List, desc: str, update_fn, item_to_str_fn
                 progress.update(mqc_task, advance=1, s_fn=item_to_str_fn(item)[-50:])
                 update_fn(i, item)
             progress.update(mqc_task, s_fn="")
+
+
+ReturnType = TypeVar("ReturnType")
+
+
+def run_with_spinner(
+    module_name: str,
+    desc: str,
+    update_fn: Callable[[], ReturnType],
+    disable_progress=False,
+) -> ReturnType:
+    disable_progress = disable_progress or config.no_ansi or config.quiet or os.getenv("CI") is not None
+    N_SPACES_BEFORE_PIPE = 17  # to align bar desc with other log entries
+    need_to_add_spaces = max(0, N_SPACES_BEFORE_PIPE - len(module_name))
+    with rich.progress.Progress(
+        " " * need_to_add_spaces,
+        "[blue]" + module_name + "[/]",
+        "|",
+        rich.progress.SpinnerColumn(),
+        "{task.description}",
+        console=rich_console,
+        disable=disable_progress,
+        transient=True,
+    ) as progress:
+        task = progress.add_task(desc, total=None)
+        result = update_fn()
+        progress.update(task, completed=True)
+    return result
 
 
 def rich_console_print(*args, **kwargs):

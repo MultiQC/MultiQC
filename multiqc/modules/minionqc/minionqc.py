@@ -7,6 +7,7 @@ import yaml
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
+from multiqc.utils.material_icons import get_material_icon
 
 log = logging.getLogger(__name__)
 
@@ -23,8 +24,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/roblanf/minion_qc",
             info="Quality control for ONT (Oxford Nanopore) long reads",
             extra="""
-            It uses the `sequencing_summary.txt` files produced by ONT (Oxford Nanopore Technologies) 
-            long-read base-callers to perform QC on the reads. It allows quick-and-easy comparison of data from 
+            It uses the `sequencing_summary.txt` files produced by ONT (Oxford Nanopore Technologies)
+            long-read base-callers to perform QC on the reads. It allows quick-and-easy comparison of data from
             multiple flowcells
             """,
             doi="10.1093/bioinformatics/bty654",
@@ -194,9 +195,9 @@ class MultiqcModule(BaseMultiqcModule):
             ", ".join(list(self.q_threshold_list))
         )
         if len(self.q_threshold_list) > 1:
-            description += """
+            description += f"""
             <div class="alert alert-warning">
-              <span class="glyphicon glyphicon-warning-sign"></span>
+              ${get_material_icon("mdi:warning", 16)}
               <strong>Warning!</strong> More than one quality thresholds were present.
             </div>
             """
