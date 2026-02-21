@@ -1,34 +1,68 @@
-name: "PR Report Preview: Build"
+name: "PR Report Preview"
 
 on:
-  pull_request:
-    paths:
-      - "multiqc/modules/**"
-
-# Cancel in-progress runs for the same PR
-concurrency:
-  group: pr-report-build-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  workflow_run:
+    workflows: ["Claude Code Review Trigger"]
+    types:
+      - completed
 
 jobs:
-  build:
-    name: "Build Report"
+  build-and-deploy:
+    name: "Build & Deploy Report Preview"
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    # Skip bot PRs
-    if: github.actor != 'dependabot[bot]'
+    # Only run if the trigger workflow succeeded
+    if: github.event.workflow_run.conclusion == 'success'
+
+    permissions:
+      pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Download PR info
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0 # Need full history for diff
+          name: pr-info
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Check if preview was requested
+        id: pr-info
+        run: |
+          if [ ! -f run-preview ]; then
+            echo "Not a /preview request, skipping"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PR_NUMBER=$(cat pr-number.txt)
+          HEAD_SHA=$(cat head-sha.txt)
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "PR Number: $PR_NUMBER"
+          echo "Head SHA: $HEAD_SHA"
+
+      - name: Checkout PR
+        if: steps.pr-info.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr-info.outputs.head_sha }}
+          fetch-depth: 0
 
       - name: "Detect modified modules"
+        if: steps.pr-info.outputs.skip != 'true'
         id: detect
         run: |
+          # Get base branch from the PR
+          BASE_REF=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json baseRefName -q .baseRefName)
+          echo "Base branch: $BASE_REF"
+
+          # Fetch the base branch for diff
+          git fetch origin "$BASE_REF"
+
           # Get the list of changed files compared to the base branch
-          changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
+          changed_files=$(git diff --name-only "origin/$BASE_REF"...HEAD)
 
           # Extract unique module names from changed paths
           modules=$(echo "$changed_files" \
@@ -53,6 +87,20 @@ jobs:
           done
           echo "module_flags=$module_flags" >> "$GITHUB_OUTPUT"
           echo "module_list=$modules" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
+
+      - name: "Post comment if no modules changed"
+        if: steps.pr-info.outputs.skip != 'true' && steps.detect.outputs.has_modules != 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ steps.pr-info.outputs.pr_number }}
+          header: multiqc-report-preview
+          message: |
+            ## MultiQC Report Preview
+
+            No module changes detected in this PR — nothing to preview.
 
       - name: "Set up Python"
         if: steps.detect.outputs.has_modules == 'true'
@@ -78,23 +126,39 @@ jobs:
             --force \
             --verbose \
             --outdir multiqc_report \
-            --title "PR #${{ github.event.pull_request.number }} Preview" \
+            --title "PR #${{ steps.pr-info.outputs.pr_number }} Preview" \
             --comment "Modules: ${{ steps.detect.outputs.module_list }}" \
             ${{ steps.detect.outputs.module_flags }} \
             test-data/data/modules
 
-      - name: "Save PR metadata"
+      - name: "Deploy to Netlify"
         if: steps.detect.outputs.has_modules == 'true'
-        run: |
-          mkdir -p multiqc_report/.pr-metadata
-          echo "${{ github.event.pull_request.number }}" > multiqc_report/.pr-metadata/pr-number
-          echo "${{ github.event.pull_request.head.sha }}" > multiqc_report/.pr-metadata/head-sha
-          echo "${{ steps.detect.outputs.module_list }}" > multiqc_report/.pr-metadata/module-list
-
-      - name: "Upload report artifact"
-        if: steps.detect.outputs.has_modules == 'true'
-        uses: actions/upload-artifact@v4
+        id: netlify
+        uses: nwtgck/actions-netlify@v3.0
         with:
-          name: multiqc-report-preview
-          path: multiqc_report/
-          retention-days: 1
+          publish-dir: "./multiqc_report"
+          production-deploy: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "PR #${{ steps.pr-info.outputs.pr_number }} - modules: ${{ steps.detect.outputs.module_list }}"
+          enable-pull-request-comment: false
+          enable-commit-comment: false
+          alias: multiqc-pr-${{ steps.pr-info.outputs.pr_number }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        timeout-minutes: 2
+
+      - name: "Comment on PR"
+        if: steps.detect.outputs.has_modules == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ steps.pr-info.outputs.pr_number }}
+          header: multiqc-report-preview
+          message: |
+            ## MultiQC Report Preview
+
+            A preview report has been built and deployed for the modified module(s): `${{ steps.detect.outputs.module_list }}`
+
+            **[View Report](${{ steps.netlify.outputs.deploy-url }})**
+
+            <sub>Built from ${{ steps.pr-info.outputs.head_sha }}</sub>
