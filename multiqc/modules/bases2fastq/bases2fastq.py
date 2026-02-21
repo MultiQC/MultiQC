@@ -415,8 +415,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Create run and project groups
         run_groups: Dict[str, List] = defaultdict(list)
         project_groups: Dict[str, List] = defaultdict(list)
-        # Only populated when summary_path == "project_level"; empty for run_level/combined_level
-        in_project_sample_groups: Dict[str, List] = defaultdict(list)
         ind_sample_groups: Dict[str, List] = defaultdict(list)
 
         for sample in natsorted(sample_data.keys()):
@@ -425,10 +423,8 @@ class MultiqcModule(BaseMultiqcModule):
             sample_project = samples_to_projects.get(sample, "DefaultProject")
             project_groups[sample_project].append(sample)
             ind_sample_groups[sample] = [sample]
-            if summary_path == "project_level":
-                in_project_sample_groups[sample].append(sample)
 
-        merged_groups = {**run_groups, **project_groups, **in_project_sample_groups, **ind_sample_groups}
+        merged_groups = {**run_groups, **project_groups, **ind_sample_groups}
 
         # Build color palette
         self.color_getter = mqc_colour.mqc_colour_scale()
@@ -659,12 +655,8 @@ class MultiqcModule(BaseMultiqcModule):
             indexing = f"{' + '.join(indices_cycles)}<br>{' + '.join(indices)}"
             result[run_lane]["Indexing"] = indexing
             result[run_lane]["AdapterTrimType"] = lane_data.get("AdapterTrimType", "N/A")
-            result[run_lane]["R1AdapterMinimumTrimmedLength"] = lane_data.get(
-                "R1AdapterMinimumTrimmedLength", "N/A"
-            )
-            result[run_lane]["R2AdapterMinimumTrimmedLength"] = lane_data.get(
-                "R2AdapterMinimumTrimmedLength", "N/A"
-            )
+            result[run_lane]["R1AdapterMinimumTrimmedLength"] = lane_data.get("R1AdapterMinimumTrimmedLength", "N/A")
+            result[run_lane]["R2AdapterMinimumTrimmedLength"] = lane_data.get("R2AdapterMinimumTrimmedLength", "N/A")
         return result
 
     def _parse_run_manifest(self, data_source: str) -> Dict[str, Any]:
@@ -708,9 +700,7 @@ class MultiqcModule(BaseMultiqcModule):
                     f"<Settings> section not found in {directory}/RunManifest.json.\nSkipping RunManifest metrics."
                 )
             else:
-                runs_manifest_data.update(
-                    self._extract_manifest_lane_settings(run_manifest, run_analysis_name)
-                )
+                runs_manifest_data.update(self._extract_manifest_lane_settings(run_manifest, run_analysis_name))
 
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
 
@@ -764,9 +754,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "Settings" not in run_manifest_data:
                 log.warning(f"<Settings> section not found in {run_manifest}.\nSkipping RunManifest metrics.")
             else:
-                project_manifest_data.update(
-                    self._extract_manifest_lane_settings(run_manifest_data, run_analysis_name)
-                )
+                project_manifest_data.update(self._extract_manifest_lane_settings(run_manifest_data, run_analysis_name))
             data_source_info: LoadedFileDict[Any] = {
                 "fn": str(run_manifest.name),
                 "root": str(run_manifest.parent),
@@ -1025,9 +1013,7 @@ class MultiqcModule(BaseMultiqcModule):
                 )
                 continue
 
-            run_inner, _ = self._build_index_assignment_from_stats(
-                project_stats, run_analysis_name, project=project
-            )
+            run_inner, _ = self._build_index_assignment_from_stats(project_stats, run_analysis_name, project=project)
             sample_to_index_assignment[run_analysis_name] = run_inner
 
             run_manifest_data = self._read_json_file(run_manifest, base_directory=base_directory)
@@ -1042,9 +1028,7 @@ class MultiqcModule(BaseMultiqcModule):
             elif len(sample_to_index_assignment) == 0:
                 log.warning("Index assignment data missing. Skipping creation of index assignment metrics.")
             else:
-                self._merge_manifest_index_sequences(
-                    sample_to_index_assignment, run_manifest_data, run_analysis_name
-                )
+                self._merge_manifest_index_sequences(sample_to_index_assignment, run_manifest_data, run_analysis_name)
 
         return sample_to_index_assignment
 

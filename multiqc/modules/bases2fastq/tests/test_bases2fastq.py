@@ -67,9 +67,7 @@ class TestBuildIndexAssignmentFromStats:
         project_stats = _load_fixture(
             fixtures_dir, "PairedEndDefaultProject", "Samples", "DefaultProject", "DefaultProject_RunStats.json"
         )
-        run_inner, total = m._build_index_assignment_from_stats(
-            project_stats, "RUN01-a1b2", project="DefaultProject"
-        )
+        run_inner, total = m._build_index_assignment_from_stats(project_stats, "RUN01-a1b2", project="DefaultProject")
         assert total == 100000
         assert "AAATTT" in run_inner
         assert run_inner["AAATTT"]["SamplePolonyCounts"] == 5000
@@ -85,9 +83,7 @@ class TestBuildIndexAssignmentFromStats:
         project_stats = _load_fixture(
             fixtures_dir, "PairedEndDefaultProject", "Samples", "DefaultProject", "DefaultProject_RunStats.json"
         )
-        run_inner, _ = m._build_index_assignment_from_stats(
-            project_stats, "RUN01-a1b2", project="DefaultProject"
-        )
+        run_inner, _ = m._build_index_assignment_from_stats(project_stats, "RUN01-a1b2", project="DefaultProject")
         assert run_inner
         for entry in run_inner.values():
             assert entry.get("Project") == "DefaultProject"
@@ -107,9 +103,7 @@ class TestMergeManifestIndexSequences:
             fixtures_dir, "PairedEndDefaultProject", "Samples", "DefaultProject", "DefaultProject_RunStats.json"
         )
         run_manifest = _load_fixture(fixtures_dir, "PairedEndDefaultProject", "RunManifest.json")
-        run_inner, _ = m._build_index_assignment_from_stats(
-            project_stats, "RUN01-a1b2", project="DefaultProject"
-        )
+        run_inner, _ = m._build_index_assignment_from_stats(project_stats, "RUN01-a1b2", project="DefaultProject")
         sample_to_index = {"RUN01-a1b2": run_inner}
         m._merge_manifest_index_sequences(sample_to_index, run_manifest, "RUN01-a1b2")
         assert run_inner["AAATTT"]["Index1"] == "AAA"
@@ -139,6 +133,7 @@ class TestParseRunProjectData:
         report.analysis_files = [str(run_dir)]
         report.search_files(["bases2fastq"])
         import multiqc.modules.bases2fastq.bases2fastq as b2f_mod
+
         with patch.object(b2f_mod, "_get_min_polonies", return_value=100):
             m = MultiqcModule()
         assert len(m.run_level_samples) == 1
@@ -308,9 +303,7 @@ class TestBuildIndexAssignmentEdgeCases:
         report.analysis_files = [str(fixtures_dir / "PairedEndNoProject")]
         report.search_files(["bases2fastq"])
         m = MultiqcModule()
-        run_inner, total = m._build_index_assignment_from_stats(
-            {"NumPoloniesBeforeTrimming": 1000}, "RUN01-a1b2"
-        )
+        run_inner, total = m._build_index_assignment_from_stats({"NumPoloniesBeforeTrimming": 1000}, "RUN01-a1b2")
         assert run_inner == {}
         assert total == 1000
 
@@ -353,7 +346,9 @@ class TestMergeManifestIndexSequencesEdgeCases:
         m = MultiqcModule()
         sample_to_index = {}
         m._merge_manifest_index_sequences(
-            sample_to_index, {"Samples": [{"SampleName": "S1", "Indexes": [{"Index1": "A", "Index2": "T"}]}]}, "RUN01-a1b2"
+            sample_to_index,
+            {"Samples": [{"SampleName": "S1", "Indexes": [{"Index1": "A", "Index2": "T"}]}]},
+            "RUN01-a1b2",
         )
         assert sample_to_index == {}
 
@@ -416,9 +411,7 @@ class TestProjectLevelPath:
         )
         manifest = _load_fixture(fixtures_dir, "PairedEndDefaultProject", "RunManifest.json")
         (tmp_path / "Samples" / "DefaultProject").mkdir(parents=True)
-        (tmp_path / "Samples" / "DefaultProject" / "DefaultProject_RunStats.json").write_text(
-            json.dumps(project_stats)
-        )
+        (tmp_path / "Samples" / "DefaultProject" / "DefaultProject_RunStats.json").write_text(json.dumps(project_stats))
         (tmp_path / "RunManifest.json").write_text(json.dumps(manifest))
         report.analysis_files = [str(tmp_path)]
         report.search_files(["bases2fastq"])
@@ -438,8 +431,8 @@ class TestSelectDataBySummaryPath:
         report.analysis_files = [str(run_dir)]
         report.search_files(["bases2fastq"])
         m = MultiqcModule()
-        run_data, sample_data, samples_to_projects, manifest_data, index_data, unassigned = m._select_data_by_summary_path(
-            "project_level"
+        run_data, sample_data, samples_to_projects, manifest_data, index_data, unassigned = (
+            m._select_data_by_summary_path("project_level")
         )
         assert run_data is m.project_level_data
         assert sample_data is m.project_level_samples
@@ -451,8 +444,8 @@ class TestSelectDataBySummaryPath:
         report.analysis_files = [str(run_dir)]
         report.search_files(["bases2fastq"])
         m = MultiqcModule()
-        run_data, sample_data, samples_to_projects, manifest_data, index_data, unassigned = m._select_data_by_summary_path(
-            "combined_level"
+        run_data, sample_data, samples_to_projects, manifest_data, index_data, unassigned = (
+            m._select_data_by_summary_path("combined_level")
         )
         assert run_data is m.run_level_data
         assert sample_data is m.project_level_samples

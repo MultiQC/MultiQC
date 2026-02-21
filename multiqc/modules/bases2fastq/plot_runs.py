@@ -653,12 +653,7 @@ def plot_base_quality_hist(run_data, color_dict):
 
 def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for median BQ of each cycle (skip runs without Reads/Cycles)
-    runs_with_reads = [
-        s
-        for s in run_data
-        if _run_has_reads(run_data[s])
-        and run_data[s]["Reads"][0].get("Cycles")
-    ]
+    runs_with_reads = [s for s in run_data if _run_has_reads(run_data[s]) and run_data[s]["Reads"][0].get("Cycles")]
     if not runs_with_reads:
         plot_content: list[Any] = []
         plot_html = linegraph.plot(
@@ -770,7 +765,10 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         cycle_dict = dict()
         R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
-        if not run_data[s_name]["Reads"][0]["Cycles"] or "PercentBelowFilterThreshold" not in run_data[s_name]["Reads"][0]["Cycles"][0]:
+        if (
+            not run_data[s_name]["Reads"][0]["Cycles"]
+            or "PercentBelowFilterThreshold" not in run_data[s_name]["Reads"][0]["Cycles"][0]
+        ):
             continue
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
