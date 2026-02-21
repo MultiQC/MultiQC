@@ -83,7 +83,7 @@ See [implementation-checklist.md](implementation-checklist.md) for detailed step
 ### Quality Checks
 
 - [ ] `multiqc -f --strict path/to/test/data/`
-- [ ] `pre-commit run`
+- [ ] `prek run`
 - [ ] `ruff check multiqc/modules/yourmodule/`
 - [ ] `python .github/workflows/code_checks.py`
 - [ ] `pytest multiqc/modules/yourmodule/tests/ -v`
