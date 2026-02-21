@@ -21,6 +21,14 @@ Know what you're doing with this kind of thing? Here's a quick reference:
 <table><thead>
 <tr><th>Method</th><th>Command</th></tr>
 </thead><tbody><tr>
+<td>uv</td>
+<td>
+
+```bash
+uv tool install multiqc
+```
+
+</td></tr><tr>
 <td>Pip</td>
 <td>
 
@@ -34,14 +42,6 @@ pip install multiqc
 
 ```bash
 pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
-```
-
-</td></tr><tr>
-<td>uv</td>
-<td>
-
-```bash
-uv tool install multiqc
 ```
 
 </td></tr><tr>
