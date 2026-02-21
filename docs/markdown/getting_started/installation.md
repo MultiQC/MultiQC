@@ -12,7 +12,7 @@ If you're new to software packaging, this page can be a little overwhelming.
 If in doubt, a general rule is:
 
 - _Running MultiQC in a pipeline?_ &nbsp; Use [Docker](#docker) or [Singularity](#singularity).
-- _Running MultiQC locally?_ &nbsp; Use [Pip](#pip--pypi) or [Conda](#conda).
+- _Running MultiQC locally?_ &nbsp; Use [uv](#uv), [Pip](#pip--pypi), or [Conda](#conda).
 
 :::tip{title="Installation cheat sheet"}
 
@@ -34,6 +34,14 @@ pip install multiqc
 
 ```bash
 pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
+```
+
+</td></tr><tr>
+<td>uv</td>
+<td>
+
+```bash
+uv tool install multiqc
 ```
 
 </td></tr><tr>
@@ -63,6 +71,10 @@ MultiQC is written in Python and needs a Python installation to run.
 To run MultiQC manually install, you'll typically install it into a local Python environment.
 MultiQC requires Python version 3.9 or above.
 
+:::tip
+If you use [uv](#uv) to install MultiQC, you don't need to install Python separately — uv automatically downloads and manages Python for you.
+:::
+
 ### System Python
 
 Python comes installed on most operating systems. You can install MultiQC directly here, but it is _not_ recommended. This often causes problems, and it's a little risky to mess with it.
@@ -70,6 +82,28 @@ Python comes installed on most operating systems. You can install MultiQC direct
 :::danger
 If you find yourself prepending `sudo` to any MultiQC commands, take a step back and think about Python virtual environments / conda instead.
 :::
+
+### Python with uv
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package and project manager that can also install and manage Python versions.
+If you don't have Python installed, uv will automatically download it when needed — no separate Python installation required.
+
+To install uv:
+
+```bash
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+uv will automatically download a suitable Python version when you install or run a Python package.
+If you'd like to install a specific Python version explicitly, you can do so with:
+
+```bash
+uv python install 3.13
+```
 
 ### Python with Conda
 
@@ -107,6 +141,42 @@ python3 -m multiqc .
 ## Installing MultiQC locally
 
 There are a few different ways to install MultiQC into your local Python environment:
+
+### uv
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package and project manager, written in Rust.
+It can replace pip, pip-tools, pipx, pyenv, and virtualenv — all in a single tool.
+uv automatically manages Python installations, so you don't need to install Python separately.
+
+The recommended way to install MultiQC with uv is as a tool:
+
+```bash
+uv tool install multiqc
+```
+
+This installs MultiQC into an isolated environment and adds the `multiqc` command to your PATH.
+You can then run `multiqc` directly:
+
+```bash
+multiqc .
+```
+
+Alternatively, you can run MultiQC without installing it permanently using `uvx` (an alias for `uv tool run`):
+
+```bash
+uvx multiqc .
+```
+
+To upgrade MultiQC:
+
+```bash
+uv tool upgrade multiqc
+```
+
+:::tip
+uv can also be used as a drop-in replacement for pip inside virtual environments.
+See the [uv documentation](https://docs.astral.sh/uv/) for more details.
+:::
 
 ### Conda
 

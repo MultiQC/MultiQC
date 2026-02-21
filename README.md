@@ -32,28 +32,27 @@ More modules are being written all the time. Please suggest any ideas as a new
 
 ## Installation
 
-You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/)
-using `pip` as follows:
+You can install MultiQC using [uv](https://docs.astral.sh/uv/) (no separate Python installation required):
+
+```bash
+uv tool install multiqc
+```
+
+Alternatively, install from [PyPI](https://pypi.python.org/pypi/multiqc/) using `pip`:
 
 ```bash
 pip install multiqc
 ```
 
-Alternatively, you can install using [Conda](http://anaconda.org/)
+Or install using [Conda](http://anaconda.org/)
 from [Bioconda](https://bioconda.github.io/) ([set up your channels](https://bioconda.github.io/#usage) first):
 
 ```bash
 conda install multiqc
 ```
 
-If you would like the development version from GitHub instead, you can install it with `pip`:
-
-```bash
-pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
-```
-
-MultiQC is also available via Docker and Singularity images, Galaxy wrappers, and
-many more software distribution systems.
+MultiQC is also available via Docker, Singularity, and
+many more distribution methods.
 See [the documentation](https://docs.seqera.io/multiqc/getting_started/installation/) for details.
 
 ## Usage
