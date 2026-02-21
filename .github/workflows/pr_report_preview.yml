@@ -1,0 +1,118 @@
+name: "PR Report Preview"
+
+on:
+  pull_request:
+    paths:
+      - "multiqc/modules/**"
+
+# Cancel in-progress runs for the same PR
+concurrency:
+  group: pr-report-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: "Build & Deploy Report"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Only run on PRs from forks or branches, not on dependabot/bot PRs
+    if: github.actor != 'dependabot[bot]'
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need full history for diff
+
+      - name: "Detect modified modules"
+        id: detect
+        run: |
+          # Get the list of changed files compared to the base branch
+          changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
+
+          # Extract unique module names from changed paths
+          modules=$(echo "$changed_files" \
+            | grep '^multiqc/modules/' \
+            | cut -d'/' -f3 \
+            | sort -u \
+            | tr '\n' ' ')
+
+          if [ -z "$modules" ]; then
+            echo "No module changes detected"
+            echo "has_modules=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Detected modified modules: $modules"
+          echo "has_modules=true" >> "$GITHUB_OUTPUT"
+
+          # Build --module flags for multiqc CLI
+          module_flags=""
+          for mod in $modules; do
+            module_flags="$module_flags --module $mod"
+          done
+          echo "module_flags=$module_flags" >> "$GITHUB_OUTPUT"
+          echo "module_list=$modules" >> "$GITHUB_OUTPUT"
+
+      - name: "Set up Python"
+        if: steps.detect.outputs.has_modules == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: "Install MultiQC"
+        if: steps.detect.outputs.has_modules == 'true'
+        run: pip install .
+
+      - name: "Download test data"
+        if: steps.detect.outputs.has_modules == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: MultiQC/test-data
+          path: test-data
+
+      - name: "Run MultiQC for modified modules"
+        if: steps.detect.outputs.has_modules == 'true'
+        run: |
+          multiqc \
+            --force \
+            --verbose \
+            --outdir multiqc_report \
+            --title "PR #${{ github.event.pull_request.number }} Preview" \
+            --comment "Modules: ${{ steps.detect.outputs.module_list }}" \
+            ${{ steps.detect.outputs.module_flags }} \
+            test-data/data/modules
+
+      - name: "Deploy to Netlify"
+        if: steps.detect.outputs.has_modules == 'true'
+        id: netlify
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: "./multiqc_report"
+          production-deploy: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "PR #${{ github.event.pull_request.number }} - modules: ${{ steps.detect.outputs.module_list }}"
+          enable-pull-request-comment: false
+          enable-commit-comment: false
+          alias: multiqc-pr-${{ github.event.pull_request.number }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        timeout-minutes: 2
+
+      - name: "Comment on PR"
+        if: steps.detect.outputs.has_modules == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: multiqc-report-preview
+          message: |
+            ## MultiQC Report Preview
+
+            A preview report has been built and deployed for the modified module(s): `${{ steps.detect.outputs.module_list }}`
+
+            **[View Report](${{ steps.netlify.outputs.deploy-url }})**
+
+            <sub>Built from ${{ github.event.pull_request.head.sha }} | [Netlify deploy log](${{ steps.netlify.outputs.deploy-url }})</sub>
