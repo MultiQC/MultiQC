@@ -36,7 +36,7 @@ log = logging.getLogger(__name__)
 
 
 # Default minimum polony threshold - samples below this are skipped
-DEFAULT_MIN_POLONIES = 10000
+DEFAULT_MIN_POLONIES = 1000
 
 
 def _get_min_polonies() -> int:
@@ -738,8 +738,12 @@ class MultiqcModule(BaseMultiqcModule):
             if not directory:
                 continue
 
-            # Get RunManifest.json from run output root (two levels up from project directory)
-            base_directory = Path(directory).parent.parent
+            # Get RunManifest.json from run output root (check if it exists in the same directory or try two levels up)
+            base_directory = Path(directory).resolve()
+            if (base_directory / "RunManifest.json").exists():
+                base_directory = base_directory
+            else:
+                base_directory = base_directory.parent.parent
             run_manifest = base_directory / "RunManifest.json"
             project_stats = json.loads(f["f"])
             run_analysis_name = self._extract_run_analysis_name(

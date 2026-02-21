@@ -559,10 +559,23 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
     return plot_html, plot_name, anchor, description, helptext, run_data
 
 
+def _run_has_reads(run_entry: dict) -> bool:
+    """True if run has valid Reads list with at least one read and required keys for run plots."""
+    reads = run_entry.get("Reads")
+    if not reads or not isinstance(reads, list):
+        return False
+    if len(reads) < 1:
+        return False
+    r0 = reads[0]
+    return isinstance(r0, dict) and "QualityScoreHistogram" in r0 and "PerReadMeanQualityScoreHistogram" in r0
+
+
 def plot_base_quality_hist(run_data, color_dict):
-    # Prepare plot data for per base BQ histogram
+    # Prepare plot data for per base BQ histogram (skip runs without Reads)
     bq_hist_dict: Dict[str, Dict[int, float]] = {}
     for s_name in natsorted(run_data.keys()):
+        if not _run_has_reads(run_data[s_name]):
+            continue
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         R1_base_quality_counts = run_data[s_name]["Reads"][0]["QualityScoreHistogram"]
         R2_base_quality_counts = [0] * len(R1_base_quality_counts)
@@ -577,6 +590,8 @@ def plot_base_quality_hist(run_data, color_dict):
     # Prepare plot data for per read average BQ histogram
     per_read_quality_hist_dict: Dict[str, Dict[int, float]] = {}
     for s_name in natsorted(run_data.keys()):
+        if not _run_has_reads(run_data[s_name]):
+            continue
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         R1_quality_counts = run_data[s_name]["Reads"][0]["PerReadMeanQualityScoreHistogram"]
         R2_quality_counts = [0] * len(R1_quality_counts)
@@ -637,15 +652,37 @@ def plot_base_quality_hist(run_data, color_dict):
 
 
 def plot_base_quality_by_cycle(run_data, color_dict):
-    # Prepare plot data for median BQ of each cycle
+    # Prepare plot data for median BQ of each cycle (skip runs without Reads/Cycles)
+    runs_with_reads = [
+        s
+        for s in run_data
+        if _run_has_reads(run_data[s])
+        and run_data[s]["Reads"][0].get("Cycles")
+    ]
+    if not runs_with_reads:
+        plot_content: list[Any] = []
+        plot_html = linegraph.plot(
+            plot_content,
+            pconfig={"id": "bases2fastq_run_bq_by_cycle", "title": "bases2fastq: Run Base Quality by Cycle"},
+        )
+        return (
+            plot_html,
+            "Run Base Quality by Cycle",
+            "bq_by_cycle",
+            "Base quality by cycle",
+            "No run data with Reads available.",
+            plot_content,
+        )
 
     r1r2_split = 0
-    for s_name in natsorted(run_data.keys()):
-        R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
-        r1r2_split = max(r1r2_split, R1CycleNum)
+    for s_name in natsorted(runs_with_reads):
+        read0 = run_data[s_name]["Reads"][0]
+        if read0.get("Cycles"):
+            R1CycleNum = len(read0["Cycles"])
+            r1r2_split = max(r1r2_split, R1CycleNum)
 
     median_dict: Dict[str, Dict[int, float]] = {}
-    for s_name in natsorted(run_data.keys()):
+    for s_name in natsorted(runs_with_reads):
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         cycle_dict: Dict[int, float] = {}
         R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
@@ -660,7 +697,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
 
     # Prepare plot data for mean BQ of each cycle
     mean_dict: Dict[str, Dict[int, float]] = {}
-    for s_name in natsorted(run_data.keys()):
+    for s_name in natsorted(runs_with_reads):
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         # Update each sample cycle info
         cycle_dict = {}
@@ -675,7 +712,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
 
     # Prepare plot data for %Q30 of each cycle
     Q30_dict = {}
-    for s_name in natsorted(run_data.keys()):
+    for s_name in natsorted(runs_with_reads):
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         # Update each sample cycle info
         cycle_dict = dict()
@@ -690,7 +727,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
 
     # Prepare plot data for %Q40 of each cycle
     Q40_dict = {}
-    for s_name in natsorted(run_data.keys()):
+    for s_name in natsorted(runs_with_reads):
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         cycle_dict = dict()
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
@@ -705,7 +742,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for %Q50 of each cycle
     Q50_dict = {}
     percent_q50_values = set()
-    for s_name in natsorted(run_data.keys()):
+    for s_name in natsorted(runs_with_reads):
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         cycle_dict = dict()
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
@@ -729,11 +766,11 @@ def plot_base_quality_by_cycle(run_data, color_dict):
 
     # Prepare plot data for % base calls below PF threshold
     below_pf_dict = {}
-    for s_name in natsorted(run_data.keys()):
+    for s_name in natsorted(runs_with_reads):
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         cycle_dict = dict()
         R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
-        if "PercentBelowFilterThreshold" not in run_data[s_name]["Reads"][0]["Cycles"][0]:
+        if not run_data[s_name]["Reads"][0]["Cycles"] or "PercentBelowFilterThreshold" not in run_data[s_name]["Reads"][0]["Cycles"][0]:
             continue
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
