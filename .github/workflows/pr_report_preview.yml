@@ -37,6 +37,19 @@ jobs:
 
           PR_NUMBER=$(cat pr-number.txt)
           HEAD_SHA=$(cat head-sha.txt)
+
+          # Validate PR number is a positive integer
+          if ! echo "$PR_NUMBER" | grep -qE '^[0-9]+$'; then
+            echo "::error::Invalid PR number: $PR_NUMBER"
+            exit 1
+          fi
+
+          # Validate HEAD_SHA is a hex string
+          if ! echo "$HEAD_SHA" | grep -qE '^[0-9a-f]{40}$'; then
+            echo "::error::Invalid HEAD SHA: $HEAD_SHA"
+            exit 1
+          fi
+
           echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
           echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -55,7 +68,7 @@ jobs:
         id: detect
         run: |
           # Get base branch from the PR
-          BASE_REF=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json baseRefName -q .baseRefName)
+          BASE_REF=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json baseRefName -q .baseRefName)
           echo "Base branch: $BASE_REF"
 
           # Fetch the base branch for diff
@@ -77,6 +90,14 @@ jobs:
             exit 0
           fi
 
+          # Validate module names contain only safe characters (alphanumeric, hyphens, underscores)
+          for mod in $modules; do
+            if ! echo "$mod" | grep -qE '^[a-zA-Z0-9_-]+$'; then
+              echo "::error::Invalid module name: $mod"
+              exit 1
+            fi
+          done
+
           echo "Detected modified modules: $modules"
           echo "has_modules=true" >> "$GITHUB_OUTPUT"
 
@@ -90,6 +111,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
 
       - name: "Post comment if no modules changed"
         if: steps.pr-info.outputs.skip != 'true' && steps.detect.outputs.has_modules != 'true'
@@ -126,10 +148,14 @@ jobs:
             --force \
             --verbose \
             --outdir multiqc_report \
-            --title "PR #${{ steps.pr-info.outputs.pr_number }} Preview" \
-            --comment "Modules: ${{ steps.detect.outputs.module_list }}" \
-            ${{ steps.detect.outputs.module_flags }} \
+            --title "PR #${PR_NUMBER} Preview" \
+            --comment "Modules: ${MODULE_LIST}" \
+            ${MODULE_FLAGS} \
             test-data/data/modules
+        env:
+          PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
+          MODULE_LIST: ${{ steps.detect.outputs.module_list }}
+          MODULE_FLAGS: ${{ steps.detect.outputs.module_flags }}
 
       - name: "Deploy to Netlify"
         if: steps.detect.outputs.has_modules == 'true'
