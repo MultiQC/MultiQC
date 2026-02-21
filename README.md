@@ -51,7 +51,11 @@ from [Bioconda](https://bioconda.github.io/) ([set up your channels](https://bio
 conda install multiqc
 ```
 
-If you would like the development version from GitHub instead, you can install it with `pip`:
+If you would like the development version from GitHub instead, you can install it with `uv` or `pip`:
+
+```bash
+uv tool install git+https://github.com/MultiQC/MultiQC.git
+```
 
 ```bash
 pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git

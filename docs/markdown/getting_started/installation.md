@@ -37,6 +37,14 @@ pip install multiqc
 ```
 
 </td></tr><tr>
+<td>uv (dev version)</td>
+<td>
+
+```bash
+uv tool install git+https://github.com/MultiQC/MultiQC.git
+```
+
+</td></tr><tr>
 <td>Pip (dev version)</td>
 <td>
 
@@ -173,6 +181,26 @@ To upgrade MultiQC:
 uv tool upgrade multiqc
 ```
 
+#### Development version
+
+If you would like the development version from GitHub instead:
+
+```bash
+uv tool install git+https://github.com/MultiQC/MultiQC.git
+```
+
+To update the dev version between releases, use `--reinstall`:
+
+```bash
+uv tool install --reinstall git+https://github.com/MultiQC/MultiQC.git
+```
+
+You can also run the dev version directly without installing, using `uvx`:
+
+```bash
+uvx --from git+https://github.com/MultiQC/MultiQC.git multiqc .
+```
+
 :::tip
 uv can also be used as a drop-in replacement for pip inside virtual environments.
 See the [uv documentation](https://docs.astral.sh/uv/) for more details.
@@ -271,9 +299,17 @@ cd MultiQC
 pip install .
 ```
 
+Or, using uv:
+
+```bash
+git clone https://github.com/MultiQC/MultiQC.git
+cd MultiQC
+uv pip install .
+```
+
 This will fetch the latest development code. To update to the latest changes, use `git pull`.
 
-Use the `--editable` flag (`pip install -e .`) if you intend to develop the code locally.
+Use the `--editable` flag (`pip install -e .` or `uv pip install -e .`) if you intend to develop the code locally.
 This symlinks the source files so that you don't have to reinstall every time you edit a file.
 
 `git` not installed? No problem - just download the flat files:
