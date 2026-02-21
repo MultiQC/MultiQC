@@ -51,6 +51,12 @@ from [Bioconda](https://bioconda.github.io/) ([set up your channels](https://bio
 conda install multiqc
 ```
 
+If you would like the development version from GitHub instead, you can install it with `pip`:
+
+```bash
+pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
+```
+
 MultiQC is also available via Docker, Singularity, and
 many more distribution methods.
 See [the documentation](https://docs.seqera.io/multiqc/getting_started/installation/) for details.
