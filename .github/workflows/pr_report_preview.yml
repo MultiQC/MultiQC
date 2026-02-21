@@ -1,4 +1,4 @@
-name: "PR Report Preview"
+name: "PR Report Preview: Build"
 
 on:
   pull_request:
@@ -7,20 +7,17 @@ on:
 
 # Cancel in-progress runs for the same PR
 concurrency:
-  group: pr-report-${{ github.event.pull_request.number }}
+  group: pr-report-build-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
-    name: "Build & Deploy Report"
+  build:
+    name: "Build Report"
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    # Only run on PRs from forks or branches, not on dependabot/bot PRs
+    # Skip bot PRs
     if: github.actor != 'dependabot[bot]'
-
-    permissions:
-      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -86,33 +83,18 @@ jobs:
             ${{ steps.detect.outputs.module_flags }} \
             test-data/data/modules
 
-      - name: "Deploy to Netlify"
+      - name: "Save PR metadata"
         if: steps.detect.outputs.has_modules == 'true'
-        id: netlify
-        uses: nwtgck/actions-netlify@v3.0
-        with:
-          publish-dir: "./multiqc_report"
-          production-deploy: false
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "PR #${{ github.event.pull_request.number }} - modules: ${{ steps.detect.outputs.module_list }}"
-          enable-pull-request-comment: false
-          enable-commit-comment: false
-          alias: multiqc-pr-${{ github.event.pull_request.number }}
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        timeout-minutes: 2
+        run: |
+          mkdir -p multiqc_report/.pr-metadata
+          echo "${{ github.event.pull_request.number }}" > multiqc_report/.pr-metadata/pr-number
+          echo "${{ github.event.pull_request.head.sha }}" > multiqc_report/.pr-metadata/head-sha
+          echo "${{ steps.detect.outputs.module_list }}" > multiqc_report/.pr-metadata/module-list
 
-      - name: "Comment on PR"
+      - name: "Upload report artifact"
         if: steps.detect.outputs.has_modules == 'true'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: actions/upload-artifact@v4
         with:
-          header: multiqc-report-preview
-          message: |
-            ## MultiQC Report Preview
-
-            A preview report has been built and deployed for the modified module(s): `${{ steps.detect.outputs.module_list }}`
-
-            **[View Report](${{ steps.netlify.outputs.deploy-url }})**
-
-            <sub>Built from ${{ github.event.pull_request.head.sha }} | [Netlify deploy log](${{ steps.netlify.outputs.deploy-url }})</sub>
+          name: multiqc-report-preview
+          path: multiqc_report/
+          retention-days: 1

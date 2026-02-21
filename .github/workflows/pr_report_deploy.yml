@@ -1,0 +1,72 @@
+name: "PR Report Preview: Deploy"
+
+on:
+  workflow_run:
+    workflows: ["PR Report Preview: Build"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: "Deploy Report to Netlify"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    # Only deploy if the build succeeded
+    if: github.event.workflow_run.conclusion == 'success'
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: "Download report artifact"
+        uses: actions/download-artifact@v4
+        with:
+          name: multiqc-report-preview
+          path: multiqc_report/
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: "Read PR metadata"
+        id: metadata
+        run: |
+          PR_NUMBER=$(cat multiqc_report/.pr-metadata/pr-number)
+          HEAD_SHA=$(cat multiqc_report/.pr-metadata/head-sha)
+          MODULE_LIST=$(cat multiqc_report/.pr-metadata/module-list)
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "module_list=$MODULE_LIST" >> "$GITHUB_OUTPUT"
+          echo "PR #$PR_NUMBER | SHA: $HEAD_SHA | Modules: $MODULE_LIST"
+
+          # Remove metadata dir so it's not deployed
+          rm -rf multiqc_report/.pr-metadata
+
+      - name: "Deploy to Netlify"
+        id: netlify
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: "./multiqc_report"
+          production-deploy: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "PR #${{ steps.metadata.outputs.pr_number }} - modules: ${{ steps.metadata.outputs.module_list }}"
+          enable-pull-request-comment: false
+          enable-commit-comment: false
+          alias: multiqc-pr-${{ steps.metadata.outputs.pr_number }}
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        timeout-minutes: 2
+
+      - name: "Comment on PR"
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ steps.metadata.outputs.pr_number }}
+          header: multiqc-report-preview
+          message: |
+            ## MultiQC Report Preview
+
+            A preview report has been built and deployed for the modified module(s): `${{ steps.metadata.outputs.module_list }}`
+
+            **[View Report](${{ steps.netlify.outputs.deploy-url }})**
+
+            <sub>Built from ${{ steps.metadata.outputs.head_sha }}</sub>
