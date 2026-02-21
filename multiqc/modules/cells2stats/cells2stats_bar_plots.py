@@ -99,6 +99,7 @@ def plot_cell_assignment(c2s_run_data):
     cats = [{"total_density": {"name": "Total Density"}}, cat, {"total_count": {"name": "Total Counts"}}, cat, cat]
 
     plot_name = "Barcoding Cell Assignment Metrics"
+    # Check if any dictionary is empty (len(dict) == 0) inside the plot_content list
     plot_html = (
         bargraph.plot(plot_content, cats, pconfig=pconfig) if min([len(el) for el in plot_content]) > 0 else None
     )

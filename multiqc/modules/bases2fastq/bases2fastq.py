@@ -5,10 +5,10 @@ import re
 import json
 import logging
 import random
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import uuid
 from pathlib import Path
-
+from natsort import natsorted
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.types import LoadedFileDict
@@ -217,14 +217,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.group_lookup_dict: Dict[str, Any] = {}  # item -> group it belongs to
         self.project_lookup_dict: Dict[str, Any] = {}  # sample -> project mapping
 
-        # === Legacy/auxiliary data structures ===
-        self.b2f_sample_data: Dict[str, Any] = {}
-        self.b2f_run_data: Dict[str, Any] = {}
-        self.b2f_run_project_data: Dict[str, Any] = {}
-        self.b2f_run_project_sample_data: Dict[str, Any] = {}
-        self.missing_runs: set = set()  # Runs referenced but not found
-        self.sample_id_to_run: Dict[str, str] = {}  # sample_id -> run_analysis_name
-
     def _validate_path(self, file_path: Path, base_directory: Path) -> bool:
         """
         Validate that a file path doesn't escape outside the expected directory hierarchy.
@@ -293,23 +285,23 @@ class MultiqcModule(BaseMultiqcModule):
         Returns:
             summary_path: The determined summary path ('run_level', 'project_level', or 'combined_level')
         """
-        # Check for available log files
-        run_level_log_files = len(list(self.find_log_files("bases2fastq/run")))
-        project_level_log_files = len(list(self.find_log_files("bases2fastq/project")))
+        # Collect log files once per pattern (find_log_files returns a generator)
+        run_level_log_files = list(self.find_log_files("bases2fastq/run"))
+        project_level_log_files = list(self.find_log_files("bases2fastq/project"))
 
-        if run_level_log_files == 0 and project_level_log_files == 0:
+        if len(run_level_log_files) == 0 and len(project_level_log_files) == 0:
             error_msg = "No run- or project-level log files found within the Bases2Fastq results."
             log.error(error_msg)
             raise ModuleNoSamplesFound(error_msg)
 
         # Parse data from available sources
-        if run_level_log_files > 0:
+        if len(run_level_log_files) > 0:
             (self.run_level_data, self.run_level_samples, self.run_level_samples_to_project) = (
-                self._parse_run_project_data("bases2fastq/run")
+                self._parse_run_project_data("bases2fastq/run", log_files=run_level_log_files)
             )
-        if project_level_log_files > 0:
+        if len(project_level_log_files) > 0:
             (self.project_level_data, self.project_level_samples, self.project_level_samples_to_project) = (
-                self._parse_run_project_data("bases2fastq/project")
+                self._parse_run_project_data("bases2fastq/project", log_files=project_level_log_files)
             )
 
         # Count samples
@@ -332,6 +324,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Determine summary path
         summary_path = self._determine_summary_path()
 
+        # Required call to confirm module is used (after confirming data was found)
+        self.add_software_version(None)
+
         # Log what was found
         log.info(f"Found {len(self.run_level_data)} run(s) within the Bases2Fastq results.")
         log.info(f"Found {len(self.project_level_data)} project(s) within the Bases2Fastq results.")
@@ -339,9 +334,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.info(f"Found {num_run_level_samples} sample(s) within the Bases2Fastq results.")
         else:
             log.info(f"Found {num_project_level_samples} sample(s) within the Bases2Fastq results.")
-
-        # Required call to confirm module is used
-        self.add_software_version(None)
 
         # Warn if no data found
         if len(self.run_level_data) == 0 and len(self.project_level_data) == 0:
@@ -374,7 +366,9 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _select_data_by_summary_path(
         self, summary_path: str
-    ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, str], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+    ) -> Tuple[
+        Dict[str, Any], Dict[str, Any], Dict[str, str], Dict[str, Any], Dict[str, Any], Dict[int, Dict[str, Any]]
+    ]:
         """
         Select the appropriate data sources based on the summary path.
 
@@ -421,13 +415,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Create run and project groups
         run_groups: Dict[str, List] = defaultdict(list)
         project_groups: Dict[str, List] = defaultdict(list)
+        # Only populated when summary_path == "project_level"; empty for run_level/combined_level
         in_project_sample_groups: Dict[str, List] = defaultdict(list)
         ind_sample_groups: Dict[str, List] = defaultdict(list)
 
-        for sample in sample_data.keys():
+        for sample in natsorted(sample_data.keys()):
             run_name, _ = sample.split("__")
             run_groups[run_name].append(sample)
-            sample_project = samples_to_projects[sample]
+            sample_project = samples_to_projects.get(sample, "DefaultProject")
             project_groups[sample_project].append(sample)
             ind_sample_groups[sample] = [sample]
             if summary_path == "project_level":
@@ -458,7 +453,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Assign colors to samples
         self.sample_color: Dict[str, str] = {}
-        for sample_name in samples_to_projects.keys():
+        for sample_name in natsorted(samples_to_projects.keys()):
             if summary_path == "project_level" or len(project_groups) == 1:
                 sample_color = self.group_color[sample_name]
             else:
@@ -477,7 +472,7 @@ class MultiqcModule(BaseMultiqcModule):
         samples_to_projects: Dict[str, str],
         manifest_data: Dict[str, Any],
         index_assignment_data: Dict[str, Any],
-        unassigned_sequences: Dict[str, Any],
+        unassigned_sequences: Dict[int, Dict[str, Any]],
     ) -> None:
         """Generate all plots and add sections to the report."""
         # QC metrics table
@@ -541,7 +536,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         return f"{run_name}-{analysis_id[0:4]}"
 
-    def _parse_run_project_data(self, data_source: str) -> List[Dict[str, Any]]:
+    def _parse_run_project_data(
+        self, data_source: str, log_files: Optional[List[LoadedFileDict[Any]]] = None
+    ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, str]]:
         """
         Parse RunStats.json files to extract run/project and sample-level data.
 
@@ -550,9 +547,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         Args:
             data_source: Search pattern key ("bases2fastq/run" or "bases2fastq/project")
+            log_files: Optional pre-collected list of file dicts from find_log_files.
+                When provided, used instead of calling find_log_files again.
 
         Returns:
-            List containing:
+            Tuple of:
             - runs_global_data: Dict[run_name, run_stats] - Run/project level metrics
             - runs_sample_data: Dict[sample_id, sample_stats] - Per-sample metrics
             - sample_to_project: Dict[sample_id, project_name] - Sample-to-project mapping
@@ -560,13 +559,14 @@ class MultiqcModule(BaseMultiqcModule):
         Data Flow:
             RunStats.json -> parse -> filter samples by min_polonies -> populate dicts
         """
-        runs_global_data = {}
-        runs_sample_data = {}
-        sample_to_project = {}
+        runs_global_data: Dict[str, Any] = {}
+        runs_sample_data: Dict[str, Any] = {}
+        sample_to_project: Dict[str, str] = {}
         if data_source == "":
-            return [runs_global_data, runs_sample_data, sample_to_project]
+            return (runs_global_data, runs_sample_data, sample_to_project)
 
-        for f in self.find_log_files(data_source):
+        files_to_process = log_files if log_files is not None else list(self.find_log_files(data_source))
+        for f in files_to_process:
             data = json.loads(f["f"])
 
             # Copy incomind data and reset samples to include only desired
@@ -619,7 +619,53 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
 
-        return [runs_global_data, runs_sample_data, sample_to_project]
+        return (runs_global_data, runs_sample_data, sample_to_project)
+
+    def _extract_manifest_lane_settings(
+        self, run_manifest_data: Dict[str, Any], run_analysis_name: str
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Extract per-lane settings from a parsed RunManifest.json Settings section.
+
+        Args:
+            run_manifest_data: Parsed RunManifest.json (must contain "Settings" list)
+            run_analysis_name: Run identifier for building run_lane keys
+
+        Returns:
+            Dict[run_lane, settings] where run_lane = "{run_analysis_name} | L{lane_id}"
+            and settings contain Indexing, AdapterTrimType, R1/R2AdapterMinimumTrimmedLength
+        """
+        result: Dict[str, Dict[str, Any]] = {}
+        if "Settings" not in run_manifest_data:
+            return result
+        for lane_data in run_manifest_data["Settings"]:
+            lane_id = lane_data.get("Lane")
+            if not lane_id:
+                log.error("<Lane> not found in Settings section of RunManifest. Skipping lanes.")
+                continue
+            lane_name = f"L{lane_id}"
+            run_lane = f"{run_analysis_name} | {lane_name}"
+            result[run_lane] = {}
+
+            indices = []
+            indices_cycles = []
+            mask_pattern = re.compile(r"^I\d+Mask$")
+            matching_keys = [key for key in lane_data.keys() if mask_pattern.match(key)]
+            for key in matching_keys:
+                for mask_info in lane_data[key]:
+                    if mask_info["Read"] not in indices:
+                        indices.append(mask_info["Read"])
+                    indices_cycles.append(str(len(mask_info["Cycles"])))
+            indexing = f"{' + '.join(indices_cycles)}<br>{' + '.join(indices)}"
+            result[run_lane]["Indexing"] = indexing
+            result[run_lane]["AdapterTrimType"] = lane_data.get("AdapterTrimType", "N/A")
+            result[run_lane]["R1AdapterMinimumTrimmedLength"] = lane_data.get(
+                "R1AdapterMinimumTrimmedLength", "N/A"
+            )
+            result[run_lane]["R2AdapterMinimumTrimmedLength"] = lane_data.get(
+                "R2AdapterMinimumTrimmedLength", "N/A"
+            )
+        return result
 
     def _parse_run_manifest(self, data_source: str) -> Dict[str, Any]:
         """
@@ -636,7 +682,7 @@ class MultiqcModule(BaseMultiqcModule):
         Returns:
             Dict[run_lane, settings] where run_lane = "{run_name} | L{lane_id}"
         """
-        runs_manifest_data = {}
+        runs_manifest_data: Dict[str, Dict[str, Any]] = {}
 
         if data_source == "":
             return runs_manifest_data
@@ -662,34 +708,9 @@ class MultiqcModule(BaseMultiqcModule):
                     f"<Settings> section not found in {directory}/RunManifest.json.\nSkipping RunManifest metrics."
                 )
             else:
-                for lane_data in run_manifest["Settings"]:
-                    lane_id = lane_data.get("Lane")
-                    if not lane_id:
-                        log.error("<Lane> not found in Settings section of RunManifest. Skipping lanes.")
-                        continue
-                    lane_name = f"L{lane_id}"
-                    run_lane = f"{run_analysis_name} | {lane_name}"
-                    runs_manifest_data[run_lane] = {}
-
-                    indices = []
-                    indices_cycles = []
-                    mask_pattern = re.compile(r"^I\d+Mask$")
-                    matching_keys = [key for key in lane_data.keys() if mask_pattern.match(key)]
-                    for key in matching_keys:
-                        for mask_info in lane_data[key]:
-                            if mask_info["Read"] not in indices:
-                                indices.append(mask_info["Read"])
-                            indices_cycles.append(str(len(mask_info["Cycles"])))
-                    indexing = f"{' + '.join(indices_cycles)}<br>{' + '.join(indices)}"
-                    runs_manifest_data[run_lane]["Indexing"] = indexing
-
-                    runs_manifest_data[run_lane]["AdapterTrimType"] = lane_data.get("AdapterTrimType", "N/A")
-                    runs_manifest_data[run_lane]["R1AdapterMinimumTrimmedLength"] = lane_data.get(
-                        "R1AdapterMinimumTrimmedLength", "N/A"
-                    )
-                    runs_manifest_data[run_lane]["R2AdapterMinimumTrimmedLength"] = lane_data.get(
-                        "R2AdapterMinimumTrimmedLength", "N/A"
-                    )
+                runs_manifest_data.update(
+                    self._extract_manifest_lane_settings(run_manifest, run_analysis_name)
+                )
 
             self.add_data_source(f=f, s_name=run_analysis_name, module="bases2fastq")
 
@@ -707,7 +728,7 @@ class MultiqcModule(BaseMultiqcModule):
             + ../../RunManifest.json (run-level manifest)
             -> Extract per-lane settings
         """
-        project_manifest_data = {}
+        project_manifest_data: Dict[str, Dict[str, Any]] = {}
 
         if data_source == "":
             return project_manifest_data
@@ -739,34 +760,9 @@ class MultiqcModule(BaseMultiqcModule):
             if "Settings" not in run_manifest_data:
                 log.warning(f"<Settings> section not found in {run_manifest}.\nSkipping RunManifest metrics.")
             else:
-                for lane_data in run_manifest_data["Settings"]:
-                    lane_id = lane_data.get("Lane")
-                    if not lane_id:
-                        log.error("<Lane> not found in Settings section of RunManifest. Skipping lanes.")
-                        continue
-                    lane_name = f"L{lane_id}"
-                    run_lane = f"{run_analysis_name} | {lane_name}"
-                    project_manifest_data[run_lane] = {}
-
-                    indices = []
-                    indices_cycles = []
-                    mask_pattern = re.compile(r"^I\d+Mask$")
-                    matching_keys = [key for key in lane_data.keys() if mask_pattern.match(key)]
-                    for key in matching_keys:
-                        for mask_info in lane_data[key]:
-                            if mask_info["Read"] not in indices:
-                                indices.append(mask_info["Read"])
-                            indices_cycles.append(str(len(mask_info["Cycles"])))
-                    indexing = f"{' + '.join(indices_cycles)}<br>{' + '.join(indices)}"
-                    project_manifest_data[run_lane]["Indexing"] = indexing
-
-                    project_manifest_data[run_lane]["AdapterTrimType"] = lane_data.get("AdapterTrimType", "N/A")
-                    project_manifest_data[run_lane]["R1AdapterMinimumTrimmedLength"] = lane_data.get(
-                        "R1AdapterMinimumTrimmedLength", "N/A"
-                    )
-                    project_manifest_data[run_lane]["R2AdapterMinimumTrimmedLength"] = lane_data.get(
-                        "R2AdapterMinimumTrimmedLength", "N/A"
-                    )
+                project_manifest_data.update(
+                    self._extract_manifest_lane_settings(run_manifest_data, run_analysis_name)
+                )
             data_source_info: LoadedFileDict[Any] = {
                 "fn": str(run_manifest.name),
                 "root": str(run_manifest.parent),
@@ -778,7 +774,84 @@ class MultiqcModule(BaseMultiqcModule):
 
         return project_manifest_data
 
-    def _parse_run_unassigned_sequences(self, data_source: str) -> Dict[str, Any]:
+    def _build_index_assignment_from_stats(
+        self,
+        stats_dict: Dict[str, Any],
+        run_analysis_name: str,
+        project: Optional[str] = None,
+    ) -> Tuple[Dict[str, Dict[str, Any]], int]:
+        """
+        Build per-run index assignment dict from RunStats SampleStats/Occurrences.
+
+        Returns:
+            Tuple of (run_inner_dict, total_polonies). run_inner_dict is
+            { merged_expected_sequence -> { SampleID, SamplePolonyCounts, PercentOfPolonies, Index1, Index2, ... } }
+        """
+        run_inner: Dict[str, Dict[str, Any]] = {}
+        total_polonies = stats_dict.get("NumPoloniesBeforeTrimming", 0)
+        if "SampleStats" not in stats_dict:
+            return (run_inner, total_polonies)
+        for sample_data in stats_dict["SampleStats"]:
+            sample_name = sample_data.get("SampleName")
+            sample_id = "__".join([run_analysis_name, sample_name]) if (run_analysis_name and sample_name) else None
+            if "Occurrences" not in sample_data:
+                log.error(f"Missing data needed to extract index assignment for sample {sample_id}. Skipping.")
+                continue
+            for occurrence in sample_data["Occurrences"]:
+                sample_expected_seq = occurrence.get("ExpectedSequence")
+                sample_counts = occurrence.get("NumPoloniesBeforeTrimming")
+                if any(x is None for x in [sample_expected_seq, sample_counts, sample_id]):
+                    log.error(f"Missing data needed to extract index assignment for sample {sample_id}. Skipping.")
+                    continue
+                if sample_expected_seq not in run_inner:
+                    entry: Dict[str, Any] = {
+                        "SampleID": sample_id,
+                        "SamplePolonyCounts": 0,
+                        "PercentOfPolonies": float("nan"),
+                        "Index1": "",
+                        "Index2": "",
+                    }
+                    if project is not None:
+                        entry["Project"] = project
+                    run_inner[sample_expected_seq] = entry
+                run_inner[sample_expected_seq]["SamplePolonyCounts"] += sample_counts
+        for entry in run_inner.values():
+            if total_polonies > 0:
+                entry["PercentOfPolonies"] = round(entry["SamplePolonyCounts"] / total_polonies * 100, 2)
+        return (run_inner, total_polonies)
+
+    def _merge_manifest_index_sequences(
+        self,
+        sample_to_index_assignment: Dict[str, Any],
+        run_manifest_data: Dict[str, Any],
+        run_analysis_name: str,
+    ) -> None:
+        """Merge Index1/Index2 from RunManifest Samples into sample_to_index_assignment (mutates)."""
+        if "Samples" not in run_manifest_data or run_analysis_name not in sample_to_index_assignment:
+            return
+        run_data = sample_to_index_assignment[run_analysis_name]
+        for sample_data in run_manifest_data["Samples"]:
+            sample_name = sample_data.get("SampleName")
+            if run_analysis_name is None or sample_name is None or "Indexes" not in sample_data:
+                continue
+            sample_id = "__".join([run_analysis_name, sample_name])
+            for index_data in sample_data["Indexes"]:
+                index_1 = index_data.get("Index1", "")
+                index_2 = index_data.get("Index2", "")
+                merged_indices = f"{index_1}{index_2}"
+                if merged_indices not in run_data:
+                    log.error(f"Index assignment information not found for sample {sample_id}. Skipping.")
+                    continue
+                if sample_id != run_data[merged_indices]["SampleID"]:
+                    log.error(
+                        f"RunManifest SampleID <{sample_id}> does not match "
+                        f"RunStats SampleID {run_data[merged_indices]['SampleID']}. Skipping."
+                    )
+                    continue
+                run_data[merged_indices]["Index1"] = index_1
+                run_data[merged_indices]["Index2"] = index_2
+
+    def _parse_run_unassigned_sequences(self, data_source: str) -> Dict[int, Dict[str, Any]]:
         """
         Parse unassigned/unknown barcode sequences from run-level data.
 
@@ -789,7 +862,7 @@ class MultiqcModule(BaseMultiqcModule):
             RunStats.json -> Lanes -> UnassignedSequences
             -> Extract: sequence, count, percentage of total polonies
         """
-        run_unassigned_sequences = {}
+        run_unassigned_sequences: Dict[int, Dict[str, Any]] = {}
         if data_source == "":
             return run_unassigned_sequences
 
@@ -849,7 +922,7 @@ class MultiqcModule(BaseMultiqcModule):
             + RunManifest.json -> Samples -> index sequences (Index1, Index2)
             -> Combined index assignment table
         """
-        sample_to_index_assignment = {}
+        sample_to_index_assignment: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
         if manifest_data_source == "":
             return sample_to_index_assignment
@@ -865,9 +938,6 @@ class MultiqcModule(BaseMultiqcModule):
             if run_stats is None:
                 continue
 
-            total_polonies = 0
-
-            # Get run name information
             run_analysis_name = self._extract_run_analysis_name(run_stats, source_info=str(run_stats_path))
             if run_analysis_name is None:
                 continue
@@ -877,7 +947,6 @@ class MultiqcModule(BaseMultiqcModule):
                 log.info(f"Skipping <{run_analysis_name}> because it is present in ignore list.")
                 continue
 
-            # Ensure sample stats are present
             if "SampleStats" not in run_stats:
                 log.error(
                     f"Error, missing SampleStats in RunStats.json. Skipping index assignment metrics.\n"
@@ -887,43 +956,8 @@ class MultiqcModule(BaseMultiqcModule):
                 )
                 continue
 
-            # Extract per sample polony counts and overall total counts
-            total_polonies = run_stats.get("NumPoloniesBeforeTrimming", 0)
-            for sample_data in run_stats["SampleStats"]:
-                sample_name = sample_data.get("SampleName")
-                sample_id = None
-                if run_analysis_name and sample_name:
-                    sample_id = "__".join([run_analysis_name, sample_name])
-
-                if "Occurrences" not in sample_data:
-                    log.error(f"Missing data needed to extract index assignment for sample {sample_id}. Skipping.")
-                    continue
-
-                for occurrence in sample_data["Occurrences"]:
-                    sample_expected_seq = occurrence.get("ExpectedSequence")
-                    sample_counts = occurrence.get("NumPoloniesBeforeTrimming")
-                    if any([element is None for element in [sample_expected_seq, sample_counts, sample_id]]):
-                        log.error(f"Missing data needed to extract index assignment for sample {sample_id}. Skipping.")
-                        continue
-                    if run_analysis_name not in sample_to_index_assignment:
-                        sample_to_index_assignment[run_analysis_name] = {}
-                    if sample_expected_seq not in sample_to_index_assignment[run_analysis_name]:
-                        sample_to_index_assignment[run_analysis_name][sample_expected_seq] = {
-                            "SampleID": sample_id,
-                            "SamplePolonyCounts": 0,
-                            "PercentOfPolonies": float("nan"),
-                            "Index1": "",
-                            "Index2": "",
-                        }
-                    sample_to_index_assignment[run_analysis_name][sample_expected_seq]["SamplePolonyCounts"] += (
-                        sample_counts
-                    )
-
-            for sample_data in sample_to_index_assignment[run_analysis_name].values():
-                if total_polonies > 0:
-                    sample_data["PercentOfPolonies"] = round(
-                        sample_data["SamplePolonyCounts"] / total_polonies * 100, 2
-                    )
+            run_inner, _ = self._build_index_assignment_from_stats(run_stats, run_analysis_name)
+            sample_to_index_assignment[run_analysis_name] = run_inner
 
             run_manifest = json.loads(f["f"])
             if "Samples" not in run_manifest:
@@ -934,28 +968,7 @@ class MultiqcModule(BaseMultiqcModule):
             elif len(sample_to_index_assignment) == 0:
                 log.warning("Index assignment data missing. Skipping creation of index assignment metrics.")
             else:
-                for sample_data in run_manifest["Samples"]:
-                    sample_name = sample_data.get("SampleName")
-                    sample_id = None
-                    if run_analysis_name is None or sample_name is None or "Indexes" not in sample_data:
-                        continue
-                    sample_id = "__".join([run_analysis_name, sample_name])
-                    for index_data in sample_data["Indexes"]:
-                        index_1 = index_data.get("Index1", "")
-                        index_2 = index_data.get("Index2", "")
-                        merged_indices = f"{index_1}{index_2}"
-                        if merged_indices not in sample_to_index_assignment[run_analysis_name]:
-                            log.error(f"Index assignment information not found for sample {sample_id}. Skipping.")
-                            continue
-                        if sample_id != sample_to_index_assignment[run_analysis_name][merged_indices]["SampleID"]:
-                            log.error(
-                                f"RunManifest SampleID <{sample_id}> does not match "
-                                f"RunStats SampleID {sample_to_index_assignment[merged_indices]['SampleID']}."
-                                "Skipping."
-                            )
-                            continue
-                        sample_to_index_assignment[run_analysis_name][merged_indices]["Index1"] = index_1
-                        sample_to_index_assignment[run_analysis_name][merged_indices]["Index2"] = index_2
+                self._merge_manifest_index_sequences(sample_to_index_assignment, run_manifest, run_analysis_name)
 
         return sample_to_index_assignment
 
@@ -971,7 +984,7 @@ class MultiqcModule(BaseMultiqcModule):
             + ../../RunManifest.json -> Samples -> index sequences
             -> Combined index assignment table
         """
-        sample_to_index_assignment = {}
+        sample_to_index_assignment: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
         if data_source == "":
             return sample_to_index_assignment
@@ -999,7 +1012,6 @@ class MultiqcModule(BaseMultiqcModule):
                 log.info(f"Skipping <{run_analysis_name}> because it is present in ignore list.")
                 continue
 
-            # Ensure sample stats are present
             if "SampleStats" not in project_stats:
                 log.error(
                     f"Error, missing SampleStats in RunStats.json. Skipping index assignment metrics.\n"
@@ -1009,45 +1021,10 @@ class MultiqcModule(BaseMultiqcModule):
                 )
                 continue
 
-            # Extract per sample polony counts and overall total counts
-            total_polonies = project_stats.get("NumPoloniesBeforeTrimming", 0)
-            for sample_data in project_stats["SampleStats"]:
-                sample_name = sample_data.get("SampleName")
-                sample_id = None
-
-                if run_analysis_name and sample_name:
-                    sample_id = "__".join([run_analysis_name, sample_name])
-
-                if "Occurrences" not in sample_data:
-                    log.error(f"Missing data needed to extract index assignment for sample {sample_id}. Skipping.")
-                    continue
-
-                for occurrence in sample_data["Occurrences"]:
-                    sample_expected_seq = occurrence.get("ExpectedSequence")
-                    sample_counts = occurrence.get("NumPoloniesBeforeTrimming")
-                    if any([element is None for element in [sample_expected_seq, sample_counts, sample_id]]):
-                        log.error(f"Missing data needed to extract index assignment for sample {sample_id}. Skipping.")
-                        continue
-                    if run_analysis_name not in sample_to_index_assignment:
-                        sample_to_index_assignment[run_analysis_name] = {}
-                    if sample_expected_seq not in sample_to_index_assignment[run_analysis_name]:
-                        sample_to_index_assignment[run_analysis_name][sample_expected_seq] = {
-                            "SampleID": sample_id,
-                            "Project": project,
-                            "SamplePolonyCounts": 0,
-                            "PercentOfPolonies": float("nan"),
-                            "Index1": "",
-                            "Index2": "",
-                        }
-                    sample_to_index_assignment[run_analysis_name][sample_expected_seq]["SamplePolonyCounts"] += (
-                        sample_counts
-                    )
-
-            for sample_data in sample_to_index_assignment[run_analysis_name].values():
-                if total_polonies > 0:
-                    sample_data["PercentOfPolonies"] = round(
-                        sample_data["SamplePolonyCounts"] / total_polonies * 100, 2
-                    )
+            run_inner, _ = self._build_index_assignment_from_stats(
+                project_stats, run_analysis_name, project=project
+            )
+            sample_to_index_assignment[run_analysis_name] = run_inner
 
             run_manifest_data = self._read_json_file(run_manifest, base_directory=base_directory)
             if run_manifest_data is None:
@@ -1061,31 +1038,13 @@ class MultiqcModule(BaseMultiqcModule):
             elif len(sample_to_index_assignment) == 0:
                 log.warning("Index assignment data missing. Skipping creation of index assignment metrics.")
             else:
-                for sample_data in run_manifest_data["Samples"]:
-                    sample_name = sample_data.get("SampleName")
-                    sample_id = None
-                    if run_analysis_name is None or sample_name is None or "Indexes" not in sample_data:
-                        continue
-                    sample_id = "__".join([run_analysis_name, sample_name])
-                    for index_data in sample_data["Indexes"]:
-                        index_1 = index_data.get("Index1", "")
-                        index_2 = index_data.get("Index2", "")
-                        merged_indices = f"{index_1}{index_2}"
-                        if merged_indices not in sample_to_index_assignment[run_analysis_name]:
-                            continue
-                        if sample_id != sample_to_index_assignment[run_analysis_name][merged_indices]["SampleID"]:
-                            log.error(
-                                f"RunManifest SampleID <{sample_id}> does not match "
-                                f"RunStats SampleID {sample_to_index_assignment[merged_indices]['SampleID']}."
-                                "Skipping."
-                            )
-                            continue
-                        sample_to_index_assignment[run_analysis_name][merged_indices]["Index1"] = index_1
-                        sample_to_index_assignment[run_analysis_name][merged_indices]["Index2"] = index_2
+                self._merge_manifest_index_sequences(
+                    sample_to_index_assignment, run_manifest_data, run_analysis_name
+                )
 
         return sample_to_index_assignment
 
-    def add_run_plots(self, data: Dict[str, Any], plot_functions: List[Callable]) -> None:
+    def add_run_plots(self, data: Dict[Any, Any], plot_functions: List[Callable]) -> None:
         for func in plot_functions:
             plot_html, plot_name, anchor, description, helptext, plot_data = func(data, self.run_color)
             self.add_section(name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext)
