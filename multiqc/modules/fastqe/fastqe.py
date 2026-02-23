@@ -1,59 +1,11 @@
 # https://github.com/fastqe/fastqe
 # https://github.com/fastqe/fastqe/issues/11
+import html
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import table
-from multiqc.plots.table_object import TableConfig
 
 log = logging.getLogger(__name__)
-
-# Emoji to Phred quality score mapping, based on FastQE default emoji encoding.
-# See: https://github.com/fastqe/fastqe/blob/master/fastqe/map_data.py
-EMOJI_TO_PHRED: dict[str, int] = {
-    "🚫": 0,
-    "❌": 1,
-    "👺": 2,
-    "💔": 3,
-    "🙅": 4,
-    "👾": 5,
-    "🙈": 6,
-    "🙊": 7,
-    "🙉": 8,
-    "🤡": 9,
-    "👹": 10,
-    "😡": 11,
-    "😱": 12,
-    "😰": 13,
-    "😅": 14,
-    "😭": 15,
-    "😒": 16,
-    "🤢": 17,
-    "😩": 18,
-    "😧": 19,
-    "😿": 20,
-    "😾": 21,
-    "😐": 22,
-    "😶": 23,
-    "😙": 24,
-    "😊": 25,
-    "😃": 26,
-    "😘": 27,
-    "😁": 28,
-    "😗": 29,
-    "😚": 30,
-    "😇": 31,
-    "😄": 32,
-    "😎": 33,
-    "😉": 34,
-    "😝": 35,
-    "😛": 36,
-    "😋": 37,
-    "😌": 38,
-    "😜": 39,
-    "😆": 40,
-    "🤗": 41,
-}
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -62,7 +14,7 @@ class MultiqcModule(BaseMultiqcModule):
     fun and visually intuitive way to assess sequencing data quality.
 
     The module parses the tab-separated output from FastQE and displays the
-    emoji quality strings for each sample along with summary statistics.
+    emoji quality strings for each sample in the report.
 
     **Note** — MultiQC parses the standard output from FastQE. You must capture
     FastQE stdout to a file when running, for example:
@@ -107,54 +59,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self._fastqe_emoji_table(fastqe_data),
         )
 
-        numeric_data = self._compute_numeric_stats(fastqe_data)
-        if numeric_data:
-            headers: dict = {
-                "avg_quality": {
-                    "title": "Avg Quality",
-                    "description": "Average Phred quality score across all bases",
-                    "min": 0,
-                    "max": 41,
-                    "scale": "RdYlGn",
-                    "format": "{:,.1f}",
-                },
-                "min_quality": {
-                    "title": "Min Quality",
-                    "description": "Minimum Phred quality score",
-                    "min": 0,
-                    "max": 41,
-                    "scale": "RdYlGn",
-                },
-                "max_quality": {
-                    "title": "Max Quality",
-                    "description": "Maximum Phred quality score",
-                    "min": 0,
-                    "max": 41,
-                    "scale": "RdYlGn",
-                },
-                "num_bases": {
-                    "title": "# Bases",
-                    "description": "Number of base positions",
-                    "format": "{:,d}",
-                    "scale": "Blues",
-                },
-            }
-            self.general_stats_addcols(numeric_data, headers)
-
-            self.add_section(
-                name="Quality Statistics",
-                anchor="fastqe-stats",
-                description="Numeric quality score statistics derived from emoji encodings.",
-                plot=table.plot(
-                    numeric_data,
-                    headers,
-                    TableConfig(
-                        id="fastqe_stats_table",
-                        title="FastQE: Quality Statistics",
-                    ),
-                ),
-            )
-
         self.write_data_file(fastqe_data, "multiqc_fastqe")
 
     def _parse_fastqe_log(self, f) -> dict[str, dict[str, str]] | None:
@@ -189,9 +93,9 @@ class MultiqcModule(BaseMultiqcModule):
             for stat_type, emoji_str in sorted(data.items()):
                 rows.append(
                     f"<tr>"
-                    f'<td style="font-weight:bold;">{s_name}</td>'
-                    f"<td>{stat_type}</td>"
-                    f'<td style="white-space:nowrap; font-size:1.2em; letter-spacing:2px;">{emoji_str}</td>'
+                    f'<td style="font-weight:bold;">{html.escape(s_name)}</td>'
+                    f"<td>{html.escape(stat_type)}</td>"
+                    f'<td style="white-space:nowrap; font-size:1.2em; letter-spacing:2px;">{html.escape(emoji_str)}</td>'
                     f"</tr>"
                 )
 
@@ -208,36 +112,3 @@ class MultiqcModule(BaseMultiqcModule):
             f"<tbody>{''.join(rows)}</tbody>"
             "</table>"
         )
-
-    def _compute_numeric_stats(self, fastqe_data: dict[str, dict[str, str]]) -> dict[str, dict[str, float]]:
-        """Convert emoji quality strings to numeric statistics."""
-        numeric_data: dict[str, dict[str, float]] = {}
-
-        for s_name, data in fastqe_data.items():
-            # Use 'mean' stat if available, otherwise first available
-            emoji_str = data.get("mean") or next(iter(data.values()), None)
-            if not emoji_str:
-                continue
-
-            scores = self._emoji_to_scores(emoji_str)
-            if not scores:
-                continue
-
-            numeric_data[s_name] = {
-                "avg_quality": sum(scores) / len(scores),
-                "min_quality": min(scores),
-                "max_quality": max(scores),
-                "num_bases": len(scores),
-            }
-
-        return numeric_data
-
-    @staticmethod
-    def _emoji_to_scores(emoji_str: str) -> list[int]:
-        """Convert an emoji quality string to a list of Phred scores."""
-        scores = []
-        for char in emoji_str:
-            if char in EMOJI_TO_PHRED:
-                scores.append(EMOJI_TO_PHRED[char])
-            # Skip spaces and other non-emoji characters
-        return scores
