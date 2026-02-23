@@ -9,6 +9,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from importlib import import_module
 
 import packaging.version
 import polars as pl
@@ -163,6 +164,7 @@ class LoadMultiqcData(BaseMultiqcModule):
                     # Extract module data first so we can use it for section defaults
                     anchor = mod_dict.get("anchor", "")
                     name = mod_dict.get("name", "")
+                    mod_id = mod_dict.get("mod_id", "")
                     info = mod_dict.get("info", "")
                     intro = mod_dict.get("intro", "")
                     comment = mod_dict.get("comment", "")
@@ -224,6 +226,14 @@ class LoadMultiqcData(BaseMultiqcModule):
                     mod.versions = versions
                     mod.intro = intro
                     mod.comment = comment
+
+                    # Register CSS and JS sections in module if they exist
+                    if mod_id:
+                        html_assets = self.register_module_assets(mod_id)
+                        log.debug(f'Add CSS to {mod_id}: {html_assets["css"]}')
+                        mod.css.update(html_assets["css"])
+                        log.debug(f'Add JS to {mod_id}: {html_assets["js"]}')
+                        mod.js.update(html_assets["js"])
 
                     # Check for duplicate modules and merge if found (same logic as exec_modules.py)
                     existing_mod = None
@@ -432,3 +442,40 @@ class LoadMultiqcData(BaseMultiqcModule):
                 log.error(f"Error creating plot object for {anchor}: {e}")
                 if config.strict:
                     raise e
+
+
+    @staticmethod
+    def register_module_assets(module_name: str):
+        """
+        Find and register static assets for a module without instantiating it.
+        Looks in .../multiqc/modules/<module_name>/assets/{js,css}.
+        """
+        try:
+            # Most modules keep code under multiqc.modules.<name>.<name>
+            mod = import_module(f"multiqc.modules.{module_name}.{module_name}")
+        except ImportError:
+            # Some modules use subpackages, or skip if absent
+            try:
+                mod = import_module(f"multiqc.modules.{module_name}")
+            except ImportError:
+                log.debug("No importable module for %s; skipping assets", module_name)
+                return
+
+        mod_dir = Path(mod.__file__).parent
+        assets_dir = mod_dir / "assets"
+        css_dir = assets_dir / "css"
+        js_dir = assets_dir / "js"
+
+        # These two dicts mirror what modules set in __init__()
+        css_map = {}
+        js_map = {}
+
+        if css_dir.exists():
+            for css in css_dir.glob("*.css"):
+                css_map[f"assets/css/{css.name}"] = str(css)
+
+        if js_dir.exists():
+            for js in js_dir.glob("*.js"):
+                js_map[f"assets/js/{js.name}"] = str(js)
+
+        return {"css": css_map, "js": js_map}
