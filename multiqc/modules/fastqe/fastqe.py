@@ -2,7 +2,7 @@
 # https://github.com/fastqe/fastqe/issues/11
 import html
 import logging
-from typing import Optional
+from typing import Dict, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Uses emoji to represent FASTQ sequence quality scores.",
         )
 
-        fastqe_data: dict[str, dict[str, str]] = {}
+        fastqe_data: Dict[str, Dict[str, str]] = {}
         for f in self.find_log_files("fastqe", filehandles=True):
             parsed = self._parse_fastqe_log(f)
             if parsed:
@@ -62,9 +62,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(fastqe_data, "multiqc_fastqe")
 
-    def _parse_fastqe_log(self, f) -> Optional[dict[str, dict[str, str]]]:
+    def _parse_fastqe_log(self, f) -> Optional[Dict[str, Dict[str, str]]]:
         """Parse FastQE TSV: Filename\\tStatistic\\tQualities -> {sample: {stat: emoji}}"""
-        data: dict[str, dict[str, str]] = {}
+        data: Dict[str, Dict[str, str]] = {}
 
         for line in f["f"]:
             line = line.strip()
@@ -87,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
         return data if data else None
 
     @staticmethod
-    def _fastqe_emoji_table(fastqe_data: dict[str, dict[str, str]]) -> str:
+    def _fastqe_emoji_table(fastqe_data: Dict[str, Dict[str, str]]) -> str:
         """Generate an HTML table showing emoji quality strings per sample."""
         rows = []
         for s_name, data in sorted(fastqe_data.items()):
