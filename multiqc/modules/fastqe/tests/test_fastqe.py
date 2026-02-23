@@ -1,10 +1,12 @@
 """Tests for the FastQE MultiQC module."""
+
 from pathlib import Path
 
 import pytest
 from multiqc import config, report
 from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.modules.fastqe import MultiqcModule
+
 SAMPLE_FASTQE_DATA = (
     "Filename\tStatistic\tQualities\n"
     "sample1.fastq.gz\tmean\t😁😁😁😁😁😄😄😄😃😃😃😉😉😊😊😊😊😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋😋\n"
@@ -27,6 +29,7 @@ class TestFastqeParsing:
         (tmp_path / "sample1_fastqe.tsv").write_text(SAMPLE_FASTQE_DATA)
         m = run_module(tmp_path, monkeypatch)
         assert len(m.saved_raw_data["multiqc_fastqe"]) > 0
+
     def test_sample_name(self, tmp_path, monkeypatch):
         (tmp_path / "sample1_fastqe.tsv").write_text(SAMPLE_FASTQE_DATA)
         m = run_module(tmp_path, monkeypatch)
@@ -40,6 +43,7 @@ class TestFastqeParsing:
         for s_name, stats in data.items():
             assert "mean" in stats
             assert len(stats["mean"]) > 0
+
     def test_section_created(self, tmp_path, monkeypatch):
         (tmp_path / "sample1_fastqe.tsv").write_text(SAMPLE_FASTQE_DATA)
         m = run_module(tmp_path, monkeypatch)
