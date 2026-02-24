@@ -463,6 +463,7 @@ class LoadMultiqcData(BaseMultiqcModule):
         if getattr(mod, "__file__", None) is None:
             return {"css": {}, "js": {}}
 
+        mod_dir = Path(mod.__file__).parent
         assets_dir = mod_dir / "assets"
         css_dir = assets_dir / "css"
         js_dir = assets_dir / "js"
