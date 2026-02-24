@@ -1,13 +1,19 @@
-from typing import Any, Dict
+from typing import Any, Dict, cast
+
+from natsort import natsorted
+
 from multiqc.plots import bargraph, linegraph, table
+from multiqc.plots.table_object import ColumnDict
 from multiqc import config
-from .plot_runs import generate_random_string
 
-import numpy as np
 
-"""
-Functions for plotting per sample information of bases2fastq
-"""
+def _sample_has_reads(sample_entry: dict) -> bool:
+    """True if sample has valid Reads list with at least one read and Cycles."""
+    reads = sample_entry.get("Reads")
+    if not reads or not isinstance(reads, list) or len(reads) < 1:
+        return False
+    r0 = reads[0]
+    return bool(isinstance(r0, dict) and r0.get("Cycles"))
 
 
 def _calculate_sample_reads_eliminated(run_data) -> int:
@@ -39,21 +45,21 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     plot_content = dict()
     reads_present = set()
     is_percent_q50_present = False
-    for s_name in sample_data.keys():
+    for s_name in natsorted(sample_data.keys()):
         general_stats = dict()
         general_stats.update({"group": group_lookup_dict[s_name]})
         general_stats.update({"project": project_lookup_dict.get(s_name, "")})
         general_stats.update({"num_polonies_sample": sample_data[s_name]["NumPolonies"]})
-        general_stats.update({"yield_sample": sample_data[s_name]["Yield"]})
-        general_stats.update({"mean_base_quality_sample": sample_data[s_name]["QualityScoreMean"]})
-        general_stats.update({"percent_q30_sample": sample_data[s_name]["PercentQ30"]})
-        general_stats.update({"percent_q40_sample": sample_data[s_name]["PercentQ40"]})
+        general_stats.update({"yield_sample": sample_data[s_name].get("Yield", 0.0)})
+        general_stats.update({"mean_base_quality_sample": sample_data[s_name].get("QualityScoreMean", 0)})
+        general_stats.update({"percent_q30_sample": sample_data[s_name].get("PercentQ30", 0)})
+        general_stats.update({"percent_q40_sample": sample_data[s_name].get("PercentQ40", 0)})
         percent_q50 = sample_data[s_name].get("PercentQ50")
         if percent_q50 is not None:
             is_percent_q50_present = True
             general_stats.update({"percent_q50_run": percent_q50})
         general_stats.update({"reads_eliminated": _calculate_sample_reads_eliminated(sample_data[s_name])})
-        general_stats.update({"percent_mismatch": sample_data[s_name]["PercentMismatch"]})
+        general_stats.update({"percent_mismatch": sample_data[s_name].get("PercentMismatch", 0)})
         if "Reads" in sample_data[s_name]:
             for read in sample_data[s_name]["Reads"]:
                 read_name = read["Read"]
@@ -141,13 +147,13 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     }
 
     pconfig = {
-        "id": f"sample_qc_metric_table_{generate_random_string(5)}",
+        "id": "bases2fastq_sample_qc_metric_table",
         "title": "Sample QC Metrics Table",
         "no_violin": False,
     }
 
     plot_name = "Sample QC Metrics Table"
-    plot_html = table.plot(plot_content, headers, pconfig=pconfig)
+    plot_html = table.plot(plot_content, cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "sample_qc_metrics_table"
     description = "QC metrics per unique sample"
     helptext = """
@@ -169,20 +175,32 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
 
 def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
     """Create the epic HTML for the FastQC sequence content heatmap"""
+    samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
+    if not samples_with_reads:
+        empty_data: Dict[str, Dict[int, Any]] = {}
+        plot_html = linegraph.plot(
+            empty_data,
+            pconfig={
+                "id": "bases2fastq_per_cycle_base_content",
+                "title": "bases2fastq: Per Cycle Base Content Percentage",
+                "xlab": "Cycle",
+                "ylab": "Percentage of Total Reads",
+            },
+        )
+        return plot_html, "Per Cycle Base Content", "base_content", "", "", empty_data
 
     # Prep the data
-    data = dict()
+    data: Dict[str, Dict[int, Any]] = {}
 
     r1r2_split = 0
-    for s_name in sorted(sample_data.keys()):
-        paired_end = True if len(sample_data[s_name]["Reads"]) > 1 else False
+    for s_name in natsorted(samples_with_reads):
         for base in "ACTG":
             base_s_name = "__".join([s_name, base])
             data[base_s_name] = {}
             R1 = sample_data[s_name]["Reads"][0]["Cycles"]
             r1r2_split = max(r1r2_split, len(R1))
 
-    for s_name in sorted(sample_data.keys()):
+    for s_name in natsorted(samples_with_reads):
         paired_end = True if len(sample_data[s_name]["Reads"]) > 1 else False
         R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         for cycle in range(len(R1)):
@@ -216,7 +234,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
         "x_lines": [{"color": "#FF0000", "width": 2, "value": r1r2_split, "dashStyle": "dash"}],
         "colors": color_dict,
         "ymin": 0,
-        "id": f"per_cycle_base_content_{generate_random_string(5)}",
+        "id": "bases2fastq_per_cycle_base_content",
         "title": "bases2fastq: Per Cycle Base Content Percentage",
     }
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
@@ -239,15 +257,29 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
 
 
 def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
-    data = dict()
+    samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
+    if not samples_with_reads:
+        empty_data: Dict[str, Dict[int, float]] = {}
+        plot_html = linegraph.plot(
+            empty_data,
+            pconfig={
+                "id": "bases2fastq_per_cycle_n_content",
+                "title": "bases2fastq: Per Cycle N Content",
+                "xlab": "Cycle",
+                "ylab": "Percentage of N bases",
+            },
+        )
+        return plot_html, "Per Cycle N Content", "n_content", "", "", empty_data
+
+    data: Dict[str, Dict[int, float]] = {}
     r1r2_split = 0
-    for s_name in sorted(sample_data.keys()):
+    for s_name in natsorted(samples_with_reads):
         data[s_name] = {}
         R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         R1_cycle_num = len(R1)
         r1r2_split = max(r1r2_split, R1_cycle_num)
 
-    for s_name in sorted(sample_data.keys()):
+    for s_name in natsorted(samples_with_reads):
         paired_end = True if len(sample_data[s_name]["Reads"]) > 1 else False
         R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         R1_cycle_num = len(R1)
@@ -283,11 +315,11 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
         "colors": color_dict,
         "ymin": 0,
         "ymax": 100,
-        "id": f"per_cycle_n_content_{generate_random_string(5)}",
+        "id": "bases2fastq_per_cycle_n_content",
         "title": "bases2fastq: Per Cycle N Content Percentage",
     }
     plot_html = linegraph.plot(plot_content, pconfig=pconfig)
-    plot_name = "Per Cycle N Content."
+    plot_name = "Per Cycle N Content"
     anchor = "n_content"
     description = """
     Percentage of unidentified bases ("N" bases) by each sequencing cycle.
@@ -310,9 +342,26 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
     """
     Plot GC Histogram per Sample
     """
-    gc_hist_dict = dict()
-    for s_name in sample_data.keys():
-        R1_gc_counts = sample_data[s_name]["Reads"][0]["PerReadGCCountHistogram"]
+    samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
+    if not samples_with_reads:
+        empty_gc_hist: Dict[str, Dict[float, float]] = {}
+        plot_html = linegraph.plot(
+            empty_gc_hist,
+            pconfig={
+                "id": "bases2fastq_gc_hist",
+                "title": "bases2fastq: Per Sample GC Content Histogram",
+                "xlab": "GC Content (%)",
+                "ylab": "Percentage of reads that have GC (%)",
+            },
+        )
+        return plot_html, "Per Sample GC Histogram", "gc_histogram", "", "", empty_gc_hist
+
+    gc_hist_dict: Dict[str, Dict[float, float]] = {}
+    for s_name in natsorted(samples_with_reads):
+        r0 = sample_data[s_name]["Reads"][0]
+        if "PerReadGCCountHistogram" not in r0:
+            continue
+        R1_gc_counts = r0["PerReadGCCountHistogram"]
         R2_gc_counts = [0] * len(R1_gc_counts)
         if len(sample_data[s_name]["Reads"]) > 1:
             R2_gc_counts_raw = sample_data[s_name]["Reads"][1]["PerReadGCCountHistogram"]
@@ -340,7 +389,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
         "xlab": "GC Content (%)",
         "ylab": "Percentage of reads that have GC (%)",
         "colors": sample_color,
-        "id": f"gc_hist_{generate_random_string(5)}",
+        "id": "bases2fastq_gc_hist",
         "title": "bases2fastq: Per Sample GC Content Histogram",
     }
     plot_name = "Per Sample GC Histogram"
@@ -370,17 +419,30 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
     """
     Plot Adapter Content per Sample
     """
-    plot_content = dict()
+    samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
+    if not samples_with_reads:
+        empty_content: Dict[str, Dict[int, float]] = {}
+        plot_html = linegraph.plot(
+            empty_content,
+            pconfig={
+                "id": "bases2fastq_per_cycle_adapter_content",
+                "title": "bases2fastq: Per Cycle Adapter Content",
+                "xlab": "Cycle",
+                "ylab": "% of Sequences",
+            },
+        )
+        return plot_html, "Per Sample Adapter Content", "adapter_content", "", "", empty_content
+
+    plot_content: Dict[str, Dict[int, float]] = {}
 
     r1r2_split = 0
-    for s_name in sample_data.keys():
+    for s_name in natsorted(samples_with_reads):
         plot_content.update({s_name: {}})
-        # Read 1
         cycles = sample_data[s_name]["Reads"][0]["Cycles"]
         R1_cycle_num = len(cycles)
         r1r2_split = max(r1r2_split, R1_cycle_num)
 
-    for s_name in sample_data.keys():
+    for s_name in natsorted(samples_with_reads):
         paired_end = True if len(sample_data[s_name]["Reads"]) > 1 else False
         plot_content.update({s_name: {}})
         # Read 1
@@ -397,7 +459,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
                 adapter_percent = cycle["PercentReadsTrimmed"]
                 plot_content[s_name].update({cycle_no: adapter_percent})
     pconfig = {
-        "id": f"per_cycle_adapter_content_{generate_random_string(5)}",
+        "id": "bases2fastq_per_cycle_adapter_content",
         "title": "bases2fastq: Per Cycle Adapter Content",
         "xlab": "Cycle",
         "ylab": "% of Sequences",
