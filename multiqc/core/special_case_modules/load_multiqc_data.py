@@ -230,9 +230,9 @@ class LoadMultiqcData(BaseMultiqcModule):
                     # Register CSS and JS sections in module if they exist
                     if mod_id:
                         html_assets = self.register_module_assets(mod_id)
-                        log.debug(f'Add CSS to {mod_id}: {html_assets["css"]}')
+                        log.debug(f"Add CSS to {mod_id}: {html_assets['css']}")
                         mod.css.update(html_assets["css"])
-                        log.debug(f'Add JS to {mod_id}: {html_assets["js"]}')
+                        log.debug(f"Add JavaScript to {mod_id}: {html_assets['js']}")
                         mod.js.update(html_assets["js"])
 
                     # Check for duplicate modules and merge if found (same logic as exec_modules.py)
