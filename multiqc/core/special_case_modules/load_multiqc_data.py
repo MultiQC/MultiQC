@@ -443,7 +443,6 @@ class LoadMultiqcData(BaseMultiqcModule):
                 if config.strict:
                     raise e
 
-
     @staticmethod
     def register_module_assets(module_name: str):
         """
