@@ -460,7 +460,9 @@ class LoadMultiqcData(BaseMultiqcModule):
                 log.debug("No importable module for %s; skipping assets", module_name)
                 return
 
-        mod_dir = Path(mod.__file__).parent
+        if getattr(mod, "__file__", None) is None:
+            return {"css": {}, "js": {}}
+
         assets_dir = mod_dir / "assets"
         css_dir = assets_dir / "css"
         js_dir = assets_dir / "js"
