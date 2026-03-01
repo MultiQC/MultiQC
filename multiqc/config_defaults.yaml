@@ -515,6 +515,7 @@ module_order:
   - fgbio
   - dragen
   - dragen_fastqc
+  - checkatlas
   - dedup
   - pbmarkdup
   - damageprofiler
