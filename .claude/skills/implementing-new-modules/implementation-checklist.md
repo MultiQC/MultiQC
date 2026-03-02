@@ -191,10 +191,10 @@ __all__ = ["MultiqcModule"]
 
 ## Phase 7: Quality Checks
 
-### Pre-commit
+### Prek
 
 ```bash
-pre-commit run --files multiqc/modules/toolname/*
+prek run --files multiqc/modules/toolname/*
 ```
 
 ### Linting

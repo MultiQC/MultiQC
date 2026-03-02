@@ -69,7 +69,7 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = [
-    "pre-commit",
+    "prek",
     "ruff>=0.8.3",
     "pdoc3",
     "pytest",
