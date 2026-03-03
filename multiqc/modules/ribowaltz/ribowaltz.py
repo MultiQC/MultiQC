@@ -361,7 +361,7 @@ class MultiqcModule(BaseMultiqcModule):
         cats = ["5' UTR", "CDS", "3' UTR"]
 
         pconfig = BarPlotConfig(
-            id="ribowaltz_psite_regions",
+            id="ribowaltz_psite_regions_plot",
             title="riboWaltz: P-site Region Distribution",
             ylab="% of P-sites",
             cpswitch=False,
@@ -380,7 +380,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="P-site Region Distribution",
-            anchor="ribowaltz_psite_regions_section",
+            anchor="ribowaltz_psite_regions",
             description=(
                 "Distribution of P-sites across transcript regions. "
                 "Good Ribo-seq data shows strong CDS enrichment (>70%). "
@@ -435,7 +435,7 @@ translating ribosomes rather than random RNA fragments.
                 sample_groups[region] = group_samples
 
         pconfig = BarPlotConfig(
-            id="ribowaltz_frames",
+            id="ribowaltz_frames_plot",
             title="riboWaltz: Reading Frame Distribution",
             ylab="% of P-sites",
             cpswitch=False,
@@ -463,7 +463,7 @@ translating ribosomes rather than random RNA fragments.
 
         self.add_section(
             name="Reading Frame Distribution",
-            anchor="ribowaltz_frames_section",
+            anchor="ribowaltz_frames",
             description=(
                 "Distribution of P-sites across reading frames for each transcript region. "
                 "Good Ribo-seq data shows Frame 0 enrichment (>50%) in the CDS but not in UTRs."
@@ -490,7 +490,7 @@ Samples are grouped by region (5' UTR, CDS, 3' UTR) for easy comparison.
         """Create line graph for metaprofile around start codon"""
 
         pconfig = LinePlotConfig(
-            id="ribowaltz_metaprofile_start",
+            id="ribowaltz_metaprofile_start_plot",
             title="riboWaltz: Metaprofile (Start Codon)",
             xlab="Distance from start codon (nt)",
             ylab="P-site frequency",
@@ -500,7 +500,7 @@ Samples are grouped by region (5' UTR, CDS, 3' UTR) for easy comparison.
 
         self.add_section(
             name="Metaprofile (Start Codon)",
-            anchor="ribowaltz_metaprofile_start_section",
+            anchor="ribowaltz_metaprofile_start",
             description=(
                 "P-site frequency around the start codon. "
                 "Good Ribo-seq data shows trinucleotide periodicity with peaks at frame 0 positions."
@@ -527,7 +527,7 @@ Clear periodicity indicates:
         """Create line graph for metaprofile around stop codon"""
 
         pconfig = LinePlotConfig(
-            id="ribowaltz_metaprofile_stop",
+            id="ribowaltz_metaprofile_stop_plot",
             title="riboWaltz: Metaprofile (Stop Codon)",
             xlab="Distance from stop codon (nt)",
             ylab="P-site frequency",
@@ -537,7 +537,7 @@ Clear periodicity indicates:
 
         self.add_section(
             name="Metaprofile (Stop Codon)",
-            anchor="ribowaltz_metaprofile_stop_section",
+            anchor="ribowaltz_metaprofile_stop",
             description=(
                 "P-site frequency around the stop codon. "
                 "Good Ribo-seq data shows trinucleotide periodicity and proper termination patterns."
