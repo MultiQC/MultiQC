@@ -1,5 +1,3 @@
-"""MultiQC module for riboWaltz ribosome profiling QC"""
-
 import logging
 from typing import Dict, List, Optional
 
@@ -382,7 +380,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="P-site Region Distribution",
-            anchor="ribowaltz_psite_regions",
+            anchor="ribowaltz_psite_regions_section",
             description=(
                 "Distribution of P-sites across transcript regions. "
                 "Good Ribo-seq data shows strong CDS enrichment (>70%). "
@@ -465,7 +463,7 @@ translating ribosomes rather than random RNA fragments.
 
         self.add_section(
             name="Reading Frame Distribution",
-            anchor="ribowaltz_frames",
+            anchor="ribowaltz_frames_section",
             description=(
                 "Distribution of P-sites across reading frames for each transcript region. "
                 "Good Ribo-seq data shows Frame 0 enrichment (>50%) in the CDS but not in UTRs."
@@ -502,7 +500,7 @@ Samples are grouped by region (5' UTR, CDS, 3' UTR) for easy comparison.
 
         self.add_section(
             name="Metaprofile (Start Codon)",
-            anchor="ribowaltz_metaprofile_start",
+            anchor="ribowaltz_metaprofile_start_section",
             description=(
                 "P-site frequency around the start codon. "
                 "Good Ribo-seq data shows trinucleotide periodicity with peaks at frame 0 positions."
@@ -539,7 +537,7 @@ Clear periodicity indicates:
 
         self.add_section(
             name="Metaprofile (Stop Codon)",
-            anchor="ribowaltz_metaprofile_stop",
+            anchor="ribowaltz_metaprofile_stop_section",
             description=(
                 "P-site frequency around the stop codon. "
                 "Good Ribo-seq data shows trinucleotide periodicity and proper termination patterns."
