@@ -292,6 +292,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for sample, data in stop_data.items():
             clean_name = self.clean_s_name(sample, f)
+            self.add_data_source(f, clean_name)
             if clean_name in self.metaprofile_stop_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {clean_name}")
             self.metaprofile_stop_data[clean_name] = data
@@ -423,7 +424,7 @@ translating ribosomes rather than random RNA fragments.
         cats = ["Frame 0", "Frame 1", "Frame 2"]
 
         # Build sample groups for visual grouping by region
-        # Format: {"Group Name": [[sample_key, display_name], ...], ...}
+        # Format: {"Group Name": [[sample_key, offset_group], ...], ...}
         sample_groups: Dict[str, List[List[str]]] = {}
         for region in regions:
             group_samples: List[List[str]] = []
