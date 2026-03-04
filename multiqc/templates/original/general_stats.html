@@ -14,6 +14,7 @@ This block generates the General Statistics table at the top of the report.
       <blockquote class="mqc-section-comment">{{ config.section_comments.general_stats }}</blockquote>
     {% endif %}
 
+    {% if not config.simple_output %}
     <div
       class="ai-summary ai-local-content"
       id="general_stats_table_ai_summary_wrapper"
@@ -41,6 +42,7 @@ This block generates the General Statistics table at the top of the report.
       </div>
       <div class="ai-summary-error" id="general_stats_table_ai_summary_error" style="display: none;"></div>
     </div>
+    {% endif %}
 
     {{ report.general_stats_html }}
   </div>
