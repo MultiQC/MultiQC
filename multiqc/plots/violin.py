@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore
+import plotly.graph_objects as go
 import polars as pl
 
 from multiqc import config, report
@@ -1193,5 +1193,5 @@ def find_outliers(
         outlier_status[indices] = True
 
     if added_values:
-        outlier_status = outlier_status[: -len(added_values)]  # type: ignore
+        outlier_status = outlier_status[: -len(added_values)]
     return outlier_status

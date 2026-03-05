@@ -78,15 +78,7 @@ dev = [
     "syrupy",       # to compare html snpashots, alternative to pytest-snapshot that
     # does work better with parametrized tests
     "pygithub",             # to generate changelog
-    "mypy",
-    "types-PyYAML",
-    "types-tqdm",
-    "types-requests",
-    "types-Markdown",
-    "types-beautifulsoup4",
-    "types-Pillow",
-    "types-jsonschema",
-    "types-boto3",
+    "ty",                   # type checking (faster alternative to mypy)
     "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
 ]
@@ -306,16 +298,17 @@ line-length = 120
 target-version = "py312"
 lint.ignore = ["F401"]   # unused-import
 
-[tool.mypy]
-check_untyped_defs = true
-plugins = ["pydantic.mypy"]
-# exclude all files in multiqc/modules
-files = ["multiqc", "tests"]
-exclude = "multiqc/modules/*"
+[tool.ty.src]
+include = ["multiqc", "tests"]
+exclude = ["multiqc/modules"]
 
-[tool.pyright]
-include = ["multiqc", "scripts", "tests"]
-ignore = ["**/build", "**/dist", "**/venv*"]
+# ty is still in beta - ignore some rules that produce false positives with complex generics
+[tool.ty.rules]
+possibly-missing-attribute = "ignore"  # false positives for submodules like yaml.scanner
+invalid-argument-type = "warn"  # often false positives with generics
+invalid-return-type = "warn"  # often false positives with generics
+invalid-assignment = "warn"  # often false positives with TypedDicts and generics
+unresolved-attribute = "warn"  # false positives with dict comprehensions
 
 [tool.pytest.ini_options]
 minversion = "6.0"
