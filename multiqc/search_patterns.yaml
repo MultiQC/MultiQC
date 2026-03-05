@@ -557,6 +557,9 @@ longranger/invocation:
   fn: "_invocation"
   contents: "call PHASER_SVCALLER_CS("
   max_filesize: 2048
+longreadsum/summary:
+  fn: "*_summary*.json"
+  contents: '"longreadsum_version"'
 macs2:
   fn: "*_peaks.xls"
 malt:
