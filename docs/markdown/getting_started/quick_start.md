@@ -9,10 +9,26 @@ This tutorial covers installation and first run for a typical user.
 It's not meant to be comprehensive - see the rest of the documentation for that -
 it's just to get the majority up and running quickly so you can get a taste for how to use MultiQC.
 
-## Install Conda
+## Install MultiQC
 
-In order to install MultiQC, we first need Python.
-Arguably, the easiest way to do this is with Conda
+### Option A: Using uv (recommended)
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package manager that handles everything — including installing Python for you automatically.
+No need to install Python separately (see [full docs](installation/#uv)).
+
+1. Install uv:
+   ```bash
+   # macOS / Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+2. Install MultiQC:
+   ```bash
+   uv tool install multiqc
+   ```
+
+### Option B: Using Conda
+
+Alternatively, you can use Conda
 (see [full docs](installation/#python-with-conda)).
 
 1. [Download miniconda](https://conda.io/miniconda.html) for your operating system.
@@ -29,15 +45,12 @@ Arguably, the easiest way to do this is with Conda
    conda create --name myenv python=3.11
    conda activate myenv
    ```
+6. Install MultiQC:
+   ```bash
+   conda install multiqc
+   ```
 
-## Install MultiQC
-
-Now that we have Python, we can install MultiQC.
-As we're already using Conda, we may as well install MultiQC with Conda too (see [full docs](installation/#conda)).
-
-```bash
-conda install multiqc
-```
+### Verify installation
 
 Check that it worked by printing the MultiQC version (or `--help` text):
 
