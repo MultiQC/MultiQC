@@ -61,9 +61,10 @@ the output from each module and print it in sections.
                   <div class="well">{{ s['helptext'] }}</div>
                 </div>  
               {% endif %}
-              <div 
-                class="ai-summary ai-local-content" 
-                id="{{ s['anchor'] }}_ai_summary_wrapper" 
+              {% if not config.simple_output %}
+              <div
+                class="ai-summary ai-local-content"
+                id="{{ s['anchor'] }}_ai_summary_wrapper"
                 style="display: none; margin-bottom: 7px; padding-bottom: 4px">
                 <div style="display: flex; justify-content: space-between; align-items: center">
                   <b>AI Summary</b>
@@ -71,10 +72,10 @@ the output from each module and print it in sections.
                 <div class="ai-summary-response" id="{{ s['anchor'] }}_ai_summary_response" style="margin-bottom: -5px;"></div>
                 <div style="display: flex; justify-content: space-between; align-items: baseline;">
                   <div class="ai-summary-disclaimer" id="{{ s['anchor'] }}_ai_summary_disclaimer" style="display: none;">
-                    Provider: <span class="ai-summary-disclaimer-provider">{{ report.ai_provider_title }}</span>, 
+                    Provider: <span class="ai-summary-disclaimer-provider">{{ report.ai_provider_title }}</span>,
                     model: <span class="ai-summary-disclaimer-model">{{ report.ai_model_resolved or report.ai_model }}</span>
                   </div>
-                  <a 
+                  <a
                     class='btn btn-default btn-sm ai-continue-in-chat'
                     id="{{ s['anchor'] }}_ai_summary_continue_in_chat"
                     data-seqera-website="{{ config.seqera_website }}"
@@ -87,6 +88,7 @@ the output from each module and print it in sections.
                 </div>
               <div class="ai-summary-error" id="{{ s['anchor'] }}_ai_summary_error" style="display: none;"></div>
               </div>
+              {% endif %}
               {{ s['content_before_plot'] if s['content_before_plot'] }}
               {% if s['plot'] is not none %}<div class="mqc-section-plot">{{ s['plot'] }}</div>{% endif %}
               {{ s['content'] if s['content'] }}
