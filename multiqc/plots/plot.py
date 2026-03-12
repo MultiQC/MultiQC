@@ -26,7 +26,7 @@ from typing import (
     cast,
 )
 
-import plotly.graph_objects as go  # type: ignore
+import plotly.graph_objects as go
 import polars as pl
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
@@ -949,7 +949,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
             try:
-                from IPython.core.display import HTML  # type: ignore
+                from IPython.core.display import HTML
             except ImportError:
                 raise ImportError(
                     "IPython is required to show plot. The function is expected to be run in an interactive environment, "

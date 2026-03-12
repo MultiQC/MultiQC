@@ -1040,7 +1040,7 @@ class BaseMultiqcModule:
     ) -> Dict[SampleNameT, DataT]:
         """Strip out samples which match `sample_names_ignore`"""
         try:
-            if not isinstance(data, dict):  # type: ignore
+            if not isinstance(data, dict):
                 return data
             new_data: Dict[SampleNameT, DataT] = dict()
             for s_name, v in data.items():
@@ -1127,7 +1127,7 @@ class BaseMultiqcModule:
                 for row in rows:
                     column_ids.update(row.data.keys())
             for col_id in sorted(column_ids):
-                _headers[col_id] = {}
+                _headers[col_id] = cast(ColumnDict, {})
         else:
             # Make a copy
             _headers = {ColumnKey(col_id): cast(ColumnDict, col_dict.copy()) for col_id, col_dict in headers.items()}
@@ -1165,7 +1165,7 @@ class BaseMultiqcModule:
 
         # Append to report.general_stats for later assembly into table
         report.general_stats_data[anchor] = rows_by_group
-        report.general_stats_headers[anchor] = _headers  # type: ignore
+        report.general_stats_headers[anchor] = _headers
 
     def add_data_source(
         self,

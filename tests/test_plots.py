@@ -324,7 +324,7 @@ def test_boxplot_custom_boxpoints(boxpoints_value):
     # Test with "all" boxpoints (show all data points)
     plot_all = _verify_rendered(
         box.plot(
-            data,  # type: ignore
+            data,
             box.BoxPlotConfig(id=f"box_{boxpoints_value}", title=f"Box Plot - {boxpoints_value}"),
         )
     )
@@ -712,7 +712,7 @@ def test_linegraph_axis_controlled_by_switches_invalid():
 def test_linegraph_axis_controlled_by_switches_string_instead_of_list():
     """Test that a flat string instead of a list is rejected with a useful error."""
     with patch("logging.Logger.error") as err:
-        config = LinePlotConfig(id="test", title="Test", axis_controlled_by_switches="yaxis")  # type: ignore
+        config = LinePlotConfig(id="test", title="Test", axis_controlled_by_switches="yaxis")
         assert config.axis_controlled_by_switches is None
         errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
         assert "'axis_controlled_by_switches'" in errs
