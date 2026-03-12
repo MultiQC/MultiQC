@@ -186,6 +186,7 @@ def save_report_metadata() -> None:
         module_dict: Dict[str, Any] = {
             "name": mod.name,
             "anchor": str(mod.anchor),
+            "mod_id": mod.mod_id,
             "info": mod.info,
             "intro": mod.intro,
             "comment": mod.comment,
