@@ -48,3 +48,12 @@ Once you've submitted a new pull request, here's what you can expect from me:
 - First pass - I go through and give feedback just by reading the code
 - Second pass - I download and run your code, usually more feedback
 - Merge! Once we're both happy, I merge into the main codebase.
+
+### PR automation commands
+
+When your PR is ready for review and the automated tests are passing, you can use the following commands by adding a comment on the PR:
+
+- **`/review`** — Triggers an AI code review that will post feedback as a PR comment.
+- **`/preview`** — Builds a MultiQC report using test data for any modules modified in the PR and deploys it as a preview. A link to the report will be posted as a PR comment.
+
+You can use both commands in the same comment. These commands work for PRs from forks as well.
