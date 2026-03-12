@@ -116,6 +116,164 @@ def test_heatmap():
     )
 
 
+def test_heatmap_clustering_produces_reordered_data():
+    """
+    Test that clustering reorders rows, xcats, and ycats consistently:
+    the clustered category labels must match the clustered data order.
+    """
+    # Design data so that row 0 (A) is most similar to row 2 (C),
+    # and col 0 is most similar to col 2, forcing a reorder.
+    data = [
+        [10, 0, 11],  # A - similar to C
+        [0, 10, 0],  # B - different
+        [11, 0, 10],  # C - similar to A
+    ]
+    xcats = ["X1", "X2", "X3"]
+    ycats = ["A", "B", "C"]
+
+    plot = _verify_rendered(
+        heatmap.plot(
+            data=data,
+            xcats=xcats,
+            ycats=ycats,
+            pconfig=heatmap.HeatmapConfig(
+                id="heatmap_cluster",
+                title="Heatmap Cluster",
+                cluster_rows=True,
+                cluster_cols=True,
+            ),
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+
+    # Original data should be unchanged
+    assert ds["xcats"] == ["X1", "X2", "X3"]
+    assert ds["ycats"] == ["A", "B", "C"]
+    assert ds["rows"] == data
+
+    # Clustered versions should exist
+    assert ds["rows_clustered"] is not None
+    assert ds["xcats_clustered"] is not None
+    assert ds["ycats_clustered"] is not None
+
+    # Verify that clustered categories are a permutation of originals
+    assert sorted(ds["xcats_clustered"]) == sorted(xcats)
+    assert sorted(ds["ycats_clustered"]) == sorted(ycats)
+
+    # The key invariant: looking up a value by its clustered row/col label
+    # must return the same value as looking it up in the original data.
+    for ci, ycat in enumerate(ds["ycats_clustered"]):
+        orig_row_idx = ycats.index(ycat)
+        for cj, xcat in enumerate(ds["xcats_clustered"]):
+            orig_col_idx = xcats.index(xcat)
+            assert ds["rows_clustered"][ci][cj] == data[orig_row_idx][orig_col_idx], (
+                f"Mismatch at clustered[{ci}][{cj}] ({ycat}, {xcat}): "
+                f"expected {data[orig_row_idx][orig_col_idx]}, got {ds['rows_clustered'][ci][cj]}"
+            )
+
+
+def test_heatmap_clustering_disabled():
+    """
+    When clustering is disabled, no clustered data should be produced.
+    """
+    plot = _verify_rendered(
+        heatmap.plot(
+            data=[[1, 2], [3, 4]],
+            xcats=["Cat1", "Cat2"],
+            ycats=["Sample1", "Sample2"],
+            pconfig=heatmap.HeatmapConfig(
+                id="heatmap_no_cluster",
+                title="Heatmap No Cluster",
+                cluster_rows=False,
+                cluster_cols=False,
+            ),
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    assert ds["rows_clustered"] is None
+    assert ds["xcats_clustered"] is None
+    assert ds["ycats_clustered"] is None
+
+
+def test_heatmap_clustering_rows_only():
+    """
+    When only row clustering is enabled, xcats should stay in original order.
+    """
+    data = [
+        [10, 0],
+        [0, 10],
+        [11, 0],
+    ]
+    xcats = ["X1", "X2"]
+    ycats = ["A", "B", "C"]
+
+    plot = _verify_rendered(
+        heatmap.plot(
+            data=data,
+            xcats=xcats,
+            ycats=ycats,
+            pconfig=heatmap.HeatmapConfig(
+                id="heatmap_cluster_rows",
+                title="Heatmap Cluster Rows",
+                cluster_rows=True,
+                cluster_cols=False,
+            ),
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    assert ds["rows_clustered"] is not None
+    assert ds["ycats_clustered"] is not None
+    # xcats should be the same as original when column clustering is disabled
+    assert ds["xcats_clustered"] == xcats
+
+    # Verify row label - data consistency
+    for ci, ycat in enumerate(ds["ycats_clustered"]):
+        orig_row_idx = ycats.index(ycat)
+        for cj in range(len(xcats)):
+            assert ds["rows_clustered"][ci][cj] == data[orig_row_idx][cj]
+
+
+def test_heatmap_clustering_cols_only():
+    """
+    When only column clustering is enabled, ycats should stay in original order.
+    """
+    data = [
+        [10, 0, 11],
+        [0, 10, 0],
+    ]
+    xcats = ["X1", "X2", "X3"]
+    ycats = ["A", "B"]
+
+    plot = _verify_rendered(
+        heatmap.plot(
+            data=data,
+            xcats=xcats,
+            ycats=ycats,
+            pconfig=heatmap.HeatmapConfig(
+                id="heatmap_cluster_cols",
+                title="Heatmap Cluster Cols",
+                cluster_rows=False,
+                cluster_cols=True,
+            ),
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    assert ds["rows_clustered"] is not None
+    assert ds["xcats_clustered"] is not None
+    # ycats should be the same as original when row clustering is disabled
+    assert ds["ycats_clustered"] == ycats
+
+    # Verify column label - data consistency
+    for ci in range(len(ycats)):
+        for cj, xcat in enumerate(ds["xcats_clustered"]):
+            orig_col_idx = xcats.index(xcat)
+            assert ds["rows_clustered"][ci][cj] == data[ci][orig_col_idx]
+
+
 def test_scatter():
     _verify_rendered(
         scatter.plot(
