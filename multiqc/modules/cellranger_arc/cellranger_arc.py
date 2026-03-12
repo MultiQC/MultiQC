@@ -131,36 +131,67 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_html_summary(self, summary):
         """
         Cell Ranger ARC report parser
+
+        Parses data in three separate calls to prevent key collisions:
+        1. Joint metrics (no namespace) - shared metrics
+        2. ATAC metrics (namespace="ATAC") - ATAC-specific metrics
+        3. GEX metrics (namespace="GEX") - GEX-specific metrics
         """
         parsed_data: Dict[str, Dict] = dict()
         warnings = dict()
         plots_data_by_id = dict()
 
-        data_rows = (
-            summary["joint_metrics_table"]["rows"]
-            + summary["atac_sequencing_table"]["rows"]
-            + summary["gex_sequencing_table"]["rows"]
+        # Parse joint metrics (no namespace prefix)
+        joint_data_rows = summary["joint_metrics_table"]["rows"]
+        joint_help_text = summary["joint_metrics_helptext"]["data"]
+
+        joint_parsed, joint_headers = table_data_and_headers(
+            joint_data_rows,
+            joint_help_text,
+            namespace=None,
+        )
+
+        # Parse ATAC metrics (with ATAC namespace prefix)
+        atac_data_rows = (
+            summary["atac_sequencing_table"]["rows"]
             + summary["atac_cells_table"]["rows"]
-            + summary["gex_cells_table"]["rows"]
             + summary["atac_mapping_table"]["rows"]
-            + summary["gex_mapping_table"]["rows"]
             + summary["atac_targeting_table"]["rows"]
         )
-        help_text = (
-            summary["joint_metrics_helptext"]["data"]
-            + summary["atac_sequencing_helptext"]["data"]
-            + summary["gex_sequencing_helptext"]["data"]
+        atac_help_text = (
+            summary["atac_sequencing_helptext"]["data"]
             + summary["atac_cells_helptext"]["data"]
-            + summary["gex_cells_helptext"]["data"]
             + summary["atac_mapping_helptext"]["data"]
-            + summary["gex_mapping_helptext"]["data"]
             + summary["atac_targeting_helptext"]["data"]
         )
 
-        parsed_data, self.all_headers = table_data_and_headers(
-            data_rows,
-            help_text,
+        atac_parsed, atac_headers = table_data_and_headers(
+            atac_data_rows,
+            atac_help_text,
+            namespace="ATAC",
         )
+
+        # Parse GEX metrics (with GEX namespace prefix)
+        gex_data_rows = (
+            summary["gex_sequencing_table"]["rows"]
+            + summary["gex_cells_table"]["rows"]
+            + summary["gex_mapping_table"]["rows"]
+        )
+        gex_help_text = (
+            summary["gex_sequencing_helptext"]["data"]
+            + summary["gex_cells_helptext"]["data"]
+            + summary["gex_mapping_helptext"]["data"]
+        )
+
+        gex_parsed, gex_headers = table_data_and_headers(
+            gex_data_rows,
+            gex_help_text,
+            namespace="GEX",
+        )
+
+        # Merge all parsed data and headers
+        parsed_data = {**joint_parsed, **atac_parsed, **gex_parsed}
+        self.all_headers = {**joint_headers, **atac_headers, **gex_headers}
 
         # Extract warnings if any
         alarms_list = summary["alarms"].get("alarms", [])
@@ -184,11 +215,14 @@ class MultiqcModule(BaseMultiqcModule):
     def general_stats_table(self, data_by_sample, data_headers):
         """
         Takes the entire data by sample, subset and add it to the basic stats table
+
+        Note: Uses prefixed keys for ATAC/GEX-specific metrics to avoid collisions.
+        Joint metrics (Feature linkages, Linked genes/peaks) remain unprefixed.
         """
         general_cols = {
-            "Estimated number of cells": "YlGn",
-            "Fraction of high-quality fragments in cells": "Blues",
-            "Median genes per cell": "GnBu",
+            "ATAC_Estimated number of cells": "YlGn",
+            "ATAC_Fraction of high-quality fragments in cells": "Blues",
+            "GEX_Median genes per cell": "GnBu",
             "Feature linkages detected": "PuBuGn",
             "Linked genes": "RdYlGn",
             "Linked peaks": "RdYlBu",
@@ -203,22 +237,22 @@ class MultiqcModule(BaseMultiqcModule):
         stats and adds to summary section
         """
         seq_target_cols = {
-            "Sequenced read pairs": "YlGn",
-            "Valid barcodes": "RdPu",
-            "Percent duplicates": "Blues",
-            "Number of peaks": "Greens",
-            "Fraction of genome in peaks": "Purples",
-            "TSS enrichment score": "PuBuGn",
-            "Fraction of high-quality fragments overlapping peaks": "Spectral",
+            "ATAC_Sequenced read pairs": "YlGn",
+            "ATAC_Valid barcodes": "RdPu",
+            "ATAC_Percent duplicates": "Blues",
+            "ATAC_Number of peaks": "Greens",
+            "ATAC_Fraction of genome in peaks": "Purples",
+            "ATAC_TSS enrichment score": "PuBuGn",
+            "ATAC_Fraction of high-quality fragments overlapping peaks": "Spectral",
         }
         cell_mapping_cols = {
-            "Estimated number of cells": "YlGn",
-            "Mean raw read pairs per cell": "RdPu",
-            "Fraction of high-quality fragments in cells": "Blues",
-            "Fraction of transposition events in peaks in cells": "Greens",
-            "Median high-quality fragments per cell": "Purples",
-            "Confidently mapped read pairs": "PuBuGn",
-            "Non-nuclear read pairs": "Spectral",
+            "ATAC_Estimated number of cells": "YlGn",
+            "ATAC_Mean raw read pairs per cell": "RdPu",
+            "ATAC_Fraction of high-quality fragments in cells": "Blues",
+            "ATAC_Fraction of transposition events in peaks in cells": "Greens",
+            "ATAC_Median high-quality fragments per cell": "Purples",
+            "ATAC_Confidently mapped read pairs": "PuBuGn",
+            "ATAC_Non-nuclear read pairs": "Spectral",
         }
         seq_target_headers = subset_header(data_headers, seq_target_cols, "ATAC")
         cell_mapping_headers = subset_header(data_headers, cell_mapping_cols, "ATAC")
@@ -292,42 +326,42 @@ class MultiqcModule(BaseMultiqcModule):
         Takes the entire data by sample, subset for gex stats and adds to summary section
         """
         gex_cols = {
-            "Sequenced read pairs": "YlGn",
-            "Estimated number of cells": "RdPu",
-            "Mean raw reads per cell": "Blues",
-            "Total genes detected": "Greens",
-            "Median genes per cell": "Purples",
-            "Fraction of transcriptomic reads in cells": "PuBuGn",
-            "Reads with TSO": "YlOrRd",
-            "Valid barcodes": "Spectral",
-            "Valid UMIs": "RdYlGn",
-            "Median UMI counts per cell": "YlGn",
-            "Percent duplicates": "RdPu",
-            "Q30 bases in barcode": "Blues",
-            "Q30 bases in UMI": "Greens",
-            "Reads mapped to genome": "Purples",
-            "Reads mapped confidently to genome": "PuBuGn",
-            "Reads mapped confidently to transcriptome": "YlOrRd",
-            "Reads mapped confidently to exonic regions": "Spectral",
-            "Reads mapped confidently to intronic regions": "RdYlGn",
-            "Reads mapped confidently to intergenic regions": "YlGn",
-            "Reads mapped antisense to gene": "RdPu",
+            "GEX_Sequenced read pairs": "YlGn",
+            "GEX_Estimated number of cells": "RdPu",
+            "GEX_Mean raw reads per cell": "Blues",
+            "GEX_Total genes detected": "Greens",
+            "GEX_Median genes per cell": "Purples",
+            "GEX_Fraction of transcriptomic reads in cells": "PuBuGn",
+            "GEX_Reads with TSO": "YlOrRd",
+            "GEX_Valid barcodes": "Spectral",
+            "GEX_Valid UMIs": "RdYlGn",
+            "GEX_Median UMI counts per cell": "YlGn",
+            "GEX_Percent duplicates": "RdPu",
+            "GEX_Q30 bases in barcode": "Blues",
+            "GEX_Q30 bases in UMI": "Greens",
+            "GEX_Reads mapped to genome": "Purples",
+            "GEX_Reads mapped confidently to genome": "PuBuGn",
+            "GEX_Reads mapped confidently to transcriptome": "YlOrRd",
+            "GEX_Reads mapped confidently to exonic regions": "Spectral",
+            "GEX_Reads mapped confidently to intronic regions": "RdYlGn",
+            "GEX_Reads mapped confidently to intergenic regions": "YlGn",
+            "GEX_Reads mapped antisense to gene": "RdPu",
         }
 
         gex_headers = subset_header(data_headers, gex_cols, "GEX")
         gex_headers = set_hidden_cols(
             gex_headers,
             [
-                "Percent duplicates",
-                "Q30 bases in barcode",
-                "Q30 bases in UMI",
-                "Reads mapped to genome",
-                "Reads mapped confidently to genome",
-                "Reads mapped confidently to transcriptome",
-                "Reads mapped confidently to exonic regions",
-                "Reads mapped confidently to intronic regions",
-                "Reads mapped confidently to intergenic regions",
-                "Reads mapped antisense to gene",
+                "GEX_Percent duplicates",
+                "GEX_Q30 bases in barcode",
+                "GEX_Q30 bases in UMI",
+                "GEX_Reads mapped to genome",
+                "GEX_Reads mapped confidently to genome",
+                "GEX_Reads mapped confidently to transcriptome",
+                "GEX_Reads mapped confidently to exonic regions",
+                "GEX_Reads mapped confidently to intronic regions",
+                "GEX_Reads mapped confidently to intergenic regions",
+                "GEX_Reads mapped antisense to gene",
             ],
         )
         self.add_section(
