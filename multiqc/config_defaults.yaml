@@ -259,6 +259,7 @@ fn_clean_exts:
   - ".flagstat"
   - "_star_aligned"
   - "_fastqc"
+  - "_fastqe"
   - ".hicup"
   - ".counts"
   - "_counts"
@@ -601,6 +602,7 @@ module_order:
   - afterqc
   - fastp
   - fastqc
+  - fastqe
   - sequali
   - filtlong
   - prinseqplusplus
