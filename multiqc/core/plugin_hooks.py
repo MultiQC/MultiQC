@@ -5,10 +5,10 @@ trigger points during MultiQC execution."""
 import sys
 from typing import Dict, List
 
-if sys.version_info < (3, 10):
-    from importlib_metadata import entry_points
-else:
+if sys.version_info >= (3, 10):
     from importlib.metadata import entry_points
+else:
+    from importlib_metadata import entry_points
 
 # Load the hooks
 hook_functions: Dict[str, List] = {}

@@ -9,10 +9,10 @@ from typing import Dict, Set, Union
 import pytest
 import yaml
 
-if sys.version_info < (3, 10):
-    from importlib_metadata import EntryPoint
-else:
+if sys.version_info >= (3, 10):
     from importlib.metadata import EntryPoint
+else:
+    from importlib_metadata import EntryPoint
 
 from multiqc import config, report
 from multiqc.core.exceptions import RunError

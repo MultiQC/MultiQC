@@ -17,10 +17,10 @@ from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 import yaml
 from jsonschema import validate as validate_json_schema
 
-if sys.version_info < (3, 10):
-    from importlib_metadata import EntryPoint, entry_points, version
-else:
+if sys.version_info >= (3, 10):
     from importlib.metadata import EntryPoint, entry_points, version
+else:
+    from importlib_metadata import EntryPoint, entry_points, version
 
 from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.utils import pyaml_env
