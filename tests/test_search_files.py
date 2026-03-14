@@ -7,7 +7,10 @@ from typing import Dict, Set, Union
 
 import pytest
 import yaml
-from importlib_metadata import EntryPoint
+try:
+    from importlib_metadata import EntryPoint
+except ImportError:
+    from importlib.metadata import EntryPoint
 
 from multiqc import config, report
 from multiqc.core.exceptions import RunError

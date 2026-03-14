@@ -6,8 +6,12 @@ import tracemalloc
 from typing import Callable, Dict, List, Union
 
 import rich
-from importlib_metadata import EntryPoint
 from rich.syntax import Syntax
+
+try:
+    from importlib_metadata import EntryPoint
+except ImportError:
+    from importlib.metadata import EntryPoint
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound

@@ -14,10 +14,13 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
-import importlib_metadata
 import yaml
-from importlib_metadata import EntryPoint
 from jsonschema import validate as validate_json_schema
+
+try:
+    from importlib_metadata import EntryPoint, entry_points, version
+except ImportError:
+    from importlib.metadata import EntryPoint, entry_points, version
 
 from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.utils import pyaml_env
@@ -28,7 +31,7 @@ from multiqc.utils.util_functions import strtobool, update_dict
 logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
-version = importlib_metadata.version("multiqc")
+version = version("multiqc")
 short_version = version
 git_hash = None
 git_hash_short = None
@@ -300,7 +303,7 @@ def load_defaults():
     # Modules must be listed in pyproject.toml under entry_points['multiqc.modules.v1']
     # Get all modules, including those from other extension packages
     avail_modules = dict()
-    for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
+    for entry_point in entry_points(group="multiqc.modules.v1"):
         nice_name = entry_point.name
         avail_modules[nice_name] = entry_point
 
@@ -309,7 +312,7 @@ def load_defaults():
     # Templates must be listed in pyproject.toml under entry_points['multiqc.templates.v1']
     # Get all templates, including those from other extension packages
     avail_templates = {}
-    for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
+    for entry_point in entry_points(group="multiqc.templates.v1"):
         nice_name = entry_point.name
         avail_templates[nice_name] = entry_point
 

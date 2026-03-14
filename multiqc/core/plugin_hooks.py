@@ -4,7 +4,10 @@ trigger points during MultiQC execution."""
 
 from typing import Dict, List
 
-from importlib_metadata import entry_points
+try:
+    from importlib_metadata import entry_points
+except ImportError:
+    from importlib.metadata import entry_points
 
 # Load the hooks
 hook_functions: Dict[str, List] = {}
