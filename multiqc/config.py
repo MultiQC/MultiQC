@@ -18,9 +18,9 @@ import yaml
 from jsonschema import validate as validate_json_schema
 
 if sys.version_info >= (3, 10):
-    from importlib.metadata import EntryPoint, entry_points, version
+    from importlib.metadata import EntryPoint, entry_points, version as version_
 else:
-    from importlib_metadata import EntryPoint, entry_points, version
+    from importlib_metadata import EntryPoint, entry_points, version as version_
 
 from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.utils import pyaml_env
@@ -31,7 +31,7 @@ from multiqc.utils.util_functions import strtobool, update_dict
 logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
-version = version("multiqc")
+version = version_("multiqc")
 short_version = version
 git_hash = None
 git_hash_short = None
