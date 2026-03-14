@@ -2,11 +2,12 @@
 to run their own custom subroutines at predefined
 trigger points during MultiQC execution."""
 
+import sys
 from typing import Dict, List
 
-try:
+if sys.version_info < (3, 10):
     from importlib_metadata import entry_points
-except ImportError:
+else:
     from importlib.metadata import entry_points
 
 # Load the hooks

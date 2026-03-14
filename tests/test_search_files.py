@@ -2,15 +2,16 @@
 Tests for discovering and excluding files
 """
 
+import sys
 from pathlib import Path
 from typing import Dict, Set, Union
 
 import pytest
 import yaml
 
-try:
+if sys.version_info < (3, 10):
     from importlib_metadata import EntryPoint
-except ImportError:
+else:
     from importlib.metadata import EntryPoint
 
 from multiqc import config, report

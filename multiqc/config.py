@@ -17,9 +17,9 @@ from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 import yaml
 from jsonschema import validate as validate_json_schema
 
-try:
+if sys.version_info < (3, 10):
     from importlib_metadata import EntryPoint, entry_points, version
-except ImportError:
+else:
     from importlib.metadata import EntryPoint, entry_points, version
 
 from multiqc.types import Anchor, ModuleId, SectionId

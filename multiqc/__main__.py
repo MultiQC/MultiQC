@@ -7,9 +7,11 @@ $ multiqc .
 $ python -m multiqc .
 """
 
-try:
+import sys
+
+if sys.version_info < (3, 10):
     from importlib_metadata import entry_points
-except ImportError:
+else:
     from importlib.metadata import entry_points
 
 from . import multiqc

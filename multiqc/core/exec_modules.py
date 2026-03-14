@@ -8,9 +8,9 @@ from typing import Callable, Dict, List, Union
 import rich
 from rich.syntax import Syntax
 
-try:
+if sys.version_info < (3, 10):
     from importlib_metadata import EntryPoint
-except ImportError:
+else:
     from importlib.metadata import EntryPoint
 
 from multiqc import config, report
