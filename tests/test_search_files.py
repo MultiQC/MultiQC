@@ -7,6 +7,7 @@ from typing import Dict, Set, Union
 
 import pytest
 import yaml
+
 try:
     from importlib_metadata import EntryPoint
 except ImportError:
