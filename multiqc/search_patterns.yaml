@@ -470,7 +470,7 @@ hifiasm:
 hifi_trimmer:
   fn: "*.json"
   contents: '"total_reads_processed"'
-  num_lines: 50
+  num_lines: 1000
 hisat2:
   contents: "HISAT2 summary stats:"
 homer/findpeaks:
