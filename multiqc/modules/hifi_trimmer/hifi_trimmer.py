@@ -77,7 +77,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(self.hifi_trimmer_data)} reports")
 
-        # Superfluous function call to confirm that it is used in this module
+        # Register HiFi-Trimmer in the software versions table; passing None is a supported no-op
+        # when the version cannot be determined from the available reports.
         self.add_software_version(None)
 
         # Add data to general stats table
