@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HiFi-Trimmer",
             anchor="hifi_trimmer",
             href="https://github.com/sanger-tol/hifi-trimmer",
