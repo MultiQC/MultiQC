@@ -12,6 +12,7 @@ VERSION_REGEX = r"# This file was produced by samtools stats \(([\d\.]+)"
 HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
+# Note: used by the hifi_trimmer module
 def parse_samtools_stats_lines(file_contents: str) -> Dict:
     """Parse `SN` rows from samtools stats output into a normalized dict."""
     parsed_data: Dict = {}

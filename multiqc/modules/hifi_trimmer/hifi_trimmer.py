@@ -14,6 +14,9 @@ class MultiqcModule(BaseMultiqcModule):
     a HiFi read set using a BLAST search against a fasta file of adapter sequences.
     It is designed to be highly configurable, with per-adapter settings to determine
     actions if the adapter is found at the ends of a read or in the middle.
+    A `samtools stats` file can be provided to give a more accurate count of the
+    number of reads / bases involved for this sample.
+    Linking is done by sample name.
     """
 
     def __init__(self):
