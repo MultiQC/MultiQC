@@ -2,6 +2,7 @@ import json
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.samtools.stats import parse_samtools_stats_lines
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
@@ -29,8 +30,8 @@ class MultiqcModule(BaseMultiqcModule):
         # First, parse samtools stats files to get total sequences and bases
         samtools_data = {}
         for f in self.find_log_files("samtools/stats"):
-            parsed_data = self.parse_samtools_stats(f)
-            if parsed_data:
+            parsed_data = parse_samtools_stats_lines(f["f"])
+            if "raw_total_sequences" in parsed_data or "total_length" in parsed_data:
                 s_name = f["s_name"]
                 samtools_data[s_name] = parsed_data
                 log.debug(f"Found samtools stats for {s_name}")
@@ -98,27 +99,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write parsed report data to a file
         self.write_data_file(self.hifi_trimmer_data, "multiqc_hifi_trimmer")
-
-    def parse_samtools_stats(self, f):
-        """Parse samtools stats file to extract total sequences and bases"""
-        parsed_data = {}
-        for line in f["f"].splitlines():
-            if not line.startswith("SN"):
-                continue
-            sections = line.split("\t")
-            if len(sections) < 3:
-                continue
-            field = sections[1].strip()[:-1]
-            field = field.replace(" ", "_")
-            try:
-                value = float(sections[2].strip())
-                parsed_data[field] = value
-            except ValueError:
-                continue
-
-        if "raw_total_sequences" in parsed_data or "total_length" in parsed_data:
-            return parsed_data
-        return None
 
     def parse_hifi_trimmer_json(self, f):
         """Parse the JSON output from HiFi-Trimmer and save the summary statistics"""

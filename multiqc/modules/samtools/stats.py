@@ -12,12 +12,33 @@ VERSION_REGEX = r"# This file was produced by samtools stats \(([\d\.]+)"
 HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
+def parse_samtools_stats_lines(file_contents: str) -> Dict:
+    """Parse `SN` rows from samtools stats output into a normalized dict."""
+    parsed_data: Dict = {}
+    for line in file_contents.splitlines():
+        if not line.startswith("SN"):
+            continue
+
+        sections = line.split("\t")
+        if len(sections) < 3:
+            continue
+
+        field = sections[1].strip()[:-1].replace(" ", "_")
+        try:
+            value = float(sections[2].strip())
+        except ValueError:
+            continue
+        parsed_data[field] = value
+
+    return parsed_data
+
+
 def parse_samtools_stats(module: BaseMultiqcModule):
     """Find Samtools stats logs and parse their data"""
 
     samtools_stats: Dict = dict()
     for f in module.find_log_files("samtools/stats"):
-        parsed_data = dict()
+        parsed_data = parse_samtools_stats_lines(f["f"])
         for line in f["f"].splitlines():
             # Get version number from file contents
             if line.startswith("# This file was produced by samtools stats"):
@@ -39,14 +60,6 @@ def parse_samtools_stats(module: BaseMultiqcModule):
                 htslib_version = htslib_version_match.group(1)
                 if htslib_version != samtools_version:
                     module.add_software_version(htslib_version, f["s_name"], "HTSlib")
-
-            if not line.startswith("SN"):
-                continue
-            sections = line.split("\t")
-            field = sections[1].strip()[:-1]
-            field = field.replace(" ", "_")
-            value = float(sections[2].strip())
-            parsed_data[field] = value
 
         if len(parsed_data) > 0:
             # Work out some percentages
