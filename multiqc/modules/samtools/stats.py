@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict
+from typing import Dict, Tuple, Optional
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, violin
@@ -13,10 +13,26 @@ HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
 # Note: used by the hifi_trimmer module
-def parse_samtools_stats_lines(file_contents: str) -> Dict:
-    """Parse `SN` rows from samtools stats output into a normalized dict."""
+def parse_samtools_stats_lines(file_contents: str) -> Tuple[Dict, Optional[str], Optional[str]]:
+    """Parse `SN` rows from samtools stats output into a normalized dict.
+    Also extract samtools and htslib versions if present on the header line.
+    Returns a tuple: (parsed_data, samtools_version, htslib_version)
+    """
     parsed_data: Dict = {}
+    samtools_version: Optional[str] = None
+    htslib_version: Optional[str] = None
+
     for line in file_contents.splitlines():
+        # Version/header line
+        if line.startswith("# This file was produced by samtools stats"):
+            version_match = re.search(VERSION_REGEX, line)
+            if version_match:
+                samtools_version = version_match.group(1)
+
+            htslib_version_match = re.search(HTSLIB_REGEX, line)
+            if htslib_version_match:
+                htslib_version = htslib_version_match.group(1)
+
         if not line.startswith("SN"):
             continue
 
@@ -31,7 +47,7 @@ def parse_samtools_stats_lines(file_contents: str) -> Dict:
             continue
         parsed_data[field] = value
 
-    return parsed_data
+    return parsed_data, samtools_version, htslib_version
 
 
 def parse_samtools_stats(module: BaseMultiqcModule):
@@ -39,28 +55,13 @@ def parse_samtools_stats(module: BaseMultiqcModule):
 
     samtools_stats: Dict = dict()
     for f in module.find_log_files("samtools/stats"):
-        parsed_data = parse_samtools_stats_lines(f["f"])
-        for line in f["f"].splitlines():
-            # Get version number from file contents
-            if line.startswith("# This file was produced by samtools stats"):
-                # Look for Samtools version
-                version_match = re.search(VERSION_REGEX, line)
-                if version_match is None:
-                    continue
+        parsed_data, samtools_version, htslib_version = parse_samtools_stats_lines(f["f"])
 
-                # Add Samtools version
-                samtools_version = version_match.group(1)
-                module.add_software_version(samtools_version, f["s_name"])
-
-                # Look for HTSlib version
-                htslib_version_match = re.search(HTSLIB_REGEX, line)
-                if htslib_version_match is None:
-                    continue
-
-                # Add HTSlib version if different from Samtools version
-                htslib_version = htslib_version_match.group(1)
-                if htslib_version != samtools_version:
-                    module.add_software_version(htslib_version, f["s_name"], "HTSlib")
+        # Add Samtools and HTSlib versions if found
+        if samtools_version:
+            module.add_software_version(samtools_version, f["s_name"])
+        if htslib_version and htslib_version != samtools_version:
+            module.add_software_version(htslib_version, f["s_name"], "HTSlib")
 
         if len(parsed_data) > 0:
             # Work out some percentages

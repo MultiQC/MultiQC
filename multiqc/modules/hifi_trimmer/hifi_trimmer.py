@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         # First, parse samtools stats files to get total sequences and bases
         samtools_data = {}
         for f in self.find_log_files("samtools/stats"):
-            parsed_data = parse_samtools_stats_lines(f["f"])
+            parsed_data, samtools_version, htslib_version = parse_samtools_stats_lines(f["f"])
             if "raw_total_sequences" in parsed_data or "total_length" in parsed_data:
                 s_name = f["s_name"]
                 samtools_data[s_name] = parsed_data
