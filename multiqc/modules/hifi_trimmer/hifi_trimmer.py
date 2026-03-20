@@ -164,10 +164,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         if data["total_bases_processed"] > 0:
             data["pct_bases_removed"] = (data["total_bases_removed"] / data["total_bases_processed"]) * 100
-            data["pct_bases_kept"] = (data["total_bases_kept"] / data["total_bases_processed"]) * 100
         else:
             data["pct_bases_removed"] = 0
-            data["pct_bases_kept"] = 0
 
         return {"s_name": s_name, "data": data}
 
