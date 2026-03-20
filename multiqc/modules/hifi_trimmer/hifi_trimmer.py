@@ -93,6 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Read Statistics",
             anchor="hifi_trimmer_reads",
             description="Summary of read processing statistics from HiFi-Trimmer.",
+            helptext="This plot shows the number of reads that were processed, trimmed, discarded by HiFi-Trimmer &mdash; and unprocessed, if total read counts are available from samtools stats.",
             plot=self.hifi_trimmer_reads_barplot(),
         )
 
@@ -100,6 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Base Statistics",
             anchor="hifi_trimmer_bases",
             description="Summary of base processing statistics from HiFi-Trimmer.",
+            helptext="This plot shows the number of bases that were processed, kept, removed by HiFi-Trimmer &mdash; and unprocessed, if total base counts are available from samtools stats.",
             plot=self.hifi_trimmer_bases_barplot(),
         )
 
