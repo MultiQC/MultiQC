@@ -249,7 +249,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "HiFi-Trimmer: Read Statistics",
             "ylab": "Number of Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_zero_cats": True,
         }
 
         return bargraph.plot(plot_data, cats, config)
@@ -282,7 +282,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "HiFi-Trimmer: Base Statistics",
             "ylab": "Number of Bases",
             "cpswitch_counts_label": "Number of Bases",
-            "hide_zero_cats": False,
+            "hide_zero_cats": True,
         }
 
         return bargraph.plot(plot_data, cats, config)
