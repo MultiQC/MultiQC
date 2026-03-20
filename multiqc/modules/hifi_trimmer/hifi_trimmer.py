@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug(f"Merged samtools stats data for {s_name} (matched with {samtools_key})")
 
                 self.hifi_trimmer_data[s_name] = data
-                self.add_data_source(f, s_name)
+                self.add_data_source(f, s_name=s_name)
 
         # Filter to strip out ignored sample names
         self.hifi_trimmer_data = self.ignore_samples(self.hifi_trimmer_data)
