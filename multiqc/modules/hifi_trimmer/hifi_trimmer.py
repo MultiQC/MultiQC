@@ -55,10 +55,11 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     # Try stripping common suffixes to match samtools stats files
                     for suffix in ["_hifi_trimmer", ".hifi_trimmer", "_trimmer"]:
-                        candidate = s_name.replace(suffix, "")
-                        if candidate in samtools_data:
-                            samtools_key = candidate
-                            break
+                        if s_name.endswith(suffix):
+                            candidate = s_name[: -len(suffix)]
+                            if candidate in samtools_data:
+                                samtools_key = candidate
+                                break
 
                 if samtools_key:
                     # Use samtools stats data as the source of truth for total reads/bases
