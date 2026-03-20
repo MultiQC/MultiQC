@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hifi_trimmer",
             href="https://github.com/sanger-tol/hifi-trimmer",
             info="Filters and trims adapter sequences from HiFi reads using BLAST.",
-            # doi="",  # No DOI available
+            doi="",  # No DOI available
         )
 
         # Find and load any HiFi-Trimmer reports
