@@ -38,11 +38,11 @@ class TestCustomFavicon:
 
         report_html = (tmp_path / "multiqc_report.html").read_text()
         expected_favicon_html = """\
-<link
-  rel="icon"
-  type="image/png"
-  href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-/>"""
+  <link
+    rel="icon"
+    type="image/png"
+    href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+  />"""
         assert expected_favicon_html in report_html
 
     def test_custom_favicon_svg_in_html(self, data_dir, sample_data_file: Path, tmp_path: Path) -> None:
@@ -62,11 +62,11 @@ class TestCustomFavicon:
 
         report_html = (tmp_path / "multiqc_report.html").read_text()
         expected_favicon_html = """\
-<link
-  rel="icon"
-  type="image/svg+xml"
-  href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIGZpbGw9IiM0Q0FGNTAiLz4KPC9zdmc+Cg=="
-/>"""
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIGZpbGw9IiM0Q0FGNTAiLz4KPC9zdmc+Cg=="
+  />"""
         assert expected_favicon_html in report_html
 
     def test_default_favicon_when_not_configured(self, sample_data_file: Path, tmp_path: Path) -> None:
@@ -81,11 +81,11 @@ class TestCustomFavicon:
 
         report_html = (tmp_path / "multiqc_report.html").read_text()
         expected_favicon_html = """\
-<link
-  rel="icon"
-  type="image/svg+xml"
-  href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUxIiBoZWlnaHQ9IjI1MSIgdmlld0JveD0iMCAwIDI1MSAyNTEiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik00Ni42NjAxIDEyMC41NDVDNDkuMjgwMSA4MS4wOTcyIDgwLjk3MDEgNDkuNDg5NCAxMjAuNDYgNDcuMDA5NVYwLjk0MjYyN0M1NS41MDAxIDMuNTAyNDUgMy4yODAwOCA1NS42MTkgMC41ODAwNzggMTIwLjU0NUg0Ni42NjAxWiIgZmlsbD0iI0YxODA0NiIvPgo8cGF0aCBkPSJNMTIwLjE5IDIwNC44NDlDODAuNzQwMSAyMDIuMjI5IDQ5LjEzMDEgMTcwLjU0MiA0Ni42NTAxIDEzMS4wNTRIMC41ODAwNzhDMy4xNDAwOCAxOTYuMDEgNTUuMjYwMSAyNDguMjI2IDEyMC4xOSAyNTAuOTI2VjIwNC44NDlaIiBmaWxsPSIjRjE4MDQ2Ii8+CjxwYXRoIGQ9Ik0xMzAuOTY5IDQ3LjAxOTVDMTcwLjQxOSA0OS42Mzk0IDIwMi4wMjkgODEuMzI3MiAyMDQuNTA5IDEyMC44MTVIMjUwLjU3OUMyNDguMDE5IDU1Ljg1ODkgMTk1Ljg5OSAzLjY0MjQ1IDEzMC45NjkgMC45NDI2MjdWNDcuMDE5NVoiIGZpbGw9IiNGMTgwNDYiLz4KPHBhdGggZD0iTTI1MC41NzkgMjA0Ljg0OUMyMTEuMTI5IDIwMi4yMjkgMTc5LjUxOSAxNzAuNTQyIDE3Ny4wMzkgMTMxLjA1NEgxMzAuOTY5QzEzMy41MjkgMTk2LjAxIDE4NS42NDkgMjQ4LjIyNiAyNTAuNTc5IDI1MC45MjZWMjA0Ljg0OVoiIGZpbGw9IiNGMTgwNDYiLz4KPC9zdmc+Cg=="
-/>"""
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUxIiBoZWlnaHQ9IjI1MSIgdmlld0JveD0iMCAwIDI1MSAyNTEiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik00Ni42NjAxIDEyMC41NDVDNDkuMjgwMSA4MS4wOTcyIDgwLjk3MDEgNDkuNDg5NCAxMjAuNDYgNDcuMDA5NVYwLjk0MjYyN0M1NS41MDAxIDMuNTAyNDUgMy4yODAwOCA1NS42MTkgMC41ODAwNzggMTIwLjU0NUg0Ni42NjAxWiIgZmlsbD0iI0YxODA0NiIvPgo8cGF0aCBkPSJNMTIwLjE5IDIwNC44NDlDODAuNzQwMSAyMDIuMjI5IDQ5LjEzMDEgMTcwLjU0MiA0Ni42NTAxIDEzMS4wNTRIMC41ODAwNzhDMy4xNDAwOCAxOTYuMDEgNTUuMjYwMSAyNDguMjI2IDEyMC4xOSAyNTAuOTI2VjIwNC44NDlaIiBmaWxsPSIjRjE4MDQ2Ii8+CjxwYXRoIGQ9Ik0xMzAuOTY5IDQ3LjAxOTVDMTcwLjQxOSA0OS42Mzk0IDIwMi4wMjkgODEuMzI3MiAyMDQuNTA5IDEyMC44MTVIMjUwLjU3OUMyNDguMDE5IDU1Ljg1ODkgMTk1Ljg5OSAzLjY0MjQ1IDEzMC45NjkgMC45NDI2MjdWNDcuMDE5NVoiIGZpbGw9IiNGMTgwNDYiLz4KPHBhdGggZD0iTTI1MC41NzkgMjA0Ljg0OUMyMTEuMTI5IDIwMi4yMjkgMTc5LjUxOSAxNzAuNTQyIDE3Ny4wMzkgMTMxLjA1NEgxMzAuOTY5QzEzMy41MjkgMTk2LjAxIDE4NS42NDkgMjQ4LjIyNiAyNTAuNTc5IDI1MC45MjZWMjA0Ljg0OVoiIGZpbGw9IiNGMTgwNDYiLz4KPC9zdmc+Cg=="
+  />"""
         assert expected_favicon_html in report_html
 
 
