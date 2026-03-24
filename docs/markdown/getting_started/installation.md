@@ -232,7 +232,7 @@ Doing so will likely cause weird stuff to happen (such as only being able to ins
 
 ### Pip / PyPI
 
-This is the easiest way to install MultiQC. `pip` is the package manager for the Python Package Manager. It comes bundled with recent versions of Python,
+`pip` is the package manager for the Python Package Index. It comes bundled with recent versions of Python,
 otherwise you can find installation instructions [here](https://pip.pypa.io/en/stable/installation/).
 
 You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc) as follows:
