@@ -61,7 +61,7 @@ uv tool install git+https://github.com/MultiQC/MultiQC.git
 pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
 ```
 
-MultiQC is also available via Docker, Singularity, and
+MultiQC is also available via Docker and Singularity images, Galaxy wrappers, and
 many more distribution methods.
 See [the documentation](https://docs.seqera.io/multiqc/getting_started/installation/) for details.
 
