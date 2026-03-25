@@ -37,6 +37,14 @@ pip install multiqc
 ```
 
 </td></tr><tr>
+<td>Conda</td>
+<td>
+
+```bash
+conda install multiqc
+```
+
+</td></tr><tr>
 <td>uv (dev version)</td>
 <td>
 
@@ -50,14 +58,6 @@ uv tool install git+https://github.com/MultiQC/MultiQC.git
 
 ```bash
 pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
-```
-
-</td></tr><tr>
-<td>Conda</td>
-<td>
-
-```bash
-conda install multiqc
 ```
 
 </td></tr><tr>

@@ -8,7 +8,7 @@
 
 ### Aggregate bioinformatics results across many samples into a single report
 
-##### Find [documentation](https://docs.seqera.io/multiqc) and [example reports](https://multiqc.info/example-reports/) at [http://multiqc.info](http://multiqc.info)
+##### Find [documentation](https://docs.seqera.io/multiqc) and [example reports](https://seqera.io/multiqc/#reports) at [https://seqera.io/multiqc/](https://seqera.io/multiqc/)
 
 [![PyPI Version](https://img.shields.io/pypi/v/multiqc)](https://pypi.python.org/pypi/multiqc/)
 [![Bioconda Version](https://img.shields.io/conda/v/bioconda/multiqc?label=bioconda)](https://bioconda.github.io/recipes/multiqc/README.html)
