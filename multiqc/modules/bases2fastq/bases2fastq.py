@@ -1063,7 +1063,9 @@ class MultiqcModule(BaseMultiqcModule):
         for func in plot_functions:
             plot_html, plot_name, anchor, description, helptext, plot_data = func(data, self.run_color)
             if plot_html is not None:
-                self.add_section(name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext)
+                self.add_section(
+                    name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext
+                )
                 self.write_data_file(plot_data, f"base2fastq:{plot_name}")
 
     def add_sample_plots(
@@ -1083,5 +1085,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data, group_lookup, project_lookup, self.sample_color
             )
             if plot_html is not None:
-                self.add_section(name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext)
+                self.add_section(
+                    name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext
+                )
                 self.write_data_file(plot_data, f"base2fastq:{plot_name}")
