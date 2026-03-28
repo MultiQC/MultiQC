@@ -1,5 +1,5 @@
 import math
-from typing import Any, Dict, cast
+from typing import Any, Dict, List, cast
 
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.table_object import ColumnDict, SectionT
@@ -429,7 +429,7 @@ def tabulate_index_assignment_stats(run_data, color_dict):
             if "Project" in sample_data:
                 sample_index_stats.update({"project": sample_data["Project"]})
                 project_present = True
-            sample_index_stats.update({"sample_name": sample_data["SampleID"].split("__")[1]})
+            sample_index_stats.update({"sample_name": sample_data["SampleID"].split("__", maxsplit=1)[1]})
             sample_index_stats.update({"index_1": sample_data["Index1"]})
             sample_index_stats.update({"index_2": sample_data["Index2"]})
             sample_index_stats.update({"assigned_polonies": sample_data["SamplePolonyCounts"]})
@@ -655,7 +655,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for median BQ of each cycle (skip runs without Reads/Cycles)
     runs_with_reads = [s for s in run_data if _run_has_reads(run_data[s]) and run_data[s]["Reads"][0].get("Cycles")]
     if not runs_with_reads:
-        plot_content: list[Any] = []
+        plot_content: List[Any] = []
         plot_html = linegraph.plot(
             plot_content,
             pconfig={"id": "bases2fastq_run_bq_by_cycle", "title": "bases2fastq: Run Base Quality by Cycle"},
