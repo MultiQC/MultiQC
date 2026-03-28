@@ -11,9 +11,13 @@ it prints the contents of these files into the report.
 #}
 
 <!-- Favicon includes -->
+{% if config.custom_favicon is not none %}
+<link rel="icon" type="{{ get_mime_type(config.custom_favicon) }}" href="data:{{ get_mime_type(config.custom_favicon) }};base64,{{ include_file(config.custom_favicon, b64=True) }}">
+{% else %}
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,{{ include_file('assets/img/favicon-32x32.png', b64=True) }}">
 <link rel="icon" type="image/png" sizes="96x96" href="data:image/png;base64,{{ include_file('assets/img/favicon-96x96.png', b64=True) }}">
 <link rel="icon" type="image/png" sizes="16x16" href="data:image/png;base64,{{ include_file('assets/img/favicon-16x16.png', b64=True) }}">
+{% endif %}
 
 <!-- Include CSS -->
 <style type="text/css">
