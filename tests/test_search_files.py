@@ -2,12 +2,17 @@
 Tests for discovering and excluding files
 """
 
+import sys
 from pathlib import Path
 from typing import Dict, Set, Union
 
 import pytest
 import yaml
-from importlib_metadata import EntryPoint
+
+if sys.version_info >= (3, 10):
+    from importlib.metadata import EntryPoint
+else:
+    from importlib_metadata import EntryPoint
 
 from multiqc import config, report
 from multiqc.core.exceptions import RunError
