@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any, Dict, cast
 
 from natsort import natsorted
 
@@ -153,7 +153,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     }
 
     plot_name = "Sample QC Metrics Table"
-    plot_html = table.plot(plot_content, cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(plot_content, cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "sample_qc_metrics_table"
     description = "QC metrics per unique sample"
     helptext = """
@@ -177,7 +177,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
     """Create the epic HTML for the FastQC sequence content heatmap"""
     samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
     if not samples_with_reads:
-        empty_data: dict[str, dict[int, Any]] = {}
+        empty_data: Dict[str, Dict[int, Any]] = {}
         plot_html = linegraph.plot(
             empty_data,
             pconfig={
@@ -190,7 +190,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
         return plot_html, "Per Cycle Base Content", "base_content", "", "", empty_data
 
     # Prep the data
-    data: dict[str, dict[int, Any]] = {}
+    data: Dict[str, Dict[int, Any]] = {}
 
     r1r2_split = 0
     for s_name in natsorted(samples_with_reads):
@@ -259,7 +259,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
 def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
     samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
     if not samples_with_reads:
-        empty_data: dict[str, dict[int, float]] = {}
+        empty_data: Dict[str, Dict[int, float]] = {}
         plot_html = linegraph.plot(
             empty_data,
             pconfig={
@@ -271,7 +271,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
         )
         return plot_html, "Per Cycle N Content", "n_content", "", "", empty_data
 
-    data: dict[str, dict[int, float]] = {}
+    data: Dict[str, Dict[int, float]] = {}
     r1r2_split = 0
     for s_name in natsorted(samples_with_reads):
         data[s_name] = {}
@@ -344,7 +344,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
     """
     samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
     if not samples_with_reads:
-        empty_gc_hist: dict[str, dict[float, float]] = {}
+        empty_gc_hist: Dict[str, Dict[float, float]] = {}
         plot_html = linegraph.plot(
             empty_gc_hist,
             pconfig={
@@ -356,7 +356,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
         )
         return plot_html, "Per Sample GC Histogram", "gc_histogram", "", "", empty_gc_hist
 
-    gc_hist_dict: dict[str, dict[float, float]] = {}
+    gc_hist_dict: Dict[str, Dict[float, float]] = {}
     for s_name in natsorted(samples_with_reads):
         r0 = sample_data[s_name]["Reads"][0]
         if "PerReadGCCountHistogram" not in r0:
@@ -421,7 +421,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
     """
     samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
     if not samples_with_reads:
-        empty_content: dict[str, dict[int, float]] = {}
+        empty_content: Dict[str, Dict[int, float]] = {}
         plot_html = linegraph.plot(
             empty_content,
             pconfig={
@@ -433,7 +433,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
         )
         return plot_html, "Per Sample Adapter Content", "adapter_content", "", "", empty_content
 
-    plot_content: dict[str, dict[int, float]] = {}
+    plot_content: Dict[str, Dict[int, float]] = {}
 
     r1r2_split = 0
     for s_name in natsorted(samples_with_reads):

@@ -1,5 +1,5 @@
 import math
-from typing import Any, cast
+from typing import Any, Dict, List, cast
 
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.table_object import ColumnDict, SectionT
@@ -212,7 +212,7 @@ def tabulate_project_stats(run_data, color_dict):
         first_key = run_keys[0]
         project_header = f"{run_data[first_key]['Project']} | "
     plot_name = f"{project_header}Sequencing QC Metrics Table"
-    plot_html = table.plot(plot_content, cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(plot_content, cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "project_run_qc_metrics_table"
     description = "QC metrics per run, per project"
     helptext = """
@@ -339,7 +339,7 @@ def tabulate_run_stats(run_data, color_dict):
     }
 
     plot_name = "Sequencing Run QC Metrics Table"
-    plot_html = table.plot(plot_content, cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(plot_content, cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "run_qc_metrics_table"
     description = "QC metrics per run"
     helptext = """
@@ -398,7 +398,7 @@ def tabulate_manifest_stats(run_data, color_dict):
     }
 
     plot_name = "Run Manifest Table"
-    plot_html = table.plot(plot_content, cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(plot_content, cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "run_manifest_metrics_table"
     description = "Run parameters used."
     helptext = """
@@ -437,7 +437,7 @@ def tabulate_index_assignment_stats(run_data, color_dict):
             plot_content.update({index: sample_index_stats})
             index += 1
 
-    headers: dict[str, Any] = {}
+    headers: Dict[str, Any] = {}
     headers["run_name"] = {
         "title": "Run Name",
         "description": "Run Name.",
@@ -480,7 +480,7 @@ def tabulate_index_assignment_stats(run_data, color_dict):
     }
 
     plot_name = "Index Assignment Metrics"
-    plot_html = table.plot(cast(SectionT, plot_content), cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(cast(SectionT, plot_content), cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "index_assignment_metrics"
     description = "Index assignment metrics."
     helptext = """
@@ -506,7 +506,7 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
         - Polonies
         - % Polonies
     """
-    headers: dict[str, Any] = {}
+    headers: Dict[str, Any] = {}
     headers["Run Name"] = {
         "title": "Run Name",
         "description": "Run Name (Run ID + Analysis ID).",
@@ -544,7 +544,7 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
     }
 
     plot_name = "Unassigned Indices Metrics"
-    plot_html = table.plot(cast(SectionT, run_data), cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(cast(SectionT, run_data), cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "index_unassignment_metrics"
     description = "Index unassignment metrics."
     helptext = """
@@ -572,7 +572,7 @@ def _run_has_reads(run_entry: dict) -> bool:
 
 def plot_base_quality_hist(run_data, color_dict):
     # Prepare plot data for per base BQ histogram (skip runs without Reads)
-    bq_hist_dict: dict[str, dict[int, float]] = {}
+    bq_hist_dict: Dict[str, Dict[int, float]] = {}
     for s_name in natsorted(run_data.keys()):
         if not _run_has_reads(run_data[s_name]):
             continue
@@ -588,7 +588,7 @@ def plot_base_quality_hist(run_data, color_dict):
             bq_hist_dict[s_name].update({quality: R1R2_base_quality_counts[quality] / total_bases * 100})
 
     # Prepare plot data for per read average BQ histogram
-    per_read_quality_hist_dict: dict[str, dict[int, float]] = {}
+    per_read_quality_hist_dict: Dict[str, Dict[int, float]] = {}
     for s_name in natsorted(run_data.keys()):
         if not _run_has_reads(run_data[s_name]):
             continue
@@ -655,7 +655,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for median BQ of each cycle (skip runs without Reads/Cycles)
     runs_with_reads = [s for s in run_data if _run_has_reads(run_data[s]) and run_data[s]["Reads"][0].get("Cycles")]
     if not runs_with_reads:
-        plot_content: list[Any] = []
+        plot_content: List[Any] = []
         plot_html = linegraph.plot(
             plot_content,
             pconfig={"id": "bases2fastq_run_bq_by_cycle", "title": "bases2fastq: Run Base Quality by Cycle"},
@@ -676,10 +676,10 @@ def plot_base_quality_by_cycle(run_data, color_dict):
             R1CycleNum = len(read0["Cycles"])
             r1r2_split = max(r1r2_split, R1CycleNum)
 
-    median_dict: dict[str, dict[int, float]] = {}
+    median_dict: Dict[str, Dict[int, float]] = {}
     for s_name in natsorted(runs_with_reads):
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
-        cycle_dict: dict[int, float] = {}
+        cycle_dict: Dict[int, float] = {}
         R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
@@ -691,7 +691,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         median_dict.update({s_name: cycle_dict})
 
     # Prepare plot data for mean BQ of each cycle
-    mean_dict: dict[str, dict[int, float]] = {}
+    mean_dict: Dict[str, Dict[int, float]] = {}
     for s_name in natsorted(runs_with_reads):
         paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
         # Update each sample cycle info
