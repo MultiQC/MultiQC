@@ -363,6 +363,10 @@ fastp:
   num_lines: 50
 fastq_screen:
   fn: "*_screen.txt"
+fastqe:
+  fn: "*fastqe*"
+  contents: "Filename\tStatistic\tQualities"
+  num_lines: 1
 fastqc/data:
   fn: "fastqc_data.txt"
 fastqc/zip:
