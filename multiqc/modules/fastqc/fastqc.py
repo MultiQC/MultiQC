@@ -332,8 +332,12 @@ class MultiqcModule(BaseMultiqcModule):
         section = None
         s_headers = None
         for line in file_contents.splitlines():
-            if line.startswith("##FastQC") or line.startswith("##Falco"):
-                version_match = re.search(VERSION_REGEX, line)
+            if line.startswith("##FastQC"):
+                version_match = re.search(r'##FastQC\t(.+)', line)
+                if version_match:
+                    self.add_software_version(version_match.group(1), s_name)
+            elif line.startswith("##Falco"):
+                version_match = re.search(r'##Falco\t(.+)', line)
                 if version_match:
                     self.add_software_version(version_match.group(1), s_name, software_name="Falco")
             if line == ">>END_MODULE":
