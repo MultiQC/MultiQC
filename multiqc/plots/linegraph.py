@@ -8,7 +8,7 @@ import os
 import random
 from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
 
-import plotly.graph_objects as go  # type: ignore
+import plotly.graph_objects as go
 import polars as pl
 from natsort import natsorted
 from pydantic import Field
@@ -94,13 +94,13 @@ class Series(ValidatedConfig, Generic[KeyT, ValT]):
     def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         xs = [x[0] for x in self.pairs]
         if len(xs) > 0:
-            return min(xs), max(xs)  # type: ignore
+            return min(xs), max(xs)
         return None, None
 
     def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         ys = [x[1] for x in self.pairs if x[1] is not None]
         if len(ys) > 0:
-            return min(ys), max(ys)  # type: ignore
+            return min(ys), max(ys)
         return None, None
 
 
@@ -133,9 +133,9 @@ class LinePlotConfig(PConfig):
     ) -> Union[Series, List[Series], List[List[Series]]]:
         if isinstance(data, list):
             if isinstance(data[0], list):
-                return [[Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in ds] for ds in data]  # type: ignore
-            return [Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in data]  # type: ignore
-        return Series(path_in_cfg=path_in_cfg, **data) if isinstance(data, dict) else data  # type: ignore
+                return [[Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in ds] for ds in data]
+            return [Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in data]
+        return Series(path_in_cfg=path_in_cfg, **data) if isinstance(data, dict) else data
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("lineplot",), **data)
@@ -154,9 +154,9 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         for line in self.lines:
             _xmin, _xmax = line.get_x_range()
             if _xmin is not None:
-                xmin = min(xmin, _xmin) if xmin is not None else _xmin  # type: ignore
+                xmin = min(xmin, _xmin) if xmin is not None else _xmin
             if _xmax is not None:
-                xmax = max(xmax, _xmax) if xmax is not None else _xmax  # type: ignore
+                xmax = max(xmax, _xmax) if xmax is not None else _xmax
         return xmin, xmax
 
     def get_y_range(self) -> Tuple[Optional[ValT], Optional[ValT]]:
@@ -166,9 +166,9 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         for line in self.lines:
             _ymin, _ymax = line.get_y_range()
             if _ymin is not None:
-                ymin = min(ymin, _ymin) if ymin is not None else _ymin  # type: ignore
+                ymin = min(ymin, _ymin) if ymin is not None else _ymin
             if _ymax is not None:
-                ymax = max(ymax, _ymax) if ymax is not None else _ymax  # type: ignore
+                ymax = max(ymax, _ymax) if ymax is not None else _ymax
         return ymin, ymax
 
     @staticmethod

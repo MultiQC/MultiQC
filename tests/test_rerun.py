@@ -201,8 +201,8 @@ def test_merge_bargraph():
     input_data1 = BarPlotInputData(
         anchor=anchor,
         plot_type=PlotType.BAR,
-        data=[dataset1],  # type: ignore
-        cats=[cats1],  # type: ignore
+        data=[dataset1],
+        cats=[cats1],
         pconfig=pconfig,
         creation_date=datetime.now() - timedelta(days=1),
     )
@@ -222,8 +222,8 @@ def test_merge_bargraph():
     input_data2 = BarPlotInputData(
         anchor=anchor,
         plot_type=PlotType.BAR,
-        data=[dataset2],  # type: ignore
-        cats=[cats2],  # type: ignore
+        data=[dataset2],
+        cats=[cats2],
         pconfig=pconfig,
         creation_date=datetime.now(),
     )

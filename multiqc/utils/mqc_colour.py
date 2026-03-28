@@ -11,7 +11,7 @@ import re
 from typing import Optional, Tuple, Union
 
 import numpy as np
-import spectra  # type: ignore
+import spectra
 
 from multiqc import config, report
 
@@ -348,7 +348,7 @@ class mqc_colour_scale(object):
                 my_scale = my_spectra_scale.domain(domain_nums)
 
                 # Get the color from the scale
-                thecolour = my_scale(val_float)  # type: ignore
+                thecolour = my_scale(val_float)
 
                 # Apply lightening with alpha
                 if lighten > 0:
