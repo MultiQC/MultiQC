@@ -1355,7 +1355,7 @@ def _get_sortlist_js(dt: DataTable) -> str:
                 logger.warning(
                     "Tried to sort by column '%s', but column was not found. Available columns: %s",
                     d["column"],
-                    [col1_header]+[k for (_, k, _) in headers],
+                    [col1_header] + [k for (_, k, _) in headers],
                 )
                 return ""
         direction = 0 if d.get("direction", "").startswith("asc") else 1
