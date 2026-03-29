@@ -26,7 +26,6 @@ from multiqc.utils.material_icons import get_material_icon
 
 log = logging.getLogger(__name__)
 
-VERSION_REGEX = r"(?:FastQC|Falco)\t([\d\.]+)"
 
 
 @dataclasses.dataclass
@@ -332,14 +331,9 @@ class MultiqcModule(BaseMultiqcModule):
         section = None
         s_headers = None
         for line in file_contents.splitlines():
-            if line.startswith("##FastQC"):
-                version_match = re.search(r"##FastQC\t(.+)", line)
-                if version_match:
-                    self.add_software_version(version_match.group(1), s_name)
-            elif line.startswith("##Falco"):
-                version_match = re.search(r"##Falco\t(.+)", line)
-                if version_match:
-                    self.add_software_version(version_match.group(1), s_name, software_name="Falco")
+            m = re.search(r"##(FastQC|Falco)\t([\d\.]+)", line)
+            if m:
+                self.add_software_version(m.group(2), s_name, software_name=m.group(1))
             if line == ">>END_MODULE":
                 section = None
                 s_headers = None
