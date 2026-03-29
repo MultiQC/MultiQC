@@ -27,7 +27,6 @@ from multiqc.utils.material_icons import get_material_icon
 log = logging.getLogger(__name__)
 
 
-
 @dataclasses.dataclass
 class Metrics:
     """Dataclass for storing FastQC metrics"""
