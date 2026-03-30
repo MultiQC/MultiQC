@@ -101,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Base Statistics",
             anchor="hifi_trimmer_bases",
             description="Summary of base processing statistics from HiFi-Trimmer.",
-            helptext="This plot shows the number of bases that were processed, kept, removed by HiFi-Trimmer &mdash; and unprocessed, if total base counts are available from samtools stats.",
+            helptext="This plot shows the number of bases that were processed unchanged, removed, and trimmed, by HiFi-Trimmer &mdash; and unprocessed, if total base counts are available from samtools stats.",
             plot=self.hifi_trimmer_bases_barplot(),
         )
 
@@ -149,18 +149,18 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Calculate derived metrics
-        data["total_reads_kept"] = data["total_reads_processed"] - data["total_reads_discarded"]
-        data["total_bases_kept"] = data["total_bases_processed"] - data["total_bases_removed"]
+        data["total_reads_unchanged"] = data["total_reads_processed"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
+        data["total_bases_unchanged"] = data["total_bases_processed"] - data["total_bases_removed"]
 
         # Calculate percentages
         if data["total_reads_processed"] > 0:
             data["pct_reads_discarded"] = (data["total_reads_discarded"] / data["total_reads_processed"]) * 100
             data["pct_reads_trimmed"] = (data["total_reads_trimmed"] / data["total_reads_processed"]) * 100
-            data["pct_reads_kept"] = (data["total_reads_kept"] / data["total_reads_processed"]) * 100
+            data["pct_reads_unchanged"] = (data["total_reads_unchanged"] / data["total_reads_processed"]) * 100
         else:
             data["pct_reads_discarded"] = 0
             data["pct_reads_trimmed"] = 0
-            data["pct_reads_kept"] = 0
+            data["pct_reads_unchanged"] = 0
 
         if data["total_bases_processed"] > 0:
             data["pct_bases_removed"] = (data["total_bases_removed"] / data["total_bases_processed"]) * 100
@@ -189,9 +189,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.0f}",
                 "shared_key": "read_count",
             },
-            "pct_reads_kept": {
-                "title": "% Reads Kept",
-                "description": "Percentage of reads kept after filtering",
+            "pct_reads_unchanged": {
+                "title": "% Reads Unchanged",
+                "description": "Percentage of reads kept unchanged (neither trimmed nor discarded)",
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
@@ -224,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
         plot_data = {}
         for s_name, data in self.hifi_trimmer_data.items():
             plot_data[s_name] = {
-                "total_reads_kept": data.get("total_reads_kept", 0),
+                "total_reads_unchanged": data.get("total_reads_unchanged", 0),
                 "total_reads_trimmed": data.get("total_reads_trimmed", 0),
                 "total_reads_discarded": data.get("total_reads_discarded", 0),
             }
@@ -237,7 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         cats = {
             "unprocessed_reads": {"name": "Unprocessed Reads", "color": "#95a5a6"},
-            "total_reads_kept": {"name": "Reads Kept", "color": "#2ecc71"},
+            "total_reads_unchanged": {"name": "Reads Unchanged", "color": "#2ecc71"},
             "total_reads_trimmed": {"name": "Reads Trimmed", "color": "#f39c12"},
             "total_reads_discarded": {"name": "Reads Discarded", "color": "#e74c3c"},
         }
@@ -259,7 +259,7 @@ class MultiqcModule(BaseMultiqcModule):
         plot_data = {}
         for s_name, data in self.hifi_trimmer_data.items():
             plot_data[s_name] = {
-                "total_bases_kept": data.get("total_bases_kept", 0),
+                "total_bases_unchanged": data.get("total_bases_unchanged", 0),
                 "total_bases_removed": data.get("total_bases_removed", 0),
             }
             # Add unprocessed bases if we have sample totals from samtools stats
@@ -271,7 +271,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         cats = {
             "unprocessed_bases": {"name": "Unprocessed Bases", "color": "#95a5a6"},
-            "total_bases_kept": {"name": "Bases Kept", "color": "#3498db"},
+            "total_bases_unchanged": {"name": "Bases Unchanged", "color": "#3498db"},
             "total_bases_removed": {"name": "Bases Removed", "color": "#e74c3c"},
         }
 
