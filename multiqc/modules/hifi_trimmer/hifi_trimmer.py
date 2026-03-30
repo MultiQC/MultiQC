@@ -225,6 +225,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.0f}",
                 "hidden": True,
             }
+        headers["pct_bases_kept"] = {
+            "title": "% Bases kept",
+            "description": "Percentage of bases kept (not removed) by HiFi-Trimmer",
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
+            "scale": "RdYlGn",
+            "format": "{:,.1f}",
+            "hidden": True,
+        }
 
         self.general_stats_addcols(self.hifi_trimmer_data, headers)
 
