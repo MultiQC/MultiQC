@@ -147,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
         # number of reads or bases HiFi-Trimmer says it processed.
         total = data.get(total_key) or data.get(processed_key)
         if total:
-            data[pct_key] = (total - data[removed_key]) / total * 100
+            data[pct_key] = max(total - data[removed_key], 0) / total * 100
 
     @staticmethod
     def _get_unprocessed_total(data, total_key, processed_key, fallback_subtract_keys):
@@ -158,11 +158,11 @@ class MultiqcModule(BaseMultiqcModule):
         processed = data.get(processed_key)
         if processed is not None:
             # Newer JSON can distinguish "processed" from "present in sample".
-            return total - processed
+            return max(total - processed, 0)
 
         # Older JSON lacks *_processed counts, so whatever remains after subtracting
         # the reported categories is shown as "unprocessed" in the plots.
-        return total - sum(data[key] for key in fallback_subtract_keys)
+        return max(total - sum(data[key] for key in fallback_subtract_keys), 0)
 
     def parse_hifi_trimmer_json(self, f):
         """Parse HiFi-Trimmer JSON output and return summary statistics."""
