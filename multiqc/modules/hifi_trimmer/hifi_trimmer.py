@@ -120,8 +120,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             summary = parsed_json["summary"]
             required_keys = [
-                "total_reads_processed",
-                "total_bases_processed",
                 "total_reads_discarded",
                 "total_reads_trimmed",
                 "total_bases_removed",
@@ -139,33 +137,31 @@ class MultiqcModule(BaseMultiqcModule):
         # Get sample name from filename
         s_name = self.clean_s_name(f["fn"], f)
 
-        # Extract metrics
+        # Extract metrics; *_processed fields are absent in older versions
         data = {
-            "total_reads_processed": summary["total_reads_processed"],
-            "total_bases_processed": summary["total_bases_processed"],
             "total_reads_discarded": summary["total_reads_discarded"],
             "total_reads_trimmed": summary["total_reads_trimmed"],
             "total_bases_removed": summary["total_bases_removed"],
         }
+        if "total_reads_processed" in summary:
+            data["total_reads_processed"] = summary["total_reads_processed"]
+        if "total_bases_processed" in summary:
+            data["total_bases_processed"] = summary["total_bases_processed"]
 
         # Calculate derived metrics
-        data["total_reads_unchanged"] = data["total_reads_processed"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
-        data["total_bases_unchanged"] = data["total_bases_processed"] - data["total_bases_removed"]
+        if "total_reads_processed" in data:
+            data["total_reads_unchanged"] = data["total_reads_processed"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
+        if "total_bases_processed" in data:
+            data["total_bases_unchanged"] = data["total_bases_processed"] - data["total_bases_removed"]
 
         # Calculate percentages
-        if data["total_reads_processed"] > 0:
+        if data.get("total_reads_processed", 0) > 0:
             data["pct_reads_discarded"] = (data["total_reads_discarded"] / data["total_reads_processed"]) * 100
             data["pct_reads_trimmed"] = (data["total_reads_trimmed"] / data["total_reads_processed"]) * 100
             data["pct_reads_unchanged"] = (data["total_reads_unchanged"] / data["total_reads_processed"]) * 100
-        else:
-            data["pct_reads_discarded"] = 0
-            data["pct_reads_trimmed"] = 0
-            data["pct_reads_unchanged"] = 0
 
-        if data["total_bases_processed"] > 0:
+        if data.get("total_bases_processed", 0) > 0:
             data["pct_bases_removed"] = (data["total_bases_removed"] / data["total_bases_processed"]) * 100
-        else:
-            data["pct_bases_removed"] = 0
 
         return {"s_name": s_name, "data": data}
 
