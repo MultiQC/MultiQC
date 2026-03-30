@@ -70,24 +70,23 @@ class MultiqcModule(BaseMultiqcModule):
                     data["sample_total_bases"] = samtools_data[samtools_key].get("total_length", 0)
                     log.debug(f"Merged samtools stats data for {s_name} (matched with {samtools_key})")
 
-                # Case 2b: samtools present but no *_processed — derive kept from total
-                if "total_reads_processed" not in data and "sample_total_reads" in data:
-                    data["total_reads_kept"] = (
-                        data["sample_total_reads"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
-                    )
-                if "total_bases_processed" not in data and "sample_total_bases" in data:
-                    data["total_bases_kept"] = data["sample_total_bases"] - data["total_bases_removed"]
+                # pct_reads_kept = (not-discarded) / total
+                # When samtools total is available use it as denominator; otherwise fall back to *_processed.
+                reads_total = data.get("sample_total_reads")
+                if reads_total:
+                    data["pct_reads_kept"] = (reads_total - data["total_reads_discarded"]) / reads_total * 100
+                elif "total_reads_processed" in data:
+                    data["pct_reads_kept"] = (
+                        data["total_reads_processed"] - data["total_reads_discarded"]
+                    ) / data["total_reads_processed"] * 100
 
-                # pct_reads_kept: prefer sample total (samtools) over processed as denominator
-                if "total_reads_kept" in data:
-                    reads_denom = data.get("sample_total_reads") or data.get("total_reads_processed")
-                    if reads_denom:
-                        data["pct_reads_kept"] = data["total_reads_kept"] / reads_denom * 100
-
-                if "total_bases_kept" in data:
-                    bases_denom = data.get("sample_total_bases") or data.get("total_bases_processed")
-                    if bases_denom:
-                        data["pct_bases_kept"] = data["total_bases_kept"] / bases_denom * 100
+                bases_total = data.get("sample_total_bases")
+                if bases_total:
+                    data["pct_bases_kept"] = (bases_total - data["total_bases_removed"]) / bases_total * 100
+                elif "total_bases_processed" in data:
+                    data["pct_bases_kept"] = (
+                        data["total_bases_processed"] - data["total_bases_removed"]
+                    ) / data["total_bases_processed"] * 100
 
                 self.hifi_trimmer_data[s_name] = data
                 self.add_data_source(f, s_name=s_name)
