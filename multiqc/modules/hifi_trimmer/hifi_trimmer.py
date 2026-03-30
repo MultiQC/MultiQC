@@ -196,19 +196,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {}
 
-        if has_samtools:
-            # Cases 2a/2b: show the samtools total (hidden by default to save space)
-            headers["sample_total_reads"] = {
-                "title": "Total Reads",
-                "description": "Total number of reads in the sample (from samtools stats)",
-                "min": 0,
-                "scale": "Greens",
-                "format": "{:,.0f}",
-                "shared_key": "read_count",
-                "hidden": True,
-            }
-        elif has_processed:
-            # Case 1a: no samtools — show reads processed as the main read-count column
+        if has_processed and not has_samtools:
+            # No samtools — show reads processed as the main read-count column
             headers["total_reads_processed"] = {
                 "title": "Reads processed",
                 "description": "Total number of reads processed by HiFi-Trimmer",
@@ -227,23 +216,15 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.1f}",
         }
 
-        # Bases columns (hidden by default)
-        headers["sample_total_bases"] = {
-            "title": "Total Bases",
-            "description": "Total number of bases in the sample (from samtools stats)",
-            "min": 0,
-            "scale": "Purples",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["total_bases_processed"] = {
-            "title": "Bases processed",
-            "description": "Total number of bases processed by HiFi-Trimmer",
-            "min": 0,
-            "scale": "Purples",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
+        if has_processed:
+            headers["total_bases_processed"] = {
+                "title": "Bases processed",
+                "description": "Total number of bases processed by HiFi-Trimmer",
+                "min": 0,
+                "scale": "Purples",
+                "format": "{:,.0f}",
+                "hidden": True,
+            }
 
         self.general_stats_addcols(self.hifi_trimmer_data, headers)
 
