@@ -223,6 +223,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "scale": "Purples",
                 "format": "{:,.0f}",
+                "shared_key": "base_count",
                 "hidden": True,
             }
         headers["pct_bases_kept"] = {
