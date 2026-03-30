@@ -71,11 +71,11 @@ class MultiqcModule(BaseMultiqcModule):
                     log.debug(f"Merged samtools stats data for {s_name} (matched with {samtools_key})")
 
                 # Case 2b: samtools present but no *_processed — derive kept from total
-                if "total_reads_kept" not in data and "sample_total_reads" in data:
+                if "total_reads_processed" not in data and "sample_total_reads" in data:
                     data["total_reads_kept"] = (
                         data["sample_total_reads"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
                     )
-                if "total_bases_kept" not in data and "sample_total_bases" in data:
+                if "total_bases_processed" not in data and "sample_total_bases" in data:
                     data["total_bases_kept"] = data["sample_total_bases"] - data["total_bases_removed"]
 
                 # pct_reads_kept: prefer sample total (samtools) over processed as denominator
@@ -173,17 +173,17 @@ class MultiqcModule(BaseMultiqcModule):
             "total_bases_removed": summary["total_bases_removed"],
         }
 
-        # Optional fields: *_processed absent in older versions; *_kept may be reported directly
-        for opt_key in ("total_reads_processed", "total_bases_processed", "total_reads_kept", "total_bases_kept"):
+        # Optional fields: *_processed absent in older versions
+        for opt_key in ("total_reads_processed", "total_bases_processed"):
             if opt_key in summary:
                 data[opt_key] = summary[opt_key]
 
-        # Derive *_kept from *_processed when not reported directly by the tool
-        if "total_reads_kept" not in data and "total_reads_processed" in data:
+        # Derive *_kept from *_processed
+        if "total_reads_processed" in data:
             data["total_reads_kept"] = (
                 data["total_reads_processed"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
             )
-        if "total_bases_kept" not in data and "total_bases_processed" in data:
+        if "total_bases_processed" in data:
             data["total_bases_kept"] = data["total_bases_processed"] - data["total_bases_removed"]
 
         # Percentages are computed later in __init__ after samtools data is merged
@@ -218,17 +218,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.0f}",
                 "shared_key": "read_count",
             }
-        else:
-            # Case 1b: no samtools, no *_processed — only reads kept is available
-            headers["total_reads_kept"] = {
-                "title": "Reads kept",
-                "description": "Number of reads kept unchanged by HiFi-Trimmer",
-                "min": 0,
-                "scale": "Greens",
-                "format": "{:,.0f}",
-                "shared_key": "read_count",
-            }
-
         headers["pct_reads_kept"] = {
             "title": "% Reads kept",
             "description": "Percentage of reads kept unchanged (neither trimmed nor discarded)",
@@ -268,10 +257,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             entry: dict[str, int] = {}
 
-            # "Reads kept" bar: only shown when we can distinguish kept from unprocessed.
-            # In case 2b (samtools but no *_processed) the two categories are bundled into
-            # "Reads unprocessed" below, so we omit a separate kept bar.
-            if has_processed or (not has_samtools and "total_reads_kept" in data):
+            # "Reads kept" bar: only available when *_processed is present (case 1a/2a).
+            # In case 2b (samtools but no *_processed) kept reads are bundled into
+            # "Reads unprocessed" and we omit a separate bar.
+            if has_processed:
                 entry["total_reads_kept"] = data.get("total_reads_kept", 0)
 
             entry["total_reads_trimmed"] = data["total_reads_trimmed"]
@@ -317,7 +306,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             entry: dict[str, int] = {}
 
-            if has_processed or (not has_samtools and "total_bases_kept" in data):
+            if has_processed:
                 entry["total_bases_kept"] = data.get("total_bases_kept", 0)
 
             entry["total_bases_removed"] = data["total_bases_removed"]
