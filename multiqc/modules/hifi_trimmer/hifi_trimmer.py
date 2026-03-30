@@ -196,7 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {}
 
-        if has_processed and not has_samtools:
+        if has_processed:
             # No samtools — show reads processed as the main read-count column
             headers["total_reads_processed"] = {
                 "title": "Reads processed",
@@ -236,6 +236,33 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.1f}",
             "hidden": True,
         }
+
+        if not has_processed and not has_samtools:
+            # Fall back to showing reads trimmed + discarded when no total counts are available
+            headers["total_reads_trimmed"] = {
+                "title": "Reads trimmed",
+                "description": "Total number of reads trimmed by HiFi-Trimmer",
+                "min": 0,
+                "scale": "Oranges",
+                "format": "{:,.0f}",
+                "shared_key": "read_count",
+            }
+            headers["total_reads_discarded"] = {
+                "title": "Reads discarded",
+                "description": "Total number of reads discarded by HiFi-Trimmer",
+                "min": 0,
+                "scale": "Reds",
+                "format": "{:,.0f}",
+                "shared_key": "read_count",
+            }
+            headers["total_bases_removed"] = {
+                "title": "Bases removed",
+                "description": "Total number of bases removed by HiFi-Trimmer",
+                "min": 0,
+                "scale": "Reds",
+                "format": "{:,.0f}",
+                "shared_key": "base_count",
+            }
 
         self.general_stats_addcols(self.hifi_trimmer_data, headers)
 
