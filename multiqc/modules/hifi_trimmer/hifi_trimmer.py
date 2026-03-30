@@ -208,7 +208,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         headers["pct_reads_kept"] = {
             "title": "% Reads kept",
-            "description": "Percentage of reads kept unchanged (neither trimmed nor discarded)",
+            "description": "Percentage of reads kept unchanged or trimmed",
             "min": 0,
             "max": 100,
             "suffix": "%",
