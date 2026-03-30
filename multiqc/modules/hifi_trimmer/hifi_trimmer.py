@@ -7,16 +7,14 @@ from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
+# HiFi-Trimmer sample names often carry a suffix that samtools stats filenames do not.
+SAMTOOLS_SAMPLE_SUFFIXES = ("_hifi_trimmer", ".hifi_trimmer", "_trimmer")
+
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    A command-line tool for filtering and trimming extraneous adapter hits from
-    a HiFi read set using a BLAST search against a fasta file of adapter sequences.
-    It is designed to be highly configurable, with per-adapter settings to determine
-    actions if the adapter is found at the ends of a read or in the middle.
-    A `samtools stats` file can be provided to give a more accurate count of the
-    number of reads / bases involved for this sample.
-    Linking is done by sample name.
+    Parse HiFi-Trimmer JSON summaries and optionally merge sample totals from
+    matching samtools stats reports.
     """
 
     def __init__(self):
@@ -28,95 +26,63 @@ class MultiqcModule(BaseMultiqcModule):
             doi="",  # No DOI available
         )
 
-        # Find and load any HiFi-Trimmer reports
         self.hifi_trimmer_data = {}
 
-        # First, parse samtools stats files to get total sequences and bases
-        samtools_data = {}
-        for f in self.find_log_files("samtools/stats"):
-            parsed_data, samtools_version, htslib_version = parse_samtools_stats_lines(f["f"])
-            if "raw_total_sequences" in parsed_data or "total_length" in parsed_data:
-                s_name = f["s_name"]
-                samtools_data[s_name] = parsed_data
-                log.debug(f"Found samtools stats for {s_name}")
+        # Samtools totals are optional, but when present they are the best denominator
+        # for kept percentages and for separating processed from unprocessed signal.
+        samtools_data = self._load_samtools_stats()
 
-        # Then parse HiFi-Trimmer JSON files
         for f in self.find_log_files("hifi_trimmer", filehandles=True):
             parsed = self.parse_hifi_trimmer_json(f)
-            if parsed is not None:
-                s_name = parsed["s_name"]
-                if s_name in self.hifi_trimmer_data:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+            if parsed is None:
+                continue
 
-                data = parsed["data"]
+            s_name, data = parsed
+            if s_name in self.hifi_trimmer_data:
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
-                # Try to merge with samtools stats data if available
-                # Try exact match first, then try without common suffixes
-                samtools_key = None
-                if s_name in samtools_data:
-                    samtools_key = s_name
-                else:
-                    # Try stripping common suffixes to match samtools stats files
-                    for suffix in ["_hifi_trimmer", ".hifi_trimmer", "_trimmer"]:
-                        if s_name.endswith(suffix):
-                            candidate = s_name[: -len(suffix)]
-                            if candidate in samtools_data:
-                                samtools_key = candidate
-                                break
+            # Merge totals first so kept percentages prefer full-sample counts over
+            # HiFi-Trimmer's processed-only counts.
+            self._merge_samtools_totals(s_name, data, samtools_data)
+            self._add_kept_percentage(
+                data,
+                total_key="sample_total_reads",
+                processed_key="total_reads_processed",
+                removed_key="total_reads_discarded",
+                pct_key="pct_reads_kept",
+            )
+            self._add_kept_percentage(
+                data,
+                total_key="sample_total_bases",
+                processed_key="total_bases_processed",
+                removed_key="total_bases_removed",
+                pct_key="pct_bases_kept",
+            )
 
-                if samtools_key:
-                    # Use samtools stats data as the source of truth for total reads/bases
-                    data["sample_total_reads"] = samtools_data[samtools_key].get("raw_total_sequences", 0)
-                    data["sample_total_bases"] = samtools_data[samtools_key].get("total_length", 0)
-                    log.debug(f"Merged samtools stats data for {s_name} (matched with {samtools_key})")
+            self.hifi_trimmer_data[s_name] = data
+            self.add_data_source(f, s_name=s_name)
 
-                # pct_reads_kept = (not-discarded) / total
-                # When samtools total is available use it as denominator; otherwise fall back to *_processed.
-                reads_total = data.get("sample_total_reads")
-                if reads_total:
-                    data["pct_reads_kept"] = (reads_total - data["total_reads_discarded"]) / reads_total * 100
-                elif "total_reads_processed" in data:
-                    data["pct_reads_kept"] = (
-                        data["total_reads_processed"] - data["total_reads_discarded"]
-                    ) / data["total_reads_processed"] * 100
-
-                bases_total = data.get("sample_total_bases")
-                if bases_total:
-                    data["pct_bases_kept"] = (bases_total - data["total_bases_removed"]) / bases_total * 100
-                elif "total_bases_processed" in data:
-                    data["pct_bases_kept"] = (
-                        data["total_bases_processed"] - data["total_bases_removed"]
-                    ) / data["total_bases_processed"] * 100
-
-                self.hifi_trimmer_data[s_name] = data
-                self.add_data_source(f, s_name=s_name)
-
-        # Filter to strip out ignored sample names
         self.hifi_trimmer_data = self.ignore_samples(self.hifi_trimmer_data)
 
-        if len(self.hifi_trimmer_data) == 0:
+        if not self.hifi_trimmer_data:
             raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.hifi_trimmer_data)} reports")
 
-        # Register HiFi-Trimmer in the software versions table; passing None is a supported no-op
-        # when the version cannot be determined from the available reports.
         self.add_software_version(None)
 
-        # Add data to general stats table
         self.hifi_trimmer_general_stats_table()
 
-        # Add sections with bar charts
         self.add_section(
             name="Read Statistics",
             anchor="hifi_trimmer_reads",
             description="Summary of read processing statistics from HiFi-Trimmer.",
             helptext=(
-                "This plot shows reads kept unchanged, trimmed, and discarded by HiFi-Trimmer. "
-                "When <code>*_processed</code> counts are present and samtools stats are available, "
-                "reads not submitted to HiFi-Trimmer are shown separately as unprocessed. "
-                "Without <code>*_processed</code> counts and with samtools stats, the unprocessed bar "
-                "bundles kept and truly unprocessed reads together."
+                "This plot shows discarded and trimmed reads, plus unchanged reads when "
+                "HiFi-Trimmer reports <code>total_reads_processed</code>. If matching samtools "
+                "stats are found, reads outside the HiFi-Trimmer input are shown as unprocessed. "
+                "Older JSON output without <code>*_processed</code> counts cannot separate unchanged "
+                "from unprocessed reads, so those values are combined."
             ),
             plot=self.hifi_trimmer_reads_barplot(),
         )
@@ -126,58 +92,106 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hifi_trimmer_bases",
             description="Summary of base processing statistics from HiFi-Trimmer.",
             helptext=(
-                "This plot shows bases kept and removed by HiFi-Trimmer. "
-                "When <code>*_processed</code> counts are present and samtools stats are available, "
-                "bases not submitted to HiFi-Trimmer are shown separately as unprocessed."
+                "This plot shows removed bases, plus unchanged bases when HiFi-Trimmer reports "
+                "<code>total_bases_processed</code>. If matching samtools stats are found, bases "
+                "outside the HiFi-Trimmer input are shown as unprocessed. Older JSON output without "
+                "<code>*_processed</code> counts combines unchanged and unprocessed bases."
             ),
             plot=self.hifi_trimmer_bases_barplot(),
         )
 
-        # Write parsed report data to a file
         self.write_data_file(self.hifi_trimmer_data, "multiqc_hifi_trimmer")
 
+    def _load_samtools_stats(self):
+        samtools_data = {}
+        for f in self.find_log_files("samtools/stats"):
+            parsed_data, _, _ = parse_samtools_stats_lines(f["f"])
+            # Ignore partial samtools outputs that do not provide a usable total.
+            if "raw_total_sequences" not in parsed_data and "total_length" not in parsed_data:
+                continue
+
+            samtools_data[f["s_name"]] = parsed_data
+            log.debug(f"Found samtools stats for {f['s_name']}")
+
+        return samtools_data
+
+    def _find_samtools_sample(self, s_name, samtools_data):
+        if s_name in samtools_data:
+            return s_name
+
+        # HiFi-Trimmer output filenames may include a tool-specific suffix.
+        for suffix in SAMTOOLS_SAMPLE_SUFFIXES:
+            if s_name.endswith(suffix):
+                candidate = s_name[: -len(suffix)]
+                if candidate in samtools_data:
+                    return candidate
+
+        return None
+
+    def _merge_samtools_totals(self, s_name, data, samtools_data):
+        samtools_key = self._find_samtools_sample(s_name, samtools_data)
+        if samtools_key is None:
+            return
+
+        stats = samtools_data[samtools_key]
+        if "raw_total_sequences" in stats:
+            data["sample_total_reads"] = stats["raw_total_sequences"]
+        if "total_length" in stats:
+            data["sample_total_bases"] = stats["total_length"]
+
+        log.debug(f"Merged samtools stats data for {s_name} (matched with {samtools_key})")
+
+    @staticmethod
+    def _add_kept_percentage(data, total_key, processed_key, removed_key, pct_key):
+        # Prefer the full-sample total from samtools, otherwise fall back to the
+        # number of reads or bases HiFi-Trimmer says it processed.
+        total = data.get(total_key) or data.get(processed_key)
+        if total:
+            data[pct_key] = (total - data[removed_key]) / total * 100
+
+    @staticmethod
+    def _get_unprocessed_total(data, total_key, processed_key, fallback_subtract_keys):
+        total = data.get(total_key)
+        if not total:
+            return 0
+
+        processed = data.get(processed_key)
+        if processed is not None:
+            # Newer JSON can distinguish "processed" from "present in sample".
+            return total - processed
+
+        # Older JSON lacks *_processed counts, so whatever remains after subtracting
+        # the reported categories is shown as "unprocessed" in the plots.
+        return total - sum(data[key] for key in fallback_subtract_keys)
+
     def parse_hifi_trimmer_json(self, f):
-        """Parse the JSON output from HiFi-Trimmer and save the summary statistics"""
+        """Parse HiFi-Trimmer JSON output and return summary statistics."""
         try:
-            parsed_json = json.load(f["f"])
-
-            # Check for required keys
-            if "summary" not in parsed_json:
-                log.debug(f"HiFi-Trimmer JSON missing 'summary' key - skipping sample: '{f['fn']}'")
-                return None
-
-            summary = parsed_json["summary"]
-            required_keys = [
-                "total_reads_discarded",
-                "total_reads_trimmed",
-                "total_bases_removed",
-            ]
-
-            if not all(key in summary for key in required_keys):
-                log.debug(f"HiFi-Trimmer JSON missing required keys - skipping sample: '{f['fn']}'")
-                return None
-
-        except (json.JSONDecodeError, KeyError) as e:
+            summary = json.load(f["f"]).get("summary")
+        except json.JSONDecodeError as e:
             log.debug(f"Could not parse HiFi-Trimmer JSON: '{f['fn']}'")
             log.debug(e)
             return None
 
-        # Get sample name from filename
+        if not isinstance(summary, dict):
+            log.debug(f"HiFi-Trimmer JSON missing 'summary' key - skipping sample: '{f['fn']}'")
+            return None
+
+        required_keys = ("total_reads_discarded", "total_reads_trimmed", "total_bases_removed")
+        if any(key not in summary for key in required_keys):
+            log.debug(f"HiFi-Trimmer JSON missing required keys - skipping sample: '{f['fn']}'")
+            return None
+
         s_name = self.clean_s_name(f["fn"], f)
+        data = {key: summary[key] for key in required_keys}
 
-        # Extract required fields
-        data = {
-            "total_reads_discarded": summary["total_reads_discarded"],
-            "total_reads_trimmed": summary["total_reads_trimmed"],
-            "total_bases_removed": summary["total_bases_removed"],
-        }
-
-        # Optional fields: *_processed absent in older versions
+        # Older HiFi-Trimmer output only reports discarded / trimmed / removed totals.
+        # Newer output also reports how much data was actually processed.
         for opt_key in ("total_reads_processed", "total_bases_processed"):
             if opt_key in summary:
                 data[opt_key] = summary[opt_key]
 
-        # Derive *_unchanged from *_processed
+        # "Unchanged" is not emitted directly, so derive it when processed totals exist.
         if "total_reads_processed" in data:
             data["total_reads_unchanged"] = (
                 data["total_reads_processed"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
@@ -185,11 +199,10 @@ class MultiqcModule(BaseMultiqcModule):
         if "total_bases_processed" in data:
             data["total_bases_unchanged"] = data["total_bases_processed"] - data["total_bases_removed"]
 
-        # Percentages are computed later in __init__ after samtools data is merged
-        return {"s_name": s_name, "data": data}
+        return s_name, data
 
     def hifi_trimmer_general_stats_table(self):
-        """Add key statistics to the general stats table"""
+        """Add key statistics to the general stats table."""
         all_data = list(self.hifi_trimmer_data.values())
         has_processed = any("total_reads_processed" in d for d in all_data)
         has_samtools = any("sample_total_reads" in d for d in all_data)
@@ -197,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {}
 
         if has_processed:
-            # No samtools — show reads processed as the main read-count column
+            # When processed totals exist they are more informative than raw trimmed counts.
             headers["total_reads_processed"] = {
                 "title": "Reads processed",
                 "description": "Total number of reads processed by HiFi-Trimmer",
@@ -238,7 +251,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         if not has_processed and not has_samtools:
-            # Fall back to showing reads trimmed + discarded when no total counts are available
+            # Old JSON without samtools totals has no defensible denominator, so surface
+            # the raw event counts instead.
             headers["total_reads_trimmed"] = {
                 "title": "Reads trimmed",
                 "description": "Total number of reads trimmed by HiFi-Trimmer",
@@ -267,34 +281,26 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.hifi_trimmer_data, headers)
 
     def hifi_trimmer_reads_barplot(self):
-        """Generate a bar plot showing read statistics"""
+        """Generate a bar plot showing read statistics."""
         plot_data = {}
         for s_name, data in self.hifi_trimmer_data.items():
-            has_processed = "total_reads_processed" in data
-            has_samtools = "sample_total_reads" in data
+            entry = {
+                "total_reads_trimmed": data["total_reads_trimmed"],
+                "total_reads_discarded": data["total_reads_discarded"],
+            }
 
-            entry: dict[str, int] = {}
+            # Only newer JSON can break kept reads into unchanged vs trimmed.
+            if "total_reads_unchanged" in data:
+                entry["total_reads_unchanged"] = data["total_reads_unchanged"]
 
-            # "Reads unchanged" bar: only available when *_processed is present (cases 1a/2a).
-            # In case 2b (samtools but no *_processed) unchanged reads are bundled into
-            # "Reads unprocessed" and we omit a separate bar.
-            if has_processed:
-                entry["total_reads_unchanged"] = data.get("total_reads_unchanged", 0)
-
-            entry["total_reads_trimmed"] = data["total_reads_trimmed"]
-            entry["total_reads_discarded"] = data["total_reads_discarded"]
-
-            if has_samtools:
-                if has_processed:
-                    # Case 2a: truly unprocessed = total − processed
-                    unprocessed = data["sample_total_reads"] - data["total_reads_processed"]
-                else:
-                    # Case 2b: bundle kept + truly unprocessed (can't distinguish without *_processed)
-                    unprocessed = (
-                        data["sample_total_reads"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
-                    )
-                if unprocessed > 0:
-                    entry["unprocessed_reads"] = unprocessed
+            unprocessed = self._get_unprocessed_total(
+                data,
+                total_key="sample_total_reads",
+                processed_key="total_reads_processed",
+                fallback_subtract_keys=("total_reads_discarded", "total_reads_trimmed"),
+            )
+            if unprocessed > 0:
+                entry["unprocessed_reads"] = unprocessed
 
             plot_data[s_name] = entry
 
@@ -316,26 +322,23 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(plot_data, cats, config)
 
     def hifi_trimmer_bases_barplot(self):
-        """Generate a bar plot showing base statistics"""
+        """Generate a bar plot showing base statistics."""
         plot_data = {}
         for s_name, data in self.hifi_trimmer_data.items():
-            has_processed = "total_bases_processed" in data
-            has_samtools = "sample_total_bases" in data
+            entry = {"total_bases_removed": data["total_bases_removed"]}
 
-            entry: dict[str, int] = {}
+            # Only newer JSON can break kept bases into unchanged vs removed.
+            if "total_bases_unchanged" in data:
+                entry["total_bases_unchanged"] = data["total_bases_unchanged"]
 
-            if has_processed:
-                entry["total_bases_unchanged"] = data.get("total_bases_unchanged", 0)
-
-            entry["total_bases_removed"] = data["total_bases_removed"]
-
-            if has_samtools:
-                if has_processed:
-                    unprocessed = data["sample_total_bases"] - data["total_bases_processed"]
-                else:
-                    unprocessed = data["sample_total_bases"] - data["total_bases_removed"]
-                if unprocessed > 0:
-                    entry["unprocessed_bases"] = unprocessed
+            unprocessed = self._get_unprocessed_total(
+                data,
+                total_key="sample_total_bases",
+                processed_key="total_bases_processed",
+                fallback_subtract_keys=("total_bases_removed",),
+            )
+            if unprocessed > 0:
+                entry["unprocessed_bases"] = unprocessed
 
             plot_data[s_name] = entry
 
