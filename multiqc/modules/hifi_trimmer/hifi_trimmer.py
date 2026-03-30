@@ -177,13 +177,13 @@ class MultiqcModule(BaseMultiqcModule):
             if opt_key in summary:
                 data[opt_key] = summary[opt_key]
 
-        # Derive *_kept from *_processed
+        # Derive *_unchanged from *_processed
         if "total_reads_processed" in data:
-            data["total_reads_kept"] = (
+            data["total_reads_unchanged"] = (
                 data["total_reads_processed"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
             )
         if "total_bases_processed" in data:
-            data["total_bases_kept"] = data["total_bases_processed"] - data["total_bases_removed"]
+            data["total_bases_unchanged"] = data["total_bases_processed"] - data["total_bases_removed"]
 
         # Percentages are computed later in __init__ after samtools data is merged
         return {"s_name": s_name, "data": data}
@@ -256,11 +256,11 @@ class MultiqcModule(BaseMultiqcModule):
 
             entry: dict[str, int] = {}
 
-            # "Reads kept" bar: only available when *_processed is present (case 1a/2a).
-            # In case 2b (samtools but no *_processed) kept reads are bundled into
+            # "Reads unchanged" bar: only available when *_processed is present (cases 1a/2a).
+            # In case 2b (samtools but no *_processed) unchanged reads are bundled into
             # "Reads unprocessed" and we omit a separate bar.
             if has_processed:
-                entry["total_reads_kept"] = data.get("total_reads_kept", 0)
+                entry["total_reads_unchanged"] = data.get("total_reads_unchanged", 0)
 
             entry["total_reads_trimmed"] = data["total_reads_trimmed"]
             entry["total_reads_discarded"] = data["total_reads_discarded"]
@@ -281,7 +281,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         cats = {
             "unprocessed_reads": {"name": "Reads unprocessed", "color": "#95a5a6"},
-            "total_reads_kept": {"name": "Reads kept", "color": "#2ecc71"},
+            "total_reads_unchanged": {"name": "Reads unchanged", "color": "#2ecc71"},
             "total_reads_trimmed": {"name": "Reads trimmed", "color": "#f39c12"},
             "total_reads_discarded": {"name": "Reads discarded", "color": "#e74c3c"},
         }
@@ -306,7 +306,7 @@ class MultiqcModule(BaseMultiqcModule):
             entry: dict[str, int] = {}
 
             if has_processed:
-                entry["total_bases_kept"] = data.get("total_bases_kept", 0)
+                entry["total_bases_unchanged"] = data.get("total_bases_unchanged", 0)
 
             entry["total_bases_removed"] = data["total_bases_removed"]
 
@@ -322,7 +322,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         cats = {
             "unprocessed_bases": {"name": "Bases unprocessed", "color": "#95a5a6"},
-            "total_bases_kept": {"name": "Bases kept", "color": "#3498db"},
+            "total_bases_unchanged": {"name": "Bases unchanged", "color": "#3498db"},
             "total_bases_removed": {"name": "Bases removed", "color": "#e74c3c"},
         }
 
