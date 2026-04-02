@@ -78,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
     ```yaml
     sp:
       fastqc/data:
-        fn: "fastqc_data.txt"
+        fn: "*fastqc_data.txt"
       fastqc/zip:
         fn: "*_fastqc.zip"
     ```
@@ -262,24 +262,28 @@ class MultiqcModule(BaseMultiqcModule):
         # Dynamic module naming based on discovered tools
         if self._tools_found == {"Falco"}:
             self.name = "Falco"
+            self.anchor = Anchor("falco")
             self.href = "https://github.com/smithlabcode/falco"
             self.info = "A C++ drop-in replacement for FastQC."
-            self.intro = (
-                "<p>A C++ drop-in replacement for FastQC."
-                '<a href="https://github.com/smithlabcode/falco" class="text-muted ms-2 small" target="_blank">'
-                "https://github.com/smithlabcode/falco</a></p>"
-            )
+            self.intro = self._get_intro()
             # Clean up the software versions table: remove the "FastQC" group
             # that was auto-created because self.name was still "FastQC" during parsing
             if "FastQC" in report.software_versions:
-                falco_versions = report.software_versions.get("FastQC", {}).get("Falco", set())
+                falco_versions = report.software_versions.get("FastQC", {}).get("Falco", [])
                 if falco_versions:
                     report.software_versions.setdefault("Falco", {})["Falco"] = falco_versions
                 del report.software_versions["FastQC"]
+                
         elif "Falco" in self._tools_found and "FastQC" in self._tools_found:
             self.name = "FastQC / Falco"
+            self.href = [
+                "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
+                "https://github.com/smithlabcode/falco",
+            ]
             self.info = "Quality control tools for high throughput sequencing data."
-        del self._tools_found
+            self.intro = self._get_intro()
+            
+        self._tools_found = None
 
         log.info(f"Found {len(self.fastqc_data)} reports")
 
