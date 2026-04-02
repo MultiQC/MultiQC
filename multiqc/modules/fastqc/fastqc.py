@@ -265,7 +265,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.href = "https://github.com/smithlabcode/falco"
             self.info = "A C++ drop-in replacement for FastQC."
             self.intro = (
-                '<p>A C++ drop-in replacement for FastQC.'
+                "<p>A C++ drop-in replacement for FastQC."
                 '<a href="https://github.com/smithlabcode/falco" class="text-muted ms-2 small" target="_blank">'
                 "https://github.com/smithlabcode/falco</a></p>"
             )
