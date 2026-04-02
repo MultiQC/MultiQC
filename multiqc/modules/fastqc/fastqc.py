@@ -263,7 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
         if self._tools_found == {"Falco"}:
             self.name = "Falco"
             self.anchor = Anchor("falco")
-            self.href = "https://github.com/smithlabcode/falco"
+            self.href = ["https://github.com/smithlabcode/falco"]
             self.info = "A C++ drop-in replacement for FastQC."
             self.intro = self._get_intro()
             # Clean up the software versions table: remove the "FastQC" group
