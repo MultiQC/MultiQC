@@ -41,8 +41,9 @@ class Metrics:
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    FastQC generates an HTML report which is what most people use when
-    they run the program. However, it also helpfully generates a file
+    FastQC and [Falco](https://github.com/smithlabcode/falco) (a high-performance
+    drop-in replacement) generate an HTML report which is what most people use when
+    they run the program. However, they also helpfully generate a file
     called `fastqc_data.txt` which is relatively easy to parse.
 
     A typical run will produce the following files:
@@ -202,6 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.fastqc_data: Dict[SampleName, Any] = dict()
         self.order_of_duplication_levels: List[Union[float, str]] = []
+        self._tools_found: Set[str] = set()
 
         # Find and parse unzipped FastQC reports
         f: LoadedFileDict[str]
@@ -256,6 +258,28 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
         if len(self.fastqc_data) == 0:
             raise ModuleNoSamplesFound
+
+        # Dynamic module naming based on discovered tools
+        if self._tools_found == {"Falco"}:
+            self.name = "Falco"
+            self.href = "https://github.com/smithlabcode/falco"
+            self.info = "A C++ drop-in replacement for FastQC."
+            self.intro = (
+                '<p>A C++ drop-in replacement for FastQC.'
+                '<a href="https://github.com/smithlabcode/falco" class="text-muted ms-2 small" target="_blank">'
+                "https://github.com/smithlabcode/falco</a></p>"
+            )
+            # Clean up the software versions table: remove the "FastQC" group
+            # that was auto-created because self.name was still "FastQC" during parsing
+            if "FastQC" in report.software_versions:
+                falco_versions = report.software_versions.get("FastQC", {}).get("Falco", set())
+                if falco_versions:
+                    report.software_versions.setdefault("Falco", {})["Falco"] = falco_versions
+                del report.software_versions["FastQC"]
+        elif "Falco" in self._tools_found and "FastQC" in self._tools_found:
+            self.name = "FastQC / Falco"
+            self.info = "Quality control tools for high throughput sequencing data."
+        del self._tools_found
 
         log.info(f"Found {len(self.fastqc_data)} reports")
 
@@ -333,6 +357,7 @@ class MultiqcModule(BaseMultiqcModule):
             m = re.search(r"##(FastQC|Falco)\t([\d\.]+)", line)
             if m:
                 self.add_software_version(m.group(2), s_name, software_name=m.group(1))
+                self._tools_found.add(m.group(1))
             if line == ">>END_MODULE":
                 section = None
                 s_headers = None
