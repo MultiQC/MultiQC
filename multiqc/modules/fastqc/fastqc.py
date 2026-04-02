@@ -273,7 +273,6 @@ class MultiqcModule(BaseMultiqcModule):
                 if falco_versions:
                     report.software_versions.setdefault("Falco", {})["Falco"] = falco_versions
                 del report.software_versions["FastQC"]
-                
         elif "Falco" in self._tools_found and "FastQC" in self._tools_found:
             self.name = "FastQC / Falco"
             self.href = [
@@ -282,7 +281,6 @@ class MultiqcModule(BaseMultiqcModule):
             ]
             self.info = "Quality control tools for high throughput sequencing data."
             self.intro = self._get_intro()
-            
         self._tools_found = None
 
         log.info(f"Found {len(self.fastqc_data)} reports")
