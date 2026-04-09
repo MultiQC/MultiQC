@@ -5,6 +5,15 @@ description: Guides for how to contribute to the MultiQC code base
 
 # Contributing
 
+## PR automation commands
+
+When your PR is ready for review and the automated tests are passing, you can use the following commands by adding a comment on the PR:
+
+- **`/review`** — Triggers an AI code review that will post feedback as a PR comment.
+- **`/preview`** — Builds a MultiQC report using test data for any modules modified in the PR and deploys it as a preview. A link to the report will be posted as a PR comment.
+
+You can use both commands in the same comment. These commands work for PRs from forks as well.
+
 ## Changelog
 
 `CHANGELOG.md` file is populated semi-automatically. To generate an initial state, we use a script:
