@@ -82,7 +82,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     if is_paired_end:
         headers = {
             "proper_pairs_percent": {
-                "title": "% Proper Pairs (MAPQ>=30)",
+                "title": "% Proper Pairs (MAPQ>=Q)",
                 "description": "% Reads mapped in proper pairs with MAPQ >= mapq_cut (default 30).",
                 "suffix": "%",
                 "scale": "RdYlGn",
