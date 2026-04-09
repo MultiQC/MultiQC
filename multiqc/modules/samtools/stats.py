@@ -3,7 +3,7 @@ import re
 from typing import Dict
 
 from multiqc import BaseMultiqcModule, config
-from multiqc.plots import bargraph, violin
+from multiqc.plots import bargraph, linegraph, violin
 
 log = logging.getLogger(__name__)
 
@@ -16,9 +16,24 @@ def parse_samtools_stats(module: BaseMultiqcModule):
     """Find Samtools stats logs and parse their data"""
 
     samtools_stats: Dict = dict()
+    insert_size_hist: Dict = dict()
     for f in module.find_log_files("samtools/stats"):
         parsed_data = dict()
+        insert_sizes = dict()
         for line in f["f"].splitlines():
+            if line.startswith("IS"):
+                sections = line.split("\t")
+                if len(sections) < 6:
+                    continue
+                try:
+                    insert_size = int(sections[1].strip())
+                    pairs_total = float(sections[2].strip())
+                except ValueError:
+                    continue
+                if insert_size == 0:
+                    continue
+                insert_sizes[insert_size] = pairs_total
+                continue
             # Get version number from file contents
             if line.startswith("# This file was produced by samtools stats"):
                 # Look for Samtools version
@@ -59,9 +74,12 @@ def parse_samtools_stats(module: BaseMultiqcModule):
                 log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             module.add_data_source(f, section="stats")
             samtools_stats[f["s_name"]] = parsed_data
+            if len(insert_sizes) > 0:
+                insert_size_hist[f["s_name"]] = insert_sizes
 
     # Filter to strip out ignored sample names
     samtools_stats = module.ignore_samples(samtools_stats)
+    insert_size_hist = module.ignore_samples(insert_size_hist)
 
     if len(samtools_stats) == 0:
         return 0
@@ -139,6 +157,9 @@ def parse_samtools_stats(module: BaseMultiqcModule):
 
     # Make bargraph plot of mapped/unmapped reads
     alignment_section(module, samtools_stats)
+
+    # Insert size distribution
+    insert_length_section(module, insert_size_hist)
 
     # Make dot plot of counts
     keys = {}
@@ -238,6 +259,28 @@ def alignment_section(module, samples_data):
         to be uniquely mapped. These reads are often filtered out in downstream analyses.
         """,
         plot=alignment_chart(bedgraph_data),
+    )
+
+
+def insert_length_section(module, insert_size_hist):
+    if len(insert_size_hist) == 0:
+        return
+
+    pconfig = {
+        "id": "samtools_insert_size",
+        "title": "Samtools: stats: Insert size distribution",
+        "ylab": "Read pairs",
+        "xlab": "Insert size (bp)",
+        "xmin": 0,
+        "ymin": 0,
+        "tt_label": "<b>{point.x} bp</b>: {point.y}",
+    }
+
+    module.add_section(
+        name="Insert size distribution",
+        anchor="samtools-stats-insert-size",
+        description="Insert size distribution from <code>samtools stats</code> (IS lines).",
+        plot=linegraph.plot(insert_size_hist, pconfig),
     )
 
 
