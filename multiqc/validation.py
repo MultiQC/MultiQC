@@ -49,7 +49,7 @@ def add_validation_warning(path_in_cfg: Tuple[str, ...], warning: str):
 
 
 # To avoid cluttering stdout with duplicated messages
-collapse_repeated_messages = False
+collapse_repeated_messages: bool = False
 _printed_errors: Set[str] = set()
 _printed_warnings: Set[str] = set()
 
@@ -232,7 +232,7 @@ class ValidatedConfig(BaseModel):
                         if expected_type is not None:
                             if expected_type.__name__ in ["Optional", "Union"]:
                                 expected_type = expected_type.__args__[0]
-                        val = expected_type(val)  # type: ignore
+                        val = expected_type(val)
                     except Exception:
                         v_str = repr(val)
                         if len(v_str) > 20:

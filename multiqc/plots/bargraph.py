@@ -8,7 +8,7 @@ from collections import OrderedDict, defaultdict
 from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore
+import plotly.graph_objects as go
 import polars as pl
 from natsort import natsorted
 from pydantic import BaseModel, Field
@@ -286,9 +286,10 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                     if isinstance(cat_props, CatConf):
                         ds_categories[CatName(cat_name)] = cat_props
                     else:
-                        if "name" not in cat_props:
-                            cat_props = {"name": cat_name, **cat_props}
-                        ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), **cat_props)
+                        cat_props_dict = cast(Mapping[str, Any], cat_props)
+                        if "name" not in cat_props_dict:
+                            cat_props_dict = {"name": cat_name, **cat_props_dict}
+                        ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), **cat_props_dict)
             else:
                 raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
             categories_per_ds.append(ds_categories)
