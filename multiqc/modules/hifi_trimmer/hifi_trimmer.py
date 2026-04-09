@@ -78,11 +78,9 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hifi_trimmer_reads",
             description="Summary of read processing statistics from HiFi-Trimmer.",
             helptext=(
-                "This plot shows discarded and trimmed reads, plus unchanged reads when "
-                "HiFi-Trimmer reports <code>total_reads_processed</code>. If matching samtools "
-                "stats are found, reads outside the HiFi-Trimmer input are shown as unprocessed. "
-                "Older JSON output without <code>*_processed</code> counts cannot separate unchanged "
-                "from unprocessed reads, so those values are combined."
+                "This plot shows discarded, trimmed, and unchanged reads derived from "
+                "<code>total_reads_processed</code>. If matching samtools stats are found, reads "
+                "outside the HiFi-Trimmer input are shown as unprocessed."
             ),
             plot=self.hifi_trimmer_reads_barplot(),
         )
@@ -92,10 +90,9 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hifi_trimmer_bases",
             description="Summary of base processing statistics from HiFi-Trimmer.",
             helptext=(
-                "This plot shows removed bases, plus unchanged bases when HiFi-Trimmer reports "
+                "This plot shows removed and unchanged bases derived from "
                 "<code>total_bases_processed</code>. If matching samtools stats are found, bases "
-                "outside the HiFi-Trimmer input are shown as unprocessed. Older JSON output without "
-                "<code>*_processed</code> counts combines unchanged and unprocessed bases."
+                "outside the HiFi-Trimmer input are shown as unprocessed."
             ),
             plot=self.hifi_trimmer_bases_barplot(),
         )
@@ -150,19 +147,12 @@ class MultiqcModule(BaseMultiqcModule):
             data[pct_key] = max(total - data[removed_key], 0) / total * 100
 
     @staticmethod
-    def _get_unprocessed_total(data, total_key, processed_key, fallback_subtract_keys):
+    def _get_unprocessed_total(data, total_key, processed_key):
         total = data.get(total_key)
         if not total:
             return 0
 
-        processed = data.get(processed_key)
-        if processed is not None:
-            # Newer JSON can distinguish "processed" from "present in sample".
-            return max(total - processed, 0)
-
-        # Older JSON lacks *_processed counts, so whatever remains after subtracting
-        # the reported categories is shown as "unprocessed" in the plots.
-        return max(total - sum(data[key] for key in fallback_subtract_keys), 0)
+        return max(total - data[processed_key], 0)
 
     def parse_hifi_trimmer_json(self, f):
         """Parse HiFi-Trimmer JSON output and return summary statistics."""
@@ -177,7 +167,13 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug(f"HiFi-Trimmer JSON missing 'summary' key - skipping sample: '{f['fn']}'")
             return None
 
-        required_keys = ("total_reads_discarded", "total_reads_trimmed", "total_bases_removed")
+        required_keys = (
+            "total_reads_discarded",
+            "total_reads_trimmed",
+            "total_bases_removed",
+            "total_reads_processed",
+            "total_bases_processed",
+        )
         if any(key not in summary for key in required_keys):
             log.debug(f"HiFi-Trimmer JSON missing required keys - skipping sample: '{f['fn']}'")
             return None
@@ -185,40 +181,25 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = self.clean_s_name(f["fn"], f)
         data = {key: summary[key] for key in required_keys}
 
-        # Older HiFi-Trimmer output only reports discarded / trimmed / removed totals.
-        # Newer output also reports how much data was actually processed.
-        for opt_key in ("total_reads_processed", "total_bases_processed"):
-            if opt_key in summary:
-                data[opt_key] = summary[opt_key]
-
-        # "Unchanged" is not emitted directly, so derive it when processed totals exist.
-        if "total_reads_processed" in data:
-            data["total_reads_unchanged"] = (
-                data["total_reads_processed"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
-            )
-        if "total_bases_processed" in data:
-            data["total_bases_unchanged"] = data["total_bases_processed"] - data["total_bases_removed"]
+        data["total_reads_unchanged"] = (
+            data["total_reads_processed"] - data["total_reads_discarded"] - data["total_reads_trimmed"]
+        )
+        data["total_bases_unchanged"] = data["total_bases_processed"] - data["total_bases_removed"]
 
         return s_name, data
 
     def hifi_trimmer_general_stats_table(self):
         """Add key statistics to the general stats table."""
-        all_data = list(self.hifi_trimmer_data.values())
-        has_processed = any("total_reads_processed" in d for d in all_data)
-        has_samtools = any("sample_total_reads" in d for d in all_data)
-
         headers = {}
 
-        if has_processed:
-            # When processed totals exist they are more informative than raw trimmed counts.
-            headers["total_reads_processed"] = {
-                "title": "Reads processed",
-                "description": "Total number of reads processed by HiFi-Trimmer",
-                "min": 0,
-                "scale": "Blues",
-                "format": "{:,.0f}",
-                "shared_key": "read_count",
-            }
+        headers["total_reads_processed"] = {
+            "title": "Reads processed",
+            "description": "Total number of reads processed by HiFi-Trimmer",
+            "min": 0,
+            "scale": "Blues",
+            "format": "{:,.0f}",
+            "shared_key": "read_count",
+        }
         headers["pct_reads_kept"] = {
             "title": "% Reads kept",
             "description": "Percentage of reads kept unchanged or trimmed",
@@ -229,16 +210,15 @@ class MultiqcModule(BaseMultiqcModule):
             "format": "{:,.1f}",
         }
 
-        if has_processed:
-            headers["total_bases_processed"] = {
-                "title": "Bases processed",
-                "description": "Total number of bases processed by HiFi-Trimmer",
-                "min": 0,
-                "scale": "Purples",
-                "format": "{:,.0f}",
-                "shared_key": "base_count",
-                "hidden": True,
-            }
+        headers["total_bases_processed"] = {
+            "title": "Bases processed",
+            "description": "Total number of bases processed by HiFi-Trimmer",
+            "min": 0,
+            "scale": "Purples",
+            "format": "{:,.0f}",
+            "shared_key": "base_count",
+            "hidden": True,
+        }
         headers["pct_bases_kept"] = {
             "title": "% Bases kept",
             "description": "Percentage of bases kept (not removed) by HiFi-Trimmer",
@@ -250,34 +230,6 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
         }
 
-        if not has_processed and not has_samtools:
-            # Old JSON without samtools totals has no defensible denominator, so surface
-            # the raw event counts instead.
-            headers["total_reads_trimmed"] = {
-                "title": "Reads trimmed",
-                "description": "Total number of reads trimmed by HiFi-Trimmer",
-                "min": 0,
-                "scale": "Oranges",
-                "format": "{:,.0f}",
-                "shared_key": "read_count",
-            }
-            headers["total_reads_discarded"] = {
-                "title": "Reads discarded",
-                "description": "Total number of reads discarded by HiFi-Trimmer",
-                "min": 0,
-                "scale": "Reds",
-                "format": "{:,.0f}",
-                "shared_key": "read_count",
-            }
-            headers["total_bases_removed"] = {
-                "title": "Bases removed",
-                "description": "Total number of bases removed by HiFi-Trimmer",
-                "min": 0,
-                "scale": "Reds",
-                "format": "{:,.0f}",
-                "shared_key": "base_count",
-            }
-
         self.general_stats_addcols(self.hifi_trimmer_data, headers)
 
     def hifi_trimmer_reads_barplot(self):
@@ -285,19 +237,15 @@ class MultiqcModule(BaseMultiqcModule):
         plot_data = {}
         for s_name, data in self.hifi_trimmer_data.items():
             entry = {
+                "total_reads_unchanged": data["total_reads_unchanged"],
                 "total_reads_trimmed": data["total_reads_trimmed"],
                 "total_reads_discarded": data["total_reads_discarded"],
             }
-
-            # Only newer JSON can break kept reads into unchanged vs trimmed.
-            if "total_reads_unchanged" in data:
-                entry["total_reads_unchanged"] = data["total_reads_unchanged"]
 
             unprocessed = self._get_unprocessed_total(
                 data,
                 total_key="sample_total_reads",
                 processed_key="total_reads_processed",
-                fallback_subtract_keys=("total_reads_discarded", "total_reads_trimmed"),
             )
             if unprocessed > 0:
                 entry["unprocessed_reads"] = unprocessed
@@ -325,17 +273,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate a bar plot showing base statistics."""
         plot_data = {}
         for s_name, data in self.hifi_trimmer_data.items():
-            entry = {"total_bases_removed": data["total_bases_removed"]}
-
-            # Only newer JSON can break kept bases into unchanged vs removed.
-            if "total_bases_unchanged" in data:
-                entry["total_bases_unchanged"] = data["total_bases_unchanged"]
+            entry = {
+                "total_bases_unchanged": data["total_bases_unchanged"],
+                "total_bases_removed": data["total_bases_removed"],
+            }
 
             unprocessed = self._get_unprocessed_total(
                 data,
                 total_key="sample_total_bases",
                 processed_key="total_bases_processed",
-                fallback_subtract_keys=("total_bases_removed",),
             )
             if unprocessed > 0:
                 entry["unprocessed_bases"] = unprocessed
