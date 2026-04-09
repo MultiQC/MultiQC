@@ -516,13 +516,16 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
             parent_template.template_dir,
             tmp_dir.get_tmp_dir(),
             dirs_exist_ok=True,
-            ignore=shutil.ignore_patterns("*.pyc"),
+            ignore=shutil.ignore_patterns("*.pyc", "node_modules"),
         )
 
     # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
     # parent template files are overwritten)
     shutil.copytree(
-        template_mod.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True, ignore=shutil.ignore_patterns("*.pyc")
+        template_mod.template_dir,
+        tmp_dir.get_tmp_dir(),
+        dirs_exist_ok=True,
+        ignore=shutil.ignore_patterns("*.pyc", "node_modules"),
     )
 
     # Function to include file contents in Jinja template
