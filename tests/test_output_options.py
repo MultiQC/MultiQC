@@ -83,11 +83,44 @@ def test_parquet_wide_merges_samples(tmp_path):
     plot_input_data join keys, resulting in one row per table instead of one row per sample.
     """
     with open(tmp_path / "f1_mqc.json", "w") as f:
-        json.dump({"data": {"foo": {"col1": "n/a"}}, "id": "myid", "anchor": "myanchor", "plot_type": "table", "file_format": "json", "section_name": "My Section", "description": "my desc"}, f)
+        json.dump(
+            {
+                "data": {"foo": {"col1": "n/a"}},
+                "id": "myid",
+                "anchor": "myanchor",
+                "plot_type": "table",
+                "file_format": "json",
+                "section_name": "My Section",
+                "description": "my desc",
+            },
+            f,
+        )
     with open(tmp_path / "f2_mqc.json", "w") as f:
-        json.dump({"data": {"foo": {"col1": 2}}, "id": "myid2", "anchor": "myanchor2", "plot_type": "table", "file_format": "json", "section_name": "My Section", "description": "my desc"}, f)
+        json.dump(
+            {
+                "data": {"foo": {"col1": 2}},
+                "id": "myid2",
+                "anchor": "myanchor2",
+                "plot_type": "table",
+                "file_format": "json",
+                "section_name": "My Section",
+                "description": "my desc",
+            },
+            f,
+        )
     with open(tmp_path / "f3_mqc.json", "w") as f:
-        json.dump({"data": {"foo": {"col1": 3}}, "id": "myid3", "anchor": "myanchor3", "plot_type": "table", "file_format": "json", "section_name": "My Section", "description": "my desc"}, f)
+        json.dump(
+            {
+                "data": {"foo": {"col1": 3}},
+                "id": "myid3",
+                "anchor": "myanchor3",
+                "plot_type": "table",
+                "file_format": "json",
+                "section_name": "My Section",
+                "description": "my desc",
+            },
+            f,
+        )
 
     out_dir = tmp_path / "out"
     out_dir.mkdir()
