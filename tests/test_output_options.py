@@ -86,7 +86,7 @@ def test_parquet_wide_merges_samples(tmp_path):
     with open(tmp_path / "f1_mqc.json", "w") as f:
         json.dump(
             {
-                "data": {"foo": {"col1": None, "col2": 3.4, "col3": float("nan"), "col4": "bar"}},
+                "data": {"foo": {"col1": None, "col2": 3.4, "col3": float("nan"), "col4": "bar", "col5": True}},
                 "id": "myid",
                 "anchor": "myanchor",
                 "plot_type": "table",
@@ -144,6 +144,7 @@ def test_parquet_wide_merges_samples(tmp_path):
     assert (table_rows["myid / col2"] == 3.4).all()
     assert (table_rows["myid / col3"].is_nan()).all()
     assert (table_rows["myid / col4"] == "bar").all()
+    assert (table_rows["myid / col5"] == True).all()
 
 
 def test_parquet_wide_persists_modified_values(tmp_path):
