@@ -131,19 +131,10 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                     # Process each metric/column in the order from get_headers_in_order()
                     for _, metric_name, dt_column in ordered_headers:
-                        if metric_name not in row.data:
-                            continue
-
-                        cell = row.data[metric_name]
-                        # Skip empty values
-                        if cell is None or cell.raw is None or cell.fmt == "":
-                            continue
-
-                        # Store both the value and its type for proper reconstruction
-                        try:
-                            float_val = float(cell.mod)
-                        except ValueError:
-                            float_val = float("nan")
+                        cell = row.data.get(metric_name)
+                        val = None
+                        if cell is not None:
+                            val = cell.mod
 
                         # Column names now include both the metric name and any namespace
                         # to ensure uniqueness across different tables
@@ -155,7 +146,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                         metric_col_name = ColumnKey(f"{self.dt.id} / {metric_col_name}".lower())
 
                         # Add metric to the sample's data
-                        samples_data[str(sample_name)][metric_col_name] = float_val
+                        samples_data[str(sample_name)][metric_col_name] = val
                         metric_col_names.add(metric_col_name)
 
         # Convert dictionary to DataFrame - one row per sample

@@ -79,13 +79,12 @@ def test_zip_data_dir_with_rerun(stub_modules, tmp_path):
 def test_parquet_wide_merges_samples(tmp_path):
     """
     Verify that wide parquet format merges multiple tables for the same sample into a single row.
-    Regression test: the old join lacked nulls_equal=True, so None != None for the plot_type and
-    plot_input_data join keys, resulting in one row per table instead of one row per sample.
+    Verify that the values all get persisted in the proper format.
     """
     with open(tmp_path / "f1_mqc.json", "w") as f:
         json.dump(
             {
-                "data": {"foo": {"col1": "n/a"}},
+                "data": {"foo": {"col1": None, "col2": 3.4, "col3": float("nan"), "col4": "bar"}},
                 "id": "myid",
                 "anchor": "myanchor",
                 "plot_type": "table",
@@ -135,6 +134,11 @@ def test_parquet_wide_merges_samples(tmp_path):
     assert (table_rows["sample"] == "foo").all()
 
     # Each table should have contributed its metric column
-    assert (table_rows["myid / col1"].is_nan()).all()
+    assert (table_rows["myid / col1"].is_null()).all()
     assert (table_rows["myid2 / col1"] == 2).all()
     assert (table_rows["myid3 / col1"] == 3).all()
+
+    # typing tests
+    assert (table_rows["myid / col2"] == 3.4).all()
+    assert (table_rows["myid / col3"].is_nan()).all()
+    assert (table_rows["myid / col4"] == "bar").all()
