@@ -5,8 +5,10 @@ import polars as pl
 import pytest
 
 import multiqc
-from multiqc import report, BaseMultiqcModule, write_report
+from multiqc import config, report, BaseMultiqcModule, write_report
 from multiqc.core.update_config import ClConfig
+from multiqc.plots import table
+from multiqc.types import Anchor
 
 
 @pytest.fixture()
@@ -142,3 +144,27 @@ def test_parquet_wide_merges_samples(tmp_path):
     assert (table_rows["myid / col2"] == 3.4).all()
     assert (table_rows["myid / col3"].is_nan()).all()
     assert (table_rows["myid / col4"] == "bar").all()
+
+
+def test_parquet_wide_persists_modified_values(tmp_path):
+    """
+    Verify that the post-modify value is what gets persisted in wide parquet, not the raw value.
+    """
+    config.parquet_format = "wide"
+    module = BaseMultiqcModule(name="test-module", anchor=Anchor("test_module"))
+    module.add_section(
+        name="Test Section",
+        plot=table.plot(
+            data={"sample1": {"metric1": 5}},
+            headers={"metric1": {"title": "Metric 1", "modify": lambda x: x * 10}},
+            pconfig={"id": "test_table", "title": "Test: Test Table"},
+        ),
+    )
+    report.modules = [module]
+    write_report(force=True, output_dir=str(tmp_path))
+
+    df = pl.read_parquet(tmp_path / "multiqc_data" / "multiqc.parquet")
+    table_rows = df.filter(pl.col("type") == "table_row")
+    assert table_rows.height == 1
+    assert (table_rows["sample"] == "sample1").all()
+    assert (table_rows["test_table / metric1"] == 50.0).all()
