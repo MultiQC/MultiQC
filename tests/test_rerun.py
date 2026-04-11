@@ -43,6 +43,30 @@ def test_rerun_parquet(data_dir, tmp_path):
         assert key in report2_data, f"Key {key} missing from second report"
         assert report1_data[key] == report2_data[key], f"Value for {key} differs between reports"
 
+    # Generate a wide-format parquet to use as input for Run 3
+    run_wide_src_dir = tmp_path / "run_wide_src"
+    run_wide_src_dir.mkdir()
+    multiqc.run(
+        data_dir / "modules/fastp/SAMPLE.json",
+        cfg=ClConfig(output_dir=run_wide_src_dir, strict=True, cl_config=["parquet_format: wide"]),
+    )
+
+    # Run 3: Run on the wide-format parquet; results should match Run 1
+    run_c_dir = tmp_path / "run_c"
+    run_c_dir.mkdir()
+    multiqc.run(
+        run_wide_src_dir / "multiqc_data" / "multiqc.parquet",
+        cfg=ClConfig(output_dir=run_c_dir, strict=True),
+    )
+
+    with open(run_c_dir / "multiqc_data" / "multiqc_data.json") as f:
+        report3_data = json.load(f)
+
+    for key in ["report_plot_data"]:
+        assert key in report1_data, f"Key {key} missing from first report"
+        assert key in report3_data, f"Key {key} missing from third report"
+        assert report1_data[key] == report3_data[key], f"Value for {key} differs between reports (wide parquet)"
+
 
 def test_rerun_and_combine(data_dir, tmp_path):
     """Test adding new data to report.
