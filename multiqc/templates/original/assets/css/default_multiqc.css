@@ -1,0 +1,1450 @@
+/* CSS Styles for Default MultiQC Report Template */
+
+/* NEW: Maintain approximate visual parity post Bootstrap 5 upgrade in main MultiQC codebase */
+
+.btn-outline-secondary {
+  color: #333;
+  background-color: #fff;
+  border-color: #ccc;
+}
+.btn-sm {
+  padding: 5px 10px 5px 8px;
+}
+.col-12 {
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+/* General Styles */
+code {
+  background-color: #f3f3f3;
+  color: #666;
+}
+
+kbd {
+  background-color: #ccc;
+  color: #333;
+}
+
+@media only screen and (max-width: 768px) {
+  code {
+    display: inline-block;
+    max-width: 90%;
+    overflow: auto;
+  }
+}
+
+.radio.input-sm {
+  height: 20px;
+}
+
+.radio.input-sm input {
+  margin: 2px 0 0 -20px;
+}
+
+.mqc_small_space {
+  padding: 0 1px;
+}
+
+/* Page Template */
+@media only screen and (min-width: 768px) {
+  .mainpage {
+    margin-left: 270px;
+  }
+
+  .footer {
+    margin-left: 250px;
+  }
+
+  .mainpage,
+  .footer {
+    -moz-transition: margin-left 0.5s;
+    -webkit-transition: margin-left 0.5s;
+    transition: margin-left 0.5s;
+  }
+
+  .mainpage.hidden-nav,
+  .footer.hidden-nav {
+    margin-left: 0;
+  }
+
+  .side-nav-wrapper {
+    position: fixed;
+  }
+
+  .side-nav {
+    height: 100%;
+    width: 250px;
+    border-right: 1px solid #ccc;
+    overflow: auto;
+    padding-bottom: 30px;
+    -webkit-transition: margin-left 0.5s;
+    transition: margin-left 0.5s;
+    margin-left: 0;
+  }
+
+  .side-nav.hidden-nav {
+    margin-left: -250px;
+  }
+}
+
+.mainpage {
+  padding: 20px;
+}
+
+.side-nav-wrapper {
+  height: 100%;
+  background-color: #ededed;
+}
+
+.side-nav h1 {
+  font-size: 18px;
+  text-align: center;
+  margin: 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.side-nav h1 a {
+  padding: 20px 0 15px;
+}
+
+.side-nav h1 img {
+  height: 26px;
+}
+
+.side-nav h1 small {
+  font-size: 12px;
+}
+
+.side-nav .side-nav-title a {
+  color: #333;
+  font-size: 16px;
+  font-weight: normal;
+  padding: 15px 0;
+}
+
+.side-nav .mqc_loading_warning {
+  text-align: center;
+  border-bottom: 1px solid #ccc;
+  color: #ca424c;
+}
+
+.side-nav p {
+  font-size: 0.8em;
+  color: #999;
+  padding: 10px;
+}
+
+.side-nav ul.mqc-nav {
+  border-bottom: 1px solid #ccc;
+}
+
+.side-nav ul.mqc-nav,
+.side-nav ul.mqc-nav ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.side-nav a {
+  display: inline-block;
+  width: 100%;
+  text-decoration: none;
+}
+
+.side-nav a:hover,
+.side-nav a:active,
+.side-nav a:focus {
+  background-color: #dedede;
+}
+
+.side-nav .mqc-nav a.nav-l1 {
+  padding: 10px;
+  border-top: 1px solid #ccc;
+}
+
+.side-nav .mqc-nav li:first-child .nav-l1 {
+  border-top: 0;
+}
+
+.side-nav .mqc-nav a.nav-l2 {
+  padding: 5px 10px 5px 15px;
+  border-top: 1px solid #dedede;
+  font-size: 0.9em;
+  color: #788fa4;
+}
+
+.side-nav .mqc-nav li {
+  position: relative;
+}
+
+#side-nav-handle {
+  display: block;
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  height: 50px;
+  width: 15px;
+  padding-top: 14px;
+  border: 1px solid #ccc;
+  border-left: 0;
+  background-color: #ededed;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  color: #ccc;
+  cursor: pointer;
+}
+
+#side-nav-handle .glyphicon-triangle-right {
+  color: #999;
+}
+
+@media only screen and (max-width: 768px) {
+  #side-nav-handle {
+    display: none;
+  }
+}
+
+.side-nav .navbar-toggle {
+  background-color: #ddd;
+  border-color: #999;
+  position: absolute;
+  right: 10px;
+  top: 15px;
+  margin: 0;
+}
+
+.side-nav .navbar-toggle:hover,
+.side-nav .navbar-toggle:focus,
+.side-nav .navbar-toggle:active {
+  background-color: #ccc;
+}
+
+.side-nav .navbar-toggle .icon-bar {
+  background-color: #999;
+}
+
+#page_title {
+  margin: 0 0 20px;
+}
+
+#page_title img {
+  max-width: 320px;
+}
+
+.report_comment,
+.mqc-section-comment {
+  border-left: 5px solid #8eb9dd;
+  background-color: #e8f1f8;
+}
+
+.mqc-module-title-section {
+  display: flex;
+  align-items: flex-end;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  column-gap: 10px;
+}
+
+.general-stats-help-btn {
+  overflow: auto;
+}
+
+h2.mqc-module-title {
+  margin: 0;
+}
+
+/* help button is floated, ensure it is still bounded/contained */
+h3.mqc-section-name-helpbutton {
+  overflow: auto;
+}
+
+#analysis_dirs_wrapper {
+  max-height: 80px;
+  overflow: auto;
+  margin-bottom: 10px;
+}
+
+#mqc_sname_switches_txt {
+  margin-bottom: 15px;
+}
+
+#mqc_sname_switches {
+  display: inline-block;
+  margin-left: 10px;
+}
+
+#mqc_header_hr {
+  margin: 0;
+}
+
+#mqc_welcome .close {
+  top: 2px;
+}
+
+#mqc_hide_welcome_btn {
+  position: relative;
+  float: right;
+  top: -2px;
+  right: -21px;
+  color: inherit;
+  opacity: 0.4;
+}
+
+#mqc_hide_welcome_btn:hover,
+#mqc_hide_welcome_btn:active,
+#mqc_hide_welcome_btn:focus {
+  opacity: 1;
+}
+
+.footer {
+  background-color: #ededed;
+  border-top: 1px solid #ccc;
+  font-size: 0.9em;
+  color: #999;
+  padding: 20px 0;
+  margin-top: 50px;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer a {
+  color: #999;
+  text-decoration: underline;
+}
+
+.footer .seqera-logo img {
+  height: 24px;
+  padding-right: 30px;
+  margin-top: 8px;
+  opacity: 80%;
+  transition: opacity 0.2s;
+}
+
+.footer .seqera-logo:hover img {
+  opacity: 100%;
+}
+
+/* Epic scroll bar of joy */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #ffffff;
+  border-left: 1px solid #d8d8d8;
+  border-right: 1px solid #d8d8d8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #dedede;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  -moz-box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #dddddd;
+  -moz-box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.4);
+  -webkit-box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 1px 1px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Stop the headings from "head-butting" the top of the browser
+https://css-tricks.com/hash-tag-links-padding/ */
+h1:before,
+h2:before,
+h3:before,
+h4:before {
+  display: block;
+  content: " ";
+  margin-top: -20px;
+  height: 20px;
+  visibility: hidden;
+}
+
+/* Fancy sample highlighting in the side nav */
+input.form-control[type="color"] {
+  padding: 0 2px;
+  width: 30px;
+}
+
+.hc_handle {
+  display: inline-block;
+  padding: 9px 4px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.hc_handle span {
+  display: inline-block;
+  height: 100%;
+  width: 1px;
+  margin: 0 1px;
+  background-color: #999;
+}
+
+/* Toolbox */
+@media only screen and (max-width: 768px) {
+  .mqc-toolbox {
+    padding: 0 15px;
+    background-color: #ededed;
+    border-bottom: 1px solid #ccc;
+  }
+
+  #mqc_saveconfig {
+    margin: 0 -15px;
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .mqc-toolbox {
+    display: block;
+    position: fixed;
+    z-index: 1040;
+    width: 36px;
+    height: 100% !important;
+    top: 0;
+    right: 0;
+    -o-transition: width 0.5s;
+    -webkit-transition: width 0.5s;
+    transition: width 0.5s;
+  }
+
+  .mqc-toolbox.active {
+    width: 282px;
+  }
+
+  .mqc-toolbox .row {
+    margin: 0;
+  }
+
+  .mainpage {
+    padding-right: 50px;
+  }
+
+  .mqc-toolbox-buttons {
+    position: absolute;
+    width: 36px;
+    top: 100px;
+    left: 0;
+    z-index: 20;
+  }
+
+  .mqc-toolbox-wrapper {
+    position: absolute;
+    width: 250px;
+    height: 100%;
+    overflow: auto;
+    left: 36px;
+    margin: 0;
+    background-color: #ededed;
+    border-left: 1px solid #ccc;
+    z-index: 10;
+  }
+
+  .mqc_filter_section {
+    display: none;
+  }
+
+  .mqc_filter_section.active {
+    display: block;
+  }
+}
+
+.mqc-toolbox-label {
+  display: inline-block;
+  background-color: #ededed;
+  color: #999;
+  height: 31px;
+  width: 67px;
+  padding: 3px 6px;
+  margin-left: -6px;
+  margin-bottom: 30px;
+  -ms-transform: rotate(270deg);
+  -moz-transform: rotate(270deg);
+  -webkit-transform: rotate(270deg);
+  transform: rotate(270deg);
+}
+
+.mqc-toolbox-label:hover,
+.mqc-toolbox-label:focus,
+.mqc-toolbox-label:active {
+  color: #999;
+  text-decoration: none;
+}
+
+.mqc-toolbox-header {
+  margin: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.mqc-toolbox-buttons ul,
+.mqc-toolbox-buttons li {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+.mqc-toolbox-buttons li {
+  margin: 5px 0;
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+}
+
+.mqc-toolbox-buttons li a {
+  display: inline-block;
+  font-size: 18px;
+  width: 37px;
+  height: 36px;
+  padding: 7px 8px 9px;
+  color: #999;
+  background-color: #dedede;
+  border: 1px solid transparent;
+  border-right: 1px solid #ccc;
+}
+
+.mqc-toolbox-buttons li a:hover,
+.mqc-toolbox-buttons li a.active {
+  color: #333;
+  background-color: #ededed;
+  border: 1px solid #ccc;
+}
+
+.mqc-toolbox-buttons li .in_use {
+  color: #333;
+  border: 3px solid #5bc0de;
+  padding: 5px 8px 7px 6px;
+  border-right: 1px solid #ededed;
+}
+
+.mqc-toolbox-buttons li a.active {
+  border-right: 1px solid #ededed;
+}
+
+.mqc-toplink,
+.mqc-toplink:visited {
+  display: block;
+  position: absolute;
+  bottom: 5px;
+  width: 28px;
+  height: 28px;
+  text-align: center;
+  padding: 5px 0 5px 2px;
+  border-radius: 28px;
+  background-color: #ededed;
+  color: #999;
+}
+
+.mqc-toplink:hover,
+.mqc-toplink:focus {
+  color: #333;
+}
+
+.mqc_filters {
+  margin: 10px 0;
+  padding: 0;
+  list-style-type: none;
+  font-size: 0.9em;
+}
+
+.mqc_filters button {
+  padding: 7px 10px 0;
+}
+
+.mqc_filters li {
+  padding: 0;
+  clear: both;
+}
+
+.mqc_filters li .close {
+  margin-top: -3px;
+}
+
+.mqc_filters li:hover {
+  background-color: #dedede;
+}
+
+.mqc_filter_section .mqc_regex_mode_p {
+  margin-top: 12px;
+  white-space: nowrap;
+}
+
+.mqc_switch_wrapper {
+  cursor: pointer;
+}
+
+.mqc_switch_wrapper .mqc_switch {
+  display: inline-block;
+  border: 1px solid #999;
+  border-radius: 3px;
+  padding: 2px 5px;
+  margin-left: 5px;
+  background-color: #ddd;
+}
+
+.mqc_switch_wrapper .off::after,
+.mqc_switch_wrapper .on::before {
+  content: "";
+  display: inline-block;
+  height: 0;
+  width: 0;
+  border-radius: 6px;
+  border: 6px solid #fff;
+}
+
+.mqc_switch_wrapper .off::after {
+  margin: 0 0 -2px 5px;
+}
+
+.mqc_switch_wrapper .on::before {
+  margin: 0 5px -2px 0;
+}
+
+.mqc_switch_wrapper .on {
+  background-color: #5bc0de;
+  color: #fff;
+}
+
+.mqc_filter_section {
+  padding: 10px;
+}
+
+.mqc_filter_section hr {
+  margin: 10px 0;
+  border-top: 1px solid #ccc;
+}
+
+.mqc_filter_section p {
+  font-size: 85%;
+  padding: 0;
+  margin: 5px 0;
+  color: #666;
+}
+
+.mqc_filter_section .text-danger {
+  color: #a94442;
+}
+
+.mqc_filter_section p a {
+  color: #666;
+}
+
+.mqc_filter_section p .btn {
+  color: #333;
+}
+
+.mqc_filter_section .text-success {
+  color: #3c763d;
+}
+
+.mqc_filter_section .form-inline .form-control {
+  vertical-align: middle;
+}
+
+@media only screen and (max-width: 768px) {
+  .mqc_filter_section .form-control {
+    display: inline-block;
+  }
+
+  .mqc_filter_section input[type="text"] {
+    width: auto;
+  }
+}
+
+#mqc_renamesamples input[type="text"] {
+  width: 80px;
+}
+
+#mqc_renamesamples_bulk_collapse {
+  border-top: 1px solid #ccc;
+}
+
+#mqc_renamesamples_bulk_update {
+  margin-top: 5px;
+}
+
+#mqc_renamesamples_bulk_form textarea {
+  font-size: 8px;
+  color: #999;
+}
+
+.f_text {
+  border: 0;
+  border-bottom: 1px solid #ccc;
+  padding: 5px 0 5px 10px;
+  margin: 0;
+  background-color: transparent;
+  outline: none;
+  width: -moz-calc(100% - 55px);
+  width: -webkit-calc(100% - 55px);
+  width: calc(100% - 55px);
+}
+
+.f_text:focus {
+  background-color: #f6f6f6;
+}
+
+.from_text,
+.to_text {
+  width: -moz-calc(49% - 20px);
+  width: -webkit-calc(49% - 20px);
+  width: calc(49% - 20px);
+}
+
+#mqc_exportplots .col-sm-6 {
+  padding: 0 10px 0 0;
+}
+
+#mqc_exportplots .checkbox,
+#mqc_exportplots .data-format {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: normal;
+}
+
+#mqc_exportplots .data-format label {
+  font-weight: 400;
+}
+
+#mqc_exportplots .checkbox label {
+  min-height: 0;
+}
+
+#mqc_exportplots .checkbox input {
+  margin-top: 0;
+}
+
+#mqc_exportplots blockquote {
+  font-size: 0.7em;
+  padding: 0 0 0 10px;
+  border-left: 2px solid #cccccc;
+  color: #666;
+}
+
+#mqc_exportplots blockquote a {
+  text-decoration: underline;
+}
+
+#mqc_exportplots .nav-tabs {
+  border-color: #cccccc;
+  margin-bottom: 15px;
+}
+
+#mqc_exportplots .nav-tabs li a {
+  background-color: #dddddd;
+  border-color: #cccccc;
+  padding: 8px 10px;
+  color: #999;
+  font-size: 12px;
+}
+
+#mqc_exportplots .nav-tabs li.active a {
+  background-color: #eeeeee;
+  border-bottom-color: transparent;
+  color: #333;
+}
+
+#mqc-save-success {
+  color: #3c763d;
+  background-color: #dff0d8;
+}
+
+#mqc-cleared-success {
+  color: #a94442;
+  background-color: #f2dede;
+}
+
+#mqc_about p {
+  margin-bottom: 10px;
+}
+
+#mqc_about a {
+  text-decoration: underline;
+}
+
+#mqc_about blockquote {
+  font-size: 0.8em;
+  padding: 0 0 0 10px;
+  border-left: 2px solid #cccccc;
+  color: #666;
+}
+
+/* Regex help modal */
+.regex_example_buttons button {
+  float: left;
+  clear: left;
+  margin-bottom: 8px;
+}
+
+.regex_example_demo input {
+  margin-bottom: 8px;
+  font-family: "Consolas", "Monaco", "Courier New", Courier, monospace;
+}
+
+.mqc-toolbox-wrapper .seqera-logo img {
+  height: 24px;
+  max-width: 80%;
+  opacity: 60%;
+  margin-top: 10px;
+  transition: opacity 0.2s;
+}
+
+.mqc-toolbox-wrapper .seqera-logo a:hover img {
+  opacity: 100%;
+}
+
+/* MultiQC tables */
+.table tr td {
+  font-size: 0.9em;
+  height: 30px;
+}
+
+.mqc_table tbody tr td .wrapper .val {
+  z-index: -1;
+  white-space: nowrap;
+  /* keep suffix stick to the value */
+}
+
+.mqc_table tbody tr td .wrapper .val .label {
+  font-size: 100%;
+  display: inline-block;
+  min-width: 10px;
+  padding: 3px 7px;
+  font-size: 12px;
+  vertical-align: middle;
+  border-radius: 10px;
+}
+
+.mqc-table-responsive.mqc-table-collapse {
+  max-height: 500px;
+}
+
+.mqc-table-responsive {
+  overflow: auto;
+}
+
+.table.mqc_table > thead > tr > th {
+  cursor: pointer;
+  /* Border doesn't scroll with the CSS transform, so just a box-shadow instead. */
+  border-bottom: 0;
+  -webkit-box-shadow: inset 0px -2px 0px 0 #ddd;
+  -moz-box-shadow: inset 0px -2px 0px 0 #ddd;
+  box-shadow: inset 0px -2px 0px 0 #ddd;
+}
+
+.mqc_table thead th,
+.mqc_table thead td {
+  background-color: #ffffff;
+}
+
+.mqc_table thead th .tablesorter-header-inner:after {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 4px;
+  vertical-align: middle;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+}
+
+.mqc_table thead th.tablesorter-headerAsc .tablesorter-header-inner:after {
+  border-bottom: 4px dashed;
+}
+
+.mqc_table thead th.tablesorter-headerDesc .tablesorter-header-inner:after {
+  border-top: 4px dashed;
+}
+
+.mqc_table thead th.tablesorter-headerAsc,
+.mqc_table thead th.tablesorter-headerDesc {
+  background-color: #ededed;
+  color: #1ca8dd;
+  border-bottom: 2px solid #1ca8dd;
+}
+
+.mqc_table th {
+  white-space: nowrap;
+}
+
+.mqc-table-expand {
+  text-align: center;
+  color: #999;
+  padding: 5px;
+  cursor: pointer;
+  background-color: #ffffff;
+  -webkit-transition: background-color 0.2s;
+  transition: background-color 0.2s;
+}
+
+.mqc-table-expand:hover,
+.mqc-table-expand:focus,
+.mqc-table-expand:active {
+  background-color: #ededed;
+}
+
+.mqc_table_numrows_text {
+  padding: 5px 10px;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.sorthandle {
+  border-right: none;
+  font-weight: bold;
+  text-align: center;
+}
+
+tbody .sorthandle {
+  cursor: pointer;
+  color: #ccc;
+}
+
+.mqc_config_modal_table tbody .sorthandle {
+  color: #999;
+}
+
+.mqc_table .rowheader {
+  border-left: none;
+}
+
+.mqc_table tr,
+.mqc_table td {
+  height: 100%;
+}
+
+.mqc_table .data-coloured {
+  padding: 0;
+}
+
+.mqc_table .wrapper {
+  display: inline-block;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  z-index: -10;
+}
+
+@media print {
+  /* Hide the side-navigation and toolbox */
+  .side-nav-wrapper,
+  .mqc-toolbox {
+    display: none;
+  }
+
+  .mainpage {
+    padding: 20px;
+  }
+
+  /* Don't limit the height of the sources */
+  #analysis_dirs_wrapper {
+    max-height: none !important;
+  }
+
+  /* Expand long tables */
+  .mqc-table-expand {
+    display: none;
+  }
+
+  .mqc-table-responsive.mqc-table-collapse {
+    max-height: none !important;
+  }
+
+  .mqc_table thead {
+    transform: none !important;
+  }
+
+  /* keep section titles with the first bit of content, and try to keep sections together */
+  .mqc-module-section-first,
+  .mqc-section {
+    page-break-inside: avoid;
+  }
+
+  /* make sure table cell contents show up */
+  .mqc_table .wrapper {
+    z-index: 0;
+  }
+
+  /* no use printing a useless expand button */
+  .mqc-table-expand {
+    display: none;
+  }
+
+  .mqc-section-plot .text-info {
+    display: none;
+  }
+
+  /* make sure logos aren't excessively huge - can be overwritten with config.custom_logo_width */
+  .multiqc_logo,
+  .custom_logo {
+    max-width: 200px;
+  }
+
+  /* print cell background colors in table */
+  td,
+  span.bar {
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  /* tidy up user-provided report header info */
+  .dl-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  /* ensure kv pairs take up a whole row */
+  .dl-horizontal dt {
+    flex: 0 0 34%;
+    float: none;
+    width: 300px;
+    font-weight: 900;
+    /* bold the key in the kv pair */
+  }
+
+  .dl-horizontal dd {
+    flex: 1 0 34%;
+    /* let the val grow to fill the space */
+    margin-left: 0;
+  }
+
+  /* no need to print buttons */
+  button {
+    display: none;
+  }
+
+  /* printed link text is fairly ugly */
+  a[href]:after {
+    content: none !important;
+  }
+
+  .table.mqc_table {
+    table-layout: fixed;
+  }
+
+  .mqc_table th {
+    white-space: normal;
+    /* make sure that table header text can wrap */
+    font-weight: 900;
+    /* and that table headers are bolded */
+  }
+
+  .table > thead > tr > th {
+    vertical-align: top;
+    /* looks better when all the table-headers are top-aligned, especially when some wrap */
+  }
+}
+
+.mqc_table .bar {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background-color: #dedede;
+  z-index: -1;
+}
+
+.mqc_table .val {
+  display: block;
+  padding: 5px;
+  left: 0;
+}
+
+/* Flat plots */
+.mqc_mplplot {
+  border: 1px solid #dedede;
+  margin-top: 0;
+  width: 100%;
+}
+
+.mqc_mplplot img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Draggable height bar interactive plots */
+.hc-plot {
+  height: 500px;
+  width: 100%;
+}
+
+.hc-plot.not_rendered {
+  background-color: #ededed;
+  text-align: center;
+}
+
+.hc-plot.not_rendered small {
+  display: inline-block;
+  font-style: italic;
+  padding-top: 40px;
+  color: #999;
+}
+
+.hc-plot .render_plot {
+  margin-top: 40px;
+}
+
+.hc-plot-wrapper {
+  width: 100%;
+  height: 512px;
+  position: relative;
+  border: 1px solid #dedede;
+  margin-top: 5px;
+}
+
+.hc-plot-handle {
+  position: absolute;
+  width: 100%;
+  height: 10px;
+  background-color: #dedede;
+  cursor: row-resize;
+  border-top: 1px solid #ededed;
+  -moz-transition: background-color 0.1s;
+  -webkit-transition: background-color 0.1s;
+  transition: background-color 0.1s;
+  /* two lines below are a hack to hide hanging plotly long vertical tick labels */
+  border-bottom: 2px solid white;
+  bottom: -3px;
+}
+
+.hc-plot-handle span {
+  display: block;
+  height: 1px;
+  width: 20px;
+  margin: 1px auto;
+  background-color: #999;
+}
+
+.hc-plot-handle:hover {
+  background-color: #cdcdcd;
+}
+
+.hc-plot-handle:hover span {
+  background-color: #999;
+}
+
+.mqc_hcplot_range_sliders {
+  display: inline-block;
+}
+
+.mqc_hcplot_range_sliders div {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.mqc_hcplot_range_sliders input {
+  display: inline-block;
+  width: 200px;
+}
+
+.mqc_hcplot_range_sliders input.form-control {
+  width: 100px;
+}
+
+.mqc_hcplot_yaxis_limit_toggle {
+  float: right;
+  font-size: 11px;
+  margin-top: -26px;
+}
+
+.mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper {
+  margin-left: 20px;
+}
+
+.beeswarm-hovertext {
+  height: 29px;
+  padding: 5px 8px;
+  font-size: 13px;
+  border-left: 2px solid #46b8da;
+  border-bottom: 1px solid #dedede;
+  background-color: #d9edf7;
+  color: #31708f;
+}
+
+.beeswarm-plots {
+  height: calc(100% - 25px);
+}
+
+.beeswarm-plot:nth-child(odd) {
+  background-color: #ededed;
+}
+
+.mqc-custom-content-image img {
+  max-width: 100%;
+}
+
+/* MultiQC Software Versions table */
+.mqc_versions_table {
+  width: 100%;
+}
+
+.mqc_versions_table tbody:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+g.annotation {
+  position: absolute !important;
+}
+
+.col-xs-12 button {
+  margin-top: 0;
+  margin-bottom: 2px;
+}
+
+hr {
+  border-top: 0;
+}
+
+.mqc-section-description > p {
+  margin-bottom: 4px;
+}
+
+.created-with-multiqc {
+  position: absolute;
+  bottom: 7px;
+  right: 4px;
+  margin-bottom: 0;
+  padding: 0;
+  color: #999999;
+  font-size: 8px;
+  font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
+}
+
+tr.expandable-row-secondary {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+tr.expandable-row-primary {
+  cursor: pointer;
+}
+
+tr.expandable-row-primary .expandable-row-caret {
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 4 16 16"><path d="M11.8152 13.1989L10.0167 11.1432C9.80447 10.9013 9.97697 10.5214 10.2991 10.5214H13.8961C13.9682 10.5214 14.0388 10.5421 14.0994 10.5811C14.16 10.6201 14.2081 10.6758 14.2379 10.7414C14.2677 10.8071 14.2779 10.8799 14.2674 10.9512C14.2569 11.0226 14.226 11.0893 14.1785 11.1435L12.38 13.1985C12.3448 13.2388 12.3014 13.2711 12.2527 13.2932C12.204 13.3153 12.1511 13.3268 12.0976 13.3268C12.0441 13.3268 11.9912 13.3153 11.9425 13.2932C11.8938 13.2711 11.8504 13.2388 11.8152 13.1985V13.1989Z" /></svg>')
+    50% / 24px 24px;
+  transform: rotate(-90deg);
+}
+
+tr.expandable-row-primary.expanded .expandable-row-caret {
+  transform: rotate(0deg);
+}
+
+tr.expandable-row-secondary-hidden {
+  visibility: collapse;
+}
+
+/* Safari doesn't support visibility: collapse */
+@supports (-webkit-hyphens: none) {
+  tr.expandable-row-secondary-hidden {
+    display: none;
+  }
+}
+
+tr.sample-hidden {
+  display: none;
+}
+
+th.column-hidden,
+td.column-hidden {
+  display: none;
+}
+
+tr.row-empty {
+  display: none;
+}
+
+.text-green {
+  color: rgb(18, 106, 50);
+}
+
+.text-yellow {
+  color: rgb(178, 122, 3);
+}
+
+.text-red {
+  color: rgb(184, 31, 31);
+}
+
+.ai-summary {
+  position: relative;
+  padding: 8px 4px 0px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #160f26;
+}
+
+.ai-summary summary {
+  padding-bottom: 8px;
+  position: relative;
+  list-style: none;
+  /* Removes default marker in some browsers */
+}
+
+.ai-summary .ai-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Hide the default triangle in Safari */
+.ai-summary summary::-webkit-details-marker {
+  display: none;
+}
+
+.ai-summary .ai-summary-disclaimer {
+  color: rgb(158, 158, 158);
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+.ai-summary .ai-summary-response {
+  padding-right: 4px;
+}
+
+.ai-summary ul,
+.ai-summary ol {
+  margin: 0;
+  margin-top: -5px;
+  margin-bottom: 10px;
+  list-style: disc outside;
+}
+
+.ai-summary li {
+  margin: 0;
+  margin-left: -9px;
+  margin-top: 5px;
+  padding: 0;
+}
+
+.ai-summary .ai-summary-more-button {
+  padding: 2px 8px;
+}
+
+.ai-summary .ai-continue-in-chat {
+  /* background-color: #ffffff; */
+  padding: 2px 8px 2px 6px;
+  border: 1px solid #d2d2d2;
+  color: #666;
+}
+
+.ai-summary .ai-continue-in-chat:hover,
+.ai-summary .ai-continue-in-chat:focus {
+  background-color: #f2f2f2;
+}
+
+.ai-summary .ai-summary-expand {
+  margin-left: -11px;
+  margin-right: -4px;
+  border-radius: 0 0 4px 4px;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.ai-summary .ai-summary-expand:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.ai-summary .ai-summary-expand-expanded {
+  /* margin-top: -5px; */
+}
+
+.ai-summary sample {
+  cursor: pointer;
+  -webkit-text-decoration: underline dashed;
+  /* Safari support */
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+}
+
+.ai-summary sample:hover {
+  opacity: 0.9;
+}
+
+.ai-summary .ai-generate-more {
+  padding: 2px 8px;
+  margin-left: -1px;
+  margin-right: 10px;
+}
+
+.ai-loading {
+  margin: 15px 0;
+  font-style: italic;
+  color: #666;
+}
+
+.ai-summary .ai-summary-error {
+  margin: 10px 0;
+  font-style: italic;
+  color: #ea4f4f;
+}
+
+.ai-settings-button svg {
+  vertical-align: middle;
+}
+
+.ai-provider-setting {
+  margin-bottom: 20px;
+}
+
+.ai-provider-setting:last-child {
+  margin-bottom: 0;
+}
+
+#aiSettingsModal .input-group {
+  width: 100%;
+}
+
+#aiSettingsModal .input-group input {
+  width: 100%;
+}
+
+/* .ai-reset-response {
+  margin-left: 8px;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+} */
+.ai-local-content {
+  background-color: #f2f2f2;
+}
+
+#global_ai_summary_detailed_analysis_response {
+  margin: 0px -4px 4px -10px;
+  padding: 10px 10px 0 10px;
+}
+
+#global_ai_summary_detailed_analysis_response.ai-local-content {
+  padding-bottom: 1px;
+}
+
+.ai-model-suggestion:hover {
+  opacity: 0.8;
+}
+
+.ai-model-suggestion code {
+  background-color: #dedede;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.ai-model-suggestion:hover code {
+  color: #333;
+}
+
+.spinner {
+  /* background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M304 48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zm0 416a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM48 304a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm464-48a48 48 0 1 0 -96 0 48 48 0 1 0 96 0zM142.9 437A48 48 0 1 0 75 369.1 48 48 0 1 0 142.9 437zm0-294.2A48 48 0 1 0 75 75a48 48 0 1 0 67.9 67.9zM369.1 437A48 48 0 1 0 437 369.1 48 48 0 1 0 369.1 437z"/></svg>'); */
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+
+.btn-sm {
+  padding: 5px 10px 5px 8px;
+}

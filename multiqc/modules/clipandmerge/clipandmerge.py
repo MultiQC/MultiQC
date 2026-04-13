@@ -115,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "ClipAndMerge: Read merging results",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
 
         return bargraph.plot(self.clipandmerge_data, keys, config)

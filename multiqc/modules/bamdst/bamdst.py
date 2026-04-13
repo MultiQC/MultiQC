@@ -1,14 +1,15 @@
-import logging
-from collections import defaultdict
-from typing import Dict, Union
 import csv
+import fnmatch
+import logging
 import math
 import os
-import fnmatch
+from collections import defaultdict
+from typing import Dict, Union
 
-from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import table, bargraph, linegraph
 from multiqc import config
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, linegraph, table
+from multiqc.types import LoadedFileDict
 
 log = logging.getLogger(__name__)
 
@@ -134,16 +135,16 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.cfg = _read_config()
-        data_by_sample = dict()
-        data_by_chromosome_by_sample = dict()
+        data_by_sample: Dict[str, Dict[str, Union[float, int]]] = dict()
+        data_by_chromosome_by_sample: Dict[str, Dict[str, Dict[str, Union[float, str]]]] = dict()
         for f in self.find_log_files("bamdst/coverage"):
             if data := self._parse_coverage_report(f):
                 data_by_sample[f["s_name"]] = data
 
                 # Parse "chromosomes.report" sitting next to the "coverage.report" file:
                 if os.path.exists(chroms_path := os.path.join(f["root"], "chromosomes.report")):
-                    if data := self._parse_chromosomes_report(chroms_path, f["s_name"]):
-                        data_by_chromosome_by_sample[f["s_name"]] = data
+                    if data_by_chrom := self._parse_chromosomes_report(chroms_path, f["s_name"]):
+                        data_by_chromosome_by_sample[f["s_name"]] = data_by_chrom
 
         data_by_sample = self.ignore_samples(data_by_sample)
         data_by_chromosome_by_sample = self.ignore_samples(data_by_chromosome_by_sample)
@@ -158,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
         if data_by_chromosome_by_sample:
             self._build_per_chrom_plot(data_by_chromosome_by_sample)
 
-    def _parse_coverage_report(self, f: Dict) -> Dict:
+    def _parse_coverage_report(self, f: LoadedFileDict) -> Dict[str, Union[float, int]]:
         """
         Parse one coverage report.
         """
@@ -174,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for ext in [".bam", ".cram", ".sam"]:
                     path_line = path_line.replace(ext, "<EXT>")
                 names = [
-                    self.clean_s_name(sn.strip())
+                    self.clean_s_name(sn.strip(), f)
                     for sn in path_line.split("<EXT>")
                     if sn
                     if sn.strip() not in ["-", "/dev/stdin"]
@@ -212,7 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
         return data
 
     def _parse_chromosomes_report(self, path: str, s_name: str) -> Dict[str, Dict[str, Union[float, str]]]:
-        data_by_contig = defaultdict(dict)
+        data_by_contig: Dict[str, Dict[str, Union[float, str]]] = defaultdict(dict)
         with open(path) as fh:
             reader: csv.DictReader = csv.DictReader(fh, delimiter="\t")
             for row in reader:
@@ -228,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data_by_contig[contig][k.strip()] = v
 
         if data_by_contig:
-            self.add_data_source(source=path, s_name=s_name, section="per-chromosome")
+            self.add_data_source(path=path, s_name=s_name, section="per-chromosome")
         return data_by_contig
 
     def build_tables(self, data_by_sample):
@@ -449,7 +450,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "x",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_empty": False,
                 "ymin": 0,
             }
             if data_labels:
@@ -469,7 +469,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "%",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_empty": False,
                 "ymax": 100,
                 "ymin": 0,
             }
@@ -489,7 +488,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "xlab": "Sample",
                     "ylab": "Average depth",
                     "tt_suffix": "x",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ymin": 0,
                     "data_labels": data_labels,
                 },
@@ -502,7 +501,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "xlab": "Sample",
                     "ylab": "Coverage %",
                     "tt_suffix": "%",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ymax": 100,
                     "ymin": 0,
                     "data_labels": data_labels,

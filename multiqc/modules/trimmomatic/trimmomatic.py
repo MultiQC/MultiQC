@@ -5,6 +5,7 @@ from typing import Dict
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
+from multiqc.types import Anchor, ColumnKey
 
 log = logging.getLogger(__name__)
 
@@ -22,15 +23,16 @@ class MultiqcModule(BaseMultiqcModule):
     the filenames as sample names instead. To do so, use the following config option:
 
     ```yaml
-    trimmomatic:
-      s_name_filenames: true
+    use_filename_as_sample_name: true
     ```
+
+    Note: The old `trimmomatic.s_name_filenames` option is deprecated and will be removed in a future version.
     """
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Trimmomatic",
-            anchor="trimmomatic",
+            anchor=Anchor("trimmomatic"),
             href="http://www.usadellab.org/cms/?page=trimmomatic",
             info="Read trimming tool for Illumina NGS data.",
             doi="10.1093/bioinformatics/btu170",
@@ -55,24 +57,40 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Add drop rate to the general stats table
-        headers = {
-            "dropped_pct": {
-                "title": "% Dropped",
-                "description": "% Dropped reads",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "OrRd",
-            }
-        }
-        self.general_stats_addcols(self.trimmomatic, headers)
+        self.general_stats_addcols(
+            self.trimmomatic,
+            {
+                ColumnKey("dropped_pct"): {
+                    "title": "% Dropped",
+                    "description": "% Dropped reads",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "OrRd",
+                }
+            },
+        )
 
         # Make barplot
         self.trimmomatic_barplot()
 
     def parse_trimmomatic(self, f):
         s_name = None
-        if getattr(config, "trimmomatic", {}).get("s_name_filenames", False):
+        should_use_filename = False
+        if isinstance(config.use_filename_as_sample_name, list):
+            # Check for module anchor
+            if self.anchor in config.use_filename_as_sample_name:
+                should_use_filename = True
+        elif config.use_filename_as_sample_name is True:
+            should_use_filename = True
+        elif getattr(config, "trimmomatic", {}).get("s_name_filenames", False):
+            # Deprecated option - warn user
+            log.warning(
+                "The 'trimmomatic.s_name_filenames' config option is deprecated. Use the global 'use_filename_as_sample_name' option instead."
+            )
+            should_use_filename = True
+
+        if should_use_filename:
             s_name = f["s_name"]
         for line in f["f"]:
             # Get the sample name

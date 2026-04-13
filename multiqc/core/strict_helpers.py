@@ -5,12 +5,14 @@ MultiQC lint helpers. Simple additional tests to run when
 
 import logging
 
-from multiqc import report
+from multiqc import config, report
 
 logger = logging.getLogger(__name__)
 
 
-def lint_error(msg):
-    """Add a lint error to the report"""
-    logger.error(msg)
-    report.lint_errors.append(msg)
+def lint_error(msg: str):
+    if config.strict:
+        logger.error(msg)
+        report.lint_errors.append(msg)
+    else:
+        logger.debug(msg)

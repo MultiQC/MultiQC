@@ -1,0 +1,55 @@
+<!-- Toolbar show/hide buttons -->
+<div class="mqc-toolbox-buttons d-none d-md-block">
+  <a
+    class="mqc-toolbox-label btn btn-sm mb-3 bg-body-secondary text-body-tertiary border-bottom-0 rounded-bottom-0 mb-5"
+    title="Open Toolbox"
+    data-bs-toggle="offcanvas"
+    data-bs-target="#mqc-toolbox"
+    aria-controls="mqc-toolbox"
+  >
+    Toolbox
+  </a>
+  <div class="list-group">
+    <a class="list-group-item list-group-item-action" href="#mqc_cols" title="Highlight">
+      {{ material_icon('mdi:pin', 18) }}
+    </a>
+    <a class="list-group-item list-group-item-action" href="#mqc_renamesamples" title="Rename">
+      {{ material_icon('mdi:format-text', 18) }}
+    </a>
+    <a class="list-group-item list-group-item-action" href="#mqc_hidesamples" title="Hide">
+      {{ material_icon('mdi:eye-off', 18) }}
+    </a>
+    {% if not config.no_ai %}
+      <a class="list-group-item list-group-item-action" href="#mqc_ai" title="AI">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z"
+            fill="currentColor"
+            stroke="currentColor"
+            stroke-width="0.75"
+            stroke-linejoin="round"
+          ></path>
+          <path
+            d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z"
+            fill="currentColor"
+            stroke="currentColor"
+            stroke-width="0.5"
+            stroke-linejoin="round"
+          ></path>
+        </svg>
+      </a>
+    {% endif %}
+    <a class="list-group-item list-group-item-action" href="#mqc_exportplots" title="Export">
+      {{ material_icon('mdi:download', 18) }}
+    </a>
+    <a class="list-group-item list-group-item-action" href="#mqc_saveconfig" title="Save">
+      {{ material_icon('mdi:content-save', 18) }}
+    </a>
+    <a class="list-group-item list-group-item-action" href="#mqc_citations" title="Citations">
+      {{ material_icon('mdi:school', 18) }}
+    </a>
+    <a class="list-group-item list-group-item-action" href="#mqc_about" title="About">
+      {{ material_icon('mdi:help-circle', 18) }}
+    </a>
+  </div>
+</div>

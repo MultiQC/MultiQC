@@ -4,22 +4,29 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  pre_commit:
-    name: "pre-commit"
+  prek:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-      - uses: pre-commit/action@v2.0.3
+
+      - uses: j178/prek-action@v1
+
   code_checks:
     name: "code_checks.py"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: "Install dependencies"
-        run: pip install rich
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14.0" # 3.14.1 has upstream bug
+          cache: "pip"
+
+      - run: pip install rich
 
       - name: "Run manual code style checks"
         run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py

@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "NSC",
                 "description": "Normalized strand cross-correlation",
                 "max": 10,
-                "min": 0,
+                "min": 1,
                 "format": "{:,.2f}",
                 "scale": "RdYlGn-rev",
             },

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
@@ -66,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             else:
                 for entry in parsed_entries:
-                    s_name = self.clean_s_name(entry["fastq1_in_name"])
+                    s_name = self.clean_s_name(entry["fastq1_in_name"], f)
 
                     if s_name in data_by_sample:
                         log.debug(f"Duplicate sample name found! Overwriting: {s_name}")

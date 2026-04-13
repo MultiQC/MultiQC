@@ -61,6 +61,6 @@ def parse_reports(module: BaseMultiqcModule) -> int:
             },
         }
 
-        module.general_stats_addcols(tin_data, headers, namespace="RSeQC TIN")
+        module.general_stats_addcols(tin_data, headers, namespace="TIN")
 
     return len(tin_data)

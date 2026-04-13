@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.",
             extra="""
             Implements the dynamic nomenclature of SARS-CoV-2 lineages, known as the Pango nomenclature.
-            It allows a user to assign a SARS-CoV-2 genome sequence the most likely lineage (Pango lineage) 
+            It allows a user to assign a SARS-CoV-2 genome sequence the most likely lineage (Pango lineage)
             to SARS-CoV-2 query sequences.
             """,
             doi="10.1093/ve/veab064",
@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         for idx, k in enumerate(self.lineage_colours):
             self.lineage_colours[k] = cols.get_colour(idx)
         # Manually add back None as grey
-        self.lineage_colours["None"] = "#EFEFEF"
+        self.lineage_colours["None"] = "#8888882F"
 
         self.pangolin_general_stats_table()
 

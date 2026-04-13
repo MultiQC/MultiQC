@@ -13,7 +13,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     - `prokka_table`: default `False`. Show a table in the report.
     - `prokka_barplot`: default `True`. Show a barplot in the report.
-    - `prokka_fn_snames`: default `False`. Use filenames for sample names (see below).
+    - `prokka_fn_snames`: default `False`. Use filenames for sample names (DEPRECATED - use global `use_filename_as_sample_name` instead).
 
     Sample names are generated using the first line in the prokka reports:
 
@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
     the third is the sample name. So the above will give a sample name of
     `Sample1`.
 
-    If you prefer, you can set `config.prokka_fn_snames` to `True` and MultiQC
+    If you prefer, you can set `config.use_filename_as_sample_name` to `True` and MultiQC
     will instead use the log filename as the sample name.
     """
 
@@ -136,7 +136,21 @@ class MultiqcModule(BaseMultiqcModule):
             organism = first_line.strip().split(":", 1)[1]
             s_name = f["s_name"]
         # Don't try to guess sample name if requested in the config
-        if getattr(config, "prokka_fn_snames", False):
+        should_use_filename = False
+        if isinstance(config.use_filename_as_sample_name, list):
+            # Check for module anchor
+            if self.anchor in config.use_filename_as_sample_name:
+                should_use_filename = True
+        elif config.use_filename_as_sample_name is True:
+            should_use_filename = True
+        elif getattr(config, "prokka_fn_snames", False):
+            # Deprecated option - warn user
+            log.warning(
+                "The 'prokka_fn_snames' config option is deprecated. Use the global 'use_filename_as_sample_name' option instead."
+            )
+            should_use_filename = True
+
+        if should_use_filename:
             s_name = f["s_name"]
 
         if s_name in self.prokka:

@@ -279,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
         # and reproducible for other run files
         if "pipeline_id" not in data:
             if "pipeline_name" in data and "pipeline_start_dateparts" in data:
-                log.debug(f"Trying to guess pipeline ID for file \"{f['fn']}\"")
+                log.debug(f'Trying to guess pipeline ID for file "{f["fn"]}"')
                 data["pipeline_id"] = "cf_{}_{}".format(
                     data["pipeline_name"], data["pipeline_start_dateparts"]["timestamp"]
                 )

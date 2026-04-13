@@ -2,6 +2,7 @@
 Test multiqc running in the command line
 """
 
+import json
 import os
 import subprocess
 
@@ -26,6 +27,13 @@ def test_commandline(single_module_dir, tmp_path):
     assert (tmp_path / "report.html").is_file()
     assert (tmp_path / "report_data").is_dir()
     assert (tmp_path / "report_data" / "multiqc_data.json").is_file()
+    # Test that json can be parsed
+    with open(tmp_path / "report_data" / "multiqc_data.json", "r") as f:
+        data = json.load(f)
+    assert "report_general_stats_data" in data
+    assert "config_analysis_dir" in data
+    assert "report_saved_raw_data" in data
+    assert "multiqc_general_stats" in data["report_saved_raw_data"]
 
 
 @pytest.mark.parametrize("clean_up", [True, False])

@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import bargraph, linegraph
 from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Get sample name from JSON first
         for s_name, data in parsed_json.items():
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             self.add_data_source(f, s_name)
             self.seqwho_data[s_name] = {}
 

@@ -41,7 +41,7 @@ class MultiqcModule(
     - `plotCorrelation --outFileCorMatrix`
     - `plotProfile --outFileNameData`
 
-    Please be aware that some tools (namely, `plotFingerprint --outRawCounts` and `plotCoverage --outRawCounts`) are only supported as of deepTools version 2.6. For earlier output from `plotCoverage --outRawCounts`, you can use `#'chr' 'start' 'end'` in `search_patterns.yaml` (see [here](http://multiqc.info/docs/#module-search-patterns) for more details). Also for these types of files, you may need to increase the maximum file size supported by MultiQC (`log_filesize_limit` in the MultiQC configuration file). You can find details regarding the configuration file location [here](http://multiqc.info/docs/#configuring-multiqc).
+    Please be aware that some tools (namely, `plotFingerprint --outRawCounts` and `plotCoverage --outRawCounts`) are only supported as of deepTools version 2.6. For earlier output from `plotCoverage --outRawCounts`, you can use `#'chr' 'start' 'end'` in `search_patterns.yaml` (see [here](https://docs.seqera.io/multiqc/getting_started/config#module-search-patterns) for more details). Also for these types of files, you may need to increase the maximum file size supported by MultiQC (`log_filesize_limit` in the MultiQC configuration file). You can find details regarding the configuration file location [here](https://docs.seqera.io/multiqc/getting_started/config).
 
     Note that sample names are parsed from the text files themselves, they are not derived from file names.
     """
