@@ -1,0 +1,298 @@
+{# #######################
+  header.html
+##########################
+
+This block gives the introduction content at the top of each report.
+That is, the page title, welcome message, details of where the report
+was generated and the button that launches the welcome tour.
+
+#}
+
+<h1 id="page_title">
+  {% if config.custom_logo is not none %}
+    <div class="pull-right">
+      {{ '<a href="'+config.custom_logo_url+'" target="_blank">' if config.custom_logo_url is not none }}
+      <img
+        src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}"
+        title="{{ config.custom_logo_title if config.custom_logo_title is not none }}"
+        class="custom_logo"
+        {% if config.custom_logo_width is not none %}style="width: {{ config.custom_logo_width }}px;"{% endif %}
+      />
+      {{ '</a>' if config.custom_logo_url is not none }}
+    </div>
+  {% endif %}
+  <a href="http://multiqc.info" target="_blank">
+    <img
+      src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}"
+      title="MultiQC"
+      class="multiqc_logo"
+    />
+  </a>
+</h1>
+{% if config.title is not none or config.subtitle is not none %}
+  <h1>
+    {{ config.title if config.title is not none }}
+    {{ '<br>' if config.title is not none and config.subtitle is not none }}
+    {{ '<small>'+config.subtitle+'</small>' if config.subtitle is not none }}
+  </h1>
+{% endif %}
+
+{% if config.intro_text != False %}
+  <p class="lead">
+    {{ config.intro_text if config.intro_text is not none else 'A modular tool to aggregate results from bioinformatics analyses across many samples into a single report.' }}
+  </p>
+{% endif %}
+
+{% if config.report_comment and config.report_comment | length > 0 %}
+  <blockquote class="report_comment">{{ config.report_comment }}</blockquote>
+{% endif %}
+
+{% if config.report_header_info and config.report_header_info | length > 0 %}
+  <div class="well">
+    <dl class="dl-horizontal" style="margin-bottom:0;">
+      {% for d in config.report_header_info %}{% for k, v in d.items() %}
+        <dt>{{ k }}</dt>
+        <dd>{{ v }}</dd>
+      {% endfor %}{% endfor %}
+    </dl>
+  </div>
+{% endif %}
+
+<noscript>
+  <div class="alert alert-danger">
+    <h4>JavaScript Disabled</h4>
+    <p>
+      MultiQC reports use JavaScript for plots and toolbox functions. It looks like you have JavaScript disabled in your
+      web browser. Please note that many of the report functions will not work as intended.
+    </p>
+  </div>
+</noscript>
+
+<div class="alert alert-warning mqc_loading_warning" style="display:none;">
+  <span class="glyphicon glyphicon-time"></span> &nbsp;Loading report..
+</div>
+
+{% if config.show_analysis_time or config.show_analysis_paths %}
+  <div id="analysis_dirs_wrapper" style="display: flex; justify-content: space-between; align-items: center;">
+    <span style="flex: 1;"
+      >Report
+      {% if config.show_analysis_time %}
+        generated on {{ report.creation_date.strftime('%Y-%m-%d, %H:%M %Z') }}
+      {% endif %}
+      {% if config.show_analysis_paths %}
+        based on data in:
+        {% if report.analysis_files | length == 1 %}
+          <code class="mqc_analysis_path">{{ report.analysis_files[0] }}</code>
+        {% else %}
+          <ul>
+            {% for d in report.analysis_files %}
+              <li><code class="mqc_analysis_path">{{ d }}</code></li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endif %}
+    </span>
+    {% if not config.no_ai and not report.ai_global_summary %}
+      <div class="ai-generate-button-wrapper">
+        <button
+          class="btn btn-default btn-sm ai-generate-button ai-generate-button-global"
+          data-response-div="global_ai_summary_response"
+          data-detailed-analysis-div="global_ai_summary_detailed_analysis_response"
+          data-error-div="global_ai_summary_error"
+          data-disclaimer-div="global_ai_summary_disclaimer"
+          data-wrapper-div="global_ai_summary_wrapper"
+          data-continue-in-chat-button="global_ai_summary_continue_in_chat"
+          data-section-anchor="global"
+          data-action="{% if report.ai_global_summary %}clear{% else %}generate{% endif %}"
+          data-clear-text="Clear summary"
+          data-toggle="tooltip"
+          type="button"
+        >
+          <span style="vertical-align: baseline">
+            <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z"
+                stroke="black"
+                stroke-width="0.75"
+                stroke-linejoin="round"
+              ></path>
+              <path
+                d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z"
+                stroke="#160F26"
+                stroke-width="0.5"
+                stroke-linejoin="round"
+              ></path>
+            </svg>
+          </span>
+          <span class="button-text">Summarize report</span>
+        </button>
+      </div>
+    {% endif %}
+    {% if not config.no_ai %}
+      <div class="ai-copy-button-wrapper">
+        <button
+          type="button"
+          class="btn btn-default btn-sm ai-copy-content ai-copy-content-report"
+          data-toggle="tooltip"
+          data-section-anchor="global"
+          title="Copies the report data to the clipboard formatted to discuss with AI chats like ChatGPT or Claude"
+        >
+          <span style="vertical-align: baseline">
+            <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z"
+                stroke="black"
+                stroke-width="0.75"
+                stroke-linejoin="round"
+              ></path>
+              <path
+                d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z"
+                stroke="#160F26"
+                stroke-width="0.5"
+                stroke-linejoin="round"
+              ></path>
+            </svg>
+          </span>
+          <span class="button-text">Copy report prompt</span>
+        </button>
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% if config.sample_names_rename_buttons | length > 0 %}
+  <p id="mqc_sname_switches_txt">
+    Change sample names:
+    <span class="btn-group btn-group-sm" role="group" id="mqc_sname_switches">
+      {% for sn_t in config.sample_names_rename_buttons %}
+        <button
+          type="button"
+          class="btn btn-primary mqc_sname_switches {% if loop.index == 1 %}active{% endif %}"
+          data-index="{{ loop.index - 1 }}"
+        >
+          {{ sn_t }}
+        </button>
+      {%- endfor %}
+    </span>
+  </p>
+{% endif %}
+
+{% if config.show_hide_buttons | length > 0 %}
+  <p id="mqc_hide_switches_txt">
+    Show/Hide samples:
+    <span class="btn-group btn-group-sm" role="group" id="mqc_hide_switches">
+      {% for sn_t in config.show_hide_buttons %}
+        <button
+          type="button"
+          class="btn btn-primary mqc_hide_switches {% if loop.index == 1 %}active{% endif %}"
+          data-index="{{ loop.index - 1 }}"
+        >
+          {{ sn_t }}
+        </button>
+      {%- endfor %}
+    </span>
+  </p>
+{% endif %}
+
+<hr id="mqc_header_hr" />
+
+<div class="alert alert-info alert-dismissible hidden-print" id="mqc_welcome" style="display: none;">
+  <button type="button" data-dismiss="alert" class="close" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <button type="button" data-dismiss="alert" class="btn-link btn-sm" id="mqc_hide_welcome_btn">don't show again</button>
+  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+  <strong>Welcome!</strong> Not sure where to start? &nbsp;
+  <a href="https://www.youtube.com/watch?v=qPbIlO_KWN0" target="_blank" class="btn btn-info btn-sm"
+    >Watch a tutorial video</a
+  >
+  &nbsp; <small><em>(6:06)</em></small>
+</div>
+
+{% if report.plot_data | length > 0 and report.some_plots_are_deferred %}
+  <div id="mqc-warning-many-samples" class="alert alert-warning alert-dismissible hidden-print">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
+    Because this report contains a lot of samples, you may need to click 'Show plot' to see some graphs.
+    <button id="mqc-render-all-plots" class="btn btn-default btn-sm">Render all plots</button>
+  </div>
+{% endif %}
+
+<div
+  id="global_ai_summary_wrapper"
+  class="ai-summary"
+  style="display: {% if report.ai_global_summary | length > 0 %}block{% else %}none{% endif %};"
+>
+  <div class="ai-summary-header">
+    <b>Report AI Summary </b>
+  </div>
+  <div id="global_ai_summary_response" class="ai-summary-response">{{ report.ai_global_summary }}</div>
+
+  {% if report.ai_global_detailed_analysis %}
+    <div style="display: block" id="global_ai_summary_detailed_analysis_response">
+      {{ report.ai_global_detailed_analysis }}
+    </div>
+  {% else %}
+    <div class="ai-local-content" id="global_ai_summary_detailed_analysis_response">
+      {{ report.ai_global_detailed_analysis }}
+    </div>
+  {% endif %}
+
+  <div
+    id="global_ai_summary_more_button_and_disclaimer"
+    style="margin-bottom: 4px; margin-left: -5px; display: flex; justify-content: space-between; align-items: baseline;"
+  >
+    {% if not report.ai_global_detailed_analysis %}
+      <button
+        class="btn btn-sm btn-default ai-generate-button ai-generate-button-global ai-generate-button-more"
+        data-response-div="global_ai_summary_detailed_analysis_response"
+        data-error-div="global_ai_summary_error"
+        data-disclaimer-div="global_ai_summary_disclaimer"
+        data-wrapper-div="global_ai_summary_detailed_analysis"
+        data-continue-in-chat-button="global_ai_summary_continue_in_chat"
+        data-section-anchor="global"
+        data-action="{% if report.ai_global_detailed_analysis %}clear{% else %}generate{% endif %}"
+        data-clear-text="Clear response"
+        type="button"
+        style="padding: 2px 8px; margin-right: 10px"
+        data-toggle="tooltip"
+        title="Generate a more detailed analysis and recommendations"
+      >
+        More details...
+      </button>
+    {% endif %}
+    <div style="display: flex; gap: 4px; margin-left: auto; align-items: baseline;">
+      <span
+        class="ai-summary-disclaimer"
+        id="global_ai_summary_disclaimer"
+        style="display: {% if report.ai_global_summary | length > 0 %}inline{% else %}none{% endif %};"
+      >
+        Provider: <span class="ai-summary-disclaimer-provider">{{ report.ai_provider_title }}</span>, model:
+        <span class="ai-summary-disclaimer-model">{{ report.ai_model_resolved or report.ai_model }}</span>
+      </span>
+      <a
+        class="btn btn-default btn-sm ai-continue-in-chat"
+        id="global_ai_summary_continue_in_chat"
+        style="display: {% if report.ai_thread_id %}block{% else %}none{% endif %};"
+        data-thread-id="{{ report.ai_thread_id }}"
+        data-seqera-website="{{ config.seqera_website }}"
+        href="{{ config.seqera_website }}/ask-ai/chat/{{ report.ai_thread_id }}"
+        target="_blank"
+        data-toggle="tooltip"
+      >
+        Chat with Seqera AI
+      </a>
+    </div>
+  </div>
+  <div class="ai-summary-error" id="global_ai_summary_error" style="display: none;"></div>
+  <!-- "Expand" arrow for when detailed summary is pre-generated with structured output: -->
+  <div
+    id="global_ai_summary_expand"
+    class="mqc-table-expand ai-summary-expand"
+    style="display: {% if report.ai_global_detailed_analysis %}block{% else %}none{% endif %};"
+  >
+    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+  </div>
+</div>

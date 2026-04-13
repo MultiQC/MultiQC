@@ -7,3 +7,4 @@ coverage:
       default:
         informational: true
 github_checks: false
+comment: false

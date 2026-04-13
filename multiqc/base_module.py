@@ -3,25 +3,53 @@ MultiQC modules base class, contains helper functions
 """
 
 import dataclasses
-from pathlib import Path
-from typing import List, Union, Optional, Dict, Any, cast, Tuple
-
 import fnmatch
 import io
 import itertools
+import json
 import logging
 import mimetypes
 import os
 import re
 import textwrap
 from collections import defaultdict
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 
 import markdown
 import packaging.version
+from natsort import natsorted
 
-from multiqc.plots.plotly.plot import Plot
-from multiqc import config, report
+from multiqc import config, report, validation
+from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
+from multiqc.core.strict_helpers import lint_error
+from multiqc.plots.plot import Plot
+from multiqc.plots.table_object import (
+    ColumnDict,
+    ColumnKey,
+    InputRow,
+    SampleGroup,
+    SampleName,
+    ValueT,
+)
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SampleNameMeta, Section, SectionId, SectionKey
 
 logger = logging.getLogger(__name__)
 
@@ -30,48 +58,86 @@ class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
 
 
+ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleName, SampleName]]], None]
+
+DataT = TypeVar("DataT")
+SampleNameT = TypeVar("SampleNameT", str, SampleName)
+
+
 @dataclasses.dataclass
-class Section:
-    name: str
-    anchor: str
-    description: str
-    module: str
-    comment: str = ""
-    helptext: str = ""
-    content_before_plot: str = ""
-    content: str = ""
-    plot: str = ""
-    print_section: bool = True
-    plot_id: Optional[str] = None
+class SampleGroupingConfig:
+    cols_to_weighted_average: Optional[List[Tuple[ColumnKey, ColumnKey]]] = None
+    cols_to_average: Optional[List[ColumnKey]] = None
+    cols_to_sum: Optional[List[ColumnKey]] = None
+    extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
 
 
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
-    mod_cust_config: Dict = {}
-    mod_id = None
+    mod_cust_config: Dict[str, Any] = {}
+    mod_id: Optional[ModuleId] = None
 
     def __init__(
         self,
-        name="base",
-        anchor="base",
-        target=None,
+        name: str = "base",
+        anchor: Union[Anchor, str] = Anchor("base"),
+        target: Optional[str] = None,
         href: Union[str, List[str], None] = None,
-        info=None,
-        comment=None,
-        extra=None,
-        autoformat=True,
-        autoformat_type="markdown",
+        info: Optional[str] = None,
+        comment: Optional[str] = None,
+        extra: Optional[str] = None,
+        autoformat: bool = True,
+        autoformat_type: str = "markdown",
         doi: Optional[Union[str, List[str]]] = None,
     ):
+        validation.reset()
+
         # Custom options from user config that can overwrite base module values
-        self.name = self.mod_cust_config.get("name", name)
-        self.id = self.mod_id if self.mod_id else anchor  # cannot be overwritten for repeated modules with path_filters
-        self.anchor = self.mod_cust_config.get("anchor", anchor)
-        self.href = self.mod_cust_config.get("href", [href] if isinstance(href, str) else href or [])
-        self.info = self.mod_cust_config.get("info", info)
-        self.comment = self.mod_cust_config.get("comment", comment)
-        self.extra = self.mod_cust_config.get("extra", extra)
-        self.doi = self.mod_cust_config.get("doi", [doi] if isinstance(doi, str) else doi or [])
+        self.name: str = name
+        _cust_name = self.mod_cust_config.get("name")
+        if _cust_name is not None:
+            self.name = str(_cust_name)
+
+        # cannot be overwritten for repeated modules with path_filters:
+        self.id: ModuleId = ModuleId(self.mod_id or anchor)
+
+        self.anchor: Anchor = Anchor(anchor)
+        _cust_anchor = self.mod_cust_config.get("anchor")
+        if _cust_anchor is not None:
+            self.anchor = Anchor(str(_cust_anchor))
+
+        self.info: str = info or ""
+        _cust_info = self.mod_cust_config.get("info")
+        if _cust_info is not None:
+            self.info = str(_cust_info)
+
+        self.comment: str = comment or ""
+        _cust_comment = self.mod_cust_config.get("comment")
+        if _cust_comment is not None:
+            self.comment = str(_cust_comment)
+
+        self.extra: str = extra or ""
+        _cust_extra = self.mod_cust_config.get("extra")
+        if _cust_extra is not None:
+            self.extra = str(_cust_extra)
+
+        self.href: List[str] = [href] if isinstance(href, str) else href or []
+        _cust_href = self.mod_cust_config.get("href")
+        if _cust_href is not None:
+            if isinstance(_cust_href, str):
+                self.href = [_cust_href]
+            elif isinstance(_cust_href, list):
+                self.href = [str(h) for h in _cust_href]
+
+        self.doi: List[str] = [doi] if isinstance(doi, str) else doi or []
+        _cust_doi = self.mod_cust_config.get("doi")
+        if _cust_doi is not None:
+            if isinstance(_cust_doi, str):
+                self.doi = [_cust_doi]
+            elif isinstance(_cust_doi, list):
+                self.doi = [str(d) for d in _cust_doi]
+
+        self.skip_generalstats = True if self.mod_cust_config.get("generalstats") is False else False
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
         self.versions: Dict[str, List[Tuple[Optional[packaging.version.Version], str]]] = defaultdict(list)
@@ -79,22 +145,20 @@ class BaseMultiqcModule:
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})
 
-        # Sanitise anchor ID and check for duplicates
-        self.anchor = report.save_htmlid(self.anchor)
-
         # See if we have a user comment in the config
-        if self.anchor in config.section_comments:
-            self.comment = config.section_comments[self.anchor]
+        if _config_section_comment := config.section_comments.get(str(self.anchor)):
+            self.comment = _config_section_comment
 
-        if self.info is None:
-            self.info = ""
         self.info = self.info.strip().strip(".")
         # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
         if self.info and self.info[0].islower():
             self.info = f"{self.name} {self.info}"
+        if self.info and not self.info.endswith("."):
+            self.info += "."
 
-        if self.extra is None:
-            self.extra = ""
+        if isinstance(self.href, str):
+            self.href = [self.href]
+        self.href = [i for i in self.href if i != ""]
 
         if isinstance(self.doi, str):
             self.doi = [self.doi]
@@ -103,17 +167,22 @@ class BaseMultiqcModule:
         self.intro = self._get_intro()
 
         # Format the markdown strings
-        if autoformat:
-            if self.comment is not None:
-                self.comment = textwrap.dedent(self.comment)
-                if autoformat_type == "markdown":
-                    self.comment = markdown.markdown(self.comment)
+        if autoformat and self.info:
+            self.info = textwrap.dedent(self.info)
+            if autoformat_type == "markdown":
+                self.info = markdown.markdown(self.info)
+
+        if autoformat and self.comment:
+            self.comment = textwrap.dedent(self.comment)
+            if autoformat_type == "markdown":
+                self.comment = markdown.markdown(self.comment)
 
         self.sections: List[Section] = []
 
         self.hidden = False
 
-        self.__saved_raw_data: Dict[str, Dict[str, Any]] = dict()  # Saved raw data. Identical to report.saved_raw_data
+        # Saved raw data. Written only if `preserve_module_raw_data` is set to `True`
+        self.__saved_raw_data: Optional[Dict[str, Dict[str, Any]]] = None
 
         self.css: Dict[str, str] = dict()
         self.js: Dict[str, str] = dict()
@@ -124,27 +193,27 @@ class BaseMultiqcModule:
     def _get_intro(self):
         doi_html = ""
         if len(self.doi) > 0:
-            doi_links = []
+            doi_links: List[str] = []
             for doi in self.doi:
                 # Build the HTML link for the DOI
                 doi_links.append(
-                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                    f' <a class="module-doi text-muted" data-doi="{doi}" data-bs-toggle="popover"'
+                    f' href="https://doi.org/{doi}" target="_blank">{doi}</a>'
                 )
-            doi_html = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}</em>'.format(
-                "; ".join(doi_links)
-            )
+            doi_html = '<span class="text-muted small ms-2">DOI: {}</span>'.format("; ".join(doi_links))
 
         url_link = ""
         if len(self.href) > 0:
-            url_links = []
+            url_links: List[str] = []
             for url in self.href:
-                url_links.append(f'<a href="{url}" target="_blank">{url.strip("/")}</a>')
-            url_link = '<em class="text-muted small" style="margin-left: 1rem;">URL: {}</em>'.format(
-                "; ".join(url_links)
-            )
+                url_links.append(f'<a href="{url}" class="text-muted ms-2 small" target="_blank">{url.strip("/")}</a>')
+            url_link = "; ".join(url_links)
 
-        info = (self.info + ".") if self.info else ""
-        return f"<p>{info}{url_link}{doi_html}</p>{self.extra}"
+        info_html = f"{self.info}{url_link}{doi_html}"
+        if not info_html.startswith("<"):  # Assume markdown, convert to HTML
+            info_html = markdown.markdown(info_html)
+
+        return f"{info_html}{self.extra}"
 
     def clean_child_attributes(self):
         """
@@ -157,7 +226,7 @@ class BaseMultiqcModule:
                 delattr(self, key)
 
     @property
-    def saved_raw_data(self):
+    def saved_raw_data(self) -> Optional[Dict[str, Dict[str, Any]]]:
         """
         Wrapper to give access to private __saved_raw_data. We could have just called __saved_raw_data without the
         underscore: saved_raw_data, and that would work just fine. But users might override saved_raw_data in
@@ -165,11 +234,34 @@ class BaseMultiqcModule:
         """
         return self.__saved_raw_data
 
-    def find_log_files(self, sp_key, filecontents=True, filehandles=False):
+    @overload
+    def find_log_files(
+        self, sp_key: str, filecontents: Literal[True] = True, filehandles: bool = False
+    ) -> Iterable[LoadedFileDict[str]]: ...
+
+    @overload
+    def find_log_files(
+        self, sp_key: str, filecontents: Literal[False] = False, filehandles: Literal[True] = True
+    ) -> Union[Iterable[LoadedFileDict[io.TextIOWrapper]], Iterable[LoadedFileDict[io.BufferedReader]]]: ...
+
+    @overload
+    def find_log_files(
+        self, sp_key: str, filecontents: Literal[False] = False, filehandles: Literal[False] = False
+    ) -> Iterable[LoadedFileDict[None]]: ...
+
+    def find_log_files(
+        self, sp_key: str, filecontents: bool = True, filehandles: bool = False
+    ) -> Union[
+        Iterable[LoadedFileDict[str]],
+        Iterable[LoadedFileDict[io.BufferedReader]],  # image file
+        Iterable[LoadedFileDict[io.TextIOWrapper]],  # text file
+        Iterable[LoadedFileDict[None]],
+    ]:
         """
         Return matches log files of interest.
         :param sp_key: Search pattern key specified in config
-        :param filehandles: Set to true to return a file handle instead of slurped file contents
+        :param filecontents: f["f"] will contain raw file contents
+        :param filehandles: f["f"] will be the file handle
         :return: Yields a dict with filename (fn), root directory (root), cleaned sample name
                  generated from the filename (s_name) and either the file contents or file handle
                  for the current matched file (f).
@@ -181,7 +273,9 @@ class BaseMultiqcModule:
         def get_path_filters(key: str) -> List[str]:
             pfs: List[str] = []
             val = self.mod_cust_config.get(key, [])
-            for pf in val if isinstance(val, list) else [val]:
+            values: List[str] = val if isinstance(val, list) else [val]
+            pf: str
+            for pf in values:
                 if pf.startswith("./"):
                     pf = pf[2:]
                 pfs.append(pf)
@@ -190,11 +284,14 @@ class BaseMultiqcModule:
         path_filters: List[str] = get_path_filters("path_filters")
         path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
 
-        if not isinstance(sp_key, str):
-            logger.warning(f"The find_log_files() search key must be a string, got {type(sp_key)}: {sp_key}")
-            return
+        # Get files and sort them by their clean sample names
+        module_files = list(report.files.get(ModuleId(sp_key), []))
 
-        for f in report.files.get(sp_key, []):
+        # Sort files naturally by their clean sample names
+        module_files = natsorted(module_files, key=lambda f: self.clean_s_name(f["fn"], f))
+
+        # Process the sorted files
+        for f in module_files:
             # Make a note of the filename so that we can report it if something crashes
             last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file
@@ -214,7 +311,8 @@ class BaseMultiqcModule:
                 )
                 if any(exclusion_hits):
                     logger.debug(
-                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for "
+                        f"'{self.name}'"
                     )
                     continue
 
@@ -230,96 +328,140 @@ class BaseMultiqcModule:
                 )
                 if not any(inclusion_hits):
                     logger.debug(
-                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '"
+                        f"{self.name}'"
                     )
                     continue
                 else:
                     logger.debug(
-                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '{self.name}'"
+                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '"
+                        f"{self.name}'"
                     )
 
             # Make a sample name from the filename
-            f["sp_key"] = sp_key
-            f["s_name"] = self.clean_s_name(f["fn"], f)
+            s_name = self.clean_s_name(f["fn"], f)
+
             if filehandles or filecontents:
                 try:
+                    fh: Union[io.BufferedReader, io.TextIOWrapper, None]
                     # Custom content module can now handle image files
-                    (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
-                    fh: io.IOBase  # make mypy happy
+                    (ftype, _) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
                     if ftype is not None and ftype.startswith("image"):
                         with io.open(os.path.join(f["root"], f["fn"]), "rb") as fh:
                             # always return file handles
-                            f["f"] = fh
-                            yield f
+                            yield {**f, "s_name": s_name, "f": fh}
                     else:
                         # Everything else - should be all text files
                         with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
                             if filehandles:
-                                f["f"] = fh
-                                yield f
+                                yield {**f, "s_name": s_name, "f": fh}
                             elif filecontents:
                                 try:
-                                    f["f"] = fh.read()
+                                    contents = fh.read()
                                 except UnicodeDecodeError as e:
                                     logger.debug(
-                                        f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode characters\n{e}"
+                                        f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode "
+                                        f"characters\n{e}"
                                     )
                                     try:
                                         with io.open(
-                                            os.path.join(f["root"], f["fn"]), "r", encoding="utf-8", errors="ignore"
+                                            os.path.join(f["root"], f["fn"]),
+                                            "r",
+                                            encoding="utf-8",
+                                            errors="ignore",
                                         ) as fh_ignoring:
-                                            f["f"] = fh_ignoring.read()
+                                            yield {**f, "s_name": s_name, "f": fh_ignoring.read()}
                                     except Exception as e:
                                         logger.debug(f"Still couldn't read file: {f['fn']}\n{e}")
-                                        f["f"] = None
+                                        yield {**f, "s_name": s_name, "f": None}
                                     finally:
                                         fh.close()
-                                yield f
+                                else:
+                                    yield {**f, "s_name": s_name, "f": str(contents)}
                 except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
                     logger.debug(f"Couldn't open filehandle when returning file: {f['fn']}\n{e}")
-                    f["f"] = None
+                    yield {**f, "s_name": s_name, "f": None}
             else:
-                yield f
+                yield {**f, "s_name": s_name, "f": None}
 
     def add_section(
         self,
-        name=None,
-        anchor=None,
-        description="",
-        comment="",
-        helptext="",
-        content_before_plot="",
-        plot: Optional[Union[Plot, str]] = None,
-        content="",
-        autoformat=True,
-        autoformat_type="markdown",
+        name: Optional[str] = None,
+        anchor: Optional[Union[str, Anchor]] = None,
+        id: Optional[Union[str, SectionId]] = None,
+        description: str = "",
+        comment: str = "",
+        helptext: str = "",
+        content_before_plot: str = "",
+        plot: Optional[Union[Plot[Any, Any], str]] = None,
+        content: str = "",
+        autoformat: bool = True,
+        autoformat_type: str = "markdown",
+        statuses: Optional[Dict[Literal["pass", "warn", "fail"], List[str]]] = None,
     ):
-        """Add a section to the module report output"""
+        """Add a section to the module report output
 
-        # Default anchor
-        if anchor is None:
+        Args:
+            name: Title of the section. If not specified, the section will be untitled.
+            anchor: HTML anchor ID for the section. Auto-generated from `id` if not specified.
+            id: Section identifier for configuration. Auto-generated from `name` or module anchor if not specified.
+            description: Descriptive text shown at the top of the section, below the title.
+            comment: User-configurable comment text (can be set in MultiQC config).
+            helptext: Additional help text shown in a collapsible panel.
+            content_before_plot: HTML content to insert before any plot.
+            plot: A plot object or HTML string to display in the section.
+            content: HTML content to display in the section (shown after plot if both are provided).
+            autoformat: If True, format description/comment/helptext as markdown (default: True).
+            autoformat_type: Format type for autoformat, either "markdown" or "html" (default: "markdown").
+            statuses: Optional dict with keys "pass", "warn", "fail" containing lists of sample names.
+                      When provided, displays a status progress bar showing sample pass/warn/fail counts.
+                      Can be disabled globally or per-section via `section_status_checks` config.
+        """
+        if id is None and anchor is not None:
+            id = str(anchor)
+
+        if anchor is None and id is not None:
+            anchor = str(id)
+
+        if id is None:
             if name is not None:
                 nid = name.lower().strip().replace(" ", "-")
-                anchor = f"{self.anchor}-{nid}"
+                id = f"{self.anchor}-{nid}"
             else:
                 sl = len(self.sections) + 1
-                anchor = f"{self.anchor}-section-{sl}"
+                id = f"{self.anchor}-section-{sl}"
+            if anchor is None:
+                anchor = id
 
-        # Append custom module anchor to the section if set
-        if "anchor" in self.mod_cust_config:
-            anchor = f"{self.mod_cust_config['anchor']}_{anchor}"
+        assert anchor is not None
+        assert id is not None
 
-        # Sanitise anchor ID and check for duplicates
+        # Prepend custom module anchor to the section if set
+        cust_anchor = self.mod_cust_config.get("anchor")
+        if cust_anchor:
+            anchor = f"{cust_anchor}_{anchor}"
+            id = f"{cust_anchor}_{id}"
+
+        # Sanitise anchor ID and check for global duplicates
         anchor = report.save_htmlid(anchor)
 
         # Skip if user has a config to remove this module section
-        if anchor in config.remove_sections:
-            logger.debug(f"Skipping section '{anchor}' because specified in user config")
+        if str(anchor) in config.remove_sections:
+            logger.debug(f"Skipping section with anchor '{anchor}' because specified in user config")
             return
 
-        # See if we have a user comment in the config
-        if anchor in config.section_comments:
-            comment = config.section_comments[anchor]
+        # Skip if user has a config to remove this module section
+        if str(id) in config.remove_sections:
+            logger.debug(f"Skipping section with id '{id}' because specified in user config")
+            return
+
+        # See if we have a user comment in the config, but only if the section ID is different from the module ID
+        # (otherwise it's a duplicate comment)
+        if self.anchor != id and self.anchor != anchor:
+            if str(id) in config.section_comments:
+                comment = config.section_comments[str(id)]
+            elif str(anchor) in config.section_comments:
+                comment = config.section_comments[str(anchor)]
 
         # Format the content
         if autoformat:
@@ -341,28 +483,132 @@ class BaseMultiqcModule:
         comment = comment.strip()
         helptext = helptext.strip()
 
+        # Generate status bar HTML if status data is provided
+        status_bar_html = ""
+        if statuses is not None and self._should_add_status_bar(str(id)):
+            status_bar_html = self._generate_status_bar_html(statuses, str(anchor))
+
         section = Section(
-            name=name,
-            anchor=anchor,
+            name=name or "",
+            anchor=Anchor(anchor),
+            id=SectionId(id),
             description=description,
             module=self.name,
+            module_anchor=self.anchor,
+            module_info=self.info,
             comment=comment,
             helptext=helptext,
             content_before_plot=content_before_plot,
             content=content,
-            print_section=any([description, comment, helptext, content_before_plot, plot, content]),
+            print_section=any([content_before_plot, plot, content]),
+            status_bar_html=status_bar_html,
         )
 
         if plot is not None:
             if isinstance(plot, Plot):
-                section.plot_id = plot.id
+                section.plot_anchor = plot.anchor
                 # separately keeping track of Plot objects to be rendered further
-                report.plot_by_id[plot.id] = plot
-            elif isinstance(plot, str):
+                report.plot_by_id[plot.anchor] = plot
+            else:  # str
                 section.plot = plot
 
         # self.sections is passed into Jinja template:
         self.sections.append(section)
+
+    def _should_add_status_bar(self, section_id: str) -> bool:
+        """
+        Check if status bar should be added based on config.section_status_checks.
+
+        Returns True if enabled (default), False if disabled.
+        """
+        # Check if there's a config for this module
+        module_config = config.section_status_checks.get(self.anchor)
+
+        if module_config is None:
+            # No config = enabled by default
+            return True
+
+        if isinstance(module_config, bool):
+            # Boolean config applies to all sections
+            return module_config
+
+        # Dict config - check for this specific section
+        return module_config.get(section_id, True)  # Default True if section not specified
+
+    def _generate_status_bar_html(
+        self, status: Dict[Literal["pass", "warn", "fail"], List[str]], section_anchor: str
+    ) -> str:
+        """
+        Generate HTML for status bar with pass/warn/fail counts.
+
+        Args:
+            status: Dict with keys "pass", "warn", "fail" containing lists of sample names
+            section_anchor: The anchor ID for this section
+
+        Returns:
+            HTML string containing progress bar and embedded JSON data
+        """
+        # Count samples per status
+        pass_samples = status.get("pass", [])
+        warn_samples = status.get("warn", [])
+        fail_samples = status.get("fail", [])
+
+        total = len(pass_samples) + len(warn_samples) + len(fail_samples)
+        if total == 0:
+            return ""
+
+        # Calculate percentages
+        pass_pct = (len(pass_samples) / total) * 100
+        warn_pct = (len(warn_samples) / total) * 100
+        fail_pct = (len(fail_samples) / total) * 100
+
+        # Build sample status dict for JavaScript
+        sample_statuses = {}
+        for sample in pass_samples:
+            sample_statuses[sample] = "pass"
+        for sample in warn_samples:
+            sample_statuses[sample] = "warn"
+        for sample in fail_samples:
+            sample_statuses[sample] = "fail"
+
+        # Generate progress bar HTML
+        html = f'''
+    <div class="mqc-status-progress-wrapper" data-module-key="{self.anchor.replace("-", "_")}" data-section-key="{section_anchor}">
+        <div class="progress-stacked mqc-status-progress">'''
+
+        if len(pass_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(pass_samples)} / {total} samples passed"
+                 aria-valuenow="{len(pass_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {pass_pct}%" title="{len(pass_samples)}&nbsp;/&nbsp;{total} samples passed">
+                <div class="progress-bar bg-success">{len(pass_samples)}</div>
+            </div>'''
+
+        if len(warn_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(warn_samples)} / {total} samples with warnings"
+                 aria-valuenow="{len(warn_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {warn_pct}%" title="{len(warn_samples)}&nbsp;/&nbsp;{total} samples with warnings">
+                <div class="progress-bar bg-warning">{len(warn_samples)}</div>
+            </div>'''
+
+        if len(fail_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(fail_samples)} / {total} samples failed"
+                 aria-valuenow="{len(fail_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {fail_pct}%" title="{len(fail_samples)}&nbsp;/&nbsp;{total} samples failed">
+                <div class="progress-bar bg-danger">{len(fail_samples)}</div>
+            </div>'''
+
+        html += """
+        </div>
+    </div>"""
+
+        # Add embedded JSON data for JavaScript
+        json_data = json.dumps([self.anchor.replace("-", "_"), section_anchor, sample_statuses])
+        html += f'\n    <script type="application/json" class="mqc-status-data">{json_data}</script>'
+
+        return html
 
     @staticmethod
     def _clean_fastq_pair(r1: str, r2: str) -> Optional[str]:
@@ -391,16 +637,229 @@ class BaseMultiqcModule:
 
         return None
 
+    def groups_for_sample(self, s_name: SampleName) -> Tuple[SampleGroup, Optional[str]]:
+        """
+        Takes a sample name and returns a trimmed name and groups it's assigned to.
+        based on the patterns in config.sample_merge_groups.
+        """
+        if not config.table_sample_merge:
+            return SampleGroup(s_name), None
+
+        matched_label: Optional[str] = None
+        grouping_exts: List[CleanPatternT]
+        group_name = SampleGroup(s_name)
+        for label, grouping_exts in config.table_sample_merge.items():
+            if isinstance(grouping_exts, (str, dict)):
+                grouping_exts = [grouping_exts]
+            if grouping_exts:
+                s_name_without_ext = SampleName(
+                    self._clean_s_name(
+                        s_name,
+                        fn_clean_exts=grouping_exts,
+                        fn_clean_trim=[],
+                        prepend_dirs=False,
+                    )
+                )
+                if s_name_without_ext != s_name:  # matched the label
+                    matched_label = label
+                    # Clean the rest of the name
+                    group_name = SampleGroup(
+                        # Leaving out fn_clean_exts and fn_clean_trim, so the default values are used, to make sure
+                        # all default extentions are trimmed after we trimmed the groupping pattern.
+                        self._clean_s_name(
+                            s_name_without_ext,
+                            prepend_dirs=False,
+                        )
+                    )
+                    break
+
+        return group_name, matched_label
+
+    def group_samples_names(
+        self, samples: Iterable[SampleName]
+    ) -> Dict[SampleGroup, List[Tuple[Optional[str], SampleName, SampleName]]]:
+        """
+        Group sample name according to a named set of patterns defined in
+        the config.sample_merge_groups dictionary.
+        :param samples: sample names
+        :return: a dict where the keys are group names, and the values are lists of tuples,
+            of cleaned base names according to the cleaning rules and the original sample names
+        """
+        group_by_label: Dict[Optional[str], List[Tuple[SampleGroup, SampleName]]] = defaultdict(list)
+        for original_name in sorted(samples):
+            group_name, label = self.groups_for_sample(original_name)
+            group_by_label[label].append((group_name, original_name))
+
+        group_by_merged_name: Dict[SampleGroup, List[Tuple[Optional[str], SampleName]]] = defaultdict(list)
+        for label, group in group_by_label.items():
+            for group_name, original_name in group:
+                group_by_merged_name[group_name].append((label, original_name))
+
+        # Extend sample names in non-trivial groups with the group label
+        return {
+            group_name: [
+                (
+                    label,
+                    SampleName(group_name) if (len(group) == 1 or not label) else SampleName(group_name + " " + label),
+                    original_name,
+                )
+                for (label, original_name) in group
+            ]
+            for group_name, group in group_by_merged_name.items()
+        }
+
+    def group_samples_and_average_metrics(
+        self,
+        data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
+        grouping_config: SampleGroupingConfig,
+    ) -> Dict[SampleGroup, List[InputRow]]:
+        """
+        Group samples and merges numeric metrics by averaging them, optionally normalizing using
+        `normalization_metric_name`
+        """
+
+        rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
+        for g_name, labels_s_names in self.group_samples_names([SampleName(s) for s in data_by_sample.keys()]).items():
+            if len(labels_s_names) == 0:
+                continue
+
+            # We do not want "merged sample" clash with other real samples if the group is non-trivial,
+            # so appending an ending to the "merged sample" name:
+            if len(labels_s_names) > 1 and SampleName(g_name) in data_by_sample:
+                g_name = SampleGroup(f"{g_name} (grouped)")
+
+            # Just a single row for a trivial group
+            if len(labels_s_names) == 1:
+                _, s_name, original_s_name = labels_s_names[0]
+                rows_by_grouped_samples[g_name] = [InputRow(sample=s_name, data=data_by_sample[original_s_name])]
+                continue
+
+            merged_row = InputRow(sample=SampleName(g_name), data={})
+
+            # Init a dictionary of all cols that would be summed to serve as weights
+            sum_by_col: Dict[ColumnKey, float] = dict()
+
+            if grouping_config.cols_to_weighted_average:
+                for _, weight_col_key in grouping_config.cols_to_weighted_average:
+                    sum_by_col[weight_col_key] = 0
+
+                # Calculate the weights
+                for col in sum_by_col.keys():
+                    for _, _, original_s_name in labels_s_names:
+                        val = data_by_sample[original_s_name][col]
+                        if isinstance(val, int) or isinstance(val, float):
+                            sum_by_col[col] += float(val)
+
+                for col, weight_col in grouping_config.cols_to_weighted_average:
+                    weight = sum_by_col[weight_col]
+                    if weight > 0:
+                        merged_row.data[col] = (
+                            sum(
+                                [
+                                    float(data_by_sample[original_s_name][col])
+                                    * float(data_by_sample[original_s_name][weight_col])
+                                    if (
+                                        isinstance(data_by_sample[original_s_name][col], float)
+                                        or isinstance(data_by_sample[original_s_name][col], int)
+                                    )
+                                    and (
+                                        isinstance(data_by_sample[original_s_name][weight_col], float)
+                                        or isinstance(data_by_sample[original_s_name][weight_col], int)
+                                    )
+                                    else 0
+                                    for _, _, original_s_name in labels_s_names
+                                ]
+                            )
+                            / weight
+                        )
+
+            if grouping_config.cols_to_average:
+                for col in grouping_config.cols_to_average:
+                    merged_row.data[col] = sum(
+                        [
+                            float(data_by_sample[original_s_name][col])
+                            if (
+                                isinstance(data_by_sample[original_s_name][col], float)
+                                or isinstance(data_by_sample[original_s_name][col], int)
+                            )
+                            else 0
+                            for _, _, original_s_name in labels_s_names
+                        ]
+                    ) / len(labels_s_names)
+
+            if grouping_config.cols_to_sum:
+                for col in grouping_config.cols_to_sum:
+                    if col in sum_by_col:
+                        merged_row.data[col] = sum_by_col[col]
+                    else:
+                        merged_row.data[col] = sum(
+                            [
+                                float(data_by_sample[original_s_name][col])
+                                if (
+                                    isinstance(data_by_sample[original_s_name][col], float)
+                                    or isinstance(data_by_sample[original_s_name][col], int)
+                                )
+                                else 0
+                                for _, _, original_s_name in labels_s_names
+                            ]
+                        )
+
+            # Add count of fail statuses
+            if grouping_config.extra_functions:
+                for fn in grouping_config.extra_functions:
+                    fn(merged_row, labels_s_names)
+
+            rows_by_grouped_samples[g_name] = [merged_row] + [
+                InputRow(sample=s_name, data=data_by_sample[original_s_name])
+                for _, s_name, original_s_name in labels_s_names
+            ]
+
+        return rows_by_grouped_samples
+
     def clean_s_name(
         self,
         s_name: Union[str, List[str]],
-        f: Optional[Union[Dict, str]] = None,
+        f: Union[LoadedFileDict[Any], FileDict],
         root: Optional[str] = None,
         filename: Optional[str] = None,
-        search_pattern_key: Optional[str] = None,
     ) -> str:
         """
         Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
+        This is a user-facing version of _clean_s_name and the one that should be called in modules on raw sample names,
+        because it gurantees the config options like config.prepend_dirs, config.fn_clean_exts, config.fn_clean_trim.
+
+        search_pattern_key: the search pattern key that this file matched
+        """
+        cleaned_name = self._clean_s_name(
+            s_name=s_name,
+            f=f,
+            root=root or f["root"],
+            filename=filename or f["fn"],
+            search_pattern_key=f["sp_key"],
+        )
+        # Add to the list of all used sample names in the report, to support anonymization for AI requests
+        report.sample_names.append(SampleName(cleaned_name))
+        return cleaned_name
+
+    def _clean_s_name(
+        self,
+        s_name: Union[str, List[str]],
+        f: Optional[Union[LoadedFileDict[Any], FileDict]] = None,
+        root: Optional[str] = None,
+        filename: Optional[str] = None,
+        search_pattern_key: Optional[str] = None,
+        fn_clean_exts: Optional[List[Union[str, Dict[str, Union[str, List[str]]]]]] = None,
+        fn_clean_trim: Optional[List[str]] = None,
+        prepend_dirs: Optional[bool] = None,
+    ) -> str:
+        """
+        Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
+
+        search_pattern_key: the search pattern key that this file matched
+        fn_clean_exts: patterns to use for cleaning (default: config.fn_clean_exts)
+        fn_clean_trim: patterns to use for trimming (default: config.fn_clean_trim)
+        prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs).
+            requires `f` to be set.
         """
         if isinstance(s_name, list):
             if len(s_name) == 0:
@@ -409,7 +868,16 @@ class BaseMultiqcModule:
             # Extract a sample name from a list of file names (for example, FASTQ pairs).
             # Each name is cleaned separately first:
             clean_names = [
-                self.clean_s_name(sn, f=f, root=root, filename=filename, search_pattern_key=search_pattern_key)
+                self._clean_s_name(
+                    sn,
+                    f=f,
+                    root=root,
+                    filename=filename,
+                    search_pattern_key=search_pattern_key,
+                    fn_clean_exts=fn_clean_exts,
+                    fn_clean_trim=fn_clean_trim,
+                    prepend_dirs=prepend_dirs,
+                )
                 for sn in s_name
             ]
             if len(set(clean_names)) == 1:
@@ -425,16 +893,11 @@ class BaseMultiqcModule:
             # Couldn't clean as FASTQ. Just concatenating the clean names.
             return "_".join(clean_names)
 
-        sname: str = cast(str, s_name)
-        sname_original = sname
-
-        # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
-        if isinstance(f, str):
-            root = f
-            f = None
+        sn = SampleNameMeta(original_name=SampleName(s_name))
+        trimmed_name: SampleName = sn.original_name
 
         # Set string variables from f if it was a dict from find_log_files()
-        if isinstance(f, dict):
+        if f is not None:
             if "root" in f and root is None:
                 root = f["root"]
             if "fn" in f and filename is None:
@@ -444,24 +907,40 @@ class BaseMultiqcModule:
 
         # For modules setting s_name from file contents, set s_name back to the filename
         # (if wanted in the config)
-        if filename is not None and (
-            config.use_filename_as_sample_name is True
-            or (
-                isinstance(config.use_filename_as_sample_name, list)
-                and search_pattern_key is not None
-                and search_pattern_key in config.use_filename_as_sample_name
-            )
-        ):
-            sname = filename
+        if filename is not None:
+            should_use_filename = False
+
+            # Check if we should use filename for this specific module/pattern
+            if isinstance(config.use_filename_as_sample_name, list):
+                # Check for module anchor (e.g., "verifybamid")
+                if self.anchor in config.use_filename_as_sample_name:
+                    should_use_filename = True
+                # Check for search pattern key (e.g., "verifybamid/selfsm")
+                elif search_pattern_key is not None and search_pattern_key in config.use_filename_as_sample_name:
+                    should_use_filename = True
+            # Check if we should use filename for all modules
+            elif config.use_filename_as_sample_name is True:
+                should_use_filename = True
+
+            if should_use_filename:
+                trimmed_name = SampleName(filename)
 
         # if s_name comes from file contents, it may have a file path
         # For consistency with other modules, we keep just the basename
-        sname = os.path.basename(sname)
+        trimmed_name = SampleName(os.path.basename(trimmed_name))
+
+        if fn_clean_exts is None:
+            fn_clean_exts = config.fn_clean_exts
+        if fn_clean_trim is None:
+            fn_clean_trim = config.fn_clean_trim
+        if prepend_dirs is None:
+            prepend_dirs = config.prepend_dirs
 
         # Prepend sample name with directory
-        if config.prepend_dirs:
+        if prepend_dirs:
             sep = config.prepend_dirs_sep
-            dirs = [d.strip() for d in (Path(root).parts if root else []) if d.strip() != ""]
+            parts: Tuple[str, ...] = Path(root).parts if root else ()
+            dirs: List[str] = [d.strip() for d in parts if d.strip() != ""]
             if config.prepend_dirs_depth != 0:
                 d_idx = config.prepend_dirs_depth * -1
                 if config.prepend_dirs_depth > 0:
@@ -469,11 +948,19 @@ class BaseMultiqcModule:
                 else:
                     dirs = dirs[:d_idx]
             if len(dirs) > 0:
-                sname = f"{sep.join(dirs)}{sep}{sname}"
+                trimmed_name = SampleName(f"{sep.join(dirs)}{sep}{trimmed_name}")
 
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
-            for ext in config.fn_clean_exts:
+            _ext: Union[str, Dict[str, Union[str, List[str]]]]
+            ext: Dict[str, Union[str, List[str]]]
+            for _ext in fn_clean_exts:
+                # Go through different filter types
+                if isinstance(_ext, str):
+                    ext = {"type": "truncate", "pattern": _ext}
+                else:
+                    ext = _ext
+
                 # Check if this config is limited to a module
                 if "module" in ext:
                     if isinstance(ext["module"], str):
@@ -481,40 +968,39 @@ class BaseMultiqcModule:
                     if not any([m == self.anchor for m in ext["module"]]):
                         continue
 
-                # Go through different filter types
-                if isinstance(ext, str):
-                    ext = {"type": "truncate", "pattern": ext}
+                pattern = ext.get("pattern", "")
+                assert isinstance(pattern, str)
                 if ext.get("type") == "truncate":
-                    sname = sname.split(ext["pattern"], 1)[0]
+                    trimmed_name = SampleName(str(trimmed_name).split(pattern, 1)[0])
                 elif ext.get("type") in ("remove", "replace"):
                     if ext["type"] == "replace":
                         logger.warning(
                             "use 'config.fn_clean_sample_names.remove' instead "
                             "of 'config.fn_clean_sample_names.replace' [deprecated]"
                         )
-                    sname = sname.replace(ext["pattern"], "")
+                    trimmed_name = SampleName(str(trimmed_name).replace(pattern, ""))
                 elif ext.get("type") == "regex":
-                    sname = re.sub(ext["pattern"], "", sname)
+                    trimmed_name = SampleName(re.sub(pattern, "", str(trimmed_name)))
                 elif ext.get("type") == "regex_keep":
-                    match = re.search(ext["pattern"], sname)
-                    sname = match.group() if match else sname
+                    match = re.search(pattern, str(trimmed_name))
+                    trimmed_name = SampleName(match.group()) if match else trimmed_name
                 elif ext.get("type") is None:
                     logger.error(f'config.fn_clean_exts config was missing "type" key: {ext}')
                 else:
-                    logger.error(f"Unrecognised config.fn_clean_exts type: {ext.get('type')}")
+                    logger.error(f"Unrecognised sample name cleaning pattern: {ext.get('type')}")
             # Trim off characters at the end of names
-            for chrs in config.fn_clean_trim:
-                if sname.endswith(chrs):
-                    sname = sname[: -len(chrs)]
-                if sname.startswith(chrs):
-                    sname = sname[len(chrs) :]
+            for characters in fn_clean_trim:
+                if trimmed_name.endswith(characters):
+                    trimmed_name = SampleName(str(trimmed_name)[: -len(characters)])
+                if trimmed_name.startswith(characters):
+                    trimmed_name = SampleName(str(trimmed_name)[len(characters) :])
 
         # Remove trailing whitespace
-        sname = sname.strip()
+        trimmed_name = SampleName(str(trimmed_name).strip())
 
         # If we cleaned back to an empty string, just use the original value
-        if sname == "":
-            sname = sname_original
+        if trimmed_name == "":
+            trimmed_name = sn.original_name
 
         # Do any hard replacements that are set with --replace-names
         if config.sample_names_replace:
@@ -523,108 +1009,194 @@ class BaseMultiqcModule:
                     # Skip if we're looking for exact matches only
                     if config.sample_names_replace_exact:
                         # Simple strings
-                        if not config.sample_names_replace_regex and sname != s_name_search:
+                        if not config.sample_names_replace_regex and str(trimmed_name) != s_name_search:
                             continue
                         # regexes
-                        if config.sample_names_replace_regex and not re.fullmatch(s_name_search, sname):
+                        if config.sample_names_replace_regex and not re.fullmatch(s_name_search, trimmed_name):
                             continue
                     # Replace - regex
                     if config.sample_names_replace_regex:
-                        sname = re.sub(s_name_search, s_name_replace, sname)
+                        trimmed_name = SampleName(re.sub(s_name_search, s_name_replace, str(trimmed_name)))
                     # Replace - simple string
                     else:
                         # Complete name swap
                         if config.sample_names_replace_complete:
-                            if s_name_search in sname:
-                                sname = s_name_replace
+                            if s_name_search in trimmed_name:
+                                trimmed_name = SampleName(s_name_replace)
                         # Partial substring replace
                         else:
-                            sname = sname.replace(s_name_search, s_name_replace)
+                            trimmed_name = SampleName(str(trimmed_name).replace(s_name_search, s_name_replace))
                 except re.error as e:
                     logger.error(f"Error with sample name replacement regex: {e}")
 
-        return sname
+        sn.trimmed_name = trimmed_name
+        return trimmed_name
 
-    def ignore_samples(self, data):
+    def ignore_samples(
+        self,
+        data: Dict[SampleNameT, DataT],
+        sample_names_ignore: Optional[List[str]] = None,
+        sample_names_ignore_re: Optional[List[str]] = None,
+    ) -> Dict[SampleNameT, DataT]:
         """Strip out samples which match `sample_names_ignore`"""
         try:
-            if isinstance(data, dict):
-                newdata = dict()
-            else:
+            if not isinstance(data, dict):  # type: ignore
                 return data
+            new_data: Dict[SampleNameT, DataT] = dict()
             for s_name, v in data.items():
-                if not self.is_ignore_sample(s_name):
-                    newdata[s_name] = v
-            return newdata
+                if not self.is_ignore_sample(s_name, sample_names_ignore, sample_names_ignore_re):
+                    new_data[s_name] = v
+            return new_data
         except (TypeError, AttributeError):
             return data
 
-    def is_ignore_sample(self, s_name):
+    @staticmethod
+    def is_ignore_sample(
+        s_name: Union[str, SampleName],
+        sample_names_ignore: Optional[List[str]] = None,
+        sample_names_ignore_re: Optional[List[str]] = None,
+    ) -> bool:
         """Should a sample name be ignored?"""
-        glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in config.sample_names_ignore)
-        re_match = any(re.match(sn, s_name) for sn in config.sample_names_ignore_re)
+        sample_names_ignore = sample_names_ignore or config.sample_names_ignore
+        sample_names_ignore_re = sample_names_ignore_re or config.sample_names_ignore_re
+        sample_names_only_include = config.sample_names_only_include
+        sample_names_only_include_re = config.sample_names_only_include_re
+
+        if sample_names_only_include:
+            glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in sample_names_only_include)
+            if not glob_match:
+                return True
+        if sample_names_only_include_re:
+            re_match = any(re.match(sn, s_name) for sn in sample_names_only_include_re)
+            if not re_match:
+                return True
+
+        glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in sample_names_ignore)
+        re_match = any(re.match(sn, s_name) for sn in sample_names_ignore_re)
         return glob_match or re_match
 
-    def general_stats_addcols(self, data, headers=None, namespace=None):
+    def general_stats_addcols(
+        self,
+        data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
+        headers: Optional[
+            Union[
+                Mapping[ColumnKey, ColumnDict],
+                Mapping[ColumnKey, Dict[str, Any]],
+                Mapping[str, ColumnDict],
+                Mapping[str, Dict[str, Any]],
+            ]
+        ] = None,
+        namespace: Optional[str] = None,
+        group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
+    ):
         """Helper function to add to the General Statistics variable.
         Adds to report.general_stats and does not return anything. Fills
         in required config variables if not supplied.
-        :param data: A dict with the data. First key should be sample name,
-                     then the data key, then the data.
+        :param data_by_sample: A dict with the data. Key should be sample name, the data can be a key-value dict.
+                     Or, for grouped samples, the key is the group name, and the data is a list of tuples with
+                     the first element being the sample name in the group, and the second a key-value dict.
         :param headers: Dict with information for the headers,
                         such as colour scales, min and max values etc.
                         See docs/writing_python.md for more information.
         :param namespace: Append to the module name in the table column description.
                           Can be e.g. a submodule name.
+        :param group_samples_config: Configuration for grouping samples.
         :return: None
         """
-        if headers is None:
-            headers = {}
-        # Deepish copy of headers so that we can modify it in place
-        headers = {k: v.copy() for k, v in headers.items()}
+        if self.skip_generalstats:
+            return
+
+        rows_by_group: Dict[SampleGroup, List[InputRow]]
+        if config.table_sample_merge:
+            rows_by_group = self.group_samples_and_average_metrics(
+                data_by_sample,
+                group_samples_config,
+            )
+        else:
+            rows_by_group = {
+                SampleGroup(sname): [InputRow(sample=SampleName(sname), data=data)]
+                for sname, data in data_by_sample.items()
+            }
+
+        _headers: Dict[ColumnKey, ColumnDict] = {}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
-            hs = set()
-            for d in data.values():
-                hs.update(d.keys())
-            headers = dict()
-            for k in sorted(hs):
-                headers[k] = dict()
+            column_ids: Set[ColumnKey] = set()
+            for rows in rows_by_group.values():
+                for row in rows:
+                    column_ids.update(row.data.keys())
+            for col_id in sorted(column_ids):
+                _headers[col_id] = {}
+        else:
+            # Make a copy
+            _headers = {ColumnKey(col_id): cast(ColumnDict, col_dict.copy()) for col_id, col_dict in headers.items()}
 
         # Add the module name to the description if not already done
-        keys = headers.keys()
-        for k in keys:
+        for col_id in _headers.keys():
             # Prepend the namespace displayed in the table with the module name
-            namespace = headers[k].get("namespace", namespace)
-            headers[k]["namespace"] = self.name
+            _col = _headers[col_id]
+            namespace = _col["namespace"] if "namespace" in _col else namespace
+            _headers[col_id]["namespace"] = self.name
             if namespace:
-                headers[k]["namespace"] = self.name + ": " + namespace
-            if "description" not in headers[k]:
-                headers[k]["description"] = headers[k].get("title", k)
+                _headers[col_id]["namespace"] = self.name + ": " + str(namespace)
+            if "description" not in _headers[col_id]:
+                _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
+
+            # Add grouping information to description if table_sample_merge is enabled
+            if config.table_sample_merge:
+                desc = _headers[col_id].get("description", "")
+                if group_samples_config.cols_to_weighted_average and any(
+                    col_id == c for c, _ in group_samples_config.cols_to_weighted_average
+                ):
+                    desc += " (weighted average for grouped samples)"
+                elif group_samples_config.cols_to_average and col_id in group_samples_config.cols_to_average:
+                    desc += " (averaged for grouped samples)"
+                elif group_samples_config.cols_to_sum and col_id in group_samples_config.cols_to_sum:
+                    desc += " (summed for grouped samples)"
+                _headers[col_id]["description"] = desc
+
+        # Add incremental suffix to SectionKey(self.anchor) until it's unique
+        anchor = SectionKey(self.anchor)
+        suffix = 2
+        while anchor in report.general_stats_data:
+            suffix += 1
+            anchor = SectionKey(f"{self.anchor}_{suffix}")
 
         # Append to report.general_stats for later assembly into table
-        report.general_stats_data.append(data)
-        report.general_stats_headers.append(headers)
+        report.general_stats_data[anchor] = rows_by_group
+        report.general_stats_headers[anchor] = _headers  # type: ignore
 
-    def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
-        if s_name is not None and self.is_ignore_sample(s_name):
+    def add_data_source(
+        self,
+        f: Optional[LoadedFileDict[Any]] = None,
+        s_name: Optional[str] = None,
+        path: Optional[Union[str, Path]] = None,
+        module: Optional[str] = None,
+        section: Optional[str] = None,
+    ):
+        if f is None and path is None:
+            lint_error(f"add_data_source needs f or path to be set, got: {locals()}")
             return
-        try:
-            if module is None:
-                module = self.name
-            if section is None:
-                section = "all_sections"
-            if s_name is None:
-                s_name = f["s_name"]
-            if source is None:
-                source = os.path.abspath(os.path.join(f["root"], f["fn"]))
-            report.data_sources[module][section][s_name] = source
-        except AttributeError:
-            logger.warning(f"Tried to add data source for {self.name}, but was missing fields data")
+        if module is None:
+            module = self.name
+        if section is None:
+            section = "all_sections"
+        if s_name is None and f is not None:
+            s_name = f["s_name"]
+        if s_name is None:
+            return
+        if self.is_ignore_sample(s_name):
+            return
+        if path is None and f is not None:
+            path = os.path.abspath(os.path.join(f["root"], f["fn"]))
+        report.data_sources[module][section][s_name] = str(path)
 
     def add_software_version(
-        self, version: Optional[str] = None, sample: Optional[str] = None, software_name: Optional[str] = None
+        self,
+        version: Optional[str] = None,
+        sample: Optional[str] = None,
+        software_name: Optional[str] = None,
     ):
         """Save software versions for module."""
         # Don't add if version is None. This allows every module to call this function
@@ -661,7 +1233,7 @@ class BaseMultiqcModule:
         group_name = self.name
         report.software_versions[group_name][software_name] = [v for _, v in self.versions[software_name]]
 
-    def write_data_file(self, data, fn, sort_cols=False, data_format=None):
+    def write_data_file(self, data: Any, fn: str, sort_cols: bool = False, data_format: Optional[str] = None):
         """Saves raw data to a dictionary for downstream use, then redirects
         to report.write_data_file() to create the file in the report directory"""
 
@@ -672,32 +1244,93 @@ class BaseMultiqcModule:
         # Generate a unique filename if the file already exists (running module multiple times)
         i = 1
         base_fn = fn
-        while fn in report.saved_raw_data:
+        while fn in report.saved_raw_data_keys:
             fn = f"{base_fn}_{i}"
             i += 1
 
-        if config.preserve_module_raw_data:
-            report.saved_raw_data[fn] = data
-            # Keep also in the module instance, so it's possible to map back data to specific module
-            self.__saved_raw_data[fn] = data
+        # To map back keys data to specific module
+        report.saved_raw_data_keys[fn] = None
 
-        # Save the file
+        # Save the file (usualy TSV)
         report.write_data_file(data, fn, sort_cols, data_format)
 
-    ##################################################
-    #### DEPRECATED FORWARDERS
-    def plot_bargraph(self, data, cats=None, pconfig=None):
-        """Depreciated function. Forwards to new location."""
-        from multiqc.plots import bargraph
+        # Also write data to JSON to later load into multiqc_data.json
+        if config.data_dump_file_write_raw:
+            report.write_data_file(data, fn, sort_cols, "json")
 
-        if pconfig is None:
-            pconfig = {}
-        return bargraph.plot(data, cats, pconfig)
+        # Also save the data to the module instance to enable `get_module_data()` in interactive sessions
+        if config.preserve_module_raw_data:
+            if self.__saved_raw_data is None:
+                self.__saved_raw_data = dict()
+            self.__saved_raw_data[fn] = data
+            report.saved_raw_data[fn] = data
 
-    def plot_xy_data(self, data, pconfig=None):
-        """Depreciated function. Forwards to new location."""
-        from multiqc.plots import linegraph
+    def merge(self, m: "BaseMultiqcModule"):
+        """
+        Running module on a new set of input.
+        Merging versions.
+        Plots in sections will be merged in the plotting code.
+        TODO: handle saved_raw_data if it makes sence at all. Maybe should be a breaking change.
+        """
+        if m.versions is not None:
+            if self.versions is not None:
+                self.versions.update(m.versions)
+            else:
+                self.versions = m.versions
 
-        if pconfig is None:
-            pconfig = {}
-        return linegraph.plot(data, pconfig)
+    def get_general_stats_headers(
+        self,
+        all_headers: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
+        default_shown: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+        default_hidden: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
+        sp_key: Optional[str] = None,
+    ) -> Dict[ColumnKey, ColumnDict]:
+        """
+        Get general stats columns for a module based on user configuration.
+
+        This function checks if the module has configuration in config.general_stats_columns
+        and returns the columns accordingly. It supports custom column settings
+        and an exclusion list.
+
+        Args:
+            default_headers: Default dictionary of headers the module can add
+            all_headers: Dictionary of other possible headers the module can add
+            default_hidden_keys: Dictionary with keys and boolean values for default
+                            visibility settings. If not provided, all columns
+                            are shown by default.
+
+        Returns:
+            Dictionary of headers to add to general stats
+        """
+        # Get general stats config for this module
+        module_config: Dict[ColumnKey, ColumnDict] = {}
+        for k, v in config.general_stats_columns.items():
+            if (sp_key and k == sp_key) or k.split("/")[0] in [self.id, self.name]:
+                module_config = cast(Dict[ColumnKey, ColumnDict], v.get("columns", {}))
+                break
+        general_stats_headers: Dict[ColumnKey, ColumnDict] = {}
+
+        # Check if we have a valid config for this module
+        if module_config:
+            # Update default columns with custom config
+            for k in all_headers:
+                if k in module_config:
+                    h = all_headers[ColumnKey(k)].copy()
+                    h.update(module_config[ColumnKey(k)] or {})
+                    general_stats_headers[ColumnKey(k)] = h
+            # Add custom columns that are not in default headers
+            for sp_key, col_conf in module_config.items():
+                if sp_key not in all_headers:
+                    general_stats_headers[ColumnKey(sp_key)] = col_conf
+
+        elif all_headers:
+            # Default behavior - use all headers
+            default_shown = default_shown or [k for k, v in all_headers.items() if not v.get("hidden", False)]
+            default_hidden = default_hidden or list(set(all_headers.keys()) - set(default_shown))
+            for k in all_headers:
+                if k in default_hidden or k in default_shown:
+                    general_stats_headers[ColumnKey(k)] = all_headers[ColumnKey(k)].copy()
+                    general_stats_headers[ColumnKey(k)]["hidden"] = k in default_hidden
+
+        # Cast to satisfy mypy - this is safe as the structure is identical
+        return general_stats_headers

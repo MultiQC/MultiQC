@@ -1,9 +1,10 @@
 from itertools import chain
+from typing import Any, Dict, List, Set
 
 from multiqc.plots import linegraph
 
 
-def plot_qhist(samples, file_type, **plot_args):
+def plot_qhist(samples: Dict[str, Any], file_type: str, **plot_args: Any):
     """Create line graph plot of histogram data for BBMap 'qhist' output.
 
     The 'samples' parameter could be from the bbmap mod_data dictionary:
@@ -13,7 +14,7 @@ def plot_qhist(samples, file_type, **plot_args):
     sumy = sum([int(samples[sample]["data"][x][0]) for sample in samples for x in samples[sample]["data"]])
 
     cutoff = sumy * 0.999
-    all_x = set()
+    all_x: Set[int] = set()
     for item in sorted(chain(*[samples[sample]["data"].items() for sample in samples])):
         all_x.add(item[0])
         cutoff -= item[1][0]
@@ -23,18 +24,20 @@ def plot_qhist(samples, file_type, **plot_args):
     else:
         xmax = max(all_x)
 
-    columns_to_plot = {
+    columns_to_plot: Dict[str, Dict[int, str]] = {
         "Linear": {0: "Read1", 3: "Read2"},
         "Logarithmic": {1: "Read1", 4: "Read2"},
         "Measured": {2: "Read1", 5: "Read2"},
     }
 
-    plot_data = []
+    plot_data: List[Dict[str, Any]] = []
     for column_type in columns_to_plot:
         plot_data.append(
             {
                 sample + "." + column_name: {
-                    x: samples[sample]["data"][x][column] if x in samples[sample]["data"] else 0 for x in all_x
+                    x: samples[sample]["data"][x][column] if x in samples[sample]["data"] else 0
+                    for x in all_x
+                    if len(samples[sample]["data"]) > x and len(samples[sample]["data"][x]) > column
                 }
                 for sample in samples
                 for column, column_name in columns_to_plot[column_type].items()

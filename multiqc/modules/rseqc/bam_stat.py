@@ -82,15 +82,13 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     if is_paired_end:
         headers = {
             "proper_pairs_percent": {
-                "title": "% Proper Pairs",
-                "description": "% Reads mapped in proper pairs",
-                "max": 100,
-                "min": 0,
+                "title": "% Proper Pairs (MAPQ>=Q)",
+                "description": "% Reads mapped in proper pairs with MAPQ >= mapq_cut (default 30).",
                 "suffix": "%",
                 "scale": "RdYlGn",
             }
         }
-        module.general_stats_addcols(bam_stat_data, headers, namespace="RSeQC: Bam Stat")
+        module.general_stats_addcols(bam_stat_data, headers, namespace="Bam Stat")
 
     # Make dot plot of counts
     pconfig = {

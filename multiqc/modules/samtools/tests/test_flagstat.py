@@ -4,7 +4,7 @@ from pathlib import Path
 import math
 import pytest
 
-from multiqc import report
+from multiqc import config, report
 from multiqc.modules.samtools import MultiqcModule
 from multiqc.utils import testing
 
@@ -20,9 +20,11 @@ def test_data_parsed(data_dir):
         path = data_subdir / path
         report.analysis_files = [path]
         report.search_files(["samtools"])
+        config.preserve_module_raw_data = True
         m = MultiqcModule()
+        assert m.saved_raw_data is not None
         assert len(m.saved_raw_data) > 0
-        assert m.clean_s_name(Path(path).name) in list(m.saved_raw_data.values())[0]
+        assert m._clean_s_name(Path(path).name) in list(m.saved_raw_data.values())[0]
 
 
 def slurp_file(data_dir, fname):

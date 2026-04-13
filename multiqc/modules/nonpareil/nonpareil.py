@@ -5,7 +5,7 @@ import numpy as np
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots.plotly.line import Series
+from multiqc.plots.linegraph import Series
 from multiqc.utils import mqc_colour
 
 
@@ -16,48 +16,10 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Since Nonpareil main output has no model information, it is necessary to run its
-    auxiliary `R` plot functions and save the `curves` object as a `JSON` file. Briefly,
-    call function `export_curve()` on object `curves` (for an example, see [snakemake wrapper](https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/nonpareil/plot.html#code)):
-
-    ```r
-    base::library("jsonlite")
-    base::message("Exporting model as JSON")
-
-    export_curve <- function(object){
-      # Extract variables
-      n <- names(attributes(object))[c(1:12,21:29)]
-      x <- sapply(n, function(v) attr(object,v))
-      names(x) <- n
-      # Extract vectors
-      n <- names(attributes(object))[13:20]
-      y <- lapply(n, function(v) attr(object,v))
-      names(y) <- n
-      curve_json <- c(x, y)
-
-      # Add model
-      if (object$has.model) {
-        # https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L330-L332
-        x_min <- 1e3
-        x_max <- signif(tail(attr(object,"x.adj"), n=1)*10, 1)
-        x.model <- exp(seq(log(x_min), log(x_max), length.out=1e3))
-        y.model <- predict(object, lr=x.model)
-        curve_json <- append(curve_json, list(x.model=x.model))
-        curve_json <- append(curve_json, list(y.model=y.model))
-      }
-
-      base::print(curve_json)
-      curve_json
-    }
-
-    export_set <- function(object){
-      y <- lapply(object$np.curves, "export_curve")
-      names(y) <- sapply(object$np.curves, function(n) n$label)
-      jsonlite::prettify(toJSON(y, auto_unbox=TRUE))
-    }
-
-    y <- export_set(curves)
-    write(y, "output.json")
+    Since Nonpareil main output has no model information, it is necessary extract the `curves` object as a `JSON` file.
+    From version `v3.5.5` this can be done with an auxiliary `R` script, briefly:
+    ```bash
+    NonpareilCurves.R --json out.json model.npo
     ```
 
     #### Module config options
@@ -377,8 +339,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         data_colors_default = mqc_colour.mqc_colour_scale().get_colours(self.plot_colours)
         data_colors = {
-            s_name: data.get("nonpareil_col", data_colors_default.pop(0))
-            for s_name, data in self.data_by_sample.items()
+            s_name: data.get("nonpareil_col", data_colors_default[i % len(data_colors_default)])
+            for i, (s_name, data) in enumerate(self.data_by_sample.items())
         }
 
         data_labels = [
@@ -401,6 +363,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if data["nonpareil_has.model"]:
                         extra_series[idx].append(
                             Series(
+                                path_in_cfg=("nonpareil-redundancy-plot extra_series",),
                                 name=s_name,
                                 pairs=[(x, y) for x, y in data["nonpareil_model"].items()],
                                 color=data_colors[s_name],

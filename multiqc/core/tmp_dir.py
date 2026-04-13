@@ -3,8 +3,6 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from multiqc.utils.util_functions import rmtree_with_retries
-
 logger = logging.getLogger(__name__)
 
 _tmp_dir: Optional[Path] = None
@@ -36,14 +34,22 @@ def data_tmp_dir() -> Path:
     return path
 
 
-def plots_tmp_dir() -> Path:
+def plots_tmp_dir(create=True) -> Path:
     """
     Temporary directory to collect plot exports from running modules before copying to the final
     destination in multiqc.core.write_results
     """
     path = get_tmp_dir() / "multiqc_plots"
-    os.makedirs(path, exist_ok=True)
+    if create:
+        os.makedirs(path, exist_ok=True)
     return path
+
+
+def parquet_file() -> Path:
+    """
+    Returns the path to the combined parquet file that contains all plot data
+    """
+    return data_tmp_dir() / "multiqc.parquet"
 
 
 def new_tmp_dir():

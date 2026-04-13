@@ -29,10 +29,7 @@ def parse_reports(module):
 
         for line in f["f"]:
             maybe_s_name = util.extract_sample_name(
-                module,
-                line,
-                f,
-                picard_tool="CollectWgsMetrics",
+                module, line, f, picard_tool="CollectWgsMetrics", sentieon_algo="WgsMetricsAlgo"
             )
             if maybe_s_name:
                 s_name = maybe_s_name
@@ -52,7 +49,7 @@ def parse_reports(module):
             if s_name is None:
                 continue
 
-            if util.is_line_right_before_table(line, picard_class="WgsMetrics"):
+            if util.is_line_right_before_table(line, picard_class="WgsMetrics", sentieon_algo="WgsMetricsAlgo"):
                 keys = f["f"].readline().strip("\n").split("\t")
                 vals = f["f"].readline().strip("\n").split("\t")
                 if len(vals) != len(keys):
@@ -73,6 +70,12 @@ def parse_reports(module):
 
             elif line.startswith("## HISTOGRAM"):
                 keys = f["f"].readline().strip("\n").split("\t")
+                assert len(keys) >= 2, (keys, f)
+                in_hist = True
+                histogram_by_sample[s_name] = dict()
+
+            elif line.startswith("coverage\thigh_quality_coverage_count"):
+                keys = line.strip("\n").split("\t")
                 assert len(keys) >= 2, (keys, f)
                 in_hist = True
                 histogram_by_sample[s_name] = dict()

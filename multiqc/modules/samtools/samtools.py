@@ -1,14 +1,14 @@
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from .stats import parse_samtools_stats
+from .ampliconclip import parse_samtools_ampliconclip
+from .coverage import parse_samtools_coverage
 from .flagstat import parse_samtools_flagstat
 from .idxstats import parse_samtools_idxstats
-from .rmdup import parse_samtools_rmdup
-from .coverage import parse_samtools_coverage
 from .markdup import parse_samtools_markdup
+from .rmdup import parse_samtools_rmdup
+from .stats import parse_samtools_stats
 
 log = logging.getLogger(__name__)
 
@@ -17,12 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
     """
     Supported commands:
 
-    - `stats`
+    - `ampliconclip`
+    - `coverage`
     - `flagstats`
     - `idxstats`
-    - `rmdup`
-    - `coverage`
     - `markdup`
+    - `rmdup`
+    - `stats`
 
     #### idxstats
 
@@ -53,6 +54,72 @@ class MultiqcModule(BaseMultiqcModule):
     samtools_idxstats_xchr: myXchr
     samtools_idxstats_ychr: myYchr
     ```
+
+    ### coverage
+
+    You can include and exclude contigs based on name or pattern.
+
+    For example, you could add the following to your MultiQC config file:
+
+
+    ```yaml
+    samtools_coverage:
+      include_contigs:
+        - "chr*"
+      exclude_contigs:
+        - "*_alt"
+        - "*_decoy"
+        - "*_random"
+        - "chrUn*"
+        - "HLA*"
+        - "chrM"
+        - "chrEBV"
+    ```
+
+    Note that exclusion supersedes inclusion for the contig filters.
+
+    If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
+
+    ```yaml
+    samtools_coverage:
+      show_excluded_debug_logs: True
+    ```
+
+    ### General Statistics Columns
+
+    You can customize which metrics from samtools modules appear in the General Statistics table.
+    For example, to show reads mapped percentage and error rate from stats module, and
+    add reads mapped from flagstat module:
+
+    ```yaml
+    general_stats_columns:
+      samtools/stats:
+        columns:
+          reads_mapped_percent:
+            title: "% Mapped"
+            description: "% Mapped reads from samtools stats"
+            hidden: false
+          error_rate:
+            title: "Error rate"
+            description: "Error rate from samtools stats"
+            hidden: false
+      samtools/flagstat:
+        columns:
+          mapped_passed:
+            title: "Flagstat Mapped"
+            description: "Reads mapped from samtools flagstat"
+            hidden: false
+    ```
+
+    Each samtools submodule has its own namespace in the configuration
+    - `samtools/ampliconclip`
+    - `samtools/coverage`
+    - `samtools/flagstats`
+    - `samtools/idxstats`
+    - `samtools/markdup`
+    - `samtools/rmdup`
+    - `samtools/stats`
+
     """
 
     def __init__(self):
@@ -68,6 +135,10 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
 
         # Call submodule functions
+        n["ampliconclip"] = parse_samtools_ampliconclip(self)
+        if n["ampliconclip"] > 0:
+            log.info(f"Found {n['ampliconclip']} stats reports")
+
         n["stats"] = parse_samtools_stats(self)
         if n["stats"] > 0:
             log.info(f"Found {n['stats']} stats reports")

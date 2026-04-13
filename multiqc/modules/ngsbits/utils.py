@@ -4,7 +4,7 @@ import xml.etree.ElementTree
 import re
 
 
-def parse_qcml_by(qcml_contents, tag) -> Tuple[Dict[str, Union[float, str]], Dict[str, Tuple[str, str]]]:
+def parse_qcml_by(qcml_contents: str, tag: str) -> Tuple[Dict[str, Union[float, str]], Dict[str, Tuple[str, str]]]:
     """Parse a qcML file and return key-value pairs from the quality parameter entries."""
     root = xml.etree.ElementTree.fromstring(qcml_contents)
     values: Dict[str, Union[float, str]] = dict()

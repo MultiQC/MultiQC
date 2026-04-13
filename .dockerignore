@@ -4,13 +4,17 @@
 .github/
 
 # Python build things
+*.pyc
+*.pyo
+__pycache__
 build/
 dist/
 *.egg-info
-.pytest_cache/
+.pytest_cache
+.ruff_cache
+.mypy_cache
 venv
-venv38
-venv311
+venv*
 
 # MultiQC results
 multiqc_config.yaml
@@ -18,5 +22,10 @@ multiqc_report.html
 multiqc_data/
 multiqc_plots/
 result
+benchmarks
+demo
 
+# Other things
+.idea
+.vscode
 test-data

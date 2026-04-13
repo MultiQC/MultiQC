@@ -1,0 +1,1052 @@
+/* ==========================================================================
+   CSS Styles for Default MultiQC Report Template
+   ========================================================================== */
+
+/* ==========================================================================
+   Base & General Styles
+   ========================================================================== */
+
+// Used for thousands-separator span in tables
+.mqc_small_space {
+  padding: 0 1px;
+}
+
+/* ==========================================================================
+   Page Layout & Structure
+   ========================================================================== */
+
+// Main page area
+.mainpage {
+  @include media-breakpoint-up(md) {
+    margin-left: 250px;
+    transition: margin-left 0.5s;
+
+    &.hidden-nav {
+      margin-left: 0;
+    }
+  }
+}
+
+/* ==========================================================================
+   Side Navigation
+   ========================================================================== */
+
+.side-nav-wrapper {
+  height: 100%;
+  background-color: var(--#{$prefix}secondary-bg);
+
+  @include media-breakpoint-up(md) {
+    position: fixed;
+  }
+}
+
+.side-nav {
+  border-bottom: $border-width $border-style var(--#{$prefix}border-color);
+
+  @include media-breakpoint-up(md) {
+    height: 100%;
+    width: 250px;
+    border-bottom: none;
+    border-right: $border-width $border-style var(--#{$prefix}border-color);
+    overflow: auto;
+    padding-bottom: $spacer;
+    transition: margin-left 0.5s;
+    margin-left: 0;
+
+    &.hidden-nav {
+      margin-left: -250px;
+    }
+  }
+
+  .navbar-toggler {
+    position: absolute;
+    right: 10px;
+    top: 15px;
+  }
+
+  // Side nav title, when --title is set
+  .side-nav-title {
+    text-align: center;
+    font-size: $font-size-base * 1.2;
+    font-weight: $font-weight-normal;
+    border-top: $border-width $border-style var(--#{$prefix}border-color);
+    margin: 0;
+    a {
+      color: var(--#{$prefix}body-color);
+      text-decoration: none;
+      padding: $spacer * 0.75 0;
+      display: block;
+    }
+  }
+
+  // Navigation menu
+  .mqc-nav {
+    // Border for the last nav item, only on desktop
+    @include media-breakpoint-up(sm) {
+      border-bottom: $border-width $border-style var(--#{$prefix}border-color);
+    }
+
+    &,
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+    }
+
+    li {
+      border-top: $border-width $border-style var(--#{$prefix}border-color);
+      a {
+        display: block;
+        text-decoration: none;
+
+        &:hover,
+        &:active,
+        &:focus {
+          background-color: var(--#{$prefix}secondary-bg);
+        }
+
+        // Section links
+        &.nav-l1 {
+          padding: $spacer * 0.6;
+        }
+
+        // Subsection links
+        &.nav-l2 {
+          padding: ($spacer * 0.3) ($spacer * 0.6) ($spacer * 0.3) ($spacer * 0.9);
+          font-size: $font-size-base * 0.9;
+          color: var(--#{$prefix}secondary-emphasis);
+        }
+      }
+    }
+    .mobile-toolbox-nav {
+      background-color: var(--#{$prefix}tertiary-bg);
+      &:hover,
+      &:active,
+      &:focus {
+        background-color: var(--#{$prefix}secondary-bg);
+      }
+    }
+  }
+}
+
+// Side navigation toggle handle
+#side-nav-handle {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  height: 50px;
+  width: 15px;
+  padding-top: 14px;
+  background-color: var(--#{$prefix}tertiary-bg);
+  cursor: pointer;
+  svg {
+    color: var(--#{$prefix}tertiary-color);
+    transition: transform 0.6s ease;
+  }
+}
+
+/* ==========================================================================
+   Header & Page Title
+   ========================================================================== */
+
+// "don't show again" text button
+#mqc_hide_welcome_btn {
+  color: inherit;
+  opacity: 0.4;
+  transition: $transition-fade;
+
+  &:hover,
+  &:active,
+  &:focus {
+    opacity: 1;
+  }
+}
+
+// Analysis directories - can be a huge list so limit page space
+#analysis_dirs_wrapper {
+  max-height: 80px;
+  overflow: auto;
+  margin-bottom: 10px;
+}
+
+/* ==========================================================================
+   Report Comments & Sections
+   ========================================================================== */
+
+.mqc-section h3 {
+  margin-top: 1.5rem;
+}
+.mqc-module-section-first .mqc-section h3 {
+  margin-top: 0;
+}
+
+.report_comment,
+.mqc-section-comment {
+  border-left: 5px solid var(--#{$prefix}info);
+  background-color: var(--#{$prefix}info-bg-subtle);
+  padding: ($spacer * 0.5) $spacer;
+  margin: 0 0 $spacer;
+  font-size: $font-size-base * 1.2;
+}
+
+// Markdown paragraphs in the description
+.mqc-section-description > p {
+  margin-bottom: $spacer * 0.5;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+// Back-to-top link
+.mqc-toplink,
+.mqc-toplink:visited {
+  position: fixed;
+  bottom: $spacer * 1.1;
+  right: $spacer * 0.8;
+  padding: 2px 1px;
+  z-index: 99999;
+  background-color: var(--#{$prefix}tertiary-bg);
+  color: var(--#{$prefix}tertiary-color);
+  text-decoration: none;
+
+  span {
+    display: none;
+    padding-left: 0.5rem;
+  }
+
+  &:hover {
+    background-color: var(--#{$prefix}secondary-bg);
+    color: var(--#{$prefix}body-color);
+
+    span {
+      display: inline;
+      color: var(--#{$prefix}tertiary-color);
+    }
+  }
+}
+
+.footer {
+  color: var(--#{$prefix}tertiary-color);
+  background-color: var(--#{$prefix}tertiary-bg);
+  font-size: $font-size-base * 0.9;
+
+  // Avoid the "jump to top" button
+  .container-fluid {
+    padding-right: 3.5rem;
+  }
+
+  p {
+    margin: 0;
+    a {
+      color: var(--#{$prefix}tertiary-color);
+      text-decoration: underline;
+    }
+  }
+
+  .seqera-logo {
+    width: 120px;
+  }
+}
+
+// Also used for the logo in the toolbox
+.seqera-logo {
+  svg {
+    color: var(--#{$prefix}emphasis-color);
+    transition:
+      margin 0.3s,
+      opacity 0.3s;
+    opacity: 80%;
+    margin-bottom: 0;
+  }
+
+  &:hover svg {
+    margin-bottom: 0.2rem;
+    opacity: 100%;
+  }
+}
+
+/* ==========================================================================
+   Custom Scrollbar
+   ========================================================================== */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--#{$prefix}body-bg);
+  border-left: $border-width $border-style var(--#{$prefix}border-color);
+  border-right: $border-width $border-style var(--#{$prefix}border-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--#{$prefix}secondary-bg);
+  &:active {
+    background: var(--#{$prefix}tertiary-bg);
+  }
+}
+
+/* ==========================================================================
+   Toolbox Menu
+   ========================================================================== */
+
+#mqc-toolbox {
+  .mqc-toolbox-label {
+    margin-left: -5px;
+    transform: rotate(270deg) translateX(-20px);
+  }
+  .mqc-toolbox-buttons {
+    position: absolute;
+    left: -2.5rem;
+    top: 50px;
+    bottom: 0;
+    visibility: visible;
+    overflow-y: auto;
+    // Hide scrollbars if the toolbox overflows
+    scrollbar-width: none;
+    ::-webkit-scrollbar,
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-thumb {
+      display: none !important;
+    }
+    .list-group {
+      width: 2.5rem;
+      padding-bottom: 1rem;
+      border-right: 0;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+
+      .list-group-item {
+        background-color: var(--#{$prefix}secondary-bg);
+        padding: 0.5rem;
+        text-align: center;
+        margin-top: 0.5rem;
+        border-top-width: $border-width;
+        border-top-left-radius: $border-radius;
+        border-bottom-left-radius: $border-radius;
+        border-right: 0;
+
+        &.active {
+          color: var(--#{$prefix}body-color);
+          background-color: var(--#{$prefix}body-bg);
+          border-color: var(--#{$prefix}secondary);
+        }
+
+        &.in_use {
+          color: var(--#{$prefix}primary);
+          border-color: var(--#{$prefix}primary);
+          background-color: var(--#{$prefix}primary-bg-subtle);
+        }
+
+        svg {
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+  }
+
+  // Citation blockquote
+  blockquote {
+    font-size: 0.8rem;
+  }
+}
+
+/* ==========================================================================
+   Toolbox Filters & Sample Controls
+   ========================================================================== */
+
+// Filter list
+.mqc_filters {
+  margin: 10px 0;
+  padding: 0;
+  list-style-type: none;
+  font-size: $font-size-base * 0.9;
+  li {
+    // Drag handle for resizing filters
+    .hc_handle {
+      padding: 9px 4px;
+      cursor: pointer;
+      color: var(--#{$prefix}secondary);
+    }
+    &:hover,
+    &:focus,
+    &:has(:focus) {
+      background-color: var(--#{$prefix}tertiary-bg);
+    }
+
+    // Filter text inputs
+    .f_text {
+      border: 0;
+      border-bottom: $border-width $border-style var(--#{$prefix}border-color);
+      padding: 5px 0 5px 10px;
+      margin: 0;
+      background-color: transparent;
+      outline: none;
+      color: inherit;
+    }
+  }
+}
+
+// Rename samples bulk edit
+#mqc_renamesamples_bulk_form textarea {
+  font-size: 8px;
+}
+
+// Color input for sample highlighting
+input.form-control[type="color"] {
+  padding: 5px;
+  width: 30px;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   MultiQC Tables
+   ========================================================================== */
+
+.table tr td {
+  font-size: $font-size-base * 0.9;
+  height: 30px;
+}
+
+// Table container
+.mqc-table-responsive {
+  overflow: auto;
+
+  &.mqc-table-collapse {
+    max-height: 500px;
+  }
+}
+
+// Table expand/collapse button
+.mqc-table-expand {
+  text-align: center;
+  color: var(--#{$prefix}tertiary-color);
+  padding: 5px;
+  cursor: pointer;
+  background-color: var(--#{$prefix}secondary-bg);
+  transition: background-color 0.2s;
+  border-bottom-left-radius: $border-radius;
+  border-bottom-right-radius: $border-radius;
+
+  svg {
+    transition: transform 0.6s;
+  }
+
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: var(--#{$prefix}tertiary-bg);
+  }
+}
+
+// Rotate chevron when table is expanded
+.mqc-table-responsive[data-collapsed="false"] + .mqc-table-expand svg {
+  transform: rotate(180deg);
+}
+
+.mqc_table_numrows_text {
+  padding: 5px 10px;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.mqc_table_control_buttons {
+  margin-bottom: $spacer * 0.5;
+}
+
+// Table structure
+.mqc_table {
+  tr,
+  td {
+    height: 100%;
+  }
+
+  th {
+    white-space: nowrap;
+  }
+
+  .rowheader {
+    border-left: none;
+  }
+
+  .data-coloured {
+    padding: 0;
+  }
+
+  .wrapper {
+    display: inline-block;
+    position: relative;
+    height: 100%;
+    width: 100%;
+    z-index: -10;
+  }
+
+  // Table header styles
+  thead {
+    th,
+    td {
+      background-color: var(--#{$prefix}body-bg);
+    }
+
+    th {
+      cursor: pointer;
+      // Border doesn't scroll with the CSS transform, so just a box-shadow instead.
+      border-bottom: 0;
+      box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
+
+      .tablesorter-header-inner:after {
+        content: "";
+        display: inline-block;
+        width: 0;
+        height: 0;
+        margin-left: 4px;
+        vertical-align: middle;
+        border-right: 4px solid transparent;
+        border-left: 4px solid transparent;
+      }
+
+      &.tablesorter-headerAsc {
+        background-color: var(--#{$prefix}secondary-bg);
+        color: var(--#{$prefix}primary);
+        border-bottom: map-get($border-widths, 2) $border-style var(--#{$prefix}primary);
+
+        .tablesorter-header-inner:after {
+          border-bottom: 4px dashed;
+        }
+      }
+
+      &.tablesorter-headerDesc {
+        background-color: var(--#{$prefix}secondary-bg);
+        color: var(--#{$prefix}primary);
+        border-bottom: map-get($border-widths, 2) $border-style var(--#{$prefix}primary);
+
+        .tablesorter-header-inner:after {
+          border-top: 4px dashed;
+        }
+      }
+    }
+  }
+
+  // Table body cell values
+  tbody tr td .wrapper .val {
+    z-index: -1;
+    white-space: nowrap; // keep suffix stick to the value
+
+    .label {
+      font-size: 100%;
+      display: inline-block;
+      min-width: 10px;
+      padding: 3px 7px;
+      font-size: 12px;
+      vertical-align: middle;
+      border-radius: 10px;
+    }
+  }
+
+  // Background bars in cells
+  .bar {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background-color: var(--#{$prefix}tertiary-bg);
+    z-index: -1;
+  }
+
+  .val {
+    display: block;
+    padding: 5px;
+    left: 0;
+  }
+}
+
+// Sort handle column
+.sorthandle {
+  border-right: none;
+  font-weight: bold;
+  text-align: center;
+}
+
+tbody .sorthandle {
+  cursor: pointer;
+  color: var(--#{$prefix}tertiary-color);
+}
+
+.mqc_config_modal_table tbody .sorthandle {
+  color: var(--#{$prefix}tertiary-color);
+}
+
+.table.mqc_table > thead > tr > th {
+  cursor: pointer;
+  // Border doesn't scroll with the CSS transform, so just a box-shadow instead.
+  border-bottom: 0;
+  -webkit-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
+  -moz-box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
+  box-shadow: inset 0px -2px 0px 0 var(--#{$prefix}border-color);
+}
+
+// Expandable table rows
+tr.expandable-row-primary {
+  cursor: pointer;
+
+  .expandable-row-caret {
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="4 4 16 16"><path fill="rgb(160,160,160)" d="M11.8152 13.1989L10.0167 11.1432C9.80447 10.9013 9.97697 10.5214 10.2991 10.5214H13.8961C13.9682 10.5214 14.0388 10.5421 14.0994 10.5811C14.16 10.6201 14.2081 10.6758 14.2379 10.7414C14.2677 10.8071 14.2779 10.8799 14.2674 10.9512C14.2569 11.0226 14.226 11.0893 14.1785 11.1435L12.38 13.1985C12.3448 13.2388 12.3014 13.2711 12.2527 13.2932C12.204 13.3153 12.1511 13.3268 12.0976 13.3268C12.0441 13.3268 11.9912 13.3153 11.9425 13.2932C11.8938 13.2711 11.8504 13.2388 11.8152 13.1985V13.1989Z" /></svg>')
+      50% / 24px 24px;
+    transform: rotate(-90deg);
+  }
+
+  &.expanded .expandable-row-caret {
+    transform: rotate(0deg);
+  }
+}
+
+tr.expandable-row-secondary {
+  background-color: rgba(144, 144, 144, 0.21);
+}
+
+tr.expandable-row-secondary-hidden {
+  visibility: collapse;
+}
+
+// Safari doesn't support visibility: collapse
+@supports (-webkit-hyphens: none) {
+  tr.expandable-row-secondary-hidden {
+    display: none;
+  }
+}
+
+// Hidden rows and columns
+tr.sample-hidden,
+tr.row-empty {
+  display: none;
+}
+
+th.column-hidden,
+td.column-hidden {
+  display: none;
+}
+
+/* ==========================================================================
+   Plots & Visualizations
+   ========================================================================== */
+
+// Static matplotlib plots
+.mqc_mplplot {
+  border: $border-width $border-style var(--#{$prefix}border-color);
+  margin-top: 0;
+  width: 100%;
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+// Fake dark-mode theme for static image plots in dark mode
+[data-bs-theme="dark"] .mqc_mplplot img {
+  filter: invert(1) hue-rotate(180deg) brightness(1.5) contrast(0.81);
+}
+
+// Interactive plots
+.hc-plot {
+  height: 500px;
+  width: 100%;
+
+  &.not_rendered {
+    background-color: var(--#{$prefix}tertiary-bg);
+    text-align: center;
+
+    small {
+      display: inline-block;
+      font-style: italic;
+      padding-top: 40px;
+      color: var(--#{$prefix}tertiary-color);
+    }
+  }
+
+  .render_plot {
+    margin-top: 40px;
+  }
+}
+
+.hc-plot-wrapper {
+  width: 100%;
+  height: 512px;
+  position: relative;
+  border: $border-width $border-style var(--#{$prefix}border-color);
+  margin-top: 5px;
+}
+
+// Draggable plot resize handle
+.hc-plot-handle {
+  position: absolute;
+  width: 100%;
+  height: 10px;
+  background-color: var(--#{$prefix}tertiary-bg);
+  cursor: row-resize;
+  border-top: $border-width $border-style var(--#{$prefix}border-color);
+  transition: background-color 0.1s;
+  // two lines below are a hack to hide hanging plotly long vertical tick labels
+  border-bottom: map-get($border-widths, 2) $border-style var(--#{$prefix}body-bg);
+  bottom: -3px;
+
+  span {
+    display: block;
+    height: 1px;
+    width: 20px;
+    margin: 1px auto;
+    background-color: var(--#{$prefix}tertiary-color);
+  }
+
+  &:hover {
+    background-color: var(--#{$prefix}secondary-bg);
+
+    span {
+      background-color: var(--#{$prefix}tertiary-color);
+    }
+  }
+}
+
+// Plot controls
+.mqc_hcplot_range_sliders {
+  display: inline-block;
+
+  div {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  input {
+    display: inline-block;
+    width: 200px;
+
+    &.form-control {
+      width: 100px;
+    }
+  }
+}
+
+.mqc_hcplot_yaxis_limit_toggle {
+  float: right;
+  font-size: 11px;
+  margin-top: -26px;
+}
+
+// Custom content images
+.mqc-custom-content-image img {
+  max-width: 100%;
+}
+
+// Plot annotations
+g.annotation {
+  position: absolute !important;
+}
+
+// Plotly watermark
+.created-with-multiqc {
+  position: absolute;
+  bottom: 7px;
+  right: 4px;
+  margin-bottom: 0;
+  padding: 0;
+  color: var(--#{$prefix}tertiary-color);
+  font-size: 8px;
+  font-family: $font-family-base;
+}
+
+/* ==========================================================================
+   AI Summary Components
+   ========================================================================== */
+
+// Highlighted text (not sample IDs)
+.text-green {
+  color: rgb(18, 106, 50);
+}
+.text-yellow {
+  color: rgb(178, 122, 3);
+}
+.text-red {
+  color: rgb(184, 31, 31);
+}
+[data-bs-theme="dark"] {
+  .text-green {
+    color: var(--#{$prefix}success-text-emphasis);
+  }
+  .text-yellow {
+    color: var(--#{$prefix}warning-text-emphasis);
+  }
+  .text-red {
+    color: var(--#{$prefix}danger-text-emphasis);
+  }
+}
+
+.ai-summary {
+  li p:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .ai-summary-disclaimer {
+    color: var(--#{$prefix}tertiary-color);
+    font-size: $font-size-base * 0.9;
+  }
+
+  // Animate the chevron rotation
+  .ai-summary-expand svg {
+    transition: $transition-base;
+  }
+
+  // Highlighted clickable sample names in AI response
+  sample {
+    cursor: pointer;
+    border-bottom: 2px dashed var(--#{$prefix}secondary);
+    padding: 1px 3px;
+    transition: $transition-base;
+    &:hover {
+      opacity: 0.9;
+    }
+    // Status colors
+    &.text-green {
+      color: var(--#{$prefix}success-text-emphasis);
+      border-color: var(--#{$prefix}success);
+      background: var(--#{$prefix}success-bg-subtle);
+      &:hover {
+        background: var(--#{$prefix}success);
+        color: var(--#{$prefix}white);
+      }
+    }
+
+    &.text-yellow {
+      color: var(--#{$prefix}warning-text-emphasis);
+      border-color: var(--#{$prefix}warning);
+      background: var(--#{$prefix}warning-bg-subtle);
+      &:hover {
+        background: var(--#{$prefix}warning);
+        color: var(--#{$prefix}text-dark);
+      }
+    }
+
+    &.text-red {
+      color: var(--#{$prefix}danger-text-emphasis);
+      border-color: var(--#{$prefix}danger);
+      background: var(--#{$prefix}danger-bg-subtle);
+      &:hover {
+        background: var(--#{$prefix}danger);
+        color: var(--#{$prefix}white);
+      }
+    }
+  }
+}
+
+// AI loading state
+.ai-loading {
+  margin: 15px 0;
+  font-style: italic;
+  color: var(--#{$prefix}secondary);
+}
+
+// AI generate button
+.ai-generate-button svg {
+  vertical-align: baseline;
+}
+
+/* ==========================================================================
+   Button Sizes
+   ========================================================================== */
+
+.btn-xs {
+  padding: 2px 6px;
+  font-size: $font-size-base * 0.75;
+}
+
+/* ==========================================================================
+   MultiQC Logo Styling
+   ========================================================================== */
+
+// Logo in side navigation
+.side-nav-logo {
+  text-align: center;
+  margin: 0;
+  padding: 0.25rem 0 0.5rem;
+
+  svg {
+    height: 26px;
+    width: 100%;
+  }
+}
+
+// Larger sizing for main header
+#page_title .multiqc-logo-wrapper {
+  max-width: 320px;
+  height: auto;
+  width: auto;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Dark mode color switching for logo text
+.multiqc-logo-text {
+  color: #160f26; // Default dark color
+}
+
+[data-bs-theme="dark"] .multiqc-logo-text {
+  color: #ffffff; // White in dark mode
+}
+
+// Default width - can be overwritten with config.custom_logo_width
+.custom_logo {
+  width: 320px;
+}
+// Custom logo theme switching (show/hide based on theme)
+.custom_logo_dark {
+  display: none;
+}
+
+[data-bs-theme="dark"] {
+  .custom_logo_light {
+    display: none;
+  }
+  .custom_logo_dark {
+    display: inline;
+  }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+  .side-nav-wrapper,
+  .mqc-toolbox,
+  .mqc_table_control_buttons,
+  .mqc-table-expand,
+  .mqc-table-expand,
+  .mqc-section-plot .text-info,
+  button,
+  .btn {
+    display: none;
+  }
+
+  .mainpage {
+    padding: 20px;
+  }
+  .footer {
+    background-color: transparent;
+  }
+
+  // Don't limit the height of the sources
+  #analysis_dirs_wrapper {
+    max-height: none !important;
+  }
+
+  // Expand long tables
+  .mqc-table-responsive.mqc-table-collapse {
+    max-height: none !important;
+  }
+
+  .mqc_table thead {
+    transform: none !important;
+  }
+
+  // keep section titles with the first bit of content, and try to keep sections together
+  .mqc-module-section-first,
+  .mqc-section {
+    page-break-inside: avoid;
+  }
+
+  // make sure table cell contents show up
+  .mqc_table .wrapper {
+    z-index: 0;
+  }
+
+  // make sure logos aren't dominantly huge
+  .multiqc_logo,
+  .custom_logo {
+    width: 200px;
+  }
+
+  // print cell background colors in table
+  td,
+  span.bar {
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  // tidy up user-provided report header info
+  .dl-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+
+    dt {
+      flex: 0 0 34%;
+      float: none;
+      width: 300px;
+      font-weight: 900; // bold the key in the kv pair
+    }
+
+    dd {
+      flex: 1 0 34%; // let the val grow to fill the space
+      margin-left: 0;
+    }
+  }
+
+  // printed link text is fairly ugly
+  a[href]:after {
+    content: none !important;
+  }
+
+  .table.mqc_table {
+    table-layout: fixed;
+  }
+
+  .mqc_table th {
+    white-space: normal; // make sure that table header text can wrap
+    font-weight: 900; // and that table headers are bolded
+  }
+
+  .table > thead > tr > th {
+    vertical-align: top; // looks better when all the table-headers are top-aligned, especially when some wrap
+  }
+}
+
+/* ==========================================================================
+   Module Status Bars
+   ========================================================================== */
+
+.mqc-status-progress-wrapper {
+  display: inline-block;
+  margin-left: $spacer;
+  width: 150px;
+  .progress {
+    cursor: pointer;
+  }
+}
+
+// Popover styling
+.popover-mqc-status {
+  .popover-body {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  // Status-specific colors
+  &.popover-success {
+    --#{$prefix}popover-header-bg: var(--#{$prefix}success-bg-subtle);
+    --#{$prefix}popover-header-color: var(--#{$prefix}success-text-emphasis);
+  }
+
+  &.popover-warning {
+    --#{$prefix}popover-header-bg: var(--#{$prefix}warning-bg-subtle);
+    --#{$prefix}popover-header-color: var(--#{$prefix}warning-text-emphasis);
+  }
+
+  &.popover-danger {
+    --#{$prefix}popover-header-bg: var(--#{$prefix}danger-bg-subtle);
+    --#{$prefix}popover-header-color: var(--#{$prefix}danger-text-emphasis);
+  }
+}

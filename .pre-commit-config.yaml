@@ -1,37 +1,45 @@
-# This file contains the [pre-commit](https://pre-commit.com/) configuration of this repository.
-# More on which specific pre-commit hooks we use can be found in README.md.
+# This file contains the [prek](https://github.com/j178/prek) configuration of this repository.
+# prek is a faster drop-in replacement for pre-commit.
 ---
 minimum_pre_commit_version: "2.9.2"
 repos:
   - repo: meta
     hooks:
-      - id: identity
       - id: check-hooks-apply
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.5.0" # Use the ref you want to point at
+    rev: "v6.0.0"
     hooks:
       - id: check-added-large-files
       - id: check-merge-conflict
       - id: debug-statements
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: "v1.5.4"
+    rev: "v1.5.6"
     hooks:
       - id: remove-crlf
 
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v3.0.3"
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: "v3.7.4"
     hooks:
       - id: prettier
+        additional_dependencies:
+          - prettier@3.7.4
+          - prettier-plugin-jinja-template@2.1.0
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.0
+    rev: "v0.14.11"
     hooks:
+      # Run the linter.
+      - id: ruff-check
+        args: [--fix]
+      # Run the formatter.
       - id: ruff-format
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.0
+  - repo: local
     hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+      - id: build-assets
+        name: Build assets with Vite
+        language: script
+        entry: scripts/build-assets.sh
+        files: ^multiqc/templates/default/src/.*\.(scss|js)$

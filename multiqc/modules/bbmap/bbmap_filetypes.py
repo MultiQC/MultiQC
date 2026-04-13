@@ -4,6 +4,7 @@ from multiqc import config
 
 from .plot_aqhist import plot_aqhist
 from .plot_basic_hist import plot_basic_hist
+from .plot_bbsplit import plot_bbsplit
 from .plot_bhist import plot_bhist
 from .plot_bqhist import plot_bqhist
 from .plot_covhist import plot_covhist
@@ -37,6 +38,7 @@ section_order = [
     "rpkm",
     "statsfile_machine",
     "statsfile",
+    "bbsplit",
 ]
 file_types: Dict = {
     "stats": {
@@ -91,9 +93,9 @@ file_types: Dict = {
         "plot_func": plot_aqhist,
         "plot_params": {
             "x_bands": [
-                {"from": 28, "to": 100, "color": "#c3e6c3"},
-                {"from": 20, "to": 28, "color": "#e6dcc3"},
-                {"from": 0, "to": 20, "color": "#e6c3c3"},
+                {"from": 28, "to": 100, "color": "#009500", "opacity": 0.13},
+                {"from": 20, "to": 28, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
             ],
             "ylog": True,
         },
@@ -214,7 +216,7 @@ file_types: Dict = {
     },
     "idhist": {
         "title": "Identity histogram",
-        "descr": "Histogram of read count versus percent base pair identity " "of aligned reads (`idhist`).",
+        "descr": "Histogram of read count versus percent base pair identity of aligned reads (`idhist`).",
         "help_text": "",
         "kvrows": [
             "Mean_reads",
@@ -294,7 +296,7 @@ file_types: Dict = {
     },
     "mhist": {
         "title": "Match, substitution, deletion, and insertion rates",
-        "descr": "Histogram of match, substitution, deleletion, " "and insertion rates by read location (`mhist`).",
+        "descr": "Histogram of match, substitution, deleletion, and insertion rates by read location (`mhist`).",
         "help_text": "",
         "cols": {
             "BaseNum": int,
@@ -345,9 +347,9 @@ file_types: Dict = {
         "plot_func": plot_qchist,
         "plot_params": {
             "x_bands": [
-                {"from": 30, "to": 100, "color": "#c3e6c3"},
-                {"from": 20, "to": 30, "color": "#e6dcc3"},
-                {"from": 0, "to": 20, "color": "#e6c3c3"},
+                {"from": 30, "to": 100, "color": "#009500", "opacity": 0.13},
+                {"from": 20, "to": 30, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
             ],
             "ylog": True,
             "xlab": "Phred Score",
@@ -366,12 +368,17 @@ file_types: Dict = {
             "Read1_linear": float,
             "Read1_log": float,
             "Read1_measured": float,
+        },
+        "extracols": {
             "Read2_linear": float,
             "Read2_log": float,
             "Read2_measured": float,
         },
         "plot_func": plot_qhist,
         "plot_params": {},
+        "kv_descriptions": {
+            "Deviation": ("", {}),
+        },
     },
     "rpkm": {
         "title": "RPKM/FPKM",
@@ -414,6 +421,24 @@ file_types: Dict = {
         "plot_params": {},
         "plot_func": plot_basic_hist,
         "not_implemented": "",
+    },
+    "bbsplit": {
+        "title": "BBSplit alignment statistics",
+        "descr": "Statistics on how many reads mapped to which reference genome.",
+        "help_text": "Shows the percentage and count of reads aligned to each reference genome.",
+        "cols": {
+            "name": str,
+            "%unambiguousReads": float,
+            "unambiguousMB": float,
+            "%ambiguousReads": float,
+            "ambiguousMB": float,
+            "unambiguousReads": int,
+            "ambiguousReads": int,
+            "assignedReads": int,
+            "assignedBases": int,
+        },
+        "plot_params": {},
+        "plot_func": plot_bbsplit,
     },
 }
 

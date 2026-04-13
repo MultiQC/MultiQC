@@ -7,11 +7,28 @@ from typing import Dict, Set, Union
 
 import pytest
 import yaml
+from importlib_metadata import EntryPoint
 
-from multiqc import config
-from multiqc import report
+from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.core.file_search import file_search
+
+
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state after each test."""
+    original_sp = getattr(config, "sp", None)
+    original_run_modules = config.run_modules[:]
+    original_avail_modules = config.avail_modules.copy()
+    original_analysis_dir = config.analysis_dir[:]
+    yield
+    if original_sp is not None:
+        config.sp = original_sp
+    elif hasattr(config, "sp"):
+        delattr(config, "sp")
+    config.run_modules[:] = original_run_modules
+    config.avail_modules = original_avail_modules
+    config.analysis_dir[:] = original_analysis_dir
 
 
 def _test_search_files(
@@ -22,7 +39,7 @@ def _test_search_files(
 ):
     config.sp = search_patterns
     config.run_modules = list(config.sp.keys())
-    config.avail_modules = dict.fromkeys(config.run_modules)
+    config.avail_modules = {k: EntryPoint(k, k, k) for k in config.run_modules}
 
     config.analysis_dir = [str(analysis_dir)]
     if extra_config:

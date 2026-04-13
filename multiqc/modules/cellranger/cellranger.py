@@ -2,13 +2,13 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from .count import CellRangerCountMixin
-from .vdj import CellRangerVdjMixin
+from .count import parse_count_html
+from .vdj import parse_vdj_html
 
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin):
+class MultiqcModule(BaseMultiqcModule):
     """
     The module summarizes the main information useful for QC, including:
 
@@ -38,22 +38,17 @@ class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin)
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = dict()
-        self.general_stats_data = dict()
         n = dict()
 
         # Call submodule functions
-        n["count"] = self.parse_count_html()
+        n["count"] = parse_count_html(self)
         if n["count"] > 0:
             log.info(f"Found {n['count']} Cell Ranger count reports")
 
-        n["vdj"] = self.parse_vdj_html()
+        n["vdj"] = parse_vdj_html(self)
         if n["vdj"] > 0:
             log.info(f"Found {n['vdj']} Cell Ranger VDJ reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             raise ModuleNoSamplesFound
-
-        # Add to the General Stats table (has to be called once per MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
