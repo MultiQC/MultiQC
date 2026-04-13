@@ -6,7 +6,7 @@ import numpy as np
 from itertools import groupby
 from collections import OrderedDict
 
-from multiqc.plots import beeswarm
+from multiqc.plots import violin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -175,7 +175,7 @@ class scFilterStatsMixin:
                 name="Filtering metrics",
                 anchor="scFilterStats",
                 description="Estimated percentages of alignments filtered independently for each setting in `scFilterStats`",
-                plot=beeswarm.plot(tdata, header, config),
+                plot=violin.plot(tdata, header, config),
             )
 
         return len(self.sincei_scFilterStats)

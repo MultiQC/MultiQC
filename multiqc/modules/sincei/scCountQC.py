@@ -5,7 +5,7 @@ import csv
 import numpy as np
 from itertools import groupby
 from collections import OrderedDict
-from multiqc.plots import beeswarm
+from multiqc.plots import violin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ class scCountQCMixin:
                 name="Counting Metrics",
                 anchor="scCountQC",
                 description="Statistics of distribution of counts per cells after counting using `scCountQC`",
-                plot=beeswarm.plot(tdata, header, config),
+                plot=violin.plot(tdata, header, config),
             )
 
         return len(self.sincei_scCountQC)
