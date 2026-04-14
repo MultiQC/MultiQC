@@ -131,11 +131,6 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
                     # Process each metric/column in the order from get_headers_in_order()
                     for _, metric_name, dt_column in ordered_headers:
-                        cell = row.data.get(metric_name)
-                        val = None
-                        if cell is not None:
-                            val = cell.mod
-
                         # Column names now include both the metric name and any namespace
                         # to ensure uniqueness across different tables
                         metric_col_name = ColumnKey(metric_name)
@@ -144,6 +139,16 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                         elif len(self.dt.section_by_id) > 1:
                             metric_col_name = ColumnKey(f"{section_key} / {metric_name}")
                         metric_col_name = ColumnKey(f"{self.dt.id} / {metric_col_name}".lower())
+
+                        cell = row.data.get(metric_name)
+                        if cell is None:
+                            # If all values are null, make sure at least the column gets
+                            # stored with a null value.
+                            if metric_col_name not in samples_data[str(sample_name)]:
+                                samples_data[str(sample_name)][metric_col_name] = None
+                            continue
+
+                        val = cell.mod
 
                         # Add metric to the sample's data
                         samples_data[str(sample_name)][metric_col_name] = val
