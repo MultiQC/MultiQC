@@ -190,6 +190,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_content_from_overlap(data)
 
     def sequali_general_stats(self, data):
+        def mean_read_quality(sample_dict):
+            quality_counts = sample_dict["per_sequence_quality_scores"]["average_quality_counts"]
+            qualities = [int(q) for q in sample_dict["per_sequence_quality_scores"]["x_labels"]]
+            prod = sum(q * c for q, c in zip(qualities, quality_counts))
+            total_counts = sum(quality_counts)
+            return prod / total_counts
+
         general_stats = dict()
         for sample_name, sample_dict in data.items():
             summary = sample_dict["summary"]
@@ -198,7 +205,10 @@ class MultiqcModule(BaseMultiqcModule):
                     100 * summary["total_gc_bases"] / max(summary["total_bases"] - summary["total_n_bases"], 1)
                 ),
                 "sequali_mean_sequence_length": summary["mean_length"],
+                "sequali_n50_length": sample_dict["sequence_length_distribution"].get("n50", None),
                 "sequali_total_reads": summary["total_reads"],
+                "sequali_total_bases": summary["total_bases"],
+                "sequali_mean_quality": mean_read_quality(sample_dict),
                 "sequali_duplication_percentage": (1 - sample_dict["duplication_fractions"]["remaining_fraction"])
                 * 100,
             }
@@ -211,6 +221,8 @@ class MultiqcModule(BaseMultiqcModule):
                     stats_entry["sequali_insert_size_estimate"] = insert_size_estimate
 
             general_stats[sample_name] = stats_entry
+
+        hide_n50_length = any(entry.get("sequali_n50_length") is None for entry in general_stats.values())
         headers = {
             "sequali_gc_percentage": {
                 "title": "GC %",
@@ -238,6 +250,21 @@ class MultiqcModule(BaseMultiqcModule):
                 # Longer reads is considered better for long-read technologies.
                 # Use green to signal that.
                 "scale": "Greens",
+                # If N50 length is available for all samples, hide the mean length
+                # as it is less informative and can be redundant.
+                "hidden": not hide_n50_length,
+            },
+            "sequali_n50_length": {
+                "title": "N50 length",
+                "description": "N50 length of all sequences",
+                "min": 0,
+                "suffix": " bp",
+                "format": "{:,.1f}",
+                "shared_key": "read_length",
+                # N50 read length was added in sequali v1.0.0
+                # shown in the general stats table if available.
+                "hidden": hide_n50_length,
+                "scale": "Blues",
             },
             "sequali_total_reads": {
                 "title": "Total reads",
@@ -250,6 +277,12 @@ class MultiqcModule(BaseMultiqcModule):
                 # good quality has a distinct advantage:
                 # https://www.youtube.com/watch?v=Q2FzZSBD5LE
                 "scale": "Purples",
+            },
+            "sequali_total_bases": {
+                "title": "Total bases",
+                "description": f"Total Bases ({multiqc.config.base_count_desc})",
+                "shared_key": "base_count",
+                "scale": "Greys",
             },
             "sequali_duplication_percentage": {
                 "title": "% est. dups.",
@@ -270,6 +303,12 @@ class MultiqcModule(BaseMultiqcModule):
                 # Larger insert sizes could be good or bad depending on context
                 # Use a neutral color scale
                 "scale": "Blues",
+            },
+            "sequali_mean_quality": {
+                "title": "Mean quality",
+                "description": "Mean read quality (Phred score)",
+                "min": 0,
+                "scale": "RdYlGn",
             },
         }
         self.general_stats_addcols(general_stats, headers)
