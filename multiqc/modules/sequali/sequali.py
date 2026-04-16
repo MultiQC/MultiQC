@@ -576,18 +576,40 @@ class MultiqcModule(BaseMultiqcModule):
                 id_suffix = "_read2"
                 title_suffix = ": Read 2"
                 key = "sequence_length_distribution_read2"
-            plot_data = dict()
+            plot_data = [{}, {}]
             for sample_name, sample_dict in data.items():
                 seqlength_dict = sample_dict.get(key)
                 if seqlength_dict is None:
                     continue
-                x_labels = seqlength_dict["length_ranges"]
+                x_labels = [avg_x_label(x_label) for x_label in seqlength_dict["length_ranges"]]
                 counts = seqlength_dict["counts"]
-                plot_data[sample_name] = {avg_x_label(x_label): count for x_label, count in zip(x_labels, counts)}
+                total_bases = sum(count * x_label for x_label, count in zip(x_labels, counts))
+                total_bases = max(total_bases, 1)
+
+                plot_data[1][sample_name] = {x_label: count for x_label, count in zip(x_labels, counts)}
+                # Calculate percentage of bases in each length category for the percentage plot. This is more
+                # informative than percentage of sequences as it takes into account the amount of data (bases).
+                plot_data[0][sample_name] = {
+                    x_label: (100 * x_label * count / total_bases) for x_label, count in zip(x_labels, counts)
+                }
 
             plot_config = {
                 "id": "sequali_sequence_length_distribution_plot" + id_suffix,
                 "title": "Sequali: Sequence Length Distribution" + title_suffix,
+                "data_labels": [
+                    {
+                        "name": "Base density",
+                        "ylab": "% of Bases",
+                        "xlab": "Sequence Length (bp)",
+                        "tt_label": "{point.x} bp: {point.y:.1f}%",
+                    },
+                    {
+                        "name": "Sequences",
+                        "ylab": "Number of Sequences",
+                        "xlab": "Sequence Length (bp)",
+                        "tt_label": "{point.x} bp: {point.y:,.0f}",
+                    },
+                ],
                 "ylab": "Read Count",
                 "ymin": 0,
                 "xlab": "Sequence Length (bp)",
