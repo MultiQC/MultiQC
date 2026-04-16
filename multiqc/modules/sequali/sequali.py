@@ -39,7 +39,7 @@ DUPLICATION_EXPLANATION = textwrap.dedent(
 )
 
 
-def avg_x_label(x_label: str):
+def avg_x_label(x_label: str) -> int:
     if "-" not in x_label:
         return int(x_label)
     min_x, max_x = x_label.split("-")
@@ -428,7 +428,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data[1][sample_name] = {
                     int(phred): count for phred, count in zip(x_labels, average_quality_counts)
                 }
-                total_count = sum(average_quality_counts)
+                total_count = max(sum(average_quality_counts), 1)
                 plot_data[0][sample_name] = {
                     int(phred): (100 * count / total_count) for phred, count in zip(x_labels, average_quality_counts)
                 }
@@ -544,7 +544,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "id": "sequali_per_sequence_gc_content_plot" + id_suffix,
                 "title": "Sequali: Per Sequence GC Content" + title_suffix,
                 "xlab": "% GC",
-                "ylab": "Percentage",
+                "ylab": "% of Sequences",
                 "ymin": 0,
                 "xmin": 0,
                 "xmax": 100,
