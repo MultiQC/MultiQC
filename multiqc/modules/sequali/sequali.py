@@ -418,20 +418,38 @@ class MultiqcModule(BaseMultiqcModule):
                 id_suffix = "_read2"
                 title_suffix = ": Read 2"
                 key = "per_sequence_quality_scores_read2"
-            plot_data = {}
+            plot_data = [{}, {}]  # First dict is for percentage, second for count
             for sample_name, sample_dict in data.items():
                 qual_dict = sample_dict.get(key)
                 if qual_dict is None:
                     continue
                 x_labels = qual_dict["x_labels"]
                 average_quality_counts = qual_dict["average_quality_counts"]
-                plot_data[sample_name] = {int(phred): count for phred, count in zip(x_labels, average_quality_counts)}
+                plot_data[1][sample_name] = {
+                    int(phred): count for phred, count in zip(x_labels, average_quality_counts)
+                }
+                total_count = sum(average_quality_counts)
+                plot_data[0][sample_name] = {
+                    int(phred): (100 * count / total_count) for phred, count in zip(x_labels, average_quality_counts)
+                }
 
             plot_config = {
                 "id": "sequali_per_sequence_quality_scores_plot" + id_suffix,
                 "title": "Sequali: Per Sequence Average Quality Scores" + title_suffix,
-                "ylab": "Number of Sequences",
-                "xlab": "Mean Sequence Quality (Phred Score)",
+                "data_labels": [
+                    {
+                        "name": "Percentage",
+                        "ylab": "% of Sequences",
+                        "xlab": "Mean Sequence Quality (Phred Score)",
+                        "tt_label": "Q{point.x}: {point.y:.1f}%",
+                    },
+                    {
+                        "name": "Count",
+                        "ylab": "Number of Sequences",
+                        "xlab": "Mean Sequence Quality (Phred Score)",
+                        "tt_label": "Q{point.x}: {point.y:,.0f}",
+                    },
+                ],
                 "ymin": 0,
                 "xmin": 0,
             }
@@ -439,14 +457,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="Per Sequence Average Quality Scores" + title_suffix,
                 anchor="sequali_per_sequence_quality_scores" + id_suffix,
-                description="The number of reads with average quality scores.",
+                description="The distribution of average read quality scores.",
                 helptext=textwrap.dedent(
                     """
                     Shows the quality score profile on a read level. As Illumina
-                    FASTQ files only utilize four different phred scores, the plot
+                    FASTQ files only utilize four different Phred scores, the plot
                     may look a bit erratic at times. Due to the logarithmic nature
                     of Phred scores, lower Phred scores have a more significant
-                    impact on the average quality as than higher phred scores.
+                    impact on the average quality than higher Phred scores.
                 """
                 )
                 + PHRED_SCORE_EXPLANATION,
