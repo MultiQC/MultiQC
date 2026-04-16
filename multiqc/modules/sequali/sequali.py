@@ -648,7 +648,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def insert_size_distribution_plot(self, data):
         """Plot showing insert size distribution from paired-end data"""
-        plot_data = {}
+        plot_data = [{}, {}]  # First dict is for percentage, second for count
         has_insert_size_data = False
 
         for sample_name, sample_dict in data.items():
@@ -664,7 +664,10 @@ class MultiqcModule(BaseMultiqcModule):
                         sample_data[i] = count
 
                 if sample_data:
-                    plot_data[sample_name] = sample_data
+                    total_counts = max(sum(sample_data.values()), 1)
+                    plot_data[0][sample_name] = {i: (100 * count / total_counts) for i, count in sample_data.items()}
+                    plot_data[1][sample_name] = sample_data
+
                     has_insert_size_data = True
 
         if not has_insert_size_data:
@@ -673,8 +676,20 @@ class MultiqcModule(BaseMultiqcModule):
         plot_config = {
             "id": "sequali_insert_size_distribution_plot",
             "title": "Sequali: Insert Size Distribution",
-            "ylab": "Number of Read Pairs",
-            "xlab": "Insert Size",
+            "data_labels": [
+                {
+                    "name": "Percentage",
+                    "ylab": "% of Read Pairs",
+                    "xlab": "Insert Size (bp)",
+                    "tt_label": "{point.x} bp: {point.y:.1f}%",
+                },
+                {
+                    "name": "Count",
+                    "ylab": "Number of Read Pairs",
+                    "xlab": "Insert Size (bp)",
+                    "tt_label": "{point.x} bp: {point.y:,.0f}",
+                },
+            ],
             "ymin": 0,
             "xmin": 0,
         }
