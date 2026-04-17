@@ -15,8 +15,8 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """
     The module also supports [fasterp](https://github.com/drbh/fasterp), a Rust reimplementation
-    of fastp that produces identical JSON output. When fasterp output is detected (via the
-    `command` field), its software version is tracked separately.
+    of fastp that produces identical JSON output. When a `fasterp_version` field is found in
+    the summary, the software version is tracked separately as fasterp.
 
     By default, the module generates the sample names based on the `--report_title` / `-R`
     option in the fastp command line (if present), or the input FastQ file names if not.
