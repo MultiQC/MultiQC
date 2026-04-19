@@ -14,6 +14,10 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
+    The module also supports [fasterp](https://github.com/drbh/fasterp), a Rust reimplementation
+    of fastp that produces identical JSON output. When a `fasterp_version` field is found in
+    the summary, the software version is tracked separately as fasterp.
+
     By default, the module generates the sample names based on the `--report_title` / `-R`
     option in the fastp command line (if present), or the input FastQ file names if not.
 
@@ -391,8 +395,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Don't delete dicts with subkeys, messes up multi-panel plots
 
         # Add software version if available
-        # Note: this was added to fastp JSON output in v0.22, so it won't be available in older versions
-        if "fastp_version" in parsed_json["summary"]:
+        if "fasterp_version" in parsed_json["summary"]:
+            self.add_software_version(parsed_json["summary"]["fasterp_version"], s_name, software_name="fasterp")
+        elif "fastp_version" in parsed_json["summary"]:
             self.add_software_version(parsed_json["summary"]["fastp_version"], s_name)
 
     def fastp_general_stats_table(self, data_by_sample):
