@@ -1,5 +1,51 @@
 # MultiQC Version History
 
+## [MultiQC v1.34](https://github.com/MultiQC/MultiQC/releases/tag/v1.34) - 2026-04-21
+
+### New modules
+
+- [Methurator](https://github.com/VIBTOBIlab/methurator) ([#3447](https://github.com/MultiQC/MultiQC/pull/3447))
+  - A Python package designed to estimate CpGs saturation for DNA methylation sequencing data.
+- [riboWaltz](https://github.com/LabTranslationalArchitectomics/riboWaltz) ([#3465](https://github.com/MultiQC/MultiQC/pull/3465))
+  - Computes P-site offsets and performs quality control for ribosome profiling (Ribo-seq) data.
+
+### Feature updates and improvements
+
+- Add uv as an installation method in docs and README ([#3493](https://github.com/MultiQC/MultiQC/pull/3493))
+- Add Claude PostToolUse hook for code formatting ([#3461](https://github.com/MultiQC/MultiQC/pull/3461))
+- Bump default AI models for Anthropic ([#3430](https://github.com/MultiQC/MultiQC/pull/3430))
+- Remove HTML tags in generated module docs ([#3509](https://github.com/MultiQC/MultiQC/pull/3509))
+- Enable code review workflow to post comments on PRs ([#3506](https://github.com/MultiQC/MultiQC/pull/3506))
+- better header k/v spacing ([#3471](https://github.com/MultiQC/MultiQC/pull/3471))
+- Hide AI summary sections when simple_output is enabled ([#3500](https://github.com/MultiQC/MultiQC/pull/3500))
+- `export_plots_timeout`: Add docs and increase default to 60s ([#3433](https://github.com/MultiQC/MultiQC/pull/3433))
+
+### Module updates
+
+- Clarify RSeQC bam_stat proper pairs column title ([#3526](https://github.com/MultiQC/MultiQC/pull/3526))
+- Fix mosdepth coverage in general stats if key is missing ([#3432](https://github.com/MultiQC/MultiQC/pull/3432))
+- fastp: Add limits, update color scale of % PF/% Adapter ([#3454](https://github.com/MultiQC/MultiQC/pull/3454))
+- fastp: Pick up version number for fasterp runs ([#3392](https://github.com/MultiQC/MultiQC/pull/3392))
+- Freyja: Use safe alternative to `eval()` ([#3531](https://github.com/MultiQC/MultiQC/pull/3531))
+
+### Fixes
+
+- Fix heatmap axis labels not updating when toggling clustering ([#3487](https://github.com/MultiQC/MultiQC/pull/3487))
+- Fix bug: Toggling highlighting for AI summary sample names didn't work ([#3455](https://github.com/MultiQC/MultiQC/pull/3455))
+- fix table scroll styling with sticky headers ([#3437](https://github.com/MultiQC/MultiQC/pull/3437))
+
+### Module fixes
+
+- Fix sample name cleaning in CheckM and CheckM2 modules ([#3464](https://github.com/MultiQC/MultiQC/pull/3464))
+- CrosscheckFingerprints: Fix bug due to overwriting `row_number` variable ([#3458](https://github.com/MultiQC/MultiQC/pull/3458))
+- Porechop: Fix bug with "End Trimmed Percent" denominator ([#3456](https://github.com/MultiQC/MultiQC/pull/3456))
+- Fix incorrect plot title in umicollapse module ([#3446](https://github.com/MultiQC/MultiQC/pull/3446))
+- SNPsplit: Fix module datetime serialization error ([#3444](https://github.com/MultiQC/MultiQC/pull/3444))
+
+### Infrastructure and packaging
+
+- Switch from pre-commit to prek ([#3467](https://github.com/MultiQC/MultiQC/pull/3467))
+
 ## [MultiQC v1.33](https://github.com/MultiQC/MultiQC/releases/tag/v1.33) - 2025-12-09
 
 ### New modules
