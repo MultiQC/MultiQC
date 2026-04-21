@@ -1,4 +1,5 @@
 import logging
+from ast import literal_eval
 from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -39,8 +40,8 @@ class MultiqcModule(BaseMultiqcModule):
             summarized_line = next(line for line in f["f"] if line.startswith("summarized\t"))
             dict_str = summarized_line.split("\t")[1].strip()
             try:
-                sample_dict: Dict[str, float] = dict(eval(dict_str))
-            except ValueError:
+                sample_dict: Dict[str, float] = dict(literal_eval(dict_str))
+            except (ValueError, SyntaxError):
                 log.error(f"Error parsing 'summarized' line for '{s_name}': {dict_str}, skipping sample")
                 continue
             if not sample_dict:
