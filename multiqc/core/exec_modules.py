@@ -6,8 +6,12 @@ import tracemalloc
 from typing import Callable, Dict, List, Union
 
 import rich
-from importlib_metadata import EntryPoint
 from rich.syntax import Syntax
+
+if sys.version_info >= (3, 10):
+    from importlib.metadata import EntryPoint
+else:
+    from importlib_metadata import EntryPoint
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
