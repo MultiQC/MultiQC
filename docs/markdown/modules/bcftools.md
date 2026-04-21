@@ -1,8 +1,7 @@
 ---
 title: Bcftools
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Utilities for variant calling and manipulating VCFs and BCFs.</p>
+description: "Utilities for variant calling and manipulating VCFs and BCFs."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/bcftools/bcftools.py
 -->
 
 :::note
-<p>Utilities for variant calling and manipulating VCFs and BCFs.</p>
+Utilities for variant calling and manipulating VCFs and BCFs.
 
 [https://samtools.github.io/bcftools/](https://samtools.github.io/bcftools/)
 :::

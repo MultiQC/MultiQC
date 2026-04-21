@@ -1,8 +1,7 @@
 ---
 title: HiC-Pro
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Pipeline for Hi-C data processing.</p>
+description: "Pipeline for Hi-C data processing."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/hicpro/hicpro.py
 -->
 
 :::note
-<p>Pipeline for Hi-C data processing.</p>
+Pipeline for Hi-C data processing.
 
 [https://github.com/nservant/HiC-Pro](https://github.com/nservant/HiC-Pro)
 :::

@@ -1,8 +1,7 @@
 ---
 title: BBDuk
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Common data-quality-related trimming, filtering, and masking operations with a kmer based approach.</p>
+description: "Common data-quality-related trimming, filtering, and masking operations with a kmer based approach."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/bbduk/bbduk.py
 -->
 
 :::note
-<p>Common data-quality-related trimming, filtering, and masking operations with a kmer based approach.</p>
+Common data-quality-related trimming, filtering, and masking operations with a kmer based approach.
 
 [https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/](https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/)
 :::

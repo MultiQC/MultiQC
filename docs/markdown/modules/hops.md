@@ -1,8 +1,7 @@
 ---
 title: HOPS
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.</p>
+description: "Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/hops/hops.py
 -->
 
 :::note
-<p>Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.</p>
+Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.
 
 [https://github.com/rhuebler/HOPS/](https://github.com/rhuebler/HOPS/)
 :::

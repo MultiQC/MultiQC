@@ -1,8 +1,7 @@
 ---
 title: UMI-tools
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.</p>
+description: "Tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/umitools/umitools.py
 -->
 
 :::note
-<p>Tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.</p>
+Tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.
 
 [https://github.com/CGATOxford/UMI-tools](https://github.com/CGATOxford/UMI-tools)
 :::

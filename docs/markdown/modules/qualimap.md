@@ -1,8 +1,7 @@
 ---
 title: QualiMap
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Quality control of alignment data and its derivatives like feature counts.</p>
+description: "Quality control of alignment data and its derivatives like feature counts."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/qualimap/qualimap.py
 -->
 
 :::note
-<p>Quality control of alignment data and its derivatives like feature counts.</p>
+Quality control of alignment data and its derivatives like feature counts.
 
 [http://qualimap.bioinfo.cipf.es/](http://qualimap.bioinfo.cipf.es/)
 :::

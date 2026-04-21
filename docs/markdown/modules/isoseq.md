@@ -1,8 +1,7 @@
 ---
 title: Iso-Seq
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Identifies transcripts in PacBio single-molecule sequencing data (HiFi reads).</p>
+description: "Identifies transcripts in PacBio single-molecule sequencing data (HiFi reads)."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/isoseq/isoseq.py
 -->
 
 :::note
-<p>Identifies transcripts in PacBio single-molecule sequencing data (HiFi reads).</p>
+Identifies transcripts in PacBio single-molecule sequencing data (HiFi reads).
 
 [https://github.com/PacificBiosciences/IsoSeq](https://github.com/PacificBiosciences/IsoSeq)
 :::

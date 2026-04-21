@@ -1,8 +1,7 @@
 ---
 title: Seqfu
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Manipulate FASTA/FASTQ files.</p>
+description: "Manipulate FASTA/FASTQ files."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/seqfu/seqfu.py
 -->
 
 :::note
-<p>Manipulate FASTA/FASTQ files.</p>
+Manipulate FASTA/FASTQ files.
 
 [https://telatin.github.io/seqfu2](https://telatin.github.io/seqfu2)
 :::

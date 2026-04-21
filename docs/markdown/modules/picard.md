@@ -1,8 +1,7 @@
 ---
 title: Picard
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Tools for manipulating high-throughput sequencing data.</p>
+description: "Tools for manipulating high-throughput sequencing data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/picard/picard.py
 -->
 
 :::note
-<p>Tools for manipulating high-throughput sequencing data.</p>
+Tools for manipulating high-throughput sequencing data.
 
 [http://broadinstitute.github.io/picard/](http://broadinstitute.github.io/picard/)
 :::

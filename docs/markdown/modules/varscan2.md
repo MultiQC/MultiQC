@@ -1,8 +1,7 @@
 ---
 title: VarScan2
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Variant detection in massively parallel sequencing data.</p>
+description: "Variant detection in massively parallel sequencing data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/varscan2/varscan2.py
 -->
 
 :::note
-<p>Variant detection in massively parallel sequencing data.</p>
+Variant detection in massively parallel sequencing data.
 
 [http://dkoboldt.github.io/varscan/](http://dkoboldt.github.io/varscan/)
 :::

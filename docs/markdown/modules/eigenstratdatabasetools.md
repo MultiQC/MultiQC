@@ -1,8 +1,7 @@
 ---
 title: eigenstratdatabasetools
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases.</p>
+description: "Tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/eigenstratdatabasetool
 -->
 
 :::note
-<p>Tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases.</p>
+Tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases.
 
 [https://github.com/TCLamnidis/EigenStratDatabaseTools](https://github.com/TCLamnidis/EigenStratDatabaseTools)
 :::

@@ -1,8 +1,7 @@
 ---
 title: Flexbar
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Barcode and adapter removal tool.</p>
+description: "Barcode and adapter removal tool."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/flexbar/flexbar.py
 -->
 
 :::note
-<p>Barcode and adapter removal tool.</p>
+Barcode and adapter removal tool.
 
 [https://github.com/seqan/flexbar](https://github.com/seqan/flexbar)
 :::

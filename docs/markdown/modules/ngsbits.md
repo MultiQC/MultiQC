@@ -1,8 +1,7 @@
 ---
 title: ngs-bits
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Calculating statistics from FASTQ, BAM, and VCF.</p>
+description: "Calculating statistics from FASTQ, BAM, and VCF."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/ngsbits/ngsbits.py
 -->
 
 :::note
-<p>Calculating statistics from FASTQ, BAM, and VCF.</p>
+Calculating statistics from FASTQ, BAM, and VCF.
 
 [https://github.com/imgag/ngs-bits](https://github.com/imgag/ngs-bits)
 :::

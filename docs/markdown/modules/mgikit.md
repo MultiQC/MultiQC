@@ -1,8 +1,7 @@
 ---
 title: mgikit
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Demultiplexes FASTQ files from an MGI sequencing instrument.</p>
+description: "Demultiplexes FASTQ files from an MGI sequencing instrument."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/mgikit/mgikit.py
 -->
 
 :::note
-<p>Demultiplexes FASTQ files from an MGI sequencing instrument.</p>
+Demultiplexes FASTQ files from an MGI sequencing instrument.
 
 [https://github.com/sagc-bioinformatics/mgikit](https://github.com/sagc-bioinformatics/mgikit)
 :::

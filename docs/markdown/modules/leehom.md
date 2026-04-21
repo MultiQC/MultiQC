@@ -1,8 +1,7 @@
 ---
 title: leeHom
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Bayesian reconstruction of ancient DNA.</p>
+description: "Bayesian reconstruction of ancient DNA."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/leehom/leehom.py
 -->
 
 :::note
-<p>Bayesian reconstruction of ancient DNA.</p>
+Bayesian reconstruction of ancient DNA.
 
 [https://github.com/grenaud/leeHom](https://github.com/grenaud/leeHom)
 :::

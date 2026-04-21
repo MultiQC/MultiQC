@@ -1,8 +1,7 @@
 ---
 title: FastQ Screen
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect.</p>
+description: "Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/fastq_screen/fastq_scr
 -->
 
 :::note
-<p>Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect.</p>
+Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect.
 
 [http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
 :::

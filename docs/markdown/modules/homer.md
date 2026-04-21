@@ -1,8 +1,7 @@
 ---
 title: HOMER
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Motif discovery and next-gen sequencing analysis.</p>
+description: "Motif discovery and next-gen sequencing analysis."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/homer/homer.py
 -->
 
 :::note
-<p>Motif discovery and next-gen sequencing analysis.</p>
+Motif discovery and next-gen sequencing analysis.
 
 [http://homer.ucsd.edu/homer/](http://homer.ucsd.edu/homer/)
 :::

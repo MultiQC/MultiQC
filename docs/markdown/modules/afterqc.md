@@ -1,8 +1,7 @@
 ---
 title: AfterQC
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Automatic filtering, trimming, error removing, and quality control for FastQ data.</p>
+description: "Automatic filtering, trimming, error removing, and quality control for FastQ data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/afterqc/afterqc.py
 -->
 
 :::note
-<p>Automatic filtering, trimming, error removing, and quality control for FastQ data.</p>
+Automatic filtering, trimming, error removing, and quality control for FastQ data.
 
 [https://github.com/OpenGene/AfterQC](https://github.com/OpenGene/AfterQC)
 :::

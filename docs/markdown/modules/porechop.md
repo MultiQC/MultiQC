@@ -1,8 +1,7 @@
 ---
 title: Porechop
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Finds and removes adapters from Oxford Nanopore reads.</p>
+description: "Finds and removes adapters from Oxford Nanopore reads."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/porechop/porechop.py
 -->
 
 :::note
-<p>Finds and removes adapters from Oxford Nanopore reads.</p>
+Finds and removes adapters from Oxford Nanopore reads.
 
 [https://github.com/rrwick/Porechop](https://github.com/rrwick/Porechop)
 :::

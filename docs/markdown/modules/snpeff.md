@@ -1,8 +1,7 @@
 ---
 title: SnpEff
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Annotates and predicts the effects of variants on genes (such as amino acid changes).</p>
+description: "Annotates and predicts the effects of variants on genes (such as amino acid changes)."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/snpeff/snpeff.py
 -->
 
 :::note
-<p>Annotates and predicts the effects of variants on genes (such as amino acid changes).</p>
+Annotates and predicts the effects of variants on genes (such as amino acid changes).
 
 [http://snpeff.sourceforge.net/](http://snpeff.sourceforge.net/)
 :::
