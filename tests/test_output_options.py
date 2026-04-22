@@ -11,6 +11,15 @@ from multiqc.plots import table
 from multiqc.types import Anchor
 
 
+def _assert_dt_pconfig(table_rows: pl.DataFrame, expected_id: str, expected_title: str) -> None:
+    col = f"{expected_id} / pconfig"
+    assert col in table_rows.columns
+    for pconfig_json in table_rows[col]:
+        pconfig = json.loads(pconfig_json)
+        assert pconfig["id"] == expected_id
+        assert pconfig["title"] == expected_title
+
+
 @pytest.fixture()
 def stub_modules():
     """
@@ -146,6 +155,13 @@ def test_parquet_wide_merges_samples(tmp_path):
     assert (table_rows["myid / col4"] == "bar").all()
     assert (table_rows["myid / col5"] == True).all()
 
+    # each table stores its pconfig in a per-table column to survive the outer join without renaming
+    for table_id in ("myid", "myid2", "myid3"):
+        col = f"{table_id} / pconfig"
+        assert col in table_rows.columns
+        pconfig = json.loads(table_rows[col][0])
+        assert pconfig["rows_are_samples"] is True
+
 
 def test_parquet_wide_persists_modified_values(tmp_path):
     """
@@ -169,3 +185,4 @@ def test_parquet_wide_persists_modified_values(tmp_path):
     assert table_rows.height == 1
     assert (table_rows["sample"] == "sample1").all()
     assert (table_rows["test_table / metric1"] == 50.0).all()
+    _assert_dt_pconfig(table_rows, expected_id="test_table", expected_title="Test: Test Table")

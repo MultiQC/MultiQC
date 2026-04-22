@@ -113,6 +113,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         samples_data: Dict[str, Dict[str, Any]] = {}
         metric_col_names = set()
 
+        dt_pconfig_col = f"{self.dt.id} / pconfig".lower()
+        dt_pconfig_json = self.dt.pconfig.model_dump_json()
+
         # Process each section and its rows to collect all metrics for each sample
         for section_key, section in self.dt.section_by_id.items():
             # Process each sample in this section
@@ -127,6 +130,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             "plot_type": None,
                             "plot_input_data": None,
                             "sample": str(sample_name),
+                            dt_pconfig_col: dt_pconfig_json,  # per-table column avoids collisions during outer join
                         }
 
                     # Process each metric/column in the order from get_headers_in_order()
@@ -167,6 +171,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                 "plot_type": pl.Utf8,
                 "plot_input_data": pl.Utf8,
                 "sample": pl.Utf8,
+                dt_pconfig_col: pl.Utf8,
             },
         )
         return df, metric_col_names
