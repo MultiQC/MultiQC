@@ -113,6 +113,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         samples_data: Dict[str, Dict[str, Any]] = {}
         metric_col_names = set()
 
+        dt_pconfig_col = f"{self.dt.id} / pconfig".lower()
+        dt_pconfig_json = self.dt.pconfig.model_dump_json()
+
         # Process each section and its rows to collect all metrics for each sample
         for section_key, section in self.dt.section_by_id.items():
             # Process each sample in this section
@@ -127,24 +130,11 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             "plot_type": None,
                             "plot_input_data": None,
                             "sample": str(sample_name),
+                            dt_pconfig_col: dt_pconfig_json,  # per-table column avoids collisions during outer join
                         }
 
                     # Process each metric/column in the order from get_headers_in_order()
                     for _, metric_name, dt_column in ordered_headers:
-                        if metric_name not in row.data:
-                            continue
-
-                        cell = row.data[metric_name]
-                        # Skip empty values
-                        if cell is None or cell.raw is None or cell.fmt == "":
-                            continue
-
-                        # Store both the value and its type for proper reconstruction
-                        try:
-                            float_val = float(cell.mod)
-                        except ValueError:
-                            float_val = float("nan")
-
                         # Column names now include both the metric name and any namespace
                         # to ensure uniqueness across different tables
                         metric_col_name = ColumnKey(metric_name)
@@ -154,8 +144,18 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             metric_col_name = ColumnKey(f"{section_key} / {metric_name}")
                         metric_col_name = ColumnKey(f"{self.dt.id} / {metric_col_name}".lower())
 
+                        cell = row.data.get(metric_name)
+                        if cell is None:
+                            # If all values are null, make sure at least the column gets
+                            # stored with a null value.
+                            if metric_col_name not in samples_data[str(sample_name)]:
+                                samples_data[str(sample_name)][metric_col_name] = None
+                            continue
+
+                        val = cell.mod
+
                         # Add metric to the sample's data
-                        samples_data[str(sample_name)][metric_col_name] = float_val
+                        samples_data[str(sample_name)][metric_col_name] = val
                         metric_col_names.add(metric_col_name)
 
         # Convert dictionary to DataFrame - one row per sample
@@ -171,6 +171,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                 "plot_type": pl.Utf8,
                 "plot_input_data": pl.Utf8,
                 "sample": pl.Utf8,
+                dt_pconfig_col: pl.Utf8,
             },
         )
         return df, metric_col_names
