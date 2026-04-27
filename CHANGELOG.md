@@ -1,5 +1,11 @@
 # MultiQC Version History
 
+## Unreleased
+
+### New modules
+
+- [Trim Galore (v2.x)](https://github.com/FelixKrueger/TrimGalore) — native parser for the `*_trimming_report.json` schema-v1 file emitted alongside the legacy text report by Trim Galore v2.0+. Closes [#3529](https://github.com/MultiQC/MultiQC/issues/3529). Produces the correct "Trim Galore vX.Y.Z" entry in the Software Versions table (instead of the misleading "Cutadapt 4.0" from the v0.6.x backwards-compatibility shim) and surfaces TrimGalore-specific stats not available in Cutadapt output.
+
 ## [MultiQC v1.34](https://github.com/MultiQC/MultiQC/releases/tag/v1.34) - 2026-04-21
 
 ### New modules

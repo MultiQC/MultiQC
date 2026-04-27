@@ -1,0 +1,88 @@
+{
+  "tool": "Trim Galore",
+  "schema_version": 1,
+  "trim_galore_version": "2.1.0-beta.5",
+  "input_filenames": ["BS-seq_10K_R1.fastq.gz", "BS-seq_10K_R2.fastq.gz"],
+  "mode": "paired-end",
+  "read_number": 1,
+  "command_line": "/Users/fkrueger/Github/TrimGalore/target/release/trim_galore --paired BS-seq_10K_R1.fastq.gz BS-seq_10K_R2.fastq.gz",
+  "parameters": {
+    "quality_cutoff": 20,
+    "adapters": [{"name": "Illumina", "sequence": "AGATCGGAAGAGC"}],
+    "adapters_r2": [],
+    "times": 1,
+    "error_rate": 0.1,
+    "stringency": 1,
+    "length_cutoff": 20,
+    "max_length": null,
+    "phred_encoding": 33,
+    "trim_n": false,
+    "nextseq": false,
+    "rrbs": false,
+    "non_directional": false,
+    "poly_a": false,
+    "poly_g": false,
+    "clip_r1": null,
+    "clip_r2": null,
+    "three_prime_clip_r1": null,
+    "three_prime_clip_r2": null,
+    "max_n": null,
+    "discard_untrimmed": false,
+    "consider_already_trimmed": null
+  },
+  "read_processing": {
+    "total_reads": 10000,
+    "reads_with_adapter": 3775,
+    "reads_written": 9996,
+    "reads_too_short": 4,
+    "reads_too_long": 0,
+    "reads_too_many_n": 0,
+    "reads_discarded_untrimmed": 0
+  },
+  "basepair_processing": {
+    "total_bp_processed": 650000,
+    "quality_trimmed_bp": 0,
+    "total_bp_written": 644525
+  },
+  "adapter_trimming": [
+    {
+      "name": "Illumina",
+      "sequence": "AGATCGGAAGAGC",
+      "type": "regular 3'",
+      "length": 13,
+      "times_trimmed": 3775,
+      "length_distribution": {
+        "1": 2753,
+        "2": 703,
+        "3": 223,
+        "4": 86,
+        "5": 2,
+        "6": 1,
+        "7": 1,
+        "10": 2,
+        "65": 4
+      }
+    }
+  ],
+  "poly_a_trimming": {
+    "reads_trimmed": 0,
+    "bases_removed": 0
+  },
+  "poly_g_trimming": {
+    "reads_trimmed": 0,
+    "bases_removed": 0
+  },
+  "rrbs": {
+    "trimmed_3prime": 0,
+    "trimmed_5prime": 0,
+    "r2_clipped_5prime": 0
+  },
+  "pair_validation": {
+    "pairs_analyzed": 10000,
+    "pairs_removed": 4,
+    "pairs_removed_n": 0,
+    "pairs_removed_too_long": 0,
+    "r1_unpaired": 0,
+    "r2_unpaired": 0
+  }
+}
