@@ -549,6 +549,7 @@ module_order:
   - umitools
   - truvari
   - megahit
+  - sincei
   - ganon
   - gtdbtk
   # Alignment tool stats
