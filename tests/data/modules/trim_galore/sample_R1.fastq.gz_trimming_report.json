@@ -8,7 +8,7 @@
   "command_line": "/Users/fkrueger/Github/TrimGalore/target/release/trim_galore sample.fastq.gz",
   "parameters": {
     "quality_cutoff": 20,
-    "adapters": [{"name": "Illumina", "sequence": "AGATCGGAAGAGC"}],
+    "adapters": [{ "name": "Illumina", "sequence": "AGATCGGAAGAGC" }],
     "adapters_r2": [],
     "times": 1,
     "error_rate": 0.1,

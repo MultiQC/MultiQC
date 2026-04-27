@@ -151,8 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
         schema = payload.get("schema_version")
         if schema != SCHEMA_VERSION_SUPPORTED:
             log.warning(
-                f"Skipping {f['fn']!r}: unsupported schema_version {schema!r} "
-                f"(expected {SCHEMA_VERSION_SUPPORTED})"
+                f"Skipping {f['fn']!r}: unsupported schema_version {schema!r} (expected {SCHEMA_VERSION_SUPPORTED})"
             )
             return None
 
