@@ -591,6 +591,7 @@ module_order:
   - kraken
   - malt
   - motus
+  - trim_galore
   - trimmomatic
   - sickle
   - skewer
