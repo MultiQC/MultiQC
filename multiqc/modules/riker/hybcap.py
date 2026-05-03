@@ -204,13 +204,6 @@ def parse_reports(module):
             "format": "{:,.1f}",
             "scale": "GnBu",
         },
-        "median_target_coverage": {
-            "title": "Median target cov.",
-            "suffix": "X",
-            "format": "{:,.1f}",
-            "scale": "GnBu",
-            "hidden": True,
-        },
         "frac_uncovered_targets": _pct(
             "% Uncovered targets",
             "Fraction of raw (pre-merge) targets with zero coverage",
@@ -242,22 +235,9 @@ def parse_reports(module):
             direction="higher_better",
             gmin=80,
         ),
-        "frac_target_bases_10x": _pct(
-            "% Targets ≥ 10X",
-            "Fraction of target bases with coverage ≥ 10X",
-            direction="higher_better",
-            gmin=80,
-        ),
         "frac_target_bases_20x": _pct(
             "% Targets ≥ 20X",
             "Fraction of target bases with coverage ≥ 20X",
-            direction="higher_better",
-            hidden=False,
-            gmin=80,
-        ),
-        "frac_target_bases_30x": _pct(
-            "% Targets ≥ 30X",
-            "Fraction of target bases with coverage ≥ 30X",
             direction="higher_better",
             gmin=80,
         ),
@@ -272,7 +252,6 @@ def parse_reports(module):
             "% Targets ≥ 100X",
             "Fraction of target bases with coverage ≥ 100X",
             direction="higher_better",
-            hidden=False,
             gmin=20,
         ),
         "frac_target_bases_250x": _pct(
@@ -323,9 +302,6 @@ def parse_reports(module):
             "HS penalty 50X",
             "Fold sequencing needed to reach 80% of targets at 50X",
             hidden=False,
-        ),
-        "hs_penalty_100x": _hs_penalty(
-            "HS penalty 100X", "Fold sequencing needed to reach 80% of targets at 100X"
         ),
     }
     table_config = TableConfig(
