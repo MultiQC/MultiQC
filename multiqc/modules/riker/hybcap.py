@@ -211,9 +211,7 @@ def parse_reports(module):
             hidden=False,
             gmax=10,
         ),
-        "frac_exc_dupe": _pct(
-            "% Exc dup", "Bases excluded as duplicates", direction="lower_better", gmax=30
-        ),
+        "frac_exc_dupe": _pct("% Exc dup", "Bases excluded as duplicates", direction="lower_better", gmax=30),
         "frac_exc_mapq": _pct(
             "% Exc mapq", "Bases excluded due to low mapping quality", direction="lower_better", gmax=30
         ),
@@ -295,9 +293,7 @@ def parse_reports(module):
             "scale": "GnBu",
             "hidden": True,
         },
-        "hs_penalty_20x": _hs_penalty(
-            "HS penalty 20X", "Fold sequencing needed to reach 80% of targets at 20X"
-        ),
+        "hs_penalty_20x": _hs_penalty("HS penalty 20X", "Fold sequencing needed to reach 80% of targets at 20X"),
         "hs_penalty_50x": _hs_penalty(
             "HS penalty 50X",
             "Fold sequencing needed to reach 80% of targets at 50X",
