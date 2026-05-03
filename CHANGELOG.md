@@ -1,5 +1,12 @@
 # MultiQC Version History
 
+## MultiQC v1.35dev
+
+### New modules
+
+- [Riker](https://github.com/fulcrumgenomics/riker)
+  - Fast Rust toolkit that ports key sequencing QC tools from Picard. The module parses outputs from the `alignment`, `basic`, `gcbias`, `hybcap`, `isize`, and `wgs` subtools.
+
 ## [MultiQC v1.34](https://github.com/MultiQC/MultiQC/releases/tag/v1.34) - 2026-04-21
 
 ### New modules
