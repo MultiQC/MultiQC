@@ -878,6 +878,50 @@ ribowaltz/metaprofile:
   fn: "*ribowaltz*metaprofile_psite.tsv"
   contents_re: "sample[,\t]region[,\t]x[,\t]y"
   num_lines: 1
+riker/alignment:
+  fn: "*.alignment-metrics.txt"
+  contents_re: "^sample\\b.*\\bcategory\\b"
+  num_lines: 1
+riker/basic_base_dist:
+  fn: "*.base-distribution-by-cycle.txt"
+  contents_re: "^sample\\b.*\\bfrac_a\\b"
+  num_lines: 1
+riker/basic_mean_quality:
+  fn: "*.mean-quality-by-cycle.txt"
+  contents_re: "^sample\\b.*\\bmean_quality\\b"
+  num_lines: 1
+riker/basic_quality_dist:
+  fn: "*.quality-score-distribution.txt"
+  contents_re: "^sample\\b.*\\bfrac_bases\\b"
+  num_lines: 1
+riker/gcbias_detail:
+  fn: "*.gcbias-detail.txt"
+  contents_re: "^sample\\b.*\\bnormalized_coverage\\b"
+  num_lines: 1
+riker/gcbias_summary:
+  fn: "*.gcbias-summary.txt"
+  contents_re: "^sample\\b.*\\bgc_0_19_normcov\\b"
+  num_lines: 1
+riker/hybcap_metrics:
+  fn: "*.hybcap-metrics.txt"
+  contents_re: "^sample\\b.*\\bbait_territory\\b"
+  num_lines: 1
+riker/isize_metrics:
+  fn: "*.isize-metrics.txt"
+  contents_re: "^sample\\b.*\\bpair_orientation\\b"
+  num_lines: 1
+riker/isize_histogram:
+  fn: "*.isize-histogram.txt"
+  contents_re: "^sample\\b.*\\bfr_count\\b"
+  num_lines: 1
+riker/wgs_metrics:
+  fn: "*.wgs-metrics.txt"
+  contents_re: "^sample\\b.*\\bgenome_territory\\b"
+  num_lines: 1
+riker/wgs_coverage:
+  fn: "*.wgs-coverage.txt"
+  contents_re: "^sample\\b.*\\bbases_at_or_above\\b"
+  num_lines: 1
 rockhopper:
   fn: "summary.txt"
   contents: "Number of gene-pairs predicted to be part of the same operon"
