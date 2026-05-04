@@ -1,8 +1,7 @@
 ---
 title: pycoQC
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data.</p>
+description: "Computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/pycoqc/pycoqc.py
 -->
 
 :::note
-<p>Computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data.</p>
+Computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data.
 
 [https://github.com/tleonardi/pycoQC](https://github.com/tleonardi/pycoQC)
 :::

@@ -1,8 +1,7 @@
 ---
 title: Prokka
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Rapid annotation of prokaryotic genomes.</p>
+description: "Rapid annotation of prokaryotic genomes."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/prokka/prokka.py
 -->
 
 :::note
-<p>Rapid annotation of prokaryotic genomes.</p>
+Rapid annotation of prokaryotic genomes.
 
 [http://www.vicbioinformatics.com/software.prokka.shtml](http://www.vicbioinformatics.com/software.prokka.shtml)
 :::

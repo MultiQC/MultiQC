@@ -8,7 +8,7 @@
 
 ### Aggregate bioinformatics results across many samples into a single report
 
-##### Find [documentation](https://docs.seqera.io/multiqc) and [example reports](https://multiqc.info/example-reports/) at [http://multiqc.info](http://multiqc.info)
+##### Find [documentation](https://docs.seqera.io/multiqc) and [example reports](https://seqera.io/multiqc/#reports) at [https://seqera.io/multiqc/](https://seqera.io/multiqc/)
 
 [![PyPI Version](https://img.shields.io/pypi/v/multiqc)](https://pypi.python.org/pypi/multiqc/)
 [![Bioconda Version](https://img.shields.io/conda/v/bioconda/multiqc?label=bioconda)](https://bioconda.github.io/recipes/multiqc/README.html)
@@ -32,28 +32,37 @@ More modules are being written all the time. Please suggest any ideas as a new
 
 ## Installation
 
-You can install MultiQC from [PyPI](https://pypi.python.org/pypi/multiqc/)
-using `pip` as follows:
+You can install MultiQC using [uv](https://docs.astral.sh/uv/) (no separate Python installation required):
+
+```bash
+uv tool install multiqc
+```
+
+Alternatively, install from [PyPI](https://pypi.python.org/pypi/multiqc/) using `pip`:
 
 ```bash
 pip install multiqc
 ```
 
-Alternatively, you can install using [Conda](http://anaconda.org/)
+Or install using [Conda](http://anaconda.org/)
 from [Bioconda](https://bioconda.github.io/) ([set up your channels](https://bioconda.github.io/#usage) first):
 
 ```bash
 conda install multiqc
 ```
 
-If you would like the development version from GitHub instead, you can install it with `pip`:
+If you would like the development version from GitHub instead, you can install it with `uv` or `pip`:
+
+```bash
+uv tool install git+https://github.com/MultiQC/MultiQC.git
+```
 
 ```bash
 pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
 ```
 
 MultiQC is also available via Docker and Singularity images, Galaxy wrappers, and
-many more software distribution systems.
+many more distribution methods.
 See [the documentation](https://docs.seqera.io/multiqc/getting_started/installation/) for details.
 
 ## Usage
@@ -68,7 +77,11 @@ multiqc .
 That's it! MultiQC will scan the specified directory (`.` is the current dir)
 and produce a report detailing whatever it finds.
 
-<!-- RICH-CODEX fake_command: "multiqc ." img_paths: "docs/images/screenshots/fastqc-run.svg" -->
+<!-- RICH-CODEX
+fake_command: "multiqc ."
+img_paths:
+  - "docs/images/screenshots/fastqc-run.svg"
+-->
 
 ![`cd test-data/data/modules/fastqc/v0.10.1 && multiqc .`](https://github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/fastqc-run.svg)
 

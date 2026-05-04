@@ -180,7 +180,7 @@ Our records show that [Tool Name] might already have a MultiQC module:
 - Module: `multiqc.modules.[module_name]`
 - Documentation: [Link]
 
-Please check the [list of existing modules](https://multiqc.info/modules/) before proceeding. If the existing module doesn't meet your needs, please explain what additional functionality you require.
+Please check the [list of existing modules](https://docs.seqera.io/multiqc/modules/) before proceeding. If the existing module doesn't meet your needs, please explain what additional functionality you require.
 ```
 
 ## General Guidelines

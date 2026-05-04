@@ -1,8 +1,7 @@
 ---
 title: Pangolin
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.</p>
+description: "Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/pangolin/pangolin.py
 -->
 
 :::note
-<p>Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.</p>
+Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.
 
 [https://github.com/cov-lineages/pangolin](https://github.com/cov-lineages/pangolin)
 :::

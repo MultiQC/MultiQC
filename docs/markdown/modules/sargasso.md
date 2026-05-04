@@ -1,8 +1,7 @@
 ---
 title: Sargasso
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Separates mixed-species RNA-seq reads according to their species of origin.</p>
+description: "Separates mixed-species RNA-seq reads according to their species of origin."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/sargasso/sargasso.py
 -->
 
 :::note
-<p>Separates mixed-species RNA-seq reads according to their species of origin.</p>
+Separates mixed-species RNA-seq reads according to their species of origin.
 
 [http://biomedicalinformaticsgroup.github.io/Sargasso/](http://biomedicalinformaticsgroup.github.io/Sargasso/)
 :::

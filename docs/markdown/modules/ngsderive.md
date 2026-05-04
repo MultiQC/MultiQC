@@ -1,8 +1,7 @@
 ---
 title: ngsderive
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Forensic tool for by backwards computing library information in sequencing data.</p>
+description: "Forensic tool for by backwards computing library information in sequencing data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/ngsderive/ngsderive.py
 -->
 
 :::note
-<p>Forensic tool for by backwards computing library information in sequencing data.</p>
+Forensic tool for by backwards computing library information in sequencing data.
 
 [https://github.com/stjudecloud/ngsderive](https://github.com/stjudecloud/ngsderive)
 :::

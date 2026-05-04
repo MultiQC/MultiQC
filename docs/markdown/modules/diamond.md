@@ -1,8 +1,7 @@
 ---
 title: DIAMOND
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST.</p>
+description: "Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/diamond/diamond.py
 -->
 
 :::note
-<p>Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST.</p>
+Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST.
 
 [https://github.com/bbuchfink/diamond](https://github.com/bbuchfink/diamond)
 :::

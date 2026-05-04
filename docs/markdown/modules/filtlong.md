@@ -1,8 +1,7 @@
 ---
 title: Filtlong
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Filters long reads by quality.</p>
+description: "Filters long reads by quality."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/filtlong/filtlong.py
 -->
 
 :::note
-<p>Filters long reads by quality.</p>
+Filters long reads by quality.
 
 [https://github.com/rrwick/Filtlong](https://github.com/rrwick/Filtlong)
 :::

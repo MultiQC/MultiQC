@@ -1,8 +1,7 @@
 ---
 title: BISCUIT
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Maps bisulfite converted DNA sequence reads and determines cytosine methylation states.</p>
+description: "Maps bisulfite converted DNA sequence reads and determines cytosine methylation states."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/biscuit/biscuit.py
 -->
 
 :::note
-<p>Maps bisulfite converted DNA sequence reads and determines cytosine methylation states.</p>
+Maps bisulfite converted DNA sequence reads and determines cytosine methylation states.
 
 [https://github.com/huishenlab/biscuit](https://github.com/huishenlab/biscuit)
 :::

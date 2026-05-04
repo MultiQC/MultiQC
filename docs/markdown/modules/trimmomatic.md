@@ -1,8 +1,7 @@
 ---
 title: Trimmomatic
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Read trimming tool for Illumina NGS data.</p>
+description: "Read trimming tool for Illumina NGS data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/trimmomatic/trimmomati
 -->
 
 :::note
-<p>Read trimming tool for Illumina NGS data.</p>
+Read trimming tool for Illumina NGS data.
 
 [http://www.usadellab.org/cms/?page=trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
 :::

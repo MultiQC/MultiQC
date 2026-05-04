@@ -1,8 +1,7 @@
 ---
 title: Ribo-TISH
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Identifies translated ORFs from Ribo-seq data and reports reading frame quality metrics.</p>
+description: "Identifies translated ORFs from Ribo-seq data and reports reading frame quality metrics."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/ribotish/ribotish.py
 -->
 
 :::note
-<p>Identifies translated ORFs from Ribo-seq data and reports reading frame quality metrics.</p>
+Identifies translated ORFs from Ribo-seq data and reports reading frame quality metrics.
 
 [https://github.com/zhpn1024/ribotish](https://github.com/zhpn1024/ribotish)
 :::

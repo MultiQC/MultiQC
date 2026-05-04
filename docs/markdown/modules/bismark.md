@@ -1,8 +1,7 @@
 ---
 title: Bismark
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Maps bisulfite converted sequence reads and determine cytosine methylation states.</p>
+description: "Maps bisulfite converted sequence reads and determine cytosine methylation states."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/bismark/bismark.py
 -->
 
 :::note
-<p>Maps bisulfite converted sequence reads and determine cytosine methylation states.</p>
+Maps bisulfite converted sequence reads and determine cytosine methylation states.
 
 [http://www.bioinformatics.babraham.ac.uk/projects/bismark/](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
 :::

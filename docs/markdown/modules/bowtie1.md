@@ -1,8 +1,7 @@
 ---
 title: Bowtie 1
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Ultrafast, memory-efficient short read aligner.</p>
+description: "Ultrafast, memory-efficient short read aligner."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/bowtie1/bowtie1.py
 -->
 
 :::note
-<p>Ultrafast, memory-efficient short read aligner.</p>
+Ultrafast, memory-efficient short read aligner.
 
 [http://bowtie-bio.sourceforge.net/](http://bowtie-bio.sourceforge.net/)
 :::

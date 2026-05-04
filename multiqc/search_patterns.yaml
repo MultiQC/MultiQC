@@ -870,6 +870,18 @@ rna_seqc/html:
 ribotish/qual:
   fn: "*_qual.txt"
   num_lines: 10
+ribowaltz/psite_region:
+  fn: "*ribowaltz*psite_region.tsv"
+  contents_re: "sample[,\t]region[,\t]count[,\t]scaled_count"
+  num_lines: 1
+ribowaltz/frames:
+  fn: "*ribowaltz*frames.tsv"
+  contents_re: "sample[,\t]region[,\t]frame[,\t]count[,\t]scaled_count"
+  num_lines: 1
+ribowaltz/metaprofile:
+  fn: "*ribowaltz*metaprofile_psite.tsv"
+  contents_re: "sample[,\t]region[,\t]x[,\t]y"
+  num_lines: 1
 rockhopper:
   fn: "summary.txt"
   contents: "Number of gene-pairs predicted to be part of the same operon"

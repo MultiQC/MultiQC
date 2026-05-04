@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.34dev"
+version = "1.35dev"
 dependencies = [
     "boto3",              # for aws bedrock ai support
     "click",
@@ -229,6 +229,7 @@ qualimap = "multiqc.modules.qualimap:MultiqcModule"
 quast = "multiqc.modules.quast:MultiqcModule"
 rna_seqc = "multiqc.modules.rna_seqc:MultiqcModule"
 ribotish = "multiqc.modules.ribotish:MultiqcModule"
+ribowaltz = "multiqc.modules.ribowaltz:MultiqcModule"
 rockhopper = "multiqc.modules.rockhopper:MultiqcModule"
 rsem = "multiqc.modules.rsem:MultiqcModule"
 rseqc = "multiqc.modules.rseqc:MultiqcModule"

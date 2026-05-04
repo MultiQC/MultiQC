@@ -1,8 +1,7 @@
 ---
 title: SNPsplit
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions.</p>
+description: "Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/snpsplit/snpsplit.py
 -->
 
 :::note
-<p>Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions.</p>
+Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions.
 
 [https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/](https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/)
 :::

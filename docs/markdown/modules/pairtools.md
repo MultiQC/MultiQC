@@ -1,8 +1,7 @@
 ---
 title: pairtools
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Toolkit for Chromatin Conformation Capture experiments. Handles short-reads paired reference alignments, extracts 3C-specific information, and perform common tasks such as sorting, filtering, and deduplication.</p>
+description: "Toolkit for Chromatin Conformation Capture experiments. Handles short-reads paired reference alignments, extracts 3C-specific information, and perform common tasks such as sorting, filtering, and deduplication."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/pairtools/pairtools.py
 -->
 
 :::note
-<p>Toolkit for Chromatin Conformation Capture experiments. Handles short-reads paired reference alignments, extracts 3C-specific information, and perform common tasks such as sorting, filtering, and deduplication.</p>
+Toolkit for Chromatin Conformation Capture experiments. Handles short-reads paired reference alignments, extracts 3C-specific information, and perform common tasks such as sorting, filtering, and deduplication.
 
 [https://github.com/mirnylab/pairtools](https://github.com/mirnylab/pairtools)
 :::

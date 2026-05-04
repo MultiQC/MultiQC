@@ -1,8 +1,7 @@
 ---
 title: SeqyClean
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Filters adapters, vectors, and contaminants while quality trimming.</p>
+description: "Filters adapters, vectors, and contaminants while quality trimming."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/seqyclean/seqyclean.py
 -->
 
 :::note
-<p>Filters adapters, vectors, and contaminants while quality trimming.</p>
+Filters adapters, vectors, and contaminants while quality trimming.
 
 [https://github.com/ibest/seqyclean](https://github.com/ibest/seqyclean)
 :::

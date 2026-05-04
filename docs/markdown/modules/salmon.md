@@ -1,8 +1,7 @@
 ---
 title: Salmon
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Quantifies expression of transcripts using RNA-seq data.</p>
+description: "Quantifies expression of transcripts using RNA-seq data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/salmon/salmon.py
 -->
 
 :::note
-<p>Quantifies expression of transcripts using RNA-seq data.</p>
+Quantifies expression of transcripts using RNA-seq data.
 
 [https://combine-lab.github.io/salmon/](https://combine-lab.github.io/salmon/)
 :::
