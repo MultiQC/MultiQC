@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": stat.capitalize(),
                 "description": f"Per-base {stat} quality scores as emoji",
                 "scale": False,
-                "format": lambda x: f'<span style="font-size: 1.2em; letter-spacing: 2px;">{x}</span>',
+                "format": lambda x: f'<span style="font-size: 1.5em; letter-spacing: 2px;">{x}</span>',
             }
 
         self.add_section(
