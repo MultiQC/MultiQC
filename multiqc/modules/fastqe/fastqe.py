@@ -1,10 +1,11 @@
 # https://github.com/fastqe/fastqe
 # https://github.com/fastqe/fastqe/issues/11
-import html
 import logging
 from typing import Dict, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import table
+from multiqc.plots.table_object import ColumnDict
 
 log = logging.getLogger(__name__)
 
@@ -55,11 +56,45 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_software_version(None)
 
+        # Collect all stat types across samples for column headers
+        stat_types = sorted({stat for data in fastqe_data.values() for stat in data})
+
+        headers: Dict[str, ColumnDict] = {}
+        for stat in stat_types:
+            headers[stat] = {
+                "title": stat.capitalize(),
+                "description": f"Per-base {stat} quality scores as emoji",
+                "scale": False,
+                "format": lambda x: f'<span style="font-size: 1.2em; letter-spacing: 2px;">{x}</span>',
+            }
+
         self.add_section(
             name="Quality Scores",
             anchor="fastqe-quality",
             description="Per-base quality scores represented as emoji. Each emoji maps to a Phred quality score range.",
-            plot=self._fastqe_emoji_table(fastqe_data),
+            helptext="""
+Each emoji maps to a Phred quality score. The default scale from 0 to 41 is:
+
+🚫 ❌ 👺 💔 🙅 👾 👿 💀 👻 🙈 🙉 🙊 🐵 😿 😾 🙀 💣 🔥 😡 💩 🚨 😀 😅 😏 😊 😙 😗 😚 😃 😘 😆 😄 😋 😝 😛 😜 😉 😁 😎 😍 🤩 😍
+
+The binned scale (`--bin`) compresses scores into 8 ranges:
+🚫 (0-1), 💀 (2-9), 💩 (10-19), ⚠️ (20-24), 😄 (25-29), 😆 (30-34), 😎 (35-39), 😍 (40+)
+
+FastQE supports `--mean` (default), `--min`, and `--max` statistics.
+Each will appear as a separate column in the table.
+            """,
+            plot=table.plot(
+                fastqe_data,
+                headers,
+                pconfig={
+                    "namespace": "FastQE",
+                    "id": "fastqe_quality_table",
+                    "title": "FastQE: Quality Scores",
+                    "parse_numeric": False,
+                    "sort_rows": False,
+                    "no_violin": True,
+                },
+            ),
         )
 
         self.write_data_file(fastqe_data, "multiqc_fastqe")
@@ -87,31 +122,3 @@ class MultiqcModule(BaseMultiqcModule):
                     data[sample_name][qual_type] = emoji_quals
 
         return data if data else None
-
-    @staticmethod
-    def _fastqe_emoji_table(fastqe_data: Dict[str, Dict[str, str]]) -> str:
-        """Generate an HTML table showing emoji quality strings per sample."""
-        rows = []
-        for s_name, data in sorted(fastqe_data.items()):
-            for stat_type, emoji_str in sorted(data.items()):
-                rows.append(
-                    f"<tr>"
-                    f'<td style="font-weight:bold;">{html.escape(s_name)}</td>'
-                    f"<td>{html.escape(stat_type)}</td>"
-                    f'<td style="white-space:nowrap; font-size:1.2em; letter-spacing:2px;">{html.escape(emoji_str)}</td>'
-                    f"</tr>"
-                )
-
-        if not rows:
-            return "<p>No emoji quality data found.</p>"
-
-        return (
-            '<table class="table table-striped" style="width:auto;">'
-            "<thead><tr>"
-            '<th style="width:15%;">Sample</th>'
-            '<th style="width:10%;">Statistic</th>'
-            '<th style="width:75%;">Quality Emojis</th>'
-            "</tr></thead>"
-            f"<tbody>{''.join(rows)}</tbody>"
-            "</table>"
-        )
