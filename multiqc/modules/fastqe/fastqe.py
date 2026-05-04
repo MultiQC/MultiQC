@@ -23,6 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
     ```bash
     fastqe input.fastq > fastqe_output.txt
     ```
+
+    The saved file must have `fastqe` somewhere in the file name.
     """
 
     def __init__(self):
