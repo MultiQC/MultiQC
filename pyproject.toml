@@ -34,7 +34,7 @@ dependencies = [
     "pyarrow",            # for parquet support
 ]
 # Avoid cPython bug in 3.14.1 - https://github.com/python/cpython/issues/142214
-requires-python = ">=3.8, !=3.14.1"
+requires-python = ">=3.9, !=3.14.1"
 authors = [
     { name = "Phil Ewels", email = "phil.ewels@seqera.io" },
     { name = "Vlad Savelyev", email = "vladislav.sav@gmail.com" },
