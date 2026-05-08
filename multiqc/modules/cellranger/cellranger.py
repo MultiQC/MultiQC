@@ -3,6 +3,7 @@ import logging
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .count import parse_count_html
+from .multi import parse_multi_html
 from .vdj import parse_vdj_html
 
 log = logging.getLogger(__name__)
@@ -41,6 +42,10 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
 
         # Call submodule functions
+        n["multi"] = parse_multi_html(self)
+        if n["multi"] > 0:
+            log.info(f"Found {n['multi']} Cell Ranger multi reports")
+
         n["count"] = parse_count_html(self)
         if n["count"] > 0:
             log.info(f"Found {n['count']} Cell Ranger count reports")
