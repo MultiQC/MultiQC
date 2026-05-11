@@ -93,20 +93,23 @@ def generate_config_wizard():
             "make_report",
             "make_pdf",
         ],
-        "AI Summary": [
-            "ai_summary",
-            "ai_summary_full",
-            "ai_provider",
-            "ai_model",
-            "ai_custom_endpoint",
-            "ai_auth_type",
-            "ai_retries",
-            "ai_extra_query_options",
-            "ai_custom_context_window",
-            "ai_prompt_short",
-            "ai_prompt_full",
-            "no_ai",
-            "ai_anonymize_samples",
+        "Sample Names": [
+            "prepend_dirs",
+            "prepend_dirs_depth",
+            "prepend_dirs_sep",
+            "fn_clean_sample_names",
+            "use_filename_as_sample_name",
+            "sample_names_ignore",
+            "sample_names_ignore_re",
+            "sample_names_only_include",
+            "sample_names_only_include_re",
+        ],
+        "File Discovery": [
+            "require_logs",
+            "ignore_symlinks",
+            "ignore_images",
+            "fn_ignore_dirs",
+            "fn_ignore_paths",
         ],
         "Plot Settings": [
             "plots_force_flat",
@@ -127,16 +130,20 @@ def generate_config_wizard():
             "decimalPoint_format",
             "thousandsSep_format",
         ],
-        "Sample Names": [
-            "prepend_dirs",
-            "prepend_dirs_depth",
-            "prepend_dirs_sep",
-            "fn_clean_sample_names",
-            "use_filename_as_sample_name",
-            "sample_names_ignore",
-            "sample_names_ignore_re",
-            "sample_names_only_include",
-            "sample_names_only_include_re",
+        "AI Summary": [
+            "ai_summary",
+            "ai_summary_full",
+            "ai_provider",
+            "ai_model",
+            "ai_custom_endpoint",
+            "ai_auth_type",
+            "ai_retries",
+            "ai_extra_query_options",
+            "ai_custom_context_window",
+            "ai_prompt_short",
+            "ai_prompt_full",
+            "no_ai",
+            "ai_anonymize_samples",
         ],
         "Performance & Debugging": [
             "profile_runtime",
@@ -151,7 +158,6 @@ def generate_config_wizard():
             "filesearch_lines_limit",
             "report_readerrors",
         ],
-        "File Discovery": ["require_logs", "ignore_symlinks", "ignore_images", "fn_ignore_dirs", "fn_ignore_paths"],
     }
 
     config_data: dict = {}
@@ -200,425 +206,618 @@ def _build_html(config_json_escaped: str) -> str:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MultiQC Configuration Wizard</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 250'%3E%3Cpath fill='%23F18046' d='M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z'/%3E%3Cpath fill='%23F18046' d='M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z'/%3E%3Cpath fill='%23F18046' d='M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z'/%3E%3Cpath fill='%23F18046' d='M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {{
+            /* Seqera tokens */
+            --navy: #201637;            /* --color-brand */
+            --navy-2: #2d273c;          /* --color-brand-1000 */
+            --ink: #160f26;             /* heading ink */
+            --ink-mute: #5c5767;        /* body text */
+            --ink-soft: #736f7d;        /* caption */
+            --ink-faint: #a29fa8;       /* subtle */
+            --teal: #31c9ac;            /* --color-nextflow-500 */
+            --teal-border: #0cae8e;     /* --color-nextflow-700 */
+            --teal-border-active: #087f68; /* --color-nextflow-900 */
+            --teal-tint: #e2f7f3;
+            --orange: #f18046;          /* --color-multiqc-600 (logo only) */
+            --paper: #ffffff;
+            --surface-soft: #f8f8f8;    /* --color-brand-50 */
+            --border: rgba(0, 0, 0, 0.15);
+            --border-soft: #e8e7e9;     /* --color-brand-200 */
+            --focus: #31c9ac;
+        }}
+
         * {{
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }}
 
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            min-height: 100vh;
+        html, body {{
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--ink-mute);
+            background: var(--paper);
+            font-size: 16px;
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }}
 
-        .container {{
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-            min-height: 100vh;
+        .display {{
+            font-family: 'Bricolage Grotesque', 'Inter', sans-serif;
+            font-variation-settings: 'opsz' 32;
+            color: var(--ink);
         }}
 
-        /* Header / branding */
-        .header {{
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 24px 30px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }}
-        .header-logo {{
-            flex-shrink: 0;
-        }}
-        .header-logo svg {{
-            height: 40px;
-            width: auto;
-        }}
-        .header-logo svg path.mqc-logo-text {{
-            fill: white;
-        }}
-        .header-text h1 {{
-            font-size: 1.5em;
-            margin-bottom: 2px;
-        }}
-        .header-text p {{
-            font-size: 0.95em;
-            opacity: 0.85;
-        }}
-        .header-links {{
-            margin-left: auto;
-            display: flex;
-            gap: 12px;
-        }}
-        .header-links a {{
-            color: rgba(255,255,255,0.85);
-            text-decoration: none;
-            font-size: 0.85em;
-            padding: 6px 12px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 4px;
-            transition: all 0.2s;
-        }}
-        .header-links a:hover {{
-            background: rgba(255,255,255,0.15);
-            color: white;
+        code, pre, .mono {{
+            font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Monaco, monospace;
         }}
 
-        /* Search bar */
-        .search-bar {{
-            padding: 15px 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        a {{
+            color: var(--navy);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            text-decoration-thickness: 1px;
         }}
-        .search-bar input {{
-            width: 100%;
-            padding: 10px 16px 10px 40px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1em;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.44.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: 12px center;
-        }}
-        .search-bar input:focus {{
-            outline: none;
-            border-color: #F18046;
-            box-shadow: 0 0 0 3px rgba(241, 128, 70, 0.15);
-        }}
+        a:hover {{ color: var(--teal-border); }}
 
-        .main-content {{
-            display: flex;
-            min-height: 70vh;
-        }}
-
-        /* Sidebar navigation */
+        /* Fixed left side-nav */
         .sidebar {{
-            width: 260px;
-            flex-shrink: 0;
-            background: #f8f9fa;
-            border-right: 1px solid #e9ecef;
-            padding: 16px;
-            position: sticky;
-            top: 54px;
-            height: calc(100vh - 54px);
-            overflow-y: auto;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--navy);
+            color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            flex-direction: column;
+            z-index: 50;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
         }}
-        .sidebar h3 {{
-            color: #2c3e50;
-            margin-bottom: 12px;
-            font-size: 0.85em;
+        .sidebar-brand {{
+            padding: 22px 22px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }}
+        .sidebar-brand svg {{ height: 26px; width: auto; display: block; }}
+        .sidebar-brand svg path.mqc-logo-text {{ fill: white; }}
+        .sidebar-eyebrow {{
+            margin-top: 12px;
+            font-size: 0.7em;
+            font-weight: 600;
+            letter-spacing: 0.16em;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            color: var(--teal);
         }}
-        .section-nav {{
-            list-style: none;
+
+        .sidebar-search {{
+            padding: 18px 18px 12px;
+            position: relative;
         }}
-        .section-nav li {{
-            margin-bottom: 4px;
+        .sidebar-search input {{
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-family: inherit;
+            font-size: 0.9em;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A29FA8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20.5 20.5l-4.4-4.4'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 14px center;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
         }}
+        .sidebar-search input::placeholder {{ color: rgba(255, 255, 255, 0.45); }}
+        .sidebar-search input:focus {{
+            outline: none;
+            border-color: var(--teal);
+            background-color: rgba(255, 255, 255, 0.08);
+        }}
+
+        .sidebar-sections {{
+            flex: 1;
+            overflow-y: auto;
+            padding: 6px 12px 16px;
+        }}
+        .sidebar-sections h3 {{
+            color: rgba(255, 255, 255, 0.45);
+            margin: 8px 10px 8px;
+            font-size: 0.7em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+        }}
+        .section-nav {{ list-style: none; }}
+        .section-nav li {{ margin-bottom: 2px; }}
         .section-nav a {{
-            color: #6c757d;
+            color: rgba(255, 255, 255, 0.78);
             text-decoration: none;
-            padding: 6px 10px;
+            padding: 8px 12px;
             border-radius: 4px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.9em;
-            transition: all 0.2s;
+            font-size: 0.92em;
+            font-weight: 500;
+            transition: background 0.15s ease, color 0.15s ease;
         }}
-        .section-nav a:hover, .section-nav a.active {{
-            background: #F18046;
+        .section-nav a:hover {{
+            background: rgba(255, 255, 255, 0.06);
             color: white;
+        }}
+        .section-nav a.active {{
+            background: rgba(49, 201, 172, 0.15);
+            color: white;
+            box-shadow: inset 2px 0 0 var(--teal);
         }}
         .section-nav .badge {{
-            background: #dee2e6;
-            color: #495057;
-            border-radius: 10px;
-            padding: 2px 7px;
-            font-size: 0.75em;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 0.74em;
+            font-weight: 500;
+            min-width: 22px;
+            text-align: center;
         }}
-        .section-nav a.active .badge, .section-nav a:hover .badge {{
-            background: rgba(255,255,255,0.3);
+        .section-nav a.active .badge {{
+            background: var(--teal);
+            color: var(--navy);
+        }}
+
+        .sidebar-actions {{
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px 18px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }}
+        .sidebar-actions .btn {{
+            width: 100%;
+            text-align: center;
+        }}
+        .sidebar-actions .btn-primary {{
+            background: transparent;
             color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+        }}
+        .sidebar-actions .btn-primary:hover {{
+            background: white;
+            color: var(--navy);
+            border-color: white;
+        }}
+        .sidebar-actions .btn-secondary {{
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            border-color: rgba(255, 255, 255, 0.12);
+            padding: 6px 14px;
+            font-size: 0.85em;
+        }}
+        .sidebar-actions .btn-secondary:hover {{
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.25);
+        }}
+
+        .sidebar-links {{
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 12px 18px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }}
+        .sidebar-links a {{
+            color: rgba(255, 255, 255, 0.55);
+            text-decoration: none;
+            font-size: 0.82em;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background 0.15s ease, color 0.15s ease;
+        }}
+        .sidebar-links a:hover {{
+            background: rgba(255, 255, 255, 0.06);
+            color: white;
+        }}
+        .sidebar-links a::before {{
+            content: "↗";
+            display: inline-block;
+            margin-right: 8px;
+            color: var(--teal);
+            font-size: 0.85em;
+        }}
+
+        /* Right-hand main column */
+        .main {{
+            margin-left: 280px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        /* Hero in the main column */
+        .header {{
+            background: var(--paper);
+            color: var(--ink);
+            padding: 48px 56px 36px;
+            border-bottom: 1px solid var(--border-soft);
+        }}
+        .header h1 {{
+            font-family: 'Bricolage Grotesque', 'Inter', sans-serif;
+            font-variation-settings: 'opsz' 64;
+            font-size: 2.4em;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            line-height: 1.05;
+            color: var(--ink);
+            margin: 0;
+        }}
+        .header p {{
+            font-size: 1.05em;
+            color: var(--ink-mute);
+            margin-top: 12px;
+            max-width: 62ch;
+        }}
+        .header code {{
+            background: var(--surface-soft);
+            border: 1px solid var(--border-soft);
+            color: var(--ink);
+            padding: 1px 8px;
+            border-radius: 3px;
+            font-size: 0.88em;
         }}
 
         /* Content area */
         .content {{
+            padding: 0 56px 40px;
             flex: 1;
-            padding: 0 30px 30px;
-            overflow-y: auto;
+            min-width: 0;
         }}
 
-        /* Intro / welcome section */
+        /* Welcome / intro card — Seqera Box style */
         .welcome-section {{
-            background: linear-gradient(135deg, #fff5f0 0%, #fff 100%);
-            border: 1px solid #fde0d0;
-            border-radius: 8px;
-            padding: 24px;
-            margin: 24px 0;
+            background: var(--paper);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 32px 36px;
+            margin: 32px 0 12px;
         }}
         .welcome-section h2 {{
-            color: #c0562a;
-            font-size: 1.3em;
-            margin-bottom: 10px;
+            font-family: 'Bricolage Grotesque', 'Inter', sans-serif;
+            font-variation-settings: 'opsz' 32;
+            color: var(--ink);
+            font-size: 1.5em;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+            margin-bottom: 14px;
         }}
         .welcome-section p {{
-            color: #555;
-            line-height: 1.6;
-            margin-bottom: 8px;
+            color: var(--ink-mute);
+            line-height: 1.65;
+            margin-bottom: 12px;
         }}
+        .welcome-section p:last-child {{ margin-bottom: 0; }}
         .welcome-section code {{
-            background: #f8f0ec;
-            padding: 2px 6px;
+            background: var(--surface-soft);
+            border: 1px solid var(--border-soft);
+            padding: 1px 8px;
             border-radius: 3px;
-            font-size: 0.9em;
+            font-size: 0.88em;
+            color: var(--navy);
         }}
 
         .section-heading {{
-            color: #2c3e50;
-            margin: 30px 0 16px;
-            font-size: 1.5em;
-            border-bottom: 3px solid #F18046;
-            padding-bottom: 8px;
+            font-family: 'Bricolage Grotesque', 'Inter', sans-serif;
+            font-variation-settings: 'opsz' 32;
+            color: var(--ink);
+            margin: 48px 0 18px;
+            font-size: 1.6em;
+            font-weight: 600;
+            letter-spacing: -0.015em;
+            line-height: 1.15;
+            scroll-margin-top: 24px;
+            position: relative;
+            padding-left: 14px;
+        }}
+        .section-heading::before {{
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.3em;
+            height: 0.75em;
+            width: 3px;
+            background: var(--teal);
+            border-radius: 1px;
         }}
 
+        /* Form fields — Seqera Box style */
         .form-group {{
-            margin-bottom: 20px;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 16px 20px;
-            background: #fafbfc;
-            transition: all 0.2s;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 20px 24px;
+            background: var(--paper);
+            transition: border-color 0.15s ease;
         }}
         .form-group:hover {{
-            border-color: #F18046;
-            box-shadow: 0 2px 8px rgba(241, 128, 70, 0.08);
+            border-color: rgba(0, 0, 0, 0.25);
         }}
-        .form-group.hidden {{
-            display: none;
+        .form-group:focus-within {{
+            border-color: var(--navy);
         }}
+        .form-group.hidden {{ display: none; }}
         .form-group label.field-label {{
             display: block;
-            font-weight: 600;
-            color: #2c3e50;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-weight: 500;
+            color: var(--ink);
             margin-bottom: 6px;
-            font-size: 1em;
+            font-size: 0.95em;
         }}
         .form-group .description {{
-            color: #6c757d;
-            font-size: 0.88em;
-            margin-bottom: 10px;
-            line-height: 1.4;
+            color: var(--ink-mute);
+            font-size: 0.9em;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            max-width: 70ch;
         }}
         .default-badge {{
-            background: #e8f4fd;
-            color: #2c5282;
+            background: var(--surface-soft);
+            border: 1px solid var(--border-soft);
+            color: var(--ink-mute);
             padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            margin-left: 8px;
-            font-weight: normal;
+            border-radius: 3px;
+            font-size: 0.72em;
+            margin-left: 10px;
+            font-weight: 500;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            letter-spacing: 0;
+            text-transform: none;
+            vertical-align: middle;
         }}
         .form-group input, .form-group select, .form-group textarea {{
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: inherit;
             font-size: 0.95em;
-            transition: border-color 0.2s;
+            color: var(--ink);
+            background: var(--paper);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }}
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {{
             outline: none;
-            border-color: #F18046;
-            box-shadow: 0 0 0 3px rgba(241, 128, 70, 0.1);
+            border-color: var(--teal-border);
+            box-shadow: 0 0 0 3px rgba(49, 201, 172, 0.2);
+        }}
+        .form-group select {{
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%235c5767' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
         }}
 
         .no-results {{
             text-align: center;
-            padding: 40px;
-            color: #6c757d;
+            padding: 60px 20px;
+            color: var(--ink-mute);
             display: none;
+            font-size: 0.95em;
         }}
 
-        /* Sticky bottom actions */
-        .actions {{
-            position: sticky;
-            bottom: 0;
-            background: white;
-            border-top: 1px solid #e9ecef;
-            padding: 14px 30px;
-            display: flex;
-            gap: 12px;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 50;
+        /* When previewing YAML, hide the editor UI */
+        body.preview-mode #welcomeSection,
+        body.preview-mode #sections,
+        body.preview-mode #noResults {{
+            display: none !important;
         }}
+        body.preview-mode .section-nav a {{ pointer-events: none; opacity: 0.5; }}
+        body.preview-mode .sidebar-search {{ opacity: 0.4; pointer-events: none; }}
+
         .btn {{
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.95em;
+            padding: 8px 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.92em;
             cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 600;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            font-weight: 500;
+            line-height: 1.4;
         }}
         .btn-primary {{
-            background: #F18046;
+            background: var(--navy);
+            border-color: var(--navy);
             color: white;
         }}
         .btn-primary:hover {{
-            background: #d96e35;
+            background: var(--navy-2);
+            border-color: var(--navy-2);
         }}
         .btn-secondary {{
-            background: #6c757d;
-            color: white;
+            background: var(--paper);
+            color: var(--ink);
+            border-color: var(--border);
         }}
         .btn-secondary:hover {{
-            background: #5a6268;
+            background: var(--surface-soft);
+            border-color: var(--ink-soft);
         }}
         .btn-success {{
-            background: #27ae60;
-            color: white;
+            background: var(--teal);
+            border-color: var(--teal-border);
+            color: var(--navy);
         }}
         .btn-success:hover {{
-            background: #229954;
+            background: var(--teal-border);
+            border-color: var(--teal-border-active);
+            color: white;
         }}
 
         .yaml-output {{
-            background: #1e1e2e;
-            color: #cdd6f4;
-            padding: 20px;
-            border-radius: 8px;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 0.9em;
+            background: var(--navy);
+            color: #d9d4e0;
+            padding: 20px 22px;
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Monaco, monospace;
+            font-size: 0.88em;
+            line-height: 1.6;
             white-space: pre-wrap;
-            max-height: 400px;
+            max-height: 420px;
             overflow-y: auto;
             margin-top: 16px;
         }}
 
         .yaml-preview-section {{
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 24px 0;
+            background: var(--paper);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 28px 32px;
+            margin: 32px 0;
         }}
+        .yaml-preview-header {{
+            margin-bottom: 18px;
+        }}
+        .back-btn {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: transparent;
+            color: var(--ink-mute);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.88em;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }}
+        .back-btn:hover {{
+            background: var(--surface-soft);
+            color: var(--ink);
+            border-color: var(--ink-soft);
+        }}
+        .back-btn span {{ font-size: 1.05em; line-height: 1; }}
         .yaml-preview-section h3 {{
-            color: #2c3e50;
-            margin-bottom: 8px;
+            font-family: 'Bricolage Grotesque', 'Inter', sans-serif;
+            font-variation-settings: 'opsz' 24;
+            color: var(--ink);
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: -0.01em;
         }}
-        .fields-set-count {{
-            color: #6c757d;
+        .yaml-preview-section p {{
+            color: var(--ink-mute);
+            font-size: 0.92em;
+        }}
+        .yaml-preview-section code {{
+            background: var(--surface-soft);
+            border: 1px solid var(--border-soft);
+            padding: 1px 6px;
+            border-radius: 3px;
             font-size: 0.85em;
         }}
+        .fields-set-count {{
+            color: var(--ink-soft);
+            font-size: 0.82em;
+            margin-top: 4px;
+        }}
 
-        @media (max-width: 768px) {{
-            .main-content {{
-                flex-direction: column;
-            }}
+        @media (max-width: 900px) {{
             .sidebar {{
-                width: 100%;
                 position: static;
-                height: auto;
-                border-right: none;
-                border-bottom: 1px solid #e9ecef;
-            }}
-            .section-nav {{
-                display: flex;
-                flex-wrap: wrap;
-                gap: 4px;
-            }}
-            .section-nav li {{
-                margin-bottom: 0;
-            }}
-            .header {{
-                flex-wrap: wrap;
-            }}
-            .header-links {{
-                margin-left: 0;
                 width: 100%;
+                height: auto;
             }}
+            .sidebar-sections {{ max-height: none; }}
+            .main {{ margin-left: 0; }}
+            .header {{ padding: 32px 24px; }}
+            .header h1 {{ font-size: 1.85em; }}
+            .content {{ padding: 0 24px 32px; }}
+            .actions {{ padding: 14px 24px; }}
+            .form-group {{ padding: 16px 18px; }}
+            .welcome-section {{ padding: 24px; }}
+            .yaml-preview-section {{ padding: 22px 20px; }}
         }}
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="header-logo">{MULTIQC_LOGO_SVG}</div>
-            <div class="header-text">
-                <h1>Configuration Wizard</h1>
-                <p>Build your <code style="background:rgba(255,255,255,0.15);padding:2px 6px;border-radius:3px">multiqc_config.yaml</code></p>
-            </div>
-            <div class="header-links">
-                <a href="https://multiqc.info" target="_blank" rel="noopener">MultiQC Home</a>
-                <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
-                <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
-            </div>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            {MULTIQC_LOGO_SVG}
+            <div class="sidebar-eyebrow">Config Wizard</div>
         </div>
-
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search configuration options..." autocomplete="off" />
+        <div class="sidebar-search">
+            <input type="text" id="searchInput" placeholder="Search options..." autocomplete="off" />
         </div>
+        <nav class="sidebar-sections">
+            <h3>Sections</h3>
+            <ul class="section-nav" id="sectionNav"></ul>
+        </nav>
+        <div class="sidebar-actions">
+            <button class="btn btn-primary" onclick="previewYaml()">Preview YAML</button>
+            <button class="btn btn-success" onclick="downloadConfig()">Download Config</button>
+            <button class="btn btn-secondary" onclick="resetConfig()">Reset All</button>
+        </div>
+        <div class="sidebar-links">
+            <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">seqera.io/multiqc</a>
+            <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
+            <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
+        </div>
+    </aside>
 
-        <div class="main-content">
-            <div class="sidebar">
-                <h3>Sections</h3>
-                <ul class="section-nav" id="sectionNav"></ul>
+    <main class="main">
+        <header class="header">
+            <h1>MultiQC Configuration Wizard</h1>
+            <p>Build your <code>multiqc_config.yaml</code></p>
+        </header>
+
+        <div class="content" id="contentArea">
+            <div class="welcome-section" id="welcomeSection">
+                <h2>Welcome to the MultiQC Config Wizard</h2>
+                <p>
+                    This tool helps you create a custom <code>multiqc_config.yaml</code>
+                    configuration file. You don't need to set every option, only
+                    change what you want to customise.  Unset options will use their
+                    defaults.
+                </p>
+                <p>
+                    Browse sections in the sidebar, or use the search bar above to find
+                    a specific option.  When you are done, click <strong>Preview YAML</strong>
+                    or <strong>Download Config</strong> below.
+                    For full documentation, visit
+                    <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">docs.seqera.io/multiqc</a>.
+                </p>
             </div>
 
-            <div class="content" id="contentArea">
-                <div class="welcome-section" id="welcomeSection">
-                    <h2>Welcome to the MultiQC Config Wizard</h2>
-                    <p>
-                        This tool helps you create a custom <code>multiqc_config.yaml</code>
-                        configuration file. You don't need to set every option &mdash; only
-                        change what you want to customise.  Unset options will use their
-                        defaults.
-                    </p>
-                    <p>
-                        Browse sections in the sidebar, or use the search bar above to find
-                        a specific option.  When you are done, click <strong>Preview YAML</strong>
-                        or <strong>Download Config</strong> below.
-                    </p>
-                    <p>
-                        For full documentation, visit
-                        <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">docs.seqera.io/multiqc</a>.
-                    </p>
+            <div id="sections"></div>
+
+            <div class="no-results" id="noResults">
+                No configuration options match your search.
+            </div>
+
+            <div class="yaml-preview-section" id="yamlSection" style="display:none;">
+                <div class="yaml-preview-header">
+                    <button class="btn btn-secondary back-btn" onclick="backToEditor()">
+                        <span aria-hidden="true">&larr;</span> Back to editor
+                    </button>
                 </div>
-
-                <div id="sections"></div>
-
-                <div class="no-results" id="noResults">
-                    No configuration options match your search.
-                </div>
-
-                <div class="yaml-preview-section" id="yamlSection" style="display:none;">
-                    <h3>Generated Configuration</h3>
-                    <p>Copy this content to <code>multiqc_config.yaml</code> in your project directory.</p>
-                    <p class="fields-set-count" id="fieldsSetCount"></p>
-                    <div class="yaml-output" id="yamlOutput"></div>
-                </div>
+                <h3>Generated Configuration</h3>
+                <p>Copy this content to <code>multiqc_config.yaml</code> in your project directory.</p>
+                <p class="fields-set-count" id="fieldsSetCount"></p>
+                <div class="yaml-output" id="yamlOutput"></div>
             </div>
         </div>
-
-        <div class="actions">
-            <div>
-                <button class="btn btn-secondary" onclick="resetConfig()">Reset All</button>
-            </div>
-            <div style="display:flex;gap:10px;">
-                <button class="btn btn-primary" onclick="previewYaml()">Preview YAML</button>
-                <button class="btn btn-success" onclick="downloadConfig()">Download Config</button>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <script
         src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"
@@ -894,10 +1093,16 @@ def _build_html(config_json_escaped: str) -> str:
         }}
 
         function previewYaml() {{
-            const yamlSection = document.getElementById('yamlSection');
-            yamlSection.style.display = 'block';
             generateYaml();
-            yamlSection.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+            document.body.classList.add('preview-mode');
+            document.getElementById('yamlSection').style.display = 'block';
+            window.scrollTo({{ top: 0, behavior: 'smooth' }});
+        }}
+
+        function backToEditor() {{
+            document.body.classList.remove('preview-mode');
+            document.getElementById('yamlSection').style.display = 'none';
+            window.scrollTo({{ top: 0, behavior: 'smooth' }});
         }}
 
         function downloadConfig() {{
@@ -928,8 +1133,9 @@ def _build_html(config_json_escaped: str) -> str:
                     input.value = '';
                 }}
             }});
-            const yamlSection = document.getElementById('yamlSection');
-            if (yamlSection.style.display !== 'none') generateYaml();
+            if (document.body.classList.contains('preview-mode')) {{
+                generateYaml();
+            }}
         }}
 
         function slugify(text) {{
