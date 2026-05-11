@@ -302,7 +302,7 @@ conpair/contamination:
   num_lines: 3
 cutadapt:
   - contents: "This is cutadapt"
-    exclude_contents_re: 'Trim Galore version: (?:[2-9]|\d{2,})\.'
+    exclude_contents_re: 'Trim Galore version: (?:[2-9]|\d{2,})\.' # TG v2+ has custom JSON reports
     num_lines: 100
   - fn: "*.json"
     contents: "Cutadapt report"

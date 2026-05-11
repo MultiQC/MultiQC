@@ -1026,12 +1026,12 @@ If you have a set of samples that should be grouped together in the report using
 self.general_stats_addcols(
     ...,
     group_samples_config=SampleGroupingConfig(
-        cols_to_sum=[ColumnKeyT("total_sequences")],
+        cols_to_sum=[ColumnKey("total_sequences")],
         cols_to_weighted_average=[
-            (ColumnKeyT("percent_gc"), ColumnKeyT("total_sequences")),
-            (ColumnKeyT("avg_sequence_length"), ColumnKeyT("total_sequences")),
-            (ColumnKeyT("percent_duplicates"), ColumnKeyT("total_sequences")),
-            (ColumnKeyT("median_sequence_length"), ColumnKeyT("total_sequences")),
+            (ColumnKey("percent_gc"), ColumnKey("total_sequences")),
+            (ColumnKey("avg_sequence_length"), ColumnKey("total_sequences")),
+            (ColumnKey("percent_duplicates"), ColumnKey("total_sequences")),
+            (ColumnKey("median_sequence_length"), ColumnKey("total_sequences")),
         ],
         extra_functions=[_summarize_statues],
     )
@@ -1043,36 +1043,16 @@ In this configuration, you can specify how to merge data for each column:
 - `cols_to_sum` - add up values for each sample in the group.
 - `cols_to_average` - take an average of all samples.
 - `cols_to_weighted_average` - take a weighed average, specifying the weight column in the the second tuple parameter.
-- `extra_functions` - list of functions to call to add extra data to the merged row, e.g. FastQC uses it to recalculate the `percent_fails` value:
-- `explicit_groups` - opt-in dict of `{group_display_name: [sample_names]}` that lets a module supply its own ground-truth groups instead of relying on the user-supplied `table_sample_merge` name patterns. Use this when the tool output already tells you which samples are related — for example paired-end trimmers that emit both filenames in each report, sequencing-run manifests that list lanes per sample, or any tool whose log carries a stable pair / replicate identifier. When set, this short-circuits the name-pattern matcher: each `[sample_names]` list is collapsed into one group with the given display name, and samples not listed stay as singletons.
+- `extra_functions` - list of functions to call to add extra data to the merged row
+- `explicit_groups` - opt-in dict of `{group_display_name: [sample_names]}` that lets a module supply its own ground-truth groups instead of relying on the user-supplied `table_sample_merge` name patterns.
 
-  ```python
-  # Build the groups from tool metadata during parse. Whatever identifier the
-  # tool gives you that's stable across members of the same group is fine —
-  # an explicit pair ID, a shared filename, a hash, etc.
-  explicit_groups: Dict[str, List[str]] = {}
-  for s_name, payload in data_by_sample.items():
-      group_id = payload["some_stable_group_identifier"]
-      explicit_groups.setdefault(group_id, []).append(s_name)
+#### Extra functions
 
-  self.general_stats_addcols(
-      data_by_sample,
-      headers,
-      group_samples_config=SampleGroupingConfig(
-          explicit_groups=explicit_groups,
-          cols_to_sum=[ColumnKey("some_count_column")],
-          cols_to_weighted_average=[(ColumnKey("some_percent"), ColumnKey("some_count_column"))],
-      ),
-  )
-  ```
-
-  Entries with a single member are ignored by the framework — they fall through and render as a normal ungrouped row with their original sample name, so you don't need to filter them out yourself.
-
-  Auto-grouping is independent of `table_sample_merge`: if the user has _also_ configured name patterns, you can layer them on top of your auto-groups before passing — run each auto-group's display name through `self.groups_for_sample(...)` and bucket by the result. Modules that use this should expose a config flag so users can opt out and see per-sample rows.
+The `extra_functions` flag can be used when you need custom logic beyond summing or averaging numeric values. For example, FastQC uses it to recalculate the `percent_fails` value:
 
 ```python
 def _summarize_statues(
-    merged_row: InputRowT, group_s_names: List[Tuple[Optional[str], SampleNameT, SampleNameT]]
+    merged_row: InputRow, group_s_names: List[Tuple[Optional[str], SampleName, SampleName]]
 ):
     # Add count of fail statuses
     _num_statuses = 0
@@ -1083,8 +1063,38 @@ def _summarize_statues(
             if st == "fail":
                 _num_fails += 1
     if _num_statuses > 0:
-        merged_row.data[ColumnKeyT("percent_fails")] = (float(_num_fails) / float(_num_statuses)) * 100.0
+        merged_row.data[ColumnKey("percent_fails")] = (float(_num_fails) / float(_num_statuses)) * 100.0
 ```
+
+#### Explicit groups
+
+Use this when the tool output already tells you which samples are related. For example a tool whose log carries a stable pair / replicate identifier. When set, this short-circuits the name-pattern matcher: each `[sample_names]` list is collapsed into one group with the given display name.
+
+```python
+# Build the groups from tool metadata during parse.
+explicit_groups: Dict[str, List[str]] = {}
+for s_name, data in data_by_sample.items():
+    group_id = data["sample_id"] # This will depend on your data structure
+    explicit_groups.setdefault(group_id, []).append(s_name)
+
+self.general_stats_addcols(
+    data_by_sample,
+    headers,
+    group_samples_config = SampleGroupingConfig(
+        explicit_groups = explicit_groups,
+        cols_to_sum = [ColumnKey("some_count_column")],
+        cols_to_weighted_average = [
+            (ColumnKey("some_percent"), ColumnKey("some_count_column"))
+        ],
+    ),
+)
+```
+
+Entries with a single member are ignored by the framework - they fall through and render as a normal ungrouped row with their original sample name.
+
+Modules that use this should expose a config flag so users can opt out and see per-sample rows.
+
+Auto-grouping is independent of `table_sample_merge`: if the user has _also_ configured name patterns, you can layer them on top of your auto-groups before passing: run each auto-group's display name through `self.groups_for_sample(...)` and bucket by the result.
 
 ## Step 4 - Writing data to a file
 
