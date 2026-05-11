@@ -1,7 +1,5 @@
 # MultiQC Configuration Reference
 
-
-
 This document describes all configuration options available in MultiQC.
 
 ## Introduction
@@ -16,13 +14,14 @@ MultiQC configuration can be set in several ways:
 3. **Environment variables** - MultiQC checks for environment variables that match configuration options prefixed with `MULTIQC_`, for example: `MULTIQC_TITLE="My Report"`
 
 Configuration values are loaded in the following order of precedence (highest to lowest):
+
 1. Command line parameters
 2. Current working directory config file
 3. User home directory config file
 4. Environment variables
 5. Default configuration values
 
-The options below can be specified in your YAML configuration files. 
+The options below can be specified in your YAML configuration files.
 For boolean options, use `true` or `false` (all lowercase) in your YAML files.
 
 ## Report Appearance
@@ -105,7 +104,6 @@ Report template to use
 
 Report title
 
-
 ## Output Options
 
 ### data_dir_name
@@ -186,7 +184,6 @@ Plots directory name
 
 Zip data directory
 
-
 ## MegaQC Integration
 
 ### megaqc_access_token
@@ -206,7 +203,6 @@ MegaQC timeout
 **Type**: `Optional[str]` (default: `None`)
 
 MegaQC URL to upload to
-
 
 ## AI Summary
 
@@ -288,7 +284,6 @@ AI summary full
 
 Disable AI
 
-
 ## Seqera Integration
 
 ### seqera_api_url
@@ -302,7 +297,6 @@ Seqera API URL
 **Type**: `Optional[str]` (default: `"https://seqera.io"`)
 
 Seqera website
-
 
 ## Plot Settings
 
@@ -366,7 +360,6 @@ For more than this number of samples, show no points
 
 For more than this number of samples, show only outliers
 
-
 ## Table Settings
 
 ### collapse_tables
@@ -398,7 +391,6 @@ Maximum number of rows to show in tables
 **Type**: `Optional[str]` (default: `None`)
 
 Thousands separator format
-
 
 ## Sample Names
 
@@ -516,7 +508,6 @@ Sample names to replace (regex)
 
 Use filename as sample name (can be bool for all modules or list for specific modules/patterns)
 
-
 ## Toolbox
 
 ### highlight_colors
@@ -560,7 +551,6 @@ Show/hide patterns
 **Type**: `Optional[List[Union[str, bool]]]` (default: `[]`)
 
 Show/hide regex
-
 
 ## Performance & Debugging
 
@@ -630,7 +620,6 @@ Strict
 
 Verbose output
 
-
 ## File Discovery
 
 ### filesearch_file_shared
@@ -668,7 +657,6 @@ Ignore symlinks
 **Type**: `Optional[bool]` (default: `false`)
 
 Require logs for reports
-
 
 ## Other
 
@@ -833,12 +821,11 @@ Pandoc template
 **Type**: `Optional[Literal["long", "wide"]]` (default: `"long"`)
 
 Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw',
-        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast,
-        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to
-        for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as
-        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column
-        to have a single type).
-        
+'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast,
+the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to
+for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as
+have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column
+to have a single type).
 
 ### plot_font_family
 
@@ -948,7 +935,6 @@ Version check URL
 
 Versions table group header
 
-
 ## Special Types
 
 ### SearchPattern
@@ -962,14 +948,13 @@ Example:
 ```yaml
 sp:
   fastqc:
-    fn: '*_fastqc.zip'
+    fn: "*_fastqc.zip"
   custom_tool:
-    fn: '*.log'
-    contents: 'Started analysis'
+    fn: "*.log"
+    contents: "Started analysis"
 ```
 
 Properties:
-
 
 - **contents** (`Optional[Union[str, List[str]]]`): File contents to match
 - **contents_re** (`Optional[Union[str, List[str]]]`): File contents regex pattern to match
@@ -1002,7 +987,6 @@ fn_clean_exts:
 
 Properties:
 
-
 - **module** (`Optional[Union[str, List[str]]]`): Module(s) to apply this pattern to
 - **pattern** (`str`): Pattern to match
 - **type** (`Literal["truncate", "remove", "regex", "regex_keep"]`): Type of pattern matching to use
@@ -1028,7 +1012,6 @@ general_stats_columns:
 ```
 
 Properties:
-
 
 - **ceiling** (`Optional[float]`): Ceiling value
 - **description** (`Optional[str]`): Column description
