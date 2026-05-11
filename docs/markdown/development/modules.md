@@ -1149,6 +1149,7 @@ This supports the following arguments:
 - `autoformat`: Default `True`. Automatically format the `description`, `comment` and `helptext` strings.
 - `autoformat_type`: Default `markdown`. Autoformat text type. Currently only `markdown` supported.
 - `statuses`: Optional dictionary with keys `"pass"`, `"warn"`, and `"fail"`, each containing lists of sample names. When provided, adds an interactive status progress bar to the section header showing pass/warn/fail counts.
+- `alerts`: Optional alert box, or list of alert boxes, shown below the description. Alert messages support markdown, Bootstrap levels such as `"info"`, `"warning"`, `"danger"`, and optional affected sample lists.
 
 ### Section status bars
 
@@ -1193,6 +1194,39 @@ section_status_checks:
 ```
 
 By default, all status bars are enabled. Configuration can be set at the module level (boolean) or per-section level (nested dictionary).
+
+### Section alerts
+
+Use the `alerts` parameter when a section needs to call out an important note, especially if samples were hidden from a plot or table.
+This keeps warnings separate from the section description and lets MultiQC render the Bootstrap alert markup consistently.
+
+Each alert can be a plain markdown string, a dictionary, a `SectionAlert`, or a list of these.
+Dictionary and `SectionAlert` values support:
+
+- `message`: Alert text, formatted as markdown by default
+- `level`: Bootstrap alert style, default `"info"`; for example `"success"`, `"warning"`, or `"danger"`
+- `affected_samples`: Optional list of sample names, rendered in an expandable list
+
+For example:
+
+```python
+from multiqc.types import SectionAlert
+
+self.add_section(
+    name="Adapter Content",
+    anchor="adapter_content",
+    description="Adapter content per cycle.",
+    plot=adapter_plot,
+    alerts=SectionAlert(
+        message="**3 samples** with negligible adapter content hidden from this plot.",
+        level="warning",
+        affected_samples=["sample1", "sample2", "sample3"],
+    ),
+)
+```
+
+Sections with alerts still render even when there is no plot or custom content.
+Use `alerts` instead of appending raw `<div class="alert ...">` HTML to `description` or `content`.
 
 For example:
 
