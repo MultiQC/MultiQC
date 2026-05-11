@@ -16,32 +16,38 @@ SCHEMA_MAJOR_SUPPORTED = 1
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Parses the structured `*_trimming_report.json` (schema v1) emitted by
-    Trim Galore v2.x alongside the legacy text report.
+    [Trim Galore](https://github.com/FelixKrueger/TrimGalore) provides
+    consistent quality and adapter trimming for next-generation sequencing
+    data, with special handling for Reduced Representation Bisulfite
+    Sequencing (RRBS) and small-RNA libraries.
 
-    Trim Galore v2.x also writes a `*_trimming_report.txt` carrying a
-    "This is cutadapt ..." backwards-compatibility shim. The `cutadapt`
-    module's search pattern excludes v2.x text reports (matched on the
-    `Trim Galore version:` header) so samples are not double-counted.
-    Legacy Trim Galore v0.x / v1.x text reports continue to be parsed by
-    the `cutadapt` module — they have no JSON sibling. If the JSON is
-    removed but the v2.x text file is kept, the sample will not be
-    reported by either module.
+    This MultiQC module supports Trim Galore v2.0, which is a Rust
+    rewrite of the original Perl-based v0.6 that has a new JSON output
+    file summarising results. The earlier v0.6 versions of Trim Galore
+    that wrapped Cutadapt are supported with reporting via the Cutadapt module.
+    The old log format is still produced, but the Cutadapt module search pattern
+    is configured to skip reports mentioning Trim Galore v2+. If you delete the
+    JSON but keep the v2 text file, the sample will not be reported by either module.
 
-    Sample grouping: paired-end R1 and R2 samples are auto-grouped using
-    the tool-supplied `input_filenames` field in each JSON report — no
-    name-pattern guessing. The grouping is applied to the General Stats
-    table (with expand-to-see-individuals) and the Pair Validation table.
-    The Filtered Reads / Poly-A·G / RRBS sections keep one row per read
-    because R1 and R2 stats there can legitimately differ. Users can
-    layer additional name-pattern grouping with `table_sample_merge` on
-    top of the auto-derived pairs, or disable auto-grouping in their
-    MultiQC config to see per-read rows everywhere:
+    #### Paired-end sample grouping
+
+    R1 and R2 of a paired-end sample are grouped automatically into a single
+    row in the General Statistics and Pair Validation tables. Click the
+    expand arrow on a grouped row to see the per-read values. The grouping
+    is derived from the file list inside each JSON report, so it does not
+    depend on filename patterns.
+
+    To disable automatic grouping and show one row per read everywhere:
 
     ```yaml
     trim_galore_config:
       auto_group_pairs: false
     ```
+
+    Auto-grouping can be combined with the global
+    [`table_sample_merge`](../reports/customisation.md#sample-grouping)
+    config option to merge further — for example to group lanes of an
+    already-paired sample.
     """
 
     def __init__(self):
