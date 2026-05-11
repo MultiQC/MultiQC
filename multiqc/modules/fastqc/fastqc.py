@@ -1354,9 +1354,7 @@ class MultiqcModule(BaseMultiqcModule):
             k for k, vals in pct_by_pos_by_sample.items() if not vals or max(vals.values()) < 0.1
         )
         low_adapter_series_set = set(low_adapter_series)
-        pct_by_pos_by_sample = {
-            k: d for k, d in pct_by_pos_by_sample.items() if k not in low_adapter_series_set
-        }
+        pct_by_pos_by_sample = {k: d for k, d in pct_by_pos_by_sample.items() if k not in low_adapter_series_set}
 
         # Convert status dict format
         status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
