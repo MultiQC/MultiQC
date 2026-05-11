@@ -5,7 +5,7 @@ import re
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore
+import plotly.graph_objects as go
 import polars as pl
 from pydantic import Field
 
@@ -161,7 +161,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         # Create empty matrix with appropriate type annotations
         rows: List[List[ElemT]] = []
         for _ in range(max_row_idx + 1):
-            row: List[ElemT] = [None] * (max_col_idx + 1)  # type: ignore
+            row: List[ElemT] = [None] * (max_col_idx + 1)
             rows.append(row)
 
         # Fill matrix with values
@@ -211,7 +211,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         # Initialize a matrix with None values
         merged_rows: List[List[ElemT]] = []
         for _ in range(len(all_ycats)):
-            row: List[ElemT] = [None] * len(all_xcats)  # type: ignore
+            row: List[ElemT] = [None] * len(all_xcats)
             merged_rows.append(row)
 
         # Helper function to fill the matrix from a data source
@@ -576,14 +576,14 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
                 for row in dataset.rows:
                     for val in row:
                         if val is not None and isinstance(val, (int, float)):
-                            minval = val if minval is None else min(minval, val)  # type: ignore
+                            minval = val if minval is None else min(minval, val)
         maxval = model.pconfig.max
         if maxval is None:
             for dataset in model.datasets:
                 for row in dataset.rows:
                     for val in row:
                         if val is not None and isinstance(val, (int, float)):
-                            maxval = val if maxval is None else max(maxval, val)  # type: ignore
+                            maxval = val if maxval is None else max(maxval, val)
 
         # Determining the size of the plot to reasonably display data without cluttering it too much.
         # For flat plots, we try to make the image large enough to display all samples, but to a limit

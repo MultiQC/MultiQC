@@ -476,7 +476,7 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     "--ai-provider",
-    type=click.Choice(config_schema.AiProviderLiteral.__args__),  # type: ignore
+    type=click.Choice(config_schema.AiProviderLiteral.__args__),
     help=f"Select AI provider for report summarization. [dim yellow](Default: {config.ai_provider})",
 )
 @click.option(

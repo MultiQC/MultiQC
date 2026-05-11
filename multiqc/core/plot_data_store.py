@@ -11,7 +11,7 @@ from re import Pattern
 from typing import Any, Dict, List, Optional, Set
 
 import polars as pl
-from pydantic import ValidationError  # type: ignore
+from pydantic import ValidationError
 
 from multiqc import config, report
 from multiqc.core import tmp_dir

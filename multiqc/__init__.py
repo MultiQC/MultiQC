@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 OLDEST_SUPPORTED_PYTHON_VERSION = "3.9"
 
-if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
+if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):  # ty: ignore[unsupported-operator]
     raise RuntimeError(
         "You are running MultiQC with Python {}. "
         "Please upgrade Python! MultiQC does not support Python < {}, "

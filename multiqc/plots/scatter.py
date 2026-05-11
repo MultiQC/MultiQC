@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 import polars as pl
-from plotly import graph_objects as go  # type: ignore
+from plotly import graph_objects as go
 
 from multiqc import report
 from multiqc.core.plot_data_store import parse_value
@@ -104,7 +104,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
         # Given one dataset - turn it into a list
         if not isinstance(data, list):
-            data = [data]  # type: ignore
+            data = [data]
 
         return ScatterNormalizedInputData(
             anchor=plot_anchor(pconf),

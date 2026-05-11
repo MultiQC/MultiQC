@@ -488,7 +488,7 @@ class AWSBedrockClient(Client):
         self.name = "aws_bedrock"
         self.title = "AWS Bedrock"
 
-        import boto3  # type: ignore
+        import boto3
 
         self.client = boto3.client(service_name="bedrock-runtime")
 
@@ -626,7 +626,7 @@ def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
         Tuple of (is_available, error_message)
     """
     try:
-        import boto3  # type: ignore
+        import boto3
     except ImportError:
         return False, "boto3 not installed"
 
@@ -839,7 +839,7 @@ def get_llm_client() -> Optional[Client]:
         )
         return OpenAiClient(api_key=api_key, endpoint=config.ai_custom_endpoint)
     else:
-        avail_providers = config_schema.AiProviderLiteral.__args__  # type: ignore
+        avail_providers = config_schema.AiProviderLiteral.__args__
         raise RuntimeError(
             f'Unknown AI provider "{provider}". Please set config.ai_provider to one of the following: [{", ".join(avail_providers)}]'
         )

@@ -430,9 +430,9 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
         "GENE": {"myfile.fasta": "GENE"},
     }
     if section_name:
-        assert plot.layout.title.text == section_name  # type: ignore[attr-defined]
+        assert plot.layout.title.text == section_name
     else:
-        assert plot.layout.title.text == id.title()  # type: ignore[attr-defined]
+        assert plot.layout.title.text == id.title()
 
 
 def test_heatmap_with_numerical_cats(tmp_path):

@@ -16,7 +16,7 @@ LATEST_SUPPORTED = "5.17"
 
 def check_plotly_version():
     try:
-        import plotly  # type: ignore
+        import plotly
     except ImportError:
         logger.error("ERROR: Could not import Plotly")
         sys.exit(1)

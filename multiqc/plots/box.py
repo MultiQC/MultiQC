@@ -5,7 +5,7 @@ import json
 import logging
 from typing import Any, Dict, List, Mapping, Optional, OrderedDict, Tuple, Union, cast
 
-import plotly.graph_objects as go  # type: ignore
+import plotly.graph_objects as go
 import polars as pl
 from natsort import natsorted
 
@@ -212,7 +212,7 @@ class Dataset(BaseDataset):
                 vals_by_sample[sample] = values
         report.write_data_file(vals_by_sample, self.uid)
 
-    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:  # type: ignore[override]
+    def format_dataset_for_ai_prompt(self, pconfig: PConfig, keep_hidden: bool = True) -> str:
         """Format dataset as a markdown table with basic statistics"""
         prompt = "|Sample|Min|Q1|Median|Q3|Max|Mean|\n"
         prompt += "|---|---|---|---|---|---|---|\n"

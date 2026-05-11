@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
-import coloredlogs  # type: ignore
+import coloredlogs
 import rich
 import rich.jupyter
 import rich.progress
@@ -68,7 +68,7 @@ def init_log(log_to_file: bool = False):
 
     # Reset margin-bottom to remove the gian gap between lines.
     # See https://github.com/Textualize/rich/issues/3335 for more context
-    rich.jupyter.JUPYTER_HTML_FORMAT = rich.jupyter.JUPYTER_HTML_FORMAT.replace('style="', 'style="margin-bottom:0px;')
+    rich.jupyter.JUPYTER_HTML_FORMAT = rich.jupyter.JUPYTER_HTML_FORMAT.replace('style="', 'style="margin-bottom:0px;')  # ty: ignore[invalid-assignment]
 
     # Set up the rich console
     global rich_console

@@ -155,7 +155,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 }
                 # If the search pattern 'k' has an associated custom content section config, use it:
                 if config_custom_data_id in ccdict_by_id:
-                    parsed_dict.update(ccdict_by_id[config_custom_data_id].config)  # type: ignore
+                    parsed_dict.update(ccdict_by_id[config_custom_data_id].config)
             elif f_extension == ".html":
                 parsed_dict = {"id": f["s_name"], "plot_type": "html", "data": str(f["f"])}
                 parsed_dict.update(_find_html_file_header(f))
@@ -187,9 +187,9 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     "data": html_content,
                 }
                 # Merge any configuration from YAML front-matter or matching config item
-                parsed_dict.update(md_config)  # type: ignore
+                parsed_dict.update(md_config)
                 if config_custom_data_id in ccdict_by_id:
-                    parsed_dict.update(ccdict_by_id[config_custom_data_id].config)  # type: ignore
+                    parsed_dict.update(ccdict_by_id[config_custom_data_id].config)
 
             if parsed_dict is not None:
                 parsed_item: Union[str, Dict, List, None] = parsed_dict.get("data", {})
@@ -509,7 +509,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Heatmap
         if plot_type == PlotType.HEATMAP:
             plot = heatmap.plot(
-                ccdict.data,  # type: ignore
+                ccdict.data,
                 ccdict.config.get("xcats"),
                 ccdict.config.get("ycats"),
                 pconfig=heatmap.HeatmapConfig(**pconfig),
@@ -547,18 +547,18 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig["parse_numeric"] = False
 
                 plot = (table if plot_type == PlotType.TABLE else violin).plot(
-                    plot_datasets[0],  # type: ignore
+                    plot_datasets[0],
                     headers=headers,
-                    pconfig=pconfig,  # type: ignore
+                    pconfig=pconfig,
                 )
 
             # Bar plot
             elif plot_type == PlotType.BAR:
                 ccdict.data = [{str(k): v for k, v in ds.items()} for ds in plot_datasets]
                 plot = bargraph.plot(
-                    plot_datasets,  # type: ignore
+                    plot_datasets,
                     ccdict.config.get("categories"),
-                    pconfig=bargraph.BarPlotConfig(**pconfig),  # type: ignore
+                    pconfig=bargraph.BarPlotConfig(**pconfig),
                 )
 
             # Line plot
@@ -581,7 +581,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
                 violin_data = cast(List[Tuple[SectionKey, Mapping[str, Any]]], plot_datasets)
-                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))  # type: ignore
+                plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))
 
             # Raw HTML
             elif plot_type == PlotType.HTML:
@@ -744,7 +744,7 @@ T = TypeVar("T")
 def unquote(s: T) -> T:
     """Remove quotes from the start and end of a string if present"""
     if isinstance(s, str) and (s.startswith('"') and s.endswith('"') or s.startswith("'") and s.endswith("'")):
-        return s[1:-1]  # type: ignore
+        return s[1:-1]
     return s
 
 

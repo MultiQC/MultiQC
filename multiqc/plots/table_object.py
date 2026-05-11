@@ -65,7 +65,7 @@ def is_valid_value(val: Union[ExtValueT, None]) -> bool:
     Run time check if the value is valid for a table cell. Duplicates the type hint, but
     used in case if a module ignores type checking.
     """
-    return isinstance(val, (int, float, str, bool, Cell)) or val is None  # type: ignore
+    return isinstance(val, (int, float, str, bool, Cell)) or val is None
 
 
 class ColumnDict(TypedDict, total=False):
@@ -146,7 +146,7 @@ class ColumnMeta(ValidatedConfig):
                 header_config = _header_config
                 if col_config := header_config.get(col_key, {}):
                     for custom_k, custom_v in col_config.items():
-                        col_dict[custom_k] = custom_v  # type: ignore
+                        col_dict[custom_k] = custom_v
                 break
 
         namespace = col_dict.get("namespace", pconfig.namespace) or ""
@@ -168,7 +168,7 @@ class ColumnMeta(ValidatedConfig):
         if header_config:
             if col_config := header_config.get(col_dict["clean_rid"], {}):
                 for custom_k, custom_v in col_config.items():
-                    col_dict[custom_k] = custom_v  # type: ignore
+                    col_dict[custom_k] = custom_v
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
         shared_key = col_dict.get("shared_key", None)
@@ -186,7 +186,7 @@ class ColumnMeta(ValidatedConfig):
             else:
                 multiplier = 1
             if col_dict.get("modify") is None:
-                col_dict["modify"] = lambda x: x * multiplier if isinstance(x, (int, float)) else x  # type: ignore  # noqa: E731
+                col_dict["modify"] = lambda x: x * multiplier if isinstance(x, (int, float)) else x  # noqa: E731
             if col_dict.get("min") is None:
                 col_dict["min"] = 0
             if col_dict.get("format") is None and multiplier == 1:
@@ -205,7 +205,7 @@ class ColumnMeta(ValidatedConfig):
             if config_dict := config.custom_plot_config.get(_id):
                 for cpc_k, cpc_v in config_dict.items():
                     if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
-                        col_dict[cpc_k] = cpc_v  # type: ignore
+                        col_dict[cpc_k] = cpc_v
                 break
 
         col: ColumnMeta = ColumnMeta(**col_dict)

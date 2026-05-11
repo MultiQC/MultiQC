@@ -368,8 +368,8 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
             report.html_ids_by_scope[None].remove(Anchor("general_stats_table_table"))  # Table anchor
         del report.general_stats_html
     p = table.plot_with_sections(
-        data=report.general_stats_data,  # type: ignore
-        headers=report.general_stats_headers,  # type: ignore
+        data=report.general_stats_data,
+        headers=report.general_stats_headers,
         pconfig={
             "id": "general_stats_table",
             "title": "General Statistics",
