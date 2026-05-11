@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.33dev"
+version = "1.35dev"
 dependencies = [
     "boto3",              # for aws bedrock ai support
     "click",
@@ -24,7 +24,7 @@ dependencies = [
     "coloredlogs",        # logging in notebooks
     "spectra>=0.0.10",
     "pydantic>=2.7.0",
-    "typeguard",
+    "typeguard>=4",
     "tqdm",               # progress bar in notebooks
     "python-dotenv",
     "natsort",
@@ -34,7 +34,7 @@ dependencies = [
     "pyarrow",            # for parquet support
 ]
 # Avoid cPython bug in 3.14.1 - https://github.com/python/cpython/issues/142214
-requires-python = ">=3.8, !=3.14.1"
+requires-python = ">=3.9, !=3.14.1"
 authors = [
     { name = "Phil Ewels", email = "phil.ewels@seqera.io" },
     { name = "Vlad Savelyev", email = "vladislav.sav@gmail.com" },
@@ -69,7 +69,7 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = [
-    "pre-commit",
+    "prek",
     "ruff>=0.8.3",
     "pdoc3",
     "pytest",
@@ -128,6 +128,7 @@ ccs = "multiqc.modules.ccs:MultiqcModule"
 cellranger = "multiqc.modules.cellranger:MultiqcModule"
 cellranger_arc = "multiqc.modules.cellranger_arc:MultiqcModule"
 cells2stats = "multiqc.modules.cells2stats:MultiqcModule"
+checkatlas = "multiqc.modules.checkatlas:MultiqcModule"
 checkm = "multiqc.modules.checkm:MultiqcModule"
 checkm2 = "multiqc.modules.checkm2:MultiqcModule"
 checkqc = "multiqc.modules.checkqc:MultiqcModule"
@@ -145,6 +146,7 @@ dragen_fastqc = "multiqc.modules.dragen_fastqc:MultiqcModule"
 eigenstratdatabasetools = "multiqc.modules.eigenstratdatabasetools:MultiqcModule"
 fastp = "multiqc.modules.fastp:MultiqcModule"
 fastq_screen = "multiqc.modules.fastq_screen:MultiqcModule"
+fastqe = "multiqc.modules.fastqe:MultiqcModule"
 fastqc = "multiqc.modules.fastqc:MultiqcModule"
 featurecounts = "multiqc.modules.featurecounts:MultiqcModule"
 fgbio = "multiqc.modules.fgbio:MultiqcModule"
@@ -189,6 +191,7 @@ malt = "multiqc.modules.malt:MultiqcModule"
 mapdamage = "multiqc.modules.mapdamage:MultiqcModule"
 megahit = "multiqc.modules.megahit:MultiqcModule"
 metaphlan = "multiqc.modules.metaphlan:MultiqcModule"
+methurator = "multiqc.modules.methurator:MultiqcModule"
 methylqa = "multiqc.modules.methylqa:MultiqcModule"
 mgikit = "multiqc.modules.mgikit:MultiqcModule"
 minionqc = "multiqc.modules.minionqc:MultiqcModule"
@@ -227,6 +230,7 @@ qualimap = "multiqc.modules.qualimap:MultiqcModule"
 quast = "multiqc.modules.quast:MultiqcModule"
 rna_seqc = "multiqc.modules.rna_seqc:MultiqcModule"
 ribotish = "multiqc.modules.ribotish:MultiqcModule"
+ribowaltz = "multiqc.modules.ribowaltz:MultiqcModule"
 rockhopper = "multiqc.modules.rockhopper:MultiqcModule"
 rsem = "multiqc.modules.rsem:MultiqcModule"
 rseqc = "multiqc.modules.rseqc:MultiqcModule"
@@ -260,6 +264,7 @@ sylphtax = "multiqc.modules.sylphtax:MultiqcModule"
 telseq = "multiqc.modules.telseq:MultiqcModule"
 theta2 = "multiqc.modules.theta2:MultiqcModule"
 tophat = "multiqc.modules.tophat:MultiqcModule"
+trim_galore = "multiqc.modules.trim_galore:MultiqcModule"
 trimmomatic = "multiqc.modules.trimmomatic:MultiqcModule"
 truvari = "multiqc.modules.truvari:MultiqcModule"
 umicollapse = "multiqc.modules.umicollapse:MultiqcModule"

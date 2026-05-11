@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
     _stat_types = ("summary", "quality")
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="nanoq",
             anchor="nanoq",
             href="https://github.com/nerdna/nanoq/",

@@ -1,8 +1,7 @@
 ---
 title: THetA2
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Estimates tumour purity and clonal / subclonal copy number.</p>
+description: "Estimates tumour purity and clonal / subclonal copy number."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/theta2/theta2.py
 -->
 
 :::note
-<p>Estimates tumour purity and clonal / subclonal copy number.</p>
+Estimates tumour purity and clonal / subclonal copy number.
 
 [http://compbio.cs.brown.edu/projects/theta/](http://compbio.cs.brown.edu/projects/theta/)
 :::

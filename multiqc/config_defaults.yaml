@@ -63,7 +63,7 @@ megaqc_url: null
 megaqc_access_token: null
 megaqc_timeout: 30
 export_plots: false
-export_plots_timeout: 30
+export_plots_timeout: 60
 make_report: true
 make_pdf: false
 
@@ -426,6 +426,7 @@ fn_clean_trim:
   - ".phased"
   - ".tar"
   - "runs_"
+  - ".qc"
 
 # Files to ignore when checking content with "content" and "content_re" search patterns.
 fn_ignore_files:
@@ -568,6 +569,7 @@ module_order:
   - bowtie1
   - hostile
   - cellranger
+  - checkatlas
   - snpsplit
   - odgi
   - vg
@@ -584,6 +586,7 @@ module_order:
   - bbduk
   - clipandmerge
   - cutadapt
+  - trim_galore
   - flexbar
   - sourmash
   - kaiju
@@ -597,6 +600,7 @@ module_order:
   - biobloomtools
   - seqfu
   - fastq_screen
+  - fastqe
   - afterqc
   - fastp
   - fastqc

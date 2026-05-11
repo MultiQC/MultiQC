@@ -1,8 +1,7 @@
 ---
 title: Supernova
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>De novo genome assembler of 10X Genomics linked-reads.</p>
+description: "De novo genome assembler of 10X Genomics linked-reads."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/supernova/supernova.py
 -->
 
 :::note
-<p>De novo genome assembler of 10X Genomics linked-reads.</p>
+De novo genome assembler of 10X Genomics linked-reads.
 
 [https://www.10xgenomics.com/](https://www.10xgenomics.com/)
 :::

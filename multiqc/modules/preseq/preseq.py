@@ -80,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Preseq",
             anchor="preseq",
             href="http://smithlabresearch.org/software/preseq/",

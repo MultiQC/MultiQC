@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
         doi: str = "10.1186/gb-2014-15-3-r46",
         sp_key: str = "kraken",
     ):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name=name,
             anchor=anchor,
             href=href,

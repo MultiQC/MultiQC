@@ -3,7 +3,6 @@ MultiQC submodule to parse output from Picard AlignmentSummaryMetrics
 """
 
 import logging
-from collections import OrderedDict
 from typing import Dict
 
 from multiqc.modules.picard import util
@@ -106,7 +105,7 @@ def parse_reports(module):
             pdata[s_name]["aligned_reads"] = data_by_sample[s_name]["PF_READS_ALIGNED"]
         pdata[s_name]["unaligned_reads"] = pdata[s_name]["total_reads"] - pdata[s_name]["aligned_reads"]
 
-    keys = [OrderedDict(), OrderedDict()]
+    keys = [{}, {}]
     keys[0]["aligned_reads"] = {"name": "Aligned Reads"}
     keys[0]["unaligned_reads"] = {"name": "Unaligned Reads"}
     keys[1]["PF_ALIGNED_BASES"] = {"name": "Aligned Bases"}
