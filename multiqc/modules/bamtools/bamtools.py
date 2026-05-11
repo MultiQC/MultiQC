@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bamtools",
             anchor="bamtools",
             href="https://github.com/pezmaster31/bamtools",

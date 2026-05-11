@@ -347,12 +347,12 @@ class BaseMultiqcModule:
                     # Custom content module can now handle image files
                     (ftype, _) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
                     if ftype is not None and ftype.startswith("image"):
-                        with io.open(os.path.join(f["root"], f["fn"]), "rb") as fh:
+                        with open(os.path.join(f["root"], f["fn"]), "rb") as fh:
                             # always return file handles
                             yield {**f, "s_name": s_name, "f": fh}
                     else:
                         # Everything else - should be all text files
-                        with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
+                        with open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
                             if filehandles:
                                 yield {**f, "s_name": s_name, "f": fh}
                             elif filecontents:
@@ -364,7 +364,7 @@ class BaseMultiqcModule:
                                         f"characters\n{e}"
                                     )
                                     try:
-                                        with io.open(
+                                        with open(
                                             os.path.join(f["root"], f["fn"]),
                                             "r",
                                             encoding="utf-8",

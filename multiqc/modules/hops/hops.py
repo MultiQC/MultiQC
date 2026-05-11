@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HOPS",
             anchor="hops",
             href="https://github.com/rhuebler/HOPS/",

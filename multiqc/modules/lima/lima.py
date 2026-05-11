@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialse the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Lima",
             anchor="lima",
             href="https://github.com/PacificBiosciences/barcoding",

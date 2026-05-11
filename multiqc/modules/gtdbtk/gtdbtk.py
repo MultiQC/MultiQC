@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="GTDB-Tk",
             anchor="gtdbtk",
             href="https://ecogenomics.github.io/GTDBTk/index.html",

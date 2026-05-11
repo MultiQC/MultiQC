@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Percolator",
             anchor="percolator",
             href="https://github.com/percolator/percolator",

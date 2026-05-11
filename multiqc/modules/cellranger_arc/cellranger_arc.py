@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Cell Ranger ARC",
             anchor="cellranger-arc",
             href="https://www.10xgenomics.com/support/software/cell-ranger-arc/latest",

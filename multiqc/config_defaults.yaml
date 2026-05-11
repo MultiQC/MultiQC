@@ -569,6 +569,7 @@ module_order:
   - bowtie1
   - hostile
   - cellranger
+  - checkatlas
   - snpsplit
   - odgi
   - vg
@@ -599,6 +600,7 @@ module_order:
   - biobloomtools
   - seqfu
   - fastq_screen
+  - fastqe
   - afterqc
   - fastp
   - fastqc
