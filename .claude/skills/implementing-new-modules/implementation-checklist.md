@@ -84,7 +84,7 @@ touch multiqc/modules/toolname/tests/test_subtool.py
 
 - [ ] Raise `ModuleNoSamplesFound` when no samples found (NOT `UserWarning`)
 - [ ] Use `log.debug()` for skipped files
-- [ ] Handle malformed input gracefully, with `log.debug()` messages
+- [ ] **Don't silently default known fields**. For output from trusted tools where we're sure the value should always be there for all versions of the tool, access documented dict keys directly (`parsed["total_reads"]`) instead of `parsed.get("total_reads", 0)`. A missing key means the tool's format changed — surfacing the `KeyError` is more useful than producing a report full of fake zeros. Reserve `.get(default)` for genuinely optional fields. Catching a parse error to raise a friendlier message with the file path is fine; the badness is silently producing fake data.
 
 ## Phase 4: Visualizations
 
@@ -110,10 +110,14 @@ touch multiqc/modules/toolname/tests/test_subtool.py
 - [ ] Add bar graphs with `bargraph.plot()` for counts/lengths
 - [ ] Add line plots if applicable, or heatmaps, violin, box, scatter plots
 - [ ] Use `module.add_section()` with:
-  - [ ] `name` - Section title
+  - [ ] `name` - Section title (human-readable: `"Adapter Content"`, not `"adapter_content"`)
   - [ ] `anchor` - Unique anchor ID
   - [ ] `description` - Section description
   - [ ] `plot` - Plot object
+- [ ] All plot/column **titles**, **axis labels** (`xlab`, `ylab`), section names, and table column titles must be human-readable. Never pass raw parsed keys (`total_counts`, `pct_dup`) into user-facing fields — convert to title case with spaces (`"Total Counts"`, `"% Duplicates"`).
+- [ ] For warnings, notes, or "these samples were hidden" messages, use the **`alerts=` parameter** on `add_section()` with a `SectionAlert` (from `multiqc.types`). Pass affected sample names as `affected_samples=[...]` — they'll be rendered in an expandable list automatically. Do NOT append raw `<div class="alert ...">` HTML to `description`, and don't manually wrap sample names in `<code>` in alert messages. `level` must be a Bootstrap variant: `"primary"`, `"secondary"`, `"success"`, `"danger"`, `"warning"`, `"info"`, `"light"`, `"dark"`.
+- [ ] If every sample is zero/empty for a given plot, **keep the section visible** and pass `plot=None`; never collapse the whole section. Add a `SectionAlert` via `alerts=` so the user sees the analysis ran and which samples were affected.
+- [ ] Don't pre-filter samples in the main data dict at parse time. Keep every sample in `self.toolname_data`; filter at plot-render time. This keeps `write_data_file` complete and lets different sections make different display choices.
 
 ### Color Scale Guidelines
 
@@ -147,6 +151,7 @@ toolname/subtool:
 - [ ] Use `contents` for exact match or `contents_re` for regex
 - [ ] Set appropriate `num_lines` to check
 - [ ] Place alphabetically in file
+- [ ] **Audit upstream source** before finalising the pattern. Skim the tool's source / docs for output variations across versions, optional flags (`--all`, `--verbose`, etc.), and locale settings. Matching off a single header line is fragile if the header changes between versions. List the version + flag combinations the pattern must cover, then pick the smallest pattern that catches all without false positives.
 
 ### pyproject.toml
 

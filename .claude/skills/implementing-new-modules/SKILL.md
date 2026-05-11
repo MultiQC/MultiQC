@@ -145,6 +145,12 @@ toolname = "multiqc.modules.toolname:MultiqcModule"
 5. **Hardcoding values instead of using dynamic variables such as `f["s_name"]`**
 6. **Manually cleaning sample names instead of using core functions like `self.clean_s_name()`**
 7. **Using colour scales inappropriately, eg. RdYlGn scale for non-quality metrics** (GC% is not "higher is better")
+8. **Silently defaulting on known fields** — using `parsed.get(key, 0)` for fields the tool always emits (or wrapping the whole parse in `try/except: return {}`) hides real format breakage behind a fake-looking report. Access documented keys directly; reserve `.get(default)` for genuinely optional fields. Catching a parse error to raise a friendlier message is fine; silently producing zeros is not.
+9. **Trivial single-statement helpers** — a helper that wraps one or two lines, or just renames a one-liner, adds indirection without aiding readability. Per-section / per-parser helpers (`_add_adapter_section`, `_parse_log`) are fine and often clearer; one-liner wrappers (`_add_filtered_section` calling `add_section` with no real logic) are not.
+10. **Using raw parsed dict keys in user-facing text** — `total_counts` and `pct_dup` belong in code, never in plot/column titles, axis labels, or section names. Convert to `"Total Counts"`, `"% Duplicates"`.
+11. **Dropping the whole section when all samples are zero** — keep the section, pass `plot=None`, and add a `SectionAlert` via the `alerts=` parameter on `add_section()` listing affected samples. Don't append raw `<div class="alert ...">` HTML to `description` — use the `alerts` API.
+12. **Pre-filtering samples at parse time** — keep every sample in the main data dict so `write_data_file` is complete; filter at plot-render time.
+13. **Em-dashes (—) in any text** — descriptions, docstrings, alerts, PR text. AI tell. Use commas or split sentences.
 
 ## PR Submission
 

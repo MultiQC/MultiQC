@@ -156,6 +156,10 @@ All modules follow a consistent pattern:
 - Use f-strings and other MODERN Python 3 syntax. Do not use `__future__` imports or `OrderedDict`'s.
 - Use double quotes for strings.
 - Do not add shebang lines to Python files unless they are placed in the `scripts/` folder.
+- Helpers for distinct parts of the report — one method per section, one for parsing, one for general stats — are encouraged. They make `__init__` readable as a high-level outline. What to avoid is trivial wrappers: a helper that wraps one or two lines, just renames a one-liner, or is only ever called once with no logical separation. Ask whether the function name is more meaningful than the code it hides; if not, inline it.
+- Crash loudly on unexpected data. When parsing output from known bioinformatics tools, don't silently default known fields to empty dicts or zero values — that hides real format breakage behind a fake-looking report. Access documented fields directly (`parsed["total_reads"]`), not via `.get(key, 0)`. Catching a parse error to raise a friendlier message with the file path is fine; silently producing fake data is not. Reserve `.get(default)` for genuinely optional fields.
+- Never use em-dashes (—) in any user-facing text: module descriptions, section titles, plot help text, docstrings, PR descriptions, commit messages. Use commas, semicolons, parentheses, or split into two sentences.
+- Documentation examples in generic docs (e.g. `docs/markdown/development/modules.md`) should be tool-agnostic. Use placeholder names like `toolname` rather than referencing the specific module that motivated the example.
 - When writing modules, you must follow the following rules:
   - Raise `ModuleNoSamplesFound` when no samples are found. DO NOT RAISE `UserWarning`!
   - Call `self.add_software_version()`, even if version is not found, as it's required by linting.

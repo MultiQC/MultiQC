@@ -23,6 +23,14 @@ __all__ = ["MultiqcModule"]
 
 ### toolname.py Template
 
+Per-part helpers (`_parse_log`, `_add_general_stats`, one method per section)
+keep `__init__` readable as a high-level outline. Avoid only the trivial
+single-statement wrappers. Access documented dict keys directly
+(`parsed["total_reads"]`) rather than `.get("total_reads", 0)` — a missing
+key indicates real format breakage and is more useful as a `KeyError` than
+silently produced zeros. Use human-readable titles (e.g. `"Total Counts"`,
+not the raw dict key `total_counts`) in any field a user will see.
+
 ```python
 """MultiQC module to parse output from ToolName"""
 
