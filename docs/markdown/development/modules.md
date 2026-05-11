@@ -1228,6 +1228,8 @@ self.add_section(
 Sections with alerts still render even when there is no plot or custom content.
 Use `alerts` instead of appending raw `<div class="alert ...">` HTML to `description` or `content`.
 
+![section alerts](../../../docs/images/section_alerts.png)
+
 For example:
 
 ```python
