@@ -126,7 +126,15 @@ class MultiqcModule(BaseMultiqcModule):
                     "was discarded. R1 and R2 of a pair are collapsed into a single row (the data is identical between them)."
                 ),
                 plot=pair_validation_plot,
-                alerts=_filtered_samples_alert(pv_dropped, "with less than 0.1% of pairs affected"),
+                alerts=SectionAlert(
+                    message=(
+                        f"**{len(pv_dropped)} sample{'s' if len(pv_dropped) != 1 else ''}** with less than 0.1% "
+                        "of pairs affected hidden from this table."
+                    ),
+                    affected_samples=pv_dropped,
+                )
+                if pv_dropped
+                else None,
             )
 
         poly_plot, poly_dropped = self._poly_trimming_plot(data_by_sample)
@@ -136,7 +144,15 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="trim_galore_poly_trimming",
                 description="Reads and bases removed by Trim Galore's poly-A and poly-G tail trimmers.",
                 plot=poly_plot,
-                alerts=_filtered_samples_alert(poly_dropped, "with no poly-A/G trimming"),
+                alerts=SectionAlert(
+                    message=(
+                        f"**{len(poly_dropped)} sample{'s' if len(poly_dropped) != 1 else ''}** with no "
+                        "poly-A/G trimming hidden from this table."
+                    ),
+                    affected_samples=poly_dropped,
+                )
+                if poly_dropped
+                else None,
             )
 
         rrbs_plot, rrbs_dropped = self._rrbs_plot(data_by_sample)
@@ -146,7 +162,15 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="trim_galore_rrbs",
                 description="Reduced Representation Bisulfite Sequencing (RRBS) end-repair trimming counts.",
                 plot=rrbs_plot,
-                alerts=_filtered_samples_alert(rrbs_dropped, "with no RRBS trimming"),
+                alerts=SectionAlert(
+                    message=(
+                        f"**{len(rrbs_dropped)} sample{'s' if len(rrbs_dropped) != 1 else ''}** with no "
+                        "RRBS trimming hidden from this table."
+                    ),
+                    affected_samples=rrbs_dropped,
+                )
+                if rrbs_dropped
+                else None,
             )
 
         self.write_data_file(_flatten_for_data_file(data_by_sample), "multiqc_trim_galore")
@@ -528,16 +552,6 @@ class MultiqcModule(BaseMultiqcModule):
             ),
             sorted(dropped),
         )
-
-
-def _filtered_samples_alert(dropped: List[str], reason: str) -> Optional[SectionAlert]:
-    if not dropped:
-        return None
-    n = len(dropped)
-    return SectionAlert(
-        message=f"**{n} sample{'s' if n != 1 else ''}** {reason} hidden from this table.",
-        affected_samples=dropped,
-    )
 
 
 def _flatten_for_data_file(data_by_sample: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
