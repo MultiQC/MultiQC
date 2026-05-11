@@ -200,7 +200,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         - Reads Eliminated: Number of reads eliminated across lanes.\n
         - Percent Mismatch: Percent Mismatch.\n
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
@@ -217,7 +217,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
                 "ylab": "Percentage of Total Reads",
             },
         )
-        return plot_html, "Per Cycle Base Content", "base_content", "", "", empty_data
+        return plot_html, "Per Cycle Base Content", "base_content", "", "", empty_data, None
 
     # Prep the data
     data: Dict[str, Dict[int, Any]] = {}
@@ -283,7 +283,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
     it suggests that the analysis pipeline was unable to interpret the data well enough to
     make valid base calls.
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
@@ -299,7 +299,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
                 "ylab": "Percentage of N bases",
             },
         )
-        return plot_html, "Per Cycle N Content", "n_content", "", "", empty_data
+        return plot_html, "Per Cycle N Content", "n_content", "", "", empty_data, None
 
     data: Dict[str, Dict[int, float]] = {}
     r1r2_split = 0
@@ -388,7 +388,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
                 "ylab": "Percentage of reads that have GC (%)",
             },
         )
-        return plot_html, "Per Sample GC Histogram", "gc_histogram", "", "", empty_gc_hist
+        return plot_html, "Per Sample GC Histogram", "gc_histogram", "", "", empty_gc_hist, None
 
     gc_hist_dict: Dict[str, Dict[float, float]] = {}
     for s_name in natsorted(samples_with_reads):
@@ -446,7 +446,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
     be flagged as an error by the module since it doesn't know what your genome's
     GC content should be.
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sample_color):
@@ -465,7 +465,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
                 "ylab": "% of Sequences",
             },
         )
-        return plot_html, "Per Sample Adapter Content", "adapter_content", "", "", empty_content
+        return plot_html, "Per Sample Adapter Content", "adapter_content", "", "", empty_content, None
 
     plot_content: Dict[str, Dict[int, float]] = {}
 

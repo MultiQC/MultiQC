@@ -38,3 +38,15 @@ def test_add_section_accepts_plain_string_alert():
 def test_section_alert_rejects_unsafe_level():
     with pytest.raises(ValidationError):
         SectionAlert(message="Bad level", level='info" onclick="alert(1)')
+
+
+def test_add_section_skips_empty_alert_message_with_samples():
+    module = BaseMultiqcModule(name="Test", anchor="test")
+
+    module.add_section(
+        name="Empty alert",
+        alerts={"message": "", "affected_samples": ["sample-a"]},
+    )
+
+    assert module.sections[0].alerts == []
+    assert module.sections[0].print_section is False

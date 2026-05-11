@@ -75,7 +75,7 @@ def plot_run_stats(run_data, color_dict):
         - Number of Polonies: The total number of polonies that are calculated for the run.\n
         - Yield: The total yield of all assigned reads in gigabases.
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def _calculate_reads_eliminated(run_data) -> int:
@@ -227,7 +227,7 @@ def tabulate_project_stats(run_data, color_dict):
         - Percent Q40: The percentage of ≥ Q40 Q scores for the run. This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
         - Reads Eliminated: Number of reads eliminated across lanes.\n
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def tabulate_run_stats(run_data, color_dict):
@@ -355,7 +355,7 @@ def tabulate_run_stats(run_data, color_dict):
         - Percent Q50: The percentage of ≥ Q50 Q scores for the run (when applicable). This includes assigned and unassigned reads and excludes filtered reads and no calls.\n
         - Reads Eliminated: Number of reads eliminated across lanes.\n
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def tabulate_manifest_stats(run_data, color_dict):
@@ -420,7 +420,7 @@ def tabulate_manifest_stats(run_data, color_dict):
         - Adapter Trim Type: Adapter trimming method.\n
         - Minimum Read Length R1/R2: Minumum read length after adapter trimming.\n
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def tabulate_index_assignment_stats(run_data, color_dict):
@@ -503,7 +503,7 @@ def tabulate_index_assignment_stats(run_data, color_dict):
         - Polonies: Number of polonies assigned each sample.\n
         - Polony %: Percentage of total run's polonies assigned to each sample.\n
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def tabulate_unassigned_index_stats(run_data, color_dict):
@@ -568,7 +568,7 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
         - Polonies: Number of polonies assigned each index combination.\n
         - Polony %: Percentage of total run's polonies assigned to each index combination.\n
     """
-    return plot_html, plot_name, anchor, description, helptext, run_data
+    return plot_html, plot_name, anchor, description, helptext, run_data, None
 
 
 def _run_has_reads(run_entry: dict) -> bool:
@@ -660,7 +660,7 @@ def plot_base_quality_hist(run_data, color_dict):
     common to see base calls falling into the orange area towards the end of a read._
     """
 
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def plot_base_quality_by_cycle(run_data, color_dict):
@@ -679,6 +679,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
             "Base quality by cycle",
             "No run data with Reads available.",
             plot_content,
+            None,
         )
 
     r1r2_split = 0
@@ -820,4 +821,4 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     Choose between Median Quality, Mean Quality, Percent Q30, Percent Q40 or Percent Q50 (when applicable) per cycle.\n
     Read 1 and Read 2 are separated by a red dashed line.
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None

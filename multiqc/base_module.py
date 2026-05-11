@@ -565,8 +565,9 @@ class BaseMultiqcModule:
                     section_alert.message = markdown.markdown(section_alert.message)
             section_alert.message = section_alert.message.strip()
 
-            if section_alert.message or section_alert.affected_samples:
-                formatted_alerts.append(section_alert)
+            if not section_alert.message:
+                continue
+            formatted_alerts.append(section_alert)
 
         return formatted_alerts
 

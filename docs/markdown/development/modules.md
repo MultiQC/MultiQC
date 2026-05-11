@@ -1207,6 +1207,9 @@ Dictionary and `SectionAlert` values support:
 - `level`: Bootstrap alert style, default `"info"`; for example `"success"`, `"warning"`, or `"danger"`
 - `affected_samples`: Optional list of sample names, rendered in an expandable list
 
+Alerts with an empty `message` are ignored.
+After `add_section()` runs, the `SectionAlert.message` value stored on the section is the rendered HTML string, matching how section descriptions are stored.
+
 For example:
 
 ```python

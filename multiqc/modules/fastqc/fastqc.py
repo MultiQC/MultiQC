@@ -1387,10 +1387,12 @@ class MultiqcModule(BaseMultiqcModule):
         if low_adapter_series:
             n = len(low_adapter_series)
             low_adapter_samples = sorted({series.rsplit(" - ", 1)[0] for series in low_adapter_series})
+            n_samples = len(low_adapter_samples)
             alerts = SectionAlert(
                 message=(
                     f"**{n} sample-adapter combination{'s' if n != 1 else ''}** with less than 0.1% "
-                    "adapter contamination hidden from this plot."
+                    f"adapter contamination hidden from this plot across {n_samples} sample"
+                    f"{'s' if n_samples != 1 else ''}."
                 ),
                 affected_samples=low_adapter_samples,
             )

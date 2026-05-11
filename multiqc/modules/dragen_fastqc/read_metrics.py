@@ -115,6 +115,7 @@ class DragenReadMetrics(BaseMultiqcModule):
             desc = f"All samples have sequences within a single length bin ({lengths}bp)."
             if len(seq_lengths) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
+            # Alert-only sections still render, so users see why the plot was skipped.
             self.add_section(
                 name="Sequence Length Distribution",
                 anchor="dragenqc_sequence_length_distribution",
