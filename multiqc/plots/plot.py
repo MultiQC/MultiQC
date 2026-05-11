@@ -266,6 +266,11 @@ class PConfig(ValidatedConfig):
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
                 if k in self.__class__.model_fields:
+                    field_info = self.__class__.model_fields[k]
+                    # Redirect deprecated aliases (e.g. yPlotBands -> y_bands) to their
+                    # modern field name so the corresponding parse_<field>() method runs.
+                    if isinstance(field_info.deprecated, str) and field_info.deprecated in self.__class__.model_fields:
+                        k = field_info.deprecated
                     # Check if there's a parse method for this field (e.g., parse_y_bands)
                     # to properly convert dictionaries to typed objects like LineBand
                     parse_method = getattr(self.__class__, f"parse_{k}", None)

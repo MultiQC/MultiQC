@@ -696,7 +696,7 @@ custom_plot_config:
   # Add a coloured band in the background to show what is a good result
   # Yes I know this doesn't make sense for this plot, it's just an example ;)
   bismark_mbias:
-    yPlotBands:
+    y_bands:
       - from: 0
         to: 40
         color: "#e6c3c3"

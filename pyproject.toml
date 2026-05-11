@@ -24,7 +24,7 @@ dependencies = [
     "coloredlogs",        # logging in notebooks
     "spectra>=0.0.10",
     "pydantic>=2.7.0",
-    "typeguard",
+    "typeguard>=4",
     "tqdm",               # progress bar in notebooks
     "python-dotenv",
     "natsort",

@@ -1291,3 +1291,43 @@ def test_linegraph_custom_plot_config_x_lines(reset):
     assert isinstance(plot.pconfig.x_lines[0], FlatLine)
     assert plot.pconfig.x_lines[0].value == 50
     assert plot.pconfig.x_lines[0].color == "#ff0000"
+
+
+def test_linegraph_custom_plot_config_deprecated_y_plot_bands(reset):
+    """
+    Test that the deprecated camelCase alias yPlotBands is still parsed correctly
+    when set via custom_plot_config — the docs example used to use this form, so
+    users on existing configs should not see pydantic serializer warnings.
+
+    Regression test for the deprecated-alias path in the fix for
+    https://github.com/MultiQC/MultiQC/issues/3457.
+    """
+    from multiqc.plots.plot import LineBand
+
+    plot_id = "test_linegraph_y_plot_bands_deprecated"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "yPlotBands": [
+                {"from": 0, "to": 40, "color": "#e6c3c3"},
+                {"from": 40, "to": 80, "color": "#e6dcc3"},
+            ]
+        }
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            {"Sample1": {0: 50, 1: 60, 2: 70}},
+            linegraph.LinePlotConfig(id=plot_id, title="Test: deprecated yPlotBands"),
+        )
+    )
+
+    # Deprecated alias should be redirected to the modern y_bands field and parsed
+    # into LineBand objects (not raw dicts).
+    assert plot.pconfig.y_bands is not None
+    assert len(plot.pconfig.y_bands) == 2
+    for band in plot.pconfig.y_bands:
+        assert isinstance(band, LineBand), f"Expected LineBand, got {type(band)}"
+    assert plot.pconfig.y_bands[0].from_ == 0
+    assert plot.pconfig.y_bands[0].to == 40
+    assert plot.pconfig.y_bands[0].color == "#e6c3c3"
