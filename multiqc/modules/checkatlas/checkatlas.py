@@ -1,70 +1,39 @@
-#!/usr/bin/env python
-
-"""MultiQC module to parse output from checkatlas"""
-
-from __future__ import print_function
-
+import logging
 from typing import Dict
 
-import logging
-import os.path
-from collections import OrderedDict
-
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc import config
 from multiqc.plots import linegraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
-CELLINDEX_HEADER = "cell_index"
 QC_HEADER = ["total_counts", "n_genes_by_counts", "pct_counts_mt"]
 QC_RANK_HEADER = ["cellrank_total_counts", "cellrank_n_genes_by_counts", "cellrank_pct_counts_mt"]
-
-LIST_PATTERN = [
-    "checkatlas/summary",
-    "checkatlas/adata",
-    "checkatlas/qc",
-    "checkatlas/cluster",
-    "checkatlas/annotation",
-    "checkatlas/dimred",
-    "checkatlas/specificity",
-]
-
-DICT_NAMING = {
-    "checkatlas/summary": "checkatlas_summ",
-    "checkatlas/adata": "_checkatlas_adata",
-    "checkatlas/qc": "checkatlas_qc",
-    "checkatlas/cluster": "_checkatlas_mcluster",
-    "checkatlas/annotation": "checkatlas_mannot",
-    "checkatlas/dimred": "_checkatlas_mdimred",
-    "checkatlas/specificity": "checkatlas_mspecificity",
-}
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The module parse :
-    - checkatlas/summary
-    - checkatlas/adata
-    - checkatlas/qc
-    - checkatlas/cluster
-    - checkatlas/annotation
-    - checkatlas/dimred
+    CheckAtlas is a one-liner tool to check the quality of your single-cell atlases. For every atlas, it produces
+    quality control tables and figures which can then be processed by MultiQC. CheckAtlas is able to load Scanpy,
+    Seurat, and CellRanger files.
 
+    MultiQC parses the following tables produced by CheckAtlas:
 
-
+    - `summary/sample_name.tsv` - Summary tables with general information on atlases
+    - `adata/sample_name.tsv` - Table with all scanpy adata features
+    - `qc/sample_name.tsv` - Quality control tables for every atlas
+    - `cluster/sample_name.tsv` - Table with cluster metrics calculated for every atlas
+    - `annot/sample_name.tsv` - Table with annotation metrics calculated for every atlas
+    - `dimred/sample_name.tsv` - Table with dimensionality reduction metrics calculated for every atlas
     """
 
     def __init__(self):
-        # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="CheckAtlas",
             anchor="checkatlas",
             href="https://github.com/becavin-lab/checkatlas",
             info="A one-liner tool for quality control of your single-cell atlases.",
-            doi="",
+            # Can't find a DOI // doi=
         )
 
         # Set up class objects to hold parsed data
@@ -118,294 +87,490 @@ class MultiqcModule(BaseMultiqcModule):
                 self.data_metric_dimred[key] = item
             self.add_data_source(f, s_name)
 
-        # Print results and create sections
-        if len(self.data_summary) > 0:
-            log.info("Found {} summary tables".format(len(self.data_summary)))
+        if self.data_summary:
+            log.info(f"Found {len(self.data_summary)} summary tables")
             self.add_summary_section()
-        if len(self.data_qc_counts) > 0:
-            log.info("Found {} QC counts tables".format(len(self.data_qc_counts)))
+        if self.data_qc_counts:
+            log.info(f"Found {len(self.data_qc_counts)} QC counts tables")
             self.add_qc_counts_section()
-        if len(self.data_qc_genes) > 0:
-            log.info("Found {} QC genes tables".format(len(self.data_qc_genes)))
+        if self.data_qc_genes:
+            log.info(f"Found {len(self.data_qc_genes)} QC genes tables")
             self.add_qc_ngenes_section()
-        if len(self.data_qc_mito) > 0:
-            log.info("Found {} QC mito tables".format(len(self.data_qc_mito)))
+        if self.data_qc_mito:
+            log.info(f"Found {len(self.data_qc_mito)} QC mito tables")
             self.add_qc_mito_section()
-        if len(self.data_metric_cluster) > 0:
-            log.info("Found {} metric cluster tables".format(len(self.data_metric_cluster)))
+        if self.data_metric_cluster:
+            log.info(f"Found {len(self.data_metric_cluster)} metric cluster tables")
             self.add_clustermetrics_section()
-        if len(self.data_metric_annot) > 0:
-            log.info("Found {} metric annot tables".format(len(self.data_metric_annot)))
+        if self.data_metric_annot:
+            log.info(f"Found {len(self.data_metric_annot)} metric annot tables")
             self.add_annotationmetrics_section()
-        if len(self.data_metric_dimred) > 0:
-            log.info("Found {} metric dimred tables".format(len(self.data_metric_dimred)))
+        if self.data_metric_dimred:
+            log.info(f"Found {len(self.data_metric_dimred)} metric dimred tables")
             self.add_dimredmetrics_section()
-        if len(self.data_adata) > 0:
-            log.info("Found {} adata tables".format(len(self.data_adata)))
+        if self.data_adata:
+            log.info(f"Found {len(self.data_adata)} adata tables")
             self.add_adata_section()
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
         self.add_software_version(None)
 
-        # Exit if we didn't find anything
-        # Filter to strip out ignored sample names
         self.data_summary = self.ignore_samples(self.data_summary)
-
-        if len(self.data_summary) == 0:
+        if not self.data_summary:
             raise ModuleNoSamplesFound
 
-        # Save parsed table
-        self.write_data_file(self.data_summary, "multiqc_checkatlas_summary")
-
-        # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
 
+        self.write_data_file(self.data_summary, "multiqc_checkatlas_summary")
+
     def add_summary_section(self):
-        pconfig_summary = {"namespace": "summary_table", "id": "summary", "title": "Summary of checkatlas results"}
+        pconfig_summary = {
+            "namespace": "summary_table",
+            "id": "checkatlas_summary",
+            "title": "CheckAtlas: Atlas Summary",
+        }
+        headers = {
+            "AtlasFileType": {
+                "title": "Atlas Type",
+                "description": "Source file format of the atlas (e.g. AnnData, Seurat, CellRanger)",
+            },
+            "NbCells": {
+                "title": "Cells",
+                "description": "Number of cells in the atlas",
+                "format": "{:,.0f}",
+                "scale": "Blues",
+            },
+            "NbGenes": {
+                "title": "Genes",
+                "description": "Number of genes (features) in the atlas",
+                "format": "{:,.0f}",
+                "scale": "Greens",
+            },
+            "AnnData.raw": {
+                "title": "Has Raw Layer",
+                "description": "Whether the atlas contains a raw counts layer (adata.raw)",
+            },
+            "AnnData.X": {
+                "title": "Has X Layer",
+                "description": "Whether the atlas contains the main expression matrix (adata.X)",
+            },
+            "File_extension": {
+                "title": "Atlas File",
+                "description": "Source file or extension for the atlas (file name for AnnData, extension for Seurat, directory name for CellRanger)",
+            },
+            "File_path": {
+                "title": "File Path",
+                "description": "Path to the source atlas file on disk",
+                "hidden": True,
+            },
+        }
         self.add_section(
-            name="Atlas overview",
+            name="Atlas Overview",
             anchor="checkatlas-summary",
-            description="Overview of your single-cell atlases",
+            description="Top-level statistics for each input atlas.",
             helptext="""
-                Test
+                One row per atlas, showing the source format (AnnData, Seurat or CellRanger),
+                the number of cells and genes, and which expression layers (`adata.X`, `adata.raw`)
+                are present. Useful for comparing scale and shape of atlases at a glance.
                 """,
-            plot=table.plot(data=self.data_summary, pconfig=pconfig_summary),
+            plot=table.plot(self.data_summary, headers, pconfig=pconfig_summary),
         )
 
     def add_adata_section(self):
-        config_adata = {"namespace": "adata_table", "id": "adata", "title": "Adata attributes"}
-        """ headers = {
-            "atlas_obs" : {"scale": False}
-            "obsm" : {"scale": False}
-            "var" : {"scale": False}
-            "varm" : {"scale": False}
-            "uns" : {"scale": False}
-        } """
+        config_adata = {
+            "namespace": "adata_table",
+            "id": "checkatlas_adata",
+            "title": "CheckAtlas: Atlas Object Contents",
+        }
+        headers = {
+            "atlas_obs": {
+                "title": "Observations (obs)",
+                "description": "Per-cell annotation keys stored in adata.obs (e.g. cluster labels, QC metrics)",
+            },
+            "obsm": {
+                "title": "Multi-dim Observations (obsm)",
+                "description": "Per-cell multi-dimensional arrays stored in adata.obsm (e.g. PCA, UMAP embeddings)",
+            },
+            "var": {
+                "title": "Variables (var)",
+                "description": "Per-gene annotation keys stored in adata.var (e.g. gene IDs, feature types)",
+            },
+            "varm": {
+                "title": "Multi-dim Variables (varm)",
+                "description": "Per-gene multi-dimensional arrays stored in adata.varm (e.g. PCA loadings)",
+            },
+            "uns": {
+                "title": "Unstructured (uns)",
+                "description": (
+                    "Unstructured annotation keys stored in adata.uns "
+                    "(e.g. colour maps, clustering parameters, rank-genes results)"
+                ),
+            },
+        }
         self.add_section(
-            name="Atlas object explorer",
+            name="Atlas Object Contents",
             anchor="checkatlas-anndata",
-            description="Exploration of your Atlas objects (Scanpy, Cellanger, Seurat)",
+            description="Annotation keys and slots present inside each atlas object.",
             helptext="""
+                For each atlas, the cells of this table list the keys stored in the corresponding
+                AnnData slot (Seurat and CellRanger atlases are mapped onto the same structure).
+                Use this to confirm that expected metadata (cluster assignments, embeddings,
+                QC metrics) is present in each atlas.
                 """,
-            plot=table.plot(self.data_adata, pconfig=config_adata),
+            plot=table.plot(self.data_adata, headers, pconfig=config_adata),
         )
 
     def add_qc_counts_section(self):
         config_qc = {
-            # Building the plot
-            "title": "Checkatlas: QC total_counts",
-            "ylab": "total_counts",  # X axis label
-            "xlab": "log10(Cell Rank)",  # Y axis label
-            "id": "qc_counts",  # HTML ID used for plot
-            "categories": False,  # Set to True to use x values as categories instead of numbers.
+            "title": "CheckAtlas: Total Counts per Cell",
+            "ylab": "Total Counts per Cell",
+            "xlab": "Cell Rank",
+            "id": "checkatlas_qc_counts",
+            "categories": False,
         }
 
         self.add_section(
-            name="QC total_counts",
+            name="QC: Counts per Cell",
             anchor="checkatlas-qc_counts",
-            description="QC of your atlases log10(Cellrank vs total-counts.",
+            description="Total counts per cell, ordered from highest to lowest.",
             helptext="""
-            
+                For each atlas, cells are ranked by their `total_counts` (the sum of UMI or read
+                counts across all genes) and plotted from highest to lowest. Comparing the shape
+                and height of the curves between atlases highlights differences in sequencing
+                depth and capture efficiency.
                 """,
             plot=linegraph.plot(data=self.data_qc_counts, pconfig=config_qc),
         )
 
     def add_qc_ngenes_section(self):
         pconfig_qc = {
-            # Building the plot
-            "title": "Checkatlas: QC n_genes_by_counts",
-            "ylab": "n_genes_by_counts",  # X axis label
-            "xlab": "log10(Cell Rank)",  # Y axis label
+            "title": "CheckAtlas: Genes Detected per Cell",
+            "ylab": "Genes Detected per Cell",
+            "xlab": "Cell Rank",
             "logswitch": True,
             "logswitch_active": True,
-            "id": "qc_genes",  # HTML ID used for plot
-            "categories": False,  # Set to True to use x values as categories instead of numbers.
+            "id": "checkatlas_qc_genes",
+            "categories": False,
         }
         self.add_section(
-            name="QC n_genes_by_counts",
+            name="QC: Genes Detected per Cell",
             anchor="checkatlas-qc_genes",
-            description="QC of your atlases log10(Cellrank vs n_genes_by_counts.",
+            description="Number of genes detected per cell, ordered from highest to lowest.",
             helptext="""
-
-        """,
+                For each atlas, cells are ranked by their `n_genes_by_counts` (the number of genes
+                with at least one count) and plotted from highest to lowest. Low gene complexity
+                may indicate poor capture or low-quality cells; large differences between atlases
+                can point to batch effects or platform differences.
+                """,
             plot=linegraph.plot(data=self.data_qc_genes, pconfig=pconfig_qc),
         )
 
     def add_qc_mito_section(self):
         pconfig_qc = {
-            # Building the plot
-            "title": "Checkatlas: QC pct_counts_mt",
-            "ylab": "pct_counts_mt",  # X axis label
-            "xlab": "log10(Cell Rank)",  # Y axis label
+            "title": "CheckAtlas: Mitochondrial Counts per Cell",
+            "ylab": "Mitochondrial Counts (%)",
+            "xlab": "Cell Rank",
             "logswitch": True,
             "logswitch_active": True,
-            "id": "qc_mito",  # HTML ID used for plot
-            "categories": False,  # Set to True to use x values as categories instead of numbers.
+            "id": "checkatlas_qc_mito",
+            "categories": False,
         }
         self.add_section(
-            name="QC pct_counts_mt",
+            name="QC: Mitochondrial Counts",
             anchor="checkatlas-qc_mito",
-            description="QC of your atlases log10(Cellrank vs pct_counts_mt.",
-            helptext="",
+            description="Percentage of counts from mitochondrial genes per cell, ordered from highest to lowest.",
+            helptext="""
+                For each atlas, cells are ranked by their `pct_counts_mt` (percentage of total
+                counts that come from mitochondrial genes) and plotted from highest to lowest.
+                High mitochondrial content is a common marker of stressed or dying cells and is
+                a standard QC filter for single-cell datasets. This column is only present in
+                atlases where mitochondrial genes have been annotated upstream.
+                """,
             plot=linegraph.plot(data=self.data_qc_mito, pconfig=pconfig_qc),
         )
 
     def add_clustermetrics_section(self):
-        pconfig_cluster = {"namespace": "metric_cluster_table", "id": "cluster", "title": "Clustering metrics table"}
-
+        pconfig_cluster = {
+            "namespace": "metric_cluster_table",
+            "id": "checkatlas_cluster",
+            "title": "CheckAtlas: Clustering Metrics",
+        }
+        headers = {
+            "obs": {
+                "title": "Clustering Key",
+                "description": "Name of the obs column in the atlas holding the cluster assignments",
+            },
+            "davies_bouldin": {
+                "title": "Davies-Bouldin",
+                "description": (
+                    "Davies-Bouldin index: average similarity of each cluster with its most similar cluster, "
+                    "where similarity is the ratio of within-cluster to between-cluster distances. "
+                    "Lower is better; 0 is the best possible score."
+                ),
+                "format": "{:,.3f}",
+                "scale": "RdYlGn-rev",
+                "min": 0,
+            },
+            "silhouette": {
+                "title": "Silhouette",
+                "description": (
+                    "Silhouette score: measures how similar each cell is to its own cluster compared to "
+                    "other clusters. Ranges from -1 (poor) to +1 (well clustered); higher is better."
+                ),
+                "format": "{:,.3f}",
+                "scale": "RdYlGn",
+                "min": -1,
+                "max": 1,
+            },
+            "calinski_harabasz": {
+                "title": "Calinski-Harabasz",
+                "description": (
+                    "Calinski-Harabasz index (variance ratio criterion): ratio of between-cluster to "
+                    "within-cluster dispersion. Higher values indicate better-defined clusters."
+                ),
+                "format": "{:,.2f}",
+                "scale": "RdYlGn",
+                "min": 0,
+            },
+        }
         self.add_section(
-            name="Classification metrics",
+            name="Clustering Metrics",
             anchor="checkatlas-clustmetrics",
-            description="Quality control metrics calculated on your atlases.",
+            description="Clustering quality metrics calculated for each atlas.",
             helptext="""
-            
-            """,
-            plot=table.plot(data=self.data_metric_cluster, pconfig=pconfig_cluster),
+                Internal clustering evaluation scores (Davies-Bouldin, Silhouette, Calinski-Harabasz)
+                computed by CheckAtlas for the clusterings stored in each atlas. Higher-quality
+                clusterings generally show better separation between clusters and tighter compactness
+                within them.
+                """,
+            plot=table.plot(self.data_metric_cluster, headers, pconfig=pconfig_cluster),
         )
 
     def add_annotationmetrics_section(self):
-        pconfig_annot = {"namespace": "metric_annot_table", "id": "annot", "title": "Annotation metrics table"}
+        pconfig_annot = {
+            "namespace": "metric_annot_table",
+            "id": "checkatlas_annot",
+            "title": "CheckAtlas: Annotation Metrics",
+        }
+        zero_to_one = {"format": "{:,.3f}", "scale": "RdYlGn", "min": 0, "max": 1}
+        headers = {
+            "Reference": {
+                "title": "Reference",
+                "description": "Reference clustering or label set the annotation is being compared against",
+            },
+            "obs": {
+                "title": "Annotation Key",
+                "description": "Name of the obs column in the atlas holding the cell annotations",
+            },
+            "rand_index": {
+                "title": "Rand Index",
+                "description": (
+                    "Rand index: fraction of cell pairs whose annotation agrees with the reference. "
+                    "Ranges from 0 (no agreement) to 1 (identical assignments)."
+                ),
+                **zero_to_one,
+            },
+            "adj_rand_index": {
+                "title": "Adjusted Rand Index",
+                "description": (
+                    "Rand index corrected for chance. Ranges from ~0 (random labelling) to 1 "
+                    "(perfect agreement); can be slightly negative for worse-than-random labelling."
+                ),
+                "format": "{:,.3f}",
+                "scale": "RdYlGn",
+                "max": 1,
+            },
+            "mutual_info": {
+                "title": "Mutual Information",
+                "description": (
+                    "Mutual information between the annotation and the reference labels. "
+                    "Higher values indicate more shared information."
+                ),
+                "format": "{:,.3f}",
+                "scale": "RdYlGn",
+                "min": 0,
+            },
+            "adj_mutual_info": {
+                "title": "Adjusted Mutual Information",
+                "description": (
+                    "Mutual information corrected for chance. 0 ≈ random labelling, 1 = perfect agreement."
+                ),
+                **zero_to_one,
+            },
+            "normalized_mutual_info": {
+                "title": "Normalised Mutual Information",
+                "description": (
+                    "Mutual information normalised to [0, 1]. 0 = no shared information, 1 = identical labellings."
+                ),
+                **zero_to_one,
+            },
+            "fowlkes_mallows": {
+                "title": "Fowlkes-Mallows",
+                "description": (
+                    "Geometric mean of pairwise precision and recall between the annotation and the "
+                    "reference. Ranges from 0 to 1; higher is better."
+                ),
+                **zero_to_one,
+            },
+            "vmeasure": {
+                "title": "V-measure",
+                "description": (
+                    "Harmonic mean of homogeneity and completeness of the annotation with respect to the "
+                    "reference. Ranges from 0 to 1; higher is better."
+                ),
+                **zero_to_one,
+            },
+        }
         self.add_section(
-            name="Annotation metrics",
+            name="Annotation Metrics",
             anchor="checkatlas-annotmetrics",
-            description="Quality control metrics calculated on your atlases.",
+            description="Cell annotation quality metrics calculated for each atlas.",
             helptext="""
-            
-            """,
-            plot=table.plot(self.data_metric_annot, pconfig=pconfig_annot),
+                Metrics evaluating cell-type annotations stored in each atlas, comparing them against
+                a reference clustering or label set. CheckAtlas can produce a range of comparison
+                metrics (Rand Index, Adjusted Rand Index, Mutual Information variants, Fowlkes-Mallows,
+                V-measure, etc.); only the metrics that were computed will appear as columns here.
+                """,
+            plot=table.plot(self.data_metric_annot, headers, pconfig=pconfig_annot),
         )
 
     def add_dimredmetrics_section(self):
-        pconfig_dimred = {"namespace": "metric_dimred_table", "id": "dimred", "title": "Dim. Reduction metrics table"}
+        pconfig_dimred = {
+            "namespace": "metric_dimred_table",
+            "id": "checkatlas_dimred",
+            "title": "CheckAtlas: Dimensionality Reduction Metrics",
+        }
+        headers = {
+            "obsm": {
+                "title": "Embedding Key",
+                "description": "Name of the obsm slot holding the dimensionality reduction (e.g. X_pca, X_umap)",
+            },
+            "kruskal_stress": {
+                "title": "Kruskal Stress",
+                "description": (
+                    "Kruskal stress: measures how well pairwise distances in the low-dimensional "
+                    "embedding match those in the original high-dimensional space. Lower is better."
+                ),
+                "format": "{:,.3f}",
+                "scale": "RdYlGn-rev",
+                "min": 0,
+            },
+            "spearman_rho": {
+                "title": "Spearman ρ",
+                "description": (
+                    "Spearman rank correlation between pairwise distances in the high- and "
+                    "low-dimensional spaces. Closer to 1 means distances are well preserved."
+                ),
+                "format": "{:,.3f}",
+                "scale": "RdYlGn",
+                "min": -1,
+                "max": 1,
+            },
+            "entourage": {
+                "title": "Entourage",
+                "description": (
+                    "Entourage score: proportion of each cell's nearest neighbours in the high-dimensional "
+                    "space that remain its neighbours in the low-dimensional embedding. Higher is better."
+                ),
+                "format": "{:,.3f}",
+                "scale": "RdYlGn",
+                "min": 0,
+                "max": 1,
+            },
+        }
         self.add_section(
-            name="Dimensionality reduction metrics",
+            name="Dimensionality Reduction Metrics",
             anchor="checkatlas-dimredmetrics",
-            description="Quality control metrics calculated on your atlases.",
+            description="Dimensionality reduction quality metrics calculated for each atlas.",
             helptext="""
-                
+                Metrics evaluating how well dimensionality reductions (PCA, UMAP, t-SNE, etc.) preserve
+                the structure of the original high-dimensional data. CheckAtlas can report Kruskal
+                stress, Spearman ρ on pairwise distances, and an Entourage neighbour-preservation
+                score; only the metrics that were computed will appear as columns here.
                 """,
-            plot=table.plot(self.data_metric_dimred, pconfig=pconfig_dimred),
-        )
-
-    def add_specificitymetrics_section(self):
-        # pconfig_cluster = {"namespace": "metric_specif_table", "id": "specificity", "title": "Specificity metrics table"}
-        self.add_section(
-            name="Specificity metrics",
-            anchor="checkatlas-specmetrics",
-            description="Quality control metrics calculated on your atlases.",
-            helptext="""
-            
-            """,
-            plot="",
+            plot=table.plot(self.data_metric_dimred, headers, pconfig=pconfig_dimred),
         )
 
 
 def parse_qc_logs(f):
-    """
-    Parse logs from QC tables in .tsv files
-    Order by CellRank
-    Calc log10(CelllRank)
-    :param f:
-    :return:
-    """
+    """Parse QC .tsv tables and return counts, genes and mito series keyed by cell rank."""
     lines = f.splitlines()
     headers = lines[0].split("\t")
-    # index_cellid = headers.index(CELLINDEX_HEADER)
-    try:
-        index_counts = headers.index(QC_HEADER[0])
-        index_rank_counts = headers.index(QC_RANK_HEADER[0])
-    except ValueError:
-        index_counts = -1
-    try:
-        index_genes = headers.index(QC_HEADER[1])
-        index_rank_genes = headers.index(QC_RANK_HEADER[1])
-    except ValueError:
-        index_genes = -1
-    try:
-        index_mito = headers.index(QC_HEADER[2])
-        index_rank_mito = headers.index(QC_RANK_HEADER[2])
-    except ValueError:
-        index_mito = -1
 
-    # get data
-    dict_qc_counts = dict()
-    dict_qc_genes = dict()
-    dict_qc_mito = dict()
+    def _find_indices(value_header, rank_header):
+        try:
+            return headers.index(value_header), headers.index(rank_header)
+        except ValueError:
+            return -1, -1
+
+    index_counts, index_rank_counts = _find_indices(QC_HEADER[0], QC_RANK_HEADER[0])
+    index_genes, index_rank_genes = _find_indices(QC_HEADER[1], QC_RANK_HEADER[1])
+    index_mito, index_rank_mito = _find_indices(QC_HEADER[2], QC_RANK_HEADER[2])
+
+    dict_qc_counts: Dict[int, float] = dict()
+    dict_qc_genes: Dict[int, float] = dict()
+    dict_qc_mito: Dict[int, float] = dict()
     for i in range(1, len(lines)):
         line = lines[i].split("\t")
-        # cellid = int(line[index_rank_counts])
-        if index_counts != -1:
-            rank_count = int(line[index_rank_counts])
-            count = float(line[index_counts])
-            dict_qc_counts[rank_count] = count
-        if index_genes != -1:
-            rank_genes = int(line[index_rank_genes])
-            genes = float(line[index_genes])
-            dict_qc_genes[rank_genes] = genes
-        if index_mito != -1:
-            rank_mito = int(line[index_rank_mito])
-            if line[index_mito] != "":
-                mito = float(line[index_mito])
-            else:
-                mito = 0
-            dict_qc_mito[rank_mito] = mito
+        if index_counts != -1 and max(index_counts, index_rank_counts) < len(line):
+            try:
+                dict_qc_counts[int(line[index_rank_counts])] = float(line[index_counts])
+            except ValueError:
+                log.warning(f"Could not parse QC counts row {i}: {lines[i]!r}")
+        if index_genes != -1 and max(index_genes, index_rank_genes) < len(line):
+            try:
+                dict_qc_genes[int(line[index_rank_genes])] = float(line[index_genes])
+            except ValueError:
+                log.warning(f"Could not parse QC genes row {i}: {lines[i]!r}")
+        if index_mito != -1 and max(index_mito, index_rank_mito) < len(line):
+            try:
+                rank_mito = int(line[index_rank_mito])
+                mito = float(line[index_mito]) if line[index_mito] != "" else 0.0
+                dict_qc_mito[rank_mito] = mito
+            except ValueError:
+                log.warning(f"Could not parse QC mito row {i}: {lines[i]!r}")
 
-    # reorder by rank
-    list_qc_rank_counts = list(dict_qc_counts.keys())
-    list_qc_rank_counts.sort()
-    list_qc_rank_genes = list(dict_qc_genes.keys())
-    list_qc_rank_genes.sort()
-    list_qc_rank_mito = list(dict_qc_mito.keys())
-    list_qc_rank_mito.sort()
-    data_qc_counts = dict()
-    data_qc_genes = dict()
-    data_qc_mito = dict()
-    for rank in list_qc_rank_counts:
-        data_qc_counts[rank] = dict_qc_counts[rank]
-    for rank in list_qc_rank_genes:
-        data_qc_genes[rank] = dict_qc_genes[rank]
-    for rank in list_qc_rank_mito:
-        data_qc_mito[rank] = dict_qc_mito[rank]
-    list_data = [
-        data_qc_counts,
-        data_qc_genes,
-        data_qc_mito,
+    return [
+        dict(sorted(dict_qc_counts.items())),
+        dict(sorted(dict_qc_genes.items())),
+        dict(sorted(dict_qc_mito.items())),
     ]
-    return list_data
+
+
+def _coerce(value):
+    """Convert a TSV field to int / float when possible, otherwise return the original string."""
+    if value == "":
+        return value
+    try:
+        return int(value)
+    except ValueError:
+        pass
+    try:
+        return float(value)
+    except ValueError:
+        return value
 
 
 def parse_firstline_table_logs(f):
-    """
-    Parse only header and first line of logs which are .tsv files
-    Ex: _checkatlas.tsv, adata_checkatlas.tsv
-    :param f:
-    :return:
-    """
-    data = {}
+    """Parse the header and first data row of a .tsv table into a flat dict."""
+    data: Dict[str, object] = {}
     lines = f.splitlines()
     headers = lines[0].split("\t")
     for i in range(1, len(lines)):
         line = lines[i].split("\t")
-        for j in range(0, len(line)):
-            data[headers[j]] = line[j]
+        for j in range(min(len(line), len(headers))):
+            data[headers[j]] = _coerce(line[j])
     return data
 
 
 def parse_metric_logs(f):
-    """
-    Parse all lines of logs which are .tsv files
-    Ex: _checkatlas.tsv, adata_checkatlas.tsv
-    :param f:
-    :return:
-    """
-    data = {}
+    """Parse a .tsv metric table keyed by the first column of each row."""
+    data: Dict[str, Dict[str, object]] = {}
     lines = f.splitlines()
     headers = lines[0].split("\t")
     for i in range(1, len(lines)):
         line = lines[i].split("\t")
-        line_dict = {}
-        for j in range(1, len(line)):
-            line_dict[headers[j]] = line[j]
+        if not line:
+            continue
+        line_dict = {headers[j]: _coerce(line[j]) for j in range(1, min(len(line), len(headers)))}
         data[line[0]] = line_dict
     return data

@@ -239,9 +239,6 @@ checkatlas/annotation:
 checkatlas/dimred:
   fn: "*.tsv"
   contents_re: "^Dimred_Sample"
-checkatlas/specificity:
-  fn: "*.tsv"
-  contents_re: "^Spec_Sample"
 cellranger/count_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"count"'
