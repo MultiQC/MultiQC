@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
@@ -7,8 +7,19 @@ from multiqc.plots import linegraph, table
 log = logging.getLogger(__name__)
 
 
-QC_HEADER = ["total_counts", "n_genes_by_counts", "pct_counts_mt"]
-QC_RANK_HEADER = ["cellrank_total_counts", "cellrank_n_genes_by_counts", "cellrank_pct_counts_mt"]
+# Maps each per-cell QC value column to its companion "cell rank" column in checkatlas qc/*.tsv.
+QC_METRICS: dict[str, str] = {
+    "total_counts": "cellrank_total_counts",
+    "n_genes_by_counts": "cellrank_n_genes_by_counts",
+    "pct_counts_mt": "cellrank_pct_counts_mt",
+}
+
+# Cap the number of points plotted per atlas in the QC line graphs.
+# Real atlases can have hundreds of thousands of cells; rendering one trace per cell
+# makes the report sluggish without adding visual information.
+QC_PLOT_MAX_POINTS = 1000
+
+Coerced = Union[int, float, str]
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -36,56 +47,60 @@ class MultiqcModule(BaseMultiqcModule):
             # Can't find a DOI // doi=
         )
 
-        # Set up class objects to hold parsed data
-        self.general_stats_headers: Dict = dict()
-        self.general_stats_data: Dict = dict()
-
-        self.data_summary = dict()
+        self.data_summary: dict[str, dict[str, Coerced]] = {}
         for f in self.find_log_files("checkatlas/summary"):
             s_name = f["s_name"]
-            self.data_summary[s_name] = parse_firstline_table_logs(f["f"])
+            self.data_summary[s_name] = parse_first_row(f["f"])
             self.add_data_source(f, s_name)
 
-        self.data_adata = dict()
+        self.data_adata: dict[str, dict[str, Coerced]] = {}
         for f in self.find_log_files("checkatlas/adata"):
             s_name = f["s_name"]
-            self.data_adata[s_name] = parse_firstline_table_logs(f["f"])
+            self.data_adata[s_name] = parse_first_row(f["f"])
             self.add_data_source(f, s_name)
 
-        self.data_qc_counts = dict()
-        self.data_qc_genes = dict()
-        self.data_qc_mito = dict()
+        self.data_qc_counts: dict[str, dict[int, float]] = {}
+        self.data_qc_genes: dict[str, dict[int, float]] = {}
+        self.data_qc_mito: dict[str, dict[int, float]] = {}
         for f in self.find_log_files("checkatlas/qc"):
             s_name = f["s_name"]
-            list_data = parse_qc_logs(f["f"])
-            self.data_qc_counts[s_name] = list_data[0]
-            self.data_qc_genes[s_name] = list_data[1]
-            self.data_qc_mito[s_name] = list_data[2]
+            parsed = parse_qc_logs(f["f"])
+            if parsed["total_counts"]:
+                self.data_qc_counts[s_name] = _downsample(parsed["total_counts"])
+            if parsed["n_genes_by_counts"]:
+                self.data_qc_genes[s_name] = _downsample(parsed["n_genes_by_counts"])
+            if parsed["pct_counts_mt"]:
+                self.data_qc_mito[s_name] = _downsample(parsed["pct_counts_mt"])
             self.add_data_source(f, s_name)
 
-        self.data_metric_cluster = dict()
-        for f in self.find_log_files("checkatlas/cluster"):
-            s_name = f["s_name"]
-            data = parse_metric_logs(f["f"])
-            for key, item in data.items():
-                self.data_metric_cluster[key] = item
-            self.add_data_source(f, s_name)
+        self.data_metric_cluster = self._load_metric_table("checkatlas/cluster")
+        self.data_metric_annot = self._load_metric_table("checkatlas/annotation")
+        self.data_metric_dimred = self._load_metric_table("checkatlas/dimred")
 
-        self.data_metric_annot = dict()
-        for f in self.find_log_files("checkatlas/annotation"):
-            s_name = f["s_name"]
-            data = parse_metric_logs(f["f"])
-            for key, item in data.items():
-                self.data_metric_annot[key] = item
-            self.add_data_source(f, s_name)
+        # Filter ignored samples from every dataset before rendering anything.
+        self.data_summary = self.ignore_samples(self.data_summary)
+        self.data_adata = self.ignore_samples(self.data_adata)
+        self.data_qc_counts = self.ignore_samples(self.data_qc_counts)
+        self.data_qc_genes = self.ignore_samples(self.data_qc_genes)
+        self.data_qc_mito = self.ignore_samples(self.data_qc_mito)
+        self.data_metric_cluster = self.ignore_samples(self.data_metric_cluster)
+        self.data_metric_annot = self.ignore_samples(self.data_metric_annot)
+        self.data_metric_dimred = self.ignore_samples(self.data_metric_dimred)
 
-        self.data_metric_dimred = dict()
-        for f in self.find_log_files("checkatlas/dimred"):
-            s_name = f["s_name"]
-            data = parse_metric_logs(f["f"])
-            for key, item in data.items():
-                self.data_metric_dimred[key] = item
-            self.add_data_source(f, s_name)
+        all_data: list[dict] = [
+            self.data_summary,
+            self.data_adata,
+            self.data_qc_counts,
+            self.data_qc_genes,
+            self.data_qc_mito,
+            self.data_metric_cluster,
+            self.data_metric_annot,
+            self.data_metric_dimred,
+        ]
+        if not any(all_data):
+            raise ModuleNoSamplesFound
+
+        self.add_software_version(None)
 
         if self.data_summary:
             log.info(f"Found {len(self.data_summary)} summary tables")
@@ -100,30 +115,46 @@ class MultiqcModule(BaseMultiqcModule):
             log.info(f"Found {len(self.data_qc_mito)} QC mito tables")
             self.add_qc_mito_section()
         if self.data_metric_cluster:
-            log.info(f"Found {len(self.data_metric_cluster)} metric cluster tables")
+            log.info(f"Found {len(self.data_metric_cluster)} cluster metric tables")
             self.add_clustermetrics_section()
         if self.data_metric_annot:
-            log.info(f"Found {len(self.data_metric_annot)} metric annot tables")
+            log.info(f"Found {len(self.data_metric_annot)} annotation metric tables")
             self.add_annotationmetrics_section()
         if self.data_metric_dimred:
-            log.info(f"Found {len(self.data_metric_dimred)} metric dimred tables")
+            log.info(f"Found {len(self.data_metric_dimred)} dimred metric tables")
             self.add_dimredmetrics_section()
         if self.data_adata:
             log.info(f"Found {len(self.data_adata)} adata tables")
             self.add_adata_section()
 
-        self.add_software_version(None)
+        # Write one data file per non-empty section.
+        for fname, data in [
+            ("multiqc_checkatlas_summary", self.data_summary),
+            ("multiqc_checkatlas_adata", self.data_adata),
+            ("multiqc_checkatlas_qc_counts", self.data_qc_counts),
+            ("multiqc_checkatlas_qc_genes", self.data_qc_genes),
+            ("multiqc_checkatlas_qc_mito", self.data_qc_mito),
+            ("multiqc_checkatlas_cluster", self.data_metric_cluster),
+            ("multiqc_checkatlas_annotation", self.data_metric_annot),
+            ("multiqc_checkatlas_dimred", self.data_metric_dimred),
+        ]:
+            if data:
+                self.write_data_file(data, fname)
 
-        self.data_summary = self.ignore_samples(self.data_summary)
-        if not self.data_summary:
-            raise ModuleNoSamplesFound
-
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
-
-        self.write_data_file(self.data_summary, "multiqc_checkatlas_summary")
+    def _load_metric_table(self, search_key: str) -> dict[str, dict[str, Coerced]]:
+        """Load all metric .tsv files for a given search key, warning on key collisions."""
+        data: dict[str, dict[str, Coerced]] = {}
+        for f in self.find_log_files(search_key):
+            parsed = parse_metric_logs(f["f"])
+            for key, row in parsed.items():
+                if key in data:
+                    log.warning(f"Duplicate {search_key} key '{key}' found in {f['fn']}; overwriting earlier values")
+                data[key] = row
+            self.add_data_source(f, f["s_name"])
+        return data
 
     def add_summary_section(self):
-        pconfig_summary = {
+        pconfig = {
             "namespace": "summary_table",
             "id": "checkatlas_summary",
             "title": "CheckAtlas: Atlas Summary",
@@ -155,7 +186,10 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "File_extension": {
                 "title": "Atlas File",
-                "description": "Source file or extension for the atlas (file name for AnnData, extension for Seurat, directory name for CellRanger)",
+                "description": (
+                    "Source file or extension for the atlas "
+                    "(file name for AnnData, extension for Seurat, directory name for CellRanger)"
+                ),
             },
             "File_path": {
                 "title": "File Path",
@@ -165,18 +199,18 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Atlas Overview",
-            anchor="checkatlas-summary",
+            anchor="checkatlas_summary",
             description="Top-level statistics for each input atlas.",
             helptext="""
                 One row per atlas, showing the source format (AnnData, Seurat or CellRanger),
                 the number of cells and genes, and which expression layers (`adata.X`, `adata.raw`)
                 are present. Useful for comparing scale and shape of atlases at a glance.
                 """,
-            plot=table.plot(self.data_summary, headers, pconfig=pconfig_summary),
+            plot=table.plot(self.data_summary, headers, pconfig=pconfig),
         )
 
     def add_adata_section(self):
-        config_adata = {
+        pconfig = {
             "namespace": "adata_table",
             "id": "checkatlas_adata",
             "title": "CheckAtlas: Atlas Object Contents",
@@ -208,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Atlas Object Contents",
-            anchor="checkatlas-anndata",
+            anchor="checkatlas_anndata",
             description="Annotation keys and slots present inside each atlas object.",
             helptext="""
                 For each atlas, the cells of this table list the keys stored in the corresponding
@@ -216,21 +250,20 @@ class MultiqcModule(BaseMultiqcModule):
                 Use this to confirm that expected metadata (cluster assignments, embeddings,
                 QC metrics) is present in each atlas.
                 """,
-            plot=table.plot(self.data_adata, headers, pconfig=config_adata),
+            plot=table.plot(self.data_adata, headers, pconfig=pconfig),
         )
 
     def add_qc_counts_section(self):
-        config_qc = {
+        pconfig = {
             "title": "CheckAtlas: Total Counts per Cell",
             "ylab": "Total Counts per Cell",
             "xlab": "Cell Rank",
             "id": "checkatlas_qc_counts",
             "categories": False,
         }
-
         self.add_section(
             name="QC: Counts per Cell",
-            anchor="checkatlas-qc_counts",
+            anchor="checkatlas_qc_counts",
             description="Total counts per cell, ordered from highest to lowest.",
             helptext="""
                 For each atlas, cells are ranked by their `total_counts` (the sum of UMI or read
@@ -238,11 +271,11 @@ class MultiqcModule(BaseMultiqcModule):
                 and height of the curves between atlases highlights differences in sequencing
                 depth and capture efficiency.
                 """,
-            plot=linegraph.plot(data=self.data_qc_counts, pconfig=config_qc),
+            plot=linegraph.plot(self.data_qc_counts, pconfig=pconfig),
         )
 
     def add_qc_ngenes_section(self):
-        pconfig_qc = {
+        pconfig = {
             "title": "CheckAtlas: Genes Detected per Cell",
             "ylab": "Genes Detected per Cell",
             "xlab": "Cell Rank",
@@ -253,7 +286,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="QC: Genes Detected per Cell",
-            anchor="checkatlas-qc_genes",
+            anchor="checkatlas_qc_genes",
             description="Number of genes detected per cell, ordered from highest to lowest.",
             helptext="""
                 For each atlas, cells are ranked by their `n_genes_by_counts` (the number of genes
@@ -261,11 +294,11 @@ class MultiqcModule(BaseMultiqcModule):
                 may indicate poor capture or low-quality cells; large differences between atlases
                 can point to batch effects or platform differences.
                 """,
-            plot=linegraph.plot(data=self.data_qc_genes, pconfig=pconfig_qc),
+            plot=linegraph.plot(self.data_qc_genes, pconfig=pconfig),
         )
 
     def add_qc_mito_section(self):
-        pconfig_qc = {
+        pconfig = {
             "title": "CheckAtlas: Mitochondrial Counts per Cell",
             "ylab": "Mitochondrial Counts (%)",
             "xlab": "Cell Rank",
@@ -276,20 +309,21 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="QC: Mitochondrial Counts",
-            anchor="checkatlas-qc_mito",
+            anchor="checkatlas_qc_mito",
             description="Percentage of counts from mitochondrial genes per cell, ordered from highest to lowest.",
             helptext="""
                 For each atlas, cells are ranked by their `pct_counts_mt` (percentage of total
                 counts that come from mitochondrial genes) and plotted from highest to lowest.
                 High mitochondrial content is a common marker of stressed or dying cells and is
                 a standard QC filter for single-cell datasets. This column is only present in
-                atlases where mitochondrial genes have been annotated upstream.
+                atlases where mitochondrial genes have been annotated upstream; cells with an
+                empty value are skipped.
                 """,
-            plot=linegraph.plot(data=self.data_qc_mito, pconfig=pconfig_qc),
+            plot=linegraph.plot(self.data_qc_mito, pconfig=pconfig),
         )
 
     def add_clustermetrics_section(self):
-        pconfig_cluster = {
+        pconfig = {
             "namespace": "metric_cluster_table",
             "id": "checkatlas_cluster",
             "title": "CheckAtlas: Clustering Metrics",
@@ -334,7 +368,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Clustering Metrics",
-            anchor="checkatlas-clustmetrics",
+            anchor="checkatlas_clustmetrics",
             description="Clustering quality metrics calculated for each atlas.",
             helptext="""
                 Internal clustering evaluation scores (Davies-Bouldin, Silhouette, Calinski-Harabasz)
@@ -342,11 +376,11 @@ class MultiqcModule(BaseMultiqcModule):
                 clusterings generally show better separation between clusters and tighter compactness
                 within them.
                 """,
-            plot=table.plot(self.data_metric_cluster, headers, pconfig=pconfig_cluster),
+            plot=table.plot(self.data_metric_cluster, headers, pconfig=pconfig),
         )
 
     def add_annotationmetrics_section(self):
-        pconfig_annot = {
+        pconfig = {
             "namespace": "metric_annot_table",
             "id": "checkatlas_annot",
             "title": "CheckAtlas: Annotation Metrics",
@@ -391,9 +425,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "adj_mutual_info": {
                 "title": "Adjusted Mutual Information",
-                "description": (
-                    "Mutual information corrected for chance. 0 ≈ random labelling, 1 = perfect agreement."
-                ),
+                "description": "Mutual information corrected for chance. 0 ≈ random labelling, 1 = perfect agreement.",
                 **zero_to_one,
             },
             "normalized_mutual_info": {
@@ -422,7 +454,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Annotation Metrics",
-            anchor="checkatlas-annotmetrics",
+            anchor="checkatlas_annotmetrics",
             description="Cell annotation quality metrics calculated for each atlas.",
             helptext="""
                 Metrics evaluating cell-type annotations stored in each atlas, comparing them against
@@ -430,11 +462,11 @@ class MultiqcModule(BaseMultiqcModule):
                 metrics (Rand Index, Adjusted Rand Index, Mutual Information variants, Fowlkes-Mallows,
                 V-measure, etc.); only the metrics that were computed will appear as columns here.
                 """,
-            plot=table.plot(self.data_metric_annot, headers, pconfig=pconfig_annot),
+            plot=table.plot(self.data_metric_annot, headers, pconfig=pconfig),
         )
 
     def add_dimredmetrics_section(self):
-        pconfig_dimred = {
+        pconfig = {
             "namespace": "metric_dimred_table",
             "id": "checkatlas_dimred",
             "title": "CheckAtlas: Dimensionality Reduction Metrics",
@@ -479,7 +511,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Dimensionality Reduction Metrics",
-            anchor="checkatlas-dimredmetrics",
+            anchor="checkatlas_dimredmetrics",
             description="Dimensionality reduction quality metrics calculated for each atlas.",
             helptext="""
                 Metrics evaluating how well dimensionality reductions (PCA, UMAP, t-SNE, etc.) preserve
@@ -487,56 +519,11 @@ class MultiqcModule(BaseMultiqcModule):
                 stress, Spearman ρ on pairwise distances, and an Entourage neighbour-preservation
                 score; only the metrics that were computed will appear as columns here.
                 """,
-            plot=table.plot(self.data_metric_dimred, headers, pconfig=pconfig_dimred),
+            plot=table.plot(self.data_metric_dimred, headers, pconfig=pconfig),
         )
 
 
-def parse_qc_logs(f):
-    """Parse QC .tsv tables and return counts, genes and mito series keyed by cell rank."""
-    lines = f.splitlines()
-    headers = lines[0].split("\t")
-
-    def _find_indices(value_header, rank_header):
-        try:
-            return headers.index(value_header), headers.index(rank_header)
-        except ValueError:
-            return -1, -1
-
-    index_counts, index_rank_counts = _find_indices(QC_HEADER[0], QC_RANK_HEADER[0])
-    index_genes, index_rank_genes = _find_indices(QC_HEADER[1], QC_RANK_HEADER[1])
-    index_mito, index_rank_mito = _find_indices(QC_HEADER[2], QC_RANK_HEADER[2])
-
-    dict_qc_counts: Dict[int, float] = dict()
-    dict_qc_genes: Dict[int, float] = dict()
-    dict_qc_mito: Dict[int, float] = dict()
-    for i in range(1, len(lines)):
-        line = lines[i].split("\t")
-        if index_counts != -1 and max(index_counts, index_rank_counts) < len(line):
-            try:
-                dict_qc_counts[int(line[index_rank_counts])] = float(line[index_counts])
-            except ValueError:
-                log.warning(f"Could not parse QC counts row {i}: {lines[i]!r}")
-        if index_genes != -1 and max(index_genes, index_rank_genes) < len(line):
-            try:
-                dict_qc_genes[int(line[index_rank_genes])] = float(line[index_genes])
-            except ValueError:
-                log.warning(f"Could not parse QC genes row {i}: {lines[i]!r}")
-        if index_mito != -1 and max(index_mito, index_rank_mito) < len(line):
-            try:
-                rank_mito = int(line[index_rank_mito])
-                mito = float(line[index_mito]) if line[index_mito] != "" else 0.0
-                dict_qc_mito[rank_mito] = mito
-            except ValueError:
-                log.warning(f"Could not parse QC mito row {i}: {lines[i]!r}")
-
-    return [
-        dict(sorted(dict_qc_counts.items())),
-        dict(sorted(dict_qc_genes.items())),
-        dict(sorted(dict_qc_mito.items())),
-    ]
-
-
-def _coerce(value):
+def _coerce(value: str) -> Coerced:
     """Convert a TSV field to int / float when possible, otherwise return the original string."""
     if value == "":
         return value
@@ -550,27 +537,68 @@ def _coerce(value):
         return value
 
 
-def parse_firstline_table_logs(f):
-    """Parse the header and first data row of a .tsv table into a flat dict."""
-    data: Dict[str, object] = {}
+def parse_qc_logs(f: str) -> dict[str, dict[int, float]]:
+    """Parse a QC .tsv table into one rank→value dict per QC metric."""
     lines = f.splitlines()
     headers = lines[0].split("\t")
-    for i in range(1, len(lines)):
-        line = lines[i].split("\t")
-        for j in range(min(len(line), len(headers))):
-            data[headers[j]] = _coerce(line[j])
-    return data
 
-
-def parse_metric_logs(f):
-    """Parse a .tsv metric table keyed by the first column of each row."""
-    data: Dict[str, Dict[str, object]] = {}
-    lines = f.splitlines()
-    headers = lines[0].split("\t")
-    for i in range(1, len(lines)):
-        line = lines[i].split("\t")
-        if not line:
+    indices: dict[str, tuple[int, int]] = {}
+    for value_col, rank_col in QC_METRICS.items():
+        try:
+            indices[value_col] = (headers.index(value_col), headers.index(rank_col))
+        except ValueError:
             continue
-        line_dict = {headers[j]: _coerce(line[j]) for j in range(1, min(len(line), len(headers)))}
-        data[line[0]] = line_dict
+
+    series: dict[str, dict[int, float]] = {value_col: {} for value_col in QC_METRICS}
+    for line_no, raw_line in enumerate(lines[1:], start=1):
+        line = raw_line.split("\t")
+        for value_col, (value_idx, rank_idx) in indices.items():
+            if max(value_idx, rank_idx) >= len(line):
+                continue
+            value_str = line[value_idx]
+            if value_str == "":
+                # Skip empty values consistently across metrics.
+                log.warning(f"Empty {value_col} value on row {line_no}; skipping")
+                continue
+            try:
+                series[value_col][int(line[rank_idx])] = float(value_str)
+            except ValueError:
+                log.warning(f"Could not parse {value_col} row {line_no}: {raw_line!r}")
+
+    return {value_col: dict(sorted(rows.items())) for value_col, rows in series.items()}
+
+
+def parse_first_row(f: str) -> dict[str, Coerced]:
+    """Parse the header and first data row of a .tsv table into a flat dict."""
+    lines = f.splitlines()
+    if len(lines) < 2:
+        return {}
+    headers = lines[0].split("\t")
+    line = lines[1].split("\t")
+    return {headers[j]: _coerce(line[j]) for j in range(min(len(line), len(headers)))}
+
+
+def parse_metric_logs(f: str) -> dict[str, dict[str, Coerced]]:
+    """Parse a .tsv metric table keyed by the first column of each row."""
+    data: dict[str, dict[str, Coerced]] = {}
+    lines = f.splitlines()
+    headers = lines[0].split("\t")
+    for raw_line in lines[1:]:
+        line = raw_line.split("\t")
+        if not line or not line[0]:
+            continue
+        row = {headers[j]: _coerce(line[j]) for j in range(1, min(len(line), len(headers)))}
+        data[line[0]] = row
     return data
+
+
+def _downsample(series: dict[int, float], max_points: int = QC_PLOT_MAX_POINTS) -> dict[int, float]:
+    """Subsample a rank-keyed series down to at most max_points evenly-spaced points."""
+    if len(series) <= max_points:
+        return series
+    items = sorted(series.items())
+    step = len(items) / max_points
+    sampled = [items[int(i * step)] for i in range(max_points)]
+    if sampled[-1] != items[-1]:
+        sampled.append(items[-1])
+    return dict(sampled)
