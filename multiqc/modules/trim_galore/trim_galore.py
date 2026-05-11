@@ -11,8 +11,22 @@ from multiqc.types import ColumnKey, SampleName
 log = logging.getLogger(__name__)
 
 
-SCHEMA_VERSION_SUPPORTED = 1
+SCHEMA_MAJOR_SUPPORTED = 1
 TOOL_NAME = "Trim Galore"
+
+
+def _major_version(v: Any) -> Optional[int]:
+    """Extract the major version from int / float / semver-string."""
+    if isinstance(v, int):
+        return v
+    if isinstance(v, float):
+        return int(v)
+    if isinstance(v, str):
+        try:
+            return int(v.split(".")[0])
+        except ValueError:
+            return None
+    return None
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -182,10 +196,11 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug(f"Skipping {f['fn']!r}: tool field is {payload.get('tool')!r}, not {TOOL_NAME!r}")
             return None
         schema = payload.get("schema_version")
-        if schema != SCHEMA_VERSION_SUPPORTED:
+        major = _major_version(schema)
+        if major != SCHEMA_MAJOR_SUPPORTED:
             log.error(
-                f"Skipping {f['fn']!r}: unsupported schema_version {schema!r} (expected {SCHEMA_VERSION_SUPPORTED}). "
-                "This module needs updating to handle the new schema."
+                f"Skipping {f['fn']!r}: schema_version {schema!r} has incompatible major version "
+                f"(expected major v{SCHEMA_MAJOR_SUPPORTED}). This module needs updating to handle the new schema."
             )
             return None
 
