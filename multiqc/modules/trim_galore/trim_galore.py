@@ -12,7 +12,6 @@ log = logging.getLogger(__name__)
 
 
 SCHEMA_MAJOR_SUPPORTED = 1
-TOOL_NAME = "Trim Galore"
 
 
 def _major_version(v: Any) -> Optional[int]:
@@ -68,11 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "Quality and adapter trimming for next-generation sequencing data, "
                 "with special handling for RRBS libraries."
             ),
-            extra=(
-                "This module parses the structured JSON report (`*_trimming_report.json`) "
-                "introduced in Trim Galore v2.0 alongside the legacy text report."
-            ),
-            doi="10.5281/zenodo.5127899",
+            doi="10.5281/zenodo.5127898",
         )
 
         data_by_sample: Dict[str, Dict[str, Any]] = {}
@@ -192,9 +187,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Could not parse {f['fn']!r}: {e}")
             return None
 
-        if payload.get("tool") != TOOL_NAME:
-            log.debug(f"Skipping {f['fn']!r}: tool field is {payload.get('tool')!r}, not {TOOL_NAME!r}")
-            return None
         schema = payload.get("schema_version")
         major = _major_version(schema)
         if major != SCHEMA_MAJOR_SUPPORTED:
@@ -207,13 +199,12 @@ class MultiqcModule(BaseMultiqcModule):
         # PE reports list both filenames in `input_filenames`; pick the one for
         # this read_number so R1 and R2 produce distinct samples. SE reports
         # have read_number=1 and a 1-element list, so the same logic works.
-        input_filenames = payload.get("input_filenames") or []
-        read_number = payload.get("read_number") or 1
+        input_filenames = payload.get("input_filenames", [])
+        read_number = payload.get("read_number", 1)
         if not input_filenames:
             log.warning(f"Skipping {f['fn']!r}: no input_filenames")
             return None
-        idx = max(0, min(read_number - 1, len(input_filenames) - 1))
-        s_name = self.clean_s_name(input_filenames[idx], f)
+        s_name = self.clean_s_name(input_filenames[read_number - 1], f)
         # `input_filenames` is byte-identical across R1 and R2 of the same pair,
         # making it a reliable pair key. SE: length-1 tuple.
         pair_key = tuple(input_filenames)
@@ -258,16 +249,16 @@ class MultiqcModule(BaseMultiqcModule):
     ) -> None:
         gen_stats: Dict[str, Dict[ColumnKey, Any]] = {}
         for s_name, payload in data_by_sample.items():
-            rp = payload.get("read_processing", {}) or {}
-            bp = payload.get("basepair_processing", {}) or {}
-            total = rp.get("total_reads", 0) or 0
-            total_bp = bp.get("total_bp_processed", 0) or 0
+            rp = payload.get("read_processing", {})
+            bp = payload.get("basepair_processing", {})
+            total = rp.get("total_reads", 0)
+            total_bp = bp.get("total_bp_processed", 0)
             gen_stats[s_name] = {
                 ColumnKey("tg_total_reads"): total,
-                ColumnKey("tg_pct_with_adapter"): _safe_pct(rp.get("reads_with_adapter", 0) or 0, total),
-                ColumnKey("tg_pct_passing"): _safe_pct(rp.get("reads_written", 0) or 0, total),
-                ColumnKey("tg_pct_quality_trimmed"): _safe_pct(bp.get("quality_trimmed_bp", 0) or 0, total_bp),
-                ColumnKey("tg_total_bp_written"): bp.get("total_bp_written", 0) or 0,
+                ColumnKey("tg_pct_with_adapter"): _safe_pct(rp.get("reads_with_adapter", 0), total),
+                ColumnKey("tg_pct_passing"): _safe_pct(rp.get("reads_written", 0), total),
+                ColumnKey("tg_pct_quality_trimmed"): _safe_pct(bp.get("quality_trimmed_bp", 0), total_bp),
+                ColumnKey("tg_total_bp_written"): bp.get("total_bp_written", 0),
             }
 
         headers: Dict[str, Dict[str, Any]] = {
@@ -332,13 +323,13 @@ class MultiqcModule(BaseMultiqcModule):
     def _filtered_reads_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
         bar_data: Dict[str, Dict[str, int]] = {}
         for s_name, payload in data_by_sample.items():
-            rp = payload.get("read_processing", {}) or {}
+            rp = payload.get("read_processing", {})
             bar_data[s_name] = {
-                "passing": rp.get("reads_written", 0) or 0,
-                "too_short": rp.get("reads_too_short", 0) or 0,
-                "too_long": rp.get("reads_too_long", 0) or 0,
-                "too_many_n": rp.get("reads_too_many_n", 0) or 0,
-                "discarded_untrimmed": rp.get("reads_discarded_untrimmed", 0) or 0,
+                "passing": rp.get("reads_written", 0),
+                "too_short": rp.get("reads_too_short", 0),
+                "too_long": rp.get("reads_too_long", 0),
+                "too_many_n": rp.get("reads_too_many_n", 0),
+                "discarded_untrimmed": rp.get("reads_discarded_untrimmed", 0),
             }
         cats = {
             "passing": {"name": "Passed filters"},
@@ -361,13 +352,12 @@ class MultiqcModule(BaseMultiqcModule):
     def _adapter_length_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
         line_data: Dict[str, Dict[int, int]] = {}
         for s_name, payload in data_by_sample.items():
-            adapters = payload.get("adapter_trimming") or []
+            adapters = payload.get("adapter_trimming", [])
             if not adapters:
                 continue
-            for idx, a in enumerate(adapters, start=1):
-                name = a.get("name") or f"adapter_{idx}"
-                key = f"{s_name} ({name})" if len(adapters) > 1 else s_name
-                dist = a.get("length_distribution") or {}
+            for a in adapters:
+                key = f"{s_name} ({a['name']})" if len(adapters) > 1 else s_name
+                dist = a.get("length_distribution", {})
                 parsed: Dict[int, int] = {}
                 for k, v in dist.items():
                     try:
@@ -399,12 +389,12 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             display = self._pair_display_by_key.get(pair_key, members[0])
             all_rows[display] = {
-                "pairs_analyzed": pv.get("pairs_analyzed", 0) or 0,
-                "pairs_removed": pv.get("pairs_removed", 0) or 0,
-                "pairs_removed_n": pv.get("pairs_removed_n", 0) or 0,
-                "pairs_removed_too_long": pv.get("pairs_removed_too_long", 0) or 0,
-                "r1_unpaired": pv.get("r1_unpaired", 0) or 0,
-                "r2_unpaired": pv.get("r2_unpaired", 0) or 0,
+                "pairs_analyzed": pv.get("pairs_analyzed", 0),
+                "pairs_removed": pv.get("pairs_removed", 0),
+                "pairs_removed_n": pv.get("pairs_removed_n", 0),
+                "pairs_removed_too_long": pv.get("pairs_removed_too_long", 0),
+                "r1_unpaired": pv.get("r1_unpaired", 0),
+                "r2_unpaired": pv.get("r2_unpaired", 0),
             }
 
         # `pairs_removed_*` are sub-reasons of `pairs_removed` so are not added
@@ -473,13 +463,13 @@ class MultiqcModule(BaseMultiqcModule):
         rows: Dict[str, Dict[str, int]] = {}
         dropped: List[str] = []
         for s_name, payload in data_by_sample.items():
-            pa = payload.get("poly_a_trimming") or {}
-            pg = payload.get("poly_g_trimming") or {}
+            pa = payload.get("poly_a_trimming", {})
+            pg = payload.get("poly_g_trimming", {})
             row = {
-                "poly_a_reads_trimmed": pa.get("reads_trimmed", 0) or 0,
-                "poly_a_bases_removed": pa.get("bases_removed", 0) or 0,
-                "poly_g_reads_trimmed": pg.get("reads_trimmed", 0) or 0,
-                "poly_g_bases_removed": pg.get("bases_removed", 0) or 0,
+                "poly_a_reads_trimmed": pa.get("reads_trimmed", 0),
+                "poly_a_bases_removed": pa.get("bases_removed", 0),
+                "poly_g_reads_trimmed": pg.get("reads_trimmed", 0),
+                "poly_g_bases_removed": pg.get("bases_removed", 0),
             }
             if any(row.values()):
                 rows[s_name] = row
@@ -530,11 +520,11 @@ class MultiqcModule(BaseMultiqcModule):
         rows: Dict[str, Dict[str, int]] = {}
         dropped: List[str] = []
         for s_name, payload in data_by_sample.items():
-            rr = payload.get("rrbs") or {}
+            rr = payload.get("rrbs", {})
             row = {
-                "rrbs_trimmed_3prime": rr.get("trimmed_3prime", 0) or 0,
-                "rrbs_trimmed_5prime": rr.get("trimmed_5prime", 0) or 0,
-                "rrbs_r2_clipped_5prime": rr.get("r2_clipped_5prime", 0) or 0,
+                "rrbs_trimmed_3prime": rr.get("trimmed_3prime", 0),
+                "rrbs_trimmed_5prime": rr.get("trimmed_5prime", 0),
+                "rrbs_r2_clipped_5prime": rr.get("r2_clipped_5prime", 0),
             }
             if any(row.values()):
                 rows[s_name] = row
@@ -599,12 +589,14 @@ def _filtered_samples_alert(dropped: List[str], reason: str) -> str:
 def _flatten_for_data_file(data_by_sample: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     flat: Dict[str, Dict[str, Any]] = {}
     for s_name, p in data_by_sample.items():
-        rp = p.get("read_processing", {}) or {}
-        bp = p.get("basepair_processing", {}) or {}
+        rp = p.get("read_processing", {})
+        bp = p.get("basepair_processing", {})
+        # `pair_validation` is explicitly null for SE samples — keep `or {}`
+        # so the subsequent .get() calls work uniformly.
         pv = p.get("pair_validation") or {}
-        pa = p.get("poly_a_trimming") or {}
-        pg = p.get("poly_g_trimming") or {}
-        rr = p.get("rrbs") or {}
+        pa = p.get("poly_a_trimming", {})
+        pg = p.get("poly_g_trimming", {})
+        rr = p.get("rrbs", {})
         flat[s_name] = {
             "trim_galore_version": p.get("trim_galore_version"),
             "mode": p.get("mode"),
@@ -618,12 +610,12 @@ def _flatten_for_data_file(data_by_sample: Dict[str, Dict[str, Any]]) -> Dict[st
             "total_bp_processed": bp.get("total_bp_processed"),
             "total_bp_written": bp.get("total_bp_written"),
             "quality_trimmed_bp": bp.get("quality_trimmed_bp"),
-            "pairs_analyzed": pv.get("pairs_analyzed") if pv else None,
-            "pairs_removed": pv.get("pairs_removed") if pv else None,
-            "pairs_removed_n": pv.get("pairs_removed_n") if pv else None,
-            "pairs_removed_too_long": pv.get("pairs_removed_too_long") if pv else None,
-            "r1_unpaired": pv.get("r1_unpaired") if pv else None,
-            "r2_unpaired": pv.get("r2_unpaired") if pv else None,
+            "pairs_analyzed": pv.get("pairs_analyzed"),
+            "pairs_removed": pv.get("pairs_removed"),
+            "pairs_removed_n": pv.get("pairs_removed_n"),
+            "pairs_removed_too_long": pv.get("pairs_removed_too_long"),
+            "r1_unpaired": pv.get("r1_unpaired"),
+            "r2_unpaired": pv.get("r2_unpaired"),
             "poly_a_reads_trimmed": pa.get("reads_trimmed"),
             "poly_a_bases_removed": pa.get("bases_removed"),
             "poly_g_reads_trimmed": pg.get("reads_trimmed"),
