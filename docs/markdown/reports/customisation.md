@@ -708,6 +708,25 @@ custom_plot_config:
         color: "#c3e6c3"
 ```
 
+### Targeting a single tab in a multi-dataset plot
+
+Some plots have a tab switch between multiple datasets — for example, the `samtools-coverage` line plot has tabs for _Reads_, _Bases_, _Coverage_, _Mean depth_, _BQ_ and _MQ_. By default, settings under a plot ID apply to every tab.
+
+To apply a setting to **just one tab**, nest it under `data_labels:` and key by the tab name (the label shown on the tab button):
+
+```yaml
+custom_plot_config:
+  samtools-coverage:
+    data_labels:
+      MQ:
+        y_bands:
+          - from: 50
+            to: 60
+            color: "#c3e6c3"
+```
+
+You can also use the integer position of the tab (`0:` for the first, `1:` for the second, …) if that is more convenient. Mix tab-level keys with plot-level keys freely — plot-level settings still apply to every tab, and tab-level settings layer on top of one specific tab.
+
 ## Customising tables
 
 Much like with the custom plot config above, you can override almost any configuration options for tables.

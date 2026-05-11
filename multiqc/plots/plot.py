@@ -263,8 +263,15 @@ class PConfig(ValidatedConfig):
             self.title = self.id.replace("_", " ").title()
 
         # Allow user to overwrite any given config for this plot
+        per_tab_overrides: Optional[Dict[Any, Any]] = None
         if self.id in config.custom_plot_config:
-            for k, v in config.custom_plot_config[self.id].items():
+            user_cpc = dict(config.custom_plot_config[self.id])
+            # Per-tab overrides (e.g. for multi-data_labels plots) are nested under
+            # a dict-valued `data_labels` key: pull these out so they don't clobber
+            # the list-valued `data_labels` model field via the generic setattr below.
+            if isinstance(user_cpc.get("data_labels"), dict):
+                per_tab_overrides = user_cpc.pop("data_labels")
+            for k, v in user_cpc.items():
                 if k in self.__class__.model_fields:
                     field_info = self.__class__.model_fields[k]
                     # Redirect deprecated aliases (e.g. yPlotBands -> y_bands) to their
@@ -298,6 +305,69 @@ class PConfig(ValidatedConfig):
             self.data_labels = data_labels
         else:
             self.data_labels = []
+
+        # Apply per-tab overrides from custom_plot_config, after data_labels normalization.
+        if per_tab_overrides is not None:
+            self._apply_per_tab_overrides(per_tab_overrides, path_in_cfg)
+
+    def _apply_per_tab_overrides(
+        self,
+        overrides: Dict[Any, Any],
+        path_in_cfg: Tuple[str, ...],
+    ) -> None:
+        """
+        Apply `custom_plot_config[<id>]["data_labels"]` overrides to individual tabs.
+
+        Keys may be tab names (matching `data_labels[i]["name"]`) or integer positional
+        indices. Override values are dicts of fields to merge into that tab's entry,
+        with band/line dicts parsed into LineBand/FlatLine objects.
+        """
+        if not self.data_labels:
+            logger.warning(
+                f"custom_plot_config['{self.id}']['data_labels']: this plot has no data_labels, "
+                "per-tab overrides will be ignored"
+            )
+            return
+        name_to_index: Dict[str, int] = {
+            str(dl["name"]): i for i, dl in enumerate(self.data_labels) if isinstance(dl, dict) and "name" in dl
+        }
+        for key, tab_override in overrides.items():
+            if not isinstance(tab_override, dict):
+                continue
+            if isinstance(key, int) and not isinstance(key, bool):
+                if 0 <= key < len(self.data_labels):
+                    idx = key
+                else:
+                    logger.warning(
+                        f"custom_plot_config['{self.id}']['data_labels'][{key}]: "
+                        f"index out of range (plot has {len(self.data_labels)} tab(s))"
+                    )
+                    continue
+            elif isinstance(key, str) and key in name_to_index:
+                idx = name_to_index[key]
+            else:
+                logger.warning(
+                    f"custom_plot_config['{self.id}']['data_labels']['{key}']: "
+                    f"tab not found. Valid names: {sorted(name_to_index.keys())}"
+                )
+                continue
+            parsed_override: Dict[str, Any] = {}
+            for k, v in tab_override.items():
+                parse_method = getattr(self.__class__, f"parse_{k}", None)
+                if parse_method is not None and v is not None:
+                    try:
+                        v = parse_method(v, path_in_cfg=path_in_cfg + ("data_labels", str(key), k))
+                    except (ValidationError, TypeError, KeyError) as e:
+                        logger.warning(
+                            f"Failed to parse custom_plot_config['{self.id}']['data_labels']['{key}']['{k}']: {e}"
+                        )
+                        continue
+                parsed_override[k] = v
+            dl = self.data_labels[idx]
+            if isinstance(dl, dict):
+                dl.update(parsed_override)
+            else:
+                self.data_labels[idx] = parsed_override
 
     @classmethod
     def parse_x_bands(cls, data, path_in_cfg: Tuple[str, ...]):
@@ -599,6 +669,13 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
     def __init__(self, **data):
         super().__init__(**data)
+        # Clear any shapes left over from a prior init pass — subclasses like LinePlot
+        # construct via `LinePlot(**model.__dict__, ...)` which calls `__init__` a
+        # second time on an already-populated model; without this reset the
+        # band/line shapes get appended twice.
+        self.layout.shapes = []
+        for dataset in self.datasets:
+            dataset.layout.pop("shapes", None)
         self._set_x_bands_and_range(self.pconfig)
         self._set_y_bands_and_range(self.pconfig)
 
@@ -806,14 +883,27 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             defer_render=defer_render,
         )
 
-    def _set_x_bands_and_range(self, pconfig: PConfigT):
-        x_minrange = pconfig.x_minrange
-        x_bands = pconfig.x_bands
-        x_lines = pconfig.x_lines
+    def _effective_dataset_field(self, pconfig: PConfigT, ds_idx: int, field: str) -> Any:
+        """
+        Return the effective value of a band/line/minrange field for a given dataset,
+        preferring the per-tab override in `pconfig.data_labels[ds_idx]` over the
+        plot-level value on `pconfig`.
+        """
+        if pconfig.data_labels and ds_idx < len(pconfig.data_labels):
+            dl = pconfig.data_labels[ds_idx]
+            if isinstance(dl, dict) and field in dl:
+                return dl[field]
+        return getattr(pconfig, field, None)
 
-        if x_bands or x_lines or x_minrange:
-            # same as above but for x-axis
-            for dataset in self.datasets:
+    def _set_x_bands_and_range(self, pconfig: PConfigT):
+        for ds_idx, dataset in enumerate(self.datasets):
+            x_minrange = self._effective_dataset_field(pconfig, ds_idx, "x_minrange")
+            x_bands = self._effective_dataset_field(pconfig, ds_idx, "x_bands")
+            x_lines = self._effective_dataset_field(pconfig, ds_idx, "x_lines")
+
+            if x_bands or x_lines or x_minrange:
+                # same as for y-axis: bands shouldn't affect the calculated axis range,
+                # so derive min/max from data points and set the range manually.
                 minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
                 maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 dminval, dmaxval = dataset.get_x_range()
@@ -840,11 +930,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
                 dataset.layout["xaxis"]["range"] = [minval, maxval]
 
-        if not self.layout.shapes:
-            self.layout.shapes = []
-        self.layout.shapes = (
-            list(self.layout.shapes)
-            + [
+            new_shapes: List[Dict[str, Any]] = [
                 dict(
                     type="rect",
                     x0=band.from_,
@@ -854,14 +940,11 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     yref="paper",  # make y coords are relative to the plot paper [0,1]
                     fillcolor=band.color,
                     opacity=band.opacity,
-                    line={
-                        "width": 0,
-                    },
+                    line={"width": 0},
                     layer="below",
                 )
                 for band in (x_bands or [])
-            ]
-            + [
+            ] + [
                 dict(
                     type="line",
                     yref="paper",
@@ -870,26 +953,25 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     y0=0,
                     x1=line.value,
                     y1=1,
-                    line={
-                        "width": line.width,
-                        "dash": line.dash,
-                        "color": line.color,
-                    },
+                    line={"width": line.width, "dash": line.dash, "color": line.color},
                     label=dict(text=line.label, font=dict(color=line.color)),
                 )
                 for line in (x_lines or [])
             ]
-        )
+            if new_shapes:
+                dataset.layout["shapes"] = list(dataset.layout.get("shapes", [])) + new_shapes
+
+        self._seed_global_shapes_from_first_dataset()
 
     def _set_y_bands_and_range(self, pconfig: PConfigT):
-        y_minrange = pconfig.y_minrange
-        y_bands = pconfig.y_bands
-        y_lines = pconfig.y_lines
+        for ds_idx, dataset in enumerate(self.datasets):
+            y_minrange = self._effective_dataset_field(pconfig, ds_idx, "y_minrange")
+            y_bands = self._effective_dataset_field(pconfig, ds_idx, "y_bands")
+            y_lines = self._effective_dataset_field(pconfig, ds_idx, "y_lines")
 
-        if y_bands or y_lines or y_minrange:
-            # We don't want the bands to affect the calculated axis range, so we
-            # find the min and the max from data points, and manually set the range.
-            for dataset in self.datasets:
+            if y_bands or y_lines or y_minrange:
+                # We don't want the bands to affect the calculated axis range, so we
+                # find the min and the max from data points, and manually set the range.
                 minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
                 maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
                 dminval, dmaxval = dataset.get_y_range()
@@ -912,11 +994,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
                 dataset.layout["yaxis"]["range"] = [minval, maxval]
 
-        if not self.layout.shapes:
-            self.layout.shapes = []
-        self.layout.shapes = (
-            list(self.layout.shapes)
-            + [
+            new_shapes: List[Dict[str, Any]] = [
                 dict(
                     type="rect",
                     y0=band.from_,
@@ -926,14 +1004,11 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     xref="paper",  # make x coords are relative to the plot paper [0,1]
                     fillcolor=band.color,
                     opacity=band.opacity,
-                    line={
-                        "width": 0,
-                    },
+                    line={"width": 0},
                     layer="below",
                 )
                 for band in (y_bands or [])
-            ]
-            + [
+            ] + [
                 dict(
                     type="line",
                     xref="paper",
@@ -942,16 +1017,26 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     y0=line.value,
                     x1=1,
                     y1=line.value,
-                    line={
-                        "width": line.width,
-                        "dash": line.dash,
-                        "color": line.color,
-                    },
+                    line={"width": line.width, "dash": line.dash, "color": line.color},
                     label=dict(text=line.label, font=dict(color=line.color)),
                 )
                 for line in (y_lines or [])
             ]
-        )
+            if new_shapes:
+                dataset.layout["shapes"] = list(dataset.layout.get("shapes", [])) + new_shapes
+
+        self._seed_global_shapes_from_first_dataset()
+
+    def _seed_global_shapes_from_first_dataset(self) -> None:
+        """
+        Mirror dataset[0]'s shapes onto `self.layout.shapes` as a first-paint fallback
+        for any consumer that doesn't merge `dataset.layout` (the interactive frontend
+        does, in plotting.js:renderPlot, and `get_figure` does for flat exports).
+        """
+        if not self.datasets:
+            return
+        first_shapes = list(self.datasets[0].layout.get("shapes", []))
+        self.layout.shapes = first_shapes
 
     def show(self, dataset_id: Union[int, str] = 0, flat: bool = False, **kwargs):
         """
