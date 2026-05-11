@@ -70,12 +70,9 @@ class SampleGroupingConfig:
     cols_to_average: Optional[List[ColumnKey]] = None
     cols_to_sum: Optional[List[ColumnKey]] = None
     extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
-    # Optional module-supplied groups, mapping group display name -> list of
-    # sample names. Used when the module has authoritative pair / replicate
-    # info (e.g. Trim Galore's `input_filenames`) and wants deterministic
-    # grouping that doesn't depend on name patterns. When set, takes
-    # precedence over the `config.table_sample_merge` name-pattern path
-    # inside `group_samples_and_average_metrics`.
+    # Module-supplied groups, mapping group display name -> sample names.
+    # When set, takes precedence over `config.table_sample_merge` name patterns
+    # (lets modules with authoritative pair / replicate info skip name-guessing).
     explicit_groups: Optional[Dict[str, List[str]]] = None
 
 
@@ -727,12 +724,8 @@ class BaseMultiqcModule:
 
         rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
 
-        # If the module supplied explicit groups (e.g. derived from tool metadata
-        # like Trim Galore's `input_filenames`), use those instead of running
-        # the name-pattern matcher. Entries with <= 1 member are silently
-        # ignored — they would otherwise render as a renamed singleton row, which
-        # is rarely what callers want; instead they fall through to the
-        # singleton path below and keep their original sample name.
+        # 1-member entries fall through to the singleton path below: rendering
+        # them as a renamed singleton row is rarely what callers want.
         groups_iter: Dict[SampleGroup, List[Tuple[Optional[str], SampleName, SampleName]]]
         if grouping_config.explicit_groups:
             groups_iter = {}
