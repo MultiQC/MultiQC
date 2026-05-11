@@ -18,16 +18,14 @@ class MultiqcModule(BaseMultiqcModule):
     Parses the structured `*_trimming_report.json` (schema v1) emitted by
     Trim Galore v2.x alongside the legacy text report.
 
-    The legacy text report (`*_trimming_report.txt`) is still produced
-    unchanged and continues to be parsed by the `cutadapt` module via the
-    backwards-compatibility shim. Users who want native Trim Galore parsing
-    only should disable the `cutadapt` module to avoid duplicate sample
-    entries:
-
-    ```yaml
-    disable_modules:
-      - cutadapt
-    ```
+    Trim Galore v2.x also writes a `*_trimming_report.txt` carrying a
+    "This is cutadapt ..." backwards-compatibility shim. The `cutadapt`
+    module's search pattern excludes v2.x text reports (matched on the
+    `Trim Galore version:` header) so samples are not double-counted.
+    Legacy Trim Galore v0.x / v1.x text reports continue to be parsed by
+    the `cutadapt` module — they have no JSON sibling. If the JSON is
+    removed but the v2.x text file is kept, the sample will not be
+    reported by either module.
     """
 
     def __init__(self):
