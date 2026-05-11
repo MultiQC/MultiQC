@@ -30,7 +30,7 @@ dependencies = [
     "natsort",
     "tiktoken",
     "jsonschema",
-    "polars-lts-cpu",     # for parquet support. Using LTS version for compatibility with older architectures
+    "polars[rtcompat]",   # for parquet support with runtime CPU compatibility
     "pyarrow",            # for parquet support
 ]
 # Avoid cPython bug in 3.14.1 - https://github.com/python/cpython/issues/142214
