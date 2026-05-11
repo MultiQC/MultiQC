@@ -11,7 +11,6 @@ a ``multiqc_config.yaml`` file.  Run from the repo root::
 Output: docs/multiqc_config_wizard.html
 """
 
-import html
 import json
 import sys
 from pathlib import Path
@@ -194,8 +193,6 @@ def generate_config_wizard():
 
 def _build_html(config_json_escaped: str) -> str:
     """Return the complete HTML string for the wizard."""
-
-    logo_escaped = html.escape(MULTIQC_LOGO_SVG, quote=False)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
