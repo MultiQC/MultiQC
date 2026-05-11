@@ -177,7 +177,6 @@ The parquet format is stable since 1.29, renaming the output file from `BETA-mul
 
 ### Infrastructure and packaging
 
-- Use the official Pyodide `polars` distribution for WASM installs ([#3310](https://github.com/MultiQC/MultiQC/issues/3310))
 - WASM workaround: if `write_parquet` not supported by polars, write a CSV file ([#3309](https://github.com/MultiQC/MultiQC/pull/3309))
 - Add Claude instructions ([#3301](https://github.com/MultiQC/MultiQC/pull/3301))
 - Add Claude review action ([#3299](https://github.com/MultiQC/MultiQC/pull/3299))
