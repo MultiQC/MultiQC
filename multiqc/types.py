@@ -1,7 +1,7 @@
 import dataclasses
 import io
 from enum import Enum
-from typing import Generic, List, NewType, Optional, TypeVar, Union
+from typing import ClassVar, Generic, List, NewType, Optional, TypeVar, Union
 
 # Do not export typing.TypedDict: it doesn't support generics and will break Python 3.9
 from pydantic import BaseModel, Field, field_validator
@@ -99,7 +99,7 @@ class SampleNameMeta:
 
 
 class SectionAlert(BaseModel):
-    valid_levels = {"primary", "secondary", "success", "danger", "warning", "info", "light", "dark"}
+    valid_levels: ClassVar[set[str]] = {"primary", "secondary", "success", "danger", "warning", "info", "light", "dark"}
 
     message: str
     level: str = "info"
