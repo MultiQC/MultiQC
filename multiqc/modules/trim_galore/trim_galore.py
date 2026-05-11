@@ -1,9 +1,10 @@
 import json
 import logging
-from typing import Any, Dict, Optional, Tuple, Union
+import re
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
-from multiqc.plots import bargraph, linegraph
+from multiqc.plots import bargraph, linegraph, table
 from multiqc.types import ColumnKey, SampleName
 
 log = logging.getLogger(__name__)
@@ -89,6 +90,51 @@ class MultiqcModule(BaseMultiqcModule):
                     "real adapter contamination."
                 ),
                 plot=adapter_plot,
+            )
+
+        pair_validation_plot, pv_dropped = self._pair_validation_plot(data_by_sample)
+        if pair_validation_plot is not None:
+            description = (
+                "Outcomes of paired-end validation: pairs analysed, pairs removed "
+                "(broken down by reason), and reads left unpaired after a partner "
+                "was discarded. R1 and R2 of a pair are collapsed into a single "
+                "row (the data is identical between them). Samples where less than "
+                "0.1% of pairs were affected are omitted."
+            )
+            description += _filtered_samples_alert(pv_dropped, "with < 0.1% of pairs affected")
+            self.add_section(
+                name="Pair Validation",
+                anchor="trim_galore_pair_validation",
+                description=description,
+                plot=pair_validation_plot,
+            )
+
+        poly_plot, poly_dropped = self._poly_trimming_plot(data_by_sample)
+        if poly_plot is not None:
+            description = (
+                "Reads and bases removed by Trim Galore's poly-A and poly-G "
+                "tail trimmers. Samples with nothing trimmed are omitted."
+            )
+            description += _filtered_samples_alert(poly_dropped, "with no poly-A/G trimming")
+            self.add_section(
+                name="Poly-A / Poly-G Trimming",
+                anchor="trim_galore_poly_trimming",
+                description=description,
+                plot=poly_plot,
+            )
+
+        rrbs_plot, rrbs_dropped = self._rrbs_plot(data_by_sample)
+        if rrbs_plot is not None:
+            description = (
+                "Reduced Representation Bisulfite Sequencing (RRBS) end-repair "
+                "trimming counts. Samples with nothing trimmed are omitted."
+            )
+            description += _filtered_samples_alert(rrbs_dropped, "with no RRBS trimming")
+            self.add_section(
+                name="RRBS Trimming",
+                anchor="trim_galore_rrbs",
+                description=description,
+                plot=rrbs_plot,
             )
 
         self.write_data_file(_flatten_for_data_file(data_by_sample), "multiqc_trim_galore")
@@ -236,7 +282,13 @@ class MultiqcModule(BaseMultiqcModule):
                 name = a.get("name") or f"adapter_{idx}"
                 key = f"{s_name} ({name})" if len(adapters) > 1 else s_name
                 dist = a.get("length_distribution") or {}
-                line_data[key] = {int(k): v for k, v in dist.items()}
+                parsed: Dict[int, int] = {}
+                for k, v in dist.items():
+                    try:
+                        parsed[int(k)] = v
+                    except (TypeError, ValueError):
+                        log.debug(f"Skipping non-integer adapter-length key {k!r} in {s_name}")
+                line_data[key] = parsed
         if not line_data:
             return None
         return linegraph.plot(
@@ -251,6 +303,231 @@ class MultiqcModule(BaseMultiqcModule):
             },
         )
 
+    def _pair_validation_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
+        # pair_validation is pair-level (identical between R1 and R2 JSONs),
+        # so collapse PE pairs to a single row keyed by the pair name.
+        all_rows: Dict[str, Dict[str, int]] = {}
+        for s_name, payload in data_by_sample.items():
+            pv = payload.get("pair_validation")
+            if not pv:
+                continue
+            pair_name = re.sub(r"[._-]?R?[12]$", "", s_name) or s_name
+            if pair_name in all_rows:
+                continue
+            all_rows[pair_name] = {
+                "pairs_analyzed": pv.get("pairs_analyzed", 0) or 0,
+                "pairs_removed": pv.get("pairs_removed", 0) or 0,
+                "pairs_removed_n": pv.get("pairs_removed_n", 0) or 0,
+                "pairs_removed_too_long": pv.get("pairs_removed_too_long", 0) or 0,
+                "r1_unpaired": pv.get("r1_unpaired", 0) or 0,
+                "r2_unpaired": pv.get("r2_unpaired", 0) or 0,
+            }
+
+        # Per-row gate: skip rows where less than 0.1% of pairs were affected
+        # (removed or left unpaired). Reasons (pairs_removed_*) are subsets of
+        # pairs_removed so are not added separately.
+        def _kept(r: Dict[str, int]) -> bool:
+            return bool(r["pairs_analyzed"]) and (
+                (r["pairs_removed"] + r["r1_unpaired"] + r["r2_unpaired"]) / r["pairs_analyzed"] > 0.001
+            )
+
+        rows = {n: r for n, r in all_rows.items() if _kept(r)}
+        dropped = sorted(n for n, r in all_rows.items() if not _kept(r))
+        if not rows:
+            return None, dropped
+        headers: Dict[str, Dict[str, Any]] = {
+            "pairs_analyzed": {
+                "title": "Pairs analysed",
+                "description": "Total read pairs examined by pair validation",
+                "scale": "Greys",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+            "pairs_removed": {
+                "title": "Pairs removed",
+                "description": "Total read pairs removed by pair validation",
+                "scale": "OrRd",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+            "pairs_removed_n": {
+                "title": "Pairs removed (N content)",
+                "description": "Read pairs removed because they exceeded the N-content threshold",
+                "scale": "OrRd",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+            "pairs_removed_too_long": {
+                "title": "Pairs removed (too long)",
+                "description": "Read pairs removed because one or both reads exceeded the maximum length",
+                "scale": "OrRd",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+            "r1_unpaired": {
+                "title": "R1 unpaired",
+                "description": "R1 reads left unpaired after their R2 partner was discarded",
+                "scale": "Oranges",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+            "r2_unpaired": {
+                "title": "R2 unpaired",
+                "description": "R2 reads left unpaired after their R1 partner was discarded",
+                "scale": "Oranges",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+        }
+        return (
+            table.plot(
+                rows,
+                cast(Any, headers),
+                pconfig={
+                    "namespace": self.name,
+                    "id": "trim_galore_pair_validation_table",
+                    "title": "Trim Galore: Pair Validation",
+                },
+            ),
+            dropped,
+        )
+
+    def _poly_trimming_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
+        rows: Dict[str, Dict[str, int]] = {}
+        dropped: List[str] = []
+        for s_name, payload in data_by_sample.items():
+            pa = payload.get("poly_a_trimming") or {}
+            pg = payload.get("poly_g_trimming") or {}
+            row = {
+                "poly_a_reads_trimmed": pa.get("reads_trimmed", 0) or 0,
+                "poly_a_bases_removed": pa.get("bases_removed", 0) or 0,
+                "poly_g_reads_trimmed": pg.get("reads_trimmed", 0) or 0,
+                "poly_g_bases_removed": pg.get("bases_removed", 0) or 0,
+            }
+            if any(row.values()):
+                rows[s_name] = row
+            else:
+                dropped.append(s_name)
+        if not rows:
+            return None, sorted(dropped)
+        headers: Dict[str, Dict[str, Any]] = {
+            "poly_a_reads_trimmed": {
+                "title": "Poly-A reads trimmed",
+                "description": "Reads with a poly-A tail trimmed",
+                "scale": "Purples",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+            "poly_a_bases_removed": {
+                "title": "Poly-A bp removed",
+                "description": "Bases removed by poly-A trimming",
+                "scale": "Purples",
+                "shared_key": "base_count",
+                "format": "{:,d}",
+            },
+            "poly_g_reads_trimmed": {
+                "title": "Poly-G reads trimmed",
+                "description": "Reads with a poly-G tail trimmed",
+                "scale": "Greens",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+            "poly_g_bases_removed": {
+                "title": "Poly-G bp removed",
+                "description": "Bases removed by poly-G trimming",
+                "scale": "Greens",
+                "shared_key": "base_count",
+                "format": "{:,d}",
+            },
+        }
+        return (
+            table.plot(
+                rows,
+                cast(Any, headers),
+                pconfig={
+                    "namespace": self.name,
+                    "id": "trim_galore_poly_trimming_table",
+                    "title": "Trim Galore: Poly-A / Poly-G Trimming",
+                },
+            ),
+            sorted(dropped),
+        )
+
+    def _rrbs_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
+        rows: Dict[str, Dict[str, int]] = {}
+        dropped: List[str] = []
+        for s_name, payload in data_by_sample.items():
+            rr = payload.get("rrbs") or {}
+            row = {
+                "rrbs_trimmed_3prime": rr.get("trimmed_3prime", 0) or 0,
+                "rrbs_trimmed_5prime": rr.get("trimmed_5prime", 0) or 0,
+                "rrbs_r2_clipped_5prime": rr.get("r2_clipped_5prime", 0) or 0,
+            }
+            if any(row.values()):
+                rows[s_name] = row
+            else:
+                dropped.append(s_name)
+        if not rows:
+            return None, sorted(dropped)
+        headers: Dict[str, Dict[str, Any]] = {
+            "rrbs_trimmed_3prime": {
+                "title": "3' trimmed",
+                "description": "Reads trimmed at the 3' end for RRBS end-repair",
+                "scale": "Blues",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+            "rrbs_trimmed_5prime": {
+                "title": "5' trimmed",
+                "description": "Reads trimmed at the 5' end for RRBS end-repair",
+                "scale": "Blues",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+            "rrbs_r2_clipped_5prime": {
+                "title": "R2 5' clipped",
+                "description": "R2 reads with the 5' end clipped (directional RRBS)",
+                "scale": "Blues",
+                "shared_key": "read_count",
+                "format": "{:,d}",
+            },
+        }
+        return (
+            table.plot(
+                rows,
+                cast(Any, headers),
+                pconfig={
+                    "namespace": self.name,
+                    "id": "trim_galore_rrbs_table",
+                    "title": "Trim Galore: RRBS Trimming",
+                },
+            ),
+            sorted(dropped),
+        )
+
+
+def _filtered_samples_alert(dropped: List[str], reason: str) -> str:
+    """Bootstrap alert listing samples removed from a section.
+
+    Wraps long sample lists (>10) in a <details> block like the bases2fastq
+    module does, so the alert stays compact for large cohorts.
+    """
+    if not dropped:
+        return ""
+    n = len(dropped)
+    sample_list = ", ".join(f"<code>{s}</code>" for s in dropped)
+    body = (
+        f"<details><summary>Show {n} sample names</summary><p style='margin-top:0.5em'>{sample_list}</p></details>"
+        if n > 10
+        else sample_list
+    )
+    return (
+        f'\n\n<div class="alert alert-info">'
+        f"<strong>{n} sample{'s' if n != 1 else ''}</strong> {reason} "
+        f"hidden from this table: {body}"
+        f"</div>"
+    )
+
 
 def _flatten_for_data_file(data_by_sample: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     flat: Dict[str, Dict[str, Any]] = {}
@@ -258,6 +535,9 @@ def _flatten_for_data_file(data_by_sample: Dict[str, Dict[str, Any]]) -> Dict[st
         rp = p.get("read_processing", {}) or {}
         bp = p.get("basepair_processing", {}) or {}
         pv = p.get("pair_validation") or {}
+        pa = p.get("poly_a_trimming") or {}
+        pg = p.get("poly_g_trimming") or {}
+        rr = p.get("rrbs") or {}
         flat[s_name] = {
             "trim_galore_version": p.get("trim_galore_version"),
             "mode": p.get("mode"),
@@ -273,6 +553,17 @@ def _flatten_for_data_file(data_by_sample: Dict[str, Dict[str, Any]]) -> Dict[st
             "quality_trimmed_bp": bp.get("quality_trimmed_bp"),
             "pairs_analyzed": pv.get("pairs_analyzed") if pv else None,
             "pairs_removed": pv.get("pairs_removed") if pv else None,
+            "pairs_removed_n": pv.get("pairs_removed_n") if pv else None,
+            "pairs_removed_too_long": pv.get("pairs_removed_too_long") if pv else None,
+            "r1_unpaired": pv.get("r1_unpaired") if pv else None,
+            "r2_unpaired": pv.get("r2_unpaired") if pv else None,
+            "poly_a_reads_trimmed": pa.get("reads_trimmed"),
+            "poly_a_bases_removed": pa.get("bases_removed"),
+            "poly_g_reads_trimmed": pg.get("reads_trimmed"),
+            "poly_g_bases_removed": pg.get("bases_removed"),
+            "rrbs_trimmed_3prime": rr.get("trimmed_3prime"),
+            "rrbs_trimmed_5prime": rr.get("trimmed_5prime"),
+            "rrbs_r2_clipped_5prime": rr.get("r2_clipped_5prime"),
         }
     return flat
 
