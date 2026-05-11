@@ -30,8 +30,8 @@ dependencies = [
     "natsort",
     "tiktoken",
     "jsonschema",
-    # Use the official Pyodide package on Emscripten; Pyodide only publishes `polars`.
-    "polars; sys_platform == 'emscripten'",
+    # Pyodide currently publishes Polars 1.33.1; `rtcompat` is available from 1.34.0 for native installs.
+    "polars>=1.33.1; sys_platform == 'emscripten'",
     "polars[rtcompat]>=1.34.0; sys_platform != 'emscripten'",  # for parquet support with runtime CPU compatibility
     "pyarrow",            # for parquet support
 ]
