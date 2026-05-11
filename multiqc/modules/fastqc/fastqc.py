@@ -20,7 +20,7 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleG
 from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.table_object import ColumnKey, InputRow, SampleName
-from multiqc.types import Anchor, LoadedFileDict
+from multiqc.types import Anchor, LoadedFileDict, SectionAlert
 from multiqc.utils.material_icons import get_material_icon
 
 log = logging.getLogger(__name__)
@@ -1050,7 +1050,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="Sequence Length Distribution",
                 anchor="fastqc_sequence_length_distribution",
-                content=f'<div class="alert alert-info">{desc}</div>',
+                alerts=SectionAlert(message=desc),
                 statuses=status_dict if section_statuses else None,
             )
         else:
@@ -1211,10 +1211,16 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         plot = None
-        content = None
+        alerts: Optional[SectionAlert] = None
         # Check if any samples have more than 1% overrepresented sequences, else don't make plot.
         if max([x["total_overrepresented"] for x in data_by_sample.values()]) < 1:
-            content = f'<div class="alert alert-info">{len(data_by_sample)} samples had less than 1% of reads made up of overrepresented sequences</div>'
+            alerts = SectionAlert(
+                message=(
+                    f"{len(data_by_sample)} sample{'s' if len(data_by_sample) != 1 else ''} had less than 1% "
+                    "of reads made up of overrepresented sequences."
+                ),
+                affected_samples=[str(s_name) for s_name in sorted(data_by_sample)],
+            )
         else:
             plot = bargraph.plot(data_by_sample, cats, pconfig)
 
@@ -1245,7 +1251,7 @@ class MultiqcModule(BaseMultiqcModule):
             but doesn't appear at the start of the file for some reason could be missed by this module._
             """,
             plot=plot,
-            content=content or "",
+            alerts=alerts,
         )
 
         # Add a table of the top overrepresented sequences
@@ -1344,8 +1350,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Lots of these datasets will be all zeros.
         # Only take datasets with > 0.1% adapter contamination
+        low_adapter_series = sorted(
+            k for k, vals in pct_by_pos_by_sample.items() if not vals or max(vals.values()) < 0.1
+        )
+        low_adapter_series_set = set(low_adapter_series)
         pct_by_pos_by_sample = {
-            k: d for k, d in pct_by_pos_by_sample.items() if max(pct_by_pos_by_sample[k].values()) >= 0.1
+            k: d for k, d in pct_by_pos_by_sample.items() if k not in low_adapter_series_set
         }
 
         # Convert status dict format
@@ -1375,11 +1385,18 @@ class MultiqcModule(BaseMultiqcModule):
             ]
 
         plot = None
-        content = ""
+        alerts: Optional[SectionAlert] = None
+        if low_adapter_series:
+            n = len(low_adapter_series)
+            alerts = SectionAlert(
+                message=(
+                    f"**{n} sample-adapter combination{'s' if n != 1 else ''}** with less than 0.1% "
+                    "adapter contamination hidden from this plot."
+                ),
+                affected_samples=low_adapter_series,
+            )
         if len(pct_by_pos_by_sample) > 0:
             plot = linegraph.plot(pct_by_pos_by_sample, pconfig)
-        else:
-            content = '<div class="alert alert-info">No samples found with any adapter contamination > 0.1%</div>'
 
         # Note - colours are messy as we've added adapter names here. Not
         # possible to break down pass / warn / fail for each adapter, which
@@ -1406,7 +1423,7 @@ class MultiqcModule(BaseMultiqcModule):
             increase as the read length goes on._
             """,
             plot=plot,
-            content=content,
+            alerts=alerts,
             statuses=status_dict if section_statuses else None,
         )
 

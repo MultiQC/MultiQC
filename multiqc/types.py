@@ -1,10 +1,11 @@
 import dataclasses
 import io
+import re
 from enum import Enum
 from typing import Generic, List, NewType, Optional, TypeVar, Union
 
 # Do not export typing.TypedDict: it doesn't support generics and will break Python 3.9
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing_extensions import TypedDict
 
 Anchor = NewType("Anchor", str)
@@ -98,6 +99,19 @@ class SampleNameMeta:
     labels: List[str] = dataclasses.field(default_factory=list)
 
 
+class SectionAlert(BaseModel):
+    message: str
+    level: str = "info"
+    affected_samples: List[str] = Field(default_factory=list)
+
+    @field_validator("level")
+    @classmethod
+    def validate_level(cls, level: str) -> str:
+        if re.fullmatch(r"[A-Za-z0-9_-]+", level) is None:
+            raise ValueError("Alert level must contain only letters, numbers, underscores, and hyphens")
+        return level
+
+
 class Section(BaseModel):
     name: str
     anchor: Anchor
@@ -115,3 +129,4 @@ class Section(BaseModel):
     plot_anchor: Optional[Anchor] = None
     ai_summary: str = ""
     status_bar_html: str = ""
+    alerts: List[SectionAlert] = Field(default_factory=list)

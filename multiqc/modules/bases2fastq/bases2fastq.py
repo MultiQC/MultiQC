@@ -1068,10 +1068,16 @@ class MultiqcModule(BaseMultiqcModule):
         if not data:
             return
         for func in plot_functions:
-            plot_html, plot_name, anchor, description, helptext, plot_data = func(data, self.run_color)
-            if plot_html is not None:
+            plot_html, plot_name, anchor, description, helptext, plot_data, *extra = func(data, self.run_color)
+            alerts = extra[0] if extra else None
+            if plot_html is not None or alerts:
                 self.add_section(
-                    name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext
+                    name=plot_name,
+                    plot=plot_html,
+                    anchor=anchor,
+                    description=description,
+                    helptext=helptext,
+                    alerts=alerts,
                 )
                 self.write_data_file(plot_data, f"base2fastq:{plot_name}")
 
@@ -1088,11 +1094,17 @@ class MultiqcModule(BaseMultiqcModule):
             plot_per_read_gc_hist,
         ]
         for func in plot_functions:
-            plot_html, plot_name, anchor, description, helptext, plot_data = func(
+            plot_html, plot_name, anchor, description, helptext, plot_data, *extra = func(
                 data, group_lookup, project_lookup, self.sample_color
             )
-            if plot_html is not None:
+            alerts = extra[0] if extra else None
+            if plot_html is not None or alerts:
                 self.add_section(
-                    name=plot_name, plot=plot_html, anchor=anchor, description=description, helptext=helptext
+                    name=plot_name,
+                    plot=plot_html,
+                    anchor=anchor,
+                    description=description,
+                    helptext=helptext,
+                    alerts=alerts,
                 )
                 self.write_data_file(plot_data, f"base2fastq:{plot_name}")

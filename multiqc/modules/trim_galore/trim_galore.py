@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, linegraph, table
-from multiqc.types import ColumnKey, SampleName
+from multiqc.types import ColumnKey, SampleName, SectionAlert
 
 log = logging.getLogger(__name__)
 
@@ -120,13 +120,13 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="Pair Validation",
                 anchor="trim_galore_pair_validation",
-                description="Outcomes of paired-end validation"
-                + _filtered_samples_alert(pv_dropped, "with < 0.1% of pairs affected"),
+                description="Outcomes of paired-end validation",
                 helptext=(
                     "Shows pairs analysed, pairs removed (broken down by reason), and reads left unpaired after a partner "
                     "was discarded. R1 and R2 of a pair are collapsed into a single row (the data is identical between them)."
                 ),
                 plot=pair_validation_plot,
+                alerts=_filtered_samples_alert(pv_dropped, "with less than 0.1% of pairs affected"),
             )
 
         poly_plot, poly_dropped = self._poly_trimming_plot(data_by_sample)
@@ -134,9 +134,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="Poly-A / Poly-G Trimming",
                 anchor="trim_galore_poly_trimming",
-                description="Reads and bases removed by Trim Galore's poly-A and poly-G tail trimmers."
-                + _filtered_samples_alert(poly_dropped, "with no poly-A/G trimming"),
+                description="Reads and bases removed by Trim Galore's poly-A and poly-G tail trimmers.",
                 plot=poly_plot,
+                alerts=_filtered_samples_alert(poly_dropped, "with no poly-A/G trimming"),
             )
 
         rrbs_plot, rrbs_dropped = self._rrbs_plot(data_by_sample)
@@ -144,9 +144,9 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="RRBS Trimming",
                 anchor="trim_galore_rrbs",
-                description="Reduced Representation Bisulfite Sequencing (RRBS) end-repair trimming counts."
-                + _filtered_samples_alert(rrbs_dropped, "with no RRBS trimming"),
+                description="Reduced Representation Bisulfite Sequencing (RRBS) end-repair trimming counts.",
                 plot=rrbs_plot,
+                alerts=_filtered_samples_alert(rrbs_dropped, "with no RRBS trimming"),
             )
 
         self.write_data_file(_flatten_for_data_file(data_by_sample), "multiqc_trim_galore")
@@ -530,23 +530,13 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
-def _filtered_samples_alert(dropped: List[str], reason: str) -> str:
-    """Bootstrap alert listing samples removed from a section.
-
-    Sample names are always inside a collapsed <details> element so the
-    alert stays compact regardless of cohort size.
-    """
+def _filtered_samples_alert(dropped: List[str], reason: str) -> Optional[SectionAlert]:
     if not dropped:
-        return ""
+        return None
     n = len(dropped)
-    sample_list = ", ".join(f"<code>{s}</code>" for s in dropped)
-    return (
-        f'\n\n<div class="alert alert-info">'
-        f"<strong>{n} sample{'s' if n != 1 else ''}</strong> {reason} "
-        f"hidden from this table."
-        f"<details><summary>Show sample names</summary>"
-        f"<p style='margin-top:0.5em'>{sample_list}</p></details>"
-        f"</div>"
+    return SectionAlert(
+        message=f"**{n} sample{'s' if n != 1 else ''}** {reason} hidden from this table.",
+        affected_samples=dropped,
     )
 
 

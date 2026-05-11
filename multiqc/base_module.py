@@ -49,9 +49,20 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SampleNameMeta, Section, SectionId, SectionKey
+from multiqc.types import (
+    Anchor,
+    FileDict,
+    LoadedFileDict,
+    ModuleId,
+    SampleNameMeta,
+    Section,
+    SectionAlert,
+    SectionId,
+    SectionKey,
+)
 
 logger = logging.getLogger(__name__)
+SectionAlertInput = Union[str, Mapping[str, Any], SectionAlert]
 
 
 class ModuleNoSamplesFound(Exception):
@@ -402,6 +413,7 @@ class BaseMultiqcModule:
         autoformat: bool = True,
         autoformat_type: str = "markdown",
         statuses: Optional[Dict[Literal["pass", "warn", "fail"], List[str]]] = None,
+        alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]] = None,
     ):
         """Add a section to the module report output
 
@@ -420,6 +432,8 @@ class BaseMultiqcModule:
             statuses: Optional dict with keys "pass", "warn", "fail" containing lists of sample names.
                       When provided, displays a status progress bar showing sample pass/warn/fail counts.
                       Can be disabled globally or per-section via `section_status_checks` config.
+            alerts: Optional section alert, or list of alerts. Alert messages are autoformatted like descriptions
+                    and rendered with Bootstrap contextual classes such as "info", "warning", or "danger".
         """
         if id is None and anchor is not None:
             id = str(anchor)
@@ -482,6 +496,8 @@ class BaseMultiqcModule:
                 if autoformat_type == "markdown":
                     helptext = markdown.markdown(helptext)
 
+        section_alerts = self._format_section_alerts(alerts, autoformat, autoformat_type)
+
         # Strip excess whitespace
         description = description.strip()
         comment = comment.strip()
@@ -504,8 +520,9 @@ class BaseMultiqcModule:
             helptext=helptext,
             content_before_plot=content_before_plot,
             content=content,
-            print_section=any([content_before_plot, plot, content]),
+            print_section=any([content_before_plot, plot, content, section_alerts]),
             status_bar_html=status_bar_html,
+            alerts=section_alerts,
         )
 
         if plot is not None:
@@ -518,6 +535,40 @@ class BaseMultiqcModule:
 
         # self.sections is passed into Jinja template:
         self.sections.append(section)
+
+    def _format_section_alerts(
+        self,
+        alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]],
+        autoformat: bool,
+        autoformat_type: str,
+    ) -> List[SectionAlert]:
+        if alerts is None:
+            return []
+
+        if isinstance(alerts, (str, SectionAlert)) or isinstance(alerts, Mapping):
+            alert_items: Sequence[SectionAlertInput] = [alerts]
+        else:
+            alert_items = alerts
+
+        formatted_alerts: List[SectionAlert] = []
+        for alert in alert_items:
+            if isinstance(alert, str):
+                section_alert = SectionAlert(message=alert)
+            elif isinstance(alert, SectionAlert):
+                section_alert = alert.model_copy()
+            else:
+                section_alert = SectionAlert(**alert)
+
+            if autoformat:
+                section_alert.message = textwrap.dedent(section_alert.message)
+                if autoformat_type == "markdown":
+                    section_alert.message = markdown.markdown(section_alert.message)
+            section_alert.message = section_alert.message.strip()
+
+            if section_alert.message or section_alert.affected_samples:
+                formatted_alerts.append(section_alert)
+
+        return formatted_alerts
 
     def _should_add_status_bar(self, section_id: str) -> bool:
         """
