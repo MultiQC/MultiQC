@@ -1,5 +1,15 @@
 # Module Structure Templates
 
+Directory layout and class skeleton templates for new modules. Patterns
+for the code _inside_ a module (parsing, plots, alerts) live in
+[code-patterns.md](code-patterns.md).
+
+## Contents
+
+- Single-Tool Module — directory, `__init__.py`, `toolname.py` template
+- Multi-Subtool Module — directory, orchestrator, submodule parser, test file
+- Registration Files — `search_patterns.yaml` and `pyproject.toml` entries
+
 ## Single-Tool Module
 
 ### Directory Structure

@@ -1,6 +1,22 @@
 # GitHub Actions Guide for Module Triage
 
-This document describes GitHub CLI operations and API interactions for the module triage system.
+GitHub CLI operations and API interactions for the module triage system.
+
+## Contents
+
+- Prerequisites — `gh` auth and required scopes
+- Fetching issue data — single issue, list, search related
+- Parsing the issue body — extract tool name, URL, description
+- Checking for example files — uploads, test-data links
+- Managing labels — priority labels, status labels (with removal order)
+- Posting comments — analysis comment template usage
+- Project board operations — add issue, update fields, move columns
+- Batch operations — triage-all, stale request detection
+- Rate limiting — checking remaining calls, caching
+- Error handling — issue not found, label conflicts, permissions
+- Dry-run mode
+- Complete example workflow
+- Testing and workflow integration
 
 ## Prerequisites
 

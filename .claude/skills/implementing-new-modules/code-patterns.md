@@ -1,153 +1,18 @@
 # Code Patterns for MultiQC Modules
 
-## Module Class Structure
+Patterns for the code _inside_ a module. For the overall class skeleton,
+directory layout, and `__init__` orchestration, see
+[module-structure.md](module-structure.md).
 
-### Single-Tool Module
+## Contents
 
-Per-part helpers (`_parse_log`, `_add_general_stats`, one method per section)
-are good — they keep `__init__` readable as a high-level outline. What to
-avoid is trivial wrappers that hide one or two lines. Let parse errors
-propagate; don't catch them to return `{}` or `0`.
-
-```python
-"""MultiQC module to parse output from ToolName"""
-
-import logging
-from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
-log = logging.getLogger(__name__)
-
-
-class MultiqcModule(BaseMultiqcModule):
-    """
-    ToolName provides [description].
-
-    The module parses output from `toolname command` which produces
-    [description of output].
-    """
-
-    def __init__(self):
-        super().__init__(
-            name="ToolName",
-            anchor="toolname",
-            href="https://example.com/toolname",
-            info="Brief description of what the tool does.",
-            doi="10.xxxx/xxxxx",
-        )
-
-        # Parse data
-        self.toolname_data = {}
-        for f in self.find_log_files("toolname"):
-            parsed = self.parse_log(f)
-            # ... process parsed data
-
-        # Filter ignored samples
-        self.toolname_data = self.ignore_samples(self.toolname_data)
-
-        if len(self.toolname_data) == 0:
-            raise ModuleNoSamplesFound
-
-        # Add sections and stats
-        self.add_general_stats()
-        self.add_sections()
-
-        # Write data file (MUST be at the end)
-        self.write_data_file(self.toolname_data, "multiqc_toolname")
-```
-
-### Multi-Subtool Module Orchestrator
-
-```python
-"""MultiQC module to parse output from ToolName"""
-
-import logging
-from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
-from .subtool1 import parse_toolname_subtool1
-from .subtool2 import parse_toolname_subtool2
-
-log = logging.getLogger(__name__)
-
-
-class MultiqcModule(BaseMultiqcModule):
-    """
-    Supported commands:
-
-    - `subtool1`
-    - `subtool2`
-    """
-
-    def __init__(self):
-        super().__init__(
-            name="ToolName",
-            anchor="toolname",
-            href="https://example.com/toolname",
-            info="Brief description of what the tool does.",
-            doi="10.xxxx/xxxxx",
-        )
-
-        n = dict()
-
-        n["subtool1"] = parse_toolname_subtool1(self)
-        if n["subtool1"] > 0:
-            log.info(f"Found {n['subtool1']} subtool1 reports")
-
-        n["subtool2"] = parse_toolname_subtool2(self)
-        if n["subtool2"] > 0:
-            log.info(f"Found {n['subtool2']} subtool2 reports")
-
-        if sum(n.values()) == 0:
-            raise ModuleNoSamplesFound
-```
-
-### Submodule Parser Function
-
-```python
-"""MultiQC submodule to parse output from toolname subtool"""
-
-import logging
-from typing import Dict
-
-from multiqc import BaseMultiqcModule, config
-from multiqc.plots import table, bargraph
-
-log = logging.getLogger(__name__)
-
-
-def parse_toolname_subtool(module: BaseMultiqcModule) -> int:
-    """Find toolname subtool logs and parse their data"""
-
-    data: Dict[str, Dict] = {}
-
-    for f in module.find_log_files("toolname/subtool"):
-        parsed = parse_report()
-        for s_name, sample_data in parsed.items():
-            s_name = module.clean_s_name(s_name, f)  # Only needed if not using f['s_name']
-            if s_name in data:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            module.add_data_source(f, s_name=s_name, section="subtool")
-            data[s_name] = sample_data
-
-            # Required call - even if version is None
-            module.add_software_version(None, s_name)
-
-    # Filter ignored samples
-    data = module.ignore_samples(data)
-
-    if len(data) == 0:
-        return 0
-
-    # Add general stats
-    add_general_stats(module, data)
-
-    # Add detailed section
-    add_section(module, data)
-
-    # Write data file
-    module.write_data_file(data, "multiqc_toolname_subtool")
-
-    return len(data)
-```
+- Parsing patterns (key-value, JSON)
+- General stats headers
+- Visualisation patterns (table, bar graph, line graph)
+- User-facing text (human-readable labels, section alerts)
+- Data handling (don't pre-filter, all-zero plot handling)
+- Search patterns: audit upstream source
+- `__init__.py` pattern
 
 ## Parsing Patterns
 
