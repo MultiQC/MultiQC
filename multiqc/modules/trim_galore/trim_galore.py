@@ -103,6 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         if payload.get("tool") != TOOL_NAME:
+            log.debug(f"Skipping {f['fn']!r}: tool field is {payload.get('tool')!r}, not {TOOL_NAME!r}")
             return None
         schema = payload.get("schema_version")
         if schema != SCHEMA_VERSION_SUPPORTED:
