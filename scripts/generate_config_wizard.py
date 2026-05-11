@@ -38,6 +38,10 @@ MULTIQC_LOGO_SVG = """\
 <path d="M885.03 71.47V45.81H865.56L848.45 62.92H840.26V0H808.83V173.98C808.83 183.13 811.52 190.46 816.92 195.95C822.31 201.44 829.67 204.19 839.04 204.19H885.02V177.95H849.1C843.2 177.95 840.25 174.9 840.25 168.8V71.48H885.01L885.03 71.47Z" fill="#333" class="mqc-logo-text"/>
 </svg>"""
 
+# Schema properties that are intentionally omitted from the wizard.
+# `sp` is the module search-patterns dict — too structured for a flat form.
+SKIP_PROPERTIES = {"sp"}
+
 
 def generate_config_wizard():
     """Generate a self-contained HTML configuration wizard for MultiQC.
@@ -72,37 +76,58 @@ def generate_config_wizard():
             "show_analysis_paths",
             "show_analysis_time",
             "custom_logo",
+            "custom_logo_dark",
             "custom_logo_url",
             "custom_logo_title",
+            "custom_logo_width",
             "custom_css_files",
             "simple_output",
             "template",
+            "template_dark_mode",
+            "custom_content",
+            "section_comments",
+            "remove_sections",
         ],
         "Output Options": [
             "output_fn_name",
             "data_dir_name",
             "plots_dir_name",
             "data_format",
+            "data_format_extensions",
+            "parquet_format",
             "force",
             "make_data_dir",
             "zip_data_dir",
             "data_dump_file",
             "data_dump_file_write_raw",
             "export_plots",
+            "export_plot_formats",
             "export_plots_timeout",
             "make_report",
             "make_pdf",
+            "pandoc_template",
+            "file_list",
         ],
         "Sample Names": [
             "prepend_dirs",
             "prepend_dirs_depth",
             "prepend_dirs_sep",
             "fn_clean_sample_names",
+            "fn_clean_exts",
+            "fn_clean_trim",
+            "extra_fn_clean_exts",
+            "extra_fn_clean_trim",
             "use_filename_as_sample_name",
             "sample_names_ignore",
             "sample_names_ignore_re",
             "sample_names_only_include",
             "sample_names_only_include_re",
+            "sample_names_rename",
+            "sample_names_rename_buttons",
+            "sample_names_replace",
+            "sample_names_replace_complete",
+            "sample_names_replace_exact",
+            "sample_names_replace_regex",
         ],
         "File Discovery": [
             "require_logs",
@@ -110,6 +135,7 @@ def generate_config_wizard():
             "ignore_images",
             "fn_ignore_dirs",
             "fn_ignore_paths",
+            "filesearch_file_shared",
         ],
         "Plot Settings": [
             "plots_force_flat",
@@ -117,11 +143,23 @@ def generate_config_wizard():
             "plots_export_font_scale",
             "plots_flat_numseries",
             "plots_defer_loading_numseries",
+            "plot_font_family",
+            "custom_plot_config",
             "lineplot_number_of_points_to_hide_markers",
             "barplot_legend_on_bottom",
+            "boxplot_boxpoints",
+            "box_min_threshold_outliers",
+            "box_min_threshold_no_points",
             "violin_downsample_after",
             "violin_min_threshold_outliers",
             "violin_min_threshold_no_points",
+            "highlight_patterns",
+            "highlight_colors",
+            "highlight_regex",
+            "show_hide_buttons",
+            "show_hide_patterns",
+            "show_hide_mode",
+            "show_hide_regex",
         ],
         "Table Settings": [
             "collapse_tables",
@@ -129,6 +167,32 @@ def generate_config_wizard():
             "max_configurable_table_columns",
             "decimalPoint_format",
             "thousandsSep_format",
+            "general_stats_columns",
+            "general_stats_helptext",
+            "skip_generalstats",
+            "table_columns_name",
+            "table_columns_placement",
+            "table_columns_visible",
+            "table_cond_formatting_rules",
+            "table_cond_formatting_colours",
+            "custom_table_header_config",
+        ],
+        "Software Versions": [
+            "software_versions",
+            "versions_table_group_header",
+            "disable_version_detection",
+            "skip_versions_section",
+        ],
+        "Read & Base Counts": [
+            "read_count_multiplier",
+            "read_count_prefix",
+            "read_count_desc",
+            "long_read_count_multiplier",
+            "long_read_count_prefix",
+            "long_read_count_desc",
+            "base_count_multiplier",
+            "base_count_prefix",
+            "base_count_desc",
         ],
         "AI Summary": [
             "ai_summary",
@@ -140,10 +204,21 @@ def generate_config_wizard():
             "ai_retries",
             "ai_extra_query_options",
             "ai_custom_context_window",
+            "ai_max_completion_tokens",
+            "ai_reasoning_effort",
+            "ai_extended_thinking",
+            "ai_thinking_budget_tokens",
             "ai_prompt_short",
             "ai_prompt_full",
             "no_ai",
             "ai_anonymize_samples",
+        ],
+        "Integrations": [
+            "megaqc_url",
+            "megaqc_access_token",
+            "megaqc_timeout",
+            "seqera_website",
+            "seqera_api_url",
         ],
         "Performance & Debugging": [
             "profile_runtime",
@@ -157,8 +232,28 @@ def generate_config_wizard():
             "log_filesize_limit",
             "filesearch_lines_limit",
             "report_readerrors",
+            "no_version_check",
+            "version_check_url",
         ],
     }
+
+    # Catch regressions: every schema property must be either listed in a section
+    # above or explicitly skipped via SKIP_PROPERTIES.
+    listed = {p for section_props in sections.values() for p in section_props}
+    missing = set(properties) - listed - SKIP_PROPERTIES
+    if missing:
+        raise RuntimeError(
+            f"{len(missing)} schema properties are missing from the wizard sections: "
+            f"{sorted(missing)}.\n"
+            f"Add each one to the appropriate section in `sections`, or to "
+            f"SKIP_PROPERTIES at the top of this file."
+        )
+    stale = listed - set(properties)
+    if stale:
+        raise RuntimeError(
+            f"Wizard sections reference {len(stale)} properties that are no longer "
+            f"in the schema: {sorted(stale)}. Remove them from `sections`."
+        )
 
     config_data: dict = {}
     for section_name, section_props in sections.items():
@@ -460,7 +555,6 @@ def _build_html(config_json_escaped: str) -> str:
             font-size: 1.05em;
             color: var(--ink-mute);
             margin-top: 12px;
-            max-width: 62ch;
         }}
         .header code {{
             background: var(--surface-soft);
@@ -564,7 +658,6 @@ def _build_html(config_json_escaped: str) -> str:
             font-size: 0.9em;
             margin-bottom: 12px;
             line-height: 1.5;
-            max-width: 70ch;
         }}
         .default-badge {{
             background: var(--surface-soft);
@@ -764,7 +857,7 @@ def _build_html(config_json_escaped: str) -> str:
             <ul class="section-nav" id="sectionNav"></ul>
         </nav>
         <div class="sidebar-actions">
-            <button class="btn btn-primary" onclick="previewYaml()">Preview YAML</button>
+            <button id="previewBtn" class="btn btn-primary" onclick="previewYaml()">Preview YAML</button>
             <button class="btn btn-success" onclick="downloadConfig()">Download Config</button>
             <button class="btn btn-secondary" onclick="resetConfig()">Reset All</button>
         </div>
@@ -806,12 +899,12 @@ def _build_html(config_json_escaped: str) -> str:
             </div>
 
             <div class="yaml-preview-section" id="yamlSection" style="display:none;">
-                <div class="yaml-preview-header">
+                <div class="yaml-preview-head">
+                    <h3>Generated Configuration</h3>
                     <button class="btn btn-secondary back-btn" onclick="backToEditor()">
                         <span aria-hidden="true">&larr;</span> Back to editor
                     </button>
                 </div>
-                <h3>Generated Configuration</h3>
                 <p>Copy this content to <code>multiqc_config.yaml</code> in your project directory.</p>
                 <p class="fields-set-count" id="fieldsSetCount"></p>
                 <div class="yaml-output" id="yamlOutput"></div>
