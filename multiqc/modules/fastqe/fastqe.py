@@ -34,6 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="fastqe",
             href="https://github.com/fastqe/fastqe",
             info="Uses emoji to represent FASTQ sequence quality scores.",
+            # doi="",  # No DOI
         )
 
         fastqe_data: Dict[str, Dict[str, str]] = {}

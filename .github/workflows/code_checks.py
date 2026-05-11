@@ -10,16 +10,26 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 MODULES_DIR = os.path.join(BASE_DIR, "multiqc", "modules")
 num_errors = 0
 
+SUPER_INIT_TERMS = ("super(MultiqcModule, self).__init__(", "super().__init__(")
+
 must_be_present_after = [
     ("self.add_data_source", "self.find_log_files"),
     ("self.write_data_file", "self.find_log_files"),
-    ("doi=", "super(MultiqcModule, self).__init__("),
+    ("doi=", SUPER_INIT_TERMS),
     ("self.add_software_version", "self.find_log_files"),
 ]
 
 must_be_avoided_after = [
     ('f["contents_lines"]', "self.find_log_files", "Use 'f[\"f\"].splitlines()' instead"),
 ]
+
+
+def matches_search_term(contents, search_term):
+    """Return True if any of the search term variants appears in contents."""
+    if isinstance(search_term, tuple):
+        return any(term in contents for term in search_term)
+    return search_term in contents
+
 
 # Check that add_data_source() is called for each module
 for must_be_present, search_term in must_be_present_after:
@@ -28,7 +38,7 @@ for must_be_present, search_term in must_be_present_after:
     for fn in glob.glob(os.path.join(MODULES_DIR, "*", "*.py")):
         with open(fn, "r") as fh:
             contents = fh.read()
-            if search_term in contents and must_be_present not in contents:
+            if matches_search_term(contents, search_term) and must_be_present not in contents:
                 relpath = os.path.relpath(fn, MODULES_DIR)
                 missing_files.append((relpath, f"Can't find '{must_be_present}' in /{relpath}"))
                 num_errors += 1
@@ -43,7 +53,7 @@ for must_be_avoided, search_term, suggestion in must_be_avoided_after:
     for fn in glob.glob(os.path.join(MODULES_DIR, "*", "*.py")):
         with open(fn, "r") as fh:
             contents = fh.read()
-            if search_term in contents and must_be_avoided in contents:
+            if matches_search_term(contents, search_term) and must_be_avoided in contents:
                 relpath = os.path.relpath(fn, MODULES_DIR)
                 message = f"Found '{must_be_avoided}' in /{relpath}"
                 if suggestion:
