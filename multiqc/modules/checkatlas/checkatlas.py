@@ -199,7 +199,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Atlas Overview",
-            anchor="checkatlas_summary",
+            anchor="checkatlas_summary_section",
             description="Top-level statistics for each input atlas.",
             helptext="""
                 One row per atlas, showing the source format (AnnData, Seurat or CellRanger),
@@ -263,7 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="QC: Counts per Cell",
-            anchor="checkatlas_qc_counts",
+            anchor="checkatlas_qc_counts_section",
             description="Total counts per cell, ordered from highest to lowest.",
             helptext="""
                 For each atlas, cells are ranked by their `total_counts` (the sum of UMI or read
@@ -286,7 +286,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="QC: Genes Detected per Cell",
-            anchor="checkatlas_qc_genes",
+            anchor="checkatlas_qc_genes_section",
             description="Number of genes detected per cell, ordered from highest to lowest.",
             helptext="""
                 For each atlas, cells are ranked by their `n_genes_by_counts` (the number of genes
@@ -309,7 +309,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="QC: Mitochondrial Counts",
-            anchor="checkatlas_qc_mito",
+            anchor="checkatlas_qc_mito_section",
             description="Percentage of counts from mitochondrial genes per cell, ordered from highest to lowest.",
             helptext="""
                 For each atlas, cells are ranked by their `pct_counts_mt` (percentage of total
