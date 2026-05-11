@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="QualiMap",
             anchor="qualimap",
             href="http://qualimap.bioinfo.cipf.es/",

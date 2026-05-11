@@ -434,7 +434,7 @@ class MultiqcModule(BaseMultiqcModule):
             assert isinstance(cc_dict.config["section_name"], str)
             modname = cc_dict.config["section_name"]
 
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name=modname,
             anchor=anchor,
             href=cc_dict.config.get("section_href"),

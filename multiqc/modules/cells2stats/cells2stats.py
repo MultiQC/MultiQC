@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="cells2stats",
             anchor="cells2stats",
             href="https://docs.elembio.io/docs/cells2stats/introduction/",

@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="ToolName",
             anchor="toolname",
             href="https://example.com/toolname",
@@ -73,7 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="ToolName",
             anchor="toolname",
             href="https://example.com/toolname",

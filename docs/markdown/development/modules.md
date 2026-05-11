@@ -316,7 +316,7 @@ from multiqc.base_module import BaseMultiqcModule
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
           name="My Module",
           anchor="mymodule",
           href="https://www.awesome_bioinfo.com/mymodule",
@@ -333,7 +333,7 @@ analysis module credits and description in the report.
 The `info` parameter supports rich markdown formatting. For example:
 
 `````python
-super(MultiqcModule, self).__init__(
+super().__init__(
     name="My Advanced Module",
     anchor="myadvancedmodule",
     href="https://www.awesome_bioinfo.com/myadvancedmodule",
@@ -408,7 +408,7 @@ class MultiqcModule(BaseMultiqcModule):
     Version 1.1.0 of the tool is tested.
     """
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             ...
         )
         ...
@@ -1374,7 +1374,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Qualalyser",
             anchor="qualalyser",
             href="https://github.com/bioinformatics-centre/qualalyser/",

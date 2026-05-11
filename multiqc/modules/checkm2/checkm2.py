@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="CheckM2",
             anchor="checkm2",
             href="https://github.com/chklovski/CheckM2",

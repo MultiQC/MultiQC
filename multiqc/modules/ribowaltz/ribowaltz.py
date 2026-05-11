@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="riboWaltz",
             anchor="ribowaltz",
             href="https://github.com/LabTranslationalArchitectomics/riboWaltz",

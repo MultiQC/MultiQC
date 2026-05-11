@@ -16,7 +16,7 @@ SPECIES = ["human", "mouse"]
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="SeqWho",
             anchor="seqwho",
             href="https://daehwankimlab.github.io/seqwho/",

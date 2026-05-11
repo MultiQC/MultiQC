@@ -21,6 +21,7 @@ must_be_present_after = [
 
 must_be_avoided_after = [
     ('f["contents_lines"]', "self.find_log_files", "Use 'f[\"f\"].splitlines()' instead"),
+    ("super(MultiqcModule", "class MultiqcModule", "Use 'super().__init__()' instead"),
 ]
 
 
