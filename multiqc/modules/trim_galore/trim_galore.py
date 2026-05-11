@@ -3,6 +3,7 @@ import logging
 import re
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.types import ColumnKey, SampleName
@@ -243,6 +244,29 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
+    def _apply_grouping(self, data_by_sample: Dict[str, Dict[str, int]]) -> Dict[str, Dict[str, int]]:
+        """Merge per-sample rows into per-group rows, summing all metrics.
+
+        Reads `config.table_sample_merge` via `group_samples_names()`. No-op
+        when the user hasn't configured grouping — each sample stays its own
+        row, matching the framework's behaviour for `general_stats_addcols`.
+        """
+        if not config.table_sample_merge:
+            return dict(data_by_sample)
+        out: Dict[str, Dict[str, int]] = {}
+        for group_name, members in self.group_samples_names([SampleName(s) for s in data_by_sample]).items():
+            if len(members) == 1:
+                _, _, original = members[0]
+                out[str(group_name)] = dict(data_by_sample[str(original)])
+                continue
+            merged: Dict[str, int] = {}
+            for _, _, original in members:
+                for col, val in data_by_sample[str(original)].items():
+                    merged[col] = merged.get(col, 0) + val
+            display = f"{group_name} (grouped)" if str(group_name) in data_by_sample else str(group_name)
+            out[display] = merged
+        return out
+
     def _filtered_reads_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
         bar_data: Dict[str, Dict[str, int]] = {}
         for s_name, payload in data_by_sample.items():
@@ -254,6 +278,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "too_many_n": rp.get("reads_too_many_n", 0) or 0,
                 "discarded_untrimmed": rp.get("reads_discarded_untrimmed", 0) or 0,
             }
+        bar_data = self._apply_grouping(bar_data)
         cats = {
             "passing": {"name": "Passed filters"},
             "too_short": {"name": "Too short"},
@@ -393,17 +418,20 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def _poly_trimming_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
-        rows: Dict[str, Dict[str, int]] = {}
-        dropped: List[str] = []
+        per_sample: Dict[str, Dict[str, int]] = {}
         for s_name, payload in data_by_sample.items():
             pa = payload.get("poly_a_trimming") or {}
             pg = payload.get("poly_g_trimming") or {}
-            row = {
+            per_sample[s_name] = {
                 "poly_a_reads_trimmed": pa.get("reads_trimmed", 0) or 0,
                 "poly_a_bases_removed": pa.get("bases_removed", 0) or 0,
                 "poly_g_reads_trimmed": pg.get("reads_trimmed", 0) or 0,
                 "poly_g_bases_removed": pg.get("bases_removed", 0) or 0,
             }
+        grouped = self._apply_grouping(per_sample)
+        rows: Dict[str, Dict[str, int]] = {}
+        dropped: List[str] = []
+        for s_name, row in grouped.items():
             if any(row.values()):
                 rows[s_name] = row
             else:
@@ -454,15 +482,18 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def _rrbs_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
-        rows: Dict[str, Dict[str, int]] = {}
-        dropped: List[str] = []
+        per_sample: Dict[str, Dict[str, int]] = {}
         for s_name, payload in data_by_sample.items():
             rr = payload.get("rrbs") or {}
-            row = {
+            per_sample[s_name] = {
                 "rrbs_trimmed_3prime": rr.get("trimmed_3prime", 0) or 0,
                 "rrbs_trimmed_5prime": rr.get("trimmed_5prime", 0) or 0,
                 "rrbs_r2_clipped_5prime": rr.get("r2_clipped_5prime", 0) or 0,
             }
+        grouped = self._apply_grouping(per_sample)
+        rows: Dict[str, Dict[str, int]] = {}
+        dropped: List[str] = []
+        for s_name, row in grouped.items():
             if any(row.values()):
                 rows[s_name] = row
             else:
