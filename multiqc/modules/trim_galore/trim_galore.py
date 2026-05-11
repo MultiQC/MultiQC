@@ -94,11 +94,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Filtered Reads",
             anchor="trim_galore_filtered_reads",
-            description=(
-                "Disposition of reads after trimming. The `passing` bucket reflects reads "
-                "that survived quality trimming, adapter trimming and N-content filtering "
-                "(i.e. what made it into the trimmed output); the remaining buckets show "
-                "which filter rejected the rest."
+            description="Number of reads after trimming.",
+            helptext=(
+                "The `passing` bucket reflects reads that survived quality trimming, adapter trimming and N-content filtering "
+                "(i.e. what made it into the trimmed output); the remaining buckets show which filter rejected the rest."
             ),
             plot=self._filtered_reads_plot(data_by_sample),
         )
@@ -108,69 +107,49 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="Adapter Length Distribution",
                 anchor="trim_galore_adapter_lengths",
-                description=(
-                    "Histogram of adapter match lengths per read. Tall left tail at "
-                    "1 bp is normal — Trim Galore's default `--stringency 1` accepts "
-                    "single-base overlaps, which represent random hits rather than "
-                    "real adapter contamination."
+                description="Histogram of adapter match lengths per read.",
+                helptext=(
+                    "Note that a tall left tail at 1 bp is normal: Trim Galore's default `--stringency 1` accepts "
+                    "single-base overlaps, which represent random hits rather than real adapter contamination."
                 ),
                 plot=adapter_plot,
             )
 
-        self._add_filtered_section(
-            self._pair_validation_plot(data_by_sample),
-            name="Pair Validation",
-            anchor="trim_galore_pair_validation",
-            description=(
-                "Outcomes of paired-end validation: pairs analysed, pairs removed "
-                "(broken down by reason), and reads left unpaired after a partner "
-                "was discarded. R1 and R2 of a pair are collapsed into a single "
-                "row (the data is identical between them). Samples where less than "
-                "0.1% of pairs were affected are omitted."
-            ),
-            dropped_reason="with < 0.1% of pairs affected",
-        )
-        self._add_filtered_section(
-            self._poly_trimming_plot(data_by_sample),
-            name="Poly-A / Poly-G Trimming",
-            anchor="trim_galore_poly_trimming",
-            description=(
-                "Reads and bases removed by Trim Galore's poly-A and poly-G "
-                "tail trimmers. Samples with nothing trimmed are omitted."
-            ),
-            dropped_reason="with no poly-A/G trimming",
-        )
-        self._add_filtered_section(
-            self._rrbs_plot(data_by_sample),
-            name="RRBS Trimming",
-            anchor="trim_galore_rrbs",
-            description=(
-                "Reduced Representation Bisulfite Sequencing (RRBS) end-repair "
-                "trimming counts. Samples with nothing trimmed are omitted."
-            ),
-            dropped_reason="with no RRBS trimming",
-        )
+        pair_validation_plot, pv_dropped = self._pair_validation_plot(data_by_sample)
+        if pair_validation_plot is not None:
+            self.add_section(
+                name="Pair Validation",
+                anchor="trim_galore_pair_validation",
+                description="Outcomes of paired-end validation"
+                + _filtered_samples_alert(pv_dropped, "with < 0.1% of pairs affected"),
+                helptext=(
+                    "Shows pairs analysed, pairs removed (broken down by reason), and reads left unpaired after a partner "
+                    "was discarded. R1 and R2 of a pair are collapsed into a single row (the data is identical between them)."
+                ),
+                plot=pair_validation_plot,
+            )
+
+        poly_plot, poly_dropped = self._poly_trimming_plot(data_by_sample)
+        if poly_plot is not None:
+            self.add_section(
+                name="Poly-A / Poly-G Trimming",
+                anchor="trim_galore_poly_trimming",
+                description="Reads and bases removed by Trim Galore's poly-A and poly-G tail trimmers."
+                + _filtered_samples_alert(poly_dropped, "with no poly-A/G trimming"),
+                plot=poly_plot,
+            )
+
+        rrbs_plot, rrbs_dropped = self._rrbs_plot(data_by_sample)
+        if rrbs_plot is not None:
+            self.add_section(
+                name="RRBS Trimming",
+                anchor="trim_galore_rrbs",
+                description="Reduced Representation Bisulfite Sequencing (RRBS) end-repair trimming counts."
+                + _filtered_samples_alert(rrbs_dropped, "with no RRBS trimming"),
+                plot=rrbs_plot,
+            )
 
         self.write_data_file(_flatten_for_data_file(data_by_sample), "multiqc_trim_galore")
-
-    def _add_filtered_section(
-        self,
-        plot_and_dropped: Tuple[Any, List[str]],
-        *,
-        name: str,
-        anchor: str,
-        description: str,
-        dropped_reason: str,
-    ) -> None:
-        plot, dropped = plot_and_dropped
-        if plot is None:
-            return
-        self.add_section(
-            name=name,
-            anchor=anchor,
-            description=description + _filtered_samples_alert(dropped, dropped_reason),
-            plot=plot,
-        )
 
     def _parse_log(self, f) -> Optional[Tuple[str, Dict[str, Any], Tuple[str, ...]]]:
         try:
