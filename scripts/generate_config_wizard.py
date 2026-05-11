@@ -1,34 +1,68 @@
 #!/usr/bin/env python3
 """
-Script to generate a web-based configuration wizard for MultiQC.
+Generate an interactive HTML configuration wizard for MultiQC.
+
+Reads the MultiQCConfig Pydantic model and config_defaults.yaml, then
+produces a single self-contained HTML page with a guided form for building
+a ``multiqc_config.yaml`` file.  Run from the repo root::
+
+    python scripts/generate_config_wizard.py
+
+Output: docs/multiqc_config_wizard.html
 """
 
+import html
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import get_args
 
 import yaml
 
 # Add parent directory to path so we can import multiqc
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from multiqc.utils.config_schema import MultiQCConfig
+from multiqc.utils.config_schema import AiProviderLiteral, MultiQCConfig
+
+MULTIQC_LOGO_SVG = """\
+<svg width="1318" height="250" viewBox="0 0 1318 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z" fill="#F18046"/>
+<path d="M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z" fill="#F18046"/>
+<path d="M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z" fill="#F18046"/>
+<path d="M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z" fill="#F18046"/>
+<path d="M1100.98 249.999V179.569H1096.12C1093.89 183.629 1090.65 187.529 1086.39 191.269C1082.13 195.019 1076.71 198.109 1070.13 200.539C1063.54 202.969 1055.39 204.189 1045.66 204.189C1033.09 204.189 1021.54 201.149 1011 195.069C1000.46 188.989 992.05 180.229 985.77 168.769C979.48 157.319 976.35 143.489 976.35 127.269V122.709C976.35 106.499 979.54 92.6691 985.93 81.2091C992.31 69.7591 1000.77 60.9891 1011.31 54.9091C1021.85 48.8291 1033.3 45.7891 1045.66 45.7891C1060.25 45.7891 1071.45 48.4291 1079.25 53.6891C1087.05 58.9591 1092.88 64.9391 1096.73 71.6291H1101.59V45.7891H1132.29V249.979H1100.98V249.999ZM1054.47 176.829C1068.25 176.829 1079.5 172.469 1088.21 163.759C1096.92 155.049 1101.28 142.579 1101.28 126.369V123.629C1101.28 107.619 1096.87 95.2591 1088.06 86.5391C1079.24 77.8291 1068.04 73.4691 1054.47 73.4691C1040.9 73.4691 1030 77.8291 1021.18 86.5391C1012.36 95.2591 1007.96 107.619 1007.96 123.629V126.369C1007.96 142.589 1012.37 155.049 1021.18 163.759C1030 172.479 1041.09 176.829 1054.47 176.829Z" fill="#333" class="mqc-logo-text"/>
+<path d="M1235.96 204.189C1221.57 204.189 1208.55 201.149 1196.9 195.069C1185.24 188.989 1176.02 180.169 1169.24 168.619C1162.45 157.069 1159.06 143.189 1159.06 126.969V123.019C1159.06 106.809 1162.45 92.9793 1169.24 81.5193C1176.03 70.0693 1185.25 61.2593 1196.9 55.0693C1208.55 48.8893 1221.57 45.7993 1235.96 45.7993C1250.35 45.7993 1262.61 48.4393 1272.74 53.6993C1282.87 58.9693 1291.03 65.9593 1297.21 74.6793C1303.39 83.3993 1307.39 93.0193 1309.22 103.559L1278.82 109.939C1277.8 103.249 1275.68 97.1693 1272.44 91.6993C1269.2 86.2293 1264.64 81.8693 1258.76 78.6293C1252.88 75.3893 1245.48 73.7693 1236.57 73.7693C1227.66 73.7693 1220 75.7493 1213.01 79.6993C1206.02 83.6493 1200.49 89.3293 1196.44 96.7193C1192.38 104.119 1190.36 113.089 1190.36 123.619V126.359C1190.36 136.899 1192.38 145.919 1196.44 153.419C1200.49 160.919 1206.02 166.599 1213.01 170.439C1220 174.289 1227.85 176.219 1236.57 176.219C1249.74 176.219 1259.77 172.829 1266.67 166.039C1273.56 159.249 1277.92 150.589 1279.74 140.049L1310.14 147.039C1307.71 157.379 1303.4 166.909 1297.22 175.619C1291.04 184.339 1282.88 191.279 1272.75 196.439C1262.61 201.609 1250.35 204.189 1235.97 204.189H1235.96Z" fill="#333" class="mqc-logo-text"/>
+<path d="M330.02 204.19V45.8096H360.72V65.8696H365.58C368.42 60.5996 372.98 55.9396 379.26 51.8896C385.54 47.8396 394.05 45.8096 404.8 45.8096C415.55 45.8096 424.91 48.0896 431.7 52.6496C438.49 57.2096 443.6 63.0396 447.05 70.1296H451.91C455.35 63.2396 460.37 57.4696 466.96 52.7996C473.54 48.1396 482.92 45.8096 495.08 45.8096C504.81 45.8096 513.42 47.7896 520.92 51.7396C528.42 55.6896 534.4 61.5696 538.86 69.3696C543.32 77.1696 545.55 86.8496 545.55 98.3996V204.19H514.24V100.83C514.24 91.7096 511.76 84.6696 506.79 79.6996C501.82 74.7396 494.78 72.2496 485.66 72.2496C475.93 72.2496 468.13 75.3896 462.25 81.6696C456.37 87.9496 453.43 96.9696 453.43 108.73V204.19H422.12V100.83C422.12 91.7096 419.64 84.6696 414.67 79.6996C409.7 74.7396 402.66 72.2496 393.54 72.2496C383.81 72.2496 376.01 75.3896 370.13 81.6696C364.25 87.9496 361.31 96.9696 361.31 108.73V204.19H330H330.02Z" fill="#333" class="mqc-logo-text"/>
+<path d="M634.529 203.85C623.179 203.85 613.049 201.31 604.129 196.25C595.209 191.19 588.219 183.99 583.149 174.67C578.079 165.35 575.549 154.2 575.549 141.23V45.8096H606.859V139.1C606.859 152.07 610.099 161.65 616.589 167.83C623.069 174.01 632.089 177.1 643.649 177.1C656.419 177.1 666.699 172.8 674.509 164.18C682.309 155.57 686.209 143.16 686.209 126.94V45.8096H717.519V204.19H686.819V178.62H681.959C679.119 184.7 674.059 190.43 666.759 195.8C659.459 201.17 648.719 203.86 634.539 203.86L634.529 203.85Z" fill="#333" class="mqc-logo-text"/>
+<path d="M747.521 204.19V0H778.831V204.19H747.521Z" fill="#333" class="mqc-logo-text"/>
+<path d="M915.029 204.19V45.8096H946.339V204.19H915.029Z" fill="#333" class="mqc-logo-text"/>
+<path d="M885.03 71.47V45.81H865.56L848.45 62.92H840.26V0H808.83V173.98C808.83 183.13 811.52 190.46 816.92 195.95C822.31 201.44 829.67 204.19 839.04 204.19H885.02V177.95H849.1C843.2 177.95 840.25 174.9 840.25 168.8V71.48H885.01L885.03 71.47Z" fill="#333" class="mqc-logo-text"/>
+</svg>"""
 
 
 def generate_config_wizard():
-    """Generate a web-based configuration wizard for MultiQC."""
+    """Generate a self-contained HTML configuration wizard for MultiQC.
 
-    # Get JSON schema and default values
+    The wizard shows all options on a single scrollable page, with a sidebar
+    for navigation and a global search bar.  Boolean fields use a tri-state
+    select (not set / true / false) so that ``default: true`` values are
+    handled clearly.
+    """
+
     schema = MultiQCConfig.model_json_schema()
     properties = schema.get("properties", {})
 
-    # Load default values from config_defaults.yaml
     config_defaults_path = Path(__file__).parent.parent / "multiqc" / "config_defaults.yaml"
-    with open(config_defaults_path, "r") as f:
-        config_defaults = yaml.safe_load(f)
+    try:
+        with open(config_defaults_path, "r") as f:
+            config_defaults = yaml.safe_load(f)
+    except FileNotFoundError:
+        print(f"Error: Could not find {config_defaults_path}")
+        sys.exit(1)
+    except yaml.YAMLError as e:
+        print(f"Error parsing YAML: {e}")
+        sys.exit(1)
 
-    # Group properties into logical sections
     sections = {
         "Report Appearance": [
             "title",
@@ -121,39 +155,49 @@ def generate_config_wizard():
         "File Discovery": ["require_logs", "ignore_symlinks", "ignore_images", "fn_ignore_dirs", "fn_ignore_paths"],
     }
 
-    # Build configuration data for JavaScript
-    config_data = {}
+    config_data: dict = {}
     for section_name, section_props in sections.items():
         config_data[section_name] = {}
         for prop_name in section_props:
-            if prop_name in properties:
-                prop = properties[prop_name]
+            if prop_name not in properties:
+                continue
+            prop = properties[prop_name]
 
-                # Get type information
-                prop_type = prop.get("type", "string")
-                if "anyOf" in prop:
-                    # Handle Optional types
-                    type_options = [t.get("type") for t in prop.get("anyOf", []) if "type" in t]
-                    if type_options:
-                        prop_type = type_options[0]
+            prop_type = prop.get("type", "string")
+            if "anyOf" in prop:
+                type_options = [t.get("type") for t in prop.get("anyOf", []) if "type" in t]
+                if type_options:
+                    prop_type = type_options[0]
 
-                # Handle enum/literal types
-                enum_values = None
-                if "enum" in prop:
-                    enum_values = prop["enum"]
-                elif "$defs" in schema and "AiProviderLiteral" in schema["$defs"]:
-                    if prop_name == "ai_provider":
-                        enum_values = ["seqera", "openai", "anthropic", "aws_bedrock", "custom"]
+            enum_values = None
+            if "enum" in prop:
+                enum_values = prop["enum"]
+            elif prop_name == "ai_provider":
+                enum_values = list(get_args(AiProviderLiteral))
 
-                config_data[section_name][prop_name] = {
-                    "type": prop_type,
-                    "description": prop.get("description", ""),
-                    "default": config_defaults.get(prop_name),
-                    "enum": enum_values,
-                }
+            default_val = config_defaults.get(prop_name)
 
-    # Generate HTML
-    html_content = f"""<!DOCTYPE html>
+            config_data[section_name][prop_name] = {
+                "type": prop_type,
+                "description": prop.get("description", ""),
+                "default": default_val,
+                "enum": enum_values,
+            }
+
+    # Escape JSON data for safe embedding inside a <script> tag
+    config_json = json.dumps(config_data, indent=8)
+    config_json_escaped = config_json.replace("</", "<\\/")
+
+    html_content = _build_html(config_json_escaped)
+    return html_content
+
+
+def _build_html(config_json_escaped: str) -> str:
+    """Return the complete HTML string for the wizard."""
+
+    logo_escaped = html.escape(MULTIQC_LOGO_SVG, quote=False)
+
+    return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -165,239 +209,294 @@ def generate_config_wizard():
             margin: 0;
             padding: 0;
         }}
-        
+
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f0f2f5;
             min-height: 100vh;
-            padding: 20px;
         }}
-        
+
         .container {{
             max-width: 1200px;
             margin: 0 auto;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            min-height: 100vh;
         }}
-        
+
+        /* Header / branding */
         .header {{
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             color: white;
-            padding: 30px;
-            text-align: center;
+            padding: 24px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }}
-        
-        .header h1 {{
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        .header-logo {{
+            flex-shrink: 0;
         }}
-        
-        .header p {{
-            font-size: 1.1em;
-            opacity: 0.9;
+        .header-logo svg {{
+            height: 40px;
+            width: auto;
         }}
-        
+        .header-logo svg path.mqc-logo-text {{
+            fill: white;
+        }}
+        .header-text h1 {{
+            font-size: 1.5em;
+            margin-bottom: 2px;
+        }}
+        .header-text p {{
+            font-size: 0.95em;
+            opacity: 0.85;
+        }}
+        .header-links {{
+            margin-left: auto;
+            display: flex;
+            gap: 12px;
+        }}
+        .header-links a {{
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            font-size: 0.85em;
+            padding: 6px 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            transition: all 0.2s;
+        }}
+        .header-links a:hover {{
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }}
+
+        /* Search bar */
+        .search-bar {{
+            padding: 15px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }}
+        .search-bar input {{
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.44.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 12px center;
+        }}
+        .search-bar input:focus {{
+            outline: none;
+            border-color: #F18046;
+            box-shadow: 0 0 0 3px rgba(241, 128, 70, 0.15);
+        }}
+
         .main-content {{
             display: flex;
             min-height: 70vh;
         }}
-        
+
+        /* Sidebar navigation */
         .sidebar {{
-            width: 300px;
+            width: 260px;
+            flex-shrink: 0;
             background: #f8f9fa;
             border-right: 1px solid #e9ecef;
-            padding: 20px;
+            padding: 16px;
+            position: sticky;
+            top: 54px;
+            height: calc(100vh - 54px);
+            overflow-y: auto;
         }}
-        
         .sidebar h3 {{
             color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.2em;
+            margin-bottom: 12px;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }}
-        
         .section-nav {{
             list-style: none;
         }}
-        
         .section-nav li {{
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }}
-        
         .section-nav a {{
             color: #6c757d;
             text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            display: block;
-            transition: all 0.3s ease;
+            padding: 6px 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            transition: all 0.2s;
         }}
-        
         .section-nav a:hover, .section-nav a.active {{
-            background: #3498db;
+            background: #F18046;
             color: white;
         }}
-        
+        .section-nav .badge {{
+            background: #dee2e6;
+            color: #495057;
+            border-radius: 10px;
+            padding: 2px 7px;
+            font-size: 0.75em;
+        }}
+        .section-nav a.active .badge, .section-nav a:hover .badge {{
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }}
+
+        /* Content area */
         .content {{
             flex: 1;
-            padding: 30px;
+            padding: 0 30px 30px;
             overflow-y: auto;
         }}
-        
-        .section {{
-            display: none;
-            animation: fadeIn 0.3s ease;
+
+        /* Intro / welcome section */
+        .welcome-section {{
+            background: linear-gradient(135deg, #fff5f0 0%, #fff 100%);
+            border: 1px solid #fde0d0;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 24px 0;
         }}
-        
-        .section.active {{
-            display: block;
+        .welcome-section h2 {{
+            color: #c0562a;
+            font-size: 1.3em;
+            margin-bottom: 10px;
         }}
-        
-        @keyframes fadeIn {{
-            from {{ opacity: 0; transform: translateY(10px); }}
-            to {{ opacity: 1; transform: translateY(0); }}
+        .welcome-section p {{
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 8px;
         }}
-        
-        .section h2 {{
+        .welcome-section code {{
+            background: #f8f0ec;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }}
+
+        .section-heading {{
             color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.8em;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
+            margin: 30px 0 16px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #F18046;
+            padding-bottom: 8px;
         }}
-        
+
         .form-group {{
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             border: 1px solid #e9ecef;
             border-radius: 8px;
-            padding: 20px;
+            padding: 16px 20px;
             background: #fafbfc;
-            transition: all 0.3s ease;
+            transition: all 0.2s;
         }}
-        
         .form-group:hover {{
-            border-color: #3498db;
-            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+            border-color: #F18046;
+            box-shadow: 0 2px 8px rgba(241, 128, 70, 0.08);
         }}
-        
-        .form-group label {{
+        .form-group.hidden {{
+            display: none;
+        }}
+        .form-group label.field-label {{
             display: block;
             font-weight: 600;
             color: #2c3e50;
-            margin-bottom: 8px;
-            font-size: 1.1em;
+            margin-bottom: 6px;
+            font-size: 1em;
         }}
-        
         .form-group .description {{
             color: #6c757d;
-            font-size: 0.9em;
-            margin-bottom: 12px;
+            font-size: 0.88em;
+            margin-bottom: 10px;
             line-height: 1.4;
         }}
-        
-        .form-group input, .form-group select, .form-group textarea {{
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1em;
-            transition: border-color 0.3s ease;
-        }}
-        
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {{
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-        }}
-        
-        .form-group input[type="checkbox"] {{
-            width: auto;
-            margin-right: 8px;
-        }}
-        
-        .checkbox-wrapper {{
-            display: flex;
-            align-items: center;
-        }}
-        
-        .default-value {{
+        .default-badge {{
             background: #e8f4fd;
             color: #2c5282;
-            padding: 4px 8px;
+            padding: 2px 8px;
             border-radius: 4px;
-            font-size: 0.85em;
+            font-size: 0.8em;
             margin-left: 8px;
+            font-weight: normal;
         }}
-        
+        .form-group input, .form-group select, .form-group textarea {{
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: border-color 0.2s;
+        }}
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {{
+            outline: none;
+            border-color: #F18046;
+            box-shadow: 0 0 0 3px rgba(241, 128, 70, 0.1);
+        }}
+
+        .no-results {{
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            display: none;
+        }}
+
+        /* Sticky bottom actions */
         .actions {{
             position: sticky;
             bottom: 0;
             background: white;
             border-top: 1px solid #e9ecef;
-            padding: 20px 30px;
+            padding: 14px 30px;
             display: flex;
-            gap: 15px;
+            gap: 12px;
             justify-content: space-between;
             align-items: center;
+            z-index: 50;
         }}
-        
         .btn {{
-            padding: 12px 24px;
+            padding: 10px 20px;
             border: none;
             border-radius: 6px;
-            font-size: 1em;
+            font-size: 0.95em;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
+            transition: all 0.2s;
             font-weight: 600;
         }}
-        
         .btn-primary {{
-            background: #3498db;
+            background: #F18046;
             color: white;
         }}
-        
         .btn-primary:hover {{
-            background: #2980b9;
-            transform: translateY(-1px);
+            background: #d96e35;
         }}
-        
         .btn-secondary {{
             background: #6c757d;
             color: white;
         }}
-        
         .btn-secondary:hover {{
             background: #5a6268;
         }}
-        
         .btn-success {{
             background: #27ae60;
             color: white;
         }}
-        
         .btn-success:hover {{
             background: #229954;
         }}
-        
-        .progress {{
-            height: 4px;
-            background: #e9ecef;
-            border-radius: 2px;
-            overflow: hidden;
-        }}
-        
-        .progress-bar {{
-            height: 100%;
-            background: #3498db;
-            transition: width 0.3s ease;
-        }}
-        
+
         .yaml-output {{
-            background: #2c3e50;
-            color: #ecf0f1;
+            background: #1e1e2e;
+            color: #cdd6f4;
             padding: 20px;
             border-radius: 8px;
             font-family: 'Monaco', 'Courier New', monospace;
@@ -405,28 +504,50 @@ def generate_config_wizard():
             white-space: pre-wrap;
             max-height: 400px;
             overflow-y: auto;
-            margin-top: 20px;
+            margin-top: 16px;
         }}
-        
+
+        .yaml-preview-section {{
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 24px 0;
+        }}
+        .yaml-preview-section h3 {{
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }}
+        .fields-set-count {{
+            color: #6c757d;
+            font-size: 0.85em;
+        }}
+
         @media (max-width: 768px) {{
             .main-content {{
                 flex-direction: column;
             }}
-            
             .sidebar {{
                 width: 100%;
+                position: static;
+                height: auto;
                 border-right: none;
                 border-bottom: 1px solid #e9ecef;
             }}
-            
             .section-nav {{
                 display: flex;
                 flex-wrap: wrap;
-                gap: 5px;
+                gap: 4px;
             }}
-            
             .section-nav li {{
                 margin-bottom: 0;
+            }}
+            .header {{
+                flex-wrap: wrap;
+            }}
+            .header-links {{
+                margin-left: 0;
+                width: 100%;
             }}
         }}
     </style>
@@ -434,189 +555,204 @@ def generate_config_wizard():
 <body>
     <div class="container">
         <div class="header">
-            <h1>🧬 MultiQC Configuration Wizard</h1>
-            <p>Create your perfect MultiQC configuration with guided assistance</p>
+            <div class="header-logo">{MULTIQC_LOGO_SVG}</div>
+            <div class="header-text">
+                <h1>Configuration Wizard</h1>
+                <p>Build your <code style="background:rgba(255,255,255,0.15);padding:2px 6px;border-radius:3px">multiqc_config.yaml</code></p>
+            </div>
+            <div class="header-links">
+                <a href="https://multiqc.info" target="_blank" rel="noopener">MultiQC Home</a>
+                <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
+                <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
+            </div>
         </div>
-        
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search configuration options..." autocomplete="off" />
+        </div>
+
         <div class="main-content">
             <div class="sidebar">
-                <h3>Configuration Sections</h3>
-                <ul class="section-nav" id="sectionNav">
-                    <!-- Will be populated by JavaScript -->
-                </ul>
-                
-                <div class="progress" style="margin-top: 20px;">
-                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
-                </div>
-                <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">
-                    <span id="progressText">0% complete</span>
-                </p>
+                <h3>Sections</h3>
+                <ul class="section-nav" id="sectionNav"></ul>
             </div>
-            
-            <div class="content">
-                <div id="sections">
-                    <!-- Will be populated by JavaScript -->
+
+            <div class="content" id="contentArea">
+                <div class="welcome-section" id="welcomeSection">
+                    <h2>Welcome to the MultiQC Config Wizard</h2>
+                    <p>
+                        This tool helps you create a custom <code>multiqc_config.yaml</code>
+                        configuration file. You don't need to set every option &mdash; only
+                        change what you want to customise.  Unset options will use their
+                        defaults.
+                    </p>
+                    <p>
+                        Browse sections in the sidebar, or use the search bar above to find
+                        a specific option.  When you are done, click <strong>Preview YAML</strong>
+                        or <strong>Download Config</strong> below.
+                    </p>
+                    <p>
+                        For full documentation, visit
+                        <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">docs.seqera.io/multiqc</a>.
+                    </p>
                 </div>
-                
-                <div id="yamlSection" class="section">
-                    <h2>🎉 Generated Configuration</h2>
-                    <p>Here's your custom MultiQC configuration file. Copy this content to <code>multiqc_config.yaml</code> in your project directory.</p>
+
+                <div id="sections"></div>
+
+                <div class="no-results" id="noResults">
+                    No configuration options match your search.
+                </div>
+
+                <div class="yaml-preview-section" id="yamlSection" style="display:none;">
+                    <h3>Generated Configuration</h3>
+                    <p>Copy this content to <code>multiqc_config.yaml</code> in your project directory.</p>
+                    <p class="fields-set-count" id="fieldsSetCount"></p>
                     <div class="yaml-output" id="yamlOutput"></div>
                 </div>
             </div>
         </div>
-        
+
         <div class="actions">
             <div>
-                <button class="btn btn-secondary" onclick="resetConfig()">🔄 Reset All</button>
-                <button class="btn btn-secondary" onclick="loadDefaults()">⚙️ Load Defaults</button>
+                <button class="btn btn-secondary" onclick="resetConfig()">Reset All</button>
             </div>
-            <div>
-                <button class="btn btn-primary" onclick="previewYaml()">👁️ Preview YAML</button>
-                <button class="btn btn-success" onclick="downloadConfig()">📥 Download Config</button>
+            <div style="display:flex;gap:10px;">
+                <button class="btn btn-primary" onclick="previewYaml()">Preview YAML</button>
+                <button class="btn btn-success" onclick="downloadConfig()">Download Config</button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"
+        integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+    ></script>
     <script>
-        // Configuration data from Python
-        const configData = {json.dumps(config_data, indent=8)};
-        
+        const configData = {config_json_escaped};
+
         let currentConfig = {{}};
-        let currentSection = null;
-        let yamlNavLink = null; // Store reference to YAML nav link
-        
-        // Initialize the wizard
+
         function initWizard() {{
             createSectionNavigation();
             createSectionContent();
-            showSection(Object.keys(configData)[0]);
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
         }}
-        
+
         function createSectionNavigation() {{
             const nav = document.getElementById('sectionNav');
-            Object.keys(configData).forEach((sectionName, index) => {{
+            Object.entries(configData).forEach(([sectionName, sectionProps]) => {{
                 const li = document.createElement('li');
                 const a = document.createElement('a');
-                a.href = '#';
+                a.href = '#section-' + slugify(sectionName);
                 a.textContent = sectionName;
-                a.dataset.section = sectionName; // Add data attribute for easier selection
+                a.dataset.section = sectionName;
+                const badge = document.createElement('span');
+                badge.className = 'badge';
+                badge.textContent = Object.keys(sectionProps).length;
+                a.appendChild(badge);
                 a.onclick = (e) => {{
                     e.preventDefault();
-                    showSection(sectionName);
+                    document.getElementById('section-' + slugify(sectionName))
+                        .scrollIntoView({{ behavior: 'smooth', block: 'start' }});
                 }};
                 li.appendChild(a);
                 nav.appendChild(li);
             }});
-            
-            // Add YAML preview section
-            const yamlLi = document.createElement('li');
-            const yamlA = document.createElement('a');
-            yamlA.href = '#';
-            yamlA.textContent = '📝 Preview YAML';
-            yamlA.dataset.section = 'yaml'; // Add data attribute
-            yamlA.onclick = (e) => {{
-                e.preventDefault();
-                showSection('yaml');
-            }};
-            yamlLi.appendChild(yamlA);
-            nav.appendChild(yamlLi);
-            yamlNavLink = yamlA; // Store reference
         }}
-        
+
         function createSectionContent() {{
             const sectionsContainer = document.getElementById('sections');
-            
+
             Object.entries(configData).forEach(([sectionName, sectionProps]) => {{
-                const sectionDiv = document.createElement('div');
-                sectionDiv.className = 'section';
-                sectionDiv.id = sectionName.replace(/\\s+/g, '-').toLowerCase();
-                
                 const h2 = document.createElement('h2');
+                h2.className = 'section-heading';
+                h2.id = 'section-' + slugify(sectionName);
                 h2.textContent = sectionName;
-                sectionDiv.appendChild(h2);
-                
+                sectionsContainer.appendChild(h2);
+
                 Object.entries(sectionProps).forEach(([propName, propData]) => {{
                     const formGroup = createFormGroup(propName, propData);
-                    sectionDiv.appendChild(formGroup);
+                    formGroup.dataset.section = sectionName;
+                    sectionsContainer.appendChild(formGroup);
                 }});
-                
-                sectionsContainer.appendChild(sectionDiv);
             }});
         }}
-        
+
         function createFormGroup(propName, propData) {{
             const formGroup = document.createElement('div');
             formGroup.className = 'form-group';
-            
+            formGroup.dataset.propname = propName;
+
             const label = document.createElement('label');
+            label.className = 'field-label';
             label.textContent = propName;
-            
+
             if (propData.default !== null && propData.default !== undefined) {{
                 const defaultSpan = document.createElement('span');
-                defaultSpan.className = 'default-value';
-                defaultSpan.textContent = `default: ${{formatDefaultValue(propData.default)}}`;
+                defaultSpan.className = 'default-badge';
+                defaultSpan.textContent = 'default: ' + formatDefaultValue(propData.default);
                 label.appendChild(defaultSpan);
             }}
-            
+
             formGroup.appendChild(label);
-            
+
             if (propData.description) {{
                 const desc = document.createElement('div');
                 desc.className = 'description';
                 desc.textContent = propData.description;
                 formGroup.appendChild(desc);
             }}
-            
+
             const input = createInput(propName, propData);
             formGroup.appendChild(input);
-            
+
             return formGroup;
         }}
-        
+
         function createInput(propName, propData) {{
             let input;
-            
+
             if (propData.enum) {{
                 input = document.createElement('select');
-                
-                // Add empty option
                 const emptyOption = document.createElement('option');
                 emptyOption.value = '';
-                emptyOption.textContent = '-- Select --';
+                emptyOption.textContent = '-- Not set --';
                 input.appendChild(emptyOption);
-                
                 propData.enum.forEach(value => {{
                     const option = document.createElement('option');
                     option.value = value;
                     option.textContent = value;
                     input.appendChild(option);
                 }});
-            }} else if (propData.type === 'boolean') {{
-                const wrapper = document.createElement('div');
-                wrapper.className = 'checkbox-wrapper';
-                
-                input = document.createElement('input');
-                input.type = 'checkbox';
-                input.id = propName; // Set ID on the actual input, not the wrapper
-                
-                const label = document.createElement('label');
-                label.textContent = 'Enabled';
-                label.style.fontWeight = 'normal';
-                label.style.marginBottom = '0';
-                label.style.cursor = 'pointer';
-                label.onclick = () => {{
-                    input.checked = !input.checked;
-                    updateConfig(propName, input);
-                }};
-                
+                input.id = propName;
                 input.onchange = () => updateConfig(propName, input);
-                input.oninput = () => updateConfig(propName, input);
-                
-                wrapper.appendChild(input);
-                wrapper.appendChild(label);
-                return wrapper;
+                return input;
+
+            }} else if (propData.type === 'boolean') {{
+                input = document.createElement('select');
+                input.id = propName;
+
+                const notSet = document.createElement('option');
+                notSet.value = '';
+                const defaultStr = (propData.default === true) ? 'true' : (propData.default === false) ? 'false' : 'none';
+                notSet.textContent = '-- Not set (default: ' + defaultStr + ') --';
+                input.appendChild(notSet);
+
+                const optTrue = document.createElement('option');
+                optTrue.value = 'true';
+                optTrue.textContent = 'true';
+                input.appendChild(optTrue);
+
+                const optFalse = document.createElement('option');
+                optFalse.value = 'false';
+                optFalse.textContent = 'false';
+                input.appendChild(optFalse);
+
+                input.onchange = () => updateConfig(propName, input);
+                return input;
+
             }} else if (propData.type === 'array') {{
                 input = document.createElement('textarea');
                 input.rows = 3;
@@ -632,26 +768,25 @@ def generate_config_wizard():
                 input = document.createElement('input');
                 input.type = 'text';
             }}
-            
-            if (propData.type !== 'boolean') {{
-                input.id = propName;
-                input.onchange = () => updateConfig(propName, input);
-                input.oninput = () => updateConfig(propName, input);
-            }}
-            
+
+            input.id = propName;
+            input.onchange = () => updateConfig(propName, input);
+            input.oninput = () => updateConfig(propName, input);
             return input;
         }}
-        
+
         function updateConfig(propName, input) {{
             const propData = getCurrentPropData(propName);
-            
+
             if (propData.type === 'boolean') {{
-                // Always set boolean values explicitly (true or false)
-                currentConfig[propName] = input.checked;
+                if (input.value === '') {{
+                    delete currentConfig[propName];
+                }} else {{
+                    currentConfig[propName] = (input.value === 'true');
+                }}
             }} else if (propData.type === 'array') {{
                 const value = input.value.trim();
                 if (value) {{
-                    // Split by comma or newline and clean up
                     currentConfig[propName] = value.split(/[,\\n]/).map(s => s.trim()).filter(s => s);
                 }} else {{
                     delete currentConfig[propName];
@@ -678,98 +813,101 @@ def generate_config_wizard():
                     delete currentConfig[propName];
                 }}
             }}
-            
-            updateProgress();
         }}
-        
+
         function getCurrentPropData(propName) {{
             for (const sectionProps of Object.values(configData)) {{
-                if (sectionProps[propName]) {{
-                    return sectionProps[propName];
-                }}
+                if (sectionProps[propName]) return sectionProps[propName];
             }}
             return {{}};
         }}
-        
-        function showSection(sectionName) {{
-            // Update navigation - use data attributes for reliable selection
-            document.querySelectorAll('.section-nav a').forEach(a => a.classList.remove('active'));
-            
-            if (sectionName === 'yaml') {{
-                if (yamlNavLink) {{
-                    yamlNavLink.classList.add('active');
+
+        function handleSearch() {{
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const formGroups = document.querySelectorAll('.form-group');
+            const headings = document.querySelectorAll('.section-heading');
+            let anyVisible = false;
+
+            formGroups.forEach(fg => {{
+                const name = (fg.dataset.propname || '').toLowerCase();
+                const desc = (fg.querySelector('.description') || {{}}).textContent || '';
+                if (!query || name.includes(query) || desc.toLowerCase().includes(query)) {{
+                    fg.classList.remove('hidden');
+                    anyVisible = true;
+                }} else {{
+                    fg.classList.add('hidden');
                 }}
-                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-                document.getElementById('yamlSection').classList.add('active');
-                generateYaml();
-            }} else {{
-                const targetNav = document.querySelector(`.section-nav a[data-section="${{sectionName}}"]`);
-                if (targetNav) {{
-                    targetNav.classList.add('active');
+            }});
+
+            headings.forEach(h => {{
+                const sectionSlug = h.id;
+                let sibling = h.nextElementSibling;
+                let hasVisible = false;
+                while (sibling && !sibling.classList.contains('section-heading')) {{
+                    if (sibling.classList.contains('form-group') && !sibling.classList.contains('hidden')) {{
+                        hasVisible = true;
+                    }}
+                    sibling = sibling.nextElementSibling;
                 }}
-                
-                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-                const targetSection = document.getElementById(sectionName.replace(/\\s+/g, '-').toLowerCase());
-                if (targetSection) {{
-                    targetSection.classList.add('active');
-                }}
-            }}
-            
-            currentSection = sectionName;
+                h.style.display = (!query || hasVisible) ? '' : 'none';
+            }});
+
+            document.getElementById('noResults').style.display = (query && !anyVisible) ? 'block' : 'none';
+            document.getElementById('welcomeSection').style.display = query ? 'none' : '';
         }}
-        
-        function updateProgress() {{
-            const totalFields = Object.values(configData).reduce((sum, section) => 
-                sum + Object.keys(section).length, 0
-            );
-            const filledFields = Object.keys(currentConfig).length;
-            const percentage = Math.round((filledFields / totalFields) * 100);
-            
-            document.getElementById('progressBar').style.width = percentage + '%';
-            document.getElementById('progressText').textContent = `${{percentage}}% complete (${{filledFields}}/${{totalFields}} fields)`;
-        }}
-        
+
         function formatDefaultValue(value) {{
             if (Array.isArray(value)) {{
-                return `[${{value.length}} items]`;
+                if (value.length <= 3) {{
+                    return JSON.stringify(value);
+                }}
+                return '[' + value.length + ' items]';
             }} else if (typeof value === 'object' && value !== null) {{
-                return `{{${{Object.keys(value).length}} keys}}`;
+                const keys = Object.keys(value);
+                if (keys.length <= 2) {{
+                    return JSON.stringify(value);
+                }}
+                return '{{' + keys.length + ' keys}}';
             }} else if (typeof value === 'string') {{
-                return `"${{value}}"`;
+                return '"' + value + '"';
             }}
             return String(value);
         }}
-        
+
         function generateYaml() {{
+            const output = document.getElementById('yamlOutput');
+            const count = Object.keys(currentConfig).length;
+            document.getElementById('fieldsSetCount').textContent = count + ' option' + (count !== 1 ? 's' : '') + ' configured';
+
+            if (count === 0) {{
+                output.textContent = '# No configuration set yet\\n# Change some values above, then come back here.';
+                return;
+            }}
+
             try {{
-                if (Object.keys(currentConfig).length === 0) {{
-                    document.getElementById('yamlOutput').textContent = '# No configuration set yet\\n# Fill out some fields in the other sections and come back here to see your YAML config!';
-                    return;
-                }}
-                
-                const yaml = jsyaml.dump(currentConfig, {{
+                output.textContent = jsyaml.dump(currentConfig, {{
                     indent: 2,
                     lineWidth: 80,
                     noRefs: true,
                     sortKeys: true
                 }});
-                document.getElementById('yamlOutput').textContent = yaml;
             }} catch (error) {{
-                console.error('Error generating YAML:', error);
-                document.getElementById('yamlOutput').textContent = '# Error generating YAML: ' + error.message;
+                output.textContent = '# Error generating YAML: ' + error.message;
             }}
         }}
-        
+
         function previewYaml() {{
-            showSection('yaml');
+            const yamlSection = document.getElementById('yamlSection');
+            yamlSection.style.display = 'block';
+            generateYaml();
+            yamlSection.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
         }}
-        
+
         function downloadConfig() {{
             if (Object.keys(currentConfig).length === 0) {{
-                alert('No configuration to download! Please fill out some fields first.');
+                alert('No configuration to download. Please set some options first.');
                 return;
             }}
-            
             generateYaml();
             const yaml = document.getElementById('yamlOutput').textContent;
             const blob = new Blob([yaml], {{ type: 'text/yaml' }});
@@ -782,58 +920,29 @@ def generate_config_wizard():
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }}
-        
+
         function resetConfig() {{
-            if (confirm('Are you sure you want to reset all configuration? This cannot be undone.')) {{
-                currentConfig = {{}};
-                document.querySelectorAll('input, select, textarea').forEach(input => {{
-                    if (input.type === 'checkbox') {{
-                        input.checked = false;
-                    }} else {{
-                        input.value = '';
-                    }}
-                }});
-                updateProgress();
-                if (currentSection === 'yaml') {{
-                    generateYaml(); // Refresh YAML if currently viewing it
+            if (!confirm('Reset all configuration? This cannot be undone.')) return;
+            currentConfig = {{}};
+            document.querySelectorAll('.form-group input, .form-group select, .form-group textarea').forEach(input => {{
+                if (input.tagName === 'SELECT') {{
+                    input.selectedIndex = 0;
+                }} else {{
+                    input.value = '';
                 }}
-            }}
+            }});
+            const yamlSection = document.getElementById('yamlSection');
+            if (yamlSection.style.display !== 'none') generateYaml();
         }}
-        
-        function loadDefaults() {{
-            if (confirm('Load default values for all fields? This will overwrite your current settings.')) {{
-                currentConfig = {{}};
-                Object.entries(configData).forEach(([sectionName, sectionProps]) => {{
-                    Object.entries(sectionProps).forEach(([propName, propData]) => {{
-                        if (propData.default !== null && propData.default !== undefined) {{
-                            currentConfig[propName] = propData.default;
-                            
-                            const input = document.getElementById(propName);
-                            if (input) {{
-                                if (propData.type === 'boolean') {{
-                                    input.checked = propData.default;
-                                }} else if (propData.type === 'array') {{
-                                    input.value = Array.isArray(propData.default) ? 
-                                        propData.default.join(', ') : String(propData.default);
-                                }} else {{
-                                    input.value = propData.default;
-                                }}
-                            }}
-                        }}
-                    }});
-                }});
-                updateProgress();
-                if (currentSection === 'yaml') {{
-                    generateYaml(); // Refresh YAML if currently viewing it
-                }}
-            }}
+
+        function slugify(text) {{
+            return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         }}
-        
-        // Check if js-yaml loaded properly
+
         document.addEventListener('DOMContentLoaded', function() {{
             if (typeof jsyaml === 'undefined') {{
-                console.error('js-yaml library failed to load');
-                document.getElementById('yamlOutput').textContent = '# Error: js-yaml library failed to load\\n# Please check your internet connection and refresh the page.';
+                document.getElementById('yamlOutput').textContent =
+                    '# Error: js-yaml library failed to load.\\n# Please check your internet connection and refresh.';
             }} else {{
                 initWizard();
             }}
@@ -842,19 +951,19 @@ def generate_config_wizard():
 </body>
 </html>"""
 
-    return html_content
-
 
 if __name__ == "__main__":
-    # Generate the wizard HTML
-    html = generate_config_wizard()
+    html_output = generate_config_wizard()
 
-    # Output file
     output_path = Path(__file__).parent.parent / "docs" / "multiqc_config_wizard.html"
 
-    # Write to file
-    with open(output_path, "w") as f:
-        f.write(html)
+    try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            f.write(html_output)
+    except OSError as e:
+        print(f"Error writing to {output_path}: {e}")
+        sys.exit(1)
 
     print(f"MultiQC Configuration Wizard generated at {output_path}")
     print("Open the HTML file in your web browser to use the wizard.")

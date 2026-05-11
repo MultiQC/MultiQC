@@ -1,5 +1,7 @@
 # MultiQC Configuration Reference
 
+
+
 This document describes all configuration options available in MultiQC.
 
 ## Introduction
@@ -14,14 +16,13 @@ MultiQC configuration can be set in several ways:
 3. **Environment variables** - MultiQC checks for environment variables that match configuration options prefixed with `MULTIQC_`, for example: `MULTIQC_TITLE="My Report"`
 
 Configuration values are loaded in the following order of precedence (highest to lowest):
-
 1. Command line parameters
 2. Current working directory config file
 3. User home directory config file
 4. Environment variables
 5. Default configuration values
 
-The options below can be specified in your YAML configuration files.
+The options below can be specified in your YAML configuration files. 
 For boolean options, use `true` or `false` (all lowercase) in your YAML files.
 
 ## Report Appearance
@@ -104,6 +105,7 @@ Report template to use
 
 Report title
 
+
 ## Output Options
 
 ### data_dir_name
@@ -138,9 +140,9 @@ Export plots
 
 ### export_plots_timeout
 
-**Type**: `Optional[int]` (default: `30`)
+**Type**: `Optional[int]` (default: `60`)
 
-Export plots timeout
+Timeout for exporting each plot, in seconds
 
 ### force
 
@@ -184,6 +186,7 @@ Plots directory name
 
 Zip data directory
 
+
 ## MegaQC Integration
 
 ### megaqc_access_token
@@ -203,6 +206,7 @@ MegaQC timeout
 **Type**: `Optional[str]` (default: `None`)
 
 MegaQC URL to upload to
+
 
 ## AI Summary
 
@@ -256,7 +260,7 @@ Prompt for short AI summary, put before the report details when sent to the prov
 
 ### ai_provider
 
-**Type**: `Optional[Literal["seqera", "openai", "anthropic", "custom"]]` (default: `"seqera"`)
+**Type**: `Optional[Literal["seqera", "openai", "anthropic", "aws_bedrock", "custom"]]` (default: `"seqera"`)
 
 AI provider
 
@@ -284,6 +288,7 @@ AI summary full
 
 Disable AI
 
+
 ## Seqera Integration
 
 ### seqera_api_url
@@ -297,6 +302,7 @@ Seqera API URL
 **Type**: `Optional[str]` (default: `"https://seqera.io"`)
 
 Seqera website
+
 
 ## Plot Settings
 
@@ -360,6 +366,7 @@ For more than this number of samples, show no points
 
 For more than this number of samples, show only outliers
 
+
 ## Table Settings
 
 ### collapse_tables
@@ -392,6 +399,7 @@ Maximum number of rows to show in tables
 
 Thousands separator format
 
+
 ## Sample Names
 
 ### extra_fn_clean_exts
@@ -408,7 +416,7 @@ Additional strings to trim from start/end of sample names
 
 ### fn_clean_exts
 
-**Type**: `Optional[List[Union[str, CleanPattern]]]` (default: `[".gz",".fastq",".fq",".bam",".cram",".sam",".sra",".vcf",".dat","_tophat",".pbmarkdup.log",".log",".stderr",".out",".spp",".fa",".fasta",".png",".jpg",".jpeg",".html","Log.final","ReadsPerGene",".flagstat","_star_aligned","_fastqc",".hicup",".counts","_counts",".txt",".tsv",".csv",".aligned","Aligned",".merge",".deduplicated",".dedup",".clean",".sorted",".report","| stdin",".geneBodyCoverage",".inner_distance_freq",".junctionSaturation_plot.r",".pos.DupRate.xls",".GC.xls","_slamdunk","_bismark",".conpair",".concordance",".contamination",".BEST.results","_peaks.xls",".relatedness",".cnt",".aqhist",".bhist",".bincov",".bqhist",".covhist",".covstats",".ehist",".gchist",".idhist",".ihist",".indelhist",".lhist",".mhist",".qahist",".qchist",".qhist",".rpkm",".selfSM",".extendedFrags","_SummaryStatistics",".purple.purity",".purple.qc",".trim",".bowtie2",".mkD",".highfreq",".lowfreq",".consensus",".snpEff",".snpeff",".scaffolds",".contigs",".kraken2",".ccurve",".hisat2","_duprate",".markdup",".read_distribution",".junction_annotation",".infer_experiment",".biotype",".ivar",".mpileup",".primer_trim",".mapped",".vep","_vep","ccs","_NanoStats",".cutadapt",".qcML",".mosdepth","_gopeaks",".readCounts",".wgs_contig_mean_cov","_overall_mean_cov","_coverage_metrics",".wgs_fine_hist",".wgs_coverage_metrics",".wgs_hist",".vc_metrics",".gvcf_metrics",".ploidy_estimation_metrics","_overall_mean_cov",".fragment_length_hist",".mapping_metrics",".gc_metrics",".trimmer_metrics",".time_metrics",".quant_metrics",".quant.metrics",".quant.transcript_coverage",".scRNA_metrics",".scRNA.metrics",".scATAC_metrics",".scATAC.metrics",".fastqc_metrics",".labels",".bammetrics.metrics",".filter_summary",".cluster_report",".error.spl",".error.grp",".vgstats"]`)
+**Type**: `Optional[List[Union[str, CleanPattern]]]` (default: `[".gz",".fastq",".fq",".bam",".cram",".sam",".sra",".vcf",".dat","_tophat",".pbmarkdup.log",".log",".stderr",".out",".spp",".fa",".fasta",".png",".jpg",".jpeg",".html","Log.final","ReadsPerGene",".flagstat","_star_aligned","_fastqc",".hicup",".counts","_counts",".txt",".tsv",".csv",".aligned","Aligned",".merge",".deduplicated",".dedup",".clean",".sorted",".report","| stdin",".geneBodyCoverage",".inner_distance_freq",".junctionSaturation_plot.r",".pos.DupRate.xls",".GC.xls","_slamdunk","_bismark",".conpair",".concordance",".contamination",".BEST.results","_peaks.xls",".relatedness",".cnt",".aqhist",".bhist",".bincov",".bqhist",".covhist",".covstats",".ehist",".gchist",".idhist",".ihist",".indelhist",".lhist",".mhist",".qahist",".qchist",".qhist",".rpkm",".selfSM",".extendedFrags","_SummaryStatistics",".purple.purity",".purple.qc",".trim",".bowtie2",".mkD",".highfreq",".lowfreq",".consensus",".snpEff",".snpeff",".scaffolds",".contigs",".kraken2",".ccurve",".hisat2","_duprate",".markdup",".read_distribution",".junction_annotation",".infer_experiment",".biotype",".ivar",".mpileup",".primer_trim",".mapped",".vep","_vep","ccs","_NanoStats",".cutadapt",".qcML",".mosdepth","_gopeaks",".readCounts",".wgs_contig_mean_cov","_overall_mean_cov","_coverage_metrics",".wgs_fine_hist",".wgs_coverage_metrics",".wgs_hist",".vc_metrics",".gvcf_metrics",".ploidy_estimation_metrics","_overall_mean_cov",".fragment_length_hist",".mapping_metrics",".gc_metrics",".trimmer_metrics",".time_metrics",".quant_metrics",".quant.metrics",".quant.transcript_coverage",".scRNA_metrics",".scRNA.metrics",".scATAC_metrics",".scATAC.metrics",".fastqc_metrics",".labels",".bammetrics.metrics",".filter_summary",".cluster_report",".error.spl",".error.grp",".vgstats","_mapq_table","_strand_table","_isize_table","_dup_report","_cv_table","_covdist_all","_covdist_q40","_CpGRetention","_CpHRetentionByReadPos","_totalBaseConversionRate","_totalReadConversionRate",".sylphmpa","_qual"]`)
 
 Extensions to clean from sample names
 
@@ -420,7 +428,7 @@ Clean sample names
 
 ### fn_clean_trim
 
-**Type**: `Optional[List[str]]` (default: `[".",":","_","-",".r","_val",".idxstats","_trimmed",".trimmed",".csv",".yaml",".yml",".json","_mqc","short_summary_","_summary",".summary",".align",".h5","_matrix",".stats",".hist",".phased",".tar","runs_"]`)
+**Type**: `Optional[List[str]]` (default: `[".",":","_","-",".r","_val",".idxstats","_trimmed",".trimmed",".csv",".yaml",".yml",".json","_mqc","short_summary_","_summary",".summary",".align",".h5","_matrix",".stats",".hist",".phased",".tar","runs_",".qc"]`)
 
 Strings to trim from start/end of sample names
 
@@ -504,9 +512,10 @@ Sample names to replace (regex)
 
 ### use_filename_as_sample_name
 
-**Type**: `Optional[bool]` (default: `false`)
+**Type**: `Optional[Union[bool, List[str]]]` (default: `false`)
 
-Use filename as sample name
+Use filename as sample name (can be bool for all modules or list for specific modules/patterns)
+
 
 ## Toolbox
 
@@ -542,15 +551,16 @@ Show/hide mode
 
 ### show_hide_patterns
 
-**Type**: `Optional[List[str]]` (default: `[]`)
+**Type**: `Optional[List[Union[str, List[str]]]]` (default: `[]`)
 
 Show/hide patterns
 
 ### show_hide_regex
 
-**Type**: `Optional[List[str]]` (default: `[]`)
+**Type**: `Optional[List[Union[str, bool]]]` (default: `[]`)
 
 Show/hide regex
+
 
 ## Performance & Debugging
 
@@ -604,7 +614,7 @@ Quiet output
 
 ### report_readerrors
 
-**Type**: `Optional[int]` (default: `false`)
+**Type**: `Optional[bool]` (default: `false`)
 
 Report read errors
 
@@ -619,6 +629,7 @@ Strict
 **Type**: `Optional[bool]` (default: `false`)
 
 Verbose output
+
 
 ## File Discovery
 
@@ -658,7 +669,32 @@ Ignore symlinks
 
 Require logs for reports
 
+
 ## Other
+
+### ai_extended_thinking
+
+**Type**: `Optional[bool]` (default: `false`)
+
+Enable extended thinking for Anthropic Claude 4 models
+
+### ai_max_completion_tokens
+
+**Type**: `Optional[int]` (default: `None`)
+
+Maximum completion tokens for OpenAI reasoning models
+
+### ai_reasoning_effort
+
+**Type**: `Optional[str]` (default: `None`)
+
+Reasoning effort level for OpenAI reasoning models (low, medium, high)
+
+### ai_thinking_budget_tokens
+
+**Type**: `Optional[int]` (default: `None`)
+
+Budget tokens for Anthropic extended thinking
 
 ### base_count_desc
 
@@ -678,11 +714,41 @@ Base count multiplier
 
 Base count prefix
 
+### box_min_threshold_no_points
+
+**Type**: `Optional[int]` (default: `1000`)
+
+For more than this number of samples, show no points
+
+### box_min_threshold_outliers
+
+**Type**: `Optional[int]` (default: `100`)
+
+For more than this number of samples, show only outliers
+
+### boxplot_boxpoints
+
+**Type**: `Optional[Union[str, bool]]` (default: `"outliers"`)
+
+Boxplot boxpoints setting
+
 ### custom_content
 
 **Type**: `Optional[Dict[str, Any]]` (default: `{"order":[]}`)
 
 Custom content settings
+
+### custom_logo_dark
+
+**Type**: `Optional[str]` (default: `None`)
+
+Path to custom logo image for dark mode
+
+### custom_logo_width
+
+**Type**: `Optional[int]` (default: `None`)
+
+Width in pixels for the custom logo
 
 ### custom_plot_config
 
@@ -726,6 +792,12 @@ Create a file list
 
 Configuration for general stats columns per module. Keys are module IDs.
 
+### general_stats_helptext
+
+**Type**: `Optional[str]` (default: `None`)
+
+Help text for general statistics table.
+
 ### long_read_count_desc
 
 **Type**: `Optional[str]` (default: `"thousands"`)
@@ -755,6 +827,24 @@ No version check
 **Type**: `Optional[str]` (default: `None`)
 
 Pandoc template
+
+### parquet_format
+
+**Type**: `Optional[Literal["long", "wide"]]` (default: `"long"`)
+
+Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw',
+        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast,
+        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to
+        for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as
+        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column
+        to have a single type).
+        
+
+### plot_font_family
+
+**Type**: `Optional[str]` (default: `None`)
+
+Custom font family for plots (defaults to system font stack)
 
 ### read_count_desc
 
@@ -840,6 +930,12 @@ Colours to use for conditional formatting in tables
 
 Rules for conditional formatting in tables
 
+### template_dark_mode
+
+**Type**: `Optional[bool]` (default: `true`)
+
+Enable dark mode toggle and JavaScript for the report template
+
 ### version_check_url
 
 **Type**: `Optional[str]` (default: `"https://api.multiqc.info/version"`)
@@ -851,6 +947,7 @@ Version check URL
 **Type**: `Optional[str]` (default: `"Group"`)
 
 Versions table group header
+
 
 ## Special Types
 
@@ -865,13 +962,14 @@ Example:
 ```yaml
 sp:
   fastqc:
-    fn: "*_fastqc.zip"
+    fn: '*_fastqc.zip'
   custom_tool:
-    fn: "*.log"
-    contents: "Started analysis"
+    fn: '*.log'
+    contents: 'Started analysis'
 ```
 
 Properties:
+
 
 - **contents** (`Optional[Union[str, List[str]]]`): File contents to match
 - **contents_re** (`Optional[Union[str, List[str]]]`): File contents regex pattern to match
@@ -904,6 +1002,7 @@ fn_clean_exts:
 
 Properties:
 
+
 - **module** (`Optional[Union[str, List[str]]]`): Module(s) to apply this pattern to
 - **pattern** (`str`): Pattern to match
 - **type** (`Literal["truncate", "remove", "regex", "regex_keep"]`): Type of pattern matching to use
@@ -929,6 +1028,7 @@ general_stats_columns:
 ```
 
 Properties:
+
 
 - **ceiling** (`Optional[float]`): Ceiling value
 - **description** (`Optional[str]`): Column description

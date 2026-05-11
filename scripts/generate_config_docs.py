@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """
-Script to generate markdown documentation from the MultiQC configuration schema.
+Generate markdown documentation from the MultiQC configuration Pydantic schema.
+
+Reads the MultiQCConfig model and config_defaults.yaml, then produces a
+Markdown reference grouped by logical section.  Run from the repo root::
+
+    python scripts/generate_config_docs.py
+
+Output: docs/markdown/config_schema.md
 """
 
 import json
@@ -58,7 +65,8 @@ def format_type_annotation(annotation):
         return f"Literal[{', '.join(literals)}]"
 
     elif annotation is AiProviderLiteral:
-        return "Literal['seqera', 'openai', 'anthropic', 'custom']"
+        literals = [f"'{a}'" for a in get_args(annotation)]
+        return f"Literal[{', '.join(literals)}]"
 
     # Handle basic types
     if annotation is str:
@@ -115,8 +123,15 @@ def generate_markdown_from_schema():
 
     # Load default values from config_defaults.yaml
     config_defaults_path = Path(__file__).parent.parent / "multiqc" / "config_defaults.yaml"
-    with open(config_defaults_path, "r") as f:
-        config_defaults = yaml.safe_load(f)
+    try:
+        with open(config_defaults_path, "r") as f:
+            config_defaults = yaml.safe_load(f)
+    except FileNotFoundError:
+        print(f"Error: Could not find {config_defaults_path}")
+        sys.exit(1)
+    except yaml.YAMLError as e:
+        print(f"Error parsing YAML: {e}")
+        sys.exit(1)
 
     output = ["# MultiQC Configuration Reference\n\n"]
     output.append("""
@@ -429,14 +444,16 @@ Properties:\n\n""")
 
 
 if __name__ == "__main__":
-    # Generate markdown
     markdown = generate_markdown_from_schema()
 
-    # Output file
     output_path = Path(__file__).parent.parent / "docs" / "markdown" / "config_schema.md"
 
-    # Write to file
-    with open(output_path, "w") as f:
-        f.write(markdown)
+    try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
+            f.write(markdown)
+    except OSError as e:
+        print(f"Error writing to {output_path}: {e}")
+        sys.exit(1)
 
     print(f"Configuration documentation generated at {output_path}")
