@@ -1246,11 +1246,9 @@ def test_linegraph_custom_plot_config_y_bands(reset):
     assert plot.pconfig.y_bands[0].to == 40
     assert plot.pconfig.y_bands[0].color == "#e6c3c3"
 
-    # Verify the bands are rendered in the layout shapes. Shapes are now per-dataset
-    # (see Plot._set_y_bands_and_range), with plot.layout.shapes seeded from dataset[0]
-    # for any consumer that doesn't merge dataset.layout.
-    shapes = plot.layout.shapes
-    assert shapes is not None
+    # Shapes are per-dataset (see Plot._set_y_bands_and_range). For a single-dataset
+    # plot, that's just datasets[0].
+    shapes = plot.datasets[0].layout.get("shapes", [])
     y_band_shapes = [s for s in shapes if s["type"] == "rect" and s["xref"] == "paper"]
     assert len(y_band_shapes) == 3
     band_y_values = sorted(set((s["y0"], s["y1"]) for s in y_band_shapes))
