@@ -27,8 +27,8 @@ pytest tests/test_modules_run.py::test_module_run -v
 ### Linting and Type Checking
 
 ```bash
-# Run pre-commit hooks (includes ruff, mypy, etc.)
-pre-commit run --all-files
+# Run prek hooks (includes ruff, prettier, etc.)
+prek run --all-files
 
 # Run ruff linting
 ruff check multiqc/

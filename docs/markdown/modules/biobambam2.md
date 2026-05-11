@@ -1,8 +1,7 @@
 ---
 title: biobambam2
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Tools for early stage alignment file processing.</p>
+description: "Tools for early stage alignment file processing."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/biobambam2/biobambam2.
 -->
 
 :::note
-<p>Tools for early stage alignment file processing.</p>
+Tools for early stage alignment file processing.
 
 [https://gitlab.com/german.tischler/biobambam2](https://gitlab.com/german.tischler/biobambam2)
 :::

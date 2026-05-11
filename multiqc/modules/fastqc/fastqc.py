@@ -26,8 +26,6 @@ from multiqc.utils.material_icons import get_material_icon
 
 log = logging.getLogger(__name__)
 
-VERSION_REGEX = r"FastQC\t([\d\.]+)"
-
 
 @dataclasses.dataclass
 class Metrics:
@@ -43,8 +41,9 @@ class Metrics:
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    FastQC generates an HTML report which is what most people use when
-    they run the program. However, it also helpfully generates a file
+    FastQC and [Falco](https://github.com/smithlabcode/falco) (a high-performance
+    drop-in replacement) generate an HTML report which is what most people use when
+    they run the program. However, they also helpfully generate a file
     called `fastqc_data.txt` which is relatively easy to parse.
 
     A typical run will produce the following files:
@@ -79,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
     ```yaml
     sp:
       fastqc/data:
-        fn: "fastqc_data.txt"
+        fn: "*fastqc_data.txt"
       fastqc/zip:
         fn: "*_fastqc.zip"
     ```
@@ -204,6 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.fastqc_data: Dict[SampleName, Any] = dict()
         self.order_of_duplication_levels: List[Union[float, str]] = []
+        self._tools_found: Set[str] = set()
 
         # Find and parse unzipped FastQC reports
         f: LoadedFileDict[str]
@@ -258,6 +258,30 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
         if len(self.fastqc_data) == 0:
             raise ModuleNoSamplesFound
+
+        # Dynamic module naming based on discovered tools
+        if self._tools_found == {"Falco"}:
+            self.name = "Falco"
+            self.anchor = Anchor("falco")
+            self.href = ["https://github.com/smithlabcode/falco"]
+            self.info = "A C++ drop-in replacement for FastQC."
+            self.intro = self._get_intro()
+            # Clean up the software versions table: remove the "FastQC" group
+            # that was auto-created because self.name was still "FastQC" during parsing
+            if "FastQC" in report.software_versions:
+                falco_versions = report.software_versions.get("FastQC", {}).get("Falco", [])
+                if falco_versions:
+                    report.software_versions.setdefault("Falco", {})["Falco"] = falco_versions
+                del report.software_versions["FastQC"]
+        elif "Falco" in self._tools_found and "FastQC" in self._tools_found:
+            self.name = "FastQC / Falco"
+            self.href = [
+                "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
+                "https://github.com/smithlabcode/falco",
+            ]
+            self.info = "Quality control tools for high throughput sequencing data."
+            self.intro = self._get_intro()
+        self._tools_found = None
 
         log.info(f"Found {len(self.fastqc_data)} reports")
 
@@ -332,10 +356,10 @@ class MultiqcModule(BaseMultiqcModule):
         section = None
         s_headers = None
         for line in file_contents.splitlines():
-            if line.startswith("##FastQC"):
-                version_match = re.search(VERSION_REGEX, line)
-                if version_match:
-                    self.add_software_version(version_match.group(1), s_name)
+            m = re.search(r"##(FastQC|Falco)\t([\d\.]+)", line)
+            if m:
+                self.add_software_version(m.group(2), s_name, software_name=m.group(1))
+                self._tools_found.add(m.group(1))
             if line == ">>END_MODULE":
                 section = None
                 s_headers = None

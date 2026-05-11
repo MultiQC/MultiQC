@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: read
       id-token: write
 
@@ -51,6 +51,7 @@ jobs:
           PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          allowed_non_write_users: "*"
           show_full_output: true
           prompt: |
             Please review pull request #${{ steps.pr-info.outputs.pr_number }} and provide feedback on:

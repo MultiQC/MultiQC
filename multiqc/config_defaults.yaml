@@ -599,6 +599,7 @@ module_order:
   - biobloomtools
   - seqfu
   - fastq_screen
+  - fastqe
   - afterqc
   - fastp
   - fastqc
