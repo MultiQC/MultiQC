@@ -515,7 +515,6 @@ module_order:
   - fgbio
   - dragen
   - dragen_fastqc
-  - checkatlas
   - dedup
   - pbmarkdup
   - damageprofiler
@@ -570,6 +569,7 @@ module_order:
   - bowtie1
   - hostile
   - cellranger
+  - checkatlas
   - snpsplit
   - odgi
   - vg

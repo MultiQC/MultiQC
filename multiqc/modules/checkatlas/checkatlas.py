@@ -146,10 +146,15 @@ class MultiqcModule(BaseMultiqcModule):
         data: dict[str, dict[str, Coerced]] = {}
         for f in self.find_log_files(search_key):
             parsed = parse_metric_logs(f["f"])
-            for key, row in parsed.items():
-                if key in data:
-                    log.warning(f"Duplicate {search_key} key '{key}' found in {f['fn']}; overwriting earlier values")
-                data[key] = row
+            duplicate_keys = [key for key in parsed if key in data]
+            data.update(parsed)
+            if duplicate_keys:
+                first = duplicate_keys[0]
+                extra = f" (and {len(duplicate_keys) - 1} more)" if len(duplicate_keys) > 1 else ""
+                log.warning(
+                    f"{f['fn']}: {len(duplicate_keys)} duplicate {search_key} key(s) overwrote earlier values; "
+                    f"first was '{first}'{extra}"
+                )
             self.add_data_source(f, f["s_name"])
         return data
 
@@ -242,7 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Atlas Object Contents",
-            anchor="checkatlas_anndata",
+            anchor="checkatlas_adata_section",
             description="Annotation keys and slots present inside each atlas object.",
             helptext="""
                 For each atlas, the cells of this table list the keys stored in the corresponding
@@ -368,7 +373,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Clustering Metrics",
-            anchor="checkatlas_clustmetrics",
+            anchor="checkatlas_cluster_section",
             description="Clustering quality metrics calculated for each atlas.",
             helptext="""
                 Internal clustering evaluation scores (Davies-Bouldin, Silhouette, Calinski-Harabasz)
@@ -454,7 +459,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Annotation Metrics",
-            anchor="checkatlas_annotmetrics",
+            anchor="checkatlas_annot_section",
             description="Cell annotation quality metrics calculated for each atlas.",
             helptext="""
                 Metrics evaluating cell-type annotations stored in each atlas, comparing them against
@@ -511,7 +516,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.add_section(
             name="Dimensionality Reduction Metrics",
-            anchor="checkatlas_dimredmetrics",
+            anchor="checkatlas_dimred_section",
             description="Dimensionality reduction quality metrics calculated for each atlas.",
             helptext="""
                 Metrics evaluating how well dimensionality reductions (PCA, UMAP, t-SNE, etc.) preserve
@@ -550,7 +555,8 @@ def parse_qc_logs(f: str) -> dict[str, dict[int, float]]:
             continue
 
     series: dict[str, dict[int, float]] = {value_col: {} for value_col in QC_METRICS}
-    for line_no, raw_line in enumerate(lines[1:], start=1):
+    # start=2 so line_no matches the file line number (line 1 is the header).
+    for line_no, raw_line in enumerate(lines[1:], start=2):
         line = raw_line.split("\t")
         for value_col, (value_idx, rank_idx) in indices.items():
             if max(value_idx, rank_idx) >= len(line):
@@ -558,12 +564,12 @@ def parse_qc_logs(f: str) -> dict[str, dict[int, float]]:
             value_str = line[value_idx]
             if value_str == "":
                 # Skip empty values consistently across metrics.
-                log.warning(f"Empty {value_col} value on row {line_no}; skipping")
+                log.warning(f"Empty {value_col} value on line {line_no}; skipping")
                 continue
             try:
                 series[value_col][int(line[rank_idx])] = float(value_str)
             except ValueError:
-                log.warning(f"Could not parse {value_col} row {line_no}: {raw_line!r}")
+                log.warning(f"Could not parse {value_col} on line {line_no}: {raw_line!r}")
 
     return {value_col: dict(sorted(rows.items())) for value_col, rows in series.items()}
 

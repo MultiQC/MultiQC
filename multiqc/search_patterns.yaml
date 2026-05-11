@@ -227,22 +227,30 @@ ccs/v5:
   fn: "*.json"
 checkatlas/summary:
   fn: "*.tsv"
-  contents_re: "^AtlasFileType"
+  contents_re: '^AtlasFileType\tNbCells\tNbGenes'
+  num_lines: 1
 checkatlas/adata:
   fn: "*.tsv"
-  contents_re: "^atlas_obs"
+  contents_re: '^atlas_obs\tobsm\tvar\tvarm\tuns'
+  num_lines: 1
 checkatlas/qc:
+  # CheckAtlas adds a "cellrank_<metric>" column for every QC metric in df_annot;
+  # this prefix is specific to CheckAtlas and avoids matching generic scanpy QC TSVs.
   fn: "*.tsv"
-  contents_re: "(n_genes_by_counts|total_counts)"
+  contents_re: "cellrank_(total_counts|n_genes_by_counts|pct_counts_mt)"
+  num_lines: 1
 checkatlas/cluster:
   fn: "*.tsv"
-  contents_re: "^Clust_Sample"
+  contents_re: '^Clust_Sample\tobs'
+  num_lines: 1
 checkatlas/annotation:
   fn: "*.tsv"
-  contents_re: "^Annot_Sample"
+  contents_re: '^Annot_Sample\tReference\tobs'
+  num_lines: 1
 checkatlas/dimred:
   fn: "*.tsv"
-  contents_re: "^Dimred_Sample"
+  contents_re: '^Dimred_Sample\tobsm'
+  num_lines: 1
 cellranger/count_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"count"'
