@@ -1149,7 +1149,7 @@ This supports the following arguments:
 - `autoformat`: Default `True`. Automatically format the `description`, `comment` and `helptext` strings.
 - `autoformat_type`: Default `markdown`. Autoformat text type. Currently only `markdown` supported.
 - `statuses`: Optional dictionary with keys `"pass"`, `"warn"`, and `"fail"`, each containing lists of sample names. When provided, adds an interactive status progress bar to the section header showing pass/warn/fail counts.
-- `alerts`: Optional alert box, or list of alert boxes, shown below the description. Alert messages support markdown, Bootstrap levels such as `"info"`, `"warning"`, `"danger"`, and optional affected sample lists.
+- `alerts`: Optional alert box, or list of alert boxes, shown below the description. Alert messages support markdown, Bootstrap alert levels, and optional affected sample lists.
 
 ### Section status bars
 
@@ -1204,7 +1204,7 @@ Each alert can be a plain markdown string, a dictionary, a `SectionAlert`, or a 
 Dictionary and `SectionAlert` values support:
 
 - `message`: Alert text, formatted as markdown by default
-- `level`: Bootstrap alert style, default `"info"`; for example `"success"`, `"warning"`, or `"danger"`
+- `level`: Bootstrap alert style, default `"info"`; must be one of `"primary"`, `"secondary"`, `"success"`, `"danger"`, `"warning"`, `"info"`, `"light"`, or `"dark"`
 - `affected_samples`: Optional list of sample names, rendered in an expandable list
 
 Alerts with an empty `message` are ignored.

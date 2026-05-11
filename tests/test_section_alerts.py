@@ -40,6 +40,11 @@ def test_section_alert_rejects_unsafe_level():
         SectionAlert(message="Bad level", level='info" onclick="alert(1)')
 
 
+def test_section_alert_rejects_non_bootstrap_level():
+    with pytest.raises(ValidationError):
+        SectionAlert(message="Bad level", level="important")
+
+
 def test_add_section_skips_empty_alert_message_with_samples():
     module = BaseMultiqcModule(name="Test", anchor="test")
 

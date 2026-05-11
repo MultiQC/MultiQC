@@ -1,6 +1,5 @@
 import dataclasses
 import io
-import re
 from enum import Enum
 from typing import Generic, List, NewType, Optional, TypeVar, Union
 
@@ -100,6 +99,8 @@ class SampleNameMeta:
 
 
 class SectionAlert(BaseModel):
+    valid_levels = {"primary", "secondary", "success", "danger", "warning", "info", "light", "dark"}
+
     message: str
     level: str = "info"
     affected_samples: List[str] = Field(default_factory=list)
@@ -107,8 +108,9 @@ class SectionAlert(BaseModel):
     @field_validator("level")
     @classmethod
     def validate_level(cls, level: str) -> str:
-        if re.fullmatch(r"[A-Za-z0-9_-]+", level) is None:
-            raise ValueError("Alert level must contain only letters, numbers, underscores, and hyphens")
+        if level not in cls.valid_levels:
+            valid_levels = ", ".join(sorted(cls.valid_levels))
+            raise ValueError(f"Alert level must be one of: {valid_levels}")
         return level
 
 

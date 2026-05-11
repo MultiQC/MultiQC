@@ -71,7 +71,7 @@ the output from each module and print it in sections.
     {% endif %}
     {% if s['alerts'] is not none and s['alerts'] | length > 0 %}
       {% for alert in s['alerts'] %}
-        <div class="alert alert-{{ alert['level'] }} mqc-section-alert">
+        <div class="alert alert-{{ alert['level'] }} mqc-section-alert" role="alert">
           {{ alert['message'] }}
           {% if alert['affected_samples'] is not none and alert['affected_samples'] | length > 0 %}
             <details>
