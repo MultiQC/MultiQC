@@ -58,13 +58,14 @@ jobs:
             the `reviewing-prs` skill in `.claude/skills/reviewing-prs/`.
             Follow the workflow, severity scheme, rule checklist, PR-hygiene
             checks, and output template defined there.
+            Cover code quality, bugs, perf, and security.
 
             You are running in CI mode (PR_NUMBER env var is set), so post
             the review yourself via `gh pr comment $PR_NUMBER --body-file -`
             as the skill instructs. Do not just display it.
 
             The skill points at CLAUDE.md and the other repo skills for
-            project conventions — load those references as needed for the
+            project conventions. Load those references as needed for the
             change types in this PR.
 
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md

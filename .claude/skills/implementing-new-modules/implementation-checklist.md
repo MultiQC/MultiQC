@@ -1,4 +1,4 @@
-# Module Implementation Guide
+# Module Implementation Checklist
 
 Workflow guide for implementing a new MultiQC module. Hard requirements
 (things that will fail lint or CI) are marked **must**; everything else is

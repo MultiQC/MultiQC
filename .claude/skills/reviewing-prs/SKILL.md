@@ -141,6 +141,10 @@ display too:
 Cap the review at ~10 findings unless the change is genuinely large;
 otherwise prioritise blockers and changes. Author can ask for more.
 
+## Interactive mode
+
+Print summary to chat, wait for approval.
+
 ## Posting (CI mode)
 
 **Critical: do not let the shell interpret backticks.** A previous review
