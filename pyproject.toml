@@ -30,7 +30,9 @@ dependencies = [
     "natsort",
     "tiktoken",
     "jsonschema",
-    "polars-lts-cpu",     # for parquet support. Using LTS version for compatibility with older architectures
+    # Use the official Pyodide package name on Emscripten; `polars-lts-cpu` is unavailable there.
+    "polars-lts-cpu; sys_platform != 'emscripten'",
+    "polars; sys_platform == 'emscripten'",
     "pyarrow",            # for parquet support
 ]
 # Avoid cPython bug in 3.14.1 - https://github.com/python/cpython/issues/142214
