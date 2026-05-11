@@ -200,7 +200,7 @@ Run MultiQC against test data with `--strict` to surface internal lint
 errors:
 
 ```bash
-multiqc /Users/ewels/GitHub/MultiQC/test-data/data/modules/toolname -m toolname --strict
+multiqc path/to/test-data/data/modules/toolname -m toolname --strict
 ```
 
 Unit tests for each parser function. Cover:

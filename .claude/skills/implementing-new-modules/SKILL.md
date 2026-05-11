@@ -1,7 +1,7 @@
 ---
 name: implementing-new-modules
 description: |
-  Create a new MultiQC module from scratch — parse a bioinformatics tool's output, register search patterns and entry points, add general stats columns, build plots and sections, write tests, open a PR. Use when implementing a `module: new` GitHub issue, when the user asks to add support for a new tool, or when adding a parser for a new tool output format.
+  Create a new MultiQC module from scratch. Parse a bioinformatics tool's output, register search patterns and entry points, add general stats columns, build plots and sections, write tests, open a PR. Use when implementing a `module: new` GitHub issue, when the user asks to add support for a new tool, or when adding a parser for a new tool output format.
 ---
 
 # Implement New MultiQC Module

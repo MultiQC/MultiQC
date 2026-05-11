@@ -9,10 +9,10 @@ directory layout, and `__init__` orchestration, see
 - Parsing patterns (key-value, JSON)
 - General stats headers
 - Visualisation patterns (table, bar graph, line graph)
+- `__init__.py` pattern
 - User-facing text (human-readable labels, section alerts)
 - Data handling (don't pre-filter, all-zero plot handling)
 - Search patterns: audit upstream source
-- `__init__.py` pattern
 
 ## Parsing Patterns
 

@@ -1,7 +1,7 @@
 ---
 name: reviewing-prs
 description: |
-  Review MultiQC pull requests or local branch diffs — scan changes for anti-patterns against the project's rules, check PR hygiene (issue link, test data, screenshots), and produce a structured comment with severity-tagged findings. Use when the user asks to review a MultiQC PR, asks for feedback on a branch/diff, runs `gh pr view`/`gh pr diff`, or wants a code review of MultiQC changes (new modules, plot tweaks, core refactors, docs, anything).
+  Review MultiQC pull requests or local branch diffs. Scan changes for anti-patterns against the project's rules, check PR hygiene (issue link, test data, screenshots), and produce a structured comment with severity-tagged findings. Use when the user asks to review a MultiQC PR, asks for feedback on a branch/diff, runs `gh pr view`/`gh pr diff`, or wants a code review of MultiQC changes (new modules, plot tweaks, core refactors, docs, anything).
 ---
 
 # Review MultiQC Pull Requests
@@ -38,8 +38,8 @@ contains "MUST post" / "post the comment", you're in CI mode.
    depends on context.
 4. **Check PR hygiene** (see below).
 5. **Write up** using the Output template.
-6. **Deliver** based on mode: CI → `gh pr comment <n> --body-file -` with
-   a heredoc. Interactive → print to chat and wait.
+6. **Deliver** based on mode: CI → post via `gh pr comment` (see Posting
+   below for the correct invocation). Interactive → print to chat and wait.
 
 ## Severity scheme
 
@@ -140,3 +140,40 @@ display too:
 
 Cap the review at ~10 findings unless the change is genuinely large;
 otherwise prioritise blockers and changes. Author can ask for more.
+
+## Posting (CI mode)
+
+**Critical: do not let the shell interpret backticks.** A previous review
+posted with `\`\`\`bash`literally in the comment body because the heredoc
+let bash interpret backticks as command substitution and the agent escaped
+them. Result: GitHub showed`\`\`\`bash` as text instead of a code fence.
+
+**Use one of these two patterns. Both are safe; do not invent variations.**
+
+Pattern A — write to a temp file, then post:
+
+````bash
+cat > /tmp/review.md <<'REVIEW_EOF'
+<!-- your review markdown here, including ```bash code fences -->
+REVIEW_EOF
+gh pr comment "$PR_NUMBER" --body-file /tmp/review.md
+````
+
+Pattern B — heredoc piped to stdin with single-quoted delimiter:
+
+````bash
+gh pr comment "$PR_NUMBER" --body-file - <<'REVIEW_EOF'
+<!-- your review markdown here, including ```bash code fences -->
+REVIEW_EOF
+````
+
+The single quotes around `'REVIEW_EOF'` are mandatory — they disable
+parameter expansion, command substitution, and backtick interpretation
+inside the heredoc, so triple-backtick code fences pass through verbatim.
+
+**Do NOT** use `--body "$(cat <<EOF ... EOF)"` — the unquoted `EOF` lets
+bash interpret backticks; escaping them produces `\`\`\`` in the rendered
+comment.
+
+**Do NOT** manually escape backticks in the markdown content. The
+markdown body should look exactly how it should render on GitHub.

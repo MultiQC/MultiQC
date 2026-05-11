@@ -1,7 +1,7 @@
 ---
 name: triaging-module-requests
 description: |
-  Triage MultiQC `module: new` GitHub issues — calculate 0-100 priority scores, apply priority labels, post analysis comments with score breakdowns, and give contributors actionable feedback to improve their request. Use when a new `module: new` issue is opened, when a user comments `@claude analyze-module` on a request, during weekly bulk triage, or when manually re-evaluating a module request.
+  Triage MultiQC `module: new` GitHub issues: calculate 0-100 priority scores, apply priority labels, post analysis comments with score breakdowns, and give contributors actionable feedback to improve their request. Use when a new `module: new` issue is opened, when a user comments `@claude analyze-module` on a request, during weekly bulk triage, or when manually re-evaluating a module request.
 ---
 
 # Triage MultiQC Module Requests

@@ -262,7 +262,7 @@ def parse_toolname_subtool1(module: BaseMultiqcModule) -> int:
     return len(data)
 
 
-def parse_report(file_content: str, fallback_name: Optional[str] = None) -> Dict[str, Dict]:
+def parse_report(file_content: str, fallback_sample_name: Optional[str] = None) -> Dict[str, Dict]:
     """Parse subtool1 output file."""
     parsed_data: Dict[str, Dict] = {}
     # Implementation here
