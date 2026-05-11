@@ -1137,3 +1137,16 @@ Each module must be configured to use this config option. If you find a MultiQC 
 :::tip
 This only works for tables, and doesn't affect plots. You might want to combine this option with `module_order` to [repeat the module in the report](#running-modules-multiple-times) for each grouping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
 :::
+
+### Modules with built-in auto-grouping
+
+Some modules know exactly which samples are paired from their own log output and group them automatically — no `table_sample_merge` patterns needed. Trim Galore is the first such module: every JSON report lists both R1 and R2 input filenames, so the module can group R1 and R2 of a pair deterministically. SE samples and files that aren't part of a pair stay as singletons.
+
+If you also set `table_sample_merge`, the patterns layer on top of the auto-derived groups — for example, you can let the module group R1+R2 automatically and use `table_sample_merge` to additionally group multiple lanes of the same pair.
+
+Each module that does this exposes its own opt-out flag if you'd prefer per-sample rows everywhere. For Trim Galore:
+
+```yaml
+trim_galore_config:
+  auto_group_pairs: false
+```

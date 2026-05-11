@@ -1,6 +1,6 @@
 import json
 import logging
-import re
+from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from multiqc import config
@@ -28,6 +28,21 @@ class MultiqcModule(BaseMultiqcModule):
     the `cutadapt` module — they have no JSON sibling. If the JSON is
     removed but the v2.x text file is kept, the sample will not be
     reported by either module.
+
+    Sample grouping: paired-end R1 and R2 samples are auto-grouped using
+    the tool-supplied `input_filenames` field in each JSON report — no
+    name-pattern guessing. The grouping is applied to the General Stats
+    table (with expand-to-see-individuals) and the Pair Validation table.
+    The Filtered Reads / Poly-A·G / RRBS sections keep one row per read
+    because R1 and R2 stats there can legitimately differ. Users can
+    layer additional name-pattern grouping with `table_sample_merge` on
+    top of the auto-derived pairs, or disable auto-grouping in their
+    MultiQC config to see per-read rows everywhere:
+
+    ```yaml
+    trim_galore_config:
+      auto_group_pairs: false
+    ```
     """
 
     def __init__(self):
@@ -47,16 +62,20 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         data_by_sample: Dict[str, Dict[str, Any]] = {}
+        # Maps the tool-derived pair key (tuple of input filenames) to the
+        # list of sample names that share it. Used to build auto-grouping.
+        pair_key_to_samples: Dict[Tuple[str, ...], List[str]] = {}
         for f in self.find_log_files("trim_galore", filehandles=True):
             parsed = self._parse_log(f)
             if parsed is None:
                 continue
-            s_name, payload = parsed
+            s_name, payload, pair_key = parsed
             if self.is_ignore_sample(s_name):
                 continue
             if s_name in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             data_by_sample[s_name] = payload
+            pair_key_to_samples.setdefault(pair_key, []).append(s_name)
             self.add_data_source(f, s_name=s_name)
             self.add_software_version(payload.get("trim_galore_version"), s_name)
 
@@ -65,7 +84,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(data_by_sample)} reports")
 
-        self._general_stats_table(data_by_sample)
+        # Auto-group R1/R2 pairs using tool-supplied input_filenames, layered
+        # with any user `table_sample_merge` patterns. Can be disabled via
+        # `trim_galore_config.auto_group_pairs: false`.
+        auto_group_pairs = getattr(config, "trim_galore_config", {}).get("auto_group_pairs", True)
+        pair_display_by_key: Dict[Tuple[str, ...], str] = {}
+        explicit_groups: Optional[Dict[str, List[str]]] = None
+        if auto_group_pairs:
+            explicit_groups, pair_display_by_key = self._derive_auto_groups(pair_key_to_samples, data_by_sample)
+
+        self._general_stats_table(data_by_sample, explicit_groups)
 
         self.add_section(
             name="Filtered Reads",
@@ -93,7 +121,9 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=adapter_plot,
             )
 
-        pair_validation_plot, pv_dropped = self._pair_validation_plot(data_by_sample)
+        pair_validation_plot, pv_dropped = self._pair_validation_plot(
+            data_by_sample, pair_key_to_samples, pair_display_by_key
+        )
         if pair_validation_plot is not None:
             description = (
                 "Outcomes of paired-end validation: pairs analysed, pairs removed "
@@ -140,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(_flatten_for_data_file(data_by_sample), "multiqc_trim_galore")
 
-    def _parse_log(self, f) -> Optional[Tuple[str, Dict[str, Any]]]:
+    def _parse_log(self, f) -> Optional[Tuple[str, Dict[str, Any], Tuple[str, ...]]]:
         try:
             payload = json.load(f["f"])
         except json.JSONDecodeError as e:
@@ -169,9 +199,62 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         idx = max(0, min(read_number - 1, len(input_filenames) - 1))
         s_name = self.clean_s_name(input_filenames[idx], f)
-        return s_name, payload
+        # Pair key: byte-identical between R1 and R2 JSONs of the same pair,
+        # length-1 for SE. Used downstream for tool-derived sample grouping.
+        pair_key = tuple(input_filenames)
+        return s_name, payload, pair_key
 
-    def _general_stats_table(self, data_by_sample: Dict[str, Dict[str, Any]]) -> None:
+    def _derive_auto_groups(
+        self,
+        pair_key_to_samples: Dict[Tuple[str, ...], List[str]],
+        data_by_sample: Dict[str, Dict[str, Any]],
+    ) -> Tuple[Dict[str, List[str]], Dict[Tuple[str, ...], str]]:
+        """Build module-supplied groups from tool-derived pair info.
+
+        Returns `(explicit_groups, pair_display_by_key)`:
+          - `explicit_groups` maps group display name → list of sample names,
+            ready to pass via `SampleGroupingConfig.explicit_groups`. Entries
+            with a single member are passed through unchanged — the framework
+            ignores them and the sample renders as a normal ungrouped row.
+          - `pair_display_by_key` maps each pair_key to its display name so
+            other sections (pair_validation) can collapse consistently.
+
+        When the user has `config.table_sample_merge` set, name patterns are
+        layered on top: each auto-group's display name is run through the
+        existing name-pattern matcher to merge into a super-group.
+        """
+        auto_groups: Dict[str, List[str]] = {}
+        pair_display_by_key: Dict[Tuple[str, ...], str] = {}
+        for pair_key, members in pair_key_to_samples.items():
+            sorted_members = sorted(members)
+            # For PE pairs derive a common display name; for SE the lone
+            # sample name *is* the display name. _clean_fastq_pair handles
+            # the variations of `_R1`/`_R2`, `_1`/`_2`, `.1`/`.2`, etc.
+            if len(sorted_members) >= 2:
+                display = self._clean_fastq_pair(sorted_members[0], sorted_members[1]) or "_".join(sorted_members)
+            else:
+                display = sorted_members[0]
+            auto_groups[display] = sorted_members
+            pair_display_by_key[pair_key] = display
+
+        if not config.table_sample_merge:
+            return auto_groups, pair_display_by_key
+
+        # Layer user name-patterns on top: bucket each auto-group's display
+        # name through `groups_for_sample`. The framework drops single-member
+        # super-groups, so SE samples that don't match a pattern still render
+        # as their original ungrouped row.
+        by_super: Dict[str, List[str]] = defaultdict(list)
+        for auto_display, samples in auto_groups.items():
+            super_name, _ = self.groups_for_sample(SampleName(auto_display))
+            by_super[str(super_name)].extend(samples)
+        return dict(by_super), pair_display_by_key
+
+    def _general_stats_table(
+        self,
+        data_by_sample: Dict[str, Dict[str, Any]],
+        explicit_groups: Optional[Dict[str, List[str]]] = None,
+    ) -> None:
         gen_stats: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]] = {}
         for s_name, payload in data_by_sample.items():
             rp = payload.get("read_processing", {}) or {}
@@ -232,6 +315,7 @@ class MultiqcModule(BaseMultiqcModule):
             gen_stats,
             headers,
             group_samples_config=SampleGroupingConfig(
+                explicit_groups=explicit_groups,
                 cols_to_sum=[
                     ColumnKey("tg_total_reads"),
                     ColumnKey("tg_total_bp_written"),
@@ -244,29 +328,6 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
-    def _apply_grouping(self, data_by_sample: Dict[str, Dict[str, int]]) -> Dict[str, Dict[str, int]]:
-        """Merge per-sample rows into per-group rows, summing all metrics.
-
-        Reads `config.table_sample_merge` via `group_samples_names()`. No-op
-        when the user hasn't configured grouping — each sample stays its own
-        row, matching the framework's behaviour for `general_stats_addcols`.
-        """
-        if not config.table_sample_merge:
-            return dict(data_by_sample)
-        out: Dict[str, Dict[str, int]] = {}
-        for group_name, members in self.group_samples_names([SampleName(s) for s in data_by_sample]).items():
-            if len(members) == 1:
-                _, _, original = members[0]
-                out[str(group_name)] = dict(data_by_sample[str(original)])
-                continue
-            merged: Dict[str, int] = {}
-            for _, _, original in members:
-                for col, val in data_by_sample[str(original)].items():
-                    merged[col] = merged.get(col, 0) + val
-            display = f"{group_name} (grouped)" if str(group_name) in data_by_sample else str(group_name)
-            out[display] = merged
-        return out
-
     def _filtered_reads_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
         bar_data: Dict[str, Dict[str, int]] = {}
         for s_name, payload in data_by_sample.items():
@@ -278,7 +339,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "too_many_n": rp.get("reads_too_many_n", 0) or 0,
                 "discarded_untrimmed": rp.get("reads_discarded_untrimmed", 0) or 0,
             }
-        bar_data = self._apply_grouping(bar_data)
         cats = {
             "passing": {"name": "Passed filters"},
             "too_short": {"name": "Too short"},
@@ -328,18 +388,25 @@ class MultiqcModule(BaseMultiqcModule):
             },
         )
 
-    def _pair_validation_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
+    def _pair_validation_plot(
+        self,
+        data_by_sample: Dict[str, Dict[str, Any]],
+        pair_key_to_samples: Dict[Tuple[str, ...], List[str]],
+        pair_display_by_key: Dict[Tuple[str, ...], str],
+    ):
         # pair_validation is pair-level (identical between R1 and R2 JSONs),
-        # so collapse PE pairs to a single row keyed by the pair name.
+        # so collapse PE pairs to a single row keyed by the tool-derived
+        # pair_key. Skip pair_keys where no member has pair_validation
+        # populated (SE samples).
         all_rows: Dict[str, Dict[str, int]] = {}
-        for s_name, payload in data_by_sample.items():
-            pv = payload.get("pair_validation")
+        for pair_key, members in pair_key_to_samples.items():
+            # First member's payload is fine — pair_validation is identical
+            # across R1 and R2 JSONs of the same pair.
+            pv = data_by_sample[members[0]].get("pair_validation")
             if not pv:
                 continue
-            pair_name = re.sub(r"[._-]?R?[12]$", "", s_name) or s_name
-            if pair_name in all_rows:
-                continue
-            all_rows[pair_name] = {
+            display = pair_display_by_key.get(pair_key, members[0])
+            all_rows[display] = {
                 "pairs_analyzed": pv.get("pairs_analyzed", 0) or 0,
                 "pairs_removed": pv.get("pairs_removed", 0) or 0,
                 "pairs_removed_n": pv.get("pairs_removed_n", 0) or 0,
@@ -418,20 +485,17 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def _poly_trimming_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
-        per_sample: Dict[str, Dict[str, int]] = {}
+        rows: Dict[str, Dict[str, int]] = {}
+        dropped: List[str] = []
         for s_name, payload in data_by_sample.items():
             pa = payload.get("poly_a_trimming") or {}
             pg = payload.get("poly_g_trimming") or {}
-            per_sample[s_name] = {
+            row = {
                 "poly_a_reads_trimmed": pa.get("reads_trimmed", 0) or 0,
                 "poly_a_bases_removed": pa.get("bases_removed", 0) or 0,
                 "poly_g_reads_trimmed": pg.get("reads_trimmed", 0) or 0,
                 "poly_g_bases_removed": pg.get("bases_removed", 0) or 0,
             }
-        grouped = self._apply_grouping(per_sample)
-        rows: Dict[str, Dict[str, int]] = {}
-        dropped: List[str] = []
-        for s_name, row in grouped.items():
             if any(row.values()):
                 rows[s_name] = row
             else:
@@ -482,18 +546,15 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def _rrbs_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
-        per_sample: Dict[str, Dict[str, int]] = {}
+        rows: Dict[str, Dict[str, int]] = {}
+        dropped: List[str] = []
         for s_name, payload in data_by_sample.items():
             rr = payload.get("rrbs") or {}
-            per_sample[s_name] = {
+            row = {
                 "rrbs_trimmed_3prime": rr.get("trimmed_3prime", 0) or 0,
                 "rrbs_trimmed_5prime": rr.get("trimmed_5prime", 0) or 0,
                 "rrbs_r2_clipped_5prime": rr.get("r2_clipped_5prime", 0) or 0,
             }
-        grouped = self._apply_grouping(per_sample)
-        rows: Dict[str, Dict[str, int]] = {}
-        dropped: List[str] = []
-        for s_name, row in grouped.items():
             if any(row.values()):
                 rows[s_name] = row
             else:

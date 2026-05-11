@@ -70,6 +70,13 @@ class SampleGroupingConfig:
     cols_to_average: Optional[List[ColumnKey]] = None
     cols_to_sum: Optional[List[ColumnKey]] = None
     extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
+    # Optional module-supplied groups, mapping group display name -> list of
+    # sample names. Used when the module has authoritative pair / replicate
+    # info (e.g. Trim Galore's `input_filenames`) and wants deterministic
+    # grouping that doesn't depend on name patterns. When set, takes
+    # precedence over the `config.table_sample_merge` name-pattern path
+    # inside `group_samples_and_average_metrics`.
+    explicit_groups: Optional[Dict[str, List[str]]] = None
 
 
 class BaseMultiqcModule:
@@ -719,7 +726,30 @@ class BaseMultiqcModule:
         """
 
         rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
-        for g_name, labels_s_names in self.group_samples_names([SampleName(s) for s in data_by_sample.keys()]).items():
+
+        # If the module supplied explicit groups (e.g. derived from tool metadata
+        # like Trim Galore's `input_filenames`), use those instead of running
+        # the name-pattern matcher. Entries with <= 1 member are silently
+        # ignored — they would otherwise render as a renamed singleton row, which
+        # is rarely what callers want; instead they fall through to the
+        # singleton path below and keep their original sample name.
+        groups_iter: Dict[SampleGroup, List[Tuple[Optional[str], SampleName, SampleName]]]
+        if grouping_config.explicit_groups:
+            groups_iter = {}
+            grouped_originals: Set[str] = set()
+            for gname, members in grouping_config.explicit_groups.items():
+                if len(members) <= 1:
+                    continue
+                groups_iter[SampleGroup(gname)] = [(None, SampleName(s), SampleName(s)) for s in members]
+                grouped_originals.update(members)
+            for s_name in data_by_sample:
+                if str(s_name) in grouped_originals:
+                    continue
+                groups_iter[SampleGroup(str(s_name))] = [(None, SampleName(str(s_name)), SampleName(str(s_name)))]
+        else:
+            groups_iter = self.group_samples_names([SampleName(s) for s in data_by_sample.keys()])
+
+        for g_name, labels_s_names in groups_iter.items():
             if len(labels_s_names) == 0:
                 continue
 
@@ -1107,7 +1137,7 @@ class BaseMultiqcModule:
             return
 
         rows_by_group: Dict[SampleGroup, List[InputRow]]
-        if config.table_sample_merge:
+        if config.table_sample_merge or group_samples_config.explicit_groups:
             rows_by_group = self.group_samples_and_average_metrics(
                 data_by_sample,
                 group_samples_config,
@@ -1143,8 +1173,8 @@ class BaseMultiqcModule:
             if "description" not in _headers[col_id]:
                 _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
 
-            # Add grouping information to description if table_sample_merge is enabled
-            if config.table_sample_merge:
+            # Add grouping information to description when grouping is active
+            if config.table_sample_merge or group_samples_config.explicit_groups:
                 desc = _headers[col_id].get("description", "")
                 if group_samples_config.cols_to_weighted_average and any(
                     col_id == c for c, _ in group_samples_config.cols_to_weighted_average

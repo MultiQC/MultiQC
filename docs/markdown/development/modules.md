@@ -1044,6 +1044,31 @@ In this configuration, you can specify how to merge data for each column:
 - `cols_to_average` - take an average of all samples.
 - `cols_to_weighted_average` - take a weighed average, specifying the weight column in the the second tuple parameter.
 - `extra_functions` - list of functions to call to add extra data to the merged row, e.g. FastQC uses it to recalculate the `percent_fails` value:
+- `explicit_groups` - opt-in dict of `{group_display_name: [sample_names]}` that lets a module supply its own ground-truth groups instead of relying on the user-supplied `table_sample_merge` name patterns. Use this when the tool output already tells you which samples are related — for example paired-end trimmers that emit both filenames in each report, sequencing-run manifests that list lanes per sample, or any tool whose log carries a stable pair / replicate identifier. When set, this short-circuits the name-pattern matcher: each `[sample_names]` list is collapsed into one group with the given display name, and samples not listed stay as singletons.
+
+  ```python
+  # Build the groups from tool metadata during parse. Whatever identifier the
+  # tool gives you that's stable across members of the same group is fine —
+  # an explicit pair ID, a shared filename, a hash, etc.
+  explicit_groups: Dict[str, List[str]] = {}
+  for s_name, payload in data_by_sample.items():
+      group_id = payload["some_stable_group_identifier"]
+      explicit_groups.setdefault(group_id, []).append(s_name)
+
+  self.general_stats_addcols(
+      data_by_sample,
+      headers,
+      group_samples_config=SampleGroupingConfig(
+          explicit_groups=explicit_groups,
+          cols_to_sum=[ColumnKey("some_count_column")],
+          cols_to_weighted_average=[(ColumnKey("some_percent"), ColumnKey("some_count_column"))],
+      ),
+  )
+  ```
+
+  Entries with a single member are ignored by the framework — they fall through and render as a normal ungrouped row with their original sample name, so you don't need to filter them out yourself.
+
+  Auto-grouping is independent of `table_sample_merge`: if the user has _also_ configured name patterns, you can layer them on top of your auto-groups before passing — run each auto-group's display name through `self.groups_for_sample(...)` and bucket by the result. Modules that use this should expose a config flag so users can opt out and see per-sample rows.
 
 ```python
 def _summarize_statues(
