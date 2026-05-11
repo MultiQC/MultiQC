@@ -147,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for line in lines[1:]:
             row = re.split(r"\t| {3,}", line.rstrip("\n"))
-            sname = row[0]
+            sname = self.clean_s_name(row[0], f)
             if sname in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {sname}")
             data_by_sample[sname] = {k: v for k, v in zip(column_names[1:], row[1:]) if v is not None}

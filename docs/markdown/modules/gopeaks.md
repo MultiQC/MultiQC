@@ -1,8 +1,7 @@
 ---
 title: GoPeaks
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Calls peaks in CUT&amp;TAG/CUT&amp;RUN datasets.</p>
+description: "Calls peaks in CUT&TAG/CUT&RUN datasets."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/gopeaks/gopeaks.py
 -->
 
 :::note
-<p>Calls peaks in CUT&amp;TAG/CUT&amp;RUN datasets.</p>
+Calls peaks in CUT&TAG/CUT&RUN datasets.
 
 [https://github.com/maxsonBraunLab/gopeaks](https://github.com/maxsonBraunLab/gopeaks)
 :::
