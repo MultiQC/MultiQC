@@ -585,13 +585,13 @@ module_order:
   - bbduk
   - clipandmerge
   - cutadapt
+  - trim_galore
   - flexbar
   - sourmash
   - kaiju
   - kraken
   - malt
   - motus
-  - trim_galore
   - trimmomatic
   - sickle
   - skewer

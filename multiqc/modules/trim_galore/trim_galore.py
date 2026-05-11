@@ -1,57 +1,28 @@
-"""
-Native MultiQC module for Trim Galore v2.x ("Oxidized Edition").
-
-Parses the structured `*_trimming_report.json` file emitted by Trim Galore
-v2.x alongside the legacy text report (schema v1).  See:
-https://github.com/MultiQC/MultiQC/issues/3529
-
-Why a dedicated module rather than reusing the `cutadapt` module:
-  * Software-versions table shows "Trim Galore" with the correct version
-    instead of the misleading "Cutadapt 4.0" backwards-compatibility shim.
-  * Native access to TrimGalore-specific stats not present in Cutadapt
-    output (RRBS truncation counts, poly-A / poly-G trimming summaries,
-    paired-end pair-validation outcomes).
-  * The JSON is purely additive — Trim Galore continues to emit the
-    text report unchanged, so the existing `cutadapt` module path
-    keeps working for users who don't enable this module.
-"""
-
 import json
 import logging
-import re
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
-from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, linegraph
+from multiqc.types import ColumnKey, SampleName
 
 log = logging.getLogger(__name__)
 
-
-# ── Schema constants ────────────────────────────────────────────────────────
-#
-# Trim Galore JSON schema v1 — these keys are stable for the v2.x line.
-# When the schema bumps, add handling for newer versions and keep these
-# constants for the v1 path.
 
 SCHEMA_VERSION_SUPPORTED = 1
 TOOL_NAME = "Trim Galore"
 
 
-# ── Module ──────────────────────────────────────────────────────────────────
-
-
 class MultiqcModule(BaseMultiqcModule):
     """
-    Trim Galore v2.x ("Oxidized Edition") — Rust rewrite of the original
-    Perl script. Single binary, zero external runtime deps. Same CLI and
-    same output filenames as v0.6.x; emits an additional structured JSON
-    report (`*_trimming_report.json`) that this module parses.
+    Parses the structured `*_trimming_report.json` (schema v1) emitted by
+    Trim Galore v2.x alongside the legacy text report.
 
     The legacy text report (`*_trimming_report.txt`) is still produced
     unchanged and continues to be parsed by the `cutadapt` module via the
-    backwards-compatibility shim.  Users who want native Trim Galore
-    parsing should disable the `cutadapt` module to avoid duplicate
-    sample entries:
+    backwards-compatibility shim. Users who want native Trim Galore parsing
+    only should disable the `cutadapt` module to avoid duplicate sample
+    entries:
 
     ```yaml
     disable_modules:
@@ -69,11 +40,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "with special handling for RRBS libraries."
             ),
             extra=(
-                "Trim Galore v2.x is a Rust rewrite of the original Perl tool. "
-                "It is a drop-in replacement for v0.6.x scripts and pipelines: "
-                "same CLI, same output filenames, same text report. This MultiQC "
-                "module parses the structured JSON report (`*_trimming_report.json`) "
-                "introduced in v2.0 alongside the legacy text report."
+                "This module parses the structured JSON report (`*_trimming_report.json`) "
+                "introduced in Trim Galore v2.0 alongside the legacy text report."
             ),
             doi="10.5281/zenodo.5127899",
         )
@@ -84,43 +52,33 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed is None:
                 continue
             s_name, payload = parsed
+            if self.is_ignore_sample(s_name):
+                continue
             if s_name in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             data_by_sample[s_name] = payload
             self.add_data_source(f, s_name=s_name)
+            self.add_software_version(payload.get("trim_galore_version"), s_name)
 
-            # Software version — single canonical entry per sample.
-            version = payload.get("trim_galore_version")
-            if version:
-                self.add_software_version(version, s_name)
-
-        data_by_sample = self.ignore_samples(data_by_sample)
         if not data_by_sample:
             raise ModuleNoSamplesFound
 
         log.info(f"Found {len(data_by_sample)} reports")
 
-        # Persist the raw parsed JSON for downstream use / inspection.
-        self.write_data_file(data_by_sample, "multiqc_trim_galore")
-
-        # ── General stats table ──
         self._general_stats_table(data_by_sample)
 
-        # ── Filtering disposition bar plot ──
         self.add_section(
             name="Filtered Reads",
             anchor="trim_galore_filtered_reads",
             description=(
-                "Disposition of reads after trimming. Reads that passed all filters "
-                "land in the trimmed output; the rest are categorised by which filter "
-                "rejected them."
+                "Disposition of reads after trimming. The `passing` bucket reflects reads "
+                "that survived quality trimming, adapter trimming and N-content filtering "
+                "(i.e. what made it into the trimmed output); the remaining buckets show "
+                "which filter rejected the rest."
             ),
             plot=self._filtered_reads_plot(data_by_sample),
         )
 
-        # ── Adapter length distribution ──
-        # One trace per (sample, adapter) — collapses cleanly when most samples
-        # use a single adapter.
         adapter_plot = self._adapter_length_plot(data_by_sample)
         if adapter_plot is not None:
             self.add_section(
@@ -135,11 +93,9 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=adapter_plot,
             )
 
-    # ── Parsing ─────────────────────────────────────────────────────────
+        self.write_data_file(_flatten_for_data_file(data_by_sample), "multiqc_trim_galore")
 
     def _parse_log(self, f) -> Optional[Tuple[str, Dict[str, Any]]]:
-        """Parse a single TrimGalore JSON report. Returns (sample_name, payload)
-        or None if the file is malformed / wrong schema."""
         try:
             payload = json.load(f["f"])
         except json.JSONDecodeError as e:
@@ -150,51 +106,41 @@ class MultiqcModule(BaseMultiqcModule):
             return None
         schema = payload.get("schema_version")
         if schema != SCHEMA_VERSION_SUPPORTED:
-            log.warning(
-                f"Skipping {f['fn']!r}: unsupported schema_version {schema!r} (expected {SCHEMA_VERSION_SUPPORTED})"
+            log.error(
+                f"Skipping {f['fn']!r}: unsupported schema_version {schema!r} (expected {SCHEMA_VERSION_SUPPORTED}). "
+                "This module needs updating to handle the new schema."
             )
             return None
 
-        # Sample name: PE reports list BOTH input filenames in
-        # `input_filenames`, so deriving from index 0 collapses R1 + R2 onto
-        # the same sample. Use `read_number` (1 or 2) to pick the matching
-        # entry. SE reports have `read_number: 1` and `input_filenames` of
-        # length 1, so the same logic gives the correct SE behaviour.
+        # PE reports list BOTH input filenames in `input_filenames`; use
+        # `read_number` to pick the matching one so R1 and R2 produce
+        # distinct samples. SE reports have `read_number: 1` and a
+        # single-entry list, so the same logic gives the correct SE behaviour.
         input_filenames = payload.get("input_filenames") or []
         read_number = payload.get("read_number") or 1
         if not input_filenames:
             log.warning(f"Skipping {f['fn']!r}: no input_filenames")
             return None
         idx = max(0, min(read_number - 1, len(input_filenames) - 1))
-        s_name = self.clean_s_name(_strip_fastq_suffix(input_filenames[idx]), f)
+        s_name = self.clean_s_name(input_filenames[idx], f)
         return s_name, payload
 
-    # ── Section: general stats ──────────────────────────────────────────
-
     def _general_stats_table(self, data_by_sample: Dict[str, Dict[str, Any]]) -> None:
-        """Add five Trim Galore columns to the general statistics table."""
-
-        gen_stats: Dict[str, Dict[str, float]] = {}
+        gen_stats: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]] = {}
         for s_name, payload in data_by_sample.items():
             rp = payload.get("read_processing", {}) or {}
             bp = payload.get("basepair_processing", {}) or {}
-
-            total_reads = rp.get("total_reads", 0) or 0
-            reads_with_adapter = rp.get("reads_with_adapter", 0) or 0
-            reads_written = rp.get("reads_written", 0) or 0
+            total = rp.get("total_reads", 0) or 0
             total_bp = bp.get("total_bp_processed", 0) or 0
-            quality_trimmed = bp.get("quality_trimmed_bp", 0) or 0
-
-            row: Dict[str, float] = {
-                "tg_total_reads": total_reads,
-                "tg_pct_with_adapter": _safe_pct(reads_with_adapter, total_reads),
-                "tg_pct_passing": _safe_pct(reads_written, total_reads),
-                "tg_pct_quality_trimmed": _safe_pct(quality_trimmed, total_bp),
-                "tg_total_bp_written": bp.get("total_bp_written", 0) or 0,
+            gen_stats[s_name] = {
+                ColumnKey("tg_total_reads"): total,
+                ColumnKey("tg_pct_with_adapter"): _safe_pct(rp.get("reads_with_adapter", 0) or 0, total),
+                ColumnKey("tg_pct_passing"): _safe_pct(rp.get("reads_written", 0) or 0, total),
+                ColumnKey("tg_pct_quality_trimmed"): _safe_pct(bp.get("quality_trimmed_bp", 0) or 0, total_bp),
+                ColumnKey("tg_total_bp_written"): bp.get("total_bp_written", 0) or 0,
             }
-            gen_stats[s_name] = row
 
-        headers = {
+        headers: Dict[str, Dict[str, Any]] = {
             "tg_pct_with_adapter": {
                 "title": "% Adapter",
                 "description": "% reads where at least one adapter was detected",
@@ -220,14 +166,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "%",
                 "scale": "Blues",
-                "format": "{:,.2f}",
+                "format": "{:,.1f}",
             },
             "tg_total_reads": {
                 "title": "Reads",
                 "description": "Total reads processed",
                 "scale": "Greys",
                 "shared_key": "read_count",
-                "hidden": True,
             },
             "tg_total_bp_written": {
                 "title": "BP written",
@@ -237,13 +182,23 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
         }
-        self.general_stats_addcols(gen_stats, headers)
-
-    # ── Section: filtering disposition bar plot ─────────────────────────
+        self.general_stats_addcols(
+            gen_stats,
+            headers,
+            group_samples_config=SampleGroupingConfig(
+                cols_to_sum=[
+                    ColumnKey("tg_total_reads"),
+                    ColumnKey("tg_total_bp_written"),
+                ],
+                cols_to_weighted_average=[
+                    (ColumnKey("tg_pct_with_adapter"), ColumnKey("tg_total_reads")),
+                    (ColumnKey("tg_pct_passing"), ColumnKey("tg_total_reads")),
+                    (ColumnKey("tg_pct_quality_trimmed"), ColumnKey("tg_total_bp_written")),
+                ],
+            ),
+        )
 
     def _filtered_reads_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
-        """Stacked bar plot of read disposition: passing / too_short /
-        too_long / too_many_n / discarded_untrimmed."""
         bar_data: Dict[str, Dict[str, int]] = {}
         for s_name, payload in data_by_sample.items():
             rp = payload.get("read_processing", {}) or {}
@@ -255,14 +210,11 @@ class MultiqcModule(BaseMultiqcModule):
                 "discarded_untrimmed": rp.get("reads_discarded_untrimmed", 0) or 0,
             }
         cats = {
-            "passing": {"name": "Passed filters", "color": "#7cb5ec"},
-            "too_short": {"name": "Too short", "color": "#f7a35c"},
-            "too_long": {"name": "Too long", "color": "#90ed7d"},
-            "too_many_n": {"name": "Too many Ns", "color": "#8085e9"},
-            "discarded_untrimmed": {
-                "name": "Discarded (untrimmed)",
-                "color": "#e4d354",
-            },
+            "passing": {"name": "Passed filters"},
+            "too_short": {"name": "Too short"},
+            "too_long": {"name": "Too long"},
+            "too_many_n": {"name": "Too many Ns"},
+            "discarded_untrimmed": {"name": "Discarded (untrimmed)"},
         }
         return bargraph.plot(
             bar_data,
@@ -275,25 +227,17 @@ class MultiqcModule(BaseMultiqcModule):
             },
         )
 
-    # ── Section: adapter length distribution ────────────────────────────
-
     def _adapter_length_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
-        """Per-sample adapter length distribution. When a sample has multiple
-        adapters (rare), each adapter becomes its own trace under a
-        composite key."""
         line_data: Dict[str, Dict[int, int]] = {}
         for s_name, payload in data_by_sample.items():
             adapters = payload.get("adapter_trimming") or []
-            if len(adapters) == 1:
-                a = adapters[0]
+            if not adapters:
+                continue
+            for idx, a in enumerate(adapters, start=1):
+                name = a.get("name") or f"adapter_{idx}"
+                key = f"{s_name} ({name})" if len(adapters) > 1 else s_name
                 dist = a.get("length_distribution") or {}
-                line_data[s_name] = {int(k): v for k, v in dist.items()}
-            else:
-                for idx, a in enumerate(adapters, start=1):
-                    name = a.get("name") or f"adapter_{idx}"
-                    composite = f"{s_name}: {name}"
-                    dist = a.get("length_distribution") or {}
-                    line_data[composite] = {int(k): v for k, v in dist.items()}
+                line_data[key] = {int(k): v for k, v in dist.items()}
         if not line_data:
             return None
         return linegraph.plot(
@@ -309,16 +253,29 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
-# ── Helpers ─────────────────────────────────────────────────────────────────
-
-
-_FASTQ_SUFFIX_RE = re.compile(r"\.(fastq|fq)(\.gz)?$", re.IGNORECASE)
-
-
-def _strip_fastq_suffix(name: str) -> str:
-    """Strip `.fastq[.gz]` / `.fq[.gz]` from the input filename so the sample
-    name is the bare basename (`sample_R1` rather than `sample_R1.fastq.gz`)."""
-    return _FASTQ_SUFFIX_RE.sub("", name)
+def _flatten_for_data_file(data_by_sample: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    flat: Dict[str, Dict[str, Any]] = {}
+    for s_name, p in data_by_sample.items():
+        rp = p.get("read_processing", {}) or {}
+        bp = p.get("basepair_processing", {}) or {}
+        pv = p.get("pair_validation") or {}
+        flat[s_name] = {
+            "trim_galore_version": p.get("trim_galore_version"),
+            "mode": p.get("mode"),
+            "total_reads": rp.get("total_reads"),
+            "reads_with_adapter": rp.get("reads_with_adapter"),
+            "reads_written": rp.get("reads_written"),
+            "reads_too_short": rp.get("reads_too_short"),
+            "reads_too_long": rp.get("reads_too_long"),
+            "reads_too_many_n": rp.get("reads_too_many_n"),
+            "reads_discarded_untrimmed": rp.get("reads_discarded_untrimmed"),
+            "total_bp_processed": bp.get("total_bp_processed"),
+            "total_bp_written": bp.get("total_bp_written"),
+            "quality_trimmed_bp": bp.get("quality_trimmed_bp"),
+            "pairs_analyzed": pv.get("pairs_analyzed") if pv else None,
+            "pairs_removed": pv.get("pairs_removed") if pv else None,
+        }
+    return flat
 
 
 def _safe_pct(part: int, total: int) -> float:

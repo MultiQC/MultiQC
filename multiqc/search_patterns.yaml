@@ -1060,8 +1060,6 @@ tophat:
   shared: true
 trim_galore:
   fn: "*_trimming_report.json"
-  contents: '"tool": "Trim Galore"'
-  num_lines: 5
 trimmomatic:
   contents_re: "^Trimmomatic"
 truvari/bench:
