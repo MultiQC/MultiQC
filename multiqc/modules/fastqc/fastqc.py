@@ -5,7 +5,6 @@
 #### Have a look at Kallisto for a simpler example.     ####
 ############################################################
 import dataclasses
-import io
 import json
 import logging
 import math
@@ -888,7 +887,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if not os.path.isfile(tgc_path):
                     tgc_path = tgc
                 try:
-                    with io.open(tgc_path, "r", encoding="utf-8") as f:
+                    with open(tgc_path, "r", encoding="utf-8") as f:
                         theoretical_gc_raw = f.read()
                 except IOError:
                     log.warning(f"Couldn't open FastQC Theoretical GC Content file {tgc_path}")

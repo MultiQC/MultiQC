@@ -556,10 +556,10 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
                     return f'</style><link rel="stylesheet" href="{name}">'
 
             if b64:
-                with io.open(_path, "rb") as f:
+                with open(_path, "rb") as f:
                     return base64.b64encode(f.read()).decode("utf-8")
             else:
-                with io.open(_path, "r", encoding="utf-8") as f:
+                with open(_path, "r", encoding="utf-8") as f:
                     return f.read()
         except (OSError, IOError) as e:
             logger.error(f"Could not include file '{name}': {e}")
@@ -603,7 +603,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
     else:
         assert report_path is not None
         try:
-            with io.open(report_path, "w", encoding="utf-8") as f:
+            with open(report_path, "w", encoding="utf-8") as f:
                 print(report_output, file=f)
         except IOError as e:
             raise IOError(f"Could not print report to '{config.output_fn}' - {IOError(e)}")
