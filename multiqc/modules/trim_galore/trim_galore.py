@@ -409,42 +409,36 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Total read pairs examined by pair validation",
                 "scale": "Greys",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
             "pairs_removed": {
                 "title": "Pairs removed",
                 "description": "Total read pairs removed by pair validation",
                 "scale": "OrRd",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
             "pairs_removed_n": {
                 "title": "Pairs removed (N content)",
                 "description": "Read pairs removed because they exceeded the N-content threshold",
                 "scale": "OrRd",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
             "pairs_removed_too_long": {
                 "title": "Pairs removed (too long)",
                 "description": "Read pairs removed because one or both reads exceeded the maximum length",
                 "scale": "OrRd",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
             "r1_unpaired": {
                 "title": "R1 unpaired",
                 "description": "R1 reads left unpaired after their R2 partner was discarded",
                 "scale": "Oranges",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
             "r2_unpaired": {
                 "title": "R2 unpaired",
                 "description": "R2 reads left unpaired after their R1 partner was discarded",
                 "scale": "Oranges",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
         }
         return (
@@ -484,28 +478,24 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Reads with a poly-A tail trimmed",
                 "scale": "Purples",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
             "poly_a_bases_removed": {
                 "title": "Poly-A bp removed",
                 "description": "Bases removed by poly-A trimming",
                 "scale": "Purples",
                 "shared_key": "base_count",
-                "format": "{:,d}",
             },
             "poly_g_reads_trimmed": {
                 "title": "Poly-G reads trimmed",
                 "description": "Reads with a poly-G tail trimmed",
                 "scale": "Greens",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
             "poly_g_bases_removed": {
                 "title": "Poly-G bp removed",
                 "description": "Bases removed by poly-G trimming",
                 "scale": "Greens",
                 "shared_key": "base_count",
-                "format": "{:,d}",
             },
         }
         return (
@@ -543,21 +533,18 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Reads trimmed at the 3' end for RRBS end-repair",
                 "scale": "Blues",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
             "rrbs_trimmed_5prime": {
                 "title": "5' trimmed",
                 "description": "Reads trimmed at the 5' end for RRBS end-repair",
                 "scale": "Blues",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
             "rrbs_r2_clipped_5prime": {
                 "title": "R2 5' clipped",
                 "description": "R2 reads with the 5' end clipped (directional RRBS)",
                 "scale": "Blues",
                 "shared_key": "read_count",
-                "format": "{:,d}",
             },
         }
         return (
@@ -577,22 +564,19 @@ class MultiqcModule(BaseMultiqcModule):
 def _filtered_samples_alert(dropped: List[str], reason: str) -> str:
     """Bootstrap alert listing samples removed from a section.
 
-    Wraps long sample lists (>10) in a <details> block like the bases2fastq
-    module does, so the alert stays compact for large cohorts.
+    Sample names are always inside a collapsed <details> element so the
+    alert stays compact regardless of cohort size.
     """
     if not dropped:
         return ""
     n = len(dropped)
     sample_list = ", ".join(f"<code>{s}</code>" for s in dropped)
-    body = (
-        f"<details><summary>Show {n} sample names</summary><p style='margin-top:0.5em'>{sample_list}</p></details>"
-        if n > 10
-        else sample_list
-    )
     return (
         f'\n\n<div class="alert alert-info">'
         f"<strong>{n} sample{'s' if n != 1 else ''}</strong> {reason} "
-        f"hidden from this table: {body}"
+        f"hidden from this table."
+        f"<details><summary>Show sample names</summary>"
+        f"<p style='margin-top:0.5em'>{sample_list}</p></details>"
         f"</div>"
     )
 
