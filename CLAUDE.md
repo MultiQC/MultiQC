@@ -1,167 +1,135 @@
 # CLAUDE.md
 
-# IMPORTANT
+Guidance for Claude Code (claude.ai/code) when working in this repository.
 
-Never push to main branch. When asked to add a change or create a pull request, always check if we are on main first. If we are, create a new branch and push to it.
+## IMPORTANT
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Never push to main. When asked to add a change or open a PR, check the
+current branch first; if it's `main`, create a new branch and push to that.
 
-## Development Commands
+Do NOT create a `Pipfile` — this project uses `pyproject.toml`.
 
-### Testing
+## Style and conventions
+
+- Python 3.9+. Use f-strings and other modern Python 3 syntax. Do not use
+  `__future__` imports or `OrderedDict`.
+- Double quotes for strings.
+- No shebang lines on Python files unless under `scripts/`.
+- Type hints are used extensively; mypy enforces.
+- Code formatting is enforced with ruff.
+- Tests live in `tests/` and use pytest.
+- Helpers for distinct parts of the report — one method per section, one
+  for parsing, one for general stats — are encouraged. They make
+  `__init__` readable as a high-level outline. What to avoid is trivial
+  wrappers: a helper that wraps one or two lines, just renames a
+  one-liner, or is called once with no logical separation. Ask whether
+  the function name is more meaningful than the code it hides; if not,
+  inline it.
+- Crash loudly on unexpected data. When parsing output from known
+  bioinformatics tools, don't silently default known fields to empty
+  dicts or zero values — that hides real format breakage behind a
+  fake-looking report. Access documented fields directly
+  (`parsed["total_reads"]`), not via `.get(key, 0)`. Catching a parse
+  error to raise a friendlier message with the file path is fine;
+  silently producing fake data is not. Reserve `.get(default)` for
+  genuinely optional fields.
+- Never use em-dashes (—) in any user-facing text: module descriptions,
+  section titles, plot help text, docstrings, PR descriptions, commit
+  messages. Use commas, semicolons, parentheses, or split into two
+  sentences.
+- Documentation examples in generic docs (e.g.
+  `docs/markdown/development/modules.md`) should be tool-agnostic. Use
+  placeholder names like `toolname` rather than referencing the specific
+  module that motivated the example.
+
+## Module rules (mandatory)
+
+When writing modules, the following are mandatory:
+
+- Raise `ModuleNoSamplesFound` when no samples are found. **Do not raise
+  `UserWarning`**.
+- Call `self.add_software_version()` even if version is unknown — it's
+  required by linting.
+- Call `self.write_data_file()` at the **very end** of the module, after
+  all sections are added.
+- Register the module via the entry point in `pyproject.toml` (ignore
+  `setup.py`).
+- Put module documentation in the module class docstring; do not add
+  separate markdown files or module-level docstrings.
+- The module's `info` field must start with a capital letter.
+
+For full module guidance, see the `implementing-new-modules` skill in
+`.claude/skills/`.
+
+## Architecture
+
+**Entry point**: `multiqc/__main__.py` and `multiqc/multiqc.py`. The
+`run()` function orchestrates execution: CLI parsing, config loading,
+module execution, report writing.
+
+**Config**: `multiqc/config.py` loads defaults from
+`multiqc/config_defaults.yaml` and supports user configs and `MULTIQC_*`
+env vars.
+
+**Modules**: `multiqc/modules/<toolname>/`. Each module inherits from
+`BaseMultiqcModule` (`multiqc/base_module.py`). Modules are
+auto-discovered via entry points in `pyproject.toml`. Search patterns
+live in `multiqc/search_patterns.yaml`.
+
+**Plots**: `multiqc/plots/` — bar graphs, line graphs, scatter,
+heatmaps, tables, etc. Interactive plots use Plotly; flat plots are
+also supported.
+
+**Report**: `multiqc/report.py` collects module outputs and renders via
+Jinja2 templates in `multiqc/templates/` (default, simple, sections,
+gathered, original, geo, disco).
+
+**Data flow**:
+
+1. `multiqc/core/file_search.py` scans for recognised log files.
+2. `multiqc/core/exec_modules.py` runs modules against found files.
+3. Modules parse and emit data.
+4. `multiqc/core/write_results.py` assembles the final report.
+
+**AI features** (optional): `multiqc/core/ai.py`. Multi-provider
+(OpenAI, Anthropic, AWS Bedrock), config via `ai_*` options. Supports
+sample name anonymisation.
+
+## Key files
+
+- `multiqc/config_defaults.yaml` — default configuration values
+- `multiqc/utils/config_schema.py` — Pydantic `MultiQCConfig` model: source
+  of truth for option types, descriptions, examples, and Literal enums.
+  Driven into `docs/markdown/config_schema.md`,
+  `multiqc/utils/config_schema.json`, and the wizard HTML by scripts in
+  `scripts/`. `tests/test_config_wizard.py` catches drift.
+- `multiqc/search_patterns.yaml` — file-pattern matching for every module
+- `multiqc/base_module.py` — `BaseMultiqcModule` parent class
+- `pyproject.toml` — package config and module entry points
+- `multiqc/plots/` — plot classes
+- `multiqc/core/` — file search, module execution, write results
+
+## Development commands
 
 ```bash
-# Run all tests with coverage
-pytest -vv --cov=multiqc --cov-report=xml
+# Tests
+pytest -vv --cov=multiqc --cov-report=xml          # full suite
+pytest -vv -n 4 --cov=multiqc --cov-report=xml     # parallel
+pytest tests/test_modules_run.py -v                # one file
+pytest tests/test_modules_run.py::test_module_run -v   # one test
 
-# Run tests in parallel (faster)
-pytest -vv -n 4 --cov=multiqc --cov-report=xml
-
-# Run single test file
-pytest tests/test_modules_run.py -v
-
-# Run specific test
-pytest tests/test_modules_run.py::test_module_run -v
-```
-
-### Linting and Type Checking
-
-```bash
-# Run prek hooks (includes ruff, prettier, etc.)
+# Lint / type-check
 prek run --all-files
-
-# Run ruff linting
 ruff check multiqc/
-
-# Run mypy type checking
 mypy multiqc
 mypy tests
+python .github/workflows/code_checks.py            # custom checks
 
-# Run custom code style checks
-python .github/workflows/code_checks.py
-```
-
-### Installation and Development Setup
-
-```bash
-# Install MultiQC in development mode with all dependencies
+# Install for development
 pip install -e '.[dev]'
 
-# Install just the package
-pip install -e .
+# Run multiqc
+multiqc .                                          # all modules
+multiqc . --module fastqc --module samtools        # specific
+multiqc . --config custom_config.yaml              # custom config
 ```
-
-### Running MultiQC
-
-```bash
-# Basic usage
-multiqc .
-
-# Run with specific modules
-multiqc . --module fastqc --module samtools
-
-# Run with custom config
-multiqc . --config custom_config.yaml
-```
-
-## High-Level Architecture
-
-### Core Components
-
-**Main Entry Point**: `multiqc/__main__.py` and `multiqc/multiqc.py`
-
-- The `run()` function orchestrates the entire MultiQC execution
-- Handles command-line parsing, config loading, and module execution
-
-**Configuration System**: `multiqc/config.py`
-
-- Global configuration loaded from `config_defaults.yaml`
-- Supports user config files in multiple locations
-- Environment variable support via `MULTIQC_*` variables
-- Uses `pyproject.toml` for package configuration
-
-**Module System**: `multiqc/modules/`
-
-- Each bioinformatics tool has its own module directory
-- Modules inherit from `BaseMultiqcModule` in `multiqc/base_module.py`
-- Module discovery via entry points in `pyproject.toml`
-- Pattern matching for log files defined in `search_patterns.yaml`
-
-**Report Generation**: `multiqc/report.py`
-
-- Collects data from all modules
-- Generates HTML reports using Jinja2 templates
-- Supports multiple output formats (HTML, data files, plots)
-
-### Key Data Flow
-
-1. **File Discovery**: `multiqc/core/file_search.py` scans directories for recognized log files
-2. **Module Execution**: `multiqc/core/exec_modules.py` runs modules against found files
-3. **Data Collection**: Modules parse log files and extract metrics
-4. **Report Assembly**: `multiqc/core/write_results.py` combines all module outputs
-5. **Output Generation**: Templates in `multiqc/templates/` render the final report
-
-### Module Structure
-
-All modules follow a consistent pattern:
-
-- Inherit from `BaseMultiqcModule`
-- Use `find_log_files()` to locate relevant files
-- Parse log files and extract metrics
-- Add data to general stats with `general_stats_addcols()`
-- Create plots using classes in `multiqc/plots/`
-- Add sections to the report with `add_section()`
-
-### Plot System
-
-**Plot Types**: `multiqc/plots/`
-
-- Bar graphs, line graphs, scatter plots, heatmaps, tables
-- Interactive plots using Plotly
-- Flat plot export for publications
-
-**Templates**: `multiqc/templates/`
-
-- `default/`: Main HTML template with interactive features
-- `simple/`: Simplified template
-- `sections/`: Section-based template
-- Template discovery via entry points
-
-### AI Integration
-
-**AI Features**: `multiqc/core/ai.py`
-
-- Optional AI-powered report summaries
-- Supports multiple providers (OpenAI, Anthropic, AWS Bedrock)
-- Configurable via `ai_*` config options
-- Sample name anonymization for privacy
-
-## Important Files
-
-- `multiqc/config_defaults.yaml`: Default configuration values
-- `multiqc/search_patterns.yaml`: File pattern matching for all modules
-- `pyproject.toml`: Package configuration and module entry points
-- `multiqc/base_module.py`: Base class that all modules inherit from
-- `multiqc/plots/`: Plot generation classes
-- `multiqc/core/`: Core functionality (file search, module execution, etc.)
-
-## Development Notes
-
-- All modules are auto-discovered via entry points in `pyproject.toml`
-- File patterns in `search_patterns.yaml` determine which files each module processes
-- The codebase uses type hints extensively with mypy checking
-- Tests are located in `tests/` and use pytest framework
-- Code formatting is enforced with ruff
-- The project supports Python 3.9+
-- Use f-strings and other MODERN Python 3 syntax. Do not use `__future__` imports or `OrderedDict`'s.
-- Use double quotes for strings.
-- Do not add shebang lines to Python files unless they are placed in the `scripts/` folder.
-- When writing modules, you must follow the following rules:
-  - Raise `ModuleNoSamplesFound` when no samples are found. DO NOT RAISE `UserWarning`!
-  - Call `self.add_software_version()`, even if version is not found, as it's required by linting.
-  - Call `self.write_data_file` in the very end of the module, after all sections are added. IT IS IMPORTANT TO CALL IT IN THE END!
-  - Add entry point into `pyproject.toml`. Ignore `setup.py`.
-  - Do not add separate markdown files or module-level docstrings. Instead add a docstring to the module class.
-  - Module's `info` MUST start with a capital letter.
-
-DO NOT CREATE Pipfile - use pyproject.toml instead.

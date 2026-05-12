@@ -45,10 +45,10 @@ show_analysis_paths: False
 show_analysis_time: False
 ```
 
-## Report Logo
+## Report Logo / Favicon
 
 To add your own custom logo to reports, you can add the following
-three lines to your MultiQC configuration file:
+lines to your MultiQC configuration file:
 
 ```yaml
 custom_logo: "/abs/path/to/logo.png"
@@ -62,6 +62,16 @@ Only `custom_logo` is needed. The URL will make the logo open up
 a new web browser tab with your address and the title sets the mouse
 hover title text. Width allows you to adjust the logo size and dark
 lets you have an alternate variant shown when the report is in dark mode.
+
+If you like, you can also provide a custom favicon (the icon shown in the browser
+address bar):
+
+```yaml
+custom_favicon: "/abs/path/to/favicon.png"
+```
+
+Favicons and logos can be any of the following file formats:
+`.png`, `.svg`, `.ico`, `.gif`, `.jpg`, `.jpeg`, `.webp`.
 
 ## Project level information
 
@@ -696,7 +706,7 @@ custom_plot_config:
   # Add a coloured band in the background to show what is a good result
   # Yes I know this doesn't make sense for this plot, it's just an example ;)
   bismark_mbias:
-    yPlotBands:
+    y_bands:
       - from: 0
         to: 40
         color: "#e6c3c3"
@@ -707,6 +717,25 @@ custom_plot_config:
         to: 100
         color: "#c3e6c3"
 ```
+
+### Targeting a single tab in a multi-dataset plot
+
+Some plots have a tab switch between multiple datasets — for example, the `samtools-coverage` line plot has tabs for _Reads_, _Bases_, _Coverage_, _Mean depth_, _BQ_ and _MQ_. By default, settings under a plot ID apply to every tab.
+
+To apply a setting to **just one tab**, nest it under `data_labels:` and key by the tab name (the label shown on the tab button):
+
+```yaml
+custom_plot_config:
+  samtools-coverage:
+    data_labels:
+      MQ:
+        y_bands:
+          - from: 50
+            to: 60
+            color: "#c3e6c3"
+```
+
+You can also use the integer position of the tab (`0:` for the first, `1:` for the second, …) if that is more convenient. Mix tab-level keys with plot-level keys freely — plot-level settings still apply to every tab, and tab-level settings layer on top of one specific tab.
 
 ## Customising tables
 
@@ -1118,3 +1147,16 @@ Each module must be configured to use this config option. If you find a MultiQC 
 :::tip
 This only works for tables, and doesn't affect plots. You might want to combine this option with `module_order` to [repeat the module in the report](#running-modules-multiple-times) for each grouping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
 :::
+
+### Modules with built-in auto-grouping
+
+Some modules know exactly which samples are paired from their own log output and group them automatically.
+
+If you also set `table_sample_merge`, the patterns layer on top of the auto-derived groups. For example, you can let the module group R1+R2 automatically and use `table_sample_merge` to additionally group multiple lanes of the same pair.
+
+Module that do this should expose an opt-out flag if you'd prefer per-sample rows everywhere. For example, with Trim Galore:
+
+```yaml
+trim_galore_config:
+  auto_group_pairs: false
+```

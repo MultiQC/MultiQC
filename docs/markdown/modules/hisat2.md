@@ -1,8 +1,7 @@
 ---
 title: HISAT2
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Maps DNA or RNA reads against a genome or a population of genomes.</p>
+description: "Maps DNA or RNA reads against a genome or a population of genomes."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/hisat2/hisat2.py
 -->
 
 :::note
-<p>Maps DNA or RNA reads against a genome or a population of genomes.</p>
+Maps DNA or RNA reads against a genome or a population of genomes.
 
 [https://ccb.jhu.edu/software/hisat2/](https://ccb.jhu.edu/software/hisat2/)
 :::

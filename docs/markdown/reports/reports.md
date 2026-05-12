@@ -65,7 +65,7 @@ You can inspect the individual samples within a group by clicking on the arrow:
 
 ![genstats_grouped_samples_expanded](../../../docs/images/genstats_grouping_expanded.png)
 
-To enable this feature in your runs, [use this configuration option](../reports/customisation.md#sample-grouping).
+To enable this feature in your runs, [use this configuration option](../reports/customisation.md#sample-grouping). Some modules (e.g. Trim Galore) also [auto-detect pairs](../reports/customisation.md#modules-with-built-in-auto-grouping) from their own log output — no config needed.
 
 ## Plots
 

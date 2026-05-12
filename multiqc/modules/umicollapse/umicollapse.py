@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="UMICollapse",
             anchor="umicollapse",
             href="https://github.com/Daniel-Liu-c0deb0t/UMICollapse",

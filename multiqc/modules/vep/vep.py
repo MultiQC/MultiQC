@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="VEP",
             anchor="vep",
             href="https://www.ensembl.org/info/docs/tools/vep/index.html",

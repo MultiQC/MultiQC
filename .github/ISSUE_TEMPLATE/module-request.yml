@@ -115,6 +115,6 @@ body:
       description: These help improve your request's priority, but aren't strictly required. We're here to help!
       options:
         - label: I have included example data files (uploaded/zipped, not copy-pasted)
-        - label: I have checked that no similar module already exists in the [MultiQC modules list](https://multiqc.info/modules/)
+        - label: I have checked that no similar module already exists in the [MultiQC modules list](https://docs.seqera.io/multiqc/modules/)
         - label: I have provided the tool's homepage or repository URL
         - label: I understand this request will be prioritized based on tool popularity, community need, and request quality

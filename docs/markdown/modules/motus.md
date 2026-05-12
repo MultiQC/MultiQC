@@ -1,8 +1,7 @@
 ---
 title: Motus
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).</p>
+description: "Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs)."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/motus/motus.py
 -->
 
 :::note
-<p>Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).</p>
+Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).
 
 [https://motu-tool.org/](https://motu-tool.org/)
 :::
