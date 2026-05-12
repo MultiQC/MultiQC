@@ -4,7 +4,6 @@ import importlib.util
 import sys
 from pathlib import Path
 
-import pytest
 import yaml
 
 from multiqc.utils.config_schema import MultiQCConfig
@@ -23,24 +22,23 @@ def _load_wizard_module():
     return module
 
 
-def test_wizard_covers_every_schema_property():
-    """Every MultiQCConfig field must be in the wizard or in SKIP_PROPERTIES.
+def test_every_field_has_a_section():
+    """Every MultiQCConfig field must declare a section via cfg(..., section=...).
 
-    This guards against new config fields being silently dropped from the
-    wizard. If this fails, add the new field to the matching section in
-    `scripts/generate_config_wizard.py`, or, if it cannot reasonably be
-    rendered as a form field, add it to `SKIP_PROPERTIES`.
+    Section tags drive both the config docs grouping and the wizard sidebar.
+    A field with no section would be silently dropped from both, so the
+    generator scripts refuse to build until one is set. Add the section to the
+    Field via cfg() in `multiqc/utils/config_schema.py`, or, if it cannot
+    reasonably be rendered, add it to `SKIP_PROPERTIES` in the generator script.
     """
     wizard = _load_wizard_module()
-    html = wizard.generate_config_wizard()
-
-    schema_props = set(MultiQCConfig.model_json_schema()["properties"])
-    rendered = {p for p in schema_props if f'"{p}"' in html}
-    missing = schema_props - rendered - wizard.SKIP_PROPERTIES
-    assert not missing, (
-        f"Config properties absent from the wizard: {sorted(missing)}. "
-        f"Add them to a section in scripts/generate_config_wizard.py, "
-        f"or to SKIP_PROPERTIES."
+    properties = MultiQCConfig.model_json_schema()["properties"]
+    untagged = sorted(
+        name for name, prop in properties.items() if name not in wizard.SKIP_PROPERTIES and "section" not in prop
+    )
+    assert not untagged, (
+        f"Config properties with no section tag: {untagged}. "
+        f'Wrap each Field with cfg(..., section="...") in multiqc/utils/config_schema.py.'
     )
 
 
@@ -50,14 +48,6 @@ def test_wizard_skip_list_is_in_schema():
     schema_props = set(MultiQCConfig.model_json_schema()["properties"])
     stale = wizard.SKIP_PROPERTIES - schema_props
     assert not stale, f"SKIP_PROPERTIES references unknown fields: {sorted(stale)}"
-
-
-def test_wizard_uncommon_list_is_in_schema():
-    """UNCOMMON_PROPERTIES must reference real config fields, not stale names."""
-    wizard = _load_wizard_module()
-    schema_props = set(MultiQCConfig.model_json_schema()["properties"])
-    stale = wizard.UNCOMMON_PROPERTIES - schema_props
-    assert not stale, f"UNCOMMON_PROPERTIES references unknown fields: {sorted(stale)}"
 
 
 def test_config_defaults_keys_are_in_schema():

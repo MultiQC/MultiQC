@@ -300,6 +300,17 @@
       body.show-uncommon .form-group.uncommon {
         display: block;
       }
+      .section-nav .nav-advanced-only,
+      .section-heading.advanced-only {
+        display: none;
+      }
+      body.show-uncommon .section-nav .nav-advanced-only {
+        display: list-item;
+      }
+      body.show-uncommon .section-heading.advanced-only,
+      body.search-active .section-heading.advanced-only {
+        display: block;
+      }
       body.show-uncommon .form-group.uncommon .field-label::after {
         content: "advanced";
         margin-left: 8px;
@@ -350,33 +361,29 @@
         border-color: rgba(255, 255, 255, 0.25);
       }
 
-      .sidebar-links {
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 12px 18px 18px;
+      .welcome-links {
         display: flex;
-        flex-direction: column;
-        gap: 2px;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+        margin-top: 14px;
       }
-      .sidebar-links a {
-        color: rgba(255, 255, 255, 0.55);
+      .welcome-links a {
+        color: var(--navy);
         text-decoration: none;
-        font-size: 0.82em;
-        padding: 5px 10px;
-        border-radius: 4px;
-        transition:
-          background 0.15s ease,
-          color 0.15s ease;
+        font-size: 0.92em;
+        font-weight: 500;
+        transition: color 0.15s ease;
       }
-      .sidebar-links a:hover {
-        background: rgba(255, 255, 255, 0.06);
-        color: white;
+      .welcome-links a:hover {
+        color: var(--teal-border);
+        text-decoration: underline;
       }
-      .sidebar-links a::before {
+      .welcome-links a::after {
         content: "↗";
         display: inline-block;
-        margin-right: 8px;
-        color: var(--teal);
-        font-size: 0.85em;
+        margin-left: 6px;
+        color: var(--teal-border);
+        font-size: 0.9em;
       }
 
       /* Right-hand main column */
@@ -675,7 +682,6 @@
         border-color: #d04949 !important;
       }
       .form-group input,
-      .form-group select,
       .form-group textarea {
         width: 100%;
         padding: 9px 12px;
@@ -699,26 +705,17 @@
         color: var(--ink);
       }
       .form-group input:focus,
-      .form-group select:focus,
       .form-group textarea:focus {
         outline: none;
         border-color: var(--teal-border);
         box-shadow: 0 0 0 3px rgba(49, 201, 172, 0.2);
       }
-      .form-group select {
-        appearance: none;
-        -webkit-appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%235c5767' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        padding-right: 36px;
-      }
 
       .bool-toggle {
         display: inline-flex;
+        flex-wrap: wrap;
         border: 1px solid var(--border);
         border-radius: 0;
-        overflow: hidden;
         background: var(--paper);
       }
       .bool-toggle-btn {
@@ -877,8 +874,6 @@
         font-size: 0.88em;
         line-height: 1.6;
         white-space: pre-wrap;
-        max-height: 420px;
-        overflow-y: auto;
         margin-top: 16px;
       }
       /* Minimal YAML highlight theme tuned to the navy code surface */
@@ -912,10 +907,11 @@
       }
       .yaml-preview-head {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 16px;
         margin-bottom: 6px;
+        flex-wrap: wrap;
       }
       .yaml-preview-head h3 {
         margin-bottom: 0;
@@ -924,23 +920,6 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 6px 14px;
-        background: transparent;
-        color: var(--ink-mute);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        font-family: inherit;
-        font-size: 0.88em;
-        cursor: pointer;
-        transition:
-          background 0.15s ease,
-          color 0.15s ease,
-          border-color 0.15s ease;
-      }
-      .back-btn:hover {
-        background: var(--surface-soft);
-        color: var(--ink);
-        border-color: var(--ink-soft);
       }
       .back-btn span {
         font-size: 1.05em;
@@ -970,6 +949,12 @@
         color: var(--ink-soft);
         font-size: 0.82em;
         margin-top: 4px;
+      }
+      .yaml-preview-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
       }
 
       @media (max-width: 900px) {
@@ -1051,14 +1036,8 @@
           <span class="show-uncommon-label">Show advanced options</span>
         </button>
       </nav>
-      <div class="sidebar-links">
-        <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">seqera.io/multiqc</a>
-        <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
-        <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
-      </div>
       <div class="sidebar-actions">
-        <button id="previewBtn" class="btn btn-primary" onclick="previewYaml()">Preview YAML</button>
-        <button class="btn btn-success" onclick="downloadConfig()">Download Config</button>
+        <button id="previewBtn" class="btn btn-success" onclick="previewYaml()">Preview YAML</button>
         <button class="btn btn-secondary" onclick="resetConfig()">Reset All</button>
       </div>
     </aside>
@@ -1079,9 +1058,13 @@
           </p>
           <p>
             Browse sections in the sidebar, or use the search bar above to find a specific option. When you are done,
-            click <strong>Preview YAML</strong> or <strong>Download Config</strong> below. For full documentation, visit
-            <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">docs.seqera.io/multiqc</a>.
+            click <strong>Preview YAML</strong> below.
           </p>
+          <div class="welcome-links">
+            <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">MultiQC Homepage</a>
+            <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
+            <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
+          </div>
         </div>
 
         <div id="sections"></div>
@@ -1091,9 +1074,13 @@
         <div class="yaml-preview-section" id="yamlSection" style="display:none;">
           <div class="yaml-preview-head">
             <h3>Generated Configuration</h3>
-            <button class="btn btn-secondary back-btn" onclick="backToEditor()">
-              <span aria-hidden="true">&larr;</span> Back to editor
-            </button>
+            <div class="yaml-preview-actions">
+              <button class="btn btn-secondary back-btn" onclick="backToEditor()">
+                <span aria-hidden="true">&larr;</span> Back to editor
+              </button>
+              <button id="copyBtn" class="btn btn-primary" onclick="copyConfig()">Copy to clipboard</button>
+              <button class="btn btn-success" onclick="downloadConfig()">Download config</button>
+            </div>
           </div>
           <p>Copy this content to <code>multiqc_config.yaml</code> in your project directory.</p>
           <p class="fields-set-count" id="fieldsSetCount"></p>
@@ -1167,9 +1154,12 @@
           a.href = "#section-" + slugify(sectionName);
           a.textContent = sectionName;
           a.dataset.section = sectionName;
+          const commonCount = Object.values(sectionProps).filter((p) => !p.uncommon).length;
+          // Sections that are entirely advanced (eg. MegaQC) are hidden from the
+          // sidebar until the user toggles "Show advanced options" on.
+          if (commonCount === 0) li.classList.add("nav-advanced-only");
           const badge = document.createElement("span");
           badge.className = "badge";
-          const commonCount = Object.values(sectionProps).filter((p) => !p.uncommon).length;
           badge.textContent = commonCount;
           a.appendChild(badge);
           a.onclick = (e) => {
@@ -1200,6 +1190,8 @@
           h2.id = "section-" + slugify(sectionName);
           h2.dataset.section = sectionName;
           h2.textContent = sectionName;
+          const commonCount = Object.values(sectionProps).filter((p) => !p.uncommon).length;
+          if (commonCount === 0) h2.classList.add("advanced-only");
           sectionsContainer.appendChild(h2);
 
           Object.entries(sectionProps).forEach(([propName, propData]) => {
@@ -1330,53 +1322,36 @@
         let input;
 
         if (propData.enum) {
-          // Small enums render as a segmented toggle like the true/false buttons;
-          // larger enums stay as a dropdown.
-          if (propData.enum.length <= 4) {
-            const wrapper = document.createElement("div");
-            wrapper.className = "bool-toggle";
-            const hidden = document.createElement("input");
-            hidden.type = "hidden";
-            hidden.id = propName;
-            wrapper.appendChild(hidden);
-            const hasDefault = propData.default !== null && propData.default !== undefined;
-            propData.enum.forEach((val) => {
-              const btn = document.createElement("button");
-              btn.type = "button";
-              btn.className = "bool-toggle-btn";
-              btn.dataset.value = val;
-              btn.textContent = val;
-              if (val === propData.default) btn.classList.add("active");
-              btn.onclick = () => {
-                const wasActive = btn.classList.contains("active");
-                // No default → clicking the active button again clears the selection.
-                if (wasActive && !hasDefault) {
-                  btn.classList.remove("active");
-                  hidden.value = "";
-                } else {
-                  wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
-                  hidden.value = val;
-                }
-                updateConfig(propName, hidden);
-              };
-              wrapper.appendChild(btn);
-            });
-            return wrapper;
-          }
-          input = document.createElement("select");
-          const emptyOption = document.createElement("option");
-          emptyOption.value = "";
-          emptyOption.textContent = "";
-          input.appendChild(emptyOption);
-          propData.enum.forEach((value) => {
-            const option = document.createElement("option");
-            option.value = value;
-            option.textContent = value;
-            input.appendChild(option);
+          // All enums render as a segmented button toggle.
+          const wrapper = document.createElement("div");
+          wrapper.className = "bool-toggle";
+          const hidden = document.createElement("input");
+          hidden.type = "hidden";
+          hidden.id = propName;
+          wrapper.appendChild(hidden);
+          const hasDefault = propData.default !== null && propData.default !== undefined;
+          propData.enum.forEach((val) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "bool-toggle-btn";
+            btn.dataset.value = val;
+            btn.textContent = val;
+            if (val === propData.default) btn.classList.add("active");
+            btn.onclick = () => {
+              const wasActive = btn.classList.contains("active");
+              // No default → clicking the active button again clears the selection.
+              if (wasActive && !hasDefault) {
+                btn.classList.remove("active");
+                hidden.value = "";
+              } else {
+                wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
+                hidden.value = val;
+              }
+              updateConfig(propName, hidden);
+            };
+            wrapper.appendChild(btn);
           });
-          input.id = propName;
-          input.onchange = () => updateConfig(propName, input);
-          return input;
+          return wrapper;
         } else if (propData.type === "boolean") {
           const wrapper = document.createElement("div");
           wrapper.className = "bool-toggle";
@@ -1622,8 +1597,6 @@
           input.value = serializeArrayDefault(propData.default);
         } else if (propData.type === "object" && isPrefillableDefault(propData)) {
           input.value = dumpYaml(propData.default);
-        } else if (input.tagName === "SELECT") {
-          input.selectedIndex = 0;
         } else {
           input.value = "";
         }
@@ -1775,7 +1748,7 @@
         const btn = document.getElementById("previewBtn");
         btn.textContent = "Editor";
         btn.onclick = backToEditor;
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo(0, 0);
       }
 
       function backToEditor() {
@@ -1784,7 +1757,7 @@
         const btn = document.getElementById("previewBtn");
         btn.textContent = "Preview YAML";
         btn.onclick = previewYaml;
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo(0, 0);
       }
 
       function downloadConfig() {
@@ -1803,6 +1776,28 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      }
+
+      function copyConfig() {
+        const btn = document.getElementById("copyBtn");
+        const yaml = document.getElementById("yamlOutput").textContent;
+        const showFeedback = (label) => {
+          const original = btn.dataset.originalLabel || btn.textContent;
+          btn.dataset.originalLabel = original;
+          btn.textContent = label;
+          clearTimeout(btn._copyResetTimer);
+          btn._copyResetTimer = setTimeout(() => {
+            btn.textContent = btn.dataset.originalLabel;
+          }, 1500);
+        };
+        if (!navigator.clipboard) {
+          showFeedback("Clipboard unavailable");
+          return;
+        }
+        navigator.clipboard.writeText(yaml).then(
+          () => showFeedback("Copied!"),
+          () => showFeedback("Copy failed"),
+        );
       }
 
       function resetConfig() {

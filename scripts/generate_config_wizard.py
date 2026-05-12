@@ -20,50 +20,10 @@ from typing import get_args
 # Allow the script to be either run directly or imported via importlib (eg. from tests).
 sys.path.insert(0, str(Path(__file__).parent))
 
-from _config_schema_loader import load_schema_and_defaults  # noqa: E402
+from _config_schema_loader import load_schema_and_defaults, load_sections, load_uncommon  # noqa: E402
 
 import multiqc  # noqa: E402
 from multiqc.utils.config_schema import AiProviderLiteral  # noqa: E402
-
-# Properties shown only when the "Show advanced options" toggle is on:
-# internal / debug fields, rarely-set knobs, and integrations that need
-# their own setup before being useful.
-UNCOMMON_PROPERTIES = {
-    "ai_auth_type",
-    "ai_prompt_full",
-    "ai_prompt_short",
-    "ai_retries",
-    "collapse_tables",
-    "data_dir_name",
-    "data_dump_file",
-    "data_dump_file_write_raw",
-    "data_format_extensions",
-    "ignore_symlinks",
-    "lineplot_number_of_points_to_hide_markers",
-    "megaqc_access_token",
-    "megaqc_timeout",
-    "megaqc_url",
-    "num_datasets_plot_limit",
-    "output_fn_name",
-    "pandoc_template",
-    "plot_font_family",
-    "plots_defer_loading_numseries",
-    "plots_export_font_scale",
-    "prepend_dirs_depth",
-    "prepend_dirs_sep",
-    "preserve_module_raw_data",
-    "profile_memory",
-    "report_readerrors",
-    "sample_names_only_include",
-    "sample_names_only_include_re",
-    "section_status_checks",
-    "seqera_api_url",
-    "seqera_website",
-    "simple_output",
-    "table_sample_merge",
-    "template_dark_mode",
-    "version_check_url",
-}
 
 MULTIQC_LOGO_SVG = """\
 <svg width="1318" height="250" viewBox="0 0 1318 250" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -95,209 +55,8 @@ def generate_config_wizard():
     back to a dropdown.
     """
     properties, config_defaults, _schema = load_schema_and_defaults()
-
-    sections = {
-        "Report Appearance": [
-            "title",
-            "subtitle",
-            "intro_text",
-            "report_comment",
-            "report_header_info",
-            "show_analysis_paths",
-            "show_analysis_time",
-            "custom_logo",
-            "custom_logo_dark",
-            "custom_logo_url",
-            "custom_logo_title",
-            "custom_logo_width",
-            "custom_css_files",
-            "simple_output",
-            "template",
-            "template_dark_mode",
-            "custom_content",
-            "section_comments",
-            "remove_sections",
-            "module_order",
-            "top_modules",
-            "section_status_checks",
-        ],
-        "Output Options": [
-            "output_fn_name",
-            "data_dir_name",
-            "plots_dir_name",
-            "data_format",
-            "data_format_extensions",
-            "parquet_format",
-            "force",
-            "make_data_dir",
-            "zip_data_dir",
-            "data_dump_file",
-            "data_dump_file_write_raw",
-            "export_plots",
-            "export_plot_formats",
-            "export_plots_timeout",
-            "make_report",
-            "make_pdf",
-            "pandoc_template",
-            "file_list",
-        ],
-        "Sample Names": [
-            "prepend_dirs",
-            "prepend_dirs_depth",
-            "prepend_dirs_sep",
-            "fn_clean_sample_names",
-            "extra_fn_clean_exts",
-            "extra_fn_clean_trim",
-            "fn_clean_exts",
-            "fn_clean_trim",
-            "use_filename_as_sample_name",
-            "sample_names_ignore",
-            "sample_names_ignore_re",
-            "sample_names_only_include",
-            "sample_names_only_include_re",
-            "sample_names_rename",
-            "sample_names_rename_buttons",
-            "sample_names_replace",
-            "sample_names_replace_complete",
-            "sample_names_replace_exact",
-            "sample_names_replace_regex",
-        ],
-        "File Discovery": [
-            "require_logs",
-            "ignore_symlinks",
-            "ignore_images",
-            "fn_ignore_dirs",
-            "fn_ignore_paths",
-            "fn_ignore_files",
-            "filesearch_file_shared",
-        ],
-        "Plot Settings": [
-            "plots_force_flat",
-            "plots_force_interactive",
-            "plots_export_font_scale",
-            "plots_flat_numseries",
-            "plots_defer_loading_numseries",
-            "plot_font_family",
-            "custom_plot_config",
-            "lineplot_number_of_points_to_hide_markers",
-            "barplot_legend_on_bottom",
-            "boxplot_boxpoints",
-            "box_min_threshold_outliers",
-            "box_min_threshold_no_points",
-            "violin_downsample_after",
-            "violin_min_threshold_outliers",
-            "violin_min_threshold_no_points",
-            "highlight_patterns",
-            "highlight_colors",
-            "highlight_regex",
-            "show_hide_buttons",
-            "show_hide_patterns",
-            "show_hide_mode",
-            "show_hide_regex",
-        ],
-        "Table Settings": [
-            "collapse_tables",
-            "max_table_rows",
-            "max_configurable_table_columns",
-            "decimalPoint_format",
-            "thousandsSep_format",
-            "general_stats_columns",
-            "general_stats_helptext",
-            "skip_generalstats",
-            "table_columns_name",
-            "table_columns_placement",
-            "table_columns_visible",
-            "table_cond_formatting_rules",
-            "table_cond_formatting_colours",
-            "custom_table_header_config",
-            "table_sample_merge",
-        ],
-        "Software Versions": [
-            "software_versions",
-            "versions_table_group_header",
-            "disable_version_detection",
-            "skip_versions_section",
-        ],
-        "Read & Base Counts": [
-            "read_count_multiplier",
-            "read_count_prefix",
-            "read_count_desc",
-            "long_read_count_multiplier",
-            "long_read_count_prefix",
-            "long_read_count_desc",
-            "base_count_multiplier",
-            "base_count_prefix",
-            "base_count_desc",
-        ],
-        "AI Summary": [
-            "ai_summary",
-            "ai_summary_full",
-            "ai_provider",
-            "ai_model",
-            "ai_custom_endpoint",
-            "ai_auth_type",
-            "ai_retries",
-            "ai_extra_query_options",
-            "ai_custom_context_window",
-            "ai_max_completion_tokens",
-            "ai_reasoning_effort",
-            "ai_extended_thinking",
-            "ai_thinking_budget_tokens",
-            "ai_prompt_short",
-            "ai_prompt_full",
-            "no_ai",
-            "ai_anonymize_samples",
-        ],
-        "Integrations": [
-            "megaqc_url",
-            "megaqc_access_token",
-            "megaqc_timeout",
-            "seqera_website",
-            "seqera_api_url",
-        ],
-        "Performance & Debugging": [
-            "profile_runtime",
-            "profile_memory",
-            "verbose",
-            "no_ansi",
-            "quiet",
-            "lint",
-            "strict",
-            "development",
-            "log_filesize_limit",
-            "filesearch_lines_limit",
-            "report_readerrors",
-            "no_version_check",
-            "version_check_url",
-            "preserve_module_raw_data",
-            "num_datasets_plot_limit",
-        ],
-    }
-
-    # Catch regressions: every schema property must be either listed in a section
-    # above or explicitly skipped via SKIP_PROPERTIES.
-    listed = {p for section_props in sections.values() for p in section_props}
-    missing = set(properties) - listed - SKIP_PROPERTIES
-    if missing:
-        raise RuntimeError(
-            f"{len(missing)} schema properties are missing from the wizard sections: "
-            f"{sorted(missing)}.\n"
-            f"Add each one to the appropriate section in `sections`, or to "
-            f"SKIP_PROPERTIES at the top of this file."
-        )
-    stale = listed - set(properties)
-    if stale:
-        raise RuntimeError(
-            f"Wizard sections reference {len(stale)} properties that are no longer "
-            f"in the schema: {sorted(stale)}. Remove them from `sections`."
-        )
-
-    stale_uncommon = UNCOMMON_PROPERTIES - set(properties)
-    if stale_uncommon:
-        raise RuntimeError(
-            f"UNCOMMON_PROPERTIES references {len(stale_uncommon)} fields no longer "
-            f"in the schema: {sorted(stale_uncommon)}. Remove them from the set."
-        )
+    sections = load_sections(properties, skip=SKIP_PROPERTIES)
+    uncommon = load_uncommon(properties)
 
     config_data: dict = {}
     for section_name, section_props in sections.items():
@@ -334,7 +93,7 @@ def generate_config_wizard():
             default_val = config_defaults.get(prop_name)
 
             config_data[section_name][prop_name] = {
-                "uncommon": prop_name in UNCOMMON_PROPERTIES,
+                "uncommon": prop_name in uncommon,
                 "type": prop_type,
                 "description": prop.get("description", ""),
                 "default": default_val,

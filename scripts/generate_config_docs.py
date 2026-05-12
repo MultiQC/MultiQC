@@ -11,22 +11,61 @@ Output: docs/markdown/config_schema.md
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Union, get_args, get_origin, get_type_hints
 
 import yaml
 
+
+class _PrettierYamlDumper(yaml.SafeDumper):
+    """YAML dumper that matches Prettier's output style.
+
+    Two tweaks over the default ``SafeDumper``:
+
+    1. Nested list dashes are indented one level deeper than the parent key,
+       not at the parent's indent (``key:\\n  - item`` vs ``key:\\n- item``).
+    2. Scalars that need quoting use double quotes instead of single. The
+       emitter decides quoting style at write time, so we intercept it via
+       ``choose_scalar_style`` rather than via a representer.
+    """
+
+    def increase_indent(self, flow=False, indentless=False):  # type: ignore[override]
+        return super().increase_indent(flow, False)
+
+    def choose_scalar_style(self):  # type: ignore[override]
+        style = super().choose_scalar_style()
+        return '"' if style == "'" else style
+
+
+def _dump_yaml(value):
+    """Dump YAML in a shape that round-trips through Prettier without changes."""
+    return yaml.dump(
+        value,
+        Dumper=_PrettierYamlDumper,
+        default_flow_style=False,
+        sort_keys=False,
+        allow_unicode=True,
+        width=80,
+    )
+
+
 sys.path.insert(0, str(Path(__file__).parent))
 
-from _config_schema_loader import load_schema_and_defaults  # noqa: E402
+from _config_schema_loader import load_schema_and_defaults, load_sections  # noqa: E402
 from multiqc.utils.config_schema import (  # noqa: E402
     AiProviderLiteral,
     CleanPattern,
     GeneralStatsColumnConfig,
+    GeneralStatsModuleConfig,
     MultiQCConfig,
     SearchPattern,
 )
+
+# Properties skipped in the section walk; sp is documented manually below under
+# "Special Types".
+SKIP_PROPERTIES = {"sp"}
 
 
 def format_type_annotation(annotation):
@@ -38,17 +77,13 @@ def format_type_annotation(annotation):
     args = get_args(annotation)
 
     if origin is Union:
-        # Handle Optional[Type] -> Union[Type, None]
-        if type(None) in args:
-            other_args = [arg for arg in args if arg is not type(None)]
-            if len(other_args) == 1:
-                return f"Optional[{format_type_annotation(other_args[0])}]"
-            else:
-                formatted_args = [format_type_annotation(arg) for arg in other_args]
-                return f"Optional[Union[{', '.join(formatted_args)}]]"
-        else:
-            formatted_args = [format_type_annotation(arg) for arg in args]
-            return f"Union[{', '.join(formatted_args)}]"
+        # Drop the None branch; nearly every config field is Optional, so the
+        # Optional[...] wrapper is noise in the rendered docs.
+        non_null = [arg for arg in args if arg is not type(None)]
+        if len(non_null) == 1:
+            return format_type_annotation(non_null[0])
+        formatted_args = [format_type_annotation(arg) for arg in non_null]
+        return f"Union[{', '.join(formatted_args)}]"
 
     elif origin is list or origin is List:
         if args:
@@ -87,6 +122,8 @@ def format_type_annotation(annotation):
         return "CleanPattern"
     elif annotation is GeneralStatsColumnConfig:
         return "GeneralStatsColumnConfig"
+    elif annotation is GeneralStatsModuleConfig:
+        return "GeneralStatsModuleConfig"
     elif annotation is Any:
         return "Any"
 
@@ -112,6 +149,46 @@ def format_default_value(value):
         return f"`{value}`"
 
 
+# Inline-default character budget. Above this, the default is rendered
+# below the type line as a collapsible <details> block so things like
+# module_order's 200-entry list don't blow up the type line.
+DEFAULT_INLINE_MAX = 120
+
+
+def _is_uninformative_default(value):
+    """True for defaults that add no information to the docs.
+
+    Covers ``None``, empty lists/dicts, and dicts whose every value is itself
+    uninformative (e.g. ``custom_content: {order: []}``).
+    """
+    if value is None:
+        return True
+    if isinstance(value, list) and not value:
+        return True
+    if isinstance(value, dict):
+        if not value:
+            return True
+        return all(_is_uninformative_default(v) for v in value.values())
+    return False
+
+
+def render_default(value):
+    """Return ``(inline, block)`` for use after a Type line.
+
+    Uninformative defaults render as ``("", "")``. Short defaults go inline
+    after Type. Long lists/dicts go into a collapsible block underneath so the
+    Type line stays readable.
+    """
+    if _is_uninformative_default(value):
+        return "", ""
+    formatted = format_default_value(value)
+    if len(formatted) <= DEFAULT_INLINE_MAX:
+        return f" (default: {formatted})", ""
+    yaml_text = _dump_yaml(value).rstrip()
+    block = f"\n<details><summary>Default value</summary>\n\n```yaml\n{yaml_text}\n```\n\n</details>\n"
+    return "", block
+
+
 def generate_markdown_from_schema():
     """Generate markdown documentation from the MultiQC config schema."""
     config_attrs = dict(MultiQCConfig.__annotations__)
@@ -133,6 +210,7 @@ MultiQC configuration can be set in several ways:
 3. **Environment variables** - MultiQC checks for environment variables that match configuration options prefixed with `MULTIQC_`, for example: `MULTIQC_TITLE="My Report"`
 
 Configuration values are loaded in the following order of precedence (highest to lowest):
+
 1. Command line parameters
 2. Current working directory config file
 3. User home directory config file
@@ -143,138 +221,8 @@ The options below can be specified in your YAML configuration files.
 For boolean options, use `true` or `false` (all lowercase) in your YAML files.
 """)
 
-    # Group properties into logical sections
-    sections = {
-        "General": [],
-        "Report Appearance": [
-            "title",
-            "subtitle",
-            "intro_text",
-            "report_comment",
-            "report_header_info",
-            "show_analysis_paths",
-            "show_analysis_time",
-            "custom_logo",
-            "custom_logo_url",
-            "custom_logo_title",
-            "custom_css_files",
-            "simple_output",
-            "template",
-        ],
-        "Output Options": [
-            "output_fn_name",
-            "data_dir_name",
-            "plots_dir_name",
-            "data_format",
-            "force",
-            "make_data_dir",
-            "zip_data_dir",
-            "data_dump_file",
-            "data_dump_file_write_raw",
-            "export_plots",
-            "export_plots_timeout",
-            "make_report",
-            "make_pdf",
-        ],
-        "MegaQC Integration": ["megaqc_url", "megaqc_access_token", "megaqc_timeout"],
-        "AI Summary": [
-            "ai_summary",
-            "ai_summary_full",
-            "ai_provider",
-            "ai_model",
-            "ai_custom_endpoint",
-            "ai_auth_type",
-            "ai_retries",
-            "ai_extra_query_options",
-            "ai_custom_context_window",
-            "ai_prompt_short",
-            "ai_prompt_full",
-            "no_ai",
-            "ai_anonymize_samples",
-        ],
-        "Seqera Integration": ["seqera_api_url", "seqera_website"],
-        "Plot Settings": [
-            "plots_force_flat",
-            "plots_force_interactive",
-            "plots_export_font_scale",
-            "plots_flat_numseries",
-            "plots_defer_loading_numseries",
-            "lineplot_number_of_points_to_hide_markers",
-            "barplot_legend_on_bottom",
-            "violin_downsample_after",
-            "violin_min_threshold_outliers",
-            "violin_min_threshold_no_points",
-        ],
-        "Table Settings": [
-            "collapse_tables",
-            "max_table_rows",
-            "max_configurable_table_columns",
-            "decimalPoint_format",
-            "thousandsSep_format",
-        ],
-        "Sample Names": [
-            "prepend_dirs",
-            "prepend_dirs_depth",
-            "prepend_dirs_sep",
-            "fn_clean_sample_names",
-            "use_filename_as_sample_name",
-            "fn_clean_exts",
-            "fn_clean_trim",
-            "extra_fn_clean_exts",
-            "extra_fn_clean_trim",
-            "sample_names_ignore",
-            "sample_names_ignore_re",
-            "sample_names_only_include",
-            "sample_names_only_include_re",
-            "sample_names_rename_buttons",
-            "sample_names_replace",
-            "sample_names_replace_regex",
-            "sample_names_replace_exact",
-            "sample_names_replace_complete",
-            "sample_names_rename",
-        ],
-        "Toolbox": [
-            "show_hide_buttons",
-            "show_hide_patterns",
-            "show_hide_regex",
-            "show_hide_mode",
-            "highlight_patterns",
-            "highlight_colors",
-            "highlight_regex",
-        ],
-        "Performance & Debugging": [
-            "profile_runtime",
-            "profile_memory",
-            "verbose",
-            "no_ansi",
-            "quiet",
-            "lint",
-            "strict",
-            "development",
-            "log_filesize_limit",
-            "filesearch_lines_limit",
-            "report_readerrors",
-        ],
-        "File Discovery": [
-            "require_logs",
-            "ignore_symlinks",
-            "ignore_images",
-            "fn_ignore_dirs",
-            "fn_ignore_paths",
-            "filesearch_file_shared",
-        ],
-        "Other": [],
-    }
-
-    # Assign properties to sections
-    for prop_name in properties:
-        assigned = False
-        for section, props in sections.items():
-            if prop_name in props:
-                assigned = True
-                break
-        if not assigned and prop_name not in ["$schema", "$defs"]:
-            sections["Other"].append(prop_name)
+    # Group properties into logical sections from the schema's per-field tags.
+    sections = load_sections(properties, skip=SKIP_PROPERTIES)
 
     # Generate markdown for each section
     for section, props in sections.items():
@@ -307,23 +255,18 @@ For boolean options, use `true` or `false` (all lowercase) in your YAML files.
                 description = prop.get("description", "")
 
                 # Get default value - first from config_defaults.yaml, then fall back to schema
-                default = ""
                 if prop_name in config_defaults:
                     default_val = config_defaults[prop_name]
-                    default = f" (default: {format_default_value(default_val)})"
-                elif "default" in prop:
-                    default_val = prop["default"]
-                    if default_val is None:
-                        default = " (default: `None`)"
-                    elif isinstance(default_val, (list, dict)):
-                        default = f" (default: `{json.dumps(default_val)}`)"
-                    else:
-                        default = f" (default: `{default_val}`)"
+                else:
+                    default_val = prop.get("default")
+                default_inline, default_block = render_default(default_val)
 
                 # Format the markdown
                 output.append(f"### {prop_name}\n")
-                output.append(f"**Type**: `{type_info}`{default}\n")
+                output.append(f"**Type**: `{type_info}`{default_inline}\n")
                 output.append(f"{description}\n")
+                if default_block:
+                    output.append(default_block)
 
                 # Render examples as YAML code blocks
                 examples = prop.get("examples") or []
@@ -331,13 +274,7 @@ For boolean options, use `true` or `false` (all lowercase) in your YAML files.
                     label = "Example" if len(examples) == 1 else "Examples"
                     output.append(f"**{label}**:\n")
                     for ex in examples:
-                        yaml_text = yaml.dump(
-                            {prop_name: ex},
-                            default_flow_style=False,
-                            sort_keys=False,
-                            width=80,
-                            allow_unicode=True,
-                        ).rstrip()
+                        yaml_text = _dump_yaml({prop_name: ex}).rstrip()
                         output.append(f"```yaml\n{yaml_text}\n```\n")
 
         output.append("")  # Add blank line between sections
@@ -356,10 +293,10 @@ Example:
 ```yaml
 sp:
   fastqc:
-    fn: '*_fastqc.zip'
+    fn: "*_fastqc.zip"
   custom_tool:
-    fn: '*.log'
-    contents: 'Started analysis'
+    fn: "*.log"
+    contents: "Started analysis"
 ```
 
 Properties:\n\n""")
@@ -439,7 +376,13 @@ Properties:\n\n""")
         type_info = format_type_annotation(prop_type)
         output.append(f"- **{prop_name}** (`{type_info}`): {description}")
 
-    return "\n".join(output)
+    text = "\n".join(output)
+    # Match Prettier's expectations so the file survives the commit hook
+    # without further edits: no trailing whitespace, at most one blank line
+    # between blocks, single trailing newline.
+    text = re.sub(r"[ \t]+(?=\n)", "", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.rstrip() + "\n"
 
 
 if __name__ == "__main__":
