@@ -6,7 +6,7 @@ from typing import Dict
 
 from multiqc.plots import linegraph
 
-from .util import read_tsv, to_float, to_int
+from .util import read_tsv, to_int
 
 log = logging.getLogger(__name__)
 
@@ -23,14 +23,18 @@ def _parse_metrics(module) -> Dict[str, Dict[str, Dict[str, float]]]:
     data_by_sample: Dict[str, Dict[str, Dict[str, float]]] = {}
 
     for f in module.find_log_files("riker/isize_metrics", filehandles=True):
-        for row in read_tsv(f["f"]):
+        for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.pop("sample", None)
             orientation = row.pop("pair_orientation", None)
             if not sample or not orientation:
                 continue
             s_name = module.clean_s_name(sample, f)
+            try:
+                parsed = {col: float(val) for col, val in row.items()}
+            except (TypeError, ValueError) as e:
+                log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
+                continue
             module.add_data_source(f, s_name, section="isize_metrics")
-            parsed = {col: to_float(val) for col, val in row.items()}
             data_by_sample.setdefault(s_name, {})[orientation] = parsed
 
     data_by_sample = module.ignore_samples(data_by_sample)
@@ -40,7 +44,7 @@ def _parse_metrics(module) -> Dict[str, Dict[str, Dict[str, float]]]:
     module.add_software_version(None)
 
     # Pick the FR orientation when present (the typical Illumina library), else the
-    # first available orientation — there is always at least one row per sample.
+    # first available orientation; there is always at least one row per sample.
     primary_data: Dict[str, Dict[str, float]] = {}
     for s_name, by_orient in data_by_sample.items():
         primary_data[s_name] = by_orient.get("FR", next(iter(by_orient.values())))
@@ -79,7 +83,7 @@ def _parse_histogram(module) -> set:
 
     for f in module.find_log_files("riker/isize_histogram", filehandles=True):
         rows_by_sample: Dict[str, list] = defaultdict(list)
-        for row in read_tsv(f["f"]):
+        for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
             if not sample:
                 continue
@@ -88,7 +92,8 @@ def _parse_histogram(module) -> set:
                 fr = to_int(row.get("fr_count", "0"))
                 rf = to_int(row.get("rf_count", "0"))
                 tandem = to_int(row.get("tandem_count", "0"))
-            except (KeyError, ValueError):
+            except (KeyError, ValueError) as e:
+                log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
                 continue
             rows_by_sample[sample].append((isize, fr, rf, tandem))
 

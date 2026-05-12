@@ -6,7 +6,9 @@ from typing import Dict
 
 from multiqc.plots import linegraph
 
-from .util import read_tsv, to_float, to_int
+from .util import read_tsv, to_int
+
+_BASES = ("a", "c", "g", "t", "n")
 
 log = logging.getLogger(__name__)
 
@@ -27,22 +29,17 @@ def _parse_base_distribution(module) -> set:
 
     for f in module.find_log_files("riker/basic_base_dist", filehandles=True):
         rows_by_sample: Dict[str, Dict[int, Dict[int, tuple]]] = defaultdict(lambda: defaultdict(dict))
-        for row in read_tsv(f["f"]):
+        for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
             if not sample:
                 continue
             try:
                 read_end = to_int(row["read_end"])
                 cycle = to_int(row["cycle"])
-            except (KeyError, ValueError):
+                tup = tuple(float(row[f"frac_{b}"]) * 100.0 for b in _BASES)
+            except (KeyError, ValueError) as e:
+                log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
                 continue
-            tup = (
-                to_float(row.get("frac_a", "")) * 100.0,
-                to_float(row.get("frac_c", "")) * 100.0,
-                to_float(row.get("frac_g", "")) * 100.0,
-                to_float(row.get("frac_t", "")) * 100.0,
-                to_float(row.get("frac_n", "")) * 100.0,
-            )
             rows_by_sample[sample][read_end][cycle] = tup
 
         for sample, by_read_end in rows_by_sample.items():
@@ -88,29 +85,33 @@ def _parse_base_distribution(module) -> set:
         description="Per-cycle base composition from riker's `basic` tool. Read 1 and read 2 are shown as separate samples.",
         plot=linegraph.plot(series_data, pconfig),
     )
-    module.write_data_file(
-        {s: {f"cycle_{c}_frac_a": v[0] / 100.0 for c, v in d.items()} for s, d in data_by_sample.items()},
-        f"multiqc_{module.anchor}_basic_base_distribution",
-    )
+    flat: Dict[str, Dict[str, float]] = {}
+    for s, by_cycle in data_by_sample.items():
+        flat[s] = {}
+        for cycle, vals in by_cycle.items():
+            for i, base in enumerate(_BASES):
+                flat[s][f"cycle_{cycle}_frac_{base}"] = vals[i] / 100.0
+    module.write_data_file(flat, f"multiqc_{module.anchor}_basic_base_distribution")
     return {s.removesuffix("_R1").removesuffix("_R2") for s in data_by_sample.keys()}
 
 
 def _parse_mean_quality(module) -> set:
     # Riker emits mean quality with cycles 1..N concatenated across read 1 and read 2.
-    # We plot it as-is — no read_end split available.
+    # We plot it as-is; no read_end split available.
     data_by_sample: Dict[str, Dict[int, float]] = {}
 
     for f in module.find_log_files("riker/basic_mean_quality", filehandles=True):
         rows_by_sample: Dict[str, Dict[int, float]] = defaultdict(dict)
-        for row in read_tsv(f["f"]):
+        for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
             if not sample:
                 continue
             try:
                 cycle = to_int(row["cycle"])
-            except (KeyError, ValueError):
+                rows_by_sample[sample][cycle] = float(row["mean_quality"])
+            except (KeyError, ValueError) as e:
+                log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
                 continue
-            rows_by_sample[sample][cycle] = to_float(row.get("mean_quality", ""))
 
         for sample, by_cycle in rows_by_sample.items():
             s_name = module.clean_s_name(sample, f)
@@ -147,14 +148,15 @@ def _parse_quality_distribution(module) -> set:
 
     for f in module.find_log_files("riker/basic_quality_dist", filehandles=True):
         rows_by_sample: Dict[str, Dict[int, int]] = defaultdict(dict)
-        for row in read_tsv(f["f"]):
+        for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
             if not sample:
                 continue
             try:
                 quality = to_int(row["quality"])
                 count = to_int(row["count"])
-            except (KeyError, ValueError):
+            except (KeyError, ValueError) as e:
+                log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
                 continue
             rows_by_sample[sample][quality] = count
 

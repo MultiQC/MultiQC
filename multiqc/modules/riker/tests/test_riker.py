@@ -201,6 +201,41 @@ def test_wgs_coverage(run_riker_module):
     _assert_one_sample_for_tool(module, "wgs", "HG03953")
 
 
+def test_basic_base_distribution_data_file_has_all_bases(run_riker_module):
+    """The persisted data file must include the per-cycle fraction for every base, not just A."""
+    from multiqc import config
+
+    original = config.preserve_module_raw_data
+    config.preserve_module_raw_data = True
+    try:
+        module = run_riker_module("HG00240.base-distribution-by-cycle.txt", BASE_DIST_TSV)
+    finally:
+        config.preserve_module_raw_data = original
+
+    saved = module.saved_raw_data
+    assert saved is not None
+    data = saved.get("multiqc_riker_basic_base_distribution")
+    assert data, "expected a non-empty base-distribution data file"
+    sample_row = next(iter(data.values()))
+    for base in ("a", "c", "g", "t", "n"):
+        assert f"cycle_1_frac_{base}" in sample_row, f"frac_{base} missing from data file"
+
+
+def test_read_tsv_warns_on_malformed_row(caplog, tmp_path):
+    """A row whose column count does not match the header should produce a log.warning,
+    not silently disappear."""
+    import io
+    import logging
+
+    from multiqc.modules.riker.util import read_tsv
+
+    handle = io.StringIO("sample\tcycle\tmean_quality\nHG00240\t1\t26.50\nHG00240\t2\n")
+    with caplog.at_level(logging.WARNING, logger="multiqc.modules.riker.util"):
+        rows = list(read_tsv(handle, source="HG00240.mean-quality.txt"))
+    assert len(rows) == 1
+    assert any("HG00240.mean-quality.txt" in rec.message and "line 3" in rec.message for rec in caplog.records)
+
+
 def test_no_riker_files_raises(tmp_path):
     # An unrelated file should not match any riker search pattern.
     unrelated = tmp_path / "irrelevant.txt"

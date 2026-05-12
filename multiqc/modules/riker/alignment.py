@@ -7,7 +7,7 @@ from multiqc.plots import bargraph, table
 from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table import TableConfig
 
-from .util import read_tsv, to_float, to_int
+from .util import read_tsv, to_int
 
 log = logging.getLogger(__name__)
 
@@ -32,22 +32,20 @@ def parse_reports(module):
     data_by_sample: Dict[str, Dict[str, Dict[str, float]]] = {}
 
     for f in module.find_log_files("riker/alignment", filehandles=True):
-        for row in read_tsv(f["f"]):
+        for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.pop("sample", None)
             category = row.pop("category", None)
             if not sample or not category:
                 continue
             s_name = module.clean_s_name(sample, f)
 
-            parsed: Dict[str, float] = {}
-            for col, val in row.items():
-                if col in _INT_COLS:
-                    try:
-                        parsed[col] = to_int(val)
-                    except (TypeError, ValueError):
-                        parsed[col] = to_float(val)
-                else:
-                    parsed[col] = to_float(val)
+            try:
+                parsed: Dict[str, float] = {
+                    col: (to_int(val) if col in _INT_COLS else float(val)) for col, val in row.items()
+                }
+            except (TypeError, ValueError) as e:
+                log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
+                continue
 
             data_by_sample.setdefault(s_name, {})[category] = parsed
             module.add_data_source(f, s_name, section="alignment")

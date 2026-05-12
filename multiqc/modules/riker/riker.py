@@ -4,17 +4,7 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from . import alignment, basic, gcbias, hybcap, isize, wgs
 
-TOOLS = [
-    m.__name__.split(".")[-1]
-    for m in (
-        alignment,
-        basic,
-        gcbias,
-        hybcap,
-        isize,
-        wgs,
-    )
-]
+_TOOL_MODULES = (alignment, basic, gcbias, hybcap, isize, wgs)
 
 log = logging.getLogger(__name__)
 
@@ -63,11 +53,11 @@ class MultiqcModule(BaseMultiqcModule):
             # No DOI to cite // doi=
         )
 
-        self.samples_parsed_by_tool = dict()
+        self.samples_parsed_by_tool: dict = {}
 
-        for tool_name in TOOLS:
+        for mod in _TOOL_MODULES:
+            tool_name = mod.__name__.rsplit(".", 1)[-1]
             log.debug(f"Running riker tool {tool_name}")
-            mod = globals()[tool_name]
             samples = mod.parse_reports(self)
             self.samples_parsed_by_tool[tool_name] = samples
             if len(samples) > 0:

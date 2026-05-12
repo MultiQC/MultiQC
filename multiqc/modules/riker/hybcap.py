@@ -7,7 +7,7 @@ from multiqc import config
 from multiqc.plots import linegraph, table
 from multiqc.plots.table import TableConfig
 
-from .util import read_tsv, to_float
+from .util import read_tsv
 
 log = logging.getLogger(__name__)
 
@@ -20,17 +20,20 @@ def parse_reports(module):
     panel_by_sample: Dict[str, str] = {}
 
     for f in module.find_log_files("riker/hybcap_metrics", filehandles=True):
-        for row in read_tsv(f["f"]):
+        for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.pop("sample", None)
             if not sample:
                 continue
             s_name = module.clean_s_name(sample, f)
-            module.add_data_source(f, s_name, section="hybcap_metrics")
-
             panel = row.pop("panel_name", "")
+            try:
+                parsed = {col: float(val) for col, val in row.items()}
+            except (TypeError, ValueError) as e:
+                log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
+                continue
+            module.add_data_source(f, s_name, section="hybcap_metrics")
             panel_by_sample[s_name] = panel
-
-            data_by_sample[s_name] = {col: to_float(val) for col, val in row.items()}
+            data_by_sample[s_name] = parsed
 
     data_by_sample = module.ignore_samples(data_by_sample)
     if not data_by_sample:
@@ -42,6 +45,12 @@ def parse_reports(module):
     user_covs = riker_config.get("general_stats_target_coverage", [])
     if isinstance(user_covs, list) and user_covs:
         gs_covs: List[int] = [int(c) for c in user_covs if int(c) in TARGET_COVERAGE_LEVELS]
+        skipped = [c for c in user_covs if int(c) not in TARGET_COVERAGE_LEVELS]
+        if skipped:
+            log.warning(
+                f"riker.hybcap: ignoring unsupported riker_config.general_stats_target_coverage values {skipped}; "
+                f"supported levels are {TARGET_COVERAGE_LEVELS}"
+            )
     else:
         gs_covs = [30]
 
@@ -52,7 +61,7 @@ def parse_reports(module):
     #     practical range is differentiable.
     #   - frac_uncovered_targets: lower is better. Anything beyond ~10% is
     #     concerning, so cap the gradient at 10%.
-    #   - hs_penalty_*: 1.0 is perfect efficiency. Cap gradient at 12 — typical
+    #   - hs_penalty_*: 1.0 is perfect efficiency. Cap gradient at 12; typical
     #     well-behaved panels are 1-3, but values up to ~12 are reasonable in
     #     practice for deeper-coverage thresholds, so don't saturate too early.
     #   - at_dropout / gc_dropout: capped at 10 (Picard convention treats <2 as
@@ -127,7 +136,7 @@ def parse_reports(module):
         }
     module.general_stats_addcols(data_by_sample, headers, namespace="hybcap")
 
-    # Full metrics table — most columns hidden by default; the user can toggle them.
+    # Full metrics table; most columns hidden by default and the user can toggle them.
     table_data: Dict[str, Dict[str, float]] = {}
     for s_name, row in data_by_sample.items():
         merged = dict(row)
@@ -307,7 +316,7 @@ def parse_reports(module):
     module.add_section(
         name="Hybrid capture metrics",
         anchor=f"{module.anchor}-hybcap-table",
-        description="Selected hybrid capture metrics. Many additional columns are available — use the column toggle to show/hide.",
+        description="Selected hybrid capture metrics. Many additional columns are available; use the column toggle to show/hide.",
         plot=table.plot(table_data, table_headers, table_config),
     )
 

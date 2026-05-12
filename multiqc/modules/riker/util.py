@@ -1,37 +1,39 @@
 """Shared helpers for the riker submodules."""
 
+import logging
 from typing import Dict, Iterator, List, TextIO
 
+log = logging.getLogger(__name__)
 
-def read_tsv(handle: TextIO) -> Iterator[Dict[str, str]]:
+
+def read_tsv(handle: TextIO, source: str = "<unknown>") -> Iterator[Dict[str, str]]:
     """
     Yield rows of a riker TSV output as ``{column: value}`` dicts.
 
     Riker outputs are plain TSVs with a header on the first line, no comment
-    or metadata lines, and ``sample`` as the first column. Empty / blank rows
-    and rows whose column count does not match the header are skipped.
+    or metadata lines, and ``sample`` as the first column. Empty/blank rows
+    are skipped. A row whose column count does not match the header is a
+    sign that the file format has drifted or the file is corrupt; we log a
+    warning naming ``source`` and the line number and skip the row, rather
+    than silently dropping it.
     """
     header_line = handle.readline()
     if not header_line:
         return
     header: List[str] = header_line.rstrip("\n").split("\t")
 
-    for line in handle:
+    for line_num, line in enumerate(handle, start=2):
         line = line.rstrip("\n")
         if not line:
             continue
         fields = line.split("\t")
         if len(fields) != len(header):
+            log.warning(
+                f"riker: skipping malformed row in {source} line {line_num}: "
+                f"got {len(fields)} fields, expected {len(header)}"
+            )
             continue
         yield dict(zip(header, fields))
-
-
-def to_float(value: str) -> float:
-    """Parse a numeric string from riker output to float, returning ``nan`` on failure."""
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return float("nan")
 
 
 def to_int(value: str) -> int:

@@ -6,7 +6,7 @@ from typing import Dict
 
 from multiqc.plots import linegraph
 
-from .util import read_tsv, to_float, to_int
+from .util import read_tsv, to_int
 
 log = logging.getLogger(__name__)
 
@@ -26,13 +26,17 @@ def _parse_summary(module) -> set:
     data_by_sample: Dict[str, Dict[str, float]] = {}
 
     for f in module.find_log_files("riker/gcbias_summary", filehandles=True):
-        for row in read_tsv(f["f"]):
+        for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.pop("sample", None)
             if not sample:
                 continue
             s_name = module.clean_s_name(sample, f)
+            try:
+                data_by_sample[s_name] = {col: float(val) for col, val in row.items()}
+            except (TypeError, ValueError) as e:
+                log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
+                continue
             module.add_data_source(f, s_name, section="gcbias_summary")
-            data_by_sample[s_name] = {col: to_float(val) for col, val in row.items()}
 
     data_by_sample = module.ignore_samples(data_by_sample)
     if not data_by_sample:
@@ -72,15 +76,17 @@ def _parse_detail(module) -> set:
 
     for f in module.find_log_files("riker/gcbias_detail", filehandles=True):
         rows_by_sample: Dict[str, Dict[int, float]] = defaultdict(dict)
-        for row in read_tsv(f["f"]):
+        for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
             if not sample:
                 continue
             try:
                 gc = to_int(row["gc"])
-            except (KeyError, ValueError):
+                norm_cov = float(row["normalized_coverage"])
+            except (KeyError, ValueError) as e:
+                log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
                 continue
-            rows_by_sample[sample][gc] = min(to_float(row.get("normalized_coverage", "")), _GCBIAS_Y_MAX)
+            rows_by_sample[sample][gc] = min(norm_cov, _GCBIAS_Y_MAX)
 
         for sample, by_gc in rows_by_sample.items():
             s_name = module.clean_s_name(sample, f)
