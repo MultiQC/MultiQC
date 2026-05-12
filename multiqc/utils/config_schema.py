@@ -169,10 +169,6 @@ class MultiQCConfig(BaseModel):
             "Enable the dark mode toggle in the report template.",
             advanced=True,
         )
-        custom_favicon: Optional[str] = cfg(
-            "Path to a custom favicon image to embed in the report.",
-            examples=["/path/to/favicon.ico", "./assets/favicon.png"],
-        )
         custom_logo: Optional[str] = cfg(
             "Path to an image to show at the top of the report, replacing the MultiQC logo.",
             examples=["/path/to/logo.png", "./assets/logo.svg"],
@@ -193,6 +189,10 @@ class MultiQCConfig(BaseModel):
             "Logo width in pixels. Height scales proportionally.",
             examples=[200],
             gt=0,
+        )
+        custom_favicon: Optional[str] = cfg(
+            "Path to a custom favicon image to show in the browser tab.",
+            examples=["/path/to/favicon.ico", "./assets/favicon.png"],
         )
         custom_css_files: Optional[List[str]] = cfg(
             "Paths to additional CSS files to inline into the report. Useful for branding overrides.",

@@ -1606,6 +1606,17 @@
             items_enum: null,
             examples: [200],
           },
+          custom_favicon: {
+            uncommon: false,
+            deprecated: false,
+            multiline: false,
+            type: "string",
+            description: "Path to a custom favicon image to show in the browser tab.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["/path/to/favicon.ico", "./assets/favicon.png"],
+          },
           custom_css_files: {
             uncommon: false,
             deprecated: false,
@@ -4591,6 +4602,21 @@
             examples: [200],
             section: "Report Appearance",
             title: "Custom Logo Width",
+          },
+          custom_favicon: {
+            anyOf: [
+              {
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Path to a custom favicon image to show in the browser tab.",
+            examples: ["/path/to/favicon.ico", "./assets/favicon.png"],
+            section: "Report Appearance",
+            title: "Custom Favicon",
           },
           custom_css_files: {
             anyOf: [

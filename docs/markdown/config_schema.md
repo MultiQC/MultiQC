@@ -162,6 +162,22 @@ Logo width in pixels. Height scales proportionally.
 custom_logo_width: 200
 ```
 
+### custom_favicon
+
+**Type**: `str`
+
+Path to a custom favicon image to show in the browser tab.
+
+**Examples**:
+
+```yaml
+custom_favicon: /path/to/favicon.ico
+```
+
+```yaml
+custom_favicon: ./assets/favicon.png
+```
+
 ### custom_css_files
 
 **Type**: `List[str]`
