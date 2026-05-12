@@ -304,7 +304,6 @@ class MultiqcModule(BaseMultiqcModule):
         except (KeyError, ZeroDivisionError) as e:
             log.debug(f"Could not calculate 'pct_surviving_reads' ({e.__class__.__name__}): {s_name}")
 
-
         try:
             self.fastp_data[s_name]["before_filtering_total_bases"] = int(
                 parsed_json["summary"]["before_filtering"]["total_bases"]
@@ -326,8 +325,6 @@ class MultiqcModule(BaseMultiqcModule):
             ) * 100.0
         except (KeyError, ZeroDivisionError) as e:
             log.debug(f"Could not calculate 'pct_surviving_bases' ({e.__class__.__name__}): {s_name}")
-
-
 
         # Parse adapter_cutting
         try:
