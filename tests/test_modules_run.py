@@ -51,6 +51,21 @@ def test_all_modules(module_id, entry_point, data_dir):
         assert len(report.general_stats_data) > 0 or len(m.sections) > 0
 
 
+def test_bcftools_stats_zero_depth_samples(data_dir):
+    """All-zero average depth values should still render a sequencing-depth plot."""
+    mod_dir = data_dir / "modules" / "bcftools" / "issue_3488"
+
+    report.analysis_files = [mod_dir]
+    report.search_files(["bcftools"])
+
+    from multiqc.modules.bcftools.bcftools import MultiqcModule
+
+    module = MultiqcModule()
+
+    assert "bcftools-stats_sequencing_depth" in {section.id for section in module.sections}
+    assert "bcftools-stats-sequencing-depth" in report.plot_by_id
+
+
 @pytest.mark.parametrize("module_id,entry_point", modules)
 def test_ignore_samples(module_id, entry_point, data_dir):
     """
