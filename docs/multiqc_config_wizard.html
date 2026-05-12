@@ -294,6 +294,9 @@
       .form-group.uncommon {
         display: none;
       }
+      body.search-active .form-group.uncommon {
+        display: block;
+      }
       body.show-uncommon .form-group.uncommon {
         display: block;
       }
@@ -434,7 +437,7 @@
         color: var(--ink);
       }
 
-      /* Welcome / intro card — Seqera Box style */
+      /* Welcome / intro card, Seqera Box style */
       .welcome-section {
         background: var(--paper);
         border: 1px solid var(--border);
@@ -503,7 +506,7 @@
         align-self: center;
       }
 
-      /* Form fields — blueprint style: square, sharing one continuous border */
+      /* Form fields, blueprint style: square, sharing one continuous border */
       .form-group {
         margin: 0;
         border: 1px solid var(--border);
@@ -536,7 +539,8 @@
         z-index: 2;
       }
       .form-group.hidden {
-        display: none;
+        /* `!important` so search filtering wins over the show-uncommon rule's higher specificity. */
+        display: none !important;
       }
       .form-group label.field-label {
         display: flex;
@@ -1299,7 +1303,7 @@
             type: "string",
             description: "Name of the report template.",
             default: "default",
-            enum: ["default", "simple", "sections", "gathered"],
+            enum: ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
             items_enum: null,
             examples: [],
           },
@@ -1365,6 +1369,222 @@
             enum: null,
             items_enum: null,
             examples: [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
+          },
+          module_order: {
+            uncommon: false,
+            type: "array",
+            description:
+              "Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, path_filters).",
+            default: [
+              "custom_content",
+              "ccs",
+              "ngsderive",
+              "purple",
+              "conpair",
+              "isoseq",
+              "lima",
+              "peddy",
+              "percolator",
+              "haplocheck",
+              "somalier",
+              "methylqa",
+              "mosdepth",
+              "phantompeakqualtools",
+              "qualimap",
+              "bamdst",
+              "preseq",
+              "hifiasm",
+              "quast",
+              "qorts",
+              "rna_seqc",
+              "rockhopper",
+              "rsem",
+              "rseqc",
+              "busco",
+              "checkm",
+              "bustools",
+              "goleft_indexcov",
+              "gffcompare",
+              "disambiguate",
+              "supernova",
+              "deeptools",
+              "sargasso",
+              "verifybamid",
+              "mirtrace",
+              "happy",
+              "mirtop",
+              "glimpse",
+              "gopeaks",
+              "homer",
+              "hops",
+              "macs2",
+              "theta2",
+              "snpeff",
+              "gatk",
+              "htseq",
+              "bcftools",
+              "featurecounts",
+              "fgbio",
+              "dragen",
+              "dragen_fastqc",
+              "dedup",
+              "pbmarkdup",
+              "damageprofiler",
+              "mapdamage",
+              "biobambam2",
+              "jcvi",
+              "mtnucratio",
+              "picard",
+              "vep",
+              "bakta",
+              "prokka",
+              "checkm2",
+              "qc3C",
+              "nanoq",
+              "nanostat",
+              "samblaster",
+              "samtools",
+              "bamtools",
+              "sambamba",
+              "ngsbits",
+              "pairtools",
+              "sexdeterrmine",
+              "seqera_cli",
+              "eigenstratdatabasetools",
+              "jellyfish",
+              "vcftools",
+              "longranger",
+              "stacks",
+              "varscan2",
+              "snippy",
+              "umicollapse",
+              "umitools",
+              "truvari",
+              "megahit",
+              "ganon",
+              "gtdbtk",
+              "bbmap",
+              "bismark",
+              "biscuit",
+              "diamond",
+              "hicexplorer",
+              "hicup",
+              "hicpro",
+              "salmon",
+              "kallisto",
+              "slamdunk",
+              "star",
+              "hisat2",
+              "tophat",
+              "bowtie2",
+              "bowtie1",
+              "hostile",
+              "cellranger",
+              "checkatlas",
+              "snpsplit",
+              "odgi",
+              "vg",
+              "pangolin",
+              "nextclade",
+              "freyja",
+              "humid",
+              "kat",
+              "leehom",
+              "librarian",
+              "nonpareil",
+              "adapterremoval",
+              "bbduk",
+              "clipandmerge",
+              "cutadapt",
+              "trim_galore",
+              "flexbar",
+              "sourmash",
+              "kaiju",
+              "kraken",
+              "malt",
+              "motus",
+              "trimmomatic",
+              "sickle",
+              "skewer",
+              "sortmerna",
+              "biobloomtools",
+              "seqfu",
+              "fastq_screen",
+              "fastqe",
+              "afterqc",
+              "fastp",
+              "fastqc",
+              "sequali",
+              "filtlong",
+              "prinseqplusplus",
+              "pychopper",
+              "porechop",
+              "pycoqc",
+              "minionqc",
+              "anglerfish",
+              "multivcfanalyzer",
+              "clusterflow",
+              "checkqc",
+              "bcl2fastq",
+              "bclconvert",
+              "interop",
+              "ivar",
+              "flash",
+              "seqyclean",
+              "optitype",
+              "whatshap",
+              "spaceranger",
+              "xenome",
+              "xengsort",
+              "metaphlan",
+              "sylphtax",
+              "seqwho",
+              "telseq",
+              "ataqv",
+              "mgikit",
+              "mosaicatcher",
+            ],
+            enum: null,
+            items_enum: null,
+            examples: [
+              [
+                "fastqc",
+                {
+                  fastqc: {
+                    name: "FastQC (trimmed)",
+                    path_filters: ["*_trimmed*"],
+                  },
+                },
+                "cutadapt",
+              ],
+            ],
+          },
+          top_modules: {
+            uncommon: false,
+            type: "array",
+            description:
+              "Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["fastqc", "cutadapt"]],
+          },
+          section_status_checks: {
+            uncommon: true,
+            type: "object",
+            description:
+              "Enable or disable the green/yellow/red status indicators on report sections. Top-level keys are module IDs, values are either a bool or a dict mapping section ID to bool.",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                fastqc: true,
+                samtools: {
+                  alignment_stats: false,
+                },
+              },
+            ],
           },
         },
         "Output Options": {
@@ -1987,6 +2207,39 @@
             items_enum: null,
             examples: [["*/test_data/*", "*/.snakemake/*"]],
           },
+          fn_ignore_files: {
+            uncommon: false,
+            type: "array",
+            description: "Glob patterns for file names to skip during the file search.",
+            default: [
+              ".DS_Store",
+              ".py[cod]",
+              "*.bam",
+              "*.bai",
+              "*.sam",
+              "*.fq.gz",
+              "*.fastq.gz",
+              "*.fq",
+              "*.fastq",
+              "*.fa",
+              "*.gtf",
+              "*.bed",
+              "*.vcf",
+              "*.tbi",
+              "*.txt.gz",
+              "*.pdf",
+              "*.md5",
+              "*.parquet",
+              "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html",
+              "multiqc_data.json",
+              "*.gam",
+              "*.gamp",
+              "*.jar",
+            ],
+            enum: null,
+            items_enum: null,
+            examples: [["*.bai", "*.bak", "*.tmp"]],
+          },
           filesearch_file_shared: {
             uncommon: false,
             type: "array",
@@ -2524,6 +2777,33 @@
               },
             ],
           },
+          table_sample_merge: {
+            uncommon: true,
+            type: "object",
+            description:
+              "Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name, values are clean-pattern entries (string or {type, pattern}).",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                R1: [
+                  "_R1",
+                  {
+                    pattern: "[_.-][rR]?1$",
+                    type: "regex",
+                  },
+                ],
+                R2: [
+                  "_R2",
+                  {
+                    pattern: "[_.-][rR]?2$",
+                    type: "regex",
+                  },
+                ],
+              },
+            ],
+          },
         },
         "Software Versions": {
           software_versions: {
@@ -2977,8 +3257,36 @@
             items_enum: null,
             examples: [],
           },
+          preserve_module_raw_data: {
+            uncommon: true,
+            type: "boolean",
+            description:
+              "Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          num_datasets_plot_limit: {
+            uncommon: true,
+            type: "integer",
+            description: "Deprecated. Use plots_defer_loading_numseries instead.",
+            default: 100,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
         },
       };
+
+      // Flat propName -> propData lookup, built once. Avoids walking every section
+      // for every updateConfig / resetField / resetConfig call (146 props * 11 sections).
+      const propDataIndex = {};
+      for (const sectionProps of Object.values(configData)) {
+        for (const [name, data] of Object.entries(sectionProps)) {
+          propDataIndex[name] = data;
+        }
+      }
 
       let currentConfig = {};
 
@@ -2995,8 +3303,8 @@
         window.addEventListener("beforeunload", (e) => {
           if (Object.keys(currentConfig).length > 0) {
             e.preventDefault();
-            // Required for some browsers; the actual message is ignored — the
-            // browser shows its own "Leave site?" prompt.
+            // Required for some browsers; the actual message is ignored.
+            // The browser shows its own "Leave site?" prompt.
             e.returnValue = "";
           }
         });
@@ -3026,12 +3334,6 @@
         });
       }
 
-      function isShown(fg) {
-        if (fg.classList.contains("hidden")) return false;
-        if (fg.dataset.uncommon === "1" && !document.body.classList.contains("show-uncommon")) return false;
-        return true;
-      }
-
       function toggleUncommon() {
         const on = document.body.classList.toggle("show-uncommon");
         const btn = document.getElementById("toggleUncommonBtn");
@@ -3047,6 +3349,7 @@
           const h2 = document.createElement("h2");
           h2.className = "section-heading";
           h2.id = "section-" + slugify(sectionName);
+          h2.dataset.section = sectionName;
           h2.textContent = sectionName;
           sectionsContainer.appendChild(h2);
 
@@ -3066,27 +3369,19 @@
         return false;
       }
 
-      function isComplexArray(arr) {
-        return Array.isArray(arr) && arr.some((x) => x !== null && typeof x === "object");
+      // Shared YAML serialization for default-prefills, object inputs, and inline examples.
+      function dumpYaml(value) {
+        return jsyaml.dump(value, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
       }
 
       function serializeArrayDefault(arr) {
-        if (isComplexArray(arr)) {
-          return jsyaml.dump(arr, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
-        }
-        return arr.join("\n");
+        return dumpYaml(arr);
       }
 
-      function parseArrayInput(text, def) {
-        if (isComplexArray(def)) {
-          const parsed = jsyaml.load(text);
-          if (!Array.isArray(parsed)) throw new Error("expected YAML list");
-          return parsed;
-        }
-        return text
-          .split(/[,\n]/)
-          .map((s) => s.trim())
-          .filter((s) => s);
+      function parseArrayInput(text) {
+        const parsed = jsyaml.load(text);
+        if (!Array.isArray(parsed)) throw new Error("expected YAML list");
+        return parsed;
       }
 
       function createFormGroup(propName, propData) {
@@ -3150,7 +3445,7 @@
             code.className = "language-yaml";
             let text;
             if (ex !== null && typeof ex === "object") {
-              text = jsyaml.dump(ex, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+              text = dumpYaml(ex);
             } else if (typeof ex === "string") {
               text = ex;
             } else {
@@ -3297,9 +3592,7 @@
         } else if (propData.type === "array") {
           input = document.createElement("textarea");
           input.rows = 3;
-          input.placeholder = isComplexArray(propData.default)
-            ? "Enter as a YAML list"
-            : "Enter values separated by commas or one per line";
+          input.placeholder = "Enter as a YAML list";
           if (isPrefillableDefault(propData)) {
             input.value = serializeArrayDefault(propData.default);
             input.rows = Math.min(10, Math.max(3, input.value.split("\n").length));
@@ -3309,7 +3602,7 @@
           input.rows = 3;
           input.placeholder = "Enter as YAML or JSON";
           if (isPrefillableDefault(propData)) {
-            input.value = jsyaml.dump(propData.default, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+            input.value = dumpYaml(propData.default);
             input.rows = Math.min(10, Math.max(3, input.value.split("\n").length));
           }
         } else if (propData.type === "integer") {
@@ -3379,43 +3672,46 @@
           }
         } else if (propData.type === "array") {
           const value = input.value.trim();
-          if (!value) {
-            delete currentConfig[propName];
-            input.removeAttribute("aria-invalid");
-          } else {
-            let parsed;
+          let parsed;
+          if (value) {
             try {
-              parsed = parseArrayInput(value, def);
+              parsed = parseArrayInput(value);
             } catch (e) {
               input.setAttribute("aria-invalid", "true");
               return;
             }
-            input.removeAttribute("aria-invalid");
-            if (valuesEqual(parsed, def)) {
-              delete currentConfig[propName];
-            } else {
-              currentConfig[propName] = parsed;
-            }
+          } else {
+            // An empty textarea means an empty list. Only treat it as "unset" if
+            // the field had no default (so we don't add a redundant `prop: []`).
+            parsed = [];
+          }
+          input.removeAttribute("aria-invalid");
+          const unset = !value && (def === null || def === undefined);
+          if (unset || valuesEqual(parsed, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = parsed;
           }
         } else if (propData.type === "object") {
           const value = input.value.trim();
-          if (!value) {
-            delete currentConfig[propName];
-          } else {
-            let parsed;
+          let parsed;
+          if (value) {
             try {
               parsed = jsyaml.load(value);
             } catch (e) {
-              // Invalid YAML/JSON — keep last good state, mark visually
+              // Invalid YAML/JSON, keep last good state and mark visually.
               input.setAttribute("aria-invalid", "true");
               return;
             }
-            input.removeAttribute("aria-invalid");
-            if (valuesEqual(parsed, def)) {
-              delete currentConfig[propName];
-            } else {
-              currentConfig[propName] = parsed;
-            }
+          } else {
+            parsed = {};
+          }
+          input.removeAttribute("aria-invalid");
+          const unset = !value && (def === null || def === undefined);
+          if (unset || valuesEqual(parsed, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = parsed;
           }
         } else if (propData.type === "integer") {
           const value = parseInt(input.value);
@@ -3458,12 +3754,14 @@
         if (fg) fg.classList.toggle("is-set", propName in currentConfig);
       }
 
-      function resetField(propName) {
-        const propData = getCurrentPropData(propName);
-        const input = document.getElementById(propName);
+      // Reset one form-group's visual state to its schema default and clear the
+      // field from currentConfig. Shared between resetField (single field) and
+      // resetConfig (all fields).
+      function resetGroup(fg, propData) {
+        const propName = fg.dataset.propname;
+        const input = fg.querySelector("input, select, textarea");
         if (!input) return;
-        const fg = input.closest(".form-group");
-        if (propData.type === "array" && Array.isArray(propData.items_enum) && fg) {
+        if (propData.type === "array" && Array.isArray(propData.items_enum)) {
           const def = Array.isArray(propData.default) ? propData.default : [];
           fg.querySelectorAll(".checkbox-item").forEach((lab) => {
             const cb = lab.querySelector("input[type=checkbox]");
@@ -3474,13 +3772,13 @@
         } else if (propData.type === "array" && isPrefillableDefault(propData)) {
           input.value = serializeArrayDefault(propData.default);
         } else if (propData.type === "object" && isPrefillableDefault(propData)) {
-          input.value = jsyaml.dump(propData.default, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+          input.value = dumpYaml(propData.default);
         } else if (input.tagName === "SELECT") {
           input.selectedIndex = 0;
         } else {
           input.value = "";
         }
-        const toggleEl = fg && fg.querySelector(".bool-toggle");
+        const toggleEl = fg.querySelector(".bool-toggle");
         if (toggleEl) {
           const activeValue =
             propData.type === "boolean" ? (propData.default === true ? "true" : "false") : propData.default;
@@ -3492,61 +3790,82 @@
         }
         input.removeAttribute("aria-invalid");
         delete currentConfig[propName];
-        if (fg) fg.classList.remove("is-set");
+        fg.classList.remove("is-set");
+      }
+
+      function resetField(propName) {
+        const input = document.getElementById(propName);
+        if (!input) return;
+        const fg = input.closest(".form-group");
+        if (!fg) return;
+        resetGroup(fg, getCurrentPropData(propName));
         if (document.body.classList.contains("preview-mode")) generateYaml();
       }
 
       function getCurrentPropData(propName) {
-        for (const sectionProps of Object.values(configData)) {
-          if (sectionProps[propName]) return sectionProps[propName];
-        }
-        return {};
+        return propDataIndex[propName] || {};
+      }
+
+      // Caches populated lazily on first handleSearch. DOM nodes don't exist until
+      // createSectionContent runs.
+      let _searchCache = null;
+      function _buildSearchCache() {
+        const formGroups = [];
+        document.querySelectorAll(".form-group").forEach((fg) => {
+          formGroups.push({
+            el: fg,
+            section: fg.dataset.section,
+            name: (fg.dataset.propname || "").toLowerCase(),
+            description: (fg.querySelector(".description") || {}).textContent.toLowerCase() || "",
+          });
+        });
+        const headingBySection = {};
+        document.querySelectorAll(".section-heading").forEach((h) => {
+          headingBySection[h.dataset.section || h.id] = h;
+        });
+        return {
+          formGroups,
+          headingBySection,
+          navLinks: [...document.querySelectorAll("#sectionNav a")],
+          searchWrapper: document.querySelector(".sidebar-search"),
+        };
       }
 
       function handleSearch() {
+        if (!_searchCache) _searchCache = _buildSearchCache();
+        const { formGroups, headingBySection, navLinks, searchWrapper } = _searchCache;
         const rawValue = document.getElementById("searchInput").value;
         const query = rawValue.toLowerCase().trim();
-        document.querySelector(".sidebar-search").classList.toggle("has-text", rawValue !== "");
+        searchWrapper.classList.toggle("has-text", rawValue !== "");
+        // An active search ignores the uncommon toggle so users always see matches.
+        document.body.classList.toggle("search-active", query !== "");
         const showUncommon = document.body.classList.contains("show-uncommon");
-        const formGroups = document.querySelectorAll(".form-group");
-        const headings = document.querySelectorAll(".section-heading");
         const sectionCounts = {};
         let anyVisible = false;
 
-        formGroups.forEach((fg) => {
-          const name = (fg.dataset.propname || "").toLowerCase();
-          const desc = (fg.querySelector(".description") || {}).textContent || "";
-          const sectionName = fg.dataset.section;
-          const matchesQuery = !query || name.includes(query) || desc.toLowerCase().includes(query);
-          fg.classList.toggle("hidden", !matchesQuery);
-          const counted = matchesQuery && (showUncommon || fg.dataset.uncommon !== "1");
-          if (counted) {
+        for (const fg of formGroups) {
+          const matchesQuery = !query || fg.name.includes(query) || fg.description.includes(query);
+          fg.el.classList.toggle("hidden", !matchesQuery);
+          const isUncommon = fg.el.dataset.uncommon === "1";
+          const shown = matchesQuery && (query !== "" || showUncommon || !isUncommon);
+          if (shown) {
             anyVisible = true;
-            sectionCounts[sectionName] = (sectionCounts[sectionName] || 0) + 1;
-          } else if (!(sectionName in sectionCounts)) {
-            sectionCounts[sectionName] = 0;
+            sectionCounts[fg.section] = (sectionCounts[fg.section] || 0) + 1;
+          } else if (!(fg.section in sectionCounts)) {
+            sectionCounts[fg.section] = 0;
           }
-        });
+        }
 
-        headings.forEach((h) => {
-          let sibling = h.nextElementSibling;
-          let hasVisible = false;
-          while (sibling && !sibling.classList.contains("section-heading")) {
-            if (sibling.classList.contains("form-group") && isShown(sibling)) {
-              hasVisible = true;
-            }
-            sibling = sibling.nextElementSibling;
-          }
-          h.style.display = hasVisible ? "" : "none";
-        });
+        for (const [section, heading] of Object.entries(headingBySection)) {
+          heading.style.display = sectionCounts[section] > 0 ? "" : "none";
+        }
 
-        document.querySelectorAll("#sectionNav a").forEach((a) => {
-          const sectionName = a.dataset.section;
-          const matching = sectionCounts[sectionName] || 0;
+        for (const a of navLinks) {
+          const matching = sectionCounts[a.dataset.section] || 0;
           const badge = a.querySelector(".badge");
           if (badge) badge.textContent = matching;
           a.parentElement.classList.toggle("dimmed", matching === 0);
-        });
+        }
 
         document.getElementById("noResults").style.display = query && !anyVisible ? "block" : "none";
         document.getElementById("welcomeSection").style.display = query ? "none" : "";
@@ -3641,39 +3960,7 @@
         if (!confirm("Reset all configuration? This cannot be undone.")) return;
         currentConfig = {};
         document.querySelectorAll(".form-group").forEach((fg) => {
-          const propName = fg.dataset.propname;
-          const propData = getCurrentPropData(propName);
-          const input = fg.querySelector("input, select, textarea");
-          if (!input) return;
-          if (propData.type === "array" && Array.isArray(propData.items_enum)) {
-            const def = Array.isArray(propData.default) ? propData.default : [];
-            fg.querySelectorAll(".checkbox-item").forEach((lab) => {
-              const cb = lab.querySelector("input[type=checkbox]");
-              const checked = def.includes(cb.value);
-              cb.checked = checked;
-              lab.classList.toggle("checked", checked);
-            });
-          } else if (propData.type === "array" && isPrefillableDefault(propData)) {
-            input.value = serializeArrayDefault(propData.default);
-          } else if (propData.type === "object" && isPrefillableDefault(propData)) {
-            input.value = jsyaml.dump(propData.default, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
-          } else if (input.tagName === "SELECT") {
-            input.selectedIndex = 0;
-          } else {
-            input.value = "";
-          }
-          const toggleEl = fg.querySelector(".bool-toggle");
-          if (toggleEl) {
-            const activeValue =
-              propData.type === "boolean" ? (propData.default === true ? "true" : "false") : propData.default;
-            toggleEl
-              .querySelectorAll(".bool-toggle-btn")
-              .forEach((b) => b.classList.toggle("active", b.dataset.value === activeValue));
-            const hiddenInput = toggleEl.querySelector("input[type=hidden]");
-            if (hiddenInput) hiddenInput.value = "";
-          }
-          input.removeAttribute("aria-invalid");
-          fg.classList.remove("is-set");
+          resetGroup(fg, getCurrentPropData(fg.dataset.propname));
         });
         if (document.body.classList.contains("preview-mode")) {
           generateYaml();

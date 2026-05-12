@@ -294,6 +294,9 @@
       .form-group.uncommon {
         display: none;
       }
+      body.search-active .form-group.uncommon {
+        display: block;
+      }
       body.show-uncommon .form-group.uncommon {
         display: block;
       }
@@ -434,7 +437,7 @@
         color: var(--ink);
       }
 
-      /* Welcome / intro card — Seqera Box style */
+      /* Welcome / intro card, Seqera Box style */
       .welcome-section {
         background: var(--paper);
         border: 1px solid var(--border);
@@ -503,7 +506,7 @@
         align-self: center;
       }
 
-      /* Form fields — blueprint style: square, sharing one continuous border */
+      /* Form fields, blueprint style: square, sharing one continuous border */
       .form-group {
         margin: 0;
         border: 1px solid var(--border);
@@ -536,7 +539,8 @@
         z-index: 2;
       }
       .form-group.hidden {
-        display: none;
+        /* `!important` so search filtering wins over the show-uncommon rule's higher specificity. */
+        display: none !important;
       }
       .form-group label.field-label {
         display: flex;
@@ -1108,6 +1112,15 @@
     <script>
       const configData = __CONFIG_DATA_JSON__;
 
+      // Flat propName -> propData lookup, built once. Avoids walking every section
+      // for every updateConfig / resetField / resetConfig call (146 props * 11 sections).
+      const propDataIndex = {};
+      for (const sectionProps of Object.values(configData)) {
+        for (const [name, data] of Object.entries(sectionProps)) {
+          propDataIndex[name] = data;
+        }
+      }
+
       let currentConfig = {};
 
       function initWizard() {
@@ -1123,8 +1136,8 @@
         window.addEventListener("beforeunload", (e) => {
           if (Object.keys(currentConfig).length > 0) {
             e.preventDefault();
-            // Required for some browsers; the actual message is ignored — the
-            // browser shows its own "Leave site?" prompt.
+            // Required for some browsers; the actual message is ignored.
+            // The browser shows its own "Leave site?" prompt.
             e.returnValue = "";
           }
         });
@@ -1154,12 +1167,6 @@
         });
       }
 
-      function isShown(fg) {
-        if (fg.classList.contains("hidden")) return false;
-        if (fg.dataset.uncommon === "1" && !document.body.classList.contains("show-uncommon")) return false;
-        return true;
-      }
-
       function toggleUncommon() {
         const on = document.body.classList.toggle("show-uncommon");
         const btn = document.getElementById("toggleUncommonBtn");
@@ -1175,6 +1182,7 @@
           const h2 = document.createElement("h2");
           h2.className = "section-heading";
           h2.id = "section-" + slugify(sectionName);
+          h2.dataset.section = sectionName;
           h2.textContent = sectionName;
           sectionsContainer.appendChild(h2);
 
@@ -1194,27 +1202,19 @@
         return false;
       }
 
-      function isComplexArray(arr) {
-        return Array.isArray(arr) && arr.some((x) => x !== null && typeof x === "object");
+      // Shared YAML serialization for default-prefills, object inputs, and inline examples.
+      function dumpYaml(value) {
+        return jsyaml.dump(value, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
       }
 
       function serializeArrayDefault(arr) {
-        if (isComplexArray(arr)) {
-          return jsyaml.dump(arr, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
-        }
-        return arr.join("\n");
+        return dumpYaml(arr);
       }
 
-      function parseArrayInput(text, def) {
-        if (isComplexArray(def)) {
-          const parsed = jsyaml.load(text);
-          if (!Array.isArray(parsed)) throw new Error("expected YAML list");
-          return parsed;
-        }
-        return text
-          .split(/[,\n]/)
-          .map((s) => s.trim())
-          .filter((s) => s);
+      function parseArrayInput(text) {
+        const parsed = jsyaml.load(text);
+        if (!Array.isArray(parsed)) throw new Error("expected YAML list");
+        return parsed;
       }
 
       function createFormGroup(propName, propData) {
@@ -1278,7 +1278,7 @@
             code.className = "language-yaml";
             let text;
             if (ex !== null && typeof ex === "object") {
-              text = jsyaml.dump(ex, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+              text = dumpYaml(ex);
             } else if (typeof ex === "string") {
               text = ex;
             } else {
@@ -1425,9 +1425,7 @@
         } else if (propData.type === "array") {
           input = document.createElement("textarea");
           input.rows = 3;
-          input.placeholder = isComplexArray(propData.default)
-            ? "Enter as a YAML list"
-            : "Enter values separated by commas or one per line";
+          input.placeholder = "Enter as a YAML list";
           if (isPrefillableDefault(propData)) {
             input.value = serializeArrayDefault(propData.default);
             input.rows = Math.min(10, Math.max(3, input.value.split("\n").length));
@@ -1437,7 +1435,7 @@
           input.rows = 3;
           input.placeholder = "Enter as YAML or JSON";
           if (isPrefillableDefault(propData)) {
-            input.value = jsyaml.dump(propData.default, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+            input.value = dumpYaml(propData.default);
             input.rows = Math.min(10, Math.max(3, input.value.split("\n").length));
           }
         } else if (propData.type === "integer") {
@@ -1507,43 +1505,46 @@
           }
         } else if (propData.type === "array") {
           const value = input.value.trim();
-          if (!value) {
-            delete currentConfig[propName];
-            input.removeAttribute("aria-invalid");
-          } else {
-            let parsed;
+          let parsed;
+          if (value) {
             try {
-              parsed = parseArrayInput(value, def);
+              parsed = parseArrayInput(value);
             } catch (e) {
               input.setAttribute("aria-invalid", "true");
               return;
             }
-            input.removeAttribute("aria-invalid");
-            if (valuesEqual(parsed, def)) {
-              delete currentConfig[propName];
-            } else {
-              currentConfig[propName] = parsed;
-            }
+          } else {
+            // An empty textarea means an empty list. Only treat it as "unset" if
+            // the field had no default (so we don't add a redundant `prop: []`).
+            parsed = [];
+          }
+          input.removeAttribute("aria-invalid");
+          const unset = !value && (def === null || def === undefined);
+          if (unset || valuesEqual(parsed, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = parsed;
           }
         } else if (propData.type === "object") {
           const value = input.value.trim();
-          if (!value) {
-            delete currentConfig[propName];
-          } else {
-            let parsed;
+          let parsed;
+          if (value) {
             try {
               parsed = jsyaml.load(value);
             } catch (e) {
-              // Invalid YAML/JSON — keep last good state, mark visually
+              // Invalid YAML/JSON, keep last good state and mark visually.
               input.setAttribute("aria-invalid", "true");
               return;
             }
-            input.removeAttribute("aria-invalid");
-            if (valuesEqual(parsed, def)) {
-              delete currentConfig[propName];
-            } else {
-              currentConfig[propName] = parsed;
-            }
+          } else {
+            parsed = {};
+          }
+          input.removeAttribute("aria-invalid");
+          const unset = !value && (def === null || def === undefined);
+          if (unset || valuesEqual(parsed, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = parsed;
           }
         } else if (propData.type === "integer") {
           const value = parseInt(input.value);
@@ -1586,12 +1587,14 @@
         if (fg) fg.classList.toggle("is-set", propName in currentConfig);
       }
 
-      function resetField(propName) {
-        const propData = getCurrentPropData(propName);
-        const input = document.getElementById(propName);
+      // Reset one form-group's visual state to its schema default and clear the
+      // field from currentConfig. Shared between resetField (single field) and
+      // resetConfig (all fields).
+      function resetGroup(fg, propData) {
+        const propName = fg.dataset.propname;
+        const input = fg.querySelector("input, select, textarea");
         if (!input) return;
-        const fg = input.closest(".form-group");
-        if (propData.type === "array" && Array.isArray(propData.items_enum) && fg) {
+        if (propData.type === "array" && Array.isArray(propData.items_enum)) {
           const def = Array.isArray(propData.default) ? propData.default : [];
           fg.querySelectorAll(".checkbox-item").forEach((lab) => {
             const cb = lab.querySelector("input[type=checkbox]");
@@ -1602,13 +1605,13 @@
         } else if (propData.type === "array" && isPrefillableDefault(propData)) {
           input.value = serializeArrayDefault(propData.default);
         } else if (propData.type === "object" && isPrefillableDefault(propData)) {
-          input.value = jsyaml.dump(propData.default, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+          input.value = dumpYaml(propData.default);
         } else if (input.tagName === "SELECT") {
           input.selectedIndex = 0;
         } else {
           input.value = "";
         }
-        const toggleEl = fg && fg.querySelector(".bool-toggle");
+        const toggleEl = fg.querySelector(".bool-toggle");
         if (toggleEl) {
           const activeValue =
             propData.type === "boolean" ? (propData.default === true ? "true" : "false") : propData.default;
@@ -1620,61 +1623,82 @@
         }
         input.removeAttribute("aria-invalid");
         delete currentConfig[propName];
-        if (fg) fg.classList.remove("is-set");
+        fg.classList.remove("is-set");
+      }
+
+      function resetField(propName) {
+        const input = document.getElementById(propName);
+        if (!input) return;
+        const fg = input.closest(".form-group");
+        if (!fg) return;
+        resetGroup(fg, getCurrentPropData(propName));
         if (document.body.classList.contains("preview-mode")) generateYaml();
       }
 
       function getCurrentPropData(propName) {
-        for (const sectionProps of Object.values(configData)) {
-          if (sectionProps[propName]) return sectionProps[propName];
-        }
-        return {};
+        return propDataIndex[propName] || {};
+      }
+
+      // Caches populated lazily on first handleSearch. DOM nodes don't exist until
+      // createSectionContent runs.
+      let _searchCache = null;
+      function _buildSearchCache() {
+        const formGroups = [];
+        document.querySelectorAll(".form-group").forEach((fg) => {
+          formGroups.push({
+            el: fg,
+            section: fg.dataset.section,
+            name: (fg.dataset.propname || "").toLowerCase(),
+            description: (fg.querySelector(".description") || {}).textContent.toLowerCase() || "",
+          });
+        });
+        const headingBySection = {};
+        document.querySelectorAll(".section-heading").forEach((h) => {
+          headingBySection[h.dataset.section || h.id] = h;
+        });
+        return {
+          formGroups,
+          headingBySection,
+          navLinks: [...document.querySelectorAll("#sectionNav a")],
+          searchWrapper: document.querySelector(".sidebar-search"),
+        };
       }
 
       function handleSearch() {
+        if (!_searchCache) _searchCache = _buildSearchCache();
+        const { formGroups, headingBySection, navLinks, searchWrapper } = _searchCache;
         const rawValue = document.getElementById("searchInput").value;
         const query = rawValue.toLowerCase().trim();
-        document.querySelector(".sidebar-search").classList.toggle("has-text", rawValue !== "");
+        searchWrapper.classList.toggle("has-text", rawValue !== "");
+        // An active search ignores the uncommon toggle so users always see matches.
+        document.body.classList.toggle("search-active", query !== "");
         const showUncommon = document.body.classList.contains("show-uncommon");
-        const formGroups = document.querySelectorAll(".form-group");
-        const headings = document.querySelectorAll(".section-heading");
         const sectionCounts = {};
         let anyVisible = false;
 
-        formGroups.forEach((fg) => {
-          const name = (fg.dataset.propname || "").toLowerCase();
-          const desc = (fg.querySelector(".description") || {}).textContent || "";
-          const sectionName = fg.dataset.section;
-          const matchesQuery = !query || name.includes(query) || desc.toLowerCase().includes(query);
-          fg.classList.toggle("hidden", !matchesQuery);
-          const counted = matchesQuery && (showUncommon || fg.dataset.uncommon !== "1");
-          if (counted) {
+        for (const fg of formGroups) {
+          const matchesQuery = !query || fg.name.includes(query) || fg.description.includes(query);
+          fg.el.classList.toggle("hidden", !matchesQuery);
+          const isUncommon = fg.el.dataset.uncommon === "1";
+          const shown = matchesQuery && (query !== "" || showUncommon || !isUncommon);
+          if (shown) {
             anyVisible = true;
-            sectionCounts[sectionName] = (sectionCounts[sectionName] || 0) + 1;
-          } else if (!(sectionName in sectionCounts)) {
-            sectionCounts[sectionName] = 0;
+            sectionCounts[fg.section] = (sectionCounts[fg.section] || 0) + 1;
+          } else if (!(fg.section in sectionCounts)) {
+            sectionCounts[fg.section] = 0;
           }
-        });
+        }
 
-        headings.forEach((h) => {
-          let sibling = h.nextElementSibling;
-          let hasVisible = false;
-          while (sibling && !sibling.classList.contains("section-heading")) {
-            if (sibling.classList.contains("form-group") && isShown(sibling)) {
-              hasVisible = true;
-            }
-            sibling = sibling.nextElementSibling;
-          }
-          h.style.display = hasVisible ? "" : "none";
-        });
+        for (const [section, heading] of Object.entries(headingBySection)) {
+          heading.style.display = sectionCounts[section] > 0 ? "" : "none";
+        }
 
-        document.querySelectorAll("#sectionNav a").forEach((a) => {
-          const sectionName = a.dataset.section;
-          const matching = sectionCounts[sectionName] || 0;
+        for (const a of navLinks) {
+          const matching = sectionCounts[a.dataset.section] || 0;
           const badge = a.querySelector(".badge");
           if (badge) badge.textContent = matching;
           a.parentElement.classList.toggle("dimmed", matching === 0);
-        });
+        }
 
         document.getElementById("noResults").style.display = query && !anyVisible ? "block" : "none";
         document.getElementById("welcomeSection").style.display = query ? "none" : "";
@@ -1769,39 +1793,7 @@
         if (!confirm("Reset all configuration? This cannot be undone.")) return;
         currentConfig = {};
         document.querySelectorAll(".form-group").forEach((fg) => {
-          const propName = fg.dataset.propname;
-          const propData = getCurrentPropData(propName);
-          const input = fg.querySelector("input, select, textarea");
-          if (!input) return;
-          if (propData.type === "array" && Array.isArray(propData.items_enum)) {
-            const def = Array.isArray(propData.default) ? propData.default : [];
-            fg.querySelectorAll(".checkbox-item").forEach((lab) => {
-              const cb = lab.querySelector("input[type=checkbox]");
-              const checked = def.includes(cb.value);
-              cb.checked = checked;
-              lab.classList.toggle("checked", checked);
-            });
-          } else if (propData.type === "array" && isPrefillableDefault(propData)) {
-            input.value = serializeArrayDefault(propData.default);
-          } else if (propData.type === "object" && isPrefillableDefault(propData)) {
-            input.value = jsyaml.dump(propData.default, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
-          } else if (input.tagName === "SELECT") {
-            input.selectedIndex = 0;
-          } else {
-            input.value = "";
-          }
-          const toggleEl = fg.querySelector(".bool-toggle");
-          if (toggleEl) {
-            const activeValue =
-              propData.type === "boolean" ? (propData.default === true ? "true" : "false") : propData.default;
-            toggleEl
-              .querySelectorAll(".bool-toggle-btn")
-              .forEach((b) => b.classList.toggle("active", b.dataset.value === activeValue));
-            const hiddenInput = toggleEl.querySelector("input[type=hidden]");
-            if (hiddenInput) hiddenInput.value = "";
-          }
-          input.removeAttribute("aria-invalid");
-          fg.classList.remove("is-set");
+          resetGroup(fg, getCurrentPropData(fg.dataset.propname));
         });
         if (document.body.classList.contains("preview-mode")) {
           generateYaml();

@@ -140,7 +140,7 @@ Subtitle shown under the report title. Plain text only.
 
 ### template
 
-**Type**: `Optional[Literal["default", "simple", "sections", "gathered"]]` (default: `"default"`)
+**Type**: `Optional[Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"]]` (default: `"default"`)
 
 Name of the report template.
 
@@ -1132,6 +1132,21 @@ Image formats to export when export_plots is on.
 
 Treat the input path as a file containing a list of paths to scan, one per line.
 
+### fn_ignore_files
+
+**Type**: `Optional[List[str]]` (default: `[".DS_Store",".py[cod]","*.bam","*.bai","*.sam","*.fq.gz","*.fastq.gz","*.fq","*.fastq","*.fa","*.gtf","*.bed","*.vcf","*.tbi","*.txt.gz","*.pdf","*.md5","*.parquet","*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html","multiqc_data.json","*.gam","*.gamp","*.jar"]`)
+
+Glob patterns for file names to skip during the file search.
+
+**Example**:
+
+```yaml
+fn_ignore_files:
+  - "*.bai"
+  - "*.bak"
+  - "*.tmp"
+```
+
 ### general_stats_columns
 
 **Type**: `Dict[str, <class 'multiqc.utils.config_schema.GeneralStatsModuleConfig'>]` (default: `{}`)
@@ -1206,11 +1221,35 @@ long_read_count_prefix: M
 long_read_count_prefix: ""
 ```
 
+### module_order
+
+**Type**: `Optional[List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]]` (default: `["custom_content","ccs","ngsderive","purple","conpair","isoseq","lima","peddy","percolator","haplocheck","somalier","methylqa","mosdepth","phantompeakqualtools","qualimap","bamdst","preseq","hifiasm","quast","qorts","rna_seqc","rockhopper","rsem","rseqc","busco","checkm","bustools","goleft_indexcov","gffcompare","disambiguate","supernova","deeptools","sargasso","verifybamid","mirtrace","happy","mirtop","glimpse","gopeaks","homer","hops","macs2","theta2","snpeff","gatk","htseq","bcftools","featurecounts","fgbio","dragen","dragen_fastqc","dedup","pbmarkdup","damageprofiler","mapdamage","biobambam2","jcvi","mtnucratio","picard","vep","bakta","prokka","checkm2","qc3C","nanoq","nanostat","samblaster","samtools","bamtools","sambamba","ngsbits","pairtools","sexdeterrmine","seqera_cli","eigenstratdatabasetools","jellyfish","vcftools","longranger","stacks","varscan2","snippy","umicollapse","umitools","truvari","megahit","ganon","gtdbtk","bbmap","bismark","biscuit","diamond","hicexplorer","hicup","hicpro","salmon","kallisto","slamdunk","star","hisat2","tophat","bowtie2","bowtie1","hostile","cellranger","checkatlas","snpsplit","odgi","vg","pangolin","nextclade","freyja","humid","kat","leehom","librarian","nonpareil","adapterremoval","bbduk","clipandmerge","cutadapt","trim_galore","flexbar","sourmash","kaiju","kraken","malt","motus","trimmomatic","sickle","skewer","sortmerna","biobloomtools","seqfu","fastq_screen","fastqe","afterqc","fastp","fastqc","sequali","filtlong","prinseqplusplus","pychopper","porechop","pycoqc","minionqc","anglerfish","multivcfanalyzer","clusterflow","checkqc","bcl2fastq","bclconvert","interop","ivar","flash","seqyclean","optitype","whatshap","spaceranger","xenome","xengsort","metaphlan","sylphtax","seqwho","telseq","ataqv","mgikit","mosaicatcher"]`)
+
+Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, path_filters).
+
+**Example**:
+
+```yaml
+module_order:
+  - fastqc
+  - fastqc:
+      name: FastQC (trimmed)
+      path_filters:
+        - "*_trimmed*"
+  - cutadapt
+```
+
 ### no_version_check
 
 **Type**: `Optional[bool]` (default: `false`)
 
 Skip the network check for newer MultiQC versions on startup.
+
+### num_datasets_plot_limit
+
+**Type**: `Optional[int]` (default: `100`)
+
+Deprecated. Use plots_defer_loading_numseries instead.
 
 ### pandoc_template
 
@@ -1229,6 +1268,12 @@ Parquet table layout. 'long' has rows of (sample_name, metric_name, val_raw, val
 **Type**: `Optional[str]` (default: `None`)
 
 CSS font-family for plot text. Defaults to a system font stack.
+
+### preserve_module_raw_data
+
+**Type**: `Optional[bool]` (default: `false`)
+
+Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.
 
 ### read_count_desc
 
@@ -1305,6 +1350,21 @@ section_comments:
   fastqc_overrepresented_sequences: "**This is** an important note about the overrepresented
     sequences."
   samtools: Reviewed by *Phil* on 2024-08-21.
+```
+
+### section_status_checks
+
+**Type**: `Optional[Dict[str, Union[bool, Dict[str, bool]]]]` (default: `{}`)
+
+Enable or disable the green/yellow/red status indicators on report sections. Top-level keys are module IDs, values are either a bool or a dict mapping section ID to bool.
+
+**Example**:
+
+```yaml
+section_status_checks:
+  fastqc: true
+  samtools:
+    alignment_stats: false
 ```
 
 ### skip_generalstats
@@ -1427,11 +1487,45 @@ table_cond_formatting_rules:
       - gt: 20
 ```
 
+### table_sample_merge
+
+**Type**: `Optional[Dict[str, List[Union[str, Dict[str, Union[str, List[str]]]]]]]` (default: `None`)
+
+Merge rows of supporting modules' tables by collapsing samples that match a pattern. Keys are the merged group name, values are clean-pattern entries (string or {type, pattern}).
+
+**Example**:
+
+```yaml
+table_sample_merge:
+  R1:
+    - _R1
+    - pattern: "[_.-][rR]?1$"
+      type: regex
+  R2:
+    - _R2
+    - pattern: "[_.-][rR]?2$"
+      type: regex
+```
+
 ### template_dark_mode
 
 **Type**: `Optional[bool]` (default: `true`)
 
 Enable the dark mode toggle in the report template.
+
+### top_modules
+
+**Type**: `Optional[List[Union[str, Dict[str, Dict[str, str]]]]]` (default: `[]`)
+
+Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.
+
+**Example**:
+
+```yaml
+top_modules:
+  - fastqc
+  - cutadapt
+```
 
 ### version_check_url
 

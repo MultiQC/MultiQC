@@ -17,17 +17,17 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import get_args
 
-import yaml
+# Allow the script to be either run directly or imported via importlib (eg. from tests).
+sys.path.insert(0, str(Path(__file__).parent))
 
-# Add parent directory to path so we can import multiqc
-sys.path.insert(0, str(Path(__file__).parent.parent))
+from _config_schema_loader import load_schema_and_defaults  # noqa: E402
 
-import multiqc
-from multiqc.utils.config_schema import AiProviderLiteral, MultiQCConfig
+import multiqc  # noqa: E402
+from multiqc.utils.config_schema import AiProviderLiteral  # noqa: E402
 
-# Properties shown only when the "Show advanced options" toggle is on.
-# Curated by hand — internal / debug / rarely-set fields, or integrations
-# that need their own setup before being useful.
+# Properties shown only when the "Show advanced options" toggle is on:
+# internal / debug fields, rarely-set knobs, and integrations that need
+# their own setup before being useful.
 UNCOMMON_PROPERTIES = {
     "ai_auth_type",
     "ai_prompt_full",
@@ -43,6 +43,7 @@ UNCOMMON_PROPERTIES = {
     "megaqc_access_token",
     "megaqc_timeout",
     "megaqc_url",
+    "num_datasets_plot_limit",
     "output_fn_name",
     "pandoc_template",
     "plot_font_family",
@@ -50,13 +51,16 @@ UNCOMMON_PROPERTIES = {
     "plots_export_font_scale",
     "prepend_dirs_depth",
     "prepend_dirs_sep",
+    "preserve_module_raw_data",
     "profile_memory",
     "report_readerrors",
     "sample_names_only_include",
     "sample_names_only_include_re",
+    "section_status_checks",
     "seqera_api_url",
     "seqera_website",
     "simple_output",
+    "table_sample_merge",
     "template_dark_mode",
     "version_check_url",
 }
@@ -77,7 +81,7 @@ MULTIQC_LOGO_SVG = """\
 </svg>"""
 
 # Schema properties that are intentionally omitted from the wizard.
-# `sp` is the module search-patterns dict — too structured for a flat form.
+# `sp` is the module search-patterns dict, too structured for a flat form.
 SKIP_PROPERTIES = {"sp"}
 
 
@@ -85,24 +89,12 @@ def generate_config_wizard():
     """Generate a self-contained HTML configuration wizard for MultiQC.
 
     The wizard shows all options on a single scrollable page, with a sidebar
-    for navigation and a global search bar.  Boolean fields use a tri-state
-    select (not set / true / false) so that ``default: true`` values are
-    handled clearly.
+    for navigation and a global search bar. Booleans render as a two-button
+    toggle whose default value matches the schema default and is omitted from
+    the YAML; enums with <=4 options use the same toggle, larger enums fall
+    back to a dropdown.
     """
-
-    schema = MultiQCConfig.model_json_schema()
-    properties = schema.get("properties", {})
-
-    config_defaults_path = Path(__file__).parent.parent / "multiqc" / "config_defaults.yaml"
-    try:
-        with open(config_defaults_path, "r") as f:
-            config_defaults = yaml.safe_load(f)
-    except FileNotFoundError:
-        print(f"Error: Could not find {config_defaults_path}")
-        sys.exit(1)
-    except yaml.YAMLError as e:
-        print(f"Error parsing YAML: {e}")
-        sys.exit(1)
+    properties, config_defaults, _schema = load_schema_and_defaults()
 
     sections = {
         "Report Appearance": [
@@ -125,6 +117,9 @@ def generate_config_wizard():
             "custom_content",
             "section_comments",
             "remove_sections",
+            "module_order",
+            "top_modules",
+            "section_status_checks",
         ],
         "Output Options": [
             "output_fn_name",
@@ -173,6 +168,7 @@ def generate_config_wizard():
             "ignore_images",
             "fn_ignore_dirs",
             "fn_ignore_paths",
+            "fn_ignore_files",
             "filesearch_file_shared",
         ],
         "Plot Settings": [
@@ -214,6 +210,7 @@ def generate_config_wizard():
             "table_cond_formatting_rules",
             "table_cond_formatting_colours",
             "custom_table_header_config",
+            "table_sample_merge",
         ],
         "Software Versions": [
             "software_versions",
@@ -272,6 +269,8 @@ def generate_config_wizard():
             "report_readerrors",
             "no_version_check",
             "version_check_url",
+            "preserve_module_raw_data",
+            "num_datasets_plot_limit",
         ],
     }
 

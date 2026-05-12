@@ -132,7 +132,7 @@ class MultiQCConfig(BaseModel):
         None,
         description="Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.",
     )
-    template: Optional[Literal["default", "simple", "sections", "gathered"]] = Field(
+    template: Optional[Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"]] = Field(
         None,
         description="Name of the report template.",
     )
@@ -716,6 +716,63 @@ class MultiQCConfig(BaseModel):
         None,
         description="Strings appended to the built-in trim list, without overriding defaults.",
         examples=[["sample_", "_processed"]],
+    )
+
+    fn_ignore_files: Optional[List[str]] = Field(
+        None,
+        description="Glob patterns for file names to skip during the file search.",
+        examples=[["*.bai", "*.bak", "*.tmp"]],
+    )
+    top_modules: Optional[List[Union[str, Dict[str, Dict[str, str]]]]] = Field(
+        None,
+        description=(
+            "Module IDs to render before module_order. Useful for pinning a module to the top "
+            "regardless of where it appears in module_order. Same shape as module_order entries."
+        ),
+        examples=[["fastqc", "cutadapt"]],
+    )
+    module_order: Optional[List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]] = Field(
+        None,
+        description=(
+            "Order in which modules appear in the report. Each entry is either a module ID, "
+            "or a single-key dict mapping the ID to per-run overrides (eg. name, path_filters)."
+        ),
+        examples=[
+            [
+                "fastqc",
+                {"fastqc": {"name": "FastQC (trimmed)", "path_filters": ["*_trimmed*"]}},
+                "cutadapt",
+            ]
+        ],
+    )
+    preserve_module_raw_data: Optional[bool] = Field(
+        None,
+        description="Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.",
+    )
+    table_sample_merge: Optional[Dict[str, List[Union[str, Dict[str, Union[str, List[str]]]]]]] = Field(
+        None,
+        description=(
+            "Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. "
+            "Keys are the merged group name, values are clean-pattern entries (string or {type, pattern})."
+        ),
+        examples=[
+            {
+                "R1": ["_R1", {"type": "regex", "pattern": "[_.-][rR]?1$"}],
+                "R2": ["_R2", {"type": "regex", "pattern": "[_.-][rR]?2$"}],
+            }
+        ],
+    )
+    section_status_checks: Optional[Dict[str, Union[bool, Dict[str, bool]]]] = Field(
+        None,
+        description=(
+            "Enable or disable the green/yellow/red status indicators on report sections. "
+            "Top-level keys are module IDs, values are either a bool or a dict mapping section ID to bool."
+        ),
+        examples=[{"fastqc": True, "samtools": {"alignment_stats": False}}],
+    )
+    num_datasets_plot_limit: Optional[int] = Field(
+        None,
+        description="Deprecated. Use plots_defer_loading_numseries instead.",
     )
 
     # Search patterns

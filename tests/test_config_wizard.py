@@ -5,10 +5,13 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 from multiqc.utils.config_schema import MultiQCConfig
 
-WIZARD_SCRIPT = Path(__file__).parent.parent / "scripts" / "generate_config_wizard.py"
+REPO_ROOT = Path(__file__).parent.parent
+WIZARD_SCRIPT = REPO_ROOT / "scripts" / "generate_config_wizard.py"
+CONFIG_DEFAULTS = REPO_ROOT / "multiqc" / "config_defaults.yaml"
 
 
 def _load_wizard_module():
@@ -24,8 +27,8 @@ def test_wizard_covers_every_schema_property():
 
     This guards against new config fields being silently dropped from the
     wizard. If this fails, add the new field to the matching section in
-    `scripts/generate_config_wizard.py`, or — only if it cannot reasonably
-    be rendered as a form field — add it to `SKIP_PROPERTIES`.
+    `scripts/generate_config_wizard.py`, or, if it cannot reasonably be
+    rendered as a form field, add it to `SKIP_PROPERTIES`.
     """
     wizard = _load_wizard_module()
     html = wizard.generate_config_wizard()
@@ -54,3 +57,20 @@ def test_wizard_uncommon_list_is_in_schema():
     schema_props = set(MultiQCConfig.model_json_schema()["properties"])
     stale = wizard.UNCOMMON_PROPERTIES - schema_props
     assert not stale, f"UNCOMMON_PROPERTIES references unknown fields: {sorted(stale)}"
+
+
+def test_config_defaults_keys_are_in_schema():
+    """Every key in config_defaults.yaml must have a matching field in MultiQCConfig.
+
+    Without this guard, a developer can add a config option (with a default in the
+    YAML and a typed attribute in multiqc/config.py) but forget to surface it in
+    the schema, leaving it undocumented and absent from the wizard.
+    """
+    with open(CONFIG_DEFAULTS) as f:
+        defaults = yaml.safe_load(f) or {}
+    schema_props = set(MultiQCConfig.model_json_schema()["properties"])
+    missing = sorted(set(defaults) - schema_props)
+    assert not missing, (
+        f"Config defaults present in config_defaults.yaml but missing from MultiQCConfig: {missing}. "
+        f"Add a Field for each to multiqc/utils/config_schema.py."
+    )

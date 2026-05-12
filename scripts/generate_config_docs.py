@@ -17,10 +17,10 @@ from typing import Any, Dict, List, Literal, Optional, Union, get_args, get_orig
 
 import yaml
 
-# Add parent directory to path so we can import multiqc
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent))
 
-from multiqc.utils.config_schema import (
+from _config_schema_loader import load_schema_and_defaults  # noqa: E402
+from multiqc.utils.config_schema import (  # noqa: E402
     AiProviderLiteral,
     CleanPattern,
     GeneralStatsColumnConfig,
@@ -114,24 +114,8 @@ def format_default_value(value):
 
 def generate_markdown_from_schema():
     """Generate markdown documentation from the MultiQC config schema."""
-    # Get Pydantic model attributes and type hints
-    config_attrs = {name: field for name, field in MultiQCConfig.__annotations__.items()}
-
-    # Get JSON schema for descriptions and default values
-    schema = MultiQCConfig.model_json_schema()
-    properties = schema.get("properties", {})
-
-    # Load default values from config_defaults.yaml
-    config_defaults_path = Path(__file__).parent.parent / "multiqc" / "config_defaults.yaml"
-    try:
-        with open(config_defaults_path, "r") as f:
-            config_defaults = yaml.safe_load(f)
-    except FileNotFoundError:
-        print(f"Error: Could not find {config_defaults_path}")
-        sys.exit(1)
-    except yaml.YAMLError as e:
-        print(f"Error parsing YAML: {e}")
-        sys.exit(1)
+    config_attrs = dict(MultiQCConfig.__annotations__)
+    properties, config_defaults, schema = load_schema_and_defaults()
 
     output = ["# MultiQC Configuration Reference\n\n"]
     output.append("""
