@@ -95,6 +95,7 @@ def generate_config_wizard():
             config_data[section_name][prop_name] = {
                 "uncommon": prop_name in uncommon,
                 "deprecated": bool(prop.get("deprecated", False)),
+                "multiline": bool(prop.get("multiline", False)),
                 "type": prop_type,
                 "description": prop.get("description", ""),
                 "default": default_val,

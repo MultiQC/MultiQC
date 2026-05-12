@@ -327,38 +327,12 @@
         vertical-align: middle;
       }
 
-      .sidebar-actions {
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 16px 18px 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+      .sidebar-cta {
+        padding: 14px 18px 6px;
       }
-      .sidebar-actions .btn {
+      .sidebar-cta .btn {
         width: 100%;
         text-align: center;
-      }
-      .sidebar-actions .btn-primary {
-        background: transparent;
-        color: white;
-        border-color: rgba(255, 255, 255, 0.3);
-      }
-      .sidebar-actions .btn-primary:hover {
-        background: white;
-        color: var(--navy);
-        border-color: white;
-      }
-      .sidebar-actions .btn-secondary {
-        background: transparent;
-        color: rgba(255, 255, 255, 0.6);
-        border-color: rgba(255, 255, 255, 0.12);
-        padding: 6px 14px;
-        font-size: 0.85em;
-      }
-      .sidebar-actions .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: white;
-        border-color: rgba(255, 255, 255, 0.25);
       }
 
       .welcome-links {
@@ -395,10 +369,6 @@
         font-size: 0.95em;
         line-height: 1;
       }
-      .welcome-cta {
-        margin-top: 18px;
-      }
-
       /* Right-hand main column */
       .main {
         margin-left: 280px;
@@ -572,6 +542,24 @@
         border-color: var(--teal-border);
         z-index: 2;
       }
+      .form-group.is-invalid,
+      .form-group.is-invalid:focus-within,
+      .form-group.is-set.is-invalid {
+        background: #fdf5f5;
+        border-color: #d04949;
+        box-shadow: inset 3px 0 0 #d04949;
+        z-index: 2;
+      }
+      .form-group.is-invalid input,
+      .form-group.is-invalid textarea {
+        border-color: #d04949;
+      }
+      .field-error-msg {
+        margin-top: 8px;
+        color: #b03939;
+        font-size: 0.85em;
+        line-height: 1.45;
+      }
       .form-group.hidden {
         /* `!important` so search filtering wins over the show-uncommon rule's higher specificity. */
         display: none !important;
@@ -579,6 +567,7 @@
       .form-group label.field-label {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 6px;
         flex-wrap: wrap;
         font-family: "JetBrains Mono", ui-monospace, monospace;
@@ -649,7 +638,6 @@
 
       .examples-toggle {
         display: inline-block;
-        margin-left: auto;
         align-self: center;
         background: transparent;
         border: none;
@@ -707,9 +695,6 @@
         font-style: italic;
       }
 
-      textarea[aria-invalid="true"] {
-        border-color: #d04949 !important;
-      }
       .form-group input,
       .form-group textarea {
         width: 100%;
@@ -738,6 +723,11 @@
         outline: none;
         border-color: var(--teal-border);
         box-shadow: 0 0 0 3px rgba(49, 201, 172, 0.2);
+      }
+      .form-group.is-invalid input:focus,
+      .form-group.is-invalid textarea:focus {
+        border-color: #d04949;
+        box-shadow: 0 0 0 3px rgba(208, 73, 73, 0.2);
       }
 
       .bool-toggle {
@@ -836,23 +826,17 @@
       }
 
       /* When previewing or validating YAML, hide the editor UI */
-      body.preview-mode #welcomeSection,
-      body.preview-mode #sections,
-      body.preview-mode #noResults,
-      body.validate-mode #welcomeSection,
-      body.validate-mode #sections,
-      body.validate-mode #noResults {
+      body.yaml-mode #welcomeSection,
+      body.yaml-mode #sections,
+      body.yaml-mode #noResults {
         display: none !important;
       }
-      body.preview-mode .section-nav a,
-      body.validate-mode .section-nav a {
+      body.yaml-mode .section-nav a {
         pointer-events: none;
         opacity: 0.5;
       }
-      body.preview-mode .sidebar-search,
-      body.preview-mode .show-uncommon-btn,
-      body.validate-mode .sidebar-search,
-      body.validate-mode .show-uncommon-btn {
+      body.yaml-mode .sidebar-search,
+      body.yaml-mode .show-uncommon-btn {
         opacity: 0.4;
         pointer-events: none;
       }
@@ -900,47 +884,14 @@
         color: white;
       }
 
-      .yaml-output {
-        background: var(--navy);
-        color: #d9d4e0;
-        padding: 20px 22px;
-        border-radius: 0;
-        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
-        font-size: 0.88em;
-        line-height: 1.6;
-        white-space: pre-wrap;
-        margin-top: 16px;
-      }
-      /* Minimal YAML highlight theme tuned to the navy code surface */
-      .yaml-output .hljs-attr {
-        color: #9eebd5;
-      }
-      .yaml-output .hljs-string {
-        color: #f1a373;
-      }
-      .yaml-output .hljs-number {
-        color: #a5b4fc;
-      }
-      .yaml-output .hljs-literal {
-        color: #c4b5fd;
-      }
-      .yaml-output .hljs-bullet,
-      .yaml-output .hljs-punctuation {
-        color: #8a8595;
-      }
-      .yaml-output .hljs-comment {
-        color: #847d99;
-        font-style: italic;
-      }
-
-      .yaml-preview-section {
+      .yaml-view-section {
         background: var(--paper);
         border: 1px solid var(--border);
         border-radius: 0;
         padding: 28px 32px;
         margin: 32px 0;
       }
-      .yaml-preview-head {
+      .yaml-view-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -948,71 +899,28 @@
         margin-bottom: 6px;
         flex-wrap: wrap;
       }
-      .yaml-preview-head h3 {
+      .yaml-view-head h3 {
         margin-bottom: 0;
       }
-      .back-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .back-btn span {
-        font-size: 1.05em;
-        line-height: 1;
-      }
-      .yaml-preview-section h3 {
-        font-family: "Bricolage Grotesque", "Inter", sans-serif;
-        font-variation-settings: "opsz" 24;
-        color: var(--ink);
-        font-size: 1.2em;
-        font-weight: 600;
-        margin-bottom: 6px;
-        letter-spacing: -0.01em;
-      }
-      .yaml-preview-section p {
-        color: var(--ink-mute);
-        font-size: 0.92em;
-      }
-      .yaml-preview-section code {
-        background: var(--surface-soft);
-        border: 1px solid var(--border-soft);
-        padding: 1px 6px;
-        border-radius: 3px;
-        font-size: 0.85em;
-      }
-      .fields-set-count {
-        color: var(--ink-soft);
-        font-size: 0.82em;
-        margin-top: 4px;
-      }
-      .yaml-preview-actions {
+      .yaml-view-actions {
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
         align-items: center;
       }
 
-      .validate-section {
-        background: var(--paper);
-        border: 1px solid var(--border);
-        border-radius: 0;
-        padding: 28px 32px;
-        margin: 32px 0;
-      }
-      .validate-section h3 {
-        font-family: "Bricolage Grotesque", "Inter", sans-serif;
-        font-variation-settings: "opsz" 24;
+      .yaml-view-section h3 {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
         color: var(--ink);
-        font-size: 1.2em;
-        font-weight: 600;
+        font-size: 1.05em;
+        font-weight: 500;
         margin-bottom: 6px;
-        letter-spacing: -0.01em;
       }
-      .validate-section p {
+      .yaml-view-section p {
         color: var(--ink-mute);
         font-size: 0.92em;
       }
-      .validate-section code {
+      .yaml-view-section code {
         background: var(--surface-soft);
         border: 1px solid var(--border-soft);
         padding: 1px 6px;
@@ -1265,7 +1173,7 @@
         .welcome-section {
           padding: 24px;
         }
-        .yaml-preview-section {
+        .yaml-view-section {
           padding: 22px 20px;
         }
       }
@@ -1283,6 +1191,9 @@
           __MULTIQC_LOGO_SVG__
         </a>
         <div class="sidebar-eyebrow">Config Wizard</div>
+      </div>
+      <div class="sidebar-cta">
+        <button id="viewYamlBtn" class="btn btn-success" onclick="showYaml()">View YAML</button>
       </div>
       <div class="sidebar-search">
         <input type="text" id="searchInput" placeholder="Search options..." autocomplete="off" />
@@ -1314,11 +1225,6 @@
           <span class="show-uncommon-label">Show advanced options</span>
         </button>
       </nav>
-      <div class="sidebar-actions">
-        <button id="previewBtn" class="btn btn-success" onclick="previewYaml()">Preview YAML</button>
-        <button id="validateBtn" class="btn btn-secondary" onclick="validateYaml()">Validate YAML</button>
-        <button class="btn btn-secondary" onclick="resetConfig()">Reset All</button>
-      </div>
     </aside>
 
     <main class="main">
@@ -1337,15 +1243,9 @@
           </p>
           <p>
             Browse sections in the sidebar, or use the search bar above to find a specific option. When you are done,
-            click <strong>Preview YAML</strong> below.
+            click <strong>View YAML</strong> to see the generated config. You can also paste an existing
+            <code>multiqc_config.yaml</code> there to have each option validated and explained.
           </p>
-          <p>
-            Already have a <code>multiqc_config.yaml</code>? Click <strong>Validate YAML</strong> to paste and inspect
-            it.
-          </p>
-          <div class="welcome-cta">
-            <button class="btn btn-success" onclick="validateYaml()">Validate existing YAML</button>
-          </div>
           <div class="welcome-links">
             <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">MultiQC Homepage</a>
             <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
@@ -1357,35 +1257,16 @@
 
         <div class="no-results" id="noResults">No configuration options match your search.</div>
 
-        <div class="yaml-preview-section" id="yamlSection" style="display:none;">
-          <div class="yaml-preview-head">
-            <h3>Generated Configuration</h3>
-            <div class="yaml-preview-actions">
-              <button class="btn btn-secondary back-btn" onclick="backToEditor()">
-                <span aria-hidden="true">&larr;</span> Back to editor
-              </button>
+        <div class="yaml-view-section" id="yamlViewSection" style="display: none">
+          <div class="yaml-view-head">
+            <h3>multiqc_config.yaml</h3>
+            <div class="yaml-view-actions">
+              <button class="btn btn-secondary" onclick="clearYaml()">Clear</button>
               <button id="copyBtn" class="btn btn-primary" onclick="copyConfig()">Copy to clipboard</button>
               <button class="btn btn-success" onclick="downloadConfig()">Download config</button>
             </div>
           </div>
-          <p>Copy this content to <code>multiqc_config.yaml</code> in your project directory.</p>
-          <p class="fields-set-count" id="fieldsSetCount"></p>
-          <div class="yaml-output" id="yamlOutput"></div>
-        </div>
-
-        <div class="validate-section" id="validateSection" style="display: none">
-          <div class="yaml-preview-head">
-            <h3>Validate config YAML</h3>
-            <div class="yaml-preview-actions">
-              <button class="btn btn-secondary back-btn" onclick="backToEditor()">
-                <span aria-hidden="true">&larr;</span> Back to editor
-              </button>
-            </div>
-          </div>
-          <p>
-            Paste an existing <code>multiqc_config.yaml</code> below. Each option is checked against the schema and
-            explained.
-          </p>
+          <p>Edit, paste, or just read your config. Each option is checked against the schema and explained below.</p>
           <textarea
             id="validateInput"
             class="validate-input"
@@ -1394,8 +1275,8 @@
             placeholder="# paste here..."
           ></textarea>
           <!-- Monaco mounts into this container the first time the user enters
-               Validate mode. The textarea above stays as a fallback if the
-               CDN fails or hasn't finished loading. -->
+               YAML mode. The textarea above stays as a fallback if the CDN
+               fails or hasn't finished loading. -->
           <div id="validateMonaco" class="validate-monaco" style="display: none"></div>
           <div class="validate-summary" id="validateSummary"></div>
           <div class="validate-cards" id="validateCards"></div>
@@ -1433,7 +1314,7 @@
       referrerpolicy="no-referrer"
     ></script>
     <!-- Monaco's AMD loader. The editor + language chunks are fetched lazily
-         the first time validateYaml() runs; editor-only users never pay. -->
+         the first time showYaml() runs; editor-only users never pay. -->
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs/loader.min.js"
       integrity="sha384-UcP5/iVWyRzIhnVjcB2o9W1eoYKL5fAhHTRzvFZg8ctOsoAoDeBQyQuyIk+BJ/nh"
@@ -1447,7 +1328,7 @@
       let ajvValidate = null; // compiled lazily on first validate
 
       // Flat propName -> propData lookup, built once. Avoids walking every section
-      // for every updateConfig / resetField / resetConfig call (146 props * 11 sections).
+      // for every updateConfig / resetField call (146 props * 11 sections).
       const propDataIndex = {};
       for (const sectionProps of Object.values(configData)) {
         for (const [name, data] of Object.entries(sectionProps)) {
@@ -1456,6 +1337,11 @@
       }
 
       let currentConfig = {};
+      // Top-level keys present in a pasted/edited YAML that don't correspond
+      // to a wizard form widget (plugin keys, schema-only keys like `sp`,
+      // typos the user wants to keep). Round-trip across editor/yaml mode
+      // and survive a page reload via localStorage.
+      let pluginKeys = {};
 
       // {sectionName: commonCount}, computed once at init from configData.
       // Used by both the sidebar TOC and the in-page section headings to
@@ -1549,9 +1435,11 @@
         return false;
       }
 
-      // Shared YAML serialization for default-prefills, object inputs, and inline examples.
-      function dumpYaml(value) {
-        return jsyaml.dump(value, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+      // Shared YAML serialization for default-prefills, object inputs, and
+      // inline examples. Accepts an optional opts merge for callers that need
+      // extras like sortKeys.
+      function dumpYaml(value, opts) {
+        return jsyaml.dump(value, { indent: 2, lineWidth: 80, noRefs: true, ...opts }).trimEnd();
       }
 
       function serializeArrayDefault(arr) {
@@ -1723,6 +1611,11 @@
           input = document.createElement("input");
           input.type = "number";
           input.step = "any";
+        } else if (propData.multiline) {
+          // Prose strings (intro_text, report_comment, AI prompts) render
+          // as a textarea instead of a single-line input.
+          input = document.createElement("textarea");
+          input.rows = 4;
         } else {
           input = document.createElement("input");
           input.type = "text";
@@ -1751,6 +1644,46 @@
           return ka.every((k) => valuesEqual(a[k], b[k]));
         }
         return false;
+      }
+
+      // Mark a form-group as having an invalid value, surface a human-readable
+      // error message under the input, and tag the input with aria-invalid for
+      // assistive tech. Used for free-text array/object textareas where the
+      // user's input can fail YAML/JSON parsing.
+      function setFieldError(input, message) {
+        input.setAttribute("aria-invalid", "true");
+        const fg = input.closest(".form-group");
+        if (!fg) return;
+        fg.classList.add("is-invalid");
+        let msg = fg.querySelector(".field-error-msg");
+        if (!msg) {
+          msg = document.createElement("div");
+          msg.className = "field-error-msg";
+          fg.appendChild(msg);
+        }
+        msg.textContent = message;
+      }
+
+      function clearFieldError(input) {
+        input.removeAttribute("aria-invalid");
+        const fg = input.closest(".form-group");
+        if (!fg) return;
+        fg.classList.remove("is-invalid");
+        const msg = fg.querySelector(".field-error-msg");
+        if (msg) msg.remove();
+      }
+
+      // Run the JSON schema against `value` for this property. On any errors,
+      // surface them under the input and return false (caller skips writing
+      // to currentConfig); otherwise clear the field-error and return true.
+      function checkAgainstSchema(input, propName, value) {
+        const errors = validateFieldAgainstSchema(propName, value);
+        if (errors.length) {
+          setFieldError(input, errors.join("; "));
+          return false;
+        }
+        clearFieldError(input);
+        return true;
       }
 
       function updateConfig(propName, input) {
@@ -1788,7 +1721,7 @@
             try {
               parsed = parseArrayInput(value);
             } catch (e) {
-              input.setAttribute("aria-invalid", "true");
+              setFieldError(input, "Expected a YAML list. " + (e.message || ""));
               return;
             }
           } else {
@@ -1796,7 +1729,7 @@
             // the field had no default (so we don't add a redundant `prop: []`).
             parsed = [];
           }
-          input.removeAttribute("aria-invalid");
+          if (!checkAgainstSchema(input, propName, parsed)) return;
           const unset = !value && (def === null || def === undefined);
           if (unset || valuesEqual(parsed, def)) {
             delete currentConfig[propName];
@@ -1810,14 +1743,17 @@
             try {
               parsed = jsyaml.load(value);
             } catch (e) {
-              // Invalid YAML/JSON, keep last good state and mark visually.
-              input.setAttribute("aria-invalid", "true");
+              setFieldError(input, "Invalid YAML. " + (e.message || ""));
+              return;
+            }
+            if (parsed && (typeof parsed !== "object" || Array.isArray(parsed))) {
+              setFieldError(input, "Expected a YAML mapping (key: value pairs).");
               return;
             }
           } else {
             parsed = {};
           }
-          input.removeAttribute("aria-invalid");
+          if (!checkAgainstSchema(input, propName, parsed)) return;
           const unset = !value && (def === null || def === undefined);
           if (unset || valuesEqual(parsed, def)) {
             delete currentConfig[propName];
@@ -1827,7 +1763,10 @@
         } else if (propData.type === "integer") {
           const value = parseInt(input.value);
           if (isNaN(value)) {
+            clearFieldError(input);
             delete currentConfig[propName];
+          } else if (!checkAgainstSchema(input, propName, value)) {
+            return;
           } else if (valuesEqual(value, def)) {
             delete currentConfig[propName];
           } else {
@@ -1836,7 +1775,10 @@
         } else if (propData.type === "number") {
           const value = parseFloat(input.value);
           if (isNaN(value)) {
+            clearFieldError(input);
             delete currentConfig[propName];
+          } else if (!checkAgainstSchema(input, propName, value)) {
+            return;
           } else if (valuesEqual(value, def)) {
             delete currentConfig[propName];
           } else {
@@ -1870,6 +1812,15 @@
       // don't echo localStorage data back into localStorage one key at a time.
       let isHydrating = false;
 
+      // Raw editor text from the last Back-to-editor, plus a snapshot of the
+      // form state it represents. When the user re-enters View YAML and the
+      // form still matches that snapshot, we rehydrate the editor with the
+      // exact original text so comments, blank lines and key ordering survive
+      // the round-trip. Any form change makes the snapshot compare unequal
+      // and View YAML rebuilds cleanly from currentConfig + pluginKeys.
+      let lastEditedYaml = null;
+      let lastEditedFormSnap = null;
+
       // Persist the editor state to localStorage so a page refresh doesn't
       // wipe in-progress configs. Empty configs clear the entry so a clean
       // user comes back to a clean wizard.
@@ -1893,18 +1844,17 @@
         }
       }
 
-      // Read previous editor + paste state from localStorage and apply it to
-      // the freshly built DOM. Unknown keys (schema drift) are skipped quietly.
+      // Read previous editor state + preserved plugin keys from localStorage
+      // and restore them. Schema-drifted keys are skipped quietly.
       function hydrateFromStorage() {
         isHydrating = true;
         try {
-          const raw = (function () {
-            try {
-              return localStorage.getItem("mqc_wizard_config");
-            } catch (e) {
-              return null;
-            }
-          })();
+          let raw = null;
+          try {
+            raw = localStorage.getItem("mqc_wizard_config");
+          } catch (e) {
+            // storage unavailable: leave the wizard pristine
+          }
           if (raw) {
             try {
               const stored = JSON.parse(raw);
@@ -1916,23 +1866,35 @@
               // Corrupt JSON: leave the wizard pristine.
             }
           }
-          let paste = null;
+          let pk = null;
           try {
-            paste = localStorage.getItem("mqc_wizard_validate");
+            pk = localStorage.getItem("mqc_wizard_plugin_keys");
           } catch (e) {
             // ignore
           }
-          if (paste) document.getElementById("validateInput").value = paste;
+          if (pk) {
+            try {
+              pluginKeys = JSON.parse(pk) || {};
+            } catch (e) {
+              pluginKeys = {};
+            }
+          }
+          try {
+            lastEditedYaml = localStorage.getItem("mqc_wizard_yaml_text");
+            const snap = localStorage.getItem("mqc_wizard_yaml_form_snap");
+            if (snap) lastEditedFormSnap = JSON.parse(snap);
+          } catch (e) {
+            // ignore
+          }
         } finally {
           isHydrating = false;
         }
       }
 
-      // Push a stored value back into the matching form-group, then let the
-      // existing `updateConfig` path put it into `currentConfig`. That keeps
-      // the type-handling switch a single source of truth.
-      // Keep in sync with createInput: this is the inverse path for restoring
-      // a stored value into the matching form-group widget.
+      // Push a value into the matching form-group's widget, then let the
+      // existing `updateConfig` path canonicalise it into `currentConfig`.
+      // Keep in sync with `createInput`: a new widget type added there needs
+      // a matching branch here.
       function applyValueToGroup(propName, value) {
         const fg = document.querySelector(`.form-group[data-propname="${CSS.escape(propName)}"]`);
         if (!fg) return;
@@ -1980,9 +1942,9 @@
         updateConfig(propName, input);
       }
 
-      // Reset one form-group's visual state to its schema default and clear the
-      // field from currentConfig. Shared between resetField (single field) and
-      // resetConfig (all fields).
+      // Reset one form-group's visual state to its schema default and clear
+      // the field from currentConfig. Used by resetField (per-field arrow)
+      // and applyYamlToForm (round-trip back from the YAML view).
       function resetGroup(fg, propData) {
         const propName = fg.dataset.propname;
         const input = fg.querySelector("input, select, textarea");
@@ -2012,7 +1974,7 @@
           const hiddenInput = toggleEl.querySelector("input[type=hidden]");
           if (hiddenInput) hiddenInput.value = "";
         }
-        input.removeAttribute("aria-invalid");
+        clearFieldError(input);
         delete currentConfig[propName];
         fg.classList.remove("is-set");
       }
@@ -2024,7 +1986,6 @@
         if (!fg) return;
         resetGroup(fg, getCurrentPropData(propName));
         saveEditorConfig();
-        if (document.body.classList.contains("preview-mode")) generateYaml();
       }
 
       function getCurrentPropData(propName) {
@@ -2115,70 +2076,47 @@
         return String(value);
       }
 
-      function generateYaml() {
-        const output = document.getElementById("yamlOutput");
-        const count = Object.keys(currentConfig).length;
-        document.getElementById("fieldsSetCount").textContent =
-          count + " option" + (count !== 1 ? "s" : "") + " configured";
-
-        let text;
-        if (count === 0) {
-          text = "# No configuration set yet\n# Change some values above, then come back here.";
-        } else {
-          try {
-            text = jsyaml.dump(currentConfig, {
-              indent: 2,
-              lineWidth: 80,
-              noRefs: true,
-              sortKeys: true,
-            });
-          } catch (error) {
-            text = "# Error generating YAML: " + error.message;
-          }
-        }
-
-        if (typeof hljs !== "undefined" && hljs.getLanguage && hljs.getLanguage("yaml")) {
-          output.innerHTML = hljs.highlight(text, { language: "yaml" }).value;
-        } else {
-          output.textContent = text;
-        }
-      }
-
-      // Single source of truth for the three view modes. Toggles body class,
-      // shows/hides the right section, and rewrites each sidebar button's
-      // label + onclick so Editor / Preview / Validate stay mutually exclusive.
+      // Editor ↔ YAML two-state toggle. setMode("editor") shows the form,
+      // setMode("yaml") shows the merged YAML view (editor + cards). The
+      // sidebar CTA swaps label + handler so it always offers the other view.
       function setMode(mode) {
-        document.body.classList.toggle("preview-mode", mode === "preview");
-        document.body.classList.toggle("validate-mode", mode === "validate");
-        document.getElementById("yamlSection").style.display = mode === "preview" ? "block" : "none";
-        document.getElementById("validateSection").style.display = mode === "validate" ? "block" : "none";
-
-        const pb = document.getElementById("previewBtn");
-        const vb = document.getElementById("validateBtn");
-        pb.textContent = mode === "preview" ? "Editor" : "Preview YAML";
-        pb.onclick = mode === "preview" ? backToEditor : previewYaml;
-        vb.textContent = mode === "validate" ? "Editor" : "Validate YAML";
-        vb.onclick = mode === "validate" ? backToEditor : validateYaml;
-
+        const yaml = mode === "yaml";
+        document.body.classList.toggle("yaml-mode", yaml);
+        document.getElementById("yamlViewSection").style.display = yaml ? "block" : "none";
+        const btn = document.getElementById("viewYamlBtn");
+        btn.textContent = yaml ? "Back to editor" : "View YAML";
+        btn.onclick = yaml ? backToEditor : showYaml;
         window.scrollTo(0, 0);
       }
 
-      function previewYaml() {
-        generateYaml();
-        setMode("preview");
-      }
-
-      function validateYaml() {
-        setMode("validate");
+      function showYaml() {
+        // Block entry while any form field has an unparsed YAML/JSON value;
+        // otherwise the invalid text would be silently dropped on the way to
+        // the YAML view.
+        const invalid = document.querySelector(".form-group.is-invalid");
+        if (invalid) {
+          invalid.scrollIntoView({ behavior: "smooth", block: "center" });
+          const input = invalid.querySelector("input, textarea");
+          if (input) input.focus({ preventScroll: true });
+          return;
+        }
+        // If the form's parsed shape still matches the YAML text the user
+        // last had open, restore it verbatim — comments, blank lines and
+        // key ordering all survive. If anything in the form has changed
+        // (or the cache is stale across a reload), regenerate cleanly.
+        setValidateText(yamlTextForCurrentForm());
+        setMode("yaml");
         document.getElementById("validateInput").focus();
         runValidation();
-        // Lazily upgrade the textarea to a Monaco editor on first entry.
+        // On first entry Monaco mounts asynchronously and the textarea-side
+        // validation we just ran needs a second pass once getValidateText
+        // starts reading from the editor. On subsequent entries Monaco is
+        // already live, so we skip the redundant re-run.
+        const hadEditor = !!monacoEditor;
         ensureMonaco().then(
           (ed) => {
             ed.focus();
-            // Re-run validation so the line-range map is in sync with the
-            // editor's view (in case the user typed before Monaco was ready).
-            runValidation();
+            if (!hadEditor) runValidation();
           },
           () => {
             // Monaco unavailable — textarea fallback is already live.
@@ -2187,16 +2125,179 @@
       }
 
       function backToEditor() {
+        // If the user wrote invalid YAML, keep them in YAML mode so they
+        // can fix it — the validate summary already shows the parse error.
+        const text = getValidateText();
+        if (!applyYamlToForm(text)) return;
+        // Cache the raw text along with the form snapshot it represents.
+        // Re-entry restores the exact text (preserving comments) as long
+        // as the live form still matches the snapshot.
+        lastEditedYaml = text;
+        lastEditedFormSnap = { ...currentConfig, ...pluginKeys };
+        safeLocalStorageSet("mqc_wizard_yaml_text", text || null);
+        safeLocalStorageSet(
+          "mqc_wizard_yaml_form_snap",
+          Object.keys(lastEditedFormSnap).length === 0 ? null : JSON.stringify(lastEditedFormSnap),
+        );
         setMode("editor");
       }
 
+      // Pick what to put in the editor when entering View YAML.
+      // - If the form still matches the snapshot the cached text represents,
+      //   restore the cached text verbatim (comments + formatting survive).
+      // - Otherwise, try to patch just the changed scalars into the cached
+      //   text in-place so comments for unchanged keys still survive. If the
+      //   diff touches anything complex (nested lists/dicts changed, value
+      //   spanning multiple lines, etc.), fall back to a fresh dump.
+      function yamlTextForCurrentForm() {
+        const now = { ...currentConfig, ...pluginKeys };
+        if (lastEditedYaml !== null && lastEditedFormSnap !== null) {
+          if (valuesEqual(now, lastEditedFormSnap)) return lastEditedYaml;
+          const merged = mergeFormIntoCachedYaml(lastEditedYaml, lastEditedFormSnap, now);
+          if (merged !== null) return merged;
+        }
+        return buildYamlFromForm();
+      }
+
+      // Patch a cached YAML string with the deltas between `snap` and `now`.
+      // Returns the patched text, or null when the diff is too complex to
+      // patch safely (caller falls back to a full rebuild).
+      //
+      // Only handles the common case: top-level scalar values that fit on a
+      // single line in the cached text. Anything else (a list/dict value
+      // changed, a folded/literal multi-line scalar, an unparseable line)
+      // bails to a rebuild.
+      function mergeFormIntoCachedYaml(cachedText, snap, now) {
+        const isScalar = (v) => v === null || typeof v !== "object";
+        const dumpScalar = (v) => jsyaml.dump(v, { lineWidth: -1, noRefs: true }).trimEnd();
+
+        const allKeys = new Set([...Object.keys(snap), ...Object.keys(now)]);
+        const changes = [];
+        for (const k of allKeys) {
+          const inSnap = k in snap;
+          const inNow = k in now;
+          if (inSnap && !inNow) {
+            changes.push({ key: k, op: "remove" });
+          } else if (!inSnap && inNow) {
+            if (!isScalar(now[k])) return null;
+            changes.push({ key: k, op: "add", value: now[k] });
+          } else if (!valuesEqual(snap[k], now[k])) {
+            if (!isScalar(now[k]) || !isScalar(snap[k])) return null;
+            changes.push({ key: k, op: "set", value: now[k] });
+          }
+        }
+        if (changes.length === 0) return cachedText;
+
+        const ranges = computeKeyLineRanges(cachedText);
+        const lines = cachedText.split("\n");
+        // Pattern: "<key>:<space><value>[<optional trailing comment>]"
+        const lineRe = /^([A-Za-z_][A-Za-z0-9_]*\s*:\s*)([^#\r\n]*?)(\s*#.*)?$/;
+
+        // 1. In-place scalar edits (line indices unchanged).
+        for (const c of changes) {
+          if (c.op !== "set") continue;
+          const range = ranges[c.key];
+          if (!range || range.start !== range.end) return null;
+          const line = lines[range.start - 1];
+          const m = lineRe.exec(line);
+          if (!m) return null;
+          lines[range.start - 1] = m[1] + dumpScalar(c.value) + (m[3] || "");
+        }
+
+        // 2. Removals, in reverse line order so earlier indices stay valid.
+        const toRemove = changes
+          .filter((c) => c.op === "remove")
+          .map((c) => ranges[c.key])
+          .filter(Boolean)
+          .sort((a, b) => b.start - a.start);
+        for (const r of toRemove) {
+          lines.splice(r.start - 1, r.end - r.start + 1);
+        }
+
+        // 3. Additions — append, preserving any trailing newline.
+        const adds = changes.filter((c) => c.op === "add");
+        if (adds.length) {
+          const trailing = lines.length && lines[lines.length - 1] === "" ? lines.pop() : null;
+          for (const c of adds) lines.push(`${c.key}: ${dumpScalar(c.value)}`);
+          if (trailing !== null) lines.push(trailing);
+        }
+        return lines.join("\n");
+      }
+
+      // Build a YAML string from the wizard form state plus any preserved
+      // unknown keys from previous round-trips. Order matches the editor page:
+      // known keys first in their MultiQCConfig source order, then any plugin
+      // / unknown keys in the order they were last pasted.
+      function buildYamlFromForm() {
+        const ordered = {};
+        for (const propName of Object.keys(propDataIndex)) {
+          if (propName in currentConfig) ordered[propName] = currentConfig[propName];
+        }
+        for (const [k, v] of Object.entries(pluginKeys)) ordered[k] = v;
+        if (Object.keys(ordered).length === 0) return "";
+        try {
+          return dumpYaml(ordered);
+        } catch (e) {
+          return "# Error generating YAML: " + e.message;
+        }
+      }
+
+      // Reverse of buildYamlFromForm: walk the parsed YAML, push known keys
+      // back into the form widgets, remember unknown keys for next entry.
+      // Returns true on success, false if the YAML couldn't be parsed — the
+      // caller uses that to decide whether to keep the user in YAML mode so
+      // their edits aren't silently discarded. An empty / null document is
+      // treated as success: the user is asking to clear all options.
+      function applyYamlToForm(text) {
+        let parsed = null;
+        if (text.trim()) {
+          try {
+            parsed = jsyaml.load(text);
+          } catch (e) {
+            return false;
+          }
+          if (parsed != null && (typeof parsed !== "object" || Array.isArray(parsed))) return false;
+        }
+        parsed = parsed || {};
+
+        // Suppress per-key saveEditorConfig writes during the batch apply;
+        // we save once at the end.
+        isHydrating = true;
+        try {
+          for (const k of Object.keys(currentConfig)) {
+            if (k in parsed) continue;
+            const fg = document.querySelector(`.form-group[data-propname="${CSS.escape(k)}"]`);
+            if (fg) resetGroup(fg, getCurrentPropData(k));
+          }
+          pluginKeys = {};
+          for (const [k, v] of Object.entries(parsed)) {
+            if (propDataIndex[k]) applyValueToGroup(k, v);
+            else pluginKeys[k] = v;
+          }
+        } finally {
+          isHydrating = false;
+        }
+        saveEditorConfig();
+        safeLocalStorageSet(
+          "mqc_wizard_plugin_keys",
+          Object.keys(pluginKeys).length === 0 ? null : JSON.stringify(pluginKeys),
+        );
+        return true;
+      }
+
+      function clearYaml() {
+        if (!getValidateText().trim()) return;
+        if (!confirm("Clear all YAML? This empties the editor and removes every option from the wizard.")) return;
+        setValidateText("");
+        runValidation();
+      }
+
       function downloadConfig() {
-        if (Object.keys(currentConfig).length === 0) {
+        const yaml = getValidateText();
+        if (!yaml.trim()) {
           alert("No configuration to download. Please set some options first.");
           return;
         }
-        generateYaml();
-        const yaml = document.getElementById("yamlOutput").textContent;
         const blob = new Blob([yaml], { type: "text/yaml" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -2210,7 +2311,7 @@
 
       function copyConfig() {
         const btn = document.getElementById("copyBtn");
-        const yaml = document.getElementById("yamlOutput").textContent;
+        const yaml = getValidateText();
         const showFeedback = (label) => {
           const original = btn.dataset.originalLabel || btn.textContent;
           btn.dataset.originalLabel = original;
@@ -2228,18 +2329,6 @@
           () => showFeedback("Copied!"),
           () => showFeedback("Copy failed"),
         );
-      }
-
-      function resetConfig() {
-        if (!confirm("Reset all configuration? This cannot be undone.")) return;
-        currentConfig = {};
-        document.querySelectorAll(".form-group").forEach((fg) => {
-          resetGroup(fg, getCurrentPropData(fg.dataset.propname));
-        });
-        saveEditorConfig();
-        if (document.body.classList.contains("preview-mode")) {
-          generateYaml();
-        }
       }
 
       function slugify(text) {
@@ -2297,7 +2386,7 @@
 
       // Compile the JSON schema once, lazily. Returns null if Ajv2020 didn't
       // load (CDN failure) — caller falls back to no-Ajv rendering.
-      // Monaco editor: loaded lazily the first time validateYaml() runs, so
+      // Monaco editor: loaded lazily the first time showYaml() runs, so
       // editor-only users don't pay for it. Until it resolves (or if the CDN
       // fails), the plain textarea keeps working as a fallback.
       let monacoEditor = null;
@@ -2316,9 +2405,9 @@
             paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs" },
           });
           require(["vs/editor/editor.main"], () => {
-            // Custom theme matching the wizard's navy / Seqera palette and
-            // the token colours already used by the Preview YAML view's
-            // highlight.js theme — so the two views feel like the same app.
+            // Custom theme matching the wizard's navy / Seqera palette so
+            // the editor reads as part of the same app rather than a foreign
+            // VS Code panel.
             monaco.editor.defineTheme("mqc-dark", {
               base: "vs-dark",
               inherit: true,
@@ -2456,6 +2545,26 @@
         };
       }
 
+      // Drop noise from Pydantic's `Optional[...]` schemas: the "null" branch
+      // of an `anyOf` always fails for any real value and the `anyOf`
+      // catch-all message ("must match a schema in anyOf") just summarises
+      // the sub-errors we already have. Dedupe by path + keyword + params so
+      // multiple anyOf branches don't repeat the same complaint.
+      function filterAjvErrors(errors) {
+        if (!errors) return [];
+        const kept = [];
+        const seen = new Set();
+        for (const err of errors) {
+          if (err.keyword === "anyOf") continue;
+          if (err.keyword === "type" && err.params && err.params.type === "null") continue;
+          const sig = `${err.instancePath}\t${err.keyword}\t${JSON.stringify(err.params || {})}`;
+          if (seen.has(sig)) continue;
+          seen.add(sig);
+          kept.push(err);
+        }
+        return kept;
+      }
+
       // Render a single Ajv error in human terms, trimmed to the field that
       // owns it (the top-level key card already shows the property name).
       function formatAjvError(err) {
@@ -2466,6 +2575,18 @@
         if (err.keyword === "type") return `expected ${err.params.type}${where}`;
         if (err.keyword === "required") return `missing required field: ${err.params.missingProperty}${where}`;
         return `${err.message || "invalid"}${where}`;
+      }
+
+      // Run the JSON schema validator against a single field's parsed value.
+      // Returns an array of human-readable error messages (empty when valid
+      // or Ajv unavailable). Used by the form to catch shape mismatches that
+      // a plain YAML parse can't (e.g. `[as]` instead of `[{cool: beans}]`).
+      function validateFieldAgainstSchema(propName, value) {
+        const validate = compileValidator();
+        if (!validate) return [];
+        validate({ [propName]: value });
+        const ours = (validate.errors || []).filter((err) => (err.instancePath || "").split("/")[1] === propName);
+        return filterAjvErrors(ours).map(formatAjvError);
       }
 
       let lastValidated = { parsed: null, results: [], keyLineRanges: {} };
@@ -2504,8 +2625,6 @@
         const text = getValidateText();
         const summary = document.getElementById("validateSummary");
         const cards = document.getElementById("validateCards");
-
-        saveValidateInput(text);
 
         if (!text.trim()) {
           summary.innerHTML = "";
@@ -2546,7 +2665,7 @@
         const errorsByKey = {};
         if (validate) {
           validate(known);
-          for (const err of validate.errors || []) {
+          for (const err of filterAjvErrors(validate.errors)) {
             const top = (err.instancePath || "").split("/")[1];
             if (!top) continue;
             (errorsByKey[top] = errorsByKey[top] || []).push(formatAjvError(err));
@@ -2771,20 +2890,14 @@
         for (const [k, v] of Object.entries(lastValidated.parsed)) {
           if (!drop.has(k)) kept[k] = v;
         }
-        const out = Object.keys(kept).length
-          ? jsyaml.dump(kept, { indent: 2, lineWidth: 80, noRefs: true, sortKeys: true })
-          : "";
+        const out = Object.keys(kept).length ? dumpYaml(kept, { sortKeys: true }) : "";
         setValidateText(out);
         runValidation();
       }
 
-      function saveValidateInput(text) {
-        safeLocalStorageSet("mqc_wizard_validate", text || null);
-      }
-
       document.addEventListener("DOMContentLoaded", function () {
         if (typeof jsyaml === "undefined") {
-          document.getElementById("yamlOutput").textContent =
+          document.getElementById("validateInput").value =
             "# Error: js-yaml library failed to load.\n# Please check your internet connection and refresh.";
         } else {
           initWizard();

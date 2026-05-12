@@ -94,6 +94,7 @@ def cfg(
     *,
     section: Optional[str] = None,
     advanced: bool = False,
+    multiline: bool = False,
     default: Any = None,
     default_factory: Any = None,
     **kwargs: Any,
@@ -103,7 +104,9 @@ def cfg(
     ``section`` is usually inherited from an enclosing ``with section(...)``
     block; pass ``section=`` explicitly to override or for a one-off field
     outside any block. ``advanced=True`` hides the field behind the wizard's
-    "Show advanced options" toggle. Both end up in the JSON schema under
+    "Show advanced options" toggle. ``multiline=True`` renders string fields
+    as a textarea instead of a single-line input — use for prose fields like
+    descriptions and prompts. All flags end up in the JSON schema under
     ``json_schema_extra`` and are read back by
     ``scripts/_config_schema_loader.py``. Any other ``Field`` kwargs
     (``examples``, validators, ``deprecated``) pass straight through via
@@ -117,6 +120,8 @@ def cfg(
     extra: Dict[str, Any] = {"section": section}
     if advanced:
         extra["advanced"] = True
+    if multiline:
+        extra["multiline"] = True
     if default_factory is not None:
         return Field(default_factory=default_factory, description=description, json_schema_extra=extra, **kwargs)
     return Field(default, description=description, json_schema_extra=extra, **kwargs)
@@ -129,10 +134,12 @@ class MultiQCConfig(BaseModel):
         title: Optional[str] = cfg("Title shown at the top of the report and used in the page title.")
         subtitle: Optional[str] = cfg("Subtitle shown under the report title. Plain text only.")
         intro_text: Optional[str] = cfg(
-            "Paragraph shown under the title. Useful for adding context about the analysis."
+            "Paragraph shown under the title. Useful for adding context about the analysis.",
+            multiline=True,
         )
         report_comment: Optional[str] = cfg(
             "Free-text comment shown at the top of the report. HTML is allowed.",
+            multiline=True,
             examples=["This report was generated from the RNA-seq pipeline on 2024-08-21."],
         )
         report_header_info: Optional[List[Dict[str, str]]] = cfg(
@@ -181,6 +188,7 @@ class MultiQCConfig(BaseModel):
         custom_logo_width: Optional[int] = cfg(
             "Logo width in pixels. Height scales proportionally.",
             examples=[200],
+            gt=0,
         )
         custom_css_files: Optional[List[str]] = cfg(
             "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
@@ -557,6 +565,7 @@ class MultiQCConfig(BaseModel):
         )
         general_stats_helptext: Optional[str] = cfg(
             "Help text shown under the General Statistics heading at the top of the report.",
+            multiline=True,
         )
         skip_generalstats: Optional[bool] = cfg(
             "Hide the General Statistics table at the top of the report.",
@@ -751,11 +760,13 @@ class MultiQCConfig(BaseModel):
         ai_prompt_short: Optional[str] = cfg(
             "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
             advanced=True,
+            multiline=True,
             examples=["Write the summary in one short paragraph aimed at a lab head, no jargon."],
         )
         ai_prompt_full: Optional[str] = cfg(
             "Custom prompt prepended to the full-section AI summary request.",
             advanced=True,
+            multiline=True,
             examples=["Use bullet points and call out any sample that looks like an outlier."],
         )
         no_ai: Optional[bool] = cfg(
