@@ -16,6 +16,7 @@ CONFIG_DEFAULTS = REPO_ROOT / "multiqc" / "config_defaults.yaml"
 
 def _load_wizard_module():
     spec = importlib.util.spec_from_file_location("generate_config_wizard", WIZARD_SCRIPT)
+    assert spec is not None and spec.loader is not None, f"Could not load {WIZARD_SCRIPT}"
     module = importlib.util.module_from_spec(spec)
     sys.modules["generate_config_wizard"] = module
     spec.loader.exec_module(module)
