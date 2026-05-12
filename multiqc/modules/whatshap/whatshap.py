@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="WhatsHap",
             anchor="whatshap",
             href="https://whatshap.readthedocs.io/",

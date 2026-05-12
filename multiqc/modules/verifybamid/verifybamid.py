@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="VerifyBAMID",
             anchor="verifybamid",
             href="https://genome.sph.umich.edu/wiki/VerifyBamID",

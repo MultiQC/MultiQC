@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="OptiType",
             anchor="optitype",
             href="https://github.com/FRED-2/OptiType",

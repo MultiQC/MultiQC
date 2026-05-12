@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="MinIONQC",
             anchor="minionqc",
             href="https://github.com/roblanf/minion_qc",

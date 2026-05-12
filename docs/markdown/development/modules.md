@@ -316,7 +316,7 @@ from multiqc.base_module import BaseMultiqcModule
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
           name="My Module",
           anchor="mymodule",
           href="https://www.awesome_bioinfo.com/mymodule",
@@ -333,7 +333,7 @@ analysis module credits and description in the report.
 The `info` parameter supports rich markdown formatting. For example:
 
 `````python
-super(MultiqcModule, self).__init__(
+super().__init__(
     name="My Advanced Module",
     anchor="myadvancedmodule",
     href="https://www.awesome_bioinfo.com/myadvancedmodule",
@@ -408,7 +408,7 @@ class MultiqcModule(BaseMultiqcModule):
     Version 1.1.0 of the tool is tested.
     """
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             ...
         )
         ...
@@ -1026,12 +1026,12 @@ If you have a set of samples that should be grouped together in the report using
 self.general_stats_addcols(
     ...,
     group_samples_config=SampleGroupingConfig(
-        cols_to_sum=[ColumnKeyT("total_sequences")],
+        cols_to_sum=[ColumnKey("total_sequences")],
         cols_to_weighted_average=[
-            (ColumnKeyT("percent_gc"), ColumnKeyT("total_sequences")),
-            (ColumnKeyT("avg_sequence_length"), ColumnKeyT("total_sequences")),
-            (ColumnKeyT("percent_duplicates"), ColumnKeyT("total_sequences")),
-            (ColumnKeyT("median_sequence_length"), ColumnKeyT("total_sequences")),
+            (ColumnKey("percent_gc"), ColumnKey("total_sequences")),
+            (ColumnKey("avg_sequence_length"), ColumnKey("total_sequences")),
+            (ColumnKey("percent_duplicates"), ColumnKey("total_sequences")),
+            (ColumnKey("median_sequence_length"), ColumnKey("total_sequences")),
         ],
         extra_functions=[_summarize_statues],
     )
@@ -1043,11 +1043,16 @@ In this configuration, you can specify how to merge data for each column:
 - `cols_to_sum` - add up values for each sample in the group.
 - `cols_to_average` - take an average of all samples.
 - `cols_to_weighted_average` - take a weighed average, specifying the weight column in the the second tuple parameter.
-- `extra_functions` - list of functions to call to add extra data to the merged row, e.g. FastQC uses it to recalculate the `percent_fails` value:
+- `extra_functions` - list of functions to call to add extra data to the merged row
+- `explicit_groups` - opt-in dict of `{group_display_name: [sample_names]}` that lets a module supply its own ground-truth groups instead of relying on the user-supplied `table_sample_merge` name patterns.
+
+#### Extra functions
+
+The `extra_functions` flag can be used when you need custom logic beyond summing or averaging numeric values. For example, FastQC uses it to recalculate the `percent_fails` value:
 
 ```python
 def _summarize_statues(
-    merged_row: InputRowT, group_s_names: List[Tuple[Optional[str], SampleNameT, SampleNameT]]
+    merged_row: InputRow, group_s_names: List[Tuple[Optional[str], SampleName, SampleName]]
 ):
     # Add count of fail statuses
     _num_statuses = 0
@@ -1058,8 +1063,38 @@ def _summarize_statues(
             if st == "fail":
                 _num_fails += 1
     if _num_statuses > 0:
-        merged_row.data[ColumnKeyT("percent_fails")] = (float(_num_fails) / float(_num_statuses)) * 100.0
+        merged_row.data[ColumnKey("percent_fails")] = (float(_num_fails) / float(_num_statuses)) * 100.0
 ```
+
+#### Explicit groups
+
+Use this when the tool output already tells you which samples are related. For example a tool whose log carries a stable pair / replicate identifier. When set, this short-circuits the name-pattern matcher: each `[sample_names]` list is collapsed into one group with the given display name.
+
+```python
+# Build the groups from tool metadata during parse.
+explicit_groups: Dict[str, List[str]] = {}
+for s_name, data in data_by_sample.items():
+    group_id = data["sample_id"] # This will depend on your data structure
+    explicit_groups.setdefault(group_id, []).append(s_name)
+
+self.general_stats_addcols(
+    data_by_sample,
+    headers,
+    group_samples_config = SampleGroupingConfig(
+        explicit_groups = explicit_groups,
+        cols_to_sum = [ColumnKey("some_count_column")],
+        cols_to_weighted_average = [
+            (ColumnKey("some_percent"), ColumnKey("some_count_column"))
+        ],
+    ),
+)
+```
+
+Entries with a single member are ignored by the framework - they fall through and render as a normal ungrouped row with their original sample name.
+
+Modules that use this should expose a config flag so users can opt out and see per-sample rows.
+
+Auto-grouping is independent of `table_sample_merge`: if the user has _also_ configured name patterns, you can layer them on top of your auto-groups before passing: run each auto-group's display name through `self.groups_for_sample(...)` and bucket by the result.
 
 ## Step 4 - Writing data to a file
 
@@ -1114,6 +1149,7 @@ This supports the following arguments:
 - `autoformat`: Default `True`. Automatically format the `description`, `comment` and `helptext` strings.
 - `autoformat_type`: Default `markdown`. Autoformat text type. Currently only `markdown` supported.
 - `statuses`: Optional dictionary with keys `"pass"`, `"warn"`, and `"fail"`, each containing lists of sample names. When provided, adds an interactive status progress bar to the section header showing pass/warn/fail counts.
+- `alerts`: Optional alert box, or list of alert boxes, shown below the description. Alert messages support markdown, Bootstrap alert levels, and optional affected sample lists.
 
 ### Section status bars
 
@@ -1158,6 +1194,44 @@ section_status_checks:
 ```
 
 By default, all status bars are enabled. Configuration can be set at the module level (boolean) or per-section level (nested dictionary).
+
+### Section alerts
+
+Use the `alerts` parameter when a section needs to call out an important note, especially if samples were hidden from a plot or table.
+This keeps warnings separate from the section description and lets MultiQC render the Bootstrap alert markup consistently.
+
+Each alert can be a plain markdown string, a dictionary, a `SectionAlert`, or a list of these.
+Dictionary and `SectionAlert` values support:
+
+- `message`: Alert text, formatted as markdown by default
+- `level`: Bootstrap alert style, default `"info"`; must be one of `"primary"`, `"secondary"`, `"success"`, `"danger"`, `"warning"`, `"info"`, `"light"`, or `"dark"`
+- `affected_samples`: Optional list of sample names, rendered in an expandable list
+
+Alerts with an empty `message` are ignored.
+After `add_section()` runs, the `SectionAlert.message` value stored on the section is the rendered HTML string, matching how section descriptions are stored.
+
+For example:
+
+```python
+from multiqc.types import SectionAlert
+
+self.add_section(
+    name="Adapter Content",
+    anchor="adapter_content",
+    description="Adapter content per cycle.",
+    plot=adapter_plot,
+    alerts=SectionAlert(
+        message="**3 samples** with negligible adapter content hidden from this plot.",
+        level="warning",
+        affected_samples=["sample1", "sample2", "sample3"],
+    ),
+)
+```
+
+Sections with alerts still render even when there is no plot or custom content.
+Use `alerts` instead of appending raw `<div class="alert ...">` HTML to `description` or `content`.
+
+![section alerts](../../../docs/images/section_alerts.png)
 
 For example:
 
@@ -1374,7 +1448,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Qualalyser",
             anchor="qualalyser",
             href="https://github.com/bioinformatics-centre/qualalyser/",

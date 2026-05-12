@@ -1,8 +1,7 @@
 ---
 title: VEP
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions.</p>
+description: "Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/vep/vep.py
 -->
 
 :::note
-<p>Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions.</p>
+Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions.
 
 [https://www.ensembl.org/info/docs/tools/vep/index.html](https://www.ensembl.org/info/docs/tools/vep/index.html)
 :::

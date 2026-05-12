@@ -570,6 +570,7 @@ module_order:
   - bowtie1
   - hostile
   - cellranger
+  - checkatlas
   - snpsplit
   - odgi
   - vg
@@ -586,6 +587,7 @@ module_order:
   - bbduk
   - clipandmerge
   - cutadapt
+  - trim_galore
   - flexbar
   - sourmash
   - kaiju
@@ -599,6 +601,7 @@ module_order:
   - biobloomtools
   - seqfu
   - fastq_screen
+  - fastqe
   - afterqc
   - fastp
   - fastqc

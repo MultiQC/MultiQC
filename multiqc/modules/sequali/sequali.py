@@ -107,7 +107,7 @@ def prune_sample_dict(sample_dict: Dict[str, Any]):
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Sequali",
             anchor="sequali",
             href="https://github.com/rhpvorderman/sequali",
