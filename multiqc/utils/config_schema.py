@@ -75,7 +75,9 @@ class MultiQCConfig(BaseModel):
         None, description="Paragraph shown under the title. Useful for adding context about the analysis."
     )
     report_comment: Optional[str] = Field(
-        None, description="Free-text comment shown at the top of the report. HTML is allowed."
+        None,
+        description="Free-text comment shown at the top of the report. HTML is allowed.",
+        examples=["This report was generated from the RNA-seq pipeline on 2024-08-21."],
     )
     report_header_info: Optional[List[Dict[str, str]]] = Field(
         None,
@@ -83,6 +85,14 @@ class MultiQCConfig(BaseModel):
             "Extra key/value pairs shown in the report header, eg. contact name, run ID, pipeline version. "
             "Each list item is a single-key dictionary."
         ),
+        examples=[
+            [
+                {"Contact E-mail": "phil.ewels@seqera.io"},
+                {"Application Type": "RNA-seq"},
+                {"Project Type": "Application"},
+                {"Sequencing Platform": "HiSeq 2500 High Output V4"},
+            ]
+        ],
     )
     show_analysis_paths: Optional[bool] = Field(
         None, description="Show the absolute paths of analysed directories in the report header."
@@ -91,16 +101,32 @@ class MultiQCConfig(BaseModel):
         None, description="Show the date and time the report was generated in the header."
     )
     custom_logo: Optional[str] = Field(
-        None, description="Path to an image to show at the top of the report, replacing the MultiQC logo."
+        None,
+        description="Path to an image to show at the top of the report, replacing the MultiQC logo.",
+        examples=["/path/to/logo.png", "./assets/logo.svg"],
     )
     custom_logo_dark: Optional[str] = Field(
-        None, description="Path to an alternative logo for dark mode. Falls back to custom_logo if unset."
+        None,
+        description="Path to an alternative logo for dark mode. Falls back to custom_logo if unset.",
+        examples=["./assets/logo_dark.svg"],
     )
-    custom_logo_url: Optional[str] = Field(None, description="URL the custom logo links to when clicked.")
-    custom_logo_title: Optional[str] = Field(None, description="Tooltip text shown when hovering over the custom logo.")
-    custom_logo_width: Optional[int] = Field(None, description="Logo width in pixels. Height scales proportionally.")
+    custom_logo_url: Optional[str] = Field(
+        None,
+        description="URL the custom logo links to when clicked.",
+        examples=["https://www.scilifelab.se"],
+    )
+    custom_logo_title: Optional[str] = Field(
+        None,
+        description="Tooltip text shown when hovering over the custom logo.",
+        examples=["Our institute name"],
+    )
+    custom_logo_width: Optional[int] = Field(
+        None, description="Logo width in pixels. Height scales proportionally.", examples=[200]
+    )
     custom_css_files: Optional[List[str]] = Field(
-        None, description="Paths to additional CSS files to inline into the report. Useful for branding overrides."
+        None,
+        description="Paths to additional CSS files to inline into the report. Useful for branding overrides.",
+        examples=[["./assets/custom.css", "./assets/branding.css"]],
     )
     simple_output: Optional[bool] = Field(
         None,
@@ -124,30 +150,48 @@ class MultiQCConfig(BaseModel):
     read_count_multiplier: Optional[float] = Field(
         None,
         description="Multiplier applied to read counts before display. Default 0.000001 shows reads in millions.",
+        examples=[0.001, 1],
     )
     read_count_prefix: Optional[str] = Field(
-        None, description="Suffix shown after formatted read counts, eg. 'M' for millions."
+        None,
+        description="Suffix shown after formatted read counts, eg. 'M' for millions.",
+        examples=["K", ""],
     )
     read_count_desc: Optional[str] = Field(
-        None, description="Word used in plot/axis labels for read counts, eg. 'millions'."
+        None,
+        description="Word used in plot/axis labels for read counts, eg. 'millions'.",
+        examples=["thousands", "raw reads"],
     )
     long_read_count_multiplier: Optional[float] = Field(
-        None, description="Multiplier for long-read counts. Default 0.001 shows counts in thousands."
+        None,
+        description="Multiplier for long-read counts. Default 0.001 shows counts in thousands.",
+        examples=[0.000001, 1],
     )
     long_read_count_prefix: Optional[str] = Field(
-        None, description="Suffix shown after formatted long-read counts, eg. 'K' for thousands."
+        None,
+        description="Suffix shown after formatted long-read counts, eg. 'K' for thousands.",
+        examples=["M", ""],
     )
     long_read_count_desc: Optional[str] = Field(
-        None, description="Word used in labels for long-read counts, eg. 'thousands'."
+        None,
+        description="Word used in labels for long-read counts, eg. 'thousands'.",
+        examples=["millions", "reads"],
     )
     base_count_multiplier: Optional[float] = Field(
         None,
         description="Multiplier for base counts. Default 0.000000001 shows bases in gigabases.",
+        examples=[0.000001, 0.001],
     )
     base_count_prefix: Optional[str] = Field(
-        None, description="Suffix shown after formatted base counts, eg. 'Gb' for gigabases."
+        None,
+        description="Suffix shown after formatted base counts, eg. 'Gb' for gigabases.",
+        examples=["Mb", "Kb"],
     )
-    base_count_desc: Optional[str] = Field(None, description="Word used in labels for base counts, eg. 'gigabases'.")
+    base_count_desc: Optional[str] = Field(
+        None,
+        description="Word used in labels for base counts, eg. 'gigabases'.",
+        examples=["megabases", "kilobases"],
+    )
     output_fn_name: Optional[str] = Field(
         None, description="Filename for the generated HTML report. Defaults to multiqc_report.html."
     )
@@ -174,7 +218,9 @@ class MultiQCConfig(BaseModel):
         None, description="How many parent directories to include. 0 means all the way to the root."
     )
     prepend_dirs_sep: Optional[str] = Field(
-        None, description="String inserted between directory names and the sample name. Defaults to '|'."
+        None,
+        description="String inserted between directory names and the sample name. Defaults to '|'.",
+        examples=["_", " - "],
     )
     file_list: Optional[bool] = Field(
         None,
@@ -228,6 +274,7 @@ class MultiQCConfig(BaseModel):
     ai_custom_endpoint: Optional[str] = Field(
         None,
         description="Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
+        examples=["http://localhost:11434/v1", "https://api.example.com/v1"],
     )
     ai_auth_type: Optional[str] = Field(
         None, description="Authentication scheme used by the custom endpoint, eg. bearer or api_key."
@@ -236,6 +283,7 @@ class MultiQCConfig(BaseModel):
     ai_extra_query_options: Optional[str] = Field(
         None,
         description="Extra URL query parameters appended to AI requests. Format: key1=val1&key2=val2.",
+        examples=["temperature=0.3&top_p=0.9"],
     )
     ai_custom_context_window: Optional[str] = Field(
         None,
@@ -244,10 +292,12 @@ class MultiQCConfig(BaseModel):
     ai_prompt_short: Optional[str] = Field(
         None,
         description="Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
+        examples=["Write the summary in one short paragraph aimed at a lab head, no jargon."],
     )
     ai_prompt_full: Optional[str] = Field(
         None,
         description="Custom prompt prepended to the full-section AI summary request.",
+        examples=["Use bullet points and call out any sample that looks like an outlier."],
     )
     no_ai: Optional[bool] = Field(
         None,
@@ -338,6 +388,21 @@ class MultiQCConfig(BaseModel):
     general_stats_columns: Dict[str, GeneralStatsModuleConfig] = Field(
         default_factory=dict,
         description="Per-module overrides for General Stats columns. Top-level keys are module IDs.",
+        examples=[
+            {
+                "fastqc": {
+                    "columns": {
+                        "percent_duplicates": {
+                            "title": "% Dups",
+                            "min": 0,
+                            "max": 100,
+                            "scale": "RdYlGn-rev",
+                            "format": "{:,.1f}%",
+                        }
+                    }
+                }
+            }
+        ],
     )
     general_stats_helptext: Optional[str] = Field(
         None, description="Help text shown under the General Statistics heading at the top of the report."
@@ -348,6 +413,12 @@ class MultiQCConfig(BaseModel):
             "Hide or show specific columns. Top-level keys are module IDs, "
             "values are either a bool (apply to all columns) or a dict mapping column ID to bool."
         ),
+        examples=[
+            {
+                "fastqc": False,
+                "samtools": {"raw_total_sequences": True, "error_rate": False},
+            }
+        ],
     )
     table_columns_placement: Optional[Dict[str, Dict[str, float]]] = Field(
         None,
@@ -355,6 +426,7 @@ class MultiQCConfig(BaseModel):
             "Reorder table columns. Top-level keys are module IDs, inner keys are column IDs, "
             "values are float sort weights (lower is further left)."
         ),
+        examples=[{"fastqc": {"percent_duplicates": 900, "percent_gc": 800, "total_sequences": 700}}],
     )
     table_columns_name: Optional[Dict[str, Union[str, Dict[str, str]]]] = Field(
         None,
@@ -362,6 +434,7 @@ class MultiQCConfig(BaseModel):
             "Rename table columns. Top-level keys are module IDs, inner keys are column IDs, "
             "values are the new display name."
         ),
+        examples=[{"fastqc": {"percent_duplicates": "% Dups", "percent_gc": "% GC"}}],
     )
     table_cond_formatting_colours: Optional[List[Dict[str, str]]] = Field(
         None,
@@ -369,6 +442,13 @@ class MultiQCConfig(BaseModel):
             "Background colours referenced by table_cond_formatting_rules. "
             "List of single-key dicts mapping a colour ID to a hex code."
         ),
+        examples=[
+            [
+                {"pass": "#5cb85c"},
+                {"warn": "#f0ad4e"},
+                {"fail": "#d9534f"},
+            ]
+        ],
     )
     table_cond_formatting_rules: Optional[Dict[str, Dict[str, List[Dict[str, Union[str, int, float]]]]]] = Field(
         None,
@@ -376,20 +456,44 @@ class MultiQCConfig(BaseModel):
             "Conditional cell formatting. Nested dicts map table ID to column ID to a list of rules "
             "(eg. {s_eq: pass} matches an exact value). See the customisation docs for the full grammar."
         ),
+        examples=[
+            {
+                "all_columns": {
+                    "pass": [{"s_eq": "pass"}, {"s_eq": "ok"}],
+                    "warn": [{"s_eq": "warn"}],
+                    "fail": [{"s_eq": "fail"}],
+                },
+                "mqc-generalstats-percent_duplicates": {
+                    "fail": [{"gt": 50}],
+                    "warn": [{"gt": 20}],
+                },
+            }
+        ],
     )
     decimalPoint_format: Optional[str] = Field(
-        None, description="Decimal-point character used in formatted numbers, eg. '.' (default) or ','."
+        None,
+        description="Decimal-point character used in formatted numbers, eg. '.' (default) or ','.",
+        examples=[","],
     )
     thousandsSep_format: Optional[str] = Field(
-        None, description="Thousands separator used in formatted numbers, eg. ',' (default), ' ', or '."
+        None,
+        description="Thousands separator used in formatted numbers, eg. ',' (default), ' ', or '.",
+        examples=[" ", "'"],
     )
     remove_sections: Optional[List[str]] = Field(
         None,
-        description="Module sections to hide. Use the section anchor as it appears in the URL, eg. gatk-compare-overlap.",
+        description="Module sections to hide. Use the section anchor as it appears in the URL.",
+        examples=[["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
     )
     section_comments: Optional[Dict[str, str]] = Field(
         None,
         description="Markdown text shown under specific module sections. Keys are section anchors.",
+        examples=[
+            {
+                "fastqc_overrepresented_sequences": "**This is** an important note about the overrepresented sequences.",
+                "samtools": "Reviewed by *Phil* on 2024-08-21.",
+            }
+        ],
     )
     lint: Optional[bool] = Field(
         None,
@@ -402,14 +506,30 @@ class MultiQCConfig(BaseModel):
     custom_plot_config: Optional[Dict[str, Any]] = Field(
         None,
         description="Override plot config options per plot. Top-level keys are plot IDs, values are option dicts.",
+        examples=[
+            {
+                "fastqc_per_base_sequence_quality_plot": {
+                    "title": "FastQC: Mean Quality Scores (custom)",
+                    "yaxis": {"title": "Phred score"},
+                }
+            }
+        ],
     )
     custom_table_header_config: Optional[Dict[str, Any]] = Field(
         None,
         description="Override table column config. Same shape as custom_plot_config but for table headers.",
+        examples=[
+            {
+                "general_stats_table": {
+                    "% Dups": {"min": 0, "max": 100, "format": "{:,.1f}%"},
+                }
+            }
+        ],
     )
     software_versions: Optional[Dict[str, Any]] = Field(
         None,
         description="Manually specify software versions for the Software Versions section. Top-level keys are tool names.",
+        examples=[{"samtools": "1.20", "bwa": "0.7.17", "fastqc": "0.12.1"}],
     )
     ignore_symlinks: Optional[bool] = Field(
         None, description="Skip symlinked files and directories during the file search."
@@ -418,30 +538,44 @@ class MultiQCConfig(BaseModel):
         None, description="Skip image files (PNG/JPEG/etc.) to avoid wasting time opening them."
     )
     fn_ignore_dirs: Optional[List[str]] = Field(
-        None, description="Glob patterns for directory names to skip entirely during the file search."
+        None,
+        description="Glob patterns for directory names to skip entirely during the file search.",
+        examples=[["work", ".nextflow", "*_logs"]],
     )
     fn_ignore_paths: Optional[List[str]] = Field(
-        None, description="Glob patterns for paths to skip during the file search."
+        None,
+        description="Glob patterns for paths to skip during the file search.",
+        examples=[["*/test_data/*", "*/.snakemake/*"]],
     )
     sample_names_ignore: Optional[List[str]] = Field(
-        None, description="Glob patterns. Matching samples are dropped from the report."
+        None,
+        description="Glob patterns. Matching samples are dropped from the report.",
+        examples=[["*_temp", "control_*"]],
     )
     sample_names_ignore_re: Optional[List[str]] = Field(
-        None, description="Regex patterns. Matching samples are dropped from the report."
+        None,
+        description="Regex patterns. Matching samples are dropped from the report.",
+        examples=[[r"^test_.*", r".*_neg_ctrl$"]],
     )
     sample_names_only_include: Optional[List[str]] = Field(
-        None, description="Glob patterns. If set, only matching samples are kept."
+        None,
+        description="Glob patterns. If set, only matching samples are kept.",
+        examples=[["RNA_*", "Sample_??"]],
     )
     sample_names_only_include_re: Optional[List[str]] = Field(
-        None, description="Regex patterns. If set, only matching samples are kept."
+        None,
+        description="Regex patterns. If set, only matching samples are kept.",
+        examples=[[r"^WGS_[0-9]+$"]],
     )
     sample_names_rename_buttons: Optional[List[str]] = Field(
         None,
         description="Names of the toolbox buttons that switch between the rename groups defined in sample_names_rename.",
+        examples=[["Sample ID", "Patient ID", "Lane"]],
     )
     sample_names_replace: Optional[Dict[str, str]] = Field(
         None,
         description="Substring replacements applied to every sample name. Keys are matched, values are replacements.",
+        examples=[{"_001": "", "Sample_": "S"}],
     )
     sample_names_replace_regex: Optional[bool] = Field(
         None, description="Treat keys in sample_names_replace as regex patterns."
@@ -455,26 +589,43 @@ class MultiQCConfig(BaseModel):
     sample_names_rename: Optional[List[List[str]]] = Field(
         None,
         description="Toolbox rename pairs. Each entry is a [from, to] pair, grouped by the buttons in sample_names_rename_buttons.",
+        examples=[
+            [
+                ["SMP001", "Patient_A"],
+                ["SMP002", "Patient_B"],
+                ["SMP003", "Patient_C"],
+            ]
+        ],
     )
     show_hide_buttons: Optional[List[str]] = Field(
-        None, description="Labels for the toolbox show/hide buttons. One per pattern set."
+        None,
+        description="Labels for the toolbox show/hide buttons. One per pattern set.",
+        examples=[["Tumour samples", "Normal samples"]],
     )
     show_hide_patterns: Optional[List[Union[str, List[str]]]] = Field(
         None,
         description="Patterns for each show/hide button. Each entry is a string or list of strings to match against sample names.",
+        examples=[[["_T_", "_tumour_"], ["_N_", "_normal_"]]],
     )
     show_hide_regex: Optional[List[Union[str, bool]]] = Field(
-        None, description="Whether each pattern set is treated as regex. List of bools aligned with show_hide_buttons."
+        None,
+        description="Whether each pattern set is treated as regex. List of bools aligned with show_hide_buttons.",
+        examples=[[False, False]],
     )
     show_hide_mode: Optional[List[str]] = Field(
         None,
         description="Action for each show/hide button: 'show' (only show matches) or 'hide' (hide matches).",
+        examples=[["show", "show"]],
     )
     highlight_patterns: Optional[List[str]] = Field(
-        None, description="Substring (or regex) patterns. Matching samples are highlighted in plots and tables."
+        None,
+        description="Substring (or regex) patterns. Matching samples are highlighted in plots and tables.",
+        examples=[["control", "treated"]],
     )
     highlight_colors: Optional[List[str]] = Field(
-        None, description="Hex colour for each entry in highlight_patterns, in the same order."
+        None,
+        description="Hex colour for each entry in highlight_patterns, in the same order.",
+        examples=[["#377eb8", "#e41a1c"]],
     )
     highlight_regex: Optional[bool] = Field(
         None, description="Treat highlight_patterns as regex instead of plain substring."
@@ -501,9 +652,11 @@ class MultiQCConfig(BaseModel):
     data_format_extensions: Optional[Dict[str, str]] = Field(
         None,
         description="Override the file extension used when writing each data format, eg. {tsv: txt} to write TSV as .txt.",
+        examples=[{"tsv": "txt", "json": "json", "yaml": "yml"}],
     )
-    export_plot_formats: Optional[List[str]] = Field(
-        None, description="Image formats to export when export_plots is on. Subset of png, svg, pdf."
+    export_plot_formats: Optional[List[Literal["png", "svg", "pdf"]]] = Field(
+        None,
+        description="Image formats to export when export_plots is on.",
     )
     filesearch_file_shared: Optional[List[str]] = Field(
         None,
@@ -512,6 +665,19 @@ class MultiQCConfig(BaseModel):
     custom_content: Optional[Dict[str, Any]] = Field(
         None,
         description="Embed arbitrary plots, tables or text in the report. See the Custom Content docs for the full structure.",
+        examples=[
+            {
+                "order": ["my-section-id", "my-other-section-id"],
+                "data": {
+                    "my-section-id": {
+                        "id": "my-section-id",
+                        "section_name": "My Custom Section",
+                        "plot_type": "table",
+                        "data": {"sample1": {"col1": 100}, "sample2": {"col1": 200}},
+                    }
+                },
+            }
+        ],
     )
     fn_clean_sample_names: Optional[bool] = Field(
         None,
@@ -527,16 +693,22 @@ class MultiQCConfig(BaseModel):
     fn_clean_exts: Optional[List[Union[str, CleanPattern]]] = Field(
         None,
         description="Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in list.",
+        examples=[[".gz", ".fastq", ".bam", {"type": "regex", "pattern": r"_S\d+_L\d+"}]],
     )
     fn_clean_trim: Optional[List[str]] = Field(
-        None, description="Strings trimmed from the start or end of sample names. Replaces the built-in list."
+        None,
+        description="Strings trimmed from the start or end of sample names. Replaces the built-in list.",
+        examples=[["_R1", "_R2", "_001"]],
     )
     extra_fn_clean_exts: Optional[List[Union[str, CleanPattern]]] = Field(
         None,
         description="Extensions appended to the built-in list. Use to add custom suffixes without overriding defaults.",
+        examples=[[".mySuffix", {"type": "remove", "pattern": "_tmp", "module": ["samtools"]}]],
     )
     extra_fn_clean_trim: Optional[List[str]] = Field(
-        None, description="Strings appended to the built-in trim list, without overriding defaults."
+        None,
+        description="Strings appended to the built-in trim list, without overriding defaults.",
+        examples=[["sample_", "_processed"]],
     )
 
     # Search patterns

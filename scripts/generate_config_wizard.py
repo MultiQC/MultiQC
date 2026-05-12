@@ -149,10 +149,10 @@ def generate_config_wizard():
             "prepend_dirs_depth",
             "prepend_dirs_sep",
             "fn_clean_sample_names",
-            "fn_clean_exts",
-            "fn_clean_trim",
             "extra_fn_clean_exts",
             "extra_fn_clean_trim",
+            "fn_clean_exts",
+            "fn_clean_trim",
             "use_filename_as_sample_name",
             "sample_names_ignore",
             "sample_names_ignore_re",
@@ -306,17 +306,29 @@ def generate_config_wizard():
                 continue
             prop = properties[prop_name]
 
-            prop_type = prop.get("type", "string")
+            # Pydantic wraps Optional fields in anyOf. Pull out the non-null branch
+            # so we can read the inner type / items metadata.
+            inner = prop
             if "anyOf" in prop:
-                type_options = [t.get("type") for t in prop.get("anyOf", []) if "type" in t]
-                if type_options:
-                    prop_type = type_options[0]
+                non_null = [t for t in prop["anyOf"] if t.get("type") != "null"]
+                if non_null:
+                    inner = non_null[0]
+
+            prop_type = inner.get("type", prop.get("type", "string"))
 
             enum_values = None
-            if "enum" in prop:
+            if "enum" in inner:
+                enum_values = inner["enum"]
+            elif "enum" in prop:
                 enum_values = prop["enum"]
             elif prop_name == "ai_provider":
                 enum_values = list(get_args(AiProviderLiteral))
+
+            items_enum = None
+            if prop_type == "array":
+                items = inner.get("items")
+                if isinstance(items, dict) and isinstance(items.get("enum"), list):
+                    items_enum = items["enum"]
 
             default_val = config_defaults.get(prop_name)
 
@@ -326,6 +338,8 @@ def generate_config_wizard():
                 "description": prop.get("description", ""),
                 "default": default_val,
                 "enum": enum_values,
+                "items_enum": items_enum,
+                "examples": prop.get("examples", []),
             }
 
     # Escape JSON data for safe embedding inside a <script> tag

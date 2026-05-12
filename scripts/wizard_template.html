@@ -527,7 +527,10 @@
         display: none;
       }
       .form-group label.field-label {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
         font-family: "JetBrains Mono", ui-monospace, monospace;
         font-weight: 500;
         color: var(--ink);
@@ -547,7 +550,6 @@
         padding: 2px 8px;
         border-radius: 3px;
         font-size: 0.72em;
-        margin-left: 10px;
         font-weight: 500;
         font-family: "JetBrains Mono", ui-monospace, monospace;
         letter-spacing: 0;
@@ -555,7 +557,6 @@
         vertical-align: middle;
       }
       .field-reset-btn {
-        margin-left: 6px;
         padding: 3px 6px;
         background: transparent;
         border: 1px solid transparent;
@@ -579,6 +580,67 @@
       .field-reset-btn svg {
         display: block;
       }
+
+      .examples-toggle {
+        display: inline-block;
+        margin-left: auto;
+        align-self: center;
+        background: transparent;
+        border: none;
+        color: var(--teal-border);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.78em;
+        line-height: 1.3;
+        padding: 0;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .examples-toggle:hover {
+        color: var(--navy);
+      }
+      .field-examples {
+        display: none;
+        margin: 0 0 14px;
+      }
+      .field-examples.is-open {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field-examples pre {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 10px 12px;
+        margin: 0;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.8em;
+        line-height: 1.55;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        color: var(--ink-mute);
+      }
+      .field-examples .hljs-attr {
+        color: #0f7d65;
+      }
+      .field-examples .hljs-string {
+        color: #b85c2f;
+      }
+      .field-examples .hljs-number {
+        color: #3d4dac;
+      }
+      .field-examples .hljs-literal {
+        color: #6b3fb1;
+      }
+      .field-examples .hljs-bullet,
+      .field-examples .hljs-punctuation {
+        color: var(--ink-soft);
+      }
+      .field-examples .hljs-comment {
+        color: var(--ink-faint);
+        font-style: italic;
+      }
+
       textarea[aria-invalid="true"] {
         border-color: #d04949 !important;
       }
@@ -662,6 +724,51 @@
       .bool-toggle-btn:focus-visible {
         outline: 2px solid var(--teal);
         outline-offset: -2px;
+      }
+
+      .checkbox-group {
+        display: inline-flex;
+        border: 1px solid var(--border);
+        background: var(--paper);
+      }
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 14px;
+        border-right: 1px solid var(--border);
+        background: transparent;
+        color: var(--ink-soft);
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.78em;
+        cursor: pointer;
+        user-select: none;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .checkbox-item:last-of-type {
+        border-right: none;
+      }
+      .checkbox-item:hover {
+        background: var(--surface-soft);
+        color: var(--ink);
+      }
+      .checkbox-item.checked {
+        background: var(--surface-soft);
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .form-group.is-set .checkbox-item.checked {
+        background: rgba(49, 201, 172, 0.12);
+        color: var(--teal-border);
+      }
+      .checkbox-item input[type="checkbox"] {
+        width: 12px;
+        height: 12px;
+        margin: 0;
+        cursor: pointer;
+        accent-color: var(--teal-border);
       }
 
       .no-results {
@@ -1135,6 +1242,51 @@
           formGroup.appendChild(desc);
         }
 
+        let examplesBlock = null;
+        if (Array.isArray(propData.examples) && propData.examples.length > 0) {
+          const showLabel =
+            propData.examples.length === 1 ? "Show example" : "Show " + propData.examples.length + " examples";
+          const hideLabel =
+            propData.examples.length === 1 ? "Hide example" : "Hide " + propData.examples.length + " examples";
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "examples-toggle";
+          toggle.textContent = showLabel;
+          toggle.setAttribute("aria-expanded", "false");
+          examplesBlock = document.createElement("div");
+          examplesBlock.className = "field-examples";
+          propData.examples.forEach((ex) => {
+            const pre = document.createElement("pre");
+            const code = document.createElement("code");
+            code.className = "language-yaml";
+            let text;
+            if (ex !== null && typeof ex === "object") {
+              text = jsyaml.dump(ex, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+            } else if (typeof ex === "string") {
+              text = ex;
+            } else {
+              text = String(ex);
+            }
+            if (typeof hljs !== "undefined" && hljs.getLanguage && hljs.getLanguage("yaml")) {
+              code.innerHTML = hljs.highlight(text, { language: "yaml" }).value;
+            } else {
+              code.textContent = text;
+            }
+            pre.appendChild(code);
+            examplesBlock.appendChild(pre);
+          });
+          toggle.onclick = (e) => {
+            e.preventDefault();
+            const willShow = !examplesBlock.classList.contains("is-open");
+            examplesBlock.classList.toggle("is-open", willShow);
+            toggle.textContent = willShow ? hideLabel : showLabel;
+            toggle.setAttribute("aria-expanded", willShow ? "true" : "false");
+          };
+          label.appendChild(toggle);
+        }
+
+        if (examplesBlock) formGroup.appendChild(examplesBlock);
+
         const input = createInput(propName, propData);
         formGroup.appendChild(input);
 
@@ -1168,8 +1320,8 @@
           hidden.id = propName;
           wrapper.appendChild(hidden);
 
+          const effectiveDefault = propData.default === true;
           [
-            { val: "", label: "default" },
             { val: "true", label: "true" },
             { val: "false", label: "false" },
           ].forEach((opt) => {
@@ -1178,13 +1330,45 @@
             btn.className = "bool-toggle-btn";
             btn.dataset.value = opt.val;
             btn.textContent = opt.label;
-            if (opt.val === "") btn.classList.add("active");
+            if ((opt.val === "true") === effectiveDefault) btn.classList.add("active");
             btn.onclick = () => {
               wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
               hidden.value = opt.val;
               updateConfig(propName, hidden);
             };
             wrapper.appendChild(btn);
+          });
+
+          return wrapper;
+        } else if (propData.type === "array" && Array.isArray(propData.items_enum)) {
+          const wrapper = document.createElement("div");
+          wrapper.className = "checkbox-group";
+
+          const hidden = document.createElement("input");
+          hidden.type = "hidden";
+          hidden.id = propName;
+          wrapper.appendChild(hidden);
+
+          const def = Array.isArray(propData.default) ? propData.default : [];
+          propData.items_enum.forEach((val) => {
+            const lab = document.createElement("label");
+            lab.className = "checkbox-item";
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = val;
+            cb.checked = def.includes(val);
+            const span = document.createElement("span");
+            span.textContent = val;
+            cb.onchange = () => {
+              lab.classList.toggle("checked", cb.checked);
+              const selected = [...wrapper.querySelectorAll("input[type=checkbox]:checked")].map((c) => c.value);
+              hidden.value = JSON.stringify(selected);
+              updateConfig(propName, hidden);
+            };
+            if (cb.checked) lab.classList.add("checked");
+            lab.appendChild(cb);
+            lab.appendChild(span);
+            wrapper.appendChild(lab);
           });
 
           return wrapper;
@@ -1251,9 +1435,25 @@
           if (input.value === "") {
             delete currentConfig[propName];
           } else {
-            // An explicit `true` or `false` selection is always recorded — even
-            // when it matches the default — so the YAML reflects the user's intent.
-            currentConfig[propName] = input.value === "true";
+            const parsed = input.value === "true";
+            // Selecting the default is treated as "not set" so the YAML stays clean.
+            if (parsed === (def === true)) {
+              delete currentConfig[propName];
+            } else {
+              currentConfig[propName] = parsed;
+            }
+          }
+        } else if (propData.type === "array" && Array.isArray(propData.items_enum)) {
+          let selected;
+          try {
+            selected = JSON.parse(input.value || "[]");
+          } catch (e) {
+            return;
+          }
+          if (valuesEqual(selected, def || [])) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = selected;
           }
         } else if (propData.type === "array") {
           const value = input.value.trim();
@@ -1332,7 +1532,16 @@
         const propData = getCurrentPropData(propName);
         const input = document.getElementById(propName);
         if (!input) return;
-        if (propData.type === "array" && isPrefillableDefault(propData)) {
+        const fg = input.closest(".form-group");
+        if (propData.type === "array" && Array.isArray(propData.items_enum) && fg) {
+          const def = Array.isArray(propData.default) ? propData.default : [];
+          fg.querySelectorAll(".checkbox-item").forEach((lab) => {
+            const cb = lab.querySelector("input[type=checkbox]");
+            const checked = def.includes(cb.value);
+            cb.checked = checked;
+            lab.classList.toggle("checked", checked);
+          });
+        } else if (propData.type === "array" && isPrefillableDefault(propData)) {
           input.value = serializeArrayDefault(propData.default);
         } else if (propData.type === "object" && isPrefillableDefault(propData)) {
           input.value = jsyaml.dump(propData.default, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
@@ -1341,9 +1550,14 @@
         } else {
           input.value = "";
         }
+        if (propData.type === "boolean" && fg) {
+          const effectiveDefault = propData.default === true;
+          fg.querySelectorAll(".bool-toggle-btn").forEach((b) =>
+            b.classList.toggle("active", (b.dataset.value === "true") === effectiveDefault),
+          );
+        }
         input.removeAttribute("aria-invalid");
         delete currentConfig[propName];
-        const fg = input.closest(".form-group");
         if (fg) fg.classList.remove("is-set");
         if (document.body.classList.contains("preview-mode")) generateYaml();
       }
@@ -1497,7 +1711,15 @@
           const propData = getCurrentPropData(propName);
           const input = fg.querySelector("input, select, textarea");
           if (!input) return;
-          if (propData.type === "array" && isPrefillableDefault(propData)) {
+          if (propData.type === "array" && Array.isArray(propData.items_enum)) {
+            const def = Array.isArray(propData.default) ? propData.default : [];
+            fg.querySelectorAll(".checkbox-item").forEach((lab) => {
+              const cb = lab.querySelector("input[type=checkbox]");
+              const checked = def.includes(cb.value);
+              cb.checked = checked;
+              lab.classList.toggle("checked", checked);
+            });
+          } else if (propData.type === "array" && isPrefillableDefault(propData)) {
             input.value = serializeArrayDefault(propData.default);
           } else if (propData.type === "object" && isPrefillableDefault(propData)) {
             input.value = jsyaml.dump(propData.default, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
@@ -1506,11 +1728,11 @@
           } else {
             input.value = "";
           }
-          const boolToggle = fg.querySelector(".bool-toggle");
-          if (boolToggle) {
-            boolToggle
-              .querySelectorAll(".bool-toggle-btn")
-              .forEach((b) => b.classList.toggle("active", b.dataset.value === ""));
+          if (propData.type === "boolean") {
+            const effectiveDefault = propData.default === true;
+            fg.querySelectorAll(".bool-toggle-btn").forEach((b) =>
+              b.classList.toggle("active", (b.dataset.value === "true") === effectiveDefault),
+            );
           }
           input.removeAttribute("aria-invalid");
           fg.classList.remove("is-set");
