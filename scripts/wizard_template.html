@@ -426,7 +426,7 @@
       .welcome-section {
         background: var(--paper);
         border: 1px solid var(--border);
-        border-radius: 3px;
+        border-radius: 0;
         padding: 32px 36px;
         margin: 32px 0 12px;
       }
@@ -461,7 +461,7 @@
         font-family: "Bricolage Grotesque", "Inter", sans-serif;
         font-variation-settings: "opsz" 32;
         color: var(--ink);
-        margin: 48px 0 18px;
+        margin: 56px -56px 22px 0;
         font-size: 1.6em;
         font-weight: 600;
         letter-spacing: -0.015em;
@@ -469,6 +469,9 @@
         scroll-margin-top: 24px;
         position: relative;
         padding-left: 14px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
       }
       .section-heading::before {
         content: "";
@@ -478,32 +481,47 @@
         height: 0.75em;
         width: 3px;
         background: var(--teal);
-        border-radius: 1px;
+        border-radius: 0;
+      }
+      .section-heading::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+        align-self: center;
       }
 
-      /* Form fields — Seqera Box style */
+      /* Form fields — blueprint style: square, sharing one continuous border */
       .form-group {
-        margin-bottom: 10px;
+        margin: 0;
         border: 1px solid var(--border);
-        border-radius: 3px;
+        border-radius: 0;
         padding: 20px 24px;
         background: var(--paper);
+        position: relative;
         transition:
           border-color 0.15s ease,
           box-shadow 0.15s ease;
       }
+      .form-group + .form-group {
+        margin-top: -1px;
+      }
       .form-group:hover {
         border-color: rgba(0, 0, 0, 0.25);
+        z-index: 1;
       }
       .form-group:focus-within {
         border-color: var(--navy);
+        z-index: 2;
       }
       .form-group.is-set {
         border-color: var(--teal);
         box-shadow: inset 3px 0 0 var(--teal);
+        z-index: 1;
       }
       .form-group.is-set:focus-within {
         border-color: var(--teal-border);
+        z-index: 2;
       }
       .form-group.hidden {
         display: none;
@@ -570,7 +588,7 @@
         width: 100%;
         padding: 9px 12px;
         border: 1px solid var(--border);
-        border-radius: 4px;
+        border-radius: 0;
         font-family: inherit;
         font-size: 0.95em;
         color: var(--ink);
@@ -607,7 +625,7 @@
       .bool-toggle {
         display: inline-flex;
         border: 1px solid var(--border);
-        border-radius: 4px;
+        border-radius: 0;
         overflow: hidden;
         background: var(--paper);
       }
@@ -664,7 +682,8 @@
         pointer-events: none;
         opacity: 0.5;
       }
-      body.preview-mode .sidebar-search {
+      body.preview-mode .sidebar-search,
+      body.preview-mode .show-uncommon-btn {
         opacity: 0.4;
         pointer-events: none;
       }
@@ -716,7 +735,7 @@
         background: var(--navy);
         color: #d9d4e0;
         padding: 20px 22px;
-        border-radius: 3px;
+        border-radius: 0;
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
         font-size: 0.88em;
         line-height: 1.6;
@@ -750,7 +769,7 @@
       .yaml-preview-section {
         background: var(--paper);
         border: 1px solid var(--border);
-        border-radius: 3px;
+        border-radius: 0;
         padding: 28px 32px;
         margin: 32px 0;
       }
@@ -976,6 +995,14 @@
           searchInput.value = "";
           searchInput.dispatchEvent(new Event("input"));
           searchInput.focus();
+        });
+        window.addEventListener("beforeunload", (e) => {
+          if (Object.keys(currentConfig).length > 0) {
+            e.preventDefault();
+            // Required for some browsers; the actual message is ignored — the
+            // browser shows its own "Leave site?" prompt.
+            e.returnValue = "";
+          }
         });
       }
 
@@ -1224,12 +1251,9 @@
           if (input.value === "") {
             delete currentConfig[propName];
           } else {
-            const parsed = input.value === "true";
-            if (valuesEqual(parsed, def)) {
-              delete currentConfig[propName];
-            } else {
-              currentConfig[propName] = parsed;
-            }
+            // An explicit `true` or `false` selection is always recorded — even
+            // when it matches the default — so the YAML reflects the user's intent.
+            currentConfig[propName] = input.value === "true";
           }
         } else if (propData.type === "array") {
           const value = input.value.trim();
