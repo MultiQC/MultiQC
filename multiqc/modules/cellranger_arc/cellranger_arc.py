@@ -218,6 +218,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         Note: Uses prefixed keys for ATAC/GEX-specific metrics to avoid collisions.
         Joint metrics (Feature linkages, Linked genes/peaks) remain unprefixed.
+        Display titles for assay-specific columns are prefixed with "ATAC" / "GEX"
+        so the source assay is obvious in the general stats table.
         """
         general_cols = {
             "ATAC_Estimated number of cells": "YlGn",
@@ -229,6 +231,19 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         general_headers = subset_header(data_headers, general_cols)
+
+        # Disambiguate assay-specific titles. Copy the entries first so the
+        # section tables (which share these dicts) keep their unprefixed titles
+        # alongside their ATAC/GEX namespace grouping.
+        title_overrides = {
+            "ATAC_Estimated number of cells": "ATAC est. cells",
+            "ATAC_Fraction of high-quality fragments in cells": "ATAC high-qual fragments",
+            "GEX_Median genes per cell": "GEX median genes per cell",
+        }
+        for key, new_title in title_overrides.items():
+            if key in general_headers:
+                general_headers[key] = {**general_headers[key], "title": new_title}
+
         self.general_stats_addcols(data_by_sample, general_headers)
 
     def atac_summary_table(self, data_by_sample, data_headers):
