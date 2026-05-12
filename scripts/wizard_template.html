@@ -311,8 +311,9 @@
       body.search-active .section-heading.advanced-only {
         display: block;
       }
-      body.show-uncommon .form-group.uncommon .field-label::after {
+      body.show-uncommon .form-group.uncommon .field-key::after {
         content: "advanced";
+        display: inline-block;
         margin-left: 8px;
         padding: 1px 6px;
         border-radius: 3px;
@@ -327,38 +328,12 @@
         vertical-align: middle;
       }
 
-      .sidebar-actions {
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 16px 18px 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+      .sidebar-cta {
+        padding: 14px 18px 6px;
       }
-      .sidebar-actions .btn {
+      .sidebar-cta .btn {
         width: 100%;
         text-align: center;
-      }
-      .sidebar-actions .btn-primary {
-        background: transparent;
-        color: white;
-        border-color: rgba(255, 255, 255, 0.3);
-      }
-      .sidebar-actions .btn-primary:hover {
-        background: white;
-        color: var(--navy);
-        border-color: white;
-      }
-      .sidebar-actions .btn-secondary {
-        background: transparent;
-        color: rgba(255, 255, 255, 0.6);
-        border-color: rgba(255, 255, 255, 0.12);
-        padding: 6px 14px;
-        font-size: 0.85em;
-      }
-      .sidebar-actions .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: white;
-        border-color: rgba(255, 255, 255, 0.25);
       }
 
       .welcome-links {
@@ -395,7 +370,6 @@
         font-size: 0.95em;
         line-height: 1;
       }
-
       /* Right-hand main column */
       .main {
         margin-left: 280px;
@@ -569,6 +543,24 @@
         border-color: var(--teal-border);
         z-index: 2;
       }
+      .form-group.is-invalid,
+      .form-group.is-invalid:focus-within,
+      .form-group.is-set.is-invalid {
+        background: #fdf5f5;
+        border-color: #d04949;
+        box-shadow: inset 3px 0 0 #d04949;
+        z-index: 2;
+      }
+      .form-group.is-invalid input,
+      .form-group.is-invalid textarea {
+        border-color: #d04949;
+      }
+      .field-error-msg {
+        margin-top: 8px;
+        color: #b03939;
+        font-size: 0.85em;
+        line-height: 1.45;
+      }
       .form-group.hidden {
         /* `!important` so search filtering wins over the show-uncommon rule's higher specificity. */
         display: none !important;
@@ -576,6 +568,7 @@
       .form-group label.field-label {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 6px;
         flex-wrap: wrap;
         font-family: "JetBrains Mono", ui-monospace, monospace;
@@ -583,6 +576,12 @@
         color: var(--ink);
         margin-bottom: 6px;
         font-size: 0.95em;
+      }
+      .field-key-group {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
       }
       .form-group .description {
         color: var(--ink-mute);
@@ -646,7 +645,6 @@
 
       .examples-toggle {
         display: inline-block;
-        margin-left: auto;
         align-self: center;
         background: transparent;
         border: none;
@@ -704,9 +702,6 @@
         font-style: italic;
       }
 
-      textarea[aria-invalid="true"] {
-        border-color: #d04949 !important;
-      }
       .form-group input,
       .form-group textarea {
         width: 100%;
@@ -735,6 +730,11 @@
         outline: none;
         border-color: var(--teal-border);
         box-shadow: 0 0 0 3px rgba(49, 201, 172, 0.2);
+      }
+      .form-group.is-invalid input:focus,
+      .form-group.is-invalid textarea:focus {
+        border-color: #d04949;
+        box-shadow: 0 0 0 3px rgba(208, 73, 73, 0.2);
       }
 
       .bool-toggle {
@@ -832,18 +832,18 @@
         font-size: 0.95em;
       }
 
-      /* When previewing YAML, hide the editor UI */
-      body.preview-mode #welcomeSection,
-      body.preview-mode #sections,
-      body.preview-mode #noResults {
+      /* When previewing or validating YAML, hide the editor UI */
+      body.yaml-mode #welcomeSection,
+      body.yaml-mode #sections,
+      body.yaml-mode #noResults {
         display: none !important;
       }
-      body.preview-mode .section-nav a {
+      body.yaml-mode .section-nav a {
         pointer-events: none;
         opacity: 0.5;
       }
-      body.preview-mode .sidebar-search,
-      body.preview-mode .show-uncommon-btn {
+      body.yaml-mode .sidebar-search,
+      body.yaml-mode .show-uncommon-btn {
         opacity: 0.4;
         pointer-events: none;
       }
@@ -891,47 +891,18 @@
         color: white;
       }
 
-      .yaml-output {
-        background: var(--navy);
-        color: #d9d4e0;
-        padding: 20px 22px;
-        border-radius: 0;
-        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
-        font-size: 0.88em;
-        line-height: 1.6;
-        white-space: pre-wrap;
-        margin-top: 16px;
-      }
-      /* Minimal YAML highlight theme tuned to the navy code surface */
-      .yaml-output .hljs-attr {
-        color: #9eebd5;
-      }
-      .yaml-output .hljs-string {
-        color: #f1a373;
-      }
-      .yaml-output .hljs-number {
-        color: #a5b4fc;
-      }
-      .yaml-output .hljs-literal {
-        color: #c4b5fd;
-      }
-      .yaml-output .hljs-bullet,
-      .yaml-output .hljs-punctuation {
-        color: #8a8595;
-      }
-      .yaml-output .hljs-comment {
-        color: #847d99;
-        font-style: italic;
-      }
-
-      .yaml-preview-section {
+      .yaml-view-section {
+        display: none;
         background: var(--paper);
         border: 1px solid var(--border);
         border-radius: 0;
         padding: 28px 32px;
         margin: 32px 0;
       }
-      .yaml-preview-head {
+      body.yaml-mode .yaml-view-section {
+        display: block;
+      }
+      .yaml-view-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -939,48 +910,304 @@
         margin-bottom: 6px;
         flex-wrap: wrap;
       }
-      .yaml-preview-head h3 {
+      .yaml-view-head h3 {
         margin-bottom: 0;
       }
-      .back-btn {
-        display: inline-flex;
+      .yaml-view-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 6px;
       }
-      .back-btn span {
-        font-size: 1.05em;
-        line-height: 1;
-      }
-      .yaml-preview-section h3 {
-        font-family: "Bricolage Grotesque", "Inter", sans-serif;
-        font-variation-settings: "opsz" 24;
+
+      .yaml-view-section h3 {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
         color: var(--ink);
-        font-size: 1.2em;
-        font-weight: 600;
+        font-size: 1.05em;
+        font-weight: 500;
         margin-bottom: 6px;
-        letter-spacing: -0.01em;
       }
-      .yaml-preview-section p {
+      .yaml-view-section p {
         color: var(--ink-mute);
         font-size: 0.92em;
       }
-      .yaml-preview-section code {
+      .yaml-view-section code {
         background: var(--surface-soft);
         border: 1px solid var(--border-soft);
         padding: 1px 6px;
         border-radius: 3px;
         font-size: 0.85em;
       }
-      .fields-set-count {
-        color: var(--ink-soft);
-        font-size: 0.82em;
-        margin-top: 4px;
+      .validate-input {
+        width: 100%;
+        margin-top: 12px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 0;
+        background: var(--navy);
+        color: #d9d4e0;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.85em;
+        line-height: 1.55;
+        resize: vertical;
+        min-height: 220px;
       }
-      .yaml-preview-actions {
+      .validate-input::placeholder {
+        color: rgba(217, 212, 224, 0.4);
+      }
+      .validate-input:focus {
+        outline: 2px solid var(--teal);
+        outline-offset: 2px;
+      }
+      .validate-summary {
         display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        margin-top: 18px;
+        min-height: 28px;
+      }
+      .validate-summary .btn {
+        margin-left: auto;
+        padding: 6px 14px;
+        font-size: 0.85em;
+      }
+      .validate-summary-hint {
+        color: var(--ink-soft);
+        font-size: 0.78em;
+        margin-left: 0.5rem;
+      }
+      .validate-summary-hint::before {
+        content: "← ";
+      }
+      .validate-card.is-filtered-out {
+        display: none;
+      }
+      .validate-cards {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .validate-monaco {
+        margin-top: 12px;
+        height: 360px;
+        border: 1px solid var(--border);
+      }
+      .validate-line-hl {
+        background: rgba(49, 201, 172, 0.18);
+      }
+      .validate-line-hl-margin {
+        background: var(--teal);
+        width: 3px !important;
+        margin-left: 2px;
+      }
+      .validate-card {
+        border: 1px solid var(--border-soft);
+        border-left: 3px solid var(--border);
+        background: var(--paper);
+        padding: 14px 18px;
+        cursor: pointer;
+        transition: box-shadow 0.15s ease;
+      }
+      .validate-card:hover {
+        box-shadow: 0 1px 0 var(--ink-soft);
+      }
+      .validate-card.is-active {
+        outline: 2px solid var(--teal);
+        outline-offset: -2px;
+      }
+      .validate-card.status-ok {
+        border-left-color: var(--teal-border);
+      }
+      .validate-card.status-error {
+        border-left-color: #d04949;
+        background: #fdf5f5;
+      }
+      .validate-card.status-default {
+        border-left-color: var(--ink-faint);
+        background: var(--surface-soft);
+      }
+      .validate-card.status-deprecated {
+        border-left-color: #f0ad4e;
+        background: #fff8eb;
+      }
+      .validate-card.status-unknown {
+        border-left-color: #b07cd6;
+        background: #f8f4fc;
+      }
+      .validate-card-head {
+        display: flex;
+        align-items: center;
         gap: 10px;
         flex-wrap: wrap;
-        align-items: center;
+        margin-bottom: 8px;
+      }
+      .validate-key {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.95em;
+        color: var(--ink);
+        background: transparent;
+        border: 0;
+        padding: 0;
+      }
+      .validate-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-family: "Inter", sans-serif;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+      }
+      /* Summary-row badges are buttons that toggle filtering. */
+      button.validate-badge {
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        transition:
+          opacity 0.15s ease,
+          border-color 0.15s ease;
+      }
+      #validateSummary .validate-badge:not(.is-active) {
+        opacity: 0.55;
+      }
+      #validateSummary .validate-badge:hover {
+        opacity: 1;
+      }
+      #validateSummary .validate-badge.is-active {
+        border-color: currentColor;
+      }
+      .validate-badge.ok {
+        background: rgba(49, 201, 172, 0.15);
+        color: var(--teal-border-active);
+      }
+      .validate-badge.error {
+        background: rgba(208, 73, 73, 0.12);
+        color: #b03939;
+      }
+      .validate-badge.default {
+        background: rgba(0, 0, 0, 0.06);
+        color: var(--ink-mute);
+      }
+      .validate-badge.deprecated {
+        background: rgba(240, 173, 78, 0.18);
+        color: #8a5a0a;
+      }
+      .validate-badge.unknown {
+        background: rgba(176, 124, 214, 0.18);
+        color: #6b3da3;
+      }
+      .validate-value-inline {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.85em;
+        color: var(--ink-mute);
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 8px;
+        border-radius: 3px;
+        max-width: 40em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .validate-type {
+        font-family: "Inter", sans-serif;
+        font-size: 0.6em;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        margin-left: 0.5em;
+      }
+      .validate-desc {
+        color: var(--ink-mute);
+        font-size: 0.88em;
+        line-height: 1.5;
+        margin-bottom: 6px;
+      }
+      .validate-desc code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.92em;
+      }
+      .validate-desc a {
+        color: var(--teal-border);
+        text-decoration: underline;
+      }
+      .validate-msg {
+        color: var(--ink-mute);
+        font-size: 0.85em;
+        margin-top: 4px;
+      }
+      .validate-msg code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+      }
+      /* Wide-screen layout for the YAML view: editor on the left, scrollable
+         cards on the right. The 1500px threshold leaves the editor at least
+         ~600px wide (sidebar 280 + section padding ~70 + editor 600 + gap
+         24 + cards 500 ≈ 1474). Below that, fall back to the stacked layout. */
+      @media (min-width: 1500px) {
+        body.yaml-mode .yaml-view-section {
+          display: grid;
+          grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+          /* Summary sits above the cards (filters its own list), editor
+             spans the two right-hand rows on the left. */
+          grid-template-rows: auto auto auto 1fr;
+          grid-template-areas:
+            "head head"
+            "intro intro"
+            "editor summary"
+            "editor cards";
+          gap: 12px 24px;
+          align-items: stretch;
+          /* Lock the section to the viewport so the cards column can scroll
+             internally. The 350px subtraction leaves room for the page
+             header above and the page-footer / breathing room below.
+             `overflow: hidden` is needed so the cards' content can't spill
+             past the section box; without it, max-height only clamps the
+             box, and the grid item still grows past it. */
+          height: calc(100vh - 350px);
+          overflow: hidden;
+        }
+        body.yaml-mode .yaml-view-section > .yaml-view-head {
+          grid-area: head;
+        }
+        body.yaml-mode .yaml-view-section > p {
+          grid-area: intro;
+          margin: 0;
+        }
+        body.yaml-mode .yaml-view-section > #validateInput,
+        body.yaml-mode .yaml-view-section > #validateMonaco {
+          grid-area: editor;
+          margin: 0;
+          height: 100%;
+          min-height: 400px;
+        }
+        body.yaml-mode .yaml-view-section > .validate-summary {
+          grid-area: summary;
+          margin: 0;
+        }
+        body.yaml-mode .yaml-view-section > .validate-cards {
+          grid-area: cards;
+          margin: 0;
+          overflow-y: auto;
+          /* min-height:0 lets the grid item shrink below its content so the
+             1fr row constraint actually kicks in. */
+          min-height: 0;
+        }
       }
 
       @media (max-width: 900px) {
@@ -1013,7 +1240,7 @@
         .welcome-section {
           padding: 24px;
         }
-        .yaml-preview-section {
+        .yaml-view-section {
           padding: 22px 20px;
         }
       }
@@ -1031,6 +1258,9 @@
           __MULTIQC_LOGO_SVG__
         </a>
         <div class="sidebar-eyebrow">Config Wizard</div>
+      </div>
+      <div class="sidebar-cta">
+        <button id="viewYamlBtn" class="btn btn-success" onclick="showYaml()">View YAML</button>
       </div>
       <div class="sidebar-search">
         <input type="text" id="searchInput" placeholder="Search options..." autocomplete="off" />
@@ -1062,10 +1292,6 @@
           <span class="show-uncommon-label">Show advanced options</span>
         </button>
       </nav>
-      <div class="sidebar-actions">
-        <button id="previewBtn" class="btn btn-success" onclick="previewYaml()">Preview YAML</button>
-        <button class="btn btn-secondary" onclick="resetConfig()">Reset All</button>
-      </div>
     </aside>
 
     <main class="main">
@@ -1084,7 +1310,8 @@
           </p>
           <p>
             Browse sections in the sidebar, or use the search bar above to find a specific option. When you are done,
-            click <strong>Preview YAML</strong> below.
+            click <strong>View YAML</strong> to see the generated config. You can also paste an existing
+            <code>multiqc_config.yaml</code> there to have each option validated and explained.
           </p>
           <div class="welcome-links">
             <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">MultiQC Homepage</a>
@@ -1097,20 +1324,29 @@
 
         <div class="no-results" id="noResults">No configuration options match your search.</div>
 
-        <div class="yaml-preview-section" id="yamlSection" style="display:none;">
-          <div class="yaml-preview-head">
-            <h3>Generated Configuration</h3>
-            <div class="yaml-preview-actions">
-              <button class="btn btn-secondary back-btn" onclick="backToEditor()">
-                <span aria-hidden="true">&larr;</span> Back to editor
-              </button>
+        <div class="yaml-view-section" id="yamlViewSection">
+          <div class="yaml-view-head">
+            <h3>multiqc_config.yaml</h3>
+            <div class="yaml-view-actions">
+              <button class="btn btn-secondary" onclick="clearYaml()">Clear</button>
               <button id="copyBtn" class="btn btn-primary" onclick="copyConfig()">Copy to clipboard</button>
               <button class="btn btn-success" onclick="downloadConfig()">Download config</button>
             </div>
           </div>
-          <p>Copy this content to <code>multiqc_config.yaml</code> in your project directory.</p>
-          <p class="fields-set-count" id="fieldsSetCount"></p>
-          <div class="yaml-output" id="yamlOutput"></div>
+          <p>Edit, paste, or just read your config. Each option is checked against the schema and explained below.</p>
+          <textarea
+            id="validateInput"
+            class="validate-input"
+            rows="14"
+            spellcheck="false"
+            placeholder="# paste here..."
+          ></textarea>
+          <!-- Monaco mounts into this container the first time the user enters
+               YAML mode. The textarea above stays as a fallback if the CDN
+               fails or hasn't finished loading. -->
+          <div id="validateMonaco" class="validate-monaco" style="display: none"></div>
+          <div class="validate-summary" id="validateSummary"></div>
+          <div class="validate-cards" id="validateCards"></div>
         </div>
       </div>
 
@@ -1138,11 +1374,28 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.17.1/ajv2020.bundle.min.js"
+      integrity="sha384-kz0rEmUPEGITP2jtssINcPlpx2oqv5B7mCxBMc6J15TQxYhoz2QdB0I974nvL4nI"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <!-- Monaco's AMD loader. The editor + language chunks are fetched lazily
+         the first time showYaml() runs; editor-only users never pay. -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs/loader.min.js"
+      integrity="sha384-UcP5/iVWyRzIhnVjcB2o9W1eoYKL5fAhHTRzvFZg8ctOsoAoDeBQyQuyIk+BJ/nh"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
     <script>
       const configData = __CONFIG_DATA_JSON__;
+      const configSchema = __CONFIG_SCHEMA_JSON__;
+      const propNames = Object.keys(configSchema.properties || {});
+      let ajvValidate = null; // compiled lazily on first validate
 
       // Flat propName -> propData lookup, built once. Avoids walking every section
-      // for every updateConfig / resetField / resetConfig call (146 props * 11 sections).
+      // for every updateConfig / resetField call (146 props * 11 sections).
       const propDataIndex = {};
       for (const sectionProps of Object.values(configData)) {
         for (const [name, data] of Object.entries(sectionProps)) {
@@ -1151,6 +1404,11 @@
       }
 
       let currentConfig = {};
+      // Top-level keys present in a pasted/edited YAML that don't correspond
+      // to a wizard form widget (plugin keys, schema-only keys like `sp`,
+      // typos the user wants to keep). Round-trip across editor/yaml mode
+      // and survive a page reload via localStorage.
+      let pluginKeys = {};
 
       // {sectionName: commonCount}, computed once at init from configData.
       // Used by both the sidebar TOC and the in-page section headings to
@@ -1165,6 +1423,7 @@
       function initWizard() {
         createSectionNavigation();
         createSectionContent();
+        hydrateFromStorage();
         const searchInput = document.getElementById("searchInput");
         searchInput.addEventListener("input", handleSearch);
         document.getElementById("clearSearchBtn").addEventListener("click", () => {
@@ -1172,13 +1431,11 @@
           searchInput.dispatchEvent(new Event("input"));
           searchInput.focus();
         });
-        window.addEventListener("beforeunload", (e) => {
-          if (Object.keys(currentConfig).length > 0) {
-            e.preventDefault();
-            // Required for some browsers; the actual message is ignored.
-            // The browser shows its own "Leave site?" prompt.
-            e.returnValue = "";
-          }
+        const validateInput = document.getElementById("validateInput");
+        let validateTimer;
+        validateInput.addEventListener("input", () => {
+          clearTimeout(validateTimer);
+          validateTimer = setTimeout(runValidation, 250);
         });
       }
 
@@ -1245,9 +1502,11 @@
         return false;
       }
 
-      // Shared YAML serialization for default-prefills, object inputs, and inline examples.
-      function dumpYaml(value) {
-        return jsyaml.dump(value, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+      // Shared YAML serialization for default-prefills, object inputs, and
+      // inline examples. Accepts an optional opts merge for callers that need
+      // extras like sortKeys.
+      function dumpYaml(value, opts) {
+        return jsyaml.dump(value, { indent: 2, lineWidth: 80, noRefs: true, ...opts }).trimEnd();
       }
 
       function serializeArrayDefault(arr) {
@@ -1269,13 +1528,30 @@
 
         const label = document.createElement("label");
         label.className = "field-label";
-        label.textContent = propName;
+
+        // Group all left-side bits (key name, advanced badge via ::after on
+        // .field-key, default + reset) into one flex child so the label's
+        // `justify-content: space-between` only stretches the gap between
+        // this group and the right-aligned examples-toggle.
+        const keyGroup = document.createElement("span");
+        keyGroup.className = "field-key-group";
+        const keyName = document.createElement("span");
+        keyName.className = "field-key";
+        keyName.textContent = propName;
+        keyGroup.appendChild(keyName);
+        if (propData.type) {
+          const typeTag = document.createElement("span");
+          typeTag.className = "validate-type";
+          typeTag.textContent = propData.type;
+          keyGroup.appendChild(typeTag);
+        }
+        label.appendChild(keyGroup);
 
         if (propData.default !== null && propData.default !== undefined) {
           const defaultSpan = document.createElement("span");
           defaultSpan.className = "default-badge";
           defaultSpan.textContent = "default: " + formatDefaultValue(propData.default);
-          label.appendChild(defaultSpan);
+          keyGroup.appendChild(defaultSpan);
 
           if (isPrefillableDefault(propData)) {
             const resetBtn = document.createElement("button");
@@ -1289,7 +1565,7 @@
               e.preventDefault();
               resetField(propName);
             };
-            label.appendChild(resetBtn);
+            keyGroup.appendChild(resetBtn);
           }
         }
 
@@ -1419,6 +1695,11 @@
           input = document.createElement("input");
           input.type = "number";
           input.step = "any";
+        } else if (propData.multiline) {
+          // Prose strings (intro_text, report_comment, AI prompts) render
+          // as a textarea instead of a single-line input.
+          input = document.createElement("textarea");
+          input.rows = 4;
         } else {
           input = document.createElement("input");
           input.type = "text";
@@ -1440,13 +1721,51 @@
           return a.every((x, i) => valuesEqual(x, b[i]));
         }
         if (typeof a === "object") {
-          const ka = Object.keys(a).sort();
-          const kb = Object.keys(b).sort();
-          if (ka.length !== kb.length) return false;
-          if (!ka.every((k, i) => k === kb[i])) return false;
-          return ka.every((k) => valuesEqual(a[k], b[k]));
+          const ka = Object.keys(a);
+          if (ka.length !== Object.keys(b).length) return false;
+          return ka.every((k) => k in b && valuesEqual(a[k], b[k]));
         }
         return false;
+      }
+
+      // Mark a form-group as having an invalid value, surface a human-readable
+      // error message under the input, and tag the input with aria-invalid for
+      // assistive tech. Used for free-text array/object textareas where the
+      // user's input can fail YAML/JSON parsing.
+      function setFieldError(input, message) {
+        input.setAttribute("aria-invalid", "true");
+        const fg = input.closest(".form-group");
+        if (!fg) return;
+        fg.classList.add("is-invalid");
+        let msg = fg.querySelector(".field-error-msg");
+        if (!msg) {
+          msg = document.createElement("div");
+          msg.className = "field-error-msg";
+          fg.appendChild(msg);
+        }
+        msg.textContent = message;
+      }
+
+      function clearFieldError(input) {
+        input.removeAttribute("aria-invalid");
+        const fg = input.closest(".form-group");
+        if (!fg) return;
+        fg.classList.remove("is-invalid");
+        const msg = fg.querySelector(".field-error-msg");
+        if (msg) msg.remove();
+      }
+
+      // Run the JSON schema against `value` for this property. On any errors,
+      // surface them under the input and return false (caller skips writing
+      // to currentConfig); otherwise clear the field-error and return true.
+      function checkAgainstSchema(input, propName, value) {
+        const errors = validateFieldAgainstSchema(propName, value);
+        if (errors.length) {
+          setFieldError(input, errors.join("; "));
+          return false;
+        }
+        clearFieldError(input);
+        return true;
       }
 
       function updateConfig(propName, input) {
@@ -1484,7 +1803,7 @@
             try {
               parsed = parseArrayInput(value);
             } catch (e) {
-              input.setAttribute("aria-invalid", "true");
+              setFieldError(input, "Expected a YAML list. " + (e.message || ""));
               return;
             }
           } else {
@@ -1492,7 +1811,7 @@
             // the field had no default (so we don't add a redundant `prop: []`).
             parsed = [];
           }
-          input.removeAttribute("aria-invalid");
+          if (!checkAgainstSchema(input, propName, parsed)) return;
           const unset = !value && (def === null || def === undefined);
           if (unset || valuesEqual(parsed, def)) {
             delete currentConfig[propName];
@@ -1506,14 +1825,17 @@
             try {
               parsed = jsyaml.load(value);
             } catch (e) {
-              // Invalid YAML/JSON, keep last good state and mark visually.
-              input.setAttribute("aria-invalid", "true");
+              setFieldError(input, "Invalid YAML. " + (e.message || ""));
+              return;
+            }
+            if (parsed && (typeof parsed !== "object" || Array.isArray(parsed))) {
+              setFieldError(input, "Expected a YAML mapping (key: value pairs).");
               return;
             }
           } else {
             parsed = {};
           }
-          input.removeAttribute("aria-invalid");
+          if (!checkAgainstSchema(input, propName, parsed)) return;
           const unset = !value && (def === null || def === undefined);
           if (unset || valuesEqual(parsed, def)) {
             delete currentConfig[propName];
@@ -1523,7 +1845,10 @@
         } else if (propData.type === "integer") {
           const value = parseInt(input.value);
           if (isNaN(value)) {
+            clearFieldError(input);
             delete currentConfig[propName];
+          } else if (!checkAgainstSchema(input, propName, value)) {
+            return;
           } else if (valuesEqual(value, def)) {
             delete currentConfig[propName];
           } else {
@@ -1532,7 +1857,10 @@
         } else if (propData.type === "number") {
           const value = parseFloat(input.value);
           if (isNaN(value)) {
+            clearFieldError(input);
             delete currentConfig[propName];
+          } else if (!checkAgainstSchema(input, propName, value)) {
+            return;
           } else if (valuesEqual(value, def)) {
             delete currentConfig[propName];
           } else {
@@ -1559,11 +1887,159 @@
 
         const fg = input.closest(".form-group");
         if (fg) fg.classList.toggle("is-set", propName in currentConfig);
+        saveEditorConfig();
       }
 
-      // Reset one form-group's visual state to its schema default and clear the
-      // field from currentConfig. Shared between resetField (single field) and
-      // resetConfig (all fields).
+      // Suppresses saveEditorConfig writes during initial hydration so we
+      // don't echo localStorage data back into localStorage one key at a time.
+      let isHydrating = false;
+
+      // Raw editor text from the last Back-to-editor, plus a snapshot of the
+      // form state it represents. When the user re-enters View YAML and the
+      // form still matches that snapshot, we rehydrate the editor with the
+      // exact original text so comments, blank lines and key ordering survive
+      // the round-trip. Any form change makes the snapshot compare unequal
+      // and View YAML rebuilds cleanly from currentConfig + pluginKeys.
+      let lastEditedYaml = null;
+      let lastEditedFormSnap = null;
+
+      // Persist the editor state to localStorage so a page refresh doesn't
+      // wipe in-progress configs. Empty configs clear the entry so a clean
+      // user comes back to a clean wizard. Debounced because updateConfig
+      // fires on every keystroke in textareas like report_header_info.
+      let _saveEditorConfigTimer = null;
+      function _flushSaveEditorConfig() {
+        if (_saveEditorConfigTimer !== null) {
+          clearTimeout(_saveEditorConfigTimer);
+          _saveEditorConfigTimer = null;
+        }
+        safeLocalStorageSet(
+          "mqc_wizard_config",
+          Object.keys(currentConfig).length === 0 ? null : JSON.stringify(currentConfig),
+        );
+      }
+      function saveEditorConfig() {
+        if (isHydrating) return;
+        clearTimeout(_saveEditorConfigTimer);
+        _saveEditorConfigTimer = setTimeout(_flushSaveEditorConfig, 200);
+      }
+      // Don't drop the user's last edits if they navigate away during the
+      // debounce window.
+      window.addEventListener("pagehide", _flushSaveEditorConfig);
+
+      // Set or remove (when value is null) a localStorage entry, swallowing
+      // quota / disabled-storage errors so the wizard keeps working in
+      // private-mode browsers or with strict storage policies.
+      function safeLocalStorageSet(key, value) {
+        try {
+          if (value === null) localStorage.removeItem(key);
+          else localStorage.setItem(key, value);
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      // Read previous editor state + preserved plugin keys from localStorage
+      // and restore them. Schema-drifted keys are skipped quietly.
+      function hydrateFromStorage() {
+        isHydrating = true;
+        try {
+          let raw = null;
+          try {
+            raw = localStorage.getItem("mqc_wizard_config");
+          } catch (e) {
+            // storage unavailable: leave the wizard pristine
+          }
+          if (raw) {
+            try {
+              const stored = JSON.parse(raw);
+              for (const [k, v] of Object.entries(stored)) {
+                if (!propDataIndex[k]) continue;
+                applyValueToGroup(k, v);
+              }
+            } catch (e) {
+              // Corrupt JSON: leave the wizard pristine.
+            }
+          }
+          let pk = null;
+          try {
+            pk = localStorage.getItem("mqc_wizard_plugin_keys");
+          } catch (e) {
+            // ignore
+          }
+          if (pk) {
+            try {
+              pluginKeys = JSON.parse(pk) || {};
+            } catch (e) {
+              pluginKeys = {};
+            }
+          }
+          try {
+            lastEditedYaml = localStorage.getItem("mqc_wizard_yaml_text");
+            const snap = localStorage.getItem("mqc_wizard_yaml_form_snap");
+            if (snap) lastEditedFormSnap = JSON.parse(snap);
+          } catch (e) {
+            // ignore
+          }
+        } finally {
+          isHydrating = false;
+        }
+      }
+
+      // Push a value into the matching form-group's widget, then let the
+      // existing `updateConfig` path canonicalise it into `currentConfig`.
+      // Keep in sync with `createInput`: a new widget type added there needs
+      // a matching branch here.
+      function applyValueToGroup(propName, value) {
+        const fg = document.querySelector(`.form-group[data-propname="${CSS.escape(propName)}"]`);
+        if (!fg) return;
+        const propData = propDataIndex[propName];
+        if (!propData) return;
+
+        // Segmented toggle (boolean or enum): activate the matching button and
+        // sync the hidden input.
+        const toggle = fg.querySelector(".bool-toggle");
+        if (toggle) {
+          const target = String(value);
+          toggle.querySelectorAll(".bool-toggle-btn").forEach((b) => {
+            b.classList.toggle("active", b.dataset.value === target);
+          });
+          const hidden = toggle.querySelector("input[type=hidden]");
+          hidden.value = target;
+          updateConfig(propName, hidden);
+          return;
+        }
+
+        // items_enum checkbox group: tick the right boxes, push aggregate
+        // value through the hidden input.
+        const cbGroup = fg.querySelector(".checkbox-group");
+        if (cbGroup) {
+          const want = new Set((Array.isArray(value) ? value : []).map(String));
+          cbGroup.querySelectorAll("input[type=checkbox]").forEach((cb) => {
+            cb.checked = want.has(String(cb.value));
+            const lab = cb.closest("label");
+            if (lab) lab.classList.toggle("checked", cb.checked);
+          });
+          const hidden = cbGroup.querySelector("input[type=hidden]");
+          hidden.value = JSON.stringify([...want]);
+          updateConfig(propName, hidden);
+          return;
+        }
+
+        // Plain input / textarea.
+        const input = fg.querySelector("input, textarea");
+        if (!input) return;
+        if (propData.type === "array" || propData.type === "object") {
+          input.value = dumpYaml(value);
+        } else {
+          input.value = String(value);
+        }
+        updateConfig(propName, input);
+      }
+
+      // Reset one form-group's visual state to its schema default and clear
+      // the field from currentConfig. Used by resetField (per-field arrow)
+      // and applyYamlToForm (round-trip back from the YAML view).
       function resetGroup(fg, propData) {
         const propName = fg.dataset.propname;
         const input = fg.querySelector("input, select, textarea");
@@ -1593,7 +2069,7 @@
           const hiddenInput = toggleEl.querySelector("input[type=hidden]");
           if (hiddenInput) hiddenInput.value = "";
         }
-        input.removeAttribute("aria-invalid");
+        clearFieldError(input);
         delete currentConfig[propName];
         fg.classList.remove("is-set");
       }
@@ -1604,7 +2080,7 @@
         const fg = input.closest(".form-group");
         if (!fg) return;
         resetGroup(fg, getCurrentPropData(propName));
-        if (document.body.classList.contains("preview-mode")) generateYaml();
+        saveEditorConfig();
       }
 
       function getCurrentPropData(propName) {
@@ -1695,61 +2171,235 @@
         return String(value);
       }
 
-      function generateYaml() {
-        const output = document.getElementById("yamlOutput");
-        const count = Object.keys(currentConfig).length;
-        document.getElementById("fieldsSetCount").textContent =
-          count + " option" + (count !== 1 ? "s" : "") + " configured";
-
-        let text;
-        if (count === 0) {
-          text = "# No configuration set yet\n# Change some values above, then come back here.";
-        } else {
-          try {
-            text = jsyaml.dump(currentConfig, {
-              indent: 2,
-              lineWidth: 80,
-              noRefs: true,
-              sortKeys: true,
-            });
-          } catch (error) {
-            text = "# Error generating YAML: " + error.message;
-          }
-        }
-
-        if (typeof hljs !== "undefined" && hljs.getLanguage && hljs.getLanguage("yaml")) {
-          output.innerHTML = hljs.highlight(text, { language: "yaml" }).value;
-        } else {
-          output.textContent = text;
-        }
+      // Editor ↔ YAML two-state toggle. setMode("editor") shows the form,
+      // setMode("yaml") shows the merged YAML view (editor + cards). The
+      // sidebar CTA swaps label + handler so it always offers the other view.
+      function setMode(mode) {
+        const yaml = mode === "yaml";
+        document.body.classList.toggle("yaml-mode", yaml);
+        const btn = document.getElementById("viewYamlBtn");
+        btn.textContent = yaml ? "Back to editor" : "View YAML";
+        btn.onclick = yaml ? backToEditor : showYaml;
+        window.scrollTo(0, 0);
       }
 
-      function previewYaml() {
-        generateYaml();
-        document.body.classList.add("preview-mode");
-        document.getElementById("yamlSection").style.display = "block";
-        const btn = document.getElementById("previewBtn");
-        btn.textContent = "Editor";
-        btn.onclick = backToEditor;
-        window.scrollTo(0, 0);
+      function showYaml() {
+        // Block entry while any form field has an unparsed YAML/JSON value;
+        // otherwise the invalid text would be silently dropped on the way to
+        // the YAML view.
+        const invalid = document.querySelector(".form-group.is-invalid");
+        if (invalid) {
+          invalid.scrollIntoView({ behavior: "smooth", block: "center" });
+          const input = invalid.querySelector("input, textarea");
+          if (input) input.focus({ preventScroll: true });
+          return;
+        }
+        // If the form's parsed shape still matches the YAML text the user
+        // last had open, restore it verbatim: comments, blank lines and
+        // key ordering all survive. If anything in the form has changed
+        // (or the cache is stale across a reload), regenerate cleanly.
+        setValidateText(yamlTextForCurrentForm());
+        setMode("yaml");
+        document.getElementById("validateInput").focus();
+        runValidation();
+        // On first entry Monaco mounts asynchronously and the textarea-side
+        // validation we just ran needs a second pass once getValidateText
+        // starts reading from the editor. On subsequent entries Monaco is
+        // already live, so we skip the redundant re-run.
+        const hadEditor = !!monacoEditor;
+        ensureMonaco().then(
+          (ed) => {
+            ed.focus();
+            if (!hadEditor) runValidation();
+          },
+          () => {
+            // Monaco unavailable; textarea fallback is already live.
+          },
+        );
       }
 
       function backToEditor() {
-        document.body.classList.remove("preview-mode");
-        document.getElementById("yamlSection").style.display = "none";
-        const btn = document.getElementById("previewBtn");
-        btn.textContent = "Preview YAML";
-        btn.onclick = previewYaml;
-        window.scrollTo(0, 0);
+        // If the user wrote invalid YAML, keep them in YAML mode so they
+        // can fix it; the validate summary already shows the parse error.
+        const text = getValidateText();
+        if (!applyYamlToForm(text)) return;
+        // Cache the raw text along with the form snapshot it represents.
+        // Re-entry restores the exact text (preserving comments) as long
+        // as the live form still matches the snapshot.
+        lastEditedYaml = text;
+        lastEditedFormSnap = { ...currentConfig, ...pluginKeys };
+        safeLocalStorageSet("mqc_wizard_yaml_text", text || null);
+        safeLocalStorageSet(
+          "mqc_wizard_yaml_form_snap",
+          Object.keys(lastEditedFormSnap).length === 0 ? null : JSON.stringify(lastEditedFormSnap),
+        );
+        setMode("editor");
+      }
+
+      // Pick what to put in the editor when entering View YAML.
+      // - If the form still matches the snapshot the cached text represents,
+      //   restore the cached text verbatim (comments + formatting survive).
+      // - Otherwise, try to patch just the changed scalars into the cached
+      //   text in-place so comments for unchanged keys still survive. If the
+      //   diff touches anything complex (nested lists/dicts changed, value
+      //   spanning multiple lines, etc.), fall back to a fresh dump.
+      function yamlTextForCurrentForm() {
+        const now = { ...currentConfig, ...pluginKeys };
+        if (lastEditedYaml !== null && lastEditedFormSnap !== null) {
+          if (valuesEqual(now, lastEditedFormSnap)) return lastEditedYaml;
+          const merged = mergeFormIntoCachedYaml(lastEditedYaml, lastEditedFormSnap, now);
+          if (merged !== null) return merged;
+        }
+        return buildYamlFromForm();
+      }
+
+      // Patch a cached YAML string with the deltas between `snap` and `now`.
+      // Returns the patched text, or null when the diff is too complex to
+      // patch safely (caller falls back to a full rebuild).
+      //
+      // Only handles the common case: top-level scalar values that fit on a
+      // single line in the cached text. Anything else (a list/dict value
+      // changed, a folded/literal multi-line scalar, an unparseable line)
+      // bails to a rebuild.
+      function mergeFormIntoCachedYaml(cachedText, snap, now) {
+        const isScalar = (v) => v === null || typeof v !== "object";
+        const dumpScalar = (v) => dumpYaml(v, { lineWidth: -1 });
+
+        const allKeys = new Set([...Object.keys(snap), ...Object.keys(now)]);
+        const changes = [];
+        for (const k of allKeys) {
+          const inSnap = k in snap;
+          const inNow = k in now;
+          if (inSnap && !inNow) {
+            changes.push({ key: k, op: "remove" });
+          } else if (!inSnap && inNow) {
+            if (!isScalar(now[k])) return null;
+            changes.push({ key: k, op: "add", value: now[k] });
+          } else if (!valuesEqual(snap[k], now[k])) {
+            if (!isScalar(now[k]) || !isScalar(snap[k])) return null;
+            changes.push({ key: k, op: "set", value: now[k] });
+          }
+        }
+        if (changes.length === 0) return cachedText;
+
+        const ranges = computeKeyLineRanges(cachedText);
+        const lines = cachedText.split("\n");
+        // Pattern: "<key>:<space><value>[<optional trailing comment>]"
+        const lineRe = /^([A-Za-z_][A-Za-z0-9_]*\s*:\s*)([^#\r\n]*?)(\s*#.*)?$/;
+
+        // 1. In-place scalar edits (line indices unchanged).
+        for (const c of changes) {
+          if (c.op !== "set") continue;
+          const range = ranges[c.key];
+          if (!range || range.start !== range.end) return null;
+          const line = lines[range.start - 1];
+          const m = lineRe.exec(line);
+          if (!m) return null;
+          // Guard against the regex mis-splitting a value containing '#'
+          // (e.g. `title: "Run #42"`) as a trailing comment. Parse the
+          // value-only portion and verify it matches the snapshot; if not,
+          // bail to the rebuild path rather than corrupt the line.
+          try {
+            const reparsed = jsyaml.load(m[1] + m[2]);
+            if (!reparsed || !valuesEqual(reparsed[c.key], snap[c.key])) return null;
+          } catch (e) {
+            return null;
+          }
+          lines[range.start - 1] = m[1] + dumpScalar(c.value) + (m[3] || "");
+        }
+
+        // 2. Removals, in reverse line order so earlier indices stay valid.
+        const toRemove = changes
+          .filter((c) => c.op === "remove")
+          .map((c) => ranges[c.key])
+          .filter(Boolean)
+          .sort((a, b) => b.start - a.start);
+        for (const r of toRemove) {
+          lines.splice(r.start - 1, r.end - r.start + 1);
+        }
+
+        // 3. Additions: append, preserving any trailing newline.
+        const adds = changes.filter((c) => c.op === "add");
+        if (adds.length) {
+          const trailing = lines.length && lines[lines.length - 1] === "" ? lines.pop() : null;
+          for (const c of adds) lines.push(`${c.key}: ${dumpScalar(c.value)}`);
+          if (trailing !== null) lines.push(trailing);
+        }
+        return lines.join("\n");
+      }
+
+      // Build a YAML string from the wizard form state plus any preserved
+      // unknown keys from previous round-trips. Order matches the editor page:
+      // known keys first in their MultiQCConfig source order, then any plugin
+      // / unknown keys in the order they were last pasted.
+      function buildYamlFromForm() {
+        const ordered = {};
+        for (const propName of Object.keys(propDataIndex)) {
+          if (propName in currentConfig) ordered[propName] = currentConfig[propName];
+        }
+        for (const [k, v] of Object.entries(pluginKeys)) ordered[k] = v;
+        if (Object.keys(ordered).length === 0) return "";
+        try {
+          return dumpYaml(ordered);
+        } catch (e) {
+          return "# Error generating YAML: " + e.message;
+        }
+      }
+
+      // Reverse of buildYamlFromForm: walk the parsed YAML, push known keys
+      // back into the form widgets, remember unknown keys for next entry.
+      // Returns true on success, false if the YAML couldn't be parsed; the
+      // caller uses that to decide whether to keep the user in YAML mode so
+      // their edits aren't silently discarded. An empty / null document is
+      // treated as success: the user is asking to clear all options.
+      function applyYamlToForm(text) {
+        let parsed = null;
+        if (text.trim()) {
+          try {
+            parsed = jsyaml.load(text);
+          } catch (e) {
+            return false;
+          }
+          if (parsed != null && (typeof parsed !== "object" || Array.isArray(parsed))) return false;
+        }
+        parsed = parsed || {};
+
+        // Suppress per-key saveEditorConfig writes during the batch apply;
+        // we save once at the end.
+        isHydrating = true;
+        try {
+          for (const k of Object.keys(currentConfig)) {
+            if (!(k in parsed)) resetField(k);
+          }
+          pluginKeys = {};
+          for (const [k, v] of Object.entries(parsed)) {
+            if (propDataIndex[k]) applyValueToGroup(k, v);
+            else pluginKeys[k] = v;
+          }
+        } finally {
+          isHydrating = false;
+        }
+        saveEditorConfig();
+        safeLocalStorageSet(
+          "mqc_wizard_plugin_keys",
+          Object.keys(pluginKeys).length === 0 ? null : JSON.stringify(pluginKeys),
+        );
+        return true;
+      }
+
+      function clearYaml() {
+        if (!getValidateText().trim()) return;
+        if (!confirm("Clear the YAML editor?")) return;
+        setValidateText("");
+        runValidation();
       }
 
       function downloadConfig() {
-        if (Object.keys(currentConfig).length === 0) {
+        const yaml = getValidateText();
+        if (!yaml.trim()) {
           alert("No configuration to download. Please set some options first.");
           return;
         }
-        generateYaml();
-        const yaml = document.getElementById("yamlOutput").textContent;
         const blob = new Blob([yaml], { type: "text/yaml" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -1763,7 +2413,7 @@
 
       function copyConfig() {
         const btn = document.getElementById("copyBtn");
-        const yaml = document.getElementById("yamlOutput").textContent;
+        const yaml = getValidateText();
         const showFeedback = (label) => {
           const original = btn.dataset.originalLabel || btn.textContent;
           btn.dataset.originalLabel = original;
@@ -1781,17 +2431,6 @@
           () => showFeedback("Copied!"),
           () => showFeedback("Copy failed"),
         );
-      }
-
-      function resetConfig() {
-        if (!confirm("Reset all configuration? This cannot be undone.")) return;
-        currentConfig = {};
-        document.querySelectorAll(".form-group").forEach((fg) => {
-          resetGroup(fg, getCurrentPropData(fg.dataset.propname));
-        });
-        if (document.body.classList.contains("preview-mode")) {
-          generateYaml();
-        }
       }
 
       function slugify(text) {
@@ -1836,17 +2475,536 @@
       // Minimal inline markdown for field descriptions: `code`, **bold**, and
       // [text](url) links. HTML is escaped first so descriptions can't inject
       // tags directly. Block-level markdown (lists, headings) isn't supported.
+      function escapeHtml(s) {
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
       function renderInlineMd(text) {
-        const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        return escaped
+        return escapeHtml(text)
           .replace(/`([^`]+)`/g, "<code>$1</code>")
           .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
           .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
       }
 
+      // Compile the JSON schema once, lazily. Returns null if Ajv2020 didn't
+      // load (CDN failure); caller falls back to no-Ajv rendering.
+      // Monaco editor: loaded lazily the first time showYaml() runs, so
+      // editor-only users don't pay for it. Until it resolves (or if the CDN
+      // fails), the plain textarea keeps working as a fallback.
+      let monacoEditor = null;
+      let monacoLineDecorations = [];
+      let monacoReadyPromise = null;
+
+      function ensureMonaco() {
+        if (monacoReadyPromise) return monacoReadyPromise;
+        if (typeof require !== "function" || typeof require.config !== "function") {
+          // Loader didn't load (CDN blocked etc.); stay on the textarea.
+          monacoReadyPromise = Promise.reject(new Error("Monaco loader unavailable"));
+          return monacoReadyPromise;
+        }
+        monacoReadyPromise = new Promise((resolve, reject) => {
+          require.config({
+            paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs" },
+          });
+          require(["vs/editor/editor.main"], () => {
+            // Custom theme matching the wizard's navy / Seqera palette so
+            // the editor reads as part of the same app rather than a foreign
+            // VS Code panel.
+            monaco.editor.defineTheme("mqc-dark", {
+              base: "vs-dark",
+              inherit: true,
+              rules: [
+                { token: "type", foreground: "9eebd5" }, // YAML keys
+                { token: "string", foreground: "f1a373" },
+                { token: "string.yaml", foreground: "f1a373" },
+                { token: "number", foreground: "a5b4fc" },
+                { token: "keyword", foreground: "c4b5fd" }, // true/false/null
+                { token: "delimiter", foreground: "8a8595" },
+                { token: "comment", foreground: "847d99", fontStyle: "italic" },
+              ],
+              colors: {
+                "editor.background": "#201637",
+                "editor.foreground": "#d9d4e0",
+                "editorLineNumber.foreground": "#5c5767",
+                "editorLineNumber.activeForeground": "#a29fa8",
+                "editor.selectionBackground": "#31c9ac33",
+                "editor.inactiveSelectionBackground": "#31c9ac22",
+                "editorIndentGuide.background1": "#2d273c",
+                "editorIndentGuide.activeBackground1": "#3d3651",
+                "editorCursor.foreground": "#31c9ac",
+                "scrollbarSlider.background": "#3d365160",
+                "scrollbarSlider.hoverBackground": "#3d3651a0",
+                "scrollbarSlider.activeBackground": "#3d3651c0",
+              },
+            });
+            const container = document.getElementById("validateMonaco");
+            const textarea = document.getElementById("validateInput");
+            monacoEditor = monaco.editor.create(container, {
+              value: textarea.value,
+              language: "yaml",
+              theme: "mqc-dark",
+              automaticLayout: true,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              fontSize: 13,
+              wordWrap: "on",
+              renderLineHighlight: "none",
+            });
+            textarea.style.display = "none";
+            container.style.display = "block";
+            let timer;
+            monacoEditor.onDidChangeModelContent(() => {
+              // Drop the click-to-highlight decoration immediately so it
+              // doesn't linger on lines the user is actively editing.
+              clearJumpHighlight();
+              clearTimeout(timer);
+              timer = setTimeout(runValidation, 250);
+            });
+            resolve(monacoEditor);
+          }, (err) => {
+            console.error("Monaco load failed:", err);
+            reject(err);
+          });
+        });
+        return monacoReadyPromise;
+      }
+
+      function getValidateText() {
+        return monacoEditor ? monacoEditor.getValue() : document.getElementById("validateInput").value;
+      }
+
+      function setValidateText(text) {
+        if (monacoEditor) monacoEditor.setValue(text);
+        else document.getElementById("validateInput").value = text;
+      }
+
+      function compileValidator() {
+        if (ajvValidate) return ajvValidate;
+        const lib = typeof window !== "undefined" ? window.ajv2020 : undefined;
+        if (!lib) return null;
+        const AjvClass = lib.default || lib;
+        try {
+          const ajv = new AjvClass({ allErrors: true, strict: false });
+          ajvValidate = ajv.compile(configSchema);
+        } catch (e) {
+          // Schema compile errors shouldn't take the wizard down; leave
+          // ajvValidate null and let the validator skip Ajv-side checks.
+          console.error("Ajv compile failed:", e);
+          ajvValidate = null;
+        }
+        return ajvValidate;
+      }
+
+      function levenshtein(a, b) {
+        if (a === b) return 0;
+        const m = a.length;
+        const n = b.length;
+        if (!m || !n) return m + n;
+        const dp = new Array(n + 1);
+        for (let j = 0; j <= n; j++) dp[j] = j;
+        for (let i = 1; i <= m; i++) {
+          let prev = dp[0];
+          dp[0] = i;
+          for (let j = 1; j <= n; j++) {
+            const tmp = dp[j];
+            dp[j] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[j], dp[j - 1]);
+            prev = tmp;
+          }
+        }
+        return dp[n];
+      }
+
+      // Closest schema property name within edit distance 2 (good for catching
+      // single-letter typos like "titel" → "title"). Returns null otherwise.
+      // Self-matches (distance 0) are skipped so a recognised key never
+      // suggests itself.
+      function suggestKey(unknown) {
+        let best = null;
+        let bestDist = Infinity;
+        for (const p of propNames) {
+          const d = levenshtein(unknown, p);
+          if (d > 0 && d < bestDist && d <= 2) {
+            best = p;
+            bestDist = d;
+          }
+        }
+        return best;
+      }
+
+      // Some schema properties are excluded from the wizard form (SKIP_PROPERTIES,
+      // currently just `sp`) but are still valid YAML keys. Synthesise a minimal
+      // propData entry from the JSON schema so they classify correctly.
+      function schemaPropData(name) {
+        const p = configSchema.properties && configSchema.properties[name];
+        if (!p) return null;
+        const branches = Array.isArray(p.anyOf) ? p.anyOf : [p];
+        const nonNull = branches.find((b) => b.type && b.type !== "null") || branches[0] || {};
+        return {
+          type: nonNull.type || p.type || null,
+          description: p.description || "",
+          default: undefined,
+          deprecated: !!p.deprecated,
+        };
+      }
+
+      // Drop noise from Pydantic's `Optional[...]` schemas: the "null" branch
+      // of an `anyOf` always fails for any real value and the `anyOf`
+      // catch-all message ("must match a schema in anyOf") just summarises
+      // the sub-errors we already have. Dedupe by path + keyword + params so
+      // multiple anyOf branches don't repeat the same complaint.
+      function filterAjvErrors(errors) {
+        if (!errors) return [];
+        const kept = [];
+        const seen = new Set();
+        for (const err of errors) {
+          if (err.keyword === "anyOf") continue;
+          if (err.keyword === "type" && err.params && err.params.type === "null") continue;
+          const sig = `${err.instancePath}\t${err.keyword}\t${JSON.stringify(err.params || {})}`;
+          if (seen.has(sig)) continue;
+          seen.add(sig);
+          kept.push(err);
+        }
+        return kept;
+      }
+
+      // Render a single Ajv error in human terms, trimmed to the field that
+      // owns it (the top-level key card already shows the property name).
+      function formatAjvError(err) {
+        const path = err.instancePath || "";
+        const tail = path.split("/").slice(2).join("/");
+        const where = tail ? ` at ${tail}` : "";
+        if (err.keyword === "enum") return `valid values: ${err.params.allowedValues.join(", ")}${where}`;
+        if (err.keyword === "type") return `expected ${err.params.type}${where}`;
+        if (err.keyword === "required") return `missing required field: ${err.params.missingProperty}${where}`;
+        return `${err.message || "invalid"}${where}`;
+      }
+
+      // Run the JSON schema validator against a single field's parsed value.
+      // Returns an array of human-readable error messages (empty when valid
+      // or Ajv unavailable). Used by the form to catch shape mismatches that
+      // a plain YAML parse can't (e.g. `[as]` instead of `[{cool: beans}]`).
+      function validateFieldAgainstSchema(propName, value) {
+        const validate = compileValidator();
+        if (!validate) return [];
+        validate({ [propName]: value });
+        const ours = (validate.errors || []).filter((err) => (err.instancePath || "").split("/")[1] === propName);
+        return filterAjvErrors(ours).map(formatAjvError);
+      }
+
+      let lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+
+      // Map each top-level key in the paste to its 1-indexed [start, end]
+      // line range. Naive regex walk; fine for MultiQC configs (no leading
+      // whitespace on top-level keys, no multi-document YAML). Trailing
+      // blank lines and section-header comments between blocks are excluded
+      // so the click-to-highlight band stops at the last content line.
+      function computeKeyLineRanges(text) {
+        const ranges = {};
+        const lines = text.split("\n");
+        const topKeyRe = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/;
+        const isContent = (line) => {
+          const t = line.trim();
+          return t !== "" && !t.startsWith("#");
+        };
+        const trimTrailing = (start, end) => {
+          while (end > start && !isContent(lines[end - 1])) end--;
+          return end;
+        };
+        let lastKey = null;
+        for (let i = 0; i < lines.length; i++) {
+          const m = topKeyRe.exec(lines[i]);
+          if (m) {
+            if (lastKey) ranges[lastKey].end = trimTrailing(ranges[lastKey].start, i);
+            lastKey = m[1];
+            ranges[lastKey] = { start: i + 1, end: lines.length };
+          }
+        }
+        if (lastKey) ranges[lastKey].end = trimTrailing(ranges[lastKey].start, lines.length);
+        return ranges;
+      }
+
+      function runValidation() {
+        const text = getValidateText();
+        const summary = document.getElementById("validateSummary");
+        const cards = document.getElementById("validateCards");
+
+        if (!text.trim()) {
+          summary.innerHTML = "";
+          cards.innerHTML = "";
+          lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+          return;
+        }
+
+        let parsed;
+        try {
+          parsed = jsyaml.load(text);
+        } catch (e) {
+          summary.innerHTML =
+            '<span class="validate-badge error">YAML parse error</span> ' + escapeHtml(e.message || String(e));
+          cards.innerHTML = "";
+          lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+          return;
+        }
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          summary.innerHTML = '<span class="validate-badge error">Expected a mapping at the top level.</span>';
+          cards.innerHTML = "";
+          lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+          return;
+        }
+
+        const keyLineRanges = computeKeyLineRanges(text);
+
+        // Ajv runs against the known-key subset so plugin keys don't dominate
+        // the error list; unknown keys are reported separately with suggestions.
+        // "Known" = anything in the JSON schema (so SKIP_PROPERTIES like `sp`
+        // still get deep-validated even though they have no wizard form input).
+        const knownSet = new Set(propNames);
+        const known = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (knownSet.has(k)) known[k] = v;
+        }
+        const validate = compileValidator();
+        const errorsByKey = {};
+        if (validate) {
+          validate(known);
+          for (const err of filterAjvErrors(validate.errors)) {
+            const top = (err.instancePath || "").split("/")[1];
+            if (!top) continue;
+            (errorsByKey[top] = errorsByKey[top] || []).push(formatAjvError(err));
+          }
+        }
+
+        const results = [];
+        for (const [k, v] of Object.entries(parsed)) {
+          const data = propDataIndex[k] || schemaPropData(k);
+          if (!data) {
+            results.push({ key: k, value: v, status: "unknown", suggestion: suggestKey(k) });
+            continue;
+          }
+          const matchesDefault = valuesEqual(v, data.default);
+          if (data.deprecated) {
+            // `matchesDefault` rides along so bulk-remove can sweep deprecated
+            // values that are also no-ops (e.g. `lint: false` for users who
+            // have it set in old configs).
+            results.push({ key: k, value: v, status: "deprecated", data, matchesDefault });
+          } else if (errorsByKey[k]) {
+            results.push({ key: k, value: v, status: "error", data, messages: errorsByKey[k] });
+          } else if (matchesDefault) {
+            results.push({ key: k, value: v, status: "default", data });
+          } else {
+            results.push({ key: k, value: v, status: "ok", data });
+          }
+        }
+        lastValidated = { parsed, results, keyLineRanges };
+        renderSummary(results);
+        renderCards(results);
+      }
+
+      // Drop the active line decoration + card outline. Called on every
+      // edit so highlights don't linger over text the user is changing.
+      function clearJumpHighlight() {
+        if (monacoEditor && monacoLineDecorations.length) {
+          monacoLineDecorations = monacoEditor.deltaDecorations(monacoLineDecorations, []);
+        }
+        document.querySelectorAll("#validateCards .validate-card.is-active").forEach((c) => {
+          c.classList.remove("is-active");
+        });
+      }
+
+      // Highlight + scroll-to for the given top-level key, both in Monaco and
+      // in the plain-textarea fallback. Card click handler.
+      function jumpToKey(key) {
+        const range = lastValidated.keyLineRanges[key];
+        if (!range) return;
+        clearJumpHighlight();
+        const card = document.querySelector(`#validateCards .validate-card[data-key="${CSS.escape(key)}"]`);
+        if (card) card.classList.add("is-active");
+
+        if (monacoEditor) {
+          const r = new monaco.Range(range.start, 1, range.end, 1);
+          monacoLineDecorations = monacoEditor.deltaDecorations(monacoLineDecorations, [
+            {
+              range: r,
+              options: {
+                isWholeLine: true,
+                className: "validate-line-hl",
+                linesDecorationsClassName: "validate-line-hl-margin",
+              },
+            },
+          ]);
+          monacoEditor.revealLineInCenterIfOutsideViewport(range.start);
+          return;
+        }
+        // Textarea fallback: select the character range so the browser
+        // scrolls and visually marks it (native selection, not whole-line).
+        const ta = document.getElementById("validateInput");
+        const text = ta.value;
+        const lines = text.split("\n");
+        const start = lines.slice(0, range.start - 1).reduce((acc, l) => acc + l.length + 1, 0);
+        const end = lines.slice(0, range.end).reduce((acc, l) => acc + l.length + 1, 0) - 1;
+        ta.focus({ preventScroll: true });
+        ta.setSelectionRange(start, end);
+        // Best-effort scroll: count line height from font metrics.
+        const lineHeight = parseInt(getComputedStyle(ta).lineHeight, 10) || 18;
+        ta.scrollTop = Math.max(0, (range.start - 3) * lineHeight);
+      }
+
+      function defaultSweep(results) {
+        // Keys that bulk-remove will drop: explicit "default" rows plus any
+        // "deprecated" row whose value happens to match the schema default.
+        return results.filter((r) => r.status === "default" || (r.status === "deprecated" && r.matchesDefault));
+      }
+
+      // Which status groups the summary badges are currently filtering to.
+      // Empty set means show everything.
+      const filterStatuses = new Set();
+
+      function renderSummary(results) {
+        const count = (s) => results.filter((r) => r.status === s).length;
+        const sweep = defaultSweep(results).length;
+        const summary = document.getElementById("validateSummary");
+        summary.innerHTML = "";
+        const pluralS = (n) => (n === 1 ? "" : "s");
+        const entries = [
+          { status: "ok", n: count("ok"), label: "valid", always: true },
+          { status: "error", n: count("error"), label: (n) => `error${pluralS(n)}` },
+          { status: "default", n: count("default"), label: "matches default" },
+          { status: "deprecated", n: count("deprecated"), label: "deprecated" },
+          { status: "unknown", n: count("unknown"), label: "unknown" },
+        ];
+        // Drop filters for statuses that no longer appear so the filter state
+        // doesn't strand "no results" when the user changes the paste.
+        for (const s of [...filterStatuses]) {
+          if (!entries.some((e) => e.status === s && e.n > 0)) filterStatuses.delete(s);
+        }
+        let renderedAnyBadge = false;
+        for (const e of entries) {
+          if (!e.n && !e.always) continue;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = `validate-badge ${e.status}`;
+          btn.dataset.status = e.status;
+          btn.setAttribute("aria-pressed", filterStatuses.has(e.status) ? "true" : "false");
+          btn.classList.toggle("is-active", filterStatuses.has(e.status));
+          const labelText = typeof e.label === "function" ? e.label(e.n) : e.label;
+          btn.textContent = `${e.n} ${labelText}`;
+          btn.onclick = () => toggleFilter(e.status);
+          summary.appendChild(btn);
+          renderedAnyBadge = true;
+        }
+        if (renderedAnyBadge) {
+          const hint = document.createElement("span");
+          hint.className = "validate-summary-hint";
+          hint.textContent = "click to filter";
+          summary.appendChild(hint);
+        }
+        if (sweep) {
+          const btn = document.createElement("button");
+          btn.className = "btn btn-secondary";
+          btn.textContent = "Remove defaults";
+          btn.title =
+            sweep === 1
+              ? `Remove 1 option whose value matches the MultiQC default - it has no effect`
+              : `Remove ${sweep} options whose values match the MultiQC default - they have no effect`;
+          btn.onclick = removeDefaults;
+          summary.appendChild(btn);
+        }
+      }
+
+      function toggleFilter(status) {
+        if (filterStatuses.has(status)) filterStatuses.delete(status);
+        else filterStatuses.add(status);
+        // Update aria-pressed/active on the just-clicked badges without a full
+        // re-render (re-render would also be fine; small enough).
+        document.querySelectorAll("#validateSummary .validate-badge").forEach((b) => {
+          const on = filterStatuses.has(b.dataset.status);
+          b.classList.toggle("is-active", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        applyFilter();
+      }
+
+      function applyFilter() {
+        const on = filterStatuses.size > 0;
+        document.querySelectorAll("#validateCards .validate-card").forEach((c) => {
+          c.classList.toggle("is-filtered-out", on && !filterStatuses.has(c.dataset.status));
+        });
+      }
+
+      function renderCards(results) {
+        const root = document.getElementById("validateCards");
+        root.innerHTML = "";
+        for (const r of results) root.appendChild(renderCard(r));
+        applyFilter();
+      }
+
+      function badgeLabel(r) {
+        return (
+          {
+            ok: "valid",
+            error: "invalid",
+            default: "matches default",
+            deprecated: "deprecated",
+            unknown: "unknown option",
+          }[r.status] || r.status
+        );
+      }
+
+      function renderCard(r) {
+        const card = document.createElement("div");
+        card.className = `validate-card status-${r.status}`;
+        card.dataset.status = r.status;
+        card.dataset.key = r.key;
+        card.onclick = () => jumpToKey(r.key);
+        const valueLabel = escapeHtml(formatDefaultValue(r.value));
+        const typeTag = r.data && r.data.type ? `<span class="validate-type">${escapeHtml(r.data.type)}</span>` : "";
+        const head =
+          `<div class="validate-card-head">` +
+          `<code class="validate-key">${escapeHtml(r.key)}</code>` +
+          `<span class="validate-value-inline">${valueLabel}</span>` +
+          typeTag +
+          `<span class="validate-badge ${r.status}">${escapeHtml(badgeLabel(r))}</span>` +
+          `</div>`;
+        let body = "";
+        if (r.data && r.data.description) {
+          body += `<div class="validate-desc">${renderInlineMd(r.data.description)}</div>`;
+        }
+        if (r.status === "unknown") {
+          body += r.suggestion
+            ? `<div class="validate-msg">did you mean <code>${escapeHtml(r.suggestion)}</code>?</div>`
+            : `<div class="validate-msg">not a recognised option</div>`;
+        } else if (r.messages && r.messages.length) {
+          body += r.messages.map((m) => `<div class="validate-msg">${escapeHtml(m)}</div>`).join("");
+        } else if (r.status === "default") {
+          body += `<div class="validate-msg">matches the MultiQC default: has no effect</div>`;
+        } else if (r.status === "deprecated") {
+          body += `<div class="validate-msg">this option is deprecated; see the description for a replacement</div>`;
+          if (r.matchesDefault) {
+            body += `<div class="validate-msg">value also matches the MultiQC default: safe to remove</div>`;
+          }
+        }
+        card.innerHTML = head + body;
+        return card;
+      }
+
+      function removeDefaults() {
+        if (!lastValidated.parsed) return;
+        const drop = new Set(defaultSweep(lastValidated.results).map((r) => r.key));
+        if (!drop.size) return;
+        const kept = {};
+        for (const [k, v] of Object.entries(lastValidated.parsed)) {
+          if (!drop.has(k)) kept[k] = v;
+        }
+        // Preserve the user's typed key order (kept is built by iterating
+        // their parsed YAML), so the stripped result reads naturally.
+        const out = Object.keys(kept).length ? dumpYaml(kept) : "";
+        setValidateText(out);
+        runValidation();
+      }
+
       document.addEventListener("DOMContentLoaded", function () {
         if (typeof jsyaml === "undefined") {
-          document.getElementById("yamlOutput").textContent =
+          document.getElementById("validateInput").value =
             "# Error: js-yaml library failed to load.\n# Please check your internet connection and refresh.";
         } else {
           initWizard();

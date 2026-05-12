@@ -209,6 +209,18 @@ custom_content:
     - my-other-section-id
 ```
 
+### custom_content_modules
+
+**Type**: `List[str]`
+
+Extra module IDs whose output should be parsed as custom content.
+
+### custom_data
+
+**Type**: `Dict[str, Any]`
+
+Inline custom content data keyed by section ID. Companion to custom_content for users who prefer splitting the metadata and the data across two top-level keys.
+
 ### top_modules
 
 **Type**: `List[Union[str, Dict[str, Dict[str, str]]]]`
@@ -415,6 +427,34 @@ module_order:
   - cutadapt
 ```
 
+### run_modules
+
+**Type**: `List[str]`
+
+Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).
+
+**Example**:
+
+```yaml
+run_modules:
+  - fastqc
+  - cutadapt
+  - samtools
+```
+
+### exclude_modules
+
+**Type**: `List[str]`
+
+Module IDs to skip (mirror of the --exclude CLI flag).
+
+**Example**:
+
+```yaml
+exclude_modules:
+  - fastqc
+```
+
 ### remove_sections
 
 **Type**: `List[str]`
@@ -427,6 +467,22 @@ Module sections to hide. Use the section anchor as it appears in the URL.
 remove_sections:
   - fastqc_overrepresented_sequences
   - gatk-compare-overlap
+```
+
+### report_section_order
+
+**Type**: `Dict[str, Any]`
+
+Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides. See the [customisation docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output) for the full grammar.
+
+**Example**:
+
+```yaml
+report_section_order:
+  custom_content-my-section:
+    before: fastqc
+  fastqc:
+    order: -10
 ```
 
 ### section_comments
@@ -1803,19 +1859,21 @@ Number of times to retry an AI request on transient errors.
 
 ### ai_extra_query_options
 
-**Type**: `str`
+**Type**: `Dict[str, Any]`
 
-Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.
+Extra request-body fields merged into the AI request payload (provider-specific).
 
 **Example**:
 
 ```yaml
-ai_extra_query_options: temperature=0.3&top_p=0.9
+ai_extra_query_options:
+  temperature: 0.3
+  top_p: 0.9
 ```
 
 ### ai_custom_context_window
 
-**Type**: `str`
+**Type**: `int`
 
 Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.
 
@@ -1900,6 +1958,12 @@ Auth token for the MegaQC instance.
 
 Upload timeout in seconds when posting to MegaQC.
 
+### megaqc_upload
+
+**Type**: `bool`
+
+Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.
+
 ## Seqera Integration
 
 ### seqera_website
@@ -1950,7 +2014,7 @@ Suppress non-essential log messages.
 
 **Type**: `bool` (default: `false`)
 
-Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.
+Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.
 
 ### strict
 

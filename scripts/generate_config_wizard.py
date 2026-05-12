@@ -15,7 +15,7 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import get_args
+from typing import Any, get_args
 
 # Allow the script to be either run directly or imported via importlib (eg. from tests).
 sys.path.insert(0, str(Path(__file__).parent))
@@ -43,6 +43,12 @@ MULTIQC_LOGO_SVG = """\
 # Schema properties that are intentionally omitted from the wizard.
 # `sp` is the module search-patterns dict, too structured for a flat form.
 SKIP_PROPERTIES = {"sp"}
+
+
+def _inject_json(obj: Any, *, indent: int) -> str:
+    """``json.dumps`` then escape ``</`` so the payload is safe inside a
+    ``<script>`` tag (an unescaped ``</script>`` would close it early)."""
+    return json.dumps(obj, indent=indent).replace("</", "<\\/")
 
 
 def generate_config_wizard():
@@ -94,6 +100,8 @@ def generate_config_wizard():
 
             config_data[section_name][prop_name] = {
                 "uncommon": prop_name in uncommon,
+                "deprecated": bool(prop.get("deprecated", False)),
+                "multiline": bool(prop.get("multiline", False)),
                 "type": prop_type,
                 "description": prop.get("description", ""),
                 "default": default_val,
@@ -102,18 +110,19 @@ def generate_config_wizard():
                 "examples": prop.get("examples", []),
             }
 
-    # Escape JSON data for safe embedding inside a <script> tag
-    config_json = json.dumps(config_data, indent=8)
-    config_json_escaped = config_json.replace("</", "<\\/")
+    config_data_js = _inject_json(config_data, indent=8)
+    # Full JSON schema for the wizard's Validate YAML view to run Ajv against
+    # client-side, no second fetch.
+    schema_js = _inject_json(_schema, indent=2)
 
-    html_content = _build_html(config_json_escaped)
+    html_content = _build_html(config_data_js, schema_js)
     return html_content
 
 
 TEMPLATE_PATH = Path(__file__).parent / "wizard_template.html"
 
 
-def _build_html(config_json_escaped: str) -> str:
+def _build_html(config_data_js: str, schema_js: str) -> str:
     """Return the complete HTML string for the wizard.
 
     Reads ``scripts/wizard_template.html`` and substitutes the runtime
@@ -123,7 +132,8 @@ def _build_html(config_json_escaped: str) -> str:
     generated_on = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     return (
         template.replace("__MULTIQC_LOGO_SVG__", MULTIQC_LOGO_SVG)
-        .replace("__CONFIG_DATA_JSON__", config_json_escaped)
+        .replace("__CONFIG_DATA_JSON__", config_data_js)
+        .replace("__CONFIG_SCHEMA_JSON__", schema_js)
         .replace("__MULTIQC_VERSION__", multiqc.__version__)
         .replace("__GENERATED_ON__", generated_on)
     )

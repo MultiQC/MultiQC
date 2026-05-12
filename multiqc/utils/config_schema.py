@@ -94,6 +94,7 @@ def cfg(
     *,
     section: Optional[str] = None,
     advanced: bool = False,
+    multiline: bool = False,
     default: Any = None,
     default_factory: Any = None,
     **kwargs: Any,
@@ -103,10 +104,14 @@ def cfg(
     ``section`` is usually inherited from an enclosing ``with section(...)``
     block; pass ``section=`` explicitly to override or for a one-off field
     outside any block. ``advanced=True`` hides the field behind the wizard's
-    "Show advanced options" toggle. Both end up in the JSON schema under
+    "Show advanced options" toggle. ``multiline=True`` renders string fields
+    as a textarea instead of a single-line input, use for prose fields like
+    descriptions and prompts. All flags end up in the JSON schema under
     ``json_schema_extra`` and are read back by
     ``scripts/_config_schema_loader.py``. Any other ``Field`` kwargs
-    (``examples``, validators, etc.) pass straight through via ``**kwargs``.
+    (``examples``, validators, ``deprecated``) pass straight through via
+    ``**kwargs`` - Pydantic surfaces ``deprecated`` as ``"deprecated": true``
+    in the JSON schema, which the wizard's Validate YAML view picks up.
     """
     if section is None:
         section = _current_section.get()
@@ -115,6 +120,8 @@ def cfg(
     extra: Dict[str, Any] = {"section": section}
     if advanced:
         extra["advanced"] = True
+    if multiline:
+        extra["multiline"] = True
     if default_factory is not None:
         return Field(default_factory=default_factory, description=description, json_schema_extra=extra, **kwargs)
     return Field(default, description=description, json_schema_extra=extra, **kwargs)
@@ -127,10 +134,12 @@ class MultiQCConfig(BaseModel):
         title: Optional[str] = cfg("Title shown at the top of the report and used in the page title.")
         subtitle: Optional[str] = cfg("Subtitle shown under the report title. Plain text only.")
         intro_text: Optional[str] = cfg(
-            "Paragraph shown under the title. Useful for adding context about the analysis."
+            "Paragraph shown under the title. Useful for adding context about the analysis.",
+            multiline=True,
         )
         report_comment: Optional[str] = cfg(
             "Free-text comment shown at the top of the report. HTML is allowed.",
+            multiline=True,
             examples=["This report was generated from the RNA-seq pipeline on 2024-08-21."],
         )
         report_header_info: Optional[List[Dict[str, str]]] = cfg(
@@ -179,6 +188,7 @@ class MultiQCConfig(BaseModel):
         custom_logo_width: Optional[int] = cfg(
             "Logo width in pixels. Height scales proportionally.",
             examples=[200],
+            gt=0,
         )
         custom_css_files: Optional[List[str]] = cfg(
             "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
@@ -206,6 +216,14 @@ class MultiQCConfig(BaseModel):
                 }
             ],
         )
+        custom_content_modules: Optional[List[str]] = cfg(
+            "Extra module IDs whose output should be parsed as custom content.",
+            advanced=True,
+        )
+        custom_data: Optional[Dict[str, Any]] = cfg(
+            "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer "
+            "splitting the metadata and the data across two top-level keys.",
+        )
         top_modules: Optional[List[Union[str, Dict[str, Dict[str, str]]]]] = cfg(
             (
                 "Module IDs to render before module_order. Useful for pinning a module to the top "
@@ -226,9 +244,24 @@ class MultiQCConfig(BaseModel):
                 ]
             ],
         )
+        run_modules: Optional[List[str]] = cfg(
+            "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
+            examples=[["fastqc", "cutadapt", "samtools"]],
+        )
+        exclude_modules: Optional[List[str]] = cfg(
+            "Module IDs to skip (mirror of the --exclude CLI flag).",
+            examples=[["fastqc"]],
+        )
         remove_sections: Optional[List[str]] = cfg(
             "Module sections to hide. Use the section anchor as it appears in the URL.",
             examples=[["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
+        )
+        report_section_order: Optional[Dict[str, Any]] = cfg(
+            (
+                "Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), "
+                "an explicit order number, or a dict of overrides. See the [customisation docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output) for the full grammar."
+            ),
+            examples=[{"fastqc": {"order": -10}, "custom_content-my-section": {"before": "fastqc"}}],
         )
         section_comments: Optional[Dict[str, str]] = cfg(
             "Markdown text shown under specific module sections. Keys are section anchors.",
@@ -442,6 +475,7 @@ class MultiQCConfig(BaseModel):
         num_datasets_plot_limit: Optional[int] = cfg(
             "Deprecated. Use `plots_defer_loading_numseries` instead.",
             advanced=True,
+            deprecated="Use `plots_defer_loading_numseries` instead.",
         )
         plot_font_family: Optional[str] = cfg(
             "CSS font-family for plot text. Defaults to a system font stack.",
@@ -554,6 +588,7 @@ class MultiQCConfig(BaseModel):
         )
         general_stats_helptext: Optional[str] = cfg(
             "Help text shown under the General Statistics heading at the top of the report.",
+            multiline=True,
         )
         skip_generalstats: Optional[bool] = cfg(
             "Hide the General Statistics table at the top of the report.",
@@ -720,14 +755,15 @@ class MultiQCConfig(BaseModel):
             "Number of times to retry an AI request on transient errors.",
             advanced=True,
         )
-        ai_extra_query_options: Optional[str] = cfg(
-            "Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.",
-            examples=["temperature=0.3&top_p=0.9"],
+        ai_extra_query_options: Optional[Dict[str, Any]] = cfg(
+            "Extra request-body fields merged into the AI request payload (provider-specific).",
+            examples=[{"temperature": 0.3, "top_p": 0.9}],
             advanced=True,
         )
-        ai_custom_context_window: Optional[str] = cfg(
+        ai_custom_context_window: Optional[int] = cfg(
             "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
             advanced=True,
+            gt=0,
         )
         ai_max_completion_tokens: Optional[int] = cfg(
             "Maximum completion tokens for OpenAI reasoning models.",
@@ -747,12 +783,12 @@ class MultiQCConfig(BaseModel):
         )
         ai_prompt_short: Optional[str] = cfg(
             "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
-            advanced=True,
+            multiline=True,
             examples=["Write the summary in one short paragraph aimed at a lab head, no jargon."],
         )
         ai_prompt_full: Optional[str] = cfg(
             "Custom prompt prepended to the full-section AI summary request.",
-            advanced=True,
+            multiline=True,
             examples=["Use bullet points and call out any sample that looks like an outlier."],
         )
         no_ai: Optional[bool] = cfg(
@@ -773,6 +809,10 @@ class MultiQCConfig(BaseModel):
         )
         megaqc_timeout: Optional[int] = cfg(
             "Upload timeout in seconds when posting to MegaQC.",
+            advanced=True,
+        )
+        megaqc_upload: Optional[bool] = cfg(
+            "Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.",
             advanced=True,
         )
 
@@ -798,7 +838,8 @@ class MultiQCConfig(BaseModel):
         no_ansi: Optional[bool] = cfg("Disable ANSI colour codes in terminal output.")
         quiet: Optional[bool] = cfg("Suppress non-essential log messages.")
         lint: Optional[bool] = cfg(
-            "Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.",
+            "Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.",
+            deprecated="Use `--lint` command-line flag instead.",
         )
         strict: Optional[bool] = cfg("Treat module warnings as errors. Stricter than lint.", advanced=True)
         development: Optional[bool] = cfg(

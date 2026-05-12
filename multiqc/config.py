@@ -21,7 +21,7 @@ from jsonschema import validate as validate_json_schema
 
 from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.utils import pyaml_env
-from multiqc.utils.config_schema import config_to_schema
+from multiqc.utils.config_schema import AiProviderLiteral, config_to_schema
 from multiqc.utils.util_functions import strtobool, update_dict
 
 # Default logger will be replaced by caller
@@ -75,7 +75,7 @@ custom_logo_title: str
 custom_logo_width: int
 custom_css_files: List[str]
 simple_output: bool
-template: str
+template: Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"]
 template_dark_mode: bool
 plot_font_family: Optional[str]
 profile_runtime: bool
@@ -93,7 +93,7 @@ base_count_desc: str
 output_fn_name: str
 data_dir_name: str
 plots_dir_name: str
-data_format: str
+data_format: Literal["tsv", "csv", "json", "yaml"]
 force: bool
 verbose: bool
 no_ansi: bool
@@ -111,17 +111,17 @@ data_dump_file: bool
 data_dump_file_write_raw: Optional[bool]
 megaqc_url: str
 megaqc_access_token: Optional[str]
-megaqc_timeout: float
+megaqc_timeout: int
 export_plots: bool
 make_report: bool
 make_pdf: bool
 
 ai_summary: bool
 ai_summary_full: bool
-ai_provider: str
+ai_provider: AiProviderLiteral
 ai_model: str
 ai_custom_endpoint: Optional[str]
-ai_auth_type: Optional[str]
+ai_auth_type: Optional[Literal["bearer", "api-key"]]
 ai_retries: int
 ai_extra_query_options: Optional[Dict[str, Any]]
 ai_custom_context_window: Optional[int]
@@ -129,7 +129,7 @@ ai_prompt_short: Optional[str]
 ai_prompt_full: Optional[str]
 no_ai: bool
 ai_anonymize_samples: bool
-ai_reasoning_effort: Optional[str]
+ai_reasoning_effort: Optional[Literal["low", "medium", "high"]]
 ai_max_completion_tokens: Optional[int]
 ai_extended_thinking: bool
 ai_thinking_budget_tokens: Optional[int]
