@@ -404,6 +404,20 @@
         color: var(--ink);
         margin: 0;
       }
+      .header-version {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.42em;
+        font-weight: 500;
+        letter-spacing: 0;
+        color: var(--ink-soft);
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        border-radius: 3px;
+        padding: 4px 10px;
+        margin-left: 14px;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
       .header p {
         font-size: 1.05em;
         color: var(--ink-mute);
@@ -1051,7 +1065,7 @@
 
     <main class="main">
       <header class="header">
-        <h1>MultiQC Configuration Wizard</h1>
+        <h1>MultiQC Configuration Wizard <span class="header-version">v__MULTIQC_VERSION__</span></h1>
         <p>Build your <code>multiqc_config.yaml</code></p>
       </header>
 
