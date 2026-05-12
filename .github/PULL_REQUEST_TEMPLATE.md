@@ -14,3 +14,7 @@ Please fill in the appropriate checklist below (delete whatever is not relevant)
 - [ ] There aren't any huge tables with > 6 columns (explain reasoning if so)
 - [ ] Each table column has a different colour scale to its neighbour, which relates to the data (e.g. if high numbers are bad, they're red)
 - [ ] Module does not do any significant computational work
+
+---
+
+<sup>When your PR is ready for review and tests are passing, add a comment with <code>/review</code> to request an AI code review, or <code>/preview</code> to build and deploy a preview report for any modified modules. You can use both in the same comment.</sup>
