@@ -216,6 +216,14 @@ class MultiQCConfig(BaseModel):
                 }
             ],
         )
+        custom_content_modules: Optional[List[str]] = cfg(
+            "Extra module IDs whose output should be parsed as custom content.",
+            advanced=True,
+        )
+        custom_data: Optional[Dict[str, Any]] = cfg(
+            "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer "
+            "splitting the metadata and the data across two top-level keys.",
+        )
         top_modules: Optional[List[Union[str, Dict[str, Dict[str, str]]]]] = cfg(
             (
                 "Module IDs to render before module_order. Useful for pinning a module to the top "
@@ -236,9 +244,24 @@ class MultiQCConfig(BaseModel):
                 ]
             ],
         )
+        run_modules: Optional[List[str]] = cfg(
+            "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
+            examples=[["fastqc", "cutadapt", "samtools"]],
+        )
+        exclude_modules: Optional[List[str]] = cfg(
+            "Module IDs to skip (mirror of the --exclude CLI flag).",
+            examples=[["fastqc"]],
+        )
         remove_sections: Optional[List[str]] = cfg(
             "Module sections to hide. Use the section anchor as it appears in the URL.",
             examples=[["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
+        )
+        report_section_order: Optional[Dict[str, Any]] = cfg(
+            (
+                "Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), "
+                "an explicit order number, or a dict of overrides — see the customisation docs for the full grammar."
+            ),
+            examples=[{"fastqc": {"order": -10}, "custom_content-my-section": {"before": "fastqc"}}],
         )
         section_comments: Optional[Dict[str, str]] = cfg(
             "Markdown text shown under specific module sections. Keys are section anchors.",
@@ -787,6 +810,10 @@ class MultiQCConfig(BaseModel):
         )
         megaqc_timeout: Optional[int] = cfg(
             "Upload timeout in seconds when posting to MegaQC.",
+            advanced=True,
+        )
+        megaqc_upload: Optional[bool] = cfg(
+            "Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.",
             advanced=True,
         )
 

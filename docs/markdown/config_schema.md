@@ -459,6 +459,28 @@ section_status_checks:
     alignment_stats: false
 ```
 
+### custom_data
+
+**Type**: `Dict[str, Any]`
+
+Inline custom content data keyed by section ID. Companion to custom_content for users who prefer splitting the metadata and the data across two top-level keys.
+
+### report_section_order
+
+**Type**: `Dict[str, Any]`
+
+Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides — see the customisation docs for the full grammar.
+
+**Example**:
+
+```yaml
+report_section_order:
+  custom_content-my-section:
+    before: fastqc
+  fastqc:
+    order: -10
+```
+
 ## Output Options
 
 ### force
@@ -1106,6 +1128,40 @@ fn_ignore_files:
 **Type**: `List[str]`
 
 Module IDs whose log files may be matched by multiple modules during the search.
+
+### run_modules
+
+**Type**: `List[str]`
+
+Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).
+
+**Example**:
+
+```yaml
+run_modules:
+  - fastqc
+  - cutadapt
+  - samtools
+```
+
+### exclude_modules
+
+**Type**: `List[str]`
+
+Module IDs to skip (mirror of the --exclude CLI flag).
+
+**Example**:
+
+```yaml
+exclude_modules:
+  - fastqc
+```
+
+### custom_content_modules
+
+**Type**: `List[str]`
+
+Extra module IDs whose output should be parsed as custom content.
 
 ## Plot Settings
 
@@ -1899,6 +1955,12 @@ Auth token for the MegaQC instance.
 **Type**: `int` (default: `30`)
 
 Upload timeout in seconds when posting to MegaQC.
+
+### megaqc_upload
+
+**Type**: `bool`
+
+Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.
 
 ## Seqera Integration
 
