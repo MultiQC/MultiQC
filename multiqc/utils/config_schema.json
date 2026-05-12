@@ -416,7 +416,7 @@
         }
       ],
       "default": null,
-      "description": "Report title",
+      "description": "Title shown at the top of the report and used in the page title.",
       "title": "Title"
     },
     "subtitle": {
@@ -429,7 +429,7 @@
         }
       ],
       "default": null,
-      "description": "Report subtitle",
+      "description": "Subtitle shown under the report title. Plain text only.",
       "title": "Subtitle"
     },
     "intro_text": {
@@ -442,7 +442,7 @@
         }
       ],
       "default": null,
-      "description": "Report introduction text",
+      "description": "Paragraph shown under the title. Useful for adding context about the analysis.",
       "title": "Intro Text"
     },
     "report_comment": {
@@ -455,7 +455,8 @@
         }
       ],
       "default": null,
-      "description": "Report comment",
+      "description": "Free-text comment shown at the top of the report. HTML is allowed.",
+      "examples": ["This report was generated from the RNA-seq pipeline on 2024-08-21."],
       "title": "Report Comment"
     },
     "report_header_info": {
@@ -474,7 +475,23 @@
         }
       ],
       "default": null,
-      "description": "Report header dictionary",
+      "description": "Extra key/value pairs shown in the report header, eg. contact name, run ID, pipeline version. Each list item is a single-key dictionary.",
+      "examples": [
+        [
+          {
+            "Contact E-mail": "phil.ewels@seqera.io"
+          },
+          {
+            "Application Type": "RNA-seq"
+          },
+          {
+            "Project Type": "Application"
+          },
+          {
+            "Sequencing Platform": "HiSeq 2500 High Output V4"
+          }
+        ]
+      ],
       "title": "Report Header Info"
     },
     "show_analysis_paths": {
@@ -487,7 +504,7 @@
         }
       ],
       "default": null,
-      "description": "Show analysis paths in the report",
+      "description": "Show the absolute paths of analysed directories in the report header.",
       "title": "Show Analysis Paths"
     },
     "show_analysis_time": {
@@ -500,7 +517,7 @@
         }
       ],
       "default": null,
-      "description": "Show analysis time in the report",
+      "description": "Show the date and time the report was generated in the header.",
       "title": "Show Analysis Time"
     },
     "custom_logo": {
@@ -513,7 +530,8 @@
         }
       ],
       "default": null,
-      "description": "Path to custom logo image",
+      "description": "Path to an image to show at the top of the report, replacing the MultiQC logo.",
+      "examples": ["/path/to/logo.png", "./assets/logo.svg"],
       "title": "Custom Logo"
     },
     "custom_logo_dark": {
@@ -526,7 +544,8 @@
         }
       ],
       "default": null,
-      "description": "Path to custom logo image for dark mode",
+      "description": "Path to an alternative logo for dark mode. Falls back to custom_logo if unset.",
+      "examples": ["./assets/logo_dark.svg"],
       "title": "Custom Logo Dark"
     },
     "custom_logo_url": {
@@ -539,7 +558,8 @@
         }
       ],
       "default": null,
-      "description": "URL for custom logo",
+      "description": "URL the custom logo links to when clicked.",
+      "examples": ["https://www.scilifelab.se"],
       "title": "Custom Logo Url"
     },
     "custom_logo_title": {
@@ -552,7 +572,8 @@
         }
       ],
       "default": null,
-      "description": "Title for custom logo",
+      "description": "Tooltip text shown when hovering over the custom logo.",
+      "examples": ["Our institute name"],
       "title": "Custom Logo Title"
     },
     "custom_logo_width": {
@@ -565,7 +586,8 @@
         }
       ],
       "default": null,
-      "description": "Width in pixels for the custom logo",
+      "description": "Logo width in pixels. Height scales proportionally.",
+      "examples": [200],
       "title": "Custom Logo Width"
     },
     "custom_css_files": {
@@ -581,7 +603,8 @@
         }
       ],
       "default": null,
-      "description": "Custom CSS files to include",
+      "description": "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
+      "examples": [["./assets/custom.css", "./assets/branding.css"]],
       "title": "Custom Css Files"
     },
     "simple_output": {
@@ -594,12 +617,13 @@
         }
       ],
       "default": null,
-      "description": "Simple output",
+      "description": "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.",
       "title": "Simple Output"
     },
     "template": {
       "anyOf": [
         {
+          "enum": ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
           "type": "string"
         },
         {
@@ -607,7 +631,7 @@
         }
       ],
       "default": null,
-      "description": "Report template to use",
+      "description": "Name of the report template.",
       "title": "Template"
     },
     "template_dark_mode": {
@@ -620,7 +644,7 @@
         }
       ],
       "default": null,
-      "description": "Enable dark mode toggle and JavaScript for the report template",
+      "description": "Enable the dark mode toggle in the report template.",
       "title": "Template Dark Mode"
     },
     "plot_font_family": {
@@ -633,7 +657,7 @@
         }
       ],
       "default": null,
-      "description": "Custom font family for plots (defaults to system font stack)",
+      "description": "CSS font-family for plot text. Defaults to a system font stack.",
       "title": "Plot Font Family"
     },
     "profile_runtime": {
@@ -646,7 +670,7 @@
         }
       ],
       "default": null,
-      "description": "Profile runtime",
+      "description": "Time each module and include the breakdown in the report.",
       "title": "Profile Runtime"
     },
     "profile_memory": {
@@ -659,7 +683,7 @@
         }
       ],
       "default": null,
-      "description": "Profile memory",
+      "description": "Track peak memory per module. Adds runtime overhead.",
       "title": "Profile Memory"
     },
     "pandoc_template": {
@@ -672,7 +696,7 @@
         }
       ],
       "default": null,
-      "description": "Pandoc template",
+      "description": "Path to a Pandoc template used when exporting the report as PDF.",
       "title": "Pandoc Template"
     },
     "read_count_multiplier": {
@@ -685,7 +709,8 @@
         }
       ],
       "default": null,
-      "description": "Read count multiplier",
+      "description": "Multiplier applied to read counts before display. Default 0.000001 shows reads in millions.",
+      "examples": [0.001, 1],
       "title": "Read Count Multiplier"
     },
     "read_count_prefix": {
@@ -698,7 +723,8 @@
         }
       ],
       "default": null,
-      "description": "Read count prefix",
+      "description": "Suffix shown after formatted read counts, eg. 'M' for millions.",
+      "examples": ["K", ""],
       "title": "Read Count Prefix"
     },
     "read_count_desc": {
@@ -711,7 +737,8 @@
         }
       ],
       "default": null,
-      "description": "Read count description",
+      "description": "Word used in plot/axis labels for read counts, eg. 'millions'.",
+      "examples": ["thousands", "raw reads"],
       "title": "Read Count Desc"
     },
     "long_read_count_multiplier": {
@@ -724,7 +751,8 @@
         }
       ],
       "default": null,
-      "description": "Long read count multiplier",
+      "description": "Multiplier for long-read counts. Default 0.001 shows counts in thousands.",
+      "examples": [1e-6, 1],
       "title": "Long Read Count Multiplier"
     },
     "long_read_count_prefix": {
@@ -737,7 +765,8 @@
         }
       ],
       "default": null,
-      "description": "Long read count prefix",
+      "description": "Suffix shown after formatted long-read counts, eg. 'K' for thousands.",
+      "examples": ["M", ""],
       "title": "Long Read Count Prefix"
     },
     "long_read_count_desc": {
@@ -750,7 +779,8 @@
         }
       ],
       "default": null,
-      "description": "Long read count description",
+      "description": "Word used in labels for long-read counts, eg. 'thousands'.",
+      "examples": ["millions", "reads"],
       "title": "Long Read Count Desc"
     },
     "base_count_multiplier": {
@@ -763,7 +793,8 @@
         }
       ],
       "default": null,
-      "description": "Base count multiplier",
+      "description": "Multiplier for base counts. Default 0.000000001 shows bases in gigabases.",
+      "examples": [1e-6, 0.001],
       "title": "Base Count Multiplier"
     },
     "base_count_prefix": {
@@ -776,7 +807,8 @@
         }
       ],
       "default": null,
-      "description": "Base count prefix",
+      "description": "Suffix shown after formatted base counts, eg. 'Gb' for gigabases.",
+      "examples": ["Mb", "Kb"],
       "title": "Base Count Prefix"
     },
     "base_count_desc": {
@@ -789,7 +821,8 @@
         }
       ],
       "default": null,
-      "description": "Base count description",
+      "description": "Word used in labels for base counts, eg. 'gigabases'.",
+      "examples": ["megabases", "kilobases"],
       "title": "Base Count Desc"
     },
     "output_fn_name": {
@@ -802,7 +835,7 @@
         }
       ],
       "default": null,
-      "description": "Output filename",
+      "description": "Filename for the generated HTML report. Defaults to multiqc_report.html.",
       "title": "Output Fn Name"
     },
     "data_dir_name": {
@@ -815,7 +848,7 @@
         }
       ],
       "default": null,
-      "description": "Data directory name",
+      "description": "Name of the directory written alongside the report holding parsed data. Defaults to multiqc_data.",
       "title": "Data Dir Name"
     },
     "plots_dir_name": {
@@ -828,12 +861,13 @@
         }
       ],
       "default": null,
-      "description": "Plots directory name",
+      "description": "Directory for exported plot images when export_plots is on. Defaults to multiqc_plots.",
       "title": "Plots Dir Name"
     },
     "data_format": {
       "anyOf": [
         {
+          "enum": ["tsv", "csv", "json", "yaml"],
           "type": "string"
         },
         {
@@ -841,7 +875,7 @@
         }
       ],
       "default": null,
-      "description": "Data format for output files",
+      "description": "Format used when writing parsed data files.",
       "title": "Data Format"
     },
     "force": {
@@ -854,7 +888,7 @@
         }
       ],
       "default": null,
-      "description": "Overwrite existing reports",
+      "description": "Overwrite existing output files without prompting.",
       "title": "Force"
     },
     "verbose": {
@@ -867,7 +901,7 @@
         }
       ],
       "default": null,
-      "description": "Verbose output",
+      "description": "Print extra debug log messages to the terminal.",
       "title": "Verbose"
     },
     "no_ansi": {
@@ -880,7 +914,7 @@
         }
       ],
       "default": null,
-      "description": "Disable ANSI output",
+      "description": "Disable ANSI colour codes in terminal output.",
       "title": "No Ansi"
     },
     "quiet": {
@@ -893,7 +927,7 @@
         }
       ],
       "default": null,
-      "description": "Quiet output",
+      "description": "Suppress non-essential log messages.",
       "title": "Quiet"
     },
     "prepend_dirs": {
@@ -906,7 +940,7 @@
         }
       ],
       "default": null,
-      "description": "Prepend directories to sample names",
+      "description": "Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple folders.",
       "title": "Prepend Dirs"
     },
     "prepend_dirs_depth": {
@@ -919,7 +953,7 @@
         }
       ],
       "default": null,
-      "description": "Depth to prepend directories",
+      "description": "How many parent directories to include. 0 means all the way to the root.",
       "title": "Prepend Dirs Depth"
     },
     "prepend_dirs_sep": {
@@ -932,7 +966,8 @@
         }
       ],
       "default": null,
-      "description": "Separator for prepended directories",
+      "description": "String inserted between directory names and the sample name. Defaults to '|'.",
+      "examples": ["_", " - "],
       "title": "Prepend Dirs Sep"
     },
     "file_list": {
@@ -945,7 +980,7 @@
         }
       ],
       "default": null,
-      "description": "Create a file list",
+      "description": "Treat the input path as a file containing a list of paths to scan, one per line.",
       "title": "File List"
     },
     "require_logs": {
@@ -958,7 +993,7 @@
         }
       ],
       "default": null,
-      "description": "Require logs for reports",
+      "description": "Fail with an error if any module explicitly requested with --module has no log files found. Off by default, so missing inputs are skipped silently.",
       "title": "Require Logs"
     },
     "version_check_url": {
@@ -971,7 +1006,7 @@
         }
       ],
       "default": null,
-      "description": "Version check URL",
+      "description": "URL queried by MultiQC's own update check. Set to override the default endpoint.",
       "title": "Version Check Url"
     },
     "make_data_dir": {
@@ -984,7 +1019,7 @@
         }
       ],
       "default": null,
-      "description": "Create data directory",
+      "description": "Write parsed data as files alongside the report.",
       "title": "Make Data Dir"
     },
     "zip_data_dir": {
@@ -997,7 +1032,7 @@
         }
       ],
       "default": null,
-      "description": "Zip data directory",
+      "description": "Compress the data directory into a single .zip file.",
       "title": "Zip Data Dir"
     },
     "data_dump_file": {
@@ -1010,7 +1045,7 @@
         }
       ],
       "default": null,
-      "description": "Write data to a file",
+      "description": "Write a single JSON file containing all parsed data, for re-running MultiQC later.",
       "title": "Data Dump File"
     },
     "data_dump_file_write_raw": {
@@ -1023,7 +1058,7 @@
         }
       ],
       "default": null,
-      "description": "Write raw data to a file",
+      "description": "Include raw values (before any normalisation or filtering) in the dumped JSON.",
       "title": "Data Dump File Write Raw"
     },
     "megaqc_url": {
@@ -1036,7 +1071,7 @@
         }
       ],
       "default": null,
-      "description": "MegaQC URL to upload to",
+      "description": "URL of a MegaQC instance to upload report data to after generation.",
       "title": "Megaqc Url"
     },
     "megaqc_access_token": {
@@ -1049,7 +1084,7 @@
         }
       ],
       "default": null,
-      "description": "MegaQC access token",
+      "description": "Auth token for the MegaQC instance.",
       "title": "Megaqc Access Token"
     },
     "megaqc_timeout": {
@@ -1062,7 +1097,7 @@
         }
       ],
       "default": null,
-      "description": "MegaQC timeout",
+      "description": "Upload timeout in seconds when posting to MegaQC.",
       "title": "Megaqc Timeout"
     },
     "export_plots": {
@@ -1075,7 +1110,7 @@
         }
       ],
       "default": null,
-      "description": "Export plots",
+      "description": "Save each plot as a static image (formats set by export_plot_formats).",
       "title": "Export Plots"
     },
     "export_plots_timeout": {
@@ -1088,7 +1123,7 @@
         }
       ],
       "default": null,
-      "description": "Timeout for exporting each plot, in seconds",
+      "description": "Timeout for exporting each plot, in seconds.",
       "title": "Export Plots Timeout"
     },
     "make_report": {
@@ -1101,7 +1136,7 @@
         }
       ],
       "default": null,
-      "description": "Make report",
+      "description": "Generate the HTML report. Set to false to only produce data files.",
       "title": "Make Report"
     },
     "make_pdf": {
@@ -1114,7 +1149,7 @@
         }
       ],
       "default": null,
-      "description": "Make PDF",
+      "description": "Also generate a PDF version of the report. Requires Pandoc to be installed.",
       "title": "Make Pdf"
     },
     "ai_summary": {
@@ -1127,7 +1162,7 @@
         }
       ],
       "default": null,
-      "description": "AI summary",
+      "description": "Generate a short AI-written summary at the top of the report.",
       "title": "Ai Summary"
     },
     "ai_summary_full": {
@@ -1140,7 +1175,7 @@
         }
       ],
       "default": null,
-      "description": "AI summary full",
+      "description": "Also generate a longer per-section AI summary. Requires ai_summary to be on.",
       "title": "Ai Summary Full"
     },
     "ai_provider": {
@@ -1154,7 +1189,7 @@
         }
       ],
       "default": null,
-      "description": "AI provider",
+      "description": "AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, custom.",
       "title": "Ai Provider"
     },
     "ai_model": {
@@ -1167,7 +1202,7 @@
         }
       ],
       "default": null,
-      "description": "AI model",
+      "description": "Model name, eg. gpt-4o or claude-sonnet-4-5. Provider-specific.",
       "title": "Ai Model"
     },
     "ai_custom_endpoint": {
@@ -1180,12 +1215,14 @@
         }
       ],
       "default": null,
-      "description": "AI custom endpoint",
+      "description": "Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
+      "examples": ["http://localhost:11434/v1", "https://api.example.com/v1"],
       "title": "Ai Custom Endpoint"
     },
     "ai_auth_type": {
       "anyOf": [
         {
+          "enum": ["bearer", "api-key"],
           "type": "string"
         },
         {
@@ -1193,7 +1230,7 @@
         }
       ],
       "default": null,
-      "description": "AI auth type",
+      "description": "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.",
       "title": "Ai Auth Type"
     },
     "ai_retries": {
@@ -1206,7 +1243,7 @@
         }
       ],
       "default": null,
-      "description": "AI retries",
+      "description": "Number of times to retry an AI request on transient errors.",
       "title": "Ai Retries"
     },
     "ai_extra_query_options": {
@@ -1219,7 +1256,8 @@
         }
       ],
       "default": null,
-      "description": "AI extra query options",
+      "description": "Extra URL query parameters appended to AI requests. Format: key1=val1&key2=val2.",
+      "examples": ["temperature=0.3&top_p=0.9"],
       "title": "Ai Extra Query Options"
     },
     "ai_custom_context_window": {
@@ -1232,7 +1270,7 @@
         }
       ],
       "default": null,
-      "description": "AI custom context window",
+      "description": "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
       "title": "Ai Custom Context Window"
     },
     "ai_prompt_short": {
@@ -1245,7 +1283,8 @@
         }
       ],
       "default": null,
-      "description": "Prompt for short AI summary, put before the report details when sent to the provider",
+      "description": "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
+      "examples": ["Write the summary in one short paragraph aimed at a lab head, no jargon."],
       "title": "Ai Prompt Short"
     },
     "ai_prompt_full": {
@@ -1258,7 +1297,8 @@
         }
       ],
       "default": null,
-      "description": "Prompt for full AI summary, put before the report details when sent to the provider",
+      "description": "Custom prompt prepended to the full-section AI summary request.",
+      "examples": ["Use bullet points and call out any sample that looks like an outlier."],
       "title": "Ai Prompt Full"
     },
     "no_ai": {
@@ -1271,7 +1311,7 @@
         }
       ],
       "default": null,
-      "description": "Disable AI",
+      "description": "Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.",
       "title": "No Ai"
     },
     "ai_anonymize_samples": {
@@ -1284,12 +1324,13 @@
         }
       ],
       "default": null,
-      "description": "Anonymize samples",
+      "description": "Replace sample names with placeholders before sending data to the AI provider.",
       "title": "Ai Anonymize Samples"
     },
     "ai_reasoning_effort": {
       "anyOf": [
         {
+          "enum": ["low", "medium", "high"],
           "type": "string"
         },
         {
@@ -1297,7 +1338,7 @@
         }
       ],
       "default": null,
-      "description": "Reasoning effort level for OpenAI reasoning models (low, medium, high)",
+      "description": "Reasoning effort for OpenAI reasoning models.",
       "title": "Ai Reasoning Effort"
     },
     "ai_max_completion_tokens": {
@@ -1310,7 +1351,7 @@
         }
       ],
       "default": null,
-      "description": "Maximum completion tokens for OpenAI reasoning models",
+      "description": "Maximum completion tokens for OpenAI reasoning models.",
       "title": "Ai Max Completion Tokens"
     },
     "ai_extended_thinking": {
@@ -1323,7 +1364,7 @@
         }
       ],
       "default": null,
-      "description": "Enable extended thinking for Anthropic Claude 4 models",
+      "description": "Enable extended thinking on Anthropic Claude models that support it.",
       "title": "Ai Extended Thinking"
     },
     "ai_thinking_budget_tokens": {
@@ -1336,7 +1377,7 @@
         }
       ],
       "default": null,
-      "description": "Budget tokens for Anthropic extended thinking",
+      "description": "Token budget for Anthropic extended thinking when enabled.",
       "title": "Ai Thinking Budget Tokens"
     },
     "seqera_api_url": {
@@ -1349,7 +1390,7 @@
         }
       ],
       "default": null,
-      "description": "Seqera API URL",
+      "description": "Base URL for the Seqera Platform API. Defaults to the public instance.",
       "title": "Seqera Api Url"
     },
     "seqera_website": {
@@ -1362,7 +1403,7 @@
         }
       ],
       "default": null,
-      "description": "Seqera website",
+      "description": "Base URL used for Seqera Platform links in the report.",
       "title": "Seqera Website"
     },
     "plots_force_flat": {
@@ -1375,7 +1416,7 @@
         }
       ],
       "default": null,
-      "description": "Force static plot images",
+      "description": "Render plots as static images instead of interactive Plotly. Useful for very large reports.",
       "title": "Plots Force Flat"
     },
     "plots_force_interactive": {
@@ -1388,7 +1429,7 @@
         }
       ],
       "default": null,
-      "description": "Force interactive plots",
+      "description": "Force interactive plots even when MultiQC would normally fall back to flat images.",
       "title": "Plots Force Interactive"
     },
     "plots_export_font_scale": {
@@ -1401,7 +1442,7 @@
         }
       ],
       "default": null,
-      "description": "Font scale for exported plots",
+      "description": "Multiplier applied to font sizes in exported plot images. Bump up for publication-quality output.",
       "title": "Plots Export Font Scale"
     },
     "plots_flat_numseries": {
@@ -1414,7 +1455,7 @@
         }
       ],
       "default": null,
-      "description": "Number of series to show in flat plots",
+      "description": "If a plot has more than this many series, MultiQC switches it from interactive to flat image.",
       "title": "Plots Flat Numseries"
     },
     "plots_defer_loading_numseries": {
@@ -1427,7 +1468,7 @@
         }
       ],
       "default": null,
-      "description": "Number of series to defer loading - user will need to press button to render plot",
+      "description": "Plots with more than this many series start collapsed. The user clicks a button to render them.",
       "title": "Plots Defer Loading Numseries"
     },
     "lineplot_number_of_points_to_hide_markers": {
@@ -1440,7 +1481,7 @@
         }
       ],
       "default": null,
-      "description": "Number of points to hide markers - sum of data points in all samples",
+      "description": "Hide individual data point markers in line plots once the total point count across samples exceeds this.",
       "title": "Lineplot Number Of Points To Hide Markers"
     },
     "barplot_legend_on_bottom": {
@@ -1453,23 +1494,20 @@
         }
       ],
       "default": null,
-      "description": "Place bar plot legend at the bottom (not recommended)",
+      "description": "Place bar plot legends below the plot instead of to the side. Not recommended.",
       "title": "Barplot Legend On Bottom"
     },
     "boxplot_boxpoints": {
       "anyOf": [
         {
-          "type": "string"
-        },
-        {
-          "type": "boolean"
+          "enum": ["outliers", "suspectedoutliers", "all", false]
         },
         {
           "type": "null"
         }
       ],
       "default": null,
-      "description": "Boxplot boxpoints setting",
+      "description": "How boxplot data points are drawn. Use false to hide individual points.",
       "title": "Boxplot Boxpoints"
     },
     "box_min_threshold_outliers": {
@@ -1482,7 +1520,7 @@
         }
       ],
       "default": null,
-      "description": "For more than this number of samples, show only outliers",
+      "description": "When a boxplot has more samples than this, only outlier points are drawn.",
       "title": "Box Min Threshold Outliers"
     },
     "box_min_threshold_no_points": {
@@ -1495,7 +1533,7 @@
         }
       ],
       "default": null,
-      "description": "For more than this number of samples, show no points",
+      "description": "When a boxplot has more samples than this, no individual points are drawn.",
       "title": "Box Min Threshold No Points"
     },
     "violin_downsample_after": {
@@ -1508,7 +1546,7 @@
         }
       ],
       "default": null,
-      "description": "Downsample data for violin plot starting from this number os samples",
+      "description": "Start downsampling violin plot data once the sample count exceeds this. Keeps rendering snappy.",
       "title": "Violin Downsample After"
     },
     "violin_min_threshold_outliers": {
@@ -1521,7 +1559,7 @@
         }
       ],
       "default": null,
-      "description": "For more than this number of samples, show only outliers",
+      "description": "When a violin plot has more samples than this, only outlier points are drawn.",
       "title": "Violin Min Threshold Outliers"
     },
     "violin_min_threshold_no_points": {
@@ -1534,7 +1572,7 @@
         }
       ],
       "default": null,
-      "description": "For more than this number of samples, show no points",
+      "description": "When a violin plot has more samples than this, no individual points are drawn.",
       "title": "Violin Min Threshold No Points"
     },
     "collapse_tables": {
@@ -1547,7 +1585,7 @@
         }
       ],
       "default": null,
-      "description": "Collapse tables",
+      "description": "Collapse module tables by default. Users click to expand.",
       "title": "Collapse Tables"
     },
     "max_table_rows": {
@@ -1560,7 +1598,7 @@
         }
       ],
       "default": null,
-      "description": "Maximum number of rows to show in tables",
+      "description": "Tables larger than this many rows are rendered as a violin plot instead.",
       "title": "Max Table Rows"
     },
     "max_configurable_table_columns": {
@@ -1573,14 +1611,29 @@
         }
       ],
       "default": null,
-      "description": "Maximum number of columns to show in tables",
+      "description": "Cap on the number of columns the user can toggle in the table-configure toolbox.",
       "title": "Max Configurable Table Columns"
     },
     "general_stats_columns": {
       "additionalProperties": {
         "$ref": "#/$defs/GeneralStatsModuleConfig"
       },
-      "description": "Configuration for general stats columns per module. Keys are module IDs.",
+      "description": "Per-module overrides for General Stats columns. Top-level keys are module IDs.",
+      "examples": [
+        {
+          "fastqc": {
+            "columns": {
+              "percent_duplicates": {
+                "format": "{:,.1f}%",
+                "max": 100,
+                "min": 0,
+                "scale": "RdYlGn-rev",
+                "title": "% Dups"
+              }
+            }
+          }
+        }
+      ],
       "title": "General Stats Columns",
       "type": "object"
     },
@@ -1594,7 +1647,7 @@
         }
       ],
       "default": null,
-      "description": "Help text for general statistics table.",
+      "description": "Help text shown under the General Statistics heading at the top of the report.",
       "title": "General Stats Helptext"
     },
     "table_columns_visible": {
@@ -1620,7 +1673,16 @@
         }
       ],
       "default": null,
-      "description": "Which columns to show in tables",
+      "description": "Hide or show specific columns. Top-level keys are module IDs, values are either a bool (apply to all columns) or a dict mapping column ID to bool.",
+      "examples": [
+        {
+          "fastqc": false,
+          "samtools": {
+            "error_rate": false,
+            "raw_total_sequences": true
+          }
+        }
+      ],
       "title": "Table Columns Visible"
     },
     "table_columns_placement": {
@@ -1639,7 +1701,16 @@
         }
       ],
       "default": null,
-      "description": "Placement of columns in tables",
+      "description": "Reorder table columns. Top-level keys are module IDs, inner keys are column IDs, values are float sort weights (lower is further left).",
+      "examples": [
+        {
+          "fastqc": {
+            "percent_duplicates": 900,
+            "percent_gc": 800,
+            "total_sequences": 700
+          }
+        }
+      ],
       "title": "Table Columns Placement"
     },
     "table_columns_name": {
@@ -1665,7 +1736,15 @@
         }
       ],
       "default": null,
-      "description": "Name of columns in tables",
+      "description": "Rename table columns. Top-level keys are module IDs, inner keys are column IDs, values are the new display name.",
+      "examples": [
+        {
+          "fastqc": {
+            "percent_duplicates": "% Dups",
+            "percent_gc": "% GC"
+          }
+        }
+      ],
       "title": "Table Columns Name"
     },
     "table_cond_formatting_colours": {
@@ -1684,7 +1763,20 @@
         }
       ],
       "default": null,
-      "description": "Colours to use for conditional formatting in tables",
+      "description": "Background colours referenced by table_cond_formatting_rules. List of single-key dicts mapping a colour ID to a hex code.",
+      "examples": [
+        [
+          {
+            "pass": "#5cb85c"
+          },
+          {
+            "warn": "#f0ad4e"
+          },
+          {
+            "fail": "#d9534f"
+          }
+        ]
+      ],
       "title": "Table Cond Formatting Colours"
     },
     "table_cond_formatting_rules": {
@@ -1719,7 +1811,43 @@
         }
       ],
       "default": null,
-      "description": "Rules for conditional formatting in tables",
+      "description": "Conditional cell formatting. Nested dicts map table ID to column ID to a list of rules (eg. {s_eq: pass} matches an exact value). See the customisation docs for the full grammar.",
+      "examples": [
+        {
+          "all_columns": {
+            "fail": [
+              {
+                "s_eq": "fail"
+              }
+            ],
+            "pass": [
+              {
+                "s_eq": "pass"
+              },
+              {
+                "s_eq": "ok"
+              }
+            ],
+            "warn": [
+              {
+                "s_eq": "warn"
+              }
+            ]
+          },
+          "mqc-generalstats-percent_duplicates": {
+            "fail": [
+              {
+                "gt": 50
+              }
+            ],
+            "warn": [
+              {
+                "gt": 20
+              }
+            ]
+          }
+        }
+      ],
       "title": "Table Cond Formatting Rules"
     },
     "decimalPoint_format": {
@@ -1732,7 +1860,8 @@
         }
       ],
       "default": null,
-      "description": "Decimal point format",
+      "description": "Decimal-point character used in formatted numbers, eg. '.' (default) or ','.",
+      "examples": [","],
       "title": "Decimalpoint Format"
     },
     "thousandsSep_format": {
@@ -1745,7 +1874,8 @@
         }
       ],
       "default": null,
-      "description": "Thousands separator format",
+      "description": "Thousands separator used in formatted numbers, eg. ',' (default), ' ', or '.",
+      "examples": [" ", "'"],
       "title": "Thousandssep Format"
     },
     "remove_sections": {
@@ -1761,7 +1891,8 @@
         }
       ],
       "default": null,
-      "description": "Sections to remove",
+      "description": "Module sections to hide. Use the section anchor as it appears in the URL.",
+      "examples": [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
       "title": "Remove Sections"
     },
     "section_comments": {
@@ -1777,7 +1908,13 @@
         }
       ],
       "default": null,
-      "description": "Comments for sections",
+      "description": "Markdown text shown under specific module sections. Keys are section anchors.",
+      "examples": [
+        {
+          "fastqc_overrepresented_sequences": "**This is** an important note about the overrepresented sequences.",
+          "samtools": "Reviewed by *Phil* on 2024-08-21."
+        }
+      ],
       "title": "Section Comments"
     },
     "lint": {
@@ -1790,7 +1927,7 @@
         }
       ],
       "default": null,
-      "description": "Lint",
+      "description": "Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.",
       "title": "Lint"
     },
     "strict": {
@@ -1803,7 +1940,7 @@
         }
       ],
       "default": null,
-      "description": "Strict",
+      "description": "Treat module warnings as errors. Stricter than lint.",
       "title": "Strict"
     },
     "development": {
@@ -1816,7 +1953,7 @@
         }
       ],
       "default": null,
-      "description": "Development",
+      "description": "Enable developer-mode features such as live JS reloading. Internal use.",
       "title": "Development"
     },
     "custom_plot_config": {
@@ -1830,7 +1967,17 @@
         }
       ],
       "default": null,
-      "description": "Custom plot config",
+      "description": "Override plot config options per plot. Top-level keys are plot IDs, values are option dicts.",
+      "examples": [
+        {
+          "fastqc_per_base_sequence_quality_plot": {
+            "title": "FastQC: Mean Quality Scores (custom)",
+            "yaxis": {
+              "title": "Phred score"
+            }
+          }
+        }
+      ],
       "title": "Custom Plot Config"
     },
     "custom_table_header_config": {
@@ -1844,7 +1991,18 @@
         }
       ],
       "default": null,
-      "description": "Custom table header config",
+      "description": "Override table column config. Same shape as custom_plot_config but for table headers.",
+      "examples": [
+        {
+          "general_stats_table": {
+            "% Dups": {
+              "format": "{:,.1f}%",
+              "max": 100,
+              "min": 0
+            }
+          }
+        }
+      ],
       "title": "Custom Table Header Config"
     },
     "software_versions": {
@@ -1858,7 +2016,14 @@
         }
       ],
       "default": null,
-      "description": "Software versions",
+      "description": "Manually specify software versions for the Software Versions section. Top-level keys are tool names.",
+      "examples": [
+        {
+          "bwa": "0.7.17",
+          "fastqc": "0.12.1",
+          "samtools": "1.20"
+        }
+      ],
       "title": "Software Versions"
     },
     "ignore_symlinks": {
@@ -1871,7 +2036,7 @@
         }
       ],
       "default": null,
-      "description": "Ignore symlinks",
+      "description": "Skip symlinked files and directories during the file search.",
       "title": "Ignore Symlinks"
     },
     "ignore_images": {
@@ -1884,7 +2049,7 @@
         }
       ],
       "default": null,
-      "description": "Ignore images",
+      "description": "Skip image files (PNG/JPEG/etc.) to avoid wasting time opening them.",
       "title": "Ignore Images"
     },
     "fn_ignore_dirs": {
@@ -1900,7 +2065,8 @@
         }
       ],
       "default": null,
-      "description": "Directories to ignore",
+      "description": "Glob patterns for directory names to skip entirely during the file search.",
+      "examples": [["work", ".nextflow", "*_logs"]],
       "title": "Fn Ignore Dirs"
     },
     "fn_ignore_paths": {
@@ -1916,7 +2082,8 @@
         }
       ],
       "default": null,
-      "description": "Paths to ignore",
+      "description": "Glob patterns for paths to skip during the file search.",
+      "examples": [["*/test_data/*", "*/.snakemake/*"]],
       "title": "Fn Ignore Paths"
     },
     "sample_names_ignore": {
@@ -1932,7 +2099,8 @@
         }
       ],
       "default": null,
-      "description": "Sample names to ignore",
+      "description": "Glob patterns. Matching samples are dropped from the report.",
+      "examples": [["*_temp", "control_*"]],
       "title": "Sample Names Ignore"
     },
     "sample_names_ignore_re": {
@@ -1948,7 +2116,8 @@
         }
       ],
       "default": null,
-      "description": "Sample names to ignore (regex)",
+      "description": "Regex patterns. Matching samples are dropped from the report.",
+      "examples": [["^test_.*", ".*_neg_ctrl$"]],
       "title": "Sample Names Ignore Re"
     },
     "sample_names_only_include": {
@@ -1964,7 +2133,8 @@
         }
       ],
       "default": null,
-      "description": "Sample names to include",
+      "description": "Glob patterns. If set, only matching samples are kept.",
+      "examples": [["RNA_*", "Sample_??"]],
       "title": "Sample Names Only Include"
     },
     "sample_names_only_include_re": {
@@ -1980,7 +2150,8 @@
         }
       ],
       "default": null,
-      "description": "Sample names to include (regex)",
+      "description": "Regex patterns. If set, only matching samples are kept.",
+      "examples": [["^WGS_[0-9]+$"]],
       "title": "Sample Names Only Include Re"
     },
     "sample_names_rename_buttons": {
@@ -1996,7 +2167,8 @@
         }
       ],
       "default": null,
-      "description": "Sample names to rename",
+      "description": "Names of the toolbox buttons that switch between the rename groups defined in sample_names_rename.",
+      "examples": [["Sample ID", "Patient ID", "Lane"]],
       "title": "Sample Names Rename Buttons"
     },
     "sample_names_replace": {
@@ -2012,7 +2184,13 @@
         }
       ],
       "default": null,
-      "description": "Sample names to replace",
+      "description": "Substring replacements applied to every sample name. Keys are matched, values are replacements.",
+      "examples": [
+        {
+          "Sample_": "S",
+          "_001": ""
+        }
+      ],
       "title": "Sample Names Replace"
     },
     "sample_names_replace_regex": {
@@ -2025,7 +2203,7 @@
         }
       ],
       "default": null,
-      "description": "Sample names to replace (regex)",
+      "description": "Treat keys in sample_names_replace as regex patterns.",
       "title": "Sample Names Replace Regex"
     },
     "sample_names_replace_exact": {
@@ -2038,7 +2216,7 @@
         }
       ],
       "default": null,
-      "description": "Sample names to replace (exact)",
+      "description": "Only replace when the key matches the sample name exactly, not as a substring.",
       "title": "Sample Names Replace Exact"
     },
     "sample_names_replace_complete": {
@@ -2051,7 +2229,7 @@
         }
       ],
       "default": null,
-      "description": "Sample names to replace (complete)",
+      "description": "Replace the entire sample name when the key matches anywhere in it.",
       "title": "Sample Names Replace Complete"
     },
     "sample_names_rename": {
@@ -2070,7 +2248,14 @@
         }
       ],
       "default": null,
-      "description": "Sample names to rename",
+      "description": "Toolbox rename pairs. Each entry is a [from, to] pair, grouped by the buttons in sample_names_rename_buttons.",
+      "examples": [
+        [
+          ["SMP001", "Patient_A"],
+          ["SMP002", "Patient_B"],
+          ["SMP003", "Patient_C"]
+        ]
+      ],
       "title": "Sample Names Rename"
     },
     "show_hide_buttons": {
@@ -2086,7 +2271,8 @@
         }
       ],
       "default": null,
-      "description": "Show/hide buttons",
+      "description": "Labels for the toolbox show/hide buttons. One per pattern set.",
+      "examples": [["Tumour samples", "Normal samples"]],
       "title": "Show Hide Buttons"
     },
     "show_hide_patterns": {
@@ -2112,7 +2298,13 @@
         }
       ],
       "default": null,
-      "description": "Show/hide patterns",
+      "description": "Patterns for each show/hide button. Each entry is a string or list of strings to match against sample names.",
+      "examples": [
+        [
+          ["_T_", "_tumour_"],
+          ["_N_", "_normal_"]
+        ]
+      ],
       "title": "Show Hide Patterns"
     },
     "show_hide_regex": {
@@ -2135,7 +2327,8 @@
         }
       ],
       "default": null,
-      "description": "Show/hide regex",
+      "description": "Whether each pattern set is treated as regex. List of bools aligned with show_hide_buttons.",
+      "examples": [[false, false]],
       "title": "Show Hide Regex"
     },
     "show_hide_mode": {
@@ -2151,7 +2344,8 @@
         }
       ],
       "default": null,
-      "description": "Show/hide mode",
+      "description": "Action for each show/hide button: 'show' (only show matches) or 'hide' (hide matches).",
+      "examples": [["show", "show"]],
       "title": "Show Hide Mode"
     },
     "highlight_patterns": {
@@ -2167,7 +2361,8 @@
         }
       ],
       "default": null,
-      "description": "Patterns for highlighting samples",
+      "description": "Substring (or regex) patterns. Matching samples are highlighted in plots and tables.",
+      "examples": [["control", "treated"]],
       "title": "Highlight Patterns"
     },
     "highlight_colors": {
@@ -2183,7 +2378,8 @@
         }
       ],
       "default": null,
-      "description": "Colors to use for highlighting patterns",
+      "description": "Hex colour for each entry in highlight_patterns, in the same order.",
+      "examples": [["#377eb8", "#e41a1c"]],
       "title": "Highlight Colors"
     },
     "highlight_regex": {
@@ -2196,7 +2392,7 @@
         }
       ],
       "default": null,
-      "description": "Whether to use regex mode for highlighting",
+      "description": "Treat highlight_patterns as regex instead of plain substring.",
       "title": "Highlight Regex"
     },
     "no_version_check": {
@@ -2209,7 +2405,7 @@
         }
       ],
       "default": null,
-      "description": "No version check",
+      "description": "Skip the network check for newer MultiQC versions on startup.",
       "title": "No Version Check"
     },
     "log_filesize_limit": {
@@ -2222,7 +2418,7 @@
         }
       ],
       "default": null,
-      "description": "Log filesize limit",
+      "description": "Skip log files larger than this many bytes.",
       "title": "Log Filesize Limit"
     },
     "filesearch_lines_limit": {
@@ -2235,7 +2431,7 @@
         }
       ],
       "default": null,
-      "description": "Filesearch lines limit",
+      "description": "Stop reading a log file after this many lines.",
       "title": "Filesearch Lines Limit"
     },
     "report_readerrors": {
@@ -2248,7 +2444,7 @@
         }
       ],
       "default": null,
-      "description": "Report read errors",
+      "description": "Surface file read errors in the log instead of silently skipping them.",
       "title": "Report Readerrors"
     },
     "skip_generalstats": {
@@ -2261,7 +2457,7 @@
         }
       ],
       "default": null,
-      "description": "Skip generalstats",
+      "description": "Hide the General Statistics table at the top of the report.",
       "title": "Skip Generalstats"
     },
     "skip_versions_section": {
@@ -2274,7 +2470,7 @@
         }
       ],
       "default": null,
-      "description": "Skip versions section",
+      "description": "Hide the Software Versions section.",
       "title": "Skip Versions Section"
     },
     "disable_version_detection": {
@@ -2287,7 +2483,7 @@
         }
       ],
       "default": null,
-      "description": "Disable version detection",
+      "description": "Skip parsing software versions from module log files.",
       "title": "Disable Version Detection"
     },
     "versions_table_group_header": {
@@ -2300,7 +2496,7 @@
         }
       ],
       "default": null,
-      "description": "Versions table group header",
+      "description": "Column header for the grouping column in the Software Versions table. Defaults to 'Group'.",
       "title": "Versions Table Group Header"
     },
     "data_format_extensions": {
@@ -2316,13 +2512,21 @@
         }
       ],
       "default": null,
-      "description": "Data format extensions",
+      "description": "Override the file extension used when writing each data format, eg. {tsv: txt} to write TSV as .txt.",
+      "examples": [
+        {
+          "json": "json",
+          "tsv": "txt",
+          "yaml": "yml"
+        }
+      ],
       "title": "Data Format Extensions"
     },
     "export_plot_formats": {
       "anyOf": [
         {
           "items": {
+            "enum": ["png", "svg", "pdf"],
             "type": "string"
           },
           "type": "array"
@@ -2332,7 +2536,7 @@
         }
       ],
       "default": null,
-      "description": "Export plot formats",
+      "description": "Image formats to export when export_plots is on.",
       "title": "Export Plot Formats"
     },
     "filesearch_file_shared": {
@@ -2348,7 +2552,7 @@
         }
       ],
       "default": null,
-      "description": "Filesearch file shared",
+      "description": "Module IDs whose log files may be matched by multiple modules during the search.",
       "title": "Filesearch File Shared"
     },
     "custom_content": {
@@ -2362,7 +2566,27 @@
         }
       ],
       "default": null,
-      "description": "Custom content settings",
+      "description": "Embed arbitrary plots, tables or text in the report. See the Custom Content docs for the full structure.",
+      "examples": [
+        {
+          "data": {
+            "my-section-id": {
+              "data": {
+                "sample1": {
+                  "col1": 100
+                },
+                "sample2": {
+                  "col1": 200
+                }
+              },
+              "id": "my-section-id",
+              "plot_type": "table",
+              "section_name": "My Custom Section"
+            }
+          },
+          "order": ["my-section-id", "my-other-section-id"]
+        }
+      ],
       "title": "Custom Content"
     },
     "fn_clean_sample_names": {
@@ -2375,7 +2599,7 @@
         }
       ],
       "default": null,
-      "description": "Clean sample names",
+      "description": "Apply the cleaning rules in fn_clean_exts and fn_clean_trim to sample names.",
       "title": "Fn Clean Sample Names"
     },
     "use_filename_as_sample_name": {
@@ -2394,7 +2618,7 @@
         }
       ],
       "default": false,
-      "description": "Use filename as sample name (can be bool for all modules or list for specific modules/patterns)",
+      "description": "Use the source filename as the sample name instead of any name parsed from the log. Set to true for all modules, or to a list of module IDs / patterns to apply selectively.",
       "title": "Use Filename As Sample Name"
     },
     "fn_clean_exts": {
@@ -2417,7 +2641,18 @@
         }
       ],
       "default": null,
-      "description": "Extensions to clean from sample names",
+      "description": "Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in list.",
+      "examples": [
+        [
+          ".gz",
+          ".fastq",
+          ".bam",
+          {
+            "pattern": "_S\\d+_L\\d+",
+            "type": "regex"
+          }
+        ]
+      ],
       "title": "Fn Clean Exts"
     },
     "fn_clean_trim": {
@@ -2433,7 +2668,8 @@
         }
       ],
       "default": null,
-      "description": "Strings to trim from start/end of sample names",
+      "description": "Strings trimmed from the start or end of sample names. Replaces the built-in list.",
+      "examples": [["_R1", "_R2", "_001"]],
       "title": "Fn Clean Trim"
     },
     "extra_fn_clean_exts": {
@@ -2456,7 +2692,17 @@
         }
       ],
       "default": null,
-      "description": "Additional extensions to clean from sample names",
+      "description": "Extensions appended to the built-in list. Use to add custom suffixes without overriding defaults.",
+      "examples": [
+        [
+          ".mySuffix",
+          {
+            "module": ["samtools"],
+            "pattern": "_tmp",
+            "type": "remove"
+          }
+        ]
+      ],
       "title": "Extra Fn Clean Exts"
     },
     "extra_fn_clean_trim": {
@@ -2472,8 +2718,224 @@
         }
       ],
       "default": null,
-      "description": "Additional strings to trim from start/end of sample names",
+      "description": "Strings appended to the built-in trim list, without overriding defaults.",
+      "examples": [["sample_", "_processed"]],
       "title": "Extra Fn Clean Trim"
+    },
+    "fn_ignore_files": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Glob patterns for file names to skip during the file search.",
+      "examples": [["*.bai", "*.bak", "*.tmp"]],
+      "title": "Fn Ignore Files"
+    },
+    "top_modules": {
+      "anyOf": [
+        {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.",
+      "examples": [["fastqc", "cutadapt"]],
+      "title": "Top Modules"
+    },
+    "module_order": {
+      "anyOf": [
+        {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    ]
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, path_filters).",
+      "examples": [
+        [
+          "fastqc",
+          {
+            "fastqc": {
+              "name": "FastQC (trimmed)",
+              "path_filters": ["*_trimmed*"]
+            }
+          },
+          "cutadapt"
+        ]
+      ],
+      "title": "Module Order"
+    },
+    "preserve_module_raw_data": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.",
+      "title": "Preserve Module Raw Data"
+    },
+    "table_sample_merge": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    ]
+                  },
+                  "type": "object"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name, values are clean-pattern entries (string or {type, pattern}).",
+      "examples": [
+        {
+          "R1": [
+            "_R1",
+            {
+              "pattern": "[_.-][rR]?1$",
+              "type": "regex"
+            }
+          ],
+          "R2": [
+            "_R2",
+            {
+              "pattern": "[_.-][rR]?2$",
+              "type": "regex"
+            }
+          ]
+        }
+      ],
+      "title": "Table Sample Merge"
+    },
+    "section_status_checks": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": "object"
+              }
+            ]
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Enable or disable the green/yellow/red status indicators on report sections. Top-level keys are module IDs, values are either a bool or a dict mapping section ID to bool.",
+      "examples": [
+        {
+          "fastqc": true,
+          "samtools": {
+            "alignment_stats": false
+          }
+        }
+      ],
+      "title": "Section Status Checks"
+    },
+    "num_datasets_plot_limit": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Deprecated. Use plots_defer_loading_numseries instead.",
+      "title": "Num Datasets Plot Limit"
     },
     "sp": {
       "anyOf": [
@@ -2512,7 +2974,7 @@
         }
       ],
       "default": null,
-      "description": "Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw',\n        'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast,\n        the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to\n        for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as\n        have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column\n        to have a single type).\n        ",
+      "description": "Parquet table layout. 'long' has rows of (sample_name, metric_name, val_raw, val_raw_type, val_str), easy to filter by metric. 'wide' uses one column per metric (prefixed with table name and namespace), easier for analytics but can hit column limits or mixed-type issues.",
       "title": "Parquet Format"
     }
   },

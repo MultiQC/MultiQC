@@ -1491,7 +1491,7 @@ table_cond_formatting_rules:
 
 **Type**: `Optional[Dict[str, List[Union[str, Dict[str, Union[str, List[str]]]]]]]` (default: `None`)
 
-Merge rows of supporting modules' tables by collapsing samples that match a pattern. Keys are the merged group name, values are clean-pattern entries (string or {type, pattern}).
+Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name, values are clean-pattern entries (string or {type, pattern}).
 
 **Example**:
 

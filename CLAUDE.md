@@ -82,7 +82,7 @@ also supported.
 
 **Report**: `multiqc/report.py` collects module outputs and renders via
 Jinja2 templates in `multiqc/templates/` (default, simple, sections,
-gathered, original).
+gathered, original, geo, disco).
 
 **Data flow**:
 
@@ -97,7 +97,12 @@ sample name anonymisation.
 
 ## Key files
 
-- `multiqc/config_defaults.yaml` — default configuration
+- `multiqc/config_defaults.yaml` — default configuration values
+- `multiqc/utils/config_schema.py` — Pydantic `MultiQCConfig` model: source
+  of truth for option types, descriptions, examples, and Literal enums.
+  Driven into `docs/markdown/config_schema.md`,
+  `multiqc/utils/config_schema.json`, and the wizard HTML by scripts in
+  `scripts/`. `tests/test_config_wizard.py` catches drift.
 - `multiqc/search_patterns.yaml` — file-pattern matching for every module
 - `multiqc/base_module.py` — `BaseMultiqcModule` parent class
 - `pyproject.toml` — package config and module entry points
