@@ -1724,6 +1724,7 @@
         }
       ],
       "default": null,
+      "deprecated": true,
       "description": "Deprecated. Use `plots_defer_loading_numseries` instead.",
       "section": "Plot Settings",
       "title": "Num Datasets Plot Limit"
@@ -3052,7 +3053,8 @@
         }
       ],
       "default": null,
-      "description": "Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.",
+      "deprecated": true,
+      "description": "Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.",
       "section": "Performance & Debugging",
       "title": "Lint"
     },

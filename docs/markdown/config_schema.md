@@ -1950,7 +1950,7 @@ Suppress non-essential log messages.
 
 **Type**: `bool` (default: `false`)
 
-Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.
+Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.
 
 ### strict
 

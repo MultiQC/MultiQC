@@ -106,7 +106,9 @@ def cfg(
     "Show advanced options" toggle. Both end up in the JSON schema under
     ``json_schema_extra`` and are read back by
     ``scripts/_config_schema_loader.py``. Any other ``Field`` kwargs
-    (``examples``, validators, etc.) pass straight through via ``**kwargs``.
+    (``examples``, validators, ``deprecated``) pass straight through via
+    ``**kwargs`` — Pydantic surfaces ``deprecated`` as ``"deprecated": true``
+    in the JSON schema, which the wizard's Validate YAML view picks up.
     """
     if section is None:
         section = _current_section.get()
@@ -442,6 +444,7 @@ class MultiQCConfig(BaseModel):
         num_datasets_plot_limit: Optional[int] = cfg(
             "Deprecated. Use `plots_defer_loading_numseries` instead.",
             advanced=True,
+            deprecated="Use `plots_defer_loading_numseries` instead.",
         )
         plot_font_family: Optional[str] = cfg(
             "CSS font-family for plot text. Defaults to a system font stack.",
@@ -798,7 +801,8 @@ class MultiQCConfig(BaseModel):
         no_ansi: Optional[bool] = cfg("Disable ANSI colour codes in terminal output.")
         quiet: Optional[bool] = cfg("Suppress non-essential log messages.")
         lint: Optional[bool] = cfg(
-            "Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.",
+            "Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.",
+            deprecated="Use `--lint` command-line flag instead.",
         )
         strict: Optional[bool] = cfg("Treat module warnings as errors. Stricter than lint.", advanced=True)
         development: Optional[bool] = cfg(
