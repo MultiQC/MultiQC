@@ -11,7 +11,7 @@ VERSION_REGEX = r"Flexbar - flexible barcode and adapter removal, version ([\d\.
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Flexbar",
             anchor="flexbar",
             href="https://github.com/seqan/flexbar",

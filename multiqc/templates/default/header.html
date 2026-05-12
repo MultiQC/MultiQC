@@ -55,8 +55,8 @@ was generated and the button that launches the welcome tour.
   <div class="card card-body bg-body-tertiary mb-2">
     <dl class="row" style="margin-bottom:0;">
       {% for d in config.report_header_info %}{% for k, v in d.items() %}
-        <dt class="col-sm-3">{{ k }}</dt>
-        <dd class="col-sm-9">{{ v }}</dd>
+        <dt class="col-sm-6 col-md-4">{{ k }}</dt>
+        <dd class="col-sm-6 col-md-8">{{ v }}</dd>
       {% endfor %}{% endfor %}
     </dl>
   </div>

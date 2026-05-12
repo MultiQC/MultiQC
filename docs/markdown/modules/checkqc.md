@@ -1,8 +1,7 @@
 ---
 title: CheckQC
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Checks a set of quality criteria against an Illumina runfolder.</p>
+description: "Checks a set of quality criteria against an Illumina runfolder."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/checkqc/checkqc.py
 -->
 
 :::note
-<p>Checks a set of quality criteria against an Illumina runfolder.</p>
+Checks a set of quality criteria against an Illumina runfolder.
 
 [https://github.com/Molmed/checkQC](https://github.com/Molmed/checkQC)
 :::

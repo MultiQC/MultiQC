@@ -9,10 +9,26 @@ This tutorial covers installation and first run for a typical user.
 It's not meant to be comprehensive - see the rest of the documentation for that -
 it's just to get the majority up and running quickly so you can get a taste for how to use MultiQC.
 
-## Install Conda
+## Install MultiQC
 
-In order to install MultiQC, we first need Python.
-Arguably, the easiest way to do this is with Conda
+### Option A: Using uv (recommended)
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package manager that handles everything — including installing Python for you automatically.
+No need to install Python separately (see [full docs](installation/#uv)).
+
+1. Install uv:
+   ```bash
+   # macOS / Linux
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+2. Install MultiQC:
+   ```bash
+   uv tool install multiqc
+   ```
+
+### Option B: Using Conda
+
+Alternatively, you can use Conda
 (see [full docs](installation/#python-with-conda)).
 
 1. [Download miniconda](https://conda.io/miniconda.html) for your operating system.
@@ -29,15 +45,12 @@ Arguably, the easiest way to do this is with Conda
    conda create --name myenv python=3.11
    conda activate myenv
    ```
+6. Install MultiQC:
+   ```bash
+   conda install multiqc
+   ```
 
-## Install MultiQC
-
-Now that we have Python, we can install MultiQC.
-As we're already using Conda, we may as well install MultiQC with Conda too (see [full docs](installation/#conda)).
-
-```bash
-conda install multiqc
-```
+### Verify installation
 
 Check that it worked by printing the MultiQC version (or `--help` text):
 
@@ -46,20 +59,20 @@ multiqc --version
 ```
 
 ```txt
-multiqc, version 1.20
+multiqc, version 1.33
 ```
 
 ## Get some example data
 
-To try MultiQC out quickly, you can fetch some example input data from the [Example reports](https://multiqc.info/example-reports/) page.
+To try MultiQC out quickly, you can fetch some example input data from the [Example reports](https://seqera.io/multiqc/#reports) page.
 
 Each example report has a link to _Download input data_.
 You should be able to recreate the example report using this.
 
-For example, for the [RNA-seq report](https://multiqc.info/example-reports/rna-seq/):
+For example, for the [RNA-seq report](https://seqera.io/examples/rna-seq/multiqc_report):
 
 ```bash
-curl -O -J -L http://multiqc.info/examples/rna-seq/data.zip
+curl -O -J -L https://seqera.io/examples/rna-seq/data.zip
 unzip data.zip
 ```
 
@@ -80,7 +93,7 @@ multiqc .
 ```
 
 ```txt
-  /// MultiQC 🔍 | v1.20
+  /// MultiQC 🔍 | v1.33
 
 |           multiqc | Search path : /demo/data
 |         searching | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 121/121
@@ -97,7 +110,7 @@ multiqc .
 
 You can see in the log output that MultiQC created a file called `multiqc_report.html`.
 Open it and take a look (you can usually <kbd>ctrl</kbd>/<kbd>cmd</kbd> + click the filename in most terminals).
-It should look basically the same as the example report [on the MultiQC website](https://multiqc.info/example-reports/rna-seq/).
+It should look basically the same as [this example report](https://seqera.io/examples/rna-seq/multiqc_report).
 
 Try using the toolbox features in the right hand sidebar, for example hiding and highlighting specific samples.
 
