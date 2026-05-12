@@ -473,7 +473,7 @@ remove_sections:
 
 **Type**: `Dict[str, Any]`
 
-Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides — see the customisation docs for the full grammar.
+Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides. See the [customisation docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output) for the full grammar.
 
 **Example**:
 

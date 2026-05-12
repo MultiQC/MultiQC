@@ -1176,7 +1176,7 @@
              internally. The 350px subtraction leaves room for the page
              header above and the page-footer / breathing room below.
              `overflow: hidden` is needed so the cards' content can't spill
-             past the section box — without it, max-height only clamps the
+             past the section box; without it, max-height only clamps the
              box, and the grid item still grows past it. */
           height: calc(100vh - 350px);
           overflow: hidden;
@@ -2188,7 +2188,7 @@
           return;
         }
         // If the form's parsed shape still matches the YAML text the user
-        // last had open, restore it verbatim — comments, blank lines and
+        // last had open, restore it verbatim: comments, blank lines and
         // key ordering all survive. If anything in the form has changed
         // (or the cache is stale across a reload), regenerate cleanly.
         setValidateText(yamlTextForCurrentForm());
@@ -2206,14 +2206,14 @@
             if (!hadEditor) runValidation();
           },
           () => {
-            // Monaco unavailable — textarea fallback is already live.
+            // Monaco unavailable; textarea fallback is already live.
           },
         );
       }
 
       function backToEditor() {
         // If the user wrote invalid YAML, keep them in YAML mode so they
-        // can fix it — the validate summary already shows the parse error.
+        // can fix it; the validate summary already shows the parse error.
         const text = getValidateText();
         if (!applyYamlToForm(text)) return;
         // Cache the raw text along with the form snapshot it represents.
@@ -2288,6 +2288,16 @@
           const line = lines[range.start - 1];
           const m = lineRe.exec(line);
           if (!m) return null;
+          // Guard against the regex mis-splitting a value containing '#'
+          // (e.g. `title: "Run #42"`) as a trailing comment. Parse the
+          // value-only portion and verify it matches the snapshot; if not,
+          // bail to the rebuild path rather than corrupt the line.
+          try {
+            const reparsed = jsyaml.load(m[1] + m[2]);
+            if (!reparsed || !valuesEqual(reparsed[c.key], snap[c.key])) return null;
+          } catch (e) {
+            return null;
+          }
           lines[range.start - 1] = m[1] + dumpScalar(c.value) + (m[3] || "");
         }
 
@@ -2301,7 +2311,7 @@
           lines.splice(r.start - 1, r.end - r.start + 1);
         }
 
-        // 3. Additions — append, preserving any trailing newline.
+        // 3. Additions: append, preserving any trailing newline.
         const adds = changes.filter((c) => c.op === "add");
         if (adds.length) {
           const trailing = lines.length && lines[lines.length - 1] === "" ? lines.pop() : null;
@@ -2331,7 +2341,7 @@
 
       // Reverse of buildYamlFromForm: walk the parsed YAML, push known keys
       // back into the form widgets, remember unknown keys for next entry.
-      // Returns true on success, false if the YAML couldn't be parsed — the
+      // Returns true on success, false if the YAML couldn't be parsed; the
       // caller uses that to decide whether to keep the user in YAML mode so
       // their edits aren't silently discarded. An empty / null document is
       // treated as success: the user is asking to clear all options.
@@ -2372,7 +2382,7 @@
 
       function clearYaml() {
         if (!getValidateText().trim()) return;
-        if (!confirm("Clear all YAML? This empties the editor and removes every option from the wizard.")) return;
+        if (!confirm("Clear the YAML editor?")) return;
         setValidateText("");
         runValidation();
       }
@@ -2470,7 +2480,7 @@
       }
 
       // Compile the JSON schema once, lazily. Returns null if Ajv2020 didn't
-      // load (CDN failure) — caller falls back to no-Ajv rendering.
+      // load (CDN failure); caller falls back to no-Ajv rendering.
       // Monaco editor: loaded lazily the first time showYaml() runs, so
       // editor-only users don't pay for it. Until it resolves (or if the CDN
       // fails), the plain textarea keeps working as a fallback.
@@ -2481,7 +2491,7 @@
       function ensureMonaco() {
         if (monacoReadyPromise) return monacoReadyPromise;
         if (typeof require !== "function" || typeof require.config !== "function") {
-          // Loader didn't load (CDN blocked etc.) — stay on the textarea.
+          // Loader didn't load (CDN blocked etc.); stay on the textarea.
           monacoReadyPromise = Promise.reject(new Error("Monaco loader unavailable"));
           return monacoReadyPromise;
         }
@@ -2570,7 +2580,7 @@
           const ajv = new AjvClass({ allErrors: true, strict: false });
           ajvValidate = ajv.compile(configSchema);
         } catch (e) {
-          // Schema compile errors shouldn't take the wizard down — leave
+          // Schema compile errors shouldn't take the wizard down; leave
           // ajvValidate null and let the validator skip Ajv-side checks.
           console.error("Ajv compile failed:", e);
           ajvValidate = null;
@@ -2677,7 +2687,7 @@
       let lastValidated = { parsed: null, results: [], keyLineRanges: {} };
 
       // Map each top-level key in the paste to its 1-indexed [start, end]
-      // line range. Naive regex walk — fine for MultiQC configs (no leading
+      // line range. Naive regex walk; fine for MultiQC configs (no leading
       // whitespace on top-level keys, no multi-document YAML). Trailing
       // blank lines and section-header comments between blocks are excluded
       // so the click-to-highlight band stops at the last content line.
@@ -2887,8 +2897,8 @@
           btn.textContent = "Remove defaults";
           btn.title =
             sweep === 1
-              ? `Remove 1 option whose value matches the MultiQC default — it has no effect`
-              : `Remove ${sweep} options whose values match the MultiQC default — they have no effect`;
+              ? `Remove 1 option whose value matches the MultiQC default - it has no effect`
+              : `Remove ${sweep} options whose values match the MultiQC default - they have no effect`;
           btn.onclick = removeDefaults;
           summary.appendChild(btn);
         }
@@ -2898,7 +2908,7 @@
         if (filterStatuses.has(status)) filterStatuses.delete(status);
         else filterStatuses.add(status);
         // Update aria-pressed/active on the just-clicked badges without a full
-        // re-render (re-render would also be fine — small enough).
+        // re-render (re-render would also be fine; small enough).
         document.querySelectorAll("#validateSummary .validate-badge").forEach((b) => {
           const on = filterStatuses.has(b.dataset.status);
           b.classList.toggle("is-active", on);
@@ -2959,11 +2969,11 @@
         } else if (r.messages && r.messages.length) {
           body += r.messages.map((m) => `<div class="validate-msg">${escapeHtml(m)}</div>`).join("");
         } else if (r.status === "default") {
-          body += `<div class="validate-msg">matches the MultiQC default — has no effect</div>`;
+          body += `<div class="validate-msg">matches the MultiQC default: has no effect</div>`;
         } else if (r.status === "deprecated") {
           body += `<div class="validate-msg">this option is deprecated; see the description for a replacement</div>`;
           if (r.matchesDefault) {
-            body += `<div class="validate-msg">value also matches the MultiQC default — safe to remove</div>`;
+            body += `<div class="validate-msg">value also matches the MultiQC default: safe to remove</div>`;
           }
         }
         card.innerHTML = head + body;

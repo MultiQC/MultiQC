@@ -105,12 +105,12 @@ def cfg(
     block; pass ``section=`` explicitly to override or for a one-off field
     outside any block. ``advanced=True`` hides the field behind the wizard's
     "Show advanced options" toggle. ``multiline=True`` renders string fields
-    as a textarea instead of a single-line input — use for prose fields like
+    as a textarea instead of a single-line input, use for prose fields like
     descriptions and prompts. All flags end up in the JSON schema under
     ``json_schema_extra`` and are read back by
     ``scripts/_config_schema_loader.py``. Any other ``Field`` kwargs
     (``examples``, validators, ``deprecated``) pass straight through via
-    ``**kwargs`` — Pydantic surfaces ``deprecated`` as ``"deprecated": true``
+    ``**kwargs`` - Pydantic surfaces ``deprecated`` as ``"deprecated": true``
     in the JSON schema, which the wizard's Validate YAML view picks up.
     """
     if section is None:
@@ -259,7 +259,7 @@ class MultiQCConfig(BaseModel):
         report_section_order: Optional[Dict[str, Any]] = cfg(
             (
                 "Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), "
-                "an explicit order number, or a dict of overrides — see the customisation docs for the full grammar."
+                "an explicit order number, or a dict of overrides. See the [customisation docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output) for the full grammar."
             ),
             examples=[{"fastqc": {"order": -10}, "custom_content-my-section": {"before": "fastqc"}}],
         )

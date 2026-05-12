@@ -45,6 +45,12 @@ MULTIQC_LOGO_SVG = """\
 SKIP_PROPERTIES = {"sp"}
 
 
+def _inject_json(obj: Any, *, indent: int) -> str:
+    """``json.dumps`` then escape ``</`` so the payload is safe inside a
+    ``<script>`` tag (an unescaped ``</script>`` would close it early)."""
+    return json.dumps(obj, indent=indent).replace("</", "<\\/")
+
+
 def generate_config_wizard():
     """Generate a self-contained HTML configuration wizard for MultiQC.
 
@@ -111,12 +117,6 @@ def generate_config_wizard():
 
     html_content = _build_html(config_data_js, schema_js)
     return html_content
-
-
-def _inject_json(obj: Any, *, indent: int) -> str:
-    """``json.dumps`` then escape ``</`` so the payload is safe inside a
-    ``<script>`` tag (an unescaped ``</script>`` would close it early)."""
-    return json.dumps(obj, indent=indent).replace("</", "<\\/")
 
 
 TEMPLATE_PATH = Path(__file__).parent / "wizard_template.html"
