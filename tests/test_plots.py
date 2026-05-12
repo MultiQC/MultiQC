@@ -25,6 +25,7 @@ def reset_config():
     original_export_plots = config.export_plots
     original_export_plot_formats = getattr(config, "export_plot_formats", None)
     original_strict = config.strict
+    original_custom_plot_config = config.custom_plot_config.copy() if hasattr(config, "custom_plot_config") else {}
     yield
     config.boxplot_boxpoints = original_boxplot_boxpoints
     config.box_min_threshold_no_points = original_box_min_threshold_no_points
@@ -36,6 +37,7 @@ def reset_config():
     elif hasattr(config, "export_plot_formats"):
         delattr(config, "export_plot_formats")
     config.strict = original_strict
+    config.custom_plot_config = original_custom_plot_config
 
 
 def _verify_rendered(plot) -> Plot:
@@ -410,6 +412,20 @@ def test_bar_plot_no_matching_cats():
         {"id": plot_id, "title": "Test: Bar Graph"},
     )
     # Will return a warning message html instead of a plot:
+    assert plot is None
+
+
+def test_bar_plot_all_zero_cats():
+    """
+    All categories are zero for all samples. With hide_zero_cats=True (default),
+    all categories get filtered, so the plot should return None gracefully
+    instead of raising ValueError. Regression test for #3481.
+    """
+    plot = bargraph.plot(
+        {"Sample1": {"Cat1": 0, "Cat2": 0}, "Sample2": {"Cat1": 0, "Cat2": 0}},
+        ["Cat1", "Cat2"],
+        {"id": "test_bar_plot_all_zero_cats", "title": "Test: Bar Graph"},
+    )
     assert plot is None
 
 
@@ -1200,3 +1216,309 @@ def test_table_custom_plot_config_invalid_field(reset):
     for section in dt.section_by_id.values():
         for col_key, col_meta in section.column_by_key.items():
             assert col_meta.hidden is True, f"Column {col_key} should be hidden"
+
+
+def test_linegraph_custom_plot_config_y_bands(reset):
+    """
+    Test that custom_plot_config can set y_bands as dictionaries that get properly
+    converted to LineBand objects.
+
+    This is a regression test for https://github.com/MultiQC/MultiQC/issues/3457
+    where y_bands specified via custom_plot_config were not being parsed into
+    LineBand objects because setattr bypassed the validation.
+    """
+    from multiqc.plots.plot import LineBand
+
+    plot_id = "test_linegraph_y_bands"
+
+    # Set custom_plot_config with y_bands as raw dictionaries
+    config.custom_plot_config = {
+        plot_id: {
+            "y_bands": [
+                {"from": 0, "to": 40, "color": "#e6c3c3"},
+                {"from": 40, "to": 80, "color": "#e6dcc3"},
+                {"from": 80, "to": 100, "color": "#c3e6c3"},
+            ]
+        }
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            {"Sample1": {0: 50, 1: 60, 2: 70}},
+            linegraph.LinePlotConfig(id=plot_id, title="Test: Line Graph with Y Bands"),
+        )
+    )
+
+    # Verify that y_bands are properly converted to LineBand objects
+    assert plot.pconfig.y_bands is not None
+    assert len(plot.pconfig.y_bands) == 3
+    for band in plot.pconfig.y_bands:
+        assert isinstance(band, LineBand), f"Expected LineBand, got {type(band)}"
+
+    # Verify specific band values
+    assert plot.pconfig.y_bands[0].from_ == 0
+    assert plot.pconfig.y_bands[0].to == 40
+    assert plot.pconfig.y_bands[0].color == "#e6c3c3"
+
+    # Shapes are per-dataset (see Plot._set_y_bands_and_range). For a single-dataset
+    # plot, that's just datasets[0].
+    shapes = plot.datasets[0].layout.get("shapes", [])
+    y_band_shapes = [s for s in shapes if s["type"] == "rect" and s["xref"] == "paper"]
+    assert len(y_band_shapes) == 3
+    band_y_values = sorted(set((s["y0"], s["y1"]) for s in y_band_shapes))
+    assert (0, 40) in band_y_values
+    assert (40, 80) in band_y_values
+    assert (80, 100) in band_y_values
+
+
+def test_linegraph_custom_plot_config_x_lines(reset):
+    """
+    Test that custom_plot_config can set x_lines as dictionaries that get properly
+    converted to FlatLine objects.
+    """
+    from multiqc.plots.plot import FlatLine
+
+    plot_id = "test_linegraph_x_lines"
+
+    # Set custom_plot_config with x_lines as raw dictionaries
+    config.custom_plot_config = {
+        plot_id: {
+            "x_lines": [
+                {"value": 50, "color": "#ff0000", "width": 2},
+            ]
+        }
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            {"Sample1": {0: 10, 50: 60, 100: 70}},
+            linegraph.LinePlotConfig(id=plot_id, title="Test: Line Graph with X Lines"),
+        )
+    )
+
+    # Verify that x_lines are properly converted to FlatLine objects
+    assert plot.pconfig.x_lines is not None
+    assert len(plot.pconfig.x_lines) == 1
+    assert isinstance(plot.pconfig.x_lines[0], FlatLine)
+    assert plot.pconfig.x_lines[0].value == 50
+    assert plot.pconfig.x_lines[0].color == "#ff0000"
+
+
+def test_linegraph_custom_plot_config_deprecated_y_plot_bands(reset):
+    """
+    Test that the deprecated camelCase alias yPlotBands is still parsed correctly
+    when set via custom_plot_config — the docs example used to use this form, so
+    users on existing configs should not see pydantic serializer warnings.
+
+    Regression test for the deprecated-alias path in the fix for
+    https://github.com/MultiQC/MultiQC/issues/3457.
+    """
+    from multiqc.plots.plot import LineBand
+
+    plot_id = "test_linegraph_y_plot_bands_deprecated"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "yPlotBands": [
+                {"from": 0, "to": 40, "color": "#e6c3c3"},
+                {"from": 40, "to": 80, "color": "#e6dcc3"},
+            ]
+        }
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            {"Sample1": {0: 50, 1: 60, 2: 70}},
+            linegraph.LinePlotConfig(id=plot_id, title="Test: deprecated yPlotBands"),
+        )
+    )
+
+    # Deprecated alias should be redirected to the modern y_bands field and parsed
+    # into LineBand objects (not raw dicts).
+    assert plot.pconfig.y_bands is not None
+    assert len(plot.pconfig.y_bands) == 2
+    for band in plot.pconfig.y_bands:
+        assert isinstance(band, LineBand), f"Expected LineBand, got {type(band)}"
+    assert plot.pconfig.y_bands[0].from_ == 0
+    assert plot.pconfig.y_bands[0].to == 40
+    assert plot.pconfig.y_bands[0].color == "#e6c3c3"
+
+
+def test_linegraph_custom_plot_config_per_tab_y_bands(reset):
+    """
+    Test that custom_plot_config can target a single tab in a multi-data_labels
+    plot via the nested `data_labels:` dict form, keyed by tab name.
+
+    Regression test for the OP of https://github.com/MultiQC/MultiQC/issues/3457:
+    user wants y_bands on just one of multiple subplots (e.g. only the "MQ" tab
+    in samtools-coverage), not all of them.
+    """
+    from multiqc.plots.plot import LineBand
+
+    plot_id = "test_linegraph_per_tab_y_bands"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "data_labels": {
+                "Second": {
+                    "y_bands": [
+                        {"from": 50, "to": 60, "color": "#c3e6c3"},
+                    ],
+                },
+            },
+        },
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            [{"Sample1": {0: 1, 1: 2}}, {"Sample1": {0: 10, 1: 20}}],
+            {
+                "id": plot_id,
+                "title": "Test: per-tab y_bands",
+                "data_labels": [{"name": "First"}, {"name": "Second"}],
+            },
+        )
+    )
+
+    # The override is parsed into LineBand objects and stored on the matching tab.
+    second_dl = plot.pconfig.data_labels[1]
+    assert isinstance(second_dl, dict)
+    assert second_dl["name"] == "Second"
+    bands = second_dl.get("y_bands")
+    assert bands is not None and len(bands) == 1
+    assert isinstance(bands[0], LineBand)
+    assert bands[0].from_ == 50
+    assert bands[0].to == 60
+
+    # The "First" tab should have no y_bands.
+    first_dl = plot.pconfig.data_labels[0]
+    assert isinstance(first_dl, dict)
+    assert "y_bands" not in first_dl
+
+    # Shapes are emitted onto dataset[1] only, not dataset[0].
+    first_rects = [
+        s for s in plot.datasets[0].layout.get("shapes", []) if s["type"] == "rect" and s.get("xref") == "paper"
+    ]
+    second_rects = [
+        s for s in plot.datasets[1].layout.get("shapes", []) if s["type"] == "rect" and s.get("xref") == "paper"
+    ]
+    assert first_rects == []
+    assert len(second_rects) == 1
+    assert (second_rects[0]["y0"], second_rects[0]["y1"]) == (50, 60)
+
+
+def test_linegraph_custom_plot_config_per_tab_positional_index(reset):
+    """
+    Test that integer keys in the per-tab override dict are treated as positional
+    indices into data_labels.
+    """
+    from multiqc.plots.plot import FlatLine
+
+    plot_id = "test_linegraph_per_tab_positional"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "data_labels": {
+                0: {"y_lines": [{"value": 5, "color": "#ff0000"}]},
+            },
+        },
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            [{"Sample1": {0: 1, 1: 2}}, {"Sample1": {0: 10, 1: 20}}],
+            {
+                "id": plot_id,
+                "title": "Test: per-tab positional",
+                "data_labels": [{"name": "A"}, {"name": "B"}],
+            },
+        )
+    )
+
+    first_dl = plot.pconfig.data_labels[0]
+    assert isinstance(first_dl, dict)
+    lines = first_dl.get("y_lines")
+    assert lines is not None and len(lines) == 1
+    assert isinstance(lines[0], FlatLine)
+    assert lines[0].value == 5
+
+    first_lines = [s for s in plot.datasets[0].layout.get("shapes", []) if s["type"] == "line"]
+    second_lines = [s for s in plot.datasets[1].layout.get("shapes", []) if s["type"] == "line"]
+    assert len(first_lines) == 1
+    assert second_lines == []
+
+
+def test_linegraph_custom_plot_config_per_tab_unmatched_name(reset, caplog):
+    """
+    Test that an unmatched tab name in the per-tab override is logged as a warning
+    and does not affect the plot.
+    """
+    plot_id = "test_linegraph_per_tab_unmatched"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "data_labels": {
+                "Nonexistent": {"y_bands": [{"from": 0, "to": 10, "color": "#c3e6c3"}]},
+            },
+        },
+    }
+
+    with caplog.at_level("WARNING"):
+        plot = _verify_rendered(
+            linegraph.plot(
+                [{"Sample1": {0: 1, 1: 2}}, {"Sample1": {0: 10, 1: 20}}],
+                {
+                    "id": plot_id,
+                    "title": "Test: per-tab unmatched",
+                    "data_labels": [{"name": "A"}, {"name": "B"}],
+                },
+            )
+        )
+
+    assert any("Nonexistent" in rec.message for rec in caplog.records)
+    for dl in plot.pconfig.data_labels:
+        assert isinstance(dl, dict)
+        assert "y_bands" not in dl
+    for dataset in plot.datasets:
+        rects = [s for s in dataset.layout.get("shapes", []) if s["type"] == "rect"]
+        assert rects == []
+
+
+def test_linegraph_custom_plot_config_per_tab_with_plot_level_bands(reset):
+    """
+    Plot-level y_bands still apply to every tab; per-tab y_lines layer on top
+    of just one tab.
+    """
+    plot_id = "test_linegraph_per_tab_layered"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "y_bands": [{"from": 0, "to": 5, "color": "#e6c3c3"}],
+            "data_labels": {
+                "B": {"y_lines": [{"value": 15, "color": "#0000ff"}]},
+            },
+        },
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            [{"Sample1": {0: 1, 1: 2}}, {"Sample1": {0: 10, 1: 20}}],
+            {
+                "id": plot_id,
+                "title": "Test: per-tab layered",
+                "data_labels": [{"name": "A"}, {"name": "B"}],
+            },
+        )
+    )
+
+    rect0 = [s for s in plot.datasets[0].layout.get("shapes", []) if s["type"] == "rect"]
+    rect1 = [s for s in plot.datasets[1].layout.get("shapes", []) if s["type"] == "rect"]
+    assert len(rect0) == 1
+    assert len(rect1) == 1
+    assert (rect0[0]["y0"], rect0[0]["y1"]) == (0, 5)
+
+    line0 = [s for s in plot.datasets[0].layout.get("shapes", []) if s["type"] == "line"]
+    line1 = [s for s in plot.datasets[1].layout.get("shapes", []) if s["type"] == "line"]
+    assert line0 == []
+    assert len(line1) == 1
+    assert line1[0]["y0"] == 15

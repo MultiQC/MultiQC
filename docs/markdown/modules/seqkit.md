@@ -1,8 +1,7 @@
 ---
 title: SeqKit
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Cross-platform and ultrafast toolkit for FASTA/Q file manipulation.</p>
+description: "Cross-platform and ultrafast toolkit for FASTA/Q file manipulation."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/seqkit/seqkit.py
 -->
 
 :::note
-<p>Cross-platform and ultrafast toolkit for FASTA/Q file manipulation.</p>
+Cross-platform and ultrafast toolkit for FASTA/Q file manipulation.
 
 [https://bioinf.shenwei.me/seqkit/](https://bioinf.shenwei.me/seqkit/)
 :::

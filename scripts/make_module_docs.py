@@ -11,7 +11,7 @@ from typing import Dict
 import yaml
 from markdownify import markdownify
 from pathlib import Path
-from textwrap import dedent, indent
+from textwrap import dedent
 import subprocess
 
 from multiqc import config, report, BaseMultiqcModule
@@ -68,12 +68,13 @@ def main():
         else:
             extra = ""
 
+        info_plain = markdownify(module.info).strip()
+
         text = f"""\
 ---
 title: {module.name}
 displayed_sidebar: multiqcSidebar
-description: >
-{indent(module.info, "    ")}
+description: "{info_plain}"
 ---
 
 <!--
@@ -86,7 +87,7 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
 -->
 
 :::note
-{module.info}
+{info_plain}
 
 {", ".join([f"[{href}]({href})" for href in module.href])}
 :::

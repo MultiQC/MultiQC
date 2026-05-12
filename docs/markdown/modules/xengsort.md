@@ -1,8 +1,7 @@
 ---
 title: Xengsort
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Fast xenograft read sorter based on space-efficient k-mer hashing.</p>
+description: "Fast xenograft read sorter based on space-efficient k-mer hashing."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/xengsort/xengsort.py
 -->
 
 :::note
-<p>Fast xenograft read sorter based on space-efficient k-mer hashing.</p>
+Fast xenograft read sorter based on space-efficient k-mer hashing.
 
 [https://gitlab.com/genomeinformatics/xengsort](https://gitlab.com/genomeinformatics/xengsort)
 :::

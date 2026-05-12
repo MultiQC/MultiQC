@@ -22,6 +22,7 @@ custom_logo_dark: null
 custom_logo_url: null
 custom_logo_title: null
 custom_logo_width: null
+custom_favicon: null # Path to custom favicon (SVG recommended for all sizes)
 custom_css_files: []
 simple_output: false
 template: "default"
@@ -569,6 +570,7 @@ module_order:
   - bowtie1
   - hostile
   - cellranger
+  - checkatlas
   - snpsplit
   - odgi
   - vg
@@ -585,6 +587,7 @@ module_order:
   - bbduk
   - clipandmerge
   - cutadapt
+  - trim_galore
   - flexbar
   - sourmash
   - kaiju
@@ -598,6 +601,7 @@ module_order:
   - biobloomtools
   - seqfu
   - fastq_screen
+  - fastqe
   - afterqc
   - fastp
   - fastqc

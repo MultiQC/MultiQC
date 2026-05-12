@@ -421,6 +421,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
                     ysuffix="X",
                     cpswitch_counts_label="Sequencing depth",
                     cpswitch=False,
+                    hide_zero_cats=False,
                     data_labels=list(bcftools_stats_sample_depth),
                 ),
             ),

@@ -1,141 +1,164 @@
-# Implementation Checklist
+# Module Implementation Checklist
 
-## Phase 1: Research and Planning
+Workflow guide for implementing a new MultiQC module. Hard requirements
+(things that will fail lint or CI) are marked **must**; everything else is
+guidance — adapt to the tool.
 
-### Understand the Tool
+## Contents
 
-- [ ] Read tool documentation for output format specification
-- [ ] Identify all output files the tool produces
-- [ ] Determine if tool has multiple subcommands with different outputs
-- [ ] Note any version-specific output format differences
+- Research the tool
+- Module skeleton (single-tool vs multi-subtool)
+- Parser must-calls
+- Error handling
+- General stats columns
+- Detailed sections and plots
+- Section alerts
+- Color scale guidelines
+- Registration (search_patterns.yaml, pyproject.toml)
+- Testing
+- Quality checks
+- Docstring and PR
 
-### Gather Test Data
+## Research the tool
 
-- [ ] Check `MultiQC/test-data/data/modules/` for existing test files
-- [ ] If not present, obtain sample output files
-- [ ] Ensure test data covers:
-  - [ ] Standard output format
-  - [ ] Output with all optional columns (e.g., `--all` flag)
-  - [ ] Edge cases (empty, minimal data)
+Read the tool's docs and any example output files. Note:
 
-### Choose Architecture
+- Output filename / format (TSV, JSON, key-value, etc.)
+- Whether the tool has subcommands with different output formats
+- Version-specific variations and flag-dependent output (`--all`, `--verbose`)
 
-- [ ] Single-tool module (one output format)
-- [ ] Multi-subtool module (multiple subcommands)
-- [ ] Reference similar existing module for patterns
+Check `MultiQC/test-data/data/modules/` for existing test data; if absent,
+ask for it or pull it from the request issue.
 
-## Phase 2: Module Structure
+## Module skeleton
 
-### Create Directory Structure
+For a tool with one output format → single-tool module.
+For a tool with multiple subcommands that emit different formats →
+multi-subtool module (one parser file per subcommand).
 
-```bash
-mkdir -p multiqc/modules/toolname/tests
-touch multiqc/modules/toolname/__init__.py
-touch multiqc/modules/toolname/toolname.py
-touch multiqc/modules/toolname/tests/__init__.py
-```
+See [module-structure.md](module-structure.md) for directory layout and
+templates.
 
-### For Multi-subtool Modules
+## Parser must-calls
 
-```bash
-touch multiqc/modules/toolname/subtool.py
-touch multiqc/modules/toolname/tests/test_subtool.py
-```
+Inside the parser loop, for each sample:
 
-## Phase 3: Parser Implementation
+- **must** `module.add_data_source(f, s_name=s_name, section="...")`
+- **must** `module.add_software_version(version_or_None, s_name)` — even
+  when no version is available; lint requires it
+- Use `module.clean_s_name(s_name, f)` only if `s_name` was extracted from
+  file contents (not from `f["s_name"]`)
+- If the tool has a standard extension that should be stripped, add it to
+  `fn_clean_exts` in `config_defaults.yaml`
 
-### Main Module Class (`toolname.py`)
+After the loop:
 
-- [ ] Import `BaseMultiqcModule` and `ModuleNoSamplesFound`
-- [ ] Create `MultiqcModule` class with docstring describing supported commands
-- [ ] Call `super().__init__()` with:
-  - [ ] `name` - Display name
-  - [ ] `anchor` - URL anchor (lowercase, no spaces)
-  - [ ] `href` - Tool homepage URL
-  - [ ] `info` - Brief description (starts with capital letter)
-  - [ ] `doi` - Publication DOI if available
+- **must** `data = module.ignore_samples(data)`
+- **must** raise `ModuleNoSamplesFound` when `len(data) == 0` — never
+  `UserWarning`
+- **must** `module.write_data_file(data, "multiqc_toolname_subtool")` at
+  the END, after all sections are added
 
-### Submodule Parser (for multi-subtool)
+For multi-subtool modules: the per-subtool `parse_*` function returns
+`len(data)`. The orchestrator raises `ModuleNoSamplesFound` if every
+subtool returned 0.
 
-- [ ] Create `parse_toolname_subtool(module)` function
-- [ ] Return count of samples found (not 0 if successful)
+## Error handling
 
-### Core Parser Logic
+Don't silently default known fields. For output from trusted tools where a
+value should always be present, access dict keys directly
+(`parsed["total_reads"]`) instead of `parsed.get("total_reads", 0)`. A
+missing key indicates a real format change — surfacing the `KeyError`
+beats producing a report full of fake zeros. Reserve `.get(default)` for
+genuinely optional fields. Catching a parse error to raise a friendlier
+message with the file path is fine; the badness is silently producing fake
+data.
 
-- [ ] Use `module.find_log_files("toolname/subtool")` to discover files
-- [ ] Handle both tab-separated and space-separated formats if applicable
-- [ ] Use `dict(zip(headers, values))` for clean parsing
-- [ ] Convert numeric values appropriately (int vs float)
-- [ ] Rename problematic column names (e.g., `Q20(%)` → `Q20_pct`)
+For files that may not actually be from this tool (loose search pattern),
+catch the parse error, `log.debug()` it, and `continue`.
 
-### Sample Name Handling
+## General stats columns
 
-- [ ] Use `module.clean_s_name(s_name, f)` for cleanup if not using `f["s_name"]` (ie. coming from file contents)
-- [ ] Add to `fn_clean_exts` in `config_defaults.yaml` if tool has a standard extension that needs removing
+Keep the number of columns small (the general stats table is shared with
+every other module). Per column, set:
 
-### Required Calls
+- `title` — short display title
+- `description` — tooltip text; use `config.read_count_desc` /
+  `config.base_count_desc` etc. for shared formatting
+- `scale` — see Color scale guidelines below
+- `shared_key` — for related columns across modules (e.g. `"read_count"`)
+- `hidden` — `True` for less-important columns
+- `min` / `max` — for percentages and bounded metrics
+- `suffix` — units (`"%"`, `" bp"`)
 
-- [ ] `module.add_data_source(f, s_name=s_name, section="subtool")`
-- [ ] `module.add_software_version(version, s_name)` (even if version is None)
-- [ ] `module.ignore_samples(data_dict)` to filter ignored samples
-- [ ] `module.write_data_file(data, "multiqc_toolname_subtool")` at the END
+Only set keys that actually differ from defaults. Run through
+`module.get_general_stats_headers()` for config integration, then
+`module.general_stats_addcols(data, headers, namespace="toolname")`.
 
-### Error Handling
+## Detailed sections and plots
 
-- [ ] Raise `ModuleNoSamplesFound` when no samples found (NOT `UserWarning`)
-- [ ] Use `log.debug()` for skipped files
-- [ ] Handle malformed input gracefully, with `log.debug()` messages
+`module.add_section()` arguments:
 
-## Phase 4: Visualizations
+- `name` — section title, **human-readable** (`"Adapter Content"`, not
+  `"adapter_content"`)
+- `anchor` — unique section anchor
+- `description` — section description
+- `plot` — plot object (table, bargraph, linegraph, heatmap, violin, box,
+  scatter)
+- `alerts` — see Section alerts below
 
-### General Stats Table
+All user-facing strings (plot titles, axis labels `xlab`/`ylab`, table
+column titles, section names) **must be human-readable**. Never pass raw
+parsed keys like `total_counts` or `pct_dup` — convert to title case with
+spaces.
 
-- [ ] Define headers dict with appropriate keys
-- [ ] Ensure number of headers is apprpriate (not too many)
-- [ ] Include for each column:
-  - [ ] `title` - Short display title
-  - [ ] `description` - Tooltip text (use `config.read_count_desc` etc. where appropriate)
-  - [ ] `scale` - Color scale name
-  - [ ] `shared_key` - For related columns (e.g., `"read_count"`, `"base_count"`)
-  - [ ] `hidden` - True for less important columns
-  - [ ] `min`/`max` - For percentage columns
-  - [ ] `suffix` - Units (e.g., `"%"`, `" bp"`)
-- [ ] Check that only keys with non-default values are included
-- [ ] Use `module.get_general_stats_headers()` for config integration
-- [ ] Call `module.general_stats_addcols(data, headers, namespace="toolname")`
+Don't pre-filter samples in the main data dict at parse time. Keep every
+sample in `self.toolname_data`; filter at plot-render time. This keeps
+`write_data_file` complete and lets different sections make different
+display choices.
 
-### Detailed Section
+## Section alerts
 
-- [ ] Add table with `table.plot()` for detailed metrics
-- [ ] Add bar graphs with `bargraph.plot()` for counts/lengths
-- [ ] Add line plots if applicable, or heatmaps, violin, box, scatter plots
-- [ ] Use `module.add_section()` with:
-  - [ ] `name` - Section title
-  - [ ] `anchor` - Unique anchor ID
-  - [ ] `description` - Section description
-  - [ ] `plot` - Plot object
+For warnings, notes, or "these samples were hidden" messages, use the
+`alerts=` parameter on `add_section()` with a `SectionAlert` (from
+`multiqc.types`):
 
-### Color Scale Guidelines
+- Pass affected sample names as `affected_samples=[...]` — they render in
+  an expandable list automatically. **Don't** wrap names in `<code>`
+  manually
+- `level` must be a Bootstrap variant: `"primary"`, `"secondary"`,
+  `"success"`, `"danger"`, `"warning"`, `"info"`, `"light"`, `"dark"`
+- **Don't** append raw `<div class="alert ...">` HTML to `description` —
+  that's the old pattern
 
-Use scales from ColorBrewer:
+If every sample is zero/empty for a plot, **keep the section visible**:
+pass `plot=None` and add a `SectionAlert` so the user sees the analysis
+ran and which samples were affected. Never drop the whole section.
 
-- [ ] Sequential
-  - [ ] OrRd, PuBu, BuPu, Oranges, BuGn, YlOrBr, YlGn, Reds, RdPu, Greens, YlGnBu, Purples, GnBu, Greys, YlOrRd, PuRd, Blues, PuBuGn
-- [ ] Diverging
-  - [ ] Spectral, RdYlGn, RdBu, PiYG, PRGn, RdYlBu, BrBG, RdGy, PuOr
-- [ ] Qualitative
-  - [ ] Set2, Accent, Set1, Set3, Dark2, Paired, Pastel2, Pastel1
+See [code-patterns.md](code-patterns.md) for code examples.
 
-Use with semantic meaning. For example:
+## Color scale guidelines
 
-- [ ] `RdYlGn` - For quality metrics (higher is better)
-- [ ] `Blues`, `Greens`, `Purples`, `Oranges` - For neutral counts
-- [ ] `RdYlBu` - For metrics where middle is best (e.g., GC%)
-- [ ] `Reds`, `OrRd` - For error/warning counts
+Use ColorBrewer scales with semantic meaning:
 
-## Phase 5: Registration
+- `RdYlGn` — quality metrics (higher is better)
+- `RdYlBu` — middle-is-best (e.g. GC%)
+- `Blues`, `Greens`, `Purples`, `Oranges` — neutral counts
+- `Reds`, `OrRd` — error/warning counts
 
-### search_patterns.yaml
+Available scales:
+
+- Sequential: `OrRd`, `PuBu`, `BuPu`, `Oranges`, `BuGn`, `YlOrBr`, `YlGn`,
+  `Reds`, `RdPu`, `Greens`, `YlGnBu`, `Purples`, `GnBu`, `Greys`,
+  `YlOrRd`, `PuRd`, `Blues`, `PuBuGn`
+- Diverging: `Spectral`, `RdYlGn`, `RdBu`, `PiYG`, `PRGn`, `RdYlBu`,
+  `BrBG`, `RdGy`, `PuOr`
+- Qualitative: `Set2`, `Accent`, `Set1`, `Set3`, `Dark2`, `Paired`,
+  `Pastel2`, `Pastel1`
+
+## Registration
+
+`search_patterns.yaml` (alphabetical):
 
 ```yaml
 toolname/subtool:
@@ -143,20 +166,27 @@ toolname/subtool:
   num_lines: 1
 ```
 
-- [ ] Use `fn` file filename matching where possible
-- [ ] Use `contents` for exact match or `contents_re` for regex
-- [ ] Set appropriate `num_lines` to check
-- [ ] Place alphabetically in file
+Prefer `fn` (filename glob) when the tool produces a standard filename.
+Fall back to `contents` for an exact-string match, or `contents_re` for a
+regex. Set `num_lines` to cap content scanning; if the tool's stdout is
+captured to a file, add 3 to the expected line count to allow for
+prepended system lines.
 
-### pyproject.toml
+**Audit upstream source** before finalising the pattern. Skim the tool's
+code/docs for output variations across versions, optional flags, locale
+settings. Matching one header line is fragile if the header changes
+between versions. List version + flag combinations the pattern must
+cover, then pick the smallest pattern that catches all without false
+positives.
+
+`pyproject.toml` — add alphabetically under
+`[project.entry-points."multiqc.modules.v1"]`:
 
 ```toml
 toolname = "multiqc.modules.toolname:MultiqcModule"
 ```
 
-- [ ] Add entry point alphabetically in `[project.entry-points."multiqc.modules.v1"]`
-
-### **init**.py
+`__init__.py`:
 
 ```python
 from .toolname import MultiqcModule
@@ -164,99 +194,57 @@ from .toolname import MultiqcModule
 __all__ = ["MultiqcModule"]
 ```
 
-## Phase 6: Testing
+## Testing
 
-### Running MultiQC
+Run MultiQC against test data with `--strict` to surface internal lint
+errors:
 
-- [ ] Run MultiQC on the test data provided, from the MultiQC/test-data repository
-- [ ] Use the `--strict` flag in the MultiQC command to find internal linting errors
+```bash
+multiqc path/to/test-data/data/modules/toolname -m toolname --strict
+```
 
-### Unit Tests
+Unit tests for each parser function. Cover:
 
-- [ ] Create test file with sample data as string constants
-- [ ] Test parser with full output format
-- [ ] Test parser with minimal output format
-- [ ] Test edge cases:
-  - [ ] Empty file (header only)
-  - [ ] Invalid format
-  - [ ] Windows paths
-  - [ ] Stdin input
-  - [ ] Fallback sample name
+- Full output format (all optional columns)
+- Minimal output format
+- Empty file (header only)
+- Invalid format
+- Windows paths
+- Stdin input (fallback sample name)
 
-### Integration Tests
+Integration tests:
 
-- [ ] Ensure test data exists in `test-data` repository
-- [ ] Run: `pytest tests/test_modules_run.py -k "toolname" -v`
-- [ ] Verify both `test_all_modules` and `test_ignore_samples` pass
+```bash
+pytest tests/test_modules_run.py -k "toolname" -v
+```
 
-## Phase 7: Quality Checks
+Both `test_all_modules` and `test_ignore_samples` must pass.
 
-### Prek
+## Quality checks
 
 ```bash
 prek run --files multiqc/modules/toolname/*
-```
-
-### Linting
-
-```bash
 ruff check multiqc/modules/toolname/
-```
-
-### Custom Checks
-
-```bash
 python .github/workflows/code_checks.py
-```
-
-Verifies:
-
-- [ ] `add_data_source` is called
-- [ ] `write_data_file` is called
-- [ ] `doi=` is present in module init
-- [ ] `add_software_version` is called
-
-### Type Checking (if configured)
-
-```bash
 mypy multiqc/modules/toolname/
 ```
 
-## Phase 8: Documentation
+`code_checks.py` verifies `add_data_source`, `write_data_file`, `doi=`,
+and `add_software_version` are present.
 
-### Module Docstring
+## Docstring and PR
 
-- [ ] Add comprehensive docstring to `MultiqcModule` class
-- [ ] List all supported subcommands
-- [ ] Document any configuration options
-- [ ] Include example command to generate compatible output
+The `MultiqcModule` class docstring is the module's user-facing
+documentation. Include:
 
-### No Separate Markdown Files
+- What the tool does
+- Supported subcommands (if multi-subtool)
+- Any configuration options the module respects
+- Example command(s) that generate compatible output
 
-- Do NOT create separate `.md` documentation files
-- All documentation goes in the module class docstring
+Do **not** add separate `.md` files for the module.
 
-## Phase 9: Commit and PR
-
-### Commit Message Format
-
-```
-Add [ToolName] module for [description]
-
-Implements a new MultiQC module to parse output from [tool command].
-[Tool description and purpose].
-
-Features:
-- [Feature 1]
-- [Feature 2]
-
-Closes #XXXX
-```
-
-### PR Description
-
-- [ ] Reference original issue
-- [ ] Describe metrics captured
-- [ ] Note configuration options if any
-- [ ] Reference test data location
-- [ ] Include sample report screenshot if possible
+PR body: brief description first, then a `<details>` block with the full
+write-up. Reference the original issue (`Closes #XXXX`), describe captured
+metrics, mention any new config options, and link the test data location.
+A sample report screenshot helps reviewers.

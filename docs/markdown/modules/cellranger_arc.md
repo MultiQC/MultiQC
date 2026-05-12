@@ -1,8 +1,7 @@
 ---
 title: Cell Ranger ARC
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Analyzes single-cell multiome ATAC and gene expression data produced by 10X Genomics.</p>
+description: "Analyzes single-cell multiome ATAC and gene expression data produced by 10X Genomics."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/cellranger_arc/cellran
 -->
 
 :::note
-<p>Analyzes single-cell multiome ATAC and gene expression data produced by 10X Genomics.</p>
+Analyzes single-cell multiome ATAC and gene expression data produced by 10X Genomics.
 
 [https://www.10xgenomics.com/support/software/cell-ranger-arc/latest](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest)
 :::

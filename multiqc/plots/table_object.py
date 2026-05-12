@@ -1338,23 +1338,26 @@ def _get_sortlist_js(dt: DataTable) -> str:
     sortlist: List[Tuple[int, int]] = []
 
     # defaultsort is a list of {column, direction} objects
+    col1_header = dt.pconfig.col1_header
     for d in defaultsort:
-        try:
-            # The first element of the triple is not actually unique, it's a bucket index,
-            # so we must re-enumerate ourselves here
-            idx = next(
-                idx
-                for idx, (_, k, header) in enumerate(headers)
-                if d["column"].lower() in [k.lower(), header.title.lower()]
-            )
-        except StopIteration:
-            logger.warning(
-                "Tried to sort by column '%s', but column was not found. Available columns: %s",
-                d["column"],
-                [k for (_, k, _) in headers],
-            )
-            return ""
-        idx += 1  # to account for col1_header
+        idx = 0
+        if d["column"] != col1_header:
+            try:
+                # The first element of the triple is not actually unique, it's a bucket index,
+                # so we must re-enumerate ourselves here.
+                # We start at 1 to account for col1_header.
+                idx = next(
+                    idx
+                    for idx, (_, k, header) in enumerate(headers, start=1)
+                    if d["column"].lower() in [k.lower(), header.title.lower()]
+                )
+            except StopIteration:
+                logger.warning(
+                    "Tried to sort by column '%s', but column was not found. Available columns: %s",
+                    d["column"],
+                    [col1_header] + [k for (_, k, _) in headers],
+                )
+                return ""
         direction = 0 if d.get("direction", "").startswith("asc") else 1
         sortlist.append((idx, direction))
 

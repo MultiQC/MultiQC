@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="JCVI Genome Annotation",
             anchor="jcvi",
             href="https://pypi.org/project/jcvi/",

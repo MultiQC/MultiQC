@@ -126,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bamdst",
             anchor="bamdst",
             href="https://https://github.com/shiquan/bamdst",

@@ -1,8 +1,7 @@
 ---
 title: Xenium
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.</p>
+description: "Spatial transcriptomics platform from 10x Genomics that provides subcellular resolution."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/xenium/xenium.py
 -->
 
 :::note
-<p>Spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.</p>
+Spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.
 
 [https://www.10xgenomics.com/platforms/xenium](https://www.10xgenomics.com/platforms/xenium)
 :::

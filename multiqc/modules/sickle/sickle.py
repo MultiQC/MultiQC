@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Sickle",
             anchor="sickle",
             href="https://github.com/najoshi/sickle",

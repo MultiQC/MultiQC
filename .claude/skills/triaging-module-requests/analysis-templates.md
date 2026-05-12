@@ -1,6 +1,14 @@
 # Analysis Comment Template
 
-This document provides a unified template for analysis comments posted to module request issues.
+Unified template for the analysis comments posted to module request issues.
+
+## Contents
+
+- Main Template — the body to post; succinct, technical, no effusion
+- Customisation Guidelines — tone and focus per priority band
+- Re-Analysis Template — for re-evaluations after improvements
+- Special Case Templates — missing examples, tool not found, related requests, already implemented
+- General Guidelines — placeholders, encouragement, action-orientation
 
 ## Main Template
 
@@ -180,7 +188,7 @@ Our records show that [Tool Name] might already have a MultiQC module:
 - Module: `multiqc.modules.[module_name]`
 - Documentation: [Link]
 
-Please check the [list of existing modules](https://multiqc.info/modules/) before proceeding. If the existing module doesn't meet your needs, please explain what additional functionality you require.
+Please check the [list of existing modules](https://docs.seqera.io/multiqc/modules/) before proceeding. If the existing module doesn't meet your needs, please explain what additional functionality you require.
 ```
 
 ## General Guidelines

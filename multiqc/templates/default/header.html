@@ -13,14 +13,14 @@ was generated and the button that launches the welcome tour.
     <div class="float-end">
       {{ '<a href="'+config.custom_logo_url+'" target="_blank">' if config.custom_logo_url is not none }}
       <img
-        src="data:image/png;base64,{{ include_file(config.custom_logo, b64=True) }}"
+        src="data:{{ get_mime_type(config.custom_logo) }};base64,{{ include_file(config.custom_logo, b64=True) }}"
         title="{{ config.custom_logo_title if config.custom_logo_title is not none }}"
         class="custom_logo custom_logo_light"
         {% if config.custom_logo_width is not none %}style="width: {{ config.custom_logo_width }}px;"{% endif %}
       />
       {% if config.custom_logo_dark is not none %}
         <img
-          src="data:image/png;base64,{{ include_file(config.custom_logo_dark, b64=True) }}"
+          src="data:{{ get_mime_type(config.custom_logo_dark) }};base64,{{ include_file(config.custom_logo_dark, b64=True) }}"
           title="{{ config.custom_logo_title if config.custom_logo_title is not none }}"
           class="custom_logo custom_logo_dark"
           {% if config.custom_logo_width is not none %}style="width: {{ config.custom_logo_width }}px;"{% endif %}

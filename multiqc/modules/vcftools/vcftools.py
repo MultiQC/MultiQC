@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin, TsTvByCountMixin, TsTv
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="VCFTools",
             anchor="vcftools",
             href="https://vcftools.github.io",

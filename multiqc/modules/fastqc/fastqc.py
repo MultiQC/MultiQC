@@ -5,7 +5,6 @@
 #### Have a look at Kallisto for a simpler example.     ####
 ############################################################
 import dataclasses
-import io
 import json
 import logging
 import math
@@ -21,12 +20,10 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleG
 from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.table_object import ColumnKey, InputRow, SampleName
-from multiqc.types import Anchor, LoadedFileDict
+from multiqc.types import Anchor, LoadedFileDict, SectionAlert
 from multiqc.utils.material_icons import get_material_icon
 
 log = logging.getLogger(__name__)
-
-VERSION_REGEX = r"FastQC\t([\d\.]+)"
 
 
 @dataclasses.dataclass
@@ -43,8 +40,9 @@ class Metrics:
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    FastQC generates an HTML report which is what most people use when
-    they run the program. However, it also helpfully generates a file
+    FastQC and [Falco](https://github.com/smithlabcode/falco) (a high-performance
+    drop-in replacement) generate an HTML report which is what most people use when
+    they run the program. However, they also helpfully generate a file
     called `fastqc_data.txt` which is relatively easy to parse.
 
     A typical run will produce the following files:
@@ -79,7 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
     ```yaml
     sp:
       fastqc/data:
-        fn: "fastqc_data.txt"
+        fn: "*fastqc_data.txt"
       fastqc/zip:
         fn: "*_fastqc.zip"
     ```
@@ -194,7 +192,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="FastQC",
             anchor=Anchor("fastqc"),
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
@@ -204,6 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.fastqc_data: Dict[SampleName, Any] = dict()
         self.order_of_duplication_levels: List[Union[float, str]] = []
+        self._tools_found: Set[str] = set()
 
         # Find and parse unzipped FastQC reports
         f: LoadedFileDict[str]
@@ -258,6 +257,30 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
         if len(self.fastqc_data) == 0:
             raise ModuleNoSamplesFound
+
+        # Dynamic module naming based on discovered tools
+        if self._tools_found == {"Falco"}:
+            self.name = "Falco"
+            self.anchor = Anchor("falco")
+            self.href = ["https://github.com/smithlabcode/falco"]
+            self.info = "A C++ drop-in replacement for FastQC."
+            self.intro = self._get_intro()
+            # Clean up the software versions table: remove the "FastQC" group
+            # that was auto-created because self.name was still "FastQC" during parsing
+            if "FastQC" in report.software_versions:
+                falco_versions = report.software_versions.get("FastQC", {}).get("Falco", [])
+                if falco_versions:
+                    report.software_versions.setdefault("Falco", {})["Falco"] = falco_versions
+                del report.software_versions["FastQC"]
+        elif "Falco" in self._tools_found and "FastQC" in self._tools_found:
+            self.name = "FastQC / Falco"
+            self.href = [
+                "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
+                "https://github.com/smithlabcode/falco",
+            ]
+            self.info = "Quality control tools for high throughput sequencing data."
+            self.intro = self._get_intro()
+        self._tools_found = None
 
         log.info(f"Found {len(self.fastqc_data)} reports")
 
@@ -332,10 +355,10 @@ class MultiqcModule(BaseMultiqcModule):
         section = None
         s_headers = None
         for line in file_contents.splitlines():
-            if line.startswith("##FastQC"):
-                version_match = re.search(VERSION_REGEX, line)
-                if version_match:
-                    self.add_software_version(version_match.group(1), s_name)
+            m = re.search(r"##(FastQC|Falco)\t([\d\.]+)", line)
+            if m:
+                self.add_software_version(m.group(2), s_name, software_name=m.group(1))
+                self._tools_found.add(m.group(1))
             if line == ">>END_MODULE":
                 section = None
                 s_headers = None
@@ -864,7 +887,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if not os.path.isfile(tgc_path):
                     tgc_path = tgc
                 try:
-                    with io.open(tgc_path, "r", encoding="utf-8") as f:
+                    with open(tgc_path, "r", encoding="utf-8") as f:
                         theoretical_gc_raw = f.read()
                 except IOError:
                     log.warning(f"Couldn't open FastQC Theoretical GC Content file {tgc_path}")
@@ -1027,7 +1050,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="Sequence Length Distribution",
                 anchor="fastqc_sequence_length_distribution",
-                content=f'<div class="alert alert-info">{desc}</div>',
+                alerts=SectionAlert(message=desc),
                 statuses=status_dict if section_statuses else None,
             )
         else:
@@ -1188,10 +1211,16 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         plot = None
-        content = None
+        alerts: Optional[SectionAlert] = None
         # Check if any samples have more than 1% overrepresented sequences, else don't make plot.
         if max([x["total_overrepresented"] for x in data_by_sample.values()]) < 1:
-            content = f'<div class="alert alert-info">{len(data_by_sample)} samples had less than 1% of reads made up of overrepresented sequences</div>'
+            alerts = SectionAlert(
+                message=(
+                    f"{len(data_by_sample)} sample{'s' if len(data_by_sample) != 1 else ''} had less than 1% "
+                    "of reads made up of overrepresented sequences."
+                ),
+                affected_samples=[str(s_name) for s_name in sorted(data_by_sample)],
+            )
         else:
             plot = bargraph.plot(data_by_sample, cats, pconfig)
 
@@ -1222,7 +1251,7 @@ class MultiqcModule(BaseMultiqcModule):
             but doesn't appear at the start of the file for some reason could be missed by this module._
             """,
             plot=plot,
-            content=content or "",
+            alerts=alerts,
         )
 
         # Add a table of the top overrepresented sequences
@@ -1321,9 +1350,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Lots of these datasets will be all zeros.
         # Only take datasets with > 0.1% adapter contamination
-        pct_by_pos_by_sample = {
-            k: d for k, d in pct_by_pos_by_sample.items() if max(pct_by_pos_by_sample[k].values()) >= 0.1
-        }
+        low_adapter_series = sorted(
+            k for k, vals in pct_by_pos_by_sample.items() if not vals or max(vals.values()) < 0.1
+        )
+        low_adapter_series_set = set(low_adapter_series)
+        pct_by_pos_by_sample = {k: d for k, d in pct_by_pos_by_sample.items() if k not in low_adapter_series_set}
 
         # Convert status dict format
         status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
@@ -1352,11 +1383,21 @@ class MultiqcModule(BaseMultiqcModule):
             ]
 
         plot = None
-        content = ""
+        alerts: Optional[SectionAlert] = None
+        if low_adapter_series:
+            n = len(low_adapter_series)
+            low_adapter_samples = sorted({series.rsplit(" - ", 1)[0] for series in low_adapter_series})
+            n_samples = len(low_adapter_samples)
+            alerts = SectionAlert(
+                message=(
+                    f"**{n} sample-adapter combination{'s' if n != 1 else ''}** with less than 0.1% "
+                    f"adapter contamination hidden from this plot across {n_samples} sample"
+                    f"{'s' if n_samples != 1 else ''}."
+                ),
+                affected_samples=low_adapter_samples,
+            )
         if len(pct_by_pos_by_sample) > 0:
             plot = linegraph.plot(pct_by_pos_by_sample, pconfig)
-        else:
-            content = '<div class="alert alert-info">No samples found with any adapter contamination > 0.1%</div>'
 
         # Note - colours are messy as we've added adapter names here. Not
         # possible to break down pass / warn / fail for each adapter, which
@@ -1383,7 +1424,7 @@ class MultiqcModule(BaseMultiqcModule):
             increase as the read length goes on._
             """,
             plot=plot,
-            content=content,
+            alerts=alerts,
             statuses=status_dict if section_statuses else None,
         )
 
