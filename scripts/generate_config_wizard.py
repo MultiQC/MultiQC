@@ -23,6 +23,42 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from multiqc.utils.config_schema import AiProviderLiteral, MultiQCConfig
 
+# Properties shown only when the "Show advanced options" toggle is on.
+# Curated by hand — internal / debug / rarely-set fields, or integrations
+# that need their own setup before being useful.
+UNCOMMON_PROPERTIES = {
+    "ai_auth_type",
+    "ai_prompt_full",
+    "ai_prompt_short",
+    "ai_retries",
+    "collapse_tables",
+    "data_dir_name",
+    "data_dump_file",
+    "data_dump_file_write_raw",
+    "data_format_extensions",
+    "ignore_symlinks",
+    "lineplot_number_of_points_to_hide_markers",
+    "megaqc_access_token",
+    "megaqc_timeout",
+    "megaqc_url",
+    "output_fn_name",
+    "pandoc_template",
+    "plot_font_family",
+    "plots_defer_loading_numseries",
+    "plots_export_font_scale",
+    "prepend_dirs_depth",
+    "prepend_dirs_sep",
+    "profile_memory",
+    "report_readerrors",
+    "sample_names_only_include",
+    "sample_names_only_include_re",
+    "seqera_api_url",
+    "seqera_website",
+    "simple_output",
+    "template_dark_mode",
+    "version_check_url",
+}
+
 MULTIQC_LOGO_SVG = """\
 <svg width="1318" height="250" viewBox="0 0 1318 250" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z" fill="#F18046"/>
@@ -255,6 +291,13 @@ def generate_config_wizard():
             f"in the schema: {sorted(stale)}. Remove them from `sections`."
         )
 
+    stale_uncommon = UNCOMMON_PROPERTIES - set(properties)
+    if stale_uncommon:
+        raise RuntimeError(
+            f"UNCOMMON_PROPERTIES references {len(stale_uncommon)} fields no longer "
+            f"in the schema: {sorted(stale_uncommon)}. Remove them from the set."
+        )
+
     config_data: dict = {}
     for section_name, section_props in sections.items():
         config_data[section_name] = {}
@@ -278,6 +321,7 @@ def generate_config_wizard():
             default_val = config_defaults.get(prop_name)
 
             config_data[section_name][prop_name] = {
+                "uncommon": prop_name in UNCOMMON_PROPERTIES,
                 "type": prop_type,
                 "description": prop.get("description", ""),
                 "default": default_val,

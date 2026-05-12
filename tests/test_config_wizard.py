@@ -46,3 +46,11 @@ def test_wizard_skip_list_is_in_schema():
     schema_props = set(MultiQCConfig.model_json_schema()["properties"])
     stale = wizard.SKIP_PROPERTIES - schema_props
     assert not stale, f"SKIP_PROPERTIES references unknown fields: {sorted(stale)}"
+
+
+def test_wizard_uncommon_list_is_in_schema():
+    """UNCOMMON_PROPERTIES must reference real config fields, not stale names."""
+    wizard = _load_wizard_module()
+    schema_props = set(MultiQCConfig.model_json_schema()["properties"])
+    stale = wizard.UNCOMMON_PROPERTIES - schema_props
+    assert not stale, f"UNCOMMON_PROPERTIES references unknown fields: {sorted(stale)}"

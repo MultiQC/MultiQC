@@ -249,6 +249,70 @@
         pointer-events: none;
       }
 
+      .show-uncommon-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: calc(100% - 20px);
+        margin: 12px 10px 4px;
+        padding: 6px 10px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.55);
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 0.78em;
+        cursor: pointer;
+        text-align: left;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .show-uncommon-btn:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+      .show-uncommon-state {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.18);
+        flex-shrink: 0;
+      }
+      body.show-uncommon .show-uncommon-btn {
+        background: rgba(49, 201, 172, 0.08);
+        border-color: rgba(49, 201, 172, 0.25);
+        color: white;
+      }
+      body.show-uncommon .show-uncommon-state {
+        background: var(--teal);
+        box-shadow: 0 0 0 2px rgba(49, 201, 172, 0.25);
+      }
+
+      .form-group.uncommon {
+        display: none;
+      }
+      body.show-uncommon .form-group.uncommon {
+        display: block;
+      }
+      body.show-uncommon .form-group.uncommon .field-label::after {
+        content: "advanced";
+        margin-left: 8px;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-family: "Inter", sans-serif;
+        font-size: 0.68em;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        vertical-align: middle;
+      }
+
       .sidebar-actions {
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         padding: 16px 18px 14px;
@@ -540,6 +604,48 @@
         padding-right: 36px;
       }
 
+      .bool-toggle {
+        display: inline-flex;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      .bool-toggle-btn {
+        padding: 5px 14px;
+        border: none;
+        border-right: 1px solid var(--border);
+        background: transparent;
+        color: var(--ink-soft);
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.78em;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .bool-toggle-btn:last-of-type {
+        border-right: none;
+      }
+      .bool-toggle-btn:hover {
+        background: var(--surface-soft);
+        color: var(--ink);
+      }
+      .bool-toggle-btn.active {
+        background: var(--surface-soft);
+        color: var(--ink);
+        font-weight: 600;
+        cursor: default;
+      }
+      .form-group.is-set .bool-toggle-btn.active {
+        background: rgba(49, 201, 172, 0.12);
+        color: var(--teal-border);
+      }
+      .bool-toggle-btn:focus-visible {
+        outline: 2px solid var(--teal);
+        outline-offset: -2px;
+      }
+
       .no-results {
         text-align: center;
         padding: 60px 20px;
@@ -618,6 +724,27 @@
         max-height: 420px;
         overflow-y: auto;
         margin-top: 16px;
+      }
+      /* Minimal YAML highlight theme tuned to the navy code surface */
+      .yaml-output .hljs-attr {
+        color: #9eebd5;
+      }
+      .yaml-output .hljs-string {
+        color: #f1a373;
+      }
+      .yaml-output .hljs-number {
+        color: #a5b4fc;
+      }
+      .yaml-output .hljs-literal {
+        color: #c4b5fd;
+      }
+      .yaml-output .hljs-bullet,
+      .yaml-output .hljs-punctuation {
+        color: #8a8595;
+      }
+      .yaml-output .hljs-comment {
+        color: #847d99;
+        font-style: italic;
       }
 
       .yaml-preview-section {
@@ -757,6 +884,16 @@
       <nav class="sidebar-sections">
         <h3>Sections</h3>
         <ul class="section-nav" id="sectionNav"></ul>
+        <button
+          id="toggleUncommonBtn"
+          type="button"
+          class="show-uncommon-btn"
+          onclick="toggleUncommon()"
+          aria-pressed="false"
+        >
+          <span class="show-uncommon-state" aria-hidden="true"></span>
+          <span class="show-uncommon-label">Show advanced options</span>
+        </button>
       </nav>
       <div class="sidebar-links">
         <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">seqera.io/multiqc</a>
@@ -815,6 +952,16 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/yaml.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
     <script>
       const configData = __CONFIG_DATA_JSON__;
 
@@ -842,7 +989,8 @@
           a.dataset.section = sectionName;
           const badge = document.createElement("span");
           badge.className = "badge";
-          badge.textContent = Object.keys(sectionProps).length;
+          const commonCount = Object.values(sectionProps).filter((p) => !p.uncommon).length;
+          badge.textContent = commonCount;
           a.appendChild(badge);
           a.onclick = (e) => {
             e.preventDefault();
@@ -853,6 +1001,20 @@
           li.appendChild(a);
           nav.appendChild(li);
         });
+      }
+
+      function isShown(fg) {
+        if (fg.classList.contains("hidden")) return false;
+        if (fg.dataset.uncommon === "1" && !document.body.classList.contains("show-uncommon")) return false;
+        return true;
+      }
+
+      function toggleUncommon() {
+        const on = document.body.classList.toggle("show-uncommon");
+        const btn = document.getElementById("toggleUncommonBtn");
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+        btn.querySelector(".show-uncommon-label").textContent = on ? "Hide advanced options" : "Show advanced options";
+        handleSearch();
       }
 
       function createSectionContent() {
@@ -881,10 +1043,35 @@
         return false;
       }
 
+      function isComplexArray(arr) {
+        return Array.isArray(arr) && arr.some((x) => x !== null && typeof x === "object");
+      }
+
+      function serializeArrayDefault(arr) {
+        if (isComplexArray(arr)) {
+          return jsyaml.dump(arr, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+        }
+        return arr.join("\n");
+      }
+
+      function parseArrayInput(text, def) {
+        if (isComplexArray(def)) {
+          const parsed = jsyaml.load(text);
+          if (!Array.isArray(parsed)) throw new Error("expected YAML list");
+          return parsed;
+        }
+        return text
+          .split(/[,\n]/)
+          .map((s) => s.trim())
+          .filter((s) => s);
+      }
+
       function createFormGroup(propName, propData) {
         const formGroup = document.createElement("div");
         formGroup.className = "form-group";
+        if (propData.uncommon) formGroup.classList.add("uncommon");
         formGroup.dataset.propname = propName;
+        if (propData.uncommon) formGroup.dataset.uncommon = "1";
 
         const label = document.createElement("label");
         label.className = "field-label";
@@ -946,33 +1133,43 @@
           input.onchange = () => updateConfig(propName, input);
           return input;
         } else if (propData.type === "boolean") {
-          input = document.createElement("select");
-          input.id = propName;
+          const wrapper = document.createElement("div");
+          wrapper.className = "bool-toggle";
 
-          const notSet = document.createElement("option");
-          notSet.value = "";
-          notSet.textContent = "";
-          input.appendChild(notSet);
+          const hidden = document.createElement("input");
+          hidden.type = "hidden";
+          hidden.id = propName;
+          wrapper.appendChild(hidden);
 
-          const optTrue = document.createElement("option");
-          optTrue.value = "true";
-          optTrue.textContent = "true";
-          input.appendChild(optTrue);
+          [
+            { val: "", label: "default" },
+            { val: "true", label: "true" },
+            { val: "false", label: "false" },
+          ].forEach((opt) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "bool-toggle-btn";
+            btn.dataset.value = opt.val;
+            btn.textContent = opt.label;
+            if (opt.val === "") btn.classList.add("active");
+            btn.onclick = () => {
+              wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
+              hidden.value = opt.val;
+              updateConfig(propName, hidden);
+            };
+            wrapper.appendChild(btn);
+          });
 
-          const optFalse = document.createElement("option");
-          optFalse.value = "false";
-          optFalse.textContent = "false";
-          input.appendChild(optFalse);
-
-          input.onchange = () => updateConfig(propName, input);
-          return input;
+          return wrapper;
         } else if (propData.type === "array") {
           input = document.createElement("textarea");
           input.rows = 3;
-          input.placeholder = "Enter values separated by commas or one per line";
+          input.placeholder = isComplexArray(propData.default)
+            ? "Enter as a YAML list"
+            : "Enter values separated by commas or one per line";
           if (isPrefillableDefault(propData)) {
-            input.value = propData.default.join("\n");
-            input.rows = Math.min(8, Math.max(3, propData.default.length));
+            input.value = serializeArrayDefault(propData.default);
+            input.rows = Math.min(10, Math.max(3, input.value.split("\n").length));
           }
         } else if (propData.type === "object") {
           input = document.createElement("textarea");
@@ -1038,11 +1235,16 @@
           const value = input.value.trim();
           if (!value) {
             delete currentConfig[propName];
+            input.removeAttribute("aria-invalid");
           } else {
-            const parsed = value
-              .split(/[,\n]/)
-              .map((s) => s.trim())
-              .filter((s) => s);
+            let parsed;
+            try {
+              parsed = parseArrayInput(value, def);
+            } catch (e) {
+              input.setAttribute("aria-invalid", "true");
+              return;
+            }
+            input.removeAttribute("aria-invalid");
             if (valuesEqual(parsed, def)) {
               delete currentConfig[propName];
             } else {
@@ -1107,7 +1309,7 @@
         const input = document.getElementById(propName);
         if (!input) return;
         if (propData.type === "array" && isPrefillableDefault(propData)) {
-          input.value = propData.default.join("\n");
+          input.value = serializeArrayDefault(propData.default);
         } else if (propData.type === "object" && isPrefillableDefault(propData)) {
           input.value = jsyaml.dump(propData.default, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
         } else if (input.tagName === "SELECT") {
@@ -1133,6 +1335,7 @@
         const rawValue = document.getElementById("searchInput").value;
         const query = rawValue.toLowerCase().trim();
         document.querySelector(".sidebar-search").classList.toggle("has-text", rawValue !== "");
+        const showUncommon = document.body.classList.contains("show-uncommon");
         const formGroups = document.querySelectorAll(".form-group");
         const headings = document.querySelectorAll(".section-heading");
         const sectionCounts = {};
@@ -1142,9 +1345,10 @@
           const name = (fg.dataset.propname || "").toLowerCase();
           const desc = (fg.querySelector(".description") || {}).textContent || "";
           const sectionName = fg.dataset.section;
-          const visible = !query || name.includes(query) || desc.toLowerCase().includes(query);
-          fg.classList.toggle("hidden", !visible);
-          if (visible) {
+          const matchesQuery = !query || name.includes(query) || desc.toLowerCase().includes(query);
+          fg.classList.toggle("hidden", !matchesQuery);
+          const counted = matchesQuery && (showUncommon || fg.dataset.uncommon !== "1");
+          if (counted) {
             anyVisible = true;
             sectionCounts[sectionName] = (sectionCounts[sectionName] || 0) + 1;
           } else if (!(sectionName in sectionCounts)) {
@@ -1156,21 +1360,20 @@
           let sibling = h.nextElementSibling;
           let hasVisible = false;
           while (sibling && !sibling.classList.contains("section-heading")) {
-            if (sibling.classList.contains("form-group") && !sibling.classList.contains("hidden")) {
+            if (sibling.classList.contains("form-group") && isShown(sibling)) {
               hasVisible = true;
             }
             sibling = sibling.nextElementSibling;
           }
-          h.style.display = !query || hasVisible ? "" : "none";
+          h.style.display = hasVisible ? "" : "none";
         });
 
         document.querySelectorAll("#sectionNav a").forEach((a) => {
           const sectionName = a.dataset.section;
-          const total = Object.keys(configData[sectionName] || {}).length;
-          const matching = query ? sectionCounts[sectionName] || 0 : total;
+          const matching = sectionCounts[sectionName] || 0;
           const badge = a.querySelector(".badge");
           if (badge) badge.textContent = matching;
-          a.parentElement.classList.toggle("dimmed", query !== "" && matching === 0);
+          a.parentElement.classList.toggle("dimmed", matching === 0);
         });
 
         document.getElementById("noResults").style.display = query && !anyVisible ? "block" : "none";
@@ -1201,20 +1404,26 @@
         document.getElementById("fieldsSetCount").textContent =
           count + " option" + (count !== 1 ? "s" : "") + " configured";
 
+        let text;
         if (count === 0) {
-          output.textContent = "# No configuration set yet\n# Change some values above, then come back here.";
-          return;
+          text = "# No configuration set yet\n# Change some values above, then come back here.";
+        } else {
+          try {
+            text = jsyaml.dump(currentConfig, {
+              indent: 2,
+              lineWidth: 80,
+              noRefs: true,
+              sortKeys: true,
+            });
+          } catch (error) {
+            text = "# Error generating YAML: " + error.message;
+          }
         }
 
-        try {
-          output.textContent = jsyaml.dump(currentConfig, {
-            indent: 2,
-            lineWidth: 80,
-            noRefs: true,
-            sortKeys: true,
-          });
-        } catch (error) {
-          output.textContent = "# Error generating YAML: " + error.message;
+        if (typeof hljs !== "undefined" && hljs.getLanguage && hljs.getLanguage("yaml")) {
+          output.innerHTML = hljs.highlight(text, { language: "yaml" }).value;
+        } else {
+          output.textContent = text;
         }
       }
 
@@ -1264,13 +1473,19 @@
           const input = fg.querySelector("input, select, textarea");
           if (!input) return;
           if (propData.type === "array" && isPrefillableDefault(propData)) {
-            input.value = propData.default.join("\n");
+            input.value = serializeArrayDefault(propData.default);
           } else if (propData.type === "object" && isPrefillableDefault(propData)) {
             input.value = jsyaml.dump(propData.default, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
           } else if (input.tagName === "SELECT") {
             input.selectedIndex = 0;
           } else {
             input.value = "";
+          }
+          const boolToggle = fg.querySelector(".bool-toggle");
+          if (boolToggle) {
+            boolToggle
+              .querySelectorAll(".bool-toggle-btn")
+              .forEach((b) => b.classList.toggle("active", b.dataset.value === ""));
           }
           input.removeAttribute("aria-invalid");
           fg.classList.remove("is-set");
