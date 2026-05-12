@@ -415,6 +415,20 @@ def test_bar_plot_no_matching_cats():
     assert plot is None
 
 
+def test_bar_plot_all_zero_cats():
+    """
+    All categories are zero for all samples. With hide_zero_cats=True (default),
+    all categories get filtered, so the plot should return None gracefully
+    instead of raising ValueError. Regression test for #3481.
+    """
+    plot = bargraph.plot(
+        {"Sample1": {"Cat1": 0, "Cat2": 0}, "Sample2": {"Cat1": 0, "Cat2": 0}},
+        ["Cat1", "Cat2"],
+        {"id": "test_bar_plot_all_zero_cats", "title": "Test: Bar Graph"},
+    )
+    assert plot is None
+
+
 def test_bar_plot_cats_dicts():
     """
     Advanced cats spec - dict with cat properties instead of a simple list
