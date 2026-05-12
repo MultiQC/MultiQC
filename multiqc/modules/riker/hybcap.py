@@ -100,6 +100,7 @@ def parse_reports(module):
             "description": "Fold sequencing needed to reach 80% of targets at 20X",
             "min": 1,
             "max": 12,
+            "suffix": "X",
             "format": "{:,.2f}",
             "scale": "OrRd",
             "hidden": True,
@@ -180,6 +181,7 @@ def parse_reports(module):
             "description": description,
             "min": 1,
             "max": 12,
+            "suffix": "X",
             "format": "{:,.2f}",
             "scale": "OrRd",
             "hidden": hidden,
@@ -188,10 +190,13 @@ def parse_reports(module):
     table_headers: Dict[str, dict] = {
         "panel_name": {"title": "Panel", "description": "Bait/target panel name", "hidden": True},
         "total_reads": {
-            "title": "Total reads",
-            "format": "{:,.0f}",
+            "title": f"{config.read_count_prefix} Total reads",
+            "description": f"Total number of reads ({config.read_count_desc})",
+            "format": "{:,.2f}",
             "min": 0,
             "scale": "GnBu",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
         },
         "frac_selected_bases": _pct(
             "% Selected",
@@ -296,10 +301,16 @@ def parse_reports(module):
             gmin=20,
         ),
         "hs_library_size": {
-            "title": "Library size (est.)",
-            "description": "Estimated library size from selected pairs (Lander-Waterman)",
-            "format": "{:,.0f}",
+            "title": f"{config.read_count_prefix} Library size (est.)",
+            "description": (
+                "Estimated library size from selected pairs, Lander-Waterman "
+                f"({config.read_count_desc} unique molecules)"
+            ),
+            "format": "{:,.2f}",
+            "min": 0,
             "scale": "GnBu",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
             "hidden": True,
         },
         "hs_penalty_20x": _hs_penalty("HS penalty 20X", "Fold sequencing needed to reach 80% of targets at 20X"),
@@ -317,6 +328,21 @@ def parse_reports(module):
         name="Hybrid capture metrics",
         anchor=f"{module.anchor}-hybcap-table",
         description="Selected hybrid capture metrics. Many additional columns are available; use the column toggle to show/hide.",
+        helptext="""
+            Bait/target capture quality metrics, equivalent to Picard `CollectHsMetrics`.
+
+            * `% Selected`: fraction of aligned bases that fell on or near a bait. Higher is better.
+            * `Mean target cov.`: mean per-base coverage across target regions (high-quality, non-duplicate reads).
+            * `% Uncovered targets`: fraction of raw (pre-merge) targets with zero coverage.
+            * `% Targets >= NX`: fraction of target bases covered to at least NX depth.
+            * `% Exc *`: fraction of bases excluded from the on-target depth calculation, broken down by reason
+              (duplicates, low mapping quality, read-pair overlap, low base quality, off-target).
+            * `HS penalty NX`: fold extra sequencing required to bring 80% of targets to NX coverage.
+              1X means a perfectly uniform library; higher values indicate poor bait performance.
+            * `AT dropout` / `GC dropout`: under-representation of AT-rich or GC-rich targets.
+              Values below 2 are excellent, above 5 are concerning.
+            * `Library size (est.)`: Lander-Waterman estimate of unique molecules in the captured library.
+        """,
         plot=table.plot(table_data, table_headers, table_config),
     )
 
@@ -345,6 +371,12 @@ def parse_reports(module):
             name="Hybcap target coverage",
             anchor=f"{module.anchor}-hybcap-target-coverage",
             description="Cumulative fraction of target bases at the standard depth thresholds emitted by riker's `hybcap` tool.",
+            helptext="""
+                Each point shows the fraction of target bases that reach at least the given coverage depth.
+                A well-designed panel with even bait performance produces a curve that stays close to 100%
+                until the chosen sequencing depth runs out, then falls steeply. A curve that sags at lower
+                depths indicates uneven capture and would benefit from more sequencing or panel rebalancing.
+            """,
             plot=linegraph.plot(curve_data, pconfig),
         )
 

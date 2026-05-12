@@ -156,6 +156,11 @@ def parse_reports(module):
         name="Alignment summary",
         anchor=f"{module.anchor}-alignment-summary",
         description="Aligned vs unaligned reads (from the `pair` row of riker's alignment metrics).",
+        helptext="""
+            Total reads per sample split into aligned and unaligned, taken from the `pair`
+            category row of riker's `alignment` output (or the first available category if
+            `pair` is not present). The total includes QC-failed reads.
+        """,
         plot=bargraph.plot(bar_data, bar_keys, bar_config),
     )
 
@@ -245,6 +250,21 @@ def parse_reports(module):
         name="Alignment metrics",
         anchor=f"{module.anchor}-alignment-table",
         description="Per-category alignment metrics from riker's `alignment` tool.",
+        helptext="""
+            Alignment summary metrics, equivalent to Picard `CollectAlignmentSummaryMetrics`.
+            Each sample is split into rows for the `pair`, `first_of_pair`, and `second_of_pair`
+            read categories.
+
+            * `Total reads` / `Aligned reads`: read counts (QC-failed reads are included in the total).
+            * `% Aligned`: aligned reads as a fraction of total.
+            * `Mean read length`: across all PF (passing filter) reads.
+            * `Mismatch rate` / `Indel rate`: per-base mismatch and insertion/deletion rates
+              across all aligned bases.
+            * `% Chimeric`: pairs that map across contigs, span unexpectedly large inserts,
+              or have an unexpected orientation.
+            * `Strand balance`: fraction of aligned reads on the forward strand. 0.5 is unbiased.
+            * `Bad cycles`: sequencing cycles where at least 80% of reads called N.
+        """,
         plot=table.plot(table_data, table_headers, table_config),
     )
 

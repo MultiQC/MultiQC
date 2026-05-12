@@ -138,6 +138,15 @@ def _parse_histogram(module) -> set:
         name="Insert size distribution",
         anchor=f"{module.anchor}-isize-histogram",
         description="Insert size distribution per read-pair orientation.",
+        helptext="""
+            Distribution of inferred insert sizes per pair orientation, equivalent to Picard
+            `CollectInsertSizeMetrics`. The three tabs split read pairs by orientation: FR
+            (forward-reverse, the typical Illumina library), RF (reverse-forward, mate-pair),
+            and tandem (same-strand alignments, usually structural variant or mapping artifacts).
+
+            For each orientation the histogram is trimmed to MEDIAN + 10 * MAD so that anomalous
+            chimeric long tails do not skew the summary statistics shown in the General Stats table.
+        """,
         plot=linegraph.plot([fr_by_sample, rf_by_sample, tandem_by_sample], pconfig),
     )
     return sample_set

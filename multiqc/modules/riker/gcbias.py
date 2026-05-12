@@ -116,6 +116,16 @@ def _parse_detail(module) -> set:
             "Normalized read coverage as a function of GC content. A flat line at 1.0 indicates no GC bias. "
             f"Values above {_GCBIAS_Y_MAX:g}x are clamped to keep the typical range readable."
         ),
+        helptext="""
+            For each GC bin (0-100%) the y-axis shows read coverage normalized to the genome-wide
+            mean, equivalent to Picard `CollectGcBiasMetrics`. A flat profile near 1.0 across all
+            bins indicates an unbiased library; sagging at the extremes points to AT or GC dropout
+            during library prep, often caused by PCR amplification bias.
+
+            The `AT dropout` and `GC dropout` summary metrics in the General Stats table quantify
+            the area between the observed and expected curves over the GC 0-50% and 50-100% ranges
+            respectively. Values below 2 are excellent; above 5 is worth investigating.
+        """,
         plot=linegraph.plot(data_by_sample, pconfig),
     )
     module.write_data_file(data_by_sample, f"multiqc_{module.anchor}_gcbias_detail")

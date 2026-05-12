@@ -237,6 +237,20 @@ def _parse_metrics(module) -> set:
         name="WGS coverage metrics",
         anchor=f"{module.anchor}-wgs-table",
         description="Per-sample WGS coverage and exclusion metrics from riker's `wgs` tool.",
+        helptext="""
+            Whole-genome coverage metrics, equivalent to Picard `CollectWgsMetrics`. Computed from
+            per-position aligned base counts with overlapping mate bases de-duplicated.
+
+            * `Mean cov.` / `Median cov.` / `SD cov.`: coverage depth statistics across the
+              callable genome territory.
+            * `% Exc *`: fraction of bases excluded by each filter (duplicates, low MAPQ,
+              low base quality, mate overlap, unpaired reads, coverage cap).
+              `% Exc total` is the sum and reflects the difference between raw and effective depth.
+            * `% Bases >= NX`: fraction of genome territory covered to at least N reads.
+
+            Per-position depths are clamped at riker's `coverage_cap` (default 250), so very
+            deep loci do not skew the mean.
+        """,
         plot=table.plot(data_by_sample, table_headers, table_config),
     )
 
@@ -264,6 +278,13 @@ def _parse_metrics(module) -> set:
         name="WGS excluded bases",
         anchor=f"{module.anchor}-wgs-excluded",
         description="Fraction of bases excluded from WGS coverage calculations, by exclusion reason.",
+        helptext="""
+            Each category shows the fraction of aligned bases removed by a single filter before
+            the depth calculation. The bars are stacked, so the total height is the overall
+            excluded fraction. A sample where most reads are excluded as duplicates or by the
+            coverage cap usually points to library complexity or repeat-region issues; high
+            mate-overlap exclusion indicates short insert sizes.
+        """,
         plot=bargraph.plot(excl_data, excl_cats, excl_config),
     )
 
@@ -335,6 +356,13 @@ def _parse_coverage_histogram(module) -> set:
         name="WGS coverage",
         anchor=f"{module.anchor}-wgs-coverage",
         description="Per-base coverage histogram from riker's `wgs` tool. The tail beyond 99% of bases is hidden.",
+        helptext="""
+            Number of genome bases observed at each integer coverage depth. The mode of the
+            distribution approximates the typical per-base depth of the library, while the
+            spread reflects coverage uniformity. The histogram is trimmed at the depth covering
+            99% of bases (or `riker_config.wgs_histogram_max_cov` if set) so a small number of
+            extremely deep positions do not flatten the plot.
+        """,
         plot=linegraph.plot(trimmed, pconfig),
     )
 

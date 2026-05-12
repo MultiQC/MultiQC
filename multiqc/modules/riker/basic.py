@@ -83,6 +83,15 @@ def _parse_base_distribution(module) -> set:
         name="Base distribution by cycle",
         anchor=f"{module.anchor}-basic-base-dist",
         description="Per-cycle base composition from riker's `basic` tool. Read 1 and read 2 are shown as separate samples.",
+        helptext="""
+            Fraction of each base call (A, C, G, T, N) at every sequencing cycle, equivalent to
+            Picard `CollectBaseDistributionByCycle`. Read 1 and read 2 are emitted as separate
+            `_R1` / `_R2` samples so cycle 1 of each read starts at x = 1.
+
+            Useful for spotting cycle-specific issues such as adapter readthrough at the ends of
+            reads, base composition imbalance from a non-random library, or a failing channel
+            visible as a sudden N spike.
+        """,
         plot=linegraph.plot(series_data, pconfig),
     )
     flat: Dict[str, Dict[str, float]] = {}
@@ -137,6 +146,16 @@ def _parse_mean_quality(module) -> set:
         name="Mean base quality by cycle",
         anchor=f"{module.anchor}-basic-mean-quality",
         description="Mean base quality at each sequencing cycle. Cycles 1..N concatenate read 1 then read 2.",
+        helptext="""
+            Mean base quality (Phred) at each sequencing cycle, equivalent to Picard
+            `MeanQualityByCycle`. Riker emits a single series per sample with read 1 cycles
+            followed by read 2 cycles, so a paired-end run shows two humps with a quality
+            reset at the boundary.
+
+            A gradual decline towards the end of each read is normal. Sharp drops, plateaus
+            near the lower bound, or a much weaker read 2 may indicate sequencing chemistry
+            problems.
+        """,
         plot=linegraph.plot(data_by_sample, pconfig),
     )
     module.write_data_file(data_by_sample, f"multiqc_{module.anchor}_basic_mean_quality_by_cycle")
@@ -184,6 +203,12 @@ def _parse_quality_distribution(module) -> set:
         name="Quality score distribution",
         anchor=f"{module.anchor}-basic-quality-dist",
         description="Distribution of base quality scores across all bases.",
+        helptext="""
+            Histogram of base quality (Phred) scores aggregated across every base call in the BAM,
+            equivalent to Picard `QualityScoreDistribution`. A healthy Illumina run typically shows
+            most mass at Q30 and above. A heavy left tail or a bimodal distribution suggests
+            quality issues that warrant a closer look at the per-cycle plot.
+        """,
         plot=linegraph.plot(data_by_sample, pconfig),
     )
     module.write_data_file(data_by_sample, f"multiqc_{module.anchor}_basic_quality_score_distribution")
