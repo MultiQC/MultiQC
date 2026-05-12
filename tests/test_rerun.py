@@ -5,11 +5,17 @@ from datetime import datetime, timedelta
 import polars as pl
 
 import multiqc
+from multiqc.core import tmp_dir
+from multiqc.core.plot_data_store import flush_to_parquet
+from multiqc.core.special_case_modules.load_multiqc_data import create_plot_input_data_only
 from multiqc.core.update_config import ClConfig
+from multiqc.plots import table_object
 from multiqc.plots.bargraph import BarPlotConfig, BarPlotInputData, CatConf
 from multiqc.plots.linegraph import LinePlotConfig, LinePlotNormalizedInputData, Series
 from multiqc.plots.plot import PlotType, plot_anchor
-from multiqc.types import SampleName
+from multiqc.plots.table_object import InputRow, TableConfig
+from multiqc.plots.violin import ViolinPlotInputData
+from multiqc.types import Anchor, ColumnKey, SampleGroup, SampleName, SectionKey
 
 
 def test_rerun_parquet(data_dir, tmp_path):
@@ -272,3 +278,178 @@ def test_merge_bargraph():
     sample3_cat3 = merged_df.filter((pl.col("sample") == "Sample3") & (pl.col("category") == "Cat3"))
     assert sample3_cat3.height == 1
     assert float(sample3_cat3.select("bar_value").item()) == 45.0
+
+
+def _make_grouped_violin_data() -> ViolinPlotInputData:
+    """
+    Build a ViolinPlotInputData with a multi-row group (aggregate + members),
+    simulating what table_sample_merge produces.
+    """
+    pconfig = TableConfig(id="test_grouped", title="Test Grouped Table")
+    anchor = plot_anchor(pconfig)
+    table_anchor = Anchor(f"{anchor}_table")
+
+    grouped_data: dict = {
+        SectionKey("section1"): {
+            SampleGroup("SampleA"): [
+                InputRow(sample=SampleName("SampleA"), data={"reads": 20000, "quality": 35.0}),
+                InputRow(sample=SampleName("SampleA R1"), data={"reads": 10000, "quality": 34.0}),
+                InputRow(sample=SampleName("SampleA R2"), data={"reads": 10000, "quality": 36.0}),
+            ],
+            SampleGroup("SampleB"): [
+                InputRow(sample=SampleName("SampleB"), data={"reads": 15000}),
+            ],
+        }
+    }
+    headers: dict = {
+        SectionKey("section1"): {
+            ColumnKey("reads"): {"title": "Total Reads"},
+            ColumnKey("quality"): {"title": "Quality"},
+        }
+    }
+
+    dt = table_object.DataTable.create(
+        data=grouped_data,
+        table_id=pconfig.id,
+        table_anchor=table_anchor,
+        pconfig=pconfig.model_copy(),
+        headers=headers,
+    )
+
+    return ViolinPlotInputData(
+        dt=dt,
+        plot_type=PlotType.VIOLIN,
+        pconfig=pconfig,
+        anchor=anchor,
+        show_table_by_default=True,
+        creation_date=datetime.now(),
+    )
+
+
+def test_grouped_samples_survive_df_roundtrip():
+    """
+    Verify that sample groups (aggregate row + member rows) survive
+    serialization to DataFrame and deserialization back.
+    """
+    original = _make_grouped_violin_data()
+
+    section = list(original.dt.section_by_id.values())[0]
+    assert SampleGroup("SampleA") in section.rows_by_sgroup
+    assert len(section.rows_by_sgroup[SampleGroup("SampleA")]) == 3
+    assert section.rows_by_sgroup[SampleGroup("SampleA")][0].sample == SampleName("SampleA")
+    assert section.rows_by_sgroup[SampleGroup("SampleA")][0].data[ColumnKey("reads")].raw == 20000
+
+    df = original.to_df()
+
+    assert "row_sample" in df.columns
+    group_a_rows = df.filter(pl.col("sample") == "SampleA")
+    row_samples = sorted(group_a_rows.get_column("row_sample").unique().to_list())
+    assert row_samples == ["SampleA", "SampleA R1", "SampleA R2"]
+
+    reconstructed = ViolinPlotInputData.from_df(df, original.pconfig, original.anchor)
+    section_r = list(reconstructed.dt.section_by_id.values())[0]
+
+    assert SampleGroup("SampleA") in section_r.rows_by_sgroup
+    group_a = section_r.rows_by_sgroup[SampleGroup("SampleA")]
+    assert len(group_a) == 3
+
+    row_sample_names = [str(r.sample) for r in group_a]
+    assert "SampleA" in row_sample_names
+    assert "SampleA R1" in row_sample_names
+    assert "SampleA R2" in row_sample_names
+
+    agg_row = next(r for r in group_a if str(r.sample) == "SampleA")
+    assert agg_row.data[ColumnKey("reads")].raw == 20000
+
+    r1_row = next(r for r in group_a if str(r.sample) == "SampleA R1")
+    assert r1_row.data[ColumnKey("reads")].raw == 10000
+
+    assert SampleGroup("SampleB") in section_r.rows_by_sgroup
+    assert len(section_r.rows_by_sgroup[SampleGroup("SampleB")]) == 1
+
+
+def test_grouped_samples_survive_merge():
+    """
+    Verify that merging two ViolinPlotInputData objects with grouped samples
+    preserves the group hierarchy and resolved values.
+    """
+    data1 = _make_grouped_violin_data()
+
+    pconfig = TableConfig(id="test_grouped", title="Test Grouped Table")
+    anchor = plot_anchor(pconfig)
+    table_anchor = Anchor(f"{anchor}_table")
+
+    grouped_data2: dict = {
+        SectionKey("section1"): {
+            SampleGroup("SampleC"): [
+                InputRow(sample=SampleName("SampleC"), data={"reads": 30000, "quality": 38.0}),
+                InputRow(sample=SampleName("SampleC R1"), data={"reads": 15000, "quality": 37.0}),
+                InputRow(sample=SampleName("SampleC R2"), data={"reads": 15000, "quality": 39.0}),
+            ],
+        }
+    }
+    headers: dict = {
+        SectionKey("section1"): {
+            ColumnKey("reads"): {"title": "Total Reads"},
+            ColumnKey("quality"): {"title": "Quality"},
+        }
+    }
+    dt2 = table_object.DataTable.create(
+        data=grouped_data2,
+        table_id=pconfig.id,
+        table_anchor=table_anchor,
+        pconfig=pconfig.model_copy(),
+        headers=headers,
+    )
+    data2 = ViolinPlotInputData(
+        dt=dt2,
+        plot_type=PlotType.VIOLIN,
+        pconfig=pconfig,
+        anchor=anchor,
+        show_table_by_default=True,
+        creation_date=datetime.now() + timedelta(seconds=1),
+    )
+
+    merged = ViolinPlotInputData.merge(data1, data2)
+
+    section = list(merged.dt.section_by_id.values())[0]
+
+    assert SampleGroup("SampleA") in section.rows_by_sgroup
+    group_a = section.rows_by_sgroup[SampleGroup("SampleA")]
+    assert len(group_a) == 3
+    agg_a = next(r for r in group_a if str(r.sample) == "SampleA")
+    assert agg_a.data[ColumnKey("reads")].raw == 20000
+
+    assert SampleGroup("SampleC") in section.rows_by_sgroup
+    group_c = section.rows_by_sgroup[SampleGroup("SampleC")]
+    assert len(group_c) == 3
+    agg_c = next(r for r in group_c if str(r.sample) == "SampleC")
+    assert agg_c.data[ColumnKey("reads")].raw == 30000
+
+
+def test_grouped_samples_parquet_roundtrip(tmp_path):
+    """
+    End-to-end test: write grouped sample data to parquet, load it back,
+    and verify group hierarchy and resolved values are preserved.
+    """
+    original = _make_grouped_violin_data()
+    original.save_to_parquet()
+
+    flush_to_parquet()
+    parquet_path = tmp_dir.parquet_file()
+    assert parquet_path.exists()
+
+    df = pl.read_parquet(parquet_path)
+    plot_input_rows = df.filter((pl.col("type") == "plot_input") & (pl.col("anchor") == str(original.anchor)))
+    assert plot_input_rows.height == 1
+
+    plot_input_json = json.loads(plot_input_rows.get_column("plot_input_data")[0])
+    loaded = create_plot_input_data_only(plot_input_json)
+    assert isinstance(loaded, ViolinPlotInputData)
+
+    section = list(loaded.dt.section_by_id.values())[0]
+    assert SampleGroup("SampleA") in section.rows_by_sgroup
+    group_a = section.rows_by_sgroup[SampleGroup("SampleA")]
+    assert len(group_a) == 3
+    agg = next(r for r in group_a if str(r.sample) == "SampleA")
+    assert agg.data[ColumnKey("reads")].raw == 20000

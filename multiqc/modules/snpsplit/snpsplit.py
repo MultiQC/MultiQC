@@ -1,5 +1,6 @@
 import logging
 import re
+from datetime import date, datetime
 
 import yaml
 
@@ -21,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="SNPsplit",
             anchor="SNPsplit",
             target="SNPsplit",
@@ -74,7 +75,11 @@ class MultiqcModule(BaseMultiqcModule):
                     if sk.startswith(prefix):
                         key = sk[len(prefix) :]
                 flat_key = f"{k.lower()}_{key}"
-                flat_data[flat_key] = data[k][sk]
+                value = data[k][sk]
+                # Convert datetime objects to ISO format strings for JSON serialization
+                if isinstance(value, (datetime, date)):
+                    value = value.isoformat()
+                flat_data[flat_key] = value
         input_fn = data["Meta"]["infile"]
         flat_data["version"] = data["Meta"]["version"]
         return [input_fn, flat_data]

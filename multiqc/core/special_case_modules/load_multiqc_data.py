@@ -293,6 +293,8 @@ class LoadMultiqcData(BaseMultiqcModule):
                                         print_section=new_section.print_section,
                                         plot_anchor=merged_plot_anchor,
                                         ai_summary=new_section.ai_summary,
+                                        status_bar_html=new_section.status_bar_html,
+                                        alerts=new_section.alerts,
                                     )
                                     merged_sections.append(merged_section)
                                 else:

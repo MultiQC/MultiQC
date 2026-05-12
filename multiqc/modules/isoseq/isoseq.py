@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Iso-Seq",
             anchor="isoseq",
             href="https://github.com/PacificBiosciences/IsoSeq",

@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Snippy",
             anchor="snippy",
             href="https://github.com/tseemann/snippy",

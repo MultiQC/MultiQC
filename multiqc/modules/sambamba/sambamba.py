@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Sambamba",
             anchor="sambamba",
             href="https://lomereiter.github.io/sambamba/",

@@ -1,8 +1,7 @@
 ---
 title: fastp
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...).</p>
+description: "All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/fastp/fastp.py
 -->
 
 :::note
-<p>All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...).</p>
+All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...).
 
 [https://github.com/OpenGene/fastp](https://github.com/OpenGene/fastp)
 :::
@@ -25,6 +24,10 @@ Quality control and reporting are displayed both before and after filtering, all
 depiction of the consequences of the filtering process. Notably, the latter can be conducted on a
 variety of parameters including quality scores, length, as well as the presence of adapters, polyG,
 or polyX tailing.
+
+The module also supports [fasterp](https://github.com/drbh/fasterp), a Rust reimplementation
+of fastp that produces identical JSON output. When a `fasterp_version` field is found in
+the summary, the software version is tracked separately as fasterp.
 
 By default, the module generates the sample names based on the `--report_title` / `-R`
 option in the fastp command line (if present), or the input FastQ file names if not.

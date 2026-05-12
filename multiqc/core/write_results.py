@@ -60,6 +60,27 @@ class OutputPaths:
     report_overwritten: bool = False
 
 
+def get_image_mime_type(path: str) -> str:
+    """Get MIME type for image based on file extension."""
+    ext = Path(path).suffix.lower()
+    mime_types = {
+        ".png": "image/png",
+        ".svg": "image/svg+xml",
+        ".ico": "image/x-icon",
+        ".gif": "image/gif",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+    }
+
+    if ext not in mime_types:
+        raise ValueError(
+            f"unrecognized extension for {path=} when determining MIME type. Supported extensions: {list(mime_types.keys())}."
+        )
+
+    return mime_types[ext]
+
+
 def write_results(return_html: bool = False) -> Optional[str]:
     plugin_hooks.mqc_trigger("before_report_generation")
 
@@ -516,13 +537,16 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
             parent_template.template_dir,
             tmp_dir.get_tmp_dir(),
             dirs_exist_ok=True,
-            ignore=shutil.ignore_patterns("*.pyc"),
+            ignore=shutil.ignore_patterns("*.pyc", "node_modules"),
         )
 
     # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
     # parent template files are overwritten)
     shutil.copytree(
-        template_mod.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True, ignore=shutil.ignore_patterns("*.pyc")
+        template_mod.template_dir,
+        tmp_dir.get_tmp_dir(),
+        dirs_exist_ok=True,
+        ignore=shutil.ignore_patterns("*.pyc", "node_modules"),
     )
 
     # Function to include file contents in Jinja template
@@ -553,10 +577,10 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
                     return f'</style><link rel="stylesheet" href="{name}">'
 
             if b64:
-                with io.open(_path, "rb") as f:
+                with open(_path, "rb") as f:
                     return base64.b64encode(f.read()).decode("utf-8")
             else:
-                with io.open(_path, "r", encoding="utf-8") as f:
+                with open(_path, "r", encoding="utf-8") as f:
                     return f.read()
         except (OSError, IOError) as e:
             logger.error(f"Could not include file '{name}': {e}")
@@ -565,6 +589,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir.get_tmp_dir()))
         env.globals["include_file"] = include_file
+        env.globals["get_mime_type"] = get_image_mime_type
 
         # Add Material Design Icons function to all templates
         env.globals["material_icon"] = get_material_icon
@@ -600,7 +625,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
     else:
         assert report_path is not None
         try:
-            with io.open(report_path, "w", encoding="utf-8") as f:
+            with open(report_path, "w", encoding="utf-8") as f:
                 print(report_output, file=f)
         except IOError as e:
             raise IOError(f"Could not print report to '{config.output_fn}' - {IOError(e)}")

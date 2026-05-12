@@ -470,20 +470,21 @@ $(function () {
       $(".mqc_regex_mode input").prop("checked", true);
     }
 
-    let color = $(this).css("color");
     let highlightedSamples = window.mqc_highlight_f_texts;
     if (!highlightedSamples.includes(sampleName)) {
       $("#mqc_colour_filter").val(sampleName);
-      $("#mqc_colour_filter_color").val(rgbToHex(color));
+      // Use the current color from the palette (set by highlights.js form handler)
       $(this).css("font-weight", "bold");
       // also highlight all <sample> elements in text that match the sample name
       $("sample").each(function () {
         if ($(this).text().indexOf(sampleName) > -1) $(this).css("font-weight", "bold");
       });
+      // Only submit form when adding a new highlight
+      $("#mqc_color_form").trigger("submit");
     } else {
       $("#mqc_col_filters li").each(function () {
-        if ($(this).children("input").attr("value") === sampleName) {
-          $(this).children(".close").click();
+        if ($(this).find(".f_text").val() === sampleName) {
+          $(this).find(".btn-close").click();
         }
       });
       $(this).css("font-weight", "normal");
@@ -493,7 +494,6 @@ $(function () {
       });
     }
 
-    $("#mqc_color_form").trigger("submit");
     $("#mqc_cols_apply").click();
   });
 
