@@ -96,7 +96,6 @@ def cfg(
     advanced: bool = False,
     default: Any = None,
     default_factory: Any = None,
-    examples: Optional[List[Any]] = None,
     **kwargs: Any,
 ) -> Any:
     """Wrapper around ``Field`` that tags each option with a section.
@@ -106,7 +105,8 @@ def cfg(
     outside any block. ``advanced=True`` hides the field behind the wizard's
     "Show advanced options" toggle. Both end up in the JSON schema under
     ``json_schema_extra`` and are read back by
-    ``scripts/_config_schema_loader.py``.
+    ``scripts/_config_schema_loader.py``. Any other ``Field`` kwargs
+    (``examples``, validators, etc.) pass straight through via ``**kwargs``.
     """
     if section is None:
         section = _current_section.get()
@@ -115,16 +115,9 @@ def cfg(
     extra: Dict[str, Any] = {"section": section}
     if advanced:
         extra["advanced"] = True
-    field_kwargs: Dict[str, Any] = {
-        "description": description,
-        "json_schema_extra": extra,
-    }
-    if examples is not None:
-        field_kwargs["examples"] = examples
-    field_kwargs.update(kwargs)
     if default_factory is not None:
-        return Field(default_factory=default_factory, **field_kwargs)
-    return Field(default, **field_kwargs)
+        return Field(default_factory=default_factory, description=description, json_schema_extra=extra, **kwargs)
+    return Field(default, description=description, json_schema_extra=extra, **kwargs)
 
 
 class MultiQCConfig(BaseModel):

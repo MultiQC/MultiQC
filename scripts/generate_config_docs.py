@@ -217,7 +217,7 @@ Configuration values are loaded in the following order of precedence (highest to
 4. Environment variables
 5. Default configuration values
 
-The options below can be specified in your YAML configuration files. 
+The options below can be specified in your YAML configuration files.
 For boolean options, use `true` or `false` (all lowercase) in your YAML files.
 """)
 
@@ -231,7 +231,7 @@ For boolean options, use `true` or `false` (all lowercase) in your YAML files.
 
         output.append(f"## {section}\n")
 
-        for prop_name in sorted(props):
+        for prop_name in props:
             if prop_name in properties:
                 prop = properties[prop_name]
 

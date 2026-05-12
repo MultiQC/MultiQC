@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Set, Tuple
+from typing import AbstractSet, Any, Dict, List, Set, Tuple
 
 import yaml
 
@@ -34,7 +34,7 @@ def load_schema_and_defaults() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
     return schema.get("properties", {}), defaults, schema
 
 
-def load_sections(properties: Dict[str, Any], skip: Set[str] = frozenset()) -> Dict[str, List[str]]:
+def load_sections(properties: Dict[str, Any], skip: AbstractSet[str] = frozenset()) -> Dict[str, List[str]]:
     """Group property names by their ``section`` tag, preserving source order.
 
     Sections appear in the order they first occur in ``properties`` (which

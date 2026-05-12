@@ -303,7 +303,8 @@
       .section-heading.advanced-only {
         display: none;
       }
-      body.show-uncommon .section-nav .nav-advanced-only {
+      body.show-uncommon .section-nav .nav-advanced-only,
+      body.search-active .section-nav .nav-advanced-only {
         display: list-item;
       }
       body.show-uncommon .section-heading.advanced-only,
@@ -1151,6 +1152,16 @@
 
       let currentConfig = {};
 
+      // {sectionName: commonCount}, computed once at init from configData.
+      // Used by both the sidebar TOC and the in-page section headings to
+      // decide which sections are entirely advanced.
+      const sectionCommonCounts = Object.fromEntries(
+        Object.entries(configData).map(([name, props]) => [
+          name,
+          Object.values(props).filter((p) => !p.uncommon).length,
+        ]),
+      );
+
       function initWizard() {
         createSectionNavigation();
         createSectionContent();
@@ -1179,7 +1190,7 @@
           a.href = "#section-" + slugify(sectionName);
           a.textContent = sectionName;
           a.dataset.section = sectionName;
-          const commonCount = Object.values(sectionProps).filter((p) => !p.uncommon).length;
+          const commonCount = sectionCommonCounts[sectionName];
           // Sections that are entirely advanced (eg. MegaQC) are hidden from the
           // sidebar until the user toggles "Show advanced options" on.
           if (commonCount === 0) li.classList.add("nav-advanced-only");
@@ -1215,8 +1226,7 @@
           h2.id = "section-" + slugify(sectionName);
           h2.dataset.section = sectionName;
           h2.textContent = sectionName;
-          const commonCount = Object.values(sectionProps).filter((p) => !p.uncommon).length;
-          if (commonCount === 0) h2.classList.add("advanced-only");
+          if (sectionCommonCounts[sectionName] === 0) h2.classList.add("advanced-only");
           sectionsContainer.appendChild(h2);
 
           Object.entries(sectionProps).forEach(([propName, propData]) => {
@@ -1347,65 +1357,13 @@
         let input;
 
         if (propData.enum) {
-          // All enums render as a segmented button toggle.
-          const wrapper = document.createElement("div");
-          wrapper.className = "bool-toggle";
-          const hidden = document.createElement("input");
-          hidden.type = "hidden";
-          hidden.id = propName;
-          wrapper.appendChild(hidden);
+          // No default → clicking the active button again clears the selection.
           const hasDefault = propData.default !== null && propData.default !== undefined;
-          propData.enum.forEach((val) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "bool-toggle-btn";
-            btn.dataset.value = val;
-            btn.textContent = val;
-            if (val === propData.default) btn.classList.add("active");
-            btn.onclick = () => {
-              const wasActive = btn.classList.contains("active");
-              // No default → clicking the active button again clears the selection.
-              if (wasActive && !hasDefault) {
-                btn.classList.remove("active");
-                hidden.value = "";
-              } else {
-                wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
-                hidden.value = val;
-              }
-              updateConfig(propName, hidden);
-            };
-            wrapper.appendChild(btn);
-          });
-          return wrapper;
+          return buildSegmentedToggle(propName, propData.enum, propData.default, !hasDefault);
         } else if (propData.type === "boolean") {
-          const wrapper = document.createElement("div");
-          wrapper.className = "bool-toggle";
-
-          const hidden = document.createElement("input");
-          hidden.type = "hidden";
-          hidden.id = propName;
-          wrapper.appendChild(hidden);
-
-          const effectiveDefault = propData.default === true;
-          [
-            { val: "true", label: "true" },
-            { val: "false", label: "false" },
-          ].forEach((opt) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "bool-toggle-btn";
-            btn.dataset.value = opt.val;
-            btn.textContent = opt.label;
-            if ((opt.val === "true") === effectiveDefault) btn.classList.add("active");
-            btn.onclick = () => {
-              wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
-              hidden.value = opt.val;
-              updateConfig(propName, hidden);
-            };
-            wrapper.appendChild(btn);
-          });
-
-          return wrapper;
+          // Booleans are always either true or false; never deselectable.
+          const activeValue = propData.default === true ? "true" : "false";
+          return buildSegmentedToggle(propName, ["true", "false"], activeValue, false);
         } else if (propData.type === "array" && Array.isArray(propData.items_enum)) {
           const wrapper = document.createElement("div");
           wrapper.className = "checkbox-group";
@@ -1841,6 +1799,38 @@
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/(^-|-$)/g, "");
+      }
+
+      // Build a segmented toggle: a row of buttons backed by a hidden input.
+      // Used for booleans and for enums.
+      function buildSegmentedToggle(propName, values, activeValue, allowDeselect) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "bool-toggle";
+        const hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.id = propName;
+        wrapper.appendChild(hidden);
+        values.forEach((val) => {
+          const strVal = String(val);
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "bool-toggle-btn";
+          btn.dataset.value = strVal;
+          btn.textContent = strVal;
+          if (val === activeValue) btn.classList.add("active");
+          btn.onclick = () => {
+            if (allowDeselect && btn.classList.contains("active")) {
+              btn.classList.remove("active");
+              hidden.value = "";
+            } else {
+              wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
+              hidden.value = strVal;
+            }
+            updateConfig(propName, hidden);
+          };
+          wrapper.appendChild(btn);
+        });
+        return wrapper;
       }
 
       // Minimal inline markdown for field descriptions: `code`, **bold**, and
