@@ -39,6 +39,10 @@ bases2fastq/project:
   fn: "*_RunStats.json"
   contents: "SampleStats"
   num_lines: 100
+bases2fastq/manifest:
+  fn: "RunManifest.json"
+  contents: "Settings"
+  num_lines: 100
 bbduk:
   contents: "Executing jgi.BBDuk"
   num_lines: 2
@@ -221,6 +225,32 @@ ccs/v4:
 ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
+checkatlas/summary:
+  fn: "*.tsv"
+  contents_re: '^AtlasFileType\tNbCells\tNbGenes'
+  num_lines: 1
+checkatlas/adata:
+  fn: "*.tsv"
+  contents_re: '^atlas_obs\tobsm\tvar\tvarm\tuns'
+  num_lines: 1
+checkatlas/qc:
+  # CheckAtlas adds a "cellrank_<metric>" column for every QC metric in df_annot;
+  # this prefix is specific to CheckAtlas and avoids matching generic scanpy QC TSVs.
+  fn: "*.tsv"
+  contents_re: "cellrank_(total_counts|n_genes_by_counts|pct_counts_mt)"
+  num_lines: 1
+checkatlas/cluster:
+  fn: "*.tsv"
+  contents_re: '^Clust_Sample\tobs'
+  num_lines: 1
+checkatlas/annotation:
+  fn: "*.tsv"
+  contents_re: '^Annot_Sample\tReference\tobs'
+  num_lines: 1
+checkatlas/dimred:
+  fn: "*.tsv"
+  contents_re: '^Dimred_Sample\tobsm'
+  num_lines: 1
 cellranger/count_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"count"'
@@ -272,6 +302,7 @@ conpair/contamination:
   num_lines: 3
 cutadapt:
   - contents: "This is cutadapt"
+    exclude_contents_re: 'Trim Galore version: (?:[2-9]|\d{2,})\.' # TG v2+ has custom JSON reports
     num_lines: 100
   - fn: "*.json"
     contents: "Cutadapt report"
@@ -363,8 +394,12 @@ fastp:
   num_lines: 50
 fastq_screen:
   fn: "*_screen.txt"
+fastqe:
+  fn: "*fastqe*"
+  contents: "Filename\tStatistic\tQualities"
+  num_lines: 1
 fastqc/data:
-  fn: "fastqc_data.txt"
+  fn: "*fastqc_data.txt"
 fastqc/zip:
   fn: "*_fastqc.zip"
 fastqc/theoretical_gc:
@@ -866,6 +901,18 @@ rna_seqc/html:
 ribotish/qual:
   fn: "*_qual.txt"
   num_lines: 10
+ribowaltz/psite_region:
+  fn: "*ribowaltz*psite_region.tsv"
+  contents_re: "sample[,\t]region[,\t]count[,\t]scaled_count"
+  num_lines: 1
+ribowaltz/frames:
+  fn: "*ribowaltz*frames.tsv"
+  contents_re: "sample[,\t]region[,\t]frame[,\t]count[,\t]scaled_count"
+  num_lines: 1
+ribowaltz/metaprofile:
+  fn: "*ribowaltz*metaprofile_psite.tsv"
+  contents_re: "sample[,\t]region[,\t]x[,\t]y"
+  num_lines: 1
 rockhopper:
   fn: "summary.txt"
   contents: "Number of gene-pairs predicted to be part of the same operon"
@@ -1046,6 +1093,8 @@ theta2:
 tophat:
   fn: "*align_summary.txt"
   shared: true
+trim_galore:
+  fn: "*_trimming_report.json"
 trimmomatic:
   contents_re: "^Trimmomatic"
 truvari/bench:

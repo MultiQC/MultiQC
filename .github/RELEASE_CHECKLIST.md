@@ -12,13 +12,17 @@ This checklist is for my own reference, as I forget the steps every time.
 
    Then paste it into `CHANGELOG.md` and edit accordingly: group changes if needed, add highlights.
 
-4. Update module documentation markdown files and update the config JSON schema:
+4. Update module documentation markdown files, the config JSON schema, the config reference markdown, and the configuration wizard HTML:
 
    ```bash
    cd test-data && git pull && cd ../
    python scripts/make_module_docs.py
    python scripts/generate_config_schema.py
+   python scripts/generate_config_docs.py
+   python scripts/generate_config_wizard.py
    ```
+
+   All four scripts read from `multiqc/utils/config_schema.py` and `multiqc/config_defaults.yaml`, so any new config option added since the last release is picked up automatically. The wizard's footer / header bake in the MultiQC version at generation time, so regenerate after bumping the version in `pyproject.toml`.
 
 5. Install the package again in the `install` mode. Make sure to remove the build directory and egg info that might cache outdated metadata such as entry point names:
 
@@ -55,6 +59,13 @@ This checklist is for my own reference, as I forget the steps every time.
 
    - Spot any previously unnoticed bugs and fix
    - Upload to the website and push change to Git
+   - Copy the freshly-regenerated configuration wizard into the website repo so `seqera.io/multiqc` serves the new version:
+
+     ```bash
+     cp docs/multiqc_config_wizard.html ../../seqera/web/services/website/public/
+     ```
+
+     Commit the file in the seqeralabs/web repo together with the demo report updates.
 
 8. Commit and push version updates
 9. Generate new rich-codex screenshots

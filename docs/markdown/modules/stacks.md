@@ -1,8 +1,7 @@
 ---
 title: Stacks
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Analyzes restriction enzyme-based data (e.g. RAD-seq).</p>
+description: "Analyzes restriction enzyme-based data (e.g. RAD-seq)."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/stacks/stacks.py
 -->
 
 :::note
-<p>Analyzes restriction enzyme-based data (e.g. RAD-seq).</p>
+Analyzes restriction enzyme-based data (e.g. RAD-seq).
 
 [http://catchenlab.life.illinois.edu/stacks/](http://catchenlab.life.illinois.edu/stacks/)
 :::

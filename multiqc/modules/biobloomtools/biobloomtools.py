@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="BioBloom Tools",
             anchor="biobloomtools",
             href="https://github.com/bcgsc/biobloom/",

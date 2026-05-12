@@ -1,8 +1,7 @@
 ---
 title: VerifyBAMID
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Detects sample contamination and/or sample swaps.</p>
+description: "Detects sample contamination and/or sample swaps."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/verifybamid/verifybami
 -->
 
 :::note
-<p>Detects sample contamination and/or sample swaps.</p>
+Detects sample contamination and/or sample swaps.
 
 [https://genome.sph.umich.edu/wiki/VerifyBamID](https://genome.sph.umich.edu/wiki/VerifyBamID)
 :::

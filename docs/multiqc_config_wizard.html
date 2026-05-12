@@ -1,0 +1,4032 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MultiQC Configuration Wizard</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 250'%3E%3Cpath fill='%23087f68' d='M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z'/%3E%3Cpath fill='%23087f68' d='M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z'/%3E%3Cpath fill='%23087f68' d='M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z'/%3E%3Cpath fill='%23087f68' d='M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        /* Seqera tokens */
+        --navy: #201637; /* --color-brand */
+        --navy-2: #2d273c; /* --color-brand-1000 */
+        --ink: #160f26; /* heading ink */
+        --ink-mute: #5c5767; /* body text */
+        --ink-soft: #736f7d; /* caption */
+        --ink-faint: #a29fa8; /* subtle */
+        --teal: #31c9ac; /* --color-nextflow-500 */
+        --teal-border: #0cae8e; /* --color-nextflow-700 */
+        --teal-border-active: #087f68; /* --color-nextflow-900 */
+        --teal-tint: #e2f7f3;
+        --paper: #ffffff;
+        --surface-soft: #f8f8f8; /* --color-brand-50 */
+        --border: rgba(0, 0, 0, 0.15);
+        --border-soft: #e8e7e9; /* --color-brand-200 */
+        --focus: #31c9ac;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        color: var(--ink-mute);
+        background: var(--paper);
+        font-size: 16px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .display {
+        font-family: "Bricolage Grotesque", "Inter", sans-serif;
+        font-variation-settings: "opsz" 32;
+        color: var(--ink);
+      }
+
+      code,
+      pre,
+      .mono {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+      }
+
+      a {
+        color: var(--navy);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 1px;
+      }
+      a:hover {
+        color: var(--teal-border);
+      }
+
+      /* Fixed left side-nav */
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 280px;
+        height: 100vh;
+        background: var(--navy);
+        color: rgba(255, 255, 255, 0.85);
+        display: flex;
+        flex-direction: column;
+        z-index: 50;
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .sidebar-brand {
+        padding: 22px 22px 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .sidebar-brand-link {
+        display: inline-block;
+        text-decoration: none;
+        border-radius: 3px;
+        transition: opacity 0.15s ease;
+      }
+      .sidebar-brand-link:hover {
+        opacity: 0.85;
+      }
+      .sidebar-brand-link:focus-visible {
+        outline: 2px solid var(--teal);
+        outline-offset: 4px;
+      }
+      .sidebar-brand svg {
+        height: 26px;
+        width: auto;
+        display: block;
+      }
+      .sidebar-brand svg path.mqc-logo-text {
+        fill: white;
+      }
+      .sidebar-eyebrow {
+        margin-top: 12px;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--teal);
+      }
+
+      .sidebar-search {
+        padding: 18px 18px 12px;
+        position: relative;
+      }
+      .sidebar-search input {
+        width: 100%;
+        padding: 10px 34px 10px 38px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+        background-color: rgba(255, 255, 255, 0.05);
+        color: white;
+        font-family: inherit;
+        font-size: 0.9em;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A29FA8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20.5 20.5l-4.4-4.4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 14px center;
+        transition:
+          border-color 0.15s ease,
+          background-color 0.15s ease;
+      }
+      .sidebar-search input::placeholder {
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .sidebar-search input:focus {
+        outline: none;
+        border-color: var(--teal);
+        background-color: rgba(255, 255, 255, 0.08);
+      }
+      .sidebar-search .clear-btn {
+        position: absolute;
+        right: 24px;
+        top: calc(50% + 3px);
+        transform: translateY(-50%);
+        display: none;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.55);
+        cursor: pointer;
+        border-radius: 3px;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .sidebar-search.has-text .clear-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .sidebar-search .clear-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: white;
+      }
+      .sidebar-search .clear-btn svg {
+        display: block;
+      }
+
+      .sidebar-sections {
+        flex: 1;
+        overflow-y: auto;
+        padding: 6px 12px 16px;
+      }
+      .sidebar-sections h3 {
+        color: rgba(255, 255, 255, 0.45);
+        margin: 8px 10px 8px;
+        font-size: 0.7em;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+      .section-nav {
+        list-style: none;
+      }
+      .section-nav li {
+        margin-bottom: 2px;
+      }
+      .section-nav a {
+        color: rgba(255, 255, 255, 0.78);
+        text-decoration: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.92em;
+        font-weight: 500;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .section-nav a:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+      }
+      .section-nav a.active {
+        background: rgba(49, 201, 172, 0.15);
+        color: white;
+        box-shadow: inset 2px 0 0 var(--teal);
+      }
+      .section-nav .badge {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 0.74em;
+        font-weight: 500;
+        min-width: 22px;
+        text-align: center;
+      }
+      .section-nav a.active .badge {
+        background: var(--teal);
+        color: var(--navy);
+      }
+      .section-nav li.dimmed a {
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .show-uncommon-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: calc(100% - 20px);
+        margin: 12px 10px 4px;
+        padding: 6px 10px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.55);
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 0.78em;
+        cursor: pointer;
+        text-align: left;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .show-uncommon-btn:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+      .show-uncommon-state {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.18);
+        flex-shrink: 0;
+      }
+      body.show-uncommon .show-uncommon-btn {
+        background: rgba(49, 201, 172, 0.08);
+        border-color: rgba(49, 201, 172, 0.25);
+        color: white;
+      }
+      body.show-uncommon .show-uncommon-state {
+        background: var(--teal);
+        box-shadow: 0 0 0 2px rgba(49, 201, 172, 0.25);
+      }
+
+      .form-group.uncommon {
+        display: none;
+      }
+      body.search-active .form-group.uncommon {
+        display: block;
+      }
+      body.show-uncommon .form-group.uncommon {
+        display: block;
+      }
+      .section-nav .nav-advanced-only,
+      .section-heading.advanced-only {
+        display: none;
+      }
+      body.show-uncommon .section-nav .nav-advanced-only,
+      body.search-active .section-nav .nav-advanced-only {
+        display: list-item;
+      }
+      body.show-uncommon .section-heading.advanced-only,
+      body.search-active .section-heading.advanced-only {
+        display: block;
+      }
+      body.show-uncommon .form-group.uncommon .field-label::after {
+        content: "advanced";
+        margin-left: 8px;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-family: "Inter", sans-serif;
+        font-size: 0.68em;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        vertical-align: middle;
+      }
+
+      .sidebar-actions {
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 16px 18px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .sidebar-actions .btn {
+        width: 100%;
+        text-align: center;
+      }
+      .sidebar-actions .btn-primary {
+        background: transparent;
+        color: white;
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+      .sidebar-actions .btn-primary:hover {
+        background: white;
+        color: var(--navy);
+        border-color: white;
+      }
+      .sidebar-actions .btn-secondary {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.6);
+        border-color: rgba(255, 255, 255, 0.12);
+        padding: 6px 14px;
+        font-size: 0.85em;
+      }
+      .sidebar-actions .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+
+      .welcome-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .welcome-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--paper);
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 0.9em;
+        font-weight: 500;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease;
+      }
+      .welcome-links a:hover {
+        background: var(--surface-soft);
+        border-color: var(--ink-soft);
+        color: var(--navy);
+      }
+      .welcome-links a::after {
+        content: "↗";
+        color: var(--teal-border);
+        font-size: 0.95em;
+        line-height: 1;
+      }
+
+      /* Right-hand main column */
+      .main {
+        margin-left: 280px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Hero in the main column */
+      .header {
+        background: var(--paper);
+        color: var(--ink);
+        padding: 48px 56px 36px;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .header h1 {
+        font-family: "Bricolage Grotesque", "Inter", sans-serif;
+        font-variation-settings: "opsz" 64;
+        font-size: 2.4em;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        color: var(--ink);
+        margin: 0;
+      }
+      .header-version {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.42em;
+        font-weight: 500;
+        letter-spacing: 0;
+        color: var(--ink-soft);
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        border-radius: 3px;
+        padding: 4px 10px;
+        margin-left: 14px;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
+      .header p {
+        font-size: 1.05em;
+        color: var(--ink-mute);
+        margin-top: 12px;
+      }
+      .header code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        color: var(--ink);
+        padding: 1px 8px;
+        border-radius: 3px;
+        font-size: 0.88em;
+      }
+
+      /* Content area */
+      .content {
+        padding: 0 56px 40px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .page-footer {
+        margin-top: auto;
+        padding: 22px 56px 28px;
+        border-top: 1px solid var(--border-soft);
+        color: var(--ink-soft);
+        font-size: 0.8em;
+      }
+      .page-footer code {
+        font-size: 0.95em;
+        color: var(--ink);
+      }
+
+      /* Welcome / intro card, Seqera Box style */
+      .welcome-section {
+        background: var(--paper);
+        border: 1px solid var(--border);
+        border-radius: 0;
+        padding: 32px 36px;
+        margin: 32px 0 12px;
+      }
+      .welcome-section h2 {
+        font-family: "Bricolage Grotesque", "Inter", sans-serif;
+        font-variation-settings: "opsz" 32;
+        color: var(--ink);
+        font-size: 1.5em;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+        margin-bottom: 14px;
+      }
+      .welcome-section p {
+        color: var(--ink-mute);
+        line-height: 1.65;
+        margin-bottom: 12px;
+      }
+      .welcome-section p:last-child {
+        margin-bottom: 0;
+      }
+      .welcome-section code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 8px;
+        border-radius: 3px;
+        font-size: 0.88em;
+        color: var(--navy);
+      }
+
+      .section-heading {
+        font-family: "Bricolage Grotesque", "Inter", sans-serif;
+        font-variation-settings: "opsz" 32;
+        color: var(--ink);
+        margin: 56px -56px 22px 0;
+        font-size: 1.6em;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        line-height: 1.15;
+        scroll-margin-top: 24px;
+        position: relative;
+        padding-left: 14px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .section-heading::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.3em;
+        height: 0.75em;
+        width: 3px;
+        background: var(--teal);
+        border-radius: 0;
+      }
+      .section-heading::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+        align-self: center;
+      }
+
+      /* Form fields, blueprint style: square, sharing one continuous border */
+      .form-group {
+        margin: 0;
+        border: 1px solid var(--border);
+        border-radius: 0;
+        padding: 20px 24px;
+        background: var(--paper);
+        position: relative;
+        transition:
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      .form-group + .form-group {
+        margin-top: -1px;
+      }
+      .form-group:hover {
+        border-color: rgba(0, 0, 0, 0.25);
+        z-index: 1;
+      }
+      .form-group:focus-within {
+        border-color: var(--navy);
+        z-index: 2;
+      }
+      .form-group.is-set {
+        border-color: var(--teal);
+        box-shadow: inset 3px 0 0 var(--teal);
+        z-index: 1;
+      }
+      .form-group.is-set:focus-within {
+        border-color: var(--teal-border);
+        z-index: 2;
+      }
+      .form-group.hidden {
+        /* `!important` so search filtering wins over the show-uncommon rule's higher specificity. */
+        display: none !important;
+      }
+      .form-group label.field-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-weight: 500;
+        color: var(--ink);
+        margin-bottom: 6px;
+        font-size: 0.95em;
+      }
+      .form-group .description {
+        color: var(--ink-mute);
+        font-size: 0.9em;
+        margin-bottom: 12px;
+        line-height: 1.5;
+      }
+      .form-group .description code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.88em;
+        color: var(--ink);
+      }
+      .form-group .description a {
+        color: var(--teal-border);
+        text-decoration: underline;
+      }
+      .form-group .description a:hover {
+        color: var(--teal-border-active);
+      }
+      .default-badge {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        color: var(--ink-mute);
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 0.72em;
+        font-weight: 500;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        letter-spacing: 0;
+        text-transform: none;
+        vertical-align: middle;
+      }
+      .field-reset-btn {
+        padding: 3px 6px;
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--ink-soft);
+        cursor: pointer;
+        border-radius: 3px;
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+        line-height: 1;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .field-reset-btn:hover {
+        background: var(--surface-soft);
+        color: var(--ink);
+        border-color: var(--border);
+      }
+      .field-reset-btn svg {
+        display: block;
+      }
+
+      .examples-toggle {
+        display: inline-block;
+        margin-left: auto;
+        align-self: center;
+        background: transparent;
+        border: none;
+        color: var(--teal-border);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.78em;
+        line-height: 1.3;
+        padding: 0;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .examples-toggle:hover {
+        color: var(--navy);
+      }
+      .field-examples {
+        display: none;
+        margin: 0 0 14px;
+      }
+      .field-examples.is-open {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field-examples pre {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 10px 12px;
+        margin: 0;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.8em;
+        line-height: 1.55;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        color: var(--ink-mute);
+      }
+      .field-examples .hljs-attr {
+        color: #0f7d65;
+      }
+      .field-examples .hljs-string {
+        color: #b85c2f;
+      }
+      .field-examples .hljs-number {
+        color: #3d4dac;
+      }
+      .field-examples .hljs-literal {
+        color: #6b3fb1;
+      }
+      .field-examples .hljs-bullet,
+      .field-examples .hljs-punctuation {
+        color: var(--ink-soft);
+      }
+      .field-examples .hljs-comment {
+        color: var(--ink-faint);
+        font-style: italic;
+      }
+
+      textarea[aria-invalid="true"] {
+        border-color: #d04949 !important;
+      }
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid var(--border);
+        border-radius: 0;
+        font-family: inherit;
+        font-size: 0.95em;
+        color: var(--ink);
+        background: var(--paper);
+        transition:
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      .form-group textarea {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.82em;
+        line-height: 1.5;
+        color: var(--ink-soft);
+      }
+      .form-group.is-set textarea {
+        color: var(--ink);
+      }
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--teal-border);
+        box-shadow: 0 0 0 3px rgba(49, 201, 172, 0.2);
+      }
+
+      .bool-toggle {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border: 1px solid var(--border);
+        border-radius: 0;
+        background: var(--paper);
+      }
+      .bool-toggle-btn {
+        padding: 5px 14px;
+        border: none;
+        border-right: 1px solid var(--border);
+        background: transparent;
+        color: var(--ink-soft);
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.78em;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .bool-toggle-btn:last-of-type {
+        border-right: none;
+      }
+      .bool-toggle-btn:hover {
+        background: var(--surface-soft);
+        color: var(--ink);
+      }
+      .bool-toggle-btn.active {
+        background: var(--surface-soft);
+        color: var(--ink);
+        font-weight: 600;
+        cursor: default;
+      }
+      .form-group.is-set .bool-toggle-btn.active {
+        background: rgba(49, 201, 172, 0.12);
+        color: var(--teal-border);
+      }
+      .bool-toggle-btn:focus-visible {
+        outline: 2px solid var(--teal);
+        outline-offset: -2px;
+      }
+
+      .checkbox-group {
+        display: inline-flex;
+        border: 1px solid var(--border);
+        background: var(--paper);
+      }
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 14px;
+        border-right: 1px solid var(--border);
+        background: transparent;
+        color: var(--ink-soft);
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.78em;
+        cursor: pointer;
+        user-select: none;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .checkbox-item:last-of-type {
+        border-right: none;
+      }
+      .checkbox-item:hover {
+        background: var(--surface-soft);
+        color: var(--ink);
+      }
+      .checkbox-item.checked {
+        background: var(--surface-soft);
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .form-group.is-set .checkbox-item.checked {
+        background: rgba(49, 201, 172, 0.12);
+        color: var(--teal-border);
+      }
+      .checkbox-item input[type="checkbox"] {
+        width: 12px;
+        height: 12px;
+        margin: 0;
+        cursor: pointer;
+        accent-color: var(--teal-border);
+      }
+
+      .no-results {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--ink-mute);
+        display: none;
+        font-size: 0.95em;
+      }
+
+      /* When previewing YAML, hide the editor UI */
+      body.preview-mode #welcomeSection,
+      body.preview-mode #sections,
+      body.preview-mode #noResults {
+        display: none !important;
+      }
+      body.preview-mode .section-nav a {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+      body.preview-mode .sidebar-search,
+      body.preview-mode .show-uncommon-btn {
+        opacity: 0.4;
+        pointer-events: none;
+      }
+
+      .btn {
+        padding: 8px 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 0.92em;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+      .btn-primary {
+        background: var(--navy);
+        border-color: var(--navy);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--navy-2);
+        border-color: var(--navy-2);
+      }
+      .btn-secondary {
+        background: var(--paper);
+        color: var(--ink);
+        border-color: var(--border);
+      }
+      .btn-secondary:hover {
+        background: var(--surface-soft);
+        border-color: var(--ink-soft);
+      }
+      .btn-success {
+        background: var(--teal);
+        border-color: var(--teal-border);
+        color: var(--navy);
+      }
+      .btn-success:hover {
+        background: var(--teal-border);
+        border-color: var(--teal-border-active);
+        color: white;
+      }
+
+      .yaml-output {
+        background: var(--navy);
+        color: #d9d4e0;
+        padding: 20px 22px;
+        border-radius: 0;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.88em;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        margin-top: 16px;
+      }
+      /* Minimal YAML highlight theme tuned to the navy code surface */
+      .yaml-output .hljs-attr {
+        color: #9eebd5;
+      }
+      .yaml-output .hljs-string {
+        color: #f1a373;
+      }
+      .yaml-output .hljs-number {
+        color: #a5b4fc;
+      }
+      .yaml-output .hljs-literal {
+        color: #c4b5fd;
+      }
+      .yaml-output .hljs-bullet,
+      .yaml-output .hljs-punctuation {
+        color: #8a8595;
+      }
+      .yaml-output .hljs-comment {
+        color: #847d99;
+        font-style: italic;
+      }
+
+      .yaml-preview-section {
+        background: var(--paper);
+        border: 1px solid var(--border);
+        border-radius: 0;
+        padding: 28px 32px;
+        margin: 32px 0;
+      }
+      .yaml-preview-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+      }
+      .yaml-preview-head h3 {
+        margin-bottom: 0;
+      }
+      .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .back-btn span {
+        font-size: 1.05em;
+        line-height: 1;
+      }
+      .yaml-preview-section h3 {
+        font-family: "Bricolage Grotesque", "Inter", sans-serif;
+        font-variation-settings: "opsz" 24;
+        color: var(--ink);
+        font-size: 1.2em;
+        font-weight: 600;
+        margin-bottom: 6px;
+        letter-spacing: -0.01em;
+      }
+      .yaml-preview-section p {
+        color: var(--ink-mute);
+        font-size: 0.92em;
+      }
+      .yaml-preview-section code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 0.85em;
+      }
+      .fields-set-count {
+        color: var(--ink-soft);
+        font-size: 0.82em;
+        margin-top: 4px;
+      }
+      .yaml-preview-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .sidebar {
+          position: static;
+          width: 100%;
+          height: auto;
+        }
+        .sidebar-sections {
+          max-height: none;
+        }
+        .main {
+          margin-left: 0;
+        }
+        .header {
+          padding: 32px 24px;
+        }
+        .header h1 {
+          font-size: 1.85em;
+        }
+        .content {
+          padding: 0 24px 32px;
+        }
+        .actions {
+          padding: 14px 24px;
+        }
+        .form-group {
+          padding: 16px 18px;
+        }
+        .welcome-section {
+          padding: 24px;
+        }
+        .yaml-preview-section {
+          padding: 22px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <a
+          href="#"
+          class="sidebar-brand-link"
+          onclick="event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' });"
+          aria-label="Scroll to top"
+        >
+          <svg width="1318" height="250" viewBox="0 0 1318 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z"
+              fill="#FFFFFF"
+            />
+            <path
+              d="M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z"
+              fill="#FFFFFF"
+            />
+            <path
+              d="M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z"
+              fill="#FFFFFF"
+            />
+            <path
+              d="M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z"
+              fill="#FFFFFF"
+            />
+            <path
+              d="M1100.98 249.999V179.569H1096.12C1093.89 183.629 1090.65 187.529 1086.39 191.269C1082.13 195.019 1076.71 198.109 1070.13 200.539C1063.54 202.969 1055.39 204.189 1045.66 204.189C1033.09 204.189 1021.54 201.149 1011 195.069C1000.46 188.989 992.05 180.229 985.77 168.769C979.48 157.319 976.35 143.489 976.35 127.269V122.709C976.35 106.499 979.54 92.6691 985.93 81.2091C992.31 69.7591 1000.77 60.9891 1011.31 54.9091C1021.85 48.8291 1033.3 45.7891 1045.66 45.7891C1060.25 45.7891 1071.45 48.4291 1079.25 53.6891C1087.05 58.9591 1092.88 64.9391 1096.73 71.6291H1101.59V45.7891H1132.29V249.979H1100.98V249.999ZM1054.47 176.829C1068.25 176.829 1079.5 172.469 1088.21 163.759C1096.92 155.049 1101.28 142.579 1101.28 126.369V123.629C1101.28 107.619 1096.87 95.2591 1088.06 86.5391C1079.24 77.8291 1068.04 73.4691 1054.47 73.4691C1040.9 73.4691 1030 77.8291 1021.18 86.5391C1012.36 95.2591 1007.96 107.619 1007.96 123.629V126.369C1007.96 142.589 1012.37 155.049 1021.18 163.759C1030 172.479 1041.09 176.829 1054.47 176.829Z"
+              fill="#333"
+              class="mqc-logo-text"
+            />
+            <path
+              d="M1235.96 204.189C1221.57 204.189 1208.55 201.149 1196.9 195.069C1185.24 188.989 1176.02 180.169 1169.24 168.619C1162.45 157.069 1159.06 143.189 1159.06 126.969V123.019C1159.06 106.809 1162.45 92.9793 1169.24 81.5193C1176.03 70.0693 1185.25 61.2593 1196.9 55.0693C1208.55 48.8893 1221.57 45.7993 1235.96 45.7993C1250.35 45.7993 1262.61 48.4393 1272.74 53.6993C1282.87 58.9693 1291.03 65.9593 1297.21 74.6793C1303.39 83.3993 1307.39 93.0193 1309.22 103.559L1278.82 109.939C1277.8 103.249 1275.68 97.1693 1272.44 91.6993C1269.2 86.2293 1264.64 81.8693 1258.76 78.6293C1252.88 75.3893 1245.48 73.7693 1236.57 73.7693C1227.66 73.7693 1220 75.7493 1213.01 79.6993C1206.02 83.6493 1200.49 89.3293 1196.44 96.7193C1192.38 104.119 1190.36 113.089 1190.36 123.619V126.359C1190.36 136.899 1192.38 145.919 1196.44 153.419C1200.49 160.919 1206.02 166.599 1213.01 170.439C1220 174.289 1227.85 176.219 1236.57 176.219C1249.74 176.219 1259.77 172.829 1266.67 166.039C1273.56 159.249 1277.92 150.589 1279.74 140.049L1310.14 147.039C1307.71 157.379 1303.4 166.909 1297.22 175.619C1291.04 184.339 1282.88 191.279 1272.75 196.439C1262.61 201.609 1250.35 204.189 1235.97 204.189H1235.96Z"
+              fill="#333"
+              class="mqc-logo-text"
+            />
+            <path
+              d="M330.02 204.19V45.8096H360.72V65.8696H365.58C368.42 60.5996 372.98 55.9396 379.26 51.8896C385.54 47.8396 394.05 45.8096 404.8 45.8096C415.55 45.8096 424.91 48.0896 431.7 52.6496C438.49 57.2096 443.6 63.0396 447.05 70.1296H451.91C455.35 63.2396 460.37 57.4696 466.96 52.7996C473.54 48.1396 482.92 45.8096 495.08 45.8096C504.81 45.8096 513.42 47.7896 520.92 51.7396C528.42 55.6896 534.4 61.5696 538.86 69.3696C543.32 77.1696 545.55 86.8496 545.55 98.3996V204.19H514.24V100.83C514.24 91.7096 511.76 84.6696 506.79 79.6996C501.82 74.7396 494.78 72.2496 485.66 72.2496C475.93 72.2496 468.13 75.3896 462.25 81.6696C456.37 87.9496 453.43 96.9696 453.43 108.73V204.19H422.12V100.83C422.12 91.7096 419.64 84.6696 414.67 79.6996C409.7 74.7396 402.66 72.2496 393.54 72.2496C383.81 72.2496 376.01 75.3896 370.13 81.6696C364.25 87.9496 361.31 96.9696 361.31 108.73V204.19H330H330.02Z"
+              fill="#333"
+              class="mqc-logo-text"
+            />
+            <path
+              d="M634.529 203.85C623.179 203.85 613.049 201.31 604.129 196.25C595.209 191.19 588.219 183.99 583.149 174.67C578.079 165.35 575.549 154.2 575.549 141.23V45.8096H606.859V139.1C606.859 152.07 610.099 161.65 616.589 167.83C623.069 174.01 632.089 177.1 643.649 177.1C656.419 177.1 666.699 172.8 674.509 164.18C682.309 155.57 686.209 143.16 686.209 126.94V45.8096H717.519V204.19H686.819V178.62H681.959C679.119 184.7 674.059 190.43 666.759 195.8C659.459 201.17 648.719 203.86 634.539 203.86L634.529 203.85Z"
+              fill="#333"
+              class="mqc-logo-text"
+            />
+            <path d="M747.521 204.19V0H778.831V204.19H747.521Z" fill="#333" class="mqc-logo-text" />
+            <path d="M915.029 204.19V45.8096H946.339V204.19H915.029Z" fill="#333" class="mqc-logo-text" />
+            <path
+              d="M885.03 71.47V45.81H865.56L848.45 62.92H840.26V0H808.83V173.98C808.83 183.13 811.52 190.46 816.92 195.95C822.31 201.44 829.67 204.19 839.04 204.19H885.02V177.95H849.1C843.2 177.95 840.25 174.9 840.25 168.8V71.48H885.01L885.03 71.47Z"
+              fill="#333"
+              class="mqc-logo-text"
+            />
+          </svg>
+        </a>
+        <div class="sidebar-eyebrow">Config Wizard</div>
+      </div>
+      <div class="sidebar-search">
+        <input type="text" id="searchInput" placeholder="Search options..." autocomplete="off" />
+        <button type="button" id="clearSearchBtn" class="clear-btn" aria-label="Clear search" tabindex="-1">
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M4 4l8 8M12 4l-8 8" />
+          </svg>
+        </button>
+      </div>
+      <nav class="sidebar-sections">
+        <h3>Sections</h3>
+        <ul class="section-nav" id="sectionNav"></ul>
+        <button
+          id="toggleUncommonBtn"
+          type="button"
+          class="show-uncommon-btn"
+          onclick="toggleUncommon()"
+          aria-pressed="false"
+        >
+          <span class="show-uncommon-state" aria-hidden="true"></span>
+          <span class="show-uncommon-label">Show advanced options</span>
+        </button>
+      </nav>
+      <div class="sidebar-actions">
+        <button id="previewBtn" class="btn btn-success" onclick="previewYaml()">Preview YAML</button>
+        <button class="btn btn-secondary" onclick="resetConfig()">Reset All</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <h1>MultiQC Configuration Wizard <span class="header-version">v1.35.dev0</span></h1>
+        <p>Build your <code>multiqc_config.yaml</code></p>
+      </header>
+
+      <div class="content" id="contentArea">
+        <div class="welcome-section" id="welcomeSection">
+          <h2>Welcome to the MultiQC Config Wizard</h2>
+          <p>
+            This tool helps you create a custom <code>multiqc_config.yaml</code>
+            configuration file. You don't need to set every option, only change what you want to customise. Unset
+            options will use their defaults.
+          </p>
+          <p>
+            Browse sections in the sidebar, or use the search bar above to find a specific option. When you are done,
+            click <strong>Preview YAML</strong> below.
+          </p>
+          <div class="welcome-links">
+            <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">MultiQC Homepage</a>
+            <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
+            <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+
+        <div id="sections"></div>
+
+        <div class="no-results" id="noResults">No configuration options match your search.</div>
+
+        <div class="yaml-preview-section" id="yamlSection" style="display:none;">
+          <div class="yaml-preview-head">
+            <h3>Generated Configuration</h3>
+            <div class="yaml-preview-actions">
+              <button class="btn btn-secondary back-btn" onclick="backToEditor()">
+                <span aria-hidden="true">&larr;</span> Back to editor
+              </button>
+              <button id="copyBtn" class="btn btn-primary" onclick="copyConfig()">Copy to clipboard</button>
+              <button class="btn btn-success" onclick="downloadConfig()">Download config</button>
+            </div>
+          </div>
+          <p>Copy this content to <code>multiqc_config.yaml</code> in your project directory.</p>
+          <p class="fields-set-count" id="fieldsSetCount"></p>
+          <div class="yaml-output" id="yamlOutput"></div>
+        </div>
+      </div>
+
+      <footer class="page-footer">
+        Generated on <time datetime="2026-05-12">2026-05-12</time> for MultiQC <code>1.35.dev0</code>.
+      </footer>
+    </main>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"
+      integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"
+      integrity="sha384-GdEWAbCjn+ghjX0gLx7/N1hyTVmPAjdC2OvoAA0RyNcAOhqwtT8qnbCxWle2+uJX"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/yaml.min.js"
+      integrity="sha384-bMkvdnz+wPu1ro0fqO3BaDWztc7RzSvw05MQFP6bhJKDcwpkrFYTfTFI9ndkP11l"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script>
+      const configData = {
+        "Report Meta": {
+          title: {
+            uncommon: false,
+            type: "string",
+            description: "Title shown at the top of the report and used in the page title.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          subtitle: {
+            uncommon: false,
+            type: "string",
+            description: "Subtitle shown under the report title. Plain text only.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          intro_text: {
+            uncommon: false,
+            type: "string",
+            description: "Paragraph shown under the title. Useful for adding context about the analysis.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          report_comment: {
+            uncommon: false,
+            type: "string",
+            description: "Free-text comment shown at the top of the report. HTML is allowed.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["This report was generated from the RNA-seq pipeline on 2024-08-21."],
+          },
+          report_header_info: {
+            uncommon: false,
+            type: "array",
+            description:
+              "Extra key/value pairs shown in the report header, eg. contact name, run ID, pipeline version. Each list item is a single-key dictionary.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [
+              [
+                {
+                  "Contact E-mail": "phil.ewels@seqera.io",
+                },
+                {
+                  "Application Type": "RNA-seq",
+                },
+                {
+                  "Project Type": "Application",
+                },
+                {
+                  "Sequencing Platform": "HiSeq 2500 High Output V4",
+                },
+              ],
+            ],
+          },
+          show_analysis_paths: {
+            uncommon: false,
+            type: "boolean",
+            description: "Show the absolute paths of analysed directories in the report header.",
+            default: true,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          show_analysis_time: {
+            uncommon: false,
+            type: "boolean",
+            description: "Show the date and time the report was generated in the header.",
+            default: true,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+        "Report Appearance": {
+          template: {
+            uncommon: false,
+            type: "string",
+            description: "Name of the report template.",
+            default: "default",
+            enum: ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
+            items_enum: null,
+            examples: [],
+          },
+          template_dark_mode: {
+            uncommon: true,
+            type: "boolean",
+            description: "Enable the dark mode toggle in the report template.",
+            default: true,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          custom_logo: {
+            uncommon: false,
+            type: "string",
+            description: "Path to an image to show at the top of the report, replacing the MultiQC logo.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["/path/to/logo.png", "./assets/logo.svg"],
+          },
+          custom_logo_dark: {
+            uncommon: false,
+            type: "string",
+            description: "Path to an alternative logo for dark mode. Falls back to custom_logo if unset.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["./assets/logo_dark.svg"],
+          },
+          custom_logo_url: {
+            uncommon: false,
+            type: "string",
+            description: "URL the custom logo links to when clicked.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["https://www.scilifelab.se"],
+          },
+          custom_logo_title: {
+            uncommon: false,
+            type: "string",
+            description: "Tooltip text shown when hovering over the custom logo.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["Our institute name"],
+          },
+          custom_logo_width: {
+            uncommon: false,
+            type: "integer",
+            description: "Logo width in pixels. Height scales proportionally.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [200],
+          },
+          custom_css_files: {
+            uncommon: false,
+            type: "array",
+            description: "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["./assets/custom.css", "./assets/branding.css"]],
+          },
+          simple_output: {
+            uncommon: false,
+            type: "boolean",
+            description:
+              "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+        "Report Contents": {
+          custom_content: {
+            uncommon: false,
+            type: "object",
+            description:
+              "Embed arbitrary plots, tables or text in the report. See the [Custom Content docs](https://docs.seqera.io/multiqc/custom_content) for the full structure.",
+            default: {
+              order: [],
+            },
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                data: {
+                  "my-section-id": {
+                    data: {
+                      sample1: {
+                        col1: 100,
+                      },
+                      sample2: {
+                        col1: 200,
+                      },
+                    },
+                    id: "my-section-id",
+                    plot_type: "table",
+                    section_name: "My Custom Section",
+                  },
+                },
+                order: ["my-section-id", "my-other-section-id"],
+              },
+            ],
+          },
+          top_modules: {
+            uncommon: false,
+            type: "array",
+            description:
+              "Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["fastqc", "cutadapt"]],
+          },
+          module_order: {
+            uncommon: false,
+            type: "array",
+            description:
+              "Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, path_filters).",
+            default: [
+              "custom_content",
+              "ccs",
+              "ngsderive",
+              "purple",
+              "conpair",
+              "isoseq",
+              "lima",
+              "peddy",
+              "percolator",
+              "haplocheck",
+              "somalier",
+              "methylqa",
+              "mosdepth",
+              "phantompeakqualtools",
+              "qualimap",
+              "bamdst",
+              "preseq",
+              "hifiasm",
+              "quast",
+              "qorts",
+              "rna_seqc",
+              "rockhopper",
+              "rsem",
+              "rseqc",
+              "busco",
+              "checkm",
+              "bustools",
+              "goleft_indexcov",
+              "gffcompare",
+              "disambiguate",
+              "supernova",
+              "deeptools",
+              "sargasso",
+              "verifybamid",
+              "mirtrace",
+              "happy",
+              "mirtop",
+              "glimpse",
+              "gopeaks",
+              "homer",
+              "hops",
+              "macs2",
+              "theta2",
+              "snpeff",
+              "gatk",
+              "htseq",
+              "bcftools",
+              "featurecounts",
+              "fgbio",
+              "dragen",
+              "dragen_fastqc",
+              "dedup",
+              "pbmarkdup",
+              "damageprofiler",
+              "mapdamage",
+              "biobambam2",
+              "jcvi",
+              "mtnucratio",
+              "picard",
+              "vep",
+              "bakta",
+              "prokka",
+              "checkm2",
+              "qc3C",
+              "nanoq",
+              "nanostat",
+              "samblaster",
+              "samtools",
+              "bamtools",
+              "sambamba",
+              "ngsbits",
+              "pairtools",
+              "sexdeterrmine",
+              "seqera_cli",
+              "eigenstratdatabasetools",
+              "jellyfish",
+              "vcftools",
+              "longranger",
+              "stacks",
+              "varscan2",
+              "snippy",
+              "umicollapse",
+              "umitools",
+              "truvari",
+              "megahit",
+              "ganon",
+              "gtdbtk",
+              "bbmap",
+              "bismark",
+              "biscuit",
+              "diamond",
+              "hicexplorer",
+              "hicup",
+              "hicpro",
+              "salmon",
+              "kallisto",
+              "slamdunk",
+              "star",
+              "hisat2",
+              "tophat",
+              "bowtie2",
+              "bowtie1",
+              "hostile",
+              "cellranger",
+              "checkatlas",
+              "snpsplit",
+              "odgi",
+              "vg",
+              "pangolin",
+              "nextclade",
+              "freyja",
+              "humid",
+              "kat",
+              "leehom",
+              "librarian",
+              "nonpareil",
+              "adapterremoval",
+              "bbduk",
+              "clipandmerge",
+              "cutadapt",
+              "trim_galore",
+              "flexbar",
+              "sourmash",
+              "kaiju",
+              "kraken",
+              "malt",
+              "motus",
+              "trimmomatic",
+              "sickle",
+              "skewer",
+              "sortmerna",
+              "biobloomtools",
+              "seqfu",
+              "fastq_screen",
+              "fastqe",
+              "afterqc",
+              "fastp",
+              "fastqc",
+              "sequali",
+              "filtlong",
+              "prinseqplusplus",
+              "pychopper",
+              "porechop",
+              "pycoqc",
+              "minionqc",
+              "anglerfish",
+              "multivcfanalyzer",
+              "clusterflow",
+              "checkqc",
+              "bcl2fastq",
+              "bclconvert",
+              "interop",
+              "ivar",
+              "flash",
+              "seqyclean",
+              "optitype",
+              "whatshap",
+              "spaceranger",
+              "xenome",
+              "xengsort",
+              "metaphlan",
+              "sylphtax",
+              "seqwho",
+              "telseq",
+              "ataqv",
+              "mgikit",
+              "mosaicatcher",
+            ],
+            enum: null,
+            items_enum: null,
+            examples: [
+              [
+                "fastqc",
+                {
+                  fastqc: {
+                    name: "FastQC (trimmed)",
+                    path_filters: ["*_trimmed*"],
+                  },
+                },
+                "cutadapt",
+              ],
+            ],
+          },
+          remove_sections: {
+            uncommon: false,
+            type: "array",
+            description: "Module sections to hide. Use the section anchor as it appears in the URL.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
+          },
+          section_comments: {
+            uncommon: false,
+            type: "object",
+            description: "Markdown text shown under specific module sections. Keys are section anchors.",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                fastqc_overrepresented_sequences: "**This is** an important note about the overrepresented sequences.",
+                samtools: "Reviewed by *Phil* on 2024-08-21.",
+              },
+            ],
+          },
+          section_status_checks: {
+            uncommon: true,
+            type: "object",
+            description:
+              "Enable or disable the green/yellow/red status indicators on report sections. Top-level keys are module IDs, values are either a bool or a dict mapping section ID to bool.",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                fastqc: true,
+                samtools: {
+                  alignment_stats: false,
+                },
+              },
+            ],
+          },
+        },
+        "Output Options": {
+          force: {
+            uncommon: false,
+            type: "boolean",
+            description: "Overwrite existing output files without prompting.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          output_fn_name: {
+            uncommon: false,
+            type: "string",
+            description: "Filename for the generated HTML report. Defaults to multiqc_report.html.",
+            default: "multiqc_report.html",
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          data_dir_name: {
+            uncommon: false,
+            type: "string",
+            description:
+              "Name of the directory written alongside the report holding parsed data. Defaults to multiqc_data.",
+            default: "multiqc_data",
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          plots_dir_name: {
+            uncommon: false,
+            type: "string",
+            description: "Directory for exported plot images when export_plots is on. Defaults to multiqc_plots.",
+            default: "multiqc_plots",
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          data_format: {
+            uncommon: false,
+            type: "string",
+            description: "Format used when writing parsed data files.",
+            default: "tsv",
+            enum: ["tsv", "csv", "json", "yaml"],
+            items_enum: null,
+            examples: [],
+          },
+          data_format_extensions: {
+            uncommon: true,
+            type: "object",
+            description:
+              "Override the file extension used when writing each data format, eg. {tsv: txt} to write TSV as .txt.",
+            default: {
+              tsv: "txt",
+              csv: "csv",
+              json: "json",
+              yaml: "yaml",
+            },
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                json: "json",
+                tsv: "txt",
+                yaml: "yml",
+              },
+            ],
+          },
+          parquet_format: {
+            uncommon: true,
+            type: "string",
+            description:
+              "Parquet table layout. 'long' has rows of (sample_name, metric_name, val_raw, val_raw_type, val_str), easy to filter by metric. 'wide' uses one column per metric (prefixed with table name and namespace), easier for analytics but can hit column limits or mixed-type issues.",
+            default: "long",
+            enum: ["long", "wide"],
+            items_enum: null,
+            examples: [],
+          },
+          make_data_dir: {
+            uncommon: false,
+            type: "boolean",
+            description: "Write parsed data as files alongside the report.",
+            default: true,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          zip_data_dir: {
+            uncommon: false,
+            type: "boolean",
+            description: "Compress the data directory into a single .zip file.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          data_dump_file: {
+            uncommon: true,
+            type: "boolean",
+            description: "Write a single JSON file containing all parsed data, for re-running MultiQC later.",
+            default: true,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          data_dump_file_write_raw: {
+            uncommon: true,
+            type: "boolean",
+            description: "Include raw values (before any normalisation or filtering) in the dumped JSON.",
+            default: true,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          export_plots: {
+            uncommon: false,
+            type: "boolean",
+            description: "Save each plot as a static image (formats set by export_plot_formats).",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          export_plot_formats: {
+            uncommon: false,
+            type: "array",
+            description: "Image formats to export when export_plots is on.",
+            default: ["png", "svg", "pdf"],
+            enum: null,
+            items_enum: ["png", "svg", "pdf"],
+            examples: [],
+          },
+          export_plots_timeout: {
+            uncommon: false,
+            type: "integer",
+            description: "Timeout for exporting each plot, in seconds.",
+            default: 60,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          make_report: {
+            uncommon: false,
+            type: "boolean",
+            description: "Generate the HTML report. Set to false to only produce data files.",
+            default: true,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          make_pdf: {
+            uncommon: false,
+            type: "boolean",
+            description: "Also generate a PDF version of the report. Requires Pandoc to be installed.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          pandoc_template: {
+            uncommon: true,
+            type: "string",
+            description: "Path to a Pandoc template used when exporting the report as PDF.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+        "Sample Names": {
+          prepend_dirs: {
+            uncommon: false,
+            type: "boolean",
+            description:
+              "Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple directories.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          prepend_dirs_depth: {
+            uncommon: false,
+            type: "integer",
+            description: "How many parent directories to include. 0 means all the way to the root.",
+            default: 0,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          prepend_dirs_sep: {
+            uncommon: true,
+            type: "string",
+            description: "String inserted between directory names and the sample name. Defaults to '|'.",
+            default: " | ",
+            enum: null,
+            items_enum: null,
+            examples: ["_", " - "],
+          },
+          fn_clean_sample_names: {
+            uncommon: false,
+            type: "boolean",
+            description: "Apply the cleaning rules in fn_clean_exts and fn_clean_trim to sample names.",
+            default: true,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          extra_fn_clean_exts: {
+            uncommon: false,
+            type: "array",
+            description:
+              "Extensions appended to the built-in list. Use to add custom suffixes without overriding defaults.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [
+              [
+                ".mySuffix",
+                {
+                  module: ["samtools"],
+                  pattern: "_tmp",
+                  type: "remove",
+                },
+              ],
+            ],
+          },
+          extra_fn_clean_trim: {
+            uncommon: false,
+            type: "array",
+            description: "Strings appended to the built-in trim list, without overriding defaults.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [["sample_", "_processed"]],
+          },
+          fn_clean_exts: {
+            uncommon: true,
+            type: "array",
+            description: "Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in list.",
+            default: [
+              ".gz",
+              ".fastq",
+              ".fq",
+              ".bam",
+              ".cram",
+              ".sam",
+              ".sra",
+              ".vcf",
+              ".dat",
+              "_tophat",
+              ".pbmarkdup.log",
+              ".log",
+              ".stderr",
+              ".out",
+              ".spp",
+              ".fa",
+              ".fasta",
+              ".png",
+              ".jpg",
+              ".jpeg",
+              ".html",
+              "Log.final",
+              "ReadsPerGene",
+              ".flagstat",
+              "_star_aligned",
+              "_fastqc",
+              ".hicup",
+              ".counts",
+              "_counts",
+              ".txt",
+              ".tsv",
+              ".csv",
+              ".aligned",
+              "Aligned",
+              ".merge",
+              ".deduplicated",
+              ".dedup",
+              ".clean",
+              ".sorted",
+              ".report",
+              "| stdin",
+              ".geneBodyCoverage",
+              ".inner_distance_freq",
+              ".junctionSaturation_plot.r",
+              ".pos.DupRate.xls",
+              ".GC.xls",
+              "_slamdunk",
+              "_bismark",
+              ".conpair",
+              ".concordance",
+              ".contamination",
+              ".BEST.results",
+              "_peaks.xls",
+              ".relatedness",
+              ".cnt",
+              ".aqhist",
+              ".bhist",
+              ".bincov",
+              ".bqhist",
+              ".covhist",
+              ".covstats",
+              ".ehist",
+              ".gchist",
+              ".idhist",
+              ".ihist",
+              ".indelhist",
+              ".lhist",
+              ".mhist",
+              ".qahist",
+              ".qchist",
+              ".qhist",
+              ".rpkm",
+              ".selfSM",
+              ".extendedFrags",
+              "_SummaryStatistics",
+              ".purple.purity",
+              ".purple.qc",
+              ".trim",
+              ".bowtie2",
+              ".mkD",
+              ".highfreq",
+              ".lowfreq",
+              ".consensus",
+              ".snpEff",
+              ".snpeff",
+              ".scaffolds",
+              ".contigs",
+              ".kraken2",
+              ".ccurve",
+              ".hisat2",
+              "_duprate",
+              ".markdup",
+              ".read_distribution",
+              ".junction_annotation",
+              ".infer_experiment",
+              ".biotype",
+              ".ivar",
+              ".mpileup",
+              ".primer_trim",
+              ".mapped",
+              ".vep",
+              "_vep",
+              "ccs",
+              "_NanoStats",
+              ".cutadapt",
+              ".qcML",
+              ".mosdepth",
+              "_gopeaks",
+              ".readCounts",
+              ".wgs_contig_mean_cov",
+              "_overall_mean_cov",
+              "_coverage_metrics",
+              ".wgs_fine_hist",
+              ".wgs_coverage_metrics",
+              ".wgs_hist",
+              ".vc_metrics",
+              ".gvcf_metrics",
+              ".ploidy_estimation_metrics",
+              "_overall_mean_cov",
+              ".fragment_length_hist",
+              ".mapping_metrics",
+              ".gc_metrics",
+              ".trimmer_metrics",
+              ".time_metrics",
+              ".quant_metrics",
+              ".quant.metrics",
+              ".quant.transcript_coverage",
+              ".scRNA_metrics",
+              ".scRNA.metrics",
+              ".scATAC_metrics",
+              ".scATAC.metrics",
+              ".fastqc_metrics",
+              ".labels",
+              ".bammetrics.metrics",
+              ".filter_summary",
+              ".cluster_report",
+              ".error.spl",
+              ".error.grp",
+              ".vgstats",
+              "_mapq_table",
+              "_strand_table",
+              "_isize_table",
+              "_dup_report",
+              "_cv_table",
+              "_covdist_all",
+              "_covdist_q40",
+              "_CpGRetention",
+              "_CpHRetentionByReadPos",
+              "_totalBaseConversionRate",
+              "_totalReadConversionRate",
+              ".sylphmpa",
+              "_qual",
+            ],
+            enum: null,
+            items_enum: null,
+            examples: [
+              [
+                ".gz",
+                ".fastq",
+                ".bam",
+                {
+                  pattern: "_S\\d+_L\\d+",
+                  type: "regex",
+                },
+              ],
+            ],
+          },
+          fn_clean_trim: {
+            uncommon: true,
+            type: "array",
+            description: "Strings trimmed from the start or end of sample names. Replaces the built-in list.",
+            default: [
+              ".",
+              ":",
+              "_",
+              "-",
+              ".r",
+              "_val",
+              ".idxstats",
+              "_trimmed",
+              ".trimmed",
+              ".csv",
+              ".yaml",
+              ".yml",
+              ".json",
+              "_mqc",
+              "short_summary_",
+              "_summary",
+              ".summary",
+              ".align",
+              ".h5",
+              "_matrix",
+              ".stats",
+              ".hist",
+              ".phased",
+              ".tar",
+              "runs_",
+              ".qc",
+            ],
+            enum: null,
+            items_enum: null,
+            examples: [["_R1", "_R2", "_001"]],
+          },
+          use_filename_as_sample_name: {
+            uncommon: false,
+            type: "boolean",
+            description:
+              "Use the source filename as the sample name instead of any name parsed from the log. Set to true for all modules, or to a list of module IDs / patterns to apply selectively.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          sample_names_ignore: {
+            uncommon: false,
+            type: "array",
+            description: "Glob patterns. Matching samples are dropped from the report.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["*_temp", "control_*"]],
+          },
+          sample_names_ignore_re: {
+            uncommon: false,
+            type: "array",
+            description: "Regex patterns. Matching samples are dropped from the report.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["^test_.*", ".*_neg_ctrl$"]],
+          },
+          sample_names_only_include: {
+            uncommon: true,
+            type: "array",
+            description: "Glob patterns. If set, only matching samples are kept.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["RNA_*", "Sample_??"]],
+          },
+          sample_names_only_include_re: {
+            uncommon: true,
+            type: "array",
+            description: "Regex patterns. If set, only matching samples are kept.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["^WGS_[0-9]+$"]],
+          },
+          sample_names_rename: {
+            uncommon: false,
+            type: "array",
+            description:
+              "Toolbox rename pairs. Each entry is a [from, to] pair, grouped by the buttons in sample_names_rename_buttons.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [
+              [
+                ["SMP001", "Patient_A"],
+                ["SMP002", "Patient_B"],
+                ["SMP003", "Patient_C"],
+              ],
+            ],
+          },
+          sample_names_rename_buttons: {
+            uncommon: false,
+            type: "array",
+            description:
+              "Names of the toolbox buttons that switch between the rename groups defined in sample_names_rename.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["Sample ID", "Patient ID", "Lane"]],
+          },
+          sample_names_replace: {
+            uncommon: false,
+            type: "object",
+            description:
+              "Substring replacements applied to every sample name. Keys are matched, values are replacements.",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                Sample_: "S",
+                _001: "",
+              },
+            ],
+          },
+          sample_names_replace_complete: {
+            uncommon: false,
+            type: "boolean",
+            description: "Replace the entire sample name when the key matches anywhere in it.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          sample_names_replace_exact: {
+            uncommon: false,
+            type: "boolean",
+            description: "Only replace when the key matches the sample name exactly, not as a substring.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          sample_names_replace_regex: {
+            uncommon: false,
+            type: "boolean",
+            description: "Treat keys in sample_names_replace as regex patterns.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+        "File Discovery": {
+          file_list: {
+            uncommon: false,
+            type: "boolean",
+            description: "Treat the input path as a file containing a list of paths to scan, one per line.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          require_logs: {
+            uncommon: false,
+            type: "boolean",
+            description:
+              "Fail with an error if any module explicitly requested with `--module` has no log files found. Off by default, so missing inputs are skipped silently.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          log_filesize_limit: {
+            uncommon: false,
+            type: "integer",
+            description: "Skip log files larger than this many bytes.",
+            default: 50000000,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          filesearch_lines_limit: {
+            uncommon: false,
+            type: "integer",
+            description: "Stop reading a log file after this many lines.",
+            default: 1000,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          ignore_symlinks: {
+            uncommon: true,
+            type: "boolean",
+            description: "Skip symlinked files and directories during the file search.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          ignore_images: {
+            uncommon: false,
+            type: "boolean",
+            description: "Skip image files (PNG/JPEG/etc.) to avoid wasting time opening them.",
+            default: true,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          fn_ignore_dirs: {
+            uncommon: false,
+            type: "array",
+            description: "Glob patterns for directory names to skip entirely during the file search.",
+            default: ["multiqc_data", ".git", "icarus_viewers", "runs_per_reference", "not_aligned", "contigs_reports"],
+            enum: null,
+            items_enum: null,
+            examples: [["work", ".nextflow", "*_logs"]],
+          },
+          fn_ignore_paths: {
+            uncommon: false,
+            type: "array",
+            description: "Glob patterns for paths to skip during the file search.",
+            default: [
+              "*/work/??/??????????????????????????????",
+              "*/.snakemake",
+              "*/.singularity",
+              "*/__pycache__",
+              "*/site-packages/multiqc",
+            ],
+            enum: null,
+            items_enum: null,
+            examples: [["*/test_data/*", "*/.snakemake/*"]],
+          },
+          fn_ignore_files: {
+            uncommon: false,
+            type: "array",
+            description: "Glob patterns for file names to skip during the file search.",
+            default: [
+              ".DS_Store",
+              ".py[cod]",
+              "*.bam",
+              "*.bai",
+              "*.sam",
+              "*.fq.gz",
+              "*.fastq.gz",
+              "*.fq",
+              "*.fastq",
+              "*.fa",
+              "*.gtf",
+              "*.bed",
+              "*.vcf",
+              "*.tbi",
+              "*.txt.gz",
+              "*.pdf",
+              "*.md5",
+              "*.parquet",
+              "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html",
+              "multiqc_data.json",
+              "*.gam",
+              "*.gamp",
+              "*.jar",
+            ],
+            enum: null,
+            items_enum: null,
+            examples: [["*.bai", "*.bak", "*.tmp"]],
+          },
+          filesearch_file_shared: {
+            uncommon: false,
+            type: "array",
+            description: "Module IDs whose log files may be matched by multiple modules during the search.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+        "Plot Settings": {
+          plots_force_flat: {
+            uncommon: false,
+            type: "boolean",
+            description: "Render plots as static images instead of interactive Plotly. Useful for very large reports.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          plots_force_interactive: {
+            uncommon: false,
+            type: "boolean",
+            description: "Force interactive plots even when MultiQC would normally fall back to flat images.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          plots_export_font_scale: {
+            uncommon: false,
+            type: "number",
+            description:
+              "Multiplier applied to font sizes in exported plot images. Bump up for publication-quality output.",
+            default: 1.0,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          plots_flat_numseries: {
+            uncommon: false,
+            type: "integer",
+            description:
+              "If a plot has more than this many series, MultiQC switches it from interactive to flat image.",
+            default: 2000,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          plots_defer_loading_numseries: {
+            uncommon: false,
+            type: "integer",
+            description:
+              "Plots with more than this many series start collapsed. The user clicks a button to render them.",
+            default: 100,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          num_datasets_plot_limit: {
+            uncommon: true,
+            type: "integer",
+            description: "Deprecated. Use `plots_defer_loading_numseries` instead.",
+            default: 100,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          plot_font_family: {
+            uncommon: true,
+            type: "string",
+            description: "CSS font-family for plot text. Defaults to a system font stack.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          custom_plot_config: {
+            uncommon: false,
+            type: "object",
+            description: "Override plot config options per plot. Top-level keys are plot IDs, values are option dicts.",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                fastqc_per_base_sequence_quality_plot: {
+                  title: "FastQC: Mean Quality Scores (custom)",
+                  yaxis: {
+                    title: "Phred score",
+                  },
+                },
+              },
+            ],
+          },
+          lineplot_number_of_points_to_hide_markers: {
+            uncommon: true,
+            type: "integer",
+            description:
+              "Hide individual data point markers in line plots once the total point count across samples exceeds this.",
+            default: 50,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          barplot_legend_on_bottom: {
+            uncommon: true,
+            type: "boolean",
+            description: "Place bar plot legends below the plot instead of to the side. Not recommended.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          boxplot_boxpoints: {
+            uncommon: false,
+            type: "string",
+            description: "How boxplot data points are drawn. Use false to hide individual points.",
+            default: "outliers",
+            enum: ["outliers", "suspectedoutliers", "all", false],
+            items_enum: null,
+            examples: [],
+          },
+          box_min_threshold_outliers: {
+            uncommon: false,
+            type: "integer",
+            description: "When a boxplot has more samples than this, only outlier points are drawn.",
+            default: 100,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          box_min_threshold_no_points: {
+            uncommon: false,
+            type: "integer",
+            description: "When a boxplot has more samples than this, no individual points are drawn.",
+            default: 1000,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          violin_downsample_after: {
+            uncommon: false,
+            type: "integer",
+            description:
+              "Start downsampling violin plot data once the sample count exceeds this. Keeps rendering snappy.",
+            default: 2000,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          violin_min_threshold_outliers: {
+            uncommon: false,
+            type: "integer",
+            description: "When a violin plot has more samples than this, only outlier points are drawn.",
+            default: 100,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          violin_min_threshold_no_points: {
+            uncommon: false,
+            type: "integer",
+            description: "When a violin plot has more samples than this, no individual points are drawn.",
+            default: 1000,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+        Toolbox: {
+          highlight_patterns: {
+            uncommon: false,
+            type: "array",
+            description: "Substring (or regex) patterns. Matching samples are highlighted in plots and tables.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["control", "treated"]],
+          },
+          highlight_colors: {
+            uncommon: false,
+            type: "array",
+            description: "Hex colour for each entry in highlight_patterns, in the same order.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["#377eb8", "#e41a1c"]],
+          },
+          highlight_regex: {
+            uncommon: false,
+            type: "boolean",
+            description: "Treat highlight_patterns as regex instead of plain substring.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          show_hide_buttons: {
+            uncommon: false,
+            type: "array",
+            description: "Labels for the toolbox show/hide buttons. One per pattern set.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["Tumour samples", "Normal samples"]],
+          },
+          show_hide_patterns: {
+            uncommon: false,
+            type: "array",
+            description:
+              "Patterns for each show/hide button. Each entry is a string or list of strings to match against sample names.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [
+              [
+                ["_T_", "_tumour_"],
+                ["_N_", "_normal_"],
+              ],
+            ],
+          },
+          show_hide_mode: {
+            uncommon: false,
+            type: "array",
+            description: "Action for each show/hide button: 'show' (only show matches) or 'hide' (hide matches).",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [["show", "show"]],
+          },
+          show_hide_regex: {
+            uncommon: false,
+            type: "array",
+            description: "Whether each pattern set is treated as regex. List of bools aligned with show_hide_buttons.",
+            default: [],
+            enum: null,
+            items_enum: null,
+            examples: [[false, false]],
+          },
+        },
+        "Table Settings": {
+          collapse_tables: {
+            uncommon: true,
+            type: "boolean",
+            description: "Collapse module tables by default. Users click to expand.",
+            default: true,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          max_table_rows: {
+            uncommon: false,
+            type: "integer",
+            description: "Tables larger than this many rows are rendered as a violin plot instead.",
+            default: 500,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          max_configurable_table_columns: {
+            uncommon: false,
+            type: "integer",
+            description: "Cap on the number of columns the user can toggle in the table-configure toolbox.",
+            default: 200,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          decimalPoint_format: {
+            uncommon: false,
+            type: "string",
+            description: "Decimal-point character used in formatted numbers, eg. `.` (default) or `,`.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [","],
+          },
+          thousandsSep_format: {
+            uncommon: false,
+            type: "string",
+            description: "Thousands separator used in formatted numbers, eg. `,` (default), ` ` (space), or `.`",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [" ", "'"],
+          },
+          general_stats_columns: {
+            uncommon: false,
+            type: "object",
+            description: "Per-module overrides for General Stats columns. Top-level keys are module IDs.",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                fastqc: {
+                  columns: {
+                    percent_duplicates: {
+                      format: "{:,.1f}%",
+                      max: 100,
+                      min: 0,
+                      scale: "RdYlGn-rev",
+                      title: "% Dups",
+                    },
+                  },
+                },
+              },
+            ],
+          },
+          general_stats_helptext: {
+            uncommon: false,
+            type: "string",
+            description: "Help text shown under the General Statistics heading at the top of the report.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          skip_generalstats: {
+            uncommon: false,
+            type: "boolean",
+            description: "Hide the General Statistics table at the top of the report.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          table_columns_name: {
+            uncommon: false,
+            type: "object",
+            description:
+              "Rename table columns. Top-level keys are module IDs, inner keys are column IDs, values are the new display name.",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                fastqc: {
+                  percent_duplicates: "% Dups",
+                  percent_gc: "% GC",
+                },
+              },
+            ],
+          },
+          table_columns_placement: {
+            uncommon: false,
+            type: "object",
+            description:
+              "Reorder table columns. Top-level keys are module IDs, inner keys are column IDs, values are float sort weights (lower is further left).",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                fastqc: {
+                  percent_duplicates: 900,
+                  percent_gc: 800,
+                  total_sequences: 700,
+                },
+              },
+            ],
+          },
+          table_columns_visible: {
+            uncommon: false,
+            type: "object",
+            description:
+              "Hide or show specific columns. Top-level keys are module IDs, values are either a bool (apply to all columns) or a dict mapping column ID to bool.",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                fastqc: false,
+                samtools: {
+                  error_rate: false,
+                  raw_total_sequences: true,
+                },
+              },
+            ],
+          },
+          table_cond_formatting_rules: {
+            uncommon: false,
+            type: "object",
+            description:
+              "Conditional cell formatting. Nested dicts map table ID to column ID to a list of rules (eg. {s_eq: pass} matches an exact value). See the customisation docs for the full grammar.",
+            default: {
+              all_columns: {
+                pass: [
+                  {
+                    s_eq: "pass",
+                  },
+                  {
+                    s_eq: "true",
+                  },
+                  {
+                    s_eq: "yes",
+                  },
+                  {
+                    s_eq: "ok",
+                  },
+                ],
+                warn: [
+                  {
+                    s_eq: "warn",
+                  },
+                  {
+                    s_eq: "unknown",
+                  },
+                ],
+                fail: [
+                  {
+                    s_eq: "fail",
+                  },
+                  {
+                    s_eq: "false",
+                  },
+                  {
+                    s_eq: "no",
+                  },
+                ],
+                male: [
+                  {
+                    s_eq: "male",
+                  },
+                  {
+                    s_eq: "M",
+                  },
+                ],
+                female: [
+                  {
+                    s_eq: "female",
+                  },
+                  {
+                    s_eq: "F",
+                  },
+                ],
+              },
+              QCStatus: {
+                fail: [
+                  {
+                    s_contains: "fail",
+                  },
+                ],
+              },
+            },
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                all_columns: {
+                  fail: [
+                    {
+                      s_eq: "fail",
+                    },
+                  ],
+                  pass: [
+                    {
+                      s_eq: "pass",
+                    },
+                    {
+                      s_eq: "ok",
+                    },
+                  ],
+                  warn: [
+                    {
+                      s_eq: "warn",
+                    },
+                  ],
+                },
+                "mqc-generalstats-percent_duplicates": {
+                  fail: [
+                    {
+                      gt: 50,
+                    },
+                  ],
+                  warn: [
+                    {
+                      gt: 20,
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+          table_cond_formatting_colours: {
+            uncommon: false,
+            type: "array",
+            description:
+              "Background colours referenced by table_cond_formatting_rules. List of single-key dicts mapping a colour ID to a hex code.",
+            default: [
+              {
+                blue: "#337ab7",
+              },
+              {
+                lbue: "#5bc0de",
+              },
+              {
+                pass: "#5cb85c",
+              },
+              {
+                warn: "#f0ad4e",
+              },
+              {
+                fail: "#d9534f",
+              },
+              {
+                male: "#5bc0de",
+              },
+              {
+                female: "#d9534f",
+              },
+            ],
+            enum: null,
+            items_enum: null,
+            examples: [
+              [
+                {
+                  pass: "#5cb85c",
+                },
+                {
+                  warn: "#f0ad4e",
+                },
+                {
+                  fail: "#d9534f",
+                },
+              ],
+            ],
+          },
+          custom_table_header_config: {
+            uncommon: false,
+            type: "object",
+            description: "Override table column config. Same shape as custom_plot_config but for table headers.",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                general_stats_table: {
+                  "% Dups": {
+                    format: "{:,.1f}%",
+                    max: 100,
+                    min: 0,
+                  },
+                },
+              },
+            ],
+          },
+          table_sample_merge: {
+            uncommon: true,
+            type: "object",
+            description:
+              "Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name, values are clean-pattern entries (string or {type, pattern}).",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                R1: [
+                  "_R1",
+                  {
+                    pattern: "[_.-][rR]?1$",
+                    type: "regex",
+                  },
+                ],
+                R2: [
+                  "_R2",
+                  {
+                    pattern: "[_.-][rR]?2$",
+                    type: "regex",
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        "Software Versions": {
+          software_versions: {
+            uncommon: false,
+            type: "object",
+            description:
+              "Manually specify software versions for the Software Versions section. Top-level keys are tool names.",
+            default: {},
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                bwa: "0.7.17",
+                fastqc: "0.12.1",
+                samtools: "1.20",
+              },
+            ],
+          },
+          versions_table_group_header: {
+            uncommon: false,
+            type: "string",
+            description: "Column header for the grouping column in the Software Versions table. Defaults to 'Group'.",
+            default: "Group",
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          disable_version_detection: {
+            uncommon: false,
+            type: "boolean",
+            description: "Skip parsing software versions from module log files.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          skip_versions_section: {
+            uncommon: false,
+            type: "boolean",
+            description: "Hide the Software Versions section.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+        "Read & Base Counts": {
+          read_count_multiplier: {
+            uncommon: false,
+            type: "number",
+            description: "Multiplier applied to read counts before display. Default 0.000001 shows reads in millions.",
+            default: 1e-6,
+            enum: null,
+            items_enum: null,
+            examples: [0.001, 1],
+          },
+          read_count_prefix: {
+            uncommon: false,
+            type: "string",
+            description: "Suffix shown after formatted read counts, eg. 'M' for millions.",
+            default: "M",
+            enum: null,
+            items_enum: null,
+            examples: ["K", ""],
+          },
+          read_count_desc: {
+            uncommon: false,
+            type: "string",
+            description: "Word used in plot/axis labels for read counts, eg. 'millions'.",
+            default: "millions",
+            enum: null,
+            items_enum: null,
+            examples: ["thousands", "raw reads"],
+          },
+          long_read_count_multiplier: {
+            uncommon: false,
+            type: "number",
+            description: "Multiplier for long-read counts. Default 0.001 shows counts in thousands.",
+            default: 0.001,
+            enum: null,
+            items_enum: null,
+            examples: [1e-6, 1],
+          },
+          long_read_count_prefix: {
+            uncommon: false,
+            type: "string",
+            description: "Suffix shown after formatted long-read counts, eg. 'K' for thousands.",
+            default: "K",
+            enum: null,
+            items_enum: null,
+            examples: ["M", ""],
+          },
+          long_read_count_desc: {
+            uncommon: false,
+            type: "string",
+            description: "Word used in labels for long-read counts, eg. 'thousands'.",
+            default: "thousands",
+            enum: null,
+            items_enum: null,
+            examples: ["millions", "reads"],
+          },
+          base_count_multiplier: {
+            uncommon: false,
+            type: "number",
+            description: "Multiplier for base counts. Default 0.000000001 shows bases in gigabases.",
+            default: 1e-6,
+            enum: null,
+            items_enum: null,
+            examples: [1e-6, 0.001],
+          },
+          base_count_prefix: {
+            uncommon: false,
+            type: "string",
+            description: "Suffix shown after formatted base counts, eg. 'Gb' for gigabases.",
+            default: "Mb",
+            enum: null,
+            items_enum: null,
+            examples: ["Mb", "Kb"],
+          },
+          base_count_desc: {
+            uncommon: false,
+            type: "string",
+            description: "Word used in labels for base counts, eg. 'gigabases'.",
+            default: "millions",
+            enum: null,
+            items_enum: null,
+            examples: ["megabases", "kilobases"],
+          },
+        },
+        "AI Summary": {
+          ai_summary: {
+            uncommon: false,
+            type: "boolean",
+            description: "Generate a short AI-written summary at the top of the report.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          ai_summary_full: {
+            uncommon: false,
+            type: "boolean",
+            description: "Also generate a longer per-section AI summary. Requires ai_summary to be on.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          ai_provider: {
+            uncommon: false,
+            type: "string",
+            description: "AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, custom.",
+            default: "seqera",
+            enum: ["seqera", "openai", "anthropic", "aws_bedrock", "custom"],
+            items_enum: null,
+            examples: [],
+          },
+          ai_model: {
+            uncommon: false,
+            type: "string",
+            description: "Model name. Provider-specific.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["gpt-4o", "claude-sonnet-4-5."],
+          },
+          ai_custom_endpoint: {
+            uncommon: false,
+            type: "string",
+            description: "Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["http://localhost:11434/v1", "https://api.example.com/v1"],
+          },
+          ai_auth_type: {
+            uncommon: true,
+            type: "string",
+            description:
+              "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.",
+            default: null,
+            enum: ["bearer", "api-key"],
+            items_enum: null,
+            examples: [],
+          },
+          ai_retries: {
+            uncommon: true,
+            type: "integer",
+            description: "Number of times to retry an AI request on transient errors.",
+            default: 3,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          ai_extra_query_options: {
+            uncommon: true,
+            type: "string",
+            description: "Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["temperature=0.3&top_p=0.9"],
+          },
+          ai_custom_context_window: {
+            uncommon: true,
+            type: "string",
+            description:
+              "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          ai_max_completion_tokens: {
+            uncommon: true,
+            type: "integer",
+            description: "Maximum completion tokens for OpenAI reasoning models.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          ai_reasoning_effort: {
+            uncommon: true,
+            type: "string",
+            description: "Reasoning effort for OpenAI reasoning models.",
+            default: null,
+            enum: ["low", "medium", "high"],
+            items_enum: null,
+            examples: [],
+          },
+          ai_extended_thinking: {
+            uncommon: true,
+            type: "boolean",
+            description: "Enable extended thinking on Anthropic Claude models that support it.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          ai_thinking_budget_tokens: {
+            uncommon: true,
+            type: "integer",
+            description: "Token budget for Anthropic extended thinking when enabled.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          ai_prompt_short: {
+            uncommon: true,
+            type: "string",
+            description:
+              "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["Write the summary in one short paragraph aimed at a lab head, no jargon."],
+          },
+          ai_prompt_full: {
+            uncommon: true,
+            type: "string",
+            description: "Custom prompt prepended to the full-section AI summary request.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: ["Use bullet points and call out any sample that looks like an outlier."],
+          },
+          no_ai: {
+            uncommon: false,
+            type: "boolean",
+            description: "Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          ai_anonymize_samples: {
+            uncommon: false,
+            type: "boolean",
+            description: "Replace sample names with placeholders before sending data to the AI provider.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+        "MegaQC Integration": {
+          megaqc_url: {
+            uncommon: true,
+            type: "string",
+            description: "URL of a MegaQC instance to upload report data to after generation.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          megaqc_access_token: {
+            uncommon: true,
+            type: "string",
+            description: "Auth token for the MegaQC instance.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          megaqc_timeout: {
+            uncommon: true,
+            type: "integer",
+            description: "Upload timeout in seconds when posting to MegaQC.",
+            default: 30,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+        "Seqera Integration": {
+          seqera_website: {
+            uncommon: true,
+            type: "string",
+            description: "Base URL used for Seqera Platform links in the report.",
+            default: "https://seqera.io",
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          seqera_api_url: {
+            uncommon: true,
+            type: "string",
+            description: "Base URL for the Seqera Platform API. Defaults to the public instance.",
+            default: "https://intern.seqera.io",
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+        "Performance & Debugging": {
+          profile_runtime: {
+            uncommon: false,
+            type: "boolean",
+            description: "Time each module and include the breakdown in the report.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          profile_memory: {
+            uncommon: true,
+            type: "boolean",
+            description: "Track peak memory per module. Adds runtime overhead.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          verbose: {
+            uncommon: false,
+            type: "boolean",
+            description: "Print extra debug log messages to the terminal.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          no_ansi: {
+            uncommon: false,
+            type: "boolean",
+            description: "Disable ANSI colour codes in terminal output.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          quiet: {
+            uncommon: false,
+            type: "boolean",
+            description: "Suppress non-essential log messages.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          lint: {
+            uncommon: false,
+            type: "boolean",
+            description:
+              "Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          strict: {
+            uncommon: true,
+            type: "boolean",
+            description: "Treat module warnings as errors. Stricter than lint.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          development: {
+            uncommon: true,
+            type: "boolean",
+            description: "Enable developer-mode features such as live JS reloading. Internal use.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          report_readerrors: {
+            uncommon: true,
+            type: "boolean",
+            description: "Surface file read errors in the log instead of silently skipping them.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          no_version_check: {
+            uncommon: false,
+            type: "boolean",
+            description: "Skip the network check for newer MultiQC versions on startup.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          version_check_url: {
+            uncommon: true,
+            type: "string",
+            description: "URL queried by MultiQC's own update check. Set to override the default endpoint.",
+            default: "https://api.multiqc.info/version",
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          preserve_module_raw_data: {
+            uncommon: true,
+            type: "boolean",
+            description:
+              "Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.",
+            default: false,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+        },
+      };
+
+      // Flat propName -> propData lookup, built once. Avoids walking every section
+      // for every updateConfig / resetField / resetConfig call (146 props * 11 sections).
+      const propDataIndex = {};
+      for (const sectionProps of Object.values(configData)) {
+        for (const [name, data] of Object.entries(sectionProps)) {
+          propDataIndex[name] = data;
+        }
+      }
+
+      let currentConfig = {};
+
+      // {sectionName: commonCount}, computed once at init from configData.
+      // Used by both the sidebar TOC and the in-page section headings to
+      // decide which sections are entirely advanced.
+      const sectionCommonCounts = Object.fromEntries(
+        Object.entries(configData).map(([name, props]) => [
+          name,
+          Object.values(props).filter((p) => !p.uncommon).length,
+        ]),
+      );
+
+      function initWizard() {
+        createSectionNavigation();
+        createSectionContent();
+        const searchInput = document.getElementById("searchInput");
+        searchInput.addEventListener("input", handleSearch);
+        document.getElementById("clearSearchBtn").addEventListener("click", () => {
+          searchInput.value = "";
+          searchInput.dispatchEvent(new Event("input"));
+          searchInput.focus();
+        });
+        window.addEventListener("beforeunload", (e) => {
+          if (Object.keys(currentConfig).length > 0) {
+            e.preventDefault();
+            // Required for some browsers; the actual message is ignored.
+            // The browser shows its own "Leave site?" prompt.
+            e.returnValue = "";
+          }
+        });
+      }
+
+      function createSectionNavigation() {
+        const nav = document.getElementById("sectionNav");
+        Object.entries(configData).forEach(([sectionName, sectionProps]) => {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = "#section-" + slugify(sectionName);
+          a.textContent = sectionName;
+          a.dataset.section = sectionName;
+          const commonCount = sectionCommonCounts[sectionName];
+          // Sections that are entirely advanced (eg. MegaQC) are hidden from the
+          // sidebar until the user toggles "Show advanced options" on.
+          if (commonCount === 0) li.classList.add("nav-advanced-only");
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = commonCount;
+          a.appendChild(badge);
+          a.onclick = (e) => {
+            e.preventDefault();
+            document
+              .getElementById("section-" + slugify(sectionName))
+              .scrollIntoView({ behavior: "smooth", block: "start" });
+          };
+          li.appendChild(a);
+          nav.appendChild(li);
+        });
+      }
+
+      function toggleUncommon() {
+        const on = document.body.classList.toggle("show-uncommon");
+        const btn = document.getElementById("toggleUncommonBtn");
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+        btn.querySelector(".show-uncommon-label").textContent = on ? "Hide advanced options" : "Show advanced options";
+        handleSearch();
+      }
+
+      function createSectionContent() {
+        const sectionsContainer = document.getElementById("sections");
+
+        Object.entries(configData).forEach(([sectionName, sectionProps]) => {
+          const h2 = document.createElement("h2");
+          h2.className = "section-heading";
+          h2.id = "section-" + slugify(sectionName);
+          h2.dataset.section = sectionName;
+          h2.textContent = sectionName;
+          if (sectionCommonCounts[sectionName] === 0) h2.classList.add("advanced-only");
+          sectionsContainer.appendChild(h2);
+
+          Object.entries(sectionProps).forEach(([propName, propData]) => {
+            const formGroup = createFormGroup(propName, propData);
+            formGroup.dataset.section = sectionName;
+            sectionsContainer.appendChild(formGroup);
+          });
+        });
+      }
+
+      function isPrefillableDefault(propData) {
+        const d = propData.default;
+        if (d === null || d === undefined) return false;
+        if (Array.isArray(d)) return d.length > 0;
+        if (typeof d === "object") return Object.keys(d).length > 0;
+        return false;
+      }
+
+      // Shared YAML serialization for default-prefills, object inputs, and inline examples.
+      function dumpYaml(value) {
+        return jsyaml.dump(value, { indent: 2, lineWidth: 80, noRefs: true }).trimEnd();
+      }
+
+      function serializeArrayDefault(arr) {
+        return dumpYaml(arr);
+      }
+
+      function parseArrayInput(text) {
+        const parsed = jsyaml.load(text);
+        if (!Array.isArray(parsed)) throw new Error("expected YAML list");
+        return parsed;
+      }
+
+      function createFormGroup(propName, propData) {
+        const formGroup = document.createElement("div");
+        formGroup.className = "form-group";
+        if (propData.uncommon) formGroup.classList.add("uncommon");
+        formGroup.dataset.propname = propName;
+        if (propData.uncommon) formGroup.dataset.uncommon = "1";
+
+        const label = document.createElement("label");
+        label.className = "field-label";
+        label.textContent = propName;
+
+        if (propData.default !== null && propData.default !== undefined) {
+          const defaultSpan = document.createElement("span");
+          defaultSpan.className = "default-badge";
+          defaultSpan.textContent = "default: " + formatDefaultValue(propData.default);
+          label.appendChild(defaultSpan);
+
+          if (isPrefillableDefault(propData)) {
+            const resetBtn = document.createElement("button");
+            resetBtn.type = "button";
+            resetBtn.className = "field-reset-btn";
+            resetBtn.title = "Reset to default";
+            resetBtn.setAttribute("aria-label", "Reset to default");
+            resetBtn.innerHTML =
+              '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9"/><path d="M2 3v3h3"/></svg>';
+            resetBtn.onclick = (e) => {
+              e.preventDefault();
+              resetField(propName);
+            };
+            label.appendChild(resetBtn);
+          }
+        }
+
+        formGroup.appendChild(label);
+
+        if (propData.description) {
+          const desc = document.createElement("div");
+          desc.className = "description";
+          desc.innerHTML = renderInlineMd(propData.description);
+          formGroup.appendChild(desc);
+        }
+
+        let examplesBlock = null;
+        if (Array.isArray(propData.examples) && propData.examples.length > 0) {
+          const showLabel =
+            propData.examples.length === 1 ? "Show example" : "Show " + propData.examples.length + " examples";
+          const hideLabel =
+            propData.examples.length === 1 ? "Hide example" : "Hide " + propData.examples.length + " examples";
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "examples-toggle";
+          toggle.textContent = showLabel;
+          toggle.setAttribute("aria-expanded", "false");
+          examplesBlock = document.createElement("div");
+          examplesBlock.className = "field-examples";
+          propData.examples.forEach((ex) => {
+            const pre = document.createElement("pre");
+            const code = document.createElement("code");
+            code.className = "language-yaml";
+            let text;
+            if (ex !== null && typeof ex === "object") {
+              text = dumpYaml(ex);
+            } else if (typeof ex === "string") {
+              text = ex;
+            } else {
+              text = String(ex);
+            }
+            if (typeof hljs !== "undefined" && hljs.getLanguage && hljs.getLanguage("yaml")) {
+              code.innerHTML = hljs.highlight(text, { language: "yaml" }).value;
+            } else {
+              code.textContent = text;
+            }
+            pre.appendChild(code);
+            examplesBlock.appendChild(pre);
+          });
+          toggle.onclick = (e) => {
+            e.preventDefault();
+            const willShow = !examplesBlock.classList.contains("is-open");
+            examplesBlock.classList.toggle("is-open", willShow);
+            toggle.textContent = willShow ? hideLabel : showLabel;
+            toggle.setAttribute("aria-expanded", willShow ? "true" : "false");
+          };
+          label.appendChild(toggle);
+        }
+
+        if (examplesBlock) formGroup.appendChild(examplesBlock);
+
+        const input = createInput(propName, propData);
+        formGroup.appendChild(input);
+
+        return formGroup;
+      }
+
+      function createInput(propName, propData) {
+        let input;
+
+        if (propData.enum) {
+          // No default → clicking the active button again clears the selection.
+          const hasDefault = propData.default !== null && propData.default !== undefined;
+          return buildSegmentedToggle(propName, propData.enum, propData.default, !hasDefault);
+        } else if (propData.type === "boolean") {
+          // Booleans are always either true or false; never deselectable.
+          const activeValue = propData.default === true ? "true" : "false";
+          return buildSegmentedToggle(propName, ["true", "false"], activeValue, false);
+        } else if (propData.type === "array" && Array.isArray(propData.items_enum)) {
+          const wrapper = document.createElement("div");
+          wrapper.className = "checkbox-group";
+
+          const hidden = document.createElement("input");
+          hidden.type = "hidden";
+          hidden.id = propName;
+          wrapper.appendChild(hidden);
+
+          const def = Array.isArray(propData.default) ? propData.default : [];
+          propData.items_enum.forEach((val) => {
+            const lab = document.createElement("label");
+            lab.className = "checkbox-item";
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = val;
+            cb.checked = def.includes(val);
+            const span = document.createElement("span");
+            span.textContent = val;
+            cb.onchange = () => {
+              lab.classList.toggle("checked", cb.checked);
+              const selected = [...wrapper.querySelectorAll("input[type=checkbox]:checked")].map((c) => c.value);
+              hidden.value = JSON.stringify(selected);
+              updateConfig(propName, hidden);
+            };
+            if (cb.checked) lab.classList.add("checked");
+            lab.appendChild(cb);
+            lab.appendChild(span);
+            wrapper.appendChild(lab);
+          });
+
+          return wrapper;
+        } else if (propData.type === "array") {
+          input = document.createElement("textarea");
+          input.rows = 3;
+          input.placeholder = "Enter as a YAML list";
+          if (isPrefillableDefault(propData)) {
+            input.value = serializeArrayDefault(propData.default);
+            input.rows = Math.min(10, Math.max(3, input.value.split("\n").length));
+          }
+        } else if (propData.type === "object") {
+          input = document.createElement("textarea");
+          input.rows = 3;
+          input.placeholder = "Enter as YAML or JSON";
+          if (isPrefillableDefault(propData)) {
+            input.value = dumpYaml(propData.default);
+            input.rows = Math.min(10, Math.max(3, input.value.split("\n").length));
+          }
+        } else if (propData.type === "integer") {
+          input = document.createElement("input");
+          input.type = "number";
+        } else if (propData.type === "number") {
+          input = document.createElement("input");
+          input.type = "number";
+          input.step = "any";
+        } else {
+          input = document.createElement("input");
+          input.type = "text";
+        }
+
+        input.id = propName;
+        input.onchange = () => updateConfig(propName, input);
+        input.oninput = () => updateConfig(propName, input);
+        return input;
+      }
+
+      function valuesEqual(a, b) {
+        if (a === b) return true;
+        if (a === null || b === null || a === undefined || b === undefined) return a === b;
+        if (typeof a !== typeof b) return false;
+        if (Array.isArray(a) !== Array.isArray(b)) return false;
+        if (Array.isArray(a)) {
+          if (a.length !== b.length) return false;
+          return a.every((x, i) => valuesEqual(x, b[i]));
+        }
+        if (typeof a === "object") {
+          const ka = Object.keys(a).sort();
+          const kb = Object.keys(b).sort();
+          if (ka.length !== kb.length) return false;
+          if (!ka.every((k, i) => k === kb[i])) return false;
+          return ka.every((k) => valuesEqual(a[k], b[k]));
+        }
+        return false;
+      }
+
+      function updateConfig(propName, input) {
+        const propData = getCurrentPropData(propName);
+        const def = propData.default;
+
+        if (propData.type === "boolean") {
+          if (input.value === "") {
+            delete currentConfig[propName];
+          } else {
+            const parsed = input.value === "true";
+            // Selecting the default is treated as "not set" so the YAML stays clean.
+            if (parsed === (def === true)) {
+              delete currentConfig[propName];
+            } else {
+              currentConfig[propName] = parsed;
+            }
+          }
+        } else if (propData.type === "array" && Array.isArray(propData.items_enum)) {
+          let selected;
+          try {
+            selected = JSON.parse(input.value || "[]");
+          } catch (e) {
+            return;
+          }
+          if (valuesEqual(selected, def || [])) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = selected;
+          }
+        } else if (propData.type === "array") {
+          const value = input.value.trim();
+          let parsed;
+          if (value) {
+            try {
+              parsed = parseArrayInput(value);
+            } catch (e) {
+              input.setAttribute("aria-invalid", "true");
+              return;
+            }
+          } else {
+            // An empty textarea means an empty list. Only treat it as "unset" if
+            // the field had no default (so we don't add a redundant `prop: []`).
+            parsed = [];
+          }
+          input.removeAttribute("aria-invalid");
+          const unset = !value && (def === null || def === undefined);
+          if (unset || valuesEqual(parsed, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = parsed;
+          }
+        } else if (propData.type === "object") {
+          const value = input.value.trim();
+          let parsed;
+          if (value) {
+            try {
+              parsed = jsyaml.load(value);
+            } catch (e) {
+              // Invalid YAML/JSON, keep last good state and mark visually.
+              input.setAttribute("aria-invalid", "true");
+              return;
+            }
+          } else {
+            parsed = {};
+          }
+          input.removeAttribute("aria-invalid");
+          const unset = !value && (def === null || def === undefined);
+          if (unset || valuesEqual(parsed, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = parsed;
+          }
+        } else if (propData.type === "integer") {
+          const value = parseInt(input.value);
+          if (isNaN(value)) {
+            delete currentConfig[propName];
+          } else if (valuesEqual(value, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = value;
+          }
+        } else if (propData.type === "number") {
+          const value = parseFloat(input.value);
+          if (isNaN(value)) {
+            delete currentConfig[propName];
+          } else if (valuesEqual(value, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = value;
+          }
+        } else {
+          const value = input.value.trim();
+          // Enum values may include non-strings (eg. boolean false). Round-trip
+          // the picked value back through propData.enum so booleans/numbers stay
+          // their native types in the YAML output.
+          let typedValue = value;
+          if (Array.isArray(propData.enum)) {
+            const match = propData.enum.find((v) => String(v) === value);
+            if (match !== undefined) typedValue = match;
+          }
+          if (!value) {
+            delete currentConfig[propName];
+          } else if (valuesEqual(typedValue, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = typedValue;
+          }
+        }
+
+        const fg = input.closest(".form-group");
+        if (fg) fg.classList.toggle("is-set", propName in currentConfig);
+      }
+
+      // Reset one form-group's visual state to its schema default and clear the
+      // field from currentConfig. Shared between resetField (single field) and
+      // resetConfig (all fields).
+      function resetGroup(fg, propData) {
+        const propName = fg.dataset.propname;
+        const input = fg.querySelector("input, select, textarea");
+        if (!input) return;
+        if (propData.type === "array" && Array.isArray(propData.items_enum)) {
+          const def = Array.isArray(propData.default) ? propData.default : [];
+          fg.querySelectorAll(".checkbox-item").forEach((lab) => {
+            const cb = lab.querySelector("input[type=checkbox]");
+            const checked = def.includes(cb.value);
+            cb.checked = checked;
+            lab.classList.toggle("checked", checked);
+          });
+        } else if (propData.type === "array" && isPrefillableDefault(propData)) {
+          input.value = serializeArrayDefault(propData.default);
+        } else if (propData.type === "object" && isPrefillableDefault(propData)) {
+          input.value = dumpYaml(propData.default);
+        } else {
+          input.value = "";
+        }
+        const toggleEl = fg.querySelector(".bool-toggle");
+        if (toggleEl) {
+          const activeValue =
+            propData.type === "boolean" ? (propData.default === true ? "true" : "false") : propData.default;
+          toggleEl
+            .querySelectorAll(".bool-toggle-btn")
+            .forEach((b) => b.classList.toggle("active", b.dataset.value === activeValue));
+          const hiddenInput = toggleEl.querySelector("input[type=hidden]");
+          if (hiddenInput) hiddenInput.value = "";
+        }
+        input.removeAttribute("aria-invalid");
+        delete currentConfig[propName];
+        fg.classList.remove("is-set");
+      }
+
+      function resetField(propName) {
+        const input = document.getElementById(propName);
+        if (!input) return;
+        const fg = input.closest(".form-group");
+        if (!fg) return;
+        resetGroup(fg, getCurrentPropData(propName));
+        if (document.body.classList.contains("preview-mode")) generateYaml();
+      }
+
+      function getCurrentPropData(propName) {
+        return propDataIndex[propName] || {};
+      }
+
+      // Caches populated lazily on first handleSearch. DOM nodes don't exist until
+      // createSectionContent runs.
+      let _searchCache = null;
+      function _buildSearchCache() {
+        const formGroups = [];
+        document.querySelectorAll(".form-group").forEach((fg) => {
+          formGroups.push({
+            el: fg,
+            section: fg.dataset.section,
+            name: (fg.dataset.propname || "").toLowerCase(),
+            description: (fg.querySelector(".description") || {}).textContent.toLowerCase() || "",
+          });
+        });
+        const headingBySection = {};
+        document.querySelectorAll(".section-heading").forEach((h) => {
+          headingBySection[h.dataset.section || h.id] = h;
+        });
+        return {
+          formGroups,
+          headingBySection,
+          navLinks: [...document.querySelectorAll("#sectionNav a")],
+          searchWrapper: document.querySelector(".sidebar-search"),
+        };
+      }
+
+      function handleSearch() {
+        if (!_searchCache) _searchCache = _buildSearchCache();
+        const { formGroups, headingBySection, navLinks, searchWrapper } = _searchCache;
+        const rawValue = document.getElementById("searchInput").value;
+        const query = rawValue.toLowerCase().trim();
+        searchWrapper.classList.toggle("has-text", rawValue !== "");
+        // An active search ignores the uncommon toggle so users always see matches.
+        document.body.classList.toggle("search-active", query !== "");
+        const showUncommon = document.body.classList.contains("show-uncommon");
+        const sectionCounts = {};
+        let anyVisible = false;
+
+        for (const fg of formGroups) {
+          const matchesQuery = !query || fg.name.includes(query) || fg.description.includes(query);
+          fg.el.classList.toggle("hidden", !matchesQuery);
+          const isUncommon = fg.el.dataset.uncommon === "1";
+          const shown = matchesQuery && (query !== "" || showUncommon || !isUncommon);
+          if (shown) {
+            anyVisible = true;
+            sectionCounts[fg.section] = (sectionCounts[fg.section] || 0) + 1;
+          } else if (!(fg.section in sectionCounts)) {
+            sectionCounts[fg.section] = 0;
+          }
+        }
+
+        for (const [section, heading] of Object.entries(headingBySection)) {
+          heading.style.display = sectionCounts[section] > 0 ? "" : "none";
+        }
+
+        for (const a of navLinks) {
+          const matching = sectionCounts[a.dataset.section] || 0;
+          const badge = a.querySelector(".badge");
+          if (badge) badge.textContent = matching;
+          a.parentElement.classList.toggle("dimmed", matching === 0);
+        }
+
+        document.getElementById("noResults").style.display = query && !anyVisible ? "block" : "none";
+        document.getElementById("welcomeSection").style.display = query ? "none" : "";
+      }
+
+      function formatDefaultValue(value) {
+        const isPrimitive = (v) => v === null || typeof v !== "object";
+        if (Array.isArray(value)) {
+          if (value.length <= 3 && value.every(isPrimitive)) {
+            return JSON.stringify(value);
+          }
+          return "[" + value.length + " items]";
+        } else if (typeof value === "object" && value !== null) {
+          const keys = Object.keys(value);
+          if (keys.length <= 2 && Object.values(value).every(isPrimitive)) {
+            return JSON.stringify(value);
+          }
+          return "{" + keys.length + " keys}";
+        } else if (typeof value === "string") {
+          return '"' + value + '"';
+        }
+        return String(value);
+      }
+
+      function generateYaml() {
+        const output = document.getElementById("yamlOutput");
+        const count = Object.keys(currentConfig).length;
+        document.getElementById("fieldsSetCount").textContent =
+          count + " option" + (count !== 1 ? "s" : "") + " configured";
+
+        let text;
+        if (count === 0) {
+          text = "# No configuration set yet\n# Change some values above, then come back here.";
+        } else {
+          try {
+            text = jsyaml.dump(currentConfig, {
+              indent: 2,
+              lineWidth: 80,
+              noRefs: true,
+              sortKeys: true,
+            });
+          } catch (error) {
+            text = "# Error generating YAML: " + error.message;
+          }
+        }
+
+        if (typeof hljs !== "undefined" && hljs.getLanguage && hljs.getLanguage("yaml")) {
+          output.innerHTML = hljs.highlight(text, { language: "yaml" }).value;
+        } else {
+          output.textContent = text;
+        }
+      }
+
+      function previewYaml() {
+        generateYaml();
+        document.body.classList.add("preview-mode");
+        document.getElementById("yamlSection").style.display = "block";
+        const btn = document.getElementById("previewBtn");
+        btn.textContent = "Editor";
+        btn.onclick = backToEditor;
+        window.scrollTo(0, 0);
+      }
+
+      function backToEditor() {
+        document.body.classList.remove("preview-mode");
+        document.getElementById("yamlSection").style.display = "none";
+        const btn = document.getElementById("previewBtn");
+        btn.textContent = "Preview YAML";
+        btn.onclick = previewYaml;
+        window.scrollTo(0, 0);
+      }
+
+      function downloadConfig() {
+        if (Object.keys(currentConfig).length === 0) {
+          alert("No configuration to download. Please set some options first.");
+          return;
+        }
+        generateYaml();
+        const yaml = document.getElementById("yamlOutput").textContent;
+        const blob = new Blob([yaml], { type: "text/yaml" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "multiqc_config.yaml";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function copyConfig() {
+        const btn = document.getElementById("copyBtn");
+        const yaml = document.getElementById("yamlOutput").textContent;
+        const showFeedback = (label) => {
+          const original = btn.dataset.originalLabel || btn.textContent;
+          btn.dataset.originalLabel = original;
+          btn.textContent = label;
+          clearTimeout(btn._copyResetTimer);
+          btn._copyResetTimer = setTimeout(() => {
+            btn.textContent = btn.dataset.originalLabel;
+          }, 1500);
+        };
+        if (!navigator.clipboard) {
+          showFeedback("Clipboard unavailable");
+          return;
+        }
+        navigator.clipboard.writeText(yaml).then(
+          () => showFeedback("Copied!"),
+          () => showFeedback("Copy failed"),
+        );
+      }
+
+      function resetConfig() {
+        if (!confirm("Reset all configuration? This cannot be undone.")) return;
+        currentConfig = {};
+        document.querySelectorAll(".form-group").forEach((fg) => {
+          resetGroup(fg, getCurrentPropData(fg.dataset.propname));
+        });
+        if (document.body.classList.contains("preview-mode")) {
+          generateYaml();
+        }
+      }
+
+      function slugify(text) {
+        return text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+      }
+
+      // Build a segmented toggle: a row of buttons backed by a hidden input.
+      // Used for booleans and for enums.
+      function buildSegmentedToggle(propName, values, activeValue, allowDeselect) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "bool-toggle";
+        const hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.id = propName;
+        wrapper.appendChild(hidden);
+        values.forEach((val) => {
+          const strVal = String(val);
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "bool-toggle-btn";
+          btn.dataset.value = strVal;
+          btn.textContent = strVal;
+          if (val === activeValue) btn.classList.add("active");
+          btn.onclick = () => {
+            if (allowDeselect && btn.classList.contains("active")) {
+              btn.classList.remove("active");
+              hidden.value = "";
+            } else {
+              wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
+              hidden.value = strVal;
+            }
+            updateConfig(propName, hidden);
+          };
+          wrapper.appendChild(btn);
+        });
+        return wrapper;
+      }
+
+      // Minimal inline markdown for field descriptions: `code`, **bold**, and
+      // [text](url) links. HTML is escaped first so descriptions can't inject
+      // tags directly. Block-level markdown (lists, headings) isn't supported.
+      function renderInlineMd(text) {
+        const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return escaped
+          .replace(/`([^`]+)`/g, "<code>$1</code>")
+          .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        if (typeof jsyaml === "undefined") {
+          document.getElementById("yamlOutput").textContent =
+            "# Error: js-yaml library failed to load.\n# Please check your internet connection and refresh.";
+        } else {
+          initWizard();
+        }
+      });
+    </script>
+  </body>
+</html>

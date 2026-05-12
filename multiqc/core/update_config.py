@@ -138,7 +138,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.report_comment = cfg.report_comment
     if cfg.prepend_dirs is not None:
         config.prepend_dirs = cfg.prepend_dirs
-        logger.info("Prepending directory to sample names")
+        if cfg.prepend_dirs:
+            logger.info("Prepending directory to sample names")
     if cfg.dirs_depth is not None:
         config.prepend_dirs = True
         config.prepend_dirs_depth = cfg.dirs_depth
@@ -183,7 +184,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.megaqc_upload = not cfg.no_megaqc_upload
     if cfg.fn_clean_sample_names is not None:
         config.fn_clean_sample_names = cfg.fn_clean_sample_names
-        logger.info("Not cleaning sample names")
+        if not cfg.fn_clean_sample_names:
+            logger.info("Not cleaning sample names")
     if cfg.replace_names:
         config.load_replace_names(Path(cfg.replace_names))
     if cfg.sample_names:

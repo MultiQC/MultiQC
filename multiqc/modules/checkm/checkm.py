@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="CheckM",
             anchor="checkm",
             href="https://github.com/Ecogenomics/CheckM",

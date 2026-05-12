@@ -47,7 +47,7 @@ class MultiqcModule(
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="deepTools",
             anchor="deepTools",
             target="deepTools",

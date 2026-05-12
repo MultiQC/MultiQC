@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Filtlong",
             anchor="filtlong",
             href="https://github.com/rrwick/Filtlong",

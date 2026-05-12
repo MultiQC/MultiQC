@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Nonpareil",
             anchor="nonpareil",
             href="https://github.com/lmrodriguezr/nonpareil",
