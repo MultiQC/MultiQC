@@ -219,8 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
                 nameddata[histf["s_name"]] = data
             else:
                 log.debug("%s is empty.", histf["fn"])
-        finally:
-            return nameddata
+        return nameddata
 
     @staticmethod
     def get_colors(n):

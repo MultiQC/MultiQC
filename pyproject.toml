@@ -30,7 +30,9 @@ dependencies = [
     "natsort",
     "tiktoken",
     "jsonschema",
-    "polars-lts-cpu",     # for parquet support. Using LTS version for compatibility with older architectures
+    # Pyodide currently publishes Polars 1.33.1; `rtcompat` is available from 1.34.0 for native installs.
+    "polars>=1.33.1; sys_platform == 'emscripten'",
+    "polars[rtcompat]>=1.34.0; sys_platform != 'emscripten'",
     "pyarrow",            # for parquet support
 ]
 # Avoid cPython bug in 3.14.1 - https://github.com/python/cpython/issues/142214
