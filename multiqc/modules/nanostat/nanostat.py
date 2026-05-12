@@ -86,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
     _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="NanoStat",
             anchor="nanostat",
             href=["https://github.com/wdecoster/nanostat/", "https://github.com/wdecoster/nanoplot/"],

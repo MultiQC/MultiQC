@@ -1,6 +1,14 @@
 # Analysis Comment Template
 
-This document provides a unified template for analysis comments posted to module request issues.
+Unified template for the analysis comments posted to module request issues.
+
+## Contents
+
+- Main Template — the body to post; succinct, technical, no effusion
+- Customisation Guidelines — tone and focus per priority band
+- Re-Analysis Template — for re-evaluations after improvements
+- Special Case Templates — missing examples, tool not found, related requests, already implemented
+- General Guidelines — placeholders, encouragement, action-orientation
 
 ## Main Template
 

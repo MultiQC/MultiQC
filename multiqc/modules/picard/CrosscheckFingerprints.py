@@ -2,7 +2,7 @@
 
 import logging
 import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from csv import DictReader
 from itertools import chain, groupby
 
@@ -331,7 +331,7 @@ def _get_table_headers(data_by_sample):
             "RIGHT_GROUP_VALUE",
         ] + table_cols
 
-    headers = OrderedDict()
+    headers = {}
     for h in FIELD_DESCRIPTIONS:
         # Skip anything not set to visible
         if h not in table_cols:

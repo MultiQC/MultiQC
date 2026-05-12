@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bowtie 2 / HiSAT2",
             anchor="bowtie2",
             href=["http://bowtie-bio.sourceforge.net/bowtie2/", "https://ccb.jhu.edu/software/hisat2/"],

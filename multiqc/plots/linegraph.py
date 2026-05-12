@@ -1,6 +1,5 @@
 """MultiQC functions to plot a linegraph"""
 
-import io
 import json
 import logging
 import math
@@ -290,7 +289,7 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
 
             fn = f"{self.uid}.{config.data_format_extensions[config.data_format]}"
             fpath = os.path.join(report.data_tmp_dir(), fn)
-            with io.open(fpath, "w", encoding="utf-8") as f:
+            with open(fpath, "w", encoding="utf-8") as f:
                 f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
         else:
             report.write_data_file(y_by_x_by_sample, self.uid)
