@@ -17,7 +17,7 @@ import re
 import shutil
 import sys
 import time
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path, PosixPath
 from typing import (
@@ -127,7 +127,7 @@ general_stats_data: Dict[SectionKey, Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
-# to make sure write_data_file don't overwrite for repeated modules. OrderedDict for fast lookup and to preserve insertion order:
+# to make sure write_data_file don't overwrite for repeated modules. dict for fast lookup and to preserve insertion order:
 saved_raw_data_keys: Dict[str, None]
 saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
 
@@ -223,7 +223,7 @@ def reset():
     general_stats_headers = dict()
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
-    saved_raw_data_keys = OrderedDict()
+    saved_raw_data_keys = {}
     saved_raw_data = dict()
 
     plot_data_store.reset()
@@ -350,7 +350,7 @@ class SearchFile:
             yield count_and_block_tuple
         if self._filehandle is None:
             try:
-                self._filehandle = io.open(self.path, "rt", encoding="utf-8")
+                self._filehandle = open(self.path, "rt", encoding="utf-8")
             except Exception as e:
                 if config.report_readerrors:
                     logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
@@ -379,7 +379,7 @@ class SearchFile:
                 logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
             return  # No errors
         self._filehandle.close()
-        self._filehandle = io.open(self.path, "rt", encoding="utf-8", errors="ignore")
+        self._filehandle = open(self.path, "rt", encoding="utf-8", errors="ignore")
         self._iterator = file_line_block_iterator(self._filehandle)
         try:
             if self._blocks:
@@ -827,7 +827,7 @@ def exclude_file(sp, f: SearchFile):
 
 def data_sources_tofile(data_dir: Path):
     fn = f"multiqc_sources.{config.data_format_extensions[config.data_format]}"
-    with io.open(data_dir / fn, "w", encoding="utf-8") as f:
+    with open(data_dir / fn, "w", encoding="utf-8") as f:
         if config.data_format == "json":
             json.dump(data_sources, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":

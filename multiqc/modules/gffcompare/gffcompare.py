@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="GffCompare",
             anchor="gffcompare",
             href="https://ccb.jhu.edu/software/stringtie/gffcompare.shtml",

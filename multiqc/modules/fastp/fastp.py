@@ -14,6 +14,10 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
+    The module also supports [fasterp](https://github.com/drbh/fasterp), a Rust reimplementation
+    of fastp that produces identical JSON output. When a `fasterp_version` field is found in
+    the summary, the software version is tracked separately as fasterp.
+
     By default, the module generates the sample names based on the `--report_title` / `-R`
     option in the fastp command line (if present), or the input FastQ file names if not.
 
@@ -30,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="fastp",
             anchor="fastp",
             href="https://github.com/OpenGene/fastp",
@@ -286,19 +290,41 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse data required to calculate Pct reads surviving
         try:
-            self.fastp_data[s_name]["before_filtering_total_reads"] = float(
+            self.fastp_data[s_name]["before_filtering_total_reads"] = int(
                 parsed_json["summary"]["before_filtering"]["total_reads"]
             )
         except KeyError:
             log.debug(f"Could not find pre-filtering # reads: '{s_name}'")
 
         try:
-            self.fastp_data[s_name]["pct_surviving"] = (
+            self.fastp_data[s_name]["pct_surviving_reads"] = (
                 self.fastp_data[s_name]["filtering_result_passed_filter_reads"]
                 / self.fastp_data[s_name]["before_filtering_total_reads"]
             ) * 100.0
         except (KeyError, ZeroDivisionError) as e:
-            log.debug(f"Could not calculate 'pct_surviving' ({e.__class__.__name__}): {s_name}")
+            log.debug(f"Could not calculate 'pct_surviving_reads' ({e.__class__.__name__}): {s_name}")
+
+        try:
+            self.fastp_data[s_name]["before_filtering_total_bases"] = int(
+                parsed_json["summary"]["before_filtering"]["total_bases"]
+            )
+        except KeyError:
+            log.debug(f"Could not find pre-filtering # bases: '{s_name}'")
+
+        try:
+            self.fastp_data[s_name]["after_filtering_total_bases"] = int(
+                parsed_json["summary"]["after_filtering"]["total_bases"]
+            )
+        except KeyError:
+            log.debug(f"Could not find post-filtering # bases: '{s_name}'")
+
+        try:
+            self.fastp_data[s_name]["pct_surviving_bases"] = (
+                self.fastp_data[s_name]["after_filtering_total_bases"]
+                / self.fastp_data[s_name]["before_filtering_total_bases"]
+            ) * 100.0
+        except (KeyError, ZeroDivisionError) as e:
+            log.debug(f"Could not calculate 'pct_surviving_bases' ({e.__class__.__name__}): {s_name}")
 
         # Parse adapter_cutting
         try:
@@ -391,8 +417,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Don't delete dicts with subkeys, messes up multi-panel plots
 
         # Add software version if available
-        # Note: this was added to fastp JSON output in v0.22, so it won't be available in older versions
-        if "fastp_version" in parsed_json["summary"]:
+        if "fasterp_version" in parsed_json["summary"]:
+            self.add_software_version(parsed_json["summary"]["fasterp_version"], s_name, software_name="fasterp")
+        elif "fastp_version" in parsed_json["summary"]:
             self.add_software_version(parsed_json["summary"]["fastp_version"], s_name)
 
     def fastp_general_stats_table(self, data_by_sample):
@@ -436,13 +463,22 @@ class MultiqcModule(BaseMultiqcModule):
                     "scale": "Blues",
                     "modify": lambda x: x * 100.0,
                 },
-                "pct_surviving": {
-                    "title": "% PF",
+                "pct_surviving_reads": {
+                    "title": "% PF (Reads)",
                     "description": "Percent reads passing filter",
                     "suffix": "%",
                     "scale": "RdYlGn",
                     "min": 0,
                     "max": 100,
+                },
+                "pct_surviving_bases": {
+                    "title": "% PF (Bases)",
+                    "description": "Percent bases passing filter",
+                    "suffix": "%",
+                    "scale": "RdYlGn",
+                    "min": 0,
+                    "max": 100,
+                    "hidden": True,
                 },
                 "pct_adapter": {
                     "title": "% Adapter",

@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="PRINSEQ++",
             anchor="prinseqplusplus",
             href="https://github.com/Adrian-Cantu/PRINSEQ-plus-plus",

@@ -130,7 +130,7 @@ def color_picker(degen):
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="qc3C",
             anchor="qc3C",
             href="http://github.com/cerebis/qc3C",

@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HOMER",
             anchor="homer",
             href="http://homer.ucsd.edu/homer/",
