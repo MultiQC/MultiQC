@@ -3,6 +3,7 @@
 import logging
 from typing import Dict
 
+from multiqc import config
 from multiqc.plots import bargraph, table
 from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table import TableConfig
@@ -71,11 +72,13 @@ def parse_reports(module):
     #     GnBu so the cell shows magnitude without implying good/bad.
     headers = {
         "total_reads": {
-            "title": "Total reads",
-            "description": "Total number of reads (including QC-failed)",
+            "title": f"{config.read_count_prefix} Total reads",
+            "description": f"Total number of reads, including QC-failed ({config.read_count_desc})",
             "min": 0,
-            "format": "{:,.0f}",
+            "format": "{:,.2f}",
             "scale": "GnBu",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
             "hidden": True,
         },
         "frac_aligned": {
@@ -162,30 +165,77 @@ def parse_reports(module):
         for category, row in by_cat.items():
             table_data[f"{s_name} ({category})"] = row
 
+    # Same coloring rationale as the general stats columns above.
     table_headers = {
-        "total_reads": {"title": "Total reads", "format": "{:,.0f}", "min": 0},
-        "aligned_reads": {"title": "Aligned reads", "format": "{:,.0f}", "min": 0},
+        "total_reads": {
+            "title": f"{config.read_count_prefix} Total reads",
+            "description": f"Total number of reads ({config.read_count_desc})",
+            "format": "{:,.2f}",
+            "min": 0,
+            "scale": "GnBu",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
+        },
+        "aligned_reads": {
+            "title": f"{config.read_count_prefix} Aligned reads",
+            "description": f"Number of aligned reads ({config.read_count_desc})",
+            "format": "{:,.2f}",
+            "min": 0,
+            "scale": "GnBu",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
+        },
         "frac_aligned": {
             "title": "% Aligned",
-            "min": 0,
+            "min": 80,
             "max": 100,
             "suffix": "%",
             "format": "{:,.2f}",
+            "scale": "RdYlGn",
             "modify": lambda x: x * 100.0,
         },
-        "mean_read_length": {"title": "Mean read length", "format": "{:,.1f}", "suffix": " bp"},
-        "mismatch_rate": {"title": "Mismatch rate", "format": "{:,.4f}"},
-        "indel_rate": {"title": "Indel rate", "format": "{:,.4f}"},
+        "mean_read_length": {
+            "title": "Mean read length",
+            "format": "{:,.1f}",
+            "suffix": " bp",
+            "min": 0,
+            "scale": "GnBu",
+        },
+        "mismatch_rate": {
+            "title": "Mismatch rate",
+            "format": "{:,.4f}",
+            "min": 0,
+            "max": 0.015,
+            "scale": "OrRd",
+        },
+        "indel_rate": {
+            "title": "Indel rate",
+            "format": "{:,.4f}",
+            "min": 0,
+            "max": 0.005,
+            "scale": "OrRd",
+        },
         "frac_chimeras": {
             "title": "% Chimeric",
             "min": 0,
-            "max": 100,
+            "max": 10,
             "suffix": "%",
             "format": "{:,.2f}",
+            "scale": "OrRd",
             "modify": lambda x: x * 100.0,
         },
-        "strand_balance": {"title": "Strand balance", "format": "{:,.3f}"},
-        "bad_cycles": {"title": "Bad cycles", "format": "{:,.0f}"},
+        "strand_balance": {
+            "title": "Strand balance",
+            "format": "{:,.3f}",
+            "min": 0,
+            "max": 1,
+        },
+        "bad_cycles": {
+            "title": "Bad cycles",
+            "format": "{:,.0f}",
+            "min": 0,
+            "scale": "OrRd",
+        },
     }
     table_config = TableConfig(
         id=f"{module.anchor}_alignment_table",
