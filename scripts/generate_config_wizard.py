@@ -13,6 +13,7 @@ Output: docs/multiqc_config_wizard.html
 
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import get_args
 
@@ -21,6 +22,7 @@ import yaml
 # Add parent directory to path so we can import multiqc
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import multiqc
 from multiqc.utils.config_schema import AiProviderLiteral, MultiQCConfig
 
 # Properties shown only when the "Show advanced options" toggle is on.
@@ -356,12 +358,16 @@ TEMPLATE_PATH = Path(__file__).parent / "wizard_template.html"
 def _build_html(config_json_escaped: str) -> str:
     """Return the complete HTML string for the wizard.
 
-    Reads ``scripts/wizard_template.html`` and substitutes the two
-    runtime placeholders. Keep all CSS/JS/HTML edits in that file.
+    Reads ``scripts/wizard_template.html`` and substitutes the runtime
+    placeholders. Keep all CSS/JS/HTML edits in that file.
     """
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
-    return template.replace("__MULTIQC_LOGO_SVG__", MULTIQC_LOGO_SVG).replace(
-        "__CONFIG_DATA_JSON__", config_json_escaped
+    generated_on = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return (
+        template.replace("__MULTIQC_LOGO_SVG__", MULTIQC_LOGO_SVG)
+        .replace("__CONFIG_DATA_JSON__", config_json_escaped)
+        .replace("__MULTIQC_VERSION__", multiqc.__version__)
+        .replace("__GENERATED_ON__", generated_on)
     )
 
 

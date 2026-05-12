@@ -132,9 +132,9 @@ class MultiQCConfig(BaseModel):
         None,
         description="Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.",
     )
-    template: Optional[str] = Field(
+    template: Optional[Literal["default", "simple", "sections", "gathered"]] = Field(
         None,
-        description="Name of the report template. Built-in options: default, simple, sections, gathered.",
+        description="Name of the report template.",
     )
     template_dark_mode: Optional[bool] = Field(None, description="Enable the dark mode toggle in the report template.")
     plot_font_family: Optional[str] = Field(
@@ -203,8 +203,8 @@ class MultiQCConfig(BaseModel):
         None,
         description="Directory for exported plot images when export_plots is on. Defaults to multiqc_plots.",
     )
-    data_format: Optional[str] = Field(
-        None, description="Format used when writing parsed data files. One of tsv, json, yaml."
+    data_format: Optional[Literal["tsv", "csv", "json", "yaml"]] = Field(
+        None, description="Format used when writing parsed data files."
     )
     force: Optional[bool] = Field(None, description="Overwrite existing output files without prompting.")
     verbose: Optional[bool] = Field(None, description="Print extra debug log messages to the terminal.")
@@ -228,7 +228,10 @@ class MultiQCConfig(BaseModel):
     )
     require_logs: Optional[bool] = Field(
         None,
-        description="Drop modules whose log files were found but contained no parseable data, rather than showing empty sections.",
+        description=(
+            "Fail with an error if any module explicitly requested with --module has no log files found. "
+            "Off by default, so missing inputs are skipped silently."
+        ),
     )
     version_check_url: Optional[str] = Field(
         None, description="URL queried by MultiQC's own update check. Set to override the default endpoint."
@@ -276,8 +279,12 @@ class MultiQCConfig(BaseModel):
         description="Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
         examples=["http://localhost:11434/v1", "https://api.example.com/v1"],
     )
-    ai_auth_type: Optional[str] = Field(
-        None, description="Authentication scheme used by the custom endpoint, eg. bearer or api_key."
+    ai_auth_type: Optional[Literal["bearer", "api-key"]] = Field(
+        None,
+        description=(
+            "Authentication scheme used by the custom endpoint. "
+            "'bearer' sends an Authorization header, 'api-key' sends an api-key header."
+        ),
     )
     ai_retries: Optional[int] = Field(None, description="Number of times to retry an AI request on transient errors.")
     ai_extra_query_options: Optional[str] = Field(
@@ -307,8 +314,8 @@ class MultiQCConfig(BaseModel):
         None,
         description="Replace sample names with placeholders before sending data to the AI provider.",
     )
-    ai_reasoning_effort: Optional[str] = Field(
-        None, description="Reasoning effort for OpenAI reasoning models. One of low, medium, high."
+    ai_reasoning_effort: Optional[Literal["low", "medium", "high"]] = Field(
+        None, description="Reasoning effort for OpenAI reasoning models."
     )
     ai_max_completion_tokens: Optional[int] = Field(
         None, description="Maximum completion tokens for OpenAI reasoning models."
@@ -351,9 +358,9 @@ class MultiQCConfig(BaseModel):
     barplot_legend_on_bottom: Optional[bool] = Field(
         None, description="Place bar plot legends below the plot instead of to the side. Not recommended."
     )
-    boxplot_boxpoints: Optional[Union[str, bool]] = Field(
+    boxplot_boxpoints: Optional[Literal["outliers", "suspectedoutliers", "all", False]] = Field(
         None,
-        description="How boxplot data points are drawn. One of outliers, suspectedoutliers, all, or false.",
+        description="How boxplot data points are drawn. Use false to hide individual points.",
     )
     box_min_threshold_outliers: Optional[int] = Field(
         None,

@@ -341,6 +341,21 @@ For boolean options, use `true` or `false` (all lowercase) in your YAML files.
                 output.append(f"**Type**: `{type_info}`{default}\n")
                 output.append(f"{description}\n")
 
+                # Render examples as YAML code blocks
+                examples = prop.get("examples") or []
+                if examples:
+                    label = "Example" if len(examples) == 1 else "Examples"
+                    output.append(f"**{label}**:\n")
+                    for ex in examples:
+                        yaml_text = yaml.dump(
+                            {prop_name: ex},
+                            default_flow_style=False,
+                            sort_keys=False,
+                            width=80,
+                            allow_unicode=True,
+                        ).rstrip()
+                        output.append(f"```yaml\n{yaml_text}\n```\n")
+
         output.append("")  # Add blank line between sections
 
     # Describe special types

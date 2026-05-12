@@ -422,6 +422,18 @@
         min-width: 0;
       }
 
+      .page-footer {
+        margin-top: auto;
+        padding: 22px 56px 28px;
+        border-top: 1px solid var(--border-soft);
+        color: var(--ink-soft);
+        font-size: 0.8em;
+      }
+      .page-footer code {
+        font-size: 0.95em;
+        color: var(--ink);
+      }
+
       /* Welcome / intro card — Seqera Box style */
       .welcome-section {
         background: var(--paper);
@@ -1070,6 +1082,11 @@
           <div class="yaml-output" id="yamlOutput"></div>
         </div>
       </div>
+
+      <footer class="page-footer">
+        Generated on <time datetime="__GENERATED_ON__">__GENERATED_ON__</time> for MultiQC
+        <code>__MULTIQC_VERSION__</code>.
+      </footer>
     </main>
 
     <script
@@ -1297,6 +1314,39 @@
         let input;
 
         if (propData.enum) {
+          // Small enums render as a segmented toggle like the true/false buttons;
+          // larger enums stay as a dropdown.
+          if (propData.enum.length <= 4) {
+            const wrapper = document.createElement("div");
+            wrapper.className = "bool-toggle";
+            const hidden = document.createElement("input");
+            hidden.type = "hidden";
+            hidden.id = propName;
+            wrapper.appendChild(hidden);
+            const hasDefault = propData.default !== null && propData.default !== undefined;
+            propData.enum.forEach((val) => {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "bool-toggle-btn";
+              btn.dataset.value = val;
+              btn.textContent = val;
+              if (val === propData.default) btn.classList.add("active");
+              btn.onclick = () => {
+                const wasActive = btn.classList.contains("active");
+                // No default → clicking the active button again clears the selection.
+                if (wasActive && !hasDefault) {
+                  btn.classList.remove("active");
+                  hidden.value = "";
+                } else {
+                  wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
+                  hidden.value = val;
+                }
+                updateConfig(propName, hidden);
+              };
+              wrapper.appendChild(btn);
+            });
+            return wrapper;
+          }
           input = document.createElement("select");
           const emptyOption = document.createElement("option");
           emptyOption.value = "";
@@ -1515,12 +1565,20 @@
           }
         } else {
           const value = input.value.trim();
+          // Enum values may include non-strings (eg. boolean false). Round-trip
+          // the picked value back through propData.enum so booleans/numbers stay
+          // their native types in the YAML output.
+          let typedValue = value;
+          if (Array.isArray(propData.enum)) {
+            const match = propData.enum.find((v) => String(v) === value);
+            if (match !== undefined) typedValue = match;
+          }
           if (!value) {
             delete currentConfig[propName];
-          } else if (valuesEqual(value, def)) {
+          } else if (valuesEqual(typedValue, def)) {
             delete currentConfig[propName];
           } else {
-            currentConfig[propName] = value;
+            currentConfig[propName] = typedValue;
           }
         }
 
@@ -1550,11 +1608,15 @@
         } else {
           input.value = "";
         }
-        if (propData.type === "boolean" && fg) {
-          const effectiveDefault = propData.default === true;
-          fg.querySelectorAll(".bool-toggle-btn").forEach((b) =>
-            b.classList.toggle("active", (b.dataset.value === "true") === effectiveDefault),
-          );
+        const toggleEl = fg && fg.querySelector(".bool-toggle");
+        if (toggleEl) {
+          const activeValue =
+            propData.type === "boolean" ? (propData.default === true ? "true" : "false") : propData.default;
+          toggleEl
+            .querySelectorAll(".bool-toggle-btn")
+            .forEach((b) => b.classList.toggle("active", b.dataset.value === activeValue));
+          const hiddenInput = toggleEl.querySelector("input[type=hidden]");
+          if (hiddenInput) hiddenInput.value = "";
         }
         input.removeAttribute("aria-invalid");
         delete currentConfig[propName];
@@ -1728,11 +1790,15 @@
           } else {
             input.value = "";
           }
-          if (propData.type === "boolean") {
-            const effectiveDefault = propData.default === true;
-            fg.querySelectorAll(".bool-toggle-btn").forEach((b) =>
-              b.classList.toggle("active", (b.dataset.value === "true") === effectiveDefault),
-            );
+          const toggleEl = fg.querySelector(".bool-toggle");
+          if (toggleEl) {
+            const activeValue =
+              propData.type === "boolean" ? (propData.default === true ? "true" : "false") : propData.default;
+            toggleEl
+              .querySelectorAll(".bool-toggle-btn")
+              .forEach((b) => b.classList.toggle("active", b.dataset.value === activeValue));
+            const hiddenInput = toggleEl.querySelector("input[type=hidden]");
+            if (hiddenInput) hiddenInput.value = "";
           }
           input.removeAttribute("aria-invalid");
           fg.classList.remove("is-set");

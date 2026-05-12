@@ -30,79 +30,125 @@ For boolean options, use `true` or `false` (all lowercase) in your YAML files.
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Custom CSS files to include
+Paths to additional CSS files to inline into the report. Useful for branding overrides.
+
+**Example**:
+
+```yaml
+custom_css_files:
+  - ./assets/custom.css
+  - ./assets/branding.css
+```
 
 ### custom_logo
 
 **Type**: `Optional[str]` (default: `None`)
 
-Path to custom logo image
+Path to an image to show at the top of the report, replacing the MultiQC logo.
+
+**Examples**:
+
+```yaml
+custom_logo: /path/to/logo.png
+```
+
+```yaml
+custom_logo: ./assets/logo.svg
+```
 
 ### custom_logo_title
 
 **Type**: `Optional[str]` (default: `None`)
 
-Title for custom logo
+Tooltip text shown when hovering over the custom logo.
+
+**Example**:
+
+```yaml
+custom_logo_title: Our institute name
+```
 
 ### custom_logo_url
 
 **Type**: `Optional[str]` (default: `None`)
 
-URL for custom logo
+URL the custom logo links to when clicked.
+
+**Example**:
+
+```yaml
+custom_logo_url: https://www.scilifelab.se
+```
 
 ### intro_text
 
 **Type**: `Optional[str]` (default: `None`)
 
-Report introduction text
+Paragraph shown under the title. Useful for adding context about the analysis.
 
 ### report_comment
 
 **Type**: `Optional[str]` (default: `None`)
 
-Report comment
+Free-text comment shown at the top of the report. HTML is allowed.
+
+**Example**:
+
+```yaml
+report_comment: This report was generated from the RNA-seq pipeline on 2024-08-21.
+```
 
 ### report_header_info
 
 **Type**: `Optional[List[Dict[str, str]]]` (default: `None`)
 
-Report header dictionary
+Extra key/value pairs shown in the report header, eg. contact name, run ID, pipeline version. Each list item is a single-key dictionary.
+
+**Example**:
+
+```yaml
+report_header_info:
+  - Contact E-mail: phil.ewels@seqera.io
+  - Application Type: RNA-seq
+  - Project Type: Application
+  - Sequencing Platform: HiSeq 2500 High Output V4
+```
 
 ### show_analysis_paths
 
 **Type**: `Optional[bool]` (default: `true`)
 
-Show analysis paths in the report
+Show the absolute paths of analysed directories in the report header.
 
 ### show_analysis_time
 
 **Type**: `Optional[bool]` (default: `true`)
 
-Show analysis time in the report
+Show the date and time the report was generated in the header.
 
 ### simple_output
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Simple output
+Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.
 
 ### subtitle
 
 **Type**: `Optional[str]` (default: `None`)
 
-Report subtitle
+Subtitle shown under the report title. Plain text only.
 
 ### template
 
-**Type**: `Optional[str]` (default: `"default"`)
+**Type**: `Optional[Literal["default", "simple", "sections", "gathered"]]` (default: `"default"`)
 
-Report template to use
+Name of the report template.
 
 ### title
 
 **Type**: `Optional[str]` (default: `None`)
 
-Report title
+Title shown at the top of the report and used in the page title.
 
 ## Output Options
 
@@ -110,79 +156,79 @@ Report title
 
 **Type**: `Optional[str]` (default: `"multiqc_data"`)
 
-Data directory name
+Name of the directory written alongside the report holding parsed data. Defaults to multiqc_data.
 
 ### data_dump_file
 
 **Type**: `Optional[bool]` (default: `true`)
 
-Write data to a file
+Write a single JSON file containing all parsed data, for re-running MultiQC later.
 
 ### data_dump_file_write_raw
 
 **Type**: `Optional[bool]` (default: `true`)
 
-Write raw data to a file
+Include raw values (before any normalisation or filtering) in the dumped JSON.
 
 ### data_format
 
-**Type**: `Optional[str]` (default: `"tsv"`)
+**Type**: `Optional[Literal["tsv", "csv", "json", "yaml"]]` (default: `"tsv"`)
 
-Data format for output files
+Format used when writing parsed data files.
 
 ### export_plots
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Export plots
+Save each plot as a static image (formats set by export_plot_formats).
 
 ### export_plots_timeout
 
 **Type**: `Optional[int]` (default: `60`)
 
-Timeout for exporting each plot, in seconds
+Timeout for exporting each plot, in seconds.
 
 ### force
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Overwrite existing reports
+Overwrite existing output files without prompting.
 
 ### make_data_dir
 
 **Type**: `Optional[bool]` (default: `true`)
 
-Create data directory
+Write parsed data as files alongside the report.
 
 ### make_pdf
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Make PDF
+Also generate a PDF version of the report. Requires Pandoc to be installed.
 
 ### make_report
 
 **Type**: `Optional[bool]` (default: `true`)
 
-Make report
+Generate the HTML report. Set to false to only produce data files.
 
 ### output_fn_name
 
 **Type**: `Optional[str]` (default: `"multiqc_report.html"`)
 
-Output filename
+Filename for the generated HTML report. Defaults to multiqc_report.html.
 
 ### plots_dir_name
 
 **Type**: `Optional[str]` (default: `"multiqc_plots"`)
 
-Plots directory name
+Directory for exported plot images when export_plots is on. Defaults to multiqc_plots.
 
 ### zip_data_dir
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Zip data directory
+Compress the data directory into a single .zip file.
 
 ## MegaQC Integration
 
@@ -190,19 +236,19 @@ Zip data directory
 
 **Type**: `Optional[str]` (default: `None`)
 
-MegaQC access token
+Auth token for the MegaQC instance.
 
 ### megaqc_timeout
 
 **Type**: `Optional[int]` (default: `30`)
 
-MegaQC timeout
+Upload timeout in seconds when posting to MegaQC.
 
 ### megaqc_url
 
 **Type**: `Optional[str]` (default: `None`)
 
-MegaQC URL to upload to
+URL of a MegaQC instance to upload report data to after generation.
 
 ## AI Summary
 
@@ -210,79 +256,108 @@ MegaQC URL to upload to
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Anonymize samples
+Replace sample names with placeholders before sending data to the AI provider.
 
 ### ai_auth_type
 
-**Type**: `Optional[str]` (default: `None`)
+**Type**: `Optional[Literal["bearer", "api-key"]]` (default: `None`)
 
-AI auth type
+Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.
 
 ### ai_custom_context_window
 
 **Type**: `Optional[str]` (default: `None`)
 
-AI custom context window
+Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.
 
 ### ai_custom_endpoint
 
 **Type**: `Optional[str]` (default: `None`)
 
-AI custom endpoint
+Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.
+
+**Examples**:
+
+```yaml
+ai_custom_endpoint: http://localhost:11434/v1
+```
+
+```yaml
+ai_custom_endpoint: https://api.example.com/v1
+```
 
 ### ai_extra_query_options
 
 **Type**: `Optional[str]` (default: `None`)
 
-AI extra query options
+Extra URL query parameters appended to AI requests. Format: key1=val1&key2=val2.
+
+**Example**:
+
+```yaml
+ai_extra_query_options: temperature=0.3&top_p=0.9
+```
 
 ### ai_model
 
 **Type**: `Optional[str]` (default: `None`)
 
-AI model
+Model name, eg. gpt-4o or claude-sonnet-4-5. Provider-specific.
 
 ### ai_prompt_full
 
 **Type**: `Optional[str]` (default: `None`)
 
-Prompt for full AI summary, put before the report details when sent to the provider
+Custom prompt prepended to the full-section AI summary request.
+
+**Example**:
+
+```yaml
+ai_prompt_full: Use bullet points and call out any sample that looks like an outlier.
+```
 
 ### ai_prompt_short
 
 **Type**: `Optional[str]` (default: `None`)
 
-Prompt for short AI summary, put before the report details when sent to the provider
+Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.
+
+**Example**:
+
+```yaml
+ai_prompt_short: Write the summary in one short paragraph aimed at a lab head, no
+  jargon.
+```
 
 ### ai_provider
 
 **Type**: `Optional[Literal["seqera", "openai", "anthropic", "aws_bedrock", "custom"]]` (default: `"seqera"`)
 
-AI provider
+AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, custom.
 
 ### ai_retries
 
 **Type**: `Optional[int]` (default: `3`)
 
-AI retries
+Number of times to retry an AI request on transient errors.
 
 ### ai_summary
 
 **Type**: `Optional[bool]` (default: `false`)
 
-AI summary
+Generate a short AI-written summary at the top of the report.
 
 ### ai_summary_full
 
 **Type**: `Optional[bool]` (default: `false`)
 
-AI summary full
+Also generate a longer per-section AI summary. Requires ai_summary to be on.
 
 ### no_ai
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Disable AI
+Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.
 
 ## Seqera Integration
 
@@ -290,13 +365,13 @@ Disable AI
 
 **Type**: `Optional[str]` (default: `"https://intern.seqera.io"`)
 
-Seqera API URL
+Base URL for the Seqera Platform API. Defaults to the public instance.
 
 ### seqera_website
 
 **Type**: `Optional[str]` (default: `"https://seqera.io"`)
 
-Seqera website
+Base URL used for Seqera Platform links in the report.
 
 ## Plot Settings
 
@@ -304,61 +379,61 @@ Seqera website
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Place bar plot legend at the bottom (not recommended)
+Place bar plot legends below the plot instead of to the side. Not recommended.
 
 ### lineplot_number_of_points_to_hide_markers
 
 **Type**: `Optional[int]` (default: `50`)
 
-Number of points to hide markers - sum of data points in all samples
+Hide individual data point markers in line plots once the total point count across samples exceeds this.
 
 ### plots_defer_loading_numseries
 
 **Type**: `Optional[int]` (default: `100`)
 
-Number of series to defer loading - user will need to press button to render plot
+Plots with more than this many series start collapsed. The user clicks a button to render them.
 
 ### plots_export_font_scale
 
 **Type**: `Optional[float]` (default: `1.0`)
 
-Font scale for exported plots
+Multiplier applied to font sizes in exported plot images. Bump up for publication-quality output.
 
 ### plots_flat_numseries
 
 **Type**: `Optional[int]` (default: `2000`)
 
-Number of series to show in flat plots
+If a plot has more than this many series, MultiQC switches it from interactive to flat image.
 
 ### plots_force_flat
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Force static plot images
+Render plots as static images instead of interactive Plotly. Useful for very large reports.
 
 ### plots_force_interactive
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Force interactive plots
+Force interactive plots even when MultiQC would normally fall back to flat images.
 
 ### violin_downsample_after
 
 **Type**: `Optional[int]` (default: `2000`)
 
-Downsample data for violin plot starting from this number os samples
+Start downsampling violin plot data once the sample count exceeds this. Keeps rendering snappy.
 
 ### violin_min_threshold_no_points
 
 **Type**: `Optional[int]` (default: `1000`)
 
-For more than this number of samples, show no points
+When a violin plot has more samples than this, no individual points are drawn.
 
 ### violin_min_threshold_outliers
 
 **Type**: `Optional[int]` (default: `100`)
 
-For more than this number of samples, show only outliers
+When a violin plot has more samples than this, only outlier points are drawn.
 
 ## Table Settings
 
@@ -366,31 +441,47 @@ For more than this number of samples, show only outliers
 
 **Type**: `Optional[bool]` (default: `true`)
 
-Collapse tables
+Collapse module tables by default. Users click to expand.
 
 ### decimalPoint_format
 
 **Type**: `Optional[str]` (default: `None`)
 
-Decimal point format
+Decimal-point character used in formatted numbers, eg. '.' (default) or ','.
+
+**Example**:
+
+```yaml
+decimalPoint_format: ","
+```
 
 ### max_configurable_table_columns
 
 **Type**: `Optional[int]` (default: `200`)
 
-Maximum number of columns to show in tables
+Cap on the number of columns the user can toggle in the table-configure toolbox.
 
 ### max_table_rows
 
 **Type**: `Optional[int]` (default: `500`)
 
-Maximum number of rows to show in tables
+Tables larger than this many rows are rendered as a violin plot instead.
 
 ### thousandsSep_format
 
 **Type**: `Optional[str]` (default: `None`)
 
-Thousands separator format
+Thousands separator used in formatted numbers, eg. ',' (default), ' ', or '.
+
+**Examples**:
+
+```yaml
+thousandsSep_format: " "
+```
+
+```yaml
+thousandsSep_format: "'"
+```
 
 ## Sample Names
 
@@ -398,115 +489,224 @@ Thousands separator format
 
 **Type**: `Optional[List[Union[str, CleanPattern]]]` (default: `None`)
 
-Additional extensions to clean from sample names
+Extensions appended to the built-in list. Use to add custom suffixes without overriding defaults.
+
+**Example**:
+
+```yaml
+extra_fn_clean_exts:
+  - .mySuffix
+  - module:
+      - samtools
+    pattern: _tmp
+    type: remove
+```
 
 ### extra_fn_clean_trim
 
 **Type**: `Optional[List[str]]` (default: `None`)
 
-Additional strings to trim from start/end of sample names
+Strings appended to the built-in trim list, without overriding defaults.
+
+**Example**:
+
+```yaml
+extra_fn_clean_trim:
+  - sample_
+  - _processed
+```
 
 ### fn_clean_exts
 
 **Type**: `Optional[List[Union[str, CleanPattern]]]` (default: `[".gz",".fastq",".fq",".bam",".cram",".sam",".sra",".vcf",".dat","_tophat",".pbmarkdup.log",".log",".stderr",".out",".spp",".fa",".fasta",".png",".jpg",".jpeg",".html","Log.final","ReadsPerGene",".flagstat","_star_aligned","_fastqc",".hicup",".counts","_counts",".txt",".tsv",".csv",".aligned","Aligned",".merge",".deduplicated",".dedup",".clean",".sorted",".report","| stdin",".geneBodyCoverage",".inner_distance_freq",".junctionSaturation_plot.r",".pos.DupRate.xls",".GC.xls","_slamdunk","_bismark",".conpair",".concordance",".contamination",".BEST.results","_peaks.xls",".relatedness",".cnt",".aqhist",".bhist",".bincov",".bqhist",".covhist",".covstats",".ehist",".gchist",".idhist",".ihist",".indelhist",".lhist",".mhist",".qahist",".qchist",".qhist",".rpkm",".selfSM",".extendedFrags","_SummaryStatistics",".purple.purity",".purple.qc",".trim",".bowtie2",".mkD",".highfreq",".lowfreq",".consensus",".snpEff",".snpeff",".scaffolds",".contigs",".kraken2",".ccurve",".hisat2","_duprate",".markdup",".read_distribution",".junction_annotation",".infer_experiment",".biotype",".ivar",".mpileup",".primer_trim",".mapped",".vep","_vep","ccs","_NanoStats",".cutadapt",".qcML",".mosdepth","_gopeaks",".readCounts",".wgs_contig_mean_cov","_overall_mean_cov","_coverage_metrics",".wgs_fine_hist",".wgs_coverage_metrics",".wgs_hist",".vc_metrics",".gvcf_metrics",".ploidy_estimation_metrics","_overall_mean_cov",".fragment_length_hist",".mapping_metrics",".gc_metrics",".trimmer_metrics",".time_metrics",".quant_metrics",".quant.metrics",".quant.transcript_coverage",".scRNA_metrics",".scRNA.metrics",".scATAC_metrics",".scATAC.metrics",".fastqc_metrics",".labels",".bammetrics.metrics",".filter_summary",".cluster_report",".error.spl",".error.grp",".vgstats","_mapq_table","_strand_table","_isize_table","_dup_report","_cv_table","_covdist_all","_covdist_q40","_CpGRetention","_CpHRetentionByReadPos","_totalBaseConversionRate","_totalReadConversionRate",".sylphmpa","_qual"]`)
 
-Extensions to clean from sample names
+Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in list.
+
+**Example**:
+
+```yaml
+fn_clean_exts:
+  - .gz
+  - .fastq
+  - .bam
+  - pattern: _S\d+_L\d+
+    type: regex
+```
 
 ### fn_clean_sample_names
 
 **Type**: `Optional[bool]` (default: `true`)
 
-Clean sample names
+Apply the cleaning rules in fn_clean_exts and fn_clean_trim to sample names.
 
 ### fn_clean_trim
 
 **Type**: `Optional[List[str]]` (default: `[".",":","_","-",".r","_val",".idxstats","_trimmed",".trimmed",".csv",".yaml",".yml",".json","_mqc","short_summary_","_summary",".summary",".align",".h5","_matrix",".stats",".hist",".phased",".tar","runs_",".qc"]`)
 
-Strings to trim from start/end of sample names
+Strings trimmed from the start or end of sample names. Replaces the built-in list.
+
+**Example**:
+
+```yaml
+fn_clean_trim:
+  - _R1
+  - _R2
+  - _001
+```
 
 ### prepend_dirs
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Prepend directories to sample names
+Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple folders.
 
 ### prepend_dirs_depth
 
 **Type**: `Optional[int]` (default: `0`)
 
-Depth to prepend directories
+How many parent directories to include. 0 means all the way to the root.
 
 ### prepend_dirs_sep
 
 **Type**: `Optional[str]` (default: `" | "`)
 
-Separator for prepended directories
+String inserted between directory names and the sample name. Defaults to '|'.
+
+**Examples**:
+
+```yaml
+prepend_dirs_sep: _
+```
+
+```yaml
+prepend_dirs_sep: " - "
+```
 
 ### sample_names_ignore
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Sample names to ignore
+Glob patterns. Matching samples are dropped from the report.
+
+**Example**:
+
+```yaml
+sample_names_ignore:
+  - "*_temp"
+  - control_*
+```
 
 ### sample_names_ignore_re
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Sample names to ignore (regex)
+Regex patterns. Matching samples are dropped from the report.
+
+**Example**:
+
+```yaml
+sample_names_ignore_re:
+  - ^test_.*
+  - .*_neg_ctrl$
+```
 
 ### sample_names_only_include
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Sample names to include
+Glob patterns. If set, only matching samples are kept.
+
+**Example**:
+
+```yaml
+sample_names_only_include:
+  - RNA_*
+  - Sample_??
+```
 
 ### sample_names_only_include_re
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Sample names to include (regex)
+Regex patterns. If set, only matching samples are kept.
+
+**Example**:
+
+```yaml
+sample_names_only_include_re:
+  - ^WGS_[0-9]+$
+```
 
 ### sample_names_rename
 
 **Type**: `Optional[List[List[str]]]` (default: `[]`)
 
-Sample names to rename
+Toolbox rename pairs. Each entry is a [from, to] pair, grouped by the buttons in sample_names_rename_buttons.
+
+**Example**:
+
+```yaml
+sample_names_rename:
+  - - SMP001
+    - Patient_A
+  - - SMP002
+    - Patient_B
+  - - SMP003
+    - Patient_C
+```
 
 ### sample_names_rename_buttons
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Sample names to rename
+Names of the toolbox buttons that switch between the rename groups defined in sample_names_rename.
+
+**Example**:
+
+```yaml
+sample_names_rename_buttons:
+  - Sample ID
+  - Patient ID
+  - Lane
+```
 
 ### sample_names_replace
 
 **Type**: `Optional[Dict[str, str]]` (default: `{}`)
 
-Sample names to replace
+Substring replacements applied to every sample name. Keys are matched, values are replacements.
+
+**Example**:
+
+```yaml
+sample_names_replace:
+  Sample_: S
+  _001: ""
+```
 
 ### sample_names_replace_complete
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Sample names to replace (complete)
+Replace the entire sample name when the key matches anywhere in it.
 
 ### sample_names_replace_exact
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Sample names to replace (exact)
+Only replace when the key matches the sample name exactly, not as a substring.
 
 ### sample_names_replace_regex
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Sample names to replace (regex)
+Treat keys in sample_names_replace as regex patterns.
 
 ### use_filename_as_sample_name
 
 **Type**: `Optional[Union[bool, List[str]]]` (default: `false`)
 
-Use filename as sample name (can be bool for all modules or list for specific modules/patterns)
+Use the source filename as the sample name instead of any name parsed from the log. Set to true for all modules, or to a list of module IDs / patterns to apply selectively.
 
 ## Toolbox
 
@@ -514,43 +714,93 @@ Use filename as sample name (can be bool for all modules or list for specific mo
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Colors to use for highlighting patterns
+Hex colour for each entry in highlight_patterns, in the same order.
+
+**Example**:
+
+```yaml
+highlight_colors:
+  - "#377eb8"
+  - "#e41a1c"
+```
 
 ### highlight_patterns
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Patterns for highlighting samples
+Substring (or regex) patterns. Matching samples are highlighted in plots and tables.
+
+**Example**:
+
+```yaml
+highlight_patterns:
+  - control
+  - treated
+```
 
 ### highlight_regex
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Whether to use regex mode for highlighting
+Treat highlight_patterns as regex instead of plain substring.
 
 ### show_hide_buttons
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Show/hide buttons
+Labels for the toolbox show/hide buttons. One per pattern set.
+
+**Example**:
+
+```yaml
+show_hide_buttons:
+  - Tumour samples
+  - Normal samples
+```
 
 ### show_hide_mode
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Show/hide mode
+Action for each show/hide button: 'show' (only show matches) or 'hide' (hide matches).
+
+**Example**:
+
+```yaml
+show_hide_mode:
+  - show
+  - show
+```
 
 ### show_hide_patterns
 
 **Type**: `Optional[List[Union[str, List[str]]]]` (default: `[]`)
 
-Show/hide patterns
+Patterns for each show/hide button. Each entry is a string or list of strings to match against sample names.
+
+**Example**:
+
+```yaml
+show_hide_patterns:
+  - - _T_
+    - _tumour_
+  - - _N_
+    - _normal_
+```
 
 ### show_hide_regex
 
 **Type**: `Optional[List[Union[str, bool]]]` (default: `[]`)
 
-Show/hide regex
+Whether each pattern set is treated as regex. List of bools aligned with show_hide_buttons.
+
+**Example**:
+
+```yaml
+show_hide_regex:
+  - false
+  - false
+```
 
 ## Performance & Debugging
 
@@ -558,67 +808,67 @@ Show/hide regex
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Development
+Enable developer-mode features such as live JS reloading. Internal use.
 
 ### filesearch_lines_limit
 
 **Type**: `Optional[int]` (default: `1000`)
 
-Filesearch lines limit
+Stop reading a log file after this many lines.
 
 ### lint
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Lint
+Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.
 
 ### log_filesize_limit
 
 **Type**: `Optional[int]` (default: `50000000`)
 
-Log filesize limit
+Skip log files larger than this many bytes.
 
 ### no_ansi
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Disable ANSI output
+Disable ANSI colour codes in terminal output.
 
 ### profile_memory
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Profile memory
+Track peak memory per module. Adds runtime overhead.
 
 ### profile_runtime
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Profile runtime
+Time each module and include the breakdown in the report.
 
 ### quiet
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Quiet output
+Suppress non-essential log messages.
 
 ### report_readerrors
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Report read errors
+Surface file read errors in the log instead of silently skipping them.
 
 ### strict
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Strict
+Treat module warnings as errors. Stricter than lint.
 
 ### verbose
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Verbose output
+Print extra debug log messages to the terminal.
 
 ## File Discovery
 
@@ -626,37 +876,54 @@ Verbose output
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Filesearch file shared
+Module IDs whose log files may be matched by multiple modules during the search.
 
 ### fn_ignore_dirs
 
 **Type**: `Optional[List[str]]` (default: `["multiqc_data",".git","icarus_viewers","runs_per_reference","not_aligned","contigs_reports"]`)
 
-Directories to ignore
+Glob patterns for directory names to skip entirely during the file search.
+
+**Example**:
+
+```yaml
+fn_ignore_dirs:
+  - work
+  - .nextflow
+  - "*_logs"
+```
 
 ### fn_ignore_paths
 
 **Type**: `Optional[List[str]]` (default: `["*/work/??/??????????????????????????????","*/.snakemake","*/.singularity","*/__pycache__","*/site-packages/multiqc"]`)
 
-Paths to ignore
+Glob patterns for paths to skip during the file search.
+
+**Example**:
+
+```yaml
+fn_ignore_paths:
+  - "*/test_data/*"
+  - "*/.snakemake/*"
+```
 
 ### ignore_images
 
 **Type**: `Optional[bool]` (default: `true`)
 
-Ignore images
+Skip image files (PNG/JPEG/etc.) to avoid wasting time opening them.
 
 ### ignore_symlinks
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Ignore symlinks
+Skip symlinked files and directories during the file search.
 
 ### require_logs
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Require logs for reports
+Fail with an error if any module explicitly requested with --module has no log files found. Off by default, so missing inputs are skipped silently.
 
 ## Other
 
@@ -664,222 +931,408 @@ Require logs for reports
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Enable extended thinking for Anthropic Claude 4 models
+Enable extended thinking on Anthropic Claude models that support it.
 
 ### ai_max_completion_tokens
 
 **Type**: `Optional[int]` (default: `None`)
 
-Maximum completion tokens for OpenAI reasoning models
+Maximum completion tokens for OpenAI reasoning models.
 
 ### ai_reasoning_effort
 
-**Type**: `Optional[str]` (default: `None`)
+**Type**: `Optional[Literal["low", "medium", "high"]]` (default: `None`)
 
-Reasoning effort level for OpenAI reasoning models (low, medium, high)
+Reasoning effort for OpenAI reasoning models.
 
 ### ai_thinking_budget_tokens
 
 **Type**: `Optional[int]` (default: `None`)
 
-Budget tokens for Anthropic extended thinking
+Token budget for Anthropic extended thinking when enabled.
 
 ### base_count_desc
 
 **Type**: `Optional[str]` (default: `"millions"`)
 
-Base count description
+Word used in labels for base counts, eg. 'gigabases'.
+
+**Examples**:
+
+```yaml
+base_count_desc: megabases
+```
+
+```yaml
+base_count_desc: kilobases
+```
 
 ### base_count_multiplier
 
 **Type**: `Optional[float]` (default: `1e-06`)
 
-Base count multiplier
+Multiplier for base counts. Default 0.000000001 shows bases in gigabases.
+
+**Examples**:
+
+```yaml
+base_count_multiplier: 1.0e-06
+```
+
+```yaml
+base_count_multiplier: 0.001
+```
 
 ### base_count_prefix
 
 **Type**: `Optional[str]` (default: `"Mb"`)
 
-Base count prefix
+Suffix shown after formatted base counts, eg. 'Gb' for gigabases.
+
+**Examples**:
+
+```yaml
+base_count_prefix: Mb
+```
+
+```yaml
+base_count_prefix: Kb
+```
 
 ### box_min_threshold_no_points
 
 **Type**: `Optional[int]` (default: `1000`)
 
-For more than this number of samples, show no points
+When a boxplot has more samples than this, no individual points are drawn.
 
 ### box_min_threshold_outliers
 
 **Type**: `Optional[int]` (default: `100`)
 
-For more than this number of samples, show only outliers
+When a boxplot has more samples than this, only outlier points are drawn.
 
 ### boxplot_boxpoints
 
-**Type**: `Optional[Union[str, bool]]` (default: `"outliers"`)
+**Type**: `Optional[Literal["outliers", "suspectedoutliers", "all", False]]` (default: `"outliers"`)
 
-Boxplot boxpoints setting
+How boxplot data points are drawn. Use false to hide individual points.
 
 ### custom_content
 
 **Type**: `Optional[Dict[str, Any]]` (default: `{"order":[]}`)
 
-Custom content settings
+Embed arbitrary plots, tables or text in the report. See the Custom Content docs for the full structure.
+
+**Example**:
+
+```yaml
+custom_content:
+  data:
+    my-section-id:
+      data:
+        sample1:
+          col1: 100
+        sample2:
+          col1: 200
+      id: my-section-id
+      plot_type: table
+      section_name: My Custom Section
+  order:
+    - my-section-id
+    - my-other-section-id
+```
 
 ### custom_logo_dark
 
 **Type**: `Optional[str]` (default: `None`)
 
-Path to custom logo image for dark mode
+Path to an alternative logo for dark mode. Falls back to custom_logo if unset.
+
+**Example**:
+
+```yaml
+custom_logo_dark: ./assets/logo_dark.svg
+```
 
 ### custom_logo_width
 
 **Type**: `Optional[int]` (default: `None`)
 
-Width in pixels for the custom logo
+Logo width in pixels. Height scales proportionally.
+
+**Example**:
+
+```yaml
+custom_logo_width: 200
+```
 
 ### custom_plot_config
 
 **Type**: `Optional[Dict[str, Any]]` (default: `{}`)
 
-Custom plot config
+Override plot config options per plot. Top-level keys are plot IDs, values are option dicts.
+
+**Example**:
+
+```yaml
+custom_plot_config:
+  fastqc_per_base_sequence_quality_plot:
+    title: "FastQC: Mean Quality Scores (custom)"
+    yaxis:
+      title: Phred score
+```
 
 ### custom_table_header_config
 
 **Type**: `Optional[Dict[str, Any]]` (default: `{}`)
 
-Custom table header config
+Override table column config. Same shape as custom_plot_config but for table headers.
+
+**Example**:
+
+```yaml
+custom_table_header_config:
+  general_stats_table:
+    "% Dups":
+      format: "{:,.1f}%"
+      max: 100
+      min: 0
+```
 
 ### data_format_extensions
 
 **Type**: `Optional[Dict[str, str]]` (default: `{"tsv":"txt","csv":"csv","json":"json","yaml":"yaml"}`)
 
-Data format extensions
+Override the file extension used when writing each data format, eg. {tsv: txt} to write TSV as .txt.
+
+**Example**:
+
+```yaml
+data_format_extensions:
+  json: json
+  tsv: txt
+  yaml: yml
+```
 
 ### disable_version_detection
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Disable version detection
+Skip parsing software versions from module log files.
 
 ### export_plot_formats
 
-**Type**: `Optional[List[str]]` (default: `["png","svg","pdf"]`)
+**Type**: `Optional[List[Literal["png", "svg", "pdf"]]]` (default: `["png","svg","pdf"]`)
 
-Export plot formats
+Image formats to export when export_plots is on.
 
 ### file_list
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Create a file list
+Treat the input path as a file containing a list of paths to scan, one per line.
 
 ### general_stats_columns
 
 **Type**: `Dict[str, <class 'multiqc.utils.config_schema.GeneralStatsModuleConfig'>]` (default: `{}`)
 
-Configuration for general stats columns per module. Keys are module IDs.
+Per-module overrides for General Stats columns. Top-level keys are module IDs.
+
+**Example**:
+
+```yaml
+general_stats_columns:
+  fastqc:
+    columns:
+      percent_duplicates:
+        format: "{:,.1f}%"
+        max: 100
+        min: 0
+        scale: RdYlGn-rev
+        title: "% Dups"
+```
 
 ### general_stats_helptext
 
 **Type**: `Optional[str]` (default: `None`)
 
-Help text for general statistics table.
+Help text shown under the General Statistics heading at the top of the report.
 
 ### long_read_count_desc
 
 **Type**: `Optional[str]` (default: `"thousands"`)
 
-Long read count description
+Word used in labels for long-read counts, eg. 'thousands'.
+
+**Examples**:
+
+```yaml
+long_read_count_desc: millions
+```
+
+```yaml
+long_read_count_desc: reads
+```
 
 ### long_read_count_multiplier
 
 **Type**: `Optional[float]` (default: `0.001`)
 
-Long read count multiplier
+Multiplier for long-read counts. Default 0.001 shows counts in thousands.
+
+**Examples**:
+
+```yaml
+long_read_count_multiplier: 1.0e-06
+```
+
+```yaml
+long_read_count_multiplier: 1
+```
 
 ### long_read_count_prefix
 
 **Type**: `Optional[str]` (default: `"K"`)
 
-Long read count prefix
+Suffix shown after formatted long-read counts, eg. 'K' for thousands.
+
+**Examples**:
+
+```yaml
+long_read_count_prefix: M
+```
+
+```yaml
+long_read_count_prefix: ""
+```
 
 ### no_version_check
 
 **Type**: `Optional[bool]` (default: `false`)
 
-No version check
+Skip the network check for newer MultiQC versions on startup.
 
 ### pandoc_template
 
 **Type**: `Optional[str]` (default: `None`)
 
-Pandoc template
+Path to a Pandoc template used when exporting the report as PDF.
 
 ### parquet_format
 
 **Type**: `Optional[Literal["long", "wide"]]` (default: `"long"`)
 
-Parquet table format. Long format has columns 'sample_name', 'metric_name' and 'val_raw',
-'val_raw_type', 'val_str'. To select values for a certain metric, you need to filter based on its name. In contrast,
-the wide format has columns named after metrics, prefixed with table name and optional namespace. It's easier to
-for analytics, however, might hit limits on the maximal number of columns in certain edge cases, as well as
-have potential issues in case of mixed types (i.e. if some values are non-numeric, as Parquet requires a column
-to have a single type).
+Parquet table layout. 'long' has rows of (sample_name, metric_name, val_raw, val_raw_type, val_str), easy to filter by metric. 'wide' uses one column per metric (prefixed with table name and namespace), easier for analytics but can hit column limits or mixed-type issues.
 
 ### plot_font_family
 
 **Type**: `Optional[str]` (default: `None`)
 
-Custom font family for plots (defaults to system font stack)
+CSS font-family for plot text. Defaults to a system font stack.
 
 ### read_count_desc
 
 **Type**: `Optional[str]` (default: `"millions"`)
 
-Read count description
+Word used in plot/axis labels for read counts, eg. 'millions'.
+
+**Examples**:
+
+```yaml
+read_count_desc: thousands
+```
+
+```yaml
+read_count_desc: raw reads
+```
 
 ### read_count_multiplier
 
 **Type**: `Optional[float]` (default: `1e-06`)
 
-Read count multiplier
+Multiplier applied to read counts before display. Default 0.000001 shows reads in millions.
+
+**Examples**:
+
+```yaml
+read_count_multiplier: 0.001
+```
+
+```yaml
+read_count_multiplier: 1
+```
 
 ### read_count_prefix
 
 **Type**: `Optional[str]` (default: `"M"`)
 
-Read count prefix
+Suffix shown after formatted read counts, eg. 'M' for millions.
+
+**Examples**:
+
+```yaml
+read_count_prefix: K
+```
+
+```yaml
+read_count_prefix: ""
+```
 
 ### remove_sections
 
 **Type**: `Optional[List[str]]` (default: `[]`)
 
-Sections to remove
+Module sections to hide. Use the section anchor as it appears in the URL.
+
+**Example**:
+
+```yaml
+remove_sections:
+  - fastqc_overrepresented_sequences
+  - gatk-compare-overlap
+```
 
 ### section_comments
 
 **Type**: `Optional[Dict[str, str]]` (default: `{}`)
 
-Comments for sections
+Markdown text shown under specific module sections. Keys are section anchors.
+
+**Example**:
+
+```yaml
+section_comments:
+  fastqc_overrepresented_sequences: "**This is** an important note about the overrepresented
+    sequences."
+  samtools: Reviewed by *Phil* on 2024-08-21.
+```
 
 ### skip_generalstats
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Skip generalstats
+Hide the General Statistics table at the top of the report.
 
 ### skip_versions_section
 
 **Type**: `Optional[bool]` (default: `false`)
 
-Skip versions section
+Hide the Software Versions section.
 
 ### software_versions
 
 **Type**: `Optional[Dict[str, Any]]` (default: `{}`)
 
-Software versions
+Manually specify software versions for the Software Versions section. Top-level keys are tool names.
+
+**Example**:
+
+```yaml
+software_versions:
+  bwa: 0.7.17
+  fastqc: 0.12.1
+  samtools: "1.20"
+```
 
 ### sp
 
@@ -891,49 +1344,106 @@ Search patterns for finding tool outputs
 
 **Type**: `Optional[Dict[str, Union[str, Dict[str, str]]]]` (default: `{}`)
 
-Name of columns in tables
+Rename table columns. Top-level keys are module IDs, inner keys are column IDs, values are the new display name.
+
+**Example**:
+
+```yaml
+table_columns_name:
+  fastqc:
+    percent_duplicates: "% Dups"
+    percent_gc: "% GC"
+```
 
 ### table_columns_placement
 
 **Type**: `Optional[Dict[str, Dict[str, float]]]` (default: `{}`)
 
-Placement of columns in tables
+Reorder table columns. Top-level keys are module IDs, inner keys are column IDs, values are float sort weights (lower is further left).
+
+**Example**:
+
+```yaml
+table_columns_placement:
+  fastqc:
+    percent_duplicates: 900
+    percent_gc: 800
+    total_sequences: 700
+```
 
 ### table_columns_visible
 
 **Type**: `Optional[Dict[str, Union[bool, Dict[str, bool]]]]` (default: `{}`)
 
-Which columns to show in tables
+Hide or show specific columns. Top-level keys are module IDs, values are either a bool (apply to all columns) or a dict mapping column ID to bool.
+
+**Example**:
+
+```yaml
+table_columns_visible:
+  fastqc: false
+  samtools:
+    error_rate: false
+    raw_total_sequences: true
+```
 
 ### table_cond_formatting_colours
 
 **Type**: `Optional[List[Dict[str, str]]]` (default: `[{"blue":"#337ab7"},{"lbue":"#5bc0de"},{"pass":"#5cb85c"},{"warn":"#f0ad4e"},{"fail":"#d9534f"},{"male":"#5bc0de"},{"female":"#d9534f"}]`)
 
-Colours to use for conditional formatting in tables
+Background colours referenced by table_cond_formatting_rules. List of single-key dicts mapping a colour ID to a hex code.
+
+**Example**:
+
+```yaml
+table_cond_formatting_colours:
+  - pass: "#5cb85c"
+  - warn: "#f0ad4e"
+  - fail: "#d9534f"
+```
 
 ### table_cond_formatting_rules
 
 **Type**: `Optional[Dict[str, Dict[str, List[Dict[str, Union[str, int, float]]]]]]` (default: `{"all_columns":{"pass":[{"s_eq":"pass"},{"s_eq":"true"},{"s_eq":"yes"},{"s_eq":"ok"}],"warn":[{"s_eq":"warn"},{"s_eq":"unknown"}],"fail":[{"s_eq":"fail"},{"s_eq":"false"},{"s_eq":"no"}],"male":[{"s_eq":"male"},{"s_eq":"M"}],"female":[{"s_eq":"female"},{"s_eq":"F"}]},"QCStatus":{"fail":[{"s_contains":"fail"}]}}`)
 
-Rules for conditional formatting in tables
+Conditional cell formatting. Nested dicts map table ID to column ID to a list of rules (eg. {s_eq: pass} matches an exact value). See the customisation docs for the full grammar.
+
+**Example**:
+
+```yaml
+table_cond_formatting_rules:
+  all_columns:
+    fail:
+      - s_eq: fail
+    pass:
+      - s_eq: pass
+      - s_eq: ok
+    warn:
+      - s_eq: warn
+  mqc-generalstats-percent_duplicates:
+    fail:
+      - gt: 50
+    warn:
+      - gt: 20
+```
 
 ### template_dark_mode
 
 **Type**: `Optional[bool]` (default: `true`)
 
-Enable dark mode toggle and JavaScript for the report template
+Enable the dark mode toggle in the report template.
 
 ### version_check_url
 
 **Type**: `Optional[str]` (default: `"https://api.multiqc.info/version"`)
 
-Version check URL
+URL queried by MultiQC's own update check. Set to override the default endpoint.
 
 ### versions_table_group_header
 
 **Type**: `Optional[str]` (default: `"Group"`)
 
-Versions table group header
+Column header for the grouping column in the Software Versions table. Defaults to 'Group'.
 
 ## Special Types
 
