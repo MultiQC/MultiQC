@@ -4,6 +4,7 @@ import importlib.util
 import keyword
 import re
 import sys
+import typing
 from pathlib import Path
 
 import yaml
@@ -113,6 +114,82 @@ def test_runtime_config_attrs_still_exist():
     assert not stale, (
         f"RUNTIME_CONFIG_ATTRS references names no longer in multiqc/config.py: {stale}. "
         f"Remove them from the set in tests/test_config_wizard.py."
+    )
+
+
+def _unwrap_optional(t):
+    """Return the inner type of an ``Optional[X]``; otherwise return ``t``."""
+    if typing.get_origin(t) is typing.Union:
+        non_null = [a for a in typing.get_args(t) if a is not type(None)]
+        if len(non_null) == 1:
+            return non_null[0]
+    return t
+
+
+def _type_kind(t):
+    """Coarse classification used to compare annotations across config.py and
+    the schema.
+
+    Bare primitives (``str`` / ``int`` / ``float`` / ``bool``) collapse to
+    their name; container types collapse to their origin; ``Union`` and
+    ``Literal`` are treated as the same kind so a looser ``Union[str, bool]``
+    in ``config.py`` matches a tighter ``Literal[...]`` in the schema.
+    Anything else falls into ``other``.
+    """
+    t = _unwrap_optional(t)
+    origin = typing.get_origin(t)
+    if origin is typing.Union or origin is typing.Literal:
+        return "union-or-literal"
+    if origin is list:
+        return "list"
+    if origin is dict:
+        return "dict"
+    if origin is tuple:
+        return "tuple"
+    if t is str:
+        return "str"
+    if t is int:
+        return "int"
+    if t is float:
+        return "float"
+    if t is bool:
+        return "bool"
+    return "other"
+
+
+def test_config_py_types_match_schema():
+    """The type annotation on each user-facing field in ``multiqc/config.py``
+    must agree with the schema's annotation on the matching ``MultiQCConfig``
+    field. Catches drift like ``Optional[str]`` in the schema while
+    ``config.py`` carries ``Optional[Dict[str, Any]]`` (or vice versa) — the
+    sort of thing that means a user pasting a valid YAML config gets a
+    runtime crash because the schema lets it through but the runtime can't
+    use it.
+
+    Comparison is intentionally coarse: ``Optional[T]`` strips to ``T``, and
+    ``Union``/``Literal`` count as the same kind (so a looser ``Union[str,
+    bool]`` in ``config.py`` can sit alongside a tighter ``Literal[...]`` in
+    the schema). What gets flagged is shape-level disagreement —
+    ``str`` vs ``int``, ``str`` vs ``Dict``, ``float`` vs ``int``, etc.
+    """
+    import multiqc.config as cfg_mod
+
+    config_hints = typing.get_type_hints(cfg_mod)
+    schema_fields = MultiQCConfig.model_fields
+    mismatches = []
+    for name, ann in config_hints.items():
+        if name in RUNTIME_CONFIG_ATTRS:
+            continue
+        if name not in schema_fields:
+            continue  # missing-from-schema is caught by the test above
+        ck = _type_kind(ann)
+        sk = _type_kind(schema_fields[name].annotation)
+        if ck != sk:
+            mismatches.append(f"{name}: config.py={ck}, schema={sk}")
+    assert not mismatches, (
+        "Type drift between multiqc/config.py and MultiQCConfig:\n  "
+        + "\n  ".join(mismatches)
+        + "\nAlign the annotation on both sides (usually the schema is correct)."
     )
 
 

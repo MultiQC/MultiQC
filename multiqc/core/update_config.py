@@ -130,7 +130,12 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
 
     # Set up key variables (overwrite config vars from command line)
     if cfg.template is not None:
-        config.template = cfg.template
+        # `cfg.template` is a `str` from click; click.Choice already
+        # validated it against the available template names.
+        config.template = cast(
+            Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"],
+            cfg.template,
+        )
     if cfg.title is not None:
         config.title = cfg.title
         logger.info(f"Report title: {config.title}")
@@ -158,7 +163,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     if cfg.zip_data_dir is not None:
         config.zip_data_dir = cfg.zip_data_dir
     if cfg.data_format is not None:
-        config.data_format = cfg.data_format
+        config.data_format = cast(Literal["tsv", "csv", "json", "yaml"], cfg.data_format)
     if cfg.export_plots is not None:
         config.export_plots = cfg.export_plots
     if cfg.make_report is not None:
