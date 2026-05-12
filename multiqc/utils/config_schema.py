@@ -755,14 +755,15 @@ class MultiQCConfig(BaseModel):
             "Number of times to retry an AI request on transient errors.",
             advanced=True,
         )
-        ai_extra_query_options: Optional[str] = cfg(
-            "Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.",
-            examples=["temperature=0.3&top_p=0.9"],
+        ai_extra_query_options: Optional[Dict[str, Any]] = cfg(
+            "Extra request-body fields merged into the AI request payload (provider-specific).",
+            examples=[{"temperature": 0.3, "top_p": 0.9}],
             advanced=True,
         )
-        ai_custom_context_window: Optional[str] = cfg(
+        ai_custom_context_window: Optional[int] = cfg(
             "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
             advanced=True,
+            gt=0,
         )
         ai_max_completion_tokens: Optional[int] = cfg(
             "Maximum completion tokens for OpenAI reasoning models.",
@@ -782,13 +783,11 @@ class MultiQCConfig(BaseModel):
         )
         ai_prompt_short: Optional[str] = cfg(
             "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
-            advanced=True,
             multiline=True,
             examples=["Write the summary in one short paragraph aimed at a lab head, no jargon."],
         )
         ai_prompt_full: Optional[str] = cfg(
             "Custom prompt prepended to the full-section AI summary request.",
-            advanced=True,
             multiline=True,
             examples=["Use bullet points and call out any sample that looks like an outlier."],
         )

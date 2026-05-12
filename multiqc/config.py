@@ -121,7 +121,7 @@ ai_summary_full: bool
 ai_provider: str
 ai_model: str
 ai_custom_endpoint: Optional[str]
-ai_auth_type: Optional[str]
+ai_auth_type: Optional[Literal["bearer", "api-key"]]
 ai_retries: int
 ai_extra_query_options: Optional[Dict[str, Any]]
 ai_custom_context_window: Optional[int]

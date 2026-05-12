@@ -311,8 +311,9 @@
       body.search-active .section-heading.advanced-only {
         display: block;
       }
-      body.show-uncommon .form-group.uncommon .field-label::after {
+      body.show-uncommon .form-group.uncommon .field-key::after {
         content: "advanced";
+        display: inline-block;
         margin-left: 8px;
         padding: 1px 6px;
         border-radius: 3px;
@@ -575,6 +576,12 @@
         color: var(--ink);
         margin-bottom: 6px;
         font-size: 0.95em;
+      }
+      .field-key-group {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
       }
       .form-group .description {
         color: var(--ink-mute);
@@ -885,11 +892,15 @@
       }
 
       .yaml-view-section {
+        display: none;
         background: var(--paper);
         border: 1px solid var(--border);
         border-radius: 0;
         padding: 28px 32px;
         margin: 32px 0;
+      }
+      body.yaml-mode .yaml-view-section {
+        display: block;
       }
       .yaml-view-head {
         display: flex;
@@ -1143,6 +1154,61 @@
         border-radius: 3px;
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
       }
+      /* Wide-screen layout for the YAML view: editor on the left, scrollable
+         cards on the right. The 1500px threshold leaves the editor at least
+         ~600px wide (sidebar 280 + section padding ~70 + editor 600 + gap
+         24 + cards 500 ≈ 1474). Below that, fall back to the stacked layout. */
+      @media (min-width: 1500px) {
+        body.yaml-mode .yaml-view-section {
+          display: grid;
+          grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+          /* Summary sits above the cards (filters its own list), editor
+             spans the two right-hand rows on the left. */
+          grid-template-rows: auto auto auto 1fr;
+          grid-template-areas:
+            "head head"
+            "intro intro"
+            "editor summary"
+            "editor cards";
+          gap: 12px 24px;
+          align-items: stretch;
+          /* Lock the section to the viewport so the cards column can scroll
+             internally. The 350px subtraction leaves room for the page
+             header above and the page-footer / breathing room below.
+             `overflow: hidden` is needed so the cards' content can't spill
+             past the section box — without it, max-height only clamps the
+             box, and the grid item still grows past it. */
+          height: calc(100vh - 350px);
+          overflow: hidden;
+        }
+        body.yaml-mode .yaml-view-section > .yaml-view-head {
+          grid-area: head;
+        }
+        body.yaml-mode .yaml-view-section > p {
+          grid-area: intro;
+          margin: 0;
+        }
+        body.yaml-mode .yaml-view-section > #validateInput,
+        body.yaml-mode .yaml-view-section > #validateMonaco {
+          grid-area: editor;
+          margin: 0;
+          height: 100%;
+          min-height: 400px;
+        }
+        body.yaml-mode .yaml-view-section > .validate-summary {
+          grid-area: summary;
+          margin: 0;
+        }
+        body.yaml-mode .yaml-view-section > .validate-cards {
+          grid-area: cards;
+          margin: 0;
+          overflow-y: auto;
+          /* min-height:0 lets the grid item shrink below its content so the
+             1fr row constraint actually kicks in. */
+          min-height: 0;
+        }
+      }
+
       @media (max-width: 900px) {
         .sidebar {
           position: static;
@@ -1301,7 +1367,7 @@
 
         <div class="no-results" id="noResults">No configuration options match your search.</div>
 
-        <div class="yaml-view-section" id="yamlViewSection" style="display: none">
+        <div class="yaml-view-section" id="yamlViewSection">
           <div class="yaml-view-head">
             <h3>multiqc_config.yaml</h3>
             <div class="yaml-view-actions">
@@ -1597,6 +1663,29 @@
               },
             ],
           },
+          custom_content_modules: {
+            uncommon: true,
+            deprecated: false,
+            multiline: false,
+            type: "array",
+            description: "Extra module IDs whose output should be parsed as custom content.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          custom_data: {
+            uncommon: false,
+            deprecated: false,
+            multiline: false,
+            type: "object",
+            description:
+              "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer splitting the metadata and the data across two top-level keys.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
           top_modules: {
             uncommon: false,
             deprecated: false,
@@ -1800,6 +1889,29 @@
               ],
             ],
           },
+          run_modules: {
+            uncommon: false,
+            deprecated: false,
+            multiline: false,
+            type: "array",
+            description:
+              "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [["fastqc", "cutadapt", "samtools"]],
+          },
+          exclude_modules: {
+            uncommon: false,
+            deprecated: false,
+            multiline: false,
+            type: "array",
+            description: "Module IDs to skip (mirror of the --exclude CLI flag).",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [["fastqc"]],
+          },
           remove_sections: {
             uncommon: false,
             deprecated: false,
@@ -1810,6 +1922,27 @@
             enum: null,
             items_enum: null,
             examples: [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
+          },
+          report_section_order: {
+            uncommon: false,
+            deprecated: false,
+            multiline: false,
+            type: "object",
+            description:
+              "Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides \u2014 see the customisation docs for the full grammar.",
+            default: null,
+            enum: null,
+            items_enum: null,
+            examples: [
+              {
+                "custom_content-my-section": {
+                  before: "fastqc",
+                },
+                fastqc: {
+                  order: -10,
+                },
+              },
+            ],
           },
           section_comments: {
             uncommon: false,
@@ -1842,39 +1975,6 @@
                 fastqc: true,
                 samtools: {
                   alignment_stats: false,
-                },
-              },
-            ],
-          },
-          custom_data: {
-            uncommon: false,
-            deprecated: false,
-            multiline: false,
-            type: "object",
-            description:
-              "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer splitting the metadata and the data across two top-level keys.",
-            default: null,
-            enum: null,
-            items_enum: null,
-            examples: [],
-          },
-          report_section_order: {
-            uncommon: true,
-            deprecated: false,
-            multiline: false,
-            type: "object",
-            description:
-              "Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides \u2014 see the customisation docs for the full grammar.",
-            default: null,
-            enum: null,
-            items_enum: null,
-            examples: [
-              {
-                "custom_content-my-section": {
-                  before: "fastqc",
-                },
-                fastqc: {
-                  order: -10,
                 },
               },
             ],
@@ -2648,40 +2748,6 @@
             type: "array",
             description: "Module IDs whose log files may be matched by multiple modules during the search.",
             default: [],
-            enum: null,
-            items_enum: null,
-            examples: [],
-          },
-          run_modules: {
-            uncommon: false,
-            deprecated: false,
-            multiline: false,
-            type: "array",
-            description:
-              "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
-            default: null,
-            enum: null,
-            items_enum: null,
-            examples: [["fastqc", "cutadapt", "samtools"]],
-          },
-          exclude_modules: {
-            uncommon: false,
-            deprecated: false,
-            multiline: false,
-            type: "array",
-            description: "Module IDs to skip (mirror of the --exclude CLI flag).",
-            default: null,
-            enum: null,
-            items_enum: null,
-            examples: [["fastqc"]],
-          },
-          custom_content_modules: {
-            uncommon: true,
-            deprecated: false,
-            multiline: false,
-            type: "array",
-            description: "Extra module IDs whose output should be parsed as custom content.",
-            default: null,
             enum: null,
             items_enum: null,
             examples: [],
@@ -3566,18 +3632,23 @@
             uncommon: true,
             deprecated: false,
             multiline: false,
-            type: "string",
-            description: "Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.",
+            type: "object",
+            description: "Extra request-body fields merged into the AI request payload (provider-specific).",
             default: null,
             enum: null,
             items_enum: null,
-            examples: ["temperature=0.3&top_p=0.9"],
+            examples: [
+              {
+                temperature: 0.3,
+                top_p: 0.9,
+              },
+            ],
           },
           ai_custom_context_window: {
             uncommon: true,
             deprecated: false,
             multiline: false,
-            type: "string",
+            type: "integer",
             description:
               "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
             default: null,
@@ -3630,7 +3701,7 @@
             examples: [],
           },
           ai_prompt_short: {
-            uncommon: true,
+            uncommon: false,
             deprecated: false,
             multiline: true,
             type: "string",
@@ -3642,7 +3713,7 @@
             examples: ["Write the summary in one short paragraph aimed at a lab head, no jargon."],
           },
           ai_prompt_full: {
-            uncommon: true,
+            uncommon: false,
             deprecated: false,
             multiline: true,
             type: "string",
@@ -4589,6 +4660,40 @@
             section: "Report Contents",
             title: "Custom Content",
           },
+          custom_content_modules: {
+            advanced: true,
+            anyOf: [
+              {
+                items: {
+                  type: "string",
+                },
+                type: "array",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Extra module IDs whose output should be parsed as custom content.",
+            section: "Report Contents",
+            title: "Custom Content Modules",
+          },
+          custom_data: {
+            anyOf: [
+              {
+                additionalProperties: true,
+                type: "object",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer splitting the metadata and the data across two top-level keys.",
+            section: "Report Contents",
+            title: "Custom Data",
+          },
           top_modules: {
             anyOf: [
               {
@@ -4674,6 +4779,43 @@
             section: "Report Contents",
             title: "Module Order",
           },
+          run_modules: {
+            anyOf: [
+              {
+                items: {
+                  type: "string",
+                },
+                type: "array",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
+            examples: [["fastqc", "cutadapt", "samtools"]],
+            section: "Report Contents",
+            title: "Run Modules",
+          },
+          exclude_modules: {
+            anyOf: [
+              {
+                items: {
+                  type: "string",
+                },
+                type: "array",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Module IDs to skip (mirror of the --exclude CLI flag).",
+            examples: [["fastqc"]],
+            section: "Report Contents",
+            title: "Exclude Modules",
+          },
           remove_sections: {
             anyOf: [
               {
@@ -4691,6 +4833,32 @@
             examples: [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
             section: "Report Contents",
             title: "Remove Sections",
+          },
+          report_section_order: {
+            anyOf: [
+              {
+                additionalProperties: true,
+                type: "object",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides \u2014 see the customisation docs for the full grammar.",
+            examples: [
+              {
+                "custom_content-my-section": {
+                  before: "fastqc",
+                },
+                fastqc: {
+                  order: -10,
+                },
+              },
+            ],
+            section: "Report Contents",
+            title: "Report Section Order",
           },
           section_comments: {
             anyOf: [
@@ -4751,49 +4919,6 @@
             ],
             section: "Report Contents",
             title: "Section Status Checks",
-          },
-          custom_data: {
-            anyOf: [
-              {
-                additionalProperties: true,
-                type: "object",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description:
-              "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer splitting the metadata and the data across two top-level keys.",
-            section: "Report Contents",
-            title: "Custom Data",
-          },
-          report_section_order: {
-            advanced: true,
-            anyOf: [
-              {
-                additionalProperties: true,
-                type: "object",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description:
-              "Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides \u2014 see the customisation docs for the full grammar.",
-            examples: [
-              {
-                "custom_content-my-section": {
-                  before: "fastqc",
-                },
-                fastqc: {
-                  order: -10,
-                },
-              },
-            ],
-            section: "Report Contents",
-            title: "Report Section Order",
           },
           force: {
             anyOf: [
@@ -5588,61 +5713,6 @@
             description: "Module IDs whose log files may be matched by multiple modules during the search.",
             section: "File Discovery",
             title: "Filesearch File Shared",
-          },
-          run_modules: {
-            anyOf: [
-              {
-                items: {
-                  type: "string",
-                },
-                type: "array",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description:
-              "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
-            examples: [["fastqc", "cutadapt", "samtools"]],
-            section: "File Discovery",
-            title: "Run Modules",
-          },
-          exclude_modules: {
-            anyOf: [
-              {
-                items: {
-                  type: "string",
-                },
-                type: "array",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Module IDs to skip (mirror of the --exclude CLI flag).",
-            examples: [["fastqc"]],
-            section: "File Discovery",
-            title: "Exclude Modules",
-          },
-          custom_content_modules: {
-            advanced: true,
-            anyOf: [
-              {
-                items: {
-                  type: "string",
-                },
-                type: "array",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Extra module IDs whose output should be parsed as custom content.",
-            section: "File Discovery",
-            title: "Custom Content Modules",
           },
           plots_force_flat: {
             anyOf: [
@@ -6765,15 +6835,21 @@
             advanced: true,
             anyOf: [
               {
-                type: "string",
+                additionalProperties: true,
+                type: "object",
               },
               {
                 type: "null",
               },
             ],
             default: null,
-            description: "Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.",
-            examples: ["temperature=0.3&top_p=0.9"],
+            description: "Extra request-body fields merged into the AI request payload (provider-specific).",
+            examples: [
+              {
+                temperature: 0.3,
+                top_p: 0.9,
+              },
+            ],
             section: "AI Summary",
             title: "Ai Extra Query Options",
           },
@@ -6781,7 +6857,8 @@
             advanced: true,
             anyOf: [
               {
-                type: "string",
+                exclusiveMinimum: 0,
+                type: "integer",
               },
               {
                 type: "null",
@@ -6855,7 +6932,6 @@
             title: "Ai Thinking Budget Tokens",
           },
           ai_prompt_short: {
-            advanced: true,
             anyOf: [
               {
                 type: "string",
@@ -6873,7 +6949,6 @@
             title: "Ai Prompt Short",
           },
           ai_prompt_full: {
-            advanced: true,
             anyOf: [
               {
                 type: "string",
@@ -7351,13 +7426,24 @@
 
         const label = document.createElement("label");
         label.className = "field-label";
-        label.textContent = propName;
+
+        // Group all left-side bits (key name, advanced badge via ::after on
+        // .field-key, default + reset) into one flex child so the label's
+        // `justify-content: space-between` only stretches the gap between
+        // this group and the right-aligned examples-toggle.
+        const keyGroup = document.createElement("span");
+        keyGroup.className = "field-key-group";
+        const keyName = document.createElement("span");
+        keyName.className = "field-key";
+        keyName.textContent = propName;
+        keyGroup.appendChild(keyName);
+        label.appendChild(keyGroup);
 
         if (propData.default !== null && propData.default !== undefined) {
           const defaultSpan = document.createElement("span");
           defaultSpan.className = "default-badge";
           defaultSpan.textContent = "default: " + formatDefaultValue(propData.default);
-          label.appendChild(defaultSpan);
+          keyGroup.appendChild(defaultSpan);
 
           if (isPrefillableDefault(propData)) {
             const resetBtn = document.createElement("button");
@@ -7371,7 +7457,7 @@
               e.preventDefault();
               resetField(propName);
             };
-            label.appendChild(resetBtn);
+            keyGroup.appendChild(resetBtn);
           }
         }
 
@@ -7527,11 +7613,9 @@
           return a.every((x, i) => valuesEqual(x, b[i]));
         }
         if (typeof a === "object") {
-          const ka = Object.keys(a).sort();
-          const kb = Object.keys(b).sort();
-          if (ka.length !== kb.length) return false;
-          if (!ka.every((k, i) => k === kb[i])) return false;
-          return ka.every((k) => valuesEqual(a[k], b[k]));
+          const ka = Object.keys(a);
+          if (ka.length !== Object.keys(b).length) return false;
+          return ka.every((k) => k in b && valuesEqual(a[k], b[k]));
         }
         return false;
       }
@@ -7713,14 +7797,27 @@
 
       // Persist the editor state to localStorage so a page refresh doesn't
       // wipe in-progress configs. Empty configs clear the entry so a clean
-      // user comes back to a clean wizard.
-      function saveEditorConfig() {
-        if (isHydrating) return;
+      // user comes back to a clean wizard. Debounced because updateConfig
+      // fires on every keystroke in textareas like report_header_info.
+      let _saveEditorConfigTimer = null;
+      function _flushSaveEditorConfig() {
+        if (_saveEditorConfigTimer !== null) {
+          clearTimeout(_saveEditorConfigTimer);
+          _saveEditorConfigTimer = null;
+        }
         safeLocalStorageSet(
           "mqc_wizard_config",
           Object.keys(currentConfig).length === 0 ? null : JSON.stringify(currentConfig),
         );
       }
+      function saveEditorConfig() {
+        if (isHydrating) return;
+        clearTimeout(_saveEditorConfigTimer);
+        _saveEditorConfigTimer = setTimeout(_flushSaveEditorConfig, 200);
+      }
+      // Don't drop the user's last edits if they navigate away during the
+      // debounce window.
+      window.addEventListener("pagehide", _flushSaveEditorConfig);
 
       // Set or remove (when value is null) a localStorage entry, swallowing
       // quota / disabled-storage errors so the wizard keeps working in
@@ -7972,7 +8069,6 @@
       function setMode(mode) {
         const yaml = mode === "yaml";
         document.body.classList.toggle("yaml-mode", yaml);
-        document.getElementById("yamlViewSection").style.display = yaml ? "block" : "none";
         const btn = document.getElementById("viewYamlBtn");
         btn.textContent = yaml ? "Back to editor" : "View YAML";
         btn.onclick = yaml ? backToEditor : showYaml;
@@ -8059,7 +8155,7 @@
       // bails to a rebuild.
       function mergeFormIntoCachedYaml(cachedText, snap, now) {
         const isScalar = (v) => v === null || typeof v !== "object";
-        const dumpScalar = (v) => jsyaml.dump(v, { lineWidth: -1, noRefs: true }).trimEnd();
+        const dumpScalar = (v) => dumpYaml(v, { lineWidth: -1 });
 
         const allKeys = new Set([...Object.keys(snap), ...Object.keys(now)]);
         const changes = [];
@@ -8155,9 +8251,7 @@
         isHydrating = true;
         try {
           for (const k of Object.keys(currentConfig)) {
-            if (k in parsed) continue;
-            const fg = document.querySelector(`.form-group[data-propname="${CSS.escape(k)}"]`);
-            if (fg) resetGroup(fg, getCurrentPropData(k));
+            if (!(k in parsed)) resetField(k);
           }
           pluginKeys = {};
           for (const [k, v] of Object.entries(parsed)) {
@@ -8688,9 +8782,12 @@
         }
         if (sweep) {
           const btn = document.createElement("button");
-          btn.className = "btn btn-success";
-          btn.textContent =
-            sweep === 1 ? `Remove 1 option that matches the default` : `Remove ${sweep} options that match the default`;
+          btn.className = "btn btn-secondary";
+          btn.textContent = "Remove defaults";
+          btn.title =
+            sweep === 1
+              ? `Remove 1 option whose value matches the MultiQC default — it has no effect`
+              : `Remove ${sweep} options whose values match the MultiQC default — they have no effect`;
           btn.onclick = removeDefaults;
           summary.appendChild(btn);
         }
@@ -8780,7 +8877,9 @@
         for (const [k, v] of Object.entries(lastValidated.parsed)) {
           if (!drop.has(k)) kept[k] = v;
         }
-        const out = Object.keys(kept).length ? dumpYaml(kept, { sortKeys: true }) : "";
+        // Preserve the user's typed key order (kept is built by iterating
+        // their parsed YAML), so the stripped result reads naturally.
+        const out = Object.keys(kept).length ? dumpYaml(kept) : "";
         setValidateText(out);
         runValidation();
       }

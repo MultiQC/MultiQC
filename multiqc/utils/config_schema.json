@@ -702,6 +702,39 @@
       "section": "Report Contents",
       "title": "Custom Content"
     },
+    "custom_content_modules": {
+      "advanced": true,
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Extra module IDs whose output should be parsed as custom content.",
+      "section": "Report Contents",
+      "title": "Custom Content Modules"
+    },
+    "custom_data": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer splitting the metadata and the data across two top-level keys.",
+      "section": "Report Contents",
+      "title": "Custom Data"
+    },
     "top_modules": {
       "anyOf": [
         {
@@ -785,6 +818,42 @@
       "section": "Report Contents",
       "title": "Module Order"
     },
+    "run_modules": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
+      "examples": [["fastqc", "cutadapt", "samtools"]],
+      "section": "Report Contents",
+      "title": "Run Modules"
+    },
+    "exclude_modules": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Module IDs to skip (mirror of the --exclude CLI flag).",
+      "examples": [["fastqc"]],
+      "section": "Report Contents",
+      "title": "Exclude Modules"
+    },
     "remove_sections": {
       "anyOf": [
         {
@@ -802,6 +871,31 @@
       "examples": [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
       "section": "Report Contents",
       "title": "Remove Sections"
+    },
+    "report_section_order": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides \u2014 see the customisation docs for the full grammar.",
+      "examples": [
+        {
+          "custom_content-my-section": {
+            "before": "fastqc"
+          },
+          "fastqc": {
+            "order": -10
+          }
+        }
+      ],
+      "section": "Report Contents",
+      "title": "Report Section Order"
     },
     "section_comments": {
       "anyOf": [
@@ -861,47 +955,6 @@
       ],
       "section": "Report Contents",
       "title": "Section Status Checks"
-    },
-    "custom_data": {
-      "anyOf": [
-        {
-          "additionalProperties": true,
-          "type": "object"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer splitting the metadata and the data across two top-level keys.",
-      "section": "Report Contents",
-      "title": "Custom Data"
-    },
-    "report_section_order": {
-      "advanced": true,
-      "anyOf": [
-        {
-          "additionalProperties": true,
-          "type": "object"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides \u2014 see the customisation docs for the full grammar.",
-      "examples": [
-        {
-          "custom_content-my-section": {
-            "before": "fastqc"
-          },
-          "fastqc": {
-            "order": -10
-          }
-        }
-      ],
-      "section": "Report Contents",
-      "title": "Report Section Order"
     },
     "force": {
       "anyOf": [
@@ -1686,60 +1739,6 @@
       "description": "Module IDs whose log files may be matched by multiple modules during the search.",
       "section": "File Discovery",
       "title": "Filesearch File Shared"
-    },
-    "run_modules": {
-      "anyOf": [
-        {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
-      "examples": [["fastqc", "cutadapt", "samtools"]],
-      "section": "File Discovery",
-      "title": "Run Modules"
-    },
-    "exclude_modules": {
-      "anyOf": [
-        {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Module IDs to skip (mirror of the --exclude CLI flag).",
-      "examples": [["fastqc"]],
-      "section": "File Discovery",
-      "title": "Exclude Modules"
-    },
-    "custom_content_modules": {
-      "advanced": true,
-      "anyOf": [
-        {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Extra module IDs whose output should be parsed as custom content.",
-      "section": "File Discovery",
-      "title": "Custom Content Modules"
     },
     "plots_force_flat": {
       "anyOf": [
@@ -2848,15 +2847,21 @@
       "advanced": true,
       "anyOf": [
         {
-          "type": "string"
+          "additionalProperties": true,
+          "type": "object"
         },
         {
           "type": "null"
         }
       ],
       "default": null,
-      "description": "Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.",
-      "examples": ["temperature=0.3&top_p=0.9"],
+      "description": "Extra request-body fields merged into the AI request payload (provider-specific).",
+      "examples": [
+        {
+          "temperature": 0.3,
+          "top_p": 0.9
+        }
+      ],
       "section": "AI Summary",
       "title": "Ai Extra Query Options"
     },
@@ -2864,7 +2869,8 @@
       "advanced": true,
       "anyOf": [
         {
-          "type": "string"
+          "exclusiveMinimum": 0,
+          "type": "integer"
         },
         {
           "type": "null"
@@ -2937,7 +2943,6 @@
       "title": "Ai Thinking Budget Tokens"
     },
     "ai_prompt_short": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -2954,7 +2959,6 @@
       "title": "Ai Prompt Short"
     },
     "ai_prompt_full": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "string"
