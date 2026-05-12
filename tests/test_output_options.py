@@ -153,7 +153,7 @@ def test_parquet_wide_merges_samples(tmp_path):
     assert (table_rows["myid / col2"] == 3.4).all()
     assert (table_rows["myid / col3"].is_nan()).all()
     assert (table_rows["myid / col4"] == "bar").all()
-    assert (table_rows["myid / col5"] == True).all()
+    assert table_rows["myid / col5"].all()
 
     # each table stores its pconfig in a per-table column to survive the outer join without renaming
     for table_id in ("myid", "myid2", "myid3"):
