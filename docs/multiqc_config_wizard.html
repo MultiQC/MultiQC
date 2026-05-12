@@ -1118,11 +1118,12 @@
       }
       .validate-type {
         font-family: "Inter", sans-serif;
-        font-size: 0.7em;
+        font-size: 0.6em;
         font-weight: 500;
         letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--ink-soft);
+        margin-left: 0.5em;
       }
       .validate-desc {
         color: var(--ink-mute);
@@ -7437,6 +7438,12 @@
         keyName.className = "field-key";
         keyName.textContent = propName;
         keyGroup.appendChild(keyName);
+        if (propData.type) {
+          const typeTag = document.createElement("span");
+          typeTag.className = "validate-type";
+          typeTag.textContent = propData.type;
+          keyGroup.appendChild(typeTag);
+        }
         label.appendChild(keyGroup);
 
         if (propData.default !== null && propData.default !== undefined) {
