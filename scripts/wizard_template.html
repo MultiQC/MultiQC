@@ -1405,14 +1405,15 @@
       }
 
       function formatDefaultValue(value) {
+        const isPrimitive = (v) => v === null || typeof v !== "object";
         if (Array.isArray(value)) {
-          if (value.length <= 3) {
+          if (value.length <= 3 && value.every(isPrimitive)) {
             return JSON.stringify(value);
           }
           return "[" + value.length + " items]";
         } else if (typeof value === "object" && value !== null) {
           const keys = Object.keys(value);
-          if (keys.length <= 2) {
+          if (keys.length <= 2 && Object.values(value).every(isPrimitive)) {
             return JSON.stringify(value);
           }
           return "{" + keys.length + " keys}";
