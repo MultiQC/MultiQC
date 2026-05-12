@@ -1,8 +1,7 @@
 ---
 title: Sylph-tax
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Taxonomic profiling of metagenomic reads.</p>
+description: "Taxonomic profiling of metagenomic reads."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/sylphtax/sylphtax.py
 -->
 
 :::note
-<p>Taxonomic profiling of metagenomic reads.</p>
+Taxonomic profiling of metagenomic reads.
 
 [https://sylph-docs.github.io/](https://sylph-docs.github.io/), [https://sylph-docs.github.io/sylph-tax/](https://sylph-docs.github.io/sylph-tax/)
 :::
@@ -23,10 +22,10 @@ File path for the source of this content: multiqc/modules/sylphtax/sylphtax.py
 The module supports outputs from sylphtax, that look like the following:
 
 ```tsv
-clade_name	relative_abundance	sequence_abundance	ANI (if strain-level)
-d__Bacteria	100.00010000000002	99.99999999999999	NA
-d__Bacteria|p__Bacillota	24.640800000000002	18.712699999999998	NA
-d__Bacteria|p__Bacillota_A	47.333499999999994	52.5969	NA
+clade_name  relative_abundance      sequence_abundance      ANI (if strain-level)
+d__Bacteria 100.00010000000002      99.99999999999999       NA
+d__Bacteria|p__Bacillota    24.640800000000002      18.712699999999998      NA
+d__Bacteria|p__Bacillota_A  47.333499999999994      52.5969 NA
 ```
 
 A bar graph is generated that shows the relative abundance for each sample that

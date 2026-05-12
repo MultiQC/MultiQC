@@ -1,6 +1,22 @@
 # GitHub Actions Guide for Module Triage
 
-This document describes GitHub CLI operations and API interactions for the module triage system.
+GitHub CLI operations and API interactions for the module triage system.
+
+## Contents
+
+- Prerequisites — `gh` auth and required scopes
+- Fetching issue data — single issue, list, search related
+- Parsing the issue body — extract tool name, URL, description
+- Checking for example files — uploads, test-data links
+- Managing labels — priority labels, status labels (with removal order)
+- Posting comments — analysis comment template usage
+- Project board operations — add issue, update fields, move columns
+- Batch operations — triage-all, stale request detection
+- Rate limiting — checking remaining calls, caching
+- Error handling — issue not found, label conflicts, permissions
+- Dry-run mode
+- Complete example workflow
+- Testing and workflow integration
 
 ## Prerequisites
 
@@ -45,7 +61,7 @@ gh issue list \
 gh issue list \
   --label "module: new" \
   --state open \
-  --search "NOT label:\"priority: high\""
+  --search "NOT label:\"module: prio-high\""
 ```
 
 ### Search for Related Issues
@@ -123,7 +139,7 @@ gh issue edit ISSUE_NUMBER --add-label "module: prio-high"
 - `module: prio-high` - Score ≥ 70
 - `module: prio-medium` - Score 40-69
 - `module: prio-low` - Score 20-39
-- `module: prio-hold` - Score <= 20
+- `module: prio-hold` - Score < 20
 
 **Status labels:**
 
@@ -320,7 +336,7 @@ fi
 
 ```bash
 # Safe to add label multiple times (idempotent)
-gh issue edit ISSUE_NUMBER --add-label "priority: high"
+gh issue edit ISSUE_NUMBER --add-label "module: prio-high"
 ```
 
 ### Permission Errors
@@ -341,10 +357,10 @@ When operating in dry-run mode, output intended actions without executing:
 DRY_RUN=true
 
 if [ "$DRY_RUN" = true ]; then
-  echo "[DRY RUN] Would add label: priority: high"
+  echo "[DRY RUN] Would add label: module: prio-high"
   echo "[DRY RUN] Would post comment with analysis"
 else
-  gh issue edit ISSUE_NUMBER --add-label "priority: high"
+  gh issue edit ISSUE_NUMBER --add-label "module: prio-high"
   gh issue comment ISSUE_NUMBER --body "$ANALYSIS"
 fi
 ```
@@ -377,10 +393,10 @@ fi
 
 # 5. Add labels
 if [ "$DRY_RUN" != "true" ]; then
-  gh issue edit $ISSUE_NUMBER --add-label "priority: high"
+  gh issue edit $ISSUE_NUMBER --add-label "module: prio-high"
   echo "Added priority label"
 else
-  echo "[DRY RUN] Would add label: priority: high"
+  echo "[DRY RUN] Would add label: module: prio-high"
 fi
 
 # 6. Post analysis
@@ -401,8 +417,8 @@ Test GitHub operations in dry-run mode:
 gh issue view 1234 --json title,body,labels
 
 # Test label operations (on test issue)
-gh issue edit TEST_ISSUE --add-label "priority: high"
-gh issue edit TEST_ISSUE --remove-label "priority: high"
+gh issue edit TEST_ISSUE --add-label "module: prio-high"
+gh issue edit TEST_ISSUE --remove-label "module: prio-high"
 
 # Test comment formatting
 echo "$ANALYSIS" | gh issue comment TEST_ISSUE --body-file -

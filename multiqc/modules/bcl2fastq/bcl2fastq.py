@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="bcl2fastq",
             anchor="bcl2fastq",
             href="https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html",

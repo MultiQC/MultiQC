@@ -170,6 +170,8 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                     reads_by_gc_sum += (1.0 * pct / 100) * num_reads
                     total_reads_sum += num_reads
 
+            data.clear()
+
             avg_gc_content_data[s_name] = {"avg_gc_content_percent": (reads_by_gc_sum * 100) / total_reads_sum}
 
         # Add Avg. GC Content to header

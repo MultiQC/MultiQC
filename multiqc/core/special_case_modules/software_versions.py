@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Software Versions",
             anchor=Anchor("multiqc_software_versions"),
             info="lists versions of software tools extracted from file contents.",

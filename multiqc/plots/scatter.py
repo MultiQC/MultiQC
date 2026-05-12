@@ -499,7 +499,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
                     if isinstance(dl, dict):
                         # if not a dict: only dataset name is provided
                         for k, v in dl.items():
-                            if k in series_config.model_fields:
+                            if k in ScatterConfig.model_fields:
                                 setattr(series_config, k, v)
 
                 if not isinstance(ds[s_name], list):

@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialse the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Librarian",
             anchor="librarian",
             href="https://github.com/DesmondWillowbrook/Librarian",

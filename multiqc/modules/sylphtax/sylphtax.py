@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         info="Taxonomic profiling of metagenomic reads.",
         doi="10.1038/s41587-024-02412-y",
     ):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name=name,
             anchor=anchor,
             href=href,
