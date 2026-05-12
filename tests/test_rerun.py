@@ -440,9 +440,7 @@ def test_grouped_samples_parquet_roundtrip(tmp_path):
     assert parquet_path.exists()
 
     df = pl.read_parquet(parquet_path)
-    plot_input_rows = df.filter(
-        (pl.col("type") == "plot_input") & (pl.col("anchor") == str(original.anchor))
-    )
+    plot_input_rows = df.filter((pl.col("type") == "plot_input") & (pl.col("anchor") == str(original.anchor)))
     assert plot_input_rows.height == 1
 
     plot_input_json = json.loads(plot_input_rows.get_column("plot_input_data")[0])
