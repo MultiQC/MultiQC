@@ -11,12 +11,19 @@ it prints the contents of these files into the report.
 #}
 
 <!-- Favicon includes -->
-<link
-  rel="icon"
-  type="image/svg"
-  href="data:image/svg+xml;base64,{{ include_file('assets/img/MultiQC_icon.svg', b64=True) }}"
-/>
-
+{% if config.custom_favicon is not none %}
+  <link
+    rel="icon"
+    type="{{ get_mime_type(config.custom_favicon) }}"
+    href="data:{{ get_mime_type(config.custom_favicon) }};base64,{{ include_file(config.custom_favicon, b64=True) }}"
+  />
+{% else %}
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml;base64,{{ include_file('assets/img/MultiQC_icon.svg', b64=True) }}"
+  />
+{% endif %}
 {# prettier-ignore-start #}
 
 <!-- Include CSS -->

@@ -127,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="BCL Convert",
             anchor="bclconvert",
             href="https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html",

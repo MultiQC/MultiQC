@@ -1,8 +1,7 @@
 ---
 title: FastQC
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Quality control tool for high throughput sequencing data.</p>
+description: "Quality control tool for high throughput sequencing data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/fastqc/fastqc.py
 -->
 
 :::note
-<p>Quality control tool for high throughput sequencing data.</p>
+Quality control tool for high throughput sequencing data.
 
 [http://www.bioinformatics.babraham.ac.uk/projects/fastqc/](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
 :::
@@ -93,10 +92,10 @@ column 2 = % of genome):
 
 ```bash
 # FastQC theoretical GC content curve: YOUR REFERENCE NAME
-0	0.005311768
-1	0.004108502
-2	0.004060371
-3	0.005066476
+0   0.005311768
+1   0.004108502
+2   0.004060371
+3   0.005066476
 [...]
 ```
 

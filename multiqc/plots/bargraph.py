@@ -822,6 +822,9 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 plot_samples.append(ordered_samples_names)
                 plot_data.append(cat_data_dicts)
 
+        if not plot_samples:
+            return None
+
         return BarPlot.create(
             cats_lists=plot_data,
             samples_lists=plot_samples,
