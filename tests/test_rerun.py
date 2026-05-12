@@ -5,7 +5,11 @@ from datetime import datetime, timedelta
 import polars as pl
 
 import multiqc
+from multiqc.core import tmp_dir
+from multiqc.core.plot_data_store import flush_to_parquet
+from multiqc.core.special_case_modules.load_multiqc_data import create_plot_input_data_only
 from multiqc.core.update_config import ClConfig
+from multiqc.plots import table_object
 from multiqc.plots.bargraph import BarPlotConfig, BarPlotInputData, CatConf
 from multiqc.plots.linegraph import LinePlotConfig, LinePlotNormalizedInputData, Series
 from multiqc.plots.plot import PlotType, plot_anchor
@@ -285,8 +289,6 @@ def _make_grouped_violin_data() -> ViolinPlotInputData:
     anchor = plot_anchor(pconfig)
     table_anchor = Anchor(f"{anchor}_table")
 
-    from multiqc.plots import table_object
-
     grouped_data: dict = {
         SectionKey("section1"): {
             SampleGroup("SampleA"): [
@@ -377,8 +379,6 @@ def test_grouped_samples_survive_merge():
     anchor = plot_anchor(pconfig)
     table_anchor = Anchor(f"{anchor}_table")
 
-    from multiqc.plots import table_object
-
     grouped_data2: dict = {
         SectionKey("section1"): {
             SampleGroup("SampleC"): [
@@ -435,20 +435,17 @@ def test_grouped_samples_parquet_roundtrip(tmp_path):
     original = _make_grouped_violin_data()
     original.save_to_parquet()
 
-    from multiqc.core.plot_data_store import flush_to_parquet
-    from multiqc.core import tmp_dir
-
     flush_to_parquet()
     parquet_path = tmp_dir.parquet_file()
     assert parquet_path.exists()
 
     df = pl.read_parquet(parquet_path)
-    plot_input_rows = df.filter(pl.col("type") == "plot_input")
-    assert plot_input_rows.height >= 1
+    plot_input_rows = df.filter(
+        (pl.col("type") == "plot_input") & (pl.col("anchor") == str(original.anchor))
+    )
+    assert plot_input_rows.height == 1
 
     plot_input_json = json.loads(plot_input_rows.get_column("plot_input_data")[0])
-    from multiqc.core.special_case_modules.load_multiqc_data import create_plot_input_data_only
-
     loaded = create_plot_input_data_only(plot_input_json)
     assert isinstance(loaded, ViolinPlotInputData)
 

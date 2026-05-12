@@ -26,6 +26,8 @@ from multiqc.plots.table_object import (
     ColumnMeta,
     DataTable,
     ExtValueT,
+    GroupT,
+    InputRow,
     SectionT,
     TableConfig,
     ValueT,
@@ -213,11 +215,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
         show_table_by_default = df.select("show_table_by_default").row(0)[0]
 
-        # Prepare data structure for DataTable creation.
-        # Use GroupT (which accepts List[InputRow]) so multi-row groups survive the round-trip.
-        from multiqc.plots.table_object import InputRow as _InputRow
-
-        data_dict: Dict[SectionKey, Dict[str, Any]] = {}
+        data_dict: Dict[SectionKey, Dict[str, GroupT]] = {}
         headers_dict: Dict[SectionKey, Dict[ColumnKey, ColumnDict]] = {}
 
         # Extract all columns as lists for efficient access (avoiding repeated iter_rows)
@@ -261,10 +259,10 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
         for section_key, group_map in section_group_row_indices.items():
             section_headers: Dict[ColumnKey, ColumnDict] = {}
-            section_data: Dict[str, Any] = {}
+            section_data: Dict[str, GroupT] = {}
 
             for group_sample, row_sample_map in group_map.items():
-                input_rows: List[_InputRow] = []
+                input_rows: List[InputRow] = []
                 for row_sample, indices in row_sample_map.items():
                     if has_section_order and all_section_order is not None:
                         indices = sorted(indices, key=lambda idx: all_section_order[idx])
@@ -277,11 +275,11 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             section_headers[metric_name] = json.loads(all_column_meta[idx])
 
                     if val_by_metric:
-                        input_rows.append(_InputRow(sample=SampleName(str(row_sample)), data=val_by_metric))
+                        input_rows.append(InputRow(sample=SampleName(str(row_sample)), data=val_by_metric))
 
                 if input_rows:
-                    if len(input_rows) == 1 and str(input_rows[0].sample) == group_sample:
-                        section_data[group_sample] = input_rows[0].data
+                    if len(input_rows) == 1:
+                        section_data[group_sample] = input_rows[0]
                     else:
                         section_data[group_sample] = input_rows
 
@@ -291,7 +289,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
         # Create DataTable if we have data
         dt = table_object.DataTable.create(
-            data=cast(Dict[SectionKey, SectionT], data_dict),
+            data=data_dict,  # type: ignore[arg-type]
             table_id=pconf.id,
             table_anchor=table_anchor,
             pconfig=pconf.model_copy(),
