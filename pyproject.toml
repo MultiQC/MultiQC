@@ -30,7 +30,7 @@ dependencies = [
     "natsort",
     "tiktoken",
     "jsonschema",
-    # Pyodide currently publishes Polars 1.33.1; `rtcompat` is available from 1.34.0 for native installs.
+    # Pyodide currently publishes Polars 1.33.1. Once it has 1.34.0+, collapse this into the native dependency.
     "polars>=1.33.1; sys_platform == 'emscripten'",
     "polars[rtcompat]>=1.34.0; sys_platform != 'emscripten'",
     "pyarrow",            # for parquet support
