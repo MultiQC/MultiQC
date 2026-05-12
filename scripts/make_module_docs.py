@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Generate documentation for MultiQC modules and changelog.
 
@@ -5,14 +6,12 @@ Usage:
     python scripts/make_docs.py <docs_repo_path>
 """
 
-from datetime import datetime
 import json
-import os
 from typing import Dict
 import yaml
-import argparse
+from markdownify import markdownify
 from pathlib import Path
-from textwrap import dedent, indent
+from textwrap import dedent
 import subprocess
 
 from multiqc import config, report, BaseMultiqcModule
@@ -53,12 +52,15 @@ def main():
                 "id": f"modules/{mod_id}",
                 "data": {
                     "name": f"{module.name}",
-                    "summary": f"{module.info}",
+                    "summary": f"{markdownify(module.info)}",
                 },
             }
         )
 
         docstring = module_cls.__doc__ or ""
+
+        # Replace absolute URLs with relative, so that Docs CI can find broken links
+        docstring = docstring.replace("https://docs.seqera.io/multiqc/", "../")
 
         if module.extra:
             extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
@@ -66,12 +68,13 @@ def main():
         else:
             extra = ""
 
+        info_plain = markdownify(module.info).strip()
+
         text = f"""\
 ---
 title: {module.name}
 displayed_sidebar: multiqcSidebar
-description: >
-{indent(module.info, "    ")}
+description: "{info_plain}"
 ---
 
 <!--
@@ -84,7 +87,7 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
 -->
 
 :::note
-{module.info}
+{info_plain}
 
 {", ".join([f"[{href}]({href})" for href in module.href])}
 :::

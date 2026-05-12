@@ -9,12 +9,12 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Som.py output not currently supported.
+    Som.py output supported in separate sompy module.
     """
 
     def __init__(self):
         """MultiQC module for processing hap.py output logs"""
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="hap.py",
             anchor="happy",
             href="https://github.com/Illumina/hap.py",

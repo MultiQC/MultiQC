@@ -284,7 +284,7 @@ class MultiqcModule(BaseMultiqcModule):
         # No DOI to cite // doi=
         tools=tuple(TOOLS),
     ):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name=name,
             anchor=anchor,
             href=href,

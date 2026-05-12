@@ -1,8 +1,7 @@
 ---
 title: OptiType
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>Precision HLA typing from next-generation sequencing data.</p>
+description: "Precision HLA typing from next-generation sequencing data."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/optitype/optitype.py
 -->
 
 :::note
-
-<p>Precision HLA typing from next-generation sequencing data.</p>
+Precision HLA typing from next-generation sequencing data.
 
 [https://github.com/FRED-2/OptiType](https://github.com/FRED-2/OptiType)
 :::
@@ -31,3 +29,4 @@ optitype:
   contents: "\tA1\tA2\tB1\tB2\tC1\tC2\tReads\tObjective"
   num_lines: 1
 ```
+    

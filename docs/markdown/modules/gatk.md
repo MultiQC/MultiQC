@@ -1,8 +1,7 @@
 ---
 title: GATK
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>Wide variety of tools with a primary focus on variant discovery and genotyping.</p>
+description: "Wide variety of tools with a primary focus on variant discovery and genotyping."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/gatk/gatk.py
 -->
 
 :::note
-
-<p>Wide variety of tools with a primary focus on variant discovery and genotyping.</p>
+Wide variety of tools with a primary focus on variant discovery and genotyping.
 
 [https://www.broadinstitute.org/gatk/](https://www.broadinstitute.org/gatk/)
 :::
@@ -52,14 +50,15 @@ variants in dbSNP, genotype concordance, Ti/Tv ratios and a lot more.
 
 ```yaml
 gatk/analyze_saturation_mutagenesis:
-  contents: ">>Reads in disjoint pairs evaluated separately:"
-  fn: "*.readCounts"
+  contents: '>>Reads in disjoint pairs evaluated separately:'
+  fn: '*.readCounts'
   num_lines: 10
 gatk/base_recalibrator:
-  - contents: "#:GATKTable:Arguments:Recalibration"
-    num_lines: 3
-  - contents: "#:SENTIEON_QCAL_TABLE:Arguments:Recalibration"
-    num_lines: 3
+- contents: '#:GATKTable:Arguments:Recalibration'
+  num_lines: 3
+- contents: '#:SENTIEON_QCAL_TABLE:Arguments:Recalibration'
+  num_lines: 3
 gatk/varianteval:
-  contents: "#:GATKTable:TiTvVariantEvaluator"
+  contents: '#:GATKTable:TiTvVariantEvaluator'
 ```
+    

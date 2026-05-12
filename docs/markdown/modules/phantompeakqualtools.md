@@ -1,8 +1,7 @@
 ---
 title: phantompeakqualtools
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.</p>
+description: "Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/phantompeakqualtools/p
 -->
 
 :::note
-
-<p>Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.</p>
+Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
 
 [https://www.encodeproject.org/software/phantompeakqualtools](https://www.encodeproject.org/software/phantompeakqualtools)
 :::
@@ -30,5 +28,6 @@ measure of library complexity. PBC is the ratio of (non-redundant, uniquely mapp
 
 ```yaml
 phantompeakqualtools/out:
-  fn: "*.spp.out"
+  fn: '*.spp.out'
 ```
+    

@@ -1,8 +1,7 @@
 ---
 title: DamageProfiler
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>DNA damage pattern retrieval for ancient DNA analysis.</p>
+description: "DNA damage pattern retrieval for ancient DNA analysis."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/damageprofiler/damagep
 -->
 
 :::note
-
-<p>DNA damage pattern retrieval for ancient DNA analysis.</p>
+DNA damage pattern retrieval for ancient DNA analysis.
 
 [https://github.com/Integrative-Transcriptomics/DamageProfiler](https://github.com/Integrative-Transcriptomics/DamageProfiler)
 :::
@@ -25,5 +23,6 @@ File path for the source of this content: multiqc/modules/damageprofiler/damagep
 
 ```yaml
 damageprofiler:
-  fn: "*dmgprof.json"
+  fn: '*dmgprof.json'
 ```
+    

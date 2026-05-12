@@ -1,8 +1,7 @@
 ---
 title: Sambamba
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>Toolkit for interacting with BAM/CRAM files.</p>
+description: "Toolkit for interacting with BAM/CRAM files."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/sambamba/sambamba.py
 -->
 
 :::note
-
-<p>Toolkit for interacting with BAM/CRAM files.</p>
+Toolkit for interacting with BAM/CRAM files.
 
 [https://lomereiter.github.io/sambamba/](https://lomereiter.github.io/sambamba/)
 :::
@@ -66,3 +64,4 @@ sambamba/markdup:
   contents: finding positions of the duplicate reads in the file
   num_lines: 50
 ```
+    

@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Tophat",
             anchor="tophat",
             href="https://ccb.jhu.edu/software/tophat/",

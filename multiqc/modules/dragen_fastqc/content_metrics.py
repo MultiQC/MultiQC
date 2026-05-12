@@ -7,6 +7,7 @@ from collections import defaultdict
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 from multiqc import report
+from multiqc.utils.material_icons import get_material_icon
 
 from .util import average_from_range, average_pos_from_metric
 
@@ -140,10 +141,9 @@ class DragenContentMetrics(BaseMultiqcModule):
 
         html = """<div id="dragen_fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">
-               <span class="glyphicon glyphicon-hand-up"></span>
-               Click a sample row to see a line plot for that dataset.
+               {hand_icon} Click a sample row to see a line plot for that dataset.
             </div>
-            <h5><span class="s_name text-primary"><span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name</span></h5>
+            <h5><span class="s_name text-primary">Rollover for sample name</span></h5>
             <div class="fastqc_seq_heatmap_key">
                 Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
                 <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>
@@ -163,6 +163,7 @@ class DragenContentMetrics(BaseMultiqcModule):
             # Generate unique plot ID, needed in mqc_export_selectplots
             id=report.save_htmlid("dragen_fastqc_per_base_sequence_content_plot"),
             d=json.dumps([self.anchor.replace("-", "_"), data]),
+            hand_icon=get_material_icon("mdi:hand-pointing-up", 16),
         )
 
         self.add_section(
@@ -242,7 +243,6 @@ class DragenContentMetrics(BaseMultiqcModule):
             "y_minrange": 5,
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
-            "hide_zero_cats": True,
             "y_bands": [
                 {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},
                 {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},

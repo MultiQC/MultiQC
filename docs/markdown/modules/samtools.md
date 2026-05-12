@@ -1,8 +1,7 @@
 ---
 title: Samtools
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>Toolkit for interacting with BAM/CRAM files.</p>
+description: "Toolkit for interacting with BAM/CRAM files."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/samtools/samtools.py
 -->
 
 :::note
-
-<p>Toolkit for interacting with BAM/CRAM files.</p>
+Toolkit for interacting with BAM/CRAM files.
 
 [http://www.htslib.org](http://www.htslib.org)
 :::
@@ -117,7 +115,6 @@ general_stats_columns:
 ```
 
 Each samtools submodule has its own namespace in the configuration
-
 - `samtools/ampliconclip`
 - `samtools/coverage`
 - `samtools/flagstats`
@@ -131,8 +128,8 @@ Each samtools submodule has its own namespace in the configuration
 ```yaml
 samtools/ampliconclip:
   contents:
-    - "COMMAND:"
-    - samtools ampliconclip
+  - 'COMMAND:'
+  - samtools ampliconclip
   num_lines: 11
 samtools/coverage:
   contents: "#rname\tstartpos\tendpos\tnumreads\tcovbases\tcoverage\tmeandepth\tmeanbaseq\t\
@@ -141,19 +138,20 @@ samtools/coverage:
 samtools/flagstat:
   contents: in total (QC-passed reads + QC-failed reads)
 samtools/idxstats:
-  fn: "*idxstat*"
+  fn: '*idxstat*'
 samtools/markdup_json:
   contents:
-    - '"COMMAND":'
-    - samtools markdup
+  - '"COMMAND":'
+  - samtools markdup
   num_lines: 10
 samtools/markdup_txt:
   contents:
-    - "^COMMAND:"
-    - samtools markdup
+  - '^COMMAND:'
+  - samtools markdup
   num_lines: 2
 samtools/rmdup:
-  contents: "[bam_rmdup"
+  contents: '[bam_rmdup'
 samtools/stats:
   contents: This file was produced by samtools stats
 ```
+    

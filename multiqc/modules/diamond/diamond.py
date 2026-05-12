@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DIAMOND",
             anchor="diamond",
             href="https://github.com/bbuchfink/diamond",

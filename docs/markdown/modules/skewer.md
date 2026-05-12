@@ -1,8 +1,7 @@
 ---
 title: Skewer
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>Adapter trimming tool for NGS paired-end sequences.</p>
+description: "Adapter trimming tool for NGS paired-end sequences."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/skewer/skewer.py
 -->
 
 :::note
-
-<p>Adapter trimming tool for NGS paired-end sequences.</p>
+Adapter trimming tool for NGS paired-end sequences.
 
 [https://github.com/relipmoc/skewer](https://github.com/relipmoc/skewer)
 :::
@@ -25,5 +23,6 @@ File path for the source of this content: multiqc/modules/skewer/skewer.py
 
 ```yaml
 skewer:
-  contents: "maximum error ratio allowed (-r):"
+  contents: 'maximum error ratio allowed (-r):'
 ```
+    

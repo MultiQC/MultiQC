@@ -1,8 +1,7 @@
 ---
 title: Cell Ranger
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>Analyzes single cell expression or VDJ data produced by 10X Genomics.</p>
+description: "Analyzes single cell expression or VDJ data produced by 10X Genomics."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/cellranger/cellranger.
 -->
 
 :::note
-
-<p>Analyzes single cell expression or VDJ data produced by 10X Genomics.</p>
+Analyzes single cell expression or VDJ data produced by 10X Genomics.
 
 [https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger)
 :::
@@ -42,17 +40,18 @@ If present in the original report, any warning is reported as well.
 
 ```yaml
 cellranger/count_html:
-  - contents: '"command":"Cell Ranger","subcommand":"count"'
-    fn: "*.html"
-    num_lines: 20
-  - contents: '"command": "Cell Ranger", "subcommand": "count"'
-    fn: "*.html"
-    num_lines: 20
+- contents: '"command":"Cell Ranger","subcommand":"count"'
+  fn: '*.html'
+  num_lines: 20
+- contents: '"command": "Cell Ranger", "subcommand": "count"'
+  fn: '*.html'
+  num_lines: 20
 cellranger/vdj_html:
-  - contents: '"command":"Cell Ranger","subcommand":"vdj"'
-    fn: "*.html"
-    num_lines: 20
-  - contents: '"command": "Cell Ranger", "subcommand": "vdj"'
-    fn: "*.html"
-    num_lines: 20
+- contents: '"command":"Cell Ranger","subcommand":"vdj"'
+  fn: '*.html'
+  num_lines: 20
+- contents: '"command": "Cell Ranger", "subcommand": "vdj"'
+  fn: '*.html'
+  num_lines: 20
 ```
+    

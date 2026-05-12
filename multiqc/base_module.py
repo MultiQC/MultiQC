@@ -6,6 +6,7 @@ import dataclasses
 import fnmatch
 import io
 import itertools
+import json
 import logging
 import mimetypes
 import os
@@ -48,9 +49,20 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SampleNameMeta, Section, SectionId, SectionKey
+from multiqc.types import (
+    Anchor,
+    FileDict,
+    LoadedFileDict,
+    ModuleId,
+    SampleNameMeta,
+    Section,
+    SectionAlert,
+    SectionId,
+    SectionKey,
+)
 
 logger = logging.getLogger(__name__)
+SectionAlertInput = Union[str, Mapping[str, Any], SectionAlert]
 
 
 class ModuleNoSamplesFound(Exception):
@@ -69,6 +81,10 @@ class SampleGroupingConfig:
     cols_to_average: Optional[List[ColumnKey]] = None
     cols_to_sum: Optional[List[ColumnKey]] = None
     extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
+    # Module-supplied groups, mapping group display name -> sample names.
+    # When set, takes precedence over `config.table_sample_merge` name patterns
+    # (lets modules with authoritative pair / replicate info skip name-guessing).
+    explicit_groups: Optional[Dict[str, List[str]]] = None
 
 
 class BaseMultiqcModule:
@@ -196,21 +212,17 @@ class BaseMultiqcModule:
             for doi in self.doi:
                 # Build the HTML link for the DOI
                 doi_links.append(
-                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" '
-                    f'target="_blank">{doi}</a>'
+                    f' <a class="module-doi text-muted" data-doi="{doi}" data-bs-toggle="popover"'
+                    f' href="https://doi.org/{doi}" target="_blank">{doi}</a>'
                 )
-            doi_html = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}</em>'.format(
-                "; ".join(doi_links)
-            )
+            doi_html = '<span class="text-muted small ms-2">DOI: {}</span>'.format("; ".join(doi_links))
 
         url_link = ""
         if len(self.href) > 0:
             url_links: List[str] = []
             for url in self.href:
-                url_links.append(f'<a href="{url}" target="_blank">{url.strip("/")}</a>')
-            url_link = '<em class="text-muted small" style="margin-left: 1rem;">URL: {}</em>'.format(
-                "; ".join(url_links)
-            )
+                url_links.append(f'<a href="{url}" class="text-muted ms-2 small" target="_blank">{url.strip("/")}</a>')
+            url_link = "; ".join(url_links)
 
         info_html = f"{self.info}{url_link}{doi_html}"
         if not info_html.startswith("<"):  # Assume markdown, convert to HTML
@@ -350,12 +362,12 @@ class BaseMultiqcModule:
                     # Custom content module can now handle image files
                     (ftype, _) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
                     if ftype is not None and ftype.startswith("image"):
-                        with io.open(os.path.join(f["root"], f["fn"]), "rb") as fh:
+                        with open(os.path.join(f["root"], f["fn"]), "rb") as fh:
                             # always return file handles
                             yield {**f, "s_name": s_name, "f": fh}
                     else:
                         # Everything else - should be all text files
-                        with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
+                        with open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
                             if filehandles:
                                 yield {**f, "s_name": s_name, "f": fh}
                             elif filecontents:
@@ -367,7 +379,7 @@ class BaseMultiqcModule:
                                         f"characters\n{e}"
                                     )
                                     try:
-                                        with io.open(
+                                        with open(
                                             os.path.join(f["root"], f["fn"]),
                                             "r",
                                             encoding="utf-8",
@@ -400,8 +412,29 @@ class BaseMultiqcModule:
         content: str = "",
         autoformat: bool = True,
         autoformat_type: str = "markdown",
+        statuses: Optional[Dict[Literal["pass", "warn", "fail"], List[str]]] = None,
+        alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]] = None,
     ):
-        """Add a section to the module report output"""
+        """Add a section to the module report output
+
+        Args:
+            name: Title of the section. If not specified, the section will be untitled.
+            anchor: HTML anchor ID for the section. Auto-generated from `id` if not specified.
+            id: Section identifier for configuration. Auto-generated from `name` or module anchor if not specified.
+            description: Descriptive text shown at the top of the section, below the title.
+            comment: User-configurable comment text (can be set in MultiQC config).
+            helptext: Additional help text shown in a collapsible panel.
+            content_before_plot: HTML content to insert before any plot.
+            plot: A plot object or HTML string to display in the section.
+            content: HTML content to display in the section (shown after plot if both are provided).
+            autoformat: If True, format description/comment/helptext as markdown (default: True).
+            autoformat_type: Format type for autoformat, either "markdown" or "html" (default: "markdown").
+            statuses: Optional dict with keys "pass", "warn", "fail" containing lists of sample names.
+                      When provided, displays a status progress bar showing sample pass/warn/fail counts.
+                      Can be disabled globally or per-section via `section_status_checks` config.
+            alerts: Optional section alert, or list of alerts. Alert messages are autoformatted like descriptions
+                    and rendered with Bootstrap contextual classes such as "info", "warning", or "danger".
+        """
         if id is None and anchor is not None:
             id = str(anchor)
 
@@ -463,10 +496,17 @@ class BaseMultiqcModule:
                 if autoformat_type == "markdown":
                     helptext = markdown.markdown(helptext)
 
+        section_alerts = self._format_section_alerts(alerts, autoformat, autoformat_type)
+
         # Strip excess whitespace
         description = description.strip()
         comment = comment.strip()
         helptext = helptext.strip()
+
+        # Generate status bar HTML if status data is provided
+        status_bar_html = ""
+        if statuses is not None and self._should_add_status_bar(str(id)):
+            status_bar_html = self._generate_status_bar_html(statuses, str(anchor))
 
         section = Section(
             name=name or "",
@@ -480,7 +520,9 @@ class BaseMultiqcModule:
             helptext=helptext,
             content_before_plot=content_before_plot,
             content=content,
-            print_section=any([content_before_plot, plot, content]),
+            print_section=any([content_before_plot, plot, content, section_alerts]),
+            status_bar_html=status_bar_html,
+            alerts=section_alerts,
         )
 
         if plot is not None:
@@ -493,6 +535,136 @@ class BaseMultiqcModule:
 
         # self.sections is passed into Jinja template:
         self.sections.append(section)
+
+    def _format_section_alerts(
+        self,
+        alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]],
+        autoformat: bool,
+        autoformat_type: str,
+    ) -> List[SectionAlert]:
+        if alerts is None:
+            return []
+
+        if isinstance(alerts, (str, SectionAlert)) or isinstance(alerts, Mapping):
+            alert_items: Sequence[SectionAlertInput] = [alerts]
+        else:
+            alert_items = alerts
+
+        formatted_alerts: List[SectionAlert] = []
+        for alert in alert_items:
+            if isinstance(alert, str):
+                section_alert = SectionAlert(message=alert)
+            elif isinstance(alert, SectionAlert):
+                section_alert = alert.model_copy()
+            else:
+                section_alert = SectionAlert(**alert)
+
+            if autoformat:
+                section_alert.message = textwrap.dedent(section_alert.message)
+                if autoformat_type == "markdown":
+                    section_alert.message = markdown.markdown(section_alert.message)
+            section_alert.message = section_alert.message.strip()
+
+            if not section_alert.message:
+                continue
+            formatted_alerts.append(section_alert)
+
+        return formatted_alerts
+
+    def _should_add_status_bar(self, section_id: str) -> bool:
+        """
+        Check if status bar should be added based on config.section_status_checks.
+
+        Returns True if enabled (default), False if disabled.
+        """
+        # Check if there's a config for this module
+        module_config = config.section_status_checks.get(self.anchor)
+
+        if module_config is None:
+            # No config = enabled by default
+            return True
+
+        if isinstance(module_config, bool):
+            # Boolean config applies to all sections
+            return module_config
+
+        # Dict config - check for this specific section
+        return module_config.get(section_id, True)  # Default True if section not specified
+
+    def _generate_status_bar_html(
+        self, status: Dict[Literal["pass", "warn", "fail"], List[str]], section_anchor: str
+    ) -> str:
+        """
+        Generate HTML for status bar with pass/warn/fail counts.
+
+        Args:
+            status: Dict with keys "pass", "warn", "fail" containing lists of sample names
+            section_anchor: The anchor ID for this section
+
+        Returns:
+            HTML string containing progress bar and embedded JSON data
+        """
+        # Count samples per status
+        pass_samples = status.get("pass", [])
+        warn_samples = status.get("warn", [])
+        fail_samples = status.get("fail", [])
+
+        total = len(pass_samples) + len(warn_samples) + len(fail_samples)
+        if total == 0:
+            return ""
+
+        # Calculate percentages
+        pass_pct = (len(pass_samples) / total) * 100
+        warn_pct = (len(warn_samples) / total) * 100
+        fail_pct = (len(fail_samples) / total) * 100
+
+        # Build sample status dict for JavaScript
+        sample_statuses = {}
+        for sample in pass_samples:
+            sample_statuses[sample] = "pass"
+        for sample in warn_samples:
+            sample_statuses[sample] = "warn"
+        for sample in fail_samples:
+            sample_statuses[sample] = "fail"
+
+        # Generate progress bar HTML
+        html = f'''
+    <div class="mqc-status-progress-wrapper" data-module-key="{self.anchor.replace("-", "_")}" data-section-key="{section_anchor}">
+        <div class="progress-stacked mqc-status-progress">'''
+
+        if len(pass_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(pass_samples)} / {total} samples passed"
+                 aria-valuenow="{len(pass_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {pass_pct}%" title="{len(pass_samples)}&nbsp;/&nbsp;{total} samples passed">
+                <div class="progress-bar bg-success">{len(pass_samples)}</div>
+            </div>'''
+
+        if len(warn_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(warn_samples)} / {total} samples with warnings"
+                 aria-valuenow="{len(warn_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {warn_pct}%" title="{len(warn_samples)}&nbsp;/&nbsp;{total} samples with warnings">
+                <div class="progress-bar bg-warning">{len(warn_samples)}</div>
+            </div>'''
+
+        if len(fail_samples) > 0:
+            html += f'''
+            <div class="progress" role="progressbar" aria-label="{len(fail_samples)} / {total} samples failed"
+                 aria-valuenow="{len(fail_samples)}" aria-valuemin="0" aria-valuemax="{total}"
+                 style="width: {fail_pct}%" title="{len(fail_samples)}&nbsp;/&nbsp;{total} samples failed">
+                <div class="progress-bar bg-danger">{len(fail_samples)}</div>
+            </div>'''
+
+        html += """
+        </div>
+    </div>"""
+
+        # Add embedded JSON data for JavaScript
+        json_data = json.dumps([self.anchor.replace("-", "_"), section_anchor, sample_statuses])
+        html += f'\n    <script type="application/json" class="mqc-status-data">{json_data}</script>'
+
+        return html
 
     @staticmethod
     def _clean_fastq_pair(r1: str, r2: str) -> Optional[str]:
@@ -603,7 +775,26 @@ class BaseMultiqcModule:
         """
 
         rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
-        for g_name, labels_s_names in self.group_samples_names([SampleName(s) for s in data_by_sample.keys()]).items():
+
+        # 1-member entries fall through to the singleton path below: rendering
+        # them as a renamed singleton row is rarely what callers want.
+        groups_iter: Dict[SampleGroup, List[Tuple[Optional[str], SampleName, SampleName]]]
+        if grouping_config.explicit_groups:
+            groups_iter = {}
+            grouped_originals: Set[str] = set()
+            for gname, members in grouping_config.explicit_groups.items():
+                if len(members) <= 1:
+                    continue
+                groups_iter[SampleGroup(gname)] = [(None, SampleName(s), SampleName(s)) for s in members]
+                grouped_originals.update(members)
+            for s_name in data_by_sample:
+                if str(s_name) in grouped_originals:
+                    continue
+                groups_iter[SampleGroup(str(s_name))] = [(None, SampleName(str(s_name)), SampleName(str(s_name)))]
+        else:
+            groups_iter = self.group_samples_names([SampleName(s) for s in data_by_sample.keys()])
+
+        for g_name, labels_s_names in groups_iter.items():
             if len(labels_s_names) == 0:
                 continue
 
@@ -991,7 +1182,7 @@ class BaseMultiqcModule:
             return
 
         rows_by_group: Dict[SampleGroup, List[InputRow]]
-        if config.table_sample_merge:
+        if config.table_sample_merge or group_samples_config.explicit_groups:
             rows_by_group = self.group_samples_and_average_metrics(
                 data_by_sample,
                 group_samples_config,
@@ -1027,8 +1218,8 @@ class BaseMultiqcModule:
             if "description" not in _headers[col_id]:
                 _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
 
-            # Add grouping information to description if table_sample_merge is enabled
-            if config.table_sample_merge:
+            # Add grouping information to description when grouping is active
+            if config.table_sample_merge or group_samples_config.explicit_groups:
                 desc = _headers[col_id].get("description", "")
                 if group_samples_config.cols_to_weighted_average and any(
                     col_id == c for c, _ in group_samples_config.cols_to_weighted_average

@@ -1,0 +1,44 @@
+name: Claude Code Review Trigger
+
+on:
+  pull_request:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    # Only run on PR comments (issue_comment fires for both issues and PRs)
+    # or when PR is opened
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(github.event.comment.body, '/review'))
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Save PR info
+        run: |
+          mkdir -p pr-info
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "${{ github.event.pull_request.number }}" > pr-info/pr-number.txt
+            echo "${{ github.event.pull_request.head.sha }}" > pr-info/head-sha.txt
+          else
+            # For issue_comment, get PR number and fetch head SHA
+            echo "${{ github.event.issue.number }}" > pr-info/pr-number.txt
+            HEAD_SHA=$(gh pr view "${{ github.event.issue.number }}" --json headRefOid -q .headRefOid)
+            echo "$HEAD_SHA" > pr-info/head-sha.txt
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Upload PR info
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-info
+          path: pr-info/
+          retention-days: 1

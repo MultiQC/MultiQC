@@ -28,7 +28,7 @@ from typing import (
 
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator
 
 from multiqc import config, report
 from multiqc.core import plot_data_store, tmp_dir
@@ -37,6 +37,7 @@ from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, ColumnKey, PlotType, SampleName
 from multiqc.utils import mqc_colour
+from multiqc.utils.material_icons import get_material_icon
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
@@ -67,32 +68,45 @@ def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> st
 
 
 # Create and register MultiQC default Plotly template
-multiqc_plotly_template = dict(
-    layout=go.Layout(
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
-        colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
-        xaxis=dict(
-            gridcolor="rgba(0,0,0,0.05)",
-            zerolinecolor="rgba(0,0,0,0.05)",
-            color="rgba(0,0,0,0.3)",  # axis labels
-            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
-        ),
-        yaxis=dict(
-            gridcolor="rgba(0,0,0,0.05)",
-            zerolinecolor="rgba(0,0,0,0.05)",
-            color="rgba(0,0,0,0.3)",  # axis labels
-            tickfont=dict(size=10, color="rgba(0,0,0,1)"),
-        ),
-        title=dict(font=dict(size=20)),
-        modebar=dict(
-            bgcolor="rgba(0, 0, 0, 0)",
-            color="rgba(0, 0, 0, 0.5)",
-            activecolor="rgba(0, 0, 0, 1)",
-        ),
+# Uses transparent backgrounds so plots adapt to the page theme in the HTML report
+# JavaScript in plotting.js will override colors for dark mode
+def get_multiqc_plotly_template():
+    """Get the MultiQC Plotly template with runtime config values."""
+    return dict(
+        layout=go.Layout(
+            paper_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
+            plot_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
+            font=dict(
+                family=config.plot_font_family
+                or "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+                color="rgba(60,60,60,1)",
+            ),
+            colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
+            xaxis=dict(
+                gridcolor="rgba(128,128,128,0.15)",
+                zerolinecolor="rgba(128,128,128,0.2)",
+                color="rgba(100,100,100,1)",
+                tickfont=dict(size=10, color="rgba(80,80,80,1)"),
+                spikecolor="rgba(60,60,60,1)",  # Darker spike line for light mode
+                spikethickness=-3,  # Negative value removes white border, absolute value is thickness
+            ),
+            yaxis=dict(
+                gridcolor="rgba(128,128,128,0.15)",
+                zerolinecolor="rgba(128,128,128,0.2)",
+                color="rgba(100,100,100,1)",
+                tickfont=dict(size=10, color="rgba(80,80,80,1)"),
+                spikecolor="rgba(60,60,60,1)",  # Darker spike line for light mode
+                spikethickness=-3,  # Negative value removes white border, absolute value is thickness
+            ),
+            title=dict(font=dict(size=20, color="rgba(60,60,60,1)")),
+            legend=dict(font=dict(color="rgba(60,60,60,1)")),
+            modebar=dict(
+                bgcolor="rgba(0, 0, 0, 0)",
+                color="rgba(100, 100, 100, 0.5)",
+                activecolor="rgba(80, 80, 80, 1)",
+            ),
+        )
     )
-)
 
 
 class FlatLine(ValidatedConfig):
@@ -249,9 +263,22 @@ class PConfig(ValidatedConfig):
             self.title = self.id.replace("_", " ").title()
 
         # Allow user to overwrite any given config for this plot
+        per_tab_overrides: Optional[Dict[Any, Any]] = None
         if self.id in config.custom_plot_config:
-            for k, v in config.custom_plot_config[self.id].items():
-                setattr(self, k, v)
+            user_cpc = dict(config.custom_plot_config[self.id])
+            # Per-tab overrides (e.g. for multi-data_labels plots) are nested under
+            # a dict-valued `data_labels` key: pull these out so they don't clobber
+            # the list-valued `data_labels` model field via the generic setattr below.
+            if isinstance(user_cpc.get("data_labels"), dict):
+                per_tab_overrides = user_cpc.pop("data_labels")
+            for k, v in user_cpc.items():
+                if k in self.__class__.model_fields:
+                    k, v, ok = self._resolve_custom_field(
+                        k, v, path_in_cfg, log_prefix=f"custom_plot_config['{self.id}']"
+                    )
+                    if not ok:
+                        continue
+                    setattr(self, k, v)
 
         # Normalize data labels to ensure they are unique and consistent.
         if self.data_labels and len(self.data_labels) > 1:
@@ -269,6 +296,104 @@ class PConfig(ValidatedConfig):
             self.data_labels = data_labels
         else:
             self.data_labels = []
+
+        # Apply per-tab overrides from custom_plot_config, after data_labels normalization.
+        if per_tab_overrides is not None:
+            self._apply_per_tab_overrides(per_tab_overrides, path_in_cfg)
+
+    @classmethod
+    def _resolve_custom_field(
+        cls,
+        k: str,
+        v: Any,
+        path_in_cfg: Tuple[str, ...],
+        log_prefix: str,
+    ) -> Tuple[str, Any, bool]:
+        """
+        Resolve one (key, value) pair coming from custom_plot_config:
+        - redirect deprecated aliases (e.g. `yPlotBands` -> `y_bands`),
+        - if a `parse_<field>` method exists, run it (so band/line dicts become
+          LineBand/FlatLine objects),
+        - on parse failure, log a warning and signal skip.
+
+        Returns (resolved_key, resolved_value, ok). `ok=False` means the caller
+        should skip this field.
+        """
+        field_info = cls.model_fields[k]
+        if isinstance(field_info.deprecated, str) and field_info.deprecated in cls.model_fields:
+            k = field_info.deprecated
+        parse_method = getattr(cls, f"parse_{k}", None)
+        if parse_method is not None and v is not None:
+            try:
+                v = parse_method(v, path_in_cfg=path_in_cfg + (k,))
+            except (ValidationError, TypeError, KeyError) as e:
+                logger.warning(f"Failed to parse {log_prefix}['{k}']: {e}")
+                return k, v, False
+        return k, v, True
+
+    def _apply_per_tab_overrides(
+        self,
+        overrides: Dict[Any, Any],
+        path_in_cfg: Tuple[str, ...],
+    ) -> None:
+        """
+        Apply `custom_plot_config[<id>]["data_labels"]` overrides to individual tabs.
+
+        Keys may be tab names (matching `data_labels[i]["name"]`) or integer positional
+        indices. Override values are dicts of fields to merge into that tab's entry,
+        with band/line dicts parsed into LineBand/FlatLine objects.
+        """
+        if not self.data_labels:
+            logger.warning(
+                f"custom_plot_config['{self.id}']['data_labels']: this plot has no data_labels, "
+                "per-tab overrides will be ignored"
+            )
+            return
+        name_to_index: Dict[str, int] = {
+            str(dl["name"]): i for i, dl in enumerate(self.data_labels) if isinstance(dl, dict) and "name" in dl
+        }
+        for key, tab_override in overrides.items():
+            if not isinstance(tab_override, dict):
+                continue
+            idx = self._resolve_tab_index(key, name_to_index)
+            if idx is None:
+                continue
+            tab_path = path_in_cfg + ("data_labels", str(key))
+            tab_log_prefix = f"custom_plot_config['{self.id}']['data_labels']['{key}']"
+            parsed_override: Dict[str, Any] = {}
+            for k, v in tab_override.items():
+                if k in self.__class__.model_fields:
+                    k, v, ok = self._resolve_custom_field(k, v, tab_path, log_prefix=tab_log_prefix)
+                    if not ok:
+                        continue
+                parsed_override[k] = v
+            dl = self.data_labels[idx]
+            if isinstance(dl, dict):
+                dl.update(parsed_override)
+            else:
+                self.data_labels[idx] = parsed_override
+
+    def _resolve_tab_index(self, key: Any, name_to_index: Dict[str, int]) -> Optional[int]:
+        """
+        Resolve a `custom_plot_config[<id>]["data_labels"]` key to a data_labels index,
+        logging a warning and returning None on miss. Accepts a tab name (str) or a
+        positional index (int — guarded against bool since YAML 'yes'/'no' parse to bool).
+        """
+        if isinstance(key, int) and not isinstance(key, bool):
+            if 0 <= key < len(self.data_labels):
+                return key
+            logger.warning(
+                f"custom_plot_config['{self.id}']['data_labels'][{key}]: "
+                f"index out of range (plot has {len(self.data_labels)} tab(s))"
+            )
+            return None
+        if isinstance(key, str) and key in name_to_index:
+            return name_to_index[key]
+        logger.warning(
+            f"custom_plot_config['{self.id}']['data_labels']['{key}']: "
+            f"tab not found. Valid names: {sorted(name_to_index.keys())}"
+        )
+        return None
 
     @classmethod
     def parse_x_bands(cls, data, path_in_cfg: Tuple[str, ...]):
@@ -570,6 +695,11 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
     def __init__(self, **data):
         super().__init__(**data)
+        # Subclasses like LinePlot construct via `LinePlot(**model.__dict__, ...)`
+        # which calls `__init__` a second time on an already-populated model; clear
+        # per-dataset shapes so band/line shapes don't get appended twice.
+        for dataset in self.datasets:
+            dataset.layout.pop("shapes", None)
         self._set_x_bands_and_range(self.pconfig)
         self._set_y_bands_and_range(self.pconfig)
 
@@ -645,8 +775,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if showlegend is None:
             showlegend = True if flat else False
 
-        # Use the specified template or default to multiqc
-        template = config.plot_theme if config.plot_theme else go.layout.Template(multiqc_plotly_template)
+        # Use the MultiQC template with runtime config values
+        template = go.layout.Template(get_multiqc_plotly_template())
 
         layout: go.Layout = go.Layout(
             template=template,
@@ -777,14 +907,37 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             defer_render=defer_render,
         )
 
-    def _set_x_bands_and_range(self, pconfig: PConfigT):
-        x_minrange = pconfig.x_minrange
-        x_bands = pconfig.x_bands
-        x_lines = pconfig.x_lines
+    @staticmethod
+    def _dataset_overrides(pconfig: PConfigT, ds_idx: int) -> Dict[str, Any]:
+        """Per-tab override dict from `pconfig.data_labels[ds_idx]`, or `{}` if none."""
+        if pconfig.data_labels and ds_idx < len(pconfig.data_labels):
+            dl = pconfig.data_labels[ds_idx]
+            if isinstance(dl, dict):
+                return dl
+        return {}
 
-        if x_bands or x_lines or x_minrange:
-            # same as above but for x-axis
-            for dataset in self.datasets:
+    def _any_axis_overrides(self, pconfig: PConfigT, fields: Tuple[str, ...]) -> bool:
+        """True if any of `fields` is set on the plot or on any per-tab override."""
+        if any(getattr(pconfig, f, None) for f in fields):
+            return True
+        for ds_idx in range(len(self.datasets)):
+            dl = self._dataset_overrides(pconfig, ds_idx)
+            if any(dl.get(f) for f in fields):
+                return True
+        return False
+
+    def _set_x_bands_and_range(self, pconfig: PConfigT):
+        if not self._any_axis_overrides(pconfig, ("x_bands", "x_lines", "x_minrange")):
+            return
+        for ds_idx, dataset in enumerate(self.datasets):
+            dl = self._dataset_overrides(pconfig, ds_idx)
+            x_minrange = dl.get("x_minrange", pconfig.x_minrange)
+            x_bands = dl.get("x_bands", pconfig.x_bands)
+            x_lines = dl.get("x_lines", pconfig.x_lines)
+
+            if x_bands or x_lines or x_minrange:
+                # Bands shouldn't influence the calculated axis range, so derive
+                # min/max from data points and set the range manually.
                 minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
                 maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 dminval, dmaxval = dataset.get_x_range()
@@ -811,28 +964,21 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
                 dataset.layout["xaxis"]["range"] = [minval, maxval]
 
-        if not self.layout.shapes:
-            self.layout.shapes = []
-        self.layout.shapes = (
-            list(self.layout.shapes)
-            + [
+            new_shapes: List[Dict[str, Any]] = [
                 dict(
                     type="rect",
                     x0=band.from_,
                     x1=band.to,
                     y0=0,
                     y1=1,
-                    yref="paper",  # make y coords are relative to the plot paper [0,1]
+                    yref="paper",  # y coords relative to the plot paper [0,1]
                     fillcolor=band.color,
                     opacity=band.opacity,
-                    line={
-                        "width": 0,
-                    },
+                    line={"width": 0},
                     layer="below",
                 )
                 for band in (x_bands or [])
-            ]
-            + [
+            ] + [
                 dict(
                     type="line",
                     yref="paper",
@@ -841,26 +987,26 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     y0=0,
                     x1=line.value,
                     y1=1,
-                    line={
-                        "width": line.width,
-                        "dash": line.dash,
-                        "color": line.color,
-                    },
+                    line={"width": line.width, "dash": line.dash, "color": line.color},
                     label=dict(text=line.label, font=dict(color=line.color)),
                 )
                 for line in (x_lines or [])
             ]
-        )
+            if new_shapes:
+                dataset.layout["shapes"] = list(dataset.layout.get("shapes", [])) + new_shapes
 
     def _set_y_bands_and_range(self, pconfig: PConfigT):
-        y_minrange = pconfig.y_minrange
-        y_bands = pconfig.y_bands
-        y_lines = pconfig.y_lines
+        if not self._any_axis_overrides(pconfig, ("y_bands", "y_lines", "y_minrange")):
+            return
+        for ds_idx, dataset in enumerate(self.datasets):
+            dl = self._dataset_overrides(pconfig, ds_idx)
+            y_minrange = dl.get("y_minrange", pconfig.y_minrange)
+            y_bands = dl.get("y_bands", pconfig.y_bands)
+            y_lines = dl.get("y_lines", pconfig.y_lines)
 
-        if y_bands or y_lines or y_minrange:
-            # We don't want the bands to affect the calculated axis range, so we
-            # find the min and the max from data points, and manually set the range.
-            for dataset in self.datasets:
+            if y_bands or y_lines or y_minrange:
+                # Bands shouldn't influence the calculated axis range, so derive
+                # min/max from data points and set the range manually.
                 minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
                 maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
                 dminval, dmaxval = dataset.get_y_range()
@@ -883,28 +1029,21 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
                 dataset.layout["yaxis"]["range"] = [minval, maxval]
 
-        if not self.layout.shapes:
-            self.layout.shapes = []
-        self.layout.shapes = (
-            list(self.layout.shapes)
-            + [
+            new_shapes: List[Dict[str, Any]] = [
                 dict(
                     type="rect",
                     y0=band.from_,
                     y1=band.to,
                     x0=0,
                     x1=1,
-                    xref="paper",  # make x coords are relative to the plot paper [0,1]
+                    xref="paper",  # x coords relative to the plot paper [0,1]
                     fillcolor=band.color,
                     opacity=band.opacity,
-                    line={
-                        "width": 0,
-                    },
+                    line={"width": 0},
                     layer="below",
                 )
                 for band in (y_bands or [])
-            ]
-            + [
+            ] + [
                 dict(
                     type="line",
                     xref="paper",
@@ -913,16 +1052,13 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     y0=line.value,
                     x1=1,
                     y1=line.value,
-                    line={
-                        "width": line.width,
-                        "dash": line.dash,
-                        "color": line.color,
-                    },
+                    line={"width": line.width, "dash": line.dash, "color": line.color},
                     label=dict(text=line.label, font=dict(color=line.color)),
                 )
                 for line in (y_lines or [])
             ]
-        )
+            if new_shapes:
+                dataset.layout["shapes"] = list(dataset.layout.get("shapes", [])) + new_shapes
 
     def show(self, dataset_id: Union[int, str] = 0, flat: bool = False, **kwargs):
         """
@@ -1155,9 +1291,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html = "".join(
             [
                 '<p class="text-info">',
-                '<small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
+                f"<small>{get_material_icon('mdi:image', 16)} ",
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
-                '(see the <a href="https://docs.seqera.io/multiqc/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
+                '(see the <a href="https://docs.seqera.io/multiqc/getting_started/config#flat--interactive-plots" target="_blank">docs</a>).',
                 "</small>",
                 "</p>",
             ]
@@ -1246,7 +1382,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         style_str = f'style="{style}"' if style else ""
 
-        return f'<button {attrs_str} class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
+        return f'<button {attrs_str} class="btn btn-outline-secondary btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str} {style_str}>{label}</button>\n'
 
     def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
         """
@@ -1292,7 +1428,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             export_btn = self._btn(
                 cls="export-plot",
                 style="float: right; margin-left: 5px;",
-                label='<span style="vertical-align: baseline"><svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg></span> Export...',
+                label='<svg width="11" height="11" viewBox="0 0 24 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/></svg> Export...',
                 attrs={"title": "Show export options"},
                 data_attrs={
                     "plot-anchor": str(self.anchor),
@@ -1303,29 +1439,27 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         ai_btn = ""
         if not config.no_ai:
+            seqera_ai_icon = (
+                Path(__file__).parent.parent / "templates/default/assets/img/Seqera_AI_icon.svg"
+            ).read_text()
             ai_btn = f"""
             <div class="ai-plot-buttons-container" style="float: right;">
                 <button
-                    class="btn btn-default btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-copy-content ai-copy-content-plot ai-copy-button-wrapper"
                     style="margin-left: 1px;"
                     data-section-anchor="{section_anchor}"
                     data-plot-anchor="{self.anchor}"
                     data-module-anchor="{module_anchor}"
                     data-view="plot"
                     type="button"
-                    data-toggle="tooltip"
+                    data-bs-toggle="tooltip"
                     title="Copy plot data for use with AI tools like ChatGPT"
                 >
-                    <span style="vertical-align: baseline">
-                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                        </svg>
-                    </span>
+                    {seqera_ai_icon}
                     <span class="button-text">Copy prompt</span>
                 </button>
                 <button
-                    class="btn btn-default btn-sm ai-generate-button ai-generate-button-plot ai-generate-button-wrapper"
+                    class="btn btn-outline-secondary btn-sm ai-generate-button ai-generate-button-plot ai-generate-button-wrapper"
                     data-response-div="{section_anchor}_ai_summary_response"
                     data-error-div="{section_anchor}_ai_summary_error"
                     data-disclaimer-div="{section_anchor}_ai_summary_disclaimer"
@@ -1338,15 +1472,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     data-action="generate"
                     data-clear-text="Clear summary"
                     type="button"
-                    data-toggle="tooltip"
+                    data-bs-toggle="tooltip"
                     aria-controls="{section_anchor}_ai_summary_wrapper"
                 >
-                    <span style="vertical-align: baseline">
-                        <svg width="11" height="10" viewBox="0 0 17 15" fill="black" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"></path>
-                        <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"></path>
-                        </svg>
-                    </span>
+                    {seqera_ai_icon}
                     <span class="button-text">Summarize plot</span>
                 </button>
             </div>
@@ -1359,7 +1488,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
         buttons = "\n".join(self.buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor))
-        html = f"<div class='row' style='align-items: center;'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
+        html = f"<div class='row' style='align-items: center;'>\n<div class='col-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
 
 
@@ -1423,7 +1552,7 @@ def _batch_export_plots(export_tasks, timeout=None):
     """
     # Default timeout from config
     if timeout is None:
-        timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 30
+        timeout = config.export_plots_timeout
 
     # Start the export in a separate process
     export_process = BatchExportProcess(export_tasks)
@@ -1461,11 +1590,42 @@ def _batch_export_plots(export_tasks, timeout=None):
     return completed_tasks
 
 
+def _prepare_figure_for_export(fig):
+    """
+    Prepare a figure for export by ensuring it has solid backgrounds.
+    Only modifies transparent backgrounds - preserves custom theme backgrounds.
+
+    Plots use transparent backgrounds by default to adapt to page themes in HTML,
+    but exports need solid backgrounds for readability.
+    """
+    # Create a copy to avoid modifying the original figure used in HTML
+    fig_copy = go.Figure(fig)
+
+    # Helper function to check if a color is transparent
+    def is_transparent(color):
+        if color is None:
+            return True
+        color_str = str(color).lower()
+        # Check for transparent rgba values
+        return color_str.startswith("rgba(") and ",0)" in color_str.replace(" ", "")
+
+    # Only change background if it's transparent
+    if is_transparent(fig_copy.layout.paper_bgcolor):
+        fig_copy.update_layout(paper_bgcolor="white")
+
+    if is_transparent(fig_copy.layout.plot_bgcolor):
+        fig_copy.update_layout(plot_bgcolor="white")
+
+    return fig_copy
+
+
 def _export_plot(fig, plot_path, write_kwargs):
     """Export a plotly figure to a file."""
 
-    # Default timeout of 30 seconds for image export
-    timeout = config.export_plots_timeout if hasattr(config, "export_plots_timeout") else 30
+    # Prepare figure with solid backgrounds for export (only if currently transparent)
+    fig = _prepare_figure_for_export(fig)
+
+    timeout = config.export_plots_timeout
 
     # Start the export in a separate process
     export_process = ExportProcess(fig, plot_path, write_kwargs)
@@ -1492,6 +1652,9 @@ def _export_plot(fig, plot_path, write_kwargs):
 
 def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
     try:
+        # Prepare figure with solid backgrounds for export (only if currently transparent)
+        fig = _prepare_figure_for_export(fig)
+
         img_buffer = io.BytesIO()
         fig.write_image(img_buffer, **write_kwargs)
         img_buffer = add_logo(img_buffer, format="PNG")
@@ -1579,8 +1742,10 @@ def fig_to_static_html(
 
             # Add to batch if using batch processing
             if batch_processing:
+                # Prepare figure with solid backgrounds for export (only if currently transparent)
+                fig_for_export = _prepare_figure_for_export(fig)
                 task_idx = len(_plot_export_batch)
-                _plot_export_batch.append((fig, plot_path, write_kwargs))
+                _plot_export_batch.append((fig_for_export, plot_path, write_kwargs))
                 tasks_added.append((task_idx, plot_path, file_ext))
 
                 # If we're using batch processing, we'll assume the PNG will be written by the batch process
@@ -1744,7 +1909,7 @@ def _dataset_layout(
     """
     pconfig = pconfig.model_copy()
     for k, v in dconfig.items():
-        if k in pconfig.model_fields:
+        if k in pconfig.__class__.model_fields:
             setattr(pconfig, k, v)
 
     ysuffix = pconfig.ysuffix if pconfig.ysuffix is not None else pconfig.tt_suffix

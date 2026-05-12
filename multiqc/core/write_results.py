@@ -27,6 +27,7 @@ from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor
 from multiqc.utils import util_functions
 from multiqc.utils.util_functions import rmtree_with_retries
+from multiqc.utils.material_icons import get_material_icon
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,27 @@ class OutputPaths:
     data_dir_overwritten: bool = False
     plots_dir_overwritten: bool = False
     report_overwritten: bool = False
+
+
+def get_image_mime_type(path: str) -> str:
+    """Get MIME type for image based on file extension."""
+    ext = Path(path).suffix.lower()
+    mime_types = {
+        ".png": "image/png",
+        ".svg": "image/svg+xml",
+        ".ico": "image/x-icon",
+        ".gif": "image/gif",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+    }
+
+    if ext not in mime_types:
+        raise ValueError(
+            f"unrecognized extension for {path=} when determining MIME type. Supported extensions: {list(mime_types.keys())}."
+        )
+
+    return mime_types[ext]
 
 
 def write_results(return_html: bool = False) -> Optional[str]:
@@ -119,6 +141,12 @@ def write_results(return_html: bool = False) -> Optional[str]:
             )
         )
 
+    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
+    # that goes beyond this write_results run.
+    # Do this before zipping the data directory, since zipping will remove the directory.
+    if log_and_rich.log_tmp_fn and paths.data_dir and paths.data_dir.exists():
+        shutil.copy2(log_and_rich.log_tmp_fn, str(paths.data_dir))
+
     # Zip the data directory if requested
     if config.zip_data_dir and paths.data_dir is not None:
         shutil.make_archive(str(paths.data_dir), format="zip", root_dir=str(paths.data_dir))
@@ -129,11 +157,6 @@ def write_results(return_html: bool = False) -> Optional[str]:
 
     if paths.report_path:
         logger.debug(f"Report HTML written to {paths.report_path}")
-
-    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
-    # that goes beyond this write_results run.
-    if log_and_rich.log_tmp_fn and paths.data_dir:
-        shutil.copy2(log_and_rich.log_tmp_fn, str(paths.data_dir))
 
     # Return HTML content if requested
     return html_content if return_html else None
@@ -514,13 +537,16 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
             parent_template.template_dir,
             tmp_dir.get_tmp_dir(),
             dirs_exist_ok=True,
-            ignore=shutil.ignore_patterns("*.pyc"),
+            ignore=shutil.ignore_patterns("*.pyc", "node_modules"),
         )
 
     # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
     # parent template files are overwritten)
     shutil.copytree(
-        template_mod.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True, ignore=shutil.ignore_patterns("*.pyc")
+        template_mod.template_dir,
+        tmp_dir.get_tmp_dir(),
+        dirs_exist_ok=True,
+        ignore=shutil.ignore_patterns("*.pyc", "node_modules"),
     )
 
     # Function to include file contents in Jinja template
@@ -551,10 +577,10 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
                     return f'</style><link rel="stylesheet" href="{name}">'
 
             if b64:
-                with io.open(_path, "rb") as f:
+                with open(_path, "rb") as f:
                     return base64.b64encode(f.read()).decode("utf-8")
             else:
-                with io.open(_path, "r", encoding="utf-8") as f:
+                with open(_path, "r", encoding="utf-8") as f:
                     return f.read()
         except (OSError, IOError) as e:
             logger.error(f"Could not include file '{name}': {e}")
@@ -563,6 +589,16 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir.get_tmp_dir()))
         env.globals["include_file"] = include_file
+        env.globals["get_mime_type"] = get_image_mime_type
+
+        # Add Material Design Icons function to all templates
+        env.globals["material_icon"] = get_material_icon
+
+        # Add template functions if available
+        if hasattr(template_mod, "template_functions"):
+            for func_name, func in template_mod.template_functions.items():
+                env.globals[func_name] = func
+
         j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
     except:  # noqa: E722
         raise IOError(f"Could not load {config.template} template file '{template_mod.base_fn}'")
@@ -576,13 +612,20 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
     # Use jinja2 to render the template and overwrite
     report.analysis_files = [os.path.realpath(d) for d in report.analysis_files]
     report.report_uuid = str(uuid.uuid4())
+
+    # Allow templates to override config settings
+    if hasattr(template_mod, "template_dark_mode"):
+        config.template_dark_mode = template_mod.template_dark_mode
+    if hasattr(template_mod, "plot_font_family"):
+        config.plot_font_family = template_mod.plot_font_family
+
     report_output = j_template.render(report=report, config=config)
     if to_stdout:
         print(report_output, file=sys.stdout)
     else:
         assert report_path is not None
         try:
-            with io.open(report_path, "w", encoding="utf-8") as f:
+            with open(report_path, "w", encoding="utf-8") as f:
                 print(report_output, file=f)
         except IOError as e:
             raise IOError(f"Could not print report to '{config.output_fn}' - {IOError(e)}")
@@ -608,13 +651,23 @@ def _write_pdf(report_path: Path) -> Optional[Path]:
         str(report_path),
         "--output",
         str(pdf_path),
-        "--pdf-engine=pdflatex",
+        "--pdf-engine=lualatex",
         "-V",
         "documentclass=article",
         "-V",
         "geometry=margin=1in",
         "-V",
+        "mainfont=DejaVu Sans",
+        "-V",
+        "sansfont=DejaVu Sans",
+        "-V",
+        "monofont=DejaVu Sans Mono",
+        "-V",
+        "fontsize=10pt",
+        "-V",
         "title=",
+        "-V",
+        "tables=true",
     ]
     if config.pandoc_template is not None:
         pandoc_call.append(f"--template={config.pandoc_template}")

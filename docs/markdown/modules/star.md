@@ -1,8 +1,7 @@
 ---
 title: STAR
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>Universal RNA-seq aligner.</p>
+description: "Universal RNA-seq aligner."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/star/star.py
 -->
 
 :::note
-
-<p>Universal RNA-seq aligner.</p>
+Universal RNA-seq aligner.
 
 [https://github.com/alexdobin/STAR](https://github.com/alexdobin/STAR)
 :::
@@ -33,7 +31,8 @@ files generated with `--quantMode GeneCounts`, if found.
 
 ```yaml
 star:
-  fn: "*Log.final.out"
+  fn: '*Log.final.out'
 star/genecounts:
-  fn: "*ReadsPerGene.out.tab"
+  fn: '*ReadsPerGene.out.tab'
 ```
+    

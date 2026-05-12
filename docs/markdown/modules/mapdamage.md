@@ -1,8 +1,7 @@
 ---
 title: mapDamage
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>Tracks and quantifies damage patterns in ancient DNA sequences.</p>
+description: "Tracks and quantifies damage patterns in ancient DNA sequences."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/mapdamage/mapdamage.py
 -->
 
 :::note
-
-<p>Tracks and quantifies damage patterns in ancient DNA sequences.</p>
+Tracks and quantifies damage patterns in ancient DNA sequences.
 
 [https://github.com/ginolhac/mapDamage](https://github.com/ginolhac/mapDamage)
 :::
@@ -27,7 +25,8 @@ This module parses the base `misincorporation` output.
 
 ```yaml
 mapdamage:
-  - fn: 3p*_freq.txt
-  - fn: 5p*_freq.txt
-  - fn: lgdistribution.txt
+- fn: 3p*_freq.txt
+- fn: 5p*_freq.txt
+- fn: lgdistribution.txt
 ```
+    

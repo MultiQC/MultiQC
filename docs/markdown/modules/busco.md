@@ -1,8 +1,7 @@
 ---
 title: BUSCO
 displayed_sidebar: multiqcSidebar
-description: >
-  <p>Assesses genome assembly and annotation completeness.</p>
+description: "Assesses genome assembly and annotation completeness."
 ---
 
 <!--
@@ -15,8 +14,7 @@ File path for the source of this content: multiqc/modules/busco/busco.py
 -->
 
 :::note
-
-<p>Assesses genome assembly and annotation completeness.</p>
+Assesses genome assembly and annotation completeness.
 
 [http://busco.ezlab.org/](http://busco.ezlab.org/)
 :::
@@ -34,7 +32,8 @@ output from BUSCO v1.22 - v2.
 
 ```yaml
 busco:
-  contents: "BUSCO version is:"
+  contents: 'BUSCO version is:'
   fn: short_summary*
   num_lines: 1
 ```
+    
