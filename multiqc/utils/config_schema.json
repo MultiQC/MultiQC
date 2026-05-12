@@ -417,7 +417,7 @@
       ],
       "default": null,
       "description": "Title shown at the top of the report and used in the page title.",
-      "section": "Report Appearance",
+      "section": "Report Meta",
       "title": "Title"
     },
     "subtitle": {
@@ -431,7 +431,7 @@
       ],
       "default": null,
       "description": "Subtitle shown under the report title. Plain text only.",
-      "section": "Report Appearance",
+      "section": "Report Meta",
       "title": "Subtitle"
     },
     "intro_text": {
@@ -445,7 +445,7 @@
       ],
       "default": null,
       "description": "Paragraph shown under the title. Useful for adding context about the analysis.",
-      "section": "Report Appearance",
+      "section": "Report Meta",
       "title": "Intro Text"
     },
     "report_comment": {
@@ -460,7 +460,7 @@
       "default": null,
       "description": "Free-text comment shown at the top of the report. HTML is allowed.",
       "examples": ["This report was generated from the RNA-seq pipeline on 2024-08-21."],
-      "section": "Report Appearance",
+      "section": "Report Meta",
       "title": "Report Comment"
     },
     "report_header_info": {
@@ -496,7 +496,7 @@
           }
         ]
       ],
-      "section": "Report Appearance",
+      "section": "Report Meta",
       "title": "Report Header Info"
     },
     "show_analysis_paths": {
@@ -510,7 +510,7 @@
       ],
       "default": null,
       "description": "Show the absolute paths of analysed directories in the report header.",
-      "section": "Report Appearance",
+      "section": "Report Meta",
       "title": "Show Analysis Paths"
     },
     "show_analysis_time": {
@@ -524,8 +524,38 @@
       ],
       "default": null,
       "description": "Show the date and time the report was generated in the header.",
-      "section": "Report Appearance",
+      "section": "Report Meta",
       "title": "Show Analysis Time"
+    },
+    "template": {
+      "anyOf": [
+        {
+          "enum": ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Name of the report template.",
+      "section": "Report Appearance",
+      "title": "Template"
+    },
+    "template_dark_mode": {
+      "advanced": true,
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Enable the dark mode toggle in the report template.",
+      "section": "Report Appearance",
+      "title": "Template Dark Mode"
     },
     "custom_logo": {
       "anyOf": [
@@ -621,7 +651,6 @@
       "title": "Custom Css Files"
     },
     "simple_output": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -635,36 +664,6 @@
       "section": "Report Appearance",
       "title": "Simple Output"
     },
-    "template": {
-      "anyOf": [
-        {
-          "enum": ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Name of the report template.",
-      "section": "Report Appearance",
-      "title": "Template"
-    },
-    "template_dark_mode": {
-      "advanced": true,
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Enable the dark mode toggle in the report template.",
-      "section": "Report Appearance",
-      "title": "Template Dark Mode"
-    },
     "custom_content": {
       "anyOf": [
         {
@@ -676,7 +675,7 @@
         }
       ],
       "default": null,
-      "description": "Embed arbitrary plots, tables or text in the report. See the Custom Content docs for the full structure.",
+      "description": "Embed arbitrary plots, tables or text in the report. See the [Custom Content docs](https://docs.seqera.io/multiqc/custom_content) for the full structure.",
       "examples": [
         {
           "data": {
@@ -697,37 +696,27 @@
           "order": ["my-section-id", "my-other-section-id"]
         }
       ],
-      "section": "Report Appearance",
+      "section": "Report Contents",
       "title": "Custom Content"
     },
-    "section_comments": {
-      "anyOf": [
-        {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Markdown text shown under specific module sections. Keys are section anchors.",
-      "examples": [
-        {
-          "fastqc_overrepresented_sequences": "**This is** an important note about the overrepresented sequences.",
-          "samtools": "Reviewed by *Phil* on 2024-08-21."
-        }
-      ],
-      "section": "Report Appearance",
-      "title": "Section Comments"
-    },
-    "remove_sections": {
+    "top_modules": {
       "anyOf": [
         {
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              }
+            ]
           },
           "type": "array"
         },
@@ -736,10 +725,10 @@
         }
       ],
       "default": null,
-      "description": "Module sections to hide. Use the section anchor as it appears in the URL.",
-      "examples": [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
-      "section": "Report Appearance",
-      "title": "Remove Sections"
+      "description": "Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.",
+      "examples": [["fastqc", "cutadapt"]],
+      "section": "Report Contents",
+      "title": "Top Modules"
     },
     "module_order": {
       "anyOf": [
@@ -790,27 +779,14 @@
           "cutadapt"
         ]
       ],
-      "section": "Report Appearance",
+      "section": "Report Contents",
       "title": "Module Order"
     },
-    "top_modules": {
+    "remove_sections": {
       "anyOf": [
         {
           "items": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "additionalProperties": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object"
-                },
-                "type": "object"
-              }
-            ]
+            "type": "string"
           },
           "type": "array"
         },
@@ -819,10 +795,33 @@
         }
       ],
       "default": null,
-      "description": "Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.",
-      "examples": [["fastqc", "cutadapt"]],
-      "section": "Report Appearance",
-      "title": "Top Modules"
+      "description": "Module sections to hide. Use the section anchor as it appears in the URL.",
+      "examples": [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
+      "section": "Report Contents",
+      "title": "Remove Sections"
+    },
+    "section_comments": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Markdown text shown under specific module sections. Keys are section anchors.",
+      "examples": [
+        {
+          "fastqc_overrepresented_sequences": "**This is** an important note about the overrepresented sequences.",
+          "samtools": "Reviewed by *Phil* on 2024-08-21."
+        }
+      ],
+      "section": "Report Contents",
+      "title": "Section Comments"
     },
     "section_status_checks": {
       "advanced": true,
@@ -857,11 +856,24 @@
           }
         }
       ],
-      "section": "Report Appearance",
+      "section": "Report Contents",
       "title": "Section Status Checks"
     },
+    "force": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Overwrite existing output files without prompting.",
+      "section": "Output Options",
+      "title": "Force"
+    },
     "output_fn_name": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -876,7 +888,6 @@
       "title": "Output Fn Name"
     },
     "data_dir_name": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -945,6 +956,7 @@
       "title": "Data Format Extensions"
     },
     "parquet_format": {
+      "advanced": true,
       "anyOf": [
         {
           "enum": ["long", "wide"],
@@ -958,20 +970,6 @@
       "description": "Parquet table layout. 'long' has rows of (sample_name, metric_name, val_raw, val_raw_type, val_str), easy to filter by metric. 'wide' uses one column per metric (prefixed with table name and namespace), easier for analytics but can hit column limits or mixed-type issues.",
       "section": "Output Options",
       "title": "Parquet Format"
-    },
-    "force": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Overwrite existing output files without prompting.",
-      "section": "Output Options",
-      "title": "Force"
     },
     "make_data_dir": {
       "anyOf": [
@@ -1120,20 +1118,6 @@
       "section": "Output Options",
       "title": "Pandoc Template"
     },
-    "file_list": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Treat the input path as a file containing a list of paths to scan, one per line.",
-      "section": "Output Options",
-      "title": "File List"
-    },
     "prepend_dirs": {
       "anyOf": [
         {
@@ -1144,12 +1128,11 @@
         }
       ],
       "default": null,
-      "description": "Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple folders.",
+      "description": "Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple directories.",
       "section": "Sample Names",
       "title": "Prepend Dirs"
     },
     "prepend_dirs_depth": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "integer"
@@ -1246,6 +1229,7 @@
       "title": "Extra Fn Clean Trim"
     },
     "fn_clean_exts": {
+      "advanced": true,
       "anyOf": [
         {
           "items": {
@@ -1281,6 +1265,7 @@
       "title": "Fn Clean Exts"
     },
     "fn_clean_trim": {
+      "advanced": true,
       "anyOf": [
         {
           "items": {
@@ -1502,6 +1487,20 @@
       "section": "Sample Names",
       "title": "Sample Names Replace Regex"
     },
+    "file_list": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Treat the input path as a file containing a list of paths to scan, one per line.",
+      "section": "File Discovery",
+      "title": "File List"
+    },
     "require_logs": {
       "anyOf": [
         {
@@ -1512,9 +1511,37 @@
         }
       ],
       "default": null,
-      "description": "Fail with an error if any module explicitly requested with --module has no log files found. Off by default, so missing inputs are skipped silently.",
+      "description": "Fail with an error if any module explicitly requested with `--module` has no log files found. Off by default, so missing inputs are skipped silently.",
       "section": "File Discovery",
       "title": "Require Logs"
+    },
+    "log_filesize_limit": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Skip log files larger than this many bytes.",
+      "section": "File Discovery",
+      "title": "Log Filesize Limit"
+    },
+    "filesearch_lines_limit": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Stop reading a log file after this many lines.",
+      "section": "File Discovery",
+      "title": "Filesearch Lines Limit"
     },
     "ignore_symlinks": {
       "advanced": true,
@@ -1645,7 +1672,6 @@
       "title": "Plots Force Interactive"
     },
     "plots_export_font_scale": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "number"
@@ -1674,7 +1700,6 @@
       "title": "Plots Flat Numseries"
     },
     "plots_defer_loading_numseries": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "integer"
@@ -1687,6 +1712,21 @@
       "description": "Plots with more than this many series start collapsed. The user clicks a button to render them.",
       "section": "Plot Settings",
       "title": "Plots Defer Loading Numseries"
+    },
+    "num_datasets_plot_limit": {
+      "advanced": true,
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Deprecated. Use `plots_defer_loading_numseries` instead.",
+      "section": "Plot Settings",
+      "title": "Num Datasets Plot Limit"
     },
     "plot_font_family": {
       "advanced": true,
@@ -1744,6 +1784,7 @@
       "title": "Lineplot Number Of Points To Hide Markers"
     },
     "barplot_legend_on_bottom": {
+      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -2038,7 +2079,7 @@
         }
       ],
       "default": null,
-      "description": "Decimal-point character used in formatted numbers, eg. '.' (default) or ','.",
+      "description": "Decimal-point character used in formatted numbers, eg. `.` (default) or `,`.",
       "examples": [","],
       "section": "Table Settings",
       "title": "Decimalpoint Format"
@@ -2053,7 +2094,7 @@
         }
       ],
       "default": null,
-      "description": "Thousands separator used in formatted numbers, eg. ',' (default), ' ', or '.",
+      "description": "Thousands separator used in formatted numbers, eg. `,` (default), ` ` (space), or `.`",
       "examples": [" ", "'"],
       "section": "Table Settings",
       "title": "Thousandssep Format"
@@ -2652,7 +2693,8 @@
         }
       ],
       "default": null,
-      "description": "Model name, eg. gpt-4o or claude-sonnet-4-5. Provider-specific.",
+      "description": "Model name. Provider-specific.",
+      "examples": ["gpt-4o", "claude-sonnet-4-5."],
       "section": "AI Summary",
       "title": "Ai Model"
     },
@@ -2703,6 +2745,7 @@
       "title": "Ai Retries"
     },
     "ai_extra_query_options": {
+      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -2712,12 +2755,13 @@
         }
       ],
       "default": null,
-      "description": "Extra URL query parameters appended to AI requests. Format: key1=val1&key2=val2.",
+      "description": "Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.",
       "examples": ["temperature=0.3&top_p=0.9"],
       "section": "AI Summary",
       "title": "Ai Extra Query Options"
     },
     "ai_custom_context_window": {
+      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -2732,6 +2776,7 @@
       "title": "Ai Custom Context Window"
     },
     "ai_max_completion_tokens": {
+      "advanced": true,
       "anyOf": [
         {
           "type": "integer"
@@ -2746,6 +2791,7 @@
       "title": "Ai Max Completion Tokens"
     },
     "ai_reasoning_effort": {
+      "advanced": true,
       "anyOf": [
         {
           "enum": ["low", "medium", "high"],
@@ -2761,6 +2807,7 @@
       "title": "Ai Reasoning Effort"
     },
     "ai_extended_thinking": {
+      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -2775,6 +2822,7 @@
       "title": "Ai Extended Thinking"
     },
     "ai_thinking_budget_tokens": {
+      "advanced": true,
       "anyOf": [
         {
           "type": "integer"
@@ -3009,6 +3057,7 @@
       "title": "Lint"
     },
     "strict": {
+      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -3023,6 +3072,7 @@
       "title": "Strict"
     },
     "development": {
+      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -3035,34 +3085,6 @@
       "description": "Enable developer-mode features such as live JS reloading. Internal use.",
       "section": "Performance & Debugging",
       "title": "Development"
-    },
-    "log_filesize_limit": {
-      "anyOf": [
-        {
-          "type": "integer"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Skip log files larger than this many bytes.",
-      "section": "Performance & Debugging",
-      "title": "Log Filesize Limit"
-    },
-    "filesearch_lines_limit": {
-      "anyOf": [
-        {
-          "type": "integer"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Stop reading a log file after this many lines.",
-      "section": "Performance & Debugging",
-      "title": "Filesearch Lines Limit"
     },
     "report_readerrors": {
       "advanced": true,
@@ -3122,21 +3144,6 @@
       "description": "Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.",
       "section": "Performance & Debugging",
       "title": "Preserve Module Raw Data"
-    },
-    "num_datasets_plot_limit": {
-      "advanced": true,
-      "anyOf": [
-        {
-          "type": "integer"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Deprecated. Use plots_defer_loading_numseries instead.",
-      "section": "Performance & Debugging",
-      "title": "Num Datasets Plot Limit"
     },
     "sp": {
       "anyOf": [

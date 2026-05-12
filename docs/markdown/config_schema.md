@@ -188,7 +188,7 @@ Enable the dark mode toggle in the report template.
 
 **Type**: `Dict[str, Any]`
 
-Embed arbitrary plots, tables or text in the report. See the Custom Content docs for the full structure.
+Embed arbitrary plots, tables or text in the report. See the [Custom Content docs](https://docs.seqera.io/multiqc/custom_content) for the full structure.
 
 **Example**:
 
@@ -839,7 +839,7 @@ fn_clean_trim:
 
 **Type**: `bool` (default: `false`)
 
-Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple folders.
+Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple directories.
 
 ### prepend_dirs_depth
 
@@ -1155,6 +1155,12 @@ custom_plot_config:
 
 Hide individual data point markers in line plots once the total point count across samples exceeds this.
 
+### num_datasets_plot_limit
+
+**Type**: `int` (default: `100`)
+
+Deprecated. Use `plots_defer_loading_numseries` instead.
+
 ### plot_font_family
 
 **Type**: `str`
@@ -1332,7 +1338,7 @@ custom_table_header_config:
 
 **Type**: `str`
 
-Decimal-point character used in formatted numbers, eg. '.' (default) or ','.
+Decimal-point character used in formatted numbers, eg. `.` (default) or `,`.
 
 **Example**:
 
@@ -1538,7 +1544,7 @@ table_sample_merge:
 
 **Type**: `str`
 
-Thousands separator used in formatted numbers, eg. ',' (default), ' ', or '.
+Thousands separator used in formatted numbers, eg. `,` (default), ` ` (space), or `.`
 
 **Examples**:
 
@@ -1777,7 +1783,7 @@ Enable extended thinking on Anthropic Claude models that support it.
 
 **Type**: `str`
 
-Extra URL query parameters appended to AI requests. Format: key1=val1&key2=val2.
+Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.
 
 **Example**:
 
@@ -1795,7 +1801,17 @@ Maximum completion tokens for OpenAI reasoning models.
 
 **Type**: `str`
 
-Model name, eg. gpt-4o or claude-sonnet-4-5. Provider-specific.
+Model name. Provider-specific.
+
+**Examples**:
+
+```yaml
+ai_model: gpt-4o
+```
+
+```yaml
+ai_model: claude-sonnet-4-5.
+```
 
 ### ai_prompt_full
 
@@ -1923,12 +1939,6 @@ Disable ANSI colour codes in terminal output.
 **Type**: `bool` (default: `false`)
 
 Skip the network check for newer MultiQC versions on startup.
-
-### num_datasets_plot_limit
-
-**Type**: `int` (default: `100`)
-
-Deprecated. Use plots_defer_loading_numseries instead.
 
 ### preserve_module_raw_data
 

@@ -192,13 +192,13 @@ class MultiQCConfig(BaseModel):
             examples=[["./assets/custom.css", "./assets/branding.css"]],
         )
         simple_output: Optional[bool] = cfg(
-            "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.",
-            advanced=True,
+            "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports."
         )
 
     with section("Report Contents"):
         custom_content: Optional[Dict[str, Any]] = cfg(
-            "Embed arbitrary plots, tables or text in the report. See the Custom Content docs for the full structure.",
+            "Embed arbitrary plots, tables or text in the report. See the "
+            "[Custom Content docs](https://docs.seqera.io/multiqc/custom_content) for the full structure.",
             examples=[
                 {
                     "order": ["my-section-id", "my-other-section-id"],
@@ -257,13 +257,9 @@ class MultiQCConfig(BaseModel):
 
     with section("Output Options"):
         force: Optional[bool] = cfg("Overwrite existing output files without prompting.")
-        output_fn_name: Optional[str] = cfg(
-            "Filename for the generated HTML report. Defaults to multiqc_report.html.",
-            advanced=True,
-        )
+        output_fn_name: Optional[str] = cfg("Filename for the generated HTML report. Defaults to multiqc_report.html.")
         data_dir_name: Optional[str] = cfg(
-            "Name of the directory written alongside the report holding parsed data. Defaults to multiqc_data.",
-            advanced=True,
+            "Name of the directory written alongside the report holding parsed data. Defaults to multiqc_data."
         )
         plots_dir_name: Optional[str] = cfg(
             "Directory for exported plot images when export_plots is on. Defaults to multiqc_plots.",
@@ -282,6 +278,7 @@ class MultiQCConfig(BaseModel):
                 "easy to filter by metric. 'wide' uses one column per metric (prefixed with table name and namespace), "
                 "easier for analytics but can hit column limits or mixed-type issues."
             ),
+            advanced=True,
         )
 
         make_data_dir: Optional[bool] = cfg("Write parsed data as files alongside the report.")
@@ -314,11 +311,10 @@ class MultiQCConfig(BaseModel):
 
     with section("Sample Names"):
         prepend_dirs: Optional[bool] = cfg(
-            "Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple folders.",
+            "Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple directories.",
         )
         prepend_dirs_depth: Optional[int] = cfg(
             "How many parent directories to include. 0 means all the way to the root.",
-            advanced=True,
         )
         prepend_dirs_sep: Optional[str] = cfg(
             "String inserted between directory names and the sample name. Defaults to '|'.",
@@ -339,10 +335,12 @@ class MultiQCConfig(BaseModel):
         fn_clean_exts: Optional[List[Union[str, CleanPattern]]] = cfg(
             "Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in list.",
             examples=[[".gz", ".fastq", ".bam", {"type": "regex", "pattern": r"_S\d+_L\d+"}]],
+            advanced=True,
         )
         fn_clean_trim: Optional[List[str]] = cfg(
             "Strings trimmed from the start or end of sample names. Replaces the built-in list.",
             examples=[["_R1", "_R2", "_001"]],
+            advanced=True,
         )
         use_filename_as_sample_name: Optional[Union[bool, List[str]]] = cfg(
             (
@@ -441,13 +439,15 @@ class MultiQCConfig(BaseModel):
         )
         plots_export_font_scale: Optional[float] = cfg(
             "Multiplier applied to font sizes in exported plot images. Bump up for publication-quality output.",
-            advanced=True,
         )
         plots_flat_numseries: Optional[int] = cfg(
             "If a plot has more than this many series, MultiQC switches it from interactive to flat image.",
         )
         plots_defer_loading_numseries: Optional[int] = cfg(
             "Plots with more than this many series start collapsed. The user clicks a button to render them.",
+        )
+        num_datasets_plot_limit: Optional[int] = cfg(
+            "Deprecated. Use `plots_defer_loading_numseries` instead.",
             advanced=True,
         )
         plot_font_family: Optional[str] = cfg(
@@ -471,6 +471,7 @@ class MultiQCConfig(BaseModel):
         )
         barplot_legend_on_bottom: Optional[bool] = cfg(
             "Place bar plot legends below the plot instead of to the side. Not recommended.",
+            advanced=True,
         )
         boxplot_boxpoints: Optional[Literal["outliers", "suspectedoutliers", "all", False]] = cfg(
             "How boxplot data points are drawn. Use false to hide individual points.",
@@ -532,11 +533,11 @@ class MultiQCConfig(BaseModel):
             "Cap on the number of columns the user can toggle in the table-configure toolbox.",
         )
         decimalPoint_format: Optional[str] = cfg(
-            "Decimal-point character used in formatted numbers, eg. '.' (default) or ','.",
+            "Decimal-point character used in formatted numbers, eg. `.` (default) or `,`.",
             examples=[","],
         )
         thousandsSep_format: Optional[str] = cfg(
-            "Thousands separator used in formatted numbers, eg. ',' (default), ' ', or '.",
+            "Thousands separator used in formatted numbers, eg. `,` (default), ` ` (space), or `.`",
             examples=[" ", "'"],
         )
         general_stats_columns: Dict[str, GeneralStatsModuleConfig] = cfg(
@@ -708,7 +709,8 @@ class MultiQCConfig(BaseModel):
             "AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, custom.",
         )
         ai_model: Optional[str] = cfg(
-            "Model name, eg. gpt-4o or claude-sonnet-4-5. Provider-specific.",
+            "Model name. Provider-specific.",
+            examples=["gpt-4o", "claude-sonnet-4-5."],
         )
         ai_custom_endpoint: Optional[str] = cfg(
             "Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
@@ -726,23 +728,29 @@ class MultiQCConfig(BaseModel):
             advanced=True,
         )
         ai_extra_query_options: Optional[str] = cfg(
-            "Extra URL query parameters appended to AI requests. Format: key1=val1&key2=val2.",
+            "Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.",
             examples=["temperature=0.3&top_p=0.9"],
+            advanced=True,
         )
         ai_custom_context_window: Optional[str] = cfg(
             "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
+            advanced=True,
         )
         ai_max_completion_tokens: Optional[int] = cfg(
             "Maximum completion tokens for OpenAI reasoning models.",
+            advanced=True,
         )
         ai_reasoning_effort: Optional[Literal["low", "medium", "high"]] = cfg(
             "Reasoning effort for OpenAI reasoning models.",
+            advanced=True,
         )
         ai_extended_thinking: Optional[bool] = cfg(
             "Enable extended thinking on Anthropic Claude models that support it.",
+            advanced=True,
         )
         ai_thinking_budget_tokens: Optional[int] = cfg(
             "Token budget for Anthropic extended thinking when enabled.",
+            advanced=True,
         )
         ai_prompt_short: Optional[str] = cfg(
             "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
@@ -817,10 +825,6 @@ class MultiQCConfig(BaseModel):
         )
         preserve_module_raw_data: Optional[bool] = cfg(
             "Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.",
-            advanced=True,
-        )
-        num_datasets_plot_limit: Optional[int] = cfg(
-            "Deprecated. Use plots_defer_loading_numseries instead.",
             advanced=True,
         )
 

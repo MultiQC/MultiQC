@@ -7,7 +7,7 @@
     <link
       rel="icon"
       type="image/svg+xml"
-      href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 250'%3E%3Cpath fill='%23F18046' d='M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z'/%3E%3Cpath fill='%23F18046' d='M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z'/%3E%3Cpath fill='%23F18046' d='M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z'/%3E%3Cpath fill='%23F18046' d='M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z'/%3E%3C/svg%3E"
+      href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 250'%3E%3Cpath fill='%23087f68' d='M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z'/%3E%3Cpath fill='%23087f68' d='M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z'/%3E%3Cpath fill='%23087f68' d='M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z'/%3E%3Cpath fill='%23087f68' d='M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z'/%3E%3C/svg%3E"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -28,7 +28,6 @@
         --teal-border: #0cae8e; /* --color-nextflow-700 */
         --teal-border-active: #087f68; /* --color-nextflow-900 */
         --teal-tint: #e2f7f3;
-        --orange: #f18046; /* --color-multiqc-600 (logo only) */
         --paper: #ffffff;
         --surface-soft: #f8f8f8; /* --color-brand-50 */
         --border: rgba(0, 0, 0, 0.15);
@@ -364,26 +363,36 @@
       .welcome-links {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px 18px;
-        margin-top: 14px;
+        gap: 10px;
+        margin-top: 18px;
       }
       .welcome-links a {
-        color: var(--navy);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--paper);
+        color: var(--ink);
         text-decoration: none;
-        font-size: 0.92em;
+        font-size: 0.9em;
         font-weight: 500;
-        transition: color 0.15s ease;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease;
       }
       .welcome-links a:hover {
-        color: var(--teal-border);
-        text-decoration: underline;
+        background: var(--surface-soft);
+        border-color: var(--ink-soft);
+        color: var(--navy);
       }
       .welcome-links a::after {
         content: "↗";
-        display: inline-block;
-        margin-left: 6px;
         color: var(--teal-border);
-        font-size: 0.9em;
+        font-size: 0.95em;
+        line-height: 1;
       }
 
       /* Right-hand main column */
@@ -579,6 +588,22 @@
         font-size: 0.9em;
         margin-bottom: 12px;
         line-height: 1.5;
+      }
+      .form-group .description code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.88em;
+        color: var(--ink);
+      }
+      .form-group .description a {
+        color: var(--teal-border);
+        text-decoration: underline;
+      }
+      .form-group .description a:hover {
+        color: var(--teal-border-active);
       }
       .default-badge {
         background: var(--surface-soft);
@@ -1263,7 +1288,7 @@
         if (propData.description) {
           const desc = document.createElement("div");
           desc.className = "description";
-          desc.textContent = propData.description;
+          desc.innerHTML = renderInlineMd(propData.description);
           formGroup.appendChild(desc);
         }
 
@@ -1816,6 +1841,17 @@
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/(^-|-$)/g, "");
+      }
+
+      // Minimal inline markdown for field descriptions: `code`, **bold**, and
+      // [text](url) links. HTML is escaped first so descriptions can't inject
+      // tags directly. Block-level markdown (lists, headings) isn't supported.
+      function renderInlineMd(text) {
+        const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return escaped
+          .replace(/`([^`]+)`/g, "<code>$1</code>")
+          .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
       }
 
       document.addEventListener("DOMContentLoaded", function () {

@@ -7,7 +7,7 @@
     <link
       rel="icon"
       type="image/svg+xml"
-      href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 250'%3E%3Cpath fill='%23F18046' d='M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z'/%3E%3Cpath fill='%23F18046' d='M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z'/%3E%3Cpath fill='%23F18046' d='M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z'/%3E%3Cpath fill='%23F18046' d='M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z'/%3E%3C/svg%3E"
+      href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 250'%3E%3Cpath fill='%23087f68' d='M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z'/%3E%3Cpath fill='%23087f68' d='M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z'/%3E%3Cpath fill='%23087f68' d='M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z'/%3E%3Cpath fill='%23087f68' d='M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z'/%3E%3C/svg%3E"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -28,7 +28,6 @@
         --teal-border: #0cae8e; /* --color-nextflow-700 */
         --teal-border-active: #087f68; /* --color-nextflow-900 */
         --teal-tint: #e2f7f3;
-        --orange: #f18046; /* --color-multiqc-600 (logo only) */
         --paper: #ffffff;
         --surface-soft: #f8f8f8; /* --color-brand-50 */
         --border: rgba(0, 0, 0, 0.15);
@@ -364,26 +363,36 @@
       .welcome-links {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px 18px;
-        margin-top: 14px;
+        gap: 10px;
+        margin-top: 18px;
       }
       .welcome-links a {
-        color: var(--navy);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--paper);
+        color: var(--ink);
         text-decoration: none;
-        font-size: 0.92em;
+        font-size: 0.9em;
         font-weight: 500;
-        transition: color 0.15s ease;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease;
       }
       .welcome-links a:hover {
-        color: var(--teal-border);
-        text-decoration: underline;
+        background: var(--surface-soft);
+        border-color: var(--ink-soft);
+        color: var(--navy);
       }
       .welcome-links a::after {
         content: "↗";
-        display: inline-block;
-        margin-left: 6px;
         color: var(--teal-border);
-        font-size: 0.9em;
+        font-size: 0.95em;
+        line-height: 1;
       }
 
       /* Right-hand main column */
@@ -579,6 +588,22 @@
         font-size: 0.9em;
         margin-bottom: 12px;
         line-height: 1.5;
+      }
+      .form-group .description code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.88em;
+        color: var(--ink);
+      }
+      .form-group .description a {
+        color: var(--teal-border);
+        text-decoration: underline;
+      }
+      .form-group .description a:hover {
+        color: var(--teal-border-active);
       }
       .default-badge {
         background: var(--surface-soft);
@@ -1005,19 +1030,19 @@
           <svg width="1318" height="250" viewBox="0 0 1318 250" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
               d="M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z"
-              fill="#F18046"
+              fill="#FFFFFF"
             />
             <path
               d="M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z"
-              fill="#F18046"
+              fill="#FFFFFF"
             />
             <path
               d="M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z"
-              fill="#F18046"
+              fill="#FFFFFF"
             />
             <path
               d="M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z"
-              fill="#F18046"
+              fill="#FFFFFF"
             />
             <path
               d="M1100.98 249.999V179.569H1096.12C1093.89 183.629 1090.65 187.529 1086.39 191.269C1082.13 195.019 1076.71 198.109 1070.13 200.539C1063.54 202.969 1055.39 204.189 1045.66 204.189C1033.09 204.189 1021.54 201.149 1011 195.069C1000.46 188.989 992.05 180.229 985.77 168.769C979.48 157.319 976.35 143.489 976.35 127.269V122.709C976.35 106.499 979.54 92.6691 985.93 81.2091C992.31 69.7591 1000.77 60.9891 1011.31 54.9091C1021.85 48.8291 1033.3 45.7891 1045.66 45.7891C1060.25 45.7891 1071.45 48.4291 1079.25 53.6891C1087.05 58.9591 1092.88 64.9391 1096.73 71.6291H1101.59V45.7891H1132.29V249.979H1100.98V249.999ZM1054.47 176.829C1068.25 176.829 1079.5 172.469 1088.21 163.759C1096.92 155.049 1101.28 142.579 1101.28 126.369V123.629C1101.28 107.619 1096.87 95.2591 1088.06 86.5391C1079.24 77.8291 1068.04 73.4691 1054.47 73.4691C1040.9 73.4691 1030 77.8291 1021.18 86.5391C1012.36 95.2591 1007.96 107.619 1007.96 123.629V126.369C1007.96 142.589 1012.37 155.049 1021.18 163.759C1030 172.479 1041.09 176.829 1054.47 176.829Z"
@@ -1312,7 +1337,7 @@
             examples: [["./assets/custom.css", "./assets/branding.css"]],
           },
           simple_output: {
-            uncommon: true,
+            uncommon: false,
             type: "boolean",
             description:
               "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.",
@@ -1327,7 +1352,7 @@
             uncommon: false,
             type: "object",
             description:
-              "Embed arbitrary plots, tables or text in the report. See the Custom Content docs for the full structure.",
+              "Embed arbitrary plots, tables or text in the report. See the [Custom Content docs](https://docs.seqera.io/multiqc/custom_content) for the full structure.",
             default: {
               order: [],
             },
@@ -1605,7 +1630,7 @@
             examples: [],
           },
           output_fn_name: {
-            uncommon: true,
+            uncommon: false,
             type: "string",
             description: "Filename for the generated HTML report. Defaults to multiqc_report.html.",
             default: "multiqc_report.html",
@@ -1614,7 +1639,7 @@
             examples: [],
           },
           data_dir_name: {
-            uncommon: true,
+            uncommon: false,
             type: "string",
             description:
               "Name of the directory written alongside the report holding parsed data. Defaults to multiqc_data.",
@@ -1663,7 +1688,7 @@
             ],
           },
           parquet_format: {
-            uncommon: false,
+            uncommon: true,
             type: "string",
             description:
               "Parquet table layout. 'long' has rows of (sample_name, metric_name, val_raw, val_raw_type, val_str), easy to filter by metric. 'wide' uses one column per metric (prefixed with table name and namespace), easier for analytics but can hit column limits or mixed-type issues.",
@@ -1768,14 +1793,14 @@
             uncommon: false,
             type: "boolean",
             description:
-              "Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple folders.",
+              "Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple directories.",
             default: false,
             enum: null,
             items_enum: null,
             examples: [],
           },
           prepend_dirs_depth: {
-            uncommon: true,
+            uncommon: false,
             type: "integer",
             description: "How many parent directories to include. 0 means all the way to the root.",
             default: 0,
@@ -1830,7 +1855,7 @@
             examples: [["sample_", "_processed"]],
           },
           fn_clean_exts: {
-            uncommon: false,
+            uncommon: true,
             type: "array",
             description: "Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in list.",
             default: [
@@ -2002,7 +2027,7 @@
             ],
           },
           fn_clean_trim: {
-            uncommon: false,
+            uncommon: true,
             type: "array",
             description: "Strings trimmed from the start or end of sample names. Replaces the built-in list.",
             default: [
@@ -2295,7 +2320,7 @@
             examples: [],
           },
           plots_export_font_scale: {
-            uncommon: true,
+            uncommon: false,
             type: "number",
             description:
               "Multiplier applied to font sizes in exported plot images. Bump up for publication-quality output.",
@@ -2315,10 +2340,19 @@
             examples: [],
           },
           plots_defer_loading_numseries: {
-            uncommon: true,
+            uncommon: false,
             type: "integer",
             description:
               "Plots with more than this many series start collapsed. The user clicks a button to render them.",
+            default: 100,
+            enum: null,
+            items_enum: null,
+            examples: [],
+          },
+          num_datasets_plot_limit: {
+            uncommon: true,
+            type: "integer",
+            description: "Deprecated. Use `plots_defer_loading_numseries` instead.",
             default: 100,
             enum: null,
             items_enum: null,
@@ -2362,7 +2396,7 @@
             examples: [],
           },
           barplot_legend_on_bottom: {
-            uncommon: false,
+            uncommon: true,
             type: "boolean",
             description: "Place bar plot legends below the plot instead of to the side. Not recommended.",
             default: false,
@@ -2528,7 +2562,7 @@
           decimalPoint_format: {
             uncommon: false,
             type: "string",
-            description: "Decimal-point character used in formatted numbers, eg. '.' (default) or ','.",
+            description: "Decimal-point character used in formatted numbers, eg. `.` (default) or `,`.",
             default: null,
             enum: null,
             items_enum: null,
@@ -2537,7 +2571,7 @@
           thousandsSep_format: {
             uncommon: false,
             type: "string",
-            description: "Thousands separator used in formatted numbers, eg. ',' (default), ' ', or '.",
+            description: "Thousands separator used in formatted numbers, eg. `,` (default), ` ` (space), or `.`",
             default: null,
             enum: null,
             items_enum: null,
@@ -2991,11 +3025,11 @@
           ai_model: {
             uncommon: false,
             type: "string",
-            description: "Model name, eg. gpt-4o or claude-sonnet-4-5. Provider-specific.",
+            description: "Model name. Provider-specific.",
             default: null,
             enum: null,
             items_enum: null,
-            examples: [],
+            examples: ["gpt-4o", "claude-sonnet-4-5."],
           },
           ai_custom_endpoint: {
             uncommon: false,
@@ -3026,16 +3060,16 @@
             examples: [],
           },
           ai_extra_query_options: {
-            uncommon: false,
+            uncommon: true,
             type: "string",
-            description: "Extra URL query parameters appended to AI requests. Format: key1=val1&key2=val2.",
+            description: "Extra URL query parameters appended to AI requests. Format: `key1=val1&key2=val2`.",
             default: null,
             enum: null,
             items_enum: null,
             examples: ["temperature=0.3&top_p=0.9"],
           },
           ai_custom_context_window: {
-            uncommon: false,
+            uncommon: true,
             type: "string",
             description:
               "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
@@ -3045,7 +3079,7 @@
             examples: [],
           },
           ai_max_completion_tokens: {
-            uncommon: false,
+            uncommon: true,
             type: "integer",
             description: "Maximum completion tokens for OpenAI reasoning models.",
             default: null,
@@ -3054,7 +3088,7 @@
             examples: [],
           },
           ai_reasoning_effort: {
-            uncommon: false,
+            uncommon: true,
             type: "string",
             description: "Reasoning effort for OpenAI reasoning models.",
             default: null,
@@ -3063,7 +3097,7 @@
             examples: [],
           },
           ai_extended_thinking: {
-            uncommon: false,
+            uncommon: true,
             type: "boolean",
             description: "Enable extended thinking on Anthropic Claude models that support it.",
             default: false,
@@ -3072,7 +3106,7 @@
             examples: [],
           },
           ai_thinking_budget_tokens: {
-            uncommon: false,
+            uncommon: true,
             type: "integer",
             description: "Token budget for Anthropic extended thinking when enabled.",
             default: null,
@@ -3278,15 +3312,6 @@
             items_enum: null,
             examples: [],
           },
-          num_datasets_plot_limit: {
-            uncommon: true,
-            type: "integer",
-            description: "Deprecated. Use plots_defer_loading_numseries instead.",
-            default: 100,
-            enum: null,
-            items_enum: null,
-            examples: [],
-          },
         },
       };
 
@@ -3438,7 +3463,7 @@
         if (propData.description) {
           const desc = document.createElement("div");
           desc.className = "description";
-          desc.textContent = propData.description;
+          desc.innerHTML = renderInlineMd(propData.description);
           formGroup.appendChild(desc);
         }
 
@@ -3991,6 +4016,17 @@
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/(^-|-$)/g, "");
+      }
+
+      // Minimal inline markdown for field descriptions: `code`, **bold**, and
+      // [text](url) links. HTML is escaped first so descriptions can't inject
+      // tags directly. Block-level markdown (lists, headings) isn't supported.
+      function renderInlineMd(text) {
+        const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return escaped
+          .replace(/`([^`]+)`/g, "<code>$1</code>")
+          .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
       }
 
       document.addEventListener("DOMContentLoaded", function () {
