@@ -126,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bamdst",
             anchor="bamdst",
             href="https://https://github.com/shiquan/bamdst",
@@ -450,7 +450,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "x",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_empty": False,
                 "ymin": 0,
             }
             if data_labels:
@@ -470,7 +469,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "%",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_empty": False,
                 "ymax": 100,
                 "ymin": 0,
             }
@@ -490,7 +488,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "xlab": "Sample",
                     "ylab": "Average depth",
                     "tt_suffix": "x",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ymin": 0,
                     "data_labels": data_labels,
                 },
@@ -503,7 +501,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "xlab": "Sample",
                     "ylab": "Coverage %",
                     "tt_suffix": "%",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ymax": 100,
                     "ymin": 0,
                     "data_labels": data_labels,

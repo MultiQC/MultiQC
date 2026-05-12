@@ -1,8 +1,7 @@
 ---
 title: UMICollapse
 displayed_sidebar: multiqcSidebar
-description: >
-  Algorithms for efficiently collapsing reads with Unique Molecular Identifiers
+description: "Algorithms for efficiently collapsing reads with Unique Molecular Identifiers."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/umicollapse/umicollaps
 -->
 
 :::note
-Algorithms for efficiently collapsing reads with Unique Molecular Identifiers
+Algorithms for efficiently collapsing reads with Unique Molecular Identifiers.
 
 [https://github.com/Daniel-Liu-c0deb0t/UMICollapse](https://github.com/Daniel-Liu-c0deb0t/UMICollapse)
 :::
@@ -26,7 +25,7 @@ file paths.
 
 ```
 umicollapse bam -i SRR19887568.sorted.bam -o SRR19887568.umi_dedup.sorted.bam
-Arguments	[bam, -i, SRR19887568.sorted.bam, -o, SRR19887568.umi_dedup.sorted.bam]
+Arguments   [bam, -i, SRR19887568.sorted.bam, -o, SRR19887568.umi_dedup.sorted.bam]
 ```
 
 `umicollapse` requires both -i and -o flags as valid file paths. Process
@@ -37,6 +36,7 @@ used for the -i flag, we fallback to the log file name.
 
 ```yaml
 umicollapse:
-  contents: "UMI collapsing finished in "
+  contents: 'UMI collapsing finished in '
   num_lines: 100
 ```
+    

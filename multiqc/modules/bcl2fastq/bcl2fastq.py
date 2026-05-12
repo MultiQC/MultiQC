@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="bcl2fastq",
             anchor="bcl2fastq",
             href="https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html",
@@ -120,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "id": "bcl2fastq_sample_counts",
                     "title": "bcl2fastq: Clusters by sample",
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                     "ylab": "Number of clusters",
                     "data_labels": ["Index mismatches", "Counts per lane"],
                 },

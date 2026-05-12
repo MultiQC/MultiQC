@@ -1,8 +1,7 @@
 ---
 title: Bases2Fastq
 displayed_sidebar: multiqcSidebar
-description: >
-  Demultiplexes and converts Element AVITI base calls into FASTQ files
+description: "Demultiplexes and converts Element AVITI base calls into FASTQ files."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/bases2fastq/bases2fast
 -->
 
 :::note
-Demultiplexes and converts Element AVITI base calls into FASTQ files
+Demultiplexes and converts Element AVITI base calls into FASTQ files.
 
 [https://docs.elembio.io/docs/bases2fastq/introduction/](https://docs.elembio.io/docs/bases2fastq/introduction/)
 :::
@@ -25,10 +24,15 @@ Demultiplexes and converts Element AVITI base calls into FASTQ files
 ```yaml
 bases2fastq/project:
   contents: SampleStats
-  fn: "*_RunStats.json"
+  fn: '*_RunStats.json'
   num_lines: 100
 bases2fastq/run:
   contents: SampleStats
   fn: RunStats.json
   num_lines: 100
+bases2fastq/manifest:
+  contents: Settings
+  fn: RunManifest.json
+  num_lines: 100
 ```
+    

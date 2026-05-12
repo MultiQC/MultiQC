@@ -1,8 +1,7 @@
 ---
 title: MALT
 displayed_sidebar: multiqcSidebar
-description: >
-  Aligns of metagenomic reads to a database of reference sequences (such as NR, GenBank or Silva) and outputs a MEGAN RMA file
+description: "Aligns of metagenomic reads to a database of reference sequences (such as NR, GenBank or Silva) and outputs a MEGAN RMA file."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/malt/malt.py
 -->
 
 :::note
-Aligns of metagenomic reads to a database of reference sequences (such as NR, GenBank or Silva) and outputs a MEGAN RMA file
+Aligns of metagenomic reads to a database of reference sequences (such as NR, GenBank or Silva) and outputs a MEGAN RMA file.
 
 [http://ab.inf.uni-tuebingen.de/software/malt/](http://ab.inf.uni-tuebingen.de/software/malt/)
 :::
@@ -33,3 +32,4 @@ malt:
   contents: MaltRun - Aligns sequences using MALT (MEGAN alignment tool)
   num_lines: 2
 ```
+    

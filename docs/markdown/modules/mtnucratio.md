@@ -1,8 +1,7 @@
 ---
 title: mtnucratio
 displayed_sidebar: multiqcSidebar
-description: >
-  Computes mitochondrial to nuclear genome ratios in NGS datasets.
+description: "Computes mitochondrial to nuclear genome ratios in NGS datasets."
 ---
 
 <!--
@@ -24,5 +23,6 @@ Computes mitochondrial to nuclear genome ratios in NGS datasets.
 
 ```yaml
 mtnucratio:
-  fn: "*mtnuc.json"
+  fn: '*mtnuc.json'
 ```
+    

@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="FastQ Screen",
             anchor="fastq_screen",
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/",
@@ -221,7 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "fastq_screen_bisulfite_plot",
             "title": "FastQ Screen: Bisulfite Mapping Strand Orientation",
-            "hide_empty": False,
+            "hide_zero_cats": False,
             "ylab": "Reads",
             "data_labels": [],
         }

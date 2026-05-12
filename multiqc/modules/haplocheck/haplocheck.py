@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Haplocheck",
             anchor="haplocheck",
             href="https://github.com/genepi/haplocheck/",
@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
         haplocheck_data: Dict = dict()
 
         for f in self.find_log_files("haplocheck"):
-            haplocheck_data = self.parse_logs(f)
+            haplocheck_data.update(self.parse_logs(f))
 
         haplocheck_data = self.ignore_samples(haplocheck_data)
 

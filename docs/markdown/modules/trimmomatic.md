@@ -1,8 +1,7 @@
 ---
 title: Trimmomatic
 displayed_sidebar: multiqcSidebar
-description: >
-  Read trimming tool for Illumina NGS data.
+description: "Read trimming tool for Illumina NGS data."
 ---
 
 <!--
@@ -42,3 +41,4 @@ Note: The old `trimmomatic.s_name_filenames` option is deprecated and will be re
 trimmomatic:
   contents_re: ^Trimmomatic
 ```
+    

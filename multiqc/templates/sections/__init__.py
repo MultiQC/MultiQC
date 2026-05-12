@@ -20,7 +20,7 @@ import os
 
 from multiqc import config
 
-template_parent = "default"
+template_parent = "original"
 template_dir = os.path.dirname(__file__)
 base_fn = "base.html"
 

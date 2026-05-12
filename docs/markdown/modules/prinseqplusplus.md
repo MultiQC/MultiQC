@@ -1,8 +1,7 @@
 ---
 title: PRINSEQ++
 displayed_sidebar: multiqcSidebar
-description: >
-  C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and metagenomic reads.
+description: "C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and metagenomic reads."
 ---
 
 <!--
@@ -28,6 +27,7 @@ It uses the log file name as the sample name.
 
 ```yaml
 prinseqplusplus:
-  - contents: reads removed by -
-    num_lines: 2
+- contents: reads removed by -
+  num_lines: 2
 ```
+    

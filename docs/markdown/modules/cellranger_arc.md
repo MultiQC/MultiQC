@@ -1,8 +1,7 @@
 ---
 title: Cell Ranger ARC
 displayed_sidebar: multiqcSidebar
-description: >
-  Analyzes single-cell multiome ATAC and gene expression data produced by 10X Genomics.
+description: "Analyzes single-cell multiome ATAC and gene expression data produced by 10X Genomics."
 ---
 
 <!--
@@ -42,7 +41,8 @@ If present in the original report, any warning is reported as well.
 
 ```yaml
 cellranger_arc:
-  - contents: Cell Ranger ARC
-    fn: "*.html"
-    num_lines: 250
+- contents: Cell Ranger ARC
+  fn: '*.html'
+  num_lines: 250
 ```
+    

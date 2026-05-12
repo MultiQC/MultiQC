@@ -1,8 +1,7 @@
 ---
 title: Ganon
 displayed_sidebar: multiqcSidebar
-description: >
-  Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers.
+description: "Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers."
 ---
 
 <!--
@@ -27,6 +26,7 @@ The module takes summary statistics from a file containing stdout from `ganon cl
 ```yaml
 ganon:
   contents:
-    - ganon-classify processed
+  - ganon-classify processed
   num_lines: 100
 ```
+    

@@ -1,8 +1,7 @@
 ---
 title: OptiType
 displayed_sidebar: multiqcSidebar
-description: >
-  Precision HLA typing from next-generation sequencing data.
+description: "Precision HLA typing from next-generation sequencing data."
 ---
 
 <!--
@@ -30,3 +29,4 @@ optitype:
   contents: "\tA1\tA2\tB1\tB2\tC1\tC2\tReads\tObjective"
   num_lines: 1
 ```
+    

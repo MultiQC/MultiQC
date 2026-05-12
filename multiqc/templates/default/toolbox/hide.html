@@ -1,0 +1,69 @@
+<!-- Hide -->
+<div class="tab-pane mqc_filter_section" id="mqc_hidesamples" role="tabpanel">
+  <h5 class="mb-3">
+    <button id="mqc_hidesamples_apply" class="btn btn-sm btn-primary float-end" disabled>Apply</button>
+    Show / Hide Samples
+  </h5>
+  {% if report.num_flat_plots > 0 %}
+    <p>
+      {{ material_icon('mdi:alert', 16) }} This report has flat image plots that won't be hidden.<br />
+      See the
+      <a href="https://docs.seqera.io/multiqc/development/plots/#interactive--flat-image-plots" target="_blank">
+        documentation
+      </a>
+      for help.
+    </p>
+  {% endif %}
+  <form id="mqc_hidesamples_form">
+    <div class="form-check form-control-sm">
+      <input
+        type="radio"
+        name="mqc_hidesamples_showhide"
+        class="form-check-input mqc_hidesamples_showhide"
+        id="mqc_hidesamples_hide"
+        value="hide"
+        checked
+      />
+      <label class="form-check-label" for="mqc_hidesamples_hide">Hide matching samples</label>
+    </div>
+    <div class="form-check form-control-sm">
+      <input
+        type="radio"
+        name="mqc_hidesamples_showhide"
+        class="form-check-input mqc_hidesamples_showhide"
+        id="mqc_hidesamples_show"
+        value="show"
+      />
+      <label class="form-check-label" for="mqc_hidesamples_show">Show only matching samples</label>
+    </div>
+    <div class="d-flex justify-content-between gap-2 small">
+      <input
+        id="mqc_hidesamples_filter"
+        type="text"
+        placeholder="Custom Pattern"
+        class="form-control form-control-sm flex-grow-1"
+      />
+      <button type="submit" id="mqc_hidesamples_filter_update" class="btn btn-outline-secondary btn-sm">
+        {{ material_icon('mdi:plus', 18) }}
+      </button>
+    </div>
+  </form>
+  {% if report.general_stats_data | length > 10 %}<p>Warning! This can take a few seconds.</p>{% endif %}
+  <div class="mqc_regex_mode d-flex justify-content-between mt-2">
+    <div class="form-check form-switch mt-1">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        id="re_mode_mqc_hidesamples"
+        data-bs-target="mqc_hidesamples"
+        switch
+      />
+      <label class="form-check-label" for="re_mode_mqc_hidesamples">Regex mode</label>
+    </div>
+    <button class="btn btn-sm btn-link" data-bs-toggle="modal" data-bs-target="#regex_help_modal">regex help</button>
+    <button class="btn btn-outline-danger btn-sm mqc_toolbox_clear">
+      {{ material_icon('mdi:delete', 16) }} Clear all
+    </button>
+  </div>
+  <ul id="mqc_hidesamples_filters" class="mqc_filters"></ul>
+</div>

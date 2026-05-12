@@ -1,8 +1,7 @@
 ---
 title: Sequali
 displayed_sidebar: multiqcSidebar
-description: >
-  Sequencing quality control for both long-read and short-read data
+description: "Sequencing quality control for both long-read and short-read data."
 ---
 
 <!--
@@ -15,12 +14,12 @@ File path for the source of this content: multiqc/modules/sequali/sequali.py
 -->
 
 :::note
-Sequencing quality control for both long-read and short-read data
+Sequencing quality control for both long-read and short-read data.
 
 [https://github.com/rhpvorderman/sequali](https://github.com/rhpvorderman/sequali)
 :::
 
-Features adapter search, overrepresented sequence analysis and duplication analysis and supports
+Features adapter search, overrepresented sequence  analysis and duplication analysis and supports
 FASTQ and uBAM inputs.
 
 ### File search patterns
@@ -28,6 +27,7 @@ FASTQ and uBAM inputs.
 ```yaml
 sequali:
   contents: '"sequali_version"'
-  fn: "*.json"
+  fn: '*.json'
   num_lines: 10
 ```
+    

@@ -1,8 +1,7 @@
 ---
 title: Cutadapt
 displayed_sidebar: multiqcSidebar
-description: >
-  Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.
+description: "Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences."
 ---
 
 <!--
@@ -33,7 +32,7 @@ sp:
     contents: "cutadapt version"
 ```
 
-See the [module search patterns](https://docs.seqera.io/multiqc/getting_started/config#module-search-patterns)
+See the [module search patterns](../getting_started/config#module-search-patterns)
 section of the MultiQC documentation for more information.
 
 The module also understands logs saved by Trim Galore, which contain cutadapt logs.
@@ -42,8 +41,9 @@ The module also understands logs saved by Trim Galore, which contain cutadapt lo
 
 ```yaml
 cutadapt:
-  - contents: This is cutadapt
-    num_lines: 100
-  - contents: Cutadapt report
-    fn: "*.json"
+- contents: This is cutadapt
+  num_lines: 100
+- contents: Cutadapt report
+  fn: '*.json'
 ```
+    

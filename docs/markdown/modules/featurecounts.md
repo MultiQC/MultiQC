@@ -1,8 +1,7 @@
 ---
 title: featureCounts
 displayed_sidebar: multiqcSidebar
-description: >
-  Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations.
+description: "Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations."
 ---
 
 <!--
@@ -23,7 +22,7 @@ Counts mapped reads for genomic features such as genes, exons, promoter, gene bo
 As of MultiQC v1.10, the module should also work with output from
 [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html).
 Note that your filenames must end in `.summary` to be discovered.
-See [Module search patterns](#module-search-patterns) for how to customise this.
+See [Module search patterns](../getting_started/config#module-search-patterns) for how to customise this.
 
 Please note that if files are in "Rsubread mode" then lines will be split by any
 whitespace, instead of tab characters. As such, filenames with spaces in will
@@ -33,6 +32,7 @@ cause the parsing to fail.
 
 ```yaml
 featurecounts:
-  fn: "*.summary"
+  fn: '*.summary'
   shared: true
 ```
+    

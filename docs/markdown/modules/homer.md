@@ -1,8 +1,7 @@
 ---
 title: HOMER
 displayed_sidebar: multiqcSidebar
-description: >
-  Motif discovery and next-gen sequencing analysis.
+description: "Motif discovery and next-gen sequencing analysis."
 ---
 
 <!--
@@ -49,10 +48,11 @@ homer/LengthDistribution:
 homer/RestrictionDistribution:
   fn: petagRestrictionDistribution.*.txt
 homer/findpeaks:
-  contents: "# HOMER Peaks"
+  contents: '# HOMER Peaks'
   num_lines: 3
 homer/genomeGCcontent:
   fn: genomeGCcontent.txt
 homer/tagInfo:
   fn: tagInfo.txt
 ```
+    

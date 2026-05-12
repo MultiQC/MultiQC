@@ -57,8 +57,13 @@ def read_config():
 
 def genstats_cov_thresholds(cum_fraction_by_cov: Dict[int, float], threshs: List[int]) -> Dict[str, float]:
     genstats: Dict[str, float] = {}
+    sorted_cum_fraction_by_cov = sorted(cum_fraction_by_cov.items())
     for t in threshs:
-        genstats[f"{t}_x_pc"] = cum_fraction_by_cov.get(t, 0.0) * 100.0
+        # take next known value
+        # e.g. if only 50x is known but the threshold is 40x, take the 50x value
+        # if there is no next threshold, just take 0.0
+        cov_val = next((proportion for cov, proportion in sorted_cum_fraction_by_cov if cov >= t), 0.0)
+        genstats[f"{t}_x_pc"] = cov_val * 100.0
     return genstats
 
 
@@ -170,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Mosdepth",
             anchor="mosdepth",
             href="https://github.com/brentp/mosdepth",
@@ -313,7 +318,6 @@ class MultiqcModule(BaseMultiqcModule):
                             "tt_suffix": "x",
                             "smooth_points": 500,
                             "logswitch": True,
-                            "hide_empty": False,
                             "categories": True,
                         },
                     )
@@ -326,7 +330,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "xlab": "Sample",
                             "ylab": "Average Coverage",
                             "tt_suffix": "x",
-                            "hide_empty": False,
+                            "hide_zero_cats": False,
                             "categories": True,
                         },
                     )

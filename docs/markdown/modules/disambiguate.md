@@ -1,8 +1,7 @@
 ---
 title: Disambiguate
 displayed_sidebar: multiqcSidebar
-description: >
-  Disambiguate reads aligned to two different species (e.g. human and mouse)
+description: "Disambiguate reads aligned to two different species (e.g. human and mouse)."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/disambiguate/disambigu
 -->
 
 :::note
-Disambiguate reads aligned to two different species (e.g. human and mouse)
+Disambiguate reads aligned to two different species (e.g. human and mouse).
 
 [https://github.com/AstraZeneca-NGS/disambiguate](https://github.com/AstraZeneca-NGS/disambiguate)
 :::
@@ -27,3 +26,4 @@ disambiguate:
   contents: unique species A pairs
   num_lines: 2
 ```
+    

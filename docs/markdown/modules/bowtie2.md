@@ -1,8 +1,7 @@
 ---
 title: Bowtie 2 / HiSAT2
 displayed_sidebar: multiqcSidebar
-description: >
-  Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome.
+description: "Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome."
 ---
 
 <!--
@@ -57,9 +56,10 @@ Bowtie 2 and HISAT2 are used by other tools too, so if your log file contains th
 
 ```yaml
 bowtie2:
-  contents: "reads; of these:"
+  contents: 'reads; of these:'
   exclude_contents:
-    - bisulfite
-    - HiC-Pro
+  - bisulfite
+  - HiC-Pro
   shared: true
 ```
+    

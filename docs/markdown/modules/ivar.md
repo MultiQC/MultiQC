@@ -1,8 +1,7 @@
 ---
 title: iVar
 displayed_sidebar: multiqcSidebar
-description: >
-  Functions for viral amplicon-based sequencing.
+description: "Functions for viral amplicon-based sequencing."
 ---
 
 <!--
@@ -30,3 +29,4 @@ ivar/trim:
   contents: Number of references
   num_lines: 8
 ```
+    

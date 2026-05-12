@@ -1,8 +1,7 @@
 ---
 title: cells2stats
 displayed_sidebar: multiqcSidebar
-description: >
-  Generate output files and statistics from Element Biosciences Teton Assay
+description: "Generate output files and statistics from Element Biosciences Teton cytoprofiling assays."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/cells2stats/cells2stat
 -->
 
 :::note
-Generate output files and statistics from Element Biosciences Teton Assay
+Generate output files and statistics from Element Biosciences Teton cytoprofiling assays.
 
 [https://docs.elembio.io/docs/cells2stats/introduction/](https://docs.elembio.io/docs/cells2stats/introduction/)
 :::
@@ -24,7 +23,8 @@ Generate output files and statistics from Element Biosciences Teton Assay
 
 ```yaml
 cells2stats/run:
-  contents: DemuxStats
+  contents: '"AnalysisID": "c2s.'
   fn: RunStats.json
   num_lines: 100
 ```
+    

@@ -1,8 +1,7 @@
 ---
 title: CheckM
 displayed_sidebar: multiqcSidebar
-description: >
-  Estimates genome completeness and contamination based on the presence or absence of marker genes.
+description: "Estimates genome completeness and contamination based on the presence or absence of marker genes."
 ---
 
 <!--
@@ -25,13 +24,14 @@ It will only parse an output file from `checkm lineage_wf`, `checkm taxonomy_wf`
 The output file needs to be in format 1 (`-o 1`).
 All statistics for all samples are saved to `multiqc_data/checkm-table.txt`.
 
-    Tested with CheckM v1.2.1
+Tested with CheckM v1.2.1
 
 ### File search patterns
 
 ```yaml
 checkm:
-  - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})#\
-      \ markers(?:\t| {3,})# marker sets.*"
-    num_lines: 10
+- contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})#\
+    \ markers(?:\t| {3,})# marker sets.*"
+  num_lines: 10
 ```
+    

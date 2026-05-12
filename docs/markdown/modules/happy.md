@@ -1,8 +1,7 @@
 ---
 title: hap.py
 displayed_sidebar: multiqcSidebar
-description: >
-  Benchmarks variant calls against gold standard truth datasets.
+description: "Benchmarks variant calls against gold standard truth datasets."
 ---
 
 <!--
@@ -20,12 +19,13 @@ Benchmarks variant calls against gold standard truth datasets.
 [https://github.com/Illumina/hap.py](https://github.com/Illumina/hap.py)
 :::
 
-Som.py output not currently supported.
+Som.py output supported in separate sompy module.
 
 ### File search patterns
 
 ```yaml
 happy:
   contents: Type,Filter,TRUTH
-  fn: "*.summary.csv"
+  fn: '*.summary.csv'
 ```
+    

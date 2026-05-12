@@ -1,8 +1,7 @@
 ---
 title: Rockhopper
 displayed_sidebar: multiqcSidebar
-description: >
-  Bacterial RNA-seq analysis: align reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs
+description: "Bacterial RNA-seq analysis: align reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/rockhopper/rockhopper.
 -->
 
 :::note
-Bacterial RNA-seq analysis: align reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs
+Bacterial RNA-seq analysis: align reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs.
 
 [https://cs.wellesley.edu/~btjaden/Rockhopper/](https://cs.wellesley.edu/~btjaden/Rockhopper/)
 :::
@@ -30,3 +29,4 @@ rockhopper:
   fn: summary.txt
   max_filesize: 500000
 ```
+    

@@ -1,8 +1,7 @@
 ---
 title: HOPS
 displayed_sidebar: multiqcSidebar
-description: >
-  Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.
+description: "Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT."
 ---
 
 <!--
@@ -30,3 +29,4 @@ categories (small edit distance, damage, both edit distance and aDNA damage) tha
 hops:
   fn: heatmap_overview_Wevid.json
 ```
+    

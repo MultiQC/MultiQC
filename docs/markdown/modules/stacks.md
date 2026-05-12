@@ -1,8 +1,7 @@
 ---
 title: Stacks
 displayed_sidebar: multiqcSidebar
-description: >
-  Analyzes restriction enzyme-based data (e.g. RAD-seq).
+description: "Analyzes restriction enzyme-based data (e.g. RAD-seq)."
 ---
 
 <!--
@@ -37,6 +36,7 @@ stacks/populations:
   fn: populations.log.distribs
 stacks/sumstats:
   contents: "# Pop ID\tPrivate\tNum_Indv\tVar\tStdErr\tP\tVar"
-  fn: "*.sumstats_summary.tsv"
+  fn: '*.sumstats_summary.tsv'
   max_filesize: 1000000
 ```
+    

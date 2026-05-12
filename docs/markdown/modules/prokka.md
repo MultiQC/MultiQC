@@ -1,8 +1,7 @@
 ---
 title: Prokka
 displayed_sidebar: multiqcSidebar
-description: >
-  Rapid annotation of prokaryotic genomes.
+description: "Rapid annotation of prokaryotic genomes."
 ---
 
 <!--
@@ -43,6 +42,7 @@ will instead use the log filename as the sample name.
 
 ```yaml
 prokka:
-  contents: "contigs:"
+  contents: 'contigs:'
   num_lines: 2
 ```
+    

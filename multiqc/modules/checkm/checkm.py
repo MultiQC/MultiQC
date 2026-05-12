@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="CheckM",
             anchor="checkm",
             href="https://github.com/Ecogenomics/CheckM",
@@ -45,6 +45,29 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_by_sample, "multiqc_checkm")
 
         self.mag_quality_table(data_by_sample)
+
+        # Add important columns to general table
+        headers = {
+            "Completeness": {
+                "title": "Completeness",
+                "description": "Estimated completeness of genome as determined from the presence/absence of marker genes and the expected collocalization of these genes",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Purples",
+                "format": "{:,.2f}",
+            },
+            "Contamination": {
+                "title": "Contamination",
+                "description": "Estimated contamination of genome as determined by the presence of multi-copy marker genes and the expected collocalization of these genes",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Reds",
+                "format": "{:,.2f}",
+            },
+        }
+        self.general_stats_addcols(data_by_sample, headers)
 
     def parse_file(self, f, data_by_sample):
         """Parses the file from `checkm qa`.
@@ -124,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for line in lines[1:]:
             row = re.split(r"\t| {3,}", line.rstrip("\n"))
-            sname = row[0]
+            sname = self.clean_s_name(row[0], f)
             if sname in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {sname}")
             data_by_sample[sname] = {k: v for k, v in zip(column_names[1:], row[1:]) if v is not None}

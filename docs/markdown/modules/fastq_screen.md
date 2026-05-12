@@ -1,8 +1,7 @@
 ---
 title: FastQ Screen
 displayed_sidebar: multiqcSidebar
-description: >
-  Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect.
+description: "Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect."
 ---
 
 <!--
@@ -36,5 +35,6 @@ fastqscreen_simpleplot: true
 
 ```yaml
 fastq_screen:
-  fn: "*_screen.txt"
+  fn: '*_screen.txt'
 ```
+    

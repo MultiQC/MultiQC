@@ -1,8 +1,7 @@
 ---
 title: telseq
 displayed_sidebar: multiqcSidebar
-description: >
-  Estimates telomere length from whole genome sequencing data (BAMs).
+description: "Estimates telomere length from whole genome sequencing data (BAMs)."
 ---
 
 <!--
@@ -30,3 +29,4 @@ telseq:
   contents: "ReadGroup\tLibrary\tSample\tTotal\tMapped\tDuplicates\tLENGTH_ESTIMATE"
   num_lines: 3
 ```
+    

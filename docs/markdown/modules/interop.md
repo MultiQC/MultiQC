@@ -1,8 +1,7 @@
 ---
 title: Illumina InterOp Statistics
 displayed_sidebar: multiqcSidebar
-description: >
-  Reading and writing InterOp metric files.
+description: "Reading and writing InterOp metric files."
 ---
 
 <!--
@@ -41,3 +40,4 @@ interop/index-summary:
 interop/summary:
   contents: Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30
 ```
+    

@@ -31,6 +31,7 @@ page contents, it's machine-readable tags for browsers and search engines.
     "decimalPoint_format": config.decimalPoint_format,
     "thousandsSep_format": config.thousandsSep_format,
     "boxplot_boxpoints": config.boxplot_boxpoints,
+    "template_dark_mode": config.template_dark_mode,
 } | tojson
 }}</script>
 
@@ -64,6 +65,7 @@ configCreationDate = "{{ report.creation_date.strftime('%d %b %Y, %H:%M %Z') }}"
 
      As a precaution the script is wrapped in raw block to remind developers that data should
      not be injected directly into it. -->
+
 {% raw %}
 <script type="text/javascript">
 mqc_compressed_plotdata = document.getElementById('mqc_compressed_plotdata').innerHTML;

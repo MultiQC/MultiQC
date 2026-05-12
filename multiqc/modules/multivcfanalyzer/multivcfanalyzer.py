@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="MultiVCFAnalyzer",
             anchor="multivcfanalyzer",
             href="https://github.com/alexherbig/MultiVCFAnalyzer",
@@ -277,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             # Building the plot
             "id": "mvcf_barplot",  # HTML ID used for plot
-            "hide_empty": True,  # Hide categories where data for all samples is 0
+            "hide_zero_cats": True,  # Hide categories where data for all samples is 0
             # Customising the plot
             "title": "MultiVCFAnalyzer: Call Categories",  # Plot title - should be in format "Module Name: Plot Title"
             "ylab": "Total # Positions",  # X axis label

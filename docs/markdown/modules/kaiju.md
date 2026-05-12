@@ -1,8 +1,7 @@
 ---
 title: Kaiju
 displayed_sidebar: multiqcSidebar
-description: >
-  Taxonomic classification for metagenomics.
+description: "Taxonomic classification for metagenomics."
 ---
 
 <!--
@@ -35,3 +34,4 @@ kaiju:
   contents_re: file\tpercent\treads\ttaxon_id\ttaxon_name
   num_lines: 1
 ```
+    

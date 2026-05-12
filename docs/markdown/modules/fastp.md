@@ -1,8 +1,7 @@
 ---
 title: fastp
 displayed_sidebar: multiqcSidebar
-description: >
-  All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
+description: "All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/fastp/fastp.py
 -->
 
 :::note
-All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
+All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...).
 
 [https://github.com/OpenGene/fastp](https://github.com/OpenGene/fastp)
 :::
@@ -26,20 +25,30 @@ depiction of the consequences of the filtering process. Notably, the latter can 
 variety of parameters including quality scores, length, as well as the presence of adapters, polyG,
 or polyX tailing.
 
-By default, the module generates the sample names based on the input FastQ file names in
-the command line used by fastp. If you prefer, you can tell the module to use
-the filenames as sample names instead. To do so, use the following config option:
+The module also supports [fasterp](https://github.com/drbh/fasterp), a Rust reimplementation
+of fastp that produces identical JSON output. When a `fasterp_version` field is found in
+the summary, the software version is tracked separately as fasterp.
+
+By default, the module generates the sample names based on the `--report_title` / `-R`
+option in the fastp command line (if present), or the input FastQ file names if not.
+
+If you prefer, you can tell the module to use the filenames as sample names instead.
+To do so, use the following config option:
 
 ```yaml
-fastp:
-  s_name_filenames: true
+use_filename_as_sample_name:
+    - fastp
 ```
+
+See [Using log filenames as sample names](../getting_started/config#using-log-filenames-as-sample-names)
+for more details.
 
 ### File search patterns
 
 ```yaml
 fastp:
   contents: '"before_filtering": {'
-  fn: "*.json"
+  fn: '*.json'
   num_lines: 50
 ```
+    

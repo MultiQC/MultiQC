@@ -10,6 +10,16 @@ def base_module():
     return BaseMultiqcModule()
 
 
+@pytest.fixture(autouse=True)
+def reset_config():
+    """Reset config state after each test."""
+    original_fn_clean_exts = config.fn_clean_exts[:]
+    original_fn_clean_trim = config.fn_clean_trim[:]
+    yield
+    config.fn_clean_exts[:] = original_fn_clean_exts
+    config.fn_clean_trim[:] = original_fn_clean_trim
+
+
 def test_no_trim(base_module):
     config.fn_clean_exts[:] = []
     config.fn_clean_trim[:] = []

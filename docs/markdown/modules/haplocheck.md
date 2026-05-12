@@ -1,8 +1,7 @@
 ---
 title: Haplocheck
 displayed_sidebar: multiqcSidebar
-description: >
-  Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.
+description: "Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content."
 ---
 
 <!--
@@ -28,3 +27,4 @@ haplocheck:
     \t\"Sample Coverage\""
   num_lines: 10
 ```
+    

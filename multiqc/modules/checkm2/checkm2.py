@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="CheckM2",
             anchor="checkm2",
             href="https://github.com/chklovski/CheckM2",
@@ -45,11 +45,38 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.mag_quality_table(data_by_sample)
 
+        # Add the important columns to the general stats table
+        headers = {
+            "Completeness": {
+                "title": "Predicted Completeness",
+                "description": "The percentage of MAG length relative to predicted total MAG length.",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "Contamination": {
+                "title": "Predicted Contamination",
+                "description": "The length of the contaminating portion relative to the expected (complete, uncontaminated) genome length.",
+                "min": 0,
+                "suffix": "%",
+                "format": "{:,.2f}",
+                "scale": "YlOrRd",
+            },
+            "Genome_Size": {
+                "title": "Genome Size",
+                "description": "The predicted size of the genome",
+                "scale": "YlGn",
+                "hidden": True,
+            },
+        }
+        self.general_stats_addcols(data_by_sample, headers)
+
     def parse_file(self, f, data_by_sample):
         """Parse the quality_report.tsv output."""
         reader = csv.DictReader(StringIO(f["f"]), delimiter="\t")
         for row in reader:
-            sname = row.pop("Name")  # Remove and get the Name column
+            sname = self.clean_s_name(row.pop("Name"), f)  # Remove and get the Name column
             if sname in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {sname}")
             data_by_sample[sname] = {k: v for k, v in row.items() if v != "None"}

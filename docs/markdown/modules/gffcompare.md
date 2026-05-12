@@ -1,8 +1,7 @@
 ---
 title: GffCompare
 displayed_sidebar: multiqcSidebar
-description: >
-  Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.
+description: "Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format."
 ---
 
 <!--
@@ -40,7 +39,8 @@ It is hoped to refactor this code in a future release - please submit a PR if yo
 
 ```yaml
 gffcompare:
-  contents: "# gffcompare"
-  fn: "*.stats"
+  contents: '# gffcompare'
+  fn: '*.stats'
   num_lines: 2
 ```
+    

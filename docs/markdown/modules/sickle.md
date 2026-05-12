@@ -1,8 +1,7 @@
 ---
 title: Sickle
 displayed_sidebar: multiqcSidebar
-description: >
-  A windowed adaptive trimming tool for FASTQ files using quality.
+description: "A windowed adaptive trimming tool for FASTQ files using quality."
 ---
 
 <!--
@@ -31,3 +30,4 @@ sickle:
   contents_re: 'FastQ \w*\s?records kept: .*'
   num_lines: 2
 ```
+    

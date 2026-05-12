@@ -1,0 +1,3015 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MultiQC Configuration Wizard</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 250'%3E%3Cpath fill='%23087f68' d='M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z'/%3E%3Cpath fill='%23087f68' d='M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z'/%3E%3Cpath fill='%23087f68' d='M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z'/%3E%3Cpath fill='%23087f68' d='M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        /* Seqera tokens */
+        --navy: #201637; /* --color-brand */
+        --navy-2: #2d273c; /* --color-brand-1000 */
+        --ink: #160f26; /* heading ink */
+        --ink-mute: #5c5767; /* body text */
+        --ink-soft: #736f7d; /* caption */
+        --ink-faint: #a29fa8; /* subtle */
+        --teal: #31c9ac; /* --color-nextflow-500 */
+        --teal-border: #0cae8e; /* --color-nextflow-700 */
+        --teal-border-active: #087f68; /* --color-nextflow-900 */
+        --teal-tint: #e2f7f3;
+        --paper: #ffffff;
+        --surface-soft: #f8f8f8; /* --color-brand-50 */
+        --border: rgba(0, 0, 0, 0.15);
+        --border-soft: #e8e7e9; /* --color-brand-200 */
+        --focus: #31c9ac;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        color: var(--ink-mute);
+        background: var(--paper);
+        font-size: 16px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .display {
+        font-family: "Bricolage Grotesque", "Inter", sans-serif;
+        font-variation-settings: "opsz" 32;
+        color: var(--ink);
+      }
+
+      code,
+      pre,
+      .mono {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+      }
+
+      a {
+        color: var(--navy);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 1px;
+      }
+      a:hover {
+        color: var(--teal-border);
+      }
+
+      /* Fixed left side-nav */
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 280px;
+        height: 100vh;
+        background: var(--navy);
+        color: rgba(255, 255, 255, 0.85);
+        display: flex;
+        flex-direction: column;
+        z-index: 50;
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .sidebar-brand {
+        padding: 22px 22px 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .sidebar-brand-link {
+        display: inline-block;
+        text-decoration: none;
+        border-radius: 3px;
+        transition: opacity 0.15s ease;
+      }
+      .sidebar-brand-link:hover {
+        opacity: 0.85;
+      }
+      .sidebar-brand-link:focus-visible {
+        outline: 2px solid var(--teal);
+        outline-offset: 4px;
+      }
+      .sidebar-brand svg {
+        height: 26px;
+        width: auto;
+        display: block;
+      }
+      .sidebar-brand svg path.mqc-logo-text {
+        fill: white;
+      }
+      .sidebar-eyebrow {
+        margin-top: 12px;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--teal);
+      }
+
+      .sidebar-search {
+        padding: 18px 18px 12px;
+        position: relative;
+      }
+      .sidebar-search input {
+        width: 100%;
+        padding: 10px 34px 10px 38px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+        background-color: rgba(255, 255, 255, 0.05);
+        color: white;
+        font-family: inherit;
+        font-size: 0.9em;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23A29FA8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20.5 20.5l-4.4-4.4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 14px center;
+        transition:
+          border-color 0.15s ease,
+          background-color 0.15s ease;
+      }
+      .sidebar-search input::placeholder {
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .sidebar-search input:focus {
+        outline: none;
+        border-color: var(--teal);
+        background-color: rgba(255, 255, 255, 0.08);
+      }
+      .sidebar-search .clear-btn {
+        position: absolute;
+        right: 24px;
+        top: calc(50% + 3px);
+        transform: translateY(-50%);
+        display: none;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.55);
+        cursor: pointer;
+        border-radius: 3px;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .sidebar-search.has-text .clear-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .sidebar-search .clear-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: white;
+      }
+      .sidebar-search .clear-btn svg {
+        display: block;
+      }
+
+      .sidebar-sections {
+        flex: 1;
+        overflow-y: auto;
+        padding: 6px 12px 16px;
+      }
+      .sidebar-sections h3 {
+        color: rgba(255, 255, 255, 0.45);
+        margin: 8px 10px 8px;
+        font-size: 0.7em;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+      .section-nav {
+        list-style: none;
+      }
+      .section-nav li {
+        margin-bottom: 2px;
+      }
+      .section-nav a {
+        color: rgba(255, 255, 255, 0.78);
+        text-decoration: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.92em;
+        font-weight: 500;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .section-nav a:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+      }
+      .section-nav a.active {
+        background: rgba(49, 201, 172, 0.15);
+        color: white;
+        box-shadow: inset 2px 0 0 var(--teal);
+      }
+      .section-nav .badge {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.7);
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 0.74em;
+        font-weight: 500;
+        min-width: 22px;
+        text-align: center;
+      }
+      .section-nav a.active .badge {
+        background: var(--teal);
+        color: var(--navy);
+      }
+      .section-nav li.dimmed a {
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .show-uncommon-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: calc(100% - 20px);
+        margin: 12px 10px 4px;
+        padding: 6px 10px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.55);
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 0.78em;
+        cursor: pointer;
+        text-align: left;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .show-uncommon-btn:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+      .show-uncommon-state {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.18);
+        flex-shrink: 0;
+      }
+      body.show-uncommon .show-uncommon-btn {
+        background: rgba(49, 201, 172, 0.08);
+        border-color: rgba(49, 201, 172, 0.25);
+        color: white;
+      }
+      body.show-uncommon .show-uncommon-state {
+        background: var(--teal);
+        box-shadow: 0 0 0 2px rgba(49, 201, 172, 0.25);
+      }
+
+      .form-group.uncommon {
+        display: none;
+      }
+      body.search-active .form-group.uncommon {
+        display: block;
+      }
+      body.show-uncommon .form-group.uncommon {
+        display: block;
+      }
+      .section-nav .nav-advanced-only,
+      .section-heading.advanced-only {
+        display: none;
+      }
+      body.show-uncommon .section-nav .nav-advanced-only,
+      body.search-active .section-nav .nav-advanced-only {
+        display: list-item;
+      }
+      body.show-uncommon .section-heading.advanced-only,
+      body.search-active .section-heading.advanced-only {
+        display: block;
+      }
+      body.show-uncommon .form-group.uncommon .field-key::after {
+        content: "advanced";
+        display: inline-block;
+        margin-left: 8px;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-family: "Inter", sans-serif;
+        font-size: 0.68em;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        vertical-align: middle;
+      }
+
+      .sidebar-cta {
+        padding: 14px 18px 6px;
+      }
+      .sidebar-cta .btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      .welcome-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .welcome-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--paper);
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 0.9em;
+        font-weight: 500;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease;
+      }
+      .welcome-links a:hover {
+        background: var(--surface-soft);
+        border-color: var(--ink-soft);
+        color: var(--navy);
+      }
+      .welcome-links a::after {
+        content: "↗";
+        color: var(--teal-border);
+        font-size: 0.95em;
+        line-height: 1;
+      }
+      /* Right-hand main column */
+      .main {
+        margin-left: 280px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Hero in the main column */
+      .header {
+        background: var(--paper);
+        color: var(--ink);
+        padding: 48px 56px 36px;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .header h1 {
+        font-family: "Bricolage Grotesque", "Inter", sans-serif;
+        font-variation-settings: "opsz" 64;
+        font-size: 2.4em;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        color: var(--ink);
+        margin: 0;
+      }
+      .header-version {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.42em;
+        font-weight: 500;
+        letter-spacing: 0;
+        color: var(--ink-soft);
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        border-radius: 3px;
+        padding: 4px 10px;
+        margin-left: 14px;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
+      .header p {
+        font-size: 1.05em;
+        color: var(--ink-mute);
+        margin-top: 12px;
+      }
+      .header code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        color: var(--ink);
+        padding: 1px 8px;
+        border-radius: 3px;
+        font-size: 0.88em;
+      }
+
+      /* Content area */
+      .content {
+        padding: 0 56px 40px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .page-footer {
+        margin-top: auto;
+        padding: 22px 56px 28px;
+        border-top: 1px solid var(--border-soft);
+        color: var(--ink-soft);
+        font-size: 0.8em;
+      }
+      .page-footer code {
+        font-size: 0.95em;
+        color: var(--ink);
+      }
+
+      /* Welcome / intro card, Seqera Box style */
+      .welcome-section {
+        background: var(--paper);
+        border: 1px solid var(--border);
+        border-radius: 0;
+        padding: 32px 36px;
+        margin: 32px 0 12px;
+      }
+      .welcome-section h2 {
+        font-family: "Bricolage Grotesque", "Inter", sans-serif;
+        font-variation-settings: "opsz" 32;
+        color: var(--ink);
+        font-size: 1.5em;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+        margin-bottom: 14px;
+      }
+      .welcome-section p {
+        color: var(--ink-mute);
+        line-height: 1.65;
+        margin-bottom: 12px;
+      }
+      .welcome-section p:last-child {
+        margin-bottom: 0;
+      }
+      .welcome-section code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 8px;
+        border-radius: 3px;
+        font-size: 0.88em;
+        color: var(--navy);
+      }
+
+      .section-heading {
+        font-family: "Bricolage Grotesque", "Inter", sans-serif;
+        font-variation-settings: "opsz" 32;
+        color: var(--ink);
+        margin: 56px -56px 22px 0;
+        font-size: 1.6em;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        line-height: 1.15;
+        scroll-margin-top: 24px;
+        position: relative;
+        padding-left: 14px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .section-heading::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.3em;
+        height: 0.75em;
+        width: 3px;
+        background: var(--teal);
+        border-radius: 0;
+      }
+      .section-heading::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+        align-self: center;
+      }
+
+      /* Form fields, blueprint style: square, sharing one continuous border */
+      .form-group {
+        margin: 0;
+        border: 1px solid var(--border);
+        border-radius: 0;
+        padding: 20px 24px;
+        background: var(--paper);
+        position: relative;
+        transition:
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      .form-group + .form-group {
+        margin-top: -1px;
+      }
+      .form-group:hover {
+        border-color: rgba(0, 0, 0, 0.25);
+        z-index: 1;
+      }
+      .form-group:focus-within {
+        border-color: var(--navy);
+        z-index: 2;
+      }
+      .form-group.is-set {
+        border-color: var(--teal);
+        box-shadow: inset 3px 0 0 var(--teal);
+        z-index: 1;
+      }
+      .form-group.is-set:focus-within {
+        border-color: var(--teal-border);
+        z-index: 2;
+      }
+      .form-group.is-invalid,
+      .form-group.is-invalid:focus-within,
+      .form-group.is-set.is-invalid {
+        background: #fdf5f5;
+        border-color: #d04949;
+        box-shadow: inset 3px 0 0 #d04949;
+        z-index: 2;
+      }
+      .form-group.is-invalid input,
+      .form-group.is-invalid textarea {
+        border-color: #d04949;
+      }
+      .field-error-msg {
+        margin-top: 8px;
+        color: #b03939;
+        font-size: 0.85em;
+        line-height: 1.45;
+      }
+      .form-group.hidden {
+        /* `!important` so search filtering wins over the show-uncommon rule's higher specificity. */
+        display: none !important;
+      }
+      .form-group label.field-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        flex-wrap: wrap;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-weight: 500;
+        color: var(--ink);
+        margin-bottom: 6px;
+        font-size: 0.95em;
+      }
+      .field-key-group {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .form-group .description {
+        color: var(--ink-mute);
+        font-size: 0.9em;
+        margin-bottom: 12px;
+        line-height: 1.5;
+      }
+      .form-group .description code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.88em;
+        color: var(--ink);
+      }
+      .form-group .description a {
+        color: var(--teal-border);
+        text-decoration: underline;
+      }
+      .form-group .description a:hover {
+        color: var(--teal-border-active);
+      }
+      .default-badge {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        color: var(--ink-mute);
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 0.72em;
+        font-weight: 500;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        letter-spacing: 0;
+        text-transform: none;
+        vertical-align: middle;
+      }
+      .field-reset-btn {
+        padding: 3px 6px;
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--ink-soft);
+        cursor: pointer;
+        border-radius: 3px;
+        display: inline-flex;
+        align-items: center;
+        vertical-align: middle;
+        line-height: 1;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .field-reset-btn:hover {
+        background: var(--surface-soft);
+        color: var(--ink);
+        border-color: var(--border);
+      }
+      .field-reset-btn svg {
+        display: block;
+      }
+
+      .examples-toggle {
+        display: inline-block;
+        align-self: center;
+        background: transparent;
+        border: none;
+        color: var(--teal-border);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.78em;
+        line-height: 1.3;
+        padding: 0;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .examples-toggle:hover {
+        color: var(--navy);
+      }
+      .field-examples {
+        display: none;
+        margin: 0 0 14px;
+      }
+      .field-examples.is-open {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field-examples pre {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 10px 12px;
+        margin: 0;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.8em;
+        line-height: 1.55;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        color: var(--ink-mute);
+      }
+      .field-examples .hljs-attr {
+        color: #0f7d65;
+      }
+      .field-examples .hljs-string {
+        color: #b85c2f;
+      }
+      .field-examples .hljs-number {
+        color: #3d4dac;
+      }
+      .field-examples .hljs-literal {
+        color: #6b3fb1;
+      }
+      .field-examples .hljs-bullet,
+      .field-examples .hljs-punctuation {
+        color: var(--ink-soft);
+      }
+      .field-examples .hljs-comment {
+        color: var(--ink-faint);
+        font-style: italic;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid var(--border);
+        border-radius: 0;
+        font-family: inherit;
+        font-size: 0.95em;
+        color: var(--ink);
+        background: var(--paper);
+        transition:
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      .form-group textarea {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.82em;
+        line-height: 1.5;
+        color: var(--ink-soft);
+      }
+      .form-group.is-set textarea {
+        color: var(--ink);
+      }
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--teal-border);
+        box-shadow: 0 0 0 3px rgba(49, 201, 172, 0.2);
+      }
+      .form-group.is-invalid input:focus,
+      .form-group.is-invalid textarea:focus {
+        border-color: #d04949;
+        box-shadow: 0 0 0 3px rgba(208, 73, 73, 0.2);
+      }
+
+      .bool-toggle {
+        display: inline-flex;
+        flex-wrap: wrap;
+        border: 1px solid var(--border);
+        border-radius: 0;
+        background: var(--paper);
+      }
+      .bool-toggle-btn {
+        padding: 5px 14px;
+        border: none;
+        border-right: 1px solid var(--border);
+        background: transparent;
+        color: var(--ink-soft);
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.78em;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .bool-toggle-btn:last-of-type {
+        border-right: none;
+      }
+      .bool-toggle-btn:hover {
+        background: var(--surface-soft);
+        color: var(--ink);
+      }
+      .bool-toggle-btn.active {
+        background: var(--surface-soft);
+        color: var(--ink);
+        font-weight: 600;
+        cursor: default;
+      }
+      .form-group.is-set .bool-toggle-btn.active {
+        background: rgba(49, 201, 172, 0.12);
+        color: var(--teal-border);
+      }
+      .bool-toggle-btn:focus-visible {
+        outline: 2px solid var(--teal);
+        outline-offset: -2px;
+      }
+
+      .checkbox-group {
+        display: inline-flex;
+        border: 1px solid var(--border);
+        background: var(--paper);
+      }
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 14px;
+        border-right: 1px solid var(--border);
+        background: transparent;
+        color: var(--ink-soft);
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.78em;
+        cursor: pointer;
+        user-select: none;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+      }
+      .checkbox-item:last-of-type {
+        border-right: none;
+      }
+      .checkbox-item:hover {
+        background: var(--surface-soft);
+        color: var(--ink);
+      }
+      .checkbox-item.checked {
+        background: var(--surface-soft);
+        color: var(--ink);
+        font-weight: 600;
+      }
+      .form-group.is-set .checkbox-item.checked {
+        background: rgba(49, 201, 172, 0.12);
+        color: var(--teal-border);
+      }
+      .checkbox-item input[type="checkbox"] {
+        width: 12px;
+        height: 12px;
+        margin: 0;
+        cursor: pointer;
+        accent-color: var(--teal-border);
+      }
+
+      .no-results {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--ink-mute);
+        display: none;
+        font-size: 0.95em;
+      }
+
+      /* When previewing or validating YAML, hide the editor UI */
+      body.yaml-mode #welcomeSection,
+      body.yaml-mode #sections,
+      body.yaml-mode #noResults {
+        display: none !important;
+      }
+      body.yaml-mode .section-nav a {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+      body.yaml-mode .sidebar-search,
+      body.yaml-mode .show-uncommon-btn {
+        opacity: 0.4;
+        pointer-events: none;
+      }
+
+      .btn {
+        padding: 8px 20px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 0.92em;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+      .btn-primary {
+        background: var(--navy);
+        border-color: var(--navy);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--navy-2);
+        border-color: var(--navy-2);
+      }
+      .btn-secondary {
+        background: var(--paper);
+        color: var(--ink);
+        border-color: var(--border);
+      }
+      .btn-secondary:hover {
+        background: var(--surface-soft);
+        border-color: var(--ink-soft);
+      }
+      .btn-success {
+        background: var(--teal);
+        border-color: var(--teal-border);
+        color: var(--navy);
+      }
+      .btn-success:hover {
+        background: var(--teal-border);
+        border-color: var(--teal-border-active);
+        color: white;
+      }
+
+      .yaml-view-section {
+        display: none;
+        background: var(--paper);
+        border: 1px solid var(--border);
+        border-radius: 0;
+        padding: 28px 32px;
+        margin: 32px 0;
+      }
+      body.yaml-mode .yaml-view-section {
+        display: block;
+      }
+      .yaml-view-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+      }
+      .yaml-view-head h3 {
+        margin-bottom: 0;
+      }
+      .yaml-view-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .yaml-view-section h3 {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        color: var(--ink);
+        font-size: 1.05em;
+        font-weight: 500;
+        margin-bottom: 6px;
+      }
+      .yaml-view-section p {
+        color: var(--ink-mute);
+        font-size: 0.92em;
+      }
+      .yaml-view-section code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 0.85em;
+      }
+      .validate-input {
+        width: 100%;
+        margin-top: 12px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 0;
+        background: var(--navy);
+        color: #d9d4e0;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.85em;
+        line-height: 1.55;
+        resize: vertical;
+        min-height: 220px;
+      }
+      .validate-input::placeholder {
+        color: rgba(217, 212, 224, 0.4);
+      }
+      .validate-input:focus {
+        outline: 2px solid var(--teal);
+        outline-offset: 2px;
+      }
+      .validate-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        margin-top: 18px;
+        min-height: 28px;
+      }
+      .validate-summary .btn {
+        margin-left: auto;
+        padding: 6px 14px;
+        font-size: 0.85em;
+      }
+      .validate-summary-hint {
+        color: var(--ink-soft);
+        font-size: 0.78em;
+        margin-left: 0.5rem;
+      }
+      .validate-summary-hint::before {
+        content: "← ";
+      }
+      .validate-card.is-filtered-out {
+        display: none;
+      }
+      .validate-cards {
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .validate-monaco {
+        margin-top: 12px;
+        height: 360px;
+        border: 1px solid var(--border);
+      }
+      .validate-line-hl {
+        background: rgba(49, 201, 172, 0.18);
+      }
+      .validate-line-hl-margin {
+        background: var(--teal);
+        width: 3px !important;
+        margin-left: 2px;
+      }
+      .validate-card {
+        border: 1px solid var(--border-soft);
+        border-left: 3px solid var(--border);
+        background: var(--paper);
+        padding: 14px 18px;
+        cursor: pointer;
+        transition: box-shadow 0.15s ease;
+      }
+      .validate-card:hover {
+        box-shadow: 0 1px 0 var(--ink-soft);
+      }
+      .validate-card.is-active {
+        outline: 2px solid var(--teal);
+        outline-offset: -2px;
+      }
+      .validate-card.status-ok {
+        border-left-color: var(--teal-border);
+      }
+      .validate-card.status-error {
+        border-left-color: #d04949;
+        background: #fdf5f5;
+      }
+      .validate-card.status-default {
+        border-left-color: var(--ink-faint);
+        background: var(--surface-soft);
+      }
+      .validate-card.status-deprecated {
+        border-left-color: #f0ad4e;
+        background: #fff8eb;
+      }
+      .validate-card.status-unknown {
+        border-left-color: #b07cd6;
+        background: #f8f4fc;
+      }
+      .validate-card-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+      .validate-key {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.95em;
+        color: var(--ink);
+        background: transparent;
+        border: 0;
+        padding: 0;
+      }
+      .validate-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-family: "Inter", sans-serif;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+      }
+      /* Summary-row badges are buttons that toggle filtering. */
+      button.validate-badge {
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        transition:
+          opacity 0.15s ease,
+          border-color 0.15s ease;
+      }
+      #validateSummary .validate-badge:not(.is-active) {
+        opacity: 0.55;
+      }
+      #validateSummary .validate-badge:hover {
+        opacity: 1;
+      }
+      #validateSummary .validate-badge.is-active {
+        border-color: currentColor;
+      }
+      .validate-badge.ok {
+        background: rgba(49, 201, 172, 0.15);
+        color: var(--teal-border-active);
+      }
+      .validate-badge.error {
+        background: rgba(208, 73, 73, 0.12);
+        color: #b03939;
+      }
+      .validate-badge.default {
+        background: rgba(0, 0, 0, 0.06);
+        color: var(--ink-mute);
+      }
+      .validate-badge.deprecated {
+        background: rgba(240, 173, 78, 0.18);
+        color: #8a5a0a;
+      }
+      .validate-badge.unknown {
+        background: rgba(176, 124, 214, 0.18);
+        color: #6b3da3;
+      }
+      .validate-value-inline {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.85em;
+        color: var(--ink-mute);
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 8px;
+        border-radius: 3px;
+        max-width: 40em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .validate-type {
+        font-family: "Inter", sans-serif;
+        font-size: 0.6em;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        margin-left: 0.5em;
+      }
+      .validate-desc {
+        color: var(--ink-mute);
+        font-size: 0.88em;
+        line-height: 1.5;
+        margin-bottom: 6px;
+      }
+      .validate-desc code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.92em;
+      }
+      .validate-desc a {
+        color: var(--teal-border);
+        text-decoration: underline;
+      }
+      .validate-msg {
+        color: var(--ink-mute);
+        font-size: 0.85em;
+        margin-top: 4px;
+      }
+      .validate-msg code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+      }
+      /* Wide-screen layout for the YAML view: editor on the left, scrollable
+         cards on the right. The 1500px threshold leaves the editor at least
+         ~600px wide (sidebar 280 + section padding ~70 + editor 600 + gap
+         24 + cards 500 ≈ 1474). Below that, fall back to the stacked layout. */
+      @media (min-width: 1500px) {
+        body.yaml-mode .yaml-view-section {
+          display: grid;
+          grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+          /* Summary sits above the cards (filters its own list), editor
+             spans the two right-hand rows on the left. */
+          grid-template-rows: auto auto auto 1fr;
+          grid-template-areas:
+            "head head"
+            "intro intro"
+            "editor summary"
+            "editor cards";
+          gap: 12px 24px;
+          align-items: stretch;
+          /* Lock the section to the viewport so the cards column can scroll
+             internally. The 350px subtraction leaves room for the page
+             header above and the page-footer / breathing room below.
+             `overflow: hidden` is needed so the cards' content can't spill
+             past the section box; without it, max-height only clamps the
+             box, and the grid item still grows past it. */
+          height: calc(100vh - 350px);
+          overflow: hidden;
+        }
+        body.yaml-mode .yaml-view-section > .yaml-view-head {
+          grid-area: head;
+        }
+        body.yaml-mode .yaml-view-section > p {
+          grid-area: intro;
+          margin: 0;
+        }
+        body.yaml-mode .yaml-view-section > #validateInput,
+        body.yaml-mode .yaml-view-section > #validateMonaco {
+          grid-area: editor;
+          margin: 0;
+          height: 100%;
+          min-height: 400px;
+        }
+        body.yaml-mode .yaml-view-section > .validate-summary {
+          grid-area: summary;
+          margin: 0;
+        }
+        body.yaml-mode .yaml-view-section > .validate-cards {
+          grid-area: cards;
+          margin: 0;
+          overflow-y: auto;
+          /* min-height:0 lets the grid item shrink below its content so the
+             1fr row constraint actually kicks in. */
+          min-height: 0;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .sidebar {
+          position: static;
+          width: 100%;
+          height: auto;
+        }
+        .sidebar-sections {
+          max-height: none;
+        }
+        .main {
+          margin-left: 0;
+        }
+        .header {
+          padding: 32px 24px;
+        }
+        .header h1 {
+          font-size: 1.85em;
+        }
+        .content {
+          padding: 0 24px 32px;
+        }
+        .actions {
+          padding: 14px 24px;
+        }
+        .form-group {
+          padding: 16px 18px;
+        }
+        .welcome-section {
+          padding: 24px;
+        }
+        .yaml-view-section {
+          padding: 22px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <a
+          href="#"
+          class="sidebar-brand-link"
+          onclick="event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' });"
+          aria-label="Scroll to top"
+        >
+          __MULTIQC_LOGO_SVG__
+        </a>
+        <div class="sidebar-eyebrow">Config Wizard</div>
+      </div>
+      <div class="sidebar-cta">
+        <button id="viewYamlBtn" class="btn btn-success" onclick="showYaml()">View YAML</button>
+      </div>
+      <div class="sidebar-search">
+        <input type="text" id="searchInput" placeholder="Search options..." autocomplete="off" />
+        <button type="button" id="clearSearchBtn" class="clear-btn" aria-label="Clear search" tabindex="-1">
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M4 4l8 8M12 4l-8 8" />
+          </svg>
+        </button>
+      </div>
+      <nav class="sidebar-sections">
+        <h3>Sections</h3>
+        <ul class="section-nav" id="sectionNav"></ul>
+        <button
+          id="toggleUncommonBtn"
+          type="button"
+          class="show-uncommon-btn"
+          onclick="toggleUncommon()"
+          aria-pressed="false"
+        >
+          <span class="show-uncommon-state" aria-hidden="true"></span>
+          <span class="show-uncommon-label">Show advanced options</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <h1>MultiQC Configuration Wizard <span class="header-version">v__MULTIQC_VERSION__</span></h1>
+        <p>Build your <code>multiqc_config.yaml</code></p>
+      </header>
+
+      <div class="content" id="contentArea">
+        <div class="welcome-section" id="welcomeSection">
+          <h2>Welcome to the MultiQC Config Wizard</h2>
+          <p>
+            This tool helps you create a custom <code>multiqc_config.yaml</code>
+            configuration file. You don't need to set every option, only change what you want to customise. Unset
+            options will use their defaults.
+          </p>
+          <p>
+            Browse sections in the sidebar, or use the search bar above to find a specific option. When you are done,
+            click <strong>View YAML</strong> to see the generated config. You can also paste an existing
+            <code>multiqc_config.yaml</code> there to have each option validated and explained.
+          </p>
+          <div class="welcome-links">
+            <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">MultiQC Homepage</a>
+            <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
+            <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
+          </div>
+        </div>
+
+        <div id="sections"></div>
+
+        <div class="no-results" id="noResults">No configuration options match your search.</div>
+
+        <div class="yaml-view-section" id="yamlViewSection">
+          <div class="yaml-view-head">
+            <h3>multiqc_config.yaml</h3>
+            <div class="yaml-view-actions">
+              <button class="btn btn-secondary" onclick="clearYaml()">Clear</button>
+              <button id="copyBtn" class="btn btn-primary" onclick="copyConfig()">Copy to clipboard</button>
+              <button class="btn btn-success" onclick="downloadConfig()">Download config</button>
+            </div>
+          </div>
+          <p>Edit, paste, or just read your config. Each option is checked against the schema and explained below.</p>
+          <textarea
+            id="validateInput"
+            class="validate-input"
+            rows="14"
+            spellcheck="false"
+            placeholder="# paste here..."
+          ></textarea>
+          <!-- Monaco mounts into this container the first time the user enters
+               YAML mode. The textarea above stays as a fallback if the CDN
+               fails or hasn't finished loading. -->
+          <div id="validateMonaco" class="validate-monaco" style="display: none"></div>
+          <div class="validate-summary" id="validateSummary"></div>
+          <div class="validate-cards" id="validateCards"></div>
+        </div>
+      </div>
+
+      <footer class="page-footer">
+        Generated on <time datetime="__GENERATED_ON__">__GENERATED_ON__</time> for MultiQC
+        <code>__MULTIQC_VERSION__</code>.
+      </footer>
+    </main>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"
+      integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"
+      integrity="sha384-GdEWAbCjn+ghjX0gLx7/N1hyTVmPAjdC2OvoAA0RyNcAOhqwtT8qnbCxWle2+uJX"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/yaml.min.js"
+      integrity="sha384-bMkvdnz+wPu1ro0fqO3BaDWztc7RzSvw05MQFP6bhJKDcwpkrFYTfTFI9ndkP11l"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ajv/8.17.1/ajv2020.bundle.min.js"
+      integrity="sha384-kz0rEmUPEGITP2jtssINcPlpx2oqv5B7mCxBMc6J15TQxYhoz2QdB0I974nvL4nI"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <!-- Monaco's AMD loader. The editor + language chunks are fetched lazily
+         the first time showYaml() runs; editor-only users never pay. -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs/loader.min.js"
+      integrity="sha384-UcP5/iVWyRzIhnVjcB2o9W1eoYKL5fAhHTRzvFZg8ctOsoAoDeBQyQuyIk+BJ/nh"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script>
+      const configData = __CONFIG_DATA_JSON__;
+      const configSchema = __CONFIG_SCHEMA_JSON__;
+      const propNames = Object.keys(configSchema.properties || {});
+      let ajvValidate = null; // compiled lazily on first validate
+
+      // Flat propName -> propData lookup, built once. Avoids walking every section
+      // for every updateConfig / resetField call (146 props * 11 sections).
+      const propDataIndex = {};
+      for (const sectionProps of Object.values(configData)) {
+        for (const [name, data] of Object.entries(sectionProps)) {
+          propDataIndex[name] = data;
+        }
+      }
+
+      let currentConfig = {};
+      // Top-level keys present in a pasted/edited YAML that don't correspond
+      // to a wizard form widget (plugin keys, schema-only keys like `sp`,
+      // typos the user wants to keep). Round-trip across editor/yaml mode
+      // and survive a page reload via localStorage.
+      let pluginKeys = {};
+
+      // {sectionName: commonCount}, computed once at init from configData.
+      // Used by both the sidebar TOC and the in-page section headings to
+      // decide which sections are entirely advanced.
+      const sectionCommonCounts = Object.fromEntries(
+        Object.entries(configData).map(([name, props]) => [
+          name,
+          Object.values(props).filter((p) => !p.uncommon).length,
+        ]),
+      );
+
+      function initWizard() {
+        createSectionNavigation();
+        createSectionContent();
+        hydrateFromStorage();
+        const searchInput = document.getElementById("searchInput");
+        searchInput.addEventListener("input", handleSearch);
+        document.getElementById("clearSearchBtn").addEventListener("click", () => {
+          searchInput.value = "";
+          searchInput.dispatchEvent(new Event("input"));
+          searchInput.focus();
+        });
+        const validateInput = document.getElementById("validateInput");
+        let validateTimer;
+        validateInput.addEventListener("input", () => {
+          clearTimeout(validateTimer);
+          validateTimer = setTimeout(runValidation, 250);
+        });
+      }
+
+      function createSectionNavigation() {
+        const nav = document.getElementById("sectionNav");
+        Object.entries(configData).forEach(([sectionName, sectionProps]) => {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = "#section-" + slugify(sectionName);
+          a.textContent = sectionName;
+          a.dataset.section = sectionName;
+          const commonCount = sectionCommonCounts[sectionName];
+          // Sections that are entirely advanced (eg. MegaQC) are hidden from the
+          // sidebar until the user toggles "Show advanced options" on.
+          if (commonCount === 0) li.classList.add("nav-advanced-only");
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = commonCount;
+          a.appendChild(badge);
+          a.onclick = (e) => {
+            e.preventDefault();
+            document
+              .getElementById("section-" + slugify(sectionName))
+              .scrollIntoView({ behavior: "smooth", block: "start" });
+          };
+          li.appendChild(a);
+          nav.appendChild(li);
+        });
+      }
+
+      function toggleUncommon() {
+        const on = document.body.classList.toggle("show-uncommon");
+        const btn = document.getElementById("toggleUncommonBtn");
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+        btn.querySelector(".show-uncommon-label").textContent = on ? "Hide advanced options" : "Show advanced options";
+        handleSearch();
+      }
+
+      function createSectionContent() {
+        const sectionsContainer = document.getElementById("sections");
+
+        Object.entries(configData).forEach(([sectionName, sectionProps]) => {
+          const h2 = document.createElement("h2");
+          h2.className = "section-heading";
+          h2.id = "section-" + slugify(sectionName);
+          h2.dataset.section = sectionName;
+          h2.textContent = sectionName;
+          if (sectionCommonCounts[sectionName] === 0) h2.classList.add("advanced-only");
+          sectionsContainer.appendChild(h2);
+
+          Object.entries(sectionProps).forEach(([propName, propData]) => {
+            const formGroup = createFormGroup(propName, propData);
+            formGroup.dataset.section = sectionName;
+            sectionsContainer.appendChild(formGroup);
+          });
+        });
+      }
+
+      function isPrefillableDefault(propData) {
+        const d = propData.default;
+        if (d === null || d === undefined) return false;
+        if (Array.isArray(d)) return d.length > 0;
+        if (typeof d === "object") return Object.keys(d).length > 0;
+        return false;
+      }
+
+      // Shared YAML serialization for default-prefills, object inputs, and
+      // inline examples. Accepts an optional opts merge for callers that need
+      // extras like sortKeys.
+      function dumpYaml(value, opts) {
+        return jsyaml.dump(value, { indent: 2, lineWidth: 80, noRefs: true, ...opts }).trimEnd();
+      }
+
+      function serializeArrayDefault(arr) {
+        return dumpYaml(arr);
+      }
+
+      function parseArrayInput(text) {
+        const parsed = jsyaml.load(text);
+        if (!Array.isArray(parsed)) throw new Error("expected YAML list");
+        return parsed;
+      }
+
+      function createFormGroup(propName, propData) {
+        const formGroup = document.createElement("div");
+        formGroup.className = "form-group";
+        if (propData.uncommon) formGroup.classList.add("uncommon");
+        formGroup.dataset.propname = propName;
+        if (propData.uncommon) formGroup.dataset.uncommon = "1";
+
+        const label = document.createElement("label");
+        label.className = "field-label";
+
+        // Group all left-side bits (key name, advanced badge via ::after on
+        // .field-key, default + reset) into one flex child so the label's
+        // `justify-content: space-between` only stretches the gap between
+        // this group and the right-aligned examples-toggle.
+        const keyGroup = document.createElement("span");
+        keyGroup.className = "field-key-group";
+        const keyName = document.createElement("span");
+        keyName.className = "field-key";
+        keyName.textContent = propName;
+        keyGroup.appendChild(keyName);
+        if (propData.type) {
+          const typeTag = document.createElement("span");
+          typeTag.className = "validate-type";
+          typeTag.textContent = propData.type;
+          keyGroup.appendChild(typeTag);
+        }
+        label.appendChild(keyGroup);
+
+        if (propData.default !== null && propData.default !== undefined) {
+          const defaultSpan = document.createElement("span");
+          defaultSpan.className = "default-badge";
+          defaultSpan.textContent = "default: " + formatDefaultValue(propData.default);
+          keyGroup.appendChild(defaultSpan);
+
+          if (isPrefillableDefault(propData)) {
+            const resetBtn = document.createElement("button");
+            resetBtn.type = "button";
+            resetBtn.className = "field-reset-btn";
+            resetBtn.title = "Reset to default";
+            resetBtn.setAttribute("aria-label", "Reset to default");
+            resetBtn.innerHTML =
+              '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9"/><path d="M2 3v3h3"/></svg>';
+            resetBtn.onclick = (e) => {
+              e.preventDefault();
+              resetField(propName);
+            };
+            keyGroup.appendChild(resetBtn);
+          }
+        }
+
+        formGroup.appendChild(label);
+
+        if (propData.description) {
+          const desc = document.createElement("div");
+          desc.className = "description";
+          desc.innerHTML = renderInlineMd(propData.description);
+          formGroup.appendChild(desc);
+        }
+
+        let examplesBlock = null;
+        if (Array.isArray(propData.examples) && propData.examples.length > 0) {
+          const showLabel =
+            propData.examples.length === 1 ? "Show example" : "Show " + propData.examples.length + " examples";
+          const hideLabel =
+            propData.examples.length === 1 ? "Hide example" : "Hide " + propData.examples.length + " examples";
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "examples-toggle";
+          toggle.textContent = showLabel;
+          toggle.setAttribute("aria-expanded", "false");
+          examplesBlock = document.createElement("div");
+          examplesBlock.className = "field-examples";
+          propData.examples.forEach((ex) => {
+            const pre = document.createElement("pre");
+            const code = document.createElement("code");
+            code.className = "language-yaml";
+            let text;
+            if (ex !== null && typeof ex === "object") {
+              text = dumpYaml(ex);
+            } else if (typeof ex === "string") {
+              text = ex;
+            } else {
+              text = String(ex);
+            }
+            if (typeof hljs !== "undefined" && hljs.getLanguage && hljs.getLanguage("yaml")) {
+              code.innerHTML = hljs.highlight(text, { language: "yaml" }).value;
+            } else {
+              code.textContent = text;
+            }
+            pre.appendChild(code);
+            examplesBlock.appendChild(pre);
+          });
+          toggle.onclick = (e) => {
+            e.preventDefault();
+            const willShow = !examplesBlock.classList.contains("is-open");
+            examplesBlock.classList.toggle("is-open", willShow);
+            toggle.textContent = willShow ? hideLabel : showLabel;
+            toggle.setAttribute("aria-expanded", willShow ? "true" : "false");
+          };
+          label.appendChild(toggle);
+        }
+
+        if (examplesBlock) formGroup.appendChild(examplesBlock);
+
+        const input = createInput(propName, propData);
+        formGroup.appendChild(input);
+
+        return formGroup;
+      }
+
+      function createInput(propName, propData) {
+        let input;
+
+        if (propData.enum) {
+          // No default → clicking the active button again clears the selection.
+          const hasDefault = propData.default !== null && propData.default !== undefined;
+          return buildSegmentedToggle(propName, propData.enum, propData.default, !hasDefault);
+        } else if (propData.type === "boolean") {
+          // Booleans are always either true or false; never deselectable.
+          const activeValue = propData.default === true ? "true" : "false";
+          return buildSegmentedToggle(propName, ["true", "false"], activeValue, false);
+        } else if (propData.type === "array" && Array.isArray(propData.items_enum)) {
+          const wrapper = document.createElement("div");
+          wrapper.className = "checkbox-group";
+
+          const hidden = document.createElement("input");
+          hidden.type = "hidden";
+          hidden.id = propName;
+          wrapper.appendChild(hidden);
+
+          const def = Array.isArray(propData.default) ? propData.default : [];
+          propData.items_enum.forEach((val) => {
+            const lab = document.createElement("label");
+            lab.className = "checkbox-item";
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = val;
+            cb.checked = def.includes(val);
+            const span = document.createElement("span");
+            span.textContent = val;
+            cb.onchange = () => {
+              lab.classList.toggle("checked", cb.checked);
+              const selected = [...wrapper.querySelectorAll("input[type=checkbox]:checked")].map((c) => c.value);
+              hidden.value = JSON.stringify(selected);
+              updateConfig(propName, hidden);
+            };
+            if (cb.checked) lab.classList.add("checked");
+            lab.appendChild(cb);
+            lab.appendChild(span);
+            wrapper.appendChild(lab);
+          });
+
+          return wrapper;
+        } else if (propData.type === "array") {
+          input = document.createElement("textarea");
+          input.rows = 3;
+          input.placeholder = "Enter as a YAML list";
+          if (isPrefillableDefault(propData)) {
+            input.value = serializeArrayDefault(propData.default);
+            input.rows = Math.min(10, Math.max(3, input.value.split("\n").length));
+          }
+        } else if (propData.type === "object") {
+          input = document.createElement("textarea");
+          input.rows = 3;
+          input.placeholder = "Enter as YAML or JSON";
+          if (isPrefillableDefault(propData)) {
+            input.value = dumpYaml(propData.default);
+            input.rows = Math.min(10, Math.max(3, input.value.split("\n").length));
+          }
+        } else if (propData.type === "integer") {
+          input = document.createElement("input");
+          input.type = "number";
+        } else if (propData.type === "number") {
+          input = document.createElement("input");
+          input.type = "number";
+          input.step = "any";
+        } else if (propData.multiline) {
+          // Prose strings (intro_text, report_comment, AI prompts) render
+          // as a textarea instead of a single-line input.
+          input = document.createElement("textarea");
+          input.rows = 4;
+        } else {
+          input = document.createElement("input");
+          input.type = "text";
+        }
+
+        input.id = propName;
+        input.onchange = () => updateConfig(propName, input);
+        input.oninput = () => updateConfig(propName, input);
+        return input;
+      }
+
+      function valuesEqual(a, b) {
+        if (a === b) return true;
+        if (a === null || b === null || a === undefined || b === undefined) return a === b;
+        if (typeof a !== typeof b) return false;
+        if (Array.isArray(a) !== Array.isArray(b)) return false;
+        if (Array.isArray(a)) {
+          if (a.length !== b.length) return false;
+          return a.every((x, i) => valuesEqual(x, b[i]));
+        }
+        if (typeof a === "object") {
+          const ka = Object.keys(a);
+          if (ka.length !== Object.keys(b).length) return false;
+          return ka.every((k) => k in b && valuesEqual(a[k], b[k]));
+        }
+        return false;
+      }
+
+      // Mark a form-group as having an invalid value, surface a human-readable
+      // error message under the input, and tag the input with aria-invalid for
+      // assistive tech. Used for free-text array/object textareas where the
+      // user's input can fail YAML/JSON parsing.
+      function setFieldError(input, message) {
+        input.setAttribute("aria-invalid", "true");
+        const fg = input.closest(".form-group");
+        if (!fg) return;
+        fg.classList.add("is-invalid");
+        let msg = fg.querySelector(".field-error-msg");
+        if (!msg) {
+          msg = document.createElement("div");
+          msg.className = "field-error-msg";
+          fg.appendChild(msg);
+        }
+        msg.textContent = message;
+      }
+
+      function clearFieldError(input) {
+        input.removeAttribute("aria-invalid");
+        const fg = input.closest(".form-group");
+        if (!fg) return;
+        fg.classList.remove("is-invalid");
+        const msg = fg.querySelector(".field-error-msg");
+        if (msg) msg.remove();
+      }
+
+      // Run the JSON schema against `value` for this property. On any errors,
+      // surface them under the input and return false (caller skips writing
+      // to currentConfig); otherwise clear the field-error and return true.
+      function checkAgainstSchema(input, propName, value) {
+        const errors = validateFieldAgainstSchema(propName, value);
+        if (errors.length) {
+          setFieldError(input, errors.join("; "));
+          return false;
+        }
+        clearFieldError(input);
+        return true;
+      }
+
+      function updateConfig(propName, input) {
+        const propData = getCurrentPropData(propName);
+        const def = propData.default;
+
+        if (propData.type === "boolean") {
+          if (input.value === "") {
+            delete currentConfig[propName];
+          } else {
+            const parsed = input.value === "true";
+            // Selecting the default is treated as "not set" so the YAML stays clean.
+            if (parsed === (def === true)) {
+              delete currentConfig[propName];
+            } else {
+              currentConfig[propName] = parsed;
+            }
+          }
+        } else if (propData.type === "array" && Array.isArray(propData.items_enum)) {
+          let selected;
+          try {
+            selected = JSON.parse(input.value || "[]");
+          } catch (e) {
+            return;
+          }
+          if (valuesEqual(selected, def || [])) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = selected;
+          }
+        } else if (propData.type === "array") {
+          const value = input.value.trim();
+          let parsed;
+          if (value) {
+            try {
+              parsed = parseArrayInput(value);
+            } catch (e) {
+              setFieldError(input, "Expected a YAML list. " + (e.message || ""));
+              return;
+            }
+          } else {
+            // An empty textarea means an empty list. Only treat it as "unset" if
+            // the field had no default (so we don't add a redundant `prop: []`).
+            parsed = [];
+          }
+          if (!checkAgainstSchema(input, propName, parsed)) return;
+          const unset = !value && (def === null || def === undefined);
+          if (unset || valuesEqual(parsed, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = parsed;
+          }
+        } else if (propData.type === "object") {
+          const value = input.value.trim();
+          let parsed;
+          if (value) {
+            try {
+              parsed = jsyaml.load(value);
+            } catch (e) {
+              setFieldError(input, "Invalid YAML. " + (e.message || ""));
+              return;
+            }
+            if (parsed && (typeof parsed !== "object" || Array.isArray(parsed))) {
+              setFieldError(input, "Expected a YAML mapping (key: value pairs).");
+              return;
+            }
+          } else {
+            parsed = {};
+          }
+          if (!checkAgainstSchema(input, propName, parsed)) return;
+          const unset = !value && (def === null || def === undefined);
+          if (unset || valuesEqual(parsed, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = parsed;
+          }
+        } else if (propData.type === "integer") {
+          const value = parseInt(input.value);
+          if (isNaN(value)) {
+            clearFieldError(input);
+            delete currentConfig[propName];
+          } else if (!checkAgainstSchema(input, propName, value)) {
+            return;
+          } else if (valuesEqual(value, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = value;
+          }
+        } else if (propData.type === "number") {
+          const value = parseFloat(input.value);
+          if (isNaN(value)) {
+            clearFieldError(input);
+            delete currentConfig[propName];
+          } else if (!checkAgainstSchema(input, propName, value)) {
+            return;
+          } else if (valuesEqual(value, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = value;
+          }
+        } else {
+          const value = input.value.trim();
+          // Enum values may include non-strings (eg. boolean false). Round-trip
+          // the picked value back through propData.enum so booleans/numbers stay
+          // their native types in the YAML output.
+          let typedValue = value;
+          if (Array.isArray(propData.enum)) {
+            const match = propData.enum.find((v) => String(v) === value);
+            if (match !== undefined) typedValue = match;
+          }
+          if (!value) {
+            delete currentConfig[propName];
+          } else if (valuesEqual(typedValue, def)) {
+            delete currentConfig[propName];
+          } else {
+            currentConfig[propName] = typedValue;
+          }
+        }
+
+        const fg = input.closest(".form-group");
+        if (fg) fg.classList.toggle("is-set", propName in currentConfig);
+        saveEditorConfig();
+      }
+
+      // Suppresses saveEditorConfig writes during initial hydration so we
+      // don't echo localStorage data back into localStorage one key at a time.
+      let isHydrating = false;
+
+      // Raw editor text from the last Back-to-editor, plus a snapshot of the
+      // form state it represents. When the user re-enters View YAML and the
+      // form still matches that snapshot, we rehydrate the editor with the
+      // exact original text so comments, blank lines and key ordering survive
+      // the round-trip. Any form change makes the snapshot compare unequal
+      // and View YAML rebuilds cleanly from currentConfig + pluginKeys.
+      let lastEditedYaml = null;
+      let lastEditedFormSnap = null;
+
+      // Persist the editor state to localStorage so a page refresh doesn't
+      // wipe in-progress configs. Empty configs clear the entry so a clean
+      // user comes back to a clean wizard. Debounced because updateConfig
+      // fires on every keystroke in textareas like report_header_info.
+      let _saveEditorConfigTimer = null;
+      function _flushSaveEditorConfig() {
+        if (_saveEditorConfigTimer !== null) {
+          clearTimeout(_saveEditorConfigTimer);
+          _saveEditorConfigTimer = null;
+        }
+        safeLocalStorageSet(
+          "mqc_wizard_config",
+          Object.keys(currentConfig).length === 0 ? null : JSON.stringify(currentConfig),
+        );
+      }
+      function saveEditorConfig() {
+        if (isHydrating) return;
+        clearTimeout(_saveEditorConfigTimer);
+        _saveEditorConfigTimer = setTimeout(_flushSaveEditorConfig, 200);
+      }
+      // Don't drop the user's last edits if they navigate away during the
+      // debounce window.
+      window.addEventListener("pagehide", _flushSaveEditorConfig);
+
+      // Set or remove (when value is null) a localStorage entry, swallowing
+      // quota / disabled-storage errors so the wizard keeps working in
+      // private-mode browsers or with strict storage policies.
+      function safeLocalStorageSet(key, value) {
+        try {
+          if (value === null) localStorage.removeItem(key);
+          else localStorage.setItem(key, value);
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      // Read previous editor state + preserved plugin keys from localStorage
+      // and restore them. Schema-drifted keys are skipped quietly.
+      function hydrateFromStorage() {
+        isHydrating = true;
+        try {
+          let raw = null;
+          try {
+            raw = localStorage.getItem("mqc_wizard_config");
+          } catch (e) {
+            // storage unavailable: leave the wizard pristine
+          }
+          if (raw) {
+            try {
+              const stored = JSON.parse(raw);
+              for (const [k, v] of Object.entries(stored)) {
+                if (!propDataIndex[k]) continue;
+                applyValueToGroup(k, v);
+              }
+            } catch (e) {
+              // Corrupt JSON: leave the wizard pristine.
+            }
+          }
+          let pk = null;
+          try {
+            pk = localStorage.getItem("mqc_wizard_plugin_keys");
+          } catch (e) {
+            // ignore
+          }
+          if (pk) {
+            try {
+              pluginKeys = JSON.parse(pk) || {};
+            } catch (e) {
+              pluginKeys = {};
+            }
+          }
+          try {
+            lastEditedYaml = localStorage.getItem("mqc_wizard_yaml_text");
+            const snap = localStorage.getItem("mqc_wizard_yaml_form_snap");
+            if (snap) lastEditedFormSnap = JSON.parse(snap);
+          } catch (e) {
+            // ignore
+          }
+        } finally {
+          isHydrating = false;
+        }
+      }
+
+      // Push a value into the matching form-group's widget, then let the
+      // existing `updateConfig` path canonicalise it into `currentConfig`.
+      // Keep in sync with `createInput`: a new widget type added there needs
+      // a matching branch here.
+      function applyValueToGroup(propName, value) {
+        const fg = document.querySelector(`.form-group[data-propname="${CSS.escape(propName)}"]`);
+        if (!fg) return;
+        const propData = propDataIndex[propName];
+        if (!propData) return;
+
+        // Segmented toggle (boolean or enum): activate the matching button and
+        // sync the hidden input.
+        const toggle = fg.querySelector(".bool-toggle");
+        if (toggle) {
+          const target = String(value);
+          toggle.querySelectorAll(".bool-toggle-btn").forEach((b) => {
+            b.classList.toggle("active", b.dataset.value === target);
+          });
+          const hidden = toggle.querySelector("input[type=hidden]");
+          hidden.value = target;
+          updateConfig(propName, hidden);
+          return;
+        }
+
+        // items_enum checkbox group: tick the right boxes, push aggregate
+        // value through the hidden input.
+        const cbGroup = fg.querySelector(".checkbox-group");
+        if (cbGroup) {
+          const want = new Set((Array.isArray(value) ? value : []).map(String));
+          cbGroup.querySelectorAll("input[type=checkbox]").forEach((cb) => {
+            cb.checked = want.has(String(cb.value));
+            const lab = cb.closest("label");
+            if (lab) lab.classList.toggle("checked", cb.checked);
+          });
+          const hidden = cbGroup.querySelector("input[type=hidden]");
+          hidden.value = JSON.stringify([...want]);
+          updateConfig(propName, hidden);
+          return;
+        }
+
+        // Plain input / textarea.
+        const input = fg.querySelector("input, textarea");
+        if (!input) return;
+        if (propData.type === "array" || propData.type === "object") {
+          input.value = dumpYaml(value);
+        } else {
+          input.value = String(value);
+        }
+        updateConfig(propName, input);
+      }
+
+      // Reset one form-group's visual state to its schema default and clear
+      // the field from currentConfig. Used by resetField (per-field arrow)
+      // and applyYamlToForm (round-trip back from the YAML view).
+      function resetGroup(fg, propData) {
+        const propName = fg.dataset.propname;
+        const input = fg.querySelector("input, select, textarea");
+        if (!input) return;
+        if (propData.type === "array" && Array.isArray(propData.items_enum)) {
+          const def = Array.isArray(propData.default) ? propData.default : [];
+          fg.querySelectorAll(".checkbox-item").forEach((lab) => {
+            const cb = lab.querySelector("input[type=checkbox]");
+            const checked = def.includes(cb.value);
+            cb.checked = checked;
+            lab.classList.toggle("checked", checked);
+          });
+        } else if (propData.type === "array" && isPrefillableDefault(propData)) {
+          input.value = serializeArrayDefault(propData.default);
+        } else if (propData.type === "object" && isPrefillableDefault(propData)) {
+          input.value = dumpYaml(propData.default);
+        } else {
+          input.value = "";
+        }
+        const toggleEl = fg.querySelector(".bool-toggle");
+        if (toggleEl) {
+          const activeValue =
+            propData.type === "boolean" ? (propData.default === true ? "true" : "false") : propData.default;
+          toggleEl
+            .querySelectorAll(".bool-toggle-btn")
+            .forEach((b) => b.classList.toggle("active", b.dataset.value === activeValue));
+          const hiddenInput = toggleEl.querySelector("input[type=hidden]");
+          if (hiddenInput) hiddenInput.value = "";
+        }
+        clearFieldError(input);
+        delete currentConfig[propName];
+        fg.classList.remove("is-set");
+      }
+
+      function resetField(propName) {
+        const input = document.getElementById(propName);
+        if (!input) return;
+        const fg = input.closest(".form-group");
+        if (!fg) return;
+        resetGroup(fg, getCurrentPropData(propName));
+        saveEditorConfig();
+      }
+
+      function getCurrentPropData(propName) {
+        return propDataIndex[propName] || {};
+      }
+
+      // Caches populated lazily on first handleSearch. DOM nodes don't exist until
+      // createSectionContent runs.
+      let _searchCache = null;
+      function _buildSearchCache() {
+        const formGroups = [];
+        document.querySelectorAll(".form-group").forEach((fg) => {
+          formGroups.push({
+            el: fg,
+            section: fg.dataset.section,
+            name: (fg.dataset.propname || "").toLowerCase(),
+            description: (fg.querySelector(".description") || {}).textContent.toLowerCase() || "",
+          });
+        });
+        const headingBySection = {};
+        document.querySelectorAll(".section-heading").forEach((h) => {
+          headingBySection[h.dataset.section || h.id] = h;
+        });
+        return {
+          formGroups,
+          headingBySection,
+          navLinks: [...document.querySelectorAll("#sectionNav a")],
+          searchWrapper: document.querySelector(".sidebar-search"),
+        };
+      }
+
+      function handleSearch() {
+        if (!_searchCache) _searchCache = _buildSearchCache();
+        const { formGroups, headingBySection, navLinks, searchWrapper } = _searchCache;
+        const rawValue = document.getElementById("searchInput").value;
+        const query = rawValue.toLowerCase().trim();
+        searchWrapper.classList.toggle("has-text", rawValue !== "");
+        // An active search ignores the uncommon toggle so users always see matches.
+        document.body.classList.toggle("search-active", query !== "");
+        const showUncommon = document.body.classList.contains("show-uncommon");
+        const sectionCounts = {};
+        let anyVisible = false;
+
+        for (const fg of formGroups) {
+          const matchesQuery = !query || fg.name.includes(query) || fg.description.includes(query);
+          fg.el.classList.toggle("hidden", !matchesQuery);
+          const isUncommon = fg.el.dataset.uncommon === "1";
+          const shown = matchesQuery && (query !== "" || showUncommon || !isUncommon);
+          if (shown) {
+            anyVisible = true;
+            sectionCounts[fg.section] = (sectionCounts[fg.section] || 0) + 1;
+          } else if (!(fg.section in sectionCounts)) {
+            sectionCounts[fg.section] = 0;
+          }
+        }
+
+        for (const [section, heading] of Object.entries(headingBySection)) {
+          heading.style.display = sectionCounts[section] > 0 ? "" : "none";
+        }
+
+        for (const a of navLinks) {
+          const matching = sectionCounts[a.dataset.section] || 0;
+          const badge = a.querySelector(".badge");
+          if (badge) badge.textContent = matching;
+          a.parentElement.classList.toggle("dimmed", matching === 0);
+        }
+
+        document.getElementById("noResults").style.display = query && !anyVisible ? "block" : "none";
+        document.getElementById("welcomeSection").style.display = query ? "none" : "";
+      }
+
+      function formatDefaultValue(value) {
+        const isPrimitive = (v) => v === null || typeof v !== "object";
+        if (Array.isArray(value)) {
+          if (value.length <= 3 && value.every(isPrimitive)) {
+            return JSON.stringify(value);
+          }
+          return "[" + value.length + " items]";
+        } else if (typeof value === "object" && value !== null) {
+          const keys = Object.keys(value);
+          if (keys.length <= 2 && Object.values(value).every(isPrimitive)) {
+            return JSON.stringify(value);
+          }
+          return "{" + keys.length + " keys}";
+        } else if (typeof value === "string") {
+          return '"' + value + '"';
+        }
+        return String(value);
+      }
+
+      // Editor ↔ YAML two-state toggle. setMode("editor") shows the form,
+      // setMode("yaml") shows the merged YAML view (editor + cards). The
+      // sidebar CTA swaps label + handler so it always offers the other view.
+      function setMode(mode) {
+        const yaml = mode === "yaml";
+        document.body.classList.toggle("yaml-mode", yaml);
+        const btn = document.getElementById("viewYamlBtn");
+        btn.textContent = yaml ? "Back to editor" : "View YAML";
+        btn.onclick = yaml ? backToEditor : showYaml;
+        window.scrollTo(0, 0);
+      }
+
+      function showYaml() {
+        // Block entry while any form field has an unparsed YAML/JSON value;
+        // otherwise the invalid text would be silently dropped on the way to
+        // the YAML view.
+        const invalid = document.querySelector(".form-group.is-invalid");
+        if (invalid) {
+          invalid.scrollIntoView({ behavior: "smooth", block: "center" });
+          const input = invalid.querySelector("input, textarea");
+          if (input) input.focus({ preventScroll: true });
+          return;
+        }
+        // If the form's parsed shape still matches the YAML text the user
+        // last had open, restore it verbatim: comments, blank lines and
+        // key ordering all survive. If anything in the form has changed
+        // (or the cache is stale across a reload), regenerate cleanly.
+        setValidateText(yamlTextForCurrentForm());
+        setMode("yaml");
+        document.getElementById("validateInput").focus();
+        runValidation();
+        // On first entry Monaco mounts asynchronously and the textarea-side
+        // validation we just ran needs a second pass once getValidateText
+        // starts reading from the editor. On subsequent entries Monaco is
+        // already live, so we skip the redundant re-run.
+        const hadEditor = !!monacoEditor;
+        ensureMonaco().then(
+          (ed) => {
+            ed.focus();
+            if (!hadEditor) runValidation();
+          },
+          () => {
+            // Monaco unavailable; textarea fallback is already live.
+          },
+        );
+      }
+
+      function backToEditor() {
+        // If the user wrote invalid YAML, keep them in YAML mode so they
+        // can fix it; the validate summary already shows the parse error.
+        const text = getValidateText();
+        if (!applyYamlToForm(text)) return;
+        // Cache the raw text along with the form snapshot it represents.
+        // Re-entry restores the exact text (preserving comments) as long
+        // as the live form still matches the snapshot.
+        lastEditedYaml = text;
+        lastEditedFormSnap = { ...currentConfig, ...pluginKeys };
+        safeLocalStorageSet("mqc_wizard_yaml_text", text || null);
+        safeLocalStorageSet(
+          "mqc_wizard_yaml_form_snap",
+          Object.keys(lastEditedFormSnap).length === 0 ? null : JSON.stringify(lastEditedFormSnap),
+        );
+        setMode("editor");
+      }
+
+      // Pick what to put in the editor when entering View YAML.
+      // - If the form still matches the snapshot the cached text represents,
+      //   restore the cached text verbatim (comments + formatting survive).
+      // - Otherwise, try to patch just the changed scalars into the cached
+      //   text in-place so comments for unchanged keys still survive. If the
+      //   diff touches anything complex (nested lists/dicts changed, value
+      //   spanning multiple lines, etc.), fall back to a fresh dump.
+      function yamlTextForCurrentForm() {
+        const now = { ...currentConfig, ...pluginKeys };
+        if (lastEditedYaml !== null && lastEditedFormSnap !== null) {
+          if (valuesEqual(now, lastEditedFormSnap)) return lastEditedYaml;
+          const merged = mergeFormIntoCachedYaml(lastEditedYaml, lastEditedFormSnap, now);
+          if (merged !== null) return merged;
+        }
+        return buildYamlFromForm();
+      }
+
+      // Patch a cached YAML string with the deltas between `snap` and `now`.
+      // Returns the patched text, or null when the diff is too complex to
+      // patch safely (caller falls back to a full rebuild).
+      //
+      // Only handles the common case: top-level scalar values that fit on a
+      // single line in the cached text. Anything else (a list/dict value
+      // changed, a folded/literal multi-line scalar, an unparseable line)
+      // bails to a rebuild.
+      function mergeFormIntoCachedYaml(cachedText, snap, now) {
+        const isScalar = (v) => v === null || typeof v !== "object";
+        const dumpScalar = (v) => dumpYaml(v, { lineWidth: -1 });
+
+        const allKeys = new Set([...Object.keys(snap), ...Object.keys(now)]);
+        const changes = [];
+        for (const k of allKeys) {
+          const inSnap = k in snap;
+          const inNow = k in now;
+          if (inSnap && !inNow) {
+            changes.push({ key: k, op: "remove" });
+          } else if (!inSnap && inNow) {
+            if (!isScalar(now[k])) return null;
+            changes.push({ key: k, op: "add", value: now[k] });
+          } else if (!valuesEqual(snap[k], now[k])) {
+            if (!isScalar(now[k]) || !isScalar(snap[k])) return null;
+            changes.push({ key: k, op: "set", value: now[k] });
+          }
+        }
+        if (changes.length === 0) return cachedText;
+
+        const ranges = computeKeyLineRanges(cachedText);
+        const lines = cachedText.split("\n");
+        // Pattern: "<key>:<space><value>[<optional trailing comment>]"
+        const lineRe = /^([A-Za-z_][A-Za-z0-9_]*\s*:\s*)([^#\r\n]*?)(\s*#.*)?$/;
+
+        // 1. In-place scalar edits (line indices unchanged).
+        for (const c of changes) {
+          if (c.op !== "set") continue;
+          const range = ranges[c.key];
+          if (!range || range.start !== range.end) return null;
+          const line = lines[range.start - 1];
+          const m = lineRe.exec(line);
+          if (!m) return null;
+          // Guard against the regex mis-splitting a value containing '#'
+          // (e.g. `title: "Run #42"`) as a trailing comment. Parse the
+          // value-only portion and verify it matches the snapshot; if not,
+          // bail to the rebuild path rather than corrupt the line.
+          try {
+            const reparsed = jsyaml.load(m[1] + m[2]);
+            if (!reparsed || !valuesEqual(reparsed[c.key], snap[c.key])) return null;
+          } catch (e) {
+            return null;
+          }
+          lines[range.start - 1] = m[1] + dumpScalar(c.value) + (m[3] || "");
+        }
+
+        // 2. Removals, in reverse line order so earlier indices stay valid.
+        const toRemove = changes
+          .filter((c) => c.op === "remove")
+          .map((c) => ranges[c.key])
+          .filter(Boolean)
+          .sort((a, b) => b.start - a.start);
+        for (const r of toRemove) {
+          lines.splice(r.start - 1, r.end - r.start + 1);
+        }
+
+        // 3. Additions: append, preserving any trailing newline.
+        const adds = changes.filter((c) => c.op === "add");
+        if (adds.length) {
+          const trailing = lines.length && lines[lines.length - 1] === "" ? lines.pop() : null;
+          for (const c of adds) lines.push(`${c.key}: ${dumpScalar(c.value)}`);
+          if (trailing !== null) lines.push(trailing);
+        }
+        return lines.join("\n");
+      }
+
+      // Build a YAML string from the wizard form state plus any preserved
+      // unknown keys from previous round-trips. Order matches the editor page:
+      // known keys first in their MultiQCConfig source order, then any plugin
+      // / unknown keys in the order they were last pasted.
+      function buildYamlFromForm() {
+        const ordered = {};
+        for (const propName of Object.keys(propDataIndex)) {
+          if (propName in currentConfig) ordered[propName] = currentConfig[propName];
+        }
+        for (const [k, v] of Object.entries(pluginKeys)) ordered[k] = v;
+        if (Object.keys(ordered).length === 0) return "";
+        try {
+          return dumpYaml(ordered);
+        } catch (e) {
+          return "# Error generating YAML: " + e.message;
+        }
+      }
+
+      // Reverse of buildYamlFromForm: walk the parsed YAML, push known keys
+      // back into the form widgets, remember unknown keys for next entry.
+      // Returns true on success, false if the YAML couldn't be parsed; the
+      // caller uses that to decide whether to keep the user in YAML mode so
+      // their edits aren't silently discarded. An empty / null document is
+      // treated as success: the user is asking to clear all options.
+      function applyYamlToForm(text) {
+        let parsed = null;
+        if (text.trim()) {
+          try {
+            parsed = jsyaml.load(text);
+          } catch (e) {
+            return false;
+          }
+          if (parsed != null && (typeof parsed !== "object" || Array.isArray(parsed))) return false;
+        }
+        parsed = parsed || {};
+
+        // Suppress per-key saveEditorConfig writes during the batch apply;
+        // we save once at the end.
+        isHydrating = true;
+        try {
+          for (const k of Object.keys(currentConfig)) {
+            if (!(k in parsed)) resetField(k);
+          }
+          pluginKeys = {};
+          for (const [k, v] of Object.entries(parsed)) {
+            if (propDataIndex[k]) applyValueToGroup(k, v);
+            else pluginKeys[k] = v;
+          }
+        } finally {
+          isHydrating = false;
+        }
+        saveEditorConfig();
+        safeLocalStorageSet(
+          "mqc_wizard_plugin_keys",
+          Object.keys(pluginKeys).length === 0 ? null : JSON.stringify(pluginKeys),
+        );
+        return true;
+      }
+
+      function clearYaml() {
+        if (!getValidateText().trim()) return;
+        if (!confirm("Clear the YAML editor?")) return;
+        setValidateText("");
+        runValidation();
+      }
+
+      function downloadConfig() {
+        const yaml = getValidateText();
+        if (!yaml.trim()) {
+          alert("No configuration to download. Please set some options first.");
+          return;
+        }
+        const blob = new Blob([yaml], { type: "text/yaml" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "multiqc_config.yaml";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function copyConfig() {
+        const btn = document.getElementById("copyBtn");
+        const yaml = getValidateText();
+        const showFeedback = (label) => {
+          const original = btn.dataset.originalLabel || btn.textContent;
+          btn.dataset.originalLabel = original;
+          btn.textContent = label;
+          clearTimeout(btn._copyResetTimer);
+          btn._copyResetTimer = setTimeout(() => {
+            btn.textContent = btn.dataset.originalLabel;
+          }, 1500);
+        };
+        if (!navigator.clipboard) {
+          showFeedback("Clipboard unavailable");
+          return;
+        }
+        navigator.clipboard.writeText(yaml).then(
+          () => showFeedback("Copied!"),
+          () => showFeedback("Copy failed"),
+        );
+      }
+
+      function slugify(text) {
+        return text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+      }
+
+      // Build a segmented toggle: a row of buttons backed by a hidden input.
+      // Used for booleans and for enums.
+      function buildSegmentedToggle(propName, values, activeValue, allowDeselect) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "bool-toggle";
+        const hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.id = propName;
+        wrapper.appendChild(hidden);
+        values.forEach((val) => {
+          const strVal = String(val);
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "bool-toggle-btn";
+          btn.dataset.value = strVal;
+          btn.textContent = strVal;
+          if (val === activeValue) btn.classList.add("active");
+          btn.onclick = () => {
+            if (allowDeselect && btn.classList.contains("active")) {
+              btn.classList.remove("active");
+              hidden.value = "";
+            } else {
+              wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
+              hidden.value = strVal;
+            }
+            updateConfig(propName, hidden);
+          };
+          wrapper.appendChild(btn);
+        });
+        return wrapper;
+      }
+
+      // Minimal inline markdown for field descriptions: `code`, **bold**, and
+      // [text](url) links. HTML is escaped first so descriptions can't inject
+      // tags directly. Block-level markdown (lists, headings) isn't supported.
+      function escapeHtml(s) {
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function renderInlineMd(text) {
+        return escapeHtml(text)
+          .replace(/`([^`]+)`/g, "<code>$1</code>")
+          .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      }
+
+      // Compile the JSON schema once, lazily. Returns null if Ajv2020 didn't
+      // load (CDN failure); caller falls back to no-Ajv rendering.
+      // Monaco editor: loaded lazily the first time showYaml() runs, so
+      // editor-only users don't pay for it. Until it resolves (or if the CDN
+      // fails), the plain textarea keeps working as a fallback.
+      let monacoEditor = null;
+      let monacoLineDecorations = [];
+      let monacoReadyPromise = null;
+
+      function ensureMonaco() {
+        if (monacoReadyPromise) return monacoReadyPromise;
+        if (typeof require !== "function" || typeof require.config !== "function") {
+          // Loader didn't load (CDN blocked etc.); stay on the textarea.
+          monacoReadyPromise = Promise.reject(new Error("Monaco loader unavailable"));
+          return monacoReadyPromise;
+        }
+        monacoReadyPromise = new Promise((resolve, reject) => {
+          require.config({
+            paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs" },
+          });
+          require(["vs/editor/editor.main"], () => {
+            // Custom theme matching the wizard's navy / Seqera palette so
+            // the editor reads as part of the same app rather than a foreign
+            // VS Code panel.
+            monaco.editor.defineTheme("mqc-dark", {
+              base: "vs-dark",
+              inherit: true,
+              rules: [
+                { token: "type", foreground: "9eebd5" }, // YAML keys
+                { token: "string", foreground: "f1a373" },
+                { token: "string.yaml", foreground: "f1a373" },
+                { token: "number", foreground: "a5b4fc" },
+                { token: "keyword", foreground: "c4b5fd" }, // true/false/null
+                { token: "delimiter", foreground: "8a8595" },
+                { token: "comment", foreground: "847d99", fontStyle: "italic" },
+              ],
+              colors: {
+                "editor.background": "#201637",
+                "editor.foreground": "#d9d4e0",
+                "editorLineNumber.foreground": "#5c5767",
+                "editorLineNumber.activeForeground": "#a29fa8",
+                "editor.selectionBackground": "#31c9ac33",
+                "editor.inactiveSelectionBackground": "#31c9ac22",
+                "editorIndentGuide.background1": "#2d273c",
+                "editorIndentGuide.activeBackground1": "#3d3651",
+                "editorCursor.foreground": "#31c9ac",
+                "scrollbarSlider.background": "#3d365160",
+                "scrollbarSlider.hoverBackground": "#3d3651a0",
+                "scrollbarSlider.activeBackground": "#3d3651c0",
+              },
+            });
+            const container = document.getElementById("validateMonaco");
+            const textarea = document.getElementById("validateInput");
+            monacoEditor = monaco.editor.create(container, {
+              value: textarea.value,
+              language: "yaml",
+              theme: "mqc-dark",
+              automaticLayout: true,
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              fontSize: 13,
+              wordWrap: "on",
+              renderLineHighlight: "none",
+            });
+            textarea.style.display = "none";
+            container.style.display = "block";
+            let timer;
+            monacoEditor.onDidChangeModelContent(() => {
+              // Drop the click-to-highlight decoration immediately so it
+              // doesn't linger on lines the user is actively editing.
+              clearJumpHighlight();
+              clearTimeout(timer);
+              timer = setTimeout(runValidation, 250);
+            });
+            resolve(monacoEditor);
+          }, (err) => {
+            console.error("Monaco load failed:", err);
+            reject(err);
+          });
+        });
+        return monacoReadyPromise;
+      }
+
+      function getValidateText() {
+        return monacoEditor ? monacoEditor.getValue() : document.getElementById("validateInput").value;
+      }
+
+      function setValidateText(text) {
+        if (monacoEditor) monacoEditor.setValue(text);
+        else document.getElementById("validateInput").value = text;
+      }
+
+      function compileValidator() {
+        if (ajvValidate) return ajvValidate;
+        const lib = typeof window !== "undefined" ? window.ajv2020 : undefined;
+        if (!lib) return null;
+        const AjvClass = lib.default || lib;
+        try {
+          const ajv = new AjvClass({ allErrors: true, strict: false });
+          ajvValidate = ajv.compile(configSchema);
+        } catch (e) {
+          // Schema compile errors shouldn't take the wizard down; leave
+          // ajvValidate null and let the validator skip Ajv-side checks.
+          console.error("Ajv compile failed:", e);
+          ajvValidate = null;
+        }
+        return ajvValidate;
+      }
+
+      function levenshtein(a, b) {
+        if (a === b) return 0;
+        const m = a.length;
+        const n = b.length;
+        if (!m || !n) return m + n;
+        const dp = new Array(n + 1);
+        for (let j = 0; j <= n; j++) dp[j] = j;
+        for (let i = 1; i <= m; i++) {
+          let prev = dp[0];
+          dp[0] = i;
+          for (let j = 1; j <= n; j++) {
+            const tmp = dp[j];
+            dp[j] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[j], dp[j - 1]);
+            prev = tmp;
+          }
+        }
+        return dp[n];
+      }
+
+      // Closest schema property name within edit distance 2 (good for catching
+      // single-letter typos like "titel" → "title"). Returns null otherwise.
+      // Self-matches (distance 0) are skipped so a recognised key never
+      // suggests itself.
+      function suggestKey(unknown) {
+        let best = null;
+        let bestDist = Infinity;
+        for (const p of propNames) {
+          const d = levenshtein(unknown, p);
+          if (d > 0 && d < bestDist && d <= 2) {
+            best = p;
+            bestDist = d;
+          }
+        }
+        return best;
+      }
+
+      // Some schema properties are excluded from the wizard form (SKIP_PROPERTIES,
+      // currently just `sp`) but are still valid YAML keys. Synthesise a minimal
+      // propData entry from the JSON schema so they classify correctly.
+      function schemaPropData(name) {
+        const p = configSchema.properties && configSchema.properties[name];
+        if (!p) return null;
+        const branches = Array.isArray(p.anyOf) ? p.anyOf : [p];
+        const nonNull = branches.find((b) => b.type && b.type !== "null") || branches[0] || {};
+        return {
+          type: nonNull.type || p.type || null,
+          description: p.description || "",
+          default: undefined,
+          deprecated: !!p.deprecated,
+        };
+      }
+
+      // Drop noise from Pydantic's `Optional[...]` schemas: the "null" branch
+      // of an `anyOf` always fails for any real value and the `anyOf`
+      // catch-all message ("must match a schema in anyOf") just summarises
+      // the sub-errors we already have. Dedupe by path + keyword + params so
+      // multiple anyOf branches don't repeat the same complaint.
+      function filterAjvErrors(errors) {
+        if (!errors) return [];
+        const kept = [];
+        const seen = new Set();
+        for (const err of errors) {
+          if (err.keyword === "anyOf") continue;
+          if (err.keyword === "type" && err.params && err.params.type === "null") continue;
+          const sig = `${err.instancePath}\t${err.keyword}\t${JSON.stringify(err.params || {})}`;
+          if (seen.has(sig)) continue;
+          seen.add(sig);
+          kept.push(err);
+        }
+        return kept;
+      }
+
+      // Render a single Ajv error in human terms, trimmed to the field that
+      // owns it (the top-level key card already shows the property name).
+      function formatAjvError(err) {
+        const path = err.instancePath || "";
+        const tail = path.split("/").slice(2).join("/");
+        const where = tail ? ` at ${tail}` : "";
+        if (err.keyword === "enum") return `valid values: ${err.params.allowedValues.join(", ")}${where}`;
+        if (err.keyword === "type") return `expected ${err.params.type}${where}`;
+        if (err.keyword === "required") return `missing required field: ${err.params.missingProperty}${where}`;
+        return `${err.message || "invalid"}${where}`;
+      }
+
+      // Run the JSON schema validator against a single field's parsed value.
+      // Returns an array of human-readable error messages (empty when valid
+      // or Ajv unavailable). Used by the form to catch shape mismatches that
+      // a plain YAML parse can't (e.g. `[as]` instead of `[{cool: beans}]`).
+      function validateFieldAgainstSchema(propName, value) {
+        const validate = compileValidator();
+        if (!validate) return [];
+        validate({ [propName]: value });
+        const ours = (validate.errors || []).filter((err) => (err.instancePath || "").split("/")[1] === propName);
+        return filterAjvErrors(ours).map(formatAjvError);
+      }
+
+      let lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+
+      // Map each top-level key in the paste to its 1-indexed [start, end]
+      // line range. Naive regex walk; fine for MultiQC configs (no leading
+      // whitespace on top-level keys, no multi-document YAML). Trailing
+      // blank lines and section-header comments between blocks are excluded
+      // so the click-to-highlight band stops at the last content line.
+      function computeKeyLineRanges(text) {
+        const ranges = {};
+        const lines = text.split("\n");
+        const topKeyRe = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/;
+        const isContent = (line) => {
+          const t = line.trim();
+          return t !== "" && !t.startsWith("#");
+        };
+        const trimTrailing = (start, end) => {
+          while (end > start && !isContent(lines[end - 1])) end--;
+          return end;
+        };
+        let lastKey = null;
+        for (let i = 0; i < lines.length; i++) {
+          const m = topKeyRe.exec(lines[i]);
+          if (m) {
+            if (lastKey) ranges[lastKey].end = trimTrailing(ranges[lastKey].start, i);
+            lastKey = m[1];
+            ranges[lastKey] = { start: i + 1, end: lines.length };
+          }
+        }
+        if (lastKey) ranges[lastKey].end = trimTrailing(ranges[lastKey].start, lines.length);
+        return ranges;
+      }
+
+      function runValidation() {
+        const text = getValidateText();
+        const summary = document.getElementById("validateSummary");
+        const cards = document.getElementById("validateCards");
+
+        if (!text.trim()) {
+          summary.innerHTML = "";
+          cards.innerHTML = "";
+          lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+          return;
+        }
+
+        let parsed;
+        try {
+          parsed = jsyaml.load(text);
+        } catch (e) {
+          summary.innerHTML =
+            '<span class="validate-badge error">YAML parse error</span> ' + escapeHtml(e.message || String(e));
+          cards.innerHTML = "";
+          lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+          return;
+        }
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          summary.innerHTML = '<span class="validate-badge error">Expected a mapping at the top level.</span>';
+          cards.innerHTML = "";
+          lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+          return;
+        }
+
+        const keyLineRanges = computeKeyLineRanges(text);
+
+        // Ajv runs against the known-key subset so plugin keys don't dominate
+        // the error list; unknown keys are reported separately with suggestions.
+        // "Known" = anything in the JSON schema (so SKIP_PROPERTIES like `sp`
+        // still get deep-validated even though they have no wizard form input).
+        const knownSet = new Set(propNames);
+        const known = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (knownSet.has(k)) known[k] = v;
+        }
+        const validate = compileValidator();
+        const errorsByKey = {};
+        if (validate) {
+          validate(known);
+          for (const err of filterAjvErrors(validate.errors)) {
+            const top = (err.instancePath || "").split("/")[1];
+            if (!top) continue;
+            (errorsByKey[top] = errorsByKey[top] || []).push(formatAjvError(err));
+          }
+        }
+
+        const results = [];
+        for (const [k, v] of Object.entries(parsed)) {
+          const data = propDataIndex[k] || schemaPropData(k);
+          if (!data) {
+            results.push({ key: k, value: v, status: "unknown", suggestion: suggestKey(k) });
+            continue;
+          }
+          const matchesDefault = valuesEqual(v, data.default);
+          if (data.deprecated) {
+            // `matchesDefault` rides along so bulk-remove can sweep deprecated
+            // values that are also no-ops (e.g. `lint: false` for users who
+            // have it set in old configs).
+            results.push({ key: k, value: v, status: "deprecated", data, matchesDefault });
+          } else if (errorsByKey[k]) {
+            results.push({ key: k, value: v, status: "error", data, messages: errorsByKey[k] });
+          } else if (matchesDefault) {
+            results.push({ key: k, value: v, status: "default", data });
+          } else {
+            results.push({ key: k, value: v, status: "ok", data });
+          }
+        }
+        lastValidated = { parsed, results, keyLineRanges };
+        renderSummary(results);
+        renderCards(results);
+      }
+
+      // Drop the active line decoration + card outline. Called on every
+      // edit so highlights don't linger over text the user is changing.
+      function clearJumpHighlight() {
+        if (monacoEditor && monacoLineDecorations.length) {
+          monacoLineDecorations = monacoEditor.deltaDecorations(monacoLineDecorations, []);
+        }
+        document.querySelectorAll("#validateCards .validate-card.is-active").forEach((c) => {
+          c.classList.remove("is-active");
+        });
+      }
+
+      // Highlight + scroll-to for the given top-level key, both in Monaco and
+      // in the plain-textarea fallback. Card click handler.
+      function jumpToKey(key) {
+        const range = lastValidated.keyLineRanges[key];
+        if (!range) return;
+        clearJumpHighlight();
+        const card = document.querySelector(`#validateCards .validate-card[data-key="${CSS.escape(key)}"]`);
+        if (card) card.classList.add("is-active");
+
+        if (monacoEditor) {
+          const r = new monaco.Range(range.start, 1, range.end, 1);
+          monacoLineDecorations = monacoEditor.deltaDecorations(monacoLineDecorations, [
+            {
+              range: r,
+              options: {
+                isWholeLine: true,
+                className: "validate-line-hl",
+                linesDecorationsClassName: "validate-line-hl-margin",
+              },
+            },
+          ]);
+          monacoEditor.revealLineInCenterIfOutsideViewport(range.start);
+          return;
+        }
+        // Textarea fallback: select the character range so the browser
+        // scrolls and visually marks it (native selection, not whole-line).
+        const ta = document.getElementById("validateInput");
+        const text = ta.value;
+        const lines = text.split("\n");
+        const start = lines.slice(0, range.start - 1).reduce((acc, l) => acc + l.length + 1, 0);
+        const end = lines.slice(0, range.end).reduce((acc, l) => acc + l.length + 1, 0) - 1;
+        ta.focus({ preventScroll: true });
+        ta.setSelectionRange(start, end);
+        // Best-effort scroll: count line height from font metrics.
+        const lineHeight = parseInt(getComputedStyle(ta).lineHeight, 10) || 18;
+        ta.scrollTop = Math.max(0, (range.start - 3) * lineHeight);
+      }
+
+      function defaultSweep(results) {
+        // Keys that bulk-remove will drop: explicit "default" rows plus any
+        // "deprecated" row whose value happens to match the schema default.
+        return results.filter((r) => r.status === "default" || (r.status === "deprecated" && r.matchesDefault));
+      }
+
+      // Which status groups the summary badges are currently filtering to.
+      // Empty set means show everything.
+      const filterStatuses = new Set();
+
+      function renderSummary(results) {
+        const count = (s) => results.filter((r) => r.status === s).length;
+        const sweep = defaultSweep(results).length;
+        const summary = document.getElementById("validateSummary");
+        summary.innerHTML = "";
+        const pluralS = (n) => (n === 1 ? "" : "s");
+        const entries = [
+          { status: "ok", n: count("ok"), label: "valid", always: true },
+          { status: "error", n: count("error"), label: (n) => `error${pluralS(n)}` },
+          { status: "default", n: count("default"), label: "matches default" },
+          { status: "deprecated", n: count("deprecated"), label: "deprecated" },
+          { status: "unknown", n: count("unknown"), label: "unknown" },
+        ];
+        // Drop filters for statuses that no longer appear so the filter state
+        // doesn't strand "no results" when the user changes the paste.
+        for (const s of [...filterStatuses]) {
+          if (!entries.some((e) => e.status === s && e.n > 0)) filterStatuses.delete(s);
+        }
+        let renderedAnyBadge = false;
+        for (const e of entries) {
+          if (!e.n && !e.always) continue;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = `validate-badge ${e.status}`;
+          btn.dataset.status = e.status;
+          btn.setAttribute("aria-pressed", filterStatuses.has(e.status) ? "true" : "false");
+          btn.classList.toggle("is-active", filterStatuses.has(e.status));
+          const labelText = typeof e.label === "function" ? e.label(e.n) : e.label;
+          btn.textContent = `${e.n} ${labelText}`;
+          btn.onclick = () => toggleFilter(e.status);
+          summary.appendChild(btn);
+          renderedAnyBadge = true;
+        }
+        if (renderedAnyBadge) {
+          const hint = document.createElement("span");
+          hint.className = "validate-summary-hint";
+          hint.textContent = "click to filter";
+          summary.appendChild(hint);
+        }
+        if (sweep) {
+          const btn = document.createElement("button");
+          btn.className = "btn btn-secondary";
+          btn.textContent = "Remove defaults";
+          btn.title =
+            sweep === 1
+              ? `Remove 1 option whose value matches the MultiQC default - it has no effect`
+              : `Remove ${sweep} options whose values match the MultiQC default - they have no effect`;
+          btn.onclick = removeDefaults;
+          summary.appendChild(btn);
+        }
+      }
+
+      function toggleFilter(status) {
+        if (filterStatuses.has(status)) filterStatuses.delete(status);
+        else filterStatuses.add(status);
+        // Update aria-pressed/active on the just-clicked badges without a full
+        // re-render (re-render would also be fine; small enough).
+        document.querySelectorAll("#validateSummary .validate-badge").forEach((b) => {
+          const on = filterStatuses.has(b.dataset.status);
+          b.classList.toggle("is-active", on);
+          b.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        applyFilter();
+      }
+
+      function applyFilter() {
+        const on = filterStatuses.size > 0;
+        document.querySelectorAll("#validateCards .validate-card").forEach((c) => {
+          c.classList.toggle("is-filtered-out", on && !filterStatuses.has(c.dataset.status));
+        });
+      }
+
+      function renderCards(results) {
+        const root = document.getElementById("validateCards");
+        root.innerHTML = "";
+        for (const r of results) root.appendChild(renderCard(r));
+        applyFilter();
+      }
+
+      function badgeLabel(r) {
+        return (
+          {
+            ok: "valid",
+            error: "invalid",
+            default: "matches default",
+            deprecated: "deprecated",
+            unknown: "unknown option",
+          }[r.status] || r.status
+        );
+      }
+
+      function renderCard(r) {
+        const card = document.createElement("div");
+        card.className = `validate-card status-${r.status}`;
+        card.dataset.status = r.status;
+        card.dataset.key = r.key;
+        card.onclick = () => jumpToKey(r.key);
+        const valueLabel = escapeHtml(formatDefaultValue(r.value));
+        const typeTag = r.data && r.data.type ? `<span class="validate-type">${escapeHtml(r.data.type)}</span>` : "";
+        const head =
+          `<div class="validate-card-head">` +
+          `<code class="validate-key">${escapeHtml(r.key)}</code>` +
+          `<span class="validate-value-inline">${valueLabel}</span>` +
+          typeTag +
+          `<span class="validate-badge ${r.status}">${escapeHtml(badgeLabel(r))}</span>` +
+          `</div>`;
+        let body = "";
+        if (r.data && r.data.description) {
+          body += `<div class="validate-desc">${renderInlineMd(r.data.description)}</div>`;
+        }
+        if (r.status === "unknown") {
+          body += r.suggestion
+            ? `<div class="validate-msg">did you mean <code>${escapeHtml(r.suggestion)}</code>?</div>`
+            : `<div class="validate-msg">not a recognised option</div>`;
+        } else if (r.messages && r.messages.length) {
+          body += r.messages.map((m) => `<div class="validate-msg">${escapeHtml(m)}</div>`).join("");
+        } else if (r.status === "default") {
+          body += `<div class="validate-msg">matches the MultiQC default: has no effect</div>`;
+        } else if (r.status === "deprecated") {
+          body += `<div class="validate-msg">this option is deprecated; see the description for a replacement</div>`;
+          if (r.matchesDefault) {
+            body += `<div class="validate-msg">value also matches the MultiQC default: safe to remove</div>`;
+          }
+        }
+        card.innerHTML = head + body;
+        return card;
+      }
+
+      function removeDefaults() {
+        if (!lastValidated.parsed) return;
+        const drop = new Set(defaultSweep(lastValidated.results).map((r) => r.key));
+        if (!drop.size) return;
+        const kept = {};
+        for (const [k, v] of Object.entries(lastValidated.parsed)) {
+          if (!drop.has(k)) kept[k] = v;
+        }
+        // Preserve the user's typed key order (kept is built by iterating
+        // their parsed YAML), so the stripped result reads naturally.
+        const out = Object.keys(kept).length ? dumpYaml(kept) : "";
+        setValidateText(out);
+        runValidation();
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        if (typeof jsyaml === "undefined") {
+          document.getElementById("validateInput").value =
+            "# Error: js-yaml library failed to load.\n# Please check your internet connection and refresh.";
+        } else {
+          initWizard();
+        }
+      });
+    </script>
+  </body>
+</html>

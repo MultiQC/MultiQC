@@ -1,8 +1,7 @@
 ---
 title: Salmon
 displayed_sidebar: multiqcSidebar
-description: >
-  Quantifies expression of transcripts using RNA-seq data.
+description: "Quantifies expression of transcripts using RNA-seq data."
 ---
 
 <!--
@@ -40,3 +39,4 @@ salmon/meta:
   max_filesize: 50000
   num_lines: 10
 ```
+    

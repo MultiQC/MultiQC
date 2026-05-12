@@ -1,8 +1,7 @@
 ---
 title: ClipAndMerge
 displayed_sidebar: multiqcSidebar
-description: >
-  Adapter clipping and read merging for ancient DNA data.
+description: "Adapter clipping and read merging for ancient DNA data."
 ---
 
 <!--
@@ -30,3 +29,4 @@ clipandmerge:
   contents: ClipAndMerge (
   num_lines: 5
 ```
+    

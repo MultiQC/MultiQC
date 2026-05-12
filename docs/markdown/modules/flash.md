@@ -1,8 +1,7 @@
 ---
 title: FLASh
 displayed_sidebar: multiqcSidebar
-description: >
-  Merges paired-end reads from next-generation sequencing experiments.
+description: "Merges paired-end reads from next-generation sequencing experiments."
 ---
 
 <!--
@@ -49,7 +48,8 @@ sp:
 
 ```yaml
 flash/hist:
-  fn: "*flash*.hist"
+  fn: '*flash*.hist'
 flash/log:
-  contents: "[FLASH]"
+  contents: '[FLASH]'
 ```
+    

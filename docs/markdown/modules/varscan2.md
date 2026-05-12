@@ -1,8 +1,7 @@
 ---
 title: VarScan2
 displayed_sidebar: multiqcSidebar
-description: >
-  Variant detection in massively parallel sequencing data
+description: "Variant detection in massively parallel sequencing data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/varscan2/varscan2.py
 -->
 
 :::note
-Variant detection in massively parallel sequencing data
+Variant detection in massively parallel sequencing data.
 
 [http://dkoboldt.github.io/varscan/](http://dkoboldt.github.io/varscan/)
 :::
@@ -23,7 +22,6 @@ Variant detection in massively parallel sequencing data
 VarScan is a platform-independent mutation caller for targeted, exome, and whole-genome
 resequencing data generated on Illumina, SOLiD, Life/PGM, Roche/454, and similar instruments.
 VarScan can be used to detect different types of variation:
-
 - Germline variants (SNPs an dindels) in individual samples or pools of samples.
 - Multi-sample variants (shared or private) in multi-sample datasets (with mpileup).
 - Somatic mutations, LOH events, and germline variants in tumor-normal pairs.
@@ -36,11 +34,12 @@ The MultiQC module can read output from `mpileup2cns`, `mpileup2snp` and `mpileu
 ```yaml
 varscan2/mpileup2cns:
   contents: Only variants will be reported
-  num_lines: 3
+  num_lines: 10
 varscan2/mpileup2indel:
   contents: Only indels will be reported
-  num_lines: 3
+  num_lines: 10
 varscan2/mpileup2snp:
   contents: Only SNPs will be reported
-  num_lines: 3
+  num_lines: 10
 ```
+    

@@ -1,8 +1,7 @@
 ---
 title: Filtlong
 displayed_sidebar: multiqcSidebar
-description: >
-  Filters long reads by quality.
+description: "Filters long reads by quality."
 ---
 
 <!--
@@ -47,3 +46,4 @@ filtlong:
   contents_re: .*Filtering long reads.*
   num_lines: 5
 ```
+    

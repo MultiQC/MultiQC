@@ -1,8 +1,7 @@
 ---
 title: SnpEff
 displayed_sidebar: multiqcSidebar
-description: >
-  Annotates and predicts the effects of variants on genes (such as amino acid changes).
+description: "Annotates and predicts the effects of variants on genes (such as amino acid changes)."
 ---
 
 <!--
@@ -31,3 +30,4 @@ snpeff:
   contents: SnpEff_version
   max_filesize: 5000000
 ```
+    

@@ -1,8 +1,7 @@
 ---
 title: miRTrace
 displayed_sidebar: multiqcSidebar
-description: >
-  Quality control for small RNA sequencing data.
+description: "Quality control for small RNA sequencing data."
 ---
 
 <!--
@@ -43,3 +42,4 @@ mirtrace/mirnacomplexity:
 mirtrace/summary:
   fn: mirtrace-results.json
 ```
+    

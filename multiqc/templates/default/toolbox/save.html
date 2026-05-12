@@ -1,0 +1,50 @@
+<!-- Save -->
+<div class="tab-pane" id="mqc_saveconfig" role="tabpanel">
+  <h5 class="mb-3">Save Settings</h5>
+  <div class="alert alert-info">
+    {{ material_icon('mdi:information', 20) }} Report settings are automatically saved in your browser as you use the
+    toolbox. You can also save <em>named</em> configurations below.
+  </div>
+  <form id="mqc_saveconfig_form">
+    <input type="text" class="form-control form-control-sm mb-2" placeholder="Config Name" />
+    <div class="d-flex justify-content-between gap-2">
+      <button type="submit" class="btn btn-sm btn-outline-secondary flex-grow-1">
+        {{ material_icon('mdi:content-save', 16) }} Save to Browser
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1" id="mqc_download_config">
+        {{ material_icon('mdi:download', 16) }} Save to File
+      </button>
+    </div>
+  </form>
+
+  <h5 class="mt-4 mb-2">Load Settings</h5>
+  <p>Choose a saved report profile from the browser or load from a file:</p>
+  <form id="mqc_loadconfig_form">
+    <select class="form-control">
+      <option value="">[ select named settings from browser ]</option>
+    </select>
+
+    <div class="actions d-flex justify-content-between gap-2 my-2">
+      <button type="submit" class="btn btn-sm btn-outline-secondary flex-grow-1">
+        {{ material_icon('mdi:folder-open', 16) }} Load
+      </button>
+      <button class="mqc_config_clear btn btn-sm btn-outline-danger flex-grow-1">
+        {{ material_icon('mdi:delete', 16) }} Delete
+      </button>
+    </div>
+
+    <div class="actions d-flex justify-content-between gap-2 mb-4">
+      <button class="mqc_config_set_default btn btn-sm btn-outline-primary flex-grow-1">
+        {{ material_icon('mdi:content-save-outline', 16) }} Set as default for all reports
+      </button>
+      <button class="mqc_config_clear_default btn btn-sm btn-outline-danger flex-grow-1">
+        {{ material_icon('mdi:delete', 16) }} Clear default
+      </button>
+    </div>
+
+    <div class="mb-3">
+      <label for="mqc_load_config_file" class="form-label">Load from file</label>
+      <div id="mqc_load_config_file_wrapper"></div>
+    </div>
+  </form>
+</div>

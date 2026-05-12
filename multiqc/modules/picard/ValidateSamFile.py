@@ -241,11 +241,11 @@ def _add_section_to_report(module, data):
             "This tool reports on the validity of a SAM or BAM file relative to the SAM-format specification."
         ),
         helptext="""
-            A detailed table is only shown if errors or warnings are found. Details 
-            about the errors and warnings are only shown if a `SUMMARY` report was 
+            A detailed table is only shown if errors or warnings are found. Details
+            about the errors and warnings are only shown if a `SUMMARY` report was
             parsed.
 
-            For more information on the warnings, errors and possible fixes please 
+            For more information on the warnings, errors and possible fixes please
             read [this broadinstitute article](
             https://software.broadinstitute.org/gatk/documentation/article.php?id
             =7571).""",
@@ -300,7 +300,7 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
         if b[0]:
             note_html.append(
                 f'<div class="progress-bar progress-bar-{b[1]}" style="width: {(b[0] / float(total_count)) * 100.0}%" '
-                f'data-toggle="tooltip" title="{int(b[0])} {"samples" if b[0] > 1 else "sample"} {b[2]}">{int(b[0])}</div>'
+                f'data-bs-toggle="tooltip" title="{int(b[0])} {"samples" if b[0] > 1 else "sample"} {b[2]}">{int(b[0])}</div>'
             )
     note_html.append("</div>")
 

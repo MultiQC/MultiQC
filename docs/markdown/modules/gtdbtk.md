@@ -1,8 +1,7 @@
 ---
 title: GTDB-Tk
 displayed_sidebar: multiqcSidebar
-description: >
-  Assigns objective taxonomic classifications to bacterial and archaeal genomes.
+description: "Assigns objective taxonomic classifications to bacterial and archaeal genomes."
 ---
 
 <!--
@@ -34,3 +33,4 @@ gtdbtk:
     closest_genome_taxonomy\tclosest_genome_ani"
   num_lines: 10
 ```
+    

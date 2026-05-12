@@ -1,8 +1,7 @@
 ---
 title: Somalier
 displayed_sidebar: multiqcSidebar
-description: >
-  Genotype to pedigree correspondence checks from sketches derived from BAM/CRAM or VCF
+description: "Genotype to pedigree correspondence checks from sketches derived from BAM/CRAM or VCF."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/somalier/somalier.py
 -->
 
 :::note
-Genotype to pedigree correspondence checks from sketches derived from BAM/CRAM or VCF
+Genotype to pedigree correspondence checks from sketches derived from BAM/CRAM or VCF.
 
 [https://github.com/brentp/somalier](https://github.com/brentp/somalier)
 :::
@@ -32,12 +31,13 @@ to be used for general QC.
 ```yaml
 somalier/pairs:
   contents: hom_concordance
-  fn: "*.pairs.tsv"
+  fn: '*.pairs.tsv'
   num_lines: 5
 somalier/samples:
-  contents: "#family_id"
-  fn: "*.samples.tsv"
+  contents: '#family_id'
+  fn: '*.samples.tsv'
   num_lines: 5
 somalier/somalier-ancestry:
-  fn: "*.somalier-ancestry.tsv"
+  fn: '*.somalier-ancestry.tsv'
 ```
+    

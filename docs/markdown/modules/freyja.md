@@ -1,8 +1,7 @@
 ---
 title: Freyja
 displayed_sidebar: multiqcSidebar
-description: >
-  Recovers relative lineage abundances from mixed SARS-CoV-2 samples.
+description: "Recovers relative lineage abundances from mixed SARS-CoV-2 samples."
 ---
 
 <!--
@@ -29,6 +28,7 @@ phylogenetic tree to solve the constrained (unit sum, non-negative) de-mixing pr
 ```yaml
 freyja:
   contents: "summarized\t["
-  fn: "*.tsv"
+  fn: '*.tsv'
   num_lines: 6
 ```
+    
