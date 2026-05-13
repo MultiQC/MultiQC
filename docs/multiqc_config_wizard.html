@@ -381,10 +381,7 @@
         color: rgba(255, 255, 255, 0.78);
         text-decoration: none;
         padding: 8px 12px;
-        border-radius: 4px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        display: block;
         font-size: 0.92em;
         font-weight: 500;
         transition:
@@ -397,72 +394,47 @@
         color: white;
       }
       .section-nav a.active {
-        background: rgba(49, 201, 172, 0.15);
+        background: rgba(49, 201, 172, 0.18);
         color: white;
-        box-shadow: inset 2px 0 0 var(--teal);
-      }
-      /* Scroll-location indicator: small green dot on the left of the link
-         the user is currently viewing. */
-      .section-nav a::after {
-        content: "";
-        position: absolute;
-        left: -10px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--teal);
-        opacity: 0;
-        transition: opacity 0.15s ease;
-        pointer-events: none;
-      }
-      .section-nav a.active::after {
-        opacity: 1;
-      }
-      .section-nav .badge {
-        background: rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.7);
-        border-radius: 999px;
-        padding: 2px 8px;
-        font-size: 0.74em;
-        font-weight: 500;
-        min-width: 22px;
-        text-align: center;
-      }
-      .section-nav a.active .badge {
-        background: var(--teal);
-        color: var(--navy);
       }
       .section-nav li.dimmed a {
         opacity: 0.35;
         pointer-events: none;
       }
-      /* Group sub-links are always shown beneath their section. */
+      /* Non-clickable section label shown above the section's group entries.
+         When a section has named groups, the groups are the only clickable
+         items; the section name renders here as a small all-caps header for
+         context. */
+      .section-nav-label {
+        padding: 16px 12px 4px;
+        font-size: 0.72em;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.42);
+      }
+      .section-nav-label.active {
+        color: var(--teal);
+      }
+      .section-nav-label.dimmed {
+        opacity: 0.4;
+      }
+      /* Group sub-links sit flush with the section label, no indent or rule. */
       .section-nav-sub {
         list-style: none;
-        margin: 2px 0 6px 14px;
+        margin: 0;
         padding: 0;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
       }
       .section-nav-sub li {
         margin-bottom: 0;
       }
       .section-nav-sub a {
-        padding: 4px 12px;
-        font-size: 0.84em;
-        font-weight: 400;
-        opacity: 0.78;
-      }
-      .section-nav-sub a:hover {
-        opacity: 1;
-      }
-      .section-nav-sub a.active {
-        opacity: 1;
-        background: rgba(49, 201, 172, 0.1);
+        padding: 5px 12px;
+        font-size: 0.88em;
+        font-weight: 500;
       }
       .section-nav-sub li.dimmed a {
-        opacity: 0.3;
+        opacity: 0.35;
         pointer-events: none;
       }
 
@@ -953,18 +925,36 @@
         align-self: center;
       }
 
-      /* Second-level grouping inside a section. Visually quieter than the
-         section heading so the section/group/field hierarchy reads at a glance. */
+      /* Second-level grouping inside a section. Strong enough to act as a
+         visual divider between clusters of form fields. */
       .group-heading {
         font-family: "Bricolage Grotesque", "Inter", sans-serif;
-        font-size: 0.78em;
+        font-size: 1em;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--ink-soft, rgba(15, 23, 42, 0.55));
-        margin: 24px 0 10px;
-        padding: 0;
+        color: var(--ink);
+        letter-spacing: -0.005em;
+        margin: 32px 0 12px;
+        padding: 10px 0 8px 14px;
+        position: relative;
+        border-top: 1px solid var(--border);
         scroll-margin-top: 80px;
+      }
+      .group-heading::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 14px;
+        height: 1.1em;
+        width: 3px;
+        background: var(--teal);
+        opacity: 0.5;
+      }
+      /* Tighten the gap between the section heading and the first group below
+         it (no need for double spacing). */
+      .section-heading + .group-heading {
+        margin-top: 8px;
+        border-top: 0;
+        padding-top: 0;
       }
       .group-heading + .form-group {
         margin-top: 0;
@@ -8488,7 +8478,12 @@
       // together (small groups), and the observer's threshold-based logic
       // misses transitions when both old and new headings are visible.
       function initScrollSpy() {
+        // Sections with named groups expose only the groups as clickable
+        // anchors; the section name renders as a non-clickable label (a
+        // `.section-nav-label` <li>). Track both so the active highlight
+        // works whether the user is on a sectioned-only entry or a group.
         const navBySection = {};
+        const labelBySection = {};
         const navByGroup = {}; // key = "section||group"
         document.querySelectorAll("#sectionNav a[data-section]").forEach((a) => {
           if (a.dataset.group) {
@@ -8496,6 +8491,9 @@
           } else {
             navBySection[a.dataset.section] = a;
           }
+        });
+        document.querySelectorAll("#sectionNav .section-nav-label[data-section]").forEach((el) => {
+          labelBySection[el.dataset.section] = el;
         });
 
         // The set of anchors we follow: every section + group heading, in
@@ -8514,6 +8512,9 @@
           activeGroup = group;
           for (const [s, a] of Object.entries(navBySection)) {
             a.classList.toggle("active", s === section);
+          }
+          for (const [s, el] of Object.entries(labelBySection)) {
+            el.classList.toggle("active", s === section);
           }
           for (const [k, a] of Object.entries(navByGroup)) {
             a.classList.toggle("active", k === section + "||" + group);
@@ -8605,54 +8606,62 @@
       function createSectionNavigation() {
         const nav = document.getElementById("sectionNav");
         Object.entries(configData).forEach(([sectionName, groups]) => {
-          // Named groups (the "" key is the ungrouped bucket) render as
-          // always-visible sub-links beneath their section in the sidebar.
+          // Sections with named groups expose the groups (not the section) as
+          // the clickable items; the section name becomes a non-clickable
+          // label above its groups. Sections without named groups keep a
+          // single clickable entry on the section name.
           const namedGroups = Object.keys(groups).filter((g) => g !== "");
-
-          const li = document.createElement("li");
-          li.dataset.section = sectionName;
-
-          const a = document.createElement("a");
-          a.href = "#section-" + slugify(sectionName);
-          a.textContent = sectionName;
-          a.dataset.section = sectionName;
           const commonCount = sectionCommonCounts[sectionName];
-          if (commonCount === 0) li.classList.add("nav-advanced-only");
-          const badge = document.createElement("span");
-          badge.className = "badge";
-          badge.textContent = commonCount;
-          a.appendChild(badge);
-          a.onclick = (e) => {
-            e.preventDefault();
-            setMobilePanel("nav", false);
-            document
-              .getElementById("section-" + slugify(sectionName))
-              .scrollIntoView({ behavior: "smooth", block: "start" });
-          };
-          li.appendChild(a);
 
-          if (namedGroups.length > 0) {
-            const subUl = document.createElement("ul");
-            subUl.className = "section-nav-sub";
-            for (const groupName of namedGroups) {
-              const subLi = document.createElement("li");
-              const subA = document.createElement("a");
-              subA.href = "#group-" + slugify(sectionName) + "-" + slugify(groupName);
-              subA.textContent = groupName;
-              subA.dataset.section = sectionName;
-              subA.dataset.group = groupName;
-              subA.onclick = (e) => {
-                e.preventDefault();
-                setMobilePanel("nav", false);
-                const target = document.getElementById("group-" + slugify(sectionName) + "-" + slugify(groupName));
-                if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-              };
-              subLi.appendChild(subA);
-              subUl.appendChild(subLi);
-            }
-            li.appendChild(subUl);
+          if (namedGroups.length === 0) {
+            const li = document.createElement("li");
+            li.dataset.section = sectionName;
+            if (commonCount === 0) li.classList.add("nav-advanced-only");
+            const a = document.createElement("a");
+            a.href = "#section-" + slugify(sectionName);
+            a.textContent = sectionName;
+            a.dataset.section = sectionName;
+            a.onclick = (e) => {
+              e.preventDefault();
+              setMobilePanel("nav", false);
+              document
+                .getElementById("section-" + slugify(sectionName))
+                .scrollIntoView({ behavior: "smooth", block: "start" });
+            };
+            li.appendChild(a);
+            nav.appendChild(li);
+            return;
           }
-          nav.appendChild(li);
+
+          const labelLi = document.createElement("li");
+          labelLi.className = "section-nav-label";
+          labelLi.dataset.section = sectionName;
+          labelLi.textContent = sectionName;
+          if (commonCount === 0) labelLi.classList.add("nav-advanced-only");
+          nav.appendChild(labelLi);
+
+          const subUl = document.createElement("ul");
+          subUl.className = "section-nav-sub";
+          for (const groupName of namedGroups) {
+            const subLi = document.createElement("li");
+            subLi.dataset.section = sectionName;
+            subLi.dataset.group = groupName;
+            if (commonCount === 0) subLi.classList.add("nav-advanced-only");
+            const subA = document.createElement("a");
+            subA.href = "#group-" + slugify(sectionName) + "-" + slugify(groupName);
+            subA.textContent = groupName;
+            subA.dataset.section = sectionName;
+            subA.dataset.group = groupName;
+            subA.onclick = (e) => {
+              e.preventDefault();
+              setMobilePanel("nav", false);
+              const target = document.getElementById("group-" + slugify(sectionName) + "-" + slugify(groupName));
+              if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+            };
+            subLi.appendChild(subA);
+            subUl.appendChild(subLi);
+          }
+          nav.appendChild(subUl);
         });
       }
 
@@ -9481,6 +9490,7 @@
           formGroups.push({
             el: fg,
             section: fg.dataset.section,
+            group: fg.dataset.group || null,
             name: (fg.dataset.propname || "").toLowerCase(),
             description: (fg.querySelector(".description") || {}).textContent.toLowerCase() || "",
           });
@@ -9492,14 +9502,13 @@
         return {
           formGroups,
           headingBySection,
-          navLinks: [...document.querySelectorAll("#sectionNav a")],
           searchWrapper: document.querySelector(".sidebar-search"),
         };
       }
 
       function handleSearch() {
         if (!_searchCache) _searchCache = _buildSearchCache();
-        const { formGroups, headingBySection, navLinks, searchWrapper } = _searchCache;
+        const { formGroups, headingBySection, searchWrapper } = _searchCache;
         const rawValue = document.getElementById("searchInput").value;
         const query = rawValue.toLowerCase().trim();
         searchWrapper.classList.toggle("has-text", rawValue !== "");
@@ -9507,6 +9516,7 @@
         document.body.classList.toggle("search-active", query !== "");
         const showUncommon = document.body.classList.contains("show-uncommon");
         const sectionCounts = {};
+        const groupCounts = {}; // key = "section||group"
         let anyVisible = false;
 
         for (const fg of formGroups) {
@@ -9517,6 +9527,10 @@
           if (shown) {
             anyVisible = true;
             sectionCounts[fg.section] = (sectionCounts[fg.section] || 0) + 1;
+            if (fg.group) {
+              const key = fg.section + "||" + fg.group;
+              groupCounts[key] = (groupCounts[key] || 0) + 1;
+            }
           } else if (!(fg.section in sectionCounts)) {
             sectionCounts[fg.section] = 0;
           }
@@ -9531,15 +9545,16 @@
           if (matches) anyVisible = true;
         });
 
-        for (const a of navLinks) {
-          const matching = sectionCounts[a.dataset.section] || 0;
-          const badge = a.querySelector(".badge");
-          if (badge) badge.textContent = matching;
-          // For sections with groups, the section anchor sits inside <summary>
-          // inside <details> inside <li>, so we walk up to the <li>.
-          const li = a.closest("li");
-          if (li) li.classList.toggle("dimmed", matching === 0);
-        }
+        // Dim sidebar entries with zero matches. Section-level <li>s carry
+        // data-section; group sub-link <li>s carry both data-section and
+        // data-group; non-clickable section labels are .section-nav-label.
+        document.querySelectorAll("#sectionNav li[data-section], #sectionNav .section-nav-label").forEach((el) => {
+          const section = el.dataset.section;
+          if (!section) return;
+          const group = el.dataset.group;
+          const matching = group ? groupCounts[section + "||" + group] || 0 : sectionCounts[section] || 0;
+          el.classList.toggle("dimmed", matching === 0);
+        });
 
         document.getElementById("noResults").style.display = query && !anyVisible ? "block" : "none";
         recomputeSectionHeadings();
