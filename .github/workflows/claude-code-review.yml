@@ -42,6 +42,7 @@ jobs:
         with:
           ref: ${{ steps.pr-info.outputs.head_sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Run Claude Code Review
         id: claude-review

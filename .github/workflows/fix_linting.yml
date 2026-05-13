@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           token: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
+          persist-credentials: false
 
       # Action runs on the issue comment, so we don't get the PR by default.
       # Use the GitHub CLI to check out the PR:
