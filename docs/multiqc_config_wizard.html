@@ -606,10 +606,11 @@
       }
 
       /* Split layout: scrollable form pane on the left, sticky Monaco
-         editor pane on the right. Below 1100px the panes stack vertically. */
+         editor pane on the right. At or below 1100px the layout flips to
+         the mobile three-zone (top bar + form + slide-up editor sheet). */
       .content {
         display: grid;
-        grid-template-columns: minmax(560px, 1.4fr) minmax(420px, 1fr);
+        grid-template-columns: minmax(380px, 1.4fr) minmax(300px, 1fr);
         gap: 0;
         padding: 0;
         align-items: stretch;
@@ -691,25 +692,6 @@
         margin-left: auto;
         padding: 6px 14px;
         font-size: 0.85em;
-      }
-
-      @media (max-width: 1100px) {
-        .content {
-          grid-template-columns: 1fr;
-        }
-        .editor-pane {
-          position: static;
-          height: auto;
-          border-left: 0;
-          border-top: 1px solid var(--border-soft);
-        }
-        .editor-pane-body {
-          height: 40vh;
-          min-height: 280px;
-        }
-        .form-pane {
-          padding: 0 24px 32px;
-        }
       }
 
       /* Hero in the main column */
@@ -1476,39 +1458,370 @@
         border-radius: 3px;
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
       }
-      @media (max-width: 900px) {
+      /* Mobile layout: three fixed zones — top navbar (with hamburger),
+         middle form-pane, bottom editor strip. The sidebar becomes a
+         fold-down drawer; the editor becomes a slide-up sheet. Neither is
+         visible until the user opens it. */
+      .mobile-header {
+        display: none;
+      }
+      .mobile-editor-chevron {
+        display: none;
+      }
+
+      @media (max-width: 1099px) {
+        /* Collapse the content grid to a single column: the editor pane
+           is position:fixed at mobile, so the second grid track would
+           leave a wasted empty column on the right of the form. */
+        .content {
+          grid-template-columns: 1fr;
+        }
+        .mobile-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          height: 52px;
+          padding: 0 12px;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 110;
+          background: var(--navy);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .mobile-nav-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          padding: 0;
+          background: transparent;
+          border: 1px solid transparent;
+          border-radius: 4px;
+          color: rgba(255, 255, 255, 0.85);
+          cursor: pointer;
+        }
+        .mobile-nav-toggle:hover {
+          background: rgba(255, 255, 255, 0.08);
+          color: white;
+        }
+        .mobile-nav-toggle .icon-close {
+          display: none;
+        }
+        body.mobile-nav-open .mobile-nav-toggle .icon-menu {
+          display: none;
+        }
+        body.mobile-nav-open .mobile-nav-toggle .icon-close {
+          display: block;
+        }
+        /* Brand block in the mobile header: logo + Config-Wizard eyebrow
+           inline, vertically aligned at the row's baseline. Replaces the
+           sidebar brand which is hidden on mobile to save vertical space. */
+        .mobile-brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          text-decoration: none;
+          color: inherit;
+          padding: 2px 4px;
+          border-radius: 3px;
+        }
+        .mobile-brand:focus-visible {
+          outline: 2px solid var(--teal);
+          outline-offset: 2px;
+        }
+        .mobile-brand svg {
+          height: 22px;
+          width: auto;
+          display: block;
+        }
+        .mobile-brand svg path.mqc-logo-text {
+          fill: white;
+        }
+        .mobile-brand-eyebrow {
+          font-size: 0.66em;
+          font-weight: 600;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--teal);
+          /* Optical alignment with the logo baseline. */
+          padding-top: 1px;
+        }
+        .sidebar-brand {
+          display: none;
+        }
+
+        /* Sidebar: fold-down drawer below the mobile header. Translates
+           up off-screen when closed so it doesn't intercept taps. */
         .sidebar {
-          position: static;
-          width: 100%;
+          position: fixed;
+          top: 52px;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: auto;
           height: auto;
-        }
-        .sidebar-sections {
           max-height: none;
+          z-index: 105;
+          overflow-y: auto;
+          transform: translateY(-100%);
+          transition: transform 0.22s ease;
+          border-right: 0;
+          border-bottom: 1px solid var(--border-soft);
         }
+        body.mobile-nav-open .sidebar {
+          transform: translateY(0);
+        }
+
+        /* Main column shifts down to clear the fixed mobile header and
+           leaves room at the bottom for the collapsed editor peek. */
         .main {
           margin-left: 0;
+          padding-top: 52px;
+          padding-bottom: 52px;
         }
+
+        /* Header on mobile: tighter, no external-link buttons (those live
+           in the sidebar drawer alongside the section nav). */
         .header {
-          padding: 32px 24px;
+          padding: 24px 16px 16px;
         }
-        .form-group {
-          padding: 16px 18px;
+        .header h1 {
+          font-size: 1.55em;
+        }
+        .header-version {
+          font-size: 0.5em;
+          margin-left: 8px;
+        }
+        .header p {
+          font-size: 0.95em;
+        }
+        .header-links {
+          display: none;
         }
         .welcome-banner {
-          padding: 14px 20px;
+          padding: 14px 16px;
+          gap: 12px;
+          font-size: 0.88em;
+        }
+        .form-pane {
+          padding: 0 16px 24px;
+        }
+        .form-pane-filter {
+          padding: 12px 0 10px;
+          font-size: 0.9em;
+        }
+        .form-group {
+          padding: 14px 16px;
+        }
+        .section-heading {
+          margin: 28px -16px 16px 0;
+          font-size: 1.3em;
+        }
+
+        /* Editor pane: slide-up sheet anchored to the bottom. Closed
+           state shows only the head (52px) peeking up; open state slides
+           the full 70vh into view. The form-pane's padding-bottom keeps
+           form content above the peeking head. */
+        .editor-pane {
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          top: auto;
+          height: 70vh;
+          width: auto;
+          z-index: 100;
+          padding: 0;
+          background: var(--navy);
+          border-left: 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.28);
+          transform: translateY(calc(100% - 52px));
+          transition: transform 0.22s ease;
+        }
+        body.mobile-editor-open .editor-pane {
+          transform: translateY(0);
+        }
+        .editor-pane-head {
+          min-height: 52px;
+          padding: 0 16px;
+          margin: 0;
+          flex-shrink: 0;
+          cursor: pointer;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .editor-pane-head h3 {
+          flex: 1;
+          color: rgba(255, 255, 255, 0.92);
+        }
+        .editor-pane-actions {
+          display: none;
+        }
+        body.mobile-editor-open .editor-pane-actions {
+          display: flex;
+        }
+        /* Buttons on the navy chrome: outline-on-purple so Clear and Copy
+           both stand out. Download keeps its teal pop. */
+        .editor-pane-head .btn {
+          background: rgba(255, 255, 255, 0.12);
+          border-color: rgba(255, 255, 255, 0.22);
+          color: white;
+        }
+        .editor-pane-head .btn:hover {
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.35);
+        }
+        .editor-pane-head .btn-success {
+          background: var(--teal);
+          border-color: var(--teal-border);
+          color: var(--navy);
+        }
+        .editor-pane-head .btn-success:hover {
+          background: var(--teal-border);
+          border-color: var(--teal-border-active);
+          color: white;
+        }
+        /* Drop the inner padding so Monaco / textarea fill the body edge
+           to edge; the navy chrome only shows in the head strip. */
+        .editor-pane-body {
+          padding: 0;
+        }
+        .mobile-editor-chevron {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 36px;
+          height: 36px;
+          padding: 0;
+          /* Always anchor to the right edge so the chevron stays consistent
+             whether or not the h3 title and action buttons are present. */
+          margin-left: auto;
+          background: transparent;
+          border: 0;
+          color: rgba(255, 255, 255, 0.75);
+          cursor: pointer;
+          border-radius: 4px;
+          flex-shrink: 0;
+          transition: transform 0.22s ease;
+        }
+        .mobile-editor-chevron:hover {
+          color: white;
+        }
+        body.mobile-editor-open .mobile-editor-chevron {
+          transform: rotate(180deg);
+        }
+
+        /* Keep the page-footer above the peeking editor head. */
+        .page-footer {
+          padding: 16px 16px 20px;
+          font-size: 0.78em;
+        }
+      }
+
+      /* On narrow phones the editor head's three buttons crowd the
+         filename label when the sheet is expanded — drop the filename in
+         that state only. Keep it when collapsed: it's the only label
+         telling the user what the peek strip is for. */
+      @media (max-width: 500px) {
+        body.mobile-editor-open .editor-pane-head h3 {
+          display: none;
         }
       }
     </style>
   </head>
   <body>
-    <aside class="sidebar">
-      <div class="sidebar-brand">
-        <a
-          href="#"
-          class="sidebar-brand-link"
-          onclick="event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' });"
-          aria-label="Scroll to top"
+    <header class="mobile-header">
+      <button
+        type="button"
+        class="mobile-nav-toggle"
+        id="mobileNavToggle"
+        onclick="toggleMobilePanel('nav')"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="sidebar"
+      >
+        <svg
+          class="icon-menu"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
         >
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg
+          class="icon-close"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+      <a href="#" class="mobile-brand" onclick="scrollToTopAndCloseNav(event)" aria-label="Scroll to top">
+        <svg width="1318" height="250" viewBox="0 0 1318 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z"
+            fill="#FFFFFF"
+          />
+          <path
+            d="M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z"
+            fill="#FFFFFF"
+          />
+          <path
+            d="M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z"
+            fill="#FFFFFF"
+          />
+          <path
+            d="M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z"
+            fill="#FFFFFF"
+          />
+          <path
+            d="M1100.98 249.999V179.569H1096.12C1093.89 183.629 1090.65 187.529 1086.39 191.269C1082.13 195.019 1076.71 198.109 1070.13 200.539C1063.54 202.969 1055.39 204.189 1045.66 204.189C1033.09 204.189 1021.54 201.149 1011 195.069C1000.46 188.989 992.05 180.229 985.77 168.769C979.48 157.319 976.35 143.489 976.35 127.269V122.709C976.35 106.499 979.54 92.6691 985.93 81.2091C992.31 69.7591 1000.77 60.9891 1011.31 54.9091C1021.85 48.8291 1033.3 45.7891 1045.66 45.7891C1060.25 45.7891 1071.45 48.4291 1079.25 53.6891C1087.05 58.9591 1092.88 64.9391 1096.73 71.6291H1101.59V45.7891H1132.29V249.979H1100.98V249.999ZM1054.47 176.829C1068.25 176.829 1079.5 172.469 1088.21 163.759C1096.92 155.049 1101.28 142.579 1101.28 126.369V123.629C1101.28 107.619 1096.87 95.2591 1088.06 86.5391C1079.24 77.8291 1068.04 73.4691 1054.47 73.4691C1040.9 73.4691 1030 77.8291 1021.18 86.5391C1012.36 95.2591 1007.96 107.619 1007.96 123.629V126.369C1007.96 142.589 1012.37 155.049 1021.18 163.759C1030 172.479 1041.09 176.829 1054.47 176.829Z"
+            fill="#333"
+            class="mqc-logo-text"
+          />
+          <path
+            d="M1235.96 204.189C1221.57 204.189 1208.55 201.149 1196.9 195.069C1185.24 188.989 1176.02 180.169 1169.24 168.619C1162.45 157.069 1159.06 143.189 1159.06 126.969V123.019C1159.06 106.809 1162.45 92.9793 1169.24 81.5193C1176.03 70.0693 1185.25 61.2593 1196.9 55.0693C1208.55 48.8893 1221.57 45.7993 1235.96 45.7993C1250.35 45.7993 1262.61 48.4393 1272.74 53.6993C1282.87 58.9693 1291.03 65.9593 1297.21 74.6793C1303.39 83.3993 1307.39 93.0193 1309.22 103.559L1278.82 109.939C1277.8 103.249 1275.68 97.1693 1272.44 91.6993C1269.2 86.2293 1264.64 81.8693 1258.76 78.6293C1252.88 75.3893 1245.48 73.7693 1236.57 73.7693C1227.66 73.7693 1220 75.7493 1213.01 79.6993C1206.02 83.6493 1200.49 89.3293 1196.44 96.7193C1192.38 104.119 1190.36 113.089 1190.36 123.619V126.359C1190.36 136.899 1192.38 145.919 1196.44 153.419C1200.49 160.919 1206.02 166.599 1213.01 170.439C1220 174.289 1227.85 176.219 1236.57 176.219C1249.74 176.219 1259.77 172.829 1266.67 166.039C1273.56 159.249 1277.92 150.589 1279.74 140.049L1310.14 147.039C1307.71 157.379 1303.4 166.909 1297.22 175.619C1291.04 184.339 1282.88 191.279 1272.75 196.439C1262.61 201.609 1250.35 204.189 1235.97 204.189H1235.96Z"
+            fill="#333"
+            class="mqc-logo-text"
+          />
+          <path
+            d="M330.02 204.19V45.8096H360.72V65.8696H365.58C368.42 60.5996 372.98 55.9396 379.26 51.8896C385.54 47.8396 394.05 45.8096 404.8 45.8096C415.55 45.8096 424.91 48.0896 431.7 52.6496C438.49 57.2096 443.6 63.0396 447.05 70.1296H451.91C455.35 63.2396 460.37 57.4696 466.96 52.7996C473.54 48.1396 482.92 45.8096 495.08 45.8096C504.81 45.8096 513.42 47.7896 520.92 51.7396C528.42 55.6896 534.4 61.5696 538.86 69.3696C543.32 77.1696 545.55 86.8496 545.55 98.3996V204.19H514.24V100.83C514.24 91.7096 511.76 84.6696 506.79 79.6996C501.82 74.7396 494.78 72.2496 485.66 72.2496C475.93 72.2496 468.13 75.3896 462.25 81.6696C456.37 87.9496 453.43 96.9696 453.43 108.73V204.19H422.12V100.83C422.12 91.7096 419.64 84.6696 414.67 79.6996C409.7 74.7396 402.66 72.2496 393.54 72.2496C383.81 72.2496 376.01 75.3896 370.13 81.6696C364.25 87.9496 361.31 96.9696 361.31 108.73V204.19H330H330.02Z"
+            fill="#333"
+            class="mqc-logo-text"
+          />
+          <path
+            d="M634.529 203.85C623.179 203.85 613.049 201.31 604.129 196.25C595.209 191.19 588.219 183.99 583.149 174.67C578.079 165.35 575.549 154.2 575.549 141.23V45.8096H606.859V139.1C606.859 152.07 610.099 161.65 616.589 167.83C623.069 174.01 632.089 177.1 643.649 177.1C656.419 177.1 666.699 172.8 674.509 164.18C682.309 155.57 686.209 143.16 686.209 126.94V45.8096H717.519V204.19H686.819V178.62H681.959C679.119 184.7 674.059 190.43 666.759 195.8C659.459 201.17 648.719 203.86 634.539 203.86L634.529 203.85Z"
+            fill="#333"
+            class="mqc-logo-text"
+          />
+          <path d="M747.521 204.19V0H778.831V204.19H747.521Z" fill="#333" class="mqc-logo-text" />
+          <path d="M915.029 204.19V45.8096H946.339V204.19H915.029Z" fill="#333" class="mqc-logo-text" />
+          <path
+            d="M885.03 71.47V45.81H865.56L848.45 62.92H840.26V0H808.83V173.98C808.83 183.13 811.52 190.46 816.92 195.95C822.31 201.44 829.67 204.19 839.04 204.19H885.02V177.95H849.1C843.2 177.95 840.25 174.9 840.25 168.8V71.48H885.01L885.03 71.47Z"
+            fill="#333"
+            class="mqc-logo-text"
+          />
+        </svg>
+        <span class="mobile-brand-eyebrow">Config Wizard</span>
+      </a>
+    </header>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <a href="#" class="sidebar-brand-link" onclick="scrollToTopAndCloseNav(event)" aria-label="Scroll to top">
           <svg width="1318" height="250" viewBox="0 0 1318 250" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
               d="M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z"
@@ -1677,13 +1990,35 @@
         </div>
 
         <aside class="editor-pane" id="editorPane">
-          <div class="editor-pane-head">
+          <div class="editor-pane-head" onclick="maybeToggleMobileEditor(event)">
             <h3>multiqc_config.yaml</h3>
             <div class="editor-pane-actions">
               <button class="btn btn-secondary" onclick="clearYaml()">Clear</button>
               <button id="copyBtn" class="btn btn-primary" onclick="copyConfig()">Copy</button>
               <button class="btn btn-success" onclick="downloadConfig()">Download</button>
             </div>
+            <button
+              type="button"
+              class="mobile-editor-chevron"
+              onclick="toggleMobilePanel('editor')"
+              aria-label="Expand YAML editor"
+              aria-expanded="false"
+              aria-controls="editorPane"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M6 15l6-6 6 6" />
+              </svg>
+            </button>
           </div>
           <div class="editor-pane-body">
             <textarea
@@ -7759,6 +8094,7 @@
           a.appendChild(badge);
           a.onclick = (e) => {
             e.preventDefault();
+            setMobilePanel("nav", false);
             document
               .getElementById("section-" + slugify(sectionName))
               .scrollIntoView({ behavior: "smooth", block: "start" });
@@ -7817,6 +8153,63 @@
 
       function toggleTheme() {
         setTheme(isDarkTheme() ? THEME_LIGHT : THEME_DARK);
+      }
+
+      // Mobile three-zone layout: hamburger drawer at the top, editor
+      // slide-up sheet at the bottom. Only one may be open at a time so
+      // the form stays accessible behind whichever the user closed last.
+      function isMobileViewport() {
+        return window.matchMedia("(max-width: 1099px)").matches;
+      }
+
+      const MOBILE_PANELS = {
+        nav: {
+          bodyClass: "mobile-nav-open",
+          selector: "#mobileNavToggle",
+          labelOpen: "Close menu",
+          labelClosed: "Open menu",
+        },
+        editor: {
+          bodyClass: "mobile-editor-open",
+          selector: ".mobile-editor-chevron",
+          labelOpen: "Collapse YAML editor",
+          labelClosed: "Expand YAML editor",
+        },
+      };
+
+      function setMobilePanel(name, open) {
+        const p = MOBILE_PANELS[name];
+        document.body.classList.toggle(p.bodyClass, open);
+        const btn = document.querySelector(p.selector);
+        if (btn) {
+          btn.setAttribute("aria-expanded", open ? "true" : "false");
+          btn.setAttribute("aria-label", open ? p.labelOpen : p.labelClosed);
+        }
+      }
+
+      function toggleMobilePanel(name) {
+        const open = !document.body.classList.contains(MOBILE_PANELS[name].bodyClass);
+        setMobilePanel(name, open);
+        if (open) {
+          for (const other of Object.keys(MOBILE_PANELS)) {
+            if (other !== name) setMobilePanel(other, false);
+          }
+        }
+      }
+
+      function maybeToggleMobileEditor(e) {
+        if (!isMobileViewport()) return;
+        if (e && e.target && e.target.closest(".editor-pane-actions, .mobile-editor-chevron")) return;
+        toggleMobilePanel("editor");
+      }
+
+      // Shared between the desktop sidebar brand and the mobile header brand
+      // so the two onclick attributes can't drift. The setMobilePanel call is
+      // a no-op on desktop (nav class is never set there).
+      function scrollToTopAndCloseNav(e) {
+        if (e) e.preventDefault();
+        setMobilePanel("nav", false);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
       function toggleUncommon() {
