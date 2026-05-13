@@ -1,6 +1,5 @@
 """MultiQC functions to plot a linegraph"""
 
-import io
 import json
 import logging
 import math
@@ -107,6 +106,9 @@ class Series(ValidatedConfig, Generic[KeyT, ValT]):
 SeriesT = Union[Series, Dict[str, Any]]
 
 
+AxisStr = Literal["xaxis", "yaxis"]
+
+
 class LinePlotConfig(PConfig):
     xlab: Optional[str] = None
     ylab: Optional[str] = None
@@ -120,6 +122,7 @@ class LinePlotConfig(PConfig):
     dash_styles: Dict[str, str] = {}
     hovertemplates: Dict[str, str] = {}
     legend_groups: Dict[str, str] = {}
+    axis_controlled_by_switches: Optional[List[AxisStr]] = None
 
     @classmethod
     def parse_extra_series(
@@ -286,7 +289,7 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
 
             fn = f"{self.uid}.{config.data_format_extensions[config.data_format]}"
             fpath = os.path.join(report.data_tmp_dir(), fn)
-            with io.open(fpath, "w", encoding="utf-8") as f:
+            with open(fpath, "w", encoding="utf-8") as f:
                 f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
         else:
             report.write_data_file(y_by_x_by_sample, self.uid)
@@ -616,12 +619,14 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
         lists_of_lines = [x for x in lists_of_lines if x]
         n_samples_per_dataset = [len(x) for x in lists_of_lines]
 
+        axis_controlled_by_switches = pconfig.axis_controlled_by_switches or ["yaxis"]
+
         model: Plot[Dataset[KeyT, ValT], LinePlotConfig] = Plot.initialize(
             plot_type=PlotType.LINE,
             pconfig=pconfig,
             anchor=anchor,
             n_series_per_dataset=n_samples_per_dataset,
-            axis_controlled_by_switches=["yaxis"],
+            axis_controlled_by_switches=list(axis_controlled_by_switches),
             default_tt_label="<br>%{x}: %{y}",
         )
 

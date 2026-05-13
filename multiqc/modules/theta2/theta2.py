@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="THetA2",
             anchor="theta2",
             href="http://compbio.cs.brown.edu/projects/theta/",

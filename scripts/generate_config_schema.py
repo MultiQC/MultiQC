@@ -15,7 +15,10 @@ def main():
 
     schema_file = Path(__file__).parent.parent / "multiqc" / "utils" / "config_schema.json"
     with schema_file.open("w") as f:
-        json.dump(schema, f, indent=4)
+        # 2-space indent matches Prettier's default so the file survives the
+        # commit hook without further edits.
+        json.dump(schema, f, indent=2)
+        f.write("\n")
 
     print(f"Generated schema file: {schema_file}")
 

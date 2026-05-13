@@ -1,7 +1,11 @@
 name: Claude Code Review
 
 on:
-  workflow_run:
+  # workflow_run is intentional: the trigger workflow runs in the unprivileged
+  # PR context and only uploads an artifact; this workflow consumes it from
+  # the privileged base-repo context. Removing it would either lose fork-PR
+  # support or leak ANTHROPIC_API_KEY to fork contexts.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
     workflows: ["Claude Code Review Trigger"]
     types:
       - completed
@@ -12,15 +16,16 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
 
     runs-on: ubuntu-latest
+    environment: anthropic
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: read
       id-token: write
 
     steps:
       - name: Download PR info
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: pr-info
           github-token: ${{ github.token }}
@@ -38,33 +43,36 @@ jobs:
           echo "Head SHA: $HEAD_SHA"
 
       - name: Checkout PR
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           ref: ${{ steps.pr-info.outputs.head_sha }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Run Claude Code Review
         id: claude-review
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@f4fb5c6cdccc1ee7af63692f5d08d56efaa64cc8 # v1.0.121
         env:
           PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          allowed_non_write_users: "*"
           show_full_output: true
           prompt: |
-            Please review pull request #${{ steps.pr-info.outputs.pr_number }} and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
+            Review pull request #${{ steps.pr-info.outputs.pr_number }} using
+            the `reviewing-prs` skill in `.claude/skills/reviewing-prs/`.
+            Follow the workflow, severity scheme, rule checklist, PR-hygiene
+            checks, and output template defined there.
+            Cover code quality, bugs, perf, and security.
 
-            Write a very brief summary at the top, then include the rest of your review within a <details></details> HTML tag.
+            You are running in CI mode (PR_NUMBER env var is set), so post
+            the review yourself via `gh pr comment $PR_NUMBER --body-file -`
+            as the skill instructs. Do not just display it.
 
-            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
-
-            IMPORTANT: Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR. You MUST post the comment - do not just display it.
+            The skill points at CLAUDE.md and the other repo skills for
+            project conventions. Load those references as needed for the
+            change types in this PR.
 
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://docs.anthropic.com/en/docs/claude-code/sdk#command-line for available options

@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="SortMeRNA",
             anchor="sortmerna",
             href="http://bioinfo.lifl.fr/RNA/sortmerna/",

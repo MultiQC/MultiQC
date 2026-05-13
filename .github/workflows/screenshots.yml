@@ -2,14 +2,21 @@ name: Docs screenshots
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   rich_codex:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Check out MultiQC code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.12"
           cache: "pip"
@@ -24,7 +31,7 @@ jobs:
           mv test-data-main/ test-data/
 
       - name: Generate terminal images with rich-codex
-        uses: ewels/rich-codex@v1
+        uses: ewels/rich-codex@80de9de011c994f32274bb4cffee140567621d8e # v1.2.11
         with:
           clean_img_paths: docs/images/screenshots/*.svg
           commit_changes: "true"

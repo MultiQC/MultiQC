@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
     """HiC-Pro module, parses log and stats files saved by HiC-Pro."""
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HiC-Pro",
             anchor="hicpro",
             href="https://github.com/nservant/HiC-Pro",

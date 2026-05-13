@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from Picard QualityScoreDistribution"""
 
 import logging
-from collections import OrderedDict
 
 from multiqc.plots import linegraph
 
@@ -48,7 +47,7 @@ def parse_reports(self):
 
     lg = {}
     for s_name in all_data:
-        lg[s_name] = OrderedDict((qual, data["COUNT_OF_Q"]) for qual, data in all_data[s_name].items())
+        lg[s_name] = {qual: data["COUNT_OF_Q"] for qual, data in all_data[s_name].items()}
 
     self.add_section(
         name="Base Quality Distribution",

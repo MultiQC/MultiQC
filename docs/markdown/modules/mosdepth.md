@@ -1,8 +1,7 @@
 ---
 title: Mosdepth
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing.</p>
+description: "Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/mosdepth/mosdepth.py
 -->
 
 :::note
-<p>Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing.</p>
+Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing.
 
 [https://github.com/brentp/mosdepth](https://github.com/brentp/mosdepth)
 :::

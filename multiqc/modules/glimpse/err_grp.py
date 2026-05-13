@@ -106,28 +106,28 @@ def accuracy_plot(module, data):
             pconfig={
                 "data_labels": [
                     {
-                        "name": "Best genotype r-squared (SNPs)",
-                        "ylab": "Best genotype r-squared (SNPs)",
+                        "name": "Best genotype r<sup>2</sup> (SNPs)",
+                        "ylab": "Best genotype r<sup>2</sup> (SNPs)",
                     },
                     {
-                        "name": "Imputed dosage r-squared (SNPs)",
-                        "ylab": "Imputed dosage r-squared (SNPs)",
+                        "name": "Imputed dosage r<sup>2</sup> (SNPs)",
+                        "ylab": "Imputed dosage r<sup>2</sup> (SNPs)",
                     },
                     {
-                        "name": "Best genotype r-squared (indels)",
-                        "ylab": "Best genotype r-squared (indels)",
+                        "name": "Best genotype r<sup>2</sup> (indels)",
+                        "ylab": "Best genotype r<sup>2</sup> (indels)",
                     },
                     {
-                        "name": "Imputed dosage r-squared (indels)",
-                        "ylab": "Imputed dosage r-squared (indels)",
+                        "name": "Imputed dosage r<sup>2</sup> (indels)",
+                        "ylab": "Imputed dosage r<sup>2</sup> (indels)",
                     },
                     {
-                        "name": "Best genotype r-squared (SNPs + indels)",
-                        "ylab": "Best genotype r-squared (SNPs + indels)",
+                        "name": "Best genotype r<sup>2</sup> (SNPs + indels)",
+                        "ylab": "Best genotype r<sup>2</sup> (SNPs + indels)",
                     },
                     {
-                        "name": "Imputed dosage r-squared (SNPs + indels)",
-                        "ylab": "Imputed dosage r-squared (SNPs + indels)",
+                        "name": "Imputed dosage r<sup>2</sup> (SNPs + indels)",
+                        "ylab": "Imputed dosage r<sup>2</sup> (SNPs + indels)",
                     },
                 ],
                 "id": "glimpse-err-grp-plot",
@@ -139,6 +139,7 @@ def accuracy_plot(module, data):
                 "xmax": 0.5,
                 "ymin": 0,
                 "ymax": 1.1,
+                "axis_controlled_by_switches": ["xaxis", "yaxis"],
                 "title": "Glimpse concordance by allele frequency bins",
             },
         ),

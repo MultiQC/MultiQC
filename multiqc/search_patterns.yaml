@@ -39,6 +39,10 @@ bases2fastq/project:
   fn: "*_RunStats.json"
   contents: "SampleStats"
   num_lines: 100
+bases2fastq/manifest:
+  fn: "RunManifest.json"
+  contents: "Settings"
+  num_lines: 100
 bbduk:
   contents: "Executing jgi.BBDuk"
   num_lines: 2
@@ -221,6 +225,32 @@ ccs/v4:
 ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
+checkatlas/summary:
+  fn: "*.tsv"
+  contents_re: '^AtlasFileType\tNbCells\tNbGenes'
+  num_lines: 1
+checkatlas/adata:
+  fn: "*.tsv"
+  contents_re: '^atlas_obs\tobsm\tvar\tvarm\tuns'
+  num_lines: 1
+checkatlas/qc:
+  # CheckAtlas adds a "cellrank_<metric>" column for every QC metric in df_annot;
+  # this prefix is specific to CheckAtlas and avoids matching generic scanpy QC TSVs.
+  fn: "*.tsv"
+  contents_re: "cellrank_(total_counts|n_genes_by_counts|pct_counts_mt)"
+  num_lines: 1
+checkatlas/cluster:
+  fn: "*.tsv"
+  contents_re: '^Clust_Sample\tobs'
+  num_lines: 1
+checkatlas/annotation:
+  fn: "*.tsv"
+  contents_re: '^Annot_Sample\tReference\tobs'
+  num_lines: 1
+checkatlas/dimred:
+  fn: "*.tsv"
+  contents_re: '^Dimred_Sample\tobsm'
+  num_lines: 1
 cellranger/count_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"count"'
@@ -272,11 +302,16 @@ conpair/contamination:
   num_lines: 3
 cutadapt:
   - contents: "This is cutadapt"
+    exclude_contents_re: 'Trim Galore version: (?:[2-9]|\d{2,})\.' # TG v2+ has custom JSON reports
     num_lines: 100
   - fn: "*.json"
     contents: "Cutadapt report"
 damageprofiler:
   fn: "*dmgprof.json"
+deacon:
+  fn: "*.json"
+  contents: '"version": "deacon'
+  num_lines: 30
 dedup:
   fn: "*.json"
   contents: '"tool_name": "DeDup"'
@@ -363,8 +398,12 @@ fastp:
   num_lines: 50
 fastq_screen:
   fn: "*_screen.txt"
+fastqe:
+  fn: "*fastqe*"
+  contents: "Filename\tStatistic\tQualities"
+  num_lines: 1
 fastqc/data:
-  fn: "fastqc_data.txt"
+  fn: "*fastqc_data.txt"
 fastqc/zip:
   fn: "*_fastqc.zip"
 fastqc/theoretical_gc:
@@ -445,6 +484,8 @@ hicexplorer:
   num_lines: 26
 hicup:
   fn: "HiCUP_summary_report*"
+hicup/html:
+  fn: "*HiCUP_summary_report*.html"
 hicpro/mmapstat:
   fn: "*mapstat"
   contents: "total_R"
@@ -462,9 +503,23 @@ hicpro/mRSstat:
   contents: "Valid_interaction_pairs"
 hicpro/assplit:
   fn: "*assplit.stat"
+hicstuff/pipeline_stats:
+  - fn: "*.txt"
+    contents: "## hicstuff:"
+    num_lines: 100
+  - fn: "*.log"
+    contents: "## hicstuff:"
+    num_lines: 10
+hicstuff/distancelaw:
+  contents: "## distance_law"
+  num_lines: 5
 hifiasm:
   contents: "[M::ha_analyze_count]"
   num_lines: 1
+hifi_trimmer:
+  fn: "*.json"
+  contents: '"total_reads_trimmed"'
+  num_lines: 10
 hisat2:
   contents: "HISAT2 summary stats:"
 homer/findpeaks:
@@ -570,6 +625,8 @@ megahit:
 metaphlan:
   fn: "*.txt"
   contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
+methurator:
+  fn: "*methurator_summary.yml"
 methylqa:
   fn: "*.report"
   shared: true
@@ -815,6 +872,10 @@ qc3C:
 qorts:
   contents: "BENCHMARK_MinutesOnSamIteration"
   num_lines: 100
+qorts/log:
+  fn: "QC.*.log"
+  contents: "Starting QoRTs"
+  num_lines: 2
 qualimap/bamqc/genome_results:
   fn: "genome_results.txt"
 qualimap/bamqc/coverage:
@@ -825,10 +886,18 @@ qualimap/bamqc/genome_fraction:
   fn: "genome_fraction_coverage.txt"
 qualimap/bamqc/gc_dist:
   fn: "mapped_reads_gc-content_distribution.txt"
+qualimap/bamqc/html:
+  fn: "qualimapReport.html"
+  contents: "Qualimap report: BAM QC"
+  num_lines: 10
 qualimap/rnaseq/rnaseq_results:
   fn: "rnaseq_qc_results.txt"
 qualimap/rnaseq/coverage:
   fn: "coverage_profile_along_genes_(total).txt"
+qualimap/rnaseq/html:
+  fn: "qualimapReport.html"
+  contents: "Qualimap report: RNA Seq QC"
+  num_lines: 10
 quast:
   fn: "report.tsv"
   contents: "Assembly	"
@@ -843,6 +912,69 @@ rna_seqc/coverage:
   fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
   fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
+rna_seqc/html:
+  fn: "index.html"
+  contents: "RNA-SeQC</a> v"
+  num_lines: 200
+ribotish/qual:
+  fn: "*_qual.txt"
+  num_lines: 10
+ribowaltz/psite_region:
+  fn: "*ribowaltz*psite_region.tsv"
+  contents_re: "sample[,\t]region[,\t]count[,\t]scaled_count"
+  num_lines: 1
+ribowaltz/frames:
+  fn: "*ribowaltz*frames.tsv"
+  contents_re: "sample[,\t]region[,\t]frame[,\t]count[,\t]scaled_count"
+  num_lines: 1
+ribowaltz/metaprofile:
+  fn: "*ribowaltz*metaprofile_psite.tsv"
+  contents_re: "sample[,\t]region[,\t]x[,\t]y"
+  num_lines: 1
+riker/alignment:
+  fn: "*.alignment-metrics.txt"
+  contents_re: "^sample\\b.*\\bcategory\\b"
+  num_lines: 1
+riker/basic_base_dist:
+  fn: "*.base-distribution-by-cycle.txt"
+  contents_re: "^sample\\b.*\\bfrac_a\\b"
+  num_lines: 1
+riker/basic_mean_quality:
+  fn: "*.mean-quality-by-cycle.txt"
+  contents_re: "^sample\\b.*\\bmean_quality\\b"
+  num_lines: 1
+riker/basic_quality_dist:
+  fn: "*.quality-score-distribution.txt"
+  contents_re: "^sample\\b.*\\bfrac_bases\\b"
+  num_lines: 1
+riker/gcbias_detail:
+  fn: "*.gcbias-detail.txt"
+  contents_re: "^sample\\b.*\\bnormalized_coverage\\b"
+  num_lines: 1
+riker/gcbias_summary:
+  fn: "*.gcbias-summary.txt"
+  contents_re: "^sample\\b.*\\bgc_0_19_normcov\\b"
+  num_lines: 1
+riker/hybcap_metrics:
+  fn: "*.hybcap-metrics.txt"
+  contents_re: "^sample\\b.*\\bbait_territory\\b"
+  num_lines: 1
+riker/isize_metrics:
+  fn: "*.isize-metrics.txt"
+  contents_re: "^sample\\b.*\\bpair_orientation\\b"
+  num_lines: 1
+riker/isize_histogram:
+  fn: "*.isize-histogram.txt"
+  contents_re: "^sample\\b.*\\bfr_count\\b"
+  num_lines: 1
+riker/wgs_metrics:
+  fn: "*.wgs-metrics.txt"
+  contents_re: "^sample\\b.*\\bgenome_territory\\b"
+  num_lines: 1
+riker/wgs_coverage:
+  fn: "*.wgs-coverage.txt"
+  contents_re: "^sample\\b.*\\bbases_at_or_above\\b"
+  num_lines: 1
 rockhopper:
   fn: "summary.txt"
   contents: "Number of gene-pairs predicted to be part of the same operon"
@@ -937,6 +1069,12 @@ sexdeterrmine:
 sickle:
   contents_re: 'FastQ \w*\s?records kept: .*'
   num_lines: 2
+sincei/scFilterStats:
+  contents: "Cell_ID	Total_sampled	Filtered	Blacklisted	Low_MAPQ	Missing_Flags	Excluded_Flags"
+  num_lines: 1
+sincei/scCountQC:
+  fn: "*.cells.tsv"
+  contents: "Cell_ID	barcodes	sample	n_genes_by_counts	log1p_n_genes_by_counts	total_counts"
 skewer:
   contents: "maximum error ratio allowed (-r):"
 slamdunk/summary:
@@ -1026,6 +1164,8 @@ theta2:
 tophat:
   fn: "*align_summary.txt"
   shared: true
+trim_galore:
+  fn: "*_trimming_report.json"
 trimmomatic:
   contents_re: "^Trimmomatic"
 truvari/bench:

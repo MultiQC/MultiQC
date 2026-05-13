@@ -298,6 +298,7 @@ pconfig = {
     "logswitch": False,          # Show the 'Log10' switch?
     "logswitch_active": False,   # Initial display with 'Log10' active?
     "logswitch_label": "Log10",  # Label for 'Log10' button
+    "axis_controlled_by_switches": ["yaxis"], # Which axes should be impacted by the switch button (one or both of xaxis, yaxis)
     "extra_series": None,        # See section below
     # Plot configuration
     "title": None,               # Plot title - should be in format "Module Name: Plot Title"
@@ -321,7 +322,7 @@ pconfig = {
     "x_lines": None,             # Extra vertical lines
     "xsuffix": "%",              # Suffix for the X-axis values and labels. Parsed from tt_label by default
     "ysuffix": "%",              # Suffix for the Y-axis values and labels. Parsed from tt_label by default
-    "tt_label": "{x}: {y:.2f}",  # Customise tooltip label, e.g. '{point.x} base pairs'
+    "tt_label": "{point.x}: {point.y:.2f}",  # Customise tooltip label, e.g. '{point.x} base pairs'
     "tt_decimals": None,         # Tooltip decimals when categories = True (when false use tt_label)
     "height": 500,               # The default height of the plot, in pixels
     "style": "line",             # The style of the line. Can be "line" or "lines+markers"

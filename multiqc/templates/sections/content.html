@@ -14,10 +14,27 @@ In this template, each section is hidden by default (unless it's the first modul
     <h2 id="{{ m.anchor }}">{{ m.name }}</h2>
     {{ m.intro if m.intro }}
     {% for s in m.sections %}
-      {% if s['content'] is not none and s['content'] | length > 0 %}
+      {% if (s['content'] is not none and s['content'] | length > 0) or (s['alerts'] is not none and s['alerts'] | length > 0) %}
         <div class="mqc-section mqc-section-{{ m.anchor }}">
           {% if s['name'] is not none and s['name'] | length > 0 %}
             <h3 id="{{ s['anchor'] }}">{{ s['name'] }}</h3>
+          {% endif %}
+          {% if s['alerts'] is not none and s['alerts'] | length > 0 %}
+            {% for alert in s['alerts'] %}
+              <div class="alert alert-{{ alert['level'] }} mqc-section-alert" role="alert">
+                {{ alert['message'] }}
+                {% if alert['affected_samples'] is not none and alert['affected_samples'] | length > 0 %}
+                  <details>
+                    <summary>Affected samples ({{ alert['affected_samples'] | length }})</summary>
+                    <p>
+                      {% for sample in alert['affected_samples'] %}
+                        <code>{{ sample | e }}</code>{{ ", " if not loop.last }}
+                      {% endfor %}
+                    </p>
+                  </details>
+                {% endif %}
+              </div>
+            {% endfor %}
           {% endif %}
           {{ s['content'] if s['content'] }}
           {{ '<hr>' if not loop.last }}

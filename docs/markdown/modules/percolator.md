@@ -1,8 +1,7 @@
 ---
 title: Percolator
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Semi-supervised learning for peptide identification from shotgun proteomics datasets.</p>
+description: "Semi-supervised learning for peptide identification from shotgun proteomics datasets."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/percolator/percolator.
 -->
 
 :::note
-<p>Semi-supervised learning for peptide identification from shotgun proteomics datasets.</p>
+Semi-supervised learning for peptide identification from shotgun proteomics datasets.
 
 [https://github.com/percolator/percolator](https://github.com/percolator/percolator)
 :::

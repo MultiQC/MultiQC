@@ -22,6 +22,7 @@ custom_logo_dark: null
 custom_logo_url: null
 custom_logo_title: null
 custom_logo_width: null
+custom_favicon: null # Path to custom favicon (SVG recommended for all sizes)
 custom_css_files: []
 simple_output: false
 template: "default"
@@ -63,7 +64,7 @@ megaqc_url: null
 megaqc_access_token: null
 megaqc_timeout: 30
 export_plots: false
-export_plots_timeout: 30
+export_plots_timeout: 60
 make_report: true
 make_pdf: false
 
@@ -384,6 +385,10 @@ fn_clean_exts:
   - "_totalBaseConversionRate"
   - "_totalReadConversionRate"
   - ".sylphmpa"
+  - "_qual"
+  - "_hifi_trimmer"
+  - ".hifi_trimmer"
+  - "_trimmer"
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
 # Affects all modules that support it (e.g. fastqc, cutadapt)
@@ -425,6 +430,7 @@ fn_clean_trim:
   - ".phased"
   - ".tar"
   - "runs_"
+  - ".qc"
 
 # Files to ignore when checking content with "content" and "content_re" search patterns.
 fn_ignore_files:
@@ -547,6 +553,7 @@ module_order:
   - umitools
   - truvari
   - megahit
+  - sincei
   - ganon
   - gtdbtk
   # Alignment tool stats
@@ -567,6 +574,7 @@ module_order:
   - bowtie1
   - hostile
   - cellranger
+  - checkatlas
   - snpsplit
   - odgi
   - vg
@@ -583,6 +591,7 @@ module_order:
   - bbduk
   - clipandmerge
   - cutadapt
+  - trim_galore
   - flexbar
   - sourmash
   - kaiju
@@ -597,6 +606,7 @@ module_order:
   - biobloomtools
   - seqfu
   - fastq_screen
+  - fastqe
   - afterqc
   - fastp
   - fastqc

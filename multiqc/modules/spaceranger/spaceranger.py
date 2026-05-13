@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Space Ranger",
             anchor="spaceranger",
             href="https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/what-is-space-ranger",

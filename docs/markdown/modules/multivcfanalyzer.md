@@ -1,8 +1,7 @@
 ---
 title: MultiVCFAnalyzer
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Reads multiple VCF files into combined genotype calls, produces summary statistics and downstream formats.</p>
+description: "Reads multiple VCF files into combined genotype calls, produces summary statistics and downstream formats."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/multivcfanalyzer/multi
 -->
 
 :::note
-<p>Reads multiple VCF files into combined genotype calls, produces summary statistics and downstream formats.</p>
+Reads multiple VCF files into combined genotype calls, produces summary statistics and downstream formats.
 
 [https://github.com/alexherbig/MultiVCFAnalyzer](https://github.com/alexherbig/MultiVCFAnalyzer)
 :::

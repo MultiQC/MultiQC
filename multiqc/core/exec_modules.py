@@ -7,6 +7,7 @@ from typing import Callable, Dict, List, Union
 
 import rich
 from importlib_metadata import EntryPoint
+from rich.panel import Panel
 from rich.syntax import Syntax
 
 from multiqc import config, report
@@ -154,7 +155,7 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
             from multiqc.core.log_and_rich import rich_console_print
 
             rich_console_print(
-                rich.panel.Panel(
+                Panel(
                     CustomTraceback(),
                     title=f"Oops! The '[underline]{this_module}[/]' MultiQC module broke...",
                     expand=False,

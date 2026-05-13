@@ -1,8 +1,7 @@
 ---
 title: cells2stats
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Generate output files and statistics from Element Biosciences Teton cytoprofiling assays.</p>
+description: "Generate output files and statistics from Element Biosciences Teton cytoprofiling assays."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/cells2stats/cells2stat
 -->
 
 :::note
-<p>Generate output files and statistics from Element Biosciences Teton cytoprofiling assays.</p>
+Generate output files and statistics from Element Biosciences Teton cytoprofiling assays.
 
 [https://docs.elembio.io/docs/cells2stats/introduction/](https://docs.elembio.io/docs/cells2stats/introduction/)
 :::
