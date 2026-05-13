@@ -24,6 +24,12 @@ Configuration values are loaded in the following order of precedence (highest to
 The options below can be specified in your YAML configuration files.
 For boolean options, use `true` or `false` (all lowercase) in your YAML files.
 
+:::tip
+
+If you'd rather build your config visually, the [Config Wizard](https://seqera.io/multiqc_config_wizard) renders every option below as a form field with the same descriptions and defaults, and validates as you type.
+
+:::
+
 ## Report Meta
 
 ### title
@@ -422,6 +428,7 @@ Order in which modules appear in the report. Each entry is either a module ID, o
 - sickle
 - skewer
 - sortmerna
+- ribodetector
 - biobloomtools
 - seqfu
 - fastq_screen

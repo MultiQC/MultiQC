@@ -93,6 +93,12 @@ or `json` instead).
 For more detailed instructions, run `multiqc -h` or see the
 [documentation](https://docs.seqera.io/multiqc/getting_started/running_multiqc).
 
+## Configuration
+
+To customise your reports, MultiQC reads from a YAML config file. See the [configuration docs](https://docs.seqera.io/multiqc/getting_started/config) for the full list of options and search paths.
+
+You can build a config file visually in your browser with the [MultiQC Configuration Wizard](https://seqera.io/multiqc_config_wizard). It has every option as a form field, with live YAML editor and schema validation as you type.
+
 ## Citation
 
 Please consider citing MultiQC if you use it in your analysis.

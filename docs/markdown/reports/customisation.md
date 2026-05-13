@@ -9,6 +9,8 @@ MultiQC offers a few ways to customise reports to easily add your own
 branding and some additional report-level information. These features
 are primarily designed for core genomics facilities.
 
+Most of the settings on this page live in `multiqc_config.yaml`. The [Config Wizard](../getting_started/config_wizard.md) helps you to build one in the browser with validation as you type.
+
 Note that much more extensive customisation of reports is possible using
 [custom templates](../development/templates.md).
 
