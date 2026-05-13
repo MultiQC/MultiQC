@@ -546,39 +546,56 @@
         letter-spacing: 0.01em;
       }
 
-      .welcome-links {
+      .welcome-banner {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 18px;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 14px 32px 14px 56px;
+        background: var(--surface-soft);
+        border-bottom: 1px solid var(--border-soft);
+        color: var(--ink-mute);
+        font-size: 0.92em;
+        line-height: 1.55;
       }
-      .welcome-links a {
+      .welcome-banner[hidden] {
+        display: none;
+      }
+      .welcome-banner-body {
+        flex: 1;
+      }
+      .welcome-banner-body strong {
+        color: var(--ink);
+      }
+      .welcome-banner-body code {
+        background: var(--paper);
+        border: 1px solid var(--border-soft);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 0.95em;
+        color: var(--ink);
+      }
+      .welcome-dismiss {
+        flex-shrink: 0;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--ink-soft);
+        cursor: pointer;
+        border-radius: 3px;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 7px 14px;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        background: var(--paper);
-        color: var(--ink);
-        text-decoration: none;
-        font-size: 0.9em;
-        font-weight: 500;
+        justify-content: center;
         transition:
           background 0.15s ease,
-          border-color 0.15s ease,
-          color 0.15s ease;
+          color 0.15s ease,
+          border-color 0.15s ease;
       }
-      .welcome-links a:hover {
-        background: var(--surface-soft);
-        border-color: var(--ink-soft);
+      .welcome-dismiss:hover {
+        background: var(--paper);
         color: var(--ink);
-      }
-      .welcome-links a::after {
-        content: "↗";
-        color: var(--teal-border);
-        font-size: 0.95em;
-        line-height: 1;
+        border-color: var(--border);
       }
       /* Right-hand main column */
       .main {
@@ -588,12 +605,161 @@
         flex-direction: column;
       }
 
+      /* Split layout: scrollable form pane on the left, sticky Monaco
+         editor pane on the right. Below 1100px the panes stack vertically. */
+      .content {
+        display: grid;
+        grid-template-columns: minmax(560px, 1.4fr) minmax(420px, 1fr);
+        gap: 0;
+        padding: 0;
+        align-items: stretch;
+      }
+      .editor-pane {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        /* Fill the viewport but leave room for the page header above. The
+           header padding adds ~36px below its baseline; the editor body
+           stretches to fill the remainder. */
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--paper);
+        border-left: 1px solid var(--border-soft);
+        padding: 20px 24px 16px;
+        min-width: 0;
+      }
+      .editor-pane-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .editor-pane-head h3 {
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        color: var(--ink);
+        font-size: 1em;
+        font-weight: 500;
+        margin: 0;
+      }
+      .editor-pane-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .editor-pane-actions .btn {
+        padding: 6px 14px;
+        font-size: 0.85em;
+      }
+      .editor-pane-body {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .editor-pane-body .validate-input,
+      .editor-pane-body .validate-monaco {
+        flex: 1;
+        min-height: 0;
+        margin: 0;
+        height: auto;
+      }
+      .form-pane {
+        padding: 0 40px 40px;
+        min-width: 0;
+      }
+      .form-pane-filter {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: var(--paper);
+        padding: 14px 0 12px;
+        margin: 0 0 8px;
+        border-bottom: 1px solid var(--border-soft);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        min-height: 28px;
+      }
+      .form-pane-filter:empty {
+        display: none;
+      }
+      .form-pane-filter .btn {
+        margin-left: auto;
+        padding: 6px 14px;
+        font-size: 0.85em;
+      }
+
+      @media (max-width: 1100px) {
+        .content {
+          grid-template-columns: 1fr;
+        }
+        .editor-pane {
+          position: static;
+          height: auto;
+          border-left: 0;
+          border-top: 1px solid var(--border-soft);
+        }
+        .editor-pane-body {
+          height: 40vh;
+          min-height: 280px;
+        }
+        .form-pane {
+          padding: 0 24px 32px;
+        }
+      }
+
       /* Hero in the main column */
       .header {
         background: var(--paper);
         color: var(--ink);
         padding: 48px 56px 36px;
         border-bottom: 1px solid var(--border-soft);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 32px;
+      }
+      .header-main {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .header-links {
+        flex-shrink: 0;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+      }
+      .header-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--paper);
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 0.85em;
+        font-weight: 500;
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease;
+      }
+      .header-links a:hover {
+        background: var(--surface-soft);
+        border-color: var(--ink-soft);
+      }
+      .header-links a::after {
+        content: "↗";
+        color: var(--teal-border);
+        font-size: 0.95em;
+        line-height: 1;
       }
       .header h1 {
         font-family: "Bricolage Grotesque", "Inter", sans-serif;
@@ -633,13 +799,6 @@
         font-size: 0.88em;
       }
 
-      /* Content area */
-      .content {
-        padding: 0 56px 40px;
-        flex: 1;
-        min-width: 0;
-      }
-
       .page-footer {
         margin-top: auto;
         padding: 22px 56px 28px;
@@ -652,51 +811,18 @@
         color: var(--ink);
       }
 
-      /* Welcome / intro card, Seqera Box style */
-      .welcome-section {
-        background: var(--paper);
-        border: 1px solid var(--border);
-        border-radius: 0;
-        padding: 32px 36px;
-        margin: 32px 0 12px;
-      }
-      .welcome-section h2 {
-        font-family: "Bricolage Grotesque", "Inter", sans-serif;
-        font-variation-settings: "opsz" 32;
-        color: var(--ink);
-        font-size: 1.5em;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-        line-height: 1.2;
-        margin-bottom: 14px;
-      }
-      .welcome-section p {
-        color: var(--ink-mute);
-        line-height: 1.65;
-        margin-bottom: 12px;
-      }
-      .welcome-section p:last-child {
-        margin-bottom: 0;
-      }
-      .welcome-section code {
-        background: var(--surface-soft);
-        border: 1px solid var(--border-soft);
-        padding: 1px 8px;
-        border-radius: 3px;
-        font-size: 0.88em;
-        color: var(--ink);
-      }
-
       .section-heading {
         font-family: "Bricolage Grotesque", "Inter", sans-serif;
         font-variation-settings: "opsz" 32;
         color: var(--ink);
-        margin: 56px -56px 22px 0;
-        font-size: 1.6em;
+        margin: 40px -40px 22px 0;
+        font-size: 1.45em;
         font-weight: 600;
         letter-spacing: -0.015em;
         line-height: 1.15;
-        scroll-margin-top: 24px;
+        /* Clears the sticky .form-pane-filter (~50-60px) when section nav
+           scrolls into view, plus a small breathing-room buffer. */
+        scroll-margin-top: 80px;
         position: relative;
         padding-left: 14px;
         display: flex;
@@ -753,6 +879,20 @@
         border-color: var(--teal-border);
         z-index: 2;
       }
+      /* Schema-validation error overrides the teal is-set border with red.
+         Same treatment as .is-invalid (free-text YAML parse failure) but
+         keyed on the validation result so it survives form re-renders. */
+      .form-group[data-validate-status="error"],
+      .form-group[data-validate-status="error"]:focus-within,
+      .form-group.is-set[data-validate-status="error"] {
+        border-color: var(--status-error-border);
+        box-shadow: inset 3px 0 0 var(--status-error-border);
+        z-index: 2;
+      }
+      .form-group[data-validate-status="error"] input,
+      .form-group[data-validate-status="error"] textarea {
+        border-color: var(--status-error-border);
+      }
       .form-group.is-invalid,
       .form-group.is-invalid:focus-within,
       .form-group.is-set.is-invalid {
@@ -792,6 +932,52 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 6px;
+      }
+      button.field-key {
+        font: inherit;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-weight: 500;
+        color: var(--ink);
+        background: transparent;
+        border: 0;
+        padding: 0;
+        cursor: pointer;
+        text-align: left;
+      }
+      button.field-key:hover {
+        color: var(--teal-border);
+      }
+      button.field-key:focus-visible {
+        outline: 2px solid var(--teal);
+        outline-offset: 2px;
+        border-radius: 2px;
+      }
+      .field-status-pill {
+        font-family: "Inter", sans-serif;
+        cursor: help;
+      }
+      .form-group.is-filtered-out {
+        display: none;
+      }
+
+      .unknown-keys-section .section-heading {
+        margin-top: 0;
+      }
+      .unknown-keys-section .section-heading::before {
+        background: var(--status-info-border);
+      }
+      .validate-card-actions {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .validate-card-actions .btn {
+        padding: 4px 12px;
+        font-size: 0.8em;
+      }
+      .validate-card.is-filtered-out {
+        display: none;
       }
       .form-group .description {
         color: var(--ink-mute);
@@ -1042,22 +1228,6 @@
         font-size: 0.95em;
       }
 
-      /* When previewing or validating YAML, hide the editor UI */
-      body.yaml-mode #welcomeSection,
-      body.yaml-mode #sections,
-      body.yaml-mode #noResults {
-        display: none !important;
-      }
-      body.yaml-mode .section-nav a {
-        pointer-events: none;
-        opacity: 0.5;
-      }
-      body.yaml-mode .sidebar-search,
-      body.yaml-mode .show-uncommon-btn {
-        opacity: 0.4;
-        pointer-events: none;
-      }
-
       .btn {
         padding: 8px 20px;
         border: 1px solid transparent;
@@ -1101,56 +1271,8 @@
         color: white;
       }
 
-      .yaml-view-section {
-        display: none;
-        background: var(--paper);
-        border: 1px solid var(--border);
-        border-radius: 0;
-        padding: 28px 32px;
-        margin: 32px 0;
-      }
-      body.yaml-mode .yaml-view-section {
-        display: block;
-      }
-      .yaml-view-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 6px;
-        flex-wrap: wrap;
-      }
-      .yaml-view-head h3 {
-        margin-bottom: 0;
-      }
-      .yaml-view-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-
-      .yaml-view-section h3 {
-        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
-        color: var(--ink);
-        font-size: 1.05em;
-        font-weight: 500;
-        margin-bottom: 6px;
-      }
-      .yaml-view-section p {
-        color: var(--ink-mute);
-        font-size: 0.92em;
-      }
-      .yaml-view-section code {
-        background: var(--surface-soft);
-        border: 1px solid var(--border-soft);
-        padding: 1px 6px;
-        border-radius: 3px;
-        font-size: 0.85em;
-      }
       .validate-input {
         width: 100%;
-        margin-top: 12px;
         padding: 14px 16px;
         border: 1px solid var(--border);
         border-radius: 0;
@@ -1159,7 +1281,7 @@
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
         font-size: 0.85em;
         line-height: 1.55;
-        resize: vertical;
+        resize: none;
         min-height: 220px;
       }
       .validate-input::placeholder {
@@ -1169,19 +1291,6 @@
         outline: 2px solid var(--teal);
         outline-offset: 2px;
       }
-      .validate-summary {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px 12px;
-        align-items: center;
-        margin-top: 18px;
-        min-height: 28px;
-      }
-      .validate-summary .btn {
-        margin-left: auto;
-        padding: 6px 14px;
-        font-size: 0.85em;
-      }
       .validate-summary-hint {
         color: var(--ink-soft);
         font-size: 0.78em;
@@ -1190,18 +1299,7 @@
       .validate-summary-hint::before {
         content: "← ";
       }
-      .validate-card.is-filtered-out {
-        display: none;
-      }
-      .validate-cards {
-        margin-top: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
       .validate-monaco {
-        margin-top: 12px;
-        height: 360px;
         border: 1px solid var(--border);
       }
       .validate-line-hl {
@@ -1219,12 +1317,15 @@
         margin-left: 2px;
       }
       .validate-card {
-        border: 1px solid var(--border-soft);
+        border: 1px solid var(--border);
         border-left: 3px solid var(--border);
         background: var(--paper);
         padding: 14px 18px;
         cursor: pointer;
         transition: box-shadow 0.15s ease;
+      }
+      .validate-card + .validate-card {
+        margin-top: -1px;
       }
       .validate-card:hover {
         box-shadow: 0 1px 0 var(--ink-soft);
@@ -1319,6 +1420,10 @@
         background: var(--status-info-badge-bg);
         color: var(--status-info-fg);
       }
+      .validate-badge.unfilled {
+        background: var(--status-default-badge-bg);
+        color: var(--ink-soft);
+      }
       .validate-value-inline {
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
         font-size: 0.85em;
@@ -1371,61 +1476,6 @@
         border-radius: 3px;
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
       }
-      /* Wide-screen layout for the YAML view: editor on the left, scrollable
-         cards on the right. The 1500px threshold leaves the editor at least
-         ~600px wide (sidebar 280 + section padding ~70 + editor 600 + gap
-         24 + cards 500 ≈ 1474). Below that, fall back to the stacked layout. */
-      @media (min-width: 1500px) {
-        body.yaml-mode .yaml-view-section {
-          display: grid;
-          grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-          /* Summary sits above the cards (filters its own list), editor
-             spans the two right-hand rows on the left. */
-          grid-template-rows: auto auto auto 1fr;
-          grid-template-areas:
-            "head head"
-            "intro intro"
-            "editor summary"
-            "editor cards";
-          gap: 12px 24px;
-          align-items: stretch;
-          /* Lock the section to the viewport so the cards column can scroll
-             internally. The 350px subtraction leaves room for the page
-             header above and the page-footer / breathing room below.
-             `overflow: hidden` is needed so the cards' content can't spill
-             past the section box; without it, max-height only clamps the
-             box, and the grid item still grows past it. */
-          height: calc(100vh - 350px);
-          overflow: hidden;
-        }
-        body.yaml-mode .yaml-view-section > .yaml-view-head {
-          grid-area: head;
-        }
-        body.yaml-mode .yaml-view-section > p {
-          grid-area: intro;
-          margin: 0;
-        }
-        body.yaml-mode .yaml-view-section > #validateInput,
-        body.yaml-mode .yaml-view-section > #validateMonaco {
-          grid-area: editor;
-          margin: 0;
-          height: 100%;
-          min-height: 400px;
-        }
-        body.yaml-mode .yaml-view-section > .validate-summary {
-          grid-area: summary;
-          margin: 0;
-        }
-        body.yaml-mode .yaml-view-section > .validate-cards {
-          grid-area: cards;
-          margin: 0;
-          overflow-y: auto;
-          /* min-height:0 lets the grid item shrink below its content so the
-             1fr row constraint actually kicks in. */
-          min-height: 0;
-        }
-      }
-
       @media (max-width: 900px) {
         .sidebar {
           position: static;
@@ -1441,23 +1491,11 @@
         .header {
           padding: 32px 24px;
         }
-        .header h1 {
-          font-size: 1.85em;
-        }
-        .content {
-          padding: 0 24px 32px;
-        }
-        .actions {
-          padding: 14px 24px;
-        }
         .form-group {
           padding: 16px 18px;
         }
-        .welcome-section {
-          padding: 24px;
-        }
-        .yaml-view-section {
-          padding: 22px 20px;
+        .welcome-banner {
+          padding: 14px 20px;
         }
       }
     </style>
@@ -1518,9 +1556,6 @@
           </svg>
         </a>
         <div class="sidebar-eyebrow">Config Wizard</div>
-      </div>
-      <div class="sidebar-cta">
-        <button id="viewYamlBtn" class="btn btn-success" onclick="showYaml()">View YAML</button>
       </div>
       <div class="sidebar-search">
         <input type="text" id="searchInput" placeholder="Search options..." autocomplete="off" />
@@ -1596,58 +1631,73 @@
 
     <main class="main">
       <header class="header">
-        <h1>MultiQC Configuration Wizard <span class="header-version">v1.36.dev0</span></h1>
-        <p>Build your <code>multiqc_config.yaml</code></p>
+        <div class="header-main">
+          <h1>MultiQC Configuration Wizard <span class="header-version">v1.36.dev0</span></h1>
+          <p>Build your <code>multiqc_config.yaml</code></p>
+        </div>
+        <nav class="header-links" aria-label="External links">
+          <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">MultiQC Homepage</a>
+          <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
+          <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
+        </nav>
       </header>
 
+      <div class="welcome-banner" id="welcomeBanner" hidden>
+        <div class="welcome-banner-body">
+          <strong>Welcome to the MultiQC Config Wizard.</strong>
+          This tool helps you create a custom <code>multiqc_config.yaml</code>
+          configuration file. Edit the form on the left, or paste an existing config into the editor on the right. Each
+          option is checked against the schema; status badges and filters let you narrow in on what's set, broken, or
+          unrecognised.
+        </div>
+        <button type="button" class="welcome-dismiss" onclick="dismissWelcome()" aria-label="Dismiss" title="Dismiss">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M4 4l8 8M12 4l-8 8" />
+          </svg>
+        </button>
+      </div>
+
       <div class="content" id="contentArea">
-        <div class="welcome-section" id="welcomeSection">
-          <h2>Welcome to the MultiQC Config Wizard</h2>
-          <p>
-            This tool helps you create a custom <code>multiqc_config.yaml</code>
-            configuration file. You don't need to set every option, only change what you want to customise. Unset
-            options will use their defaults.
-          </p>
-          <p>
-            Browse sections in the sidebar, or use the search bar above to find a specific option. When you are done,
-            click <strong>View YAML</strong> to see the generated config. You can also paste an existing
-            <code>multiqc_config.yaml</code> there to have each option validated and explained.
-          </p>
-          <div class="welcome-links">
-            <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">MultiQC Homepage</a>
-            <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
-            <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
-          </div>
+        <div class="form-pane" id="formPane">
+          <div class="form-pane-filter" id="validateSummary"></div>
+
+          <div id="unknownKeysSection" class="unknown-keys-section" style="display: none"></div>
+
+          <div id="sections"></div>
+
+          <div class="no-results" id="noResults">No configuration options match your search.</div>
         </div>
 
-        <div id="sections"></div>
-
-        <div class="no-results" id="noResults">No configuration options match your search.</div>
-
-        <div class="yaml-view-section" id="yamlViewSection">
-          <div class="yaml-view-head">
+        <aside class="editor-pane" id="editorPane">
+          <div class="editor-pane-head">
             <h3>multiqc_config.yaml</h3>
-            <div class="yaml-view-actions">
+            <div class="editor-pane-actions">
               <button class="btn btn-secondary" onclick="clearYaml()">Clear</button>
-              <button id="copyBtn" class="btn btn-primary" onclick="copyConfig()">Copy to clipboard</button>
-              <button class="btn btn-success" onclick="downloadConfig()">Download config</button>
+              <button id="copyBtn" class="btn btn-primary" onclick="copyConfig()">Copy</button>
+              <button class="btn btn-success" onclick="downloadConfig()">Download</button>
             </div>
           </div>
-          <p>Edit, paste, or just read your config. Each option is checked against the schema and explained below.</p>
-          <textarea
-            id="validateInput"
-            class="validate-input"
-            rows="14"
-            spellcheck="false"
-            placeholder="# paste here..."
-          ></textarea>
-          <!-- Monaco mounts into this container the first time the user enters
-               YAML mode. The textarea above stays as a fallback if the CDN
-               fails or hasn't finished loading. -->
-          <div id="validateMonaco" class="validate-monaco" style="display: none"></div>
-          <div class="validate-summary" id="validateSummary"></div>
-          <div class="validate-cards" id="validateCards"></div>
-        </div>
+          <div class="editor-pane-body">
+            <textarea
+              id="validateInput"
+              class="validate-input"
+              spellcheck="false"
+              placeholder="# Start editing the form or paste a config here..."
+            ></textarea>
+            <!-- Monaco mounts into this container on init. The textarea above
+                 stays as a fallback if the CDN fails or hasn't finished
+                 loading. -->
+            <div id="validateMonaco" class="validate-monaco" style="display: none"></div>
+          </div>
+        </aside>
       </div>
 
       <footer class="page-footer">
@@ -1679,8 +1729,8 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
-    <!-- Monaco's AMD loader. The editor + language chunks are fetched lazily
-         the first time showYaml() runs; editor-only users never pay. -->
+    <!-- Monaco's AMD loader. The editor + language chunks are fetched on
+         init; the wizard's editor pane is always visible. -->
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs/loader.min.js"
       integrity="sha384-UcP5/iVWyRzIhnVjcB2o9W1eoYKL5fAhHTRzvFZg8ctOsoAoDeBQyQuyIk+BJ/nh"
@@ -7653,8 +7703,42 @@
         let validateTimer;
         validateInput.addEventListener("input", () => {
           clearTimeout(validateTimer);
-          validateTimer = setTimeout(runValidation, 250);
+          validateTimer = setTimeout(() => {
+            runValidation();
+            pullEditorToForm(validateInput.value);
+          }, 250);
         });
+
+        // Prime the editor with the form's current YAML and load Monaco
+        // eagerly: in the unified layout the editor is always visible, so
+        // there's no "lazy until first click" benefit.
+        const initialYaml = yamlTextForCurrentForm();
+        setValidateText(initialYaml);
+        runValidation();
+        ensureMonaco().then(
+          () => runValidation(),
+          () => {
+            // Monaco unavailable; textarea fallback is already live.
+          },
+        );
+
+        updateWelcomeVisibility();
+      }
+
+      // Banner stays visible until the user explicitly dismisses it; the
+      // choice persists in localStorage so reloads remember it. State only
+      // ever flips through dismissWelcome(), so updateWelcomeVisibility is
+      // called once at boot and not on per-keystroke paths.
+      function updateWelcomeVisibility() {
+        const banner = document.getElementById("welcomeBanner");
+        if (!banner) return;
+        banner.hidden = safeLocalStorageGet("mqc_wizard_welcome_dismissed") === "1";
+      }
+
+      function dismissWelcome() {
+        safeLocalStorageSet("mqc_wizard_welcome_dismissed", "1");
+        const banner = document.getElementById("welcomeBanner");
+        if (banner) banner.hidden = true;
       }
 
       function createSectionNavigation() {
@@ -7794,6 +7878,20 @@
         if (propData.uncommon) formGroup.classList.add("uncommon");
         formGroup.dataset.propname = propName;
         if (propData.uncommon) formGroup.dataset.uncommon = "1";
+        // Click anywhere in the group's chrome (label, description, empty
+        // space) to jump to the YAML line. Skips clicks on inputs / buttons /
+        // links so widgets still work — including the field-key button,
+        // which has its own jump handler.
+        formGroup.addEventListener("click", (e) => {
+          if (e.target.closest("input, textarea, select, button, a, label")) return;
+          jumpToKey(propName);
+        });
+        // Focusing an input / textarea / select (clicking it, tabbing into
+        // it) also reveals the line so the editor stays in sync with the
+        // field being edited.
+        formGroup.addEventListener("focusin", (e) => {
+          if (e.target.matches("input, textarea, select")) jumpToKey(propName);
+        });
 
         const label = document.createElement("label");
         label.className = "field-label";
@@ -7804,9 +7902,18 @@
         // this group and the right-aligned examples-toggle.
         const keyGroup = document.createElement("span");
         keyGroup.className = "field-key-group";
-        const keyName = document.createElement("span");
+        // Skip the propname over tab order; the form-group already pulls
+        // its line into view when the user tabs to the input itself.
+        const keyName = document.createElement("button");
+        keyName.type = "button";
+        keyName.tabIndex = -1;
         keyName.className = "field-key";
         keyName.textContent = propName;
+        keyName.title = "Reveal in editor";
+        keyName.onclick = (e) => {
+          e.preventDefault();
+          jumpToKey(propName);
+        };
         keyGroup.appendChild(keyName);
         if (propData.type) {
           const typeTag = document.createElement("span");
@@ -8157,6 +8264,24 @@
         const fg = input.closest(".form-group");
         if (fg) fg.classList.toggle("is-set", propName in currentConfig);
         saveEditorConfig();
+        pushFormToEditor();
+        if (isHydrating) return;
+        // Reveal the key in the editor once it's there. runValidation reads
+        // _pendingJumpTo at the end of its successful pass.
+        _pendingJumpTo = propName;
+        // Discrete widgets (bool toggles, checkbox groups) write through a
+        // hidden input; the user expects immediate visual feedback rather
+        // than waiting for the debounced push + validation. Flush both now.
+        if (input.type === "hidden") flushPendingJump();
+      }
+
+      function flushPendingJump() {
+        if (_pushTimer !== null) {
+          clearTimeout(_pushTimer);
+          _pushTimer = null;
+          _pushFormToEditorNow();
+        }
+        runValidation();
       }
 
       // Suppresses saveEditorConfig writes during initial hydration so we
@@ -8206,6 +8331,36 @@
         } catch (e) {
           // ignore
         }
+      }
+
+      function safeLocalStorageGet(key) {
+        try {
+          return localStorage.getItem(key);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      // Serialise pluginKeys to localStorage, dropping the entry entirely
+      // when the dict is empty so a clean wizard reloads clean.
+      function persistPluginKeys() {
+        safeLocalStorageSet(
+          "mqc_wizard_plugin_keys",
+          Object.keys(pluginKeys).length === 0 ? null : JSON.stringify(pluginKeys),
+        );
+      }
+
+      // Save the current editor text + a snapshot of the form state it
+      // represents, so the comment-preserving merge in yamlTextForCurrentForm
+      // can patch in form deltas without rebuilding from scratch.
+      function saveYamlSnapshot(text) {
+        lastEditedYaml = text;
+        lastEditedFormSnap = { ...currentConfig, ...pluginKeys };
+        safeLocalStorageSet("mqc_wizard_yaml_text", text || null);
+        safeLocalStorageSet(
+          "mqc_wizard_yaml_form_snap",
+          Object.keys(lastEditedFormSnap).length === 0 ? null : JSON.stringify(lastEditedFormSnap),
+        );
       }
 
       // Read previous editor state + preserved plugin keys from localStorage
@@ -8350,6 +8505,7 @@
         if (!fg) return;
         resetGroup(fg, getCurrentPropData(propName));
         saveEditorConfig();
+        pushFormToEditor();
       }
 
       function getCurrentPropData(propName) {
@@ -8406,9 +8562,14 @@
           }
         }
 
-        for (const [section, heading] of Object.entries(headingBySection)) {
-          heading.style.display = sectionCounts[section] > 0 ? "" : "none";
-        }
+        // Also filter unrecognised-key rows so search includes them. Match
+        // count rolls into anyVisible so the "no results" footer is right.
+        document.querySelectorAll("#unknownKeysSection .validate-card").forEach((c) => {
+          const key = (c.dataset.key || "").toLowerCase();
+          const matches = !query || key.includes(query);
+          c.classList.toggle("hidden", !matches);
+          if (matches) anyVisible = true;
+        });
 
         for (const a of navLinks) {
           const matching = sectionCounts[a.dataset.section] || 0;
@@ -8418,7 +8579,7 @@
         }
 
         document.getElementById("noResults").style.display = query && !anyVisible ? "block" : "none";
-        document.getElementById("welcomeSection").style.display = query ? "none" : "";
+        recomputeSectionHeadings();
       }
 
       function formatDefaultValue(value) {
@@ -8440,69 +8601,41 @@
         return String(value);
       }
 
-      // Editor ↔ YAML two-state toggle. setMode("editor") shows the form,
-      // setMode("yaml") shows the merged YAML view (editor + cards). The
-      // sidebar CTA swaps label + handler so it always offers the other view.
-      function setMode(mode) {
-        const yaml = mode === "yaml";
-        document.body.classList.toggle("yaml-mode", yaml);
-        const btn = document.getElementById("viewYamlBtn");
-        btn.textContent = yaml ? "Back to editor" : "View YAML";
-        btn.onclick = yaml ? backToEditor : showYaml;
-        window.scrollTo(0, 0);
+      // Set true immediately before pushing form-generated text into the
+      // editor, so the resulting Monaco onChange skips pull-back-to-form
+      // (otherwise every form keystroke would loop through Yaml→form→Yaml).
+      let suppressNextEditorChange = false;
+
+      // Key the user last interacted with; consumed by runValidation to
+      // reveal the matching line in the editor once it lands.
+      let _pendingJumpTo = null;
+
+      // Form → editor. Regenerates YAML from currentConfig + pluginKeys
+      // using the comment-preserving merge in yamlTextForCurrentForm.
+      // Equality check breaks the cycle when the form change is already
+      // reflected in the editor (e.g. during applyYamlToForm).
+      let _pushTimer = null;
+      function pushFormToEditor() {
+        if (isHydrating) return;
+        clearTimeout(_pushTimer);
+        _pushTimer = setTimeout(_pushFormToEditorNow, 80);
+      }
+      function _pushFormToEditorNow() {
+        if (isHydrating) return;
+        const newText = yamlTextForCurrentForm();
+        if (newText === getValidateText()) return;
+        suppressNextEditorChange = true;
+        setValidateText(newText);
+        saveYamlSnapshot(newText);
       }
 
-      function showYaml() {
-        // Block entry while any form field has an unparsed YAML/JSON value;
-        // otherwise the invalid text would be silently dropped on the way to
-        // the YAML view.
-        const invalid = document.querySelector(".form-group.is-invalid");
-        if (invalid) {
-          invalid.scrollIntoView({ behavior: "smooth", block: "center" });
-          const input = invalid.querySelector("input, textarea");
-          if (input) input.focus({ preventScroll: true });
-          return;
-        }
-        // If the form's parsed shape still matches the YAML text the user
-        // last had open, restore it verbatim: comments, blank lines and
-        // key ordering all survive. If anything in the form has changed
-        // (or the cache is stale across a reload), regenerate cleanly.
-        setValidateText(yamlTextForCurrentForm());
-        setMode("yaml");
-        document.getElementById("validateInput").focus();
-        runValidation();
-        // On first entry Monaco mounts asynchronously and the textarea-side
-        // validation we just ran needs a second pass once getValidateText
-        // starts reading from the editor. On subsequent entries Monaco is
-        // already live, so we skip the redundant re-run.
-        const hadEditor = !!monacoEditor;
-        ensureMonaco().then(
-          (ed) => {
-            ed.focus();
-            if (!hadEditor) runValidation();
-          },
-          () => {
-            // Monaco unavailable; textarea fallback is already live.
-          },
-        );
-      }
-
-      function backToEditor() {
-        // If the user wrote invalid YAML, keep them in YAML mode so they
-        // can fix it; the validate summary already shows the parse error.
-        const text = getValidateText();
-        if (!applyYamlToForm(text)) return;
-        // Cache the raw text along with the form snapshot it represents.
-        // Re-entry restores the exact text (preserving comments) as long
-        // as the live form still matches the snapshot.
-        lastEditedYaml = text;
-        lastEditedFormSnap = { ...currentConfig, ...pluginKeys };
-        safeLocalStorageSet("mqc_wizard_yaml_text", text || null);
-        safeLocalStorageSet(
-          "mqc_wizard_yaml_form_snap",
-          Object.keys(lastEditedFormSnap).length === 0 ? null : JSON.stringify(lastEditedFormSnap),
-        );
-        setMode("editor");
+      // Editor → form. Parses YAML; on parse error, leaves form untouched
+      // (editor markers already flag the syntax problem). On success,
+      // delegates to applyYamlToForm which handles the existing
+      // form-widget + pluginKeys plumbing.
+      function pullEditorToForm(text) {
+        if (isHydrating) return;
+        if (applyYamlToForm(text)) saveYamlSnapshot(text);
       }
 
       // Pick what to put in the editor when entering View YAML.
@@ -8649,10 +8782,7 @@
           isHydrating = false;
         }
         saveEditorConfig();
-        safeLocalStorageSet(
-          "mqc_wizard_plugin_keys",
-          Object.keys(pluginKeys).length === 0 ? null : JSON.stringify(pluginKeys),
-        );
+        persistPluginKeys();
         return true;
       }
 
@@ -8757,9 +8887,8 @@
 
       // Compile the JSON schema once, lazily. Returns null if Ajv2020 didn't
       // load (CDN failure); caller falls back to no-Ajv rendering.
-      // Monaco editor: loaded lazily the first time showYaml() runs, so
-      // editor-only users don't pay for it. Until it resolves (or if the CDN
-      // fails), the plain textarea keeps working as a fallback.
+      // Monaco editor: loaded from CDN on init. Until it resolves (or if
+      // the CDN fails), the plain textarea keeps working as a fallback.
       let monacoEditor = null;
       let monacoLineDecorations = [];
       let monacoReadyPromise = null;
@@ -8881,11 +9010,30 @@
             container.style.display = "block";
             let timer;
             monacoEditor.onDidChangeModelContent(() => {
-              // Drop the click-to-highlight decoration immediately so it
-              // doesn't linger on lines the user is actively editing.
-              clearJumpHighlight();
+              // Distinguish the form's own push (suppress flag set) from a
+              // user typing in the editor. Either way validation re-runs;
+              // only the user-driven case pulls back into the form.
+              const fromForm = suppressNextEditorChange;
+              suppressNextEditorChange = false;
+              // For user-typed edits, drop any stale line highlight: the
+              // line it points to may have moved. Form-driven edits already
+              // have a fresh jump queued via _pendingJumpTo, so leaving the
+              // old highlight in place avoids a visible flash between clear
+              // and re-apply.
+              if (!fromForm) clearJumpHighlight();
               clearTimeout(timer);
-              timer = setTimeout(runValidation, 250);
+              timer = setTimeout(() => {
+                runValidation();
+                if (!fromForm) pullEditorToForm(getValidateText());
+              }, 250);
+            });
+            // Click on a top-level key line in the editor → reveal that
+            // field in the form pane. The reverse of the form's
+            // click-to-jumpToKey behavior.
+            monacoEditor.onMouseUp((e) => {
+              const pos = e.target && e.target.position;
+              if (!pos) return;
+              revealFormForLine(pos.lineNumber);
             });
             resolve(monacoEditor);
           }, (err) => {
@@ -8901,8 +9049,16 @@
       }
 
       function setValidateText(text) {
-        if (monacoEditor) monacoEditor.setValue(text);
-        else document.getElementById("validateInput").value = text;
+        if (monacoEditor) {
+          const model = monacoEditor.getModel();
+          if (model.getValue() === text) return;
+          // applyEdits maps existing decorations through the edit instead
+          // of dropping them like setValue does — keeps the line-highlight
+          // attached to the right line across form→editor sync.
+          model.pushEditOperations([], [{ range: model.getFullModelRange(), text }], () => null);
+        } else {
+          document.getElementById("validateInput").value = text;
+        }
       }
 
       function compileValidator() {
@@ -8998,7 +9154,13 @@
       // owns it (the top-level key card already shows the property name).
       function formatAjvError(err) {
         const path = err.instancePath || "";
-        const tail = path.split("/").slice(2).join("/");
+        // Label numeric segments as "position N" so messages read naturally;
+        // string keys pass through unchanged.
+        const tail = path
+          .split("/")
+          .slice(2)
+          .map((s) => (/^\d+$/.test(s) ? `position ${s}` : s))
+          .join(" / ");
         const where = tail ? ` at ${tail}` : "";
         if (err.keyword === "enum") return `valid values: ${err.params.allowedValues.join(", ")}${where}`;
         if (err.keyword === "type") return `expected ${err.params.type}${where}`;
@@ -9214,13 +9376,13 @@
       function runValidation() {
         const text = getValidateText();
         const summary = document.getElementById("validateSummary");
-        const cards = document.getElementById("validateCards");
 
         if (!text.trim()) {
           summary.innerHTML = "";
-          cards.innerHTML = "";
           lastValidated = { parsed: null, results: [], keyLineRanges: {} };
           applyValidationMarkers([]);
+          stampFormGroupStatuses([]);
+          renderUnknownKeys([]);
           return;
         }
 
@@ -9230,14 +9392,14 @@
         } catch (e) {
           summary.innerHTML =
             '<span class="validate-badge error">YAML parse error</span> ' + escapeHtml(e.message || String(e));
-          cards.innerHTML = "";
           lastValidated = { parsed: null, results: [], keyLineRanges: {} };
           applyValidationMarkers(markersForParseError(e));
+          // Don't blank statuses on parse error: keep the last good state so
+          // pills don't strobe while the user is typing.
           return;
         }
         if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
           summary.innerHTML = '<span class="validate-badge error">Expected a mapping at the top level.</span>';
-          cards.innerHTML = "";
           lastValidated = { parsed: null, results: [], keyLineRanges: {} };
           applyValidationMarkers(
             markersForTopLevelError(text, "Expected a mapping at the top level (key: value pairs)."),
@@ -9292,30 +9454,55 @@
           }
         }
         lastValidated = { parsed, results, keyLineRanges };
+        // Stamp form-groups first; renderSummary reads their data-validate-status
+        // to count the "unfilled" chip.
+        stampFormGroupStatuses(results);
+        renderUnknownKeys(results);
         renderSummary(results);
-        renderCards(results);
+        applyFilter();
         applyValidationMarkers(markersForResults(text, results, keyLineRanges));
+        if (_pendingJumpTo) {
+          const key = _pendingJumpTo;
+          _pendingJumpTo = null;
+          if (keyLineRanges[key]) jumpToKey(key);
+        }
       }
 
-      // Drop the active line decoration + card outline. Called on every
-      // edit so highlights don't linger over text the user is changing.
+      // Drop the active line decoration. Called on every edit so highlights
+      // don't linger over text the user is changing.
       function clearJumpHighlight() {
         if (monacoEditor && monacoLineDecorations.length) {
           monacoLineDecorations = monacoEditor.deltaDecorations(monacoLineDecorations, []);
         }
-        document.querySelectorAll("#validateCards .validate-card.is-active").forEach((c) => {
-          c.classList.remove("is-active");
-        });
       }
 
-      // Highlight + scroll-to for the given top-level key, both in Monaco and
-      // in the plain-textarea fallback. Card click handler.
+      // Highlight + scroll-to for the given top-level key in the editor.
+      // Map an editor line number back to its top-level YAML key and scroll
+      // the matching form-group (or unknown-row) into view. Walks up the
+      // current text until a `^key:` line is found, so clicks on indented
+      // child lines also reveal the parent entry.
+      function revealFormForLine(lineNumber) {
+        if (!monacoEditor) return;
+        const model = monacoEditor.getModel();
+        if (!model) return;
+        const topKeyRe = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/;
+        for (let i = lineNumber; i >= 1; i--) {
+          const m = topKeyRe.exec(model.getLineContent(i));
+          if (!m) continue;
+          const key = m[1];
+          const target =
+            document.querySelector(`.form-group[data-propname="${CSS.escape(key)}"]`) ||
+            document.querySelector(`#unknownKeysSection .validate-card[data-key="${CSS.escape(key)}"]`);
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
+      }
+
+      // deltaDecorations swaps in one tick so there's no flash between the
+      // old highlight clearing and the new one appearing.
       function jumpToKey(key) {
         const range = lastValidated.keyLineRanges[key];
         if (!range) return;
-        clearJumpHighlight();
-        const card = document.querySelector(`#validateCards .validate-card[data-key="${CSS.escape(key)}"]`);
-        if (card) card.classList.add("is-active");
 
         if (monacoEditor) {
           const r = new monaco.Range(range.start, 1, range.end, 1);
@@ -9341,7 +9528,6 @@
         const end = lines.slice(0, range.end).reduce((acc, l) => acc + l.length + 1, 0) - 1;
         ta.focus({ preventScroll: true });
         ta.setSelectionRange(start, end);
-        // Best-effort scroll: count line height from font metrics.
         const lineHeight = parseInt(getComputedStyle(ta).lineHeight, 10) || 18;
         ta.scrollTop = Math.max(0, (range.start - 3) * lineHeight);
       }
@@ -9362,12 +9548,18 @@
         const summary = document.getElementById("validateSummary");
         summary.innerHTML = "";
         const pluralS = (n) => (n === 1 ? "" : "s");
+        // Count unfilled form-groups (those with no validation status) so the
+        // chip shows the same kind of "X unfilled" count the others do.
+        const unfilledCount = document.querySelectorAll(
+          ".form-group[data-propname]:not([data-validate-status])",
+        ).length;
         const entries = [
           { status: "ok", n: count("ok"), label: "valid", always: true },
           { status: "error", n: count("error"), label: (n) => `error${pluralS(n)}` },
           { status: "default", n: count("default"), label: "matches default" },
           { status: "deprecated", n: count("deprecated"), label: "deprecated" },
           { status: "unknown", n: count("unknown"), label: "unknown" },
+          { status: "unfilled", n: unfilledCount, label: "unfilled" },
         ];
         // Drop filters for statuses that no longer appear so the filter state
         // doesn't strand "no results" when the user changes the paste.
@@ -9421,67 +9613,178 @@
         applyFilter();
       }
 
+      // Filter is keyed by status. Unset form-groups get a virtual
+      // "unfilled" status so the same filter chip mechanism works for them.
+      let _hasFilteredOut = false;
       function applyFilter() {
         const on = filterStatuses.size > 0;
-        document.querySelectorAll("#validateCards .validate-card").forEach((c) => {
+        // Skip the DOM walk when nothing's filtered now and nothing was
+        // filtered last pass either; that's the common-case keystroke flow.
+        if (!on && !_hasFilteredOut) {
+          recomputeSectionHeadings();
+          return;
+        }
+        document.querySelectorAll(".form-group").forEach((fg) => {
+          const status = fg.dataset.validateStatus || "unfilled";
+          fg.classList.toggle("is-filtered-out", on && !filterStatuses.has(status));
+        });
+        document.querySelectorAll("#unknownKeysSection .validate-card").forEach((c) => {
           c.classList.toggle("is-filtered-out", on && !filterStatuses.has(c.dataset.status));
+        });
+        _hasFilteredOut = on;
+        recomputeSectionHeadings();
+      }
+
+      // Headings hide whenever none of their children are visible (covering
+      // both search-hidden `.hidden` and filter-hidden `.is-filtered-out`).
+      // Shared between handleSearch + applyFilter so they don't fight.
+      function recomputeSectionHeadings() {
+        document.querySelectorAll(".section-heading[data-section]").forEach((h) => {
+          const section = h.dataset.section;
+          const visible = document.querySelector(
+            `.form-group[data-section="${CSS.escape(section)}"]:not(.is-filtered-out):not(.hidden)`,
+          );
+          h.style.display = visible ? "" : "none";
+        });
+        const unk = document.getElementById("unknownKeysSection");
+        if (unk) {
+          const anyVisible = unk.querySelector(".validate-card:not(.is-filtered-out):not(.hidden)");
+          const heading = unk.querySelector(".section-heading");
+          if (heading) heading.style.display = anyVisible ? "" : "none";
+        }
+      }
+
+      // Apply the latest result statuses to each form-group as
+      // `data-validate-status` + an inline pill in the label. Unknown keys
+      // have no form-group; they're handled by renderUnknownKeys instead.
+      // Skips DOM mutation when the status and tooltip haven't changed: this
+      // runs on every keystroke against ~160 form-groups.
+      function stampFormGroupStatuses(results) {
+        const byKey = new Map();
+        for (const r of results) byKey.set(r.key, r);
+        document.querySelectorAll(".form-group[data-propname]").forEach((fg) => {
+          const propName = fg.dataset.propname;
+          const r = byKey.get(propName);
+          const labelEl = fg.querySelector(".field-key-group");
+          const prevStatus = fg.dataset.validateStatus || "";
+          const newStatus = !r || r.status === "unknown" ? "" : r.status;
+          const newTooltip = r && r.messages ? r.messages.map((m) => m.message).join("\n") : "";
+
+          if (!newStatus) {
+            if (prevStatus) fg.removeAttribute("data-validate-status");
+            if (labelEl) {
+              const old = labelEl.querySelector(".field-status-pill");
+              if (old) old.remove();
+            }
+            return;
+          }
+          if (!labelEl) {
+            fg.dataset.validateStatus = newStatus;
+            return;
+          }
+          let pill = labelEl.querySelector(".field-status-pill");
+          if (prevStatus === newStatus && pill && pill.title === newTooltip) return;
+          fg.dataset.validateStatus = newStatus;
+          if (!pill) {
+            pill = document.createElement("span");
+            labelEl.appendChild(pill);
+          }
+          pill.className = `field-status-pill validate-badge ${newStatus}`;
+          pill.dataset.status = newStatus;
+          pill.title = newTooltip;
+          pill.textContent = pillLabel(r);
         });
       }
 
-      function renderCards(results) {
-        const root = document.getElementById("validateCards");
-        root.innerHTML = "";
-        for (const r of results) root.appendChild(renderCard(r));
-        applyFilter();
-      }
-
-      function badgeLabel(r) {
+      function pillLabel(r) {
         return (
           {
             ok: "valid",
-            error: "invalid",
-            default: "matches default",
+            error: "error",
+            default: "default",
             deprecated: "deprecated",
-            unknown: "unknown option",
           }[r.status] || r.status
         );
       }
 
-      function renderCard(r) {
+      // Synthesize a small card per unknown key (those present in the YAML
+      // but not in the schema). Rendered at the top of the form column with
+      // Rename / Remove actions.
+      function renderUnknownKeys(results) {
+        const root = document.getElementById("unknownKeysSection");
+        if (!root) return;
+        const unknowns = results.filter((r) => r.status === "unknown");
+        root.innerHTML = "";
+        if (!unknowns.length) {
+          root.style.display = "none";
+          return;
+        }
+        root.style.display = "";
+        const heading = document.createElement("h2");
+        heading.className = "section-heading section-heading-unknown";
+        heading.textContent = "Unrecognised keys";
+        root.appendChild(heading);
+        for (const r of unknowns) root.appendChild(renderUnknownRow(r));
+      }
+
+      function renderUnknownRow(r) {
         const card = document.createElement("div");
-        card.className = `validate-card status-${r.status}`;
-        card.dataset.status = r.status;
+        card.className = "validate-card status-unknown";
+        card.dataset.status = "unknown";
         card.dataset.key = r.key;
-        card.onclick = () => jumpToKey(r.key);
-        const valueLabel = escapeHtml(formatDefaultValue(r.value));
-        const typeTag = r.data && r.data.type ? `<span class="validate-type">${escapeHtml(r.data.type)}</span>` : "";
-        const head =
-          `<div class="validate-card-head">` +
+        const head = document.createElement("div");
+        head.className = "validate-card-head";
+        head.innerHTML =
           `<code class="validate-key">${escapeHtml(r.key)}</code>` +
-          `<span class="validate-value-inline">${valueLabel}</span>` +
-          typeTag +
-          `<span class="validate-badge ${r.status}">${escapeHtml(badgeLabel(r))}</span>` +
-          `</div>`;
-        let body = "";
-        if (r.data && r.data.description) {
-          body += `<div class="validate-desc">${renderInlineMd(r.data.description)}</div>`;
+          `<span class="validate-badge unknown">unknown</span>`;
+        head.onclick = () => jumpToKey(r.key);
+        card.appendChild(head);
+        if (r.suggestion) {
+          const msg = document.createElement("div");
+          msg.className = "validate-msg";
+          msg.innerHTML = `Did you mean <code>${escapeHtml(r.suggestion)}</code>?`;
+          card.appendChild(msg);
+        } else {
+          const msg = document.createElement("div");
+          msg.className = "validate-msg";
+          msg.textContent = "Not a recognised option.";
+          card.appendChild(msg);
         }
-        if (r.status === "unknown") {
-          body += r.suggestion
-            ? `<div class="validate-msg">did you mean <code>${escapeHtml(r.suggestion)}</code>?</div>`
-            : `<div class="validate-msg">not a recognised option</div>`;
-        } else if (r.messages && r.messages.length) {
-          body += r.messages.map((m) => `<div class="validate-msg">${escapeHtml(m.message)}</div>`).join("");
-        } else if (r.status === "default") {
-          body += `<div class="validate-msg">matches the MultiQC default: has no effect</div>`;
-        } else if (r.status === "deprecated") {
-          body += `<div class="validate-msg">this option is deprecated; see the description for a replacement</div>`;
-          if (r.matchesDefault) {
-            body += `<div class="validate-msg">value also matches the MultiQC default: safe to remove</div>`;
-          }
+        const actions = document.createElement("div");
+        actions.className = "validate-card-actions";
+        if (r.suggestion) {
+          const renameBtn = document.createElement("button");
+          renameBtn.type = "button";
+          renameBtn.className = "btn btn-secondary";
+          renameBtn.textContent = `Rename to ${r.suggestion}`;
+          renameBtn.onclick = () => renameUnknown(r.key, r.suggestion, r.value);
+          actions.appendChild(renameBtn);
         }
-        card.innerHTML = head + body;
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "btn btn-secondary";
+        removeBtn.textContent = "Remove";
+        removeBtn.onclick = () => removeUnknown(r.key);
+        actions.appendChild(removeBtn);
+        card.appendChild(actions);
         return card;
+      }
+
+      function removeUnknown(key) {
+        delete pluginKeys[key];
+        persistPluginKeys();
+        pushFormToEditor();
+      }
+
+      function renameUnknown(oldKey, newKey, value) {
+        delete pluginKeys[oldKey];
+        if (propDataIndex[newKey]) {
+          applyValueToGroup(newKey, value);
+        } else {
+          pluginKeys[newKey] = value;
+        }
+        persistPluginKeys();
+        pushFormToEditor();
       }
 
       function removeDefaults() {
