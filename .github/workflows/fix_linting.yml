@@ -3,9 +3,14 @@ on:
   issue_comment:
     types: [created]
 
+permissions:
+  contents: read
+
 jobs:
   fix_linting:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     # Only run if comment is on a PR with the main repo, and if it contains the magic keywords
     if: >
       github.repository_owner == 'MultiQC' &&
@@ -41,8 +46,7 @@ jobs:
 
       - name: Check if any files changed
         run: |
-          git diff --exit-code || echo "changed=YES" >> $GITHUB_ENV
-          echo "Files changed: ${{ env.changed }}"
+          git diff --exit-code || echo "changed=YES" | tee -a $GITHUB_ENV
 
       - name: Commit and push changes
         if: env.changed == 'YES'

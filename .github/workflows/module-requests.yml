@@ -105,11 +105,14 @@ jobs:
       - name: Report Workflow Status
         if: always()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          MODE: ${{ steps.mode.outputs.mode }}
+          ISSUE_NUMBER: ${{ steps.mode.outputs.issue_number }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const mode = '${{ steps.mode.outputs.mode }}';
-            const issueNumber = '${{ steps.mode.outputs.issue_number }}';
+            const mode = process.env.MODE;
+            const issueNumber = process.env.ISSUE_NUMBER;
 
             console.log(`✅ Module triage workflow completed`);
             console.log(`Mode: ${mode}`);

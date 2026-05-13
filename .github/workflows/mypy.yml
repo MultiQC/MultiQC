@@ -11,10 +11,15 @@ on:
       - "docs/**"
       - "*.md"
 
+permissions:
+  contents: read
+
 jobs:
   mypy:
     name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version: ["3.9", "3.14"] # NB: 3.14.1 has upstream bug
