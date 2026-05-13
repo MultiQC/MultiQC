@@ -36,6 +36,7 @@ permissions:
 jobs:
   module-request-handler:
     runs-on: ubuntu-latest
+    environment: anthropic
 
     # Only run for module requests or scheduled/manual triggers
     if: |
