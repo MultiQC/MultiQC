@@ -1,7 +1,11 @@
 name: Claude Code Review
 
 on:
-  workflow_run:
+  # workflow_run is intentional: the trigger workflow runs in the unprivileged
+  # PR context and only uploads an artifact; this workflow consumes it from
+  # the privileged base-repo context. Removing it would either lose fork-PR
+  # support or leak ANTHROPIC_API_KEY to fork contexts.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
     workflows: ["Claude Code Review Trigger"]
     types:
       - completed
