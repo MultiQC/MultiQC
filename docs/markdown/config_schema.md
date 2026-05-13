@@ -345,6 +345,7 @@ Order in which modules appear in the report. Each entry is either a module ID, o
 - umitools
 - truvari
 - megahit
+- sincei
 - ganon
 - gtdbtk
 - bbmap
@@ -872,6 +873,9 @@ Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in li
 - _totalReadConversionRate
 - .sylphmpa
 - _qual
+- _hifi_trimmer
+- .hifi_trimmer
+- _trimmer
 ```
 
 </details>
