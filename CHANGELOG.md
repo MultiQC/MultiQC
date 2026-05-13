@@ -48,7 +48,7 @@ The config wizard is a static HTML file that is bundled with the MultiQC repo, b
 ### Feature updates and improvements
 
 - Config: Major new automations using config schema ([#3183](https://github.com/MultiQC/MultiQC/pull/3183), [#3558](https://github.com/MultiQC/MultiQC/pull/3558), [#3561](https://github.com/MultiQC/MultiQC/pull/3561))
-  - Automated markdown reference documentation of all confign attributes for the docs
+  - Automated markdown reference documentation of all config attributes for the docs
   - New interactive tool for building, editing and validating MultiQC config files: [https://seqera.io/multiqc_config_wizard](https://seqera.io/multiqc_config_wizard)
 - AI: Catch unexpected AWS Bedrock response shapes ([#3440](https://github.com/MultiQC/MultiQC/pull/3440))
 - custom_plot_config: Fix deprecated camelCase aliases (e.g. yPlotBands) ([#3547](https://github.com/MultiQC/MultiQC/pull/3547))
