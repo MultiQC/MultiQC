@@ -2852,6 +2852,40 @@
         monaco.editor.setTheme("mqc-dark");
       }
 
+      // Hover docs over top-level keys. Pulls description / default / type
+      // from the same propData the wizard form uses, so the editor matches
+      // the form's help text without a second source of truth.
+      function registerSchemaHover() {
+        monaco.languages.registerHoverProvider("yaml", {
+          provideHover(model, position) {
+            const word = model.getWordAtPosition(position);
+            // Top-level keys only: start at column 1 and own the start of
+            // the line. Filters out values that happen to spell a known key.
+            if (!word || word.startColumn !== 1) return null;
+            const lineText = model.getLineContent(position.lineNumber);
+            const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(lineText);
+            if (!m || m[1] !== word.word) return null;
+
+            const propData = propDataIndex[word.word] || schemaPropData(word.word);
+            if (!propData || !propData.description) return null;
+
+            const header = ["**" + word.word + "**"];
+            if (propData.type) header.push("*" + propData.type + "*");
+            if (propData.deprecated) header.push("*(deprecated)*");
+            const parts = [header.join("  ")];
+            if (propData.default !== undefined && propData.default !== null) {
+              parts.push("Default: `" + formatDefaultValue(propData.default) + "`");
+            }
+            parts.push(propData.description);
+
+            return {
+              range: new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
+              contents: [{ value: parts.join("\n\n") }],
+            };
+          },
+        });
+      }
+
       function ensureMonaco() {
         if (monacoReadyPromise) return monacoReadyPromise;
         if (typeof require !== "function" || typeof require.config !== "function") {
@@ -2868,6 +2902,7 @@
             // the editor reads as part of the same app rather than a foreign
             // VS Code panel.
             defineMonacoTheme();
+            registerSchemaHover();
             const container = document.getElementById("validateMonaco");
             const textarea = document.getElementById("validateInput");
             monacoEditor = monaco.editor.create(container, {
