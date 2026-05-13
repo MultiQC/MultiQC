@@ -21,27 +21,20 @@ jobs:
        contains(github.event.comment.body, '/review'))
 
     steps:
-      - name: Check commenter write access
-        id: check-access
+      - name: Require maintainer access
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           PERM=$(gh api "repos/${{ github.repository }}/collaborators/${{ github.event.comment.user.login }}/permission" -q '.permission')
-          if [[ "$PERM" == "admin" || "$PERM" == "write" ]]; then
-            echo "has_write=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_write=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping: ${{ github.event.comment.user.login }} has '$PERM' permission (write required)"
-          fi
+          echo "${{ github.event.comment.user.login }} has permission: $PERM"
+          [[ "$PERM" =~ ^(admin|maintain|write)$ ]] || exit 1
 
       - name: Checkout repository
-        if: steps.check-access.outputs.has_write == 'true'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Save PR info
-        if: steps.check-access.outputs.has_write == 'true'
         run: |
           mkdir -p pr-info
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -57,7 +50,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Upload PR info
-        if: steps.check-access.outputs.has_write == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pr-info
