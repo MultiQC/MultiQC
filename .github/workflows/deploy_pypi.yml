@@ -9,8 +9,12 @@ permissions:
 jobs:
   build-n-publish:
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/multiqc
     permissions:
       contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -33,5 +37,3 @@ jobs:
       - name: Publish MultiQC to PyPI
         if: github.repository == 'MultiQC/MultiQC'
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
