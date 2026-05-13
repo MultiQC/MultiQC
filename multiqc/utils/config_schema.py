@@ -162,8 +162,10 @@ class MultiQCConfig(BaseModel):
         show_analysis_time: Optional[bool] = cfg("Show the date and time the report was generated in the header.")
 
     with section("Report Appearance"):
-        template: Optional[Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"]] = cfg(
-            "Name of the report template.",
+        template: Optional[str] = cfg(
+            "Name of the report template. Built-in templates: default, original, simple, sections, gathered, geo, disco. "
+            "Plugin packages can register additional templates via the `multiqc.templates.v1` entry point.",
+            examples=["default", "original", "simple", "sections", "gathered", "geo", "disco"],
         )
         template_dark_mode: Optional[bool] = cfg(
             "Enable the dark mode toggle in the report template.",

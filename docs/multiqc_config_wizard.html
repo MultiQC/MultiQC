@@ -1395,7 +1395,7 @@
       </div>
 
       <footer class="page-footer">
-        Generated on <time datetime="2026-05-12">2026-05-12</time> for MultiQC <code>1.35</code>.
+        Generated on <time datetime="2026-05-13">2026-05-13</time> for MultiQC <code>1.35</code>.
       </footer>
     </main>
 
@@ -1534,11 +1534,12 @@
             deprecated: false,
             multiline: false,
             type: "string",
-            description: "Name of the report template.",
+            description:
+              "Name of the report template. Built-in templates: default, original, simple, sections, gathered, geo, disco. Plugin packages can register additional templates via the `multiqc.templates.v1` entry point.",
             default: "default",
-            enum: ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
+            enum: null,
             items_enum: null,
-            examples: [],
+            examples: ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
           },
           template_dark_mode: {
             uncommon: true,
@@ -4504,7 +4505,6 @@
           template: {
             anyOf: [
               {
-                enum: ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
                 type: "string",
               },
               {
@@ -4512,7 +4512,9 @@
               },
             ],
             default: null,
-            description: "Name of the report template.",
+            description:
+              "Name of the report template. Built-in templates: default, original, simple, sections, gathered, geo, disco. Plugin packages can register additional templates via the `multiqc.templates.v1` entry point.",
+            examples: ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
             section: "Report Appearance",
             title: "Template",
           },

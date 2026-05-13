@@ -88,9 +88,39 @@ Show the date and time the report was generated in the header.
 
 ### template
 
-**Type**: `Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"]` (default: `"default"`)
+**Type**: `str` (default: `"default"`)
 
-Name of the report template.
+Name of the report template. Built-in templates: default, original, simple, sections, gathered, geo, disco. Plugin packages can register additional templates via the `multiqc.templates.v1` entry point.
+
+**Examples**:
+
+```yaml
+template: default
+```
+
+```yaml
+template: original
+```
+
+```yaml
+template: simple
+```
+
+```yaml
+template: sections
+```
+
+```yaml
+template: gathered
+```
+
+```yaml
+template: geo
+```
+
+```yaml
+template: disco
+```
 
 ### template_dark_mode
 
