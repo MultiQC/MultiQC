@@ -390,6 +390,7 @@
         transition:
           background 0.15s ease,
           color 0.15s ease;
+        position: relative;
       }
       .section-nav a:hover {
         background: rgba(255, 255, 255, 0.06);
@@ -399,6 +400,25 @@
         background: rgba(49, 201, 172, 0.15);
         color: white;
         box-shadow: inset 2px 0 0 var(--teal);
+      }
+      /* Scroll-location indicator: small green dot on the left of the link
+         the user is currently viewing. */
+      .section-nav a::after {
+        content: "";
+        position: absolute;
+        left: -10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--teal);
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        pointer-events: none;
+      }
+      .section-nav a.active::after {
+        opacity: 1;
       }
       .section-nav .badge {
         background: rgba(255, 255, 255, 0.1);
@@ -416,6 +436,33 @@
       }
       .section-nav li.dimmed a {
         opacity: 0.35;
+        pointer-events: none;
+      }
+      /* Group sub-links are always shown beneath their section. */
+      .section-nav-sub {
+        list-style: none;
+        margin: 2px 0 6px 14px;
+        padding: 0;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .section-nav-sub li {
+        margin-bottom: 0;
+      }
+      .section-nav-sub a {
+        padding: 4px 12px;
+        font-size: 0.84em;
+        font-weight: 400;
+        opacity: 0.78;
+      }
+      .section-nav-sub a:hover {
+        opacity: 1;
+      }
+      .section-nav-sub a.active {
+        opacity: 1;
+        background: rgba(49, 201, 172, 0.1);
+      }
+      .section-nav-sub li.dimmed a {
+        opacity: 0.3;
         pointer-events: none;
       }
 
@@ -904,6 +951,23 @@
         height: 1px;
         background: var(--border);
         align-self: center;
+      }
+
+      /* Second-level grouping inside a section. Visually quieter than the
+         section heading so the section/group/field hierarchy reads at a glance. */
+      .group-heading {
+        font-family: "Bricolage Grotesque", "Inter", sans-serif;
+        font-size: 0.78em;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--ink-soft, rgba(15, 23, 42, 0.55));
+        margin: 24px 0 10px;
+        padding: 0;
+        scroll-margin-top: 80px;
+      }
+      .group-heading + .form-group {
+        margin-top: 0;
       }
 
       /* Form fields, blueprint style: square, sharing one continuous border */
@@ -2129,11 +2193,14 @@
       let ajvValidate = null; // compiled lazily on first validate
 
       // Flat propName -> propData lookup, built once. Avoids walking every section
-      // for every updateConfig / resetField call (146 props * 11 sections).
+      // for every updateConfig / resetField call. configData is 3-level nested
+      // (section -> group -> prop), so flatten with two inner loops.
       const propDataIndex = {};
-      for (const sectionProps of Object.values(configData)) {
-        for (const [name, data] of Object.entries(sectionProps)) {
-          propDataIndex[name] = data;
+      for (const groups of Object.values(configData)) {
+        for (const props of Object.values(groups)) {
+          for (const [name, data] of Object.entries(props)) {
+            propDataIndex[name] = data;
+          }
         }
       }
 
@@ -2146,18 +2213,91 @@
 
       // {sectionName: commonCount}, computed once at init from configData.
       // Used by both the sidebar TOC and the in-page section headings to
-      // decide which sections are entirely advanced.
+      // decide which sections are entirely advanced. Walks 3-level nested
+      // configData (section -> group -> prop).
       const sectionCommonCounts = Object.fromEntries(
-        Object.entries(configData).map(([name, props]) => [
-          name,
-          Object.values(props).filter((p) => !p.uncommon).length,
-        ]),
+        Object.entries(configData).map(([name, groups]) => {
+          let count = 0;
+          for (const props of Object.values(groups)) {
+            for (const p of Object.values(props)) {
+              if (!p.uncommon) count += 1;
+            }
+          }
+          return [name, count];
+        }),
       );
+
+      // Track scroll location and apply `.active` to the matching sidebar
+      // entries: the section link, and (when scrolled into a named group) the
+      // matching group sub-link. Uses each form-group's bounding rect rather
+      // than IntersectionObserver because the headings can be very close
+      // together (small groups), and the observer's threshold-based logic
+      // misses transitions when both old and new headings are visible.
+      function initScrollSpy() {
+        const navBySection = {};
+        const navByGroup = {}; // key = "section||group"
+        document.querySelectorAll("#sectionNav a[data-section]").forEach((a) => {
+          if (a.dataset.group) {
+            navByGroup[a.dataset.section + "||" + a.dataset.group] = a;
+          } else {
+            navBySection[a.dataset.section] = a;
+          }
+        });
+
+        // The set of anchors we follow: every section + group heading, in
+        // document order. We pick whichever is most recently above the
+        // viewport's upper trigger line.
+        const anchors = [
+          ...document.querySelectorAll(".section-heading[data-section], .group-heading[data-section][data-group]"),
+        ];
+        if (anchors.length === 0) return;
+
+        let activeSection = null;
+        let activeGroup = null;
+        const applyActive = (section, group) => {
+          if (section === activeSection && group === activeGroup) return;
+          activeSection = section;
+          activeGroup = group;
+          for (const [s, a] of Object.entries(navBySection)) {
+            a.classList.toggle("active", s === section);
+          }
+          for (const [k, a] of Object.entries(navByGroup)) {
+            a.classList.toggle("active", k === section + "||" + group);
+          }
+        };
+
+        const update = () => {
+          // Trigger line sits ~25% down the viewport. The last heading whose
+          // top has crossed this line is the one the user is currently reading.
+          const cutoff = window.innerHeight * 0.25;
+          let pick = null;
+          for (const h of anchors) {
+            if (h.getBoundingClientRect().top <= cutoff) pick = h;
+            else break;
+          }
+          if (!pick) pick = anchors[0];
+          applyActive(pick.dataset.section, pick.dataset.group || null);
+        };
+
+        let ticking = false;
+        const onScroll = () => {
+          if (ticking) return;
+          ticking = true;
+          window.requestAnimationFrame(() => {
+            update();
+            ticking = false;
+          });
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll, { passive: true });
+        update();
+      }
 
       function initWizard() {
         initTheme();
         createSectionNavigation();
         createSectionContent();
+        initScrollSpy();
         hydrateFromStorage();
         const searchInput = document.getElementById("searchInput");
         searchInput.addEventListener("input", handleSearch);
@@ -2210,15 +2350,19 @@
 
       function createSectionNavigation() {
         const nav = document.getElementById("sectionNav");
-        Object.entries(configData).forEach(([sectionName, sectionProps]) => {
+        Object.entries(configData).forEach(([sectionName, groups]) => {
+          // Named groups (the "" key is the ungrouped bucket) render as
+          // always-visible sub-links beneath their section in the sidebar.
+          const namedGroups = Object.keys(groups).filter((g) => g !== "");
+
           const li = document.createElement("li");
+          li.dataset.section = sectionName;
+
           const a = document.createElement("a");
           a.href = "#section-" + slugify(sectionName);
           a.textContent = sectionName;
           a.dataset.section = sectionName;
           const commonCount = sectionCommonCounts[sectionName];
-          // Sections that are entirely advanced (eg. MegaQC) are hidden from the
-          // sidebar until the user toggles "Show advanced options" on.
           if (commonCount === 0) li.classList.add("nav-advanced-only");
           const badge = document.createElement("span");
           badge.className = "badge";
@@ -2232,6 +2376,28 @@
               .scrollIntoView({ behavior: "smooth", block: "start" });
           };
           li.appendChild(a);
+
+          if (namedGroups.length > 0) {
+            const subUl = document.createElement("ul");
+            subUl.className = "section-nav-sub";
+            for (const groupName of namedGroups) {
+              const subLi = document.createElement("li");
+              const subA = document.createElement("a");
+              subA.href = "#group-" + slugify(sectionName) + "-" + slugify(groupName);
+              subA.textContent = groupName;
+              subA.dataset.section = sectionName;
+              subA.dataset.group = groupName;
+              subA.onclick = (e) => {
+                e.preventDefault();
+                setMobilePanel("nav", false);
+                const target = document.getElementById("group-" + slugify(sectionName) + "-" + slugify(groupName));
+                if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+              };
+              subLi.appendChild(subA);
+              subUl.appendChild(subLi);
+            }
+            li.appendChild(subUl);
+          }
           nav.appendChild(li);
         });
       }
@@ -2355,7 +2521,7 @@
       function createSectionContent() {
         const sectionsContainer = document.getElementById("sections");
 
-        Object.entries(configData).forEach(([sectionName, sectionProps]) => {
+        Object.entries(configData).forEach(([sectionName, groups]) => {
           const h2 = document.createElement("h2");
           h2.className = "section-heading";
           h2.id = "section-" + slugify(sectionName);
@@ -2364,10 +2530,25 @@
           if (sectionCommonCounts[sectionName] === 0) h2.classList.add("advanced-only");
           sectionsContainer.appendChild(h2);
 
-          Object.entries(sectionProps).forEach(([propName, propData]) => {
-            const formGroup = createFormGroup(propName, propData);
-            formGroup.dataset.section = sectionName;
-            sectionsContainer.appendChild(formGroup);
+          // Each section has 1..n groups, plus an optional ungrouped bucket
+          // under the empty-string key. Named groups get an <h3> heading; the
+          // ungrouped bucket renders its fields directly under the section.
+          Object.entries(groups).forEach(([groupName, groupProps]) => {
+            if (groupName !== "") {
+              const h3 = document.createElement("h3");
+              h3.className = "group-heading";
+              h3.id = "group-" + slugify(sectionName) + "-" + slugify(groupName);
+              h3.dataset.section = sectionName;
+              h3.dataset.group = groupName;
+              h3.textContent = groupName;
+              sectionsContainer.appendChild(h3);
+            }
+            Object.entries(groupProps).forEach(([propName, propData]) => {
+              const formGroup = createFormGroup(propName, propData);
+              formGroup.dataset.section = sectionName;
+              if (groupName !== "") formGroup.dataset.group = groupName;
+              sectionsContainer.appendChild(formGroup);
+            });
           });
         });
       }
@@ -3100,7 +3281,10 @@
           const matching = sectionCounts[a.dataset.section] || 0;
           const badge = a.querySelector(".badge");
           if (badge) badge.textContent = matching;
-          a.parentElement.classList.toggle("dimmed", matching === 0);
+          // For sections with groups, the section anchor sits inside <summary>
+          // inside <details> inside <li>, so we walk up to the <li>.
+          const li = a.closest("li");
+          if (li) li.classList.toggle("dimmed", matching === 0);
         }
 
         document.getElementById("noResults").style.display = query && !anyVisible ? "block" : "none";
@@ -4168,6 +4352,14 @@
           const section = h.dataset.section;
           const visible = document.querySelector(
             `.form-group[data-section="${CSS.escape(section)}"]:not(.is-filtered-out):not(.hidden)`,
+          );
+          h.style.display = visible ? "" : "none";
+        });
+        document.querySelectorAll(".group-heading[data-section][data-group]").forEach((h) => {
+          const section = h.dataset.section;
+          const group = h.dataset.group;
+          const visible = document.querySelector(
+            `.form-group[data-section="${CSS.escape(section)}"][data-group="${CSS.escape(group)}"]:not(.is-filtered-out):not(.hidden)`,
           );
           h.style.display = visible ? "" : "none";
         });

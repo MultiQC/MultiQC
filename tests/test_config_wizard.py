@@ -67,6 +67,47 @@ def test_every_field_has_a_section():
     )
 
 
+def test_group_contiguity():
+    """Within a section, fields belonging to the same group must be contiguous.
+
+    The docs and wizard generators iterate the schema in source order and emit
+    one group heading the first time they see a group key. A non-contiguous
+    group (eg. Logo, Template, Logo again) would emit the Logo heading twice
+    and split the fields between them. Reordering the affected fields inside
+    the `with section("..."):` block in `multiqc/utils/config_schema.py` is
+    the fix.
+    """
+    properties = MultiQCConfig.model_json_schema()["properties"]
+    seen = set()
+    current = None
+    for name, prop in properties.items():
+        if prop.get("section") is None:
+            continue
+        key = (prop["section"], prop.get("group"))
+        if key != current:
+            assert key not in seen, (
+                f"Field '{name}' reopens (section={key[0]!r}, group={key[1]!r}). "
+                "Group members must be contiguous in source order; reorder the "
+                "fields inside the with section('...') block in "
+                "multiqc/utils/config_schema.py."
+            )
+            if current is not None:
+                seen.add(current)
+            current = key
+
+
+def test_group_requires_section():
+    """A `group` tag without a `section` tag would be silently dropped by the
+    loader, which keys by section first. The `group()` context manager raises
+    at import time if used outside a `section()` block, so this guard is mostly
+    a tripwire against future regressions.
+    """
+    properties = MultiQCConfig.model_json_schema()["properties"]
+    for name, prop in properties.items():
+        if "group" in prop:
+            assert "section" in prop, f"{name}: 'group' tag without 'section'."
+
+
 def test_wizard_skip_list_is_in_schema():
     """SKIP_PROPERTIES must reference real config fields, not stale names."""
     wizard = _load_wizard_module()
