@@ -15,6 +15,19 @@
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Apply the theme before the body renders so the page doesn't flash
+      // light on a dark-mode load. Runs ahead of stylesheet parse on purpose;
+      // can't share helpers with the main script as it hasn't loaded yet.
+      (function () {
+        try {
+          var stored = localStorage.getItem("mqc_wizard_theme");
+          var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var theme = stored === "dark" || stored === "light" ? stored : prefersDark ? "dark" : "light";
+          document.documentElement.dataset.theme = theme;
+        } catch (e) {}
+      })();
+    </script>
     <style>
       :root {
         /* Seqera tokens */
@@ -33,6 +46,118 @@
         --border: rgba(0, 0, 0, 0.15);
         --border-soft: #e8e7e9; /* --color-brand-200 */
         --focus: #31c9ac;
+
+        /* Derived tokens that swap on dark mode. Pulled out so the dark
+           override below only has to redeclare them, not re-derive every
+           rule. */
+        --form-hover-border: rgba(0, 0, 0, 0.25);
+        --form-focus-border: var(--navy);
+        --primary-btn-bg: var(--navy);
+        --primary-btn-bg-hover: var(--navy-2);
+        --primary-btn-fg: #ffffff;
+        --primary-btn-border: var(--primary-btn-bg);
+        --primary-btn-border-hover: var(--primary-btn-bg-hover);
+
+        --status-error-bg: #fdf5f5;
+        --status-error-border: #d04949;
+        --status-error-fg: #b03939;
+        --status-error-badge-bg: rgba(208, 73, 73, 0.12);
+
+        --status-warn-bg: #fff8eb;
+        --status-warn-border: #f0ad4e;
+        --status-warn-fg: #8a5a0a;
+        --status-warn-badge-bg: rgba(240, 173, 78, 0.18);
+
+        --status-info-bg: #f8f4fc;
+        --status-info-border: #b07cd6;
+        --status-info-fg: #6b3da3;
+        --status-info-badge-bg: rgba(176, 124, 214, 0.18);
+
+        --status-ok-fg: var(--teal-border-active);
+        --status-ok-badge-bg: rgba(49, 201, 172, 0.15);
+
+        --status-default-fg: var(--ink-mute);
+        --status-default-badge-bg: rgba(0, 0, 0, 0.06);
+
+        --hljs-attr: #0f7d65;
+        --hljs-string: #b85c2f;
+        --hljs-number: #3d4dac;
+        --hljs-literal: #6b3fb1;
+
+        --yaml-editor-bg: var(--navy);
+        --yaml-editor-fg: #d9d4e0;
+
+        --link-color: var(--navy);
+        --link-hover: var(--teal-border);
+      }
+
+      :root[data-theme="dark"] {
+        /* Sidebar keeps the Seqera brand purple so it stays recognisably
+           part of the same family in dark mode rather than collapsing to
+           neutral grey. `--color-brand-1100` is the deepest brand purple
+           in the Seqera palette; the base brand sits on top of it for the
+           primary-button surface. */
+        --navy: #160f26; /* --color-brand-1100; sidebar / primary-button bg */
+        --navy-2: #201637; /* --color-brand; primary-button hover */
+        --ink: #f5f5f7; /* headings */
+        --ink-mute: #e3e3e3; /* body text */
+        --ink-soft: #a8a8ad; /* captions / muted */
+        --ink-faint: #6e6e73; /* very subtle */
+        --paper: #1c1c1e; /* page bg + form cards */
+        --surface-soft: #2a2a2d; /* inline code / badges */
+        /* Border alphas mirror the light-mode values so lines have comparable
+           weight against their background, rather than jumping out. */
+        --border: rgba(255, 255, 255, 0.15);
+        --border-soft: rgba(255, 255, 255, 0.08);
+
+        --form-hover-border: rgba(255, 255, 255, 0.28);
+        /* Focus needs to read against the dark surface; the light-mode navy
+           would be invisible. A neutral light grey is distinct from the muted
+           default border without being a glaring white line. */
+        --form-focus-border: rgba(255, 255, 255, 0.55);
+        --primary-btn-bg: #201637; /* --color-brand */
+        --primary-btn-bg-hover: #2d273c; /* --color-brand-1000 */
+        --primary-btn-fg: #f5f5f7;
+        /* The brand-purple fill sits very close in tone to the page bg, so
+           a light-grey hairline lifts the button off the surface. */
+        --primary-btn-border: rgba(255, 255, 255, 0.22);
+        --primary-btn-border-hover: rgba(255, 255, 255, 0.4);
+
+        --status-error-bg: #2a1a1c;
+        --status-error-border: #c45959;
+        --status-error-fg: #f29a9a;
+        --status-error-badge-bg: rgba(208, 73, 73, 0.25);
+
+        --status-warn-bg: #2a2418;
+        --status-warn-border: #b8862e;
+        --status-warn-fg: #f0c065;
+        --status-warn-badge-bg: rgba(240, 173, 78, 0.22);
+
+        --status-info-bg: #241e2d;
+        --status-info-border: #8c6bb0;
+        --status-info-fg: #d4b1ee;
+        --status-info-badge-bg: rgba(176, 124, 214, 0.25);
+
+        --status-ok-fg: #5bd9bd;
+        --status-ok-badge-bg: rgba(49, 201, 172, 0.22);
+
+        --status-default-fg: var(--ink-soft);
+        --status-default-badge-bg: rgba(255, 255, 255, 0.08);
+
+        /* Higher-lightness syntax tokens for the YAML examples panel so they
+           read against the dark surface-soft. */
+        --hljs-attr: #5bd9bd;
+        --hljs-string: #f0a875;
+        --hljs-number: #a5b4fc;
+        --hljs-literal: #c4b5fd;
+
+        /* Code-editor surface drops one step below the sidebar so the editor
+           reads as a recessed input rather than competing with the chrome. */
+        --yaml-editor-bg: #0f0a1c;
+        --yaml-editor-fg: #d9d4e0;
+
+        --link-color: #5bd9bd;
+        --link-hover: var(--teal);
       }
 
       * {
@@ -71,13 +196,13 @@
       }
 
       a {
-        color: var(--navy);
+        color: var(--link-color);
         text-decoration: underline;
         text-underline-offset: 3px;
         text-decoration-thickness: 1px;
       }
       a:hover {
-        color: var(--teal-border);
+        color: var(--link-hover);
       }
 
       /* Fixed left side-nav */
@@ -336,6 +461,91 @@
         text-align: center;
       }
 
+      /* Theme toggle at the foot of the sidebar. Pill-shaped track with a
+         sliding thumb; sun / moon glyphs sit on either side of the track and
+         the thumb covers the inactive one. */
+      .sidebar-theme {
+        padding: 12px 18px 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .theme-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 6px 6px 6px 4px;
+        background: transparent;
+        border: 0;
+        color: rgba(255, 255, 255, 0.7);
+        font-family: inherit;
+        font-size: 0.82em;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: color 0.15s ease;
+      }
+      .theme-toggle:hover {
+        color: white;
+      }
+      .theme-toggle:focus-visible {
+        outline: 2px solid var(--teal);
+        outline-offset: 2px;
+      }
+      .theme-toggle-track {
+        position: relative;
+        flex-shrink: 0;
+        width: 40px;
+        height: 22px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 999px;
+        transition: background 0.18s ease;
+      }
+      .theme-toggle:hover .theme-toggle-track {
+        background: rgba(255, 255, 255, 0.14);
+      }
+      .theme-toggle-track svg {
+        position: absolute;
+        top: 50%;
+        width: 11px;
+        height: 11px;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.55);
+        pointer-events: none;
+      }
+      .theme-toggle-icon-sun {
+        left: 4px;
+      }
+      .theme-toggle-icon-moon {
+        right: 4px;
+      }
+      .theme-toggle-thumb {
+        position: absolute;
+        top: 50%;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        background: #f5f5f7;
+        border-radius: 50%;
+        transform: translateY(-50%);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        transition: left 0.18s ease;
+      }
+      :root[data-theme="dark"] .theme-toggle-thumb {
+        left: 20px;
+      }
+      :root[data-theme="dark"] .theme-toggle-icon-moon {
+        color: rgba(255, 255, 255, 0.85);
+      }
+      :root:not([data-theme="dark"]) .theme-toggle-icon-sun {
+        color: #f0ad4e;
+      }
+      .theme-toggle-label {
+        flex: 1;
+        text-align: left;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+      }
+
       .welcome-links {
         display: flex;
         flex-wrap: wrap;
@@ -362,7 +572,7 @@
       .welcome-links a:hover {
         background: var(--surface-soft);
         border-color: var(--ink-soft);
-        color: var(--navy);
+        color: var(--ink);
       }
       .welcome-links a::after {
         content: "↗";
@@ -474,7 +684,7 @@
         padding: 1px 8px;
         border-radius: 3px;
         font-size: 0.88em;
-        color: var(--navy);
+        color: var(--ink);
       }
 
       .section-heading {
@@ -527,11 +737,11 @@
         margin-top: -1px;
       }
       .form-group:hover {
-        border-color: rgba(0, 0, 0, 0.25);
+        border-color: var(--form-hover-border);
         z-index: 1;
       }
       .form-group:focus-within {
-        border-color: var(--navy);
+        border-color: var(--form-focus-border);
         z-index: 2;
       }
       .form-group.is-set {
@@ -546,18 +756,18 @@
       .form-group.is-invalid,
       .form-group.is-invalid:focus-within,
       .form-group.is-set.is-invalid {
-        background: #fdf5f5;
-        border-color: #d04949;
-        box-shadow: inset 3px 0 0 #d04949;
+        background: var(--status-error-bg);
+        border-color: var(--status-error-border);
+        box-shadow: inset 3px 0 0 var(--status-error-border);
         z-index: 2;
       }
       .form-group.is-invalid input,
       .form-group.is-invalid textarea {
-        border-color: #d04949;
+        border-color: var(--status-error-border);
       }
       .field-error-msg {
         margin-top: 8px;
-        color: #b03939;
+        color: var(--status-error-fg);
         font-size: 0.85em;
         line-height: 1.45;
       }
@@ -658,7 +868,7 @@
         text-underline-offset: 3px;
       }
       .examples-toggle:hover {
-        color: var(--navy);
+        color: var(--ink);
       }
       .field-examples {
         display: none;
@@ -682,16 +892,16 @@
         color: var(--ink-mute);
       }
       .field-examples .hljs-attr {
-        color: #0f7d65;
+        color: var(--hljs-attr);
       }
       .field-examples .hljs-string {
-        color: #b85c2f;
+        color: var(--hljs-string);
       }
       .field-examples .hljs-number {
-        color: #3d4dac;
+        color: var(--hljs-number);
       }
       .field-examples .hljs-literal {
-        color: #6b3fb1;
+        color: var(--hljs-literal);
       }
       .field-examples .hljs-bullet,
       .field-examples .hljs-punctuation {
@@ -733,7 +943,7 @@
       }
       .form-group.is-invalid input:focus,
       .form-group.is-invalid textarea:focus {
-        border-color: #d04949;
+        border-color: var(--status-error-border);
         box-shadow: 0 0 0 3px rgba(208, 73, 73, 0.2);
       }
 
@@ -863,13 +1073,13 @@
         line-height: 1.4;
       }
       .btn-primary {
-        background: var(--navy);
-        border-color: var(--navy);
-        color: white;
+        background: var(--primary-btn-bg);
+        border-color: var(--primary-btn-border);
+        color: var(--primary-btn-fg);
       }
       .btn-primary:hover {
-        background: var(--navy-2);
-        border-color: var(--navy-2);
+        background: var(--primary-btn-bg-hover);
+        border-color: var(--primary-btn-border-hover);
       }
       .btn-secondary {
         background: var(--paper);
@@ -944,8 +1154,8 @@
         padding: 14px 16px;
         border: 1px solid var(--border);
         border-radius: 0;
-        background: var(--navy);
-        color: #d9d4e0;
+        background: var(--yaml-editor-bg);
+        color: var(--yaml-editor-fg);
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
         font-size: 0.85em;
         line-height: 1.55;
@@ -1021,20 +1231,20 @@
         border-left-color: var(--teal-border);
       }
       .validate-card.status-error {
-        border-left-color: #d04949;
-        background: #fdf5f5;
+        border-left-color: var(--status-error-border);
+        background: var(--status-error-bg);
       }
       .validate-card.status-default {
         border-left-color: var(--ink-faint);
         background: var(--surface-soft);
       }
       .validate-card.status-deprecated {
-        border-left-color: #f0ad4e;
-        background: #fff8eb;
+        border-left-color: var(--status-warn-border);
+        background: var(--status-warn-bg);
       }
       .validate-card.status-unknown {
-        border-left-color: #b07cd6;
-        background: #f8f4fc;
+        border-left-color: var(--status-info-border);
+        background: var(--status-info-bg);
       }
       .validate-card-head {
         display: flex;
@@ -1084,24 +1294,24 @@
         border-color: currentColor;
       }
       .validate-badge.ok {
-        background: rgba(49, 201, 172, 0.15);
-        color: var(--teal-border-active);
+        background: var(--status-ok-badge-bg);
+        color: var(--status-ok-fg);
       }
       .validate-badge.error {
-        background: rgba(208, 73, 73, 0.12);
-        color: #b03939;
+        background: var(--status-error-badge-bg);
+        color: var(--status-error-fg);
       }
       .validate-badge.default {
-        background: rgba(0, 0, 0, 0.06);
-        color: var(--ink-mute);
+        background: var(--status-default-badge-bg);
+        color: var(--status-default-fg);
       }
       .validate-badge.deprecated {
-        background: rgba(240, 173, 78, 0.18);
-        color: #8a5a0a;
+        background: var(--status-warn-badge-bg);
+        color: var(--status-warn-fg);
       }
       .validate-badge.unknown {
-        background: rgba(176, 124, 214, 0.18);
-        color: #6b3da3;
+        background: var(--status-info-badge-bg);
+        color: var(--status-info-fg);
       }
       .validate-value-inline {
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
@@ -1292,6 +1502,46 @@
           <span class="show-uncommon-label">Show advanced options</span>
         </button>
       </nav>
+      <div class="sidebar-theme">
+        <button
+          id="themeToggle"
+          type="button"
+          class="theme-toggle"
+          onclick="toggleTheme()"
+          aria-pressed="false"
+          aria-label="Toggle dark mode"
+        >
+          <span class="theme-toggle-track" aria-hidden="true">
+            <svg
+              class="theme-toggle-icon-sun"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="8" cy="8" r="3" />
+              <path
+                d="M8 1.5v1.5M8 13v1.5M1.5 8h1.5M13 8h1.5M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M3.3 12.7l1.1-1.1M11.6 4.4l1.1-1.1"
+              />
+            </svg>
+            <svg
+              class="theme-toggle-icon-moon"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M13 9.5A5.5 5.5 0 1 1 6.5 3a4.5 4.5 0 0 0 6.5 6.5z" />
+            </svg>
+            <span class="theme-toggle-thumb"></span>
+          </span>
+          <span class="theme-toggle-label" id="themeToggleLabel">Dark mode</span>
+        </button>
+      </div>
     </aside>
 
     <main class="main">
@@ -1421,6 +1671,7 @@
       );
 
       function initWizard() {
+        initTheme();
         createSectionNavigation();
         createSectionContent();
         hydrateFromStorage();
@@ -1464,6 +1715,57 @@
           li.appendChild(a);
           nav.appendChild(li);
         });
+      }
+
+      // Theme handling. The inline <head> script already set
+      // `document.documentElement.dataset.theme` before the page rendered;
+      // this just keeps the button's aria-pressed in sync and listens for
+      // system-preference changes when the user hasn't picked a theme yet.
+      const THEME_DARK = "dark";
+      const THEME_LIGHT = "light";
+      const THEME_STORAGE_KEY = "mqc_wizard_theme";
+
+      function isDarkTheme() {
+        return document.documentElement.dataset.theme === THEME_DARK;
+      }
+
+      function initTheme() {
+        syncThemeButton();
+        if (window.matchMedia) {
+          const mq = window.matchMedia("(prefers-color-scheme: dark)");
+          const onChange = (e) => {
+            // Only follow the OS when the user hasn't made an explicit choice.
+            let stored = null;
+            try {
+              stored = localStorage.getItem(THEME_STORAGE_KEY);
+            } catch (err) {}
+            if (stored !== THEME_DARK && stored !== THEME_LIGHT) {
+              setTheme(e.matches ? THEME_DARK : THEME_LIGHT, false);
+            }
+          };
+          if (mq.addEventListener) mq.addEventListener("change", onChange);
+          else if (mq.addListener) mq.addListener(onChange);
+        }
+      }
+
+      function syncThemeButton() {
+        const btn = document.getElementById("themeToggle");
+        if (!btn) return;
+        const dark = isDarkTheme();
+        btn.setAttribute("aria-pressed", dark ? "true" : "false");
+        const label = document.getElementById("themeToggleLabel");
+        if (label) label.textContent = dark ? "Light mode" : "Dark mode";
+      }
+
+      function setTheme(theme, persist = true) {
+        document.documentElement.dataset.theme = theme;
+        if (persist) safeLocalStorageSet(THEME_STORAGE_KEY, theme);
+        syncThemeButton();
+        applyMonacoTheme();
+      }
+
+      function toggleTheme() {
+        setTheme(isDarkTheme() ? THEME_LIGHT : THEME_DARK);
       }
 
       function toggleUncommon() {
@@ -2495,6 +2797,55 @@
       let monacoLineDecorations = [];
       let monacoReadyPromise = null;
 
+      // Token colours stay the same in both themes; only the surface colours
+      // swap so the editor matches its containing page.
+      function defineMonacoTheme() {
+        const surfaces = isDarkTheme()
+          ? {
+              background: "#0f0a1c",
+              indent: "#201637",
+              indentActive: "#2d273c",
+            }
+          : {
+              background: "#201637",
+              indent: "#2d273c",
+              indentActive: "#3d3651",
+            };
+        monaco.editor.defineTheme("mqc-dark", {
+          base: "vs-dark",
+          inherit: true,
+          rules: [
+            { token: "type", foreground: "9eebd5" }, // YAML keys
+            { token: "string", foreground: "f1a373" },
+            { token: "string.yaml", foreground: "f1a373" },
+            { token: "number", foreground: "a5b4fc" },
+            { token: "keyword", foreground: "c4b5fd" }, // true/false/null
+            { token: "delimiter", foreground: "8a8595" },
+            { token: "comment", foreground: "847d99", fontStyle: "italic" },
+          ],
+          colors: {
+            "editor.background": surfaces.background,
+            "editor.foreground": "#d9d4e0",
+            "editorLineNumber.foreground": "#5c5767",
+            "editorLineNumber.activeForeground": "#a29fa8",
+            "editor.selectionBackground": "#31c9ac33",
+            "editor.inactiveSelectionBackground": "#31c9ac22",
+            "editorIndentGuide.background1": surfaces.indent,
+            "editorIndentGuide.activeBackground1": surfaces.indentActive,
+            "editorCursor.foreground": "#31c9ac",
+            "scrollbarSlider.background": "#3d365160",
+            "scrollbarSlider.hoverBackground": "#3d3651a0",
+            "scrollbarSlider.activeBackground": "#3d3651c0",
+          },
+        });
+      }
+
+      function applyMonacoTheme() {
+        if (typeof monaco === "undefined" || !monaco.editor) return;
+        defineMonacoTheme();
+        monaco.editor.setTheme("mqc-dark");
+      }
+
       function ensureMonaco() {
         if (monacoReadyPromise) return monacoReadyPromise;
         if (typeof require !== "function" || typeof require.config !== "function") {
@@ -2510,33 +2861,7 @@
             // Custom theme matching the wizard's navy / Seqera palette so
             // the editor reads as part of the same app rather than a foreign
             // VS Code panel.
-            monaco.editor.defineTheme("mqc-dark", {
-              base: "vs-dark",
-              inherit: true,
-              rules: [
-                { token: "type", foreground: "9eebd5" }, // YAML keys
-                { token: "string", foreground: "f1a373" },
-                { token: "string.yaml", foreground: "f1a373" },
-                { token: "number", foreground: "a5b4fc" },
-                { token: "keyword", foreground: "c4b5fd" }, // true/false/null
-                { token: "delimiter", foreground: "8a8595" },
-                { token: "comment", foreground: "847d99", fontStyle: "italic" },
-              ],
-              colors: {
-                "editor.background": "#201637",
-                "editor.foreground": "#d9d4e0",
-                "editorLineNumber.foreground": "#5c5767",
-                "editorLineNumber.activeForeground": "#a29fa8",
-                "editor.selectionBackground": "#31c9ac33",
-                "editor.inactiveSelectionBackground": "#31c9ac22",
-                "editorIndentGuide.background1": "#2d273c",
-                "editorIndentGuide.activeBackground1": "#3d3651",
-                "editorCursor.foreground": "#31c9ac",
-                "scrollbarSlider.background": "#3d365160",
-                "scrollbarSlider.hoverBackground": "#3d3651a0",
-                "scrollbarSlider.activeBackground": "#3d3651c0",
-              },
-            });
+            defineMonacoTheme();
             const container = document.getElementById("validateMonaco");
             const textarea = document.getElementById("validateInput");
             monacoEditor = monaco.editor.create(container, {
