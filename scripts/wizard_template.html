@@ -1207,6 +1207,12 @@
       .validate-line-hl {
         background: rgba(49, 201, 172, 0.18);
       }
+      /* Monaco's marker-hover status bar shows "No quick fixes available"
+         whenever no code-action provider is registered. We have no actions
+         to offer, so hide the dead text but keep the "View Problem" link. */
+      .monaco-editor .hover-row.status-bar .actions > div:not(.action-container) {
+        display: none;
+      }
       .validate-line-hl-margin {
         background: var(--teal);
         width: 3px !important;
@@ -3018,6 +3024,167 @@
 
       let lastValidated = { parsed: null, results: [], keyLineRanges: {} };
 
+      // Namespace for our schema-validation markers so setModelMarkers([])
+      // only clears ours.
+      const MARKERS_OWNER = "mqc-wizard-schema";
+
+      function applyValidationMarkers(markers) {
+        if (!monacoEditor) return;
+        const model = monacoEditor.getModel();
+        if (!model) return;
+        monaco.editor.setModelMarkers(model, MARKERS_OWNER, markers);
+      }
+
+      // Falls back to the full line span if the key text isn't found on the
+      // start line (e.g. an oddly-formatted multi-line block scalar).
+      function keyColumnsOnLine(lines, lineIndex, key) {
+        const line = lines[lineIndex] || "";
+        const idx = line.indexOf(key);
+        if (idx < 0) return { startColumn: 1, endColumn: Math.max(1, line.length) + 1 };
+        return { startColumn: idx + 1, endColumn: idx + key.length + 1 };
+      }
+
+      function escapeRegex(s) {
+        return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      // Walk an Ajv instancePath like "/report_header_info/0/contact_e_mail"
+      // down through the YAML source, returning the line + column of the
+      // deepest segment found. Naive scan: doesn't track indent strictly, so
+      // it can mis-target keys that re-appear under nested blocks, but for
+      // MultiQC configs (shallow, no re-used key names) it's accurate enough.
+      // Returns null on miss so the caller can fall back to the top-level key.
+      function findNestedRange(lines, blockRange, segments) {
+        if (!segments.length) return null;
+        let lineIdx = blockRange.start; // skip the top-level key line
+        const endIdx = blockRange.end;
+        let lastLineIdx = -1;
+        let lastWasIndex = false;
+        for (const seg of segments) {
+          const isIndex = /^\d+$/.test(seg);
+          let found = -1;
+          if (isIndex) {
+            const target = parseInt(seg, 10);
+            let count = 0;
+            while (lineIdx < endIdx) {
+              if (/^\s*-(\s|$)/.test(lines[lineIdx])) {
+                if (count === target) {
+                  found = lineIdx;
+                  break;
+                }
+                count++;
+              }
+              lineIdx++;
+            }
+          } else {
+            const re = new RegExp("(^|\\s|-\\s)" + escapeRegex(seg) + "\\s*:");
+            // Compact `- key: value` style holds the dash and the first
+            // nested key on the same line, so check the previous index's
+            // line before walking forward.
+            if (lastWasIndex && lastLineIdx >= 0 && re.test(lines[lastLineIdx])) {
+              found = lastLineIdx;
+            }
+            while (found < 0 && lineIdx < endIdx) {
+              if (re.test(lines[lineIdx])) {
+                found = lineIdx;
+                break;
+              }
+              lineIdx++;
+            }
+          }
+          if (found < 0) return null;
+          lastLineIdx = found;
+          lastWasIndex = isIndex;
+          lineIdx = found + 1;
+        }
+        const ln = lines[lastLineIdx];
+        const lastSeg = segments[segments.length - 1];
+        const needle = lastWasIndex ? "-" : lastSeg;
+        const idx = ln.indexOf(needle);
+        return {
+          line: lastLineIdx + 1,
+          startColumn: idx >= 0 ? idx + 1 : 1,
+          endColumn: idx >= 0 ? idx + needle.length + 1 : ln.length + 1,
+        };
+      }
+
+      function markersForParseError(e) {
+        if (!monacoEditor || typeof monaco === "undefined") return [];
+        const mark = e && e.mark;
+        const line = mark && typeof mark.line === "number" ? mark.line + 1 : 1;
+        const col = mark && typeof mark.column === "number" ? mark.column + 1 : 1;
+        return [
+          {
+            severity: monaco.MarkerSeverity.Error,
+            message: e.reason || e.message || "YAML parse error",
+            startLineNumber: line,
+            endLineNumber: line,
+            startColumn: col,
+            endColumn: col + 1,
+          },
+        ];
+      }
+
+      function markersForTopLevelError(text, message) {
+        if (!monacoEditor || typeof monaco === "undefined") return [];
+        const firstLine = text.split("\n", 1)[0] || "";
+        return [
+          {
+            severity: monaco.MarkerSeverity.Error,
+            message,
+            startLineNumber: 1,
+            endLineNumber: 1,
+            startColumn: 1,
+            endColumn: Math.max(2, firstLine.length + 1),
+          },
+        ];
+      }
+
+      function markersForResults(text, results, keyLineRanges) {
+        if (!monacoEditor || typeof monaco === "undefined") return [];
+        const lines = text.split("\n");
+        const markers = [];
+        for (const r of results) {
+          const range = keyLineRanges[r.key];
+          if (!range) continue;
+          const topCols = keyColumnsOnLine(lines, range.start - 1, r.key);
+          const topBase = {
+            startLineNumber: range.start,
+            endLineNumber: range.start,
+            startColumn: topCols.startColumn,
+            endColumn: topCols.endColumn,
+          };
+          if (r.status === "error") {
+            for (const entry of r.messages || []) {
+              const segments = (entry.instancePath || "").split("/").slice(2);
+              const nested = segments.length ? findNestedRange(lines, range, segments) : null;
+              markers.push({
+                severity: monaco.MarkerSeverity.Error,
+                message: entry.message,
+                startLineNumber: nested ? nested.line : topBase.startLineNumber,
+                endLineNumber: nested ? nested.line : topBase.endLineNumber,
+                startColumn: nested ? nested.startColumn : topBase.startColumn,
+                endColumn: nested ? nested.endColumn : topBase.endColumn,
+              });
+            }
+          } else if (r.status === "unknown") {
+            markers.push({
+              ...topBase,
+              severity: monaco.MarkerSeverity.Warning,
+              message: r.suggestion ? `Unknown option. Did you mean "${r.suggestion}"?` : "Not a recognised option.",
+            });
+          } else if (r.status === "deprecated") {
+            markers.push({
+              ...topBase,
+              severity: monaco.MarkerSeverity.Warning,
+              message: "Deprecated option. See the description for a replacement.",
+              tags: [monaco.MarkerTag.Deprecated],
+            });
+          }
+        }
+        return markers;
+      }
+
       // Map each top-level key in the paste to its 1-indexed [start, end]
       // line range. Naive regex walk; fine for MultiQC configs (no leading
       // whitespace on top-level keys, no multi-document YAML). Trailing
@@ -3057,6 +3224,7 @@
           summary.innerHTML = "";
           cards.innerHTML = "";
           lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+          applyValidationMarkers([]);
           return;
         }
 
@@ -3068,12 +3236,16 @@
             '<span class="validate-badge error">YAML parse error</span> ' + escapeHtml(e.message || String(e));
           cards.innerHTML = "";
           lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+          applyValidationMarkers(markersForParseError(e));
           return;
         }
         if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
           summary.innerHTML = '<span class="validate-badge error">Expected a mapping at the top level.</span>';
           cards.innerHTML = "";
           lastValidated = { parsed: null, results: [], keyLineRanges: {} };
+          applyValidationMarkers(
+            markersForTopLevelError(text, "Expected a mapping at the top level (key: value pairs)."),
+          );
           return;
         }
 
@@ -3095,7 +3267,10 @@
           for (const err of filterAjvErrors(validate.errors)) {
             const top = (err.instancePath || "").split("/")[1];
             if (!top) continue;
-            (errorsByKey[top] = errorsByKey[top] || []).push(formatAjvError(err));
+            (errorsByKey[top] = errorsByKey[top] || []).push({
+              message: formatAjvError(err),
+              instancePath: err.instancePath || "",
+            });
           }
         }
 
@@ -3123,6 +3298,7 @@
         lastValidated = { parsed, results, keyLineRanges };
         renderSummary(results);
         renderCards(results);
+        applyValidationMarkers(markersForResults(text, results, keyLineRanges));
       }
 
       // Drop the active line decoration + card outline. Called on every
@@ -3299,7 +3475,7 @@
             ? `<div class="validate-msg">did you mean <code>${escapeHtml(r.suggestion)}</code>?</div>`
             : `<div class="validate-msg">not a recognised option</div>`;
         } else if (r.messages && r.messages.length) {
-          body += r.messages.map((m) => `<div class="validate-msg">${escapeHtml(m)}</div>`).join("");
+          body += r.messages.map((m) => `<div class="validate-msg">${escapeHtml(m.message)}</div>`).join("");
         } else if (r.status === "default") {
           body += `<div class="validate-msg">matches the MultiQC default: has no effect</div>`;
         } else if (r.status === "deprecated") {
