@@ -269,7 +269,7 @@ Inline custom content data keyed by section ID. Companion to custom_content for 
 
 ### top_modules
 
-**Type**: `List[Union[str, Dict[str, Dict[str, str]]]]`
+**Type**: `List[Union[str, Dict[str, Dict[str, Any]]]]`
 
 Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.
 
@@ -283,9 +283,9 @@ top_modules:
 
 ### module_order
 
-**Type**: `List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]`
+**Type**: `List[Union[str, Dict[str, Dict[str, Any]]]]`
 
-Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, path_filters).
+Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, anchor, info, path_filters, path_filters_exclude, generalstats, custom_config).
 
 <details><summary>Default value</summary>
 
@@ -471,6 +471,9 @@ module_order:
       name: FastQC (trimmed)
       path_filters:
         - "*_trimmed*"
+  - fastqc:
+      generalstats: false
+      name: FastQC (raw)
   - cutadapt
 ```
 
@@ -1644,11 +1647,17 @@ custom_table_header_config:
 
 ### table_sample_merge
 
-**Type**: `Dict[str, List[Union[str, Dict[str, Union[str, List[str]]]]]]`
+**Type**: `Dict[str, Union[str, Dict[str, Union[str, List[str]]], List[Union[str, Dict[str, Union[str, List[str]]]]]]]`
 
-Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name, values are clean-pattern entries (string or {type, pattern}).
+Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name; values are a clean-pattern entry (a string suffix, or a {type, pattern} dict) or a list of such entries.
 
-**Example**:
+**Examples**:
+
+```yaml
+table_sample_merge:
+  R1: _1
+  R2: _2
+```
 
 ```yaml
 table_sample_merge:

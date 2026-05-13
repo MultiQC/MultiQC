@@ -230,22 +230,24 @@ class MultiQCConfig(BaseModel):
             "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer "
             "splitting the metadata and the data across two top-level keys.",
         )
-        top_modules: Optional[List[Union[str, Dict[str, Dict[str, str]]]]] = cfg(
+        top_modules: Optional[List[Union[str, Dict[str, Dict[str, Any]]]]] = cfg(
             (
                 "Module IDs to render before module_order. Useful for pinning a module to the top "
                 "regardless of where it appears in module_order. Same shape as module_order entries."
             ),
             examples=[["fastqc", "cutadapt"]],
         )
-        module_order: Optional[List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]] = cfg(
+        module_order: Optional[List[Union[str, Dict[str, Dict[str, Any]]]]] = cfg(
             (
                 "Order in which modules appear in the report. Each entry is either a module ID, "
-                "or a single-key dict mapping the ID to per-run overrides (eg. name, path_filters)."
+                "or a single-key dict mapping the ID to per-run overrides (eg. name, anchor, info, "
+                "path_filters, path_filters_exclude, generalstats, custom_config)."
             ),
             examples=[
                 [
                     "fastqc",
                     {"fastqc": {"name": "FastQC (trimmed)", "path_filters": ["*_trimmed*"]}},
+                    {"fastqc": {"name": "FastQC (raw)", "generalstats": False}},
                     "cutadapt",
                 ]
             ],
@@ -667,17 +669,31 @@ class MultiQCConfig(BaseModel):
                 }
             ],
         )
-        table_sample_merge: Optional[Dict[str, List[Union[str, Dict[str, Union[str, List[str]]]]]]] = cfg(
+        table_sample_merge: Optional[
+            Dict[
+                str,
+                Union[
+                    str,
+                    Dict[str, Union[str, List[str]]],
+                    List[Union[str, Dict[str, Union[str, List[str]]]]],
+                ],
+            ]
+        ] = cfg(
             (
                 "Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. "
-                "Keys are the merged group name, values are clean-pattern entries (string or {type, pattern})."
+                "Keys are the merged group name; values are a clean-pattern entry (a string suffix, or a "
+                "{type, pattern} dict) or a list of such entries."
             ),
             advanced=True,
             examples=[
                 {
+                    "R1": "_1",
+                    "R2": "_2",
+                },
+                {
                     "R1": ["_R1", {"type": "regex", "pattern": "[_.-][rR]?1$"}],
                     "R2": ["_R2", {"type": "regex", "pattern": "[_.-][rR]?2$"}],
-                }
+                },
             ],
         )
 

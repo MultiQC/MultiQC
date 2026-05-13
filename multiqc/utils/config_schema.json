@@ -532,7 +532,6 @@
     "template": {
       "anyOf": [
         {
-          "enum": ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
           "type": "string"
         },
         {
@@ -540,7 +539,8 @@
         }
       ],
       "default": null,
-      "description": "Name of the report template.",
+      "description": "Name of the report template. Built-in templates: default, original, simple, sections, gathered, geo, disco. Plugin packages can register additional templates via the `multiqc.templates.v1` entry point.",
+      "examples": ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
       "section": "Report Appearance",
       "title": "Template"
     },
@@ -760,9 +760,7 @@
               },
               {
                 "additionalProperties": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
+                  "additionalProperties": true,
                   "type": "object"
                 },
                 "type": "object"
@@ -791,19 +789,7 @@
               },
               {
                 "additionalProperties": {
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "items": {
-                          "type": "string"
-                        },
-                        "type": "array"
-                      }
-                    ]
-                  },
+                  "additionalProperties": true,
                   "type": "object"
                 },
                 "type": "object"
@@ -817,7 +803,7 @@
         }
       ],
       "default": null,
-      "description": "Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, path_filters).",
+      "description": "Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, anchor, info, path_filters, path_filters_exclude, generalstats, custom_config).",
       "examples": [
         [
           "fastqc",
@@ -825,6 +811,12 @@
             "fastqc": {
               "name": "FastQC (trimmed)",
               "path_filters": ["*_trimmed*"]
+            }
+          },
+          {
+            "fastqc": {
+              "generalstats": false,
+              "name": "FastQC (raw)"
             }
           },
           "cutadapt"
@@ -2501,30 +2493,53 @@
       "anyOf": [
         {
           "additionalProperties": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": {
                         "type": "string"
                       },
-                      {
-                        "items": {
-                          "type": "string"
-                        },
-                        "type": "array"
-                      }
-                    ]
-                  },
-                  "type": "object"
-                }
-              ]
-            },
-            "type": "array"
+                      "type": "array"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        ]
+                      },
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "array"
+              }
+            ]
           },
           "type": "object"
         },
@@ -2533,8 +2548,12 @@
         }
       ],
       "default": null,
-      "description": "Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name, values are clean-pattern entries (string or {type, pattern}).",
+      "description": "Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name; values are a clean-pattern entry (a string suffix, or a {type, pattern} dict) or a list of such entries.",
       "examples": [
+        {
+          "R1": "_1",
+          "R2": "_2"
+        },
         {
           "R1": [
             "_R1",
