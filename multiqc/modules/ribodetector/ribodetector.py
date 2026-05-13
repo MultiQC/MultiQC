@@ -50,8 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(self.ribodetector)} reports")
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
+        # No software version to find. Kept to pass linting tests.
         self.add_software_version(None)
 
         # Add to General Stats table
@@ -95,19 +94,22 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Parse rRNA sequences
             # Format: "Detected 6 rRNA sequences"
-            m = re.search(r"Detected\s+([\d,]+)\s+rRNA sequences", clean_line, re.IGNORECASE)
+            # Negative lookbehind avoids matching the "non-rRNA sequences" line.
+            m = re.search(r"Detected\s+([\d,]+)\s+(?<!non-)rRNA sequences", clean_line, re.IGNORECASE)
             if m:
                 data["rRNA"] = int(m.group(1).replace(",", ""))
                 continue
 
-        # Calculate percentages if we have the data
-        if "total" in data and data["total"] > 0:
-            if "rRNA" in data:
-                data["rRNA_pct"] = (data["rRNA"] / data["total"]) * 100
-            if "non_rRNA" in data:
-                data["non_rRNA_pct"] = (data["non_rRNA"] / data["total"]) * 100
+        missing = [k for k in ("total", "rRNA", "non_rRNA") if k not in data]
+        if missing:
+            log.warning(f"Skipping {f['fn']}: missing expected RiboDetector log lines ({', '.join(missing)})")
+            return None
 
-        return data if data else None
+        if data["total"] > 0:
+            data["rRNA_pct"] = (data["rRNA"] / data["total"]) * 100
+            data["non_rRNA_pct"] = (data["non_rRNA"] / data["total"]) * 100
+
+        return data
 
     def ribodetector_general_stats(self):
         """Add columns to the General Statistics table."""
