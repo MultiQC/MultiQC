@@ -87,6 +87,7 @@
         --teal-border: #0cae8e; /* --color-nextflow-700 */
         --teal-border-active: #087f68; /* --color-nextflow-900 */
         --teal-tint: #e2f7f3;
+        --group-highlight-bg: rgba(49, 201, 172, 0.08);
         --paper: #ffffff;
         --surface-soft: #f8f8f8; /* --color-brand-50 */
         --border: rgba(0, 0, 0, 0.15);
@@ -151,6 +152,7 @@
         --ink-faint: #6e6e73; /* very subtle */
         --paper: #1c1c1e; /* page bg + form cards */
         --surface-soft: #2a2a2d; /* inline code / badges */
+        --group-highlight-bg: rgba(49, 201, 172, 0.12);
         /* Border alphas mirror the light-mode values so lines have comparable
            weight against their background, rather than jumping out. */
         --border: rgba(255, 255, 255, 0.15);
@@ -401,11 +403,13 @@
         opacity: 0.35;
         pointer-events: none;
       }
-      /* Non-clickable section label shown above the section's group entries.
-         When a section has named groups, the groups are the only clickable
-         items; the section name renders here as a small all-caps header for
-         context. */
+      /* Section label shown above the section's group entries. Clickable
+         (scrolls to the section heading) and styled as a small all-caps
+         header, distinct from the regular group sub-links below. */
       .section-nav-label {
+        padding: 0;
+      }
+      .section-nav-label > a {
         padding: 16px 12px 4px;
         font-size: 0.72em;
         font-weight: 700;
@@ -413,7 +417,12 @@
         text-transform: uppercase;
         color: rgba(255, 255, 255, 0.42);
       }
-      .section-nav-label.active {
+      .section-nav-label > a:hover {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.78);
+      }
+      .section-nav-label.active > a {
+        background: transparent;
         color: var(--teal);
       }
       .section-nav-label.dimmed {
@@ -925,39 +934,45 @@
         align-self: center;
       }
 
-      /* Second-level grouping inside a section. Strong enough to act as a
-         visual divider between clusters of form fields. */
+      /* Second-level grouping inside a section. A bordered box wraps the
+         group's form-fields so they read as one cluster; the heading sits
+         centered on the top border, with a paper-coloured background
+         cutting through the line (fieldset/legend visual). */
+      .group-box {
+        position: relative;
+        border: 1px solid var(--border);
+        padding: 30px 18px 18px;
+        margin: 40px 0 0;
+        scroll-margin-top: 80px;
+        transition:
+          background-color 0.25s ease,
+          border-color 0.25s ease;
+      }
+      .group-box.is-highlight {
+        background: var(--group-highlight-bg);
+        border-color: var(--teal-border);
+      }
       .group-heading {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--paper);
+        padding: 0 14px;
         font-family: "Bricolage Grotesque", "Inter", sans-serif;
         font-size: 1em;
         font-weight: 600;
         color: var(--ink);
         letter-spacing: -0.005em;
-        margin: 32px 0 12px;
-        padding: 10px 0 8px 14px;
-        position: relative;
-        border-top: 1px solid var(--border);
-        scroll-margin-top: 80px;
+        white-space: nowrap;
+        max-width: calc(100% - 32px);
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
-      .group-heading::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 14px;
-        height: 1.1em;
-        width: 3px;
-        background: var(--teal);
-        opacity: 0.5;
-      }
-      /* Tighten the gap between the section heading and the first group below
-         it (no need for double spacing). */
-      .section-heading + .group-heading {
-        margin-top: 8px;
-        border-top: 0;
-        padding-top: 0;
-      }
-      .group-heading + .form-group {
-        margin-top: 0;
+      /* Tighten the gap between the section heading and the first group
+         box below it (no need for double spacing). */
+      .section-heading + .group-box {
+        margin-top: 12px;
       }
 
       /* Form fields, blueprint style: square, sharing one continuous border */
@@ -1751,6 +1766,10 @@
           margin: 28px -16px 16px 0;
           font-size: 1.3em;
         }
+        .group-box {
+          padding: 24px 10px 12px;
+          margin-top: 32px;
+        }
 
         /* Editor pane: slide-up sheet anchored to the bottom. Closed
            state shows only the head (52px) peeking up; open state slides
@@ -2227,7 +2246,7 @@
       </div>
 
       <footer class="page-footer">
-        Generated on <time datetime="2026-05-13">2026-05-13</time> for MultiQC <code>1.35</code>.
+        Generated on <time datetime="2026-05-14">2026-05-14</time> for MultiQC <code>1.35</code>.
       </footer>
     </main>
 
@@ -8437,8 +8456,7 @@
       let ajvValidate = null; // compiled lazily on first validate
 
       // Flat propName -> propData lookup, built once. Avoids walking every section
-      // for every updateConfig / resetField call. configData is 3-level nested
-      // (section -> group -> prop), so flatten with two inner loops.
+      // for every updateConfig / resetField call.
       const propDataIndex = {};
       for (const groups of Object.values(configData)) {
         for (const props of Object.values(groups)) {
@@ -8457,8 +8475,7 @@
 
       // {sectionName: commonCount}, computed once at init from configData.
       // Used by both the sidebar TOC and the in-page section headings to
-      // decide which sections are entirely advanced. Walks 3-level nested
-      // configData (section -> group -> prop).
+      // decide which sections are entirely advanced.
       const sectionCommonCounts = Object.fromEntries(
         Object.entries(configData).map(([name, groups]) => {
           let count = 0;
@@ -8500,7 +8517,7 @@
         // document order. We pick whichever is most recently above the
         // viewport's upper trigger line.
         const anchors = [
-          ...document.querySelectorAll(".section-heading[data-section], .group-heading[data-section][data-group]"),
+          ...document.querySelectorAll(".section-heading[data-section], .group-box[data-section][data-group]"),
         ];
         if (anchors.length === 0) return;
 
@@ -8603,13 +8620,28 @@
         if (banner) banner.hidden = true;
       }
 
+      // Tint the group-box that the sidebar scrolls to, so the user can
+      // see which cluster of form fields belongs to the link they just
+      // clicked. The highlight stays until another group is selected.
+      let activeHighlightedGroup = null;
+      function setActiveGroupHighlight(box) {
+        if (activeHighlightedGroup === box) return;
+        if (activeHighlightedGroup) activeHighlightedGroup.classList.remove("is-highlight");
+        box.classList.add("is-highlight");
+        activeHighlightedGroup = box;
+      }
+
       function createSectionNavigation() {
         const nav = document.getElementById("sectionNav");
+        const scrollToSection = (sectionName) => {
+          const target = document.getElementById("section-" + slugify(sectionName));
+          if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+        };
         Object.entries(configData).forEach(([sectionName, groups]) => {
-          // Sections with named groups expose the groups (not the section) as
-          // the clickable items; the section name becomes a non-clickable
-          // label above its groups. Sections without named groups keep a
-          // single clickable entry on the section name.
+          // Sections with named groups expose the section as a small all-caps
+          // header link (scrolls to the section heading) and each group as a
+          // sub-link below. Sections without named groups keep a single
+          // regular entry on the section name.
           const namedGroups = Object.keys(groups).filter((g) => g !== "");
           const commonCount = sectionCommonCounts[sectionName];
 
@@ -8624,9 +8656,7 @@
             a.onclick = (e) => {
               e.preventDefault();
               setMobilePanel("nav", false);
-              document
-                .getElementById("section-" + slugify(sectionName))
-                .scrollIntoView({ behavior: "smooth", block: "start" });
+              scrollToSection(sectionName);
             };
             li.appendChild(a);
             nav.appendChild(li);
@@ -8636,8 +8666,17 @@
           const labelLi = document.createElement("li");
           labelLi.className = "section-nav-label";
           labelLi.dataset.section = sectionName;
-          labelLi.textContent = sectionName;
           if (commonCount === 0) labelLi.classList.add("nav-advanced-only");
+          const labelA = document.createElement("a");
+          labelA.href = "#section-" + slugify(sectionName);
+          labelA.textContent = sectionName;
+          labelA.dataset.section = sectionName;
+          labelA.onclick = (e) => {
+            e.preventDefault();
+            setMobilePanel("nav", false);
+            scrollToSection(sectionName);
+          };
+          labelLi.appendChild(labelA);
           nav.appendChild(labelLi);
 
           const subUl = document.createElement("ul");
@@ -8656,7 +8695,10 @@
               e.preventDefault();
               setMobilePanel("nav", false);
               const target = document.getElementById("group-" + slugify(sectionName) + "-" + slugify(groupName));
-              if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+              if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "start" });
+                setActiveGroupHighlight(target);
+              }
             };
             subLi.appendChild(subA);
             subUl.appendChild(subLi);
@@ -8793,24 +8835,30 @@
           if (sectionCommonCounts[sectionName] === 0) h2.classList.add("advanced-only");
           sectionsContainer.appendChild(h2);
 
-          // Each section has 1..n groups, plus an optional ungrouped bucket
-          // under the empty-string key. Named groups get an <h3> heading; the
-          // ungrouped bucket renders its fields directly under the section.
+          // Empty-string groupName is the ungrouped bucket: its fields render
+          // directly under the section, no .group-box wrapper.
           Object.entries(groups).forEach(([groupName, groupProps]) => {
+            let container = sectionsContainer;
             if (groupName !== "") {
+              const box = document.createElement("section");
+              box.className = "group-box";
+              box.id = "group-" + slugify(sectionName) + "-" + slugify(groupName);
+              box.dataset.section = sectionName;
+              box.dataset.group = groupName;
               const h3 = document.createElement("h3");
               h3.className = "group-heading";
-              h3.id = "group-" + slugify(sectionName) + "-" + slugify(groupName);
               h3.dataset.section = sectionName;
               h3.dataset.group = groupName;
               h3.textContent = groupName;
-              sectionsContainer.appendChild(h3);
+              box.appendChild(h3);
+              sectionsContainer.appendChild(box);
+              container = box;
             }
             Object.entries(groupProps).forEach(([propName, propData]) => {
               const formGroup = createFormGroup(propName, propData);
               formGroup.dataset.section = sectionName;
               if (groupName !== "") formGroup.dataset.group = groupName;
-              sectionsContainer.appendChild(formGroup);
+              container.appendChild(formGroup);
             });
           });
         });
@@ -10624,13 +10672,11 @@
           );
           h.style.display = visible ? "" : "none";
         });
-        document.querySelectorAll(".group-heading[data-section][data-group]").forEach((h) => {
-          const section = h.dataset.section;
-          const group = h.dataset.group;
-          const visible = document.querySelector(
-            `.form-group[data-section="${CSS.escape(section)}"][data-group="${CSS.escape(group)}"]:not(.is-filtered-out):not(.hidden)`,
-          );
-          h.style.display = visible ? "" : "none";
+        document.querySelectorAll(".group-box[data-section][data-group]").forEach((box) => {
+          const section = box.dataset.section;
+          const group = box.dataset.group;
+          const visible = box.querySelector(".form-group:not(.is-filtered-out):not(.hidden)");
+          box.style.display = visible ? "" : "none";
         });
         const unk = document.getElementById("unknownKeysSection");
         if (unk) {

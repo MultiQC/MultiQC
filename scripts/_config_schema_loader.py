@@ -1,7 +1,6 @@
 """Shared schema + config_defaults.yaml loader used by both generator scripts."""
 
 import sys
-from collections import OrderedDict
 from pathlib import Path
 from typing import AbstractSet, Any, Dict, List, Optional, Set, Tuple
 
@@ -38,18 +37,17 @@ def load_schema_and_defaults() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
 def load_sections_with_groups(
     properties: Dict[str, Any],
     skip: AbstractSet[str] = frozenset(),
-) -> "OrderedDict[str, OrderedDict[Optional[str], List[str]]]":
+) -> Dict[str, Dict[Optional[str], List[str]]]:
     """Group property names by ``section`` then by ``group``, preserving source order.
 
-    Returns an ``OrderedDict`` keyed by section name, where each value is an
-    ``OrderedDict`` keyed by group name (or ``None`` for ungrouped fields).
-    Sections, groups within a section, and fields within a group all appear in
-    source order. Group members must be contiguous in source order; non-
-    contiguous groups produce duplicate headings in the generated docs and
-    wizard. Fails loudly on any property missing a ``section`` tag that is not
-    in ``skip``.
+    Returns a dict keyed by section name, where each value is a dict keyed by
+    group name (or ``None`` for ungrouped fields). Sections, groups within a
+    section, and fields within a group all appear in source order. Group
+    members must be contiguous in source order; non-contiguous groups produce
+    duplicate headings in the generated docs and wizard. Fails loudly on any
+    property missing a ``section`` tag that is not in ``skip``.
     """
-    out: "OrderedDict[str, OrderedDict[Optional[str], List[str]]]" = OrderedDict()
+    out: Dict[str, Dict[Optional[str], List[str]]] = {}
     untagged: List[str] = []
     for prop_name, prop in properties.items():
         if prop_name in skip:
@@ -59,7 +57,7 @@ def load_sections_with_groups(
             untagged.append(prop_name)
             continue
         group = prop.get("group")
-        section_buckets = out.setdefault(section, OrderedDict())
+        section_buckets = out.setdefault(section, {})
         section_buckets.setdefault(group, []).append(prop_name)
     if untagged:
         raise RuntimeError(
@@ -68,17 +66,6 @@ def load_sections_with_groups(
             f"or add to the loader caller's skip set."
         )
     return out
-
-
-def load_sections(properties: Dict[str, Any], skip: AbstractSet[str] = frozenset()) -> Dict[str, List[str]]:
-    """Flat ``{section_name: [prop_name, ...]}`` view of the schema, preserving
-    source order. Thin wrapper around :func:`load_sections_with_groups` for
-    callers that don't care about the group hierarchy.
-    """
-    grouped = load_sections_with_groups(properties, skip)
-    return OrderedDict(
-        (section, [name for bucket in groups.values() for name in bucket]) for section, groups in grouped.items()
-    )
 
 
 def load_uncommon(properties: Dict[str, Any]) -> Set[str]:
