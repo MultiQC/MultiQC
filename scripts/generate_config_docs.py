@@ -259,7 +259,7 @@ If you'd rather build your config visually, the [Config Wizard](https://seqera.i
         default_inline, default_block = render_default(default_val)
 
         hashes = "#" * heading_level
-        output.append(f"{hashes} {prop_name}\n")
+        output.append(f"{hashes} `{prop_name}`\n")
         output.append(f"**Type**: `{type_info}`{default_inline}\n")
         output.append(f"{description}\n")
         if default_block:
