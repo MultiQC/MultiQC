@@ -196,7 +196,7 @@ class MultiQCConfig(BaseModel):
             template: Optional[str] = cfg(
                 "Name of the report template. Built-in templates: default, original, simple, sections, gathered, geo, disco. "
                 "Plugin packages can register additional templates via the `multiqc.templates.v1` entry point.",
-                examples=["default", "original", "simple", "sections", "gathered", "geo", "disco"],
+                examples=["default"],
             )
             template_dark_mode: Optional[bool] = cfg(
                 "Enable the dark mode toggle in the report template.",
@@ -233,7 +233,7 @@ class MultiQCConfig(BaseModel):
             )
             custom_css_files: Optional[List[str]] = cfg(
                 "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
-                examples=[["./assets/custom.css", "./assets/branding.css"]],
+                examples=[["./assets/custom.css", "/path/to/branding.css"]],
             )
 
     with section("Report Contents"):
@@ -609,7 +609,7 @@ class MultiQCConfig(BaseModel):
             )
             thousandsSep_format: Optional[str] = cfg(
                 "Thousands separator used in formatted numbers, eg. `,` (default), ` ` (space), or `.`",
-                examples=[" ", "'"],
+                examples=["'"],
             )
         with group("General Stats table"):
             general_stats_columns: Dict[str, GeneralStatsModuleConfig] = cfg(
@@ -754,11 +754,11 @@ class MultiQCConfig(BaseModel):
         with group("Short reads"):
             read_count_multiplier: Optional[float] = cfg(
                 "Multiplier applied to read counts before display. Default 0.000001 shows reads in millions.",
-                examples=[0.001, 1],
+                examples=[0.001],
             )
             read_count_prefix: Optional[str] = cfg(
                 "Suffix shown after formatted read counts, eg. 'M' for millions.",
-                examples=["K", ""],
+                examples=["K"],
             )
             read_count_desc: Optional[str] = cfg(
                 "Word used in plot/axis labels for read counts, eg. 'millions'.",
@@ -767,28 +767,28 @@ class MultiQCConfig(BaseModel):
         with group("Long reads"):
             long_read_count_multiplier: Optional[float] = cfg(
                 "Multiplier for long-read counts. Default 0.001 shows counts in thousands.",
-                examples=[0.000001, 1],
+                examples=[0.000001],
             )
             long_read_count_prefix: Optional[str] = cfg(
                 "Suffix shown after formatted long-read counts, eg. 'K' for thousands.",
-                examples=["M", ""],
+                examples=["M"],
             )
             long_read_count_desc: Optional[str] = cfg(
                 "Word used in labels for long-read counts, eg. 'thousands'.",
-                examples=["millions", "reads"],
+                examples=["millions"],
             )
         with group("Bases"):
             base_count_multiplier: Optional[float] = cfg(
                 "Multiplier for base counts. Default 0.000000001 shows bases in gigabases.",
-                examples=[0.000001, 0.001],
+                examples=[0.000001],
             )
             base_count_prefix: Optional[str] = cfg(
                 "Suffix shown after formatted base counts, eg. 'Gb' for gigabases.",
-                examples=["Mb", "Kb"],
+                examples=["Mb"],
             )
             base_count_desc: Optional[str] = cfg(
                 "Word used in labels for base counts, eg. 'gigabases'.",
-                examples=["megabases", "kilobases"],
+                examples=["megabases"],
             )
 
     with section("AI Summary"):
