@@ -147,8 +147,8 @@ table_cond_formatting_rules:
   QCStatus:
     fail:
       - s_contains: "fail"
-decimalPoint_format: null
-thousandsSep_format: null
+decimalPoint_format: "."
+thousandsSep_format: " "
 remove_sections: []
 section_comments: {}
 section_status_checks: {}

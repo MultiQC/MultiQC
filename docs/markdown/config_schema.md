@@ -104,34 +104,10 @@ Show the date and time the report was generated in the header.
 
 Name of the report template. Built-in templates: default, original, simple, sections, gathered, geo, disco. Plugin packages can register additional templates via the `multiqc.templates.v1` entry point.
 
-**Examples**:
+**Example**:
 
 ```yaml
 template: default
-```
-
-```yaml
-template: original
-```
-
-```yaml
-template: simple
-```
-
-```yaml
-template: sections
-```
-
-```yaml
-template: gathered
-```
-
-```yaml
-template: geo
-```
-
-```yaml
-template: disco
 ```
 
 #### template_dark_mode
@@ -241,7 +217,7 @@ Paths to additional CSS files to inline into the report. Useful for branding ove
 ```yaml
 custom_css_files:
   - ./assets/custom.css
-  - ./assets/branding.css
+  - /path/to/branding.css
 ```
 
 ## Report Contents
@@ -1499,9 +1475,9 @@ Cap on the number of columns the user can toggle in the table-configure toolbox.
 
 #### decimalPoint_format
 
-**Type**: `str`
+**Type**: `str` (default: `"."`)
 
-Decimal-point character used in formatted numbers, eg. `.` (default) or `,`.
+Decimal-point character used in formatted numbers. Defaults to `.`
 
 **Example**:
 
@@ -1511,18 +1487,14 @@ decimalPoint_format: ","
 
 #### thousandsSep_format
 
-**Type**: `str`
+**Type**: `str` (default: `" "`)
 
-Thousands separator used in formatted numbers, eg. `,` (default), ` ` (space), or `.`
+Thousands separator used in formatted numbers. Defaults to a single space, which is rendered as a small non-breaking space.
 
-**Examples**:
-
-```yaml
-thousandsSep_format: " "
-```
+**Example**:
 
 ```yaml
-thousandsSep_format: "'"
+thousandsSep_format: ","
 ```
 
 ### General Stats table
@@ -1783,14 +1755,10 @@ Hide the Software Versions section.
 
 Multiplier applied to read counts before display. Default 0.000001 shows reads in millions.
 
-**Examples**:
+**Example**:
 
 ```yaml
 read_count_multiplier: 0.001
-```
-
-```yaml
-read_count_multiplier: 1
 ```
 
 #### read_count_prefix
@@ -1799,14 +1767,10 @@ read_count_multiplier: 1
 
 Suffix shown after formatted read counts, eg. 'M' for millions.
 
-**Examples**:
+**Example**:
 
 ```yaml
 read_count_prefix: K
-```
-
-```yaml
-read_count_prefix: ""
 ```
 
 #### read_count_desc
@@ -1833,14 +1797,10 @@ read_count_desc: raw reads
 
 Multiplier for long-read counts. Default 0.001 shows counts in thousands.
 
-**Examples**:
+**Example**:
 
 ```yaml
 long_read_count_multiplier: 1.0e-06
-```
-
-```yaml
-long_read_count_multiplier: 1
 ```
 
 #### long_read_count_prefix
@@ -1849,14 +1809,10 @@ long_read_count_multiplier: 1
 
 Suffix shown after formatted long-read counts, eg. 'K' for thousands.
 
-**Examples**:
+**Example**:
 
 ```yaml
 long_read_count_prefix: M
-```
-
-```yaml
-long_read_count_prefix: ""
 ```
 
 #### long_read_count_desc
@@ -1865,14 +1821,10 @@ long_read_count_prefix: ""
 
 Word used in labels for long-read counts, eg. 'thousands'.
 
-**Examples**:
+**Example**:
 
 ```yaml
 long_read_count_desc: millions
-```
-
-```yaml
-long_read_count_desc: reads
 ```
 
 ### Bases
@@ -1881,13 +1833,9 @@ long_read_count_desc: reads
 
 **Type**: `float` (default: `1e-06`)
 
-Multiplier for base counts. Default 0.000000001 shows bases in gigabases.
+Multiplier for base counts. Default 0.000001 shows bases in megabases.
 
-**Examples**:
-
-```yaml
-base_count_multiplier: 1.0e-06
-```
+**Example**:
 
 ```yaml
 base_count_multiplier: 0.001
@@ -1897,13 +1845,9 @@ base_count_multiplier: 0.001
 
 **Type**: `str` (default: `"Mb"`)
 
-Suffix shown after formatted base counts, eg. 'Gb' for gigabases.
+Suffix shown after formatted base counts, eg. 'Mb' for megabases.
 
-**Examples**:
-
-```yaml
-base_count_prefix: Mb
-```
+**Example**:
 
 ```yaml
 base_count_prefix: Kb
@@ -1913,13 +1857,9 @@ base_count_prefix: Kb
 
 **Type**: `str` (default: `"millions"`)
 
-Word used in labels for base counts, eg. 'gigabases'.
+Word used in labels for base counts, eg. 'megabases'.
 
-**Examples**:
-
-```yaml
-base_count_desc: megabases
-```
+**Example**:
 
 ```yaml
 base_count_desc: kilobases

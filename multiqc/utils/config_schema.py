@@ -603,13 +603,16 @@ class MultiQCConfig(BaseModel):
             max_configurable_table_columns: Optional[int] = cfg(
                 "Cap on the number of columns the user can toggle in the table-configure toolbox.",
             )
-            decimalPoint_format: Optional[str] = cfg(
-                "Decimal-point character used in formatted numbers, eg. `.` (default) or `,`.",
+            decimalPoint_format: str = cfg(
+                "Decimal-point character used in formatted numbers. Defaults to `.`",
+                default=".",
                 examples=[","],
             )
-            thousandsSep_format: Optional[str] = cfg(
-                "Thousands separator used in formatted numbers, eg. `,` (default), ` ` (space), or `.`",
-                examples=["'"],
+            thousandsSep_format: str = cfg(
+                "Thousands separator used in formatted numbers. Defaults to a single space, "
+                "which is rendered as a small non-breaking space.",
+                default=" ",
+                examples=[","],
             )
         with group("General Stats table"):
             general_stats_columns: Dict[str, GeneralStatsModuleConfig] = cfg(
@@ -779,16 +782,16 @@ class MultiQCConfig(BaseModel):
             )
         with group("Bases"):
             base_count_multiplier: Optional[float] = cfg(
-                "Multiplier for base counts. Default 0.000000001 shows bases in gigabases.",
-                examples=[0.000001],
+                "Multiplier for base counts. Default 0.000001 shows bases in megabases.",
+                examples=[0.001],
             )
             base_count_prefix: Optional[str] = cfg(
-                "Suffix shown after formatted base counts, eg. 'Gb' for gigabases.",
-                examples=["Mb"],
+                "Suffix shown after formatted base counts, eg. 'Mb' for megabases.",
+                examples=["Kb"],
             )
             base_count_desc: Optional[str] = cfg(
-                "Word used in labels for base counts, eg. 'gigabases'.",
-                examples=["megabases"],
+                "Word used in labels for base counts, eg. 'megabases'.",
+                examples=["kilobases"],
             )
 
     with section("AI Summary"):
