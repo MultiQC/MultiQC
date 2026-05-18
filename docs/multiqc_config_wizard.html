@@ -441,86 +441,6 @@
         pointer-events: none;
       }
 
-      .show-uncommon-btn {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: calc(100% - 20px);
-        margin: 12px 10px 4px;
-        padding: 6px 10px;
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.55);
-        border-radius: 4px;
-        font-family: inherit;
-        font-size: 0.78em;
-        cursor: pointer;
-        text-align: left;
-        transition:
-          background 0.15s ease,
-          color 0.15s ease,
-          border-color 0.15s ease;
-      }
-      .show-uncommon-btn:hover {
-        background: rgba(255, 255, 255, 0.04);
-        color: white;
-        border-color: rgba(255, 255, 255, 0.16);
-      }
-      .show-uncommon-state {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.18);
-        flex-shrink: 0;
-      }
-      body.show-uncommon .show-uncommon-btn {
-        background: rgba(49, 201, 172, 0.08);
-        border-color: rgba(49, 201, 172, 0.25);
-        color: white;
-      }
-      body.show-uncommon .show-uncommon-state {
-        background: var(--teal);
-        box-shadow: 0 0 0 2px rgba(49, 201, 172, 0.25);
-      }
-
-      .form-group.uncommon {
-        display: none;
-      }
-      body.search-active .form-group.uncommon {
-        display: block;
-      }
-      body.show-uncommon .form-group.uncommon {
-        display: block;
-      }
-      .section-nav .nav-advanced-only,
-      .section-heading.advanced-only {
-        display: none;
-      }
-      body.show-uncommon .section-nav .nav-advanced-only,
-      body.search-active .section-nav .nav-advanced-only {
-        display: list-item;
-      }
-      body.show-uncommon .section-heading.advanced-only,
-      body.search-active .section-heading.advanced-only {
-        display: block;
-      }
-      body.show-uncommon .form-group.uncommon .field-key::after {
-        content: "advanced";
-        display: inline-block;
-        margin-left: 8px;
-        padding: 1px 6px;
-        border-radius: 3px;
-        font-family: "Inter", sans-serif;
-        font-size: 0.68em;
-        font-weight: 500;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--ink-soft);
-        background: var(--surface-soft);
-        border: 1px solid var(--border-soft);
-        vertical-align: middle;
-      }
-
       .sidebar-cta {
         padding: 14px 18px 6px;
       }
@@ -1034,8 +954,7 @@
         line-height: 1.45;
       }
       .form-group.hidden {
-        /* `!important` so search filtering wins over the show-uncommon rule's higher specificity. */
-        display: none !important;
+        display: none;
       }
       .form-group label.field-label {
         display: flex;
@@ -1135,6 +1054,39 @@
         letter-spacing: 0;
         text-transform: none;
         vertical-align: middle;
+      }
+      .deprecated-badge {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        color: var(--ink-soft);
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        vertical-align: middle;
+        cursor: help;
+      }
+      /* The whole option is greyed out so deprecated entries read as
+         discouraged at a glance, even before the badge is noticed. */
+      .form-group.deprecated {
+        background: var(--surface-soft);
+      }
+      .form-group.deprecated .field-key,
+      .form-group.deprecated .description,
+      .form-group.deprecated .field-label {
+        color: var(--ink-soft);
+      }
+      .form-group.deprecated .field-key {
+        text-decoration: line-through;
+        text-decoration-color: var(--ink-faint);
+        text-decoration-thickness: 1px;
+      }
+      .form-group.deprecated input,
+      .form-group.deprecated textarea,
+      .form-group.deprecated select {
+        opacity: 0.7;
       }
       .field-reset-btn {
         padding: 3px 6px;
@@ -2032,16 +1984,6 @@
       </div>
       <nav class="sidebar-sections">
         <ul class="section-nav" id="sectionNav"></ul>
-        <button
-          id="toggleUncommonBtn"
-          type="button"
-          class="show-uncommon-btn"
-          onclick="toggleUncommon()"
-          aria-pressed="false"
-        >
-          <span class="show-uncommon-state" aria-hidden="true"></span>
-          <span class="show-uncommon-label">Show advanced options</span>
-        </button>
       </nav>
       <div class="sidebar-theme">
         <button
@@ -2280,7 +2222,6 @@
         "Report Meta": {
           "Header text": {
             title: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -2291,7 +2232,6 @@
               examples: [],
             },
             subtitle: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -2302,7 +2242,6 @@
               examples: [],
             },
             intro_text: {
-              uncommon: false,
               deprecated: false,
               multiline: true,
               type: "string",
@@ -2313,7 +2252,6 @@
               examples: [],
             },
             report_comment: {
-              uncommon: false,
               deprecated: false,
               multiline: true,
               type: "string",
@@ -2323,10 +2261,7 @@
               items_enum: null,
               examples: ["This report was generated from the RNA-seq pipeline on 2024-08-21."],
             },
-          },
-          "": {
             report_header_info: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -2352,8 +2287,9 @@
                 ],
               ],
             },
+          },
+          "Report generation info": {
             show_analysis_paths: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -2364,7 +2300,6 @@
               examples: [],
             },
             show_analysis_time: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -2379,7 +2314,6 @@
         "Report Appearance": {
           Template: {
             template: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -2391,7 +2325,6 @@
               examples: ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
             },
             template_dark_mode: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -2401,89 +2334,7 @@
               items_enum: null,
               examples: [],
             },
-          },
-          Logo: {
-            custom_logo: {
-              uncommon: false,
-              deprecated: false,
-              multiline: false,
-              type: "string",
-              description: "Path to an image to show at the top of the report, replacing the MultiQC logo.",
-              default: null,
-              enum: null,
-              items_enum: null,
-              examples: ["/path/to/logo.png", "./assets/logo.svg"],
-            },
-            custom_logo_dark: {
-              uncommon: false,
-              deprecated: false,
-              multiline: false,
-              type: "string",
-              description: "Path to an alternative logo for dark mode. Falls back to custom_logo if unset.",
-              default: null,
-              enum: null,
-              items_enum: null,
-              examples: ["./assets/logo_dark.svg"],
-            },
-            custom_logo_url: {
-              uncommon: false,
-              deprecated: false,
-              multiline: false,
-              type: "string",
-              description: "URL the custom logo links to when clicked.",
-              default: null,
-              enum: null,
-              items_enum: null,
-              examples: ["https://www.scilifelab.se"],
-            },
-            custom_logo_title: {
-              uncommon: false,
-              deprecated: false,
-              multiline: false,
-              type: "string",
-              description: "Tooltip text shown when hovering over the custom logo.",
-              default: null,
-              enum: null,
-              items_enum: null,
-              examples: ["Our institute name"],
-            },
-            custom_logo_width: {
-              uncommon: false,
-              deprecated: false,
-              multiline: false,
-              type: "integer",
-              description: "Logo width in pixels. Height scales proportionally.",
-              default: null,
-              enum: null,
-              items_enum: null,
-              examples: [200],
-            },
-          },
-          "": {
-            custom_favicon: {
-              uncommon: false,
-              deprecated: false,
-              multiline: false,
-              type: "string",
-              description: "Path to a custom favicon image to show in the browser tab.",
-              default: null,
-              enum: null,
-              items_enum: null,
-              examples: ["/path/to/favicon.ico", "./assets/favicon.png"],
-            },
-            custom_css_files: {
-              uncommon: false,
-              deprecated: false,
-              multiline: false,
-              type: "array",
-              description: "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
-              default: [],
-              enum: null,
-              items_enum: null,
-              examples: [["./assets/custom.css", "./assets/branding.css"]],
-            },
             simple_output: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -2495,11 +2346,84 @@
               examples: [],
             },
           },
+          Logo: {
+            custom_logo: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description: "Path to an image to show at the top of the report, replacing the MultiQC logo.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: ["/path/to/logo.png", "./assets/logo.svg"],
+            },
+            custom_logo_dark: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description: "Path to an alternative logo for dark mode. Falls back to custom_logo if unset.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: ["./assets/logo_dark.svg"],
+            },
+            custom_logo_url: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description: "URL the custom logo links to when clicked.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: ["https://www.scilifelab.se"],
+            },
+            custom_logo_title: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description: "Tooltip text shown when hovering over the custom logo.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: ["Our institute name"],
+            },
+            custom_logo_width: {
+              deprecated: false,
+              multiline: false,
+              type: "integer",
+              description: "Logo width in pixels. Height scales proportionally.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: [200],
+            },
+          },
+          Branding: {
+            custom_favicon: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description: "Path to a custom favicon image to show in the browser tab.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: ["/path/to/favicon.ico", "./assets/favicon.png"],
+            },
+            custom_css_files: {
+              deprecated: false,
+              multiline: false,
+              type: "array",
+              description: "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
+              default: [],
+              enum: null,
+              items_enum: null,
+              examples: [["./assets/custom.css", "./assets/branding.css"]],
+            },
+          },
         },
         "Report Contents": {
           "Custom content": {
             custom_content: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -2532,7 +2456,6 @@
               ],
             },
             custom_content_modules: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -2543,7 +2466,6 @@
               examples: [],
             },
             custom_data: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -2557,7 +2479,6 @@
           },
           "Module ordering": {
             top_modules: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -2569,7 +2490,6 @@
               examples: [["fastqc", "cutadapt"]],
             },
             module_order: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -2768,7 +2688,6 @@
               ],
             },
             run_modules: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -2780,7 +2699,6 @@
               examples: [["fastqc", "cutadapt", "samtools"]],
             },
             exclude_modules: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -2790,10 +2708,7 @@
               items_enum: null,
               examples: [["fastqc"]],
             },
-          },
-          "Section control": {
             remove_sections: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -2804,7 +2719,6 @@
               examples: [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
             },
             report_section_order: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -2824,8 +2738,9 @@
                 },
               ],
             },
+          },
+          "Section comments + indicators": {
             section_comments: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -2842,7 +2757,6 @@
               ],
             },
             section_status_checks: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -2865,7 +2779,6 @@
         "Output Options": {
           "Report file": {
             force: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -2876,7 +2789,6 @@
               examples: [],
             },
             output_fn_name: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -2887,7 +2799,6 @@
               examples: [],
             },
             make_report: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -2900,7 +2811,6 @@
           },
           "Data files": {
             make_data_dir: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -2911,7 +2821,6 @@
               examples: [],
             },
             zip_data_dir: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -2922,7 +2831,6 @@
               examples: [],
             },
             data_dir_name: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -2934,7 +2842,6 @@
               examples: [],
             },
             data_format: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -2945,7 +2852,6 @@
               examples: [],
             },
             data_format_extensions: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -2968,7 +2874,6 @@
               ],
             },
             parquet_format: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -2982,7 +2887,6 @@
           },
           "Data dump": {
             data_dump_file: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -2993,7 +2897,6 @@
               examples: [],
             },
             data_dump_file_write_raw: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3006,7 +2909,6 @@
           },
           "Plot export": {
             export_plots: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3017,7 +2919,6 @@
               examples: [],
             },
             export_plot_formats: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3028,7 +2929,6 @@
               examples: [],
             },
             export_plots_timeout: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3039,7 +2939,6 @@
               examples: [],
             },
             plots_dir_name: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -3052,7 +2951,6 @@
           },
           PDF: {
             make_pdf: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3063,7 +2961,6 @@
               examples: [],
             },
             pandoc_template: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -3078,7 +2975,6 @@
         "Sample Names": {
           "Prepend directory": {
             prepend_dirs: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3090,7 +2986,6 @@
               examples: [],
             },
             prepend_dirs_depth: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3101,7 +2996,6 @@
               examples: [],
             },
             prepend_dirs_sep: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -3114,7 +3008,6 @@
           },
           "Name cleaning": {
             fn_clean_sample_names: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3125,7 +3018,6 @@
               examples: [],
             },
             extra_fn_clean_exts: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3146,7 +3038,6 @@
               ],
             },
             extra_fn_clean_trim: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3157,7 +3048,6 @@
               examples: [["sample_", "_processed"]],
             },
             fn_clean_exts: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3334,7 +3224,6 @@
               ],
             },
             fn_clean_trim: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3372,7 +3261,6 @@
               examples: [["_R1", "_R2", "_001"]],
             },
             use_filename_as_sample_name: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3386,7 +3274,6 @@
           },
           "Ignore samples": {
             sample_names_ignore: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3397,7 +3284,6 @@
               examples: [["*_temp", "control_*"]],
             },
             sample_names_ignore_re: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3408,7 +3294,6 @@
               examples: [["^test_.*", ".*_neg_ctrl$"]],
             },
             sample_names_only_include: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3419,7 +3304,6 @@
               examples: [["RNA_*", "Sample_??"]],
             },
             sample_names_only_include_re: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3432,7 +3316,6 @@
           },
           "Rename and replace": {
             sample_names_rename: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3450,7 +3333,6 @@
               ],
             },
             sample_names_rename_buttons: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3462,7 +3344,6 @@
               examples: [["Sample ID", "Patient ID", "Lane"]],
             },
             sample_names_replace: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -3479,7 +3360,6 @@
               ],
             },
             sample_names_replace_complete: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3490,7 +3370,6 @@
               examples: [],
             },
             sample_names_replace_exact: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3501,7 +3380,6 @@
               examples: [],
             },
             sample_names_replace_regex: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3516,7 +3394,6 @@
         "File Discovery": {
           "Input source": {
             file_list: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3527,7 +3404,6 @@
               examples: [],
             },
             require_logs: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3541,7 +3417,6 @@
           },
           "Size limits": {
             log_filesize_limit: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3552,7 +3427,6 @@
               examples: [],
             },
             filesearch_lines_limit: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3565,7 +3439,6 @@
           },
           "Skip patterns": {
             ignore_symlinks: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3576,7 +3449,6 @@
               examples: [],
             },
             ignore_images: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3587,7 +3459,6 @@
               examples: [],
             },
             fn_ignore_dirs: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3605,7 +3476,6 @@
               examples: [["work", ".nextflow", "*_logs"]],
             },
             fn_ignore_paths: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3622,7 +3492,6 @@
               examples: [["*/test_data/*", "*/.snakemake/*"]],
             },
             fn_ignore_files: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3657,7 +3526,6 @@
               examples: [["*.bai", "*.bak", "*.tmp"]],
             },
             filesearch_file_shared: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3672,7 +3540,6 @@
         "Plot Settings": {
           "Rendering mode": {
             plots_force_flat: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3684,7 +3551,6 @@
               examples: [],
             },
             plots_force_interactive: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3695,7 +3561,6 @@
               examples: [],
             },
             plots_flat_numseries: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3707,7 +3572,6 @@
               examples: [],
             },
             plots_defer_loading_numseries: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3719,7 +3583,6 @@
               examples: [],
             },
             num_datasets_plot_limit: {
-              uncommon: true,
               deprecated: true,
               multiline: false,
               type: "integer",
@@ -3732,7 +3595,6 @@
           },
           Appearance: {
             plots_export_font_scale: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "number",
@@ -3744,7 +3606,6 @@
               examples: [],
             },
             plot_font_family: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -3755,7 +3616,6 @@
               examples: [],
             },
             custom_plot_config: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -3776,7 +3636,6 @@
               ],
             },
             lineplot_number_of_points_to_hide_markers: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3788,7 +3647,6 @@
               examples: [],
             },
             barplot_legend_on_bottom: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3801,7 +3659,6 @@
           },
           "Boxplot and violin": {
             boxplot_boxpoints: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -3812,7 +3669,6 @@
               examples: [],
             },
             box_min_threshold_outliers: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3823,7 +3679,6 @@
               examples: [],
             },
             box_min_threshold_no_points: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3834,7 +3689,6 @@
               examples: [],
             },
             violin_downsample_after: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3846,7 +3700,6 @@
               examples: [],
             },
             violin_min_threshold_outliers: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3857,7 +3710,6 @@
               examples: [],
             },
             violin_min_threshold_no_points: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3872,7 +3724,6 @@
         Toolbox: {
           Highlighting: {
             highlight_patterns: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3883,7 +3734,6 @@
               examples: [["control", "treated"]],
             },
             highlight_colors: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3894,7 +3744,6 @@
               examples: [["#377eb8", "#e41a1c"]],
             },
             highlight_regex: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3907,7 +3756,6 @@
           },
           "Show/hide buttons": {
             show_hide_buttons: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3918,7 +3766,6 @@
               examples: [["Tumour samples", "Normal samples"]],
             },
             show_hide_patterns: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3935,7 +3782,6 @@
               ],
             },
             show_hide_mode: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3946,7 +3792,6 @@
               examples: [["show", "show"]],
             },
             show_hide_regex: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -3962,7 +3807,6 @@
         "Table Settings": {
           General: {
             collapse_tables: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -3973,7 +3817,6 @@
               examples: [],
             },
             max_table_rows: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3984,7 +3827,6 @@
               examples: [],
             },
             max_configurable_table_columns: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -3995,7 +3837,6 @@
               examples: [],
             },
             decimalPoint_format: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4006,7 +3847,6 @@
               examples: [","],
             },
             thousandsSep_format: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4019,7 +3859,6 @@
           },
           "General Stats table": {
             general_stats_columns: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -4044,7 +3883,6 @@
               ],
             },
             general_stats_helptext: {
-              uncommon: false,
               deprecated: false,
               multiline: true,
               type: "string",
@@ -4055,7 +3893,6 @@
               examples: [],
             },
             skip_generalstats: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4068,7 +3905,6 @@
           },
           "Column overrides": {
             table_columns_name: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -4087,7 +3923,6 @@
               ],
             },
             table_columns_placement: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -4107,7 +3942,6 @@
               ],
             },
             table_columns_visible: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -4127,7 +3961,6 @@
               ],
             },
             custom_table_header_config: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -4150,7 +3983,6 @@
           },
           "Conditional formatting": {
             table_cond_formatting_rules: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -4256,7 +4088,6 @@
               ],
             },
             table_cond_formatting_colours: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "array",
@@ -4304,7 +4135,6 @@
           },
           "Row merging": {
             table_sample_merge: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -4339,9 +4169,8 @@
           },
         },
         "Software Versions": {
-          "": {
+          "Software Versions": {
             software_versions: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -4359,7 +4188,6 @@
               ],
             },
             versions_table_group_header: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4370,7 +4198,6 @@
               examples: [],
             },
             disable_version_detection: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4381,7 +4208,6 @@
               examples: [],
             },
             skip_versions_section: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4396,7 +4222,6 @@
         "Read & Base Counts": {
           "Short reads": {
             read_count_multiplier: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "number",
@@ -4408,7 +4233,6 @@
               examples: [0.001, 1],
             },
             read_count_prefix: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4419,7 +4243,6 @@
               examples: ["K", ""],
             },
             read_count_desc: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4432,7 +4255,6 @@
           },
           "Long reads": {
             long_read_count_multiplier: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "number",
@@ -4443,7 +4265,6 @@
               examples: [1e-6, 1],
             },
             long_read_count_prefix: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4454,7 +4275,6 @@
               examples: ["M", ""],
             },
             long_read_count_desc: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4467,7 +4287,6 @@
           },
           Bases: {
             base_count_multiplier: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "number",
@@ -4478,7 +4297,6 @@
               examples: [1e-6, 0.001],
             },
             base_count_prefix: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4489,7 +4307,6 @@
               examples: ["Mb", "Kb"],
             },
             base_count_desc: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4504,7 +4321,6 @@
         "AI Summary": {
           "On/off": {
             ai_summary: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4515,7 +4331,6 @@
               examples: [],
             },
             ai_summary_full: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4526,7 +4341,6 @@
               examples: [],
             },
             no_ai: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4537,9 +4351,43 @@
               examples: [],
             },
           },
+          Prompts: {
+            ai_prompt_short: {
+              deprecated: false,
+              multiline: true,
+              type: "string",
+              description:
+                "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: ["Write the summary in one short paragraph aimed at a lab head, no jargon."],
+            },
+            ai_prompt_full: {
+              deprecated: false,
+              multiline: true,
+              type: "string",
+              description: "Custom prompt prepended to the full-section AI summary request.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: ["Use bullet points and call out any sample that looks like an outlier."],
+            },
+          },
+          Privacy: {
+            ai_anonymize_samples: {
+              deprecated: false,
+              multiline: false,
+              type: "boolean",
+              description: "Replace sample names with placeholders before sending data to the AI provider.",
+              default: false,
+              enum: null,
+              items_enum: null,
+              examples: [],
+            },
+          },
           Provider: {
             ai_provider: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4550,7 +4398,6 @@
               examples: [],
             },
             ai_model: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4561,7 +4408,6 @@
               examples: ["gpt-4o", "claude-sonnet-4-5."],
             },
             ai_custom_endpoint: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4572,7 +4418,6 @@
               examples: ["http://localhost:11434/v1", "https://api.example.com/v1"],
             },
             ai_auth_type: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4583,10 +4428,29 @@
               items_enum: null,
               examples: [],
             },
+            seqera_website: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description: "Base URL used for Seqera Platform links in the report.",
+              default: "https://seqera.io",
+              enum: null,
+              items_enum: null,
+              examples: [],
+            },
+            seqera_api_url: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description: "Base URL for the Seqera Platform API. Defaults to the public instance.",
+              default: "https://intern.seqera.io",
+              enum: null,
+              items_enum: null,
+              examples: [],
+            },
           },
           Tuning: {
             ai_retries: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -4597,7 +4461,6 @@
               examples: [],
             },
             ai_extra_query_options: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "object",
@@ -4613,7 +4476,6 @@
               ],
             },
             ai_custom_context_window: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -4625,7 +4487,6 @@
               examples: [],
             },
             ai_max_completion_tokens: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -4636,7 +4497,6 @@
               examples: [],
             },
             ai_reasoning_effort: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4647,7 +4507,6 @@
               examples: [],
             },
             ai_extended_thinking: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4658,7 +4517,6 @@
               examples: [],
             },
             ai_thinking_budget_tokens: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -4669,49 +4527,10 @@
               examples: [],
             },
           },
-          Prompts: {
-            ai_prompt_short: {
-              uncommon: false,
-              deprecated: false,
-              multiline: true,
-              type: "string",
-              description:
-                "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
-              default: null,
-              enum: null,
-              items_enum: null,
-              examples: ["Write the summary in one short paragraph aimed at a lab head, no jargon."],
-            },
-            ai_prompt_full: {
-              uncommon: false,
-              deprecated: false,
-              multiline: true,
-              type: "string",
-              description: "Custom prompt prepended to the full-section AI summary request.",
-              default: null,
-              enum: null,
-              items_enum: null,
-              examples: ["Use bullet points and call out any sample that looks like an outlier."],
-            },
-          },
-          Privacy: {
-            ai_anonymize_samples: {
-              uncommon: false,
-              deprecated: false,
-              multiline: false,
-              type: "boolean",
-              description: "Replace sample names with placeholders before sending data to the AI provider.",
-              default: false,
-              enum: null,
-              items_enum: null,
-              examples: [],
-            },
-          },
         },
-        "MegaQC Integration": {
-          "": {
+        MegaQC: {
+          "MegaQC Integration": {
             megaqc_url: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4722,7 +4541,6 @@
               examples: [],
             },
             megaqc_access_token: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -4733,7 +4551,6 @@
               examples: [],
             },
             megaqc_timeout: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "integer",
@@ -4744,7 +4561,6 @@
               examples: [],
             },
             megaqc_upload: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4757,36 +4573,9 @@
             },
           },
         },
-        "Seqera Integration": {
-          "": {
-            seqera_website: {
-              uncommon: true,
-              deprecated: false,
-              multiline: false,
-              type: "string",
-              description: "Base URL used for Seqera Platform links in the report.",
-              default: "https://seqera.io",
-              enum: null,
-              items_enum: null,
-              examples: [],
-            },
-            seqera_api_url: {
-              uncommon: true,
-              deprecated: false,
-              multiline: false,
-              type: "string",
-              description: "Base URL for the Seqera Platform API. Defaults to the public instance.",
-              default: "https://intern.seqera.io",
-              enum: null,
-              items_enum: null,
-              examples: [],
-            },
-          },
-        },
         "Performance & Debugging": {
           Profiling: {
             profile_runtime: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4797,7 +4586,6 @@
               examples: [],
             },
             profile_memory: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4810,7 +4598,6 @@
           },
           Logging: {
             verbose: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4821,7 +4608,6 @@
               examples: [],
             },
             no_ansi: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4832,7 +4618,6 @@
               examples: [],
             },
             quiet: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4844,8 +4629,17 @@
             },
           },
           Linting: {
+            strict: {
+              deprecated: false,
+              multiline: false,
+              type: "boolean",
+              description: "Treat module warnings as errors. Stricter than lint.",
+              default: false,
+              enum: null,
+              items_enum: null,
+              examples: [],
+            },
             lint: {
-              uncommon: false,
               deprecated: true,
               multiline: false,
               type: "boolean",
@@ -4856,32 +4650,19 @@
               items_enum: null,
               examples: [],
             },
-            strict: {
-              uncommon: true,
-              deprecated: false,
-              multiline: false,
-              type: "boolean",
-              description: "Treat module warnings as errors. Stricter than lint.",
-              default: false,
-              enum: null,
-              items_enum: null,
-              examples: [],
-            },
           },
           Developer: {
             development: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
-              description: "Enable developer-mode features such as live JS reloading. Internal use.",
+              description: "Enable developer-mode features such as live JS reloading. For internal use.",
               default: false,
               enum: null,
               items_enum: null,
               examples: [],
             },
             report_readerrors: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4892,7 +4673,6 @@
               examples: [],
             },
             preserve_module_raw_data: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4906,7 +4686,6 @@
           },
           "Version check": {
             no_version_check: {
-              uncommon: false,
               deprecated: false,
               multiline: false,
               type: "boolean",
@@ -4917,7 +4696,6 @@
               examples: [],
             },
             version_check_url: {
-              uncommon: true,
               deprecated: false,
               multiline: false,
               type: "string",
@@ -5435,6 +5213,7 @@
                 },
               ],
             ],
+            group: "Header text",
             section: "Report Meta",
             title: "Report Header Info",
           },
@@ -5449,6 +5228,7 @@
             ],
             default: null,
             description: "Show the absolute paths of analysed directories in the report header.",
+            group: "Report generation info",
             section: "Report Meta",
             title: "Show Analysis Paths",
           },
@@ -5463,6 +5243,7 @@
             ],
             default: null,
             description: "Show the date and time the report was generated in the header.",
+            group: "Report generation info",
             section: "Report Meta",
             title: "Show Analysis Time",
           },
@@ -5484,7 +5265,6 @@
             title: "Template",
           },
           template_dark_mode: {
-            advanced: true,
             anyOf: [
               {
                 type: "boolean",
@@ -5498,6 +5278,22 @@
             group: "Template",
             section: "Report Appearance",
             title: "Template Dark Mode",
+          },
+          simple_output: {
+            anyOf: [
+              {
+                type: "boolean",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.",
+            group: "Template",
+            section: "Report Appearance",
+            title: "Simple Output",
           },
           custom_logo: {
             anyOf: [
@@ -5592,6 +5388,7 @@
             default: null,
             description: "Path to a custom favicon image to show in the browser tab.",
             examples: ["/path/to/favicon.ico", "./assets/favicon.png"],
+            group: "Branding",
             section: "Report Appearance",
             title: "Custom Favicon",
           },
@@ -5610,23 +5407,9 @@
             default: null,
             description: "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
             examples: [["./assets/custom.css", "./assets/branding.css"]],
+            group: "Branding",
             section: "Report Appearance",
             title: "Custom Css Files",
-          },
-          simple_output: {
-            anyOf: [
-              {
-                type: "boolean",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description:
-              "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.",
-            section: "Report Appearance",
-            title: "Simple Output",
           },
           custom_content: {
             anyOf: [
@@ -5666,7 +5449,6 @@
             title: "Custom Content",
           },
           custom_content_modules: {
-            advanced: true,
             anyOf: [
               {
                 items: {
@@ -5834,7 +5616,7 @@
             default: null,
             description: "Module sections to hide. Use the section anchor as it appears in the URL.",
             examples: [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
-            group: "Section control",
+            group: "Module ordering",
             section: "Report Contents",
             title: "Remove Sections",
           },
@@ -5861,7 +5643,7 @@
                 },
               },
             ],
-            group: "Section control",
+            group: "Module ordering",
             section: "Report Contents",
             title: "Report Section Order",
           },
@@ -5885,12 +5667,11 @@
                 samtools: "Reviewed by *Phil* on 2024-08-21.",
               },
             ],
-            group: "Section control",
+            group: "Section comments + indicators",
             section: "Report Contents",
             title: "Section Comments",
           },
           section_status_checks: {
-            advanced: true,
             anyOf: [
               {
                 additionalProperties: {
@@ -5923,7 +5704,7 @@
                 },
               },
             ],
-            group: "Section control",
+            group: "Section comments + indicators",
             section: "Report Contents",
             title: "Section Status Checks",
           },
@@ -6035,7 +5816,6 @@
             title: "Data Format",
           },
           data_format_extensions: {
-            advanced: true,
             anyOf: [
               {
                 additionalProperties: {
@@ -6062,7 +5842,6 @@
             title: "Data Format Extensions",
           },
           parquet_format: {
-            advanced: true,
             anyOf: [
               {
                 enum: ["long", "wide"],
@@ -6080,7 +5859,6 @@
             title: "Parquet Format",
           },
           data_dump_file: {
-            advanced: true,
             anyOf: [
               {
                 type: "boolean",
@@ -6096,7 +5874,6 @@
             title: "Data Dump File",
           },
           data_dump_file_write_raw: {
-            advanced: true,
             anyOf: [
               {
                 type: "boolean",
@@ -6191,7 +5968,6 @@
             title: "Make Pdf",
           },
           pandoc_template: {
-            advanced: true,
             anyOf: [
               {
                 type: "string",
@@ -6238,7 +6014,6 @@
             title: "Prepend Dirs Depth",
           },
           prepend_dirs_sep: {
-            advanced: true,
             anyOf: [
               {
                 type: "string",
@@ -6325,7 +6100,6 @@
             title: "Extra Fn Clean Trim",
           },
           fn_clean_exts: {
-            advanced: true,
             anyOf: [
               {
                 items: {
@@ -6362,7 +6136,6 @@
             title: "Fn Clean Exts",
           },
           fn_clean_trim: {
-            advanced: true,
             anyOf: [
               {
                 items: {
@@ -6442,7 +6215,6 @@
             title: "Sample Names Ignore Re",
           },
           sample_names_only_include: {
-            advanced: true,
             anyOf: [
               {
                 items: {
@@ -6462,7 +6234,6 @@
             title: "Sample Names Only Include",
           },
           sample_names_only_include_re: {
-            advanced: true,
             anyOf: [
               {
                 items: {
@@ -6662,7 +6433,6 @@
             title: "Filesearch Lines Limit",
           },
           ignore_symlinks: {
-            advanced: true,
             anyOf: [
               {
                 type: "boolean",
@@ -6830,7 +6600,6 @@
             title: "Plots Defer Loading Numseries",
           },
           num_datasets_plot_limit: {
-            advanced: true,
             anyOf: [
               {
                 type: "integer",
@@ -6863,7 +6632,6 @@
             title: "Plots Export Font Scale",
           },
           plot_font_family: {
-            advanced: true,
             anyOf: [
               {
                 type: "string",
@@ -6905,7 +6673,6 @@
             title: "Custom Plot Config",
           },
           lineplot_number_of_points_to_hide_markers: {
-            advanced: true,
             anyOf: [
               {
                 type: "integer",
@@ -6922,7 +6689,6 @@
             title: "Lineplot Number Of Points To Hide Markers",
           },
           barplot_legend_on_bottom: {
-            advanced: true,
             anyOf: [
               {
                 type: "boolean",
@@ -7181,7 +6947,6 @@
             title: "Show Hide Regex",
           },
           collapse_tables: {
-            advanced: true,
             anyOf: [
               {
                 type: "boolean",
@@ -7557,7 +7322,6 @@
             title: "Table Cond Formatting Colours",
           },
           table_sample_merge: {
-            advanced: true,
             anyOf: [
               {
                 additionalProperties: {
@@ -7664,6 +7428,7 @@
                 samtools: "1.20",
               },
             ],
+            group: "Software Versions",
             section: "Software Versions",
             title: "Software Versions",
           },
@@ -7678,6 +7443,7 @@
             ],
             default: null,
             description: "Column header for the grouping column in the Software Versions table. Defaults to 'Group'.",
+            group: "Software Versions",
             section: "Software Versions",
             title: "Versions Table Group Header",
           },
@@ -7692,6 +7458,7 @@
             ],
             default: null,
             description: "Skip parsing software versions from module log files.",
+            group: "Software Versions",
             section: "Software Versions",
             title: "Disable Version Detection",
           },
@@ -7706,6 +7473,7 @@
             ],
             default: null,
             description: "Hide the Software Versions section.",
+            group: "Software Versions",
             section: "Software Versions",
             title: "Skip Versions Section",
           },
@@ -7898,194 +7666,6 @@
             section: "AI Summary",
             title: "No Ai",
           },
-          ai_provider: {
-            anyOf: [
-              {
-                enum: ["seqera", "openai", "anthropic", "aws_bedrock", "custom"],
-                type: "string",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, custom.",
-            group: "Provider",
-            section: "AI Summary",
-            title: "Ai Provider",
-          },
-          ai_model: {
-            anyOf: [
-              {
-                type: "string",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Model name. Provider-specific.",
-            examples: ["gpt-4o", "claude-sonnet-4-5."],
-            group: "Provider",
-            section: "AI Summary",
-            title: "Ai Model",
-          },
-          ai_custom_endpoint: {
-            anyOf: [
-              {
-                type: "string",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
-            examples: ["http://localhost:11434/v1", "https://api.example.com/v1"],
-            group: "Provider",
-            section: "AI Summary",
-            title: "Ai Custom Endpoint",
-          },
-          ai_auth_type: {
-            advanced: true,
-            anyOf: [
-              {
-                enum: ["bearer", "api-key"],
-                type: "string",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description:
-              "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.",
-            group: "Provider",
-            section: "AI Summary",
-            title: "Ai Auth Type",
-          },
-          ai_retries: {
-            advanced: true,
-            anyOf: [
-              {
-                type: "integer",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Number of times to retry an AI request on transient errors.",
-            group: "Tuning",
-            section: "AI Summary",
-            title: "Ai Retries",
-          },
-          ai_extra_query_options: {
-            advanced: true,
-            anyOf: [
-              {
-                additionalProperties: true,
-                type: "object",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Extra request-body fields merged into the AI request payload (provider-specific).",
-            examples: [
-              {
-                temperature: 0.3,
-                top_p: 0.9,
-              },
-            ],
-            group: "Tuning",
-            section: "AI Summary",
-            title: "Ai Extra Query Options",
-          },
-          ai_custom_context_window: {
-            advanced: true,
-            anyOf: [
-              {
-                exclusiveMinimum: 0,
-                type: "integer",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description:
-              "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
-            group: "Tuning",
-            section: "AI Summary",
-            title: "Ai Custom Context Window",
-          },
-          ai_max_completion_tokens: {
-            advanced: true,
-            anyOf: [
-              {
-                type: "integer",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Maximum completion tokens for OpenAI reasoning models.",
-            group: "Tuning",
-            section: "AI Summary",
-            title: "Ai Max Completion Tokens",
-          },
-          ai_reasoning_effort: {
-            advanced: true,
-            anyOf: [
-              {
-                enum: ["low", "medium", "high"],
-                type: "string",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Reasoning effort for OpenAI reasoning models.",
-            group: "Tuning",
-            section: "AI Summary",
-            title: "Ai Reasoning Effort",
-          },
-          ai_extended_thinking: {
-            advanced: true,
-            anyOf: [
-              {
-                type: "boolean",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Enable extended thinking on Anthropic Claude models that support it.",
-            group: "Tuning",
-            section: "AI Summary",
-            title: "Ai Extended Thinking",
-          },
-          ai_thinking_budget_tokens: {
-            advanced: true,
-            anyOf: [
-              {
-                type: "integer",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Token budget for Anthropic extended thinking when enabled.",
-            group: "Tuning",
-            section: "AI Summary",
-            title: "Ai Thinking Budget Tokens",
-          },
           ai_prompt_short: {
             anyOf: [
               {
@@ -8136,8 +7716,23 @@
             section: "AI Summary",
             title: "Ai Anonymize Samples",
           },
-          megaqc_url: {
-            advanced: true,
+          ai_provider: {
+            anyOf: [
+              {
+                enum: ["seqera", "openai", "anthropic", "aws_bedrock", "custom"],
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, custom.",
+            group: "Provider",
+            section: "AI Summary",
+            title: "Ai Provider",
+          },
+          ai_model: {
             anyOf: [
               {
                 type: "string",
@@ -8147,12 +7742,13 @@
               },
             ],
             default: null,
-            description: "URL of a MegaQC instance to upload report data to after generation.",
-            section: "MegaQC Integration",
-            title: "Megaqc Url",
+            description: "Model name. Provider-specific.",
+            examples: ["gpt-4o", "claude-sonnet-4-5."],
+            group: "Provider",
+            section: "AI Summary",
+            title: "Ai Model",
           },
-          megaqc_access_token: {
-            advanced: true,
+          ai_custom_endpoint: {
             anyOf: [
               {
                 type: "string",
@@ -8162,42 +7758,30 @@
               },
             ],
             default: null,
-            description: "Auth token for the MegaQC instance.",
-            section: "MegaQC Integration",
-            title: "Megaqc Access Token",
+            description: "Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
+            examples: ["http://localhost:11434/v1", "https://api.example.com/v1"],
+            group: "Provider",
+            section: "AI Summary",
+            title: "Ai Custom Endpoint",
           },
-          megaqc_timeout: {
-            advanced: true,
+          ai_auth_type: {
             anyOf: [
               {
-                type: "integer",
+                enum: ["bearer", "api-key"],
+                type: "string",
               },
               {
                 type: "null",
               },
             ],
             default: null,
-            description: "Upload timeout in seconds when posting to MegaQC.",
-            section: "MegaQC Integration",
-            title: "Megaqc Timeout",
-          },
-          megaqc_upload: {
-            advanced: true,
-            anyOf: [
-              {
-                type: "boolean",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.",
-            section: "MegaQC Integration",
-            title: "Megaqc Upload",
+            description:
+              "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.",
+            group: "Provider",
+            section: "AI Summary",
+            title: "Ai Auth Type",
           },
           seqera_website: {
-            advanced: true,
             anyOf: [
               {
                 type: "string",
@@ -8208,11 +7792,11 @@
             ],
             default: null,
             description: "Base URL used for Seqera Platform links in the report.",
-            section: "Seqera Integration",
+            group: "Provider",
+            section: "AI Summary",
             title: "Seqera Website",
           },
           seqera_api_url: {
-            advanced: true,
             anyOf: [
               {
                 type: "string",
@@ -8223,8 +7807,184 @@
             ],
             default: null,
             description: "Base URL for the Seqera Platform API. Defaults to the public instance.",
-            section: "Seqera Integration",
+            group: "Provider",
+            section: "AI Summary",
             title: "Seqera Api Url",
+          },
+          ai_retries: {
+            anyOf: [
+              {
+                type: "integer",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Number of times to retry an AI request on transient errors.",
+            group: "Tuning",
+            section: "AI Summary",
+            title: "Ai Retries",
+          },
+          ai_extra_query_options: {
+            anyOf: [
+              {
+                additionalProperties: true,
+                type: "object",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Extra request-body fields merged into the AI request payload (provider-specific).",
+            examples: [
+              {
+                temperature: 0.3,
+                top_p: 0.9,
+              },
+            ],
+            group: "Tuning",
+            section: "AI Summary",
+            title: "Ai Extra Query Options",
+          },
+          ai_custom_context_window: {
+            anyOf: [
+              {
+                exclusiveMinimum: 0,
+                type: "integer",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
+            group: "Tuning",
+            section: "AI Summary",
+            title: "Ai Custom Context Window",
+          },
+          ai_max_completion_tokens: {
+            anyOf: [
+              {
+                type: "integer",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Maximum completion tokens for OpenAI reasoning models.",
+            group: "Tuning",
+            section: "AI Summary",
+            title: "Ai Max Completion Tokens",
+          },
+          ai_reasoning_effort: {
+            anyOf: [
+              {
+                enum: ["low", "medium", "high"],
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Reasoning effort for OpenAI reasoning models.",
+            group: "Tuning",
+            section: "AI Summary",
+            title: "Ai Reasoning Effort",
+          },
+          ai_extended_thinking: {
+            anyOf: [
+              {
+                type: "boolean",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Enable extended thinking on Anthropic Claude models that support it.",
+            group: "Tuning",
+            section: "AI Summary",
+            title: "Ai Extended Thinking",
+          },
+          ai_thinking_budget_tokens: {
+            anyOf: [
+              {
+                type: "integer",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Token budget for Anthropic extended thinking when enabled.",
+            group: "Tuning",
+            section: "AI Summary",
+            title: "Ai Thinking Budget Tokens",
+          },
+          megaqc_url: {
+            anyOf: [
+              {
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "URL of a MegaQC instance to upload report data to after generation.",
+            group: "MegaQC Integration",
+            section: "MegaQC",
+            title: "Megaqc Url",
+          },
+          megaqc_access_token: {
+            anyOf: [
+              {
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Auth token for the MegaQC instance.",
+            group: "MegaQC Integration",
+            section: "MegaQC",
+            title: "Megaqc Access Token",
+          },
+          megaqc_timeout: {
+            anyOf: [
+              {
+                type: "integer",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Upload timeout in seconds when posting to MegaQC.",
+            group: "MegaQC Integration",
+            section: "MegaQC",
+            title: "Megaqc Timeout",
+          },
+          megaqc_upload: {
+            anyOf: [
+              {
+                type: "boolean",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.",
+            group: "MegaQC Integration",
+            section: "MegaQC",
+            title: "Megaqc Upload",
           },
           profile_runtime: {
             anyOf: [
@@ -8242,7 +8002,6 @@
             title: "Profile Runtime",
           },
           profile_memory: {
-            advanced: true,
             anyOf: [
               {
                 type: "boolean",
@@ -8302,6 +8061,21 @@
             section: "Performance & Debugging",
             title: "Quiet",
           },
+          strict: {
+            anyOf: [
+              {
+                type: "boolean",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description: "Treat module warnings as errors. Stricter than lint.",
+            group: "Linting",
+            section: "Performance & Debugging",
+            title: "Strict",
+          },
           lint: {
             anyOf: [
               {
@@ -8319,24 +8093,7 @@
             section: "Performance & Debugging",
             title: "Lint",
           },
-          strict: {
-            advanced: true,
-            anyOf: [
-              {
-                type: "boolean",
-              },
-              {
-                type: "null",
-              },
-            ],
-            default: null,
-            description: "Treat module warnings as errors. Stricter than lint.",
-            group: "Linting",
-            section: "Performance & Debugging",
-            title: "Strict",
-          },
           development: {
-            advanced: true,
             anyOf: [
               {
                 type: "boolean",
@@ -8346,13 +8103,12 @@
               },
             ],
             default: null,
-            description: "Enable developer-mode features such as live JS reloading. Internal use.",
+            description: "Enable developer-mode features such as live JS reloading. For internal use.",
             group: "Developer",
             section: "Performance & Debugging",
             title: "Development",
           },
           report_readerrors: {
-            advanced: true,
             anyOf: [
               {
                 type: "boolean",
@@ -8368,7 +8124,6 @@
             title: "Report Readerrors",
           },
           preserve_module_raw_data: {
-            advanced: true,
             anyOf: [
               {
                 type: "boolean",
@@ -8400,7 +8155,6 @@
             title: "No Version Check",
           },
           version_check_url: {
-            advanced: true,
             anyOf: [
               {
                 type: "string",
@@ -8465,21 +8219,6 @@
       // typos the user wants to keep). Round-trip across editor/yaml mode
       // and survive a page reload via localStorage.
       let pluginKeys = {};
-
-      // {sectionName: commonCount}, computed once at init from configData.
-      // Used by both the sidebar TOC and the in-page section headings to
-      // decide which sections are entirely advanced.
-      const sectionCommonCounts = Object.fromEntries(
-        Object.entries(configData).map(([name, groups]) => {
-          let count = 0;
-          for (const props of Object.values(groups)) {
-            for (const p of Object.values(props)) {
-              if (!p.uncommon) count += 1;
-            }
-          }
-          return [name, count];
-        }),
-      );
 
       // Track scroll location and apply `.active` to the matching sidebar
       // entries: the section link, and (when scrolled into a named group) the
@@ -8631,17 +8370,15 @@
           if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
         };
         Object.entries(configData).forEach(([sectionName, groups]) => {
-          // Sections with named groups expose the section as a small all-caps
-          // header link (scrolls to the section heading) and each group as a
-          // sub-link below. Sections without named groups keep a single
-          // regular entry on the section name.
+          // Sections with one named group collapse to a single clickable
+          // section entry. Sections with multiple groups show the section as
+          // a header label and each group as a clickable sub-link.
           const namedGroups = Object.keys(groups).filter((g) => g !== "");
-          const commonCount = sectionCommonCounts[sectionName];
+          const isSingleGroup = namedGroups.length === 1;
 
-          if (namedGroups.length === 0) {
+          if (namedGroups.length === 0 || isSingleGroup) {
             const li = document.createElement("li");
             li.dataset.section = sectionName;
-            if (commonCount === 0) li.classList.add("nav-advanced-only");
             const a = document.createElement("a");
             a.href = "#section-" + slugify(sectionName);
             a.textContent = sectionName;
@@ -8659,7 +8396,6 @@
           const labelLi = document.createElement("li");
           labelLi.className = "section-nav-label";
           labelLi.dataset.section = sectionName;
-          if (commonCount === 0) labelLi.classList.add("nav-advanced-only");
           const labelA = document.createElement("a");
           labelA.href = "#section-" + slugify(sectionName);
           labelA.textContent = sectionName;
@@ -8678,7 +8414,6 @@
             const subLi = document.createElement("li");
             subLi.dataset.section = sectionName;
             subLi.dataset.group = groupName;
-            if (commonCount === 0) subLi.classList.add("nav-advanced-only");
             const subA = document.createElement("a");
             subA.href = "#group-" + slugify(sectionName) + "-" + slugify(groupName);
             subA.textContent = groupName;
@@ -8808,14 +8543,6 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
-      function toggleUncommon() {
-        const on = document.body.classList.toggle("show-uncommon");
-        const btn = document.getElementById("toggleUncommonBtn");
-        btn.setAttribute("aria-pressed", on ? "true" : "false");
-        btn.querySelector(".show-uncommon-label").textContent = on ? "Hide advanced options" : "Show advanced options";
-        handleSearch();
-      }
-
       function createSectionContent() {
         const sectionsContainer = document.getElementById("sections");
 
@@ -8825,14 +8552,17 @@
           h2.id = "section-" + slugify(sectionName);
           h2.dataset.section = sectionName;
           h2.textContent = sectionName;
-          if (sectionCommonCounts[sectionName] === 0) h2.classList.add("advanced-only");
           sectionsContainer.appendChild(h2);
 
-          // Empty-string groupName is the ungrouped bucket: its fields render
-          // directly under the section, no .group-box wrapper.
+          // When a section has only one named group, the group heading is
+          // redundant under the section heading, so skip the .group-box
+          // wrapper and render the fields flat. Sections with multiple groups
+          // keep the box and <h3>.
+          const namedGroups = Object.entries(groups).filter(([g]) => g !== "");
+          const hideGroupHeading = namedGroups.length === 1;
           Object.entries(groups).forEach(([groupName, groupProps]) => {
             let container = sectionsContainer;
-            if (groupName !== "") {
+            if (groupName !== "" && !hideGroupHeading) {
               const box = document.createElement("section");
               box.className = "group-box";
               box.id = "group-" + slugify(sectionName) + "-" + slugify(groupName);
@@ -8885,9 +8615,8 @@
       function createFormGroup(propName, propData) {
         const formGroup = document.createElement("div");
         formGroup.className = "form-group";
-        if (propData.uncommon) formGroup.classList.add("uncommon");
         formGroup.dataset.propname = propName;
-        if (propData.uncommon) formGroup.dataset.uncommon = "1";
+        if (propData.deprecated) formGroup.classList.add("deprecated");
         // Click anywhere in the group's chrome (label, description, empty
         // space) to jump to the YAML line. Skips clicks on inputs / buttons /
         // links so widgets still work — including the field-key button,
@@ -8938,6 +8667,14 @@
           defaultSpan.className = "default-badge";
           defaultSpan.textContent = "default: " + formatDefaultValue(propData.default);
           keyGroup.appendChild(defaultSpan);
+
+          if (propData.deprecated) {
+            const dep = document.createElement("span");
+            dep.className = "deprecated-badge";
+            dep.textContent = "deprecated";
+            dep.title = typeof propData.deprecated === "string" ? propData.deprecated : "Deprecated option";
+            keyGroup.appendChild(dep);
+          }
 
           if (isPrefillableDefault(propData)) {
             const resetBtn = document.createElement("button");
@@ -9553,9 +9290,7 @@
         const rawValue = document.getElementById("searchInput").value;
         const query = rawValue.toLowerCase().trim();
         searchWrapper.classList.toggle("has-text", rawValue !== "");
-        // An active search ignores the uncommon toggle so users always see matches.
         document.body.classList.toggle("search-active", query !== "");
-        const showUncommon = document.body.classList.contains("show-uncommon");
         const sectionCounts = {};
         const groupCounts = {}; // key = "section||group"
         let anyVisible = false;
@@ -9563,9 +9298,7 @@
         for (const fg of formGroups) {
           const matchesQuery = !query || fg.name.includes(query) || fg.description.includes(query);
           fg.el.classList.toggle("hidden", !matchesQuery);
-          const isUncommon = fg.el.dataset.uncommon === "1";
-          const shown = matchesQuery && (query !== "" || showUncommon || !isUncommon);
-          if (shown) {
+          if (matchesQuery) {
             anyVisible = true;
             sectionCounts[fg.section] = (sectionCounts[fg.section] || 0) + 1;
             if (fg.group) {

@@ -273,25 +273,28 @@ If you'd rather build your config visually, the [Config Wizard](https://seqera.i
                 yaml_text = _dump_yaml({prop_name: ex}).rstrip()
                 output.append(f"```yaml\n{yaml_text}\n```\n")
 
-    # Group properties into sections (and optional sub-groups) using the
-    # schema's per-field tags. Within each section, ungrouped fields render
-    # first (as ###) so a small set of section-level "introduction" options
-    # appears before drilling into named groups (### group / #### prop).
+    # Group properties into sections and sub-groups using the schema's
+    # per-field tags. When a section has only one group, the group heading
+    # is redundant under the section heading, so render the fields directly
+    # under `## section` as `### prop_name`. Otherwise, emit `### group`
+    # headings and demote fields to `#### prop_name`.
     sections_with_groups = load_sections_with_groups(properties, skip=SKIP_PROPERTIES)
 
     for section, groups in sections_with_groups.items():
         if not groups:
             continue
         output.append(f"## {section}\n")
+        named_groups = [(g, names) for g, names in groups.items() if g is not None]
+        single_group = len(named_groups) == 1 and not groups.get(None)
         ungrouped = groups.get(None, [])
         for prop_name in ungrouped:
             render_prop(prop_name, heading_level=3)
-        for group_name, names in groups.items():
-            if group_name is None:
-                continue
-            output.append(f"### {group_name}\n")
+        for group_name, names in named_groups:
+            if not single_group:
+                output.append(f"### {group_name}\n")
+            prop_level = 3 if single_group else 4
             for prop_name in names:
-                render_prop(prop_name, heading_level=4)
+                render_prop(prop_name, heading_level=prop_level)
         output.append("")  # Add blank line between sections
 
     # Describe special types

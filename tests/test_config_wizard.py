@@ -96,11 +96,30 @@ def test_group_contiguity():
             current = key
 
 
+def test_every_field_has_a_group():
+    """Every MultiQCConfig field must declare a group via cfg(..., group=...).
+
+    Groups give the docs and wizard a consistent two-level hierarchy. A field
+    with no group looks visually orphaned next to grouped siblings, so cfg()
+    refuses to build a Field without one — this test exists as a tripwire if
+    anyone bypasses cfg() and writes a raw Field, or adds a field to
+    SKIP_PROPERTIES without giving it a home.
+    """
+    wizard = _load_wizard_module()
+    properties = MultiQCConfig.model_json_schema()["properties"]
+    missing = sorted(
+        name for name, prop in properties.items() if name not in wizard.SKIP_PROPERTIES and "group" not in prop
+    )
+    assert not missing, (
+        f"Config properties with no group tag: {missing}. "
+        f'Wrap each Field with cfg(..., group="...") inside a `with group("..."):` block '
+        f"in multiqc/utils/config_schema.py."
+    )
+
+
 def test_group_requires_section():
-    """A `group` tag without a `section` tag would be silently dropped by the
-    loader, which keys by section first. The `group()` context manager raises
-    at import time if used outside a `section()` block, so this guard is mostly
-    a tripwire against future regressions.
+    """`group()` without `section()` raises at import time, but this test
+    documents the invariant in case someone tags a Field directly.
     """
     properties = MultiQCConfig.model_json_schema()["properties"]
     for name, prop in properties.items():

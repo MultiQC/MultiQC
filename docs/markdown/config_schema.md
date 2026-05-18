@@ -32,34 +32,6 @@ If you'd rather build your config visually, the [Config Wizard](https://seqera.i
 
 ## Report Meta
 
-### report_header_info
-
-**Type**: `List[Dict[str, str]]`
-
-Extra key/value pairs shown in the report header, eg. contact name, run ID, pipeline version. Each list item is a single-key dictionary.
-
-**Example**:
-
-```yaml
-report_header_info:
-  - Contact E-mail: phil.ewels@seqera.io
-  - Application Type: RNA-seq
-  - Project Type: Application
-  - Sequencing Platform: HiSeq 2500 High Output V4
-```
-
-### show_analysis_paths
-
-**Type**: `bool` (default: `true`)
-
-Show the absolute paths of analysed directories in the report header.
-
-### show_analysis_time
-
-**Type**: `bool` (default: `true`)
-
-Show the date and time the report was generated in the header.
-
 ### Header text
 
 #### title
@@ -92,43 +64,37 @@ Free-text comment shown at the top of the report. HTML is allowed.
 report_comment: This report was generated from the RNA-seq pipeline on 2024-08-21.
 ```
 
-## Report Appearance
+#### report_header_info
 
-### custom_favicon
+**Type**: `List[Dict[str, str]]`
 
-**Type**: `str`
-
-Path to a custom favicon image to show in the browser tab.
-
-**Examples**:
-
-```yaml
-custom_favicon: /path/to/favicon.ico
-```
-
-```yaml
-custom_favicon: ./assets/favicon.png
-```
-
-### custom_css_files
-
-**Type**: `List[str]`
-
-Paths to additional CSS files to inline into the report. Useful for branding overrides.
+Extra key/value pairs shown in the report header, eg. contact name, run ID, pipeline version. Each list item is a single-key dictionary.
 
 **Example**:
 
 ```yaml
-custom_css_files:
-  - ./assets/custom.css
-  - ./assets/branding.css
+report_header_info:
+  - Contact E-mail: phil.ewels@seqera.io
+  - Application Type: RNA-seq
+  - Project Type: Application
+  - Sequencing Platform: HiSeq 2500 High Output V4
 ```
 
-### simple_output
+### Report generation info
 
-**Type**: `bool` (default: `false`)
+#### show_analysis_paths
 
-Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.
+**Type**: `bool` (default: `true`)
+
+Show the absolute paths of analysed directories in the report header.
+
+#### show_analysis_time
+
+**Type**: `bool` (default: `true`)
+
+Show the date and time the report was generated in the header.
+
+## Report Appearance
 
 ### Template
 
@@ -173,6 +139,12 @@ template: disco
 **Type**: `bool` (default: `true`)
 
 Enable the dark mode toggle in the report template.
+
+#### simple_output
+
+**Type**: `bool` (default: `false`)
+
+Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.
 
 ### Logo
 
@@ -238,6 +210,38 @@ Logo width in pixels. Height scales proportionally.
 
 ```yaml
 custom_logo_width: 200
+```
+
+### Branding
+
+#### custom_favicon
+
+**Type**: `str`
+
+Path to a custom favicon image to show in the browser tab.
+
+**Examples**:
+
+```yaml
+custom_favicon: /path/to/favicon.ico
+```
+
+```yaml
+custom_favicon: ./assets/favicon.png
+```
+
+#### custom_css_files
+
+**Type**: `List[str]`
+
+Paths to additional CSS files to inline into the report. Useful for branding overrides.
+
+**Example**:
+
+```yaml
+custom_css_files:
+  - ./assets/custom.css
+  - ./assets/branding.css
 ```
 
 ## Report Contents
@@ -522,8 +526,6 @@ exclude_modules:
   - fastqc
 ```
 
-### Section control
-
 #### remove_sections
 
 **Type**: `List[str]`
@@ -553,6 +555,8 @@ report_section_order:
   fastqc:
     order: -10
 ```
+
+### Section comments + indicators
 
 #### section_comments
 
@@ -1943,6 +1947,41 @@ Also generate a longer per-section AI summary. Requires ai_summary to be on.
 
 Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.
 
+### Prompts
+
+#### ai_prompt_short
+
+**Type**: `str`
+
+Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.
+
+**Example**:
+
+```yaml
+ai_prompt_short: Write the summary in one short paragraph aimed at a lab head, no
+  jargon.
+```
+
+#### ai_prompt_full
+
+**Type**: `str`
+
+Custom prompt prepended to the full-section AI summary request.
+
+**Example**:
+
+```yaml
+ai_prompt_full: Use bullet points and call out any sample that looks like an outlier.
+```
+
+### Privacy
+
+#### ai_anonymize_samples
+
+**Type**: `bool` (default: `false`)
+
+Replace sample names with placeholders before sending data to the AI provider.
+
 ### Provider
 
 #### ai_provider
@@ -1988,6 +2027,18 @@ ai_custom_endpoint: https://api.example.com/v1
 **Type**: `Literal["bearer", "api-key"]`
 
 Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.
+
+#### seqera_website
+
+**Type**: `str` (default: `"https://seqera.io"`)
+
+Base URL used for Seqera Platform links in the report.
+
+#### seqera_api_url
+
+**Type**: `str` (default: `"https://intern.seqera.io"`)
+
+Base URL for the Seqera Platform API. Defaults to the public instance.
 
 ### Tuning
 
@@ -2041,42 +2092,7 @@ Enable extended thinking on Anthropic Claude models that support it.
 
 Token budget for Anthropic extended thinking when enabled.
 
-### Prompts
-
-#### ai_prompt_short
-
-**Type**: `str`
-
-Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.
-
-**Example**:
-
-```yaml
-ai_prompt_short: Write the summary in one short paragraph aimed at a lab head, no
-  jargon.
-```
-
-#### ai_prompt_full
-
-**Type**: `str`
-
-Custom prompt prepended to the full-section AI summary request.
-
-**Example**:
-
-```yaml
-ai_prompt_full: Use bullet points and call out any sample that looks like an outlier.
-```
-
-### Privacy
-
-#### ai_anonymize_samples
-
-**Type**: `bool` (default: `false`)
-
-Replace sample names with placeholders before sending data to the AI provider.
-
-## MegaQC Integration
+## MegaQC
 
 ### megaqc_url
 
@@ -2101,20 +2117,6 @@ Upload timeout in seconds when posting to MegaQC.
 **Type**: `bool`
 
 Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.
-
-## Seqera Integration
-
-### seqera_website
-
-**Type**: `str` (default: `"https://seqera.io"`)
-
-Base URL used for Seqera Platform links in the report.
-
-### seqera_api_url
-
-**Type**: `str` (default: `"https://intern.seqera.io"`)
-
-Base URL for the Seqera Platform API. Defaults to the public instance.
 
 ## Performance & Debugging
 
@@ -2154,17 +2156,17 @@ Suppress non-essential log messages.
 
 ### Linting
 
-#### lint
-
-**Type**: `bool` (default: `false`)
-
-Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.
-
 #### strict
 
 **Type**: `bool` (default: `false`)
 
 Treat module warnings as errors. Stricter than lint.
+
+#### lint
+
+**Type**: `bool` (default: `false`)
+
+Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.
 
 ### Developer
 
@@ -2172,7 +2174,7 @@ Treat module warnings as errors. Stricter than lint.
 
 **Type**: `bool` (default: `false`)
 
-Enable developer-mode features such as live JS reloading. Internal use.
+Enable developer-mode features such as live JS reloading. For internal use.
 
 #### report_readerrors
 

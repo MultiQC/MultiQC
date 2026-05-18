@@ -98,10 +98,9 @@ def group(name: str) -> Iterator[None]:
     """Second-level grouping inside a ``with section(...)`` block.
 
     Members of a ``group()`` cluster under a subheading in the rendered docs
-    and the wizard. Groups are optional; a section may also contain fields not
-    inside any group. ``group()`` must be used inside a ``section()`` block.
-    Group members must be contiguous in source order; the docs/wizard render
-    in source order and would otherwise emit the group heading twice.
+    and the wizard. Every field must belong to a group; ``cfg()`` raises at
+    import time otherwise. Group members must be contiguous in source order
+    so the docs/wizard don't emit the group heading twice.
     """
     if _current_section.get() is None:
         raise RuntimeError('group("...") must be used inside `with section("..."):`.')
@@ -117,21 +116,19 @@ def cfg(
     *,
     section: Optional[str] = None,
     group: Optional[str] = None,
-    advanced: bool = False,
     multiline: bool = False,
     default: Any = None,
     default_factory: Any = None,
     **kwargs: Any,
 ) -> Any:
-    """Wrapper around ``Field`` that tags each option with a section.
+    """Wrapper around ``Field`` that tags each option with a section and a group.
 
-    ``section`` is usually inherited from an enclosing ``with section(...)``
-    block; pass ``section=`` explicitly to override or for a one-off field
-    outside any block. ``group`` is the optional second-level grouping,
-    inherited from an enclosing ``with group(...)`` block (or passed
-    explicitly). ``advanced=True`` hides the field behind the wizard's "Show
-    advanced options" toggle. ``multiline=True`` renders string fields as a
-    textarea instead of a single-line input, use for prose fields like
+    ``section`` and ``group`` are usually inherited from enclosing
+    ``with section(...)`` / ``with group(...)`` blocks; pass them explicitly
+    to override or for a one-off field outside any block. Both are required:
+    every config option must live inside a group so the rendered docs and
+    wizard stay visually consistent. ``multiline=True`` renders string fields
+    as a textarea instead of a single-line input, use for prose fields like
     descriptions and prompts. All flags end up in the JSON schema under
     ``json_schema_extra`` and are read back by
     ``scripts/_config_schema_loader.py``. Any other ``Field`` kwargs
@@ -145,11 +142,12 @@ def cfg(
         raise ValueError('cfg() needs a section. Wrap the field in `with section("..."):` or pass section= explicitly.')
     if group is None:
         group = _current_group.get()
-    extra: Dict[str, Any] = {"section": section}
-    if group is not None:
-        extra["group"] = group
-    if advanced:
-        extra["advanced"] = True
+    if group is None:
+        raise ValueError(
+            'cfg() needs a group. Wrap the field in `with group("..."):` inside the section, '
+            "or pass group= explicitly. Every config option must belong to a group."
+        )
+    extra: Dict[str, Any] = {"section": section, "group": group}
     if multiline:
         extra["multiline"] = True
     if default_factory is not None:
@@ -173,24 +171,25 @@ class MultiQCConfig(BaseModel):
                 multiline=True,
                 examples=["This report was generated from the RNA-seq pipeline on 2024-08-21."],
             )
-        report_header_info: Optional[List[Dict[str, str]]] = cfg(
-            (
-                "Extra key/value pairs shown in the report header, eg. contact name, run ID, pipeline version. "
-                "Each list item is a single-key dictionary."
-            ),
-            examples=[
-                [
-                    {"Contact E-mail": "phil.ewels@seqera.io"},
-                    {"Application Type": "RNA-seq"},
-                    {"Project Type": "Application"},
-                    {"Sequencing Platform": "HiSeq 2500 High Output V4"},
-                ]
-            ],
-        )
-        show_analysis_paths: Optional[bool] = cfg(
-            "Show the absolute paths of analysed directories in the report header."
-        )
-        show_analysis_time: Optional[bool] = cfg("Show the date and time the report was generated in the header.")
+            report_header_info: Optional[List[Dict[str, str]]] = cfg(
+                (
+                    "Extra key/value pairs shown in the report header, eg. contact name, run ID, pipeline version. "
+                    "Each list item is a single-key dictionary."
+                ),
+                examples=[
+                    [
+                        {"Contact E-mail": "phil.ewels@seqera.io"},
+                        {"Application Type": "RNA-seq"},
+                        {"Project Type": "Application"},
+                        {"Sequencing Platform": "HiSeq 2500 High Output V4"},
+                    ]
+                ],
+            )
+        with group("Report generation info"):
+            show_analysis_paths: Optional[bool] = cfg(
+                "Show the absolute paths of analysed directories in the report header."
+            )
+            show_analysis_time: Optional[bool] = cfg("Show the date and time the report was generated in the header.")
 
     with section("Report Appearance"):
         with group("Template"):
@@ -201,7 +200,9 @@ class MultiQCConfig(BaseModel):
             )
             template_dark_mode: Optional[bool] = cfg(
                 "Enable the dark mode toggle in the report template.",
-                advanced=True,
+            )
+            simple_output: Optional[bool] = cfg(
+                "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports."
             )
         with group("Logo"):
             custom_logo: Optional[str] = cfg(
@@ -225,17 +226,15 @@ class MultiQCConfig(BaseModel):
                 examples=[200],
                 gt=0,
             )
-        custom_favicon: Optional[str] = cfg(
-            "Path to a custom favicon image to show in the browser tab.",
-            examples=["/path/to/favicon.ico", "./assets/favicon.png"],
-        )
-        custom_css_files: Optional[List[str]] = cfg(
-            "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
-            examples=[["./assets/custom.css", "./assets/branding.css"]],
-        )
-        simple_output: Optional[bool] = cfg(
-            "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports."
-        )
+        with group("Branding"):
+            custom_favicon: Optional[str] = cfg(
+                "Path to a custom favicon image to show in the browser tab.",
+                examples=["/path/to/favicon.ico", "./assets/favicon.png"],
+            )
+            custom_css_files: Optional[List[str]] = cfg(
+                "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
+                examples=[["./assets/custom.css", "./assets/branding.css"]],
+            )
 
     with section("Report Contents"):
         with group("Custom content"):
@@ -258,7 +257,6 @@ class MultiQCConfig(BaseModel):
             )
             custom_content_modules: Optional[List[str]] = cfg(
                 "Extra module IDs whose output should be parsed as custom content.",
-                advanced=True,
             )
             custom_data: Optional[Dict[str, Any]] = cfg(
                 "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer "
@@ -295,7 +293,6 @@ class MultiQCConfig(BaseModel):
                 "Module IDs to skip (mirror of the --exclude CLI flag).",
                 examples=[["fastqc"]],
             )
-        with group("Section control"):
             remove_sections: Optional[List[str]] = cfg(
                 "Module sections to hide. Use the section anchor as it appears in the URL.",
                 examples=[["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
@@ -307,6 +304,7 @@ class MultiQCConfig(BaseModel):
                 ),
                 examples=[{"fastqc": {"order": -10}, "custom_content-my-section": {"before": "fastqc"}}],
             )
+        with group("Section comments + indicators"):
             section_comments: Optional[Dict[str, str]] = cfg(
                 "Markdown text shown under specific module sections. Keys are section anchors.",
                 examples=[
@@ -321,7 +319,6 @@ class MultiQCConfig(BaseModel):
                     "Enable or disable the green/yellow/red status indicators on report sections. "
                     "Top-level keys are module IDs, values are either a bool or a dict mapping section ID to bool."
                 ),
-                advanced=True,
                 examples=[{"fastqc": True, "samtools": {"alignment_stats": False}}],
             )
 
@@ -345,7 +342,6 @@ class MultiQCConfig(BaseModel):
             )
             data_format_extensions: Optional[Dict[str, str]] = cfg(
                 "Override the file extension used when writing each data format, eg. {tsv: txt} to write TSV as .txt.",
-                advanced=True,
                 examples=[{"tsv": "txt", "json": "json", "yaml": "yml"}],
             )
             parquet_format: Optional[Literal["long", "wide"]] = cfg(
@@ -354,16 +350,13 @@ class MultiQCConfig(BaseModel):
                     "easy to filter by metric. 'wide' uses one column per metric (prefixed with table name and namespace), "
                     "easier for analytics but can hit column limits or mixed-type issues."
                 ),
-                advanced=True,
             )
         with group("Data dump"):
             data_dump_file: Optional[bool] = cfg(
                 "Write a single JSON file containing all parsed data, for re-running MultiQC later.",
-                advanced=True,
             )
             data_dump_file_write_raw: Optional[bool] = cfg(
                 "Include raw values (before any normalisation or filtering) in the dumped JSON.",
-                advanced=True,
             )
         with group("Plot export"):
             export_plots: Optional[bool] = cfg(
@@ -382,7 +375,6 @@ class MultiQCConfig(BaseModel):
             )
             pandoc_template: Optional[str] = cfg(
                 "Path to a Pandoc template used when exporting the report as PDF.",
-                advanced=True,
             )
 
     with section("Sample Names"):
@@ -395,7 +387,6 @@ class MultiQCConfig(BaseModel):
             )
             prepend_dirs_sep: Optional[str] = cfg(
                 "String inserted between directory names and the sample name. Defaults to '|'.",
-                advanced=True,
                 examples=["_", " - "],
             )
         with group("Name cleaning"):
@@ -413,12 +404,10 @@ class MultiQCConfig(BaseModel):
             fn_clean_exts: Optional[List[Union[str, CleanPattern]]] = cfg(
                 "Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in list.",
                 examples=[[".gz", ".fastq", ".bam", {"type": "regex", "pattern": r"_S\d+_L\d+"}]],
-                advanced=True,
             )
             fn_clean_trim: Optional[List[str]] = cfg(
                 "Strings trimmed from the start or end of sample names. Replaces the built-in list.",
                 examples=[["_R1", "_R2", "_001"]],
-                advanced=True,
             )
             use_filename_as_sample_name: Optional[Union[bool, List[str]]] = cfg(
                 (
@@ -438,12 +427,10 @@ class MultiQCConfig(BaseModel):
             )
             sample_names_only_include: Optional[List[str]] = cfg(
                 "Glob patterns. If set, only matching samples are kept.",
-                advanced=True,
                 examples=[["RNA_*", "Sample_??"]],
             )
             sample_names_only_include_re: Optional[List[str]] = cfg(
                 "Regex patterns. If set, only matching samples are kept.",
-                advanced=True,
                 examples=[[r"^WGS_[0-9]+$"]],
             )
         with group("Rename and replace"):
@@ -492,7 +479,6 @@ class MultiQCConfig(BaseModel):
         with group("Skip patterns"):
             ignore_symlinks: Optional[bool] = cfg(
                 "Skip symlinked files and directories during the file search.",
-                advanced=True,
             )
             ignore_images: Optional[bool] = cfg(
                 "Skip image files (PNG/JPEG/etc.) to avoid wasting time opening them.",
@@ -529,7 +515,6 @@ class MultiQCConfig(BaseModel):
             )
             num_datasets_plot_limit: Optional[int] = cfg(
                 "Deprecated. Use `plots_defer_loading_numseries` instead.",
-                advanced=True,
                 deprecated="Use `plots_defer_loading_numseries` instead.",
             )
         with group("Appearance"):
@@ -538,7 +523,6 @@ class MultiQCConfig(BaseModel):
             )
             plot_font_family: Optional[str] = cfg(
                 "CSS font-family for plot text. Defaults to a system font stack.",
-                advanced=True,
             )
             custom_plot_config: Optional[Dict[str, Any]] = cfg(
                 "Override plot config options per plot. Top-level keys are plot IDs, values are option dicts.",
@@ -553,11 +537,9 @@ class MultiQCConfig(BaseModel):
             )
             lineplot_number_of_points_to_hide_markers: Optional[int] = cfg(
                 "Hide individual data point markers in line plots once the total point count across samples exceeds this.",
-                advanced=True,
             )
             barplot_legend_on_bottom: Optional[bool] = cfg(
                 "Place bar plot legends below the plot instead of to the side. Not recommended.",
-                advanced=True,
             )
         with group("Boxplot and violin"):
             boxplot_boxpoints: Optional[Literal["outliers", "suspectedoutliers", "all", False]] = cfg(
@@ -614,7 +596,6 @@ class MultiQCConfig(BaseModel):
         with group("General"):
             collapse_tables: Optional[bool] = cfg(
                 "Collapse module tables by default. Users click to expand.",
-                advanced=True,
             )
             max_table_rows: Optional[int] = cfg(
                 "Tables larger than this many rows are rendered as a violin plot instead.",
@@ -743,7 +724,6 @@ class MultiQCConfig(BaseModel):
                     "Keys are the merged group name; values are a clean-pattern entry (a string suffix, or a "
                     "{type, pattern} dict) or a list of such entries."
                 ),
-                advanced=True,
                 examples=[
                     {
                         "R1": "_1",
@@ -757,17 +737,18 @@ class MultiQCConfig(BaseModel):
             )
 
     with section("Software Versions"):
-        software_versions: Optional[Dict[str, Any]] = cfg(
-            "Manually specify software versions for the Software Versions section. Top-level keys are tool names.",
-            examples=[{"samtools": "1.20", "bwa": "0.7.17", "fastqc": "0.12.1"}],
-        )
-        versions_table_group_header: Optional[str] = cfg(
-            "Column header for the grouping column in the Software Versions table. Defaults to 'Group'.",
-        )
-        disable_version_detection: Optional[bool] = cfg(
-            "Skip parsing software versions from module log files.",
-        )
-        skip_versions_section: Optional[bool] = cfg("Hide the Software Versions section.")
+        with group("Software Versions"):
+            software_versions: Optional[Dict[str, Any]] = cfg(
+                "Manually specify software versions for the Software Versions section. Top-level keys are tool names.",
+                examples=[{"samtools": "1.20", "bwa": "0.7.17", "fastqc": "0.12.1"}],
+            )
+            versions_table_group_header: Optional[str] = cfg(
+                "Column header for the grouping column in the Software Versions table. Defaults to 'Group'.",
+            )
+            disable_version_detection: Optional[bool] = cfg(
+                "Skip parsing software versions from module log files.",
+            )
+            skip_versions_section: Optional[bool] = cfg("Hide the Software Versions section.")
 
     with section("Read & Base Counts"):
         with group("Short reads"):
@@ -821,6 +802,21 @@ class MultiQCConfig(BaseModel):
             no_ai: Optional[bool] = cfg(
                 "Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.",
             )
+        with group("Prompts"):
+            ai_prompt_short: Optional[str] = cfg(
+                "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
+                multiline=True,
+                examples=["Write the summary in one short paragraph aimed at a lab head, no jargon."],
+            )
+            ai_prompt_full: Optional[str] = cfg(
+                "Custom prompt prepended to the full-section AI summary request.",
+                multiline=True,
+                examples=["Use bullet points and call out any sample that looks like an outlier."],
+            )
+        with group("Privacy"):
+            ai_anonymize_samples: Optional[bool] = cfg(
+                "Replace sample names with placeholders before sending data to the AI provider.",
+            )
         with group("Provider"):
             ai_provider: Optional[AiProviderLiteral] = cfg(
                 "AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, custom.",
@@ -838,82 +834,52 @@ class MultiQCConfig(BaseModel):
                     "Authentication scheme used by the custom endpoint. "
                     "'bearer' sends an Authorization header, 'api-key' sends an api-key header."
                 ),
-                advanced=True,
+            )
+            seqera_website: Optional[str] = cfg(
+                "Base URL used for Seqera Platform links in the report.",
+            )
+            seqera_api_url: Optional[str] = cfg(
+                "Base URL for the Seqera Platform API. Defaults to the public instance.",
             )
         with group("Tuning"):
             ai_retries: Optional[int] = cfg(
                 "Number of times to retry an AI request on transient errors.",
-                advanced=True,
             )
             ai_extra_query_options: Optional[Dict[str, Any]] = cfg(
                 "Extra request-body fields merged into the AI request payload (provider-specific).",
                 examples=[{"temperature": 0.3, "top_p": 0.9}],
-                advanced=True,
             )
             ai_custom_context_window: Optional[int] = cfg(
                 "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
-                advanced=True,
                 gt=0,
             )
             ai_max_completion_tokens: Optional[int] = cfg(
                 "Maximum completion tokens for OpenAI reasoning models.",
-                advanced=True,
             )
             ai_reasoning_effort: Optional[Literal["low", "medium", "high"]] = cfg(
                 "Reasoning effort for OpenAI reasoning models.",
-                advanced=True,
             )
             ai_extended_thinking: Optional[bool] = cfg(
                 "Enable extended thinking on Anthropic Claude models that support it.",
-                advanced=True,
             )
             ai_thinking_budget_tokens: Optional[int] = cfg(
                 "Token budget for Anthropic extended thinking when enabled.",
-                advanced=True,
-            )
-        with group("Prompts"):
-            ai_prompt_short: Optional[str] = cfg(
-                "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
-                multiline=True,
-                examples=["Write the summary in one short paragraph aimed at a lab head, no jargon."],
-            )
-            ai_prompt_full: Optional[str] = cfg(
-                "Custom prompt prepended to the full-section AI summary request.",
-                multiline=True,
-                examples=["Use bullet points and call out any sample that looks like an outlier."],
-            )
-        with group("Privacy"):
-            ai_anonymize_samples: Optional[bool] = cfg(
-                "Replace sample names with placeholders before sending data to the AI provider.",
             )
 
-    with section("MegaQC Integration"):
-        megaqc_url: Optional[str] = cfg(
-            "URL of a MegaQC instance to upload report data to after generation.",
-            advanced=True,
-        )
-        megaqc_access_token: Optional[str] = cfg(
-            "Auth token for the MegaQC instance.",
-            advanced=True,
-        )
-        megaqc_timeout: Optional[int] = cfg(
-            "Upload timeout in seconds when posting to MegaQC.",
-            advanced=True,
-        )
-        megaqc_upload: Optional[bool] = cfg(
-            "Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.",
-            advanced=True,
-        )
-
-    with section("Seqera Integration"):
-        seqera_website: Optional[str] = cfg(
-            "Base URL used for Seqera Platform links in the report.",
-            advanced=True,
-        )
-        seqera_api_url: Optional[str] = cfg(
-            "Base URL for the Seqera Platform API. Defaults to the public instance.",
-            advanced=True,
-        )
+    with section("MegaQC"):
+        with group("MegaQC Integration"):
+            megaqc_url: Optional[str] = cfg(
+                "URL of a MegaQC instance to upload report data to after generation.",
+            )
+            megaqc_access_token: Optional[str] = cfg(
+                "Auth token for the MegaQC instance.",
+            )
+            megaqc_timeout: Optional[int] = cfg(
+                "Upload timeout in seconds when posting to MegaQC.",
+            )
+            megaqc_upload: Optional[bool] = cfg(
+                "Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.",
+            )
 
     with section("Performance & Debugging"):
         with group("Profiling"):
@@ -922,30 +888,26 @@ class MultiQCConfig(BaseModel):
             )
             profile_memory: Optional[bool] = cfg(
                 "Track peak memory per module. Adds runtime overhead.",
-                advanced=True,
             )
         with group("Logging"):
             verbose: Optional[bool] = cfg("Print extra debug log messages to the terminal.")
             no_ansi: Optional[bool] = cfg("Disable ANSI colour codes in terminal output.")
             quiet: Optional[bool] = cfg("Suppress non-essential log messages.")
         with group("Linting"):
+            strict: Optional[bool] = cfg("Treat module warnings as errors. Stricter than lint.")
             lint: Optional[bool] = cfg(
                 "Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.",
                 deprecated="Use `--lint` command-line flag instead.",
             )
-            strict: Optional[bool] = cfg("Treat module warnings as errors. Stricter than lint.", advanced=True)
         with group("Developer"):
             development: Optional[bool] = cfg(
-                "Enable developer-mode features such as live JS reloading. Internal use.",
-                advanced=True,
+                "Enable developer-mode features such as live JS reloading. For internal use.",
             )
             report_readerrors: Optional[bool] = cfg(
                 "Surface file read errors in the log instead of silently skipping them.",
-                advanced=True,
             )
             preserve_module_raw_data: Optional[bool] = cfg(
                 "Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.",
-                advanced=True,
             )
         with group("Version check"):
             no_version_check: Optional[bool] = cfg(
@@ -953,7 +915,6 @@ class MultiQCConfig(BaseModel):
             )
             version_check_url: Optional[str] = cfg(
                 "URL queried by MultiQC's own update check. Set to override the default endpoint.",
-                advanced=True,
             )
 
     # Search patterns. Excluded from the wizard via SKIP_PROPERTIES; rendered manually

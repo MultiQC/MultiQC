@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import AbstractSet, Any, Dict, List, Optional, Set, Tuple
+from typing import AbstractSet, Any, Dict, List, Optional, Tuple
 
 import yaml
 
@@ -66,8 +66,3 @@ def load_sections_with_groups(
             f"or add to the loader caller's skip set."
         )
     return out
-
-
-def load_uncommon(properties: Dict[str, Any]) -> Set[str]:
-    """Set of property names flagged ``advanced=True`` in their cfg() call."""
-    return {name for name, prop in properties.items() if prop.get("advanced")}

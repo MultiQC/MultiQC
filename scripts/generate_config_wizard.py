@@ -20,7 +20,7 @@ from typing import Any, get_args
 # Allow the script to be either run directly or imported via importlib (eg. from tests).
 sys.path.insert(0, str(Path(__file__).parent))
 
-from _config_schema_loader import load_schema_and_defaults, load_sections_with_groups, load_uncommon  # noqa: E402
+from _config_schema_loader import load_schema_and_defaults, load_sections_with_groups  # noqa: E402
 
 import multiqc  # noqa: E402
 from multiqc.utils.config_schema import AiProviderLiteral  # noqa: E402
@@ -62,7 +62,6 @@ def generate_config_wizard():
     """
     properties, config_defaults, _schema = load_schema_and_defaults()
     sections_with_groups = load_sections_with_groups(properties, skip=SKIP_PROPERTIES)
-    uncommon = load_uncommon(properties)
 
     # 3-level nested: {section: {group_name_or_empty: {prop_name: prop_data}}}.
     # The empty-string key holds ungrouped fields (kept ordered first); using
@@ -104,9 +103,15 @@ def generate_config_wizard():
 
                 default_val = config_defaults.get(prop_name)
 
+                # Pydantic stores Field(deprecated="...") as the string reason
+                # when present, or true/false. Pass it through verbatim so the
+                # form can show the explanation as a tooltip.
+                deprecated_value = prop.get("deprecated")
+                if not deprecated_value:
+                    deprecated_value = False
+
                 group_data[prop_name] = {
-                    "uncommon": prop_name in uncommon,
-                    "deprecated": bool(prop.get("deprecated", False)),
+                    "deprecated": deprecated_value,
                     "multiline": bool(prop.get("multiline", False)),
                     "type": prop_type,
                     "description": prop.get("description", ""),

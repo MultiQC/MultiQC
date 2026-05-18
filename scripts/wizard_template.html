@@ -441,86 +441,6 @@
         pointer-events: none;
       }
 
-      .show-uncommon-btn {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        width: calc(100% - 20px);
-        margin: 12px 10px 4px;
-        padding: 6px 10px;
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.55);
-        border-radius: 4px;
-        font-family: inherit;
-        font-size: 0.78em;
-        cursor: pointer;
-        text-align: left;
-        transition:
-          background 0.15s ease,
-          color 0.15s ease,
-          border-color 0.15s ease;
-      }
-      .show-uncommon-btn:hover {
-        background: rgba(255, 255, 255, 0.04);
-        color: white;
-        border-color: rgba(255, 255, 255, 0.16);
-      }
-      .show-uncommon-state {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.18);
-        flex-shrink: 0;
-      }
-      body.show-uncommon .show-uncommon-btn {
-        background: rgba(49, 201, 172, 0.08);
-        border-color: rgba(49, 201, 172, 0.25);
-        color: white;
-      }
-      body.show-uncommon .show-uncommon-state {
-        background: var(--teal);
-        box-shadow: 0 0 0 2px rgba(49, 201, 172, 0.25);
-      }
-
-      .form-group.uncommon {
-        display: none;
-      }
-      body.search-active .form-group.uncommon {
-        display: block;
-      }
-      body.show-uncommon .form-group.uncommon {
-        display: block;
-      }
-      .section-nav .nav-advanced-only,
-      .section-heading.advanced-only {
-        display: none;
-      }
-      body.show-uncommon .section-nav .nav-advanced-only,
-      body.search-active .section-nav .nav-advanced-only {
-        display: list-item;
-      }
-      body.show-uncommon .section-heading.advanced-only,
-      body.search-active .section-heading.advanced-only {
-        display: block;
-      }
-      body.show-uncommon .form-group.uncommon .field-key::after {
-        content: "advanced";
-        display: inline-block;
-        margin-left: 8px;
-        padding: 1px 6px;
-        border-radius: 3px;
-        font-family: "Inter", sans-serif;
-        font-size: 0.68em;
-        font-weight: 500;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--ink-soft);
-        background: var(--surface-soft);
-        border: 1px solid var(--border-soft);
-        vertical-align: middle;
-      }
-
       .sidebar-cta {
         padding: 14px 18px 6px;
       }
@@ -1034,8 +954,7 @@
         line-height: 1.45;
       }
       .form-group.hidden {
-        /* `!important` so search filtering wins over the show-uncommon rule's higher specificity. */
-        display: none !important;
+        display: none;
       }
       .form-group label.field-label {
         display: flex;
@@ -1135,6 +1054,39 @@
         letter-spacing: 0;
         text-transform: none;
         vertical-align: middle;
+      }
+      .deprecated-badge {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        color: var(--ink-soft);
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 0.7em;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        vertical-align: middle;
+        cursor: help;
+      }
+      /* The whole option is greyed out so deprecated entries read as
+         discouraged at a glance, even before the badge is noticed. */
+      .form-group.deprecated {
+        background: var(--surface-soft);
+      }
+      .form-group.deprecated .field-key,
+      .form-group.deprecated .description,
+      .form-group.deprecated .field-label {
+        color: var(--ink-soft);
+      }
+      .form-group.deprecated .field-key {
+        text-decoration: line-through;
+        text-decoration-color: var(--ink-faint);
+        text-decoration-thickness: 1px;
+      }
+      .form-group.deprecated input,
+      .form-group.deprecated textarea,
+      .form-group.deprecated select {
+        opacity: 0.7;
       }
       .field-reset-btn {
         padding: 3px 6px;
@@ -1944,16 +1896,6 @@
       </div>
       <nav class="sidebar-sections">
         <ul class="section-nav" id="sectionNav"></ul>
-        <button
-          id="toggleUncommonBtn"
-          type="button"
-          class="show-uncommon-btn"
-          onclick="toggleUncommon()"
-          aria-pressed="false"
-        >
-          <span class="show-uncommon-state" aria-hidden="true"></span>
-          <span class="show-uncommon-label">Show advanced options</span>
-        </button>
       </nav>
       <div class="sidebar-theme">
         <button
@@ -2212,21 +2154,6 @@
       // and survive a page reload via localStorage.
       let pluginKeys = {};
 
-      // {sectionName: commonCount}, computed once at init from configData.
-      // Used by both the sidebar TOC and the in-page section headings to
-      // decide which sections are entirely advanced.
-      const sectionCommonCounts = Object.fromEntries(
-        Object.entries(configData).map(([name, groups]) => {
-          let count = 0;
-          for (const props of Object.values(groups)) {
-            for (const p of Object.values(props)) {
-              if (!p.uncommon) count += 1;
-            }
-          }
-          return [name, count];
-        }),
-      );
-
       // Track scroll location and apply `.active` to the matching sidebar
       // entries: the section link, and (when scrolled into a named group) the
       // matching group sub-link. Uses each form-group's bounding rect rather
@@ -2377,17 +2304,15 @@
           if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
         };
         Object.entries(configData).forEach(([sectionName, groups]) => {
-          // Sections with named groups expose the section as a small all-caps
-          // header link (scrolls to the section heading) and each group as a
-          // sub-link below. Sections without named groups keep a single
-          // regular entry on the section name.
+          // Sections with one named group collapse to a single clickable
+          // section entry. Sections with multiple groups show the section as
+          // a header label and each group as a clickable sub-link.
           const namedGroups = Object.keys(groups).filter((g) => g !== "");
-          const commonCount = sectionCommonCounts[sectionName];
+          const isSingleGroup = namedGroups.length === 1;
 
-          if (namedGroups.length === 0) {
+          if (namedGroups.length === 0 || isSingleGroup) {
             const li = document.createElement("li");
             li.dataset.section = sectionName;
-            if (commonCount === 0) li.classList.add("nav-advanced-only");
             const a = document.createElement("a");
             a.href = "#section-" + slugify(sectionName);
             a.textContent = sectionName;
@@ -2405,7 +2330,6 @@
           const labelLi = document.createElement("li");
           labelLi.className = "section-nav-label";
           labelLi.dataset.section = sectionName;
-          if (commonCount === 0) labelLi.classList.add("nav-advanced-only");
           const labelA = document.createElement("a");
           labelA.href = "#section-" + slugify(sectionName);
           labelA.textContent = sectionName;
@@ -2424,7 +2348,6 @@
             const subLi = document.createElement("li");
             subLi.dataset.section = sectionName;
             subLi.dataset.group = groupName;
-            if (commonCount === 0) subLi.classList.add("nav-advanced-only");
             const subA = document.createElement("a");
             subA.href = "#group-" + slugify(sectionName) + "-" + slugify(groupName);
             subA.textContent = groupName;
@@ -2554,14 +2477,6 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
-      function toggleUncommon() {
-        const on = document.body.classList.toggle("show-uncommon");
-        const btn = document.getElementById("toggleUncommonBtn");
-        btn.setAttribute("aria-pressed", on ? "true" : "false");
-        btn.querySelector(".show-uncommon-label").textContent = on ? "Hide advanced options" : "Show advanced options";
-        handleSearch();
-      }
-
       function createSectionContent() {
         const sectionsContainer = document.getElementById("sections");
 
@@ -2571,14 +2486,17 @@
           h2.id = "section-" + slugify(sectionName);
           h2.dataset.section = sectionName;
           h2.textContent = sectionName;
-          if (sectionCommonCounts[sectionName] === 0) h2.classList.add("advanced-only");
           sectionsContainer.appendChild(h2);
 
-          // Empty-string groupName is the ungrouped bucket: its fields render
-          // directly under the section, no .group-box wrapper.
+          // When a section has only one named group, the group heading is
+          // redundant under the section heading, so skip the .group-box
+          // wrapper and render the fields flat. Sections with multiple groups
+          // keep the box and <h3>.
+          const namedGroups = Object.entries(groups).filter(([g]) => g !== "");
+          const hideGroupHeading = namedGroups.length === 1;
           Object.entries(groups).forEach(([groupName, groupProps]) => {
             let container = sectionsContainer;
-            if (groupName !== "") {
+            if (groupName !== "" && !hideGroupHeading) {
               const box = document.createElement("section");
               box.className = "group-box";
               box.id = "group-" + slugify(sectionName) + "-" + slugify(groupName);
@@ -2631,9 +2549,8 @@
       function createFormGroup(propName, propData) {
         const formGroup = document.createElement("div");
         formGroup.className = "form-group";
-        if (propData.uncommon) formGroup.classList.add("uncommon");
         formGroup.dataset.propname = propName;
-        if (propData.uncommon) formGroup.dataset.uncommon = "1";
+        if (propData.deprecated) formGroup.classList.add("deprecated");
         // Click anywhere in the group's chrome (label, description, empty
         // space) to jump to the YAML line. Skips clicks on inputs / buttons /
         // links so widgets still work — including the field-key button,
@@ -2684,6 +2601,14 @@
           defaultSpan.className = "default-badge";
           defaultSpan.textContent = "default: " + formatDefaultValue(propData.default);
           keyGroup.appendChild(defaultSpan);
+
+          if (propData.deprecated) {
+            const dep = document.createElement("span");
+            dep.className = "deprecated-badge";
+            dep.textContent = "deprecated";
+            dep.title = typeof propData.deprecated === "string" ? propData.deprecated : "Deprecated option";
+            keyGroup.appendChild(dep);
+          }
 
           if (isPrefillableDefault(propData)) {
             const resetBtn = document.createElement("button");
@@ -3299,9 +3224,7 @@
         const rawValue = document.getElementById("searchInput").value;
         const query = rawValue.toLowerCase().trim();
         searchWrapper.classList.toggle("has-text", rawValue !== "");
-        // An active search ignores the uncommon toggle so users always see matches.
         document.body.classList.toggle("search-active", query !== "");
-        const showUncommon = document.body.classList.contains("show-uncommon");
         const sectionCounts = {};
         const groupCounts = {}; // key = "section||group"
         let anyVisible = false;
@@ -3309,9 +3232,7 @@
         for (const fg of formGroups) {
           const matchesQuery = !query || fg.name.includes(query) || fg.description.includes(query);
           fg.el.classList.toggle("hidden", !matchesQuery);
-          const isUncommon = fg.el.dataset.uncommon === "1";
-          const shown = matchesQuery && (query !== "" || showUncommon || !isUncommon);
-          if (shown) {
+          if (matchesQuery) {
             anyVisible = true;
             sectionCounts[fg.section] = (sectionCounts[fg.section] || 0) + 1;
             if (fg.group) {
