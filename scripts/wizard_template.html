@@ -921,6 +921,11 @@
         border-color: var(--teal-border);
         z-index: 2;
       }
+      /* Mirrors the Monaco editor's current-line highlight so the user can
+         spot which form-group corresponds to the cursor position in the YAML. */
+      .form-group.is-focused {
+        background: rgba(49, 201, 172, 0.1);
+      }
       /* Schema-validation error overrides the teal is-set border with red.
          Same treatment as .is-invalid (free-text YAML parse failure) but
          keyed on the validation result so it survives form re-renders. */
@@ -4167,6 +4172,17 @@
       // the matching form-group (or unknown-row) into view. Walks up the
       // current text until a `^key:` line is found, so clicks on indented
       // child lines also reveal the parent entry.
+      // Tracks the form-group currently paired with the editor's cursor so a
+      // single one stays tinted at a time. Updated from both directions
+      // (editor → form via revealFormForLine, form → editor via jumpToKey).
+      let focusedFormGroup = null;
+      function setFocusedFormGroup(target) {
+        if (focusedFormGroup === target) return;
+        if (focusedFormGroup) focusedFormGroup.classList.remove("is-focused");
+        focusedFormGroup = target || null;
+        if (focusedFormGroup) focusedFormGroup.classList.add("is-focused");
+      }
+
       function revealFormForLine(lineNumber) {
         if (!monacoEditor) return;
         const model = monacoEditor.getModel();
@@ -4180,6 +4196,7 @@
             document.querySelector(`.form-group[data-propname="${CSS.escape(key)}"]`) ||
             document.querySelector(`#unknownKeysSection .validate-card[data-key="${CSS.escape(key)}"]`);
           if (target) target.scrollIntoView({ behavior: "smooth", block: "center" });
+          if (target && target.classList.contains("form-group")) setFocusedFormGroup(target);
           return;
         }
       }
@@ -4187,6 +4204,8 @@
       // deltaDecorations swaps in one tick so there's no flash between the
       // old highlight clearing and the new one appearing.
       function jumpToKey(key) {
+        const fg = document.querySelector(`.form-group[data-propname="${CSS.escape(key)}"]`);
+        setFocusedFormGroup(fg);
         const range = lastValidated.keyLineRanges[key];
         if (!range) return;
 
