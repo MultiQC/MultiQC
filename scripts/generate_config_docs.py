@@ -66,6 +66,46 @@ from multiqc.utils.config_schema import (  # noqa: E402
     SectionOrderOverride,
 )
 
+# Special-type names that are documented under "## Special Types" further down
+# the same page. References to these names are linkified to the in-page anchor.
+SPECIAL_TYPES = (
+    "SearchPattern",
+    "CleanPattern",
+    "GeneralStatsColumnConfig",
+    "GeneralStatsModuleConfig",
+    "CondFormattingRule",
+    "ModuleOverride",
+    "SectionOrderOverride",
+)
+_SPECIAL_TYPE_RE = re.compile(r"\b(" + "|".join(SPECIAL_TYPES) + r")\b")
+
+
+def linkify_type_string(type_str: str) -> str:
+    """Return an inline-code HTML rendering of ``type_str`` with ``SPECIAL_TYPES``
+    occurrences wrapped in same-page anchor links.
+
+    Inline-code is emitted as ``<code>...</code>`` rather than backticks so the
+    ``<a>`` link is rendered inside the monospace span.
+    """
+    body = _SPECIAL_TYPE_RE.sub(lambda m: f'<a href="#{m.group(1).lower()}">{m.group(1)}</a>', type_str)
+    return f"<code>{body}</code>"
+
+
+def linkify_markdown(text: str) -> str:
+    """Wrap bare ``SPECIAL_TYPES`` occurrences in markdown anchor links.
+
+    Matches inside backtick code spans are left alone (they render as monospace
+    code and shouldn't become links). Splitting on backticks keeps the
+    backticked segments verbatim and only linkifies the prose between them.
+    """
+    parts = text.split("`")
+    out = []
+    for i, segment in enumerate(parts):
+        if i % 2 == 0:  # outside backticks
+            segment = _SPECIAL_TYPE_RE.sub(lambda m: f"[{m.group(1)}](#{m.group(1).lower()})", segment)
+        out.append(segment)
+    return "`".join(out)
+
 
 def format_type_annotation(annotation):
     """Format a type annotation to a readable string."""
@@ -255,8 +295,8 @@ If you'd rather build your config visually, the [Config Wizard](https://seqera.i
 
         hashes = "#" * heading_level
         output.append(f"{hashes} `{prop_name}`\n")
-        output.append(f"**Type**: `{type_info}`{default_inline}\n")
-        output.append(f"{description}\n")
+        output.append(f"**Type**: {linkify_type_string(type_info)}{default_inline}\n")
+        output.append(f"{linkify_markdown(description)}\n")
         if default_block:
             output.append(default_block)
 
@@ -301,12 +341,12 @@ If you'd rather build your config visually, the [Config Wizard](https://seqera.i
         """
         name = model_cls.__name__
         output.append(f"### {name}\n")
-        output.append(body_md + "\n\nProperties:\n\n")
+        output.append(linkify_markdown(body_md) + "\n\nProperties:\n\n")
         defs_props = schema.get("$defs", {}).get(name, {}).get("properties", {})
         for prop_name, prop_type in sorted(get_type_hints(model_cls).items()):
             description = defs_props.get(prop_name, {}).get("description", "")
             type_info = format_type_annotation(prop_type)
-            output.append(f"- **{prop_name}** (`{type_info}`): {description}")
+            output.append(f"- **{prop_name}** ({linkify_type_string(type_info)}): {linkify_markdown(description)}")
         output.append("")
 
     output.append("## Special Types\n")
