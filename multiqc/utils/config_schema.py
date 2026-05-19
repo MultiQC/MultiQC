@@ -5,6 +5,7 @@ Generated from the config defaults and type hints.
 
 from contextlib import contextmanager
 from contextvars import ContextVar
+from functools import lru_cache
 from typing import Any, Dict, Iterator, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -68,12 +69,9 @@ class CondFormattingRule(BaseModel):
 
     @model_validator(mode="after")
     def _require_at_least_one_operator(self) -> "CondFormattingRule":
-        ops = ("s_eq", "s_ne", "s_contains", "eq", "ne", "gt", "lt", "ge", "le")
+        ops = tuple(type(self).model_fields)
         if not any(getattr(self, op) is not None for op in ops):
-            raise ValueError(
-                "Conditional-formatting rule needs at least one operator "
-                "(one of: s_eq, s_ne, s_contains, eq, ne, gt, lt, ge, le)."
-            )
+            raise ValueError(f"Conditional-formatting rule needs at least one operator (one of: {', '.join(ops)}).")
         return self
 
 
@@ -1059,6 +1057,13 @@ class MultiQCConfig(BaseModel):
     model_config = ConfigDict(extra="allow")  # Allow additional fields that aren't in the schema
 
 
+@lru_cache(maxsize=1)
 def config_to_schema() -> Dict[str, Any]:
-    """Convert the config schema to a JSON Schema dict"""
+    """Convert the config schema to a JSON Schema dict.
+
+    Cached: Pydantic rebuilds the schema (~10ms) on every
+    ``model_json_schema()`` call, and ``multiqc/config.py:load_config_file``
+    fires this once per loaded config file. The schema is static for a process
+    lifetime, so a one-shot cache is safe.
+    """
     return MultiQCConfig.model_json_schema()

@@ -12645,6 +12645,7 @@
         if (monacoEditor && monacoLineDecorations.length) {
           monacoLineDecorations = monacoEditor.deltaDecorations(monacoLineDecorations, []);
         }
+        activeHighlightKey = null;
       }
 
       // Highlight + scroll-to for the given top-level key in the editor.
@@ -12685,6 +12686,10 @@
         }
       }
 
+      // Track which key currently owns the editor highlight so repeat clicks
+      // inside the same key's range don't churn Monaco decorations.
+      let activeHighlightKey = null;
+
       // Apply the validate-line-hl decoration to ``key``'s line range, or
       // fall back to a textarea selection. ``reveal`` controls whether the
       // editor scrolls the line into view (true for form→editor clicks,
@@ -12694,6 +12699,7 @@
       function applyEditorKeyHighlight(key, { reveal = true } = {}) {
         const range = lastValidated.keyLineRanges[key];
         if (!range) return;
+        if (key === activeHighlightKey && !reveal) return;
 
         if (monacoEditor) {
           const r = new monaco.Range(range.start, 1, range.end, 1);
@@ -12707,6 +12713,7 @@
               },
             },
           ]);
+          activeHighlightKey = key;
           if (reveal) monacoEditor.revealLineInCenterIfOutsideViewport(range.start);
           return;
         }

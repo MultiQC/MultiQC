@@ -65,7 +65,6 @@ from multiqc.utils.config_schema import (  # noqa: E402
     SearchPattern,
     SectionOrderOverride,
 )
-from pydantic import BaseModel  # noqa: E402
 
 
 def format_type_annotation(annotation):
@@ -119,14 +118,11 @@ def format_type_annotation(annotation):
     elif annotation is Any:
         return "Any"
 
-    # Pydantic models (and any other class) render as their plain class name,
-    # not the noisy ``<class 'multiqc.utils.config_schema.X'>`` form.
-    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-        return annotation.__name__
+    # Classes (eg. Pydantic models) render as their plain class name, not the
+    # noisy ``<class 'multiqc.utils.config_schema.X'>`` form.
     if isinstance(annotation, type):
         return annotation.__name__
 
-    # For any other type, return its string representation
     return str(annotation).replace("typing.", "")
 
 
@@ -296,12 +292,28 @@ If you'd rather build your config visually, the [Config Wizard](https://seqera.i
                 render_prop(prop_name, heading_level=prop_level)
         output.append("")  # Add blank line between sections
 
-    # Describe special types
+    def render_special_type(model_cls, body_md):
+        """Append a Special Types section for ``model_cls``.
+
+        ``body_md`` is the prose+example block shown under the heading. The
+        properties bullet list is built from ``get_type_hints(model_cls)`` and
+        descriptions pulled from the model's ``$defs`` entry.
+        """
+        name = model_cls.__name__
+        output.append(f"### {name}\n")
+        output.append(body_md + "\n\nProperties:\n\n")
+        defs_props = schema.get("$defs", {}).get(name, {}).get("properties", {})
+        for prop_name, prop_type in sorted(get_type_hints(model_cls).items()):
+            description = defs_props.get(prop_name, {}).get("description", "")
+            type_info = format_type_annotation(prop_type)
+            output.append(f"- **{prop_name}** (`{type_info}`): {description}")
+        output.append("")
+
     output.append("## Special Types\n")
 
-    # Search Pattern
-    output.append("### SearchPattern\n")
-    output.append("""Configuration for file search patterns used to find tool outputs.
+    render_special_type(
+        SearchPattern,
+        """Configuration for file search patterns used to find tool outputs.
 
 The `SearchPattern` type is used in the `sp` configuration option to define patterns for finding and parsing tool output files.
 
@@ -314,25 +326,12 @@ sp:
   custom_tool:
     fn: "*.log"
     contents: "Started analysis"
-```
+```""",
+    )
 
-Properties:\n\n""")
-    search_pattern_attrs = get_type_hints(SearchPattern)
-    for prop_name, prop_type in sorted(search_pattern_attrs.items()):
-        # Get description from schema
-        description = ""
-        if "$defs" in schema and "SearchPattern" in schema["$defs"]:
-            sp_props = schema["$defs"]["SearchPattern"].get("properties", {})
-            if prop_name in sp_props:
-                description = sp_props[prop_name].get("description", "")
-
-        type_info = format_type_annotation(prop_type)
-        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
-    output.append("")
-
-    # Clean Pattern
-    output.append("### CleanPattern\n")
-    output.append("""Pattern for cleaning sample names.
+    render_special_type(
+        CleanPattern,
+        """Pattern for cleaning sample names.
 
 The `CleanPattern` type is used in the `fn_clean_exts` and `extra_fn_clean_exts` configuration options to define patterns for cleaning sample names.
 
@@ -344,25 +343,12 @@ fn_clean_exts:
     pattern: '_S\\d+_L\\d+'
   - type: regex
     pattern: '\\d{4}-\\d{2}-\\d{2}'
-```
+```""",
+    )
 
-Properties:\n\n""")
-    clean_pattern_attrs = get_type_hints(CleanPattern)
-    for prop_name, prop_type in sorted(clean_pattern_attrs.items()):
-        # Get description from schema
-        description = ""
-        if "$defs" in schema and "CleanPattern" in schema["$defs"]:
-            cp_props = schema["$defs"]["CleanPattern"].get("properties", {})
-            if prop_name in cp_props:
-                description = cp_props[prop_name].get("description", "")
-
-        type_info = format_type_annotation(prop_type)
-        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
-    output.append("")
-
-    # General Stats Column Configuration
-    output.append("### GeneralStatsColumnConfig\n")
-    output.append("""Configuration for columns in the general statistics table.
+    render_special_type(
+        GeneralStatsColumnConfig,
+        """Configuration for columns in the general statistics table.
 
 The `GeneralStatsColumnConfig` type is used in the `general_stats_columns` configuration option to customize the appearance and behavior of columns in the general statistics table.
 
@@ -378,25 +364,12 @@ general_stats_columns:
         scale: "RdYlGn-rev"
         max: 100
         min: 0
-```
+```""",
+    )
 
-Properties:\n\n""")
-    gs_col_attrs = get_type_hints(GeneralStatsColumnConfig)
-    for prop_name, prop_type in sorted(gs_col_attrs.items()):
-        # Get description from schema
-        description = ""
-        if "$defs" in schema and "GeneralStatsColumnConfig" in schema["$defs"]:
-            gs_props = schema["$defs"]["GeneralStatsColumnConfig"].get("properties", {})
-            if prop_name in gs_props:
-                description = gs_props[prop_name].get("description", "")
-
-        type_info = format_type_annotation(prop_type)
-        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
-    output.append("")
-
-    # Conditional Formatting Rule
-    output.append("### CondFormattingRule\n")
-    output.append("""One conditional-formatting comparison for a table cell.
+    render_special_type(
+        CondFormattingRule,
+        """One conditional-formatting comparison for a table cell.
 
 Used in the `table_cond_formatting_rules` configuration option. Each rule is a dict with exactly one operator key paired with its comparison value. String operators (`s_eq`, `s_ne`, `s_contains`) compare case-insensitively; numeric operators (`eq`, `ne`, `gt`, `lt`, `ge`, `le`) cast both sides via `float()`.
 
@@ -409,24 +382,12 @@ table_cond_formatting_rules:
       - s_eq: "pass"
     fail:
       - gt: 50
-```
+```""",
+    )
 
-Properties:\n\n""")
-    cf_rule_attrs = get_type_hints(CondFormattingRule)
-    for prop_name, prop_type in sorted(cf_rule_attrs.items()):
-        description = ""
-        if "$defs" in schema and "CondFormattingRule" in schema["$defs"]:
-            cf_props = schema["$defs"]["CondFormattingRule"].get("properties", {})
-            if prop_name in cf_props:
-                description = cf_props[prop_name].get("description", "")
-
-        type_info = format_type_annotation(prop_type)
-        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
-    output.append("")
-
-    # Module Override
-    output.append("### ModuleOverride\n")
-    output.append("""Per-module override values for `top_modules` and `module_order` entries.
+    render_special_type(
+        ModuleOverride,
+        """Per-module override values for `top_modules` and `module_order` entries.
 
 Each entry in `top_modules` / `module_order` is either a module ID (string) or a single-key dict mapping the module ID to a `ModuleOverride` dict.
 
@@ -439,24 +400,12 @@ module_order:
       anchor: "fastqc_trimmed"
       path_filters:
         - "*_trimmed*"
-```
+```""",
+    )
 
-Properties:\n\n""")
-    mo_attrs = get_type_hints(ModuleOverride)
-    for prop_name, prop_type in sorted(mo_attrs.items()):
-        description = ""
-        if "$defs" in schema and "ModuleOverride" in schema["$defs"]:
-            mo_props = schema["$defs"]["ModuleOverride"].get("properties", {})
-            if prop_name in mo_props:
-                description = mo_props[prop_name].get("description", "")
-
-        type_info = format_type_annotation(prop_type)
-        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
-    output.append("")
-
-    # Section Order Override
-    output.append("### SectionOrderOverride\n")
-    output.append("""Override dict accepted as a `report_section_order` value.
+    render_special_type(
+        SectionOrderOverride,
+        """Override dict accepted as a `report_section_order` value.
 
 Each value in `report_section_order` is either the literal string `"remove"` (drops the section) or a `SectionOrderOverride` dict combining any of `order`, `before` and `after`.
 
@@ -469,19 +418,8 @@ report_section_order:
   custom_content-my-section:
     before: fastqc
   mod_section_2: remove
-```
-
-Properties:\n\n""")
-    so_attrs = get_type_hints(SectionOrderOverride)
-    for prop_name, prop_type in sorted(so_attrs.items()):
-        description = ""
-        if "$defs" in schema and "SectionOrderOverride" in schema["$defs"]:
-            so_props = schema["$defs"]["SectionOrderOverride"].get("properties", {})
-            if prop_name in so_props:
-                description = so_props[prop_name].get("description", "")
-
-        type_info = format_type_annotation(prop_type)
-        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
+```""",
+    )
 
     text = "\n".join(output)
     # Match Prettier's expectations so the file survives the commit hook
