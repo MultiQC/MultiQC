@@ -586,10 +586,14 @@ The other available configuration options are:
 
 - `name`: Section name
 - `anchor`: Section report ID
-- `target`: Intro link text
-- `href`: Intro link URL
-- `info`: Intro text
-- `extra`: Additional HTML after intro.
+- `href`: Tool homepage URL (or list of URLs)
+- `doi`: DOI (or list of DOIs)
+- `info`: Intro text, rendered as markdown
+- `comment`: Comment text, rendered as markdown
+- `extra`: Additional HTML after intro
+- `path_filters`: Glob patterns; only files matching these are used by this module run
+- `path_filters_exclude`: Glob patterns; files matching these are excluded
+- `generalstats`: Set to `false` to suppress this module's General Statistics columns
 - `custom_config`: Custom module-level settings. Translated into `config.moduleName`, but specifically for this section.
 
 For example, to run the FastQC module twice, before and after adapter trimming, you could
@@ -601,7 +605,6 @@ module_order:
       name: "FastQC (trimmed)"
       anchor: "fastqc_trimmed"
       info: "This section of the report shows FastQC results after adapter trimming."
-      target: ""
       path_filters:
         - "*_1_trimmed_fastqc.zip"
   - cutadapt
@@ -922,6 +925,8 @@ The following comparison operators are available:
 - `ne` - Value does not equal
 - `gt` - Value is greater than
 - `lt` - Value is less than
+- `ge` - Value is greater than or equal to
+- `le` - Value is less than or equal to
 
 To have matches for a specific table or column, use that ID instead of `all_columns`.
 

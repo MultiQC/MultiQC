@@ -24,10 +24,9 @@ Run the tests after editing the schema:
 pytest tests/test_config_wizard.py
 ```
 
-Six tests guard the schema/wizard contract:
+A set of tests guard the schema/wizard contract:
 
-- every schema property declares a `section` (or is in `SKIP_PROPERTIES`);
-- `SKIP_PROPERTIES` references only real schema fields;
+- every schema property declares a `section` and a `group`;
 - every user-facing field in `multiqc/config.py` is in the schema;
 - `RUNTIME_CONFIG_ATTRS` (the allow-list of runtime-only attributes) is current;
 - `config.py` type annotations agree with `MultiQCConfig` at the type-kind level;

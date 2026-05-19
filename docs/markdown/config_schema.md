@@ -265,7 +265,7 @@ Inline custom content data keyed by section ID. Companion to custom_content for 
 
 #### `top_modules`
 
-**Type**: `List[Union[str, Dict[str, Dict[str, Any]]]]`
+**Type**: `List[Union[str, Dict[str, ModuleOverride]]]`
 
 Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.
 
@@ -279,7 +279,7 @@ top_modules:
 
 #### `module_order`
 
-**Type**: `List[Union[str, Dict[str, Dict[str, Any]]]]`
+**Type**: `List[Union[str, Dict[str, ModuleOverride]]]`
 
 Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, anchor, info, path_filters, path_filters_exclude, generalstats, custom_config).
 
@@ -518,9 +518,9 @@ remove_sections:
 
 #### `report_section_order`
 
-**Type**: `Dict[str, Any]`
+**Type**: `Dict[str, Union[Literal["remove"], SectionOrderOverride]]`
 
-Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides. See the [customisation docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output) for the full grammar.
+Reorder, group or hide report sections by ID. Values are either the literal string 'remove' (drops the section) or a dict with any combination of `order` (int), `before` (str) and `after` (str). See the [customisation docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output) for the full grammar.
 
 **Example**:
 
@@ -1054,7 +1054,7 @@ sample_names_only_include_re:
 
 **Type**: `List[List[str]]`
 
-Toolbox rename pairs. Each entry is a [from, to] pair, grouped by the buttons in sample_names_rename_buttons.
+Toolbox rename rows. Each entry is a list where the first element is the source sample name and each subsequent element is the rename for the corresponding button in `sample_names_rename_buttons` (so inner lists should have `1 + len(sample_names_rename_buttons)` elements).
 
 **Example**:
 
@@ -1239,6 +1239,1294 @@ fn_ignore_files:
 
 Module IDs whose log files may be matched by multiple modules during the search.
 
+### Search patterns
+
+#### `sp`
+
+**Type**: `Dict[str, Union[SearchPattern, List[SearchPattern]]]`
+
+Override or add to the built-in module search patterns. Top-level keys are module IDs (eg. `fastqc`); values are a single `SearchPattern` dict or a list of them. See the SearchPattern definition below for the accepted fields.
+
+<details><summary>Default value</summary>
+
+```yaml
+multiqc_data:
+  fn: "*multiqc.parquet"
+adapterremoval:
+  fn: "*.settings"
+  contents: AdapterRemoval
+  num_lines: 1
+xenium/metrics:
+  fn: metrics_summary.csv
+  contents: num_cells_detected
+  num_lines: 5
+xenium/experiment:
+  fn: experiment.xenium
+  num_lines: 50
+afterqc:
+  fn: "*.json"
+  contents: allow_mismatch_in_poly
+  num_lines: 10000
+anglerfish:
+  fn: "*.json"
+  contents: anglerfish_version
+bakta:
+  fn: "*.txt"
+  contents: "Bakta:"
+bamdst/coverage:
+  contents: "## The file was created by bamdst"
+  num_lines: 5
+bamtools/stats:
+  contents: "Stats for BAM file(s):"
+  num_lines: 10
+bases2fastq/run:
+  fn: RunStats.json
+  contents: SampleStats
+  num_lines: 100
+bases2fastq/project:
+  fn: "*_RunStats.json"
+  contents: SampleStats
+  num_lines: 100
+bases2fastq/manifest:
+  fn: RunManifest.json
+  contents: Settings
+  num_lines: 100
+bbduk:
+  contents: Executing jgi.BBDuk
+  num_lines: 2
+bbmap/stats:
+  contents:
+    - "#File"
+    - "#Total"
+    - "#Matched"
+    - "#Name\tReads\tReadsPct"
+  num_lines: 10
+bbmap/bbsplit:
+  contents: "#name\t%unambiguousReads\tunambiguousMB\t%ambiguousReads"
+  num_lines: 5
+bbmap/aqhist:
+  contents: "#Quality\tcount1\tfraction1\tcount2\tfraction2"
+  num_lines: 10
+bbmap/bhist:
+  contents: "#Pos\tA\tC\tG\tT\tN"
+  num_lines: 10
+bbmap/bincov:
+  contents: "#RefName\tCov\tPos\tRunningPos"
+  num_lines: 10
+bbmap/bqhist:
+  contents: "#BaseNum\tcount_1\tmin_1\tmax_1\tmean_1\tQ1_1\tmed_1\tQ3_1\tLW_1\tRW_1\t\
+    count_2\tmin_2\tmax_2\tmean_2\tQ1_2\tmed_2\tQ3_2\tLW_2\tRW_2"
+  num_lines: 10
+bbmap/covhist:
+  contents: "#Coverage\tnumBases"
+  num_lines: 10
+bbmap/covstats:
+  contents: "#ID\tAvg_fold"
+  num_lines: 10
+bbmap/ehist:
+  contents: "#Errors\tCount"
+  num_lines: 10
+bbmap/gchist:
+  contents:
+    - "#Mean\t"
+    - "#GC\tCount"
+  num_lines: 10
+bbmap/idhist:
+  contents:
+    - "#Mean_reads"
+    - "#Identity\tReads\tBases"
+  num_lines: 10
+bbmap/ihist:
+  contents:
+    - "#Mean\t"
+    - "#InsertSize\tCount"
+  num_lines: 10
+bbmap/indelhist:
+  contents: "#Length\tDeletions\tInsertions"
+  num_lines: 10
+bbmap/lhist:
+  contents: "#Length\tCount"
+  num_lines: 10
+bbmap/mhist:
+  contents: "#BaseNum\tMatch1\tSub1\tDel1\tIns1\tN1\tOther1\tMatch2\tSub2\tDel2\t\
+    Ins2\tN2\tOther2"
+  num_lines: 10
+bbmap/qahist:
+  contents: "#Quality\tMatch\tSub\tIns\tDel"
+  num_lines: 10
+bbmap/qchist:
+  contents_re: "#Quality\tcount1\tfraction1$"
+  num_lines: 10
+bbmap/qhist:
+  contents: "#BaseNum\tRead1_linear\tRead1_log\tRead1_measured"
+  num_lines: 10
+bbmap/rpkm:
+  contents:
+    - "#File\t"
+    - "#Reads\t"
+    - "#Mapped\t"
+    - "#RefSequences\t"
+    - "#Name Length"
+  num_lines: 10
+bbmap/statsfile_machine:
+  contents: Reads Used=
+  num_lines: 10
+bbmap/statsfile:
+  contents:
+    - "Reads Used:"
+    - "Mapping:"
+    - "Reads/sec:"
+    - "kBases/sec:"
+  num_lines: 10
+bcftools/stats:
+  contents: This file was produced by bcftools stats
+bcl2fastq:
+  fn: Stats.json
+  contents: DemuxResults
+  num_lines: 300
+bclconvert/runinfo:
+  fn: RunInfo.xml
+bclconvert/demux:
+  fn: Demultiplex_Stats.csv
+bclconvert/quality_metrics:
+  fn: Quality_Metrics.csv
+bclconvert/adaptermetrics:
+  fn: Adapter_Metrics.csv
+bclconvert/unknown_barcodes:
+  fn: Top_Unknown_Barcodes.csv
+biobambam2/bamsormadup:
+  contents: "# bamsormadup"
+  num_lines: 2
+biobloomtools:
+  contents: "filter_id\thits\tmisses\tshared\trate_hit\trate_miss\trate_shared"
+  num_lines: 2
+biscuit/align_mapq:
+  fn: "*_mapq_table.txt"
+  contents: BISCUITqc Mapping Quality Table
+  num_lines: 3
+biscuit/align_strand:
+  fn: "*_strand_table.txt"
+  contents: BISCUITqc Strand Table
+  num_lines: 3
+biscuit/align_isize:
+  fn: "*_isize_table.txt"
+  contents: BISCUITqc Insert Size Table
+  num_lines: 3
+biscuit/dup_report:
+  fn: "*_dup_report.txt"
+  contents: BISCUITqc Read Duplication Table
+  num_lines: 3
+biscuit/qc_cv:
+  fn: "*_cv_table.txt"
+  contents: BISCUITqc Uniformity Table
+  num_lines: 3
+biscuit/covdist_all_base_botgc:
+  fn: "*_covdist_all_base_botgc_table.txt"
+biscuit/covdist_all_base:
+  fn: "*_covdist_all_base_table.txt"
+biscuit/covdist_all_base_topgc:
+  fn: "*_covdist_all_base_topgc_table.txt"
+biscuit/covdist_q40_base_botgc:
+  fn: "*_covdist_q40_base_botgc_table.txt"
+biscuit/covdist_q40_base:
+  fn: "*_covdist_q40_base_table.txt"
+biscuit/covdist_q40_base_topgc:
+  fn: "*_covdist_q40_base_topgc_table.txt"
+biscuit/covdist_all_cpg_botgc:
+  fn: "*_covdist_all_cpg_botgc_table.txt"
+biscuit/covdist_all_cpg:
+  fn: "*_covdist_all_cpg_table.txt"
+biscuit/covdist_all_cpg_topgc:
+  fn: "*_covdist_all_cpg_topgc_table.txt"
+biscuit/covdist_q40_cpg_botgc:
+  fn: "*_covdist_q40_cpg_botgc_table.txt"
+biscuit/covdist_q40_cpg:
+  fn: "*_covdist_q40_cpg_table.txt"
+biscuit/covdist_q40_cpg_topgc:
+  fn: "*_covdist_q40_cpg_topgc_table.txt"
+biscuit/cpg_retention_readpos:
+  fn: "*_CpGRetentionByReadPos.txt"
+biscuit/cph_retention_readpos:
+  fn: "*_CpHRetentionByReadPos.txt"
+biscuit/base_avg_retention_rate:
+  fn: "*_totalBaseConversionRate.txt"
+biscuit/read_avg_retention_rate:
+  fn: "*_totalReadConversionRate.txt"
+bismark/align:
+  fn: "*_[SP]E_report.txt"
+bismark/dedup:
+  fn: "*.deduplication_report.txt"
+bismark/meth_extract:
+  fn: "*_splitting_report.txt"
+bismark/m_bias:
+  fn: "*M-bias.txt"
+bismark/bam2nuc:
+  fn: "*.nucleotide_stats.txt"
+bowtie1:
+  contents: "# reads processed:"
+  exclude_fn:
+    - bowtie.left_kept_reads.log
+    - bowtie.left_kept_reads.m2g_um.log
+    - bowtie.left_kept_reads.m2g_um_seg1.log
+    - bowtie.left_kept_reads.m2g_um_seg2.log
+    - bowtie.right_kept_reads.log
+    - bowtie.right_kept_reads.m2g_um.log
+    - bowtie.right_kept_reads.m2g_um_seg1.log
+    - bowtie.right_kept_reads.m2g_um_seg2.log
+  shared: true
+bowtie2:
+  contents: "reads; of these:"
+  exclude_contents:
+    - bisulfite
+    - HiC-Pro
+  shared: true
+busco:
+  fn: short_summary*
+  contents: "BUSCO version is:"
+  num_lines: 1
+bustools:
+  fn: "*inspect.json"
+ccs/v4:
+  contents: ZMWs generating CCS
+  num_lines: 2
+  max_filesize: 1024
+ccs/v5:
+  contents: '"id": "ccs_processing"'
+  fn: "*.json"
+checkatlas/summary:
+  fn: "*.tsv"
+  contents_re: ^AtlasFileType\tNbCells\tNbGenes
+  num_lines: 1
+checkatlas/adata:
+  fn: "*.tsv"
+  contents_re: ^atlas_obs\tobsm\tvar\tvarm\tuns
+  num_lines: 1
+checkatlas/qc:
+  fn: "*.tsv"
+  contents_re: cellrank_(total_counts|n_genes_by_counts|pct_counts_mt)
+  num_lines: 1
+checkatlas/cluster:
+  fn: "*.tsv"
+  contents_re: ^Clust_Sample\tobs
+  num_lines: 1
+checkatlas/annotation:
+  fn: "*.tsv"
+  contents_re: ^Annot_Sample\tReference\tobs
+  num_lines: 1
+checkatlas/dimred:
+  fn: "*.tsv"
+  contents_re: ^Dimred_Sample\tobsm
+  num_lines: 1
+cellranger/count_html:
+  - fn: "*.html"
+    contents: '"command":"Cell Ranger","subcommand":"count"'
+    num_lines: 20
+  - fn: "*.html"
+    contents: '"command": "Cell Ranger", "subcommand": "count"'
+    num_lines: 20
+cellranger/vdj_html:
+  - fn: "*.html"
+    contents: '"command":"Cell Ranger","subcommand":"vdj"'
+    num_lines: 20
+  - fn: "*.html"
+    contents: '"command": "Cell Ranger", "subcommand": "vdj"'
+    num_lines: 20
+cellranger_arc:
+  - fn: "*.html"
+    contents: Cell Ranger ARC
+    num_lines: 250
+cells2stats/run:
+  fn: RunStats.json
+  contents: '"AnalysisID": "c2s.'
+  num_lines: 100
+checkm:
+  - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})#\
+      \ markers(?:\t| {3,})# marker sets.*"
+    num_lines: 10
+checkm2:
+  contents: "Name\tCompleteness\tContamination\tCompleteness_Model_Used\tTranslation_Table_Used"
+  num_lines: 10
+checkqc:
+  contents: instrument_and_reagent_type
+  fn: "*.json"
+custom_content:
+  fn_re: .+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|gif|webp|tiff|html|md)
+clipandmerge:
+  contents: ClipAndMerge (
+  num_lines: 5
+clusterflow/logs:
+  fn: "*_clusterFlow.txt"
+  shared: true
+clusterflow/runfiles:
+  fn: "*.run"
+  contents: Cluster Flow Run File
+  num_lines: 2
+conpair/concordance:
+  contents: markers (coverage per marker threshold
+  num_lines: 3
+conpair/contamination:
+  contents: "Tumor sample contamination level: "
+  num_lines: 3
+cutadapt:
+  - contents: This is cutadapt
+    exclude_contents_re: "Trim Galore version: (?:[2-9]|\\d{2,})\\."
+    num_lines: 100
+  - fn: "*.json"
+    contents: Cutadapt report
+damageprofiler:
+  fn: "*dmgprof.json"
+deacon:
+  fn: "*.json"
+  contents: '"version": "deacon'
+  num_lines: 30
+dedup:
+  fn: "*.json"
+  contents: '"tool_name": "DeDup"'
+  num_lines: 20
+deeptools/bamPEFragmentSizeTable:
+  contents: "\tFrag. Sampled\tFrag. Len. Min.\tFrag. Len. 1st. Qu.\tFrag. Len. Mean\t\
+    Frag. Len. Median\tFrag. Len. 3rd Qu."
+  num_lines: 1
+deeptools/bamPEFragmentSizeDistribution:
+  contents: "#bamPEFragmentSize"
+  num_lines: 1
+deeptools/estimateReadFiltering:
+  contents: "Sample\tTotal Reads\tMapped Reads\tAlignments in blacklisted regions\t\
+    Estimated mapped reads"
+  num_lines: 1
+deeptools/plotCorrelationData:
+  contents: "#plotCorrelation --outFileCorMatrix"
+  num_lines: 1
+deeptools/plotCoverageStdout:
+  contents: "sample\tmean\tstd\tmin\t25%\t50%\t75%\tmax"
+  num_lines: 1
+deeptools/plotCoverageOutRawCounts:
+  contents: "#plotCoverage --outRawCounts"
+  num_lines: 1
+deeptools/plotEnrichment:
+  contents: "file\tfeatureType\tpercent\tfeatureReadCount\ttotalReadCount"
+  num_lines: 1
+deeptools/plotFingerprintOutRawCounts:
+  contents: "#plotFingerprint --outRawCounts"
+  num_lines: 1
+deeptools/plotFingerprintOutQualityMetrics:
+  contents: "Sample\tAUC\tSynthetic AUC\tX-intercept\tSynthetic X-intercept\tElbow\
+    \ Point\tSynthetic Elbow Point"
+  num_lines: 1
+deeptools/plotPCAData:
+  contents: "#plotPCA --outFileNameData"
+  num_lines: 1
+deeptools/plotProfile:
+  contents: bin labels
+  num_lines: 1
+diamond:
+  fn: diamond.log
+disambiguate:
+  contents: unique species A pairs
+  num_lines: 2
+dragen/vc_metrics:
+  fn: "*.vc_metrics.csv"
+dragen/gvcf_metrics:
+  fn: "*.gvcf_metrics.csv"
+dragen/ploidy_estimation_metrics:
+  fn: "*.ploidy_estimation_metrics.csv"
+dragen/wgs_contig_mean_cov:
+  fn_re: .*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv
+dragen/overall_mean_cov_metrics:
+  fn_re: .*_overall_mean_cov.*\.csv
+dragen/coverage_metrics:
+  fn_re: .*_coverage_metrics.*\.csv
+dragen/wgs_fine_hist:
+  fn_re: .*\.wgs_fine_hist_?(tumor|normal)?\.csv
+dragen/fragment_length_hist:
+  fn: "*.fragment_length_hist.csv"
+dragen/mapping_metrics:
+  fn: "*.mapping_metrics.csv"
+  contents: Number of unique reads (excl. duplicate marked reads)
+  num_lines: 50
+dragen/gc_metrics:
+  fn: "*.gc_metrics.csv"
+dragen/trimmer_metrics:
+  fn: "*.trimmer_metrics.csv"
+dragen/time_metrics:
+  fn: "*.time_metrics.csv"
+dragen/rna_quant_metrics:
+  fn: "*.quant[._]metrics.csv"
+dragen/rna_transcript_cov:
+  fn: "*.quant.transcript_coverage.txt"
+dragen/sc_rna_metrics:
+  fn: "*.scRNA[._]metrics.csv"
+dragen/sc_atac_metrics:
+  fn: "*.scATAC[._]metrics.csv"
+dragen_fastqc:
+  fn: "*.fastqc_metrics.csv"
+eigenstratdatabasetools:
+  fn: "*_eigenstrat_coverage.json"
+fastp:
+  fn: "*.json"
+  contents: '"before_filtering": {'
+  num_lines: 50
+fastq_screen:
+  fn: "*_screen.txt"
+fastqe:
+  fn: "*fastqe*"
+  contents: "Filename\tStatistic\tQualities"
+  num_lines: 1
+fastqc/data:
+  fn: "*fastqc_data.txt"
+fastqc/zip:
+  fn: "*_fastqc.zip"
+fastqc/theoretical_gc:
+  fn: "*fastqc_theoretical_gc*"
+featurecounts:
+  fn: "*.summary"
+  shared: true
+fgbio/groupreadsbyumi:
+  contents: fraction_gt_or_eq_family_size
+  num_lines: 3
+fgbio/errorratebyreadposition:
+  contents: "read_number\tposition\tbases_total\terrors\terror_rate\ta_to_c_error_rate\t\
+    a_to_g_error_rate\ta_to_t_error_rate\tc_to_a_error_rate\tc_to_g_error_rate\tc_to_t_error_rate"
+  num_lines: 3
+filtlong:
+  contents: Scoring long reads
+  contents_re: .*Filtering long reads.*
+  num_lines: 5
+flash/log:
+  contents: "[FLASH]"
+flash/hist:
+  fn: "*flash*.hist"
+flexbar:
+  contents: Flexbar - flexible barcode and adapter removal
+freyja:
+  fn: "*.tsv"
+  contents: "summarized\t["
+  num_lines: 6
+ganon:
+  contents:
+    - ganon-classify processed
+  num_lines: 100
+gatk/varianteval:
+  contents: "#:GATKTable:TiTvVariantEvaluator"
+gatk/base_recalibrator:
+  - contents: "#:GATKTable:Arguments:Recalibration"
+    num_lines: 3
+  - contents: "#:SENTIEON_QCAL_TABLE:Arguments:Recalibration"
+    num_lines: 3
+gatk/analyze_saturation_mutagenesis:
+  fn: "*.readCounts"
+  contents: ">>Reads in disjoint pairs evaluated separately:"
+  num_lines: 10
+gffcompare:
+  fn: "*.stats"
+  contents: "# gffcompare"
+  num_lines: 2
+glimpse/err_spl:
+  fn: "*.error.spl.txt.gz"
+  num_lines: 1
+glimpse/err_grp:
+  fn: "*.error.grp.txt.gz"
+  num_lines: 1
+goleft_indexcov/roc:
+  fn: "*-indexcov.roc"
+goleft_indexcov/ped:
+  fn: "*-indexcov.ped"
+gopeaks:
+  fn: "*_gopeaks.json"
+gtdbtk:
+  contents: "user_genome\tclassification\tclosest_genome_reference\tclosest_genome_reference_radius\t\
+    closest_genome_taxonomy\tclosest_genome_ani"
+  num_lines: 10
+haplocheck:
+  contents: "\"Sample\"\t\"Contamination Status\"\t\"Contamination Level\"\t\"Distance\"\
+    \t\"Sample Coverage\""
+  num_lines: 10
+happy:
+  fn: "*.summary.csv"
+  contents: Type,Filter,TRUTH
+htseq:
+  - contents_re: ^feature\tcount$
+    num_lines: 1
+    shared: true
+  - contents_re: ^\w+.*\t\d+$
+    num_lines: 1
+    shared: true
+hicexplorer:
+  contents: Min rest. site distance
+  max_filesize: 4096
+  num_lines: 26
+hicup:
+  fn: HiCUP_summary_report*
+hicup/html:
+  fn: "*HiCUP_summary_report*.html"
+hicpro/mmapstat:
+  fn: "*mapstat"
+  contents: total_R
+  num_lines: 10
+hicpro/mpairstat:
+  fn: "*pairstat"
+  contents: Total_pairs_processed
+  num_lines: 10
+hicpro/mergestat:
+  fn: "*.mergestat"
+  contents: valid_interaction
+  num_lines: 10
+hicpro/mRSstat:
+  fn: "*RSstat"
+  contents: Valid_interaction_pairs
+hicpro/assplit:
+  fn: "*assplit.stat"
+hicstuff/pipeline_stats:
+  - fn: "*.txt"
+    contents: "## hicstuff:"
+    num_lines: 100
+  - fn: "*.log"
+    contents: "## hicstuff:"
+    num_lines: 10
+hicstuff/distancelaw:
+  contents: "## distance_law"
+  num_lines: 5
+hifiasm:
+  contents: "[M::ha_analyze_count]"
+  num_lines: 1
+hifi_trimmer:
+  fn: "*.json"
+  contents: '"total_reads_trimmed"'
+  num_lines: 10
+hisat2:
+  contents: "HISAT2 summary stats:"
+homer/findpeaks:
+  contents: "# HOMER Peaks"
+  num_lines: 3
+homer/GCcontent:
+  fn: tagGCcontent.txt
+homer/genomeGCcontent:
+  fn: genomeGCcontent.txt
+homer/RestrictionDistribution:
+  fn: petagRestrictionDistribution.*.txt
+homer/LengthDistribution:
+  fn: tagLengthDistribution.txt
+homer/tagInfo:
+  fn: tagInfo.txt
+homer/FreqDistribution:
+  fn: petag.FreqDistribution_1000.txt
+hops:
+  fn: heatmap_overview_Wevid.json
+hostile:
+  fn: "*.json"
+  contents: '"reads_removed_proportion"'
+  num_lines: 100
+humid/stats:
+  fn: stats.dat
+  contents: "total: "
+  num_lines: 1
+humid/neighbours:
+  fn: neigh.dat
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/counts:
+  fn: counts.dat
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/clusters:
+  fn: clusters.dat
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+interop/summary:
+  contents: Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30
+interop/index-summary:
+  contents: Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max
+isoseq/refine-json:
+  contents: '"num_reads_fl"'
+  fn: "*.json"
+isoseq/refine-csv:
+  contents: id,strand,fivelen,threelen,polyAlen,insertlen,primer
+  fn: "*.csv"
+isoseq/cluster-csv:
+  contents: cluster_id
+  fn: "*cluster_report.csv"
+  num_lines: 1
+ivar/trim:
+  contents: Number of references
+  num_lines: 8
+jcvi:
+  contents: "     o    % GC    % of genome    Average size (bp)    Median size (bp)\
+    \    Number    Total length (Mb)"
+jellyfish:
+  fn: "*_jf.hist"
+kaiju:
+  contents_re: file\tpercent\treads\ttaxon_id\ttaxon_name
+  num_lines: 1
+kallisto:
+  contents: "[quant] finding pseudoalignments for the reads"
+kat:
+  fn: "*.dist_analysis.json"
+kraken:
+  contents_re: ^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)[root|unclassified]
+  num_lines: 2
+librarian:
+  fn: librarian_heatmap.txt
+leehom:
+  contents: Adapter dimers/chimeras
+  num_lines: 100
+lima/summary:
+  contents: ZMWs above all thresholds
+  num_lines: 2
+  max_filesize: 1024
+lima/counts:
+  contents: "IdxFirst\tIdxCombined\tIdxFirstNamed\tIdxCombinedNamed\tCounts\tMeanScore"
+  num_lines: 1
+longranger/summary:
+  fn: "*summary.csv"
+  contents: longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule
+  num_lines: 2
+longranger/invocation:
+  fn: _invocation
+  contents: call PHASER_SVCALLER_CS(
+  max_filesize: 2048
+macs2:
+  fn: "*_peaks.xls"
+malt:
+  contents: MaltRun - Aligns sequences using MALT (MEGAN alignment tool)
+  num_lines: 2
+mapdamage:
+  - fn: 3p*_freq.txt
+  - fn: 5p*_freq.txt
+  - fn: lgdistribution.txt
+megahit:
+  contents: " - MEGAHIT v"
+  num_lines: 5
+metaphlan:
+  fn: "*.txt"
+  contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
+methurator:
+  fn: "*methurator_summary.yml"
+methylqa:
+  fn: "*.report"
+  shared: true
+mgikit/mgi_ambiguous_barcode:
+  fn: "*.mgikit.ambiguous_barcode"
+mgikit/mgi_sample_stats:
+  fn: "*.mgikit.sample_stats"
+mgikit/mgi_general_info:
+  fn: "*.mgikit.general"
+mgikit/mgi_sample_reads:
+  fn: "*.mgikit.info"
+mgikit/mgi_undetermined_barcode:
+  fn: "*.mgikit.undetermined_barcode"
+minionqc:
+  fn: summary.yaml
+  contents: total.gigabases
+mirtop:
+  fn: "*_mirtop_stats.log"
+mirtrace/summary:
+  fn: mirtrace-results.json
+mirtrace/length:
+  fn: mirtrace-stats-length.tsv
+mirtrace/contaminationbasic:
+  fn: mirtrace-stats-contamination_basic.tsv
+mirtrace/mirnacomplexity:
+  fn: mirtrace-stats-mirna-complexity.tsv
+mtnucratio:
+  fn: "*mtnuc.json"
+mosdepth/summary:
+  fn: "*.mosdepth.summary.txt"
+mosdepth/global_dist:
+  fn: "*.mosdepth.global.dist.txt"
+mosdepth/region_dist:
+  fn: "*.mosdepth.region.dist.txt"
+motus:
+  contents: Reads are aligned (by BWA) to marker gene sequences in the reference database
+  num_lines: 2
+multivcfanalyzer:
+  fn: MultiVCFAnalyzer.json
+nanostat:
+  max_filesize: 4096
+  contents_re: Metrics\s+dataset\s*
+  num_lines: 1
+nanostat/legacy:
+  max_filesize: 4096
+  contents_re: General summary:\s*
+  num_lines: 1
+nanoq:
+  contents: Nanoq Read Summary
+  num_lines: 3
+nextclade:
+  contents: seqName;clade;
+  num_lines: 1
+ngsbits/readqc:
+  - fn: "*.qcML"
+    contents: ReadQC
+    num_lines: 20
+  - fn: "*.qcML"
+    contents: SeqPurge
+    num_lines: 20
+ngsbits/mappingqc:
+  - fn: "*.qcML"
+    contents: MappingQC
+    num_lines: 20
+ngsbits/samplegender:
+  - fn: "*_ngsbits_sex.tsv"
+ngsderive/strandedness:
+  contents: "File\tTotalReads\tForwardPct\tReversePct\tPredicted"
+  num_lines: 1
+ngsderive/instrument:
+  contents: "File\tInstrument\tConfidence\tBasis"
+  num_lines: 1
+ngsderive/readlen:
+  contents: "File\tEvidence\tMajorityPctDetected\tConsensusReadLength"
+  num_lines: 1
+ngsderive/encoding:
+  contents: "File\tEvidence\tProbableEncoding"
+  num_lines: 1
+ngsderive/junction_annotation:
+  contents: "File\ttotal_junctions\ttotal_splice_events\tknown_junctions\tpartial_novel_junctions\t\
+    complete_novel_junctions\tknown_spliced_reads\tpartial_novel_spliced_reads\tcomplete_novel_spliced_reads"
+  num_lines: 1
+nonpareil:
+  - fn: "*.json"
+    contents: LRstar
+    num_lines: 50
+    max_filesize: 1048576
+optitype:
+  contents: "\tA1\tA2\tB1\tB2\tC1\tC2\tReads\tObjective"
+  num_lines: 1
+pangolin:
+  contents: pangolin_version
+  num_lines: 1
+odgi:
+  - fn: "*.og.stats.yaml"
+  - fn: "*.og.stats.yml"
+  - fn: "*.odgi.stats.yaml"
+  - fn: "*.odgi.stats.yml"
+pairtools:
+  contents:
+    - "total_single_sided_mapped\t"
+    - "cis\t"
+    - "trans\t"
+    - pair_types/
+  num_lines: 20
+peddy/summary_table:
+  fn: "*.peddy.ped"
+peddy/het_check:
+  fn: "*.het_check.csv"
+peddy/ped_check:
+  fn: "*.ped_check.csv"
+peddy/sex_check:
+  fn: "*.sex_check.csv"
+peddy/background_pca:
+  fn: "*.background_pca.json"
+percolator:
+  fn: "*percolator_feature_weights.tsv"
+seqera_cli/run_dump:
+  fn: runs_*.tar.gz
+seqera_cli/json:
+  fn: workflow.json
+sequali:
+  fn: "*.json"
+  contents: '"sequali_version"'
+  num_lines: 10
+somalier/somalier-ancestry:
+  fn: "*.somalier-ancestry.tsv"
+somalier/samples:
+  fn: "*.samples.tsv"
+  contents: "#family_id"
+  num_lines: 5
+somalier/pairs:
+  fn: "*.pairs.tsv"
+  contents: hom_concordance
+  num_lines: 5
+sourmash/compare:
+  fn: "*.labels.txt"
+sourmash/gather:
+  contents: intersect_bp,f_orig_query,f_match,f_unique_to_query,f_unique_weighted,
+  num_lines: 1
+pbmarkdup:
+  contents_re: LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS
+  num_lines: 5
+phantompeakqualtools/out:
+  fn: "*.spp.out"
+picard/alignment_metrics:
+  - contents: picard.analysis.AlignmentSummaryMetrics
+  - contents: --algo AlignmentStat
+picard/basedistributionbycycle:
+  contents: BaseDistributionByCycleMetrics
+picard/crosscheckfingerprints:
+  contents: CrosscheckFingerprints
+picard/gcbias:
+  - contents: GcBiasDetailMetrics
+  - contents: GcBiasSummaryMetrics
+  - contents: --algo GCBias
+picard/hsmetrics:
+  - contents: HsMetrics
+  - contents: --algo HsMetricAlgo
+picard/insertsize:
+  - contents: picard.analysis.InsertSizeMetrics
+  - contents: --algo InsertSizeMetricAlgo
+picard/markdups:
+  - contents: picard.sam.MarkDuplicates
+  - contents: picard.sam.DuplicationMetrics
+  - contents: picard.sam.markduplicates.MarkDuplicates
+  - contents: markduplicates.DuplicationMetrics
+  - contents: MarkDuplicatesSpark
+  - contents: markduplicates.GATKDuplicationMetrics
+  - contents: --algo Dedup
+picard/oxogmetrics:
+  - contents: "# picard.analysis.CollectOxoGMetrics"
+  - contents: "# CollectOxoGMetrics"
+  - contents_re: "# CollectMultipleMetrics .*OxoGMetrics"
+    shared: true
+picard/pcr_metrics:
+  - contents: "# picard.analysis.directed.CollectTargetedPcrMetrics"
+  - contents_re: "# CollectMultipleMetrics .*TargetedPcrMetrics"
+    shared: true
+picard/quality_by_cycle:
+  - contents: "# MeanQualityByCycle"
+  - contents: --algo MeanQualityByCycle
+  - contents_re: .*CollectMultipleMetrics.*MeanQualityByCycle
+    shared: true
+picard/quality_score_distribution:
+  - contents: "# QualityScoreDistribution"
+  - contents: --algo QualDistribution
+  - contents_re: .*CollectMultipleMetrics.*QualityScoreDistribution
+    shared: true
+picard/quality_yield_metrics:
+  - contents: "# CollectQualityYieldMetrics"
+  - contents_re: .*CollectMultipleMetrics.*QualityYieldMetrics
+    shared: true
+picard/rnaseqmetrics:
+  - contents: "# picard.analysis.Collectrnaseqmetrics"
+  - contents: "# picard.analysis.CollectRnaSeqMetrics"
+  - contents: "# CollectRnaSeqMetrics"
+  - contents_re: "# CollectMultipleMetrics .*RnaSeqMetrics"
+    shared: true
+picard/rrbs_metrics:
+  - contents: "# picard.analysis.CollectRrbsMetrics"
+  - contents_re: "# CollectMultipleMetrics .*RrbsMetrics"
+    shared: true
+picard/sam_file_validation:
+  fn: "*[Vv]alidate[Ss]am[Ff]ile*"
+picard/variant_calling_metrics:
+  contents_re: "## METRICS CLASS.*VariantCallingDetailMetrics"
+picard/wgs_metrics:
+  - contents: --algo WgsMetricsAlgo
+  - contents_re: "## METRICS CLASS.*WgsMetrics"
+    shared: true
+picard/collectilluminabasecallingmetrics:
+  contents: CollectIlluminaBasecallingMetrics
+picard/collectilluminalanemetrics:
+  contents: CollectIlluminaLaneMetrics
+picard/extractilluminabarcodes:
+  contents: ExtractIlluminaBarcodes
+picard/markilluminaadapters:
+  contents: MarkIlluminaAdapters
+porechop:
+  contents: Looking for known adapter sets
+  num_lines: 10
+preseq:
+  - contents: EXPECTED_DISTINCT
+    num_lines: 2
+  - contents: distinct_reads
+    num_lines: 2
+preseq/real_counts:
+  fn: "*preseq_real_counts*"
+prinseqplusplus:
+  - contents: reads removed by -
+    num_lines: 2
+prokka:
+  contents: "contigs:"
+  num_lines: 2
+purple/qc:
+  fn: "*.purple.qc"
+purple/purity:
+  fn: "*.purple.purity.tsv"
+pycoqc:
+  contents: '"pycoqc":'
+  num_lines: 2
+pychopper:
+  contents: "Classification\tRescue"
+  num_lines: 6
+qc3C:
+  fn: "*.qc3C.json"
+qorts:
+  contents: BENCHMARK_MinutesOnSamIteration
+  num_lines: 100
+qorts/log:
+  fn: QC.*.log
+  contents: Starting QoRTs
+  num_lines: 2
+qualimap/bamqc/genome_results:
+  fn: genome_results.txt
+qualimap/bamqc/coverage:
+  fn: coverage_histogram.txt
+qualimap/bamqc/insert_size:
+  fn: insert_size_histogram.txt
+qualimap/bamqc/genome_fraction:
+  fn: genome_fraction_coverage.txt
+qualimap/bamqc/gc_dist:
+  fn: mapped_reads_gc-content_distribution.txt
+qualimap/bamqc/html:
+  fn: qualimapReport.html
+  contents: "Qualimap report: BAM QC"
+  num_lines: 10
+qualimap/rnaseq/rnaseq_results:
+  fn: rnaseq_qc_results.txt
+qualimap/rnaseq/coverage:
+  fn: coverage_profile_along_genes_(total).txt
+qualimap/rnaseq/html:
+  fn: qualimapReport.html
+  contents: "Qualimap report: RNA Seq QC"
+  num_lines: 10
+quast:
+  fn: report.tsv
+  contents: "Assembly\t"
+  num_lines: 2
+rna_seqc/metrics_v1:
+  fn: "*metrics.tsv"
+  contents: "Sample\tNote\t"
+rna_seqc/metrics_v2:
+  fn: "*metrics.tsv"
+  contents: High Quality Ambiguous Alignment Rate
+rna_seqc/coverage:
+  fn_re: meanCoverageNorm_(high|medium|low)\.txt
+rna_seqc/correlation:
+  fn_re: corrMatrix(Pearson|Spearman)\.txt
+rna_seqc/html:
+  fn: index.html
+  contents: RNA-SeQC</a> v
+  num_lines: 200
+ribotish/qual:
+  fn: "*_qual.txt"
+  num_lines: 10
+ribowaltz/psite_region:
+  fn: "*ribowaltz*psite_region.tsv"
+  contents_re: "sample[,\t]region[,\t]count[,\t]scaled_count"
+  num_lines: 1
+ribowaltz/frames:
+  fn: "*ribowaltz*frames.tsv"
+  contents_re: "sample[,\t]region[,\t]frame[,\t]count[,\t]scaled_count"
+  num_lines: 1
+ribowaltz/metaprofile:
+  fn: "*ribowaltz*metaprofile_psite.tsv"
+  contents_re: "sample[,\t]region[,\t]x[,\t]y"
+  num_lines: 1
+riker/alignment:
+  fn: "*.alignment-metrics.txt"
+  contents_re: ^sample\b.*\bcategory\b
+  num_lines: 1
+riker/basic_base_dist:
+  fn: "*.base-distribution-by-cycle.txt"
+  contents_re: ^sample\b.*\bfrac_a\b
+  num_lines: 1
+riker/basic_mean_quality:
+  fn: "*.mean-quality-by-cycle.txt"
+  contents_re: ^sample\b.*\bmean_quality\b
+  num_lines: 1
+riker/basic_quality_dist:
+  fn: "*.quality-score-distribution.txt"
+  contents_re: ^sample\b.*\bfrac_bases\b
+  num_lines: 1
+riker/gcbias_detail:
+  fn: "*.gcbias-detail.txt"
+  contents_re: ^sample\b.*\bnormalized_coverage\b
+  num_lines: 1
+riker/gcbias_summary:
+  fn: "*.gcbias-summary.txt"
+  contents_re: ^sample\b.*\bgc_0_19_normcov\b
+  num_lines: 1
+riker/hybcap_metrics:
+  fn: "*.hybcap-metrics.txt"
+  contents_re: ^sample\b.*\bbait_territory\b
+  num_lines: 1
+riker/isize_metrics:
+  fn: "*.isize-metrics.txt"
+  contents_re: ^sample\b.*\bpair_orientation\b
+  num_lines: 1
+riker/isize_histogram:
+  fn: "*.isize-histogram.txt"
+  contents_re: ^sample\b.*\bfr_count\b
+  num_lines: 1
+riker/wgs_metrics:
+  fn: "*.wgs-metrics.txt"
+  contents_re: ^sample\b.*\bgenome_territory\b
+  num_lines: 1
+riker/wgs_coverage:
+  fn: "*.wgs-coverage.txt"
+  contents_re: ^sample\b.*\bbases_at_or_above\b
+  num_lines: 1
+rockhopper:
+  fn: summary.txt
+  contents: Number of gene-pairs predicted to be part of the same operon
+  max_filesize: 500000
+ribodetector:
+  contents: Writing output non-rRNA sequences into file
+  num_lines: 20
+rsem:
+  fn: "*.cnt"
+rseqc/bam_stat:
+  contents: "Proper-paired reads map to different chrom:"
+  max_filesize: 500000
+rseqc/gene_body_coverage:
+  fn: "*.geneBodyCoverage.txt"
+rseqc/inner_distance:
+  fn: "*.inner_distance_freq.txt"
+rseqc/junction_annotation:
+  contents: "Partial Novel Splicing Junctions:"
+  max_filesize: 500000
+rseqc/junction_saturation:
+  fn: "*.junctionSaturation_plot.r"
+rseqc/read_gc:
+  fn: "*.GC.xls"
+rseqc/read_distribution:
+  contents: Group               Total_bases         Tag_count           Tags/Kb
+  max_filesize: 500000
+rseqc/read_duplication_pos:
+  fn: "*.pos.DupRate.xls"
+rseqc/infer_experiment:
+  - fn: "*infer_experiment.txt"
+  - contents: Fraction of reads explained by
+    max_filesize: 500000
+rseqc/tin:
+  fn: "*.summary.txt"
+  contents: TIN(median)
+  num_lines: 1
+salmon/meta:
+  fn: meta_info.json
+  contents: salmon_version
+  num_lines: 10
+  max_filesize: 50000
+salmon/lfc:
+  fn: lib_format_counts.json
+salmon/fld:
+  fn: flenDist.txt
+sambamba/markdup:
+  contents: finding positions of the duplicate reads in the file
+  num_lines: 50
+samblaster:
+  contents: "samblaster: Version"
+samtools/stats:
+  contents: This file was produced by samtools stats
+samtools/flagstat:
+  contents: in total (QC-passed reads + QC-failed reads)
+samtools/idxstats:
+  fn: "*idxstat*"
+samtools/rmdup:
+  contents: "[bam_rmdup"
+samtools/ampliconclip:
+  contents:
+    - "COMMAND:"
+    - samtools ampliconclip
+  num_lines: 11
+samtools/coverage:
+  contents: "#rname\tstartpos\tendpos\tnumreads\tcovbases\tcoverage\tmeandepth\tmeanbaseq\t\
+    meanmapq"
+  num_lines: 10
+samtools/markdup_txt:
+  contents:
+    - "^COMMAND:"
+    - samtools markdup
+  num_lines: 2
+samtools/markdup_json:
+  contents:
+    - '"COMMAND":'
+    - samtools markdup
+  num_lines: 10
+sargasso:
+  fn: overall_filtering_summary.txt
+seqfu/stats:
+  contents: "File\t#Seq\tTotal bp\tAvg\tN50\tN75\tN90\tauN\tMin\tMax"
+  num_lines: 1
+seqkit/stats:
+  contents_re: ^file\s+format\s+type\s+num_seqs\s+sum_len
+  num_lines: 1
+seqwho:
+  contents: '  "Per Base Seq": ['
+  num_lines: 10
+seqyclean:
+  fn: "*_SummaryStatistics.tsv"
+sexdeterrmine:
+  fn: sexdeterrmine.json
+sickle:
+  contents_re: "FastQ \\w*\\s?records kept: .*"
+  num_lines: 2
+sincei/scFilterStats:
+  contents: "Cell_ID\tTotal_sampled\tFiltered\tBlacklisted\tLow_MAPQ\tMissing_Flags\t\
+    Excluded_Flags"
+  num_lines: 1
+sincei/scCountQC:
+  fn: "*.cells.tsv"
+  contents: "Cell_ID\tbarcodes\tsample\tn_genes_by_counts\tlog1p_n_genes_by_counts\t\
+    total_counts"
+skewer:
+  contents: "maximum error ratio allowed (-r):"
+slamdunk/summary:
+  contents: "# slamdunk summary"
+  num_lines: 1
+slamdunk/PCA:
+  contents: "# slamdunk PCA"
+  num_lines: 1
+slamdunk/rates:
+  contents: "# slamdunk rates"
+  num_lines: 1
+slamdunk/utrrates:
+  contents: "# slamdunk utrrates"
+  num_lines: 1
+slamdunk/tcperreadpos:
+  contents: "# slamdunk tcperreadpos"
+  num_lines: 1
+slamdunk/tcperutrpos:
+  contents: "# slamdunk tcperutr"
+  num_lines: 1
+snippy/snippy:
+  contents: snippy
+  num_lines: 20
+snippy/snippy-core:
+  contents_re: ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV
+  num_lines: 1
+snpeff:
+  contents: SnpEff_version
+  max_filesize: 5000000
+snpsplit/old:
+  contents: "Writing allele-flagged output file to:"
+  num_lines: 2
+snpsplit/new:
+  fn: "*SNPsplit_report.yaml"
+software_versions:
+  fn_re: .+_mqc_versions\.(yaml|yml)
+sompy:
+  fn: "*.stats.csv"
+  contents: ",sompyversion,sompycmd"
+  num_lines: 2
+sortmerna:
+  contents: Minimal SW score based on E-value
+spaceranger/count_html:
+  - fn: "*.html"
+    contents: '"command":"Space Ranger","subcommand":"count"'
+    num_lines: 20
+  - fn: "*.html"
+    contents: '"command": "Space Ranger", "subcommand": "count"'
+    num_lines: 20
+stacks/gstacks:
+  fn: gstacks.log.distribs
+  contents: BEGIN effective_coverages_per_sample
+stacks/populations:
+  fn: populations.log.distribs
+  contents: BEGIN missing_samples_per_loc_prefilters
+stacks/sumstats:
+  fn: "*.sumstats_summary.tsv"
+  contents: "# Pop ID\tPrivate\tNum_Indv\tVar\tStdErr\tP\tVar"
+  max_filesize: 1000000
+star:
+  fn: "*Log.final.out"
+star/genecounts:
+  fn: "*ReadsPerGene.out.tab"
+supernova/report:
+  fn: "*report*.txt"
+  num_lines: 100
+  contents: "- assembly checksum ="
+supernova/summary:
+  fn: summary.json
+  num_lines: 120
+  contents: '"lw_mean_mol_len":'
+supernova/molecules:
+  fn: histogram_molecules.json
+  num_lines: 10
+  contents: '"description": "molecules",'
+supernova/kmers:
+  fn: histogram_kmer_count.json
+  num_lines: 10
+  contents: '"description": "kmer_count",'
+sylphtax:
+  fn: "*.sylphmpa"
+telseq:
+  num_lines: 3
+  contents: "ReadGroup\tLibrary\tSample\tTotal\tMapped\tDuplicates\tLENGTH_ESTIMATE"
+theta2:
+  fn: "*.BEST.results"
+tophat:
+  fn: "*align_summary.txt"
+  shared: true
+trim_galore:
+  fn: "*_trimming_report.json"
+trimmomatic:
+  contents_re: ^Trimmomatic
+truvari/bench:
+  contents_re: .*truvari.* bench.*
+  fn: log.txt
+  num_lines: 10
+umicollapse:
+  num_lines: 100
+  contents: "UMI collapsing finished in "
+umitools/extract:
+  contents: "# output generated by extract"
+  num_lines: 100
+umitools/dedup:
+  contents: "# output generated by dedup"
+  num_lines: 100
+varscan2/mpileup2snp:
+  contents: Only SNPs will be reported
+  num_lines: 10
+varscan2/mpileup2indel:
+  contents: Only indels will be reported
+  num_lines: 10
+varscan2/mpileup2cns:
+  contents: Only variants will be reported
+  num_lines: 10
+vcftools/relatedness2:
+  fn: "*.relatedness2"
+vcftools/tstv_by_count:
+  fn: "*.TsTv.count"
+vcftools/tstv_by_qual:
+  fn: "*.TsTv.qual"
+vcftools/tstv_summary:
+  fn: "*.TsTv.summary"
+vep/vep_html:
+  fn: "*.html"
+  contents: VEP summary
+  num_lines: 10
+  max_filesize: 1000000
+vep/vep_txt:
+  contents: "[VEP run statistics]"
+  num_lines: 1
+  max_filesize: 100000
+verifybamid/selfsm:
+  fn: "*.selfSM"
+vg/stats:
+  contents:
+    - "Total perfect:"
+    - "Total gapless (softclips allowed):"
+    - "Total time:"
+    - "Speed:"
+  num_lines: 30
+whatshap/stats:
+  contents: "#sample\tchromosome\tfile_name\tvariants\tphased\tunphased\tsingletons"
+  num_lines: 1
+xenome:
+  contents: "B\tG\tH\tM\tcount\tpercent\tclass"
+  num_lines: 2
+xengsort:
+  contents: "# Xengsort classify"
+  num_lines: 2
+ataqv:
+  fn: "*.json"
+  contents: ataqv_version
+  num_lines: 10
+mosaicatcher:
+  fn: "*.mosaicatcher_info_raw.txt"
+```
+
+</details>
+
+**Example**:
+
+```yaml
+sp:
+  fastqc/data:
+    fn: fastqc_data.txt
+  fastqc/zip:
+    fn: "*_fastqc.zip"
+```
+
 ## Plot Settings
 
 ### Rendering mode
@@ -1375,7 +2663,7 @@ highlight_patterns:
 
 **Type**: `List[str]`
 
-Hex colour for each entry in highlight_patterns, in the same order.
+CSS colour for each entry in highlight_patterns, in the same order. Accepts hex (`#377eb8`), named colours (`red`), or any CSS colour function (`rgb(...)`, `hsl(...)`).
 
 **Example**:
 
@@ -1425,9 +2713,9 @@ show_hide_patterns:
 
 #### `show_hide_mode`
 
-**Type**: `List[str]`
+**Type**: `List[Literal["show", "hide", "show_re", "hide_re"]]`
 
-Action for each show/hide button: 'show' (only show matches) or 'hide' (hide matches).
+Action for each show/hide button: 'show' (only show matches), 'hide' (hide matches), or their `_re` variants which signal regex patterns (set by the TSV loader).
 
 **Example**:
 
@@ -1601,9 +2889,9 @@ custom_table_header_config:
 
 #### `table_cond_formatting_rules`
 
-**Type**: `Dict[str, Dict[str, List[Dict[str, Union[str, int, float]]]]]`
+**Type**: `Dict[str, Dict[str, List[CondFormattingRule]]]`
 
-Conditional cell formatting. Nested dicts map table ID to column ID to a list of rules (eg. {s_eq: pass} matches an exact value). See the customisation docs for the full grammar.
+Conditional cell formatting. Nested dicts map table ID (or the literal 'all_columns') to colour ID to a list of rules. Each rule has exactly one operator: string operators (s_eq, s_ne, s_contains) compare case-insensitively; numeric operators (eq, ne, gt, lt, ge, le) cast both sides to float. See the customisation docs for the full grammar.
 
 <details><summary>Default value</summary>
 
@@ -1686,7 +2974,7 @@ table_cond_formatting_colours:
 
 #### `table_sample_merge`
 
-**Type**: `Dict[str, Union[str, Dict[str, Union[str, List[str]]], List[Union[str, Dict[str, Union[str, List[str]]]]]]]`
+**Type**: `Dict[str, Union[str, CleanPattern, List[Union[str, CleanPattern]]]]`
 
 Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name; values are a clean-pattern entry (a string suffix, or a {type, pattern} dict) or a list of such entries.
 
@@ -1714,17 +3002,31 @@ table_sample_merge:
 
 ### `software_versions`
 
-**Type**: `Dict[str, Any]`
+**Type**: `Dict[str, Union[str, List[str], Dict[str, Union[str, List[str]]]]]`
 
-Manually specify software versions for the Software Versions section. Top-level keys are tool names.
+Manually specify software versions for the Software Versions section. Top-level keys are group or software names. Values are a single version string, a list of version strings, or a dict mapping software name to a version string or list of version strings (when the group contains multiple tools).
 
-**Example**:
+**Examples**:
 
 ```yaml
 software_versions:
   bwa: 0.7.17
   fastqc: 0.12.1
   samtools: "1.20"
+```
+
+```yaml
+software_versions:
+  quast:
+    - 5.2.0
+    - 5.1.0
+```
+
+```yaml
+software_versions:
+  samtools:
+    htslib: "1.3"
+    samtools: "1.11"
 ```
 
 ### `versions_table_group_header`
@@ -2232,3 +3534,86 @@ Properties:
 - **scale** (`str`): Color scale
 - **shared_key** (`str`): Shared key name
 - **title** (`str`): Column title
+
+### CondFormattingRule
+
+One conditional-formatting comparison for a table cell.
+
+Used in the `table_cond_formatting_rules` configuration option. Each rule is a dict with exactly one operator key paired with its comparison value. String operators (`s_eq`, `s_ne`, `s_contains`) compare case-insensitively; numeric operators (`eq`, `ne`, `gt`, `lt`, `ge`, `le`) cast both sides via `float()`.
+
+Example:
+
+```yaml
+table_cond_formatting_rules:
+  all_columns:
+    pass:
+      - s_eq: "pass"
+    fail:
+      - gt: 50
+```
+
+Properties:
+
+- **eq** (`Union[int, float]`): Numeric equality
+- **ge** (`Union[int, float]`): Greater than or equal to
+- **gt** (`Union[int, float]`): Strictly greater than
+- **le** (`Union[int, float]`): Less than or equal to
+- **lt** (`Union[int, float]`): Strictly less than
+- **ne** (`Union[int, float]`): Numeric inequality
+- **s_contains** (`str`): Case-insensitive substring match
+- **s_eq** (`str`): Case-insensitive string equality
+- **s_ne** (`str`): Case-insensitive string inequality
+
+### ModuleOverride
+
+Per-module override values for `top_modules` and `module_order` entries.
+
+Each entry in `top_modules` / `module_order` is either a module ID (string) or a single-key dict mapping the module ID to a `ModuleOverride` dict.
+
+Example:
+
+```yaml
+module_order:
+  - fastqc:
+      name: "FastQC (trimmed)"
+      anchor: "fastqc_trimmed"
+      path_filters:
+        - "*_trimmed*"
+```
+
+Properties:
+
+- **anchor** (`str`): HTML/section anchor for this module run
+- **comment** (`str`): Comment text rendered as markdown under the heading
+- **custom_config** (`Dict[str, Any]`): Module-specific config values merged into config.<module_id>
+- **doi** (`Union[str, List[str]]`): DOI or list of DOIs
+- **extra** (`str`): Extra HTML appended after the intro
+- **generalstats** (`bool`): Set to false to suppress this module's general-stats columns
+- **href** (`Union[str, List[str]]`): Tool homepage URL, or list of URLs
+- **info** (`str`): Intro text rendered as markdown under the section heading
+- **name** (`str`): Display name for this module run
+- **path_filters** (`Union[str, List[str]]`): Glob patterns restricting which files this module run sees
+- **path_filters_exclude** (`Union[str, List[str]]`): Glob patterns excluding files from this module run
+
+### SectionOrderOverride
+
+Override dict accepted as a `report_section_order` value.
+
+Each value in `report_section_order` is either the literal string `"remove"` (drops the section) or a `SectionOrderOverride` dict combining any of `order`, `before` and `after`.
+
+Example:
+
+```yaml
+report_section_order:
+  fastqc:
+    order: -10
+  custom_content-my-section:
+    before: fastqc
+  mod_section_2: remove
+```
+
+Properties:
+
+- **after** (`str`): Section/module/anchor ID to position this entry after
+- **before** (`str`): Section/module/anchor ID to position this entry before
+- **order** (`int`): Explicit numeric order

@@ -40,10 +40,6 @@ MULTIQC_LOGO_SVG = """\
 <path d="M885.03 71.47V45.81H865.56L848.45 62.92H840.26V0H808.83V173.98C808.83 183.13 811.52 190.46 816.92 195.95C822.31 201.44 829.67 204.19 839.04 204.19H885.02V177.95H849.1C843.2 177.95 840.25 174.9 840.25 168.8V71.48H885.01L885.03 71.47Z" fill="#333" class="mqc-logo-text"/>
 </svg>"""
 
-# Schema properties that are intentionally omitted from the wizard.
-# `sp` is the module search-patterns dict, too structured for a flat form.
-SKIP_PROPERTIES = {"sp"}
-
 
 def _inject_json(obj: Any, *, indent: int) -> str:
     """``json.dumps`` then escape ``</`` so the payload is safe inside a
@@ -61,7 +57,7 @@ def generate_config_wizard():
     back to a dropdown.
     """
     properties, config_defaults, _schema = load_schema_and_defaults()
-    sections_with_groups = load_sections_with_groups(properties, skip=SKIP_PROPERTIES)
+    sections_with_groups = load_sections_with_groups(properties)
 
     # 3-level nested: {section: {group_name_or_empty: {prop_name: prop_data}}}.
     # The empty-string key holds ungrouped fields (kept ordered first); using

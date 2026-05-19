@@ -57,15 +57,15 @@ from _config_schema_loader import load_schema_and_defaults, load_sections_with_g
 from multiqc.utils.config_schema import (  # noqa: E402
     AiProviderLiteral,
     CleanPattern,
+    CondFormattingRule,
     GeneralStatsColumnConfig,
     GeneralStatsModuleConfig,
+    ModuleOverride,
     MultiQCConfig,
     SearchPattern,
+    SectionOrderOverride,
 )
-
-# Properties skipped in the section walk; sp is documented manually below under
-# "Special Types".
-SKIP_PROPERTIES = {"sp"}
+from pydantic import BaseModel  # noqa: E402
 
 
 def format_type_annotation(annotation):
@@ -116,16 +116,15 @@ def format_type_annotation(annotation):
         return "Dict"
     elif annotation is list or annotation is List:
         return "List"
-    elif annotation is SearchPattern:
-        return "SearchPattern"
-    elif annotation is CleanPattern:
-        return "CleanPattern"
-    elif annotation is GeneralStatsColumnConfig:
-        return "GeneralStatsColumnConfig"
-    elif annotation is GeneralStatsModuleConfig:
-        return "GeneralStatsModuleConfig"
     elif annotation is Any:
         return "Any"
+
+    # Pydantic models (and any other class) render as their plain class name,
+    # not the noisy ``<class 'multiqc.utils.config_schema.X'>`` form.
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        return annotation.__name__
+    if isinstance(annotation, type):
+        return annotation.__name__
 
     # For any other type, return its string representation
     return str(annotation).replace("typing.", "")
@@ -278,7 +277,7 @@ If you'd rather build your config visually, the [Config Wizard](https://seqera.i
     # is redundant under the section heading, so render the fields directly
     # under `## section` as `### prop_name`. Otherwise, emit `### group`
     # headings and demote fields to `#### prop_name`.
-    sections_with_groups = load_sections_with_groups(properties, skip=SKIP_PROPERTIES)
+    sections_with_groups = load_sections_with_groups(properties)
 
     for section, groups in sections_with_groups.items():
         if not groups:
@@ -390,6 +389,96 @@ Properties:\n\n""")
             gs_props = schema["$defs"]["GeneralStatsColumnConfig"].get("properties", {})
             if prop_name in gs_props:
                 description = gs_props[prop_name].get("description", "")
+
+        type_info = format_type_annotation(prop_type)
+        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
+    output.append("")
+
+    # Conditional Formatting Rule
+    output.append("### CondFormattingRule\n")
+    output.append("""One conditional-formatting comparison for a table cell.
+
+Used in the `table_cond_formatting_rules` configuration option. Each rule is a dict with exactly one operator key paired with its comparison value. String operators (`s_eq`, `s_ne`, `s_contains`) compare case-insensitively; numeric operators (`eq`, `ne`, `gt`, `lt`, `ge`, `le`) cast both sides via `float()`.
+
+Example:
+
+```yaml
+table_cond_formatting_rules:
+  all_columns:
+    pass:
+      - s_eq: "pass"
+    fail:
+      - gt: 50
+```
+
+Properties:\n\n""")
+    cf_rule_attrs = get_type_hints(CondFormattingRule)
+    for prop_name, prop_type in sorted(cf_rule_attrs.items()):
+        description = ""
+        if "$defs" in schema and "CondFormattingRule" in schema["$defs"]:
+            cf_props = schema["$defs"]["CondFormattingRule"].get("properties", {})
+            if prop_name in cf_props:
+                description = cf_props[prop_name].get("description", "")
+
+        type_info = format_type_annotation(prop_type)
+        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
+    output.append("")
+
+    # Module Override
+    output.append("### ModuleOverride\n")
+    output.append("""Per-module override values for `top_modules` and `module_order` entries.
+
+Each entry in `top_modules` / `module_order` is either a module ID (string) or a single-key dict mapping the module ID to a `ModuleOverride` dict.
+
+Example:
+
+```yaml
+module_order:
+  - fastqc:
+      name: "FastQC (trimmed)"
+      anchor: "fastqc_trimmed"
+      path_filters:
+        - "*_trimmed*"
+```
+
+Properties:\n\n""")
+    mo_attrs = get_type_hints(ModuleOverride)
+    for prop_name, prop_type in sorted(mo_attrs.items()):
+        description = ""
+        if "$defs" in schema and "ModuleOverride" in schema["$defs"]:
+            mo_props = schema["$defs"]["ModuleOverride"].get("properties", {})
+            if prop_name in mo_props:
+                description = mo_props[prop_name].get("description", "")
+
+        type_info = format_type_annotation(prop_type)
+        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
+    output.append("")
+
+    # Section Order Override
+    output.append("### SectionOrderOverride\n")
+    output.append("""Override dict accepted as a `report_section_order` value.
+
+Each value in `report_section_order` is either the literal string `"remove"` (drops the section) or a `SectionOrderOverride` dict combining any of `order`, `before` and `after`.
+
+Example:
+
+```yaml
+report_section_order:
+  fastqc:
+    order: -10
+  custom_content-my-section:
+    before: fastqc
+  mod_section_2: remove
+```
+
+Properties:\n\n""")
+    so_attrs = get_type_hints(SectionOrderOverride)
+    for prop_name, prop_type in sorted(so_attrs.items()):
+        description = ""
+        if "$defs" in schema and "SectionOrderOverride" in schema["$defs"]:
+            so_props = schema["$defs"]["SectionOrderOverride"].get("properties", {})
+            if prop_name in so_props:
+                description = so_props[prop_name].get("description", "")
 
         type_info = format_type_annotation(prop_type)
         output.append(f"- **{prop_name}** (`{type_info}`): {description}")

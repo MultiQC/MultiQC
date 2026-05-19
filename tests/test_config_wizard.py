@@ -1,9 +1,7 @@
 """Tests for scripts/generate_config_wizard.py."""
 
-import importlib.util
 import keyword
 import re
-import sys
 import typing
 from pathlib import Path
 
@@ -12,7 +10,6 @@ import yaml
 from multiqc.utils.config_schema import MultiQCConfig
 
 REPO_ROOT = Path(__file__).parent.parent
-WIZARD_SCRIPT = REPO_ROOT / "scripts" / "generate_config_wizard.py"
 CONFIG_DEFAULTS = REPO_ROOT / "multiqc" / "config_defaults.yaml"
 CONFIG_PY = REPO_ROOT / "multiqc" / "config.py"
 
@@ -38,29 +35,16 @@ RUNTIME_CONFIG_ATTRS = {
 }
 
 
-def _load_wizard_module():
-    spec = importlib.util.spec_from_file_location("generate_config_wizard", WIZARD_SCRIPT)
-    assert spec is not None and spec.loader is not None, f"Could not load {WIZARD_SCRIPT}"
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["generate_config_wizard"] = module
-    spec.loader.exec_module(module)
-    return module
-
-
 def test_every_field_has_a_section():
     """Every MultiQCConfig field must declare a section via cfg(..., section=...).
 
     Section tags drive both the config docs grouping and the wizard sidebar.
     A field with no section would be silently dropped from both, so the
     generator scripts refuse to build until one is set. Add the section to the
-    Field via cfg() in `multiqc/utils/config_schema.py`, or, if it cannot
-    reasonably be rendered, add it to `SKIP_PROPERTIES` in the generator script.
+    Field via cfg() in `multiqc/utils/config_schema.py`.
     """
-    wizard = _load_wizard_module()
     properties = MultiQCConfig.model_json_schema()["properties"]
-    untagged = sorted(
-        name for name, prop in properties.items() if name not in wizard.SKIP_PROPERTIES and "section" not in prop
-    )
+    untagged = sorted(name for name, prop in properties.items() if "section" not in prop)
     assert not untagged, (
         f"Config properties with no section tag: {untagged}. "
         f'Wrap each Field with cfg(..., section="...") in multiqc/utils/config_schema.py.'
@@ -102,14 +86,10 @@ def test_every_field_has_a_group():
     Groups give the docs and wizard a consistent two-level hierarchy. A field
     with no group looks visually orphaned next to grouped siblings, so cfg()
     refuses to build a Field without one — this test exists as a tripwire if
-    anyone bypasses cfg() and writes a raw Field, or adds a field to
-    SKIP_PROPERTIES without giving it a home.
+    anyone bypasses cfg() and writes a raw Field.
     """
-    wizard = _load_wizard_module()
     properties = MultiQCConfig.model_json_schema()["properties"]
-    missing = sorted(
-        name for name, prop in properties.items() if name not in wizard.SKIP_PROPERTIES and "group" not in prop
-    )
+    missing = sorted(name for name, prop in properties.items() if "group" not in prop)
     assert not missing, (
         f"Config properties with no group tag: {missing}. "
         f'Wrap each Field with cfg(..., group="...") inside a `with group("..."):` block '
@@ -125,14 +105,6 @@ def test_group_requires_section():
     for name, prop in properties.items():
         if "group" in prop:
             assert "section" in prop, f"{name}: 'group' tag without 'section'."
-
-
-def test_wizard_skip_list_is_in_schema():
-    """SKIP_PROPERTIES must reference real config fields, not stale names."""
-    wizard = _load_wizard_module()
-    schema_props = set(MultiQCConfig.model_json_schema()["properties"])
-    stale = wizard.SKIP_PROPERTIES - schema_props
-    assert not stale, f"SKIP_PROPERTIES references unknown fields: {sorted(stale)}"
 
 
 def test_config_py_annotations_are_in_schema():

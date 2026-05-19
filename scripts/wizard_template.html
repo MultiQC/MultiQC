@@ -4004,9 +4004,9 @@
         return best;
       }
 
-      // Some schema properties are excluded from the wizard form (SKIP_PROPERTIES,
-      // currently just `sp`) but are still valid YAML keys. Synthesise a minimal
-      // propData entry from the JSON schema so they classify correctly.
+      // Build a propData entry on the fly from the JSON schema, for any schema
+      // key that doesn't have a pre-rendered form input (e.g. plugin-registered
+      // extensions).
       function schemaPropData(name) {
         const p = configSchema.properties && configSchema.properties[name];
         if (!p) return null;
@@ -4301,8 +4301,7 @@
 
         // Ajv runs against the known-key subset so plugin keys don't dominate
         // the error list; unknown keys are reported separately with suggestions.
-        // "Known" = anything in the JSON schema (so SKIP_PROPERTIES like `sp`
-        // still get deep-validated even though they have no wizard form input).
+        // "Known" = anything in the JSON schema.
         const knownSet = new Set(propNames);
         const known = {};
         for (const [k, v] of Object.entries(parsed)) {
