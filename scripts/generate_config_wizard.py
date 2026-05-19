@@ -78,12 +78,23 @@ def generate_config_wizard():
                 prop = properties[prop_name]
 
                 # Pydantic wraps Optional fields in anyOf. Pull out the non-null branch
-                # so we can read the inner type / items metadata.
+                # so we can read the inner type / items metadata. Fields whose schema
+                # admits multiple non-null types (eg. `Union[bool, List[str]]`) get a
+                # `union_types` payload so the form can render a type-picker.
                 inner = prop
+                union_types: list = []
                 if "anyOf" in prop:
                     non_null = [t for t in prop["anyOf"] if t.get("type") != "null"]
                     if non_null:
                         inner = non_null[0]
+                    if len(non_null) > 1:
+                        for branch in non_null:
+                            branch_entry: dict = {"type": branch.get("type")}
+                            if branch.get("type") == "array":
+                                branch_items = branch.get("items")
+                                if isinstance(branch_items, dict) and isinstance(branch_items.get("enum"), list):
+                                    branch_entry["items_enum"] = branch_items["enum"]
+                            union_types.append(branch_entry)
 
                 prop_type = inner.get("type", prop.get("type", "string"))
 
@@ -110,7 +121,7 @@ def generate_config_wizard():
                 if not deprecated_value:
                     deprecated_value = False
 
-                group_data[prop_name] = {
+                entry: dict = {
                     "deprecated": deprecated_value,
                     "multiline": bool(prop.get("multiline", False)),
                     "type": prop_type,
@@ -120,6 +131,9 @@ def generate_config_wizard():
                     "items_enum": items_enum,
                     "examples": prop.get("examples", []),
                 }
+                if union_types:
+                    entry["union_types"] = union_types
+                group_data[prop_name] = entry
             section_data[group_key] = group_data
         config_data[section_name] = section_data
 

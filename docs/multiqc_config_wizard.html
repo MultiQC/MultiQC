@@ -1245,13 +1245,37 @@
         font-weight: 600;
         cursor: default;
       }
-      .form-group.is-set .bool-toggle-btn.active {
+      .form-group.is-set .bool-toggle:not(.union-type-picker) .bool-toggle-btn.active {
         background: rgba(49, 201, 172, 0.12);
         color: var(--teal-border);
       }
       .bool-toggle-btn:focus-visible {
         outline: 2px solid var(--teal);
         outline-offset: -2px;
+      }
+
+      /* Union-typed fields (eg. Union[bool, List[str]]). The type-picker
+         row reuses .bool-toggle styles via dual classes, then each branch
+         renders its own widget below. Only the active branch is visible. */
+      .union-input {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .union-type-picker {
+        align-self: flex-start;
+      }
+      .union-type-picker .bool-toggle-btn {
+        font-family: "Inter", sans-serif;
+        font-size: 0.74em;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .union-branch {
+        display: none;
+      }
+      .union-branch.active {
+        display: block;
       }
 
       .checkbox-group {
@@ -2186,7 +2210,7 @@
       </div>
 
       <footer class="page-footer">
-        Generated on <time datetime="2026-05-18">2026-05-18</time> for MultiQC <code>1.35</code>.
+        Generated on <time datetime="2026-05-19">2026-05-19</time> for MultiQC <code>1.35</code>.
       </footer>
     </main>
 
@@ -3275,6 +3299,14 @@
               enum: null,
               items_enum: null,
               examples: [],
+              union_types: [
+                {
+                  type: "boolean",
+                },
+                {
+                  type: "array",
+                },
+              ],
             },
           },
           "Ignore samples": {
@@ -8745,8 +8777,138 @@
         return formGroup;
       }
 
+      // Map a JSON-schema type string to a short label used in the union
+      // type-picker. Falls back to capitalising the type name.
+      function unionTypeLabel(t) {
+        return (
+          {
+            boolean: "Boolean",
+            array: "List",
+            object: "Object",
+            integer: "Integer",
+            number: "Number",
+            string: "String",
+          }[t] || t.charAt(0).toUpperCase() + t.slice(1)
+        );
+      }
+
+      // Infer which branch of a union the given value belongs to.
+      function inferUnionType(value) {
+        if (typeof value === "boolean") return "boolean";
+        if (Array.isArray(value)) return "array";
+        if (value !== null && typeof value === "object") return "object";
+        if (typeof value === "number") return Number.isInteger(value) ? "integer" : "number";
+        if (typeof value === "string") return "string";
+        return null;
+      }
+
+      // Narrow a union propData to a specific branch, returning the branch-
+      // specific propData plus the DOM scope to query inside. The default
+      // only applies to the branch whose type matches it; for others, null
+      // it out so empty values are correctly flagged as is-set.
+      function resolveUnionBranch(fg, propData, branchType) {
+        const branch = propData.union_types.find((b) => b.type === branchType) || propData.union_types[0];
+        let narrowed = { ...propData, ...branch };
+        if (inferUnionType(propData.default) !== narrowed.type) {
+          narrowed.default = null;
+        }
+        delete narrowed.union_types;
+        const unionWrapper = fg.querySelector(".union-input");
+        const scope =
+          (unionWrapper && unionWrapper.querySelector(`.union-branch[data-branch-type="${narrowed.type}"]`)) || fg;
+        return { propData: narrowed, scope, unionWrapper };
+      }
+
+      // Show exactly one branch and own the `id=propName` so DOM lookups
+      // (`getElementById`, change handlers) point at the active widget.
+      // Any field-error from the previous branch is wiped because .is-invalid
+      // lives on the form-group and would otherwise outlive the input it
+      // belonged to.
+      function activateUnionBranch(unionWrapper, propName, type) {
+        const prevType = unionWrapper.dataset.activeType;
+        if (prevType === type) return;
+        unionWrapper.dataset.activeType = type;
+        unionWrapper.querySelectorAll(".union-branch").forEach((panel) => {
+          const isActive = panel.dataset.branchType === type;
+          panel.classList.toggle("active", isActive);
+          const primary = panel.querySelector("input, textarea, select");
+          if (!primary) return;
+          if (isActive) primary.id = propName;
+          else {
+            primary.removeAttribute("id");
+            primary.removeAttribute("aria-invalid");
+          }
+        });
+        unionWrapper.querySelectorAll(".union-type-picker .bool-toggle-btn").forEach((b) => {
+          b.classList.toggle("active", b.dataset.value === type);
+        });
+        // The form-group-level error chrome belongs to whichever input was
+        // previously active; clear it via the standard helper instead of
+        // duplicating its is-invalid / field-error-msg cleanup here.
+        if (prevType) {
+          const active = unionWrapper.querySelector(
+            ".union-branch.active input, .union-branch.active textarea, .union-branch.active select",
+          );
+          if (active) clearFieldError(active);
+        }
+      }
+
+      // Build a union-typed widget: a small type-picker on top, with the
+      // active branch's widget below. Switching the picker swaps the visible
+      // widget and re-runs updateConfig so currentConfig reflects the new type.
+      function createUnionInput(propName, propData) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "union-input";
+
+        const branches = propData.union_types;
+        // Pick the initial branch from the default's type, else the first branch.
+        let initialType = branches[0].type;
+        const defType = inferUnionType(propData.default);
+        if (defType && branches.some((b) => b.type === defType)) initialType = defType;
+
+        const picker = document.createElement("div");
+        picker.className = "bool-toggle union-type-picker";
+        branches.forEach((branch) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "bool-toggle-btn";
+          btn.dataset.value = branch.type;
+          btn.textContent = unionTypeLabel(branch.type);
+          btn.onclick = () => {
+            // View-state only; calling updateConfig here would rewrite the
+            // YAML and scroll the editor away from where the user was reading.
+            activateUnionBranch(wrapper, propName, branch.type);
+          };
+          picker.appendChild(btn);
+        });
+        wrapper.appendChild(picker);
+
+        branches.forEach((branch) => {
+          const panel = document.createElement("div");
+          panel.className = "union-branch";
+          panel.dataset.branchType = branch.type;
+          // Merge per-branch metadata (items_enum etc.) into a clone of propData
+          // and strip union_types so createInput's recursive call builds a
+          // single-typed widget. Default only applies to the matching branch.
+          const branchData = { ...propData, ...branch };
+          delete branchData.union_types;
+          if (inferUnionType(propData.default) !== branch.type) {
+            branchData.default = null;
+          }
+          panel.appendChild(createInput(propName, branchData));
+          wrapper.appendChild(panel);
+        });
+
+        activateUnionBranch(wrapper, propName, initialType);
+        return wrapper;
+      }
+
       function createInput(propName, propData) {
         let input;
+
+        if (Array.isArray(propData.union_types) && propData.union_types.length > 1) {
+          return createUnionInput(propName, propData);
+        }
 
         if (propData.enum) {
           // No default → clicking the active button again clears the selection.
@@ -8885,7 +9047,15 @@
       }
 
       function updateConfig(propName, input) {
-        const propData = getCurrentPropData(propName);
+        let propData = getCurrentPropData(propName);
+        // Union-typed field: dispatch using whichever branch is currently
+        // active. The form-group's union widget owns that state.
+        if (Array.isArray(propData.union_types)) {
+          const fg = input.closest(".form-group");
+          const wrapper = fg && fg.querySelector(".union-input");
+          const activeType = wrapper && wrapper.dataset.activeType;
+          propData = resolveUnionBranch(fg, propData, activeType).propData;
+        }
         const def = propData.default;
 
         if (propData.type === "boolean") {
@@ -9160,9 +9330,23 @@
         const propData = propDataIndex[propName];
         if (!propData) return;
 
+        // Union-typed field: pick the branch matching the value's runtime
+        // type, then narrow the remaining DOM lookups to that branch so the
+        // toggle/textarea selectors don't grab the inactive widget.
+        let scope = fg;
+        if (Array.isArray(propData.union_types)) {
+          const valueType = inferUnionType(value);
+          if (valueType && propData.union_types.some((b) => b.type === valueType)) {
+            const resolved = resolveUnionBranch(fg, propData, valueType);
+            if (resolved.unionWrapper) activateUnionBranch(resolved.unionWrapper, propName, valueType);
+            scope = resolved.scope;
+          }
+        }
+
         // Segmented toggle (boolean or enum): activate the matching button and
-        // sync the hidden input.
-        const toggle = fg.querySelector(".bool-toggle");
+        // sync the hidden input. The :not() filter skips the union type-picker
+        // so it doesn't get rewritten as a value-toggle.
+        const toggle = scope.querySelector(".bool-toggle:not(.union-type-picker)");
         if (toggle) {
           const target = String(value);
           toggle.querySelectorAll(".bool-toggle-btn").forEach((b) => {
@@ -9176,7 +9360,7 @@
 
         // items_enum checkbox group: tick the right boxes, push aggregate
         // value through the hidden input.
-        const cbGroup = fg.querySelector(".checkbox-group");
+        const cbGroup = scope.querySelector(".checkbox-group");
         if (cbGroup) {
           const want = new Set((Array.isArray(value) ? value : []).map(String));
           cbGroup.querySelectorAll("input[type=checkbox]").forEach((cb) => {
@@ -9190,10 +9374,13 @@
           return;
         }
 
-        // Plain input / textarea.
-        const input = fg.querySelector("input, textarea");
+        // Plain input / textarea. For union fields we read the per-branch
+        // type instead of the top-level propData.type (which is just the
+        // first branch's type, used as a fallback).
+        const input = scope.querySelector("input, textarea");
         if (!input) return;
-        if (propData.type === "array" || propData.type === "object") {
+        const effectiveType = scope === fg ? propData.type : scope.dataset.branchType;
+        if (effectiveType === "array" || effectiveType === "object") {
           input.value = dumpYaml(value);
         } else {
           input.value = String(value);
@@ -9206,11 +9393,31 @@
       // and applyYamlToForm (round-trip back from the YAML view).
       function resetGroup(fg, propData) {
         const propName = fg.dataset.propname;
-        const input = fg.querySelector("input, select, textarea");
+
+        // Union-typed fields: switch back to the branch matching the schema
+        // default's type, clear the inactive branches' inputs, then fall
+        // through to the per-type reset below scoped to the active branch.
+        let scope = fg;
+        if (Array.isArray(propData.union_types)) {
+          const defType = inferUnionType(propData.default) || propData.union_types[0].type;
+          const resolved = resolveUnionBranch(fg, propData, defType);
+          if (resolved.unionWrapper) {
+            activateUnionBranch(resolved.unionWrapper, propName, defType);
+            resolved.unionWrapper
+              .querySelectorAll(".union-branch:not(.active) input, .union-branch:not(.active) textarea")
+              .forEach((el) => {
+                el.value = "";
+              });
+          }
+          scope = resolved.scope;
+          propData = resolved.propData;
+        }
+
+        const input = scope.querySelector("input, select, textarea");
         if (!input) return;
         if (propData.type === "array" && Array.isArray(propData.items_enum)) {
           const def = Array.isArray(propData.default) ? propData.default : [];
-          fg.querySelectorAll(".checkbox-item").forEach((lab) => {
+          scope.querySelectorAll(".checkbox-item").forEach((lab) => {
             const cb = lab.querySelector("input[type=checkbox]");
             const checked = def.includes(cb.value);
             cb.checked = checked;
@@ -9223,7 +9430,7 @@
         } else {
           input.value = "";
         }
-        const toggleEl = fg.querySelector(".bool-toggle");
+        const toggleEl = scope.querySelector(".bool-toggle:not(.union-type-picker)");
         if (toggleEl) {
           const activeValue =
             propData.type === "boolean" ? (propData.default === true ? "true" : "false") : propData.default;
