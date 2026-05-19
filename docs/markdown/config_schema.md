@@ -3554,12 +3554,12 @@ table_cond_formatting_rules:
 
 Properties:
 
-- **eq** (`Union[int, float]`): Numeric equality
-- **ge** (`Union[int, float]`): Greater than or equal to
-- **gt** (`Union[int, float]`): Strictly greater than
-- **le** (`Union[int, float]`): Less than or equal to
-- **lt** (`Union[int, float]`): Strictly less than
-- **ne** (`Union[int, float]`): Numeric inequality
+- **eq** (`Union[float, int]`): Numeric equality
+- **ge** (`Union[float, int]`): Greater than or equal to
+- **gt** (`Union[float, int]`): Strictly greater than
+- **le** (`Union[float, int]`): Less than or equal to
+- **lt** (`Union[float, int]`): Strictly less than
+- **ne** (`Union[float, int]`): Numeric inequality
 - **s_contains** (`str`): Case-insensitive substring match
 - **s_eq** (`str`): Case-insensitive string equality
 - **s_ne** (`str`): Case-insensitive string inequality

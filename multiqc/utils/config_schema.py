@@ -60,12 +60,12 @@ class CondFormattingRule(BaseModel):
     s_eq: Optional[str] = Field(None, description="Case-insensitive string equality")
     s_ne: Optional[str] = Field(None, description="Case-insensitive string inequality")
     s_contains: Optional[str] = Field(None, description="Case-insensitive substring match")
-    eq: Optional[Union[int, float]] = Field(None, description="Numeric equality")
-    ne: Optional[Union[int, float]] = Field(None, description="Numeric inequality")
-    gt: Optional[Union[int, float]] = Field(None, description="Strictly greater than")
-    lt: Optional[Union[int, float]] = Field(None, description="Strictly less than")
-    ge: Optional[Union[int, float]] = Field(None, description="Greater than or equal to")
-    le: Optional[Union[int, float]] = Field(None, description="Less than or equal to")
+    eq: Optional[Union[float, int]] = Field(None, description="Numeric equality")
+    ne: Optional[Union[float, int]] = Field(None, description="Numeric inequality")
+    gt: Optional[Union[float, int]] = Field(None, description="Strictly greater than")
+    lt: Optional[Union[float, int]] = Field(None, description="Strictly less than")
+    ge: Optional[Union[float, int]] = Field(None, description="Greater than or equal to")
+    le: Optional[Union[float, int]] = Field(None, description="Less than or equal to")
 
     @model_validator(mode="after")
     def _require_at_least_one_operator(self) -> "CondFormattingRule":

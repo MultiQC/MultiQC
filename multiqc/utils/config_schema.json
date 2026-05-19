@@ -86,10 +86,10 @@
         "eq": {
           "anyOf": [
             {
-              "type": "integer"
+              "type": "number"
             },
             {
-              "type": "number"
+              "type": "integer"
             },
             {
               "type": "null"
@@ -102,10 +102,10 @@
         "ne": {
           "anyOf": [
             {
-              "type": "integer"
+              "type": "number"
             },
             {
-              "type": "number"
+              "type": "integer"
             },
             {
               "type": "null"
@@ -118,10 +118,10 @@
         "gt": {
           "anyOf": [
             {
-              "type": "integer"
+              "type": "number"
             },
             {
-              "type": "number"
+              "type": "integer"
             },
             {
               "type": "null"
@@ -134,10 +134,10 @@
         "lt": {
           "anyOf": [
             {
-              "type": "integer"
+              "type": "number"
             },
             {
-              "type": "number"
+              "type": "integer"
             },
             {
               "type": "null"
@@ -150,10 +150,10 @@
         "ge": {
           "anyOf": [
             {
-              "type": "integer"
+              "type": "number"
             },
             {
-              "type": "number"
+              "type": "integer"
             },
             {
               "type": "null"
@@ -166,10 +166,10 @@
         "le": {
           "anyOf": [
             {
-              "type": "integer"
+              "type": "number"
             },
             {
-              "type": "number"
+              "type": "integer"
             },
             {
               "type": "null"
