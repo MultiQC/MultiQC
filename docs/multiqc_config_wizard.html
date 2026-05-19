@@ -6555,6 +6555,7 @@
       const configSchema = {
         $defs: {
           CleanPattern: {
+            additionalProperties: false,
             description: "Pattern for cleaning sample names",
             properties: {
               type: {
@@ -6901,6 +6902,7 @@
             type: "object",
           },
           GeneralStatsModuleConfig: {
+            additionalProperties: false,
             description: "Configuration for a module's general stats columns",
             properties: {
               columns: {
@@ -8147,6 +8149,7 @@
           export_plots_timeout: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -8627,6 +8630,7 @@
           log_filesize_limit: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -8642,6 +8646,7 @@
           filesearch_lines_limit: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -8831,6 +8836,7 @@
           plots_flat_numseries: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -8847,6 +8853,7 @@
           plots_defer_loading_numseries: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -8879,6 +8886,7 @@
           plots_export_font_scale: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "number",
               },
               {
@@ -8982,6 +8990,7 @@
           box_min_threshold_outliers: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -8997,6 +9006,7 @@
           box_min_threshold_no_points: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -9012,6 +9022,7 @@
           violin_downsample_after: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -9028,6 +9039,7 @@
           violin_min_threshold_outliers: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -9043,6 +9055,7 @@
           violin_min_threshold_no_points: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -9228,6 +9241,7 @@
           max_table_rows: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -9243,6 +9257,7 @@
           max_configurable_table_columns: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {
@@ -9729,6 +9744,7 @@
           read_count_multiplier: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "number",
               },
               {
@@ -9777,6 +9793,7 @@
           long_read_count_multiplier: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "number",
               },
               {
@@ -9825,6 +9842,7 @@
           base_count_multiplier: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "number",
               },
               {
@@ -10211,6 +10229,7 @@
           megaqc_timeout: {
             anyOf: [
               {
+                exclusiveMinimum: 0,
                 type: "integer",
               },
               {

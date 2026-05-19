@@ -36,6 +36,8 @@ class SearchPattern(BaseModel):
 class CleanPattern(BaseModel):
     """Pattern for cleaning sample names"""
 
+    model_config = ConfigDict(extra="forbid")
+
     type: Literal["truncate", "remove", "regex", "regex_keep"] = Field(
         "truncate", description="Type of pattern matching to use"
     )
@@ -143,6 +145,8 @@ class GeneralStatsColumnConfig(BaseModel):
 
 class GeneralStatsModuleConfig(BaseModel):
     """Configuration for a module's general stats columns"""
+
+    model_config = ConfigDict(extra="forbid")
 
     columns: Dict[str, GeneralStatsColumnConfig] = Field(
         default_factory=dict, description="Columns to show in general stats table. Keys are column IDs."
@@ -451,7 +455,7 @@ class MultiQCConfig(BaseModel):
             export_plot_formats: Optional[List[Literal["png", "svg", "pdf"]]] = cfg(
                 "Image formats to export when export_plots is on.",
             )
-            export_plots_timeout: Optional[int] = cfg("Timeout for exporting each plot, in seconds.")
+            export_plots_timeout: Optional[int] = cfg("Timeout for exporting each plot, in seconds.", gt=0)
             plots_dir_name: Optional[str] = cfg(
                 "Directory for exported plot images when export_plots is on. Defaults to multiqc_plots.",
             )
@@ -563,8 +567,8 @@ class MultiQCConfig(BaseModel):
                 ),
             )
         with group("Size limits"):
-            log_filesize_limit: Optional[int] = cfg("Skip log files larger than this many bytes.")
-            filesearch_lines_limit: Optional[int] = cfg("Stop reading a log file after this many lines.")
+            log_filesize_limit: Optional[int] = cfg("Skip log files larger than this many bytes.", gt=0)
+            filesearch_lines_limit: Optional[int] = cfg("Stop reading a log file after this many lines.", gt=0)
         with group("Skip patterns"):
             ignore_symlinks: Optional[bool] = cfg(
                 "Skip symlinked files and directories during the file search.",
@@ -612,9 +616,11 @@ class MultiQCConfig(BaseModel):
             )
             plots_flat_numseries: Optional[int] = cfg(
                 "If a plot has more than this many series, MultiQC switches it from interactive to flat image.",
+                gt=0,
             )
             plots_defer_loading_numseries: Optional[int] = cfg(
                 "Plots with more than this many series start collapsed. The user clicks a button to render them.",
+                gt=0,
             )
             num_datasets_plot_limit: Optional[int] = cfg(
                 "Deprecated. Use `plots_defer_loading_numseries` instead.",
@@ -623,6 +629,7 @@ class MultiQCConfig(BaseModel):
         with group("Appearance"):
             plots_export_font_scale: Optional[float] = cfg(
                 "Multiplier applied to font sizes in exported plot images. Bump up for publication-quality output.",
+                gt=0,
             )
             plot_font_family: Optional[str] = cfg(
                 "CSS font-family for plot text. Defaults to a system font stack.",
@@ -650,18 +657,23 @@ class MultiQCConfig(BaseModel):
             )
             box_min_threshold_outliers: Optional[int] = cfg(
                 "When a boxplot has more samples than this, only outlier points are drawn.",
+                gt=0,
             )
             box_min_threshold_no_points: Optional[int] = cfg(
                 "When a boxplot has more samples than this, no individual points are drawn.",
+                gt=0,
             )
             violin_downsample_after: Optional[int] = cfg(
                 "Start downsampling violin plot data once the sample count exceeds this. Keeps rendering snappy.",
+                gt=0,
             )
             violin_min_threshold_outliers: Optional[int] = cfg(
                 "When a violin plot has more samples than this, only outlier points are drawn.",
+                gt=0,
             )
             violin_min_threshold_no_points: Optional[int] = cfg(
                 "When a violin plot has more samples than this, no individual points are drawn.",
+                gt=0,
             )
 
     with section("Toolbox"):
@@ -707,9 +719,11 @@ class MultiQCConfig(BaseModel):
             )
             max_table_rows: Optional[int] = cfg(
                 "Tables larger than this many rows are rendered as a violin plot instead.",
+                gt=0,
             )
             max_configurable_table_columns: Optional[int] = cfg(
                 "Cap on the number of columns the user can toggle in the table-configure toolbox.",
+                gt=0,
             )
             decimalPoint_format: str = cfg(
                 "Decimal-point character used in formatted numbers. Defaults to `.`",
@@ -873,6 +887,7 @@ class MultiQCConfig(BaseModel):
             read_count_multiplier: Optional[float] = cfg(
                 "Multiplier applied to read counts before display. Default 0.000001 shows reads in millions.",
                 examples=[0.001],
+                gt=0,
             )
             read_count_prefix: Optional[str] = cfg(
                 "Suffix shown after formatted read counts, eg. 'M' for millions.",
@@ -886,6 +901,7 @@ class MultiQCConfig(BaseModel):
             long_read_count_multiplier: Optional[float] = cfg(
                 "Multiplier for long-read counts. Default 0.001 shows counts in thousands.",
                 examples=[0.000001],
+                gt=0,
             )
             long_read_count_prefix: Optional[str] = cfg(
                 "Suffix shown after formatted long-read counts, eg. 'K' for thousands.",
@@ -899,6 +915,7 @@ class MultiQCConfig(BaseModel):
             base_count_multiplier: Optional[float] = cfg(
                 "Multiplier for base counts. Default 0.000001 shows bases in megabases.",
                 examples=[0.001],
+                gt=0,
             )
             base_count_prefix: Optional[str] = cfg(
                 "Suffix shown after formatted base counts, eg. 'Mb' for megabases.",
@@ -997,6 +1014,7 @@ class MultiQCConfig(BaseModel):
             )
             megaqc_timeout: Optional[int] = cfg(
                 "Upload timeout in seconds when posting to MegaQC.",
+                gt=0,
             )
             megaqc_upload: Optional[bool] = cfg(
                 "Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.",
