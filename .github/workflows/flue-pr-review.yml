@@ -1,0 +1,93 @@
+name: Flue PR Review
+
+on:
+  pull_request:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  review:
+    # Only run on PR opened, or on a /review comment on a PR (issue_comment fires for both)
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(github.event.comment.body, '/review'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: .flue
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: .flue/package-lock.json
+      - run: npm ci
+
+      - name: Resolve PR number
+        id: pr
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch PR payload
+        id: payload
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          pr_json=$(gh pr view "$PR_NUMBER" --json number,title,body,author,files)
+          diff=$(gh pr diff "$PR_NUMBER" | head -c 200000)
+          jq -nc \
+            --argjson pr "$pr_json" \
+            --arg diff "$diff" \
+            '{
+              number: $pr.number,
+              title: $pr.title,
+              body: $pr.body,
+              author: $pr.author.login,
+              changed_files: ($pr.files | map(.path)),
+              diff: $diff
+            }' > .flue/review-payload.json
+
+      - name: Run review agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx flue run pr-review --target node \
+            --id "pr-review-${{ steps.pr.outputs.number }}" \
+            --payload "$(cat review-payload.json)" \
+            > review.json
+          cat review.json
+
+      - name: Comment with review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          summary=$(jq -r '.summary' review.json)
+          verdict=$(jq -r '.verdict' review.json)
+          suggestions=$(jq -r '.suggestions | map("- " + .) | join("\n")' review.json)
+          findings=$(jq -r '
+            .findings
+            | map("- **[\(.severity) \(.category)]** \(.file // ""): \(.note)")
+            | join("\n")
+          ' review.json)
+          body=$(printf "**Automated review** (Flue + Claude) — verdict: \`%s\`\n\n**Summary**\n%s\n\n<details><summary>Findings (%s)</summary>\n\n%s\n\n</details>\n\n**Suggestions**\n%s\n" \
+            "$verdict" "$summary" "$(jq -r '.findings | length' review.json)" "$findings" "$suggestions")
+          gh pr comment "$PR_NUMBER" --body "$body"
