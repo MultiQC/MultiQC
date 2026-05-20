@@ -49,3 +49,26 @@ jobs:
           body=$(printf "**Automated triage** (Flue + Claude)\n\n**Category:** %s  \n**Priority:** %s  \n**Suggested labels:** %s\n\n**Summary**\n%s\n\n**Next steps**\n%s\n" \
             "$category" "$priority" "$labels" "$summary" "$next")
           gh issue comment "${{ github.event.issue.number }}" --body "$body"
+
+      - name: Apply category label (chains to downstream agents)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          category=$(jq -r '.category' triage.json)
+          # Map category picklist to a curated repo label. Unknown -> no label.
+          case "$category" in
+            bug)              label="bug" ;;
+            feature-request)  label="enhancement" ;;
+            module-request)   label="module: new" ;;
+            docs)             label="documentation" ;;
+            question)         label="question" ;;
+            *)                label="" ;;
+          esac
+          if [ -n "$label" ]; then
+            echo "Applying label: $label"
+            # The "module: new" label, applied here, triggers flue-module-triage
+            # via its issues:labeled handler. See .flue/AGENTS.md for the chain.
+            gh issue edit "${{ github.event.issue.number }}" --add-label "$label"
+          else
+            echo "No label for category=$category"
+          fi

@@ -22,17 +22,41 @@ invocation.
 
 ## Agents
 
-| Agent       | Trigger                                   | Output                                           |
-| ----------- | ----------------------------------------- | ------------------------------------------------ |
-| `triage`    | `issues: opened`                          | category, suggested labels, priority, next steps |
-| `pr-review` | `pull_request: opened`, `/review` comment | summary, findings by category, suggestions       |
+| Agent           | Trigger                                                        | Output                                                    |
+| --------------- | -------------------------------------------------------------- | --------------------------------------------------------- |
+| `triage`        | `issues: opened`                                               | category, suggested labels, priority, next steps          |
+| `pr-review`     | `pull_request: opened`, `/review` comment                      | summary, findings by category, suggestions                |
+| `module-triage` | `issues: opened`/`labeled` with `module: new`, manual dispatch | adoption signal, complexity, completeness, priority label |
+
+## Agent chains
+
+Agents trigger each other via GitHub labels, with no extra dispatch surface;
+every hop is visible in the GitHub UI.
+
+```
+issues:opened ─► triage ─[category=module-request]─► label "module: new"
+                                                            │
+                                                            ▼
+                                  issues:labeled ─► module-triage ─► label "module: prio-{low,medium,high}"
+```
+
+Rules for adding a chain:
+
+- Use **labels** as the transport, not `repository_dispatch` or
+  `workflow_dispatch`. Labels are debuggable and resumable.
+- The upstream agent must apply only labels from a **curated allow-list**, not
+  raw model output, to avoid creating arbitrary labels.
+- The downstream agent gates on the label via `if:` so other label changes
+  don't fire it accidentally.
+- Avoid loops: downstream agents must not apply labels that the upstream agent
+  listens for.
 
 ## Adding a new agent
 
 1. Write a spec in `skills/<name>.md` describing what the agent does and the
    exact output schema.
-2. Create `agents/<name>.ts` — import shared context, call `init`/`session.prompt`
-   with the schema.
+2. Create `agents/<name>.ts` (import shared context, call `init`/`session.prompt`
+   with the schema).
 3. Create `.github/workflows/flue-<name>.yml` that fetches inputs via `gh`,
    invokes `flue run`, and posts outputs.
 4. Update the table above.
