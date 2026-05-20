@@ -36,14 +36,7 @@ export default async function ({ init, payload }: FlueContext) {
     {
       result: v.object({
         summary: v.string(),
-        category: v.picklist([
-          "bug",
-          "feature-request",
-          "module-request",
-          "question",
-          "docs",
-          "other",
-        ]),
+        category: v.picklist(["bug", "feature-request", "module-request", "question", "docs", "other"]),
         suggested_labels: v.array(v.string()),
         priority: v.picklist(["low", "medium", "high"]),
         next_steps: v.string(),
