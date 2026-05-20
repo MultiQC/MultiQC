@@ -25,10 +25,7 @@ async function loadMarkdown(relativePath: string): Promise<string> {
 
 export default async function ({ init, payload }: FlueContext) {
   const pr = (payload ?? {}) as ReviewPayload;
-  const [repoContext, skillSpec] = await Promise.all([
-    loadMarkdown("context.md"),
-    loadMarkdown("skills/pr-review.md"),
-  ]);
+  const [repoContext, skillSpec] = await Promise.all([loadMarkdown("context.md"), loadMarkdown("skills/pr-review.md")]);
 
   const harness = await init({
     sandbox: local(),
@@ -64,14 +61,7 @@ export default async function ({ init, payload }: FlueContext) {
         summary: v.string(),
         findings: v.array(
           v.object({
-            category: v.picklist([
-              "bug",
-              "style",
-              "perf",
-              "security",
-              "test-coverage",
-              "docs",
-            ]),
+            category: v.picklist(["bug", "style", "perf", "security", "test-coverage", "docs"]),
             severity: v.picklist(["low", "medium", "high"]),
             file: v.optional(v.string()),
             note: v.string(),

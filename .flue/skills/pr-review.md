@@ -33,13 +33,15 @@ applicable (e.g. `ModuleNoSamplesFound`, `add_software_version`,
 ```ts
 v.object({
   summary: v.string(),
-  findings: v.array(v.object({
-    category: v.picklist(['bug','style','perf','security','test-coverage','docs']),
-    severity: v.picklist(['low','medium','high']),
-    file: v.optional(v.string()),
-    note: v.string(),
-  })),
+  findings: v.array(
+    v.object({
+      category: v.picklist(["bug", "style", "perf", "security", "test-coverage", "docs"]),
+      severity: v.picklist(["low", "medium", "high"]),
+      file: v.optional(v.string()),
+      note: v.string(),
+    }),
+  ),
   suggestions: v.array(v.string()),
-  verdict: v.picklist(['approve','comment','request-changes']),
-})
+  verdict: v.picklist(["approve", "comment", "request-changes"]),
+});
 ```

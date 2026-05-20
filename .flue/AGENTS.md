@@ -22,10 +22,10 @@ invocation.
 
 ## Agents
 
-| Agent | Trigger | Output |
-|---|---|---|
-| `triage` | `issues: opened` | category, suggested labels, priority, next steps |
-| `pr-review` | `pull_request: opened`, `/review` comment | summary, findings by category, suggestions |
+| Agent       | Trigger                                   | Output                                           |
+| ----------- | ----------------------------------------- | ------------------------------------------------ |
+| `triage`    | `issues: opened`                          | category, suggested labels, priority, next steps |
+| `pr-review` | `pull_request: opened`, `/review` comment | summary, findings by category, suggestions       |
 
 ## Adding a new agent
 
