@@ -1,0 +1,48 @@
+name: Flue Issue Triage
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    defaults:
+      run:
+        working-directory: .flue
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: .flue/package-lock.json
+      - run: npm ci
+      - name: Run triage agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx flue run triage --target node \
+            --id "triage-${{ github.event.issue.number }}" \
+            --payload "$(jq -nc \
+              --arg number "${{ github.event.issue.number }}" \
+              --arg title "${{ github.event.issue.title }}" \
+              --arg body  "${{ github.event.issue.body }}" \
+              --arg author "${{ github.event.issue.user.login }}" \
+              '{number: ($number|tonumber), title: $title, body: $body, author: $author}')" \
+            > triage.json
+          cat triage.json
+      - name: Comment with triage result
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          summary=$(jq -r '.summary' triage.json)
+          category=$(jq -r '.category' triage.json)
+          priority=$(jq -r '.priority' triage.json)
+          labels=$(jq -r '.suggested_labels | join(", ")' triage.json)
+          next=$(jq -r '.next_steps' triage.json)
+          body=$(printf "**Automated triage** (Flue + Claude)\n\n**Category:** %s  \n**Priority:** %s  \n**Suggested labels:** %s\n\n**Summary**\n%s\n\n**Next steps**\n%s\n" \
+            "$category" "$priority" "$labels" "$summary" "$next")
+          gh issue comment "${{ github.event.issue.number }}" --body "$body"
