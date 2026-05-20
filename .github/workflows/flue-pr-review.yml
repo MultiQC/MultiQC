@@ -22,6 +22,16 @@ jobs:
       run:
         working-directory: .flue
     steps:
+      - name: Require maintainer access for /review
+        if: github.event_name == 'issue_comment'
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PERM=$(gh api "repos/${{ github.repository }}/collaborators/${{ github.event.comment.user.login }}/permission" -q '.permission')
+          echo "${{ github.event.comment.user.login }} has permission: $PERM"
+          [[ "$PERM" =~ ^(admin|maintain|write)$ ]] || exit 1
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
