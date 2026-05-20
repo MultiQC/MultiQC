@@ -121,5 +121,6 @@ def test_grouped_lanes_sum_mapped_reads_in_general_stats(tmp_path):
 
     group_rows = report.general_stats_data[SectionKey("samtools")][SampleGroup("sample")]
     assert group_rows[0].data[ColumnKey("mapped_passed")] == 230
+    assert group_rows[0].data[ColumnKey("total_passed")] == 300
     assert group_rows[0].data[ColumnKey("flagstat_total")] == 420
     assert group_rows[0].data[ColumnKey("mapped_passed_pct")] == pytest.approx(76.67, abs=0.01)

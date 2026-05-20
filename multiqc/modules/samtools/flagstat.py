@@ -66,7 +66,7 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
             general_stats_headers,
             namespace="flagstat",
             group_samples_config=SampleGroupingConfig(
-                cols_to_sum=[ColumnKey("flagstat_total"), ColumnKey("mapped_passed")],
+                cols_to_sum=[ColumnKey("flagstat_total"), ColumnKey("mapped_passed"), ColumnKey("total_passed")],
                 cols_to_weighted_average=[(ColumnKey("mapped_passed_pct"), ColumnKey("total_passed"))],
             ),
         )
