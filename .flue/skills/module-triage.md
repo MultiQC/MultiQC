@@ -46,11 +46,11 @@ v.object({
     output_formats: v.array(v.string()),
   }),
   existing_coverage: v.string(),
-  adoption_signal: v.picklist(['weak','moderate','strong']),
-  implementation_complexity: v.picklist(['low','medium','high']),
-  request_completeness: v.picklist(['incomplete','partial','complete']),
-  suggested_priority_label: v.picklist(['module: prio-low','module: prio-medium','module: prio-high']),
+  adoption_signal: v.picklist(["weak", "moderate", "strong"]),
+  implementation_complexity: v.picklist(["low", "medium", "high"]),
+  request_completeness: v.picklist(["incomplete", "partial", "complete"]),
+  suggested_priority_label: v.picklist(["module: prio-low", "module: prio-medium", "module: prio-high"]),
   summary: v.string(),
   next_step: v.string(),
-})
+});
 ```
