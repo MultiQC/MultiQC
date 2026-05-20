@@ -1,0 +1,87 @@
+name: Flue Module Triage
+
+on:
+  issues:
+    types: [opened, labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to re-triage"
+        required: true
+        type: string
+
+jobs:
+  module-triage:
+    # Run only for issues that carry the `module: new` label,
+    # plus manual dispatch.
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' &&
+       contains(github.event.issue.labels.*.name, 'module: new'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    defaults:
+      run:
+        working-directory: .flue
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: .flue/package-lock.json
+      - run: npm ci
+
+      - name: Resolve issue number
+        id: issue
+        working-directory: .
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "number=${{ github.event.inputs.issue_number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch issue payload
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        run: |
+          gh issue view "$ISSUE_NUMBER" \
+            --json number,title,body,author,labels \
+            --jq '{number, title, body, author: .author.login, labels: [.labels[].name]}' \
+            > .flue/triage-payload.json
+
+      - name: Run module-triage agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npx flue run module-triage --target node \
+            --id "module-triage-${{ steps.issue.outputs.number }}" \
+            --payload "$(cat triage-payload.json)" \
+            > triage.json
+          cat triage.json
+
+      - name: Comment and label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        run: |
+          tool=$(jq -r '.tool.name' triage.json)
+          purpose=$(jq -r '.tool.purpose' triage.json)
+          formats=$(jq -r '.tool.output_formats | join(", ")' triage.json)
+          coverage=$(jq -r '.existing_coverage' triage.json)
+          adoption=$(jq -r '.adoption_signal' triage.json)
+          complexity=$(jq -r '.implementation_complexity' triage.json)
+          completeness=$(jq -r '.request_completeness' triage.json)
+          summary=$(jq -r '.summary' triage.json)
+          next=$(jq -r '.next_step' triage.json)
+          priority=$(jq -r '.suggested_priority_label' triage.json)
+
+          body=$(printf "**Automated module triage** (Flue + Claude)\n\n**Tool:** %s — %s\n**Output formats:** %s\n**Existing coverage:** %s\n**Adoption signal:** %s · **Complexity:** %s · **Request completeness:** %s\n\n**Summary**\n%s\n\n**Suggested next step**\n%s\n\n**Suggested priority label:** \`%s\`\n" \
+            "$tool" "$purpose" "$formats" "$coverage" "$adoption" "$complexity" "$completeness" "$summary" "$next" "$priority")
+          gh issue comment "$ISSUE_NUMBER" --body "$body"
+          gh issue edit "$ISSUE_NUMBER" --add-label "$priority"
