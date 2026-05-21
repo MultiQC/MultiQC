@@ -8,6 +8,9 @@ Makes the following available under the main multiqc namespace:
 """
 
 import sys
+import warnings
+
+warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 OLDEST_SUPPORTED_PYTHON_VERSION = "3.9"
 
@@ -40,7 +43,7 @@ from multiqc.interactive import (  # noqa: E402
     write_report,
 )
 from multiqc.multiqc import run  # noqa: E402
-from multiqc.plots.plotly.plot import PConfig, Plot  # noqa: E402
+from multiqc.plots.plot import PConfig, Plot  # noqa: E402
 
 __version__ = config.version
 

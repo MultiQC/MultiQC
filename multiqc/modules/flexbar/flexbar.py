@@ -11,7 +11,7 @@ VERSION_REGEX = r"Flexbar - flexible barcode and adapter removal, version ([\d\.
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Flexbar",
             anchor="flexbar",
             href="https://github.com/seqan/flexbar",
@@ -125,7 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Flexbar: Processed Reads",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
 
         self.add_section(plot=bargraph.plot(self.flexbar_data, keys, pconfig))

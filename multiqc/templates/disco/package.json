@@ -1,0 +1,19 @@
+{
+  "name": "multiqc-disco-template",
+  "version": "1.0",
+  "description": "90s Disco theme for MultiQC reports",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build --emptyOutDir",
+    "watch": "vite build --emptyOutDir --watch",
+    "dev": "vite build --emptyOutDir --watch"
+  },
+  "devDependencies": {
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.8",
+    "sass": "^1.99.0",
+    "terser": "^5.47.1",
+    "vite": "^8.0.12"
+  }
+}

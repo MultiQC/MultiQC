@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="goleft indexcov",
             anchor="goleft_indexcov",
             href="https://github.com/brentp/goleft/tree/master/indexcov",
@@ -210,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Bootstrap alert about missing samples
             extra = f"""<div class="alert alert-warning" style="margin:2rem 0;">
                 <strong>Warning:</strong>
-                {len(bin_plot_data_empty_samples)} sample{'s' if len(bin_plot_data_empty_samples) > 1 else ''} had zero bins and could not be plotted.
+                {len(bin_plot_data_empty_samples)} sample{"s" if len(bin_plot_data_empty_samples) > 1 else ""} had zero bins and could not be plotted.
                 <a href="#goleft_empty_samples" onclick="$('#goleft_empty_samples').slideToggle();">Click to show missing sample names.</a>
                 <div id="goleft_empty_samples" style="display:none;">
                     <ul><li><code>{"</code></li>, <li><code>".join(bin_plot_data_empty_samples)}</code></li></ul>

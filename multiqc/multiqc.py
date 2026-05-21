@@ -14,7 +14,7 @@ from typing import Optional, Tuple
 
 import rich_click as click
 
-from multiqc import config, report
+from multiqc import config, report, validation
 from multiqc.core import log_and_rich, plugin_hooks
 from multiqc.core.exceptions import NoAnalysisFound, RunError
 from multiqc.core.exec_modules import exec_modules
@@ -23,7 +23,8 @@ from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.validation import ConfigValidationError
+from multiqc.utils import config_schema, util_functions
+from multiqc.validation import ModuleConfigValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,11 @@ click.rich_click.HEADER_TEXT = (
     f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/]{emoji} [dim]v{config.version}[/]"
 )
 click.rich_click.FOOTER_TEXT = "See [link=http://multiqc.info]http://multiqc.info[/] for more details."
-click.rich_click.ERRORS_SUGGESTION = f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, run '[yellow]multiqc --help[/]' or visit [link=http://multiqc.info]http://multiqc.info[/]"
+click.rich_click.ERRORS_SUGGESTION = (
+    f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, "
+    f"run '[yellow]multiqc --help[/]' or visit ["
+    f"link=http://multiqc.info]http://multiqc.info[/]"
+)
 click.rich_click.STYLE_ERRORS_SUGGESTION = ""
 click.rich_click.OPTION_GROUPS = {
     "multiqc": [
@@ -65,6 +70,7 @@ click.rich_click.OPTION_GROUPS = {
             "options": [
                 "--module",
                 "--exclude",
+                "--require-logs",
             ],
         },
         {
@@ -100,6 +106,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--data-format",
                 "--zip-data-dir",
                 "--no-report",
+                "--clean-up",
                 "--pdf",
             ],
         },
@@ -108,15 +115,30 @@ click.rich_click.OPTION_GROUPS = {
             "options": [
                 "--verbose",
                 "--quiet",
+                "--no-version-check",
                 "--strict",
                 "--development",
-                "--require-logs",
                 "--profile-runtime",
                 "--profile-memory",
                 "--no-megaqc-upload",
                 "--no-ansi",
                 "--version",
                 "--help",
+            ],
+        },
+        {
+            "name": "AI Features",
+            "options": [
+                "--ai-summary",
+                "--ai-summary-full",
+                "--ai-provider",
+                "--no-ai",
+            ],
+        },
+        {
+            "name": "Check Config",
+            "options": [
+                "--check-config",
             ],
         },
     ],
@@ -209,6 +231,14 @@ click.rich_click.OPTION_GROUPS = {
     multiple=True,
     metavar="GLOB EXPRESSION",
     help="Ignore sample names",
+)
+@click.option(
+    "--only-samples",
+    "only_samples",
+    type=str,
+    multiple=True,
+    metavar="GLOB EXPRESSION",
+    help="Only include sample names matching the given glob expression",
 )
 @click.option(
     "--ignore-symlinks",
@@ -341,14 +371,15 @@ click.rich_click.OPTION_GROUPS = {
     "development",
     is_flag=True,
     default=None,
-    help="Development mode. Do not compress and minimise JS, export uncompressed plot data",
+    help="Development mode. Do not inline JS and CSS, export uncompressed plot data",
 )
 @click.option(
     "--pdf",
     "make_pdf",
     is_flag=True,
     default=None,
-    help="Creates PDF report with the [i]'simple'[/] template. Requires [link=https://pandoc.org/]Pandoc[/] to be installed.",
+    help="Creates PDF report with the [i]'simple'[/] template. Requires [link=https://pandoc.org/]Pandoc[/] to be "
+    "installed.",
 )
 @click.option(
     "--no-megaqc-upload",
@@ -397,7 +428,8 @@ click.rich_click.OPTION_GROUPS = {
     "profile_memory",
     is_flag=True,
     default=None,
-    help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, so the runtime metrics could scale up a few times",
+    help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, "
+    "so the runtime metrics could scale up a few times",
 )
 @click.option(
     NO_ANSI_FLAG,
@@ -427,8 +459,56 @@ click.rich_click.OPTION_GROUPS = {
     default=None,
     help="Disable checking the latest MultiQC version on the server",
 )
+@click.option(
+    "--ai",
+    "--ai-summary",
+    "ai_summary",
+    is_flag=True,
+    default=None,
+    help="Generate an AI summary of the report",
+)
+@click.option(
+    "--ai-summary-full",
+    "ai_summary_full",
+    is_flag=True,
+    default=None,
+    help="Generate a detailed AI summary of the report",
+)
+@click.option(
+    "--ai-provider",
+    type=click.Choice(config_schema.AiProviderLiteral.__args__),  # type: ignore
+    help=f"Select AI provider for report summarization. [dim yellow](Default: {config.ai_provider})",
+)
+@click.option(
+    "--ai-model",
+    type=str,
+    help="Select AI model to use for report summarization",
+)
+@click.option(
+    "--ai-custom-endpoint",
+    type=str,
+    help="Custom AI endpoint to use with OpenAI API",
+)
+@click.option(
+    "--ai-custom-context-window",
+    type=int,
+    help="Custom context window to use with OpenAI API (default: 128000)",
+)
+@click.option(
+    "--no-ai",
+    "no_ai",
+    is_flag=True,
+    default=None,
+    help="Disable AI toolbox and buttons in the report",
+)
+@click.option(
+    "--check-config",
+    is_flag=True,
+    default=False,
+    help="Check a MultiQC configuration file for errors and exit.",
+)
 @click.version_option(config.version, prog_name="multiqc")
-def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
+def run_cli(analysis_dir: Tuple[str], clean_up: bool, check_config: bool, **kwargs):
     # Main MultiQC run command for use with the click command line, complete with all click function decorators.
     # To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
     # parsed variables on to a vanilla python function.
@@ -443,9 +523,23 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     For example, to run in the current working directory, use '[blue bold]multiqc .[/]'
     """
 
+    # New: Check if this is a config check run
+    if check_config:
+        if len(analysis_dir) == 1:
+            config_file = analysis_dir[0]
+            from multiqc.core.config_check import check_config_file
+
+            check_config_file(config_file)
+            sys.exit(0)
+        else:
+            logger.error("Please specify a single config file with --check-config")
+            sys.exit(1)
+
     cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.model_fields}
     other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.model_fields}
     cfg = ClConfig(**cl_config_kwargs, unknown_options=other_fields)
+
+    validation.collapse_repeated_messages = True  # to avoid cluttering output
 
     # Pass on to a regular function that can be used easily without click
     result = run(*analysis_dir, clean_up=clean_up, cfg=cfg, interactive=False)
@@ -460,14 +554,22 @@ class RunResult:
 
     * appropriate error code (e.g. 1 if a module broke, 0 on success)
     * error message if a module broke
+    * optionally, the HTML report content if return_html=True was specified
     """
 
-    def __init__(self, sys_exit_code: int = 0, message: str = ""):
+    def __init__(self, sys_exit_code: int = 0, message: str = "", html_content: Optional[str] = None):
         self.sys_exit_code = sys_exit_code
         self.message = message
+        self.html_content = html_content
 
 
-def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, interactive: bool = True) -> RunResult:
+def run(
+    *analysis_dir,
+    clean_up: bool = True,
+    cfg: Optional[ClConfig] = None,
+    interactive: bool = True,
+    return_html: bool = False,
+) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
@@ -478,13 +580,24 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
     To run, supply with one or more directory to scan for analysis results.
     To run here, use 'multiqc .'
 
+    Args:
+        *analysis_dir: Directories to scan for analysis results
+        clean_up: Whether to clean up temporary files
+        cfg: Configuration object
+        interactive: Whether to run in interactive mode
+        return_html: If True, return HTML report content in RunResult.html_content
+
+    Returns:
+        RunResult: Contains exit code, message, and optionally HTML content
+
     See http://multiqc.info for more details.
     """
 
     # In case if run() is called multiple times in the same session:
     report.reset()
     config.reset()
-    update_config(*analysis_dir, cfg=cfg, log_to_file=not interactive)
+
+    update_config(*analysis_dir, cfg=cfg, log_to_file=not interactive, print_intro_fn=print_intro)
 
     check_version()
 
@@ -499,9 +612,17 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
             "give warnings if anything is not optimally configured in a module or a template."
         )
 
+    # Load template early to apply config overrides before modules run
+    template_mod = config.avail_templates[config.template].load()
+    if hasattr(template_mod, "template_dark_mode"):
+        config.template_dark_mode = template_mod.template_dark_mode
+    if hasattr(template_mod, "plot_font_family"):
+        config.plot_font_family = template_mod.plot_font_family
+
     report.multiqc_command = " ".join(sys.argv)
     logger.debug(f"Command used: {report.multiqc_command}")
 
+    html_content = None
     try:
         mod_dicts_in_order = file_search()
 
@@ -509,14 +630,17 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
 
         order_modules_and_sections()
 
-        write_results()
+        html_content = write_results(return_html=return_html)
 
     except NoAnalysisFound as e:
         logger.warning(f"{e.message}. Cleaning up…")
         return RunResult(message="No analysis results found", sys_exit_code=e.sys_exit_code)
 
-    except ConfigValidationError as e:
-        logger.warning("Config validation error. Exiting because strict mode is enabled. Cleaning up…")
+    except ModuleConfigValidationError as e:
+        logger.error(
+            "Config validation error. Exiting because the _strict_ mode is enabled. Please refer to the errors show "
+            "above. Cleaning up…"
+        )
         return RunResult(message=e.message, sys_exit_code=1)
 
     except RunError as e:
@@ -525,10 +649,14 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
         return RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
 
     except KeyboardInterrupt:
-        logger.critical(
-            "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
-            + "User Cancelled Execution!\nExiting MultiQC..."
-        )
+        if config.verbose:
+            msg = (
+                "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
+                + "User Cancelled Execution!\nExiting MultiQC..."
+            )
+        else:
+            msg = "User Cancelled Execution! Exiting MultiQC..."
+        logger.critical(msg)
         return RunResult(sys_exit_code=1)
 
     else:
@@ -548,16 +676,19 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
                 log_and_rich.rich_console_print(
                     "[blue]|           multiqc[/] | "
                     "Flat-image plots used. Disable with '--interactive'. "
-                    "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
+                    "See [link=https://docs.seqera.io/multiqc/getting_started/config#flat--interactive-plots]docs[/link]."
                 )
 
         sys_exit_code = 0
         if config.strict and len(report.lint_errors) > 0:
-            logger.error(f"Found {len(report.lint_errors)} linting errors!\n" + "\n".join(report.lint_errors))
+            logger.error(f"{len(report.lint_errors)} linting errors:\n" + "\n".join(report.lint_errors))
             sys_exit_code = 1
 
-        logger.info("MultiQC complete")
-        return RunResult(sys_exit_code=sys_exit_code)
+        if sys_exit_code == 0:
+            logger.info("MultiQC complete")
+        else:
+            logger.error("MultiQC complete with errors")
+        return RunResult(sys_exit_code=sys_exit_code, html_content=html_content if return_html else None)
 
     finally:
         if clean_up:
@@ -567,19 +698,52 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
 def _check_pdf_export_possible():
     if subprocess.call(["which", "pandoc"]) != 0:
         logger.error(
-            "`pandoc` and `pdflatex` tools are required to create a PDF report. Please install those and try "
+            "`pandoc` and `lualatex` tools are required to create a PDF report. Please install those and try "
             "again. See http://pandoc.org/installing.html for the `pandoc` installation instructions "
-            "(e.g. `brew install pandoc` on macOS), and install LaTeX for `pdflatex` (e.g. `brew install basictex`"
+            "(e.g. `brew install pandoc` on macOS), and install LaTeX for `lualatex` (e.g. `brew install basictex`"
             "on macOS). Alternatively, omit the `--pdf` option or unset `make_pdf: true` in the MultiQC config."
         )
         return RunResult(message="Pandoc is required to create PDF reports", sys_exit_code=1)
 
-    if subprocess.call(["which", "pdflatex"]) != 0:
+    if subprocess.call(["which", "lualatex"]) != 0:
         logger.error(
-            "The `pdflatex` tool is required to create a PDF report. Please install LaTeX and try again, "
+            "The `lualatex` tool is required to create a PDF report. Please install LaTeX and try again, "
             "e.g. `brew install basictex` on macOS. Alternatively, omit the `--pdf` option"
             "or unset `make_pdf: true` in the MultiQC config."
         )
         return RunResult(message="LaTeX is required to create PDF reports", sys_exit_code=1)
 
     logger.info("--pdf specified. Using non-interactive HTML template.")
+
+
+def print_intro():
+    if not config.quiet:
+        if util_functions.is_running_in_notebook():
+            _print_intro_with_coloredlogs()
+        else:
+            _print_intro_with_rich()
+
+
+def _print_intro_with_coloredlogs():
+    # Print intro
+    if config.no_ansi is False:
+        BOLD = "\033[1m"
+        DIM = "\033[2m"
+        DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
+        RESET = "\033[0m"
+    else:
+        BOLD = ""
+        DIM = ""
+        DARK_ORANGE = ""
+        RESET = ""
+    emoji = log_and_rich.choose_emoji()
+    emoji = f" {emoji}" if emoji else ""
+    intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET}{emoji} {DIM}v{config.version}{RESET}"
+    if not util_functions.is_running_in_notebook():
+        intro = f"\n{intro}\n"
+    logger.info(intro)
+
+
+def _print_intro_with_rich():
+    if log_and_rich.rich_console is not None:
+        log_and_rich.rich_console.print(f"\n{click.rich_click.HEADER_TEXT}\n")

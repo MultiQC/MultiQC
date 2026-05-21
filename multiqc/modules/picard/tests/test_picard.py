@@ -29,8 +29,7 @@ NUM_SAMPLES_BY_FILE = {
 @pytest.mark.parametrize("tool", TOOLS)
 def test_picard_data_parsed(tool, data_dir):
     tool_subdir = data_dir / "modules/picard" / tool
-    print(tool_subdir)
-    assert tool_subdir.exists()
+    assert tool_subdir.exists(), f"Tool subdirectory {tool_subdir} does not exist"
 
     # Check that all test files are parsed
     for path in tool_subdir.rglob("*"):
@@ -39,7 +38,6 @@ def test_picard_data_parsed(tool, data_dir):
         if path.parent.name == "multiqc_data" or path.name == "multiqc_report.html" or not path.is_file():
             continue
 
-        # print(f"Scanning path {path}")
         report.reset()
         report.analysis_files = [path]
         report.search_files(["picard"])
@@ -50,6 +48,7 @@ def test_picard_data_parsed(tool, data_dir):
             samples_parsed = []
         else:
             samples_parsed = list(m.samples_parsed_by_tool.get(tool, []))
-        print(f"{path.name}: {samples_parsed}")
         expected_num_samples = NUM_SAMPLES_BY_FILE.get(path.name, 1)
-        assert len(samples_parsed) == expected_num_samples
+        assert len(samples_parsed) == expected_num_samples, (
+            f"{path.name}: expected {expected_num_samples} samples, got {len(samples_parsed)}"
+        )

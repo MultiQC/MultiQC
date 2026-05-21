@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
     In non-strand-specific data, reporting the total numbers of occurences for both changes
     in a comlementary pair - like `A>C` and `T>G` - might not bring any additional information.
     To collapse such statistics in the substitutions plot, you can add the following section into
-    [your configuration](http://multiqc.info/docs/#configuring-multiqc):
+    [your configuration](https://docs.seqera.io/multiqc/getting_started/config):
 
     ```yaml
     bcftools:
@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bcftools",
             anchor="bcftools",
             target="Bcftools",

@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Slamdunk",
             anchor="slamdunk",
             href="http://t-neumann.github.io/slamdunk/",
@@ -450,7 +450,7 @@ class MultiqcModule(BaseMultiqcModule):
             "stacking": "normal",
             "tt_decimals": 2,
             "tt_suffix": "%",
-            "hide_empty": False,
+            "hide_zero_cats": False,
             "data_labels": [
                 "Plus Strand +",
                 "Minus Strand -",
@@ -493,7 +493,7 @@ class MultiqcModule(BaseMultiqcModule):
             "stacking": "normal",
             "tt_decimals": 2,
             "tt_suffix": "%",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
 
         self.add_section(

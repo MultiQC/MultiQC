@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DamageProfiler",
             anchor="damageprofiler",
             href="https://github.com/Integrative-Transcriptomics/DamageProfiler",
@@ -89,8 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f["f"])
         except Exception as e:
-            print(e)
-            log.warning(f"Could not parse DamageProfiler JSON: '{f['fn']}'")
+            log.warning(f"Could not parse DamageProfiler JSON: '{f['fn']}': {e}")
             return None
 
         # Get sample name from JSON first

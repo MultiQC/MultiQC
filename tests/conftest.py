@@ -1,6 +1,6 @@
 import pytest
 
-from multiqc import report, config
+from multiqc import report, config, validation
 from multiqc.utils import testing
 
 
@@ -19,3 +19,4 @@ def reset():
 
     report.reset()
     config.reset()
+    validation.reset()

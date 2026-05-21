@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HTSeq Count",
             anchor="htseq",
             target="HTSeq Count",
@@ -128,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "htseq_assignment_plot",
             "title": "HTSeq: Count Assignments",
             "ylab": "# Reads",
-            "hide_empty": False,
+            "hide_zero_cats": False,
             "cpswitch_counts_label": "Number of Reads",
         }
         return bargraph.plot(self.htseq_data, cats, config)

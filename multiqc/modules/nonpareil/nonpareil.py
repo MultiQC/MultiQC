@@ -5,7 +5,7 @@ import numpy as np
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots.plotly.line import Series
+from multiqc.plots.linegraph import Series
 from multiqc.utils import mqc_colour
 
 
@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Nonpareil",
             anchor="nonpareil",
             href="https://github.com/lmrodriguezr/nonpareil",
@@ -363,6 +363,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if data["nonpareil_has.model"]:
                         extra_series[idx].append(
                             Series(
+                                path_in_cfg=("nonpareil-redundancy-plot extra_series",),
                                 name=s_name,
                                 pairs=[(x, y) for x, y in data["nonpareil_model"].items()],
                                 color=data_colors[s_name],

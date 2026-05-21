@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, table
-from multiqc.plots.plotly.line import LinePlotConfig
+from multiqc.plots.linegraph import LinePlotConfig
 from multiqc.plots.table_object import TableConfig
 
 log = logging.getLogger(__name__)

@@ -5,7 +5,7 @@ import os
 import re
 import tarfile
 from collections import defaultdict
-from typing import Dict, Any
+from typing import Any, Dict
 
 import humanize
 
@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Seqera Platform CLI",
             anchor="seqera_cli",
             href="https://github.com/seqeralabs/tower-cli",
@@ -365,7 +365,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_decimals": 1,
                     "tt_suffix": " h",
                     "cpswitch": False,
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                 },
             ),
         )
@@ -382,7 +382,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_decimals": 1,
                     "tt_suffix": " h",
                     "cpswitch": False,
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                 },
             ),
         )
@@ -399,7 +399,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_decimals": 1,
                     "tt_suffix": " $",
                     "cpswitch": False,
-                    "hide_empty": False,
+                    "hide_zero_cats": False,
                 },
             ),
         )

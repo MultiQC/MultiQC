@@ -4,26 +4,27 @@ import gzip
 import io
 import json
 import logging
+from pathlib import Path
 
 import requests
 
 from multiqc import config
-from multiqc.utils.util_functions import dump_json
 
 log = logging.getLogger(__name__)
 
 
-def multiqc_api_post(exported_data):
+def multiqc_api_post(out_path: Path):
     headers = {"Content-Type": "application/json", "content-encoding": "gzip"}
     if config.megaqc_access_token is not None:
         headers["access_token"] = config.megaqc_access_token
-    post_data = dump_json({"data": exported_data}, ensure_ascii=False, indent=2)
-    post_data = post_data.encode("utf-8", "ignore")
+
+    with out_path.open("r") as fh:
+        post_data: str = f'{{"data": {fh.read()}}}'
 
     # Gzip the JSON for massively decreased filesize
     sio_obj = io.BytesIO()
     gzfh = gzip.GzipFile(fileobj=sio_obj, mode="w")
-    gzfh.write(post_data)
+    gzfh.write(post_data.encode("utf-8"))
     gzfh.close()
     request_body = sio_obj.getvalue()
 

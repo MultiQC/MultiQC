@@ -2,9 +2,9 @@ import json
 import logging
 from json import JSONDecodeError
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc import config
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DeDup",
             anchor="dedup",
             href="http://www.github.com/apeltzer/DeDup",

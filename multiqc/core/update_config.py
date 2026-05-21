@@ -2,13 +2,14 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional, Union, Dict, Set
+from typing import Dict, List, Literal, Optional, Union, cast
 
 from pydantic import BaseModel
 
-from multiqc import report, config
-from multiqc.core.exceptions import RunError
+from multiqc import config, report
 from multiqc.core import log_and_rich, plugin_hooks
+from multiqc.core.exceptions import RunError
+from multiqc.utils.config_schema import AiProviderLiteral
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class ClConfig(BaseModel):
     template: Optional[str] = None
     require_logs: Optional[bool] = None
     output_dir: Optional[Union[str, Path]] = None
-    use_filename_as_sample_name: Optional[bool] = None
+    use_filename_as_sample_name: Optional[Union[bool, List[str]]] = None
     replace_names: Optional[str] = None
     sample_names: Optional[str] = None
     sample_filters: Optional[str] = None
@@ -53,19 +54,31 @@ class ClConfig(BaseModel):
     no_version_check: Optional[bool] = None
     ignore: List[str] = []
     ignore_samples: List[str] = []
+    only_samples: List[str] = []
     run_modules: List[str] = []
     exclude_modules: List[str] = []
     config_files: List[Union[str, Path]] = []
     cl_config: List[str] = []
     custom_css_files: List[str] = []
     module_order: List[Union[str, Dict]] = []
-    preserve_module_raw_data: Optional[bool] = None
     extra_fn_clean_exts: List = []
     extra_fn_clean_trim: List = []
+    preserve_module_raw_data: Optional[bool] = None
+    data_dump_file_write_raw: Optional[bool] = None
+    ai_summary: Optional[bool] = None
+    ai_summary_full: Optional[bool] = None
+    ai_provider: Optional[AiProviderLiteral] = None
+    ai_model: Optional[str] = None
+    ai_custom_endpoint: Optional[str] = None
+    ai_custom_context_window: Optional[int] = None
+    ai_prompt_short: Optional[str] = None
+    ai_prompt_full: Optional[str] = None
+    no_ai: Optional[bool] = None
     unknown_options: Optional[Dict] = None
+    check_config: Optional[bool] = None
 
 
-def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False):
+def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
     """
     Update config and re-initialize logger.
 
@@ -87,7 +100,10 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.no_ansi = cfg.no_ansi
     if cfg.verbose is not None:
         config.verbose = cfg.verbose > 0
+
     log_and_rich.init_log(log_to_file=log_to_file)
+    if print_intro_fn is not None:
+        print_intro_fn()
 
     logger.debug(f"This is MultiQC v{config.version}")
     logger.debug("Running Python " + sys.version.replace("\n", " "))
@@ -114,7 +130,12 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
 
     # Set up key variables (overwrite config vars from command line)
     if cfg.template is not None:
-        config.template = cfg.template
+        # `cfg.template` is a `str` from click; click.Choice already
+        # validated it against the available template names.
+        config.template = cast(
+            Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"],
+            cfg.template,
+        )
     if cfg.title is not None:
         config.title = cfg.title
         logger.info(f"Report title: {config.title}")
@@ -122,7 +143,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.report_comment = cfg.report_comment
     if cfg.prepend_dirs is not None:
         config.prepend_dirs = cfg.prepend_dirs
-        logger.info("Prepending directory to sample names")
+        if cfg.prepend_dirs:
+            logger.info("Prepending directory to sample names")
     if cfg.dirs_depth is not None:
         config.prepend_dirs = True
         config.prepend_dirs_depth = cfg.dirs_depth
@@ -141,7 +163,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     if cfg.zip_data_dir is not None:
         config.zip_data_dir = cfg.zip_data_dir
     if cfg.data_format is not None:
-        config.data_format = cfg.data_format
+        config.data_format = cast(Literal["tsv", "csv", "json", "yaml"], cfg.data_format)
     if cfg.export_plots is not None:
         config.export_plots = cfg.export_plots
     if cfg.make_report is not None:
@@ -167,7 +189,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.megaqc_upload = not cfg.no_megaqc_upload
     if cfg.fn_clean_sample_names is not None:
         config.fn_clean_sample_names = cfg.fn_clean_sample_names
-        logger.info("Not cleaning sample names")
+        if not cfg.fn_clean_sample_names:
+            logger.info("Not cleaning sample names")
     if cfg.replace_names:
         config.load_replace_names(Path(cfg.replace_names))
     if cfg.sample_names:
@@ -195,6 +218,27 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.fn_clean_trim = list(cfg.extra_fn_clean_trim) + config.fn_clean_trim
     if cfg.preserve_module_raw_data is not None:
         config.preserve_module_raw_data = cfg.preserve_module_raw_data
+    if cfg.data_dump_file_write_raw is not None:
+        config.data_dump_file_write_raw = cfg.data_dump_file_write_raw
+    if cfg.ai_summary is not None:
+        config.ai_summary = cfg.ai_summary
+    if cfg.ai_summary_full is not None:
+        config.ai_summary = cfg.ai_summary_full
+        config.ai_summary_full = cfg.ai_summary_full
+    if cfg.ai_provider is not None:
+        config.ai_provider = cfg.ai_provider
+    if cfg.ai_model is not None:
+        config.ai_model = cfg.ai_model
+    if cfg.ai_custom_endpoint is not None:
+        config.ai_custom_endpoint = cfg.ai_custom_endpoint
+    if cfg.ai_custom_context_window is not None:
+        config.ai_custom_context_window = cfg.ai_custom_context_window
+    if cfg.ai_prompt_short is not None:
+        config.ai_prompt_short = cfg.ai_prompt_short
+    if cfg.ai_prompt_full is not None:
+        config.ai_prompt_full = cfg.ai_prompt_full
+    if cfg.no_ai is not None:
+        config.no_ai = cfg.no_ai
 
     if config.development and "png" not in config.export_plot_formats:
         config.export_plot_formats.append("png")
@@ -215,7 +259,9 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     if len(cfg.ignore_samples) > 0:
         logger.debug(f"Ignoring sample names that match: {', '.join(cfg.ignore_samples)}")
         config.sample_names_ignore.extend(cfg.ignore_samples)
-
+    if len(cfg.only_samples) > 0:
+        logger.debug(f"Only including sample names that match: {', '.join(cfg.only_samples)}")
+        config.sample_names_only_include.extend(cfg.only_samples)
     # Prep module configs
     report.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
     report.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]

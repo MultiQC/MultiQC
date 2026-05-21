@@ -22,7 +22,7 @@ EXPECTED_SAMPLES_BY_TOOL = {
     "add_gc_metrics_hist": 1,
     "add_trimmer_metrics": 1,
     "add_time_metrics": 2,
-    "add_rna_metrics": 0,
+    "add_rna_metrics": 2,
     "add_rna_transcript_coverage": 0,
     "add_sc_rna_metrics": 0,
     "add_sc_atac_metrics": 0,

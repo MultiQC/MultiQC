@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="BUSCO",
             anchor="busco",
             href="http://busco.ezlab.org/",
@@ -64,6 +64,39 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="busco-lineage-" + re.sub(r"\W+", "_", str(lin)),
                 plot=self.busco_plot(lin),
             )
+
+        # Add most important stats to the general table
+        headers = {
+            "complete": {
+                "title": "Complete BUSCOs",
+                "description": "Number of complete BUSCOs",
+                "min": 0,
+                "hidden": True,
+            },
+            "complete_single_copy": {
+                "title": "Complete and single-copy BUSCOs",
+                "description": "Number of complete and single-copy BUSCOs",
+                "min": 0,
+            },
+            "complete_duplicated": {
+                "title": "Complete and duplicated BUSCOs",
+                "description": "Number of complete and duplicated BUSCOs",
+                "min": 0,
+                "hidden": True,
+            },
+            "fragmented": {
+                "title": "Fragmented BUSCOs",
+                "description": "Number of fragmented BUSCOs",
+                "min": 0,
+                "hidden": True,
+            },
+            "missing": {
+                "title": "Missing BUSCOs",
+                "description": "Number of missing BUSCOs",
+                "min": 0,
+            },
+        }
+        self.general_stats_addcols(self.busco_data, headers)
 
     def parse_busco_log(self, f):
         parsed_data = {}

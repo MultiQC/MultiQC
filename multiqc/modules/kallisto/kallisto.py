@@ -6,7 +6,7 @@ from typing import Dict, Optional
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.bargraph import BarPlotConfig
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Kallisto",
             anchor="kallisto",
             href="http://pachterlab.github.io/kallisto/",

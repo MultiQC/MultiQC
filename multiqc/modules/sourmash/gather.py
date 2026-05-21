@@ -3,8 +3,8 @@
 import csv
 import logging
 
-from multiqc.plots import bargraph
 from multiqc import config
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)

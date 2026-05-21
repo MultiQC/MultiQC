@@ -1,10 +1,7 @@
-from collections import defaultdict
-
 import csv
-
 import json
-
 import logging
+from collections import defaultdict
 from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -33,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Iso-Seq",
             anchor="isoseq",
             href="https://github.com/PacificBiosciences/IsoSeq",

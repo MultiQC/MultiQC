@@ -1,0 +1,10 @@
+name: Request
+description: Suggest a feature/idea for MultiQC or for an existing module
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of feature
+      description: Please describe your suggestion. It might help to describe a problem or use case, plus any alternatives that you have considered.
+    validations:
+      required: true

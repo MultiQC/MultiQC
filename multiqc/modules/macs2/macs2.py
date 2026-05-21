@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="MACS2",
             anchor="macs",
             href="https://macs3-project.github.io/MACS/",
@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "MACS2: Filtered Fragments",
             "ylab": "# Fragments",
             "cpswitch_counts_label": "Number of Fragments",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
 
         self.add_section(plot=bargraph.plot(data, keys, pconfig))

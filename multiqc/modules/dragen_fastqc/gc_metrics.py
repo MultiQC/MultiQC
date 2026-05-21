@@ -126,9 +126,9 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             # 'colors': self.get_status_cols('per_base_sequence_quality'),
             "y_bands": [
-                {"from": 28, "to": 100, "color": "#c3e6c3"},
-                {"from": 20, "to": 28, "color": "#e6dcc3"},
-                {"from": 0, "to": 20, "color": "#e6c3c3"},
+                {"from": 28, "to": 100, "color": "#009500", "opacity": 0.13},
+                {"from": 20, "to": 28, "color": "#a07300", "opacity": 0.13},
+                {"from": 0, "to": 20, "color": "#990101", "opacity": 0.13},
             ],
         }
 
@@ -169,6 +169,8 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                 for pct, num_reads in gc_data.items():
                     reads_by_gc_sum += (1.0 * pct / 100) * num_reads
                     total_reads_sum += num_reads
+
+            data.clear()
 
             avg_gc_content_data[s_name] = {"avg_gc_content_percent": (reads_by_gc_sum * 100) / total_reads_sum}
 

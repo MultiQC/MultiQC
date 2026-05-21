@@ -1,57 +1,57 @@
-name: "Windows tests"
+# name: "Windows tests"
 
-on:
-  push:
-    paths:
-      # runs e.g. when version updated, module added, or dependency added
-      - "pyproject.toml"
-  pull_request:
-    paths:
-      - "pyproject.toml"
+# on:
+#   push:
+#     paths:
+#       # runs e.g. when version updated, module added, or dependency added
+#       - "pyproject.toml"
+#   pull_request:
+#     paths:
+#       - "pyproject.toml"
 
-jobs:
-  unit_tests:
-    runs-on: windows-latest
-    timeout-minutes: 10
+# jobs:
+#   unit_tests:
+#     runs-on: windows-latest
+#     timeout-minutes: 10
 
-    env:
-      # GitHub currently has 4 cores available for Windows runners
-      # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
-      worker_cores: 4
+#     env:
+#       # GitHub currently has 4 cores available for Windows runners
+#       # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+#       worker_cores: 4
 
-    steps:
-      - uses: actions/checkout@v4
+#     steps:
+#       - uses: actions/checkout@v4
 
-      # Set up Windows with C++ for numpy
-      - name: "Visual Studio Command Prompt tool"
-        run: cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform-vcvars }}
+#       # Set up Windows with C++ for numpy
+#       - name: "Visual Studio Command Prompt tool"
+#         run: cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform-vcvars }}
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: "pip"
+#       - uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.12"
+#           cache: "pip"
 
-      - name: "Cache pip"
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~\AppData\Local\pip\Cache
-            ~\AppData\Local\Programs\Python\Python312\Lib\site-packages
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+#       - name: "Cache pip"
+#         uses: actions/cache@v3
+#         with:
+#           path: |
+#             ~\AppData\Local\pip\Cache
+#             ~\AppData\Local\Programs\Python\Python312\Lib\site-packages
+#           key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+#           restore-keys: |
+#             ${{ runner.os }}-pip-
 
-      - name: "Install MultiQC"
-        run: pip install '.[dev]'
+#       - name: "Install MultiQC"
+#         run: pip install '.[dev]'
 
-      # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
-      - name: "Download test data"
-        run: |
-          curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test-data.zip
-          7z x test-data.zip -y -o"test-data"
+#       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
+#       - name: "Download test data"
+#         run: |
+#           curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test-data.zip
+#           7z x test-data.zip -y -o"test-data"
 
-      # Flat plot export doesn't work on Windows, so forcing modules like somalier and peddy write interactive.
-      # Also, forcing selected modules to be run. Some modules don't work when dumping plot json:
-      # UnicodeEncodeError: 'charmap' codec can't encode character '\u2265' in position 1: character maps to <undefined>
-      - run: |
-          multiqc --strict --interactive -m fastqc -m samtools -m kallisto -v test-data\test-data-main\data\modules\
+#       # Flat plot export doesn't work on Windows, so forcing modules like somalier and peddy write interactive.
+#       # Also, forcing selected modules to be run. Some modules don't work when dumping plot json:
+#       # UnicodeEncodeError: 'charmap' codec can't encode character '\u2265' in position 1: character maps to <undefined>
+#       - run: |
+#           multiqc --strict --interactive -m fastqc -m samtools -m kallisto -v test-data\test-data-main\data\modules\

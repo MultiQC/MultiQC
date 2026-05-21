@@ -1,0 +1,15 @@
+// Dark theme custom styles
+
+// Make btn-outline-secondary lighter in dark mode for better visibility
+.btn-outline-secondary {
+  --bs-btn-color: #adb5bd;
+  --bs-btn-border-color: #adb5bd;
+  --bs-btn-hover-color: #000;
+  --bs-btn-hover-bg: #adb5bd;
+  --bs-btn-hover-border-color: #adb5bd;
+  --bs-btn-active-color: #000;
+  --bs-btn-active-bg: #adb5bd;
+  --bs-btn-active-border-color: #adb5bd;
+  --bs-btn-disabled-color: #6c757d;
+  --bs-btn-disabled-border-color: #6c757d;
+}

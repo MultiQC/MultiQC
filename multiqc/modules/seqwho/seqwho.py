@@ -1,10 +1,9 @@
 import json
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import linegraph, bargraph
+from multiqc.plots import bargraph, linegraph
 from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
@@ -16,7 +15,7 @@ SPECIES = ["human", "mouse"]
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="SeqWho",
             anchor="seqwho",
             href="https://daehwankimlab.github.io/seqwho/",
@@ -81,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Get sample name from JSON first
         for s_name, data in parsed_json.items():
-            s_name = self.clean_s_name(s_name, f["root"])
+            s_name = self.clean_s_name(s_name, f)
             self.add_data_source(f, s_name)
             self.seqwho_data[s_name] = {}
 
@@ -98,19 +97,19 @@ class MultiqcModule(BaseMultiqcModule):
                 self.seqwho_data[s_name][i] = mle_matrix[i]
 
             # Make a Quality Score vs count  version of the data
-            self.seqwho_qualdis[s_name] = OrderedDict()
+            self.seqwho_qualdis[s_name] = {}
             qual_dist = data["Quality Dist"]
             for i in range(len(qual_dist)):
                 self.seqwho_qualdis[s_name][i] = qual_dist[i]
 
             # Make a Quality score vs position  version of the data
-            self.seqwho_qualscore[s_name] = OrderedDict()
+            self.seqwho_qualscore[s_name] = {}
             qual_scores = data["Quality Scores"]
             for i in range(len(qual_scores)):
                 self.seqwho_qualscore[s_name][i] = qual_scores[i]
 
             # Make a Read Length vs count of the data
-            self.seqwho_readdist[s_name] = OrderedDict()
+            self.seqwho_readdist[s_name] = {}
             read_dist = data["Read lengths"]
             for i in range(len(read_dist)):
                 self.seqwho_readdist[s_name][i] = read_dist[i]

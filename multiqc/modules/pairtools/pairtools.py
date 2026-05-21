@@ -1,15 +1,13 @@
+import logging
 import os
+from itertools import zip_longest
 from typing import Dict
 
 import yaml
-import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, linegraph
-
-from itertools import zip_longest
 from multiqc.modules.pairtools.utils import read_stats_from_file
-
+from multiqc.plots import bargraph, linegraph
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="pairtools",
             anchor="pairtools",
             href="https://github.com/mirnylab/pairtools",

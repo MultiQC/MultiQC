@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="BioBloom Tools",
             anchor="biobloomtools",
             href="https://github.com/bcgsc/biobloom/",
@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "biobloom_tools",
             "title": "BioBloom Tools: Alignment counts per species",
             "ylab": "Number of hits",
-            "hide_empty": False,
+            "hide_zero_cats": False,
         }
         cats["multiMatch"] = {"name": "Multiple Genomes", "color": "#820000"}
         cats["noMatch"] = {"name": "No Match", "color": "#cccccc"}

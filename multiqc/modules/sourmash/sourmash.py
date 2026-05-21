@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule, CompareMixin, GatherMixin):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Sourmash",
             anchor="sourmash",
             href="https://github.com/sourmash-bio/sourmash",
