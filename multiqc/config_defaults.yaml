@@ -88,8 +88,8 @@ ai_extended_thinking: false # Enable extended thinking for Anthropic Claude 4 mo
 ai_thinking_budget_tokens: null # Budget tokens for Anthropic extended thinking
 
 # Development settings:
-seqera_api_url: "https://intern.seqera.io"
-seqera_website: "https://seqera.io"
+seqera_api_url: "https://ai.seqera.io/v1/web"
+seqera_website: "https://ai.seqera.io"
 
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts

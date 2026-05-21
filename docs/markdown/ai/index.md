@@ -12,7 +12,7 @@ MultiQC v1.27 and newer can generate AI-powered summaries of your reports. These
 
 The AI summaries are generated using LLMs (large-language models) AI, with the following supported providers:
 
-- [Seqera AI](https://seqera.io/ask-ai/)
+- [Seqera AI](https://ai.seqera.io/)
 - [OpenAI](https://openai.com/)
 - [Anthropic](https://www.anthropic.com/)
 - [AWS Bedrock](https://aws.amazon.com/bedrock/)
@@ -34,7 +34,7 @@ To use native summary generation, MultiQC needs to communicate with an LLM provi
 All three supported services require an API key to work.
 Remember: Treat your API keys like passwords and do not share them.
 
-- [Seqera AI](https://seqera.io/ask-ai/)
+- [Seqera AI](https://ai.seqera.io/)
   - Register for free at [seqera.io](https://seqera.io/)
   - Create a new key on the **Access tokens** page: [https://cloud.seqera.io/tokens](https://cloud.seqera.io/tokens)
 - [OpenAI](https://openai.com/)
