@@ -3272,15 +3272,27 @@ Authentication scheme used by the custom endpoint. 'bearer' sends an Authorizati
 
 #### `seqera_website`
 
+**Type**: <code>str</code> (default: `"https://seqera.io"`)
+
+Base URL of the main Seqera website used for marketing/info links in the report.
+
+#### `seqera_ai_url`
+
 **Type**: <code>str</code> (default: `"https://ai.seqera.io"`)
 
-Base URL used for Seqera Platform links in the report.
+Base URL of the Seqera AI web app, used for `Continue in chat` links.
 
-#### `seqera_api_url`
+#### `seqera_ai_api_url`
 
 **Type**: <code>str</code> (default: `"https://ai.seqera.io/v1/web"`)
 
-Base URL for the Seqera Platform API. Defaults to the public instance.
+Base URL for the Seqera AI backend API used by the Seqera AI provider.
+
+#### `seqera_api_url`
+
+**Type**: <code>str</code> _(deprecated)_
+
+Deprecated. Use `seqera_ai_api_url` instead.
 
 ### Tuning
 

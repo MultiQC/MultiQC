@@ -969,10 +969,17 @@ class MultiQCConfig(BaseModel):
                 ),
             )
             seqera_website: Optional[str] = cfg(
-                "Base URL used for Seqera Platform links in the report.",
+                "Base URL of the main Seqera website used for marketing/info links in the report.",
+            )
+            seqera_ai_url: Optional[str] = cfg(
+                "Base URL of the Seqera AI web app, used for `Continue in chat` links.",
+            )
+            seqera_ai_api_url: Optional[str] = cfg(
+                "Base URL for the Seqera AI backend API used by the Seqera AI provider.",
             )
             seqera_api_url: Optional[str] = cfg(
-                "Base URL for the Seqera Platform API. Defaults to the public instance.",
+                "Deprecated. Use `seqera_ai_api_url` instead.",
+                deprecated="Use `seqera_ai_api_url` instead.",
             )
         with group("Tuning"):
             ai_retries: Optional[int] = cfg(

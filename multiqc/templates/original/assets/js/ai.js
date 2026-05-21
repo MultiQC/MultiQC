@@ -4,12 +4,12 @@
 
 window.continueInSeqeraChatHandler = function (event) {
   let el = $(event.currentTarget);
-  let seqeraWebsite = el.data("seqera-website");
+  let seqeraAiUrl = el.data("seqera-ai-url");
 
   // Either report uuid, or encoded system and chat messages
   let threadId = el.data("thread-id");
 
-  let url = seqeraWebsite;
+  let url = seqeraAiUrl;
   if (threadId) url += "/chat/" + threadId;
 
   window.open(url, "_blank");
@@ -330,7 +330,7 @@ async function summarizeWithAi(button) {
         wrapUpResponse(disclaimerDiv, provider.name, modelName);
         // Update the "Chat with Seqera AI" button to point to new thread
         if (threadId) {
-          continueInChatButton.attr("href", `${seqeraWebsite}/chat/${threadId}`).show();
+          continueInChatButton.attr("href", `${seqeraAiUrl}/chat/${threadId}`).show();
         }
         // Save response to localStorage
         const elementId = button.data("plot-anchor") || "global";
@@ -464,7 +464,7 @@ $(function () {
 
         const threadId = cachedSummary.threadId;
         if (threadId) {
-          continueInChatButton.attr("href", `${seqeraWebsite}/chat/${threadId}`);
+          continueInChatButton.attr("href", `${seqeraAiUrl}/chat/${threadId}`);
           continueInChatButton.show();
         }
       }
