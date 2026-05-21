@@ -7,12 +7,7 @@
         "type": {
           "default": "truncate",
           "description": "Type of pattern matching to use",
-          "enum": [
-            "truncate",
-            "remove",
-            "regex",
-            "regex_keep"
-          ],
+          "enum": ["truncate", "remove", "regex", "regex_keep"],
           "title": "Type",
           "type": "string"
         },
@@ -41,9 +36,7 @@
           "title": "Module"
         }
       },
-      "required": [
-        "pattern"
-      ],
+      "required": ["pattern"],
       "title": "CleanPattern",
       "type": "object"
     },
@@ -839,9 +832,7 @@
       ],
       "default": null,
       "description": "Free-text comment shown at the top of the report. HTML is allowed.",
-      "examples": [
-        "This report was generated from the RNA-seq pipeline on 2024-08-21."
-      ],
+      "examples": ["This report was generated from the RNA-seq pipeline on 2024-08-21."],
       "group": "Header text",
       "multiline": true,
       "section": "Report Meta",
@@ -925,9 +916,7 @@
       ],
       "default": null,
       "description": "Name of the report template. Built-in templates: default, original, simple, sections, gathered, geo, disco. Plugin packages can register additional templates via the `multiqc.templates.v1` entry point.",
-      "examples": [
-        "default"
-      ],
+      "examples": ["default"],
       "group": "Template",
       "section": "Report Appearance",
       "title": "Template"
@@ -973,10 +962,7 @@
       ],
       "default": null,
       "description": "Path to an image to show at the top of the report, replacing the MultiQC logo.",
-      "examples": [
-        "/path/to/logo.png",
-        "./assets/logo.svg"
-      ],
+      "examples": ["/path/to/logo.png", "./assets/logo.svg"],
       "group": "Logo",
       "section": "Report Appearance",
       "title": "Custom Logo"
@@ -992,9 +978,7 @@
       ],
       "default": null,
       "description": "Path to an alternative logo for dark mode. Falls back to custom_logo if unset.",
-      "examples": [
-        "./assets/logo_dark.svg"
-      ],
+      "examples": ["./assets/logo_dark.svg"],
       "group": "Logo",
       "section": "Report Appearance",
       "title": "Custom Logo Dark"
@@ -1010,9 +994,7 @@
       ],
       "default": null,
       "description": "URL the custom logo links to when clicked.",
-      "examples": [
-        "https://www.scilifelab.se"
-      ],
+      "examples": ["https://www.scilifelab.se"],
       "group": "Logo",
       "section": "Report Appearance",
       "title": "Custom Logo Url"
@@ -1028,9 +1010,7 @@
       ],
       "default": null,
       "description": "Tooltip text shown when hovering over the custom logo.",
-      "examples": [
-        "Our institute name"
-      ],
+      "examples": ["Our institute name"],
       "group": "Logo",
       "section": "Report Appearance",
       "title": "Custom Logo Title"
@@ -1047,9 +1027,7 @@
       ],
       "default": null,
       "description": "Logo width in pixels. Height scales proportionally.",
-      "examples": [
-        200
-      ],
+      "examples": [200],
       "group": "Logo",
       "section": "Report Appearance",
       "title": "Custom Logo Width"
@@ -1065,10 +1043,7 @@
       ],
       "default": null,
       "description": "Path to a custom favicon image to show in the browser tab.",
-      "examples": [
-        "/path/to/favicon.ico",
-        "./assets/favicon.png"
-      ],
+      "examples": ["/path/to/favicon.ico", "./assets/favicon.png"],
       "group": "Branding",
       "section": "Report Appearance",
       "title": "Custom Favicon"
@@ -1087,12 +1062,7 @@
       ],
       "default": null,
       "description": "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
-      "examples": [
-        [
-          "./assets/custom.css",
-          "/path/to/branding.css"
-        ]
-      ],
+      "examples": [["./assets/custom.css", "/path/to/branding.css"]],
       "group": "Branding",
       "section": "Report Appearance",
       "title": "Custom Css Files"
@@ -1126,10 +1096,7 @@
               "section_name": "My Custom Section"
             }
           },
-          "order": [
-            "my-section-id",
-            "my-other-section-id"
-          ]
+          "order": ["my-section-id", "my-other-section-id"]
         }
       ],
       "group": "Custom content",
@@ -1194,12 +1161,7 @@
       ],
       "default": null,
       "description": "Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.",
-      "examples": [
-        [
-          "fastqc",
-          "cutadapt"
-        ]
-      ],
+      "examples": [["fastqc", "cutadapt"]],
       "group": "Module ordering",
       "section": "Report Contents",
       "title": "Top Modules"
@@ -1234,9 +1196,7 @@
           {
             "fastqc": {
               "name": "FastQC (trimmed)",
-              "path_filters": [
-                "*_trimmed*"
-              ]
+              "path_filters": ["*_trimmed*"]
             }
           },
           {
@@ -1266,13 +1226,7 @@
       ],
       "default": null,
       "description": "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
-      "examples": [
-        [
-          "fastqc",
-          "cutadapt",
-          "samtools"
-        ]
-      ],
+      "examples": [["fastqc", "cutadapt", "samtools"]],
       "group": "Module ordering",
       "section": "Report Contents",
       "title": "Run Modules"
@@ -1291,11 +1245,7 @@
       ],
       "default": null,
       "description": "Module IDs to skip (mirror of the --exclude CLI flag).",
-      "examples": [
-        [
-          "fastqc"
-        ]
-      ],
+      "examples": [["fastqc"]],
       "group": "Module ordering",
       "section": "Report Contents",
       "title": "Exclude Modules"
@@ -1314,12 +1264,7 @@
       ],
       "default": null,
       "description": "Module sections to hide. Use the section anchor as it appears in the URL.",
-      "examples": [
-        [
-          "fastqc_overrepresented_sequences",
-          "gatk-compare-overlap"
-        ]
-      ],
+      "examples": [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
       "group": "Module ordering",
       "section": "Report Contents",
       "title": "Remove Sections"
@@ -1513,12 +1458,7 @@
     "data_format": {
       "anyOf": [
         {
-          "enum": [
-            "tsv",
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "enum": ["tsv", "csv", "json", "yaml"],
           "type": "string"
         },
         {
@@ -1559,10 +1499,7 @@
     "parquet_format": {
       "anyOf": [
         {
-          "enum": [
-            "long",
-            "wide"
-          ],
+          "enum": ["long", "wide"],
           "type": "string"
         },
         {
@@ -1624,11 +1561,7 @@
       "anyOf": [
         {
           "items": {
-            "enum": [
-              "png",
-              "svg",
-              "pdf"
-            ],
+            "enum": ["png", "svg", "pdf"],
             "type": "string"
           },
           "type": "array"
@@ -1745,10 +1678,7 @@
       ],
       "default": null,
       "description": "String inserted between directory names and the sample name. Defaults to '|'.",
-      "examples": [
-        "_",
-        " - "
-      ],
+      "examples": ["_", " - "],
       "group": "Prepend directory",
       "section": "Sample Names",
       "title": "Prepend Dirs Sep"
@@ -1793,9 +1723,7 @@
         [
           ".mySuffix",
           {
-            "module": [
-              "samtools"
-            ],
+            "module": ["samtools"],
             "pattern": "_tmp",
             "type": "remove"
           }
@@ -1819,12 +1747,7 @@
       ],
       "default": null,
       "description": "Strings appended to the built-in trim list, without overriding defaults.",
-      "examples": [
-        [
-          "sample_",
-          "_processed"
-        ]
-      ],
+      "examples": [["sample_", "_processed"]],
       "group": "Name cleaning",
       "section": "Sample Names",
       "title": "Extra Fn Clean Trim"
@@ -1879,13 +1802,7 @@
       ],
       "default": null,
       "description": "Strings trimmed from the start or end of sample names. Replaces the built-in list.",
-      "examples": [
-        [
-          "_R1",
-          "_R2",
-          "_001"
-        ]
-      ],
+      "examples": [["_R1", "_R2", "_001"]],
       "group": "Name cleaning",
       "section": "Sample Names",
       "title": "Fn Clean Trim"
@@ -1925,12 +1842,7 @@
       ],
       "default": null,
       "description": "Glob patterns. Matching samples are dropped from the report.",
-      "examples": [
-        [
-          "*_temp",
-          "control_*"
-        ]
-      ],
+      "examples": [["*_temp", "control_*"]],
       "group": "Ignore samples",
       "section": "Sample Names",
       "title": "Sample Names Ignore"
@@ -1949,12 +1861,7 @@
       ],
       "default": null,
       "description": "Regex patterns. Matching samples are dropped from the report.",
-      "examples": [
-        [
-          "^test_.*",
-          ".*_neg_ctrl$"
-        ]
-      ],
+      "examples": [["^test_.*", ".*_neg_ctrl$"]],
       "group": "Ignore samples",
       "section": "Sample Names",
       "title": "Sample Names Ignore Re"
@@ -1973,12 +1880,7 @@
       ],
       "default": null,
       "description": "Glob patterns. If set, only matching samples are kept.",
-      "examples": [
-        [
-          "RNA_*",
-          "Sample_??"
-        ]
-      ],
+      "examples": [["RNA_*", "Sample_??"]],
       "group": "Ignore samples",
       "section": "Sample Names",
       "title": "Sample Names Only Include"
@@ -1997,11 +1899,7 @@
       ],
       "default": null,
       "description": "Regex patterns. If set, only matching samples are kept.",
-      "examples": [
-        [
-          "^WGS_[0-9]+$"
-        ]
-      ],
+      "examples": [["^WGS_[0-9]+$"]],
       "group": "Ignore samples",
       "section": "Sample Names",
       "title": "Sample Names Only Include Re"
@@ -2025,18 +1923,9 @@
       "description": "Toolbox rename rows. Each entry is a list where the first element is the source sample name and each subsequent element is the rename for the corresponding button in `sample_names_rename_buttons` (so inner lists should have `1 + len(sample_names_rename_buttons)` elements).",
       "examples": [
         [
-          [
-            "SMP001",
-            "Patient_A"
-          ],
-          [
-            "SMP002",
-            "Patient_B"
-          ],
-          [
-            "SMP003",
-            "Patient_C"
-          ]
+          ["SMP001", "Patient_A"],
+          ["SMP002", "Patient_B"],
+          ["SMP003", "Patient_C"]
         ]
       ],
       "group": "Rename and replace",
@@ -2057,13 +1946,7 @@
       ],
       "default": null,
       "description": "Names of the toolbox buttons that switch between the rename groups defined in sample_names_rename.",
-      "examples": [
-        [
-          "Sample ID",
-          "Patient ID",
-          "Lane"
-        ]
-      ],
+      "examples": [["Sample ID", "Patient ID", "Lane"]],
       "group": "Rename and replace",
       "section": "Sample Names",
       "title": "Sample Names Rename Buttons"
@@ -2243,13 +2126,7 @@
       ],
       "default": null,
       "description": "Glob patterns for directory names to skip entirely during the file search.",
-      "examples": [
-        [
-          "work",
-          ".nextflow",
-          "*_logs"
-        ]
-      ],
+      "examples": [["work", ".nextflow", "*_logs"]],
       "group": "Skip patterns",
       "section": "File Discovery",
       "title": "Fn Ignore Dirs"
@@ -2268,12 +2145,7 @@
       ],
       "default": null,
       "description": "Glob patterns for paths to skip during the file search.",
-      "examples": [
-        [
-          "*/test_data/*",
-          "*/.snakemake/*"
-        ]
-      ],
+      "examples": [["*/test_data/*", "*/.snakemake/*"]],
       "group": "Skip patterns",
       "section": "File Discovery",
       "title": "Fn Ignore Paths"
@@ -2292,13 +2164,7 @@
       ],
       "default": null,
       "description": "Glob patterns for file names to skip during the file search.",
-      "examples": [
-        [
-          "*.bai",
-          "*.bak",
-          "*.tmp"
-        ]
-      ],
+      "examples": [["*.bai", "*.bak", "*.tmp"]],
       "group": "Skip patterns",
       "section": "File Discovery",
       "title": "Fn Ignore Files"
@@ -2527,12 +2393,7 @@
     "boxplot_boxpoints": {
       "anyOf": [
         {
-          "enum": [
-            "outliers",
-            "suspectedoutliers",
-            "all",
-            false
-          ]
+          "enum": ["outliers", "suspectedoutliers", "all", false]
         },
         {
           "type": "null"
@@ -2638,12 +2499,7 @@
       ],
       "default": null,
       "description": "Substring (or regex) patterns. Matching samples are highlighted in plots and tables.",
-      "examples": [
-        [
-          "control",
-          "treated"
-        ]
-      ],
+      "examples": [["control", "treated"]],
       "group": "Highlighting",
       "section": "Toolbox",
       "title": "Highlight Patterns"
@@ -2662,12 +2518,7 @@
       ],
       "default": null,
       "description": "CSS colour for each entry in highlight_patterns, in the same order. Accepts hex (`#377eb8`), named colours (`red`), or any CSS colour function (`rgb(...)`, `hsl(...)`).",
-      "examples": [
-        [
-          "#377eb8",
-          "#e41a1c"
-        ]
-      ],
+      "examples": [["#377eb8", "#e41a1c"]],
       "group": "Highlighting",
       "section": "Toolbox",
       "title": "Highlight Colors"
@@ -2701,12 +2552,7 @@
       ],
       "default": null,
       "description": "Labels for the toolbox show/hide buttons. One per pattern set.",
-      "examples": [
-        [
-          "Tumour samples",
-          "Normal samples"
-        ]
-      ],
+      "examples": [["Tumour samples", "Normal samples"]],
       "group": "Show/hide buttons",
       "section": "Toolbox",
       "title": "Show Hide Buttons"
@@ -2737,14 +2583,8 @@
       "description": "Patterns for each show/hide button. Each entry is a string or list of strings to match against sample names.",
       "examples": [
         [
-          [
-            "_T_",
-            "_tumour_"
-          ],
-          [
-            "_N_",
-            "_normal_"
-          ]
+          ["_T_", "_tumour_"],
+          ["_N_", "_normal_"]
         ]
       ],
       "group": "Show/hide buttons",
@@ -2755,12 +2595,7 @@
       "anyOf": [
         {
           "items": {
-            "enum": [
-              "show",
-              "hide",
-              "show_re",
-              "hide_re"
-            ],
+            "enum": ["show", "hide", "show_re", "hide_re"],
             "type": "string"
           },
           "type": "array"
@@ -2771,12 +2606,7 @@
       ],
       "default": null,
       "description": "Action for each show/hide button: 'show' (only show matches), 'hide' (hide matches), or their `_re` variants which signal regex patterns (set by the TSV loader).",
-      "examples": [
-        [
-          "show",
-          "show"
-        ]
-      ],
+      "examples": [["show", "show"]],
       "group": "Show/hide buttons",
       "section": "Toolbox",
       "title": "Show Hide Mode"
@@ -2802,12 +2632,7 @@
       ],
       "default": null,
       "description": "Whether each pattern set is treated as regex. List of bools aligned with show_hide_buttons.",
-      "examples": [
-        [
-          false,
-          false
-        ]
-      ],
+      "examples": [[false, false]],
       "group": "Show/hide buttons",
       "section": "Toolbox",
       "title": "Show Hide Regex"
@@ -2862,9 +2687,7 @@
     "decimalPoint_format": {
       "default": ".",
       "description": "Decimal-point character used in formatted numbers. Defaults to `.`",
-      "examples": [
-        ","
-      ],
+      "examples": [","],
       "group": "General",
       "section": "Table Settings",
       "title": "Decimalpoint Format",
@@ -2873,9 +2696,7 @@
     "thousandsSep_format": {
       "default": " ",
       "description": "Thousands separator used in formatted numbers. Defaults to a single space, which is rendered as a small non-breaking space.",
-      "examples": [
-        ","
-      ],
+      "examples": [","],
       "group": "General",
       "section": "Table Settings",
       "title": "Thousandssep Format",
@@ -3268,10 +3089,7 @@
           "samtools": "1.20"
         },
         {
-          "quast": [
-            "5.2.0",
-            "5.1.0"
-          ]
+          "quast": ["5.2.0", "5.1.0"]
         },
         {
           "samtools": {
@@ -3341,9 +3159,7 @@
       ],
       "default": null,
       "description": "Multiplier applied to read counts before display. Default 0.000001 shows reads in millions.",
-      "examples": [
-        0.001
-      ],
+      "examples": [0.001],
       "group": "Short reads",
       "section": "Read & Base Counts",
       "title": "Read Count Multiplier"
@@ -3359,9 +3175,7 @@
       ],
       "default": null,
       "description": "Suffix shown after formatted read counts, eg. 'M' for millions.",
-      "examples": [
-        "K"
-      ],
+      "examples": ["K"],
       "group": "Short reads",
       "section": "Read & Base Counts",
       "title": "Read Count Prefix"
@@ -3377,10 +3191,7 @@
       ],
       "default": null,
       "description": "Word used in plot/axis labels for read counts, eg. 'millions'.",
-      "examples": [
-        "thousands",
-        "raw reads"
-      ],
+      "examples": ["thousands", "raw reads"],
       "group": "Short reads",
       "section": "Read & Base Counts",
       "title": "Read Count Desc"
@@ -3397,9 +3208,7 @@
       ],
       "default": null,
       "description": "Multiplier for long-read counts. Default 0.001 shows counts in thousands.",
-      "examples": [
-        1e-06
-      ],
+      "examples": [1e-6],
       "group": "Long reads",
       "section": "Read & Base Counts",
       "title": "Long Read Count Multiplier"
@@ -3415,9 +3224,7 @@
       ],
       "default": null,
       "description": "Suffix shown after formatted long-read counts, eg. 'K' for thousands.",
-      "examples": [
-        "M"
-      ],
+      "examples": ["M"],
       "group": "Long reads",
       "section": "Read & Base Counts",
       "title": "Long Read Count Prefix"
@@ -3433,9 +3240,7 @@
       ],
       "default": null,
       "description": "Word used in labels for long-read counts, eg. 'thousands'.",
-      "examples": [
-        "millions"
-      ],
+      "examples": ["millions"],
       "group": "Long reads",
       "section": "Read & Base Counts",
       "title": "Long Read Count Desc"
@@ -3452,9 +3257,7 @@
       ],
       "default": null,
       "description": "Multiplier for base counts. Default 0.000001 shows bases in megabases.",
-      "examples": [
-        0.001
-      ],
+      "examples": [0.001],
       "group": "Bases",
       "section": "Read & Base Counts",
       "title": "Base Count Multiplier"
@@ -3470,9 +3273,7 @@
       ],
       "default": null,
       "description": "Suffix shown after formatted base counts, eg. 'Mb' for megabases.",
-      "examples": [
-        "Kb"
-      ],
+      "examples": ["Kb"],
       "group": "Bases",
       "section": "Read & Base Counts",
       "title": "Base Count Prefix"
@@ -3488,9 +3289,7 @@
       ],
       "default": null,
       "description": "Word used in labels for base counts, eg. 'megabases'.",
-      "examples": [
-        "kilobases"
-      ],
+      "examples": ["kilobases"],
       "group": "Bases",
       "section": "Read & Base Counts",
       "title": "Base Count Desc"
@@ -3551,9 +3350,7 @@
       ],
       "default": null,
       "description": "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
-      "examples": [
-        "Write the summary in one short paragraph aimed at a lab head, no jargon."
-      ],
+      "examples": ["Write the summary in one short paragraph aimed at a lab head, no jargon."],
       "group": "Prompts",
       "multiline": true,
       "section": "AI Summary",
@@ -3570,9 +3367,7 @@
       ],
       "default": null,
       "description": "Custom prompt prepended to the full-section AI summary request.",
-      "examples": [
-        "Use bullet points and call out any sample that looks like an outlier."
-      ],
+      "examples": ["Use bullet points and call out any sample that looks like an outlier."],
       "group": "Prompts",
       "multiline": true,
       "section": "AI Summary",
@@ -3596,13 +3391,7 @@
     "ai_provider": {
       "anyOf": [
         {
-          "enum": [
-            "seqera",
-            "openai",
-            "anthropic",
-            "aws_bedrock",
-            "custom"
-          ],
+          "enum": ["seqera", "openai", "anthropic", "aws_bedrock", "custom"],
           "type": "string"
         },
         {
@@ -3626,10 +3415,7 @@
       ],
       "default": null,
       "description": "Model name. Provider-specific.",
-      "examples": [
-        "gpt-4o",
-        "claude-sonnet-4-5."
-      ],
+      "examples": ["gpt-4o", "claude-sonnet-4-5."],
       "group": "Provider",
       "section": "AI Summary",
       "title": "Ai Model"
@@ -3645,10 +3431,7 @@
       ],
       "default": null,
       "description": "Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
-      "examples": [
-        "http://localhost:11434/v1",
-        "https://api.example.com/v1"
-      ],
+      "examples": ["http://localhost:11434/v1", "https://api.example.com/v1"],
       "group": "Provider",
       "section": "AI Summary",
       "title": "Ai Custom Endpoint"
@@ -3656,10 +3439,7 @@
     "ai_auth_type": {
       "anyOf": [
         {
-          "enum": [
-            "bearer",
-            "api-key"
-          ],
+          "enum": ["bearer", "api-key"],
           "type": "string"
         },
         {
@@ -3806,11 +3586,7 @@
     "ai_reasoning_effort": {
       "anyOf": [
         {
-          "enum": [
-            "low",
-            "medium",
-            "high"
-          ],
+          "enum": ["low", "medium", "high"],
           "type": "string"
         },
         {
