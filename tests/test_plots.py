@@ -1,6 +1,6 @@
 import sys
 import tempfile
-from typing import Dict, List, Union
+from typing import Dict, List, Sequence, Union
 from unittest.mock import patch
 
 import pytest
@@ -10,8 +10,8 @@ from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.plot import Plot, process_batch_exports
-from multiqc.plots.table_object import ColumnDict
-from multiqc.types import Anchor
+from multiqc.plots.table_object import ColumnDict, InputRow, render_html
+from multiqc.types import Anchor, SampleGroup, SampleName
 from multiqc.validation import ModuleConfigValidationError
 
 
@@ -1061,6 +1061,150 @@ def test_table_default_sort():
     assert isinstance(p, Plot)
     sort_string = _get_sortlist_js(p.datasets[0].dt)
     assert sort_string == "[[2, 1], [1, 0]]"
+
+
+def test_table_pagination_config_defaults():
+    pconfig = table.TableConfig(id="pagination_defaults", title="Pagination Defaults")
+
+    assert pconfig.pagination is False
+    assert pconfig.default_rows_per_page == 25
+
+
+def _pagination_table_data(n_rows: int = 4):
+    return {f"sample_{idx}": {"metric": idx} for idx in range(n_rows)}
+
+
+def test_paginated_table_above_max_table_rows_still_renders_table(reset):
+    config.max_table_rows = 2
+
+    p = table.plot(
+        data=_pagination_table_data(4),
+        headers={"metric": {"title": "Metric"}},
+        pconfig=table.TableConfig(
+            id="paginated_large_table",
+            title="Paginated Large Table",
+            pagination=True,
+            default_rows_per_page=25,
+        ),
+    )
+
+    assert isinstance(p, Plot)
+    assert p.show_table is True
+
+
+def test_non_paginated_table_above_max_table_rows_keeps_violin_fallback(reset):
+    config.max_table_rows = 2
+
+    p = table.plot(
+        data=_pagination_table_data(4),
+        headers={"metric": {"title": "Metric"}},
+        pconfig=table.TableConfig(
+            id="non_paginated_large_table",
+            title="Non Paginated Large Table",
+            pagination=False,
+        ),
+    )
+
+    assert isinstance(p, Plot)
+    assert p.show_table is False
+
+
+def test_paginated_table_markup_includes_metadata_and_controls(reset):
+    p = table.plot(
+        data=_pagination_table_data(12),
+        headers={"metric": {"title": "Metric"}},
+        pconfig=table.TableConfig(
+            id="paginated_markup_table",
+            title='Paginated "Markup" Table',
+            pagination=True,
+            default_rows_per_page=10,
+        ),
+    )
+
+    assert isinstance(p, Plot)
+    html, modal = render_html(
+        p.datasets[0].dt,
+        violin_anchor=p.anchor,
+        module_anchor=Anchor("test_module"),
+        section_anchor=Anchor("test_section"),
+    )
+
+    assert p.datasets[0].dt.anchor != p.datasets[0].dt.id
+    assert 'data-pagination-enabled="true"' in html
+    assert 'data-pagination-rows-per-page="10"' in html
+    assert 'class="mqc-table-pagination"' in html
+    assert f'<nav class="mqc-table-pagination" data-table-anchor="{p.datasets[0].dt.anchor}"' in html
+    assert 'aria-label="Pagination for Paginated &quot;Markup&quot; Table"' in html
+    assert modal
+
+
+def test_paginated_table_markup_total_rows_counts_rendered_group_rows(reset):
+    data: Dict[Union[str, SampleGroup], Sequence[InputRow]] = {
+        SampleGroup("sample_group_00"): [
+            InputRow(sample=SampleName("sample_group_00"), data={"metric": 0}),
+            InputRow(sample=SampleName("sample_group_00_rep_1"), data={"metric": 1}),
+        ]
+    }
+    for idx in range(1, 11):
+        data[SampleGroup(f"sample_group_{idx:02d}")] = [
+            InputRow(sample=SampleName(f"sample_group_{idx:02d}"), data={"metric": idx})
+        ]
+
+    p = table.plot(
+        data=data,
+        headers={"metric": {"title": "Metric"}},
+        pconfig=table.TableConfig(
+            id="paginated_grouped_markup_table",
+            title="Paginated Grouped Markup Table",
+            pagination=True,
+            default_rows_per_page=10,
+        ),
+    )
+
+    assert isinstance(p, Plot)
+    html, _ = render_html(
+        p.datasets[0].dt,
+        violin_anchor=p.anchor,
+        module_anchor=Anchor("test_module"),
+        section_anchor=Anchor("test_section"),
+    )
+
+    assert 'data-pagination-enabled="true"' in html
+    assert 'data-pagination-total-rows="12"' in html
+
+
+def test_non_paginated_table_markup_does_not_include_controls(reset):
+    p = table.plot(
+        data=_pagination_table_data(4),
+        headers={"metric": {"title": "Metric"}},
+        pconfig=table.TableConfig(
+            id="non_paginated_markup_table",
+            title="Non Paginated Markup Table",
+            pagination=False,
+        ),
+    )
+
+    assert isinstance(p, Plot)
+    html, _ = render_html(
+        p.datasets[0].dt,
+        violin_anchor=p.anchor,
+        module_anchor=Anchor("test_module"),
+        section_anchor=Anchor("test_section"),
+    )
+
+    assert 'data-pagination-enabled="false"' in html
+    assert 'class="mqc-table-pagination"' not in html
+
+
+def test_table_pagination_default_rows_per_page_validation(reset):
+    config.strict = True
+
+    with pytest.raises(ModuleConfigValidationError):
+        table.TableConfig(
+            id="pagination_invalid_rows_per_page",
+            title="Pagination Invalid Rows Per Page",
+            default_rows_per_page=12,
+        )
 
 
 def test_table_custom_plot_config_hidden(reset):

@@ -639,7 +639,11 @@ class MultiQCConfig(BaseModel):
                         "fastqc_per_base_sequence_quality_plot": {
                             "title": "FastQC: Mean Quality Scores (custom)",
                             "yaxis": {"title": "Phred score"},
-                        }
+                        },
+                        "general_stats_table": {
+                            "pagination": True,
+                            "default_rows_per_page": 25,
+                        },
                     }
                 ],
             )

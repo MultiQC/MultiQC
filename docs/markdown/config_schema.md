@@ -2589,6 +2589,9 @@ custom_plot_config:
     title: "FastQC: Mean Quality Scores (custom)"
     yaxis:
       title: Phred score
+  general_stats_table:
+    pagination: true
+    default_rows_per_page: 25
 ```
 
 #### `lineplot_number_of_points_to_hide_markers`
