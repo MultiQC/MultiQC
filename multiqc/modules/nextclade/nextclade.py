@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/nextstrain/nextclade",
             info="Viral genome alignment, clade assignment, mutation calling, and quality checks",
             extra="""
-            Nextclade assigns input sequences to SARS-Cov-2 clades based on differences between the input sequences 
+            Nextclade assigns input sequences to clades and lineages based on differences between the input sequences 
             and [Nextstrain](https://nextstrain.org/) reference sequences. In addition, it judges the validity of 
             the samples by performing several quality control checks on the input sequences.
             """,
@@ -98,6 +98,11 @@ class MultiqcModule(BaseMultiqcModule):
             "clade": {
                 "title": "Clade",
                 "description": "The inferred clade from the input sequence and reference tree",
+                "scale": False,
+            },
+            "lineage": {
+                "title": "Lineage",
+                "description": "The inferred lineage from the input sequence and reference tree",
                 "scale": False,
             },
             "qc_overallscore": {
