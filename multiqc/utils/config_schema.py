@@ -968,9 +968,6 @@ class MultiQCConfig(BaseModel):
                     "'bearer' sends an Authorization header, 'api-key' sends an api-key header."
                 ),
             )
-            seqera_website: Optional[str] = cfg(
-                "Base URL of the main Seqera website used for marketing/info links in the report.",
-            )
             seqera_ai_url: Optional[str] = cfg(
                 "Base URL of the Seqera AI web app, used for `Continue in chat` links.",
             )

@@ -1491,7 +1491,7 @@ ccs/v4:
   num_lines: 2
   max_filesize: 1024
 ccs/v5:
-  contents: '"id": "ccs_processing"'
+  contents: "\"id\": \"ccs_processing\""
   fn: "*.json"
 checkatlas/summary:
   fn: "*.tsv"
@@ -1519,17 +1519,17 @@ checkatlas/dimred:
   num_lines: 1
 cellranger/count_html:
   - fn: "*.html"
-    contents: '"command":"Cell Ranger","subcommand":"count"'
+    contents: "\"command\":\"Cell Ranger\",\"subcommand\":\"count\""
     num_lines: 20
   - fn: "*.html"
-    contents: '"command": "Cell Ranger", "subcommand": "count"'
+    contents: "\"command\": \"Cell Ranger\", \"subcommand\": \"count\""
     num_lines: 20
 cellranger/vdj_html:
   - fn: "*.html"
-    contents: '"command":"Cell Ranger","subcommand":"vdj"'
+    contents: "\"command\":\"Cell Ranger\",\"subcommand\":\"vdj\""
     num_lines: 20
   - fn: "*.html"
-    contents: '"command": "Cell Ranger", "subcommand": "vdj"'
+    contents: "\"command\": \"Cell Ranger\", \"subcommand\": \"vdj\""
     num_lines: 20
 cellranger_arc:
   - fn: "*.html"
@@ -1537,7 +1537,7 @@ cellranger_arc:
     num_lines: 250
 cells2stats/run:
   fn: RunStats.json
-  contents: '"AnalysisID": "c2s.'
+  contents: "\"AnalysisID\": \"c2s."
   num_lines: 100
 checkm:
   - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})#\
@@ -1577,11 +1577,11 @@ damageprofiler:
   fn: "*dmgprof.json"
 deacon:
   fn: "*.json"
-  contents: '"version": "deacon'
+  contents: "\"version\": \"deacon"
   num_lines: 30
 dedup:
   fn: "*.json"
-  contents: '"tool_name": "DeDup"'
+  contents: "\"tool_name\": \"DeDup\""
   num_lines: 20
 deeptools/bamPEFragmentSizeTable:
   contents: "\tFrag. Sampled\tFrag. Len. Min.\tFrag. Len. 1st. Qu.\tFrag. Len. Mean\t\
@@ -1664,7 +1664,7 @@ eigenstratdatabasetools:
   fn: "*_eigenstrat_coverage.json"
 fastp:
   fn: "*.json"
-  contents: '"before_filtering": {'
+  contents: "\"before_filtering\": {"
   num_lines: 50
 fastq_screen:
   fn: "*_screen.txt"
@@ -1791,7 +1791,7 @@ hifiasm:
   num_lines: 1
 hifi_trimmer:
   fn: "*.json"
-  contents: '"total_reads_trimmed"'
+  contents: "\"total_reads_trimmed\""
   num_lines: 10
 hisat2:
   contents: "HISAT2 summary stats:"
@@ -1814,7 +1814,7 @@ hops:
   fn: heatmap_overview_Wevid.json
 hostile:
   fn: "*.json"
-  contents: '"reads_removed_proportion"'
+  contents: "\"reads_removed_proportion\""
   num_lines: 100
 humid/stats:
   fn: stats.dat
@@ -1837,7 +1837,7 @@ interop/summary:
 interop/index-summary:
   contents: Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max
 isoseq/refine-json:
-  contents: '"num_reads_fl"'
+  contents: "\"num_reads_fl\""
   fn: "*.json"
 isoseq/refine-csv:
   contents: id,strand,fivelen,threelen,polyAlen,insertlen,primer
@@ -2024,7 +2024,7 @@ seqera_cli/json:
   fn: workflow.json
 sequali:
   fn: "*.json"
-  contents: '"sequali_version"'
+  contents: "\"sequali_version\""
   num_lines: 10
 somalier/somalier-ancestry:
   fn: "*.somalier-ancestry.tsv"
@@ -2141,7 +2141,7 @@ purple/qc:
 purple/purity:
   fn: "*.purple.purity.tsv"
 pycoqc:
-  contents: '"pycoqc":'
+  contents: "\"pycoqc\":"
   num_lines: 2
 pychopper:
   contents: "Classification\tRescue"
@@ -2328,7 +2328,7 @@ samtools/markdup_txt:
   num_lines: 2
 samtools/markdup_json:
   contents:
-    - '"COMMAND":'
+    - "\"COMMAND\":"
     - samtools markdup
   num_lines: 10
 sargasso:
@@ -2340,7 +2340,7 @@ seqkit/stats:
   contents_re: ^file\s+format\s+type\s+num_seqs\s+sum_len
   num_lines: 1
 seqwho:
-  contents: '  "Per Base Seq": ['
+  contents: "  \"Per Base Seq\": ["
   num_lines: 10
 seqyclean:
   fn: "*_SummaryStatistics.tsv"
@@ -2401,10 +2401,10 @@ sortmerna:
   contents: Minimal SW score based on E-value
 spaceranger/count_html:
   - fn: "*.html"
-    contents: '"command":"Space Ranger","subcommand":"count"'
+    contents: "\"command\":\"Space Ranger\",\"subcommand\":\"count\""
     num_lines: 20
   - fn: "*.html"
-    contents: '"command": "Space Ranger", "subcommand": "count"'
+    contents: "\"command\": \"Space Ranger\", \"subcommand\": \"count\""
     num_lines: 20
 stacks/gstacks:
   fn: gstacks.log.distribs
@@ -2427,15 +2427,15 @@ supernova/report:
 supernova/summary:
   fn: summary.json
   num_lines: 120
-  contents: '"lw_mean_mol_len":'
+  contents: "\"lw_mean_mol_len\":"
 supernova/molecules:
   fn: histogram_molecules.json
   num_lines: 10
-  contents: '"description": "molecules",'
+  contents: "\"description\": \"molecules\","
 supernova/kmers:
   fn: histogram_kmer_count.json
   num_lines: 10
-  contents: '"description": "kmer_count",'
+  contents: "\"description\": \"kmer_count\","
 sylphtax:
   fn: "*.sylphmpa"
 telseq:
@@ -3270,12 +3270,6 @@ ai_custom_endpoint: https://api.example.com/v1
 
 Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.
 
-#### `seqera_website`
-
-**Type**: <code>str</code> (default: `"https://seqera.io"`)
-
-Base URL of the main Seqera website used for marketing/info links in the report.
-
 #### `seqera_ai_url`
 
 **Type**: <code>str</code> (default: `"https://ai.seqera.io"`)
@@ -3290,7 +3284,7 @@ Base URL for the Seqera AI backend API used by the Seqera AI provider.
 
 #### `seqera_api_url`
 
-**Type**: <code>str</code> _(deprecated)_
+**Type**: <code>str</code>
 
 Deprecated. Use `seqera_ai_api_url` instead.
 

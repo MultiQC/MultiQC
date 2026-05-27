@@ -90,7 +90,6 @@ ai_thinking_budget_tokens: null # Budget tokens for Anthropic extended thinking
 # Development settings:
 seqera_ai_api_url: "https://ai.seqera.io/v1/web"
 seqera_ai_url: "https://ai.seqera.io"
-seqera_website: "https://seqera.io"
 
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts

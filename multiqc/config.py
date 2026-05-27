@@ -137,7 +137,6 @@ ai_thinking_budget_tokens: Optional[int]
 
 seqera_ai_api_url: str
 seqera_ai_url: str
-seqera_website: str
 
 plots_force_flat: bool
 plots_export_font_scale: float
