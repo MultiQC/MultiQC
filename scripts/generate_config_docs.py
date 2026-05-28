@@ -387,6 +387,23 @@ fn_clean_exts:
     )
 
     render_special_type(
+        GeneralStatsModuleConfig,
+        """Per-module wrapper for General Stats column overrides.
+
+The `GeneralStatsModuleConfig` type is the value of each module entry in the `general_stats_columns` configuration option. It has a single `columns` key mapping column IDs to `GeneralStatsColumnConfig` settings.
+
+Example:
+
+```yaml
+general_stats_columns:
+  fastqc:
+    columns:
+      percent_duplicates:
+        title: "% Dups"
+```""",
+    )
+
+    render_special_type(
         GeneralStatsColumnConfig,
         """Configuration for columns in the general statistics table.
 
