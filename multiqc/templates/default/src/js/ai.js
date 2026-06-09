@@ -55,7 +55,8 @@ function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsV
       currentTokens += genStatsTokens;
     } else {
       console.error(
-        `General stats alone would already exceed the token limit of ${provider.name} (${currentTokens + genStatsTokens
+        `General stats alone would already exceed the token limit of ${provider.name} (${
+          currentTokens + genStatsTokens
         } > ${maxTokens}). Cannot summarize the report`,
       );
       return userPrompt;
@@ -75,7 +76,7 @@ function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsV
       if (currentTokens + sectionsTokens > maxTokens) {
         console.warn(
           `Truncating prompt to only the general stats to fit within the context window of ${provider.name} (${maxTokens} tokens). ` +
-          `Tokens estimate: ${currentTokens}, with sections: at least ${currentTokens + sectionsTokens}`,
+            `Tokens estimate: ${currentTokens}, with sections: at least ${currentTokens + sectionsTokens}`,
         );
         return userPrompt; // Stop iterating through sections and return only general stats
       }
