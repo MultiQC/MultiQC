@@ -136,7 +136,8 @@ $(function () {
 
     if (isReasoning) {
       console.log(
-        `Reasoning model selected: ${modelName} (${isClaudeReasoning ? "Claude extended thinking" : "OpenAI reasoning"
+        `Reasoning model selected: ${modelName} (${
+          isClaudeReasoning ? "Claude extended thinking" : "OpenAI reasoning"
         })`,
       );
     }
@@ -198,8 +199,9 @@ function runStreamGeneration({
       .then((response) => {
         if (!response.ok) {
           return response.json().then((errorData) => {
-            const error = `HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"
-              }`;
+            const error = `HTTP ${response.status}: ${response.statusText} ${
+              errorData.error?.message || "Unknown error"
+            }`;
             onStreamError(error);
             throw new Error(error);
           });
