@@ -3462,10 +3462,10 @@
         }
       ],
       "default": null,
-      "description": "Base URL of the Seqera AI web app, used for `Continue in chat` links.",
+      "description": "Base URL used for Seqera Platform links in the report.",
       "group": "Provider",
       "section": "AI Summary",
-      "title": "Seqera Ai Url"
+      "title": "Seqera Website"
     },
     "seqera_api_url": {
       "anyOf": [
@@ -3477,23 +3477,7 @@
         }
       ],
       "default": null,
-      "description": "Base URL for the Seqera AI backend API used by the Seqera AI provider.",
-      "group": "Provider",
-      "section": "AI Summary",
-      "title": "Seqera Ai Api Url"
-    },
-    "seqera_api_url": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "deprecated": true,
-      "description": "Deprecated. Use `seqera_api_url` instead.",
+      "description": "Base URL for the Seqera Platform API. Defaults to the public instance.",
       "group": "Provider",
       "section": "AI Summary",
       "title": "Seqera Api Url"
