@@ -3270,13 +3270,13 @@ ai_custom_endpoint: https://api.example.com/v1
 
 Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.
 
-#### `seqera_ai_url`
+#### `seqera_website`
 
 **Type**: <code>str</code> (default: `"https://ai.seqera.io"`)
 
 Base URL of the Seqera AI web app, used for `Continue in chat` links.
 
-#### `seqera_ai_api_url`
+#### `seqera_api_url`
 
 **Type**: <code>str</code> (default: `"https://ai.seqera.io/v1/web"`)
 
@@ -3286,7 +3286,7 @@ Base URL for the Seqera AI backend API used by the Seqera AI provider.
 
 **Type**: <code>str</code> _(deprecated)_
 
-Deprecated. Use `seqera_ai_api_url` instead.
+Deprecated. Use `seqera_api_url` instead.
 
 ### Tuning
 

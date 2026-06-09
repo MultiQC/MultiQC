@@ -3452,7 +3452,7 @@
       "section": "AI Summary",
       "title": "Ai Auth Type"
     },
-    "seqera_ai_url": {
+    "seqera_website": {
       "anyOf": [
         {
           "type": "string"
@@ -3467,7 +3467,7 @@
       "section": "AI Summary",
       "title": "Seqera Ai Url"
     },
-    "seqera_ai_api_url": {
+    "seqera_api_url": {
       "anyOf": [
         {
           "type": "string"
@@ -3493,7 +3493,7 @@
       ],
       "default": null,
       "deprecated": true,
-      "description": "Deprecated. Use `seqera_ai_api_url` instead.",
+      "description": "Deprecated. Use `seqera_api_url` instead.",
       "group": "Provider",
       "section": "AI Summary",
       "title": "Seqera Api Url"

@@ -968,15 +968,15 @@ class MultiQCConfig(BaseModel):
                     "'bearer' sends an Authorization header, 'api-key' sends an api-key header."
                 ),
             )
-            seqera_ai_url: Optional[str] = cfg(
+            seqera_website: Optional[str] = cfg(
                 "Base URL of the Seqera AI web app, used for `Continue in chat` links.",
             )
-            seqera_ai_api_url: Optional[str] = cfg(
+            seqera_api_url: Optional[str] = cfg(
                 "Base URL for the Seqera AI backend API used by the Seqera AI provider.",
             )
             seqera_api_url: Optional[str] = cfg(
-                "Deprecated. Use `seqera_ai_api_url` instead.",
-                deprecated="Use `seqera_ai_api_url` instead.",
+                "Deprecated. Use `seqera_api_url` instead.",
+                deprecated="Use `seqera_api_url` instead.",
             )
         with group("Tuning"):
             ai_retries: Optional[int] = cfg(
