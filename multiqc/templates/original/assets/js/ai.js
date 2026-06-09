@@ -4,12 +4,12 @@
 
 window.continueInSeqeraChatHandler = function (event) {
   let el = $(event.currentTarget);
-  let seqeraAiUrl = el.data("seqera-ai-url");
+  let seqeraWebsite = el.data("seqera-website");
 
   // Either report uuid, or encoded system and chat messages
   let threadId = el.data("thread-id");
 
-  let url = seqeraAiUrl;
+  let url = seqeraWebsite;
   if (threadId) url += "/chat/" + threadId;
 
   window.open(url, "_blank");
@@ -55,8 +55,7 @@ function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsV
       currentTokens += genStatsTokens;
     } else {
       console.error(
-        `General stats alone would already exceed the token limit of ${provider.name} (${
-          currentTokens + genStatsTokens
+        `General stats alone would already exceed the token limit of ${provider.name} (${currentTokens + genStatsTokens
         } > ${maxTokens}). Cannot summarize the report`,
       );
       return userPrompt;
@@ -76,7 +75,7 @@ function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsV
       if (currentTokens + sectionsTokens > maxTokens) {
         console.warn(
           `Truncating prompt to only the general stats to fit within the context window of ${provider.name} (${maxTokens} tokens). ` +
-            `Tokens estimate: ${currentTokens}, with sections: at least ${currentTokens + sectionsTokens}`,
+          `Tokens estimate: ${currentTokens}, with sections: at least ${currentTokens + sectionsTokens}`,
         );
         return userPrompt; // Stop iterating through sections and return only general stats
       }
@@ -330,7 +329,7 @@ async function summarizeWithAi(button) {
         wrapUpResponse(disclaimerDiv, provider.name, modelName);
         // Update the "Chat with Seqera AI" button to point to new thread
         if (threadId) {
-          continueInChatButton.attr("href", `${seqeraAiUrl}/chat/${threadId}`).show();
+          continueInChatButton.attr("href", `${seqeraWebsite}/chat/${threadId}`).show();
         }
         // Save response to localStorage
         const elementId = button.data("plot-anchor") || "global";
@@ -464,7 +463,7 @@ $(function () {
 
         const threadId = cachedSummary.threadId;
         if (threadId) {
-          continueInChatButton.attr("href", `${seqeraAiUrl}/chat/${threadId}`);
+          continueInChatButton.attr("href", `${seqeraWebsite}/chat/${threadId}`);
           continueInChatButton.show();
         }
       }
