@@ -512,11 +512,6 @@ def _add_config(conf: Dict, conf_path=None):
     log_filename_clean_extensions = []
     log_filename_clean_trimmings = []
     for c, v in conf.items():
-        if c == "seqera_api_url":
-            # Renamed in v1.36; route the legacy key to the new name so user
-            # configs and MULTIQC_SEQERA_API_URL env vars keep working.
-            logger.warning("Config option `seqera_api_url` is deprecated, use `seqera_api_url` instead")
-            c = "seqera_api_url"
         if c == "sp":
             # Merge filename patterns instead of replacing. Add custom pattern to the beginning,
             # so they supersede the default patterns.
