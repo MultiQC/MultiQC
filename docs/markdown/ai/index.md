@@ -12,7 +12,7 @@ MultiQC v1.27 and newer can generate AI-powered summaries of your reports. These
 
 The AI summaries are generated using LLMs (large-language models) AI, with the following supported providers:
 
-- [Seqera AI](https://ai.seqera.io/)
+- [Seqera Co-Scientist](https://ai.seqera.io/)
 - [OpenAI](https://openai.com/)
 - [Anthropic](https://www.anthropic.com/)
 - [AWS Bedrock](https://aws.amazon.com/bedrock/)
@@ -34,7 +34,7 @@ To use native summary generation, MultiQC needs to communicate with an LLM provi
 All three supported services require an API key to work.
 Remember: Treat your API keys like passwords and do not share them.
 
-- [Seqera AI](https://ai.seqera.io/)
+- [Seqera Co-Scientist](https://ai.seqera.io/)
   - Register for free at [seqera.io](https://seqera.io/)
   - Create a new key on the **Access tokens** page: [https://cloud.seqera.io/tokens](https://cloud.seqera.io/tokens)
 - [OpenAI](https://openai.com/)
@@ -55,9 +55,9 @@ Remember: Treat your API keys like passwords and do not share them.
     in order to manually summarise report data.
     See [Copying prompts](#copying-prompts) for instructions.
 
-Seqera AI is free to use.[^seqera-ai-usage-limits]
+Seqera Co-Scientist is free to use.[^seqera-ai-usage-limits]
 Use of other third-party APIs are billed by their respective providers based on consumption.
-Seqera AI uses the latest AI provider models under the hood.
+Seqera Co-Scientist uses the latest AI provider models under the hood.
 
 ### Choosing a model
 
@@ -505,6 +505,6 @@ Note that with the "Continue chat" button you would see the anonymized samples, 
 
 [^seqera-ai-usage-limits]:
     Seqera Cloud Basic is free for small teams.
-    It includes access to Seqera AI, with a usage cap of 100 messages per calendar month.
+    It includes access to Seqera Co-Scientist, with a usage cap of 100 messages per calendar month.
     Researchers at qualifying academic institutions can apply for free access to Seqera Cloud Pro.
     See [Seqera Pricing](https://seqera.io/pricing/) for more details
