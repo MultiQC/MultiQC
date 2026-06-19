@@ -506,6 +506,5 @@ Note that with the "Continue chat" button you would see the anonymized samples, 
 [^seqera-ai-usage-limits]:
     Seqera Cloud Basic is free for small teams.
     It includes access to Seqera AI, with a usage cap of 100 messages per calendar month.
-    Seqera AI usage is unlimited for Seqera Cloud Pro users.
     Researchers at qualifying academic institutions can apply for free access to Seqera Cloud Pro.
     See [Seqera Pricing](https://seqera.io/pricing/) for more details
