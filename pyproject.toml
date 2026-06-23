@@ -70,6 +70,9 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+citations = [
+    "bibtexparser>=1.4,<2", # for BibTeX (.bib) input to the citations module
+]
 dev = [
     "prek",
     "ruff>=0.8.3",
@@ -91,6 +94,7 @@ dev = [
     "types-boto3",
     "beautifulsoup4",
     "jupyter",              # for jupyter notebook example
+    "bibtexparser>=1.4,<2", # for the citations module BibTeX tests
 ]
 
 [project.urls]
@@ -134,6 +138,7 @@ checkatlas = "multiqc.modules.checkatlas:MultiqcModule"
 checkm = "multiqc.modules.checkm:MultiqcModule"
 checkm2 = "multiqc.modules.checkm2:MultiqcModule"
 checkqc = "multiqc.modules.checkqc:MultiqcModule"
+citations = "multiqc.modules.citations:MultiqcModule"
 clipandmerge = "multiqc.modules.clipandmerge:MultiqcModule"
 clusterflow = "multiqc.modules.clusterflow:MultiqcModule"
 conpair = "multiqc.modules.conpair:MultiqcModule"

@@ -1,5 +1,12 @@
 # MultiQC Version History
 
+## MultiQC v1.36dev
+
+### New modules
+
+- [Citations](https://citeproc-js.readthedocs.io/en/latest/csl-json/) ([#3597](https://github.com/MultiQC/MultiQC/pull/3597))
+  - Renders structured software citations (CSL-JSON, or BibTeX with `multiqc[citations]`) into a methods sentence and bibliography.
+
 ## [MultiQC v1.35](https://github.com/MultiQC/MultiQC/releases/tag/v1.35) - 2026-05-13
 
 This release has a very nice shiny new feature for you: the _MultiQC Configuration Wizard_! 👨🏻‍🎨 🎨
