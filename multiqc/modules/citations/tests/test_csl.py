@@ -2,12 +2,12 @@
 
 import pytest
 
-from multiqc.modules.citations.csl import (
+from multiqc.modules.citations.citation import (
     Citation,
-    parse_csl,
     render_bibliography,
     render_inline,
 )
+from multiqc.modules.citations.csl import parse_csl
 
 SINGLE_AUTHOR = """
 [

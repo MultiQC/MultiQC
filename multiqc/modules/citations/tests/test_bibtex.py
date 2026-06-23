@@ -10,7 +10,7 @@ from multiqc.modules.citations.bibtex import (
     bibtexparser_available,
     parse_bibtex,
 )
-from multiqc.modules.citations.csl import render_bibliography, render_inline
+from multiqc.modules.citations.citation import render_bibliography, render_inline
 
 pytestmark = pytest.mark.skipif(not bibtexparser_available(), reason="bibtexparser not installed")
 

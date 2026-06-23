@@ -16,7 +16,7 @@ import logging
 import re
 from typing import List, Optional, Tuple
 
-from .csl import Citation, _clean_doi
+from .citation import Citation, clean_doi
 
 log = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ def _entry_to_citation(entry: dict) -> Citation:
         is_multiple_authors=is_multiple,
         year=year,
         container_title=_debrace(entry.get("journal")) or _debrace(entry.get("booktitle")),
-        doi=_clean_doi(_debrace(entry.get("doi"))),
+        doi=clean_doi(_debrace(entry.get("doi"))),
         url=_debrace(entry.get("url")) or _debrace(entry.get("howpublished")),
         csl_type=entry.get("ENTRYTYPE"),
     )

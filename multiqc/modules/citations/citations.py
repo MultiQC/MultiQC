@@ -6,7 +6,8 @@ from typing import Dict
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .bibtex import parse_bibtex
-from .csl import Citation, parse_csl, render_bibliography, render_inline
+from .citation import Citation, render_bibliography, render_inline
+from .csl import parse_csl
 
 log = logging.getLogger(__name__)
 
