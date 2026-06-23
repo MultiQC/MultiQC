@@ -63,13 +63,16 @@ class Authors:
     is_multiple: bool
 
     @classmethod
-    def from_names(cls, names: List[Tuple[str, str]], has_etal: bool) -> "Authors":
-        # names: list of (surname, display_piece) in document order
+    def from_names(cls, names: List[Tuple[str, str]], has_etal: bool, display: Optional[str] = None) -> "Authors":
+        # names: list of (surname, display_piece) in document order. Pass `display`
+        # to keep a pre-formatted author string verbatim instead of rejoining.
         surnames = [s for s, _ in names]
-        parts = [d for _, d in names]
-        if has_etal:
-            parts.append("et al.")
-        return cls(surnames=surnames, display=", ".join(parts), is_multiple=has_etal or len(names) > 1)
+        if display is None:
+            parts = [d for _, d in names]
+            if has_etal:
+                parts.append("et al.")
+            display = ", ".join(parts)
+        return cls(surnames=surnames, display=display, is_multiple=has_etal or len(names) > 1)
 
 
 def _normalize_authors(author_field: Any) -> Authors:
@@ -104,11 +107,14 @@ def _normalize_authors(author_field: Any) -> Authors:
 
 
 def _authors_from_string(text: str) -> Authors:
-    chunks = [c.strip() for c in text.strip().split(",") if c.strip()]
+    # A plain author string is already formatted by the producer, so keep it
+    # verbatim as the display; only parse it to extract surnames and is_multiple.
+    raw = text.strip()
+    chunks = [c.strip() for c in raw.split(",") if c.strip()]
     has_etal = any(c.lower().rstrip(".") == "et al" for c in chunks)
     name_chunks = [c for c in chunks if c.lower().rstrip(".") != "et al"]
     names = [(_surname_from_name(c), c) for c in name_chunks]
-    return Authors.from_names(names, has_etal)
+    return Authors.from_names(names, has_etal, display=raw)
 
 
 @dataclass

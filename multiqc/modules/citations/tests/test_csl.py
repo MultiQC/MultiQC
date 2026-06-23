@@ -126,6 +126,20 @@ def test_plain_string_author_etal_no_double_period():
     assert bib.startswith("Ewels P, Magnusson M, Lundin S, et al. (2016).")
 
 
+def test_plain_string_author_kept_verbatim():
+    """A pre-formatted author string is rendered as-is, not rejoined."""
+    item = {
+        "id": "tool",
+        "title": "T",
+        "author": "Smith, J.A.  and  Doe,K",
+        "issued": {"date-parts": [[2020]]},
+        "custom": {"tool": "tool"},
+    }
+    c = Citation.from_csl(item)
+    assert c.author_display == "Smith, J.A.  and  Doe,K"
+    assert c.surnames[0] == "Smith"
+
+
 def test_doi_is_normalised():
     assert Citation.from_csl({"id": "x", "DOI": "https://doi.org/10.1/abc", "custom": {"tool": "x"}}).doi == "10.1/abc"
     assert Citation.from_csl({"id": "y", "DOI": "doi: 10.2/def", "custom": {"tool": "y"}}).doi == "10.2/def"
