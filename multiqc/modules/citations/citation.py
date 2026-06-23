@@ -49,15 +49,37 @@ def _surname_from_name(name: str) -> str:
     return tokens[0] if tokens else head
 
 
-def _normalize_authors(author_field: Any) -> Tuple[List[str], str, bool]:
-    """Normalise a CSL `author` value to (surnames, display, is_multiple).
+@dataclass
+class Authors:
+    """The shared author shape: surnames, a display string, and is_multiple.
+
+    Each format adapter parses its own raw author field into format-specific
+    `(surname, display_piece)` pairs plus an "et al." flag; `from_names` owns the
+    rest (the display join, the "et al." suffix, and the is_multiple rule).
+    """
+
+    surnames: List[str]
+    display: str
+    is_multiple: bool
+
+    @classmethod
+    def from_names(cls, names: List[Tuple[str, str]], has_etal: bool) -> "Authors":
+        # names: list of (surname, display_piece) in document order
+        surnames = [s for s, _ in names]
+        parts = [d for _, d in names]
+        if has_etal:
+            parts.append("et al.")
+        return cls(surnames=surnames, display=", ".join(parts), is_multiple=has_etal or len(names) > 1)
+
+
+def _normalize_authors(author_field: Any) -> Authors:
+    """Normalise a CSL `author` value to an `Authors`.
 
     Accepts the CSL-standard list of `{family, given}` / `{literal}` dicts, and
     also a plain author string (e.g. "Ewels P, Magnusson M, Lundin S, et al.").
-    `is_multiple` drives the "et al." short form.
     """
     if not author_field:
-        return [], "", False
+        return Authors.from_names([], False)
 
     if isinstance(author_field, str):
         return _authors_from_string(author_field)
@@ -67,32 +89,26 @@ def _normalize_authors(author_field: Any) -> Tuple[List[str], str, bool]:
         if len(author_field) == 1 and "literal" in author_field[0]:
             return _authors_from_string(str(author_field[0]["literal"]))
 
-        surnames: List[str] = []
-        display_parts: List[str] = []
+        names: List[Tuple[str, str]] = []
         for person in author_field:
             family = person.get("family")
             if family:
-                surnames.append(str(family))
                 given = person.get("given")
-                display_parts.append(f"{family} {given}".strip() if given else str(family))
+                names.append((str(family), f"{family} {given}".strip() if given else str(family)))
             elif person.get("literal"):
                 literal = str(person["literal"])
-                surnames.append(_surname_from_name(literal))
-                display_parts.append(literal)
-        display = ", ".join(display_parts)
-        return surnames, display, len(surnames) > 1
+                names.append((_surname_from_name(literal), literal))
+        return Authors.from_names(names, False)
 
-    return [], "", False
+    return Authors.from_names([], False)
 
 
-def _authors_from_string(text: str) -> Tuple[List[str], str, bool]:
-    display = text.strip()
-    chunks = [c.strip() for c in display.split(",") if c.strip()]
+def _authors_from_string(text: str) -> Authors:
+    chunks = [c.strip() for c in text.strip().split(",") if c.strip()]
     has_etal = any(c.lower().rstrip(".") == "et al" for c in chunks)
     name_chunks = [c for c in chunks if c.lower().rstrip(".") != "et al"]
-    surnames = [_surname_from_name(c) for c in name_chunks]
-    is_multiple = has_etal or len(name_chunks) > 1
-    return surnames, display, is_multiple
+    names = [(_surname_from_name(c), c) for c in name_chunks]
+    return Authors.from_names(names, has_etal)
 
 
 @dataclass
@@ -102,14 +118,24 @@ class Citation:
     tool: str
     version: Optional[str] = None
     title: Optional[str] = None
-    author_display: str = ""
-    surnames: List[str] = field(default_factory=list)
-    is_multiple_authors: bool = False
+    authors: Authors = field(default_factory=lambda: Authors([], "", False))
     year: Optional[int] = None
     container_title: Optional[str] = None
     doi: Optional[str] = None
     url: Optional[str] = None
     csl_type: Optional[str] = None
+
+    @property
+    def surnames(self) -> List[str]:
+        return self.authors.surnames
+
+    @property
+    def author_display(self) -> str:
+        return self.authors.display
+
+    @property
+    def is_multiple_authors(self) -> bool:
+        return self.authors.is_multiple
 
     @classmethod
     def from_csl(cls, item: Dict[str, Any]) -> "Citation":
@@ -117,8 +143,6 @@ class Citation:
         tool = custom.get("tool") or item.get("id")
         if not tool:
             raise ValueError(f"CSL item is missing both `custom.tool` and `id`: {item!r}")
-
-        surnames, author_display, is_multiple = _normalize_authors(item.get("author"))
 
         year: Optional[int] = None
         issued = item.get("issued") or {}
@@ -130,9 +154,7 @@ class Citation:
             tool=str(tool),
             version=custom.get("version"),
             title=item.get("title"),
-            author_display=author_display,
-            surnames=surnames,
-            is_multiple_authors=is_multiple,
+            authors=_normalize_authors(item.get("author")),
             year=year,
             container_title=item.get("container-title"),
             doi=clean_doi(item.get("DOI")),

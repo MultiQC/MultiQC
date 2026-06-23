@@ -16,7 +16,7 @@ import logging
 import re
 from typing import List, Optional, Tuple
 
-from .citation import Citation, clean_doi
+from .citation import Authors, Citation, clean_doi
 
 log = logging.getLogger(__name__)
 
@@ -54,35 +54,28 @@ def _split_bibtex_name(name: str) -> Tuple[str, str]:
     return parts[-1], " ".join(parts[:-1])
 
 
-def _normalize_bibtex_authors(field: Optional[str]) -> Tuple[List[str], str, bool]:
-    """Normalise a BibTeX `author` value to (surnames, display, is_multiple)."""
+def _normalize_bibtex_authors(field: Optional[str]) -> Authors:
+    """Normalise a BibTeX `author` value to an `Authors`."""
     field = _debrace(field)
     if not field:
-        return [], "", False
+        return Authors.from_names([], False)
 
-    names = [n.strip() for n in _AND_SPLIT.split(field) if n.strip()]
-    has_others = any(n.lower() == "others" for n in names)  # BibTeX "and others"
-    names = [n for n in names if n.lower() != "others"]
+    raw_names = [n.strip() for n in _AND_SPLIT.split(field) if n.strip()]
+    has_etal = any(n.lower() == "others" for n in raw_names)  # BibTeX "and others"
+    raw_names = [n for n in raw_names if n.lower() != "others"]
 
-    surnames: List[str] = []
-    display_parts: List[str] = []
-    for name in names:
+    names: List[Tuple[str, str]] = []
+    for name in raw_names:
         last, given = _split_bibtex_name(name)
-        surnames.append(last)
-        display_parts.append(f"{last} {given}".strip() if given else last)
+        names.append((last, f"{last} {given}".strip() if given else last))
 
-    if has_others:
-        display_parts.append("et al.")
-    is_multiple = has_others or len(names) > 1
-    return surnames, ", ".join(display_parts), is_multiple
+    return Authors.from_names(names, has_etal)
 
 
 def _entry_to_citation(entry: dict) -> Citation:
     tool = _debrace(entry.get("tool")) or entry.get("ID")
     if not tool:
         raise ValueError(f"BibTeX entry is missing both a `tool` field and a citation key: {entry!r}")
-
-    surnames, author_display, is_multiple = _normalize_bibtex_authors(entry.get("author"))
 
     year: Optional[int] = None
     raw_year = _debrace(entry.get("year"))
@@ -95,9 +88,7 @@ def _entry_to_citation(entry: dict) -> Citation:
         tool=str(tool),
         version=_debrace(entry.get("version")),
         title=_debrace(entry.get("title")),
-        author_display=author_display,
-        surnames=surnames,
-        is_multiple_authors=is_multiple,
+        authors=_normalize_bibtex_authors(entry.get("author")),
         year=year,
         container_title=_debrace(entry.get("journal")) or _debrace(entry.get("booktitle")),
         doi=clean_doi(_debrace(entry.get("doi"))),
