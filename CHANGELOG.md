@@ -5,7 +5,7 @@
 ### New modules
 
 - [Citations](https://citeproc-js.readthedocs.io/en/latest/csl-json/) ([#3597](https://github.com/MultiQC/MultiQC/pull/3597))
-  - Renders structured software citations (CSL-JSON, or BibTeX with `multiqc[citations]`) into a methods sentence and bibliography.
+  - Renders structured software citations (CSL-JSON) into a methods sentence and bibliography.
 
 ## [MultiQC v1.35](https://github.com/MultiQC/MultiQC/releases/tag/v1.35) - 2026-05-13
 

@@ -284,8 +284,6 @@ checkqc:
   fn: "*.json"
 citations:
   fn: "*.csl.json"
-citations/bib:
-  fn: "*.citations.bib"
 custom_content:
   fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|gif|webp|tiff|html|md)'
 clipandmerge:
