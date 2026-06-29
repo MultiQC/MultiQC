@@ -1,0 +1,20 @@
+{
+  "name": "multiqc-flue-agents",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Self-driving codebase agents for MultiQC, built with Flue.",
+  "scripts": {
+    "dev": "flue dev --target node",
+    "run:triage": "flue run triage --target node",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@flue/runtime": "0.7.0",
+    "valibot": "1.4.0"
+  },
+  "devDependencies": {
+    "@flue/cli": "0.5.3",
+    "typescript": "5.5.4"
+  }
+}

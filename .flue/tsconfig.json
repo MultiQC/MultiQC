@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["agents/**/*.ts"],
+  "exclude": ["dist", "node_modules"]
+}
