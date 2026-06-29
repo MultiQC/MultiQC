@@ -4,7 +4,7 @@
 
 ### New modules
 
-- [covsnap](https://github.com/enes-ak/covsnap) ([#PRNUM](https://github.com/MultiQC/MultiQC/pull/PRNUM))
+- [covsnap](https://github.com/enes-ak/covsnap) ([#3599](https://github.com/MultiQC/MultiQC/pull/3599))
   - Coverage inspector for targeted sequencing QC; per-target and per-exon depth metrics with PASS/FAIL classification.
 
 ## [MultiQC v1.35](https://github.com/MultiQC/MultiQC/releases/tag/v1.35) - 2026-05-13
