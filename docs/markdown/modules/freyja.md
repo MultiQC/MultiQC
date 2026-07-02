@@ -1,7 +1,7 @@
 ---
 title: Freyja
 displayed_sidebar: multiqcSidebar
-description: "Recovers relative lineage abundances from mixed SARS-CoV-2 samples."
+description: "Recovers relative lineage abundances from mixed samples."
 ---
 
 <!--
@@ -14,12 +14,12 @@ File path for the source of this content: multiqc/modules/freyja/freyja.py
 -->
 
 :::note
-Recovers relative lineage abundances from mixed SARS-CoV-2 samples.
+Recovers relative lineage abundances from mixed samples.
 
 [https://github.com/andersen-lab/Freyja](https://github.com/andersen-lab/Freyja)
 :::
 
-Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a
+Freyja is a tool to recover relative lineage abundances from mixed samples from a
 sequencing dataset and uses lineage-determining mutational "barcodes" derived from the UShER global
 phylogenetic tree to solve the constrained (unit sum, non-negative) de-mixing problem.
 
