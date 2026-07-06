@@ -105,18 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Duplication Rates",
             anchor="fastp-duprates",
             description="Duplication rates of sampled reads.",
-            plot=linegraph.plot(
-                self.fastp_duplication_plotdata,
-                {
-                    "id": "fastp-duprates-plot",
-                    "title": "Fastp: Duplication Rate",
-                    "xlab": "Duplication level",
-                    "ylab": "Read percent",
-                    "y_clipmax": 100,
-                    "ymin": 0,
-                    "tt_label": "{point.x}: {point.y:.2f}%",
-                },
-            ),
+            plot=self.fastp_duplication_rate_plot(),
         )
 
         self.add_section(
@@ -163,13 +152,8 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.fastp_read_n_plot(),
         )
 
-        # Overrepresented sequences plot
-        self.add_section(
-            name="Overrepresented Sequences",
-            anchor="fastp-overrepresented-sequences",
-            description="Overrepresented sequences in the reads.",
-            plot=self.fastp_overrepresented_sequences_plot(),
-        )
+        # Overrepresented sequence sections are added only when data is present.
+        self.fastp_overrepresented_sequences_plot()
 
     def parse_fastp_log(self, f) -> Tuple[Optional[str], Dict]:
         """Parse the JSON output from fastp and save the summary statistics"""
@@ -288,13 +272,24 @@ class MultiqcModule(BaseMultiqcModule):
         except KeyError:
             log.debug(f"fastp JSON did not have a 'summary'-'after_filtering' keys: '{s_name}'")
 
-        # Parse data required to calculate Pct reads surviving
+        # Parse data required to calculate Pct reads surviving.
+        # Use the summary total when available. If missing, derive it from per-read totals.
         try:
             self.fastp_data[s_name]["before_filtering_total_reads"] = int(
                 parsed_json["summary"]["before_filtering"]["total_reads"]
             )
         except KeyError:
-            log.debug(f"Could not find pre-filtering # reads: '{s_name}'")
+            before_total_reads = 0
+            for read_key in ["read1_before_filtering", "read2_before_filtering"]:
+                try:
+                    before_total_reads += int(parsed_json[read_key]["total_reads"])
+                except KeyError:
+                    pass
+
+            if before_total_reads > 0:
+                self.fastp_data[s_name]["before_filtering_total_reads"] = before_total_reads
+            else:
+                log.debug(f"Could not find pre-filtering # reads: '{s_name}'")
 
         try:
             self.fastp_data[s_name]["pct_surviving_reads"] = (
@@ -367,6 +362,13 @@ class MultiqcModule(BaseMultiqcModule):
                 total_reads += v
                 if float(v) > 0:
                     max_i = i
+            # Include non-overlapping pairs that have unknown insert size.
+            # These are not represented in the histogram bins, but should
+            # still contribute to the denominator for accurate percentages.
+            try:
+                total_reads += int(parsed_json["insert_size"]["unknown"])
+            except (KeyError, TypeError, ValueError):
+                pass
             if total_reads == 0:
                 raise KeyError
             # Calculate percentages
@@ -434,6 +436,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "description": "Duplication rate before filtering",
                     "suffix": "%",
                     "scale": "RdYlGn-rev",
+                    "placement": 110,
                 },
                 "after_filtering_q30_rate": {
                     "title": "% > Q30",
@@ -449,6 +452,13 @@ class MultiqcModule(BaseMultiqcModule):
                     "scale": "GnBu",
                     "shared_key": "base_count",
                     "hidden": True,
+                },
+                "before_filtering_total_reads": {
+                    "title": "Total Input Reads",
+                    "description": f"Total reads before filtering ({config.read_count_desc})",
+                    "scale": "Greys",
+                    "shared_key": "read_count",
+                    "placement": 100,
                 },
                 "filtering_result_passed_filter_reads": {
                     "title": "Reads After Filtering",
@@ -503,6 +513,78 @@ class MultiqcModule(BaseMultiqcModule):
             },
         )
 
+    def fastp_compact_stats_table(self, data_by_sample):
+        """Render a compact per-tool summary table in the fastp module section."""
+        rows = {}
+        for sample, metrics in data_by_sample.items():
+            row = {}
+            if "before_filtering_total_reads" in metrics:
+                row["total_input_reads"] = metrics["before_filtering_total_reads"]
+            if "pct_duplication" in metrics:
+                row["duplication_pct"] = metrics["pct_duplication"]
+            if "pct_surviving_reads" in metrics:
+                row["pf_reads_pct"] = metrics["pct_surviving_reads"]
+            if "pct_adapter" in metrics:
+                row["adapter_pct"] = metrics["pct_adapter"]
+            if "after_filtering_gc_content" in metrics:
+                row["gc_content_pct"] = metrics["after_filtering_gc_content"] * 100.0
+            if row:
+                rows[sample] = row
+
+        if not rows:
+            return
+
+        headers = {
+            "total_input_reads": {
+                "title": "Total input reads",
+                "description": f"Total reads before filtering ({config.read_count_desc})",
+                "shared_key": "read_count",
+                "format": "{:,.0f}",
+            },
+            "duplication_pct": {
+                "title": "Duplication %",
+                "suffix": "%",
+                "min": 0,
+                "max": 100,
+                "format": "{:,.2f}",
+            },
+            "pf_reads_pct": {
+                "title": "PF reads %",
+                "suffix": "%",
+                "min": 0,
+                "max": 100,
+                "format": "{:,.2f}",
+            },
+            "adapter_pct": {
+                "title": "Adapter %",
+                "suffix": "%",
+                "min": 0,
+                "max": 100,
+                "format": "{:,.2f}",
+            },
+            "gc_content_pct": {
+                "title": "GC %",
+                "suffix": "%",
+                "min": 0,
+                "max": 100,
+                "format": "{:,.2f}",
+            },
+        }
+
+        self.add_section(
+            name="Compact stats",
+            anchor="fastp-compact-stats",
+            description="Tool-specific fastp KPI table for quick per-sample review.",
+            plot=table.plot(
+                rows,
+                headers,
+                {
+                    "id": "fastp_compact_stats",
+                    "title": "fastp: Compact Stats",
+                },
+            ),
+        )
+
     def fastp_filtered_reads_chart(self):
         """Function to generate the fastp filtered reads bar plot"""
         # Specify the order of the different possible categories
@@ -525,6 +607,47 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_decimals": 0,
         }
         return bargraph.plot(self.fastp_data, keys, pconfig)
+
+    def fastp_duplication_rate_plot(self):
+        """Create duplication plot with fallback when no duplication histogram is present."""
+        line_plot = linegraph.plot(
+            self.fastp_duplication_plotdata,
+            {
+                "id": "fastp-duprates-plot",
+                "title": "Fastp: Duplication Rate",
+                "xlab": "Duplication level",
+                "ylab": "Read percent",
+                "y_clipmax": 100,
+                "ymin": 0,
+                "tt_label": "{point.x}: {point.y:.2f}%",
+            },
+        )
+        if line_plot is not None:
+            return line_plot
+
+        # Some fastp outputs only include duplication.rate, not duplication.histogram.
+        # In that case, render a per-sample bar chart using the parsed duplication rate.
+        fallback_data = {
+            s_name: {"pct_duplication": d["pct_duplication"]}
+            for s_name, d in self.fastp_data.items()
+            if "pct_duplication" in d
+        }
+        if not fallback_data:
+            return None
+
+        return bargraph.plot(
+            fallback_data,
+            {"pct_duplication": {"name": "Duplication rate"}},
+            {
+                "id": "fastp-duprates-fallback-plot",
+                "title": "Fastp: Duplication Rate",
+                "ylab": "Read percent",
+                "tt_decimals": 2,
+                "suffix": "%",
+                "ymax": 100,
+                "ymin": 0,
+            },
+        )
 
     def fastp_read_qual_plot(self):
         """Make the read quality plot for Fastp"""
@@ -583,6 +706,10 @@ class MultiqcModule(BaseMultiqcModule):
                     pct_by_seq[seq] += count / self.fastp_data[s_name]["before_filtering_total_reads"]
                     cnt_by_sample[read_name][s_name] += count
                     samples_by_seq[seq].add(s_name)
+
+        # No overrepresented sequence entries in any sample, skip sections.
+        if not cnt_by_seq:
+            return
 
         data_labels, cnt_by_sample_pdata = self.filter_pconfig_pdata_subplots(
             cnt_by_sample, "Overrepresented Sequences"
