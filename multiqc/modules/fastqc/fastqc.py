@@ -1332,7 +1332,7 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_content_plot(self, section_statuses: Dict[SampleName, str]):
         """Create the HTML for the FastQC adapter plot"""
 
-        pct_by_pos_by_sample: Dict[str, Dict[int, int]] = dict()
+        pct_by_pos_by_sample_by_adapter: Dict[str, Dict[str, Dict[int, float]]] = dict()
         for s_name, data_by_sample in self.fastqc_data.items():
             if data_by_sample.get("adapter_content") is None:
                 continue
@@ -1341,20 +1341,31 @@ class MultiqcModule(BaseMultiqcModule):
                     _range_bp_to_num(adapters["position"], method="start")
                 )  # split ranges like "10-15", take start
                 for adapter_name, percent in adapters.items():
-                    k = f"{s_name} - {adapter_name}"
                     if adapter_name != "position":
-                        pct_by_pos_by_sample.setdefault(k, {})[pos] = percent
-        if len(pct_by_pos_by_sample) == 0:
+                        pct_by_pos_by_sample_by_adapter.setdefault(adapter_name, {}).setdefault(str(s_name), {})[
+                            pos
+                        ] = percent
+        if len(pct_by_pos_by_sample_by_adapter) == 0:
             log.debug("adapter_content not found in FastQC reports")
             return None
 
         # Lots of these datasets will be all zeros.
         # Only take datasets with > 0.1% adapter contamination
-        low_adapter_series = sorted(
-            k for k, vals in pct_by_pos_by_sample.items() if not vals or max(vals.values()) < 0.1
-        )
+        low_adapter_series: List[Tuple[str, str]] = []
+        for adapter_name, data_by_series in pct_by_pos_by_sample_by_adapter.items():
+            for sample_name, vals in data_by_series.items():
+                if not vals or max(vals.values()) < 0.1:
+                    low_adapter_series.append((adapter_name, sample_name))
         low_adapter_series_set = set(low_adapter_series)
-        pct_by_pos_by_sample = {k: d for k, d in pct_by_pos_by_sample.items() if k not in low_adapter_series_set}
+
+        for adapter_name in list(pct_by_pos_by_sample_by_adapter.keys()):
+            pct_by_pos_by_sample_by_adapter[adapter_name] = {
+                sample_name: vals
+                for sample_name, vals in pct_by_pos_by_sample_by_adapter[adapter_name].items()
+                if (adapter_name, sample_name) not in low_adapter_series_set
+            }
+            if not pct_by_pos_by_sample_by_adapter[adapter_name]:
+                del pct_by_pos_by_sample_by_adapter[adapter_name]
 
         # Convert status dict format
         status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
@@ -1373,7 +1384,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
-            "series_label": "sample-adapter combinations",
+            "series_label": "samples",
         }
         if status_checks:
             pconfig["y_bands"] = [
@@ -1382,11 +1393,19 @@ class MultiqcModule(BaseMultiqcModule):
                 {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},
             ]
 
+        data_by_adapter = []
+        data_labels = []
+        for adapter_name in sorted(pct_by_pos_by_sample_by_adapter.keys()):
+            data_by_adapter.append(pct_by_pos_by_sample_by_adapter[adapter_name])
+            data_labels.append({"name": adapter_name, "ylab": "% of Sequences", "tt_suffix": "%"})
+        if len(data_labels) > 1:
+            pconfig["data_labels"] = data_labels
+
         plot = None
         alerts: Optional[SectionAlert] = None
         if low_adapter_series:
             n = len(low_adapter_series)
-            low_adapter_samples = sorted({series.rsplit(" - ", 1)[0] for series in low_adapter_series})
+            low_adapter_samples = sorted({sample_name for _, sample_name in low_adapter_series})
             n_samples = len(low_adapter_samples)
             alerts = SectionAlert(
                 message=(
@@ -1396,8 +1415,8 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
                 affected_samples=low_adapter_samples,
             )
-        if len(pct_by_pos_by_sample) > 0:
-            plot = linegraph.plot(pct_by_pos_by_sample, pconfig)
+        if len(data_by_adapter) > 0:
+            plot = linegraph.plot(data_by_adapter, pconfig)
 
         # Note - colours are messy as we've added adapter names here. Not
         # possible to break down pass / warn / fail for each adapter, which
@@ -1412,8 +1431,8 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
             Note that only samples with ≥ 0.1% adapter contamination are shown.
 
-            There may be several lines per sample, as one is shown for each adapter
-            detected in the file.
+            Use the adapter tabs above the plot to switch between individual adapters.
+            Each view shows one line per sample for the selected adapter.
 
             From the [FastQC Help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/10%20Adapter%20Content.html):
 
