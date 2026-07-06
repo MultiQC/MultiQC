@@ -84,6 +84,7 @@ module_order: List[Dict[str, Dict[str, Union[str, List[str]]]]]
 modules: List["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
 general_stats_plot: Optional[ViolinPlot]
 general_stats_html: str
+general_stats_title: str
 lint_errors: List[str]
 num_flat_plots: int
 some_plots_are_deferred: bool
@@ -145,6 +146,7 @@ def reset():
     global modules
     global general_stats_plot
     global general_stats_html
+    global general_stats_title
     global lint_errors
     global num_flat_plots
     global some_plots_are_deferred
@@ -191,6 +193,7 @@ def reset():
     modules = []
     general_stats_plot = None
     general_stats_html = ""
+    general_stats_title = "General Statistics"
     lint_errors = []
     num_flat_plots = 0
     some_plots_are_deferred = False
