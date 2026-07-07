@@ -147,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig = {
                 "smooth_points": 500,
                 "id": "salmon_plot",
-                "title": "Inferred Library Insert Size Distribution",
+                "title": "Salmon: Inferred Library Insert Size Distribution",
                 "ylab": "Percentage",
                 "ysuffix": "%",
                 "xlab": "Library Insert Size (bp)",
