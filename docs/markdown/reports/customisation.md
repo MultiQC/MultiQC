@@ -772,6 +772,15 @@ custom_plot_config:
     min: 1000
 ```
 
+To keep a large table inspectable as rows instead of only rendering the violin fallback:
+
+```yaml
+custom_plot_config:
+  general_stats_table:
+    pagination: true
+    default_rows_per_page: 25
+```
+
 Another example of how this can be used is to make all columns in the General Statistics table hidden by default:
 
 ```yaml

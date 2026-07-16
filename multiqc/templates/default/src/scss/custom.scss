@@ -443,8 +443,44 @@ input.form-control[type="color"] {
 }
 
 // Rotate chevron when table is expanded
+.mqc-table-responsive[data-collapsed="false"] + .mqc-table-pagination + .mqc-table-expand svg,
 .mqc-table-responsive[data-collapsed="false"] + .mqc-table-expand svg {
   transform: rotate(180deg);
+}
+
+.mqc-pagination-hidden {
+  display: none !important;
+}
+
+.mqc-table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: $spacer * 0.35;
+  padding: $spacer * 0.5;
+  background-color: var(--#{$prefix}secondary-bg);
+  border-bottom-left-radius: $border-radius;
+  border-bottom-right-radius: $border-radius;
+
+  .mqc-table-pagination-pages {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacer * 0.25;
+  }
+
+  .mqc-table-pagination-ellipsis {
+    color: var(--#{$prefix}tertiary-color);
+    padding: 0 $spacer * 0.25;
+  }
+
+  .mqc-table-page-size-label {
+    margin: 0;
+  }
+
+  .mqc-table-page-size {
+    width: auto;
+  }
 }
 
 .mqc_table_numrows_text {
@@ -926,6 +962,7 @@ g.annotation {
   .mqc_table_control_buttons,
   .mqc-table-expand,
   .mqc-table-expand,
+  .mqc-table-pagination,
   .mqc-section-plot .text-info,
   button,
   .btn {
@@ -947,6 +984,10 @@ g.annotation {
   // Expand long tables
   .mqc-table-responsive.mqc-table-collapse {
     max-height: none !important;
+  }
+
+  .mqc-pagination-hidden {
+    display: table-row !important;
   }
 
   .mqc_table thead {

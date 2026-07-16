@@ -465,6 +465,8 @@ to see the data distribution of each table column. By default, MultiQC starts us
 violin plots when a table has 500 rows or more. This can be changed by setting the
 `max_table_rows` config option.
 
+For tables where sample-level values are still useful at large row counts, tables can opt in to pagination instead of switching directly to a violin plot. Set `pagination: true` and choose `default_rows_per_page` (`10`, `25`, `50`, or `100`) in the table's plot config. Paginated tables keep the original table controls while showing one page of rows at a time.
+
 There are also interactive dots for separate samples that can be hovered to show
 sample name and highlight this sample in other rows. For efficiency, if the number
 of samples is above `violin_min_threshold_outliers` (default value 100), only dots

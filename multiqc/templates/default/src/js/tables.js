@@ -2,6 +2,99 @@
 // MultiQC Table code
 ////////////////////////////////////////////////
 
+function mqcTablePaginationGroups(table) {
+  const groups = [];
+  const seen = new Set();
+
+  table.find("tbody tr").each(function () {
+    const row = $(this);
+    const group = String(row.data("sample-group"));
+    if (seen.has(group)) return;
+    if (row.hasClass("row-empty") || row.hasClass("sample-hidden")) return;
+
+    seen.add(group);
+    groups.push(group);
+  });
+
+  return groups;
+}
+
+function mqcTablePaginationState(table) {
+  let state = table.data("pagination-state");
+  const wrapper = table.closest(".mqc-table-responsive");
+  const configuredPageSize = parseInt(wrapper.data("pagination-rows-per-page"), 10) || 25;
+
+  if (state === undefined) {
+    state = { page: 1, pageSize: configuredPageSize };
+    table.data("pagination-state", state);
+  }
+
+  return state;
+}
+
+function mqcUpdateTablePagination(table, resetPage = false) {
+  const wrapper = table.closest(".mqc-table-responsive");
+  if (String(wrapper.data("pagination-enabled")) !== "true") return;
+
+  const state = mqcTablePaginationState(table);
+  if (resetPage) state.page = 1;
+
+  const groups = mqcTablePaginationGroups(table);
+  const totalPages = Math.max(1, Math.ceil(groups.length / state.pageSize));
+  state.page = Math.min(Math.max(state.page, 1), totalPages);
+
+  const start = (state.page - 1) * state.pageSize;
+  const pageGroups = new Set(groups.slice(start, start + state.pageSize));
+
+  table.find("tbody tr").each(function () {
+    const row = $(this);
+    const group = String(row.data("sample-group"));
+    row.toggleClass("mqc-pagination-hidden", !pageGroups.has(group));
+  });
+
+  const tableId = table.attr("id");
+  $(`#${tableId}_numrows`).text(groups.length);
+  mqcRenderTablePagination(table, state, totalPages);
+}
+
+function mqcRenderTablePagination(table, state, totalPages) {
+  const tableId = table.attr("id");
+  const pagination = $(`.mqc-table-pagination[data-table-anchor="${tableId}"]`);
+  if (pagination.length === 0) return;
+
+  pagination.find(".mqc-table-page-prev").prop("disabled", state.page <= 1);
+  pagination.find(".mqc-table-page-next").prop("disabled", state.page >= totalPages);
+  pagination.find(".mqc-table-page-size").val(String(state.pageSize));
+
+  const pages = pagination.find(".mqc-table-pagination-pages");
+  pages.empty();
+
+  const pageNumbers = [];
+  for (let page = 1; page <= totalPages; page += 1) {
+    if (page === 1 || page === totalPages || Math.abs(page - state.page) <= 1) {
+      pageNumbers.push(page);
+    }
+  }
+
+  let previousPage = 0;
+  pageNumbers.forEach((page) => {
+    if (previousPage !== 0 && page - previousPage > 1) {
+      pages.append('<span class="mqc-table-pagination-ellipsis">...</span>');
+    }
+    const activeClass = page === state.page ? " active" : "";
+    pages.append(
+      `<button type="button" class="btn btn-outline-secondary btn-sm mqc-table-page-number${activeClass}" data-page="${page}">${page}</button>`,
+    );
+    previousPage = page;
+  });
+}
+
+function mqcRefreshAllTablePagination(resetPage = false) {
+  $(".mqc_per_sample_table").each(function () {
+    mqcUpdateTablePagination($(this), resetPage);
+  });
+}
+
 // Execute when page load has finished loading
 $(function () {
   if ($(".mqc_per_sample_table").length > 0) {
@@ -37,6 +130,14 @@ $(function () {
       headers: null, // can revert when https://github.com/Mottie/tablesorter/pull/1851 is merged
     });
 
+    $(".mqc_per_sample_table").each(function () {
+      mqcUpdateTablePagination($(this), true);
+    });
+
+    $(".mqc_per_sample_table").on("sortEnd", function () {
+      mqcUpdateTablePagination($(this), true);
+    });
+
     // Update tablesorter if samples renamed
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
       $(".mqc_per_sample_table").trigger("update");
@@ -57,6 +158,28 @@ $(function () {
       let violinAnchor = $(this).data("violin-anchor");
       $("#mqc_violintable_wrapper_" + tableAnchor).show();
       $("#mqc_violintable_wrapper_" + violinAnchor).hide();
+    });
+
+    $(".mqc-table-pagination").on("click", "button", function (e) {
+      e.preventDefault();
+      const btn = $(this);
+      const table = $(`#${btn.closest(".mqc-table-pagination").data("table-anchor")}`);
+      const state = mqcTablePaginationState(table);
+
+      if (btn.data("action") === "prev") state.page -= 1;
+      else if (btn.data("action") === "next") state.page += 1;
+      else if (btn.data("page") !== undefined) state.page = parseInt(btn.data("page"), 10);
+
+      mqcUpdateTablePagination(table);
+    });
+
+    $(".mqc-table-pagination .mqc-table-page-size").change(function () {
+      const select = $(this);
+      const table = $(`#${select.closest(".mqc-table-pagination").data("table-anchor")}`);
+      const state = mqcTablePaginationState(table);
+      state.pageSize = parseInt(select.val(), 10);
+      state.page = 1;
+      mqcUpdateTablePagination(table);
     });
 
     $(".mqc_table_copy_btn").click(function () {
@@ -151,6 +274,7 @@ $(function () {
         $("#" + tableAnchor + " tbody").append(hrows);
         $(this).data("direction", "desc");
       }
+      mqcUpdateTablePagination($("#" + tableAnchor), true);
     });
 
     // Rename samples
@@ -198,11 +322,6 @@ $(function () {
           tr.removeClass("sample-hidden");
         }
       });
-      $(".mqc_table_numrows").each(function () {
-        let tid = $(this).attr("id").replace("_numrows", "");
-        $(this).text($("#" + tid + " tbody tr:visible").length);
-      });
-
       // Hide empty columns
       $(".mqc_per_sample_table").each(function () {
         let table = $(this);
@@ -217,7 +336,14 @@ $(function () {
           let empties = 0;
           table
             .find("tbody tr td:nth-child(" + (gsthidx + 2) + ")")
-            .filter(":visible")
+            .filter(function () {
+              const row = $(this).closest("tr");
+              return (
+                !row.hasClass("sample-hidden") &&
+                !row.hasClass("row-empty") &&
+                !row.hasClass("expandable-row-secondary-hidden")
+              );
+            })
             .each(function () {
               let td = $(this);
               count += 1;
@@ -231,6 +357,23 @@ $(function () {
           }
           gsthidx += 1;
         });
+      });
+      $(".mqc_table_numrows").each(function () {
+        let tid = $(this).attr("id").replace("_numrows", "");
+        let table = $("#" + tid);
+        if (String(table.closest(".mqc-table-responsive").data("pagination-enabled")) === "true") {
+          mqcUpdateTablePagination(table, true);
+        } else {
+          $(this).text(
+            table.find("tbody tr").filter(function () {
+              return (
+                !$(this).hasClass("sample-hidden") &&
+                !$(this).hasClass("row-empty") &&
+                !$(this).hasClass("expandable-row-secondary-hidden")
+              );
+            }).length,
+          );
+        }
       });
       $(".mqc_table_numcols").each(function () {
         let tid = $(this).attr("id").replace("_numcols", "");
@@ -553,6 +696,7 @@ $(function () {
       });
       renderPlot(violinAnchor);
     }
+    mqcUpdateTablePagination($(target), false);
   }
 
   // Make rows in MultiQC "Configure Columns" tables sortable

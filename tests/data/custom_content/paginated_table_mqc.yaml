@@ -1,0 +1,42 @@
+id: paginated_custom_table
+section_name: Paginated Custom Table
+plot_type: table
+pconfig:
+  id: paginated_custom_table
+  title: Paginated Custom Table
+  pagination: true
+  default_rows_per_page: 10
+data:
+  sample_001: { metric: 1 }
+  sample_002: { metric: 2 }
+  sample_003: { metric: 3 }
+  sample_004: { metric: 4 }
+  sample_005: { metric: 5 }
+  sample_006: { metric: 6 }
+  sample_007: { metric: 7 }
+  sample_008: { metric: 8 }
+  sample_009: { metric: 9 }
+  sample_010: { metric: 10 }
+  sample_011: { metric: 11 }
+  sample_012: { metric: 12 }
+  sample_013: { metric: 13 }
+  sample_014: { metric: 14 }
+  sample_015: { metric: 15 }
+  sample_016: { metric: 16 }
+  sample_017: { metric: 17 }
+  sample_018: { metric: 18 }
+  sample_019: { metric: 19 }
+  sample_020: { metric: 20 }
+  sample_021: { metric: 21 }
+  sample_022: { metric: 22 }
+  sample_023: { metric: 23 }
+  sample_024: { metric: 24 }
+  sample_025: { metric: 25 }
+  sample_026: { metric: 26 }
+  sample_027: { metric: 27 }
+  sample_028: { metric: 28 }
+  sample_029: { metric: 29 }
+  sample_030: { metric: 30 }
+headers:
+  metric:
+    title: Metric

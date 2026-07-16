@@ -7,8 +7,24 @@ import math
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
+from html import escape as html_escape
 from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Mapping,
+    NewType,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    TypedDict,
+    Union,
+    cast,
+)
 
 from natsort import natsorted
 from pydantic import BaseModel, Field
@@ -39,6 +55,8 @@ class TableConfig(PConfig):
     parse_numeric: bool = True
     rows_are_samples: bool = True
     flat_if_very_large: bool = False
+    pagination: bool = False
+    default_rows_per_page: Literal[10, 25, 50, 100] = 25
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("table",), **data)
@@ -1027,6 +1045,14 @@ def render_html(
             col_to_modal_headers.pop(col_anchor, None)
             logger.debug(f"Removing header {col_key} from table, as no data")
 
+    # Pagination is page-by-sample-group so secondary grouped rows stay with their primary row.
+    pagination_enabled = (
+        dt.pconfig.pagination and len(group_to_sample_to_anchor_to_td) > dt.pconfig.default_rows_per_page
+    )
+    pagination_enabled_str = str(pagination_enabled).lower()
+    pagination_total_rows = sum(len(rows_by_sample) for rows_by_sample in group_to_sample_to_anchor_to_td.values())
+    pagination_aria_label = html_escape(str(table_title), quote=True)
+
     # Put everything together
     html = ""
 
@@ -1186,7 +1212,11 @@ def render_html(
     )
     html += f"""
         <div id="{dt.anchor}_container" class="mqc_table_container">
-            <div class="table-responsive mqc-table-responsive {collapse_class}" data-collapsed="{str(collapse_class != "").lower()}">
+            <div class="table-responsive mqc-table-responsive {collapse_class}"
+                data-collapsed="{str(collapse_class != "").lower()}"
+                data-pagination-enabled="{pagination_enabled_str}"
+                data-pagination-rows-per-page="{dt.pconfig.default_rows_per_page}"
+                data-pagination-total-rows="{pagination_total_rows}">
                 <table id="{dt.anchor}" class="table table-sm mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist_js(dt)}">
         """
 
@@ -1239,6 +1269,24 @@ def render_html(
                 html += cell_html
             html += "</tr>"
     html += "</tbody></table></div>"
+    if pagination_enabled:
+        page_size_options = "\n".join(
+            f'<option value="{size}"{" selected" if size == dt.pconfig.default_rows_per_page else ""}>{size} rows</option>'
+            for size in [10, 25, 50, 100]
+        )
+        html += f"""
+        <nav class="mqc-table-pagination" data-table-anchor="{dt.anchor}" aria-label="Pagination for {pagination_aria_label}">
+            <button type="button" class="btn btn-outline-secondary btn-sm mqc-table-page-prev" data-action="prev">Previous</button>
+            <span class="mqc-table-pagination-pages" aria-live="polite"></span>
+            <button type="button" class="btn btn-outline-secondary btn-sm mqc-table-page-next" data-action="next">Next</button>
+            <label class="mqc-table-page-size-label">
+                <span class="visually-hidden">Rows per page</span>
+                <select class="form-select form-select-sm mqc-table-page-size">
+                    {page_size_options}
+                </select>
+            </label>
+        </nav>
+        """
     if len(group_to_sample_to_anchor_to_td) > 10 and config.collapse_tables:
         html += (
             f'<div class="mqc-table-expand"><span>Expand table</span> {get_material_icon("mdi:chevron-down", 20)}</div>'

@@ -933,12 +933,12 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         # - plot a Violin in Python, and serialise the figure instead of the datasets
         show_table = True
         max_n_samples = len(ds_samples)
-        if max_n_samples > config.max_table_rows and not no_violin:
+        if max_n_samples > config.max_table_rows and not no_violin and not model.pconfig.pagination:
             show_table = False
             if show_table_by_default:
                 logger.debug(
                     f"Table '{model.anchor}': sample number {max_n_samples} > {config.max_table_rows}, "
-                    "Will render only a violin plot instead of the table"
+                    "Will render only a violin plot instead of the table because table pagination is disabled"
                 )
 
         return ViolinPlot(
