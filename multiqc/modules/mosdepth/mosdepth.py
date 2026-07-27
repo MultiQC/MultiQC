@@ -1,13 +1,14 @@
 import fnmatch
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 from multiqc import Plot, config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.qualimap.QM_BamQC import genome_fraction_helptext
 from multiqc.plots import bargraph, linegraph
 from multiqc.plots.linegraph import smooth_array
+from multiqc.plots.table_object import ValueT
 from multiqc.utils.util_functions import update_dict
 
 log = logging.getLogger(__name__)
@@ -430,7 +431,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             },
         )
-        self.general_stats_addcols(genstats_by_sample, genstats_headers)
+        self.general_stats_addcols(cast(Dict[str, Dict[str, ValueT]], genstats_by_sample), genstats_headers)
 
     def parse_cov_dist(
         self, scope: str
