@@ -305,7 +305,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.write_data_file(perchrom_avg_by_sample, "mosdepth_perchrom")
 
                 num_contigs = max([len(x.keys()) for x in perchrom_avg_by_sample.values()])
-                perchrom_plot: Union[Plot, str]
+                perchrom_plot: Optional[Union[Plot, str]]
                 if num_contigs > 1:
                     perchrom_plot = linegraph.plot(
                         perchrom_avg_by_sample,
