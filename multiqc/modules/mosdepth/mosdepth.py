@@ -1,14 +1,16 @@
 import fnmatch
+import gzip
 import logging
+import os
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 
 from multiqc import Plot, config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.qualimap.QM_BamQC import genome_fraction_helptext
-from multiqc.plots import bargraph, linegraph
+from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.linegraph import smooth_array
-from multiqc.plots.table_object import ValueT
+from multiqc.plots.table_object import ColumnDict, ValueT
 from multiqc.utils.util_functions import update_dict
 
 log = logging.getLogger(__name__)
@@ -77,6 +79,89 @@ def calc_median_coverage(cum_fraction_by_cov) -> Optional[float]:
     return median_cov
 
 
+def parse_regions_bed_lines(lines: Iterable[str]) -> Dict[Tuple[str, int, int], float]:
+    """
+    Parse lines of a decompressed {prefix}.regions.bed.gz file:
+
+    chrom  start  end  [name]  mean_coverage
+
+    The name column is only present when the BED file passed to --by had a 4th column; it isn't
+    needed here since {prefix}.thresholds.bed.gz always carries a region name (see
+    parse_thresholds_bed_lines), so we only key on position.
+    """
+    mean_cov_by_region: Dict[Tuple[str, int, int], float] = {}
+    for line in lines:
+        fields = line.rstrip("\n").split("\t")
+        if len(fields) == 5:
+            chrom, start, end, _name, mean = fields
+        elif len(fields) == 4:
+            chrom, start, end, mean = fields
+        else:
+            raise ValueError(f"Unexpected number of columns ({len(fields)}): {fields}")
+        mean_cov_by_region[(chrom, int(start), int(end))] = float(mean)
+    return mean_cov_by_region
+
+
+def parse_thresholds_bed_lines(
+    lines: Iterable[str],
+) -> Tuple[List[int], Dict[Tuple[str, int, int], Tuple[str, List[int]]]]:
+    """
+    Parse lines of a decompressed {prefix}.thresholds.bed.gz file:
+
+    #chrom  start  end  region  1X  10X  20X  30X  (threshold columns vary with --thresholds)
+
+    The region name is "unknown" for every row when the BED file passed to --by had no 4th column.
+    """
+    lines_iter = iter(lines)
+    header = next(lines_iter).rstrip("\n").lstrip("#").split("\t")
+    if header[:4] != ["chrom", "start", "end", "region"]:
+        raise ValueError(f"Unexpected header: {header}")
+    thresholds = [int(col.rstrip("X")) for col in header[4:]]
+
+    by_region: Dict[Tuple[str, int, int], Tuple[str, List[int]]] = {}
+    for line in lines_iter:
+        fields = line.rstrip("\n").split("\t")
+        chrom, start, end, name = fields[:4]
+        counts = [int(x) for x in fields[4:]]
+        by_region[(chrom, int(start), int(end))] = (name, counts)
+
+    return thresholds, by_region
+
+
+def build_per_region_rows(
+    thresholds: List[int],
+    by_region: Dict[Tuple[str, int, int], Tuple[str, List[int]]],
+    mean_cov_by_region: Dict[Tuple[str, int, int], float],
+) -> Dict[str, Dict[str, Union[str, int, float]]]:
+    """
+    Combine one sample's parsed thresholds and regions data into per-region table rows, keyed by
+    a display label built from the region name.
+
+    Region names aren't guaranteed unique within a sample (e.g. one row per exon for the same
+    gene, or "unknown" for every row when --by had no name column), so whenever a name repeats,
+    the region's coordinates are appended to disambiguate.
+    """
+    names = [name for name, _ in by_region.values()]
+    duplicate_names = {name for name in names if names.count(name) > 1}
+
+    rows: Dict[str, Dict[str, Union[str, int, float]]] = {}
+    for (chrom, start, end), (name, counts) in by_region.items():
+        display_name = f"{name} ({chrom}:{start}-{end})" if name in duplicate_names else name
+        row: Dict[str, Union[str, int, float]] = {"chrom": chrom, "start": start, "end": end}
+
+        mean_cov = mean_cov_by_region.get((chrom, start, end))
+        if mean_cov is not None:
+            row["mean_coverage"] = mean_cov
+
+        length = end - start
+        for t, count in zip(thresholds, counts):
+            row[f"pct_at_{t}x"] = 100.0 * count / length if length > 0 else 0.0
+
+        rows[display_name] = row
+
+    return rows
+
+
 class MultiqcModule(BaseMultiqcModule):
     """
     Mosdepth can generate several output files all with a common prefix and different endings:
@@ -88,6 +173,13 @@ class MultiqcModule(BaseMultiqcModule):
     - quantized output that merges adjacent bases as long as they fall in the same coverage bins (`{prefix}.quantized.bed.gz`),
     - threshold output to indicate how many bases in each region are covered at the given thresholds (`{prefix}.thresholds.bed.gz`)
     - summary output providing region length, coverage mean, min, and max for each region. (`{prefix}.mosdepth.summary.txt`)
+
+    When mosdepth is run with `--by BED_FILE --thresholds`, the module joins
+    `{prefix}.regions.bed.gz` (mean coverage per region) with `{prefix}.thresholds.bed.gz`
+    (bases covered at each requested threshold per region) into a "Per-region coverage" table,
+    with one row per sample and region showing the mean coverage and the percentage of bases
+    at or above each threshold. This is useful for targeted sequencing (panels, adaptive
+    sampling), where mean coverage alone can hide dropout in part of a target.
 
     The MultiQC module plots coverage distributions from 2 kinds of outputs:
 
@@ -213,9 +305,18 @@ class MultiqcModule(BaseMultiqcModule):
         data_dicts_global = [self.ignore_samples(d) for d in raw_cov_dist_global]
         data_dicts_region = [self.ignore_samples(d) for d in raw_cov_dist_region]
 
+        mean_cov_by_region_by_sample = self.ignore_samples(self.parse_regions_bed())
+        thresholds_by_sample = self.ignore_samples(self.parse_thresholds_bed())
+
         samples_global = set.union(*(set(d.keys()) for d in data_dicts_global))
         samples_region = set.union(*(set(d.keys()) for d in data_dicts_region))
-        samples_found = samples_in_summary | samples_global | samples_region
+        samples_found = (
+            samples_in_summary
+            | samples_global
+            | samples_region
+            | set(mean_cov_by_region_by_sample)
+            | set(thresholds_by_sample)
+        )
         if not samples_found:
             raise ModuleNoSamplesFound
         log.info(f"Found reports for {len(samples_found)} samples")
@@ -433,6 +534,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
         self.general_stats_addcols(cast(Dict[str, Dict[str, ValueT]], genstats_by_sample), genstats_headers)
 
+        self.add_per_region_coverage_section(mean_cov_by_region_by_sample, thresholds_by_sample)
+
     def parse_cov_dist(
         self, scope: str
     ) -> Tuple[
@@ -605,3 +708,129 @@ class MultiqcModule(BaseMultiqcModule):
             xy_cov_by_sample,
             genstats_by_sample,
         )
+
+    def parse_regions_bed(self) -> Dict[str, Dict[Tuple[str, int, int], float]]:
+        """
+        Parse {prefix}.regions.bed.gz, produced with `--by BED_FILE` or `--by <window_size>`.
+        """
+        mean_cov_by_region_by_sample: Dict[str, Dict[Tuple[str, int, int], float]] = {}
+        for f in self.find_log_files("mosdepth/regions_bed", filecontents=False, filehandles=False):
+            s_name = self.clean_s_name(f["fn"], f)
+            with gzip.open(os.path.join(f["root"], f["fn"]), "rt") as fh:
+                try:
+                    mean_cov_by_region = parse_regions_bed_lines(fh)
+                except ValueError as e:
+                    raise ValueError(f"Error parsing {f['fn']}: {e}") from e
+
+            if mean_cov_by_region:
+                self.add_data_source(f, s_name=s_name, section="regions_bed")
+                mean_cov_by_region_by_sample[s_name] = mean_cov_by_region
+
+        return mean_cov_by_region_by_sample
+
+    def parse_thresholds_bed(
+        self,
+    ) -> Dict[str, Tuple[List[int], Dict[Tuple[str, int, int], Tuple[str, List[int]]]]]:
+        """
+        Parse {prefix}.thresholds.bed.gz, produced with `--by BED_FILE --thresholds`.
+        """
+        thresholds_by_region_by_sample: Dict[str, Tuple[List[int], Dict[Tuple[str, int, int], Tuple[str, List[int]]]]]
+        thresholds_by_region_by_sample = {}
+        for f in self.find_log_files("mosdepth/thresholds_bed", filecontents=False, filehandles=False):
+            s_name = self.clean_s_name(f["fn"], f)
+            with gzip.open(os.path.join(f["root"], f["fn"]), "rt") as fh:
+                try:
+                    thresholds, by_region = parse_thresholds_bed_lines(fh)
+                except ValueError as e:
+                    raise ValueError(f"Error parsing {f['fn']}: {e}") from e
+
+            if by_region:
+                self.add_data_source(f, s_name=s_name, section="thresholds_bed")
+                thresholds_by_region_by_sample[s_name] = (thresholds, by_region)
+
+        return thresholds_by_region_by_sample
+
+    def add_per_region_coverage_section(
+        self,
+        mean_cov_by_region_by_sample: Dict[str, Dict[Tuple[str, int, int], float]],
+        thresholds_by_sample: Dict[str, Tuple[List[int], Dict[Tuple[str, int, int], Tuple[str, List[int]]]]],
+    ) -> None:
+        """
+        Join {prefix}.regions.bed.gz and {prefix}.thresholds.bed.gz on (chrom, start, end) into a
+        per-region coverage table: region name, mean coverage, and % bases at each --thresholds level.
+        """
+        if not thresholds_by_sample:
+            return
+
+        all_thresholds: List[int] = sorted({t for thresholds, _ in thresholds_by_sample.values() for t in thresholds})
+
+        data: Dict[str, Dict[str, Union[str, int, float]]] = {}
+        for s_name, (thresholds, by_region) in thresholds_by_sample.items():
+            mean_cov_by_region = mean_cov_by_region_by_sample.get(s_name, {})
+            rows = build_per_region_rows(thresholds, by_region, mean_cov_by_region)
+            for region_label, row in rows.items():
+                data[f"{s_name} | {region_label}"] = row
+
+        headers: Dict[str, ColumnDict] = {
+            "chrom": {"title": "Chrom", "description": "Chromosome or contig", "scale": False},
+            "start": {
+                "title": "Start",
+                "description": "Region start position",
+                "scale": False,
+                "format": "{:,d}",
+            },
+            "end": {
+                "title": "End",
+                "description": "Region end position",
+                "scale": False,
+                "format": "{:,d}",
+            },
+            "mean_coverage": {
+                "title": "Mean Cov.",
+                "description": "Mean coverage across the region",
+                "min": 0,
+                "suffix": "X",
+                "scale": "BuPu",
+            },
+        }
+        for t in all_thresholds:
+            headers[f"pct_at_{t}x"] = {
+                "title": f"≥ {t}X",
+                "description": f"Percentage of bases in the region covered at least {t}X",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            }
+
+        self.add_section(
+            name="Per-region coverage",
+            anchor="mosdepth-per-region-coverage",
+            description=(
+                "Mean coverage and the percentage of bases at each requested threshold, per target "
+                "region. Generated when mosdepth is run with `--by BED_FILE --thresholds`."
+            ),
+            helptext="""
+            Joins the `{prefix}.regions.bed.gz` output (mean coverage per region) with the
+            `{prefix}.thresholds.bed.gz` output (bases covered at each requested threshold per
+            region) on chromosome, start, and end position.
+
+            The percentage of bases at or above each threshold is calculated as
+            `bases_at_threshold / (end - start) * 100`.
+
+            This is particularly useful for targeted sequencing (panels, adaptive sampling),
+            where a region can have a high mean coverage while still having a dropout that never
+            reaches a clinically required depth.
+            """,
+            plot=table.plot(
+                data,
+                headers,
+                pconfig={
+                    "id": "mosdepth-per-region-table",
+                    "title": "Mosdepth: Per-region coverage",
+                    "col1_header": "Sample | Region",
+                },
+            ),
+        )
+
+        self.write_data_file(data, "mosdepth_per_region_coverage")
