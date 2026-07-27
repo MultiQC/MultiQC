@@ -207,10 +207,10 @@ class MultiqcModule(BaseMultiqcModule):
         genstats_by_sample = defaultdict(dict, self.ignore_samples(genstats_by_sample))
         samples_in_summary = set(genstats_by_sample.keys())
 
-        data_dicts_global = self.parse_cov_dist("global")
-        data_dicts_region = self.parse_cov_dist("region")
-        data_dicts_global = [self.ignore_samples(d) for d in data_dicts_global]
-        data_dicts_region = [self.ignore_samples(d) for d in data_dicts_region]
+        raw_cov_dist_global = self.parse_cov_dist("global")
+        raw_cov_dist_region = self.parse_cov_dist("region")
+        data_dicts_global = [self.ignore_samples(d) for d in raw_cov_dist_global]
+        data_dicts_region = [self.ignore_samples(d) for d in raw_cov_dist_region]
 
         samples_global = set.union(*(set(d.keys()) for d in data_dicts_global))
         samples_region = set.union(*(set(d.keys()) for d in data_dicts_region))
