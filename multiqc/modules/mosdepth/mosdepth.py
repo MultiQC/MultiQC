@@ -157,7 +157,7 @@ def build_per_region_rows(
     rows: Dict[str, Dict[str, Union[str, int, float]]] = {}
     for (chrom, start, end), (name, counts) in by_region.items():
         display_name = f"{name} ({chrom}:{start}-{end})" if name in duplicate_names else name
-        row: Dict[str, Union[str, int, float]] = {"chrom": chrom, "start": start, "end": end}
+        row: Dict[str, Union[str, int, float]] = {"coordinates": f"{chrom}:{start}-{end}"}
 
         mean_cov = mean_cov_by_region.get((chrom, start, end))
         if mean_cov is not None:
@@ -791,19 +791,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data[f"{s_name} | {region_label}"] = row
 
         headers: Dict[str, ColumnDict] = {
-            "chrom": {"title": "Chrom", "description": "Chromosome or contig", "scale": False},
-            "start": {
-                "title": "Start",
-                "description": "Region start position",
-                "scale": False,
-                "format": "{:,d}",
-            },
-            "end": {
-                "title": "End",
-                "description": "Region end position",
-                "scale": False,
-                "format": "{:,d}",
-            },
+            "coordinates": {"title": "Coordinates", "description": "Chromosome:start-end", "scale": False},
             "mean_coverage": {
                 "title": "Mean Cov.",
                 "description": "Mean coverage across the region",

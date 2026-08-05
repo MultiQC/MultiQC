@@ -85,9 +85,7 @@ class TestBuildPerRegionRows:
 
         assert rows == {
             "TNFRSF14": {
-                "chrom": "1",
-                "start": 2488047,
-                "end": 2488227,
+                "coordinates": "1:2488047-2488227",
                 "mean_coverage": 45.83,
                 "pct_at_20x": 100.0,
                 "pct_at_30x": 100.0,
