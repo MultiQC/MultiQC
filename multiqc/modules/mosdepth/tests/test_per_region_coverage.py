@@ -31,15 +31,15 @@ class TestParseRegionsBedLines:
     def test_with_name_column(self):
         result = parse_regions_bed_lines(REGIONS_WITH_NAMES.splitlines())
         assert result == {
-            ("1", 2488047, 2488227): 45.83,
-            ("1", 2489098, 2489338): 50.91,
+            ("1", 2488047, 2488227): ("TNFRSF14", 45.83),
+            ("1", 2489098, 2489338): ("NPHP4", 50.91),
         }
 
     def test_without_name_column(self):
         result = parse_regions_bed_lines(REGIONS_WITHOUT_NAMES.splitlines())
         assert result == {
-            ("CM000663.2", 0, 10): 12.50,
-            ("CM000663.2", 10, 20): 0.00,
+            ("CM000663.2", 0, 10): (None, 12.50),
+            ("CM000663.2", 10, 20): (None, 0.00),
         }
 
     def test_empty_file(self):
@@ -79,7 +79,7 @@ class TestBuildPerRegionRows:
         by_region = {
             ("1", 2488047, 2488227): ("TNFRSF14", [180, 180]),
         }
-        mean_cov_by_region = {("1", 2488047, 2488227): 45.83}
+        mean_cov_by_region = {("1", 2488047, 2488227): ("TNFRSF14", 45.83)}
 
         rows = build_per_region_rows(thresholds, by_region, mean_cov_by_region)
 
@@ -100,6 +100,37 @@ class TestBuildPerRegionRows:
 
         assert "mean_coverage" not in rows["GENE1"]
         assert rows["GENE1"]["pct_at_20x"] == 50.0
+
+    def test_regions_only_no_thresholds(self):
+        """--by without --thresholds: mean coverage only, no pct_at_* columns."""
+        rows = build_per_region_rows(
+            thresholds=[],
+            by_region={},
+            mean_cov_by_region={("1", 0, 100): ("GENE1", 30.5)},
+        )
+
+        assert rows == {"GENE1": {"coordinates": "1:0-100", "mean_coverage": 30.5}}
+
+    def test_regions_only_without_name_falls_back_to_coordinates(self):
+        """A regions-only run with a 3-column --by BED has no name column at all."""
+        rows = build_per_region_rows(
+            thresholds=[],
+            by_region={},
+            mean_cov_by_region={("1", 0, 100): (None, 30.5)},
+        )
+
+        assert rows == {"1:0-100": {"coordinates": "1:0-100", "mean_coverage": 30.5}}
+
+    def test_thresholds_name_preferred_over_regions_name(self):
+        """If a sample somehow has both, the thresholds file's name (always present) wins."""
+        rows = build_per_region_rows(
+            thresholds=[20],
+            by_region={("1", 0, 100): ("FROM_THRESHOLDS", [50])},
+            mean_cov_by_region={("1", 0, 100): ("FROM_REGIONS", 30.5)},
+        )
+
+        assert "FROM_THRESHOLDS" in rows
+        assert "FROM_REGIONS" not in rows
 
     def test_duplicate_names_disambiguated_with_coordinates(self):
         thresholds = [20]
