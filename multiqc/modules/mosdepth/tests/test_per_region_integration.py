@@ -3,6 +3,7 @@ import gzip
 import pytest
 
 from multiqc import report, reset
+from multiqc.base_module import ModuleNoSamplesFound
 
 
 @pytest.fixture(autouse=True)
@@ -11,8 +12,10 @@ def _reset_report():
     reset()
 
 
-def test_thresholds_bed_parse_error_includes_filename(tmp_path):
-    """A malformed thresholds.bed.gz should raise with the offending filename, not a bare traceback."""
+def test_thresholds_bed_parse_error_is_skipped_not_crashed(tmp_path, caplog):
+    """A malformed thresholds.bed.gz (e.g. a same-named file from another tool) should be skipped
+    with a debug log, not crash the module - *.thresholds.bed.gz is a generic enough name that a
+    coincidental match from an unrelated tool is expected to happen."""
     thresholds_file = tmp_path / "sample.thresholds.bed.gz"
     thresholds_file.write_bytes(gzip.compress(b"chrom\tstart\tend\tname\t20X\n1\t100\t200\tGENE1\t50\n"))
 
@@ -21,8 +24,11 @@ def test_thresholds_bed_parse_error_includes_filename(tmp_path):
 
     from multiqc.modules.mosdepth.mosdepth import MultiqcModule
 
-    with pytest.raises(ValueError, match="sample.thresholds.bed.gz"):
-        MultiqcModule()
+    with caplog.at_level("DEBUG", logger="multiqc.modules.mosdepth.mosdepth"):
+        with pytest.raises(ModuleNoSamplesFound):
+            MultiqcModule()
+
+    assert "sample.thresholds.bed.gz" in caplog.text
 
 
 def test_regions_bed_without_thresholds_skips_per_region_section(tmp_path):

@@ -191,10 +191,11 @@ class MultiqcModule(BaseMultiqcModule):
     at or above each threshold. This is useful for targeted sequencing (panels, adaptive
     sampling), where mean coverage alone can hide dropout in part of a target.
 
-    `*.regions.bed.gz` and `*.thresholds.bed.gz` are matched by filename only (mosdepth's own
-    naming convention), since they're gzip-compressed and MultiQC's search doesn't decompress
-    files to sniff content. Another tool's file with one of these exact suffixes would be picked
-    up too and fail to parse; if that happens in practice, exclude it with `path_filters_exclude`.
+    `*.regions.bed.gz` and `*.thresholds.bed.gz` are always exactly those suffixes in mosdepth's
+    own output, but they're matched by filename only, since they're gzip-compressed and MultiQC's
+    search doesn't decompress files to sniff content. A same-suffix file coincidentally produced
+    by another tool would be picked up too; if it doesn't parse as mosdepth output, it's silently
+    skipped (see `-v` debug logs) rather than failing the whole mosdepth run.
 
     The MultiQC module plots coverage distributions from 2 kinds of outputs:
 
@@ -735,7 +736,10 @@ class MultiqcModule(BaseMultiqcModule):
                 try:
                     mean_cov_by_region = parse_regions_bed_lines(fh)
                 except ValueError as e:
-                    raise ValueError(f"Error parsing {f['fn']}: {e}") from e
+                    # *.regions.bed.gz is a generic name other tools could coincidentally produce;
+                    # skip rather than crash the whole module on a file that isn't really ours.
+                    log.debug(f"Skipping {f['fn']}: doesn't look like mosdepth regions.bed.gz output ({e})")
+                    continue
 
             if mean_cov_by_region:
                 self.add_data_source(f, s_name=s_name, section="regions_bed")
@@ -754,7 +758,10 @@ class MultiqcModule(BaseMultiqcModule):
                 try:
                     thresholds, by_region = parse_thresholds_bed_lines(fh)
                 except ValueError as e:
-                    raise ValueError(f"Error parsing {f['fn']}: {e}") from e
+                    # *.thresholds.bed.gz is a generic name other tools could coincidentally produce;
+                    # skip rather than crash the whole module on a file that isn't really ours.
+                    log.debug(f"Skipping {f['fn']}: doesn't look like mosdepth thresholds.bed.gz output ({e})")
+                    continue
 
             if by_region:
                 self.add_data_source(f, s_name=s_name, section="thresholds_bed")
