@@ -79,7 +79,16 @@ def calc_median_coverage(cum_fraction_by_cov) -> Optional[float]:
     return median_cov
 
 
-def parse_regions_bed_lines(lines: Iterable[str]) -> Dict[Tuple[str, int, int], float]:
+# (chrom, start, end)
+RegionKey = Tuple[str, int, int]
+MeanCovByRegion = Dict[RegionKey, float]
+# region -> (name, [base_count_at_threshold, ...])
+ThresholdsByRegion = Dict[RegionKey, Tuple[str, List[int]]]
+# sample -> ([threshold_level, ...], ThresholdsByRegion)
+ThresholdsBySample = Dict[str, Tuple[List[int], ThresholdsByRegion]]
+
+
+def parse_regions_bed_lines(lines: Iterable[str]) -> MeanCovByRegion:
     """
     Parse lines of a decompressed {prefix}.regions.bed.gz file:
 
@@ -89,7 +98,7 @@ def parse_regions_bed_lines(lines: Iterable[str]) -> Dict[Tuple[str, int, int], 
     needed here since {prefix}.thresholds.bed.gz always carries a region name (see
     parse_thresholds_bed_lines), so we only key on position.
     """
-    mean_cov_by_region: Dict[Tuple[str, int, int], float] = {}
+    mean_cov_by_region: MeanCovByRegion = {}
     for line in lines:
         fields = line.rstrip("\n").split("\t")
         if len(fields) == 5:
@@ -102,9 +111,7 @@ def parse_regions_bed_lines(lines: Iterable[str]) -> Dict[Tuple[str, int, int], 
     return mean_cov_by_region
 
 
-def parse_thresholds_bed_lines(
-    lines: Iterable[str],
-) -> Tuple[List[int], Dict[Tuple[str, int, int], Tuple[str, List[int]]]]:
+def parse_thresholds_bed_lines(lines: Iterable[str]) -> Tuple[List[int], ThresholdsByRegion]:
     """
     Parse lines of a decompressed {prefix}.thresholds.bed.gz file:
 
@@ -121,7 +128,7 @@ def parse_thresholds_bed_lines(
         raise ValueError(f"Unexpected header: {header}")
     thresholds = [int(col.rstrip("X")) for col in header[4:]]
 
-    by_region: Dict[Tuple[str, int, int], Tuple[str, List[int]]] = {}
+    by_region: ThresholdsByRegion = {}
     for line in lines_iter:
         fields = line.rstrip("\n").split("\t")
         chrom, start, end, name = fields[:4]
@@ -133,8 +140,8 @@ def parse_thresholds_bed_lines(
 
 def build_per_region_rows(
     thresholds: List[int],
-    by_region: Dict[Tuple[str, int, int], Tuple[str, List[int]]],
-    mean_cov_by_region: Dict[Tuple[str, int, int], float],
+    by_region: ThresholdsByRegion,
+    mean_cov_by_region: MeanCovByRegion,
 ) -> Dict[str, Dict[str, Union[str, int, float]]]:
     """
     Combine one sample's parsed thresholds and regions data into per-region table rows, keyed by
@@ -717,11 +724,11 @@ class MultiqcModule(BaseMultiqcModule):
             genstats_by_sample,
         )
 
-    def parse_regions_bed(self) -> Dict[str, Dict[Tuple[str, int, int], float]]:
+    def parse_regions_bed(self) -> Dict[str, MeanCovByRegion]:
         """
         Parse {prefix}.regions.bed.gz, produced with `--by BED_FILE` or `--by <window_size>`.
         """
-        mean_cov_by_region_by_sample: Dict[str, Dict[Tuple[str, int, int], float]] = {}
+        mean_cov_by_region_by_sample: Dict[str, MeanCovByRegion] = {}
         for f in self.find_log_files("mosdepth/regions_bed", filecontents=False, filehandles=False):
             s_name = self.clean_s_name(f["fn"], f)
             with gzip.open(os.path.join(f["root"], f["fn"]), "rt") as fh:
@@ -736,14 +743,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         return mean_cov_by_region_by_sample
 
-    def parse_thresholds_bed(
-        self,
-    ) -> Dict[str, Tuple[List[int], Dict[Tuple[str, int, int], Tuple[str, List[int]]]]]:
+    def parse_thresholds_bed(self) -> ThresholdsBySample:
         """
         Parse {prefix}.thresholds.bed.gz, produced with `--by BED_FILE --thresholds`.
         """
-        thresholds_by_region_by_sample: Dict[str, Tuple[List[int], Dict[Tuple[str, int, int], Tuple[str, List[int]]]]]
-        thresholds_by_region_by_sample = {}
+        thresholds_by_region_by_sample: ThresholdsBySample = {}
         for f in self.find_log_files("mosdepth/thresholds_bed", filecontents=False, filehandles=False):
             s_name = self.clean_s_name(f["fn"], f)
             with gzip.open(os.path.join(f["root"], f["fn"]), "rt") as fh:
@@ -760,8 +764,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def add_per_region_coverage_section(
         self,
-        mean_cov_by_region_by_sample: Dict[str, Dict[Tuple[str, int, int], float]],
-        thresholds_by_sample: Dict[str, Tuple[List[int], Dict[Tuple[str, int, int], Tuple[str, List[int]]]]],
+        mean_cov_by_region_by_sample: Dict[str, MeanCovByRegion],
+        thresholds_by_sample: ThresholdsBySample,
     ) -> None:
         """
         Join {prefix}.regions.bed.gz and {prefix}.thresholds.bed.gz on (chrom, start, end) into a
