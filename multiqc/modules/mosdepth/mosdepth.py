@@ -2,7 +2,7 @@ import fnmatch
 import gzip
 import logging
 import os
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 
 from multiqc import Plot, config
@@ -141,8 +141,8 @@ def build_per_region_rows(
     gene, or "unknown" for every row when --by had no name column), so whenever a name repeats,
     the region's coordinates are appended to disambiguate.
     """
-    names = [name for name, _ in by_region.values()]
-    duplicate_names = {name for name in names if names.count(name) > 1}
+    name_counts = Counter(name for name, _ in by_region.values())
+    duplicate_names = {name for name, count in name_counts.items() if count > 1}
 
     rows: Dict[str, Dict[str, Union[str, int, float]]] = {}
     for (chrom, start, end), (name, counts) in by_region.items():
