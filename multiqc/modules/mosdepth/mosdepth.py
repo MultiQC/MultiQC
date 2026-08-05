@@ -113,7 +113,10 @@ def parse_thresholds_bed_lines(
     The region name is "unknown" for every row when the BED file passed to --by had no 4th column.
     """
     lines_iter = iter(lines)
-    header = next(lines_iter).rstrip("\n").lstrip("#").split("\t")
+    header_line = next(lines_iter, None)
+    if header_line is None:
+        raise ValueError("Empty file")
+    header = header_line.rstrip("\n").lstrip("#").split("\t")
     if header[:4] != ["chrom", "start", "end", "region"]:
         raise ValueError(f"Unexpected header: {header}")
     thresholds = [int(col.rstrip("X")) for col in header[4:]]

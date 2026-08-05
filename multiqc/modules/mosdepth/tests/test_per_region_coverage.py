@@ -68,6 +68,10 @@ class TestParseThresholdsBedLines:
         with pytest.raises(ValueError):
             parse_thresholds_bed_lines(THRESHOLDS_INVALID_HEADER.splitlines())
 
+    def test_empty_file_raises_value_error(self):
+        with pytest.raises(ValueError):
+            parse_thresholds_bed_lines([])
+
 
 class TestBuildPerRegionRows:
     def test_joins_mean_coverage_by_position(self):
