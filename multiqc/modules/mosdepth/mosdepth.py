@@ -184,6 +184,11 @@ class MultiqcModule(BaseMultiqcModule):
     at or above each threshold. This is useful for targeted sequencing (panels, adaptive
     sampling), where mean coverage alone can hide dropout in part of a target.
 
+    `*.regions.bed.gz` and `*.thresholds.bed.gz` are matched by filename only (mosdepth's own
+    naming convention), since they're gzip-compressed and MultiQC's search doesn't decompress
+    files to sniff content. Another tool's file with one of these exact suffixes would be picked
+    up too and fail to parse; if that happens in practice, exclude it with `path_filters_exclude`.
+
     The MultiQC module plots coverage distributions from 2 kinds of outputs:
 
     - `{prefix}.mosdepth.region.dist.txt`
