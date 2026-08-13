@@ -161,7 +161,8 @@ def is_running_in_notebook() -> bool:
     try:
         from IPython import get_ipython  # type: ignore
 
-        if "IPKernelApp" in get_ipython().config:
+        ip = get_ipython()
+        if ip is not None and "IPKernelApp" in ip.config:
             return True
     except (ImportError, AttributeError):
         pass
