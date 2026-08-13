@@ -1190,6 +1190,8 @@ varscan2/mpileup2indel:
 varscan2/mpileup2cns:
   contents: "Only variants will be reported"
   num_lines: 10
+vcf_sv_stats:
+  fn: "*.vcf-sv-stats.json"
 vcftools/relatedness2:
   fn: "*.relatedness2"
 vcftools/tstv_by_count:

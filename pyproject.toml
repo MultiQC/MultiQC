@@ -30,6 +30,7 @@ dependencies = [
     "natsort",
     "tiktoken",
     "jsonschema",
+    "rfc8785>=0.1.4",
     # Pyodide currently publishes Polars 1.33.1; `rtcompat` is available from 1.34.0 for native installs.
     "polars>=1.33.1; sys_platform == 'emscripten'",
     "polars[rtcompat]>=1.34.0; sys_platform != 'emscripten'",
@@ -278,6 +279,7 @@ truvari = "multiqc.modules.truvari:MultiqcModule"
 umicollapse = "multiqc.modules.umicollapse:MultiqcModule"
 umitools = "multiqc.modules.umitools:MultiqcModule"
 varscan2 = "multiqc.modules.varscan2:MultiqcModule"
+vcf_sv_stats = "multiqc.modules.vcf_sv_stats:MultiqcModule"
 vcftools = "multiqc.modules.vcftools:MultiqcModule"
 vep = "multiqc.modules.vep:MultiqcModule"
 verifybamid = "multiqc.modules.verifybamid:MultiqcModule"
