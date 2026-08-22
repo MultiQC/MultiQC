@@ -591,6 +591,7 @@ module_order:
   - bbduk
   - clipandmerge
   - cutadapt
+  - dotmatch
   - trim_galore
   - flexbar
   - sourmash
