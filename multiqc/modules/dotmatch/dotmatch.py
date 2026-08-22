@@ -121,6 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="dotmatch",
             href="https://github.com/dnncha/dotmatch",
             info=("Deterministic short-DNA known-target assignment with explicit ambiguity handling."),
+            doi="10.5281/zenodo.21511337",
         )
 
         self.sample_qc: dict[str, dict[str, Any]] = {}
@@ -138,6 +139,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         if not self.sample_qc and not self.crispr_qc:
             raise ModuleNoSamplesFound
+
+        self.add_software_version(None)
 
         if self.sample_qc:
             log.info("Found %d DotMatch sample QC rows", len(self.sample_qc))
