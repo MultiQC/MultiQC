@@ -86,7 +86,7 @@ def calc_iqr_coverage(cum_fraction_by_cov) -> Optional[float]:
             q1_cov = this_cov
             break
     if q3_cov is not None and q1_cov is not None:
-        iqr = (q3_cov - q1_cov)
+        iqr = q3_cov - q1_cov
     return iqr
 
 
