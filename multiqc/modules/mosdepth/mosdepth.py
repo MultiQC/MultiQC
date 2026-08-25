@@ -75,6 +75,22 @@ def calc_median_coverage(cum_fraction_by_cov) -> Optional[float]:
             break
     return median_cov
 
+def calc_iqr_coverage(cum_fraction_by_cov) -> Optional[float]:
+    q3_cov = None
+    q1_cov = None
+    iqr = None
+    for this_cov, cum_fraction in sorted(cum_fraction_by_cov.items(), reverse=True):
+        if q3_cov is None and cum_fraction >= 0.25:
+            q3_cov = this_cov
+        if q1_cov is None and cum_fraction >= 0.75:
+            q1_cov = this_cov
+            break
+    if q3_cov is not None and q1_cov is not None:
+        iqr = (q3_cov - q1_cov)
+    return iqr
+
+
+
 
 class MultiqcModule(BaseMultiqcModule):
     """
@@ -428,6 +444,13 @@ class MultiqcModule(BaseMultiqcModule):
                     "format": "{:,d}",
                     "hidden": True,
                 },
+                "coefficient_of_iqr_variance": {
+                    "title": "IQR CV",
+                    "description": "Coefficient of interquartile range variance",
+                    "min": 0,
+                    "suffix": "",
+                    "scale": "BuPu",
+                },
             },
         )
         self.general_stats_addcols(genstats_by_sample, genstats_headers)
@@ -525,6 +548,10 @@ class MultiqcModule(BaseMultiqcModule):
             for k, v in genstats_cov_thresholds(cum_fraction_by_cov, threshs).items():
                 genstats_by_sample[s_name][k] = v
             genstats_by_sample[s_name]["median_coverage"] = calc_median_coverage(cum_fraction_by_cov)
+            iqr_coverage = calc_iqr_coverage(cum_fraction_by_cov)
+            if iqr_coverage is not None:
+                if genstats_by_sample[s_name]["median_coverage"] is not None and genstats_by_sample[s_name]["median_coverage"] is not 0:
+                    genstats_by_sample[s_name]["coefficient_of_iqr_variance"] = iqr_coverage/genstats_by_sample[s_name]["median_coverage"]
 
             # Downsampling the data to avoid carrying a lot for the line plot that would downsample anyway
             cum_fraction_by_cov = dict(smooth_array(list(cum_fraction_by_cov.items()), 500))
