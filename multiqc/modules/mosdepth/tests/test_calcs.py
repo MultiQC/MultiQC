@@ -32,6 +32,6 @@ def test_calc_median_and_iqr_coverage():
     assert actual_median == 10
     actual_iqr = calc_iqr_coverage(cum_fraction_by_cov)
     assert actual_iqr == 10
-    actual_iqr_cv = actual_iqr/actual_median
+    actual_iqr_cv = actual_iqr / actual_median
     assert actual_iqr_cv == 1.0
 
