@@ -75,6 +75,7 @@ def calc_median_coverage(cum_fraction_by_cov) -> Optional[float]:
             break
     return median_cov
 
+
 def calc_iqr_coverage(cum_fraction_by_cov) -> Optional[float]:
     q3_cov = None
     q1_cov = None
@@ -88,8 +89,6 @@ def calc_iqr_coverage(cum_fraction_by_cov) -> Optional[float]:
     if q3_cov is not None and q1_cov is not None:
         iqr = q3_cov - q1_cov
     return iqr
-
-
 
 
 class MultiqcModule(BaseMultiqcModule):

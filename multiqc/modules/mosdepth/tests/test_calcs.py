@@ -20,6 +20,7 @@ def test_genstats_cov_thresholds():
         "200_x_pc": 0.0,
     }
 
+
 def test_calc_median_and_iqr_coverage():
     cum_fraction_by_cov = {
         1: 1.0,
@@ -34,4 +35,3 @@ def test_calc_median_and_iqr_coverage():
     assert actual_iqr == 10
     actual_iqr_cv = actual_iqr / actual_median
     assert actual_iqr_cv == 1.0
-
